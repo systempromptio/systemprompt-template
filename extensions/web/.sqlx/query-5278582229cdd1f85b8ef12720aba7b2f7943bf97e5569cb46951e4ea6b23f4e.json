@@ -1,0 +1,83 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id: FileId\", skill_id as \"skill_id: SkillId\",\n            file_path as \"file_path: ValidatedFilePath\",\n            content, category, language, executable, size_bytes, checksum, created_at, updated_at\n         FROM skill_files WHERE skill_id = $1 AND file_path = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: FileId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "skill_id: SkillId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "file_path: ValidatedFilePath",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "category",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "language",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "executable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "checksum",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "5278582229cdd1f85b8ef12720aba7b2f7943bf97e5569cb46951e4ea6b23f4e"
+}

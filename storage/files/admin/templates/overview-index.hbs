@@ -1,0 +1,30 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/page-header
+        title="Live Overview"
+        subtitle="Five real-time panes streaming every inference call, decision, and tool execution through the gateway."}}
+
+    <div class="overview-grid">
+        {{#each panes}}
+        <a class="overview-card overview-card--{{this.tone}}" href="{{this.href}}"
+           data-pane="{{this.key}}">
+            <div class="overview-card__head">
+                <span class="overview-card__label">{{this.label}}</span>
+                <span class="overview-card__pulse" aria-hidden="true"></span>
+            </div>
+            <span class="overview-card__metric" data-pane-metric="{{this.key}}">{{this.metric}}</span>
+            <span class="overview-card__sub" data-pane-sub="{{this.key}}">{{this.metric_label}}</span>
+            <span class="overview-card__tagline">{{this.tagline}}</span>
+            <span class="overview-card__cta">Open live →</span>
+        </a>
+        {{/each}}
+    </div>
+
+    {{/inline}}
+    {{#*inline "head_extra"}}
+    <link rel="stylesheet" href="/css/overview-live.css?v={{css_version}}">
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script type="module" src="/js/pages/admin-overview-index.js?v={{css_version}}" defer></script>
+    {{/inline}}
+{{/layout}}

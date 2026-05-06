@@ -1,0 +1,72 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=policy.name subtitle=policy.description}}
+
+    <p><a href="/admin/governance">&larr; All policies</a></p>
+
+    <div class="card" style="margin-bottom: var(--space-6);">
+        <h2>State</h2>
+        <p>
+            <strong>Id:</strong> <code class="code-inline">{{policy.id}}</code><br>
+            <strong>Status:</strong>
+            {{#if policy.enabled}}
+            <span class="mcp-badge mcp-badge-success">ENABLED</span>
+            {{else}}
+            <span class="mcp-badge">DISABLED</span>
+            {{/if}}
+        </p>
+        <form method="post" action="/admin/governance/{{policy.id}}/toggle" style="display: inline;">
+            {{#if policy.enabled}}
+            <input type="hidden" name="enabled" value="false">
+            <button type="submit" class="btn btn-sm btn-outline">Disable this policy</button>
+            {{else}}
+            <input type="hidden" name="enabled" value="true">
+            <button type="submit" class="btn btn-sm">Enable this policy</button>
+            {{/if}}
+            <span class="text-muted" style="margin-left: var(--space-3);">Writes <code>{{config_path}}</code> and reloads the registry.</span>
+        </form>
+    </div>
+
+    <div class="card" style="margin-bottom: var(--space-6);">
+        <h2>Configuration</h2>
+        <p class="text-muted">Parameters as loaded from <code>{{config_path}}</code>. Edit the file on disk to change values; the toggle above is the only field the UI writes.</p>
+        <pre class="code-block"><code>{{params_yaml}}</code></pre>
+    </div>
+
+    <h2>Recent decisions for this policy</h2>
+    {{#if has_recent}}
+    {{#> components/data-table}}
+        <thead><tr>
+            <th class="col-date">Time</th>
+            <th>User</th>
+            <th>Tool</th>
+            <th class="col-status">Decision</th>
+            <th class="col-multiline">Reason</th>
+        </tr></thead>
+        <tbody>
+        {{#each recent}}
+        <tr>
+            <td class="col-date">{{created_at}}</td>
+            <td>{{truncate user_id 12}}</td>
+            <td><code class="code-inline">{{tool_name}}</code></td>
+            <td class="col-status">
+                {{#if is_denied}}
+                <span class="mcp-badge mcp-badge-danger">DENIED</span>
+                {{else}}
+                <span class="mcp-badge mcp-badge-success">ALLOWED</span>
+                {{/if}}
+            </td>
+            <td class="col-multiline">{{truncate reason 80}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No decisions recorded for this policy yet."}}
+    {{/if}}
+
+    {{/inline}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

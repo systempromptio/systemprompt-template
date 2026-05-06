@@ -2,7 +2,6 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/page-header title=title}}
-    {{> components/page-hero}}
 
     {{#if category_summary}}
     <div class="card mb-6 p-4">
@@ -13,41 +12,6 @@
             {{/each}}
         </div>
     </div>
-    {{/if}}
-
-    {{#if achievements_by_category}}
-    <section aria-label="Achievement collection">
-    <h3 class="mb-4">Achievements <span class="text-tertiary text-sm font-normal">{{unlocked_achievements}} of {{total_achievements}} unlocked</span></h3>
-    {{#each achievements_by_category}}
-    <details class="achievement-category" {{#if (gt unlocked_count 0)}}open{{/if}}>
-        <summary class="achievement-category__header">
-            <span class="achievement-category__icon">{{{icon}}}</span>
-            <span class="achievement-category__name">{{category}}</span>
-            <span class="achievement-category__count">{{unlocked_count}}/{{total_count}}</span>
-            <span class="achievement-category__bar" role="progressbar" aria-valuenow="{{completion_pct}}" aria-valuemin="0" aria-valuemax="100" aria-label="{{category}} completion">
-                <span class="achievement-category__bar-fill" style="width: {{completion_pct}}%"></span>
-            </span>
-            <span class="achievement-category__chevron">&#9654;</span>
-        </summary>
-        <div class="achievement-grid">
-            {{#each achievements}}
-            <div class="achievement-card {{#if is_unlocked}}unlocked{{else}}locked{{/if}}">
-                <div class="achievement-card__header">
-                    <span class="achievement-card__name">{{name}}</span>
-                    <span class="achievement-rarity achievement-rarity--{{rarity_label}}">{{rarity_label}}</span>
-                </div>
-                <div class="achievement-card__desc">{{description}}</div>
-                {{#if is_unlocked}}
-                <div class="achievement-card__date">Unlocked {{relativeTime unlocked_at}}</div>
-                {{else}}
-                <div class="achievement-card__status">Locked</div>
-                {{/if}}
-            </div>
-            {{/each}}
-        </div>
-    </details>
-    {{/each}}
-    </section>
     {{/if}}
 
     <section aria-label="Activity stream">

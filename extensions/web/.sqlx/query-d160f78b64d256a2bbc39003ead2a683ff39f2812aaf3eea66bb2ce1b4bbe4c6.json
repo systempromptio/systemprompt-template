@@ -1,0 +1,47 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO marketplace.paddle_customers (user_id, email) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET updated_at = now() RETURNING id, user_id AS \"user_id!: UserId\", paddle_customer_id, email AS \"email!: _\", name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: UserId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "paddle_customer_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "email!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "d160f78b64d256a2bbc39003ead2a683ff39f2812aaf3eea66bb2ce1b4bbe4c6"
+}

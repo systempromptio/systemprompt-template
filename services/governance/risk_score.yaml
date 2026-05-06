@@ -1,0 +1,28 @@
+# Identity risk score weights.
+#
+# Score is computed per identity (user / tenant / agent / agent_scope) over
+# the active TimeRange and is shown on the Identity & Violations heatmap and
+# the per-identity profile page.
+#
+# Formula:
+#   raw = (deny_count           * deny_weight)
+#       + (secret_breach_count  * secret_breach_weight)
+#       + (scope_violation_count * scope_violation_weight)
+#   normalized = raw / max(activity_volume, normalization_floor)
+#   score      = clamp(normalized * scale, 0.0, 100.0)
+#
+# `activity_volume` is the total number of governance decisions emitted by the
+# identity in the same time window (allow + deny). Normalising keeps high-
+# traffic identities from drowning out low-traffic-but-high-risk ones.
+#
+# Tune these without redeploying — the YAML is re-read on every page render.
+
+risk_score:
+  deny_weight: 1.0
+  secret_breach_weight: 3.0
+  scope_violation_weight: 2.0
+  # Prevent divide-by-near-zero for tiny activity volumes.
+  normalization_floor: 10.0
+  # Multiplier applied after normalisation so the typical "noticeable" score
+  # lands in the 5–40 range and a sustained breaker tops 60+.
+  scale: 50.0

@@ -126,7 +126,6 @@ fn assemble_manifest(
         issued_at: chrono::Utc::now().to_rfc3339(),
         not_before: chrono::Utc::now().to_rfc3339(),
         user_id: user_id.as_str().to_string(),
-        tenant_id: None,
         user,
         plugins,
         skills,

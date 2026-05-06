@@ -2,13 +2,6 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/page-header title=title}}
-    {{> components/page-hero}}
-
-    <section aria-label="Services CLI commands">
-        <p class="text-tertiary">Run these CLI commands for live process details:</p>
-        <p><code class="code-inline">{{cli_command}}</code></p>
-        <p><code class="code-inline">{{registry_command}}</code></p>
-    </section>
 
     <section aria-label="Service summary" class="stat-card-grid">
         {{> components/stat-card label="Agents" value=agent_count}}
@@ -33,7 +26,7 @@
         </tbody>
     {{/components/data-table}}
     {{else}}
-    {{> components/empty-state message="No agents registered. Run the CLI command above for live service status."}}
+    {{> components/empty-state message="No agents registered."}}
     {{/if}}
     </section>
     {{/inline}}

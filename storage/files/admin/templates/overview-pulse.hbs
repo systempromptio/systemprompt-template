@@ -1,0 +1,98 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/page-header
+        title="Pulse"
+        subtitle="Live gateway heartbeat — every /v1/messages request as it lands."}}
+
+    <section class="kpi-strip" aria-label="Pulse KPIs">
+        <div class="kpi-card">
+            <span class="kpi-card__label">Requests</span>
+            <span class="kpi-card__value" data-kpi="requests">{{kpis.requests}}</span>
+            <span class="kpi-card__sub"><span data-kpi="req_per_min">{{kpis.req_per_min}}</span> / min</span>
+        </div>
+        <div class="kpi-card{{#if kpis.error_count}} kpi-card--danger{{/if}}">
+            <span class="kpi-card__label">Errors</span>
+            <span class="kpi-card__value" data-kpi="error_count">{{kpis.error_count}}</span>
+            <span class="kpi-card__sub"><span data-kpi="error_rate">{{kpis.error_rate_display}}</span></span>
+        </div>
+    </section>
+
+    <section class="overview-pane">
+        <h3 class="section-title">Last 60 seconds</h3>
+        <div class="live-spark" id="pulse-spark" data-buckets="60" aria-label="Requests per second"></div>
+    </section>
+
+    <section class="overview-pane">
+        <h3 class="section-title">Live ticker
+            <span class="live-dot" aria-hidden="true"></span>
+            <span class="text-tertiary text-sm" id="pulse-status">connecting…</span>
+        </h3>
+        <ul class="live-ticker" id="pulse-ticker" data-max="100" aria-live="polite">
+            {{#each recent_requests}}
+            <li class="live-ticker__row">
+                <div class="live-ticker__summary">
+                    <span class="expand-indicator" aria-hidden="true">&#9654;</span>
+                    <span class="live-ticker__time">{{time}}</span>
+                    <span class="live-ticker__msg">{{actor}}{{#if latency}}  {{latency}}{{/if}}{{#if context_id}}  {{truncate context_id 8}}…{{/if}}</span>
+                    {{#if is_error}}
+                    <a class="live-ticker__tag live-ticker__tag--deny" href="{{error_href}}" title="{{error_message}}">ERROR</a>
+                    {{else}}
+                    <span class="live-ticker__tag{{#if is_pending}} live-ticker__tag--pending{{/if}}">{{#if is_pending}}PENDING{{else}}OK{{/if}}</span>
+                    {{/if}}
+                </div>
+                <div class="live-ticker__detail">
+                    {{#if display_name}}
+                    <div class="live-ticker__detail-kv">
+                        <span class="live-ticker__detail-label">User</span>
+                        <a class="live-ticker__detail-link" href="/admin/user?id={{user_id}}">{{display_name}} ↗</a>
+                    </div>
+                    {{/if}}
+                    {{#if department}}
+                    <div class="live-ticker__detail-kv">
+                        <span class="live-ticker__detail-label">Dept</span>
+                        <span class="live-ticker__detail-value">{{department}}</span>
+                    </div>
+                    {{/if}}
+                    {{#if session_id}}
+                    <div class="live-ticker__detail-kv">
+                        <span class="live-ticker__detail-label">Session</span>
+                        <a class="live-ticker__detail-link" href="/admin/sessions/{{session_id}}">{{truncate session_id 14}}… ↗</a>
+                    </div>
+                    {{/if}}
+                    {{#if context_id}}
+                    <div class="live-ticker__detail-kv">
+                        <span class="live-ticker__detail-label">Context</span>
+                        <a class="live-ticker__detail-link" href="/admin/contexts/{{context_id}}">{{truncate context_id 14}}… ↗</a>
+                    </div>
+                    {{/if}}
+                    {{#if trace_id}}
+                    <div class="live-ticker__detail-kv">
+                        <span class="live-ticker__detail-label">Trace</span>
+                        <a class="live-ticker__detail-link" href="/admin/traces/{{trace_id}}">{{truncate trace_id 8}}… ↗</a>
+                    </div>
+                    {{/if}}
+                    <div class="live-ticker__detail-kv">
+                        <span class="live-ticker__detail-label">Request</span>
+                        <a class="live-ticker__detail-link" href="/admin/requests/{{id}}">{{truncate id 8}}… ↗</a>
+                    </div>
+                    {{#if error_message}}
+                    <div class="live-ticker__detail-kv">
+                        <span class="live-ticker__detail-label">Error</span>
+                        <span class="live-ticker__detail-value">{{error_message}}</span>
+                    </div>
+                    {{/if}}
+                </div>
+            </li>
+            {{/each}}
+        </ul>
+    </section>
+
+    {{/inline}}
+    {{#*inline "head_extra"}}
+    <link rel="stylesheet" href="/css/overview-live.css?v={{css_version}}">
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script type="module" src="/js/pages/admin-overview-pulse.js?v={{css_version}}"
+            data-sse-url="{{sse_url}}" defer></script>
+    {{/inline}}
+{{/layout}}

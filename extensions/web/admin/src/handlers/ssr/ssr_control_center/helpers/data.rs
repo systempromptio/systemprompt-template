@@ -2,7 +2,7 @@ use crate::numeric;
 use crate::repositories::session_analyses::HealthMetrics;
 use crate::types::UserGamificationProfile;
 
-use super::super::types::{AchievementProgress, HealthObj, SessionGroup};
+use super::super::types::{HealthObj, SessionGroup};
 
 pub struct SessionCounts {
     pub active: usize,
@@ -33,16 +33,11 @@ pub struct GamificationData {
     pub next_rank_name: String,
     pub current_streak: i32,
     pub longest_streak: i32,
-    pub achievements_count: usize,
-    pub achievements_total: usize,
     pub xp_progress_pct: i64,
-    pub achievement_progress: Vec<AchievementProgress>,
 }
 
 pub fn build_gamification_data(
     gamification: Option<&UserGamificationProfile>,
-    skills_usage: &[&crate::types::conversation_analytics::EntityUsageSummary],
-    mcp_usage: &[&crate::types::conversation_analytics::EntityUsageSummary],
 ) -> GamificationData {
     let has_gamification = gamification.is_some();
     let (
@@ -53,10 +48,8 @@ pub fn build_gamification_data(
         next_rank_name,
         current_streak,
         longest_streak,
-        achievements_count,
-        achievements_total,
         xp_progress_pct,
-    ) = gamification.map_or((0, "", 0, 0, "", 0, 0, 0, 60usize, 0), |g| {
+    ) = gamification.map_or((0, "", 0, 0, "", 0, 0, 0), |g| {
         let total_for_rank = g.total_xp + g.xp_to_next_rank;
         let pct = if total_for_rank > 0 {
             let p = numeric::to_i64(
@@ -74,13 +67,9 @@ pub fn build_gamification_data(
             g.next_rank_name.as_deref().unwrap_or("Max Rank"),
             g.current_streak,
             g.longest_streak,
-            g.achievements.len(),
-            60usize,
             pct,
         )
     });
-
-    let achievement_progress = build_achievement_progress(gamification, skills_usage, mcp_usage);
 
     GamificationData {
         has_gamification,
@@ -91,65 +80,8 @@ pub fn build_gamification_data(
         next_rank_name: next_rank_name.to_string(),
         current_streak,
         longest_streak,
-        achievements_count,
-        achievements_total,
         xp_progress_pct,
-        achievement_progress,
     }
-}
-
-fn build_achievement_progress(
-    gamification: Option<&UserGamificationProfile>,
-    skills_usage: &[&crate::types::conversation_analytics::EntityUsageSummary],
-    mcp_usage: &[&crate::types::conversation_analytics::EntityUsageSummary],
-) -> Vec<AchievementProgress> {
-    let mut achievement_progress = Vec::new();
-    if let Some(g) = gamification {
-        let unlocked_ids: std::collections::HashSet<&str> = g
-            .achievements
-            .iter()
-            .map(|a| a.achievement_id.as_str())
-            .collect();
-
-        let skill_total: i64 = skills_usage.iter().map(|s| s.total_uses).sum();
-        let unique_skills = numeric::usize_to_i64(skills_usage.len());
-        let mcp_total: i64 = mcp_usage.iter().map(|m| m.total_uses).sum();
-        let unique_mcp = numeric::usize_to_i64(mcp_usage.len());
-
-        let milestones: Vec<(&str, &str, i64, i64)> = vec![
-            ("skill_use_1", "Skill Invoker", skill_total, 1),
-            ("skill_use_25", "Skill Enthusiast", skill_total, 25),
-            ("skill_use_100", "Skill Virtuoso", skill_total, 100),
-            ("skill_unique_5", "Skill Explorer", unique_skills, 5),
-            ("skill_unique_10", "Skill Polymath", unique_skills, 10),
-            ("mcp_use_1", "Server Link", mcp_total, 1),
-            ("mcp_use_25", "Server Regular", mcp_total, 25),
-            ("mcp_use_100", "Server Power User", mcp_total, 100),
-            ("mcp_use_500", "Server Master", mcp_total, 500),
-            ("mcp_unique_3", "Server Collector", unique_mcp, 3),
-            ("mcp_unique_5", "Server Network", unique_mcp, 5),
-        ];
-
-        for (id, name, current, threshold) in milestones {
-            if !unlocked_ids.contains(id) {
-                let remaining = (threshold - current).max(0);
-                let pct = if threshold > 0 {
-                    ((current * 100) / threshold).min(100)
-                } else {
-                    0
-                };
-                achievement_progress.push(AchievementProgress {
-                    id,
-                    name,
-                    current,
-                    threshold,
-                    remaining,
-                    pct,
-                });
-            }
-        }
-    }
-    achievement_progress
 }
 
 pub struct HealthData {

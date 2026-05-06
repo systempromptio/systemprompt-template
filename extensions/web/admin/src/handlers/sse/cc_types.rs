@@ -73,16 +73,6 @@ pub(super) struct PerformanceEntry {
     pub active_minutes: String,
 }
 
-#[derive(Serialize)]
-pub(super) struct AchievementProgressEntry {
-    pub id: &'static str,
-    pub name: &'static str,
-    pub current: i64,
-    pub threshold: i64,
-    pub remaining: i64,
-    pub pct: i64,
-}
-
 pub(super) const fn build_health(h: &session_analyses::HealthMetrics) -> Option<HealthEntry> {
     if h.total_sessions_30d == 0 {
         return None;
@@ -160,10 +150,6 @@ pub(super) struct GamificationBlock {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub current_streak: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub achievements_count: Option<usize>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub achievements_total: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub xp_progress_pct: Option<i64>,
 }
 
@@ -179,8 +165,6 @@ pub(super) fn build_gamification_block(
             xp_to_next_rank: None,
             next_rank_name: None,
             current_streak: None,
-            achievements_count: None,
-            achievements_total: None,
             xp_progress_pct: None,
         },
         |g| {
@@ -203,8 +187,6 @@ pub(super) fn build_gamification_block(
                         .to_string(),
                 ),
                 current_streak: Some(g.current_streak),
-                achievements_count: Some(g.achievements.len()),
-                achievements_total: Some(60),
                 xp_progress_pct: Some(xp_pct),
             }
         },

@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT COALESCE(SUM(\n            CASE\n                WHEN event_type = 'claude_code_SessionStart' THEN $2\n                WHEN event_type = 'claude_code_PostToolUse' THEN $3\n                WHEN event_type = 'claude_code_PostToolUseFailure' THEN $4\n                WHEN event_type = 'claude_code_UserPromptSubmit' THEN $5\n                WHEN event_type = 'claude_code_SubagentStart' THEN $6\n                ELSE 0\n            END\n        ), 0)::BIGINT\n        FROM plugin_usage_events\n        WHERE user_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "coalesce",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "66e44ddf0beaea9ab3fd5c91a9cf88d16b7be61d316a623f609463edad9c7ff5"
+}

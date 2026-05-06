@@ -1,0 +1,173 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/page-header
+        title=title
+        subtitle="Single-tool drill: history, deny reasons, and top users hitting the limit."}}
+
+    <p class="breadcrumbs">
+        <a href="{{back_url}}">&larr; Tool calls</a> &middot;
+        <a href="{{audit_url}}">Open in Audit Trail</a>
+    </p>
+
+    {{> components/time-range time_range}}
+
+    <section class="kpi-strip" aria-label="Tool KPIs">
+        <div class="kpi-card">
+            <span class="kpi-card__label">Calls</span>
+            <span class="kpi-card__value">{{stats.total_calls}}</span>
+            <span class="kpi-card__sub">{{stats.success_pct}}% allowed</span>
+        </div>
+        <div class="kpi-card{{#if stats.deny_count}} kpi-card--danger{{/if}}">
+            <span class="kpi-card__label">Denies</span>
+            <span class="kpi-card__value">{{stats.deny_count}}</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-card__label">Distinct users</span>
+            <span class="kpi-card__value">{{stats.distinct_users}}</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-card__label">Distinct agents</span>
+            <span class="kpi-card__value">{{stats.distinct_agents}}</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-card__label">Bytes in/out</span>
+            <span class="kpi-card__value">{{stats.total_bytes_in}} / {{stats.total_bytes_out}}</span>
+        </div>
+    </section>
+
+    <div class="tool-detail-grid">
+        <section class="identity-section">
+            <h2 class="identity-section__title">Top deny reasons</h2>
+            {{#if has_deny_reasons}}
+            <table class="data-table">
+                <thead><tr><th>Reason</th><th>Policy</th><th class="col-num">Count</th></tr></thead>
+                <tbody>
+                {{#each deny_reasons}}
+                <tr>
+                    <td>{{truncate this.reason 80}}</td>
+                    <td><code class="code-inline">{{this.policy}}</code></td>
+                    <td class="col-num">{{this.count}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            </table>
+            {{else}}
+            <p class="text-muted">No denies for this tool in window.</p>
+            {{/if}}
+        </section>
+
+        <section class="identity-section">
+            <h2 class="identity-section__title">Top users</h2>
+            {{#if top_users}}
+            <table class="data-table">
+                <thead><tr><th>User</th><th class="col-num">Denies</th><th class="col-num">Total</th></tr></thead>
+                <tbody>
+                {{#each top_users}}
+                <tr>
+                    <td>
+                        <a href="/admin/governance/identity/{{this.identity_id}}?group_by=user">
+                            {{truncate this.label 24}}
+                        </a>
+                    </td>
+                    <td class="col-num">{{this.deny_count}}</td>
+                    <td class="col-num">{{this.total_count}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            </table>
+            {{else}}
+            <p class="text-muted">No user activity in window.</p>
+            {{/if}}
+        </section>
+
+        <section class="identity-section">
+            <h2 class="identity-section__title">Top agents</h2>
+            {{#if top_agents}}
+            <table class="data-table">
+                <thead><tr><th>Agent</th><th class="col-num">Denies</th><th class="col-num">Total</th></tr></thead>
+                <tbody>
+                {{#each top_agents}}
+                <tr>
+                    <td>
+                        <a href="/admin/governance/identity/{{this.identity_id}}?group_by=agent">
+                            <code class="code-inline">{{this.label}}</code>
+                        </a>
+                    </td>
+                    <td class="col-num">{{this.deny_count}}</td>
+                    <td class="col-num">{{this.total_count}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            </table>
+            {{else}}
+            <p class="text-muted">No agent activity in window.</p>
+            {{/if}}
+        </section>
+    </div>
+
+    <section class="identity-section">
+        <h2 class="identity-section__title">
+            History <span class="text-muted">({{total_count}} total)</span>
+        </h2>
+        {{#if has_history}}
+        {{#> components/data-table}}
+            <thead><tr>
+                <th class="col-date">Time</th>
+                <th>Identity</th>
+                <th class="col-status">Decision</th>
+                <th class="col-multiline">Reason</th>
+                <th class="col-num">Bytes in/out</th>
+                <th class="col-num">Latency</th>
+                <th>trace_id</th>
+            </tr></thead>
+            <tbody>
+            {{#each history}}
+            <tr data-chain-id="{{#if this.trace_id}}{{this.trace_id}}{{else}}{{this.session_id}}{{/if}}" class="audit-row" tabindex="0"
+                role="button" aria-label="Open chain of custody for {{this.id}}">
+                <td class="col-date" title="{{this.created_at}}">{{this.created_at_local}}</td>
+                <td>
+                    <div class="audit-identity">
+                        <a href="/admin/user?id={{this.user_id}}">{{truncate this.user_id 16}}</a>
+                        {{#if this.agent_scope}}
+                          <span class="audit-identity__agent">{{this.agent_scope}}</span>
+                        {{/if}}
+                    </div>
+                </td>
+                <td class="col-status">
+                    {{#if this.is_denied}}
+                      <span class="mcp-badge mcp-badge-danger">DENY</span>
+                    {{else}}
+                      {{#if this.is_allowed}}
+                        <span class="mcp-badge mcp-badge-success">ALLOW</span>
+                      {{else}}—{{/if}}
+                    {{/if}}
+                </td>
+                <td class="col-multiline" title="{{this.reason}}">
+                  {{truncate this.reason 80}}
+                  {{#if this.metadata_present}}
+                    <details class="mcp-tool-metadata">
+                      <summary class="text-muted text-xs">metadata</summary>
+                      <div class="json-tree" data-json="{{json this.metadata}}" data-collapsed="1" data-root-label="metadata"></div>
+                    </details>
+                  {{/if}}
+                </td>
+                <td class="col-num">{{this.content_input_bytes}} / {{this.content_output_bytes}}</td>
+                <td class="col-num">{{#if this.latency_ms}}{{this.latency_ms}} ms{{else}}—{{/if}}</td>
+                <td>
+                    {{#if this.trace_id}}
+                      <code class="code-inline">{{truncate this.trace_id 8}}</code>
+                    {{else}}—{{/if}}
+                </td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No calls for this tool in window."}}
+        {{/if}}
+    </section>
+
+    {{/inline}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

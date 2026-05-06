@@ -3,11 +3,11 @@
 
     const MyCommon = {
 
-        initExpandRows: function(tableSelector, renderCallback) {
+        initExpandRows: (tableSelector, renderCallback) => {
             const table = document.querySelector(tableSelector);
             if (!table) return;
 
-            table.addEventListener('click', function(e) {
+            table.addEventListener('click', (e) => {
                 if (e.target.closest('[data-no-row-click]') ||
                     e.target.closest('.actions-menu') ||
                     e.target.closest('.btn') ||
@@ -31,12 +31,12 @@
             });
         },
 
-        handleRowClick: function(row, detailRow) {
+        handleRowClick: (row, detailRow) => {
             const isVisible = detailRow.classList.contains('visible');
 
             const table = row.closest('table');
             if (table) {
-                table.querySelectorAll('tr.detail-row.visible').forEach(function(r) {
+                table.querySelectorAll('tr.detail-row.visible').forEach((r) => {
                     if (r !== detailRow) {
                         r.classList.remove('visible');
                         const prevRow = r.previousElementSibling;
@@ -59,7 +59,7 @@
             }
         },
 
-        initSidePanel: function(panelId) {
+        initSidePanel: (panelId) => {
             const panel = document.getElementById(panelId);
             if (!panel) return null;
 
@@ -68,25 +68,38 @@
             const closeBtn = panel.querySelector('[data-panel-close]');
 
             const api = {
-                open: function() {
+                open: () => {
                     panel.classList.add('open');
                     if (overlay) overlay.classList.add('active');
                 },
-                close: function() {
+                close: () => {
                     panel.classList.remove('open');
                     if (overlay) overlay.classList.remove('active');
                 },
-                setTitle: function(text) {
+                setTitle: (text) => {
                     const title = panel.querySelector('[data-panel-title]');
                     if (title) title.textContent = text;
                 },
-                setBody: function(content) {
+                setBodyText: (text) => {
                     const body = panel.querySelector('[data-panel-body]');
-                    if (body) body.replaceChildren(content);
+                    if (!body) return;
+                    body.replaceChildren();
+                    const p = document.createElement('p');
+                    p.style.cssText = 'color:var(--sp-text-tertiary);text-align:center;padding:var(--sp-space-4)';
+                    p.textContent = text;
+                    body.append(p);
                 },
-                setFooter: function(content) {
+                setBodyDom: (el) => {
+                    const body = panel.querySelector('[data-panel-body]');
+                    if (!body) return;
+                    body.replaceChildren();
+                    body.append(el);
+                },
+                setFooterDom: (el) => {
                     const footer = panel.querySelector('[data-panel-footer]');
-                    if (footer) footer.replaceChildren(content);
+                    if (!footer) return;
+                    footer.replaceChildren();
+                    if (el) footer.append(el);
                 },
                 panel: panel
             };
@@ -97,24 +110,24 @@
             return api;
         },
 
-        initBulkActions: function(tableSelector, barId) {
+        initBulkActions: (tableSelector, barId) => {
             const table = document.querySelector(tableSelector);
             if (!table) return null;
 
             let selected = {};
 
-            function updateCount() {
+            const updateCount = () => {
                 const count = Object.keys(selected).length;
                 const countEl = document.querySelector('[data-bulk-count]');
                 if (countEl) countEl.textContent = count;
                 const bar = document.getElementById(barId);
                 if (bar) bar.style.display = count > 0 ? 'flex' : 'none';
-            }
+            };
 
-            table.addEventListener('change', function(e) {
+            table.addEventListener('change', (e) => {
                 if (e.target.classList.contains('bulk-select-all')) {
                     const checked = e.target.checked;
-                    table.querySelectorAll('.bulk-checkbox').forEach(function(cb) {
+                    table.querySelectorAll('.bulk-checkbox').forEach((cb) => {
                         cb.checked = checked;
                         const id = cb.getAttribute('data-entity-id');
                         if (checked) {
@@ -139,10 +152,10 @@
             });
 
             return {
-                getSelected: function() { return Object.keys(selected); },
-                clear: function() {
+                getSelected: () => { return Object.keys(selected); },
+                clear: () => {
                     selected = {};
-                    table.querySelectorAll('.bulk-checkbox, .bulk-select-all').forEach(function(cb) {
+                    table.querySelectorAll('.bulk-checkbox, .bulk-select-all').forEach((cb) => {
                         cb.checked = false;
                     });
                     updateCount();
@@ -150,18 +163,18 @@
             };
         },
 
-        initSearch: function(inputId, tableSelector) {
+        initSearch: (inputId, tableSelector) => {
             const input = document.getElementById(inputId);
             const table = document.querySelector(tableSelector);
             if (!input || !table) return;
 
             let timer = null;
-            input.addEventListener('input', function() {
+            input.addEventListener('input', () => {
                 clearTimeout(timer);
-                timer = setTimeout(function() {
+                timer = setTimeout(() => {
                     const query = input.value.toLowerCase().trim();
                     const rows = table.querySelectorAll('tbody tr.clickable-row');
-                    rows.forEach(function(row) {
+                    rows.forEach((row) => {
                         const text = row.textContent.toLowerCase();
                         const matches = !query || text.includes(query);
                         row.style.display = matches ? '' : 'none';
@@ -174,15 +187,15 @@
             });
         },
 
-        initFilterSelect: function(selectId, tableSelector, dataAttr) {
+        initFilterSelect: (selectId, tableSelector, dataAttr) => {
             const select = document.getElementById(selectId);
             const table = document.querySelector(tableSelector);
             if (!select || !table) return;
 
-            select.addEventListener('change', function() {
+            select.addEventListener('change', () => {
                 const value = select.value;
                 const rows = table.querySelectorAll('tbody tr.clickable-row');
-                rows.forEach(function(row) {
+                rows.forEach((row) => {
                     const attrVal = row.getAttribute(dataAttr) || '';
                     const matches = !value || attrVal === value;
                     row.style.display = matches ? '' : 'none';
@@ -194,37 +207,29 @@
             });
         },
 
-        createCenteredMessage: function(text, color) {
-            const p = document.createElement('p');
-            p.style.cssText = 'color:var(--' + color + ');text-align:center;padding:var(--sp-space-4)';
-            p.textContent = text;
-            return p;
-        },
-
-        initForkPanel: function(config) {
+        initForkPanel: (config) => {
             const panelApi = MyCommon.initSidePanel(config.panelId);
             if (!panelApi) return null;
 
             return {
-                open: function() {
+                open: () => {
                     panelApi.setTitle('Fork from Org: ' + (config.entityLabel || config.entityType));
-                    panelApi.setBody(MyCommon.createCenteredMessage('Loading...', 'sp-text-tertiary'));
-                    const emptyFooter = document.createDocumentFragment();
-                    panelApi.setFooter(emptyFooter);
+                    panelApi.setBodyText('Loading...');
+                    panelApi.setFooterDom(null);
                     panelApi.open();
 
                     fetch(app.API_BASE + '/user/forkable/' + config.entityType)
-                        .then(function(res) { return res.json(); })
-                        .then(function(data) {
+                        .then((res) => { return res.json(); })
+                        .then((data) => {
                             const items = data[config.entityType] || data.plugins || data.skills || data.agents || data.mcp_servers || data.hooks || [];
                             if (items.length === 0) {
-                                panelApi.setBody(MyCommon.createCenteredMessage('No org entities available to fork.', 'sp-text-tertiary'));
+                                panelApi.setBodyText('No org entities available to fork.');
                                 return;
                             }
 
                             const checklist = document.createElement('div');
                             checklist.className = 'add-checklist';
-                            items.forEach(function(item) {
+                            items.forEach((item) => {
                                 const label = document.createElement('label');
                                 label.className = 'acl-checkbox-row';
                                 const input = document.createElement('input');
@@ -238,22 +243,23 @@
                                 label.append(input, span);
                                 checklist.append(label);
                             });
-                            panelApi.setBody(checklist);
+                            panelApi.setBodyDom(checklist);
 
                             const footerFrag = document.createDocumentFragment();
                             const cancelBtn = document.createElement('button');
                             cancelBtn.className = 'btn btn-secondary';
                             cancelBtn.setAttribute('data-panel-close', '');
                             cancelBtn.textContent = 'Cancel';
-                            cancelBtn.addEventListener('click', panelApi.close);
                             const saveBtn = document.createElement('button');
                             saveBtn.className = 'btn btn-primary';
                             saveBtn.setAttribute('data-fork-save', '');
                             saveBtn.textContent = 'Fork Selected';
                             footerFrag.append(cancelBtn, document.createTextNode(' '), saveBtn);
-                            panelApi.setFooter(footerFrag);
+                            panelApi.setFooterDom(footerFrag);
 
-                            saveBtn.addEventListener('click', function() {
+                            cancelBtn.addEventListener('click', panelApi.close);
+
+                            saveBtn.addEventListener('click', () => {
                                 const checked = panelApi.panel.querySelectorAll('input[name="fork_id"]:checked');
                                 if (checked.length === 0) {
                                     app.Toast.show('Select at least one entity to fork', 'warning');
@@ -264,33 +270,36 @@
 
                                 const promises = [];
                                 const typeKey = config.entityType.replace(/s$/, '');
-                                checked.forEach(function(cb) {
-                                    const reqBody = {};
-                                    reqBody['org_' + typeKey + '_id'] = cb.value;
+                                checked.forEach((cb) => {
+                                    const body = {};
+                                    body['org_' + typeKey + '_id'] = cb.value;
                                     promises.push(
                                         fetch(app.API_BASE + '/user/fork/' + typeKey.replace('_', '-'), {
                                             method: 'POST',
                                             headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify(reqBody)
+                                            body: JSON.stringify(body)
                                         })
                                     );
                                 });
 
-                                Promise.all(promises).then(function(results) {
-                                    const ok = results.filter(function(r) { return r.ok; }).length;
+                                Promise.all(promises).then((results) => {
+                                    const ok = results.filter((r) => { return r.ok; }).length;
                                     app.Toast.show('Forked ' + ok + ' ' + config.entityLabel + '(s)', 'success');
                                     panelApi.close();
                                     if (config.onForked) config.onForked();
-                                    else setTimeout(function() { window.location.reload(); }, 500);
-                                }).catch(function() {
+                                    else setTimeout(() => { window.location.reload(); }, 500);
+                                }).catch(() => {
                                     app.Toast.show('Fork failed', 'error');
                                     saveBtn.disabled = false;
                                     saveBtn.textContent = 'Fork Selected';
                                 });
                             });
                         })
-                        .catch(function() {
-                            panelApi.setBody(MyCommon.createCenteredMessage('Failed to load forkable entities.', 'sp-danger'));
+                        .catch(() => {
+                            const errP = document.createElement('p');
+                            errP.style.cssText = 'color:var(--sp-danger);text-align:center;padding:var(--sp-space-4)';
+                            errP.textContent = 'Failed to load forkable entities.';
+                            panelApi.setBodyDom(errP);
                         });
                 },
                 close: panelApi.close,
@@ -298,13 +307,12 @@
             };
         },
 
-        formatJson: function(data) {
+        formatJson: (data) => {
             if (typeof data === 'string') {
                 try { data = JSON.parse(data); } catch (e) {
-                    const fallback = document.createElement('pre');
-                    fallback.className = 'json-view';
-                    fallback.textContent = data;
-                    return fallback;
+                    const span = document.createElement('span');
+                    span.textContent = data;
+                    return span;
                 }
             }
             const pre = document.createElement('pre');
@@ -313,33 +321,31 @@
             return pre;
         },
 
-        renderSourceBadge: function(baseId) {
-            const span = document.createElement('span');
+        renderSourceBadge: (baseId) => {
+            const container = document.createElement('span');
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('class', 'fork-icon');
             svg.setAttribute('viewBox', '0 0 16 16');
             svg.setAttribute('fill', 'currentColor');
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             if (baseId) {
-                span.className = 'fork-indicator forked';
+                container.className = 'fork-indicator forked';
                 path.setAttribute('d', 'M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878z');
                 svg.append(path);
-                span.append(svg);
-                span.append(document.createTextNode('forked'));
+                container.append(svg, 'forked');
             } else {
-                span.className = 'fork-indicator custom';
+                container.className = 'fork-indicator custom';
                 path.setAttribute('d', 'M8 2a6 6 0 100 12A6 6 0 008 2zm.75 3.75v2.5h2.5v1.5h-2.5v2.5h-1.5v-2.5h-2.5v-1.5h2.5v-2.5h1.5z');
                 svg.append(path);
-                span.append(svg);
-                span.append(document.createTextNode('custom'));
+                container.append(svg, 'custom');
             }
-            return span;
+            return container;
         }
     };
 
     app.MyCommon = MyCommon;
 
-    app.initMyPlugins = function() {
+    app.initMyPlugins = () => {
         MyCommon.initExpandRows('#my-plugins-table');
         MyCommon.initSearch('my-plugins-search', '#my-plugins-table');
         MyCommon.initFilterSelect('my-plugins-category-filter', '#my-plugins-table', 'data-category');
@@ -358,7 +364,7 @@
         }
     };
 
-    app.initMySkills = function() {
+    app.initMySkills = () => {
         MyCommon.initExpandRows('#my-skills-table');
         MyCommon.initSearch('my-skills-search', '#my-skills-table');
         MyCommon.initFilterSelect('my-skills-tag-filter', '#my-skills-table', 'data-tags');
@@ -377,7 +383,7 @@
         }
     };
 
-    app.initMyAgents = function() {
+    app.initMyAgents = () => {
         MyCommon.initExpandRows('#my-agents-table');
         MyCommon.initSearch('my-agents-search', '#my-agents-table');
         MyCommon.initBulkActions('#my-agents-table', 'my-agents-bulk-bar');
@@ -395,7 +401,7 @@
         }
     };
 
-    app.initMyMcpServers = function() {
+    app.initMyMcpServers = () => {
         MyCommon.initExpandRows('#my-mcp-table');
         MyCommon.initSearch('my-mcp-search', '#my-mcp-table');
         MyCommon.initBulkActions('#my-mcp-table', 'my-mcp-bulk-bar');
@@ -413,7 +419,7 @@
         }
     };
 
-    app.initMyHooks = function() {
+    app.initMyHooks = () => {
         MyCommon.initExpandRows('#my-hooks-table');
         MyCommon.initSearch('my-hooks-search', '#my-hooks-table');
         MyCommon.initBulkActions('#my-hooks-table', 'my-hooks-bulk-bar');
@@ -431,15 +437,13 @@
         }
     };
 
-    app.initMyMarketplace = function() {
+    app.initMyMarketplace = () => {
         MyCommon.initExpandRows('#my-marketplace-table');
         MyCommon.initSearch('my-marketplace-search', '#my-marketplace-table');
         MyCommon.initFilterSelect('my-marketplace-source-filter', '#my-marketplace-table', 'data-source');
         MyCommon.initFilterSelect('my-marketplace-category-filter', '#my-marketplace-table', 'data-category');
 
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-customize-plugin]');
-            if (!btn) return;
+        app.events.on('click', '[data-customize-plugin]', (e, btn) => {
             const pluginId = btn.getAttribute('data-customize-plugin');
             btn.disabled = true;
             btn.textContent = 'Customizing...';
@@ -448,16 +452,16 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ org_plugin_id: pluginId })
-            }).then(function(res) {
+            }).then((res) => {
                 if (res.ok) {
-                    return res.json().then(function(data) {
+                    return res.json().then((data) => {
                         app.Toast.show('Plugin customized successfully', 'success');
                         if (data.plugin && data.plugin.plugin_id) {
-                            setTimeout(function() {
+                            setTimeout(() => {
                                 window.location.href = '/admin/my/plugins/edit?id=' + encodeURIComponent(data.plugin.plugin_id);
                             }, 500);
                         } else {
-                            setTimeout(function() { window.location.reload(); }, 500);
+                            setTimeout(() => { window.location.reload(); }, 500);
                         }
                     });
                 } else {
@@ -465,7 +469,7 @@
                     btn.disabled = false;
                     btn.textContent = 'Customize';
                 }
-            }).catch(function() {
+            }).catch(() => {
                 app.Toast.show('Failed to customize plugin', 'error');
                 btn.disabled = false;
                 btn.textContent = 'Customize';

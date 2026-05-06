@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT CASE category\n            WHEN 'login' THEN 'Logins'\n            WHEN 'skill_usage' THEN 'Skill Uses'\n            WHEN 'marketplace_edit' THEN 'Edits'\n            WHEN 'marketplace_connect' THEN 'Uploads'\n            WHEN 'session' THEN 'Sessions'\n            ELSE REPLACE(category, '_', ' ')\n        END AS \"category!\",\n        COUNT(*)::BIGINT AS \"count!\"\n        FROM user_activity\n        WHERE user_id = $1\n        GROUP BY category\n        ORDER BY COUNT(*) DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "category!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "4f041206622c5052db23b410a0851f8369117249e69311c6cea415372b74c94e"
+}

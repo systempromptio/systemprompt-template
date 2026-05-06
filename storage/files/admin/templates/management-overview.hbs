@@ -1,0 +1,46 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title subtitle="Users, departments, devices, skills, and marketplaces — all interlinked."}}
+
+    <section aria-label="Management overview" data-page="management-overview">
+        <div class="kpi-grid" role="list">
+            {{#each stats}}
+            <a class="kpi-card" role="listitem" href="{{href}}">
+                <span class="kpi-label">{{label}}</span>
+                <span class="kpi-value">{{value}}</span>
+                <span class="kpi-arrow" aria-hidden="true">→</span>
+            </a>
+            {{/each}}
+        </div>
+
+        <div class="card" style="margin-top:1.5rem;">
+            <header class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+                <h2 style="margin:0;">Departments</h2>
+                <a class="btn btn-sm btn-outline" href="/admin/management/departments">Manage departments</a>
+            </header>
+            {{#if departments}}
+            {{#> components/data-table}}
+                <thead><tr><th>Name</th><th>Manager</th><th class="numeric col-numeric">Members</th><th class="numeric col-numeric">Assignments</th><th>Description</th></tr></thead>
+                <tbody>
+                {{#each departments}}
+                <tr class="clickable-row" onclick="location='/admin/management/departments/{{id}}'">
+                    <td><a href="/admin/management/departments/{{id}}"><strong>{{name}}</strong></a></td>
+                    <td>{{#if manager_email}}{{manager_email}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+                    <td class="numeric col-numeric">{{member_count}}</td>
+                    <td class="numeric col-numeric">{{assignment_count}}</td>
+                    <td>{{description}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            {{/components/data-table}}
+            {{else}}
+            <div class="empty-state" style="padding:2rem;text-align:center;">
+                <p class="text-muted">No departments yet.</p>
+                <a class="btn btn-primary" href="/admin/management/departments">Create your first department</a>
+            </div>
+            {{/if}}
+        </div>
+    </section>
+    {{/inline}}
+{{/layout}}

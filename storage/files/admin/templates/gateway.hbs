@@ -1,0 +1,236 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title}}
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <h2>Settings</h2>
+        <p class="text-muted" style="font-size: 0.875rem;">
+            Source of truth: <code class="code-inline">{{config.profile_path}}</code>
+            &nbsp;·&nbsp; Edits here rewrite only the <code class="code-inline">gateway:</code> block.
+        </p>
+        <form id="gateway-settings-form" class="settings-grid" style="display: grid; grid-template-columns: max-content 1fr; gap: 0.75rem 1rem; align-items: center; max-width: 640px;">
+            <label for="gw-enabled">Enabled</label>
+            <div>
+                <input type="checkbox" id="gw-enabled" name="enabled" {{#if config.enabled}}checked{{/if}} />
+                <span class="text-muted" style="margin-left: 0.5rem;">{{#if config.enabled}}Proxying /v1/messages{{else}}Bypassed{{/if}}</span>
+            </div>
+
+            <label for="gw-auth-scheme">Auth scheme</label>
+            <input type="text" id="gw-auth-scheme" name="auth_scheme" value="{{config.auth_scheme}}" />
+
+            <label for="gw-prefix">Inference path prefix</label>
+            <input type="text" id="gw-prefix" name="inference_path_prefix" value="{{config.inference_path_prefix}}" />
+
+            <label for="gw-catalog">Catalog path</label>
+            <input type="text" id="gw-catalog" name="catalog_path" value="{{#if config.catalog_path}}{{config.catalog_path}}{{/if}}" placeholder="(none)" />
+
+            <span></span>
+            <div class="form-actions" style="margin-top: 0.5rem;">
+                <button type="submit" class="btn btn-primary">Save settings</button>
+                <span id="gw-settings-status" class="text-muted" style="margin-left: 0.75rem;"></span>
+            </div>
+        </form>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="toolbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h2 style="margin: 0;">Routes <span class="text-muted" style="font-weight: normal;">({{route_count}})</span></h2>
+            <a href="/admin/gateway/routes/edit" class="btn btn-primary">+ Add route</a>
+        </div>
+        <p class="text-muted" style="font-size: 0.875rem;">First match wins. Drag a row to reorder.</p>
+
+        {{#if route_count}}
+        <p class="text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">
+            <a href="/admin/access">Open access matrix view →</a>
+        </p>
+        {{#> components/data-table}}
+            <thead>
+                <tr>
+                    <th style="width: 2rem;">#</th>
+                    <th>Pattern</th>
+                    <th>Provider</th>
+                    <th>Endpoint</th>
+                    <th>Secret</th>
+                    <th>Upstream model</th>
+                    <th class="col-numeric">Headers</th>
+                    <th>Access</th>
+                    <th class="col-actions"></th>
+                </tr>
+            </thead>
+            <tbody id="gw-routes-tbody">
+                {{#each routes}}
+                <tr data-route-index="{{index}}" data-route-id="{{id}}" draggable="true" style="cursor: move;">
+                    <td>{{index}}</td>
+                    <td><code class="code-inline">{{model_pattern}}</code></td>
+                    <td>{{provider}}</td>
+                    <td title="{{endpoint}}"><code class="code-inline">{{endpoint_short}}</code></td>
+                    <td><code class="code-inline">{{api_key_secret}}</code></td>
+                    <td>{{#if upstream_model}}<code class="code-inline">{{upstream_model}}</code>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+                    <td class="numeric">{{#if extra_headers_count}}{{extra_headers_count}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+                    <td>
+                        <button type="button" class="btn btn-small" data-toggle-access="{{id}}" aria-expanded="false">
+                            Access
+                        </button>
+                    </td>
+                    <td class="col-actions">
+                        <a href="/admin/gateway/routes/edit?id={{index}}" class="btn btn-small">Edit</a>
+                        <button type="button" class="btn btn-small btn-danger" data-delete-route="{{index}}">Delete</button>
+                    </td>
+                </tr>
+                <tr class="gw-access-row" data-access-row-for="{{id}}" hidden>
+                    <td colspan="9">
+                        <div class="gw-access-panel" data-entity-type="gateway_route" data-entity-id="{{id}}" data-loaded="false">
+                            <div class="gw-access-panel__loading text-muted">Loading…</div>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state title="No gateway routes" body="Add a route to start proxying /v1/messages."}}
+        {{/if}}
+    </div>
+
+    <div class="card">
+        <h2>Recent traffic <span class="text-muted" style="font-weight: normal;">(last {{recent_limit}} via gateway)</span></h2>
+        {{#if recent_traffic}}
+        {{#> components/data-table}}
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Model</th>
+                    <th>Matched route</th>
+                    <th>Status</th>
+                    <th class="col-numeric">Tokens</th>
+                    <th class="col-numeric">Cost (USD)</th>
+                    <th class="col-numeric">Latency (ms)</th>
+                    <th>Trace</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each recent_traffic}}
+                <tr>
+                    <td><span class="metadata-timestamp" title="{{created_at}}">{{created_at}}</span></td>
+                    <td>{{#if rejected_at_boundary}}<span class="text-tertiary">— rejected at boundary —</span>{{else}}<code class="code-inline">{{model}}</code> <span class="text-muted">({{provider}})</span>{{/if}}</td>
+                    <td>
+                        {{#if matched_pattern}}
+                        <span class="badge badge-purple">#{{matched_route_index}} {{matched_pattern}}</span>
+                        {{else}}
+                        <span class="text-tertiary">—</span>
+                        {{/if}}
+                    </td>
+                    <td>
+                        {{#if rejected_at_boundary}}<span class="badge badge-danger" title="{{error_message}}">rejected</span>
+                        {{else if (eq status "completed")}}<span class="badge badge-green">{{status}}</span>
+                        {{else}}<span class="badge badge-yellow" title="{{error_message}}">{{status}}</span>{{/if}}
+                    </td>
+                    <td class="numeric">{{total_tokens}}</td>
+                    <td class="numeric">${{cost_usd}}</td>
+                    <td class="numeric">{{#if latency_ms}}{{latency_ms}}{{else}}—{{/if}}</td>
+                    <td><code class="code-inline">{{#if trace_id}}{{trace_id}}{{else}}—{{/if}}</code></td>
+                </tr>
+                {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        <p class="text-muted" style="font-size: 0.875rem; margin-top: 0.5rem;">
+            <a href="/admin/analytics/requests">Full analytics</a>
+        </p>
+        {{else}}
+        {{> components/empty-state title="No recent requests" body="Once a client hits /v1/messages, requests will appear here."}}
+        {{/if}}
+    </div>
+    {{/inline}}
+
+    {{#*inline "scripts"}}
+    <script>
+    (function() {
+        const status = document.getElementById('gw-settings-status');
+        const setStatus = (msg, isError) => {
+            status.textContent = msg;
+            status.style.color = isError ? 'var(--color-danger, #c00)' : 'var(--color-success, #080)';
+            if (msg) setTimeout(() => { status.textContent = ''; }, 3000);
+        };
+
+        document.getElementById('gateway-settings-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const body = {
+                enabled: form.enabled.checked,
+                auth_scheme: form.auth_scheme.value,
+                inference_path_prefix: form.inference_path_prefix.value,
+                catalog_path: form.catalog_path.value,
+            };
+            try {
+                const res = await fetch('/api/public/admin/gateway', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    setStatus(err.error || 'Save failed', true);
+                    return;
+                }
+                setStatus('Saved');
+                setTimeout(() => location.reload(), 600);
+            } catch (e) {
+                setStatus(String(e), true);
+            }
+        });
+
+        document.querySelectorAll('[data-delete-route]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const idx = btn.getAttribute('data-delete-route');
+                if (!confirm(`Delete route #${idx}? This rewrites the profile YAML.`)) return;
+                const res = await fetch(`/api/public/admin/gateway/routes/${idx}`, { method: 'DELETE' });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert(err.error || 'Delete failed');
+                    return;
+                }
+                location.reload();
+            });
+        });
+
+        // Drag-to-reorder
+        const tbody = document.getElementById('gw-routes-tbody');
+        if (tbody) {
+            let dragSrc = null;
+            tbody.querySelectorAll('tr').forEach(tr => {
+                tr.addEventListener('dragstart', e => {
+                    dragSrc = tr;
+                    tr.style.opacity = '0.5';
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                tr.addEventListener('dragend', () => { tr.style.opacity = ''; });
+                tr.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+                tr.addEventListener('drop', async e => {
+                    e.preventDefault();
+                    if (!dragSrc || dragSrc === tr) return;
+                    const rect = tr.getBoundingClientRect();
+                    const before = (e.clientY - rect.top) < rect.height / 2;
+                    tbody.insertBefore(dragSrc, before ? tr : tr.nextSibling);
+                    const order = Array.from(tbody.querySelectorAll('tr'))
+                        .map(r => parseInt(r.getAttribute('data-route-index'), 10));
+                    const res = await fetch('/api/public/admin/gateway/routes/reorder', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ order }),
+                    });
+                    if (!res.ok) {
+                        alert('Reorder failed; reloading');
+                    }
+                    location.reload();
+                });
+            });
+        }
+    })();
+    </script>
+    <script data-cfasync="false" type="module">
+        import { initEntityAccess } from '/js/pages/admin-entity-access.js';
+        initEntityAccess();
+    </script>
+    {{/inline}}
+{{/layout}}

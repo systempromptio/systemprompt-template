@@ -161,8 +161,7 @@ pub(super) struct BuildTemplateDataParams<'a> {
 
 pub(super) fn build_template_data(params: &BuildTemplateDataParams<'_>) -> serde_json::Value {
     let counts = build_session_counts(params.session_groups);
-    let gamification_data =
-        build_gamification_data(params.gamification, params.skills_usage, params.mcp_usage);
+    let gamification_data = build_gamification_data(params.gamification);
     let health_data = build_health_data(params.health_metrics);
     let analyses_data = build_analyses_data(params.recent_analyses);
     let adoption = build_skill_adoption(params.skills_usage, params.unused_skills);

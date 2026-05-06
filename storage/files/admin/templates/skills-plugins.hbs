@@ -2,27 +2,13 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/page-header title=title}}
-    <p class="text-tertiary">Read-only plugin, hook, and extension inventory. CRUD lives on <a href="/admin/plugins">/admin/plugins</a>. This page mirrors <code class="code-inline">demo/skills/04-plugin-management.sh</code>.</p>
+    <p class="text-tertiary">Read-only plugin, hook, and extension inventory. CRUD lives on <a href="/admin/plugins">/admin/plugins</a>.</p>
 
     <section aria-label="Plugin statistics" class="stat-grid">
         {{> components/stat-card label="Plugins" value=stats.plugin_count}}
         {{> components/stat-card label="Enabled" value=stats.plugin_enabled}}
         {{> components/stat-card label="Hooks" value=stats.hook_count}}
         {{> components/stat-card label="Skills" value=stats.skill_count}}
-    </section>
-
-    <section aria-label="CLI commands">
-    {{#> components/data-table}}
-        <thead><tr><th>Step</th><th>Command</th></tr></thead>
-        <tbody>
-        {{#each cli_commands}}
-        <tr>
-            <td class="cell-primary">{{label}}</td>
-            <td><code class="code-inline">{{cmd}}</code></td>
-        </tr>
-        {{/each}}
-        </tbody>
-    {{/components/data-table}}
     </section>
 
     <section aria-label="Plugins">

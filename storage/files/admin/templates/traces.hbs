@@ -90,6 +90,65 @@
     </div>
     {{/if}}
 
+    {{#if has_ai_conversations}}
+    <div class="trace-ai-conversations" style="margin-bottom: var(--space-6);">
+        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-3);">AI Conversations ({{summary.ai_calls}})</h3>
+        {{#each ai_conversations}}
+        <details class="ai-call" style="margin-bottom: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-3); background: var(--color-bg-secondary);">
+            <summary style="cursor: pointer; display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center;">
+                <span style="font-weight: 600;">#{{index}}</span>
+                <span class="mcp-badge {{status_badge_class}}">{{status}}</span>
+                <code class="code-inline">{{provider}}/{{model}}</code>
+                <span class="text-sm text-tertiary">{{created_at}}</span>
+                {{#if latency_ms}}<span class="text-sm text-tertiary">{{latency_ms}}ms</span>{{/if}}
+                <span class="text-sm text-tertiary">{{total_tokens}} tok (in {{input_tokens}} / out {{output_tokens}})</span>
+                <span class="text-sm text-tertiary">{{cost_display}}</span>
+                <span class="text-sm text-tertiary">{{message_count}} msgs · {{tool_call_count}} tools</span>
+                {{#if trace_id_short}}<span class="text-sm text-tertiary">trace <code class="code-inline">{{trace_id_short}}</code></span>{{/if}}
+            </summary>
+            <div style="margin-top: var(--space-3);">
+                {{#if message_count}}
+                <h4 style="font-size: var(--text-sm); margin: var(--space-3) 0 var(--space-2);">Messages</h4>
+                <div class="ai-messages" style="display: flex; flex-direction: column; gap: var(--space-2);">
+                    {{#each messages}}
+                    <div class="ai-message" style="border-left: 3px solid var(--color-border); padding: var(--space-2) var(--space-3);">
+                        <div style="display: flex; gap: var(--space-2); align-items: center; margin-bottom: var(--space-1);">
+                            <span class="mcp-badge {{role_badge_class}}">{{role}}</span>
+                            <span class="text-sm text-tertiary">#{{sequence_number}} · {{content_length}} chars</span>
+                        </div>
+                        <pre style="font-size: var(--text-xs); white-space: pre-wrap; word-break: break-word; max-height: 240px; overflow: auto; margin: 0; padding: var(--space-2); background: var(--color-bg-primary); border-radius: var(--radius-sm);">{{content_preview}}{{#if is_truncated}}
+
+… [truncated]{{/if}}</pre>
+                    </div>
+                    {{/each}}
+                </div>
+                {{/if}}
+                {{#if tool_call_count}}
+                <h4 style="font-size: var(--text-sm); margin: var(--space-4) 0 var(--space-2);">Tool Calls</h4>
+                <div class="ai-tool-calls" style="display: flex; flex-direction: column; gap: var(--space-2);">
+                    {{#each tool_calls}}
+                    <div class="ai-tool-call" style="border-left: 3px solid var(--color-accent); padding: var(--space-2) var(--space-3);">
+                        <div style="display: flex; gap: var(--space-2); align-items: center; margin-bottom: var(--space-1);">
+                            <span class="mcp-badge mcp-badge-info">{{tool_name}}</span>
+                            <span class="text-sm text-tertiary">#{{sequence_number}}{{#if mcp_execution_id}} · exec <code class="code-inline">{{mcp_execution_id}}</code>{{/if}}</span>
+                        </div>
+                        <pre style="font-size: var(--text-xs); white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow: auto; margin: 0; padding: var(--space-2); background: var(--color-bg-primary); border-radius: var(--radius-sm);">{{tool_input_preview}}{{#if is_input_truncated}}
+
+… [truncated]{{/if}}</pre>
+                        {{#if has_result}}
+                        <div class="text-sm text-tertiary" style="margin-top: var(--space-1);">Result:</div>
+                        <pre style="font-size: var(--text-xs); white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow: auto; margin: 0; padding: var(--space-2); background: var(--color-bg-primary); border-radius: var(--radius-sm);">{{json tool_result_payload}}</pre>
+                        {{/if}}
+                    </div>
+                    {{/each}}
+                </div>
+                {{/if}}
+            </div>
+        </details>
+        {{/each}}
+    </div>
+    {{/if}}
+
     {{#if has_events}}
     <div class="trace-timeline">
         <h3 style="font-size: var(--text-base); margin-bottom: var(--space-2);">Event Timeline</h3>
@@ -140,9 +199,6 @@
         </p>
         <p style="color: var(--color-text-tertiary); font-size: var(--text-sm);">
             Example: <code class="code-inline">/admin/traces?session_id=abc-123</code>
-        </p>
-        <p style="color: var(--color-text-tertiary); font-size: var(--text-sm); margin-top: var(--space-2);">
-            Run <code class="code-inline">demo/09-agent-tracing.sh</code> to generate a traced session, then use the session ID from the output.
         </p>
     </div>
 

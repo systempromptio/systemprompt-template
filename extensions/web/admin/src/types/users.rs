@@ -255,6 +255,29 @@ pub struct UsersQuery {
     pub department: Option<String>,
 }
 
+/// One row of the `/admin/overview/identity` users table.
+///
+/// Aggregates `ai_requests` (sessions, contexts, tokens, cost, models, last activity)
+/// and `governance_decisions` (denies, secret breaches, scope violations) per user.
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+pub struct UserIdentityRow {
+    pub user_id: String,
+    pub display_name: Option<String>,
+    pub email: Option<String>,
+    pub department: String,
+    pub is_active: bool,
+    pub last_active: Option<DateTime<Utc>>,
+    pub requests: i64,
+    pub sessions: i64,
+    pub contexts: i64,
+    pub models: i64,
+    pub tokens: i64,
+    pub cost_microdollars: i64,
+    pub denies: i64,
+    pub secret_breaches: i64,
+    pub scope_violations: i64,
+}
+
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct DepartmentStats {
     pub department: String,

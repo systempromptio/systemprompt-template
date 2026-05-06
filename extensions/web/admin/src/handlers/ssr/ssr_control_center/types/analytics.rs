@@ -12,16 +12,6 @@ pub struct HealthObj {
     pub has_suggestion: bool,
 }
 
-#[derive(Serialize, Clone, Debug, Copy)]
-pub struct AchievementProgress {
-    pub id: &'static str,
-    pub name: &'static str,
-    pub current: i64,
-    pub threshold: i64,
-    pub remaining: i64,
-    pub pct: i64,
-}
-
 #[derive(Serialize, Clone, Debug)]
 pub struct MetricRow {
     pub label: &'static str,

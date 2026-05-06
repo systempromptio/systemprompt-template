@@ -49,6 +49,45 @@ pub struct GovernanceDecisionRow {
     pub created_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, FromRow)]
+pub struct WindowedCounts {
+    pub decisions: i64,
+    pub denied: i64,
+    pub secret_blocks: i64,
+    pub distinct_actors: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+pub struct TopActor {
+    pub user_id: String,
+    pub display_name: String,
+    pub email: Option<String>,
+    pub deny_count: i64,
+    pub secret_count: i64,
+    pub total: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+pub struct TopPolicy {
+    pub policy: String,
+    pub tool_name: String,
+    pub hits: i64,
+    pub distinct_actors: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+pub struct IncidentGroup {
+    pub agent_id: Option<String>,
+    pub user_id: String,
+    pub display_name: Option<String>,
+    pub policy: String,
+    pub tool_name: String,
+    pub attempts: i64,
+    pub first_seen: DateTime<Utc>,
+    pub last_seen: DateTime<Utc>,
+    pub sample_reason: String,
+}
+
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct ModelUsage {
     pub model: String,

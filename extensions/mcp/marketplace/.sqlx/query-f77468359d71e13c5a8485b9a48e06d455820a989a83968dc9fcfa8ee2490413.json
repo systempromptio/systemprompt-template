@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            COALESCE(SUM(event_count) FILTER (WHERE event_type = 'UserPromptSubmit'), 0)::BIGINT AS \"total_prompts!\",\n            COALESCE(SUM(event_count) FILTER (WHERE event_type = 'PostToolUse'), 0)::BIGINT AS \"total_tool_calls!\",\n            COALESCE(SUM(error_count), 0)::BIGINT AS \"total_errors!\",\n            COALESCE(SUM(content_input_bytes), 0)::BIGINT AS \"content_input_bytes!\",\n            COALESCE(SUM(content_output_bytes), 0)::BIGINT AS \"content_output_bytes!\"\n        FROM plugin_usage_daily\n        WHERE user_id = $1 AND date = CURRENT_DATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_prompts!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_tool_calls!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "total_errors!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "content_input_bytes!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "content_output_bytes!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "f77468359d71e13c5a8485b9a48e06d455820a989a83968dc9fcfa8ee2490413"
+}

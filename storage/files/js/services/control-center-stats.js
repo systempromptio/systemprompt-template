@@ -1,6 +1,6 @@
 export {
   setStatValue, fillStars, updateSkillCards, updateHealthScore,
-  updateSessionRatings, updateSkillAdoption, updateAchievementProgress,
+  updateSessionRatings, updateSkillAdoption,
 } from './cc-stats-ui.js';
 
 export {

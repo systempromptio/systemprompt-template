@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                mc.id as \"content_id!\",\n                COUNT(*) FILTER (WHERE ee.time_on_page_ms > 0)::BIGINT as \"total_views!\",\n                COUNT(DISTINCT ee.session_id)::BIGINT as \"unique_visitors!\",\n                COALESCE(AVG(ee.time_on_page_ms)::DOUBLE PRECISION / 1000.0, 0) as \"avg_time_seconds!\",\n                COUNT(*) FILTER (\n                    WHERE ee.time_on_page_ms > 0\n                    AND ee.created_at >= NOW() - INTERVAL '7 days'\n                )::BIGINT as \"views_7d!\",\n                COUNT(*) FILTER (\n                    WHERE ee.time_on_page_ms > 0\n                    AND ee.created_at >= NOW() - INTERVAL '30 days'\n                )::BIGINT as \"views_30d!\"\n            FROM engagement_events ee\n            JOIN markdown_content mc ON (\n                (ee.page_url LIKE '/blog/%' AND mc.slug = SUBSTRING(ee.page_url FROM 7) AND mc.source_id = 'blog')\n                OR (ee.page_url LIKE '/documentation/%' AND mc.slug = SUBSTRING(ee.page_url FROM 16) AND mc.source_id = 'documentation')\n                OR (ee.page_url LIKE '/playbooks/%' AND mc.slug = SUBSTRING(ee.page_url FROM 12) AND mc.source_id = 'playbooks')\n                OR (ee.page_url LIKE '/legal/%' AND mc.slug = SUBSTRING(ee.page_url FROM 8) AND mc.source_id = 'legal')\n            )\n            GROUP BY mc.id\n            HAVING COUNT(*) > 0\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "content_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_views!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "unique_visitors!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "avg_time_seconds!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "views_7d!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "views_30d!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "f6a5be81d03b5038e3b303898bfc086e0cd10317528a92e37455d4af4781f7ab"
+}

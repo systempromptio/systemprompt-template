@@ -1,0 +1,41 @@
+{{!--
+  Sparkline KPI card — extension of stat-card with delta pill + small canvas.
+
+  Inputs:
+    label                  card label (e.g. "Deny rate")
+    value                  primary value (string, already formatted)
+    subtitle               optional subline below value (e.g. "vs prior 24h")
+    variant                optional variant token (e.g. "danger", "success")
+    delta                  optional { direction: up|down|flat, magnitude: "+12%", tone: good|bad|neutral }
+    sparkline              optional [number, ...] inlined as JSON for client render
+    sparkline_color        one of: primary, success, danger, warning, info (maps to a token)
+    href                   optional link making the whole card clickable
+--}}
+{{#if href}}
+<a class="sparkline-card{{#if variant}} sparkline-card--{{variant}}{{/if}}" href="{{href}}">
+{{else}}
+<div class="sparkline-card{{#if variant}} sparkline-card--{{variant}}{{/if}}">
+{{/if}}
+  <div class="sparkline-card__head">
+    <span class="sparkline-card__label">{{label}}</span>
+    {{#if delta}}
+      <span class="sparkline-card__delta sparkline-card__delta--{{delta.tone}}"
+            aria-label="Change vs prior period">
+        <span class="sparkline-card__delta-arrow" aria-hidden="true">{{#if (eq delta.direction "up")}}&uarr;{{else}}{{#if (eq delta.direction "down")}}&darr;{{else}}&middot;{{/if}}{{/if}}</span>
+        {{delta.magnitude}}
+      </span>
+    {{/if}}
+  </div>
+  <div class="sparkline-card__value">{{value}}</div>
+  {{#if subtitle}}<div class="sparkline-card__subtitle">{{subtitle}}</div>{{/if}}
+  {{#if sparkline}}
+    <div class="sparkline-card__chart"
+         data-sparkline="{{json sparkline}}"
+         data-sparkline-color="{{default sparkline_color "primary"}}"
+         aria-hidden="true"></div>
+  {{/if}}
+{{#if href}}
+</a>
+{{else}}
+</div>
+{{/if}}

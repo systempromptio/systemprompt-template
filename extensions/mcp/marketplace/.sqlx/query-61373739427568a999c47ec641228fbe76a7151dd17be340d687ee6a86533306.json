@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO skill_files (id, skill_id, file_path, content, category, language, executable, size_bytes, checksum)\n          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n          ON CONFLICT (skill_id, file_path) DO UPDATE\n          SET content = EXCLUDED.content,\n              category = EXCLUDED.category,\n              language = EXCLUDED.language,\n              executable = EXCLUDED.executable,\n              size_bytes = EXCLUDED.size_bytes,\n              checksum = EXCLUDED.checksum,\n              updated_at = NOW()\n          WHERE skill_files.checksum != EXCLUDED.checksum",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "61373739427568a999c47ec641228fbe76a7151dd17be340d687ee6a86533306"
+}

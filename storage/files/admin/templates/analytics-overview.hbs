@@ -2,11 +2,6 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/page-header title=title}}
-    <section aria-label="CLI command" class="hero-cli">
-        <p class="text-tertiary text-sm">Run this on the CLI to see the same data:</p>
-        <pre class="detail-pre"><code>{{cli_command}}</code></pre>
-        <p class="text-tertiary text-sm">Window: {{window_label}}</p>
-    </section>
     <section aria-label="Overview stats">
         <div class="stat-grid">
             {{> components/stat-card label="Requests (events)" value=stats.total_events}}

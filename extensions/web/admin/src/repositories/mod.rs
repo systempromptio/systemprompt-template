@@ -3,12 +3,15 @@ pub mod analytics_grp;
 pub mod control_center_grp;
 pub mod cowork_grp;
 pub mod dashboard_grp;
+pub mod departments_grp;
 pub mod effective_plugins;
 pub mod gamification_grp;
 pub mod governance_grp;
+pub mod external_agents_grp;
 pub mod infra_grp;
 pub mod marketplace_grp;
 pub mod mcp_grp;
+pub mod perf_grp;
 pub mod plugins_grp;
 pub mod publishing_grp;
 pub mod secrets_grp;
@@ -18,6 +21,11 @@ pub mod users_grp;
 
 pub use cowork_grp::*;
 pub use dashboard_grp::*;
+pub use departments_grp::{
+    assign_user_to_department, create_department, delete_department, get_department,
+    get_department_by_name, list_department_members, list_departments,
+    list_user_management_aggregates, update_department, UserManagementAggregate,
+};
 pub use effective_plugins::{count_org_entity_additions, list_effective_enriched_plugins};
 pub use governance_grp::*;
 pub use marketplace_grp::*;
@@ -28,6 +36,12 @@ pub use secrets_grp::*;
 pub use users_grp::*;
 
 pub use agents::{create_agent, delete_agent, find_agent, list_agents, update_agent};
+pub use governance_grp::gateway::{
+    create_route as create_gateway_route, delete_route as delete_gateway_route, ensure_route_ids,
+    find_matching_route, find_matching_route_index, find_route_index_by_id, get_gateway_config,
+    reorder_routes as reorder_gateway_routes, update_gateway_settings,
+    update_route as update_gateway_route,
+};
 pub use dashboard::{get_dashboard_data, list_event_breakdown, list_events};
 pub use export::{generate_export_bundles, ExportParams};
 pub use jobs::list_jobs;
@@ -70,7 +84,10 @@ pub use user_plugins::{
     find_user_plugin, is_entity_in_platform_plugin, list_user_plugins, list_user_plugins_enriched,
     set_plugin_agents, set_plugin_mcp_servers, set_plugin_skills, update_user_plugin,
 };
-pub use user_queries::fetch_department_stats;
+pub use user_queries::{
+    fetch_department_stats, fetch_user_identity_rows, IdentitySort,
+    SortDir as IdentitySortDir,
+};
 pub use user_skills::{
     create_user_skill, delete_user_skill, fetch_agent_usage_counts, fetch_skill_avg_ratings,
     fetch_skill_usage_counts, find_agent_skill, get_or_create_user_skill, list_agent_skills,

@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            COALESCE(AVG(r.total_xp), 0)::FLOAT8 AS \"avg_xp!\",\n            COALESCE(AVG(r.events_count), 0)::FLOAT8 AS \"avg_events!\",\n            COALESCE(AVG(r.current_streak), 0)::FLOAT8 AS \"avg_streak!\",\n            COALESCE(AVG((SELECT COUNT(*) FROM employee_achievements ea WHERE ea.user_id = r.user_id)), 0)::FLOAT8 AS \"avg_achievements!\",\n            COUNT(*)::BIGINT AS \"total_users!\"\n        FROM employee_ranks r",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "avg_xp!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 1,
+        "name": "avg_events!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 2,
+        "name": "avg_streak!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "avg_achievements!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "total_users!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "561f3b04646aa5a731aab74840af5286177d1c8d8477774393407d1b6983fda2"
+}

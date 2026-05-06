@@ -153,6 +153,47 @@ impl PublishPipelineJob {
         }
     }
 
+    async fn run_derived_files(
+        &self,
+        ctx: &JobContext,
+        paths: &AppPaths,
+        db_pool: &DbPool,
+        stats: &mut PipelineStats,
+    ) {
+        self.run_sitemap(ctx, stats).await;
+        self.run_llms_txt(ctx, stats).await;
+        self.run_robots_txt(ctx, stats).await;
+        self.run_feed(paths, db_pool, stats).await;
+    }
+
+    async fn run_acl_yaml_load(
+        &self,
+        paths: &AppPaths,
+        db_pool: &DbPool,
+        stats: &mut PipelineStats,
+    ) {
+        let services_path = paths.system().services().to_path_buf();
+        let Some(pool) = db_pool.pool() else {
+            tracing::warn!("access-control YAML load skipped: db pool unavailable");
+            stats.record_failure();
+            return;
+        };
+        match systemprompt_web_admin::repositories::governance_grp::acl_yaml_loader::load_from_yaml(
+            &pool,
+            &services_path,
+        )
+        .await
+        {
+            Ok(_report) => {
+                stats.record_success();
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "access-control YAML load failed");
+                stats.record_failure();
+            }
+        }
+    }
+
     async fn run_plugin_autofork(
         &self,
         paths: &AppPaths,
@@ -240,14 +281,12 @@ impl PublishPipelineJob {
 
         let mut stats = PipelineStats::default();
 
+        self.run_acl_yaml_load(paths, db_pool, &mut stats).await;
         self.run_ingestion(ctx, &mut stats).await;
         self.run_asset_copy(paths, &mut stats).await;
         self.run_prerender(ctx, &mut stats).await;
         self.run_page_prerender(paths, db_pool, &mut stats).await;
-        self.run_sitemap(ctx, &mut stats).await;
-        self.run_llms_txt(ctx, &mut stats).await;
-        self.run_robots_txt(ctx, &mut stats).await;
-        self.run_feed(paths, db_pool, &mut stats).await;
+        self.run_derived_files(ctx, paths, db_pool, &mut stats).await;
         self.run_plugin_autofork(paths, db_pool, &mut stats).await;
         self.run_asset_organization(paths, &mut stats).await;
 

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT event_type FROM user_hooks WHERE user_id = $1 AND is_default = true",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "event_type",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e24f09fcbb8510d6727ac9193dc915ca0a1fbf3e14e8c7b70637f7fa5dc07751"
+}

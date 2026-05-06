@@ -17,6 +17,7 @@ path = "src/lib.rs"
 # Core framework (facade)
 # Audit: uses agent, ai, database, identifiers, loader, logging, mcp, models, system, traits — requires `full`.
 systemprompt = { workspace = true, features = ["full"] }
+systemprompt-security = { workspace = true }
 
 # Web extension for repository access
 systemprompt-web-extension = { path = "../../web" }

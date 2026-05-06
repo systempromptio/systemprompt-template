@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT user_id, plugin_id, ai_title, ai_summary, model, started_at, ended_at\n          FROM plugin_session_summaries\n          WHERE session_id = $1\n          LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "plugin_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "ai_title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "ai_summary",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "model",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "started_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "ended_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "ca51a5cc3be370b53552b97d635382e05a449adb092f26b7f8e2428094d3b2b3"
+}

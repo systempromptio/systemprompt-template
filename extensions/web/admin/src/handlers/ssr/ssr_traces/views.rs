@@ -2,18 +2,28 @@ use serde_json::json;
 
 use crate::types::{DECISION_DENY, POLICY_SECRET_INJECTION};
 
-use super::queries::{SessionSummaryRow, TraceEntity, TraceEvent, TraceGovernanceRow};
+use super::queries::{
+    AiCallRow, AiMessageRow, AiToolCallRow, SessionSummaryRow, TraceEntity, TraceEvent,
+    TraceGovernanceRow,
+};
 
+const PREVIEW_CHARS: usize = 4000;
+
+#[allow(clippy::too_many_arguments)]
 pub(super) fn build_trace_data(
     session_id: &str,
     events: &[TraceEvent],
     governance: &[TraceGovernanceRow],
     entities: &[TraceEntity],
     summary: &SessionSummaryRow,
+    ai_calls: &[AiCallRow],
+    ai_messages: &[AiMessageRow],
+    ai_tool_calls: &[AiToolCallRow],
 ) -> serde_json::Value {
     let events_json = build_events_json(events);
     let governance_json = build_governance_json(governance);
     let entities_json = build_entities_json(entities);
+    let ai_conversations_json = build_ai_conversations_json(ai_calls, ai_messages, ai_tool_calls);
 
     let duration_ms = events
         .first()
@@ -34,6 +44,7 @@ pub(super) fn build_trace_data(
             "errors": summary.errors,
             "duration_ms": duration_ms,
             "governance_decisions": governance.len(),
+            "ai_calls": ai_calls.len(),
         },
         "events": events_json,
         "has_events": !events_json.is_empty(),
@@ -41,7 +52,110 @@ pub(super) fn build_trace_data(
         "has_governance": !governance_json.is_empty(),
         "entities": entities_json,
         "has_entities": !entities_json.is_empty(),
+        "ai_conversations": ai_conversations_json,
+        "has_ai_conversations": !ai_conversations_json.is_empty(),
     })
+}
+
+fn truncate_preview(s: &str) -> (String, bool) {
+    if s.chars().count() > PREVIEW_CHARS {
+        let head: String = s.chars().take(PREVIEW_CHARS).collect();
+        (head, true)
+    } else {
+        (s.to_string(), false)
+    }
+}
+
+fn role_badge_class(role: &str) -> &'static str {
+    match role {
+        "system" => "mcp-badge-warning",
+        "user" => "mcp-badge-info",
+        "assistant" => "badge-purple",
+        "tool" => "mcp-badge-success",
+        _ => "mcp-badge-neutral",
+    }
+}
+
+fn status_badge_class(status: &str) -> &'static str {
+    match status {
+        "completed" | "ok" | "success" => "mcp-badge-success",
+        "pending" | "streaming" => "mcp-badge-info",
+        _ => "mcp-badge-danger",
+    }
+}
+
+fn build_ai_conversations_json(
+    calls: &[AiCallRow],
+    messages: &[AiMessageRow],
+    tool_calls: &[AiToolCallRow],
+) -> Vec<serde_json::Value> {
+    calls
+        .iter()
+        .enumerate()
+        .map(|(idx, c)| {
+            let msgs: Vec<serde_json::Value> = messages
+                .iter()
+                .filter(|m| m.request_id == c.request_id)
+                .map(|m| {
+                    let (preview, truncated) = truncate_preview(&m.content);
+                    json!({
+                        "role": m.role,
+                        "role_badge_class": role_badge_class(&m.role),
+                        "sequence_number": m.sequence_number,
+                        "content_preview": preview,
+                        "is_truncated": truncated,
+                        "content_length": m.content.len(),
+                    })
+                })
+                .collect();
+            let tcalls: Vec<serde_json::Value> = tool_calls
+                .iter()
+                .filter(|t| t.request_id == c.request_id)
+                .map(|t| {
+                    let (input_preview, input_truncated) = truncate_preview(&t.tool_input);
+                    json!({
+                        "tool_name": t.tool_name,
+                        "sequence_number": t.sequence_number,
+                        "tool_input_preview": input_preview,
+                        "is_input_truncated": input_truncated,
+                        "tool_result_payload": t.tool_result_payload,
+                        "has_result": t.tool_result_payload.is_some(),
+                        "mcp_execution_id": t.mcp_execution_id,
+                    })
+                })
+                .collect();
+            let cost_usd = c.cost_microdollars as f64 / 1_000_000.0;
+            json!({
+                "index": idx + 1,
+                "request_id": c.request_id,
+                "request_id_short": short_id(&c.request_id),
+                "model": c.model,
+                "provider": c.provider,
+                "status": c.status,
+                "status_badge_class": status_badge_class(&c.status),
+                "latency_ms": c.latency_ms,
+                "input_tokens": c.input_tokens,
+                "output_tokens": c.output_tokens,
+                "total_tokens": c.input_tokens.unwrap_or(0) + c.output_tokens.unwrap_or(0),
+                "cost_display": format!("${:.6}", cost_usd),
+                "trace_id": c.trace_id,
+                "trace_id_short": c.trace_id.as_deref().map(short_id),
+                "created_at": c.created_at.with_timezone(&chrono::Local).format("%H:%M:%S%.3f").to_string(),
+                "messages": msgs,
+                "message_count": messages.iter().filter(|m| m.request_id == c.request_id).count(),
+                "tool_calls": tcalls,
+                "tool_call_count": tool_calls.iter().filter(|t| t.request_id == c.request_id).count(),
+            })
+        })
+        .collect()
+}
+
+fn short_id(id: &str) -> String {
+    if id.len() > 12 {
+        format!("{}…", &id[..12])
+    } else {
+        id.to_string()
+    }
 }
 
 fn event_badge_class(event_type: &str) -> &'static str {

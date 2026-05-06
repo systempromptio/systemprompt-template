@@ -260,6 +260,33 @@ impl HelperDef for CssVersionHelper {
 }
 
 #[derive(Debug, Clone, Copy)]
+pub struct GovernanceColorHelper;
+impl HelperDef for GovernanceColorHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        h: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let decision = h
+            .param(0)
+            .and_then(|v| v.value().as_str())
+            .unwrap_or("")
+            .to_ascii_lowercase();
+        let color = match decision.as_str() {
+            "allow" | "pass" | "ok" => "success",
+            "flag" | "warn" | "warning" | "review" => "warning",
+            "deny" | "block" | "denied" | "fail" | "error" => "danger",
+            _ => "neutral",
+        };
+        out.write(color)?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
 pub struct DefaultHelper;
 impl HelperDef for DefaultHelper {
     fn call<'reg: 'rc, 'rc>(

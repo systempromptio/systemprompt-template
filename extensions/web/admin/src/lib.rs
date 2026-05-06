@@ -1,4 +1,6 @@
 pub mod activity;
+pub mod audit_event_bus;
+pub mod auth;
 pub mod autofork;
 pub mod error;
 pub mod event_hub;
@@ -38,6 +40,7 @@ pub fn hooks_webhook_router(pool: Arc<PgPool>) -> Router {
             post(handlers::hooks_track::handle_hook_track),
         )
         .route("/hooks/govern", post(handlers::govern_tool_use))
+        .route("/govern/authz", post(handlers::govern_authz))
         .route("/hooks/statusline", post(handlers::track_statusline_event))
         .route("/hooks/transcript", post(handlers::track_transcript_event))
         .layer(Extension(event_hub::EventHub::default()))

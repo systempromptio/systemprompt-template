@@ -1,0 +1,19 @@
+governance:
+  policies:
+  - id: secret_scan
+    enabled: true
+  - id: scope_check
+    enabled: true
+    admin_only_prefixes:
+    - mcp__systemprompt__
+    - mcp__skill-manager__
+  - id: tool_blocklist
+    enabled: true
+    patterns:
+    - delete
+    - drop
+    - destroy
+  - id: rate_limit
+    enabled: true
+    requests_per_window: 300
+    window_secs: 60

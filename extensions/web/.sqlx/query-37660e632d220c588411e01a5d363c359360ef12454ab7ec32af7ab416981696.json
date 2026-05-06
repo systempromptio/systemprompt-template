@@ -1,0 +1,95 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO marketplace.subscriptions (user_id, paddle_subscription_id, paddle_customer_id, plan_id, status, current_period_start, current_period_end, paddle_data) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (paddle_subscription_id) DO UPDATE SET plan_id = COALESCE($4, marketplace.subscriptions.plan_id), status = $5, current_period_start = COALESCE($6, marketplace.subscriptions.current_period_start), current_period_end = COALESCE($7, marketplace.subscriptions.current_period_end), paddle_data = COALESCE($8, marketplace.subscriptions.paddle_data), updated_at = now() RETURNING id, user_id AS \"user_id!: UserId\", paddle_subscription_id, paddle_customer_id, plan_id, status, current_period_start, current_period_end, cancel_at, paddle_data, created_at, updated_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: UserId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "paddle_subscription_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "paddle_customer_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "plan_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "current_period_start",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "current_period_end",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "cancel_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "paddle_data",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Uuid",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "37660e632d220c588411e01a5d363c359360ef12454ab7ec32af7ab416981696"
+}

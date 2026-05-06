@@ -1,0 +1,9 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/page-header title="Unknown policy"}}
+    <p>No policy is registered with id <code class="code-inline">{{policy_id}}</code>.</p>
+    <p><a href="/admin/governance">&larr; Back to all policies</a></p>
+    {{/inline}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

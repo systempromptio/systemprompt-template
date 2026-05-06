@@ -1,8 +1,13 @@
 pub mod access_control;
 pub mod cowork;
 pub mod demo_register;
+pub mod departments;
 pub mod devices;
+pub mod entity_access;
 pub mod export_zip;
+pub mod gateway;
+pub mod gateway_access;
+pub mod gateway_catalog;
 pub mod hooks_track;
 mod jobs;
 pub mod magic_link;
@@ -27,8 +32,12 @@ pub mod user_entities;
 mod users;
 mod webhook;
 
-pub use webhook::{govern_tool_use, track_statusline_event, track_transcript_event};
+pub use webhook::{govern_authz, govern_tool_use, track_statusline_event, track_transcript_event};
 
+pub use gateway::{
+    create_gateway_route_handler, delete_gateway_route_handler, get_gateway_handler,
+    reorder_gateway_routes_handler, update_gateway_route_handler, update_gateway_settings_handler,
+};
 pub use jobs::list_jobs_handler;
 pub use marketplace::{
     list_marketplace_handler, marketplace_plugin_users_handler, submit_rating_handler,

@@ -17,7 +17,12 @@ pub(super) fn css_assets(storage_css: &Path) -> Vec<AssetDefinition> {
     v.extend(syntax_css(storage_css));
     v.extend(feature_base_css(storage_css));
     v.extend(playbook_css(storage_css));
+    v.extend(admin_overview_css(storage_css));
     v
+}
+
+fn admin_overview_css(p: &Path) -> Vec<AssetDefinition> {
+    vec![css!(p, "overview-live.css")]
 }
 
 fn core_css(p: &Path) -> Vec<AssetDefinition> {

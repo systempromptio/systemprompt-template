@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT decision as \"id!\",\n                  decision as \"label!\",\n                  COUNT(*)::bigint as \"count!\"\n           FROM governance_decisions\n           WHERE created_at >= $1 AND created_at < $2\n           GROUP BY decision\n           ORDER BY COUNT(*) DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "label!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "fefe6b6affc3e839e50299150a7e5de5fe6e16bb7d45b9db8997e5302b3cfc43"
+}

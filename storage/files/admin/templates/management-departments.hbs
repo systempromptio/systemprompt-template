@@ -1,0 +1,102 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title subtitle="Org units that group users and roll up skill, marketplace, and access assignments."}}
+
+    <div class="toolbar" role="toolbar" aria-label="Actions">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Search departments..." id="dept-search" aria-label="Search departments...">
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-new-department">+ New department</button>
+    </div>
+
+    <section aria-label="Departments list" data-page="management-departments">
+    {{#if departments}}
+    {{#> components/data-table}}
+        <thead><tr><th>Name</th><th>Manager</th><th class="numeric col-numeric">Members</th><th class="numeric col-numeric">Assignments</th><th>Description</th><th class="col-actions"></th></tr></thead>
+        <tbody>
+        {{#each departments}}
+        <tr data-dept-id="{{id}}" data-dept-name="{{toLowerCase name}}">
+            <td><a href="/admin/management/departments/{{id}}"><strong>{{name}}</strong></a></td>
+            <td>{{#if manager_email}}{{manager_email}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td class="numeric col-numeric">{{member_count}}</td>
+            <td class="numeric col-numeric">{{assignment_count}}</td>
+            <td>{{description}}</td>
+            <td class="col-actions">
+                <a class="btn btn-sm" href="/admin/management/departments/{{id}}">Open</a>
+                <button type="button" class="btn btn-sm btn-danger" data-delete-dept="{{id}}" data-dept-name="{{name}}">Delete</button>
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    <div class="empty-state" style="padding:3rem;text-align:center;">
+        <h3>No departments yet</h3>
+        <p class="text-muted">Departments group users and let you bulk-assign skills, marketplaces, and access rules.</p>
+        <button type="button" class="btn btn-primary" id="btn-new-department-empty">+ Create your first department</button>
+    </div>
+    {{/if}}
+    </section>
+
+    <dialog id="dept-create-dialog" class="dialog">
+        <form id="dept-create-form" class="dialog-form">
+            <h3>New department</h3>
+            <label>Name<input type="text" name="name" required maxlength="64" autocomplete="off" placeholder="e.g. Engineering"></label>
+            <label>Description<textarea name="description" rows="2" placeholder="Optional"></textarea></label>
+            <label>Manager user ID<input type="text" name="manager_user_id" placeholder="Optional, e.g. usr_…"></label>
+            <menu>
+                <button type="button" class="btn btn-sm btn-outline" id="dept-create-cancel">Cancel</button>
+                <button type="submit" class="btn btn-sm btn-primary">Create</button>
+            </menu>
+            <p id="dept-create-error" class="text-danger" style="display:none;"></p>
+        </form>
+    </dialog>
+
+    <script>
+    (function() {
+        const dlg = document.getElementById('dept-create-dialog');
+        const form = document.getElementById('dept-create-form');
+        const errEl = document.getElementById('dept-create-error');
+        const open = () => { errEl.style.display = 'none'; form.reset(); dlg.showModal(); };
+        document.getElementById('btn-new-department')?.addEventListener('click', open);
+        document.getElementById('btn-new-department-empty')?.addEventListener('click', open);
+        document.getElementById('dept-create-cancel')?.addEventListener('click', () => dlg.close());
+        form?.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            const fd = new FormData(form);
+            const body = {
+                name: fd.get('name'),
+                description: fd.get('description') || '',
+                manager_user_id: fd.get('manager_user_id') || null,
+            };
+            const res = await fetch('/admin/management/departments', {
+                method: 'POST',
+                headers: {'content-type': 'application/json'},
+                body: JSON.stringify(body),
+            });
+            if (res.ok) { location.reload(); return; }
+            errEl.textContent = await res.text();
+            errEl.style.display = 'block';
+        });
+        document.querySelectorAll('[data-delete-dept]').forEach(btn => {
+            btn.addEventListener('click', async (ev) => {
+                ev.stopPropagation();
+                const id = btn.getAttribute('data-delete-dept');
+                const name = btn.getAttribute('data-dept-name');
+                if (!confirm('Delete department "' + name + '"? Members will be unassigned and department-level access rules removed.')) return;
+                const res = await fetch('/admin/management/departments/' + id, { method: 'DELETE' });
+                if (res.ok) location.reload();
+                else alert('Delete failed: ' + await res.text());
+            });
+        });
+        document.getElementById('dept-search')?.addEventListener('input', (ev) => {
+            const q = ev.target.value.toLowerCase();
+            document.querySelectorAll('[data-dept-name]').forEach(row => {
+                row.style.display = !q || row.getAttribute('data-dept-name').includes(q) ? '' : 'none';
+            });
+        });
+    })();
+    </script>
+    {{/inline}}
+{{/layout}}

@@ -1,0 +1,7 @@
+routes:
+  claude-star-3cbb7d:
+    default_included: true
+  gpt-star-e2e01:
+    default_included: true
+  star-07b44c:
+    default_included: true

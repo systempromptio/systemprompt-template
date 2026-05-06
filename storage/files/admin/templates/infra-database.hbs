@@ -2,11 +2,6 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/page-header title=title}}
-    {{> components/page-hero}}
-
-    <section aria-label="Database CLI commands">
-        <p class="text-tertiary">CLI: <code class="code-inline">{{cli_command}}</code> &middot; <code class="code-inline">systemprompt infra db info</code> &middot; <code class="code-inline">systemprompt infra db migrations status</code></p>
-    </section>
 
     <section aria-label="Database summary" class="stat-card-grid">
         {{> components/stat-card label="Database" value=db_name}}

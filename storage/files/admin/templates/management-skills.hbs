@@ -1,0 +1,43 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title subtitle="Skills available to assign to departments and users."}}
+
+    <div class="toolbar" role="toolbar">
+        <div class="search-group"><input type="text" class="search-input" placeholder="Search skills..." id="skill-search"></div>
+        <a class="btn btn-outline" href="/admin/skills/content">Edit skill content →</a>
+    </div>
+
+    {{#if items}}
+    {{#> components/data-table}}
+        <thead><tr><th>Skill</th><th>Description</th><th class="numeric col-numeric">Departments</th><th class="numeric col-numeric">Users</th><th>Coverage</th><th class="col-actions"></th></tr></thead>
+        <tbody>
+        {{#each items}}
+        <tr data-search="{{toLowerCase name}} {{toLowerCase id}}">
+            <td><strong>{{name}}</strong><br><code class="code-inline">{{id}}</code></td>
+            <td>{{#if description}}{{description}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td class="numeric col-numeric">{{departments}}</td>
+            <td class="numeric col-numeric">{{users}}</td>
+            <td><span class="text-muted" style="font-size:.875rem;">{{coverage_label}}</span></td>
+            <td class="col-actions"><a class="btn btn-sm btn-outline" href="/admin/access-control?entity_type=skill&entity_id={{id}}">Assign</a></td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    <div class="empty-state" style="padding:3rem;text-align:center;">
+        <h3>No skills published yet</h3>
+        <p class="text-muted">Skills come from installed plugins. <a href="/admin/skills/content">Browse skill content</a> or <a href="/admin/browse/plugins">install a plugin</a>.</p>
+    </div>
+    {{/if}}
+
+    <script>
+    document.getElementById('skill-search')?.addEventListener('input', (ev) => {
+        const q = ev.target.value.toLowerCase();
+        document.querySelectorAll('tr[data-search]').forEach(r => {
+            r.style.display = !q || r.getAttribute('data-search').includes(q) ? '' : 'none';
+        });
+    });
+    </script>
+    {{/inline}}
+{{/layout}}

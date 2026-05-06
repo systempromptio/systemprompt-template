@@ -1,13 +1,13 @@
-(function(app) {
+((app) => {
     'use strict';
 
     const OrgCommon = {
 
-        initExpandRows: function(tableSelector, renderCallback) {
+        initExpandRows: (tableSelector, renderCallback) => {
             const table = document.querySelector(tableSelector);
             if (!table) return;
 
-            table.addEventListener('click', function(e) {
+            table.addEventListener('click', (e) => {
                 if (e.target.closest('[data-no-row-click]') ||
                     e.target.closest('.actions-menu') ||
                     e.target.closest('.btn') ||
@@ -31,12 +31,12 @@
             });
         },
 
-        handleRowClick: function(row, detailRow) {
+        handleRowClick: (row, detailRow) => {
             const isVisible = detailRow.classList.contains('visible');
 
             const table = row.closest('table');
             if (table) {
-                table.querySelectorAll('tr.detail-row.visible').forEach(function(r) {
+                table.querySelectorAll('tr.detail-row.visible').forEach((r) => {
                     if (r !== detailRow) {
                         r.classList.remove('visible');
                         const prevRow = r.previousElementSibling;
@@ -59,7 +59,7 @@
             }
         },
 
-        initSidePanel: function(panelId) {
+        initSidePanel: (panelId) => {
             const panel = document.getElementById(panelId);
             if (!panel) return null;
 
@@ -68,25 +68,39 @@
             const closeBtn = panel.querySelector('[data-panel-close]');
 
             const api = {
-                open: function() {
+                open: () => {
                     panel.classList.add('open');
                     if (overlay) overlay.classList.add('active');
                 },
-                close: function() {
+                close: () => {
                     panel.classList.remove('open');
                     if (overlay) overlay.classList.remove('active');
                 },
-                setTitle: function(text) {
+                setTitle: (text) => {
                     const title = panel.querySelector('[data-panel-title]');
                     if (title) title.textContent = text;
                 },
-                setBody: function(html) {
+                setBody: (content) => {
                     const body = panel.querySelector('[data-panel-body]');
-                    if (body) body.innerHTML = html;
+                    if (!body) return;
+                    body.replaceChildren();
+                    if (typeof content === 'string') {
+                        body.textContent = content;
+                    } else if (content instanceof Node) {
+                        body.append(content);
+                    }
                 },
-                setFooter: function(html) {
+                setBodyDom: (el) => {
+                    const body = panel.querySelector('[data-panel-body]');
+                    if (!body) return;
+                    body.replaceChildren();
+                    body.append(el);
+                },
+                setFooterDom: (el) => {
                     const footer = panel.querySelector('[data-panel-footer]');
-                    if (footer) footer.innerHTML = html;
+                    if (!footer) return;
+                    footer.replaceChildren();
+                    footer.append(el);
                 },
                 panel: panel
             };
@@ -97,43 +111,59 @@
             return api;
         },
 
-        initAssignPanel: function(config) {
+        initAssignPanel: (config) => {
             const panelApi = OrgCommon.initSidePanel(config.panelId);
             if (!panelApi) return null;
 
             return {
-                open: function(entityId, entityName, currentPluginIds) {
+                open: (entityId, entityName, currentPluginIds) => {
                     panelApi.setTitle('Assign ' + (entityName || entityId));
 
                     const allPlugins = config.allPlugins || [];
                     const currentSet = {};
-                    (currentPluginIds || []).forEach(function(id) { currentSet[id] = true; });
+                    (currentPluginIds || []).forEach((id) => { currentSet[id] = true; });
 
-                    let html = '<div class="assign-panel-checklist">';
+                    const checklist = document.createElement('div');
+                    checklist.className = 'assign-panel-checklist';
+
                     if (allPlugins.length === 0) {
-                        html += '<p style="color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)">No plugins available.</p>';
+                        const p = document.createElement('p');
+                        p.style.cssText = 'color:var(--sp-text-tertiary);font-size:var(--sp-text-sm)';
+                        p.textContent = 'No plugins available.';
+                        checklist.append(p);
                     } else {
-                        allPlugins.forEach(function(p) {
-                            const checked = currentSet[p.id] ? ' checked' : '';
-                            html += '<label class="acl-checkbox-row">' +
-                                '<input type="checkbox" name="plugin_id" value="' + app.escapeHtml(p.id) + '"' + checked + '>' +
-                                '<span class="acl-checkbox-label">' + app.escapeHtml(p.name || p.id) + '</span>' +
-                                '</label>';
+                        allPlugins.forEach((p) => {
+                            const label = document.createElement('label');
+                            label.className = 'acl-checkbox-row';
+                            const input = document.createElement('input');
+                            input.type = 'checkbox';
+                            input.name = 'plugin_id';
+                            input.value = p.id;
+                            if (currentSet[p.id]) input.checked = true;
+                            const span = document.createElement('span');
+                            span.className = 'acl-checkbox-label';
+                            span.textContent = p.name || p.id;
+                            label.append(input, span);
+                            checklist.append(label);
                         });
                     }
-                    html += '</div>';
-                    panelApi.setBody(html);
 
-                    panelApi.setFooter(
-                        '<button class="btn btn-secondary" data-panel-close>Cancel</button> ' +
-                        '<button class="btn btn-primary" data-assign-save data-entity-id="' + app.escapeHtml(entityId) + '">Save</button>'
-                    );
+                    panelApi.setBodyDom(checklist);
 
-                    const footer = panelApi.panel.querySelector('[data-panel-footer]');
-                    if (footer) {
-                        const cancelBtn = footer.querySelector('[data-panel-close]');
-                        if (cancelBtn) cancelBtn.addEventListener('click', panelApi.close);
-                    }
+                    const footerFrag = document.createDocumentFragment();
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'btn btn-secondary';
+                    cancelBtn.setAttribute('data-panel-close', '');
+                    cancelBtn.textContent = 'Cancel';
+                    const saveBtn = document.createElement('button');
+                    saveBtn.className = 'btn btn-primary';
+                    saveBtn.setAttribute('data-assign-save', '');
+                    saveBtn.setAttribute('data-entity-id', entityId);
+                    saveBtn.textContent = 'Save';
+                    footerFrag.append(cancelBtn, document.createTextNode(' '), saveBtn);
+                    panelApi.setFooterDom(footerFrag);
+
+                    cancelBtn.addEventListener('click', panelApi.close);
 
                     panelApi.open();
                 },
@@ -142,49 +172,62 @@
             };
         },
 
-        initEditPanel: function(config) {
+        initEditPanel: (config) => {
             const panelApi = OrgCommon.initSidePanel(config.panelId);
             if (!panelApi) return null;
             let currentEntityId = null;
 
-            function buildForm(entityData) {
-                let html = '<form class="edit-panel-form">';
-                (config.fields || []).forEach(function(f) {
+            const buildForm = (entityData) => {
+                const form = document.createElement('form');
+                form.className = 'edit-panel-form';
+                (config.fields || []).forEach((f) => {
                     let val = entityData[f.name] || '';
                     if (Array.isArray(val)) val = val.join(', ');
-                    html += '<div class="form-group">';
-                    html += '<label class="form-label">' + app.escapeHtml(f.label) + '</label>';
+                    const group = document.createElement('div');
+                    group.className = 'form-group';
+                    const label = document.createElement('label');
+                    label.className = 'form-label';
+                    label.textContent = f.label;
+                    group.append(label);
                     if (f.type === 'textarea') {
-                        html += '<textarea class="form-control" name="' + f.name + '" rows="' + (f.rows || 10) + '">' + app.escapeHtml(val) + '</textarea>';
+                        const textarea = document.createElement('textarea');
+                        textarea.className = 'form-control';
+                        textarea.name = f.name;
+                        textarea.rows = f.rows || 10;
+                        textarea.textContent = val;
+                        group.append(textarea);
                     } else {
-                        html += '<input type="text" class="form-control" name="' + f.name + '" value="' + app.escapeHtml(val) + '"' + (f.required ? ' required' : '') + '>';
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'form-control';
+                        input.name = f.name;
+                        input.value = val;
+                        if (f.required) input.required = true;
+                        group.append(input);
                     }
-                    html += '</div>';
+                    form.append(group);
                 });
-                html += '</form>';
-                return html;
-            }
+                return form;
+            };
 
-            function collectFormData() {
+            const collectFormData = () => {
                 const form = panelApi.panel.querySelector('.edit-panel-form');
                 if (!form) return {};
                 const body = {};
-                (config.fields || []).forEach(function(f) {
+                (config.fields || []).forEach((f) => {
                     const el = form.querySelector('[name="' + f.name + '"]');
                     if (!el) return;
                     const val = el.value;
                     if (f.name === 'tags') {
-                        body[f.name] = val.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+                        body[f.name] = val.split(',').map((t) => t.trim()).filter(Boolean);
                     } else {
                         body[f.name] = val;
                     }
                 });
                 return body;
-            }
+            };
 
-            document.addEventListener('click', function(e) {
-                const btn = e.target.closest('[data-edit-save]');
-                if (!btn) return;
+            app.events.on('click', '[data-edit-save]', (e, btn) => {
                 btn.disabled = true;
                 btn.textContent = 'Saving...';
                 const body = collectFormData();
@@ -193,19 +236,19 @@
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
-                }).then(function(res) {
+                }).then((res) => {
                     if (res.ok) {
                         app.Toast.show((config.entityLabel || 'Item') + ' updated', 'success');
                         panelApi.close();
-                        setTimeout(function() { window.location.reload(); }, 500);
+                        setTimeout(() => { window.location.reload(); }, 500);
                     } else {
-                        res.text().then(function(t) {
+                        res.text().then((t) => {
                             app.Toast.show('Failed to save: ' + t, 'error');
                         });
                         btn.disabled = false;
                         btn.textContent = 'Save';
                     }
-                }).catch(function() {
+                }).catch(() => {
                     app.Toast.show('Failed to save', 'error');
                     btn.disabled = false;
                     btn.textContent = 'Save';
@@ -213,43 +256,48 @@
             });
 
             return {
-                open: function(entityId, entityData) {
+                open: (entityId, entityData) => {
                     currentEntityId = entityId;
-                    panelApi.setTitle('Edit ' + app.escapeHtml(entityData.name || entityId));
-                    panelApi.setBody(buildForm(entityData));
-                    panelApi.setFooter(
-                        '<button class="btn btn-secondary" data-panel-close>Cancel</button> ' +
-                        '<button class="btn btn-primary" data-edit-save>Save</button>'
-                    );
-                    const footer = panelApi.panel.querySelector('[data-panel-footer]');
-                    if (footer) {
-                        const cancelBtn = footer.querySelector('[data-panel-close]');
-                        if (cancelBtn) cancelBtn.addEventListener('click', panelApi.close);
-                    }
+                    panelApi.setTitle('Edit ' + (entityData.name || entityId));
+                    panelApi.setBodyDom(buildForm(entityData));
+
+                    const footerFrag = document.createDocumentFragment();
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'btn btn-secondary';
+                    cancelBtn.setAttribute('data-panel-close', '');
+                    cancelBtn.textContent = 'Cancel';
+                    const saveBtn = document.createElement('button');
+                    saveBtn.className = 'btn btn-primary';
+                    saveBtn.setAttribute('data-edit-save', '');
+                    saveBtn.textContent = 'Save';
+                    footerFrag.append(cancelBtn, document.createTextNode(' '), saveBtn);
+                    panelApi.setFooterDom(footerFrag);
+
+                    cancelBtn.addEventListener('click', panelApi.close);
                     panelApi.open();
                 },
                 close: panelApi.close
             };
         },
 
-        initBulkActions: function(tableSelector, barId) {
+        initBulkActions: (tableSelector, barId) => {
             const table = document.querySelector(tableSelector);
             if (!table) return null;
 
             let selected = {};
 
-            function updateCount() {
+            const updateCount = () => {
                 const count = Object.keys(selected).length;
                 const countEl = document.querySelector('[data-bulk-count]');
                 if (countEl) countEl.textContent = count;
                 const bar = document.getElementById(barId);
                 if (bar) bar.style.display = count > 0 ? 'flex' : 'none';
-            }
+            };
 
-            table.addEventListener('change', function(e) {
+            table.addEventListener('change', (e) => {
                 if (e.target.classList.contains('bulk-select-all')) {
                     const checked = e.target.checked;
-                    table.querySelectorAll('.bulk-checkbox').forEach(function(cb) {
+                    table.querySelectorAll('.bulk-checkbox').forEach((cb) => {
                         cb.checked = checked;
                         const id = cb.getAttribute('data-entity-id');
                         if (checked) {
@@ -274,10 +322,10 @@
             });
 
             return {
-                getSelected: function() { return Object.keys(selected); },
-                clear: function() {
+                getSelected: () => Object.keys(selected),
+                clear: () => {
                     selected = {};
-                    table.querySelectorAll('.bulk-checkbox, .bulk-select-all').forEach(function(cb) {
+                    table.querySelectorAll('.bulk-checkbox, .bulk-select-all').forEach((cb) => {
                         cb.checked = false;
                     });
                     updateCount();
@@ -285,69 +333,114 @@
             };
         },
 
-        formatJson: function(data) {
+        formatJson: (data) => {
             if (typeof data === 'string') {
-                try { data = JSON.parse(data); } catch (e) { return app.escapeHtml(data); }
+                try { data = JSON.parse(data); } catch (e) {
+                    const span = document.createElement('span');
+                    span.textContent = data;
+                    return span;
+                }
             }
-            return '<pre class="json-view">' + app.escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
+            const pre = document.createElement('pre');
+            pre.className = 'json-view';
+            pre.textContent = JSON.stringify(data, null, 2);
+            return pre;
         },
 
-        renderRoleBadges: function(roles) {
+        renderRoleBadges: (roles) => {
+            const frag = document.createDocumentFragment();
             if (!roles || !roles.length) {
-                return '<span class="badge badge-gray">All</span>';
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-gray';
+                badge.textContent = 'All';
+                frag.append(badge);
+                return frag;
             }
-            const assigned = roles.filter(function(r) { return r.assigned; });
+            const assigned = roles.filter((r) => r.assigned);
             if (!assigned.length) {
-                return '<span class="badge badge-gray">All</span>';
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-gray';
+                badge.textContent = 'All';
+                frag.append(badge);
+                return frag;
             }
-            return assigned.map(function(r) {
-                return '<span class="badge badge-blue">' + app.escapeHtml(r.name) + '</span>';
-            }).join(' ');
+            assigned.forEach((r, i) => {
+                if (i > 0) frag.append(document.createTextNode(' '));
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-blue';
+                badge.textContent = r.name;
+                frag.append(badge);
+            });
+            return frag;
         },
 
-        renderDeptBadges: function(departments) {
+        renderDeptBadges: (departments) => {
+            const frag = document.createDocumentFragment();
             if (!departments || !departments.length) {
-                return '<span class="badge badge-gray">None</span>';
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-gray';
+                badge.textContent = 'None';
+                frag.append(badge);
+                return frag;
             }
-            const assigned = departments.filter(function(d) { return d.assigned; });
+            const assigned = departments.filter((d) => d.assigned);
             if (!assigned.length) {
-                return '<span class="badge badge-gray">None</span>';
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-gray';
+                badge.textContent = 'None';
+                frag.append(badge);
+                return frag;
             }
-            return assigned.map(function(d) {
+            assigned.forEach((d, i) => {
+                if (i > 0) frag.append(document.createTextNode(' '));
                 const cls = d.default_included ? 'badge-yellow' : 'badge-green';
-                return '<span class="badge ' + cls + '">' + app.escapeHtml(d.name) + '</span>';
-            }).join(' ');
+                const badge = document.createElement('span');
+                badge.className = 'badge ' + cls;
+                badge.textContent = d.name;
+                frag.append(badge);
+            });
+            return frag;
         },
 
-        renderPluginBadges: function(plugins) {
+        renderPluginBadges: (plugins) => {
+            const frag = document.createDocumentFragment();
             if (!plugins || !plugins.length) {
-                return '<span class="badge badge-gray">None</span>';
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-gray';
+                badge.textContent = 'None';
+                frag.append(badge);
+                return frag;
             }
-            return plugins.map(function(p) {
+            plugins.forEach((p, i) => {
+                if (i > 0) frag.append(document.createTextNode(' '));
                 const name = typeof p === 'string' ? p : (p.name || p.id || p);
-                return '<span class="badge badge-purple">' + app.escapeHtml(name) + '</span>';
-            }).join(' ');
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-purple';
+                badge.textContent = name;
+                frag.append(badge);
+            });
+            return frag;
         },
 
-        initFilters: function(searchInputId, tableSelector, filters) {
+        initFilters: (searchInputId, tableSelector, filters) => {
             const table = document.querySelector(tableSelector);
             if (!table) return;
 
-            function applyFilters() {
+            const applyFilters = () => {
                 const searchInput = document.getElementById(searchInputId);
                 const q = (searchInput ? searchInput.value : '').toLowerCase().trim();
-                const filterValues = filters.map(function(f) {
+                const filterValues = filters.map((f) => {
                     const sel = document.getElementById(f.selectId);
                     return { attr: f.dataAttr, value: sel ? sel.value : '' };
                 });
 
-                table.querySelectorAll('tbody tr.clickable-row').forEach(function(row) {
+                table.querySelectorAll('tbody tr.clickable-row').forEach((row) => {
                     const matchSearch = !q ||
                         (row.getAttribute('data-name') || '').includes(q) ||
                         (row.getAttribute('data-skill-id') || row.getAttribute('data-agent-id') || '').toLowerCase().includes(q) ||
                         (row.getAttribute('data-description') || '').includes(q);
 
-                    const matchFilters = filterValues.every(function(fv) {
+                    const matchFilters = filterValues.every((fv) => {
                         if (!fv.value) return true;
                         const rowVal = row.getAttribute(fv.attr) || '';
                         return rowVal.includes(fv.value);
@@ -361,9 +454,9 @@
                         else { detail.style.display = ''; }
                     }
                 });
-            }
+            };
 
-            filters.forEach(function(f) {
+            filters.forEach((f) => {
                 const sel = document.getElementById(f.selectId);
                 if (sel) sel.addEventListener('change', applyFilters);
             });
@@ -371,7 +464,7 @@
             let searchTimer = null;
             const searchInput = document.getElementById(searchInputId);
             if (searchInput) {
-                searchInput.addEventListener('input', function() {
+                searchInput.addEventListener('input', () => {
                     clearTimeout(searchTimer);
                     searchTimer = setTimeout(applyFilters, 200);
                 });
@@ -380,7 +473,7 @@
             return { apply: applyFilters };
         },
 
-        formatTimeAgo: function(isoString) {
+        formatTimeAgo: (isoString) => {
             if (!isoString) return '--';
             const date = new Date(isoString);
             if (isNaN(date.getTime())) return '--';
@@ -393,8 +486,8 @@
             return date.toLocaleDateString();
         },
 
-        initTimeAgo: function() {
-            document.querySelectorAll('.metadata-timestamp').forEach(function(el) {
+        initTimeAgo: () => {
+            document.querySelectorAll('.metadata-timestamp').forEach((el) => {
                 const iso = el.getAttribute('title') || el.textContent.trim();
                 if (iso && iso !== '--') {
                     el.textContent = OrgCommon.formatTimeAgo(iso);
@@ -424,85 +517,129 @@
 
     function renderAgentExpand(agentId) {
         const data = getAgentDetail(agentId);
-        if (!data) return '<p class="text-muted">No detail data available.</p>';
+        if (!data) {
+            const noData = document.createElement('p');
+            noData.className = 'text-muted';
+            noData.textContent = 'No detail data available.';
+            return noData;
+        }
 
-        let html = '';
+        const frag = document.createDocumentFragment();
 
         if (data.system_prompt) {
-            html += '<div class="detail-section">';
-            html += '<strong>System Prompt</strong>';
-            html += '<pre style="margin:var(--sp-space-1) 0;max-height:200px;overflow:auto;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);white-space:pre-wrap;word-break:break-word">' + app.escapeHtml(data.system_prompt) + '</pre>';
-            html += '</div>';
+            const promptSection = document.createElement('div');
+            promptSection.className = 'detail-section';
+            const promptLabel = document.createElement('strong');
+            promptLabel.textContent = 'System Prompt';
+            const promptPre = document.createElement('pre');
+            promptPre.style.cssText = 'margin:var(--sp-space-1) 0;max-height:200px;overflow:auto;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);white-space:pre-wrap;word-break:break-word';
+            promptPre.textContent = data.system_prompt;
+            promptSection.append(promptLabel, promptPre);
+            frag.append(promptSection);
         }
 
         if (data.port || data.endpoint) {
-            html += '<div class="detail-section">';
-            html += '<strong>Connection</strong>';
-            html += '<div style="margin:var(--sp-space-1) 0;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">';
-            if (data.port) html += '<div>Port: <code class="code-inline">' + app.escapeHtml(String(data.port)) + '</code></div>';
-            if (data.endpoint) html += '<div>Endpoint: <code class="code-inline">' + app.escapeHtml(data.endpoint) + '</code></div>';
-            html += '</div></div>';
+            const connSection = document.createElement('div');
+            connSection.className = 'detail-section';
+            const connLabel = document.createElement('strong');
+            connLabel.textContent = 'Connection';
+            const connDiv = document.createElement('div');
+            connDiv.style.cssText = 'margin:var(--sp-space-1) 0;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)';
+            if (data.port) {
+                const portRow = document.createElement('div');
+                portRow.append('Port: ');
+                const portCode = document.createElement('code');
+                portCode.className = 'code-inline';
+                portCode.textContent = String(data.port);
+                portRow.append(portCode);
+                connDiv.append(portRow);
+            }
+            if (data.endpoint) {
+                const endpointRow = document.createElement('div');
+                endpointRow.append('Endpoint: ');
+                const endpointCode = document.createElement('code');
+                endpointCode.className = 'code-inline';
+                endpointCode.textContent = data.endpoint;
+                endpointRow.append(endpointCode);
+                connDiv.append(endpointRow);
+            }
+            connSection.append(connLabel, connDiv);
+            frag.append(connSection);
         }
 
         if ((data.skill_count && data.skill_count > 0) || (data.mcp_count && data.mcp_count > 0)) {
-            html += '<div class="detail-section">';
-            html += '<strong>Capabilities</strong>';
-            html += '<div class="badge-row" style="margin-top:var(--sp-space-1)">';
+            const capSection = document.createElement('div');
+            capSection.className = 'detail-section';
+            const capLabel = document.createElement('strong');
+            capLabel.textContent = 'Capabilities';
+            const badgeRow = document.createElement('div');
+            badgeRow.className = 'badge-row';
+            badgeRow.style.marginTop = 'var(--sp-space-1)';
             if (data.skill_count > 0) {
-                html += '<span class="badge badge-green">' + data.skill_count + ' skill' + (data.skill_count !== 1 ? 's' : '') + '</span>';
+                const skillBadge = document.createElement('span');
+                skillBadge.className = 'badge badge-green';
+                skillBadge.textContent = data.skill_count + ' skill' + (data.skill_count !== 1 ? 's' : '');
+                badgeRow.append(skillBadge);
             }
             if (data.mcp_count > 0) {
-                html += '<span class="badge badge-yellow">' + data.mcp_count + ' MCP server' + (data.mcp_count !== 1 ? 's' : '') + '</span>';
+                const mcpBadge = document.createElement('span');
+                mcpBadge.className = 'badge badge-yellow';
+                mcpBadge.textContent = data.mcp_count + ' MCP server' + (data.mcp_count !== 1 ? 's' : '');
+                badgeRow.append(mcpBadge);
             }
-            html += '</div></div>';
+            capSection.append(capLabel, badgeRow);
+            frag.append(capSection);
         }
 
-        html += '<div class="detail-section">';
-        html += '<details><summary style="cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">JSON Config</summary>';
-        html += app.OrgCommon.formatJson(data);
-        html += '</details></div>';
+        const jsonSection = document.createElement('div');
+        jsonSection.className = 'detail-section';
+        const details = document.createElement('details');
+        const summary = document.createElement('summary');
+        summary.style.cssText = 'cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)';
+        summary.textContent = 'JSON Config';
+        details.append(summary);
+        details.append(app.OrgCommon.formatJson(data));
+        jsonSection.append(details);
+        frag.append(jsonSection);
 
-        return html;
+        return frag;
     }
 
     function initExpandRows() {
-        app.OrgCommon.initExpandRows('.data-table', function(row, detailRow) {
+        app.OrgCommon.initExpandRows('.data-table', (row, detailRow) => {
             const content = detailRow.querySelector('[data-agent-expand]');
             if (content && !content.hasAttribute('data-loaded')) {
                 const agentId = content.getAttribute('data-agent-expand');
-                content.innerHTML = renderAgentExpand(agentId);
+                content.replaceChildren();
+                content.append(renderAgentExpand(agentId));
                 content.setAttribute('data-loaded', 'true');
             }
         });
     }
 
     function initDeleteHandlers() {
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-delete-agent]');
-            if (!btn) return;
-            const agentId = btn.getAttribute('data-delete-agent');
+        app.events.on('click', '[data-delete-agent]', (e, el) => {
+            const agentId = el.getAttribute('data-delete-agent');
             if (!confirm('Are you sure you want to delete agent "' + agentId + '"? This cannot be undone.')) return;
 
             fetch('/api/admin/agents/' + encodeURIComponent(agentId), { method: 'DELETE' })
-                .then(function(res) {
+                .then((res) => {
                     if (res.ok) {
                         app.Toast.show('Agent deleted', 'success');
-                        setTimeout(function() { window.location.reload(); }, 500);
+                        setTimeout(() => { window.location.reload(); }, 500);
                     } else {
                         app.Toast.show('Failed to delete agent', 'error');
                     }
                 })
-                .catch(function() {
+                .catch(() => {
                     app.Toast.show('Failed to delete agent', 'error');
                 });
         });
     }
 
     function initForkHandlers() {
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-fork-agent]');
-            if (!btn) return;
-            const agentId = btn.getAttribute('data-fork-agent');
+        app.events.on('click', '[data-fork-agent]', (e, el) => {
+            const agentId = el.getAttribute('data-fork-agent');
             const data = getAgentDetail(agentId);
             if (!data) return;
 
@@ -520,15 +657,15 @@
                     enabled: true
                 })
             })
-            .then(function(res) {
+            .then((res) => {
                 if (res.ok) {
                     app.Toast.show('Agent customized', 'success');
-                    setTimeout(function() { window.location.reload(); }, 500);
+                    setTimeout(() => { window.location.reload(); }, 500);
                 } else {
                     app.Toast.show('Failed to customize agent', 'error');
                 }
             })
-            .catch(function() {
+            .catch(() => {
                 app.Toast.show('Failed to customize agent', 'error');
             });
         });
@@ -542,33 +679,29 @@
         });
         if (!assignApi) return;
 
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-assign-agent]');
-            if (!btn) return;
-            const agentId = btn.getAttribute('data-assign-agent');
-            const agentName = btn.getAttribute('data-agent-name') || agentId;
+        app.events.on('click', '[data-assign-agent]', (e, el) => {
+            const agentId = el.getAttribute('data-assign-agent');
+            const agentName = el.getAttribute('data-agent-name') || agentId;
             const data = getAgentDetail(agentId);
             const currentPluginIds = data && data.assigned_plugin_ids ? data.assigned_plugin_ids : [];
             assignApi.open(agentId, agentName, currentPluginIds);
         });
 
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-assign-save]');
-            if (!btn) return;
-            const entityId = btn.getAttribute('data-entity-id');
+        app.events.on('click', '[data-assign-save]', (e, el) => {
+            const entityId = el.getAttribute('data-entity-id');
             const checkboxes = document.querySelectorAll('#assign-panel input[name="plugin_id"]');
             const selectedPlugins = [];
-            checkboxes.forEach(function(cb) {
+            checkboxes.forEach((cb) => {
                 if (cb.checked) selectedPlugins.push(cb.value);
             });
 
-            btn.disabled = true;
-            btn.textContent = 'Saving...';
+            el.disabled = true;
+            el.textContent = 'Saving...';
 
-            const promises = allPlugins.map(function(plugin) {
+            const promises = allPlugins.map((plugin) => {
                 return fetch('/api/admin/plugins/' + encodeURIComponent(plugin.id) + '/agents')
-                    .then(function(res) { return res.json(); })
-                    .then(function(currentAgents) {
+                    .then((res) => { return res.json(); })
+                    .then((currentAgents) => {
                         let agentIds = (currentAgents || []).slice();
                         const shouldInclude = selectedPlugins.includes(plugin.id);
                         const hasAgent = agentIds.includes(entityId);
@@ -576,7 +709,7 @@
                         if (shouldInclude && !hasAgent) {
                             agentIds.push(entityId);
                         } else if (!shouldInclude && hasAgent) {
-                            agentIds = agentIds.filter(function(a) { return a !== entityId; });
+                            agentIds = agentIds.filter((a) => { return a !== entityId; });
                         } else {
                             return Promise.resolve();
                         }
@@ -590,15 +723,15 @@
             });
 
             Promise.all(promises)
-                .then(function() {
+                .then(() => {
                     app.Toast.show('Plugin assignments updated', 'success');
                     assignApi.close();
-                    setTimeout(function() { window.location.reload(); }, 500);
+                    setTimeout(() => { window.location.reload(); }, 500);
                 })
-                .catch(function() {
+                .catch(() => {
                     app.Toast.show('Failed to update assignments', 'error');
-                    btn.disabled = false;
-                    btn.textContent = 'Save';
+                    el.disabled = false;
+                    el.textContent = 'Save';
                 });
         });
     }
@@ -616,10 +749,8 @@
             ]
         });
 
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-edit-agent]');
-            if (!btn) return;
-            const agentId = btn.getAttribute('data-edit-agent');
+        app.events.on('click', '[data-edit-agent]', (e, el) => {
+            const agentId = el.getAttribute('data-edit-agent');
             const data = getAgentDetail(agentId);
             if (data && editPanel) editPanel.open(agentId, data);
         });
@@ -637,16 +768,16 @@
 
         const deleteBtn = document.getElementById('bulk-delete-btn');
         if (deleteBtn) {
-            deleteBtn.addEventListener('click', function() {
+            deleteBtn.addEventListener('click', () => {
                 const ids = bulk.getSelected();
                 if (!ids.length) return;
                 if (!confirm('Delete ' + ids.length + ' agent(s)? This action cannot be undone.')) return;
-                Promise.all(ids.map(function(id) {
+                Promise.all(ids.map((id) => {
                     return fetch('/api/admin/agents/' + encodeURIComponent(id), { method: 'DELETE' });
-                })).then(function() {
+                })).then(() => {
                     app.Toast.show(ids.length + ' agents deleted', 'success');
-                    setTimeout(function() { window.location.reload(); }, 500);
-                }).catch(function() {
+                    setTimeout(() => { window.location.reload(); }, 500);
+                }).catch(() => {
                     app.Toast.show('Failed to delete some agents', 'error');
                 });
             });
@@ -654,7 +785,7 @@
 
         const assignBtn = document.getElementById('bulk-assign-btn');
         if (assignBtn && assignApi) {
-            assignBtn.addEventListener('click', function() {
+            assignBtn.addEventListener('click', () => {
                 const ids = bulk.getSelected();
                 if (!ids.length) return;
                 assignApi.open(ids.join(','), ids.length + ' agents', []);
@@ -694,76 +825,105 @@
 
     function renderSkillExpand(skillId) {
         const data = getSkillDetail(skillId);
-        if (!data) return '<p class="text-muted">No detail data available.</p>';
+        if (!data) {
+            const noData = document.createElement('p');
+            noData.className = 'text-muted';
+            noData.textContent = 'No detail data available.';
+            return noData;
+        }
 
-        let html = '<div class="detail-section">';
-        html += '<strong>Description</strong>';
-        html += '<p style="margin:var(--sp-space-1) 0;color:var(--sp-text-secondary);font-size:var(--sp-text-sm)">' + app.escapeHtml(data.description || 'No description') + '</p>';
-        html += '</div>';
+        const frag = document.createDocumentFragment();
+
+        const descSection = document.createElement('div');
+        descSection.className = 'detail-section';
+        const descLabel = document.createElement('strong');
+        descLabel.textContent = 'Description';
+        const descP = document.createElement('p');
+        descP.style.cssText = 'margin:var(--sp-space-1) 0;color:var(--sp-text-secondary);font-size:var(--sp-text-sm)';
+        descP.textContent = data.description || 'No description';
+        descSection.append(descLabel, descP);
+        frag.append(descSection);
 
         if (data.command) {
-            html += '<div class="detail-section">';
-            html += '<strong>Command</strong>';
-            html += '<pre style="margin:var(--sp-space-1) 0;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);overflow-x:auto">' + app.escapeHtml(data.command) + '</pre>';
-            html += '</div>';
+            const cmdSection = document.createElement('div');
+            cmdSection.className = 'detail-section';
+            const cmdLabel = document.createElement('strong');
+            cmdLabel.textContent = 'Command';
+            const cmdPre = document.createElement('pre');
+            cmdPre.style.cssText = 'margin:var(--sp-space-1) 0;font-size:var(--sp-text-xs);background:var(--sp-bg-surface-raised);padding:var(--sp-space-2);border-radius:var(--sp-radius-sm);overflow-x:auto';
+            cmdPre.textContent = data.command;
+            cmdSection.append(cmdLabel, cmdPre);
+            frag.append(cmdSection);
         }
 
         if (data.tags && data.tags.length) {
-            html += '<div class="detail-section">';
-            html += '<strong>Tags</strong><br>';
-            html += '<div class="badge-row" style="margin-top:var(--sp-space-1)">';
-            data.tags.forEach(function(tag) {
-                html += '<span class="badge badge-gray">' + app.escapeHtml(tag) + '</span>';
+            const tagSection = document.createElement('div');
+            tagSection.className = 'detail-section';
+            const tagLabel = document.createElement('strong');
+            tagLabel.textContent = 'Tags';
+            tagSection.append(tagLabel, document.createElement('br'));
+            const badgeRow = document.createElement('div');
+            badgeRow.className = 'badge-row';
+            badgeRow.style.marginTop = 'var(--sp-space-1)';
+            data.tags.forEach((tag) => {
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-gray';
+                badge.textContent = tag;
+                badgeRow.append(badge);
             });
-            html += '</div></div>';
+            tagSection.append(badgeRow);
+            frag.append(tagSection);
         }
 
-        html += '<div class="detail-section">';
-        html += '<details><summary style="cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)">JSON Config</summary>';
-        html += app.OrgCommon.formatJson(data);
-        html += '</details></div>';
+        const jsonSection = document.createElement('div');
+        jsonSection.className = 'detail-section';
+        const details = document.createElement('details');
+        const summary = document.createElement('summary');
+        summary.style.cssText = 'cursor:pointer;font-size:var(--sp-text-sm);color:var(--sp-text-secondary)';
+        summary.textContent = 'JSON Config';
+        details.append(summary);
+        details.append(app.OrgCommon.formatJson(data));
+        jsonSection.append(details);
+        frag.append(jsonSection);
 
-        return html;
+        return frag;
     }
 
     function initExpandRows() {
-        app.OrgCommon.initExpandRows('.data-table', function(row, detailRow) {
+        app.OrgCommon.initExpandRows('.data-table', (row, detailRow) => {
             const content = detailRow.querySelector('[data-skill-expand]');
             if (content && !content.hasAttribute('data-loaded')) {
                 const skillId = content.getAttribute('data-skill-expand');
-                content.innerHTML = renderSkillExpand(skillId);
+                content.replaceChildren();
+                content.append(renderSkillExpand(skillId));
                 content.setAttribute('data-loaded', 'true');
             }
         });
     }
 
     function initDeleteHandlers() {
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-delete-skill]');
-            if (!btn) return;
-            const skillId = btn.getAttribute('data-delete-skill');
+        app.events.on('click', '[data-delete-skill]', (e, el) => {
+            const skillId = el.getAttribute('data-delete-skill');
             if (!confirm('Are you sure you want to delete skill "' + skillId + '"? This cannot be undone.')) return;
 
             fetch('/api/admin/skills/' + encodeURIComponent(skillId), { method: 'DELETE' })
-                .then(function(res) {
+                .then((res) => {
                     if (res.ok) {
                         app.Toast.show('Skill deleted', 'success');
-                        setTimeout(function() { window.location.reload(); }, 500);
+                        setTimeout(() => { window.location.reload(); }, 500);
                     } else {
                         app.Toast.show('Failed to delete skill', 'error');
                     }
                 })
-                .catch(function() {
+                .catch(() => {
                     app.Toast.show('Failed to delete skill', 'error');
                 });
         });
     }
 
     function initForkHandlers() {
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-fork-skill]');
-            if (!btn) return;
-            const skillId = btn.getAttribute('data-fork-skill');
+        app.events.on('click', '[data-fork-skill]', (e, el) => {
+            const skillId = el.getAttribute('data-fork-skill');
             const data = getSkillDetail(skillId);
             if (!data) return;
 
@@ -780,15 +940,15 @@
                     base_skill_id: skillId
                 })
             })
-            .then(function(res) {
+            .then((res) => {
                 if (res.ok) {
                     app.Toast.show('Skill customized', 'success');
-                    setTimeout(function() { window.location.reload(); }, 500);
+                    setTimeout(() => { window.location.reload(); }, 500);
                 } else {
                     app.Toast.show('Failed to customize skill', 'error');
                 }
             })
-            .catch(function() {
+            .catch(() => {
                 app.Toast.show('Failed to customize skill', 'error');
             });
         });
@@ -802,33 +962,29 @@
         });
         if (!assignApi) return;
 
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-assign-skill]');
-            if (!btn) return;
-            const skillId = btn.getAttribute('data-assign-skill');
-            const skillName = btn.getAttribute('data-skill-name') || skillId;
+        app.events.on('click', '[data-assign-skill]', (e, el) => {
+            const skillId = el.getAttribute('data-assign-skill');
+            const skillName = el.getAttribute('data-skill-name') || skillId;
             const data = getSkillDetail(skillId);
             const currentPluginIds = data && data.assigned_plugin_ids ? data.assigned_plugin_ids : [];
             assignApi.open(skillId, skillName, currentPluginIds);
         });
 
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-assign-save]');
-            if (!btn) return;
-            const entityId = btn.getAttribute('data-entity-id');
+        app.events.on('click', '[data-assign-save]', (e, el) => {
+            const entityId = el.getAttribute('data-entity-id');
             const checkboxes = document.querySelectorAll('#assign-panel input[name="plugin_id"]');
             const selectedPlugins = [];
-            checkboxes.forEach(function(cb) {
+            checkboxes.forEach((cb) => {
                 if (cb.checked) selectedPlugins.push(cb.value);
             });
 
-            btn.disabled = true;
-            btn.textContent = 'Saving...';
+            el.disabled = true;
+            el.textContent = 'Saving...';
 
-            const promises = allPlugins.map(function(plugin) {
+            const promises = allPlugins.map((plugin) => {
                 return fetch('/api/admin/plugins/' + encodeURIComponent(plugin.id) + '/skills')
-                    .then(function(res) { return res.json(); })
-                    .then(function(currentSkills) {
+                    .then((res) => { return res.json(); })
+                    .then((currentSkills) => {
                         let skillIds = (currentSkills || []).slice();
                         const shouldInclude = selectedPlugins.includes(plugin.id);
                         const hasSkill = skillIds.includes(entityId);
@@ -836,7 +992,7 @@
                         if (shouldInclude && !hasSkill) {
                             skillIds.push(entityId);
                         } else if (!shouldInclude && hasSkill) {
-                            skillIds = skillIds.filter(function(s) { return s !== entityId; });
+                            skillIds = skillIds.filter((s) => { return s !== entityId; });
                         } else {
                             return Promise.resolve();
                         }
@@ -850,15 +1006,15 @@
             });
 
             Promise.all(promises)
-                .then(function() {
+                .then(() => {
                     app.Toast.show('Plugin assignments updated', 'success');
                     assignApi.close();
-                    setTimeout(function() { window.location.reload(); }, 500);
+                    setTimeout(() => { window.location.reload(); }, 500);
                 })
-                .catch(function() {
+                .catch(() => {
                     app.Toast.show('Failed to update assignments', 'error');
-                    btn.disabled = false;
-                    btn.textContent = 'Save';
+                    el.disabled = false;
+                    el.textContent = 'Save';
                 });
         });
     }
@@ -878,10 +1034,8 @@
             ]
         });
 
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-edit-skill]');
-            if (!btn) return;
-            const skillId = btn.getAttribute('data-edit-skill');
+        app.events.on('click', '[data-edit-skill]', (e, el) => {
+            const skillId = el.getAttribute('data-edit-skill');
             const data = getSkillDetail(skillId);
             if (data && editPanel) editPanel.open(skillId, data);
         });
@@ -899,16 +1053,16 @@
 
         const deleteBtn = document.getElementById('bulk-delete-btn');
         if (deleteBtn) {
-            deleteBtn.addEventListener('click', function() {
+            deleteBtn.addEventListener('click', () => {
                 const ids = bulk.getSelected();
                 if (!ids.length) return;
                 if (!confirm('Delete ' + ids.length + ' skill(s)? This action cannot be undone.')) return;
-                Promise.all(ids.map(function(id) {
+                Promise.all(ids.map((id) => {
                     return fetch('/api/admin/skills/' + encodeURIComponent(id), { method: 'DELETE' });
-                })).then(function() {
+                })).then(() => {
                     app.Toast.show(ids.length + ' skills deleted', 'success');
-                    setTimeout(function() { window.location.reload(); }, 500);
-                }).catch(function() {
+                    setTimeout(() => { window.location.reload(); }, 500);
+                }).catch(() => {
                     app.Toast.show('Failed to delete some skills', 'error');
                 });
             });
@@ -916,7 +1070,7 @@
 
         const assignBtn = document.getElementById('bulk-assign-btn');
         if (assignBtn && assignApi) {
-            assignBtn.addEventListener('click', function() {
+            assignBtn.addEventListener('click', () => {
                 const ids = bulk.getSelected();
                 if (!ids.length) return;
                 assignApi.open(ids.join(','), ids.length + ' skills', []);
@@ -925,21 +1079,21 @@
 
         const categoryBtn = document.getElementById('bulk-category-btn');
         if (categoryBtn) {
-            categoryBtn.addEventListener('click', function() {
+            categoryBtn.addEventListener('click', () => {
                 const ids = bulk.getSelected();
                 if (!ids.length) return;
                 const category = prompt('Enter category for ' + ids.length + ' skill(s):');
                 if (category === null) return;
-                Promise.all(ids.map(function(id) {
+                Promise.all(ids.map((id) => {
                     return fetch('/api/public/skills/' + encodeURIComponent(id), {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ category_id: category })
                     });
-                })).then(function() {
+                })).then(() => {
                     app.Toast.show('Category updated for ' + ids.length + ' skills', 'success');
-                    setTimeout(function() { window.location.reload(); }, 500);
-                }).catch(function() {
+                    setTimeout(() => { window.location.reload(); }, 500);
+                }).catch(() => {
                     app.Toast.show('Failed to update category', 'error');
                 });
             });
@@ -977,7 +1131,7 @@
             searchInput.addEventListener('input', function() {
                 const query = this.value.toLowerCase();
                 const rows = document.querySelectorAll('.data-table tbody tr.clickable-row');
-                rows.forEach(function(row) {
+                rows.forEach((row) => {
                     const name = (row.getAttribute('data-name') || '').toLowerCase();
                     const match = !query || name.includes(query);
                     row.style.display = match ? '' : 'none';
@@ -994,10 +1148,8 @@
             });
         }
 
-        document.addEventListener('click', function(e) {
-            const toggle = e.target.closest('[data-mcp-json]');
-            if (!toggle) return;
-            const mcpId = toggle.getAttribute('data-mcp-json');
+        app.events.on('click', '[data-mcp-json]', (e, el) => {
+            const mcpId = el.getAttribute('data-mcp-json');
             const container = document.querySelector('[data-mcp-json-container="' + mcpId + '"]');
             if (!container) return;
 
@@ -1006,28 +1158,33 @@
                 if (script) {
                     try {
                         const data = JSON.parse(script.textContent);
-                        container.innerHTML = OrgCommon.formatJson(data);
+                        container.replaceChildren();
+                        const formatted = document.createElement('div');
+                        formatted.innerHTML = OrgCommon.formatJson(data);
+                        container.append(...formatted.childNodes);
                     } catch (err) {
-                        container.innerHTML = '<span class="text-muted">Failed to parse JSON</span>';
+                        container.replaceChildren();
+                        const span = document.createElement('span');
+                        span.className = 'text-muted';
+                        span.textContent = 'Failed to parse JSON';
+                        container.append(span);
                     }
                 }
                 container.style.display = 'block';
-                toggle.textContent = 'Hide JSON';
+                el.textContent = 'Hide JSON';
             } else {
                 container.style.display = 'none';
-                toggle.textContent = 'Show JSON';
+                el.textContent = 'Show JSON';
             }
         });
 
-        document.addEventListener('click', function(e) {
-            const deleteBtn = e.target.closest('[data-action="delete"][data-entity-type="mcp-server"]');
-            if (!deleteBtn) return;
-            const id = deleteBtn.getAttribute('data-entity-id');
+        app.events.on('click', '[data-action="delete"][data-entity-type="mcp-server"]', (e, el) => {
+            const id = el.getAttribute('data-entity-id');
             if (!confirm('Delete MCP server "' + id + '"? This cannot be undone.')) return;
 
             app.api('/mcp-servers/' + encodeURIComponent(id), {
                 method: 'DELETE'
-            }).then(function() {
+            }).then(() => {
                 app.Toast.show('MCP server deleted', 'success');
                 const row = document.querySelector('tr[data-entity-id="' + id + '"].clickable-row');
                 if (row) {
@@ -1037,18 +1194,18 @@
                     }
                     row.remove();
                 }
-            }).catch(function(err) {
+            }).catch((err) => {
                 app.Toast.show(err.message || 'Failed to delete MCP server', 'error');
             });
         });
 
-        let allPlugins = [];
-        document.querySelectorAll('script[data-mcp-detail]').forEach(function(script) {
+        const allPlugins = [];
+        document.querySelectorAll('script[data-mcp-detail]').forEach((script) => {
             try {
                 const data = JSON.parse(script.textContent);
                 if (data.assigned_plugins) {
-                    data.assigned_plugins.forEach(function(p) {
-                        if (!allPlugins.some(function(existing) { return existing.id === p.id; })) {
+                    data.assigned_plugins.forEach((p) => {
+                        if (!allPlugins.some((existing) => { return existing.id === p.id; })) {
                             allPlugins.push(p);
                         }
                     });
@@ -1061,11 +1218,9 @@
             allPlugins: allPlugins
         });
 
-        document.addEventListener('click', function(e) {
-            const assignBtn = e.target.closest('[data-assign-mcp]');
-            if (!assignBtn) return;
-            const mcpId = assignBtn.getAttribute('data-assign-mcp');
-            const mcpName = assignBtn.getAttribute('data-mcp-name') || mcpId;
+        app.events.on('click', '[data-assign-mcp]', (e, el) => {
+            const mcpId = el.getAttribute('data-assign-mcp');
+            const mcpName = el.getAttribute('data-mcp-name') || mcpId;
 
             let currentPluginIds = [];
             const script = document.querySelector('script[data-mcp-detail="' + mcpId + '"]');
@@ -1073,7 +1228,7 @@
                 try {
                     const data = JSON.parse(script.textContent);
                     if (data.assigned_plugins) {
-                        currentPluginIds = data.assigned_plugins.map(function(p) { return p.id; });
+                        currentPluginIds = data.assigned_plugins.map((p) => { return p.id; });
                     }
                 } catch (e) {}
             }
@@ -1100,7 +1255,7 @@
             searchInput.addEventListener('input', function() {
                 const query = this.value.toLowerCase();
                 const rows = document.querySelectorAll('.data-table tbody tr.clickable-row');
-                rows.forEach(function(row) {
+                rows.forEach((row) => {
                     const name = (row.getAttribute('data-name') || '').toLowerCase();
                     const match = !query || name.includes(query);
                     row.style.display = match ? '' : 'none';
@@ -1117,10 +1272,8 @@
             });
         }
 
-        document.addEventListener('click', function(e) {
-            const toggle = e.target.closest('[data-hook-json]');
-            if (!toggle) return;
-            const hookId = toggle.getAttribute('data-hook-json');
+        app.events.on('click', '[data-hook-json]', (e, el) => {
+            const hookId = el.getAttribute('data-hook-json');
             const container = document.querySelector('[data-hook-json-container="' + hookId + '"]');
             if (!container) return;
 
@@ -1129,28 +1282,31 @@
                 if (script) {
                     try {
                         const data = JSON.parse(script.textContent);
-                        container.innerHTML = OrgCommon.formatJson(data);
+                        container.replaceChildren();
+                        container.append(OrgCommon.formatJson(data));
                     } catch (err) {
-                        container.innerHTML = '<span class="text-muted">Failed to parse JSON</span>';
+                        container.replaceChildren();
+                        const errSpan = document.createElement('span');
+                        errSpan.className = 'text-muted';
+                        errSpan.textContent = 'Failed to parse JSON';
+                        container.append(errSpan);
                     }
                 }
                 container.style.display = 'block';
-                toggle.textContent = 'Hide JSON';
+                el.textContent = 'Hide JSON';
             } else {
                 container.style.display = 'none';
-                toggle.textContent = 'Show JSON';
+                el.textContent = 'Show JSON';
             }
         });
 
-        document.addEventListener('click', function(e) {
-            const deleteBtn = e.target.closest('[data-action="delete"][data-entity-type="hook"]');
-            if (!deleteBtn) return;
-            const id = deleteBtn.getAttribute('data-entity-id');
+        app.events.on('click', '[data-action="delete"][data-entity-type="hook"]', (e, el) => {
+            const id = el.getAttribute('data-entity-id');
             if (!confirm('Delete this hook? This cannot be undone.')) return;
 
             app.api('/hooks/' + encodeURIComponent(id), {
                 method: 'DELETE'
-            }).then(function() {
+            }).then(() => {
                 app.Toast.show('Hook deleted', 'success');
                 const row = document.querySelector('tr[data-entity-id="' + id + '"].clickable-row');
                 if (row) {
@@ -1160,15 +1316,13 @@
                     }
                     row.remove();
                 }
-            }).catch(function(err) {
+            }).catch((err) => {
                 app.Toast.show(err.message || 'Failed to delete hook', 'error');
             });
         });
 
-        document.addEventListener('click', function(e) {
-            const detailsBtn = e.target.closest('[data-hook-details]');
-            if (!detailsBtn) return;
-            const hookId = detailsBtn.getAttribute('data-hook-details');
+        app.events.on('click', '[data-hook-details]', (e, el) => {
+            const hookId = el.getAttribute('data-hook-details');
             const row = document.querySelector('tr[data-entity-id="' + hookId + '"].clickable-row');
             if (!row) return;
             const detailRow = row.nextElementSibling;

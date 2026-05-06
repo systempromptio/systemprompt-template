@@ -8,10 +8,14 @@ use crate::types::{MarketplaceContext, UserContext};
 
 use super::ssr_helpers::render_typed_page;
 
+const DOWNLOAD_BASE_URL: &str =
+    "https://github.com/Ejb503/systemprompt-core/releases/latest/download";
+
 #[derive(Debug, Serialize)]
 struct SetupPageData {
     gateway_url: String,
     user_email: String,
+    download_base_url: &'static str,
 }
 
 pub async fn cowork_setup_page(
@@ -23,6 +27,7 @@ pub async fn cowork_setup_page(
     let data = SetupPageData {
         gateway_url: derive_gateway_url(&headers),
         user_email: user_ctx.email.to_string(),
+        download_base_url: DOWNLOAD_BASE_URL,
     };
     render_typed_page(&engine, "cowork-setup", &data, &user_ctx, &mkt_ctx)
 }

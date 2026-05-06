@@ -1,0 +1,69 @@
+{{!--
+  Identity filter ribbon — multi-select dropdowns + active filter chips.
+  SSR-first: native <details> for dropdowns, <form method=get> to submit.
+
+  Invoke as: {{> components/identity-filter-ribbon filter_ribbon}}
+  The partial's root context is the filter_ribbon object itself, so fields are
+  referenced directly (base_url, preserved, options, chips) — strict-mode
+  friendly.
+
+  Inputs (fields on the passed context; all optional):
+    base_url      form action / link base (e.g. /admin/audit/investigation)
+    preserved     array of {name, value} hidden inputs preserved on submit
+    options.users / .tenants / .agents / .agent_scopes / .policies / .decisions
+                  arrays of {id, label, count, selected}
+    chips         array of {label, value, group_label, remove_url}
+--}}
+<form class="filter-ribbon" method="get" action="{{base_url}}"
+      data-filter-ribbon aria-label="Identity filters">
+  {{#each preserved}}
+    <input type="hidden" name="{{this.name}}" value="{{this.value}}">
+  {{/each}}
+
+  <div class="filter-ribbon__groups">
+    {{> components/filter-ribbon-group
+        param="user_id"
+        title="User"
+        options=options.users}}
+    {{> components/filter-ribbon-group
+        param="tenant_id"
+        title="Tenant"
+        options=options.tenants}}
+    {{> components/filter-ribbon-group
+        param="agent_id"
+        title="Agent"
+        options=options.agents}}
+    {{> components/filter-ribbon-group
+        param="agent_scope"
+        title="Scope"
+        options=options.agent_scopes}}
+    {{> components/filter-ribbon-group
+        param="policy"
+        title="Policy"
+        options=options.policies}}
+    {{> components/filter-ribbon-group
+        param="decision"
+        title="Decision"
+        options=options.decisions}}
+  </div>
+
+  <div class="filter-ribbon__actions">
+    <button type="submit" class="filter-ribbon__apply">Apply filters</button>
+    {{#if chips}}
+      <a href="{{base_url}}" class="filter-ribbon__clear">Clear all</a>
+    {{/if}}
+  </div>
+
+  {{#if chips}}
+    <ul class="filter-ribbon__chips" aria-label="Active filters">
+      {{#each chips}}
+        <li class="filter-ribbon__chip">
+          <span class="filter-ribbon__chip-group">{{this.group_label}}:</span>
+          <span class="filter-ribbon__chip-value">{{this.label}}</span>
+          <a class="filter-ribbon__chip-remove" href="{{this.remove_url}}"
+             aria-label="Remove {{this.group_label}} filter {{this.label}}">&times;</a>
+        </li>
+      {{/each}}
+    </ul>
+  {{/if}}
+</form>

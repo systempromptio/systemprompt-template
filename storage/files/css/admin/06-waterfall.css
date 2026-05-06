@@ -1,0 +1,201 @@
+@layer components {
+
+/* ─────────────────────────────────────────────────────────────────────
+   Trace list (perf-traces) header stats + row decorations
+   ───────────────────────────────────────────────────────────────────── */
+
+.trace-stats {
+    margin: var(--sp-space-3) 0;
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-card, var(--sp-radius-button));
+    padding: var(--sp-space-3) var(--sp-space-4);
+}
+
+.trace-stats__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-6);
+}
+
+.trace-stats__cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.trace-stats__label {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    color: var(--sp-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.trace-stats__value {
+    font-size: var(--sp-text-lg, var(--sp-text-base));
+    font-weight: 700;
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.trace-stats__value--bad { color: var(--sp-danger); }
+
+.trace-row__id {
+    text-decoration: none;
+    color: var(--sp-text-primary);
+}
+
+.trace-row__id:hover { color: var(--sp-accent); }
+
+.trace-row__trace,
+.trace-row__agent {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.trace-paginate__info {
+    margin: 0 var(--sp-space-3);
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-tertiary);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Trace detail summary block
+   ───────────────────────────────────────────────────────────────────── */
+
+.trace-detail__summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: var(--sp-space-4);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-card, var(--sp-radius-button));
+    padding: var(--sp-space-4);
+    margin-bottom: var(--sp-space-4);
+}
+
+.trace-detail__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.trace-detail__label {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    color: var(--sp-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Waterfall renderer
+   ───────────────────────────────────────────────────────────────────── */
+
+.waterfall {
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-card, var(--sp-radius-button));
+    padding: var(--sp-space-4);
+    margin-bottom: var(--sp-space-4);
+}
+
+.waterfall__legend {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-3);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.waterfall__legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.waterfall__swatch {
+    display: inline-block;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 2px;
+    background: var(--sp-text-tertiary);
+}
+
+.waterfall__swatch--gateway    { background: var(--sp-accent); }
+.waterfall__swatch--governance { background: var(--sp-warning); }
+.waterfall__swatch--tool       { background: var(--sp-success); }
+.waterfall__swatch--model      { background: light-dark(oklch(0.62 0.18 260), oklch(0.70 0.14 250)); }
+.waterfall__swatch--spawn      { background: light-dark(oklch(0.55 0.18 320), oklch(0.65 0.14 320)); }
+
+.waterfall__root {
+    margin-top: var(--sp-space-3);
+    overflow-x: auto;
+}
+
+.waterfall__svg {
+    display: block;
+    min-width: 100%;
+    height: auto;
+}
+
+.waterfall__row {
+    cursor: pointer;
+}
+
+.waterfall__row-bg:hover {
+    fill: var(--sp-bg-tertiary);
+}
+
+.waterfall__bar {
+    transition: filter var(--sp-duration-fast);
+}
+
+.waterfall__bar:hover {
+    filter: brightness(1.15);
+}
+
+.waterfall__bar--gateway    { fill: var(--sp-accent); }
+.waterfall__bar--governance { fill: var(--sp-warning); }
+.waterfall__bar--tool       { fill: var(--sp-success); }
+.waterfall__bar--model      { fill: light-dark(oklch(0.62 0.18 260), oklch(0.70 0.14 250)); }
+.waterfall__bar--spawn      { fill: light-dark(oklch(0.55 0.18 320), oklch(0.65 0.14 320)); }
+
+.waterfall__bar--deny  { stroke: var(--sp-danger); stroke-width: 2; }
+.waterfall__bar--error { stroke: var(--sp-warning); stroke-width: 2; }
+
+.waterfall__label {
+    fill: var(--sp-text-primary);
+    font-size: 12px;
+    font-family: inherit;
+    pointer-events: none;
+}
+
+.waterfall__label--right {
+    fill: var(--sp-text-secondary);
+}
+
+.waterfall__axis {
+    fill: var(--sp-text-tertiary);
+    font-size: 10px;
+    font-family: inherit;
+}
+
+.waterfall__grid {
+    stroke: var(--sp-border-default);
+    stroke-width: 1;
+    stroke-dasharray: 2 3;
+}
+
+.waterfall__empty {
+    padding: var(--sp-space-6);
+    text-align: center;
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-sm);
+}
+
+}

@@ -1,0 +1,396 @@
+/* Unified Access Control page (/admin/access-control).
+ *
+ * Three-pane layout:
+ *   .ac-toolbar                — top status + actions
+ *   .ac-layout                 — grid: tree (left) + detail (center)
+ *     .ac-tree                 — departments tree
+ *       .ac-tree-dept          — single department block
+ *       .ac-dept-row           — clickable dept header
+ *       .ac-dept-users         — list of members
+ *       .ac-user-row           — clickable user
+ *     .ac-detail               — context-sensitive center pane
+ *       .ac-welcome / .ac-dept-editor / .ac-user-matrix
+ *
+ * Loaded after 15-* gateway-specific styles so it can override anything
+ * stale until the gateway-only matrix is fully retired. (15-gateway-access.css
+ * is no longer referenced by any template — safe to remove later.)
+ */
+
+.ac-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3, 12px);
+    align-items: center;
+    margin: var(--space-3, 12px) 0 var(--space-2, 8px);
+}
+.ac-toolbar .ac-search-group {
+    flex: 1 1 240px;
+}
+.ac-toolbar .search-input {
+    width: 100%;
+}
+.ac-source-pill {
+    flex: 1 1 320px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: var(--surface-subtle, #f4f5f9);
+    border: 1px solid var(--border-subtle, #e3e5ee);
+    font-size: 0.85rem;
+    color: var(--text-muted, #555);
+    cursor: help;
+}
+.ac-source-pill strong {
+    color: var(--text-primary, #222);
+}
+.ac-stats {
+    display: flex;
+    gap: var(--space-2, 8px);
+    color: var(--text-muted, #666);
+    font-size: 0.9rem;
+    margin-bottom: var(--space-3, 12px);
+}
+.ac-stats strong {
+    color: var(--text-primary, #222);
+}
+
+.ac-layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 320px) 1fr;
+    gap: var(--space-4, 16px);
+    align-items: start;
+}
+@media (max-width: 900px) {
+    .ac-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ac-tree {
+    background: var(--surface-default, #fff);
+    border: 1px solid var(--border-subtle, #e3e5ee);
+    border-radius: 12px;
+    padding: var(--space-3, 12px);
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+    position: sticky;
+    top: var(--space-3, 12px);
+}
+.ac-tree-heading {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #777);
+    margin: 0 0 var(--space-2, 8px);
+}
+.ac-tree-dept {
+    margin-bottom: var(--space-2, 8px);
+}
+.ac-dept-row {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary, #222);
+}
+.ac-dept-row:hover,
+.ac-dept-row[aria-pressed="true"] {
+    background: var(--surface-subtle, #f4f5f9);
+    border-color: var(--border-subtle, #e3e5ee);
+}
+.ac-dept-count {
+    font-size: 0.75rem;
+    background: var(--surface-emphasis, #eef0f7);
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: var(--text-muted, #555);
+    font-weight: 500;
+}
+.ac-dept-users {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0 0 0 8px;
+    border-left: 2px solid var(--border-subtle, #e3e5ee);
+}
+.ac-dept-users li {
+    margin: 2px 0;
+}
+.ac-user-row {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.9rem;
+    color: var(--text-primary, #333);
+}
+.ac-user-row.is-inactive {
+    opacity: 0.55;
+}
+.ac-user-row:hover,
+.ac-user-row[aria-pressed="true"] {
+    background: var(--surface-subtle, #f4f5f9);
+    border-color: var(--border-subtle, #e3e5ee);
+}
+.ac-user-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 6px;
+    flex: 1;
+}
+.ac-user-roles {
+    display: flex;
+    gap: 4px;
+}
+.ac-role-chip {
+    background: var(--surface-emphasis, #eef0f7);
+    color: var(--text-muted, #555);
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-weight: 500;
+}
+
+.ac-detail {
+    background: var(--surface-default, #fff);
+    border: 1px solid var(--border-subtle, #e3e5ee);
+    border-radius: 12px;
+    padding: var(--space-4, 16px);
+    min-height: 400px;
+}
+.ac-welcome h2 {
+    margin-top: 0;
+}
+.ac-welcome-tips {
+    margin-top: var(--space-3, 12px);
+    padding-left: 1.2em;
+    color: var(--text-muted, #555);
+}
+.ac-welcome-tips li {
+    margin-bottom: var(--space-2, 8px);
+}
+.ac-welcome-tips code {
+    background: var(--surface-subtle, #f4f5f9);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
+/* Department editor */
+.ac-dept-editor h2 {
+    margin: 0 0 var(--space-2, 8px);
+}
+.ac-dept-editor .ac-section {
+    margin-top: var(--space-3, 12px);
+}
+.ac-dept-editor .ac-section h3 {
+    margin: 0 0 var(--space-2, 8px);
+    font-size: 0.95rem;
+}
+.ac-dept-rule-list {
+    border: 1px solid var(--border-subtle, #e3e5ee);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.ac-dept-rule {
+    display: grid;
+    grid-template-columns: 120px 1fr 100px 80px;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-subtle, #e3e5ee);
+    font-size: 0.9rem;
+}
+.ac-dept-rule:last-child { border-bottom: none; }
+.ac-dept-rule-add {
+    margin-top: var(--space-2, 8px);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.ac-dept-rule-add select,
+.ac-dept-rule-add input {
+    padding: 4px 8px;
+    font-size: 0.9rem;
+    border: 1px solid var(--border-subtle, #e3e5ee);
+    border-radius: 6px;
+}
+
+/* User matrix */
+.ac-user-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2, 8px);
+    margin-bottom: var(--space-3, 12px);
+}
+.ac-user-header h2 { margin: 0; }
+.ac-user-meta {
+    color: var(--text-muted, #666);
+    font-size: 0.9rem;
+}
+.ac-matrix-section {
+    margin-top: var(--space-3, 12px);
+    border: 1px solid var(--border-subtle, #e3e5ee);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.ac-matrix-section-header {
+    background: var(--surface-subtle, #f4f5f9);
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.ac-matrix-row {
+    display: grid;
+    grid-template-columns: 1fr 90px 220px 120px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--border-subtle, #e3e5ee);
+    font-size: 0.9rem;
+}
+.ac-matrix-entity {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ac-matrix-entity .id {
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    display: block;
+}
+.ac-effective {
+    text-align: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+.ac-effective.is-allow { background: #dcf5e3; color: #137333; }
+.ac-effective.is-deny  { background: #fde0e0; color: #a50e0e; }
+.ac-source {
+    color: var(--text-muted, #555);
+    font-size: 0.8rem;
+}
+.ac-source .ac-layer-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    margin-right: 4px;
+    background: var(--surface-emphasis, #eef0f7);
+    color: var(--text-muted, #555);
+}
+.ac-source .ac-layer-tag.is-user { background: #fff3d6; color: #7a5400; }
+.ac-source .ac-layer-tag.is-department { background: #d8e6ff; color: #0a3a82; }
+.ac-source .ac-layer-tag.is-role { background: #efddff; color: #5a23a8; }
+.ac-source .ac-layer-tag.is-default { background: #eef0f7; color: #555; }
+.ac-override {
+    display: flex;
+    gap: 4px;
+}
+.ac-override button {
+    padding: 4px 8px;
+    border: 1px solid var(--border-subtle, #e3e5ee);
+    background: var(--surface-default, #fff);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+.ac-override button[aria-pressed="true"] { background: var(--surface-emphasis, #eef0f7); }
+.ac-override button.is-allow[aria-pressed="true"] { background: #dcf5e3; color: #137333; border-color: #137333; }
+.ac-override button.is-deny[aria-pressed="true"]  { background: #fde0e0; color: #a50e0e; border-color: #a50e0e; }
+
+/* Modals */
+.panel-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 80;
+}
+.ac-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--surface-default, #fff);
+    border-radius: 12px;
+    width: min(640px, 90vw);
+    max-height: 85vh;
+    overflow: auto;
+    z-index: 90;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+}
+.ac-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3, 12px) var(--space-4, 16px);
+    border-bottom: 1px solid var(--border-subtle, #e3e5ee);
+}
+.ac-modal-header h2 { margin: 0; font-size: 1.1rem; }
+.ac-modal-body {
+    padding: var(--space-4, 16px);
+}
+.ac-modal-hint {
+    color: var(--text-muted, #555);
+    font-size: 0.85rem;
+    margin: 0 0 var(--space-3, 12px);
+}
+.ac-modal-hint code {
+    background: var(--surface-subtle, #f4f5f9);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+.ac-yaml-pre {
+    background: var(--surface-subtle, #f4f5f9);
+    border: 1px solid var(--border-subtle, #e3e5ee);
+    border-radius: 8px;
+    padding: var(--space-3, 12px);
+    font-size: 0.85rem;
+    max-height: 50vh;
+    overflow: auto;
+    white-space: pre-wrap;
+}
+.ac-modal-actions {
+    display: flex;
+    gap: var(--space-2, 8px);
+    justify-content: flex-end;
+    margin-top: var(--space-3, 12px);
+}
+.ac-field {
+    display: block;
+    margin-bottom: var(--space-3, 12px);
+}
+.ac-field span {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted, #555);
+    margin-bottom: 4px;
+}
+.panel-close {
+    background: transparent;
+    border: none;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-muted, #777);
+}

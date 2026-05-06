@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM access_control_rules WHERE entity_type = $1 AND entity_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c77b4904ba5a160d4141bc6289728d7acc77655fd5e1432426dcbfe7e4cfb2ad"
+}

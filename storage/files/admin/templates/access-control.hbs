@@ -3,228 +3,160 @@
     {{#*inline "content"}}
     {{> components/page-header title=title}}
 
-    <!-- Toolbar -->
-    <div class="toolbar">
-        <div class="search-group">
-            <input type="text" class="search-input" placeholder="Search entities..." id="acl-search">
+    <!-- ===== Toolbar / source-of-truth ===== -->
+    <div class="ac-toolbar" role="toolbar" aria-label="Access control toolbar">
+        <div class="ac-search-group">
+            <input type="search" class="search-input" id="ac-search"
+                   placeholder="Search users, departments, entities…"
+                   aria-label="Search">
         </div>
-        <select class="filter-select" id="acl-role-filter" style="min-width:120px">
-            <option value="">All Roles</option>
-            {{#each known_roles}}
-            <option value="{{this}}">{{this}}</option>
-            {{/each}}
-        </select>
-        <select class="filter-select" id="acl-dept-filter" style="min-width:150px">
-            <option value="">All Departments</option>
-            {{#each departments}}
-            <option value="{{department}}">{{department}} ({{user_count}})</option>
-            {{/each}}
-        </select>
-        <button class="btn btn-primary" id="acl-bulk-assign" disabled>
-            Bulk Assign (<span id="acl-selection-count">0</span>)
+        <div class="ac-source-pill" data-tip="Bootstrap config is read from services/access-control/*.yaml on startup. Live edits are written to this instance's database only — they never get pushed back to the YAML or to git.">
+            <strong>Bootstrap:</strong> services/access-control/*.yaml &nbsp;·&nbsp;
+            <strong>Runtime edits:</strong> this instance's database
+        </div>
+        <button type="button" class="btn btn-secondary" id="ac-show-yaml">
+            Show as YAML
+        </button>
+        <button type="button" class="btn btn-secondary" id="ac-new-department">
+            + New department
         </button>
     </div>
 
-    <!-- Tab Bar -->
-    <div class="sp-tabs" data-variant="pill" role="tablist" aria-label="Access control entity types" id="acl-tabs">
-        <button type="button" class="sp-tab sp-tab--active" role="tab" aria-selected="true" data-acl-tab="plugins" data-tab="plugins" aria-controls="acl-panel-plugins">Plugins <span class="sp-tab-count">{{stats.plugin_count}}</span></button>
-        <button type="button" class="sp-tab" role="tab" aria-selected="false" data-acl-tab="agents" data-tab="agents" aria-controls="acl-panel-agents">Agents <span class="sp-tab-count">{{stats.agent_count}}</span></button>
-        <button type="button" class="sp-tab" role="tab" aria-selected="false" data-acl-tab="mcp" data-tab="mcp" aria-controls="acl-panel-mcp">MCP Servers <span class="sp-tab-count">{{stats.mcp_count}}</span></button>
+    <div class="ac-stats">
+        <span><strong>{{stats.department_count}}</strong> departments</span>
+        <span>·</span>
+        <span><strong>{{stats.user_count}}</strong> users</span>
     </div>
 
-    <!-- Coverage Summary -->
-    <div class="acl-coverage-bar" id="acl-coverage">
-        <span class="config-stat"><span class="config-stat-dot green"></span> <span id="acl-coverage-text">Loading...</span></span>
-    </div>
-
-    <!-- ===== PLUGINS PANEL ===== -->
-    <div class="sp-tab-panel" role="tabpanel" data-tab-panel="plugins" data-acl-panel="plugins" id="acl-panel-plugins">
-        {{#if plugins}}
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th style="width:40px" data-no-row-click><input type="checkbox" class="acl-select-all" data-acl-tab-target="plugins"></th>
-                        <th>Name</th>
-                        <th>Roles</th>
-                        <th>Departments</th>
-                        <th style="width:80px">Coverage</th>
-                        <th class="col-status" style="width:90px">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each plugins}}
-                    <tr class="clickable-row acl-entity-row" data-entity-type="plugin" data-entity-id="{{id}}" data-name="{{toLowerCase name}}">
-                        <td data-no-row-click>
-                            <input type="checkbox" class="acl-entity-checkbox" data-entity-type="plugin" data-entity-id="{{id}}">
-                        </td>
-                        <td>{{> components/table-cell-stacked primary=name secondary=(truncate description 60)}}</td>
-                        <td>
-                            <div class="cell-badges">
-                                {{#each roles}}{{#if assigned}}<span class="badge badge-blue">{{name}}</span>{{/if}}{{/each}}
-                                {{#unless role_count}}<span class="badge badge-gray">All</span>{{/unless}}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="cell-badges">
-                                {{#each departments}}{{#if assigned}}<span class="badge {{#if default_included}}badge-green{{else}}badge-yellow{{/if}}" title="{{#if default_included}}Default (enforced){{else}}Visible{{/if}}">{{name}}</span>{{/if}}{{/each}}
-                                {{#unless department_count}}<span class="badge badge-gray">None</span>{{/unless}}
-                            </div>
-                        </td>
-                        <td><span class="acl-coverage-indicator">{{department_count}}/{{total_departments}}</span></td>
-                        <td class="col-status">
-                            {{#if enabled}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}
-                        </td>
-                    </tr>
+    <!-- ===== Three-pane layout ===== -->
+    <div class="ac-layout">
+        <!-- Left: department tree -->
+        <aside class="ac-tree" aria-label="Departments and users">
+            <h3 class="ac-tree-heading">Departments</h3>
+            {{#each departments}}
+            <div class="ac-tree-dept" data-dept="{{name}}">
+                <button type="button" class="ac-dept-row" data-action="select-dept" data-dept="{{name}}">
+                    <span class="ac-dept-name">{{name}}</span>
+                    <span class="ac-dept-count">{{user_count}}</span>
+                </button>
+                <ul class="ac-dept-users" role="list">
+                    {{#each users}}
+                    <li>
+                        <button type="button" class="ac-user-row {{#unless is_active}}is-inactive{{/unless}}"
+                                data-action="select-user"
+                                data-user-id="{{id}}"
+                                data-user-display="{{display_name}}"
+                                data-user-email="{{email}}">
+                            <span class="ac-user-name">{{display_name}}</span>
+                            <span class="ac-user-roles">
+                                {{#each roles}}<span class="ac-role-chip">{{this}}</span>{{/each}}
+                            </span>
+                        </button>
+                    </li>
                     {{/each}}
-                </tbody>
-            </table>
-        </div>
-        {{else}}
-        {{> components/empty-state message="No plugins configured."}}
-        {{/if}}
-    </div>
+                </ul>
+            </div>
+            {{/each}}
 
-    <!-- ===== AGENTS PANEL ===== -->
-    <div class="sp-tab-panel" role="tabpanel" data-tab-panel="agents" data-acl-panel="agents" id="acl-panel-agents" hidden style="display:none">
-        {{#if agents}}
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th style="width:40px" data-no-row-click><input type="checkbox" class="acl-select-all" data-acl-tab-target="agents"></th>
-                        <th>Name</th>
-                        <th>Roles</th>
-                        <th>Departments</th>
-                        <th style="width:80px">Coverage</th>
-                        <th class="col-status" style="width:90px">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each agents}}
-                    <tr class="clickable-row acl-entity-row" data-entity-type="agent" data-entity-id="{{id}}" data-name="{{toLowerCase name}}">
-                        <td data-no-row-click>
-                            <input type="checkbox" class="acl-entity-checkbox" data-entity-type="agent" data-entity-id="{{id}}">
-                        </td>
-                        <td>{{> components/table-cell-stacked primary=name secondary=(truncate description 60)}}</td>
-                        <td>
-                            <div class="cell-badges">
-                                {{#each roles}}{{#if assigned}}<span class="badge badge-blue">{{name}}</span>{{/if}}{{/each}}
-                                {{#unless role_count}}<span class="badge badge-gray">All</span>{{/unless}}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="cell-badges">
-                                {{#each departments}}{{#if assigned}}<span class="badge {{#if default_included}}badge-green{{else}}badge-yellow{{/if}}" title="{{#if default_included}}Default (enforced){{else}}Visible{{/if}}">{{name}}</span>{{/if}}{{/each}}
-                                {{#unless department_count}}<span class="badge badge-gray">None</span>{{/unless}}
-                            </div>
-                        </td>
-                        <td><span class="acl-coverage-indicator">{{department_count}}/{{total_departments}}</span></td>
-                        <td class="col-status">
-                            {{#if enabled}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}
-                        </td>
-                    </tr>
+            {{#if unassigned_count}}
+            <div class="ac-tree-dept" data-dept="">
+                <button type="button" class="ac-dept-row ac-dept-unassigned" data-action="select-dept" data-dept="">
+                    <span class="ac-dept-name"><em>Unassigned</em></span>
+                    <span class="ac-dept-count">{{unassigned_count}}</span>
+                </button>
+                <ul class="ac-dept-users" role="list">
+                    {{#each unassigned_users}}
+                    <li>
+                        <button type="button" class="ac-user-row {{#unless is_active}}is-inactive{{/unless}}"
+                                data-action="select-user"
+                                data-user-id="{{id}}"
+                                data-user-display="{{display_name}}"
+                                data-user-email="{{email}}">
+                            <span class="ac-user-name">{{display_name}}</span>
+                            <span class="ac-user-roles">
+                                {{#each roles}}<span class="ac-role-chip">{{this}}</span>{{/each}}
+                            </span>
+                        </button>
+                    </li>
                     {{/each}}
-                </tbody>
-            </table>
-        </div>
-        {{else}}
-        {{> components/empty-state message="No agents configured."}}
-        {{/if}}
+                </ul>
+            </div>
+            {{/if}}
+        </aside>
+
+        <!-- Center pane: switches between welcome / dept editor / user matrix -->
+        <section class="ac-detail" id="ac-detail" aria-live="polite">
+            <div class="ac-welcome" id="ac-welcome">
+                <h2>Access Control</h2>
+                <p>Pick a department to assign access at the group level, or pick a user to see their full permission matrix.</p>
+                <ul class="ac-welcome-tips">
+                    <li><strong>YAML is bootstrap config.</strong> Hand-edit <code>services/access-control/*.yaml</code> in the source repo and redeploy to apply changes everywhere.</li>
+                    <li><strong>The dashboard writes to the database</strong> on this instance only — useful for one-off operational overrides.</li>
+                    <li>Use <em>Show as YAML</em> to copy the current DB state as a YAML snippet you can paste back into the source repo.</li>
+                </ul>
+            </div>
+
+            <!-- Department editor (rendered by JS) -->
+            <div class="ac-dept-editor" id="ac-dept-editor" hidden></div>
+
+            <!-- User permission matrix (rendered by JS) -->
+            <div class="ac-user-matrix" id="ac-user-matrix" hidden></div>
+        </section>
     </div>
 
-    <!-- ===== MCP SERVERS PANEL ===== -->
-    <div class="sp-tab-panel" role="tabpanel" data-tab-panel="mcp" data-acl-panel="mcp" id="acl-panel-mcp" hidden style="display:none">
-        {{#if mcp_servers}}
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th style="width:40px" data-no-row-click><input type="checkbox" class="acl-select-all" data-acl-tab-target="mcp"></th>
-                        <th>Name</th>
-                        <th>Roles</th>
-                        <th>Departments</th>
-                        <th style="width:80px">Coverage</th>
-                        <th class="col-status" style="width:90px">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each mcp_servers}}
-                    <tr class="clickable-row acl-entity-row" data-entity-type="mcp_server" data-entity-id="{{id}}" data-name="{{toLowerCase name}}">
-                        <td data-no-row-click>
-                            <input type="checkbox" class="acl-entity-checkbox" data-entity-type="mcp_server" data-entity-id="{{id}}">
-                        </td>
-                        <td>{{> components/table-cell-stacked primary=name secondary=(truncate description 60)}}</td>
-                        <td>
-                            <div class="cell-badges">
-                                {{#each roles}}{{#if assigned}}<span class="badge badge-blue">{{name}}</span>{{/if}}{{/each}}
-                                {{#unless role_count}}<span class="badge badge-gray">All</span>{{/unless}}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="cell-badges">
-                                {{#each departments}}{{#if assigned}}<span class="badge {{#if default_included}}badge-green{{else}}badge-yellow{{/if}}" title="{{#if default_included}}Default (enforced){{else}}Visible{{/if}}">{{name}}</span>{{/if}}{{/each}}
-                                {{#unless department_count}}<span class="badge badge-gray">None</span>{{/unless}}
-                            </div>
-                        </td>
-                        <td><span class="acl-coverage-indicator">{{department_count}}/{{total_departments}}</span></td>
-                        <td class="col-status">
-                            {{#if enabled}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Disabled</span>{{/if}}
-                        </td>
-                    </tr>
-                    {{/each}}
-                </tbody>
-            </table>
+    <!-- ===== Modal overlay shells ===== -->
+    <div class="panel-overlay" id="ac-modal-overlay" hidden></div>
+    <div class="ac-modal" id="ac-yaml-modal" role="dialog" aria-modal="true" aria-labelledby="ac-yaml-title" hidden>
+        <div class="ac-modal-header">
+            <h2 id="ac-yaml-title">Current state as YAML</h2>
+            <button type="button" class="panel-close" id="ac-yaml-close" aria-label="Close">&times;</button>
         </div>
-        {{else}}
-        {{> components/empty-state message="No MCP servers configured."}}
-        {{/if}}
-    </div>
-
-    <!-- Entity data for JS -->
-    {{#each plugins}}
-    <script type="application/json" data-acl-entity="plugin-{{id}}">{{{json this}}}</script>
-    {{/each}}
-    {{#each agents}}
-    <script type="application/json" data-acl-entity="agent-{{id}}">{{{json this}}}</script>
-    {{/each}}
-    {{#each mcp_servers}}
-    <script type="application/json" data-acl-entity="mcp_server-{{id}}">{{{json this}}}</script>
-    {{/each}}
-
-    <!-- ===== SIDE PANEL ===== -->
-    <div class="panel-overlay" id="acl-overlay"></div>
-    <div class="side-panel" id="acl-detail-panel">
-        <div class="panel-header">
-            <h2 id="acl-panel-title"></h2>
-            <button class="panel-close" id="acl-panel-close">&times;</button>
-        </div>
-        <div class="panel-body" id="acl-panel-body"></div>
-        <div class="panel-footer" id="acl-panel-footer">
-            <button class="btn btn-secondary" id="acl-panel-cancel">Cancel</button>
-            <button class="btn btn-primary" id="acl-panel-save">Save Changes</button>
+        <div class="ac-modal-body">
+            <p class="ac-modal-hint">
+                This is the current database state of role/department rules on this instance,
+                rendered in the loader's YAML schema. Copy any rules you want to make
+                permanent into <code>services/access-control/*.yaml</code> in the source repo
+                and redeploy. Per-user overrides are intentionally excluded.
+            </p>
+            <pre class="ac-yaml-pre" id="ac-yaml-content">Loading…</pre>
+            <div class="ac-modal-actions">
+                <button type="button" class="btn btn-secondary" id="ac-yaml-copy">Copy</button>
+            </div>
         </div>
     </div>
 
-    <div class="panel-overlay" id="acl-bulk-overlay"></div>
-    <div class="side-panel" id="acl-bulk-panel">
-        <div class="panel-header">
-            <h2>Bulk Assign Access</h2>
-            <button class="panel-close" id="acl-bulk-close">&times;</button>
+    <div class="ac-modal" id="ac-new-dept-modal" role="dialog" aria-modal="true" aria-labelledby="ac-new-dept-title" hidden>
+        <div class="ac-modal-header">
+            <h2 id="ac-new-dept-title">Create department</h2>
+            <button type="button" class="panel-close" id="ac-new-dept-close" aria-label="Close">&times;</button>
         </div>
-        <div class="panel-body" id="acl-bulk-body"></div>
-        <div class="panel-footer">
-            <button class="btn btn-secondary" id="acl-bulk-cancel">Cancel</button>
-            <button class="btn btn-primary" id="acl-bulk-apply">Apply to Selected</button>
+        <div class="ac-modal-body">
+            <label class="ac-field">
+                <span>Name</span>
+                <input type="text" id="ac-new-dept-name" class="search-input" placeholder="e.g. Engineering">
+            </label>
+            <label class="ac-field">
+                <span>Description (optional)</span>
+                <input type="text" id="ac-new-dept-desc" class="search-input">
+            </label>
+            <p class="ac-modal-hint">
+                Saving creates the department in this instance's database.
+                To make it part of the bootstrap baseline, add it to
+                <code>services/access-control/departments.yaml</code> in the source repo.
+            </p>
+            <div class="ac-modal-actions">
+                <button type="button" class="btn btn-primary" id="ac-new-dept-save">Create</button>
+                <button type="button" class="btn btn-secondary" id="ac-new-dept-cancel">Cancel</button>
+            </div>
         </div>
     </div>
+
+    <!-- Embedded data for the JS controller. -->
+    <script type="application/json" id="ac-entity-catalogue">{{{json entity_catalogue}}}</script>
+    <script type="application/json" id="ac-known-roles">{{{json known_roles}}}</script>
 
     {{/inline}}
     {{#*inline "scripts"}}
-    <script data-cfasync="false" type="module" src="/js/pages/admin-access.js" defer></script>
-    <script data-cfasync="false" type="module">
-        import { initAccessPage } from '/js/pages/admin-access.js';
-        initAccessPage();
-    </script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-access-control.js"></script>
     {{/inline}}
 {{/layout}}

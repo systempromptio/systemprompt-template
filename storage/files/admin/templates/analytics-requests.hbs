@@ -1,20 +1,161 @@
 {{#> layout title=title page=page}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title=title}}
-    <section aria-label="CLI command" class="hero-cli">
-        <p class="text-tertiary text-sm">Run this on the CLI to see the same data:</p>
-        <pre class="detail-pre"><code>{{cli_command}}</code></pre>
-        <p class="text-tertiary text-sm">Window: {{window_label}}</p>
-    </section>
-    <section aria-label="Request stats">
-        <div class="stat-grid">
-            {{> components/stat-card label="Total" value=stats.total}}
-            {{> components/stat-card label="Tool Uses" value=stats.tool_uses}}
-            {{> components/stat-card label="Sessions" value=stats.sessions}}
-            {{> components/stat-card label="Errors" value=stats.errors variant="danger"}}
+    {{> components/page-header
+        title="Inference Requests"
+        subtitle="Every /v1/messages call through the gateway. Click any row for the full chain of custody."}}
+
+    {{> components/time-range time_range}}
+
+    <section class="kpi-strip" aria-label="Request KPIs">
+        <div class="kpi-card">
+            <span class="kpi-card__label">Requests</span>
+            <span class="kpi-card__value">{{stats.total}}</span>
+            <span class="kpi-card__sub">{{stats.requests_per_minute}}/min</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-card__label">p50 latency</span>
+            <span class="kpi-card__value">{{stats.p50_latency_ms}} ms</span>
+            <span class="kpi-card__sub">p95 {{stats.p95_latency_ms}} · p99 {{stats.p99_latency_ms}}</span>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-card__label">Total cost</span>
+            <span class="kpi-card__value">{{stats.total_cost_display}}</span>
+        </div>
+        <div class="kpi-card{{#if stats.error_count}} kpi-card--danger{{/if}}">
+            <span class="kpi-card__label">Errors</span>
+            <span class="kpi-card__value">{{stats.error_count}}</span>
+            <span class="kpi-card__sub">{{stats.error_rate_pct}}%</span>
+        </div>
+        <div class="kpi-card{{#if stats.denied_session_count}} kpi-card--warning{{/if}}">
+            <span class="kpi-card__label">Pre-flight denies</span>
+            <span class="kpi-card__value">{{stats.denied_session_count}}</span>
+            <span class="kpi-card__sub">{{stats.denied_session_rate_pct}}% of sessions</span>
         </div>
     </section>
+
+    <div class="requests-charts">
+        <section class="requests-charts__panel">
+            <h3 class="requests-charts__title">Latency distribution</h3>
+            <div class="latency-histogram" data-histogram-max="{{histogram_max}}">
+                {{#each histogram}}
+                <div class="latency-histogram__bar" data-count="{{this.count}}"
+                     title="{{this.label}}: {{this.count}} requests">
+                    <span class="latency-histogram__count">{{this.count}}</span>
+                    <span class="latency-histogram__label">{{this.label}}</span>
+                </div>
+                {{/each}}
+            </div>
+        </section>
+
+        <section class="requests-charts__panel">
+            <h3 class="requests-charts__title">Cost over time</h3>
+            <div class="cost-spark" data-cost-max="{{cost_max}}"
+                 aria-label="Cost time series, 24 buckets">
+                {{#each cost_series}}
+                <div class="cost-spark__bar" data-cost="{{this.cost_microdollars}}"
+                     title="{{this.bucket_start}}: {{this.cost_microdollars}} μ$"></div>
+                {{/each}}
+            </div>
+        </section>
+    </div>
+
+    <form method="get" action="/admin/analytics/requests" class="toolbar audit-toolbar">
+        <input type="hidden" name="preset" value="{{time_range.preset}}">
+        <input type="hidden" name="from" value="{{time_range.from}}">
+        <input type="hidden" name="to" value="{{time_range.to}}">
+        <input type="text" name="q" placeholder="Search user / model / trace_id / error..."
+               value="{{search_query}}" class="search-input">
+        <button type="submit" class="btn btn-sm">Search</button>
+        <a href="{{csv_url}}" class="btn btn-sm btn-outline" download>Export CSV</a>
+        <span class="text-muted audit-toolbar__count">
+            {{total_count}} request{{#unless (eq total_count 1)}}s{{/unless}}
+        </span>
+    </form>
+
+    {{#if has_rows}}
+    {{#> components/data-table}}
+        <thead><tr>
+            <th class="col-date">Time</th>
+            <th>Identity</th>
+            <th>Model</th>
+            <th class="col-status">Status</th>
+            <th class="col-num">Tokens</th>
+            <th class="col-num">Cost</th>
+            <th class="col-num">Latency</th>
+            <th class="col-status">Denies</th>
+            <th>trace_id</th>
+        </tr></thead>
+        <tbody>
+        {{#each rows}}
+        <tr data-chain-id="{{this.id}}" class="audit-row" tabindex="0"
+            role="button" aria-label="Open chain of custody for {{this.id}}">
+            <td class="col-date" title="{{this.created_at}}">{{this.created_at_local}}</td>
+            <td>
+                <div class="audit-identity">
+                    <a href="/admin/user?id={{this.user_id}}">{{truncate this.user_label 16}}</a>
+                    {{#if this.tenant_id}}
+                      <span class="audit-identity__agent">tenant {{this.tenant_id}}</span>
+                    {{/if}}
+                </div>
+            </td>
+            <td>
+                <code class="code-inline">{{this.model}}</code>
+                <span class="text-muted text-xs">{{this.provider}}</span>
+            </td>
+            <td class="col-status">
+                {{#if this.is_error}}
+                  <span class="mcp-badge mcp-badge-danger" title="{{this.error_message}}">{{this.status}}</span>
+                {{else}}
+                  <span class="mcp-badge mcp-badge-success">{{this.status}}</span>
+                {{/if}}
+            </td>
+            <td class="col-num">
+                {{#if this.input_tokens}}{{this.input_tokens}}{{else}}—{{/if}}
+                /
+                {{#if this.output_tokens}}{{this.output_tokens}}{{else}}—{{/if}}
+            </td>
+            <td class="col-num">{{this.cost_display}}</td>
+            <td class="col-num">{{#if this.latency_ms}}{{this.latency_ms}} ms{{else}}—{{/if}}</td>
+            <td class="col-status">
+                {{#if this.is_denied_preflight}}
+                  <span class="mcp-badge mcp-badge-danger">{{this.deny_count}}</span>
+                {{else}}
+                  {{#if this.tool_call_count}}
+                    <span class="text-muted">{{this.tool_call_count}} tool</span>
+                  {{else}}—{{/if}}
+                {{/if}}
+            </td>
+            <td>
+                {{#if this.trace_id}}
+                    <code class="code-inline">{{truncate this.trace_id 8}}</code>
+                {{else}}—{{/if}}
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+
+    <nav class="audit-pagination" aria-label="Requests pagination">
+        {{#if pagination.has_prev}}
+            <a href="{{pagination.prev_url}}" class="btn btn-sm btn-outline">&larr; Previous</a>
+        {{else}}
+            <span class="btn btn-sm btn-outline is-disabled">&larr; Previous</span>
+        {{/if}}
+        <span class="audit-pagination__pos">
+            Page {{pagination.current_page}} of {{pagination.total_pages}}
+        </span>
+        {{#if pagination.has_next}}
+            <a href="{{pagination.next_url}}" class="btn btn-sm btn-outline">Next &rarr;</a>
+        {{else}}
+            <span class="btn btn-sm btn-outline is-disabled">Next &rarr;</span>
+        {{/if}}
+    </nav>
+    {{else}}
+    {{> components/empty-state
+        message="No inference requests in the current time range. Widen the window or run a demo to populate data."}}
+    {{/if}}
+
     {{/inline}}
+    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "scripts"}}{{/inline}}
 {{/layout}}

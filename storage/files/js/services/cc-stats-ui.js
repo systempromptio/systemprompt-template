@@ -74,24 +74,3 @@ export const updateSkillAdoption = (data) => {
     if (label) label.textContent = (data.total_used || 0) + '/' + (data.total_available || 0) + ' skills used';
   }
 };
-
-export const updateAchievementProgress = (progress) => {
-  const el = document.getElementById('cc-achievement-progress');
-  if (el && progress?.length) {
-    const list = el.querySelector('.cc-achievement-progress-list');
-    if (list) {
-      list.innerHTML = '';
-      for (const p of progress) {
-        const item = document.createElement('div');
-        item.className = 'cc-achievement-progress-item';
-        item.innerHTML =
-          '<div class="cc-achievement-progress-info">' +
-            '<span class="cc-achievement-progress-name">' + escapeHtml(p.name) + '</span>' +
-            '<span class="cc-achievement-progress-count">' + p.current + '/' + p.threshold + '</span>' +
-          '</div>' +
-          '<div class="cc-bar-track"><div class="cc-bar-fill" style="--sp-fill: ' + p.pct + '%"></div></div>';
-        list.append(item);
-      }
-    }
-  }
-};

@@ -2,12 +2,6 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/page-header title=title}}
-    {{> components/page-hero}}
-
-    <section aria-label="Config CLI">
-        <p class="text-tertiary">CLI: <code class="code-inline">{{cli_command}}</code> &middot; <code class="code-inline">systemprompt admin config validate</code> &middot; <code class="code-inline">systemprompt admin config runtime</code></p>
-        <p class="text-tertiary">Config directory: <code class="code-inline">{{config_dir}}</code></p>
-    </section>
 
     <section aria-label="Configuration files">
     {{#if has_files}}

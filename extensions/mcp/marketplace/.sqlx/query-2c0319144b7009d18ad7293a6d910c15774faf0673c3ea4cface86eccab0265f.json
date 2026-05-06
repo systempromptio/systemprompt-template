@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.display_name AS \"plan_name!\", p.limits\n           FROM marketplace.plans p\n           WHERE p.name = 'free' AND p.is_active = true\n           LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "plan_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "limits",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "2c0319144b7009d18ad7293a6d910c15774faf0673c3ea4cface86eccab0265f"
+}

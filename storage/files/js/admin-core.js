@@ -47,7 +47,6 @@ window.AdminApp = window.AdminApp || {};
         if (!str) return '';
         return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     };
-    // Display-only: decoded for UI hints. All API auth is server-side.
     (() => {
         try {
             const cookie = document.cookie.split(';').find((c) => c.trim().startsWith('access_token='));
@@ -70,7 +69,7 @@ window.AdminApp = window.AdminApp || {};
                     if (me.department) {
                         parts.push(app.escapeHtml(me.department));
                     }
-                    (me.roles || []).forEach(function(role) {
+                    (me.roles || []).forEach((role) => {
                         if (role !== 'user') {
                             parts.push(app.escapeHtml(role.charAt(0).toUpperCase() + role.slice(1)));
                         }
@@ -114,8 +113,13 @@ window.AdminApp = window.AdminApp || {};
             const icon = icons[type] || icons.info;
             const el = document.createElement('div');
             el.className = 'toast toast-' + type;
-            el.innerHTML = '<span class="toast-icon">' + icon + '</span>' +
-                '<span class="toast-message">' + app.escapeHtml(message) + '</span>';
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'toast-icon';
+            iconSpan.textContent = icon;
+            const msgSpan = document.createElement('span');
+            msgSpan.className = 'toast-message';
+            msgSpan.textContent = message;
+            el.append(iconSpan, msgSpan);
             container.append(el);
             setTimeout(() => {
                 el.style.opacity = '0';
@@ -135,14 +139,14 @@ window.AdminApp = window.AdminApp || {};
         input: []
     };
 
-    function on(eventType, selector, handler, options) {
+    const on = (eventType, selector, handler, options) => {
         const entry = { selector, handler, exclusive: (options && options.exclusive) || false };
         if (handlers[eventType]) {
             handlers[eventType].push(entry);
         }
-    }
+    };
 
-    function dispatch(entries, e) {
+    const dispatch = (entries, e) => {
         for (let i = 0; i < entries.length; i++) {
             const entry = entries[i];
             const match = e.target.closest(entry.selector);
@@ -152,39 +156,37 @@ window.AdminApp = window.AdminApp || {};
             }
         }
         return false;
-    }
+    };
 
-    function init() {
-        document.addEventListener('click', function(e) {
+    const init = () => {
+        document.addEventListener('click', (e) => {
             const handled = dispatch(handlers.click, e);
             if (!handled && app.shared) {
                 app.shared.closeAllMenus();
             }
         });
 
-        document.addEventListener('change', function(e) {
+        document.addEventListener('change', (e) => {
             dispatch(handlers.change, e);
         });
 
-        document.addEventListener('input', function(e) {
+        document.addEventListener('input', (e) => {
             dispatch(handlers.input, e);
         });
 
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && app.shared) {
                 app.shared.closeAllMenus();
             }
             dispatch(handlers.keydown, e);
         });
-    }
+    };
 
     app.events = { on, init };
 })(window.AdminApp);
 
 (function(app) {
     'use strict';
-
-    const escapeHtml = app.escapeHtml;
 
     function truncate(str, max) {
         if (!str) return '';
@@ -198,7 +200,7 @@ window.AdminApp = window.AdminApp || {};
         activeDropdown: null,
         activeTrigger: null,
 
-        init: function() {
+        init: () => {
             let portal = document.getElementById('dropdown-portal');
             if (!portal) {
                 portal = document.createElement('div');
@@ -208,19 +210,19 @@ window.AdminApp = window.AdminApp || {};
             }
             DropdownManager.portal = portal;
 
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', (e) => {
                 if (!DropdownManager.activeDropdown) return;
                 if (DropdownManager.activeDropdown.contains(e.target)) return;
                 if (e.target.closest('[data-action="menu"]')) return;
                 DropdownManager.close();
             }, true);
 
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') DropdownManager.close();
             });
         },
 
-        open: function(triggerBtn) {
+        open: (triggerBtn) => {
             DropdownManager.close();
 
             const menu = triggerBtn.closest('.actions-menu');
@@ -248,7 +250,7 @@ window.AdminApp = window.AdminApp || {};
             menu.classList.add('open');
         },
 
-        close: function() {
+        close: () => {
             if (DropdownManager.activeDropdown) {
                 DropdownManager.activeDropdown.remove();
                 DropdownManager.activeDropdown = null;
@@ -279,6 +281,9 @@ window.AdminApp = window.AdminApp || {};
             const trig = installMenu.querySelector('.install-trigger');
             if (trig) trig.setAttribute('aria-expanded', 'false');
         }
+        if (app._closeSidebar) {
+            app._closeSidebar();
+        }
     }
 
     function closeDeleteConfirm(overlayId) {
@@ -291,16 +296,27 @@ window.AdminApp = window.AdminApp || {};
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         if (opts && opts.id) overlay.id = opts.id;
-        overlay.innerHTML = '<div class="confirm-dialog">' +
-            '<h3>' + escapeHtml(title) + '</h3>' +
-            '<p>' + escapeHtml(message) + '</p>' +
-            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)">' +
-                '<button class="btn btn-secondary" data-action="cancel">Cancel</button>' +
-                '<button class="btn ' + btnClass + '" data-action="confirm">' + escapeHtml(confirmLabel) + '</button>' +
-            '</div>' +
-        '</div>';
-        overlay.querySelector('[data-action="cancel"]').addEventListener('click', () => overlay.remove());
-        overlay.querySelector('[data-action="confirm"]').addEventListener('click', () => {
+        const dialog = document.createElement('div');
+        dialog.className = 'confirm-dialog';
+        const h3 = document.createElement('h3');
+        h3.textContent = title;
+        const p = document.createElement('p');
+        p.textContent = message;
+        const btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.setAttribute('data-action', 'cancel');
+        cancelBtn.textContent = 'Cancel';
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = 'btn ' + btnClass;
+        confirmBtn.setAttribute('data-action', 'confirm');
+        confirmBtn.textContent = confirmLabel;
+        btnRow.append(cancelBtn, confirmBtn);
+        dialog.append(h3, p, btnRow);
+        overlay.append(dialog);
+        cancelBtn.addEventListener('click', () => overlay.remove());
+        confirmBtn.addEventListener('click', () => {
             overlay.remove();
             onConfirm();
         });
@@ -315,14 +331,25 @@ window.AdminApp = window.AdminApp || {};
         const overlay = document.createElement('div');
         overlay.className = 'confirm-overlay';
         overlay.id = 'delete-confirm';
-        overlay.innerHTML = '<div class="confirm-dialog">' +
-            '<h3>' + escapeHtml(title) + '</h3>' +
-            '<p>This action cannot be undone.</p>' +
-            '<div style="display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)">' +
-                '<button class="btn btn-secondary" data-confirm-cancel>Cancel</button>' +
-                '<button class="btn btn-danger" data-confirm-delete="' + escapeHtml(itemId) + '">Delete</button>' +
-            '</div>' +
-        '</div>';
+        const dialog = document.createElement('div');
+        dialog.className = 'confirm-dialog';
+        const h3 = document.createElement('h3');
+        h3.textContent = title;
+        const p = document.createElement('p');
+        p.textContent = 'This action cannot be undone.';
+        const btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:var(--sp-space-3);justify-content:flex-end;margin-top:var(--sp-space-5)';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.setAttribute('data-confirm-cancel', '');
+        cancelBtn.textContent = 'Cancel';
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-danger';
+        deleteBtn.setAttribute('data-confirm-delete', itemId);
+        deleteBtn.textContent = 'Delete';
+        btnRow.append(cancelBtn, deleteBtn);
+        dialog.append(h3, p, btnRow);
+        overlay.append(dialog);
         document.body.append(overlay);
         return overlay;
     }
@@ -355,12 +382,25 @@ window.AdminApp = window.AdminApp || {};
     }
 
     function showLoading(el, msg) {
-        el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>' +
-            escapeHtml(msg || 'Loading...') + '</p></div>';
+        el.replaceChildren();
+        const wrapper = document.createElement('div');
+        wrapper.className = 'loading-spinner';
+        const spinner = document.createElement('div');
+        spinner.className = 'spinner';
+        const p = document.createElement('p');
+        p.textContent = msg || 'Loading...';
+        wrapper.append(spinner, p);
+        el.append(wrapper);
     }
 
     function showEmpty(el, msg) {
-        el.innerHTML = '<div class="empty-state"><p>' + escapeHtml(msg) + '</p></div>';
+        el.replaceChildren();
+        const wrapper = document.createElement('div');
+        wrapper.className = 'empty-state';
+        const p = document.createElement('p');
+        p.textContent = msg;
+        wrapper.append(p);
+        el.append(wrapper);
     }
 
     function loadJSZip() {
@@ -409,8 +449,6 @@ window.AdminApp = window.AdminApp || {};
 (function(app) {
     'use strict';
 
-    const escapeHtml = app.escapeHtml;
-
     function renderChecklist(id, items, selected, label, opts) {
         const options = opts || {};
         const selectedSet = {};
@@ -424,33 +462,82 @@ window.AdminApp = window.AdminApp || {};
                 if (selected[k]) selectedSet[k] = true;
             });
         }
-        const hasItems = items && items.length > 0;
-        const listItems = hasItems ? items.map((item) => {
-            const val = typeof item === 'string' ? item : (item.name || item.id || item);
-            const displayName = typeof item === 'string' ? item : (item.name || item.id || String(item));
-            const checked = selectedSet[val] ? ' checked' : '';
-            const itemId = id + '-chk-' + val.replace(/[^a-zA-Z0-9_-]/g, '_');
-            return '<div class="checklist-item" data-item-name="' + escapeHtml(val.toLowerCase()) + '">' +
-                '<input type="checkbox" name="' + escapeHtml(id) + '" value="' + escapeHtml(val) + '"' + checked + ' id="' + escapeHtml(itemId) + '">' +
-                '<label for="' + escapeHtml(itemId) + '">' + escapeHtml(displayName) + '</label>' +
-            '</div>';
-        }).join('') : '<div class="empty-state" style="padding:var(--sp-space-4)"><p>None available.</p></div>';
-        let filterRow = '<input type="text" class="field-input" placeholder="Filter..." data-filter-list="' + escapeHtml(id) + '" style="margin-bottom:var(--sp-space-2)">';
+
+        const group = document.createElement('div');
+        group.className = 'form-group';
+
+        const labelEl = document.createElement('label');
+        labelEl.className = 'field-label';
+        labelEl.textContent = label;
+        group.append(labelEl);
+
+        const filterInput = document.createElement('input');
+        filterInput.type = 'text';
+        filterInput.className = 'field-input';
+        filterInput.setAttribute('data-filter-list', id);
+
         if (options.hasSelectAll) {
-            filterRow = '<div style="display:flex;gap:var(--sp-space-2);margin-bottom:var(--sp-space-2)">' +
-                '<input type="text" class="field-input" placeholder="Search..." data-filter-list="' + escapeHtml(id) + '" style="flex:1">' +
-                '<button type="button" class="btn btn-secondary btn-sm" data-select-all="' + escapeHtml(id) + '">Select All</button>' +
-                '<button type="button" class="btn btn-secondary btn-sm" data-deselect-all="' + escapeHtml(id) + '">Deselect All</button>' +
-            '</div>';
+            filterInput.placeholder = 'Search...';
+            filterInput.style.flex = '1';
+            const filterRow = document.createElement('div');
+            filterRow.style.cssText = 'display:flex;gap:var(--sp-space-2);margin-bottom:var(--sp-space-2)';
+            const selectAllBtn = document.createElement('button');
+            selectAllBtn.type = 'button';
+            selectAllBtn.className = 'btn btn-secondary btn-sm';
+            selectAllBtn.setAttribute('data-select-all', id);
+            selectAllBtn.textContent = 'Select All';
+            const deselectAllBtn = document.createElement('button');
+            deselectAllBtn.type = 'button';
+            deselectAllBtn.className = 'btn btn-secondary btn-sm';
+            deselectAllBtn.setAttribute('data-deselect-all', id);
+            deselectAllBtn.textContent = 'Deselect All';
+            filterRow.append(filterInput, selectAllBtn, deselectAllBtn);
+            group.append(filterRow);
+        } else {
+            filterInput.placeholder = 'Filter...';
+            filterInput.style.marginBottom = 'var(--sp-space-2)';
+            group.append(filterInput);
         }
+
         const maxHeight = options.hasSelectAll ? '300px' : '200px';
-        return '<div class="form-group">' +
-            '<label class="field-label">' + escapeHtml(label) + '</label>' +
-            filterRow +
-            '<div class="checklist-container" data-checklist="' + escapeHtml(id) + '" style="max-height:' + maxHeight + ';overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)">' +
-                listItems +
-            '</div>' +
-        '</div>';
+        const container = document.createElement('div');
+        container.className = 'checklist-container';
+        container.setAttribute('data-checklist', id);
+        container.style.cssText = 'max-height:' + maxHeight + ';overflow-y:auto;border:1px solid var(--sp-border-subtle);border-radius:var(--sp-radius-md);padding:var(--sp-space-2)';
+
+        const hasItems = items && items.length > 0;
+        if (hasItems) {
+            items.forEach(function(item) {
+                const val = typeof item === 'string' ? item : (item.name || item.id || item);
+                const displayName = typeof item === 'string' ? item : (item.name || item.id || String(item));
+                const itemId = id + '-chk-' + val.replace(/[^a-zA-Z0-9_-]/g, '_');
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'checklist-item';
+                itemDiv.setAttribute('data-item-name', val.toLowerCase());
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.name = id;
+                checkbox.value = val;
+                checkbox.id = itemId;
+                if (selectedSet[val]) checkbox.checked = true;
+                const itemLabel = document.createElement('label');
+                itemLabel.setAttribute('for', itemId);
+                itemLabel.textContent = displayName;
+                itemDiv.append(checkbox, itemLabel);
+                container.append(itemDiv);
+            });
+        } else {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'empty-state';
+            emptyDiv.style.padding = 'var(--sp-space-4)';
+            const emptyP = document.createElement('p');
+            emptyP.textContent = 'None available.';
+            emptyDiv.append(emptyP);
+            container.append(emptyDiv);
+        }
+
+        group.append(container);
+        return group;
     }
 
     function attachFilterHandlers(root) {
@@ -552,7 +639,7 @@ window.AdminApp = window.AdminApp || {};
             }
         }
 
-        sortableRows.sort(function(a, b) {
+        sortableRows.sort((a, b) => {
             const aCell = a.cells[colIndex];
             const bCell = b.cells[colIndex];
             if (!aCell || !bCell) return 0;
@@ -590,10 +677,10 @@ window.AdminApp = window.AdminApp || {};
 
         initTableSort();
 
-        app.events.on('input', '#' + searchInputId, function(e, el) {
+        app.events.on('input', '#' + searchInputId, (e, el) => {
             let debounceTimer = el._debounceTimer || null;
             clearTimeout(debounceTimer);
-            el._debounceTimer = setTimeout(function() {
+            el._debounceTimer = setTimeout(() => {
                 const q = el.value.toLowerCase().trim();
                 const rows = document.querySelectorAll('.data-table tbody tr');
                 for (let i = 0; i < rows.length; i++) {
@@ -603,19 +690,19 @@ window.AdminApp = window.AdminApp || {};
             }, 200);
         });
 
-        app.events.on('click', '[data-action="delete"]', function(e, deleteBtn) {
+        app.events.on('click', '[data-action="delete"]', (e, deleteBtn) => {
             shared.closeAllMenus();
             const entityId = deleteBtn.getAttribute('data-entity-id');
             const deleteEntityType = deleteBtn.getAttribute('data-entity-type') || entityType;
             showDeleteDialog(deleteEntityType, entityId, opts);
         }, { exclusive: true });
 
-        app.events.on('click', '[data-confirm-delete]', function(e, confirmBtn) {
+        app.events.on('click', '[data-confirm-delete]', (e, confirmBtn) => {
             const deleteId = confirmBtn.getAttribute('data-confirm-delete');
             performDelete(entityType, deleteId, confirmBtn, opts);
         }, { exclusive: true });
 
-        app.events.on('change', '[data-action="toggle"]', function(e, toggle) {
+        app.events.on('change', '[data-action="toggle"]', (e, toggle) => {
             const id = toggle.getAttribute('data-entity-id');
             const toggleType = toggle.getAttribute('data-entity-type') || entityType;
             const enabled = toggle.checked;
@@ -647,9 +734,9 @@ window.AdminApp = window.AdminApp || {};
             app.api(apiPath, {
                 method: 'PUT',
                 body: JSON.stringify({ enabled: enabled })
-            }).then(function() {
+            }).then(() => {
                 app.Toast.show(toggleType + ' ' + (enabled ? 'enabled' : 'disabled'), 'success');
-            }).catch(function(err) {
+            }).catch((err) => {
                 toggle.checked = !enabled;
                 if (row) {
                     row.setAttribute('data-enabled', enabled ? 'disabled' : 'enabled');
@@ -682,11 +769,11 @@ window.AdminApp = window.AdminApp || {};
         const apiPath = opts.deleteApiPath
             ? opts.deleteApiPath(entityId)
             : '/' + entityType + 's/' + encodeURIComponent(entityId);
-        app.api(apiPath, { method: 'DELETE' }).then(function() {
+        app.api(apiPath, { method: 'DELETE' }).then(() => {
             app.Toast.show(entityType + ' deleted', 'success');
             shared.closeDeleteConfirm();
             window.location.reload();
-        }).catch(function(err) {
+        }).catch((err) => {
             app.Toast.show(err.message || 'Failed to delete ' + entityType, 'error');
             confirmBtn.disabled = false;
             confirmBtn.textContent = 'Delete';
@@ -705,7 +792,7 @@ window.AdminApp = window.AdminApp || {};
         const existingId = form.querySelector('[name="' + idField + '"]');
         const isEdit = existingId && existingId.readOnly && existingId.value;
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = new FormData(form);
             const body = opts.buildBody ? opts.buildBody(form, formData) : formDataToObject(formData);
@@ -723,11 +810,11 @@ window.AdminApp = window.AdminApp || {};
             if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
 
             app.api(url, { method: method, body: JSON.stringify(body) })
-                .then(function() {
+                .then(() => {
                     app.Toast.show(entity + ' saved!', 'success');
                     window.location.href = app.BASE + listPath;
                 })
-                .catch(function(err) {
+                .catch((err) => {
                     app.Toast.show(err.message || 'Failed to save ' + entity, 'error');
                     if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = isEdit ? 'Save Changes' : 'Create'; }
                 });
@@ -736,9 +823,9 @@ window.AdminApp = window.AdminApp || {};
 
     function formDataToObject(formData) {
         const obj = {};
-        formData.forEach(function(value, key) {
+        formData.forEach((value, key) => {
             if (key === 'tags') {
-                obj[key] = value.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+                obj[key] = value.split(',').map((t) => t.trim()).filter(Boolean);
             } else {
                 obj[key] = value;
             }
@@ -746,7 +833,7 @@ window.AdminApp = window.AdminApp || {};
         return obj;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
         app.events.init();
         initTableSort();
     });
@@ -761,7 +848,7 @@ window.AdminApp = window.AdminApp || {};
 (function(app) {
     'use strict';
 
-    app.events.on('click', '.install-trigger', function(e, trigger) {
+    app.events.on('click', '.install-trigger', (e, trigger) => {
         const menu = document.getElementById('install-menu');
         if (!menu) return;
         const isOpen = menu.classList.contains('open');
@@ -769,27 +856,35 @@ window.AdminApp = window.AdminApp || {};
         trigger.setAttribute('aria-expanded', !isOpen);
     }, { exclusive: true });
 
-    app.events.on('click', '[data-install-tab]', function(e, tabBtn) {
+    app.events.on('click', '[data-install-tab]', (e, tabBtn) => {
         const widget = tabBtn.closest('.install-menu');
         if (!widget) return;
         const tabId = tabBtn.getAttribute('data-install-tab');
-        widget.querySelectorAll('[data-install-tab]').forEach(function(b) {
+        widget.querySelectorAll('[data-install-tab]').forEach((b) => {
             b.classList.toggle('active', b === tabBtn);
         });
-        widget.querySelectorAll('[data-install-panel]').forEach(function(p) {
+        widget.querySelectorAll('[data-install-panel]').forEach((p) => {
             p.style.display = p.getAttribute('data-install-panel') === tabId ? '' : 'none';
         });
     });
 
-    app.events.on('click', '[data-copy]', function(e, copyBtn) {
-        var text = copyBtn.getAttribute('data-copy');
-        navigator.clipboard.writeText(text).then(function() {
-            copyBtn.classList.add('copy-success');
-            setTimeout(function() { copyBtn.classList.remove('copy-success'); }, 2000);
+    app.events.on('click', '[data-copy]', (e, copyBtn) => {
+        const text = copyBtn.getAttribute('data-copy');
+        navigator.clipboard.writeText(text).then(() => {
+            const savedNodes = Array.from(copyBtn.childNodes).map((n) => n.cloneNode(true));
+            copyBtn.replaceChildren();
+            const checkSpan = document.createElement('span');
+            checkSpan.style.cssText = 'color:var(--sp-success);font-size:16px';
+            checkSpan.textContent = '\u2713';
+            copyBtn.append(checkSpan);
+            setTimeout(() => {
+                copyBtn.replaceChildren();
+                savedNodes.forEach((n) => { copyBtn.append(n); });
+            }, 2000);
         });
     });
 
-    app.events.on('click', '[data-action="toggle-token"]', function(e, btn) {
+    app.events.on('click', '[data-action="toggle-token"]', (e, btn) => {
         const box = btn.closest('.install-token-box');
         if (!box) return;
         const code = box.querySelector('.install-token-value');
@@ -806,7 +901,7 @@ window.AdminApp = window.AdminApp || {};
         }
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
         const tokenEl = document.querySelector('.install-token-value[data-masked="true"]');
         if (tokenEl) tokenEl.style.filter = 'blur(4px)';
     });

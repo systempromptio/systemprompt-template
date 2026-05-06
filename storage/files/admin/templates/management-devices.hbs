@@ -1,0 +1,67 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title subtitle="Every PAT and desktop app linked to a user, with live online status."}}
+
+    <div class="kpi-grid" role="list" style="margin-bottom:1.5rem;">
+        <div class="kpi-card" role="listitem"><span class="kpi-label">Total devices</span><span class="kpi-value">{{total}}</span></div>
+        <div class="kpi-card" role="listitem"><span class="kpi-label">Online (≤5m)</span><span class="kpi-value">{{online}}</span></div>
+    </div>
+
+    <div class="toolbar" role="toolbar">
+        <div class="search-group"><input type="text" class="search-input" placeholder="Search by user, device, prefix..." id="device-search"></div>
+        <select class="filter-select" id="device-platform-filter">
+            <option value="">All platforms</option>
+            <option value="macos">macOS</option>
+            <option value="windows">Windows</option>
+            <option value="linux">Linux</option>
+        </select>
+    </div>
+
+    {{#if devices}}
+    {{#> components/data-table}}
+        <thead><tr><th>Device</th><th>Owner</th><th>Department</th><th>Platform</th><th>Hostname</th><th>Last seen</th><th class="col-status">Status</th></tr></thead>
+        <tbody>
+        {{#each devices}}
+        <tr data-platform="{{platform}}" data-search="{{toLowerCase name}} {{toLowerCase (default user_email user_id)}} {{toLowerCase (default hostname "")}} {{toLowerCase key_prefix}}">
+            <td>
+                <strong>{{name}}</strong><br>
+                <code class="code-inline">{{key_prefix}}</code>
+            </td>
+            <td>{{#if user_email}}<a href="/admin/management/user?id={{user_id}}">{{user_email}}</a>{{else}}<a href="/admin/management/user?id={{user_id}}"><code>{{user_id}}</code></a>{{/if}}</td>
+            <td>{{#if department}}<a href="/admin/access-control?department={{department}}" class="badge badge-blue">{{department}}</a>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if platform}}<span class="badge">{{platform}}{{#if app_version}} <span class="text-muted">{{app_version}}</span>{{/if}}</span>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if hostname}}<code class="code-inline">{{hostname}}</code>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if last_seen_at}}<span title="{{formatDate last_seen_at}}">{{relativeTime last_seen_at}}</span>{{else}}<span class="text-tertiary">Never</span>{{/if}}</td>
+            <td class="col-status">{{#if revoked}}<span class="badge badge-gray">Revoked</span>{{else}}<span class="badge badge-green">Active</span>{{/if}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    <div class="empty-state" style="padding:3rem;text-align:center;">
+        <h3>No devices linked yet</h3>
+        <p class="text-muted">Users issue PATs from their device settings or pair the desktop app via <code>sp-cowork-auth</code>.</p>
+        <a class="btn btn-primary" href="/cowork-auth/setup">Setup guide</a>
+    </div>
+    {{/if}}
+
+    <script>
+    (function(){
+        const search = document.getElementById('device-search');
+        const platform = document.getElementById('device-platform-filter');
+        const apply = () => {
+            const q = (search.value || '').toLowerCase();
+            const pf = platform.value;
+            document.querySelectorAll('tr[data-search]').forEach(r => {
+                const matchQ = !q || r.getAttribute('data-search').includes(q);
+                const matchP = !pf || r.getAttribute('data-platform') === pf;
+                r.style.display = matchQ && matchP ? '' : 'none';
+            });
+        };
+        search?.addEventListener('input', apply);
+        platform?.addEventListener('change', apply);
+    })();
+    </script>
+    {{/inline}}
+{{/layout}}

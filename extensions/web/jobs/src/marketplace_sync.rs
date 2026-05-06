@@ -37,68 +37,72 @@ impl Job for MarketplaceSyncJob {
 }
 
 async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
-        let start = std::time::Instant::now();
+    let start = std::time::Instant::now();
 
-        tracing::info!("Marketplace sync job started");
+    tracing::info!("Marketplace sync job started");
 
-        let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-            "Database not available in job context".to_string(),
-        ))?;
+    let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
+        "Database not available in job context".to_string(),
+    ))?;
 
-        let pool = db.pool().ok_or(MarketplaceError::Internal(
-            "PgPool not available from database".to_string(),
-        ))?;
+    let pool = db.pool().ok_or(MarketplaceError::Internal(
+        "PgPool not available from database".to_string(),
+    ))?;
 
-        let dirty_users = repositories::marketplace_sync_status::get_dirty_users(&pool, 50)
-            .await
-            .map_err(|e| MarketplaceError::Internal(format!("Failed to query dirty users: {e}")))?;
+    let dirty_users = repositories::marketplace_sync_status::get_dirty_users(&pool, 50)
+        .await
+        .map_err(|e| MarketplaceError::Internal(format!("Failed to query dirty users: {e}")))?;
 
-        let total = dirty_users.len() as u64;
-        let mut success_count = 0u64;
-        let mut error_count = 0u64;
+    let total = dirty_users.len() as u64;
+    let mut success_count = 0u64;
+    let mut error_count = 0u64;
 
-        for user_id in &dirty_users {
-            match generate_and_persist_marketplace(&pool, user_id).await {
-                Ok(()) => {
-                    if let Err(e) =
-                        repositories::marketplace_sync_status::mark_user_synced(&pool, user_id)
-                            .await
-                    {
-                        tracing::warn!(user_id = %user_id, error = %e, "Failed to mark user synced");
-                        error_count += 1;
-                    } else {
-                        success_count += 1;
-                        tracing::debug!(user_id = %user_id, "Marketplace synced successfully");
-                    }
-                }
-                Err(e) => {
-                    error_count += 1;
-                    let err_msg = format!("{e}");
-                    tracing::warn!(user_id = %user_id, error = %e, "Failed to sync marketplace");
-                    if let Err(mark_err) = repositories::marketplace_sync_status::mark_sync_error(
-                        &pool, user_id, &err_msg,
-                    )
-                    .await
-                    {
-                        tracing::warn!(user_id = %user_id, error = %mark_err, "Failed to mark sync error");
-                    }
-                }
-            }
+    for user_id in &dirty_users {
+        if sync_one_user(&pool, user_id).await {
+            success_count += 1;
+        } else {
+            error_count += 1;
         }
+    }
 
-        let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+    let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 
-        tracing::info!(
-            total,
-            success = success_count,
-            errors = error_count,
-            duration_ms,
-            "Marketplace sync job completed"
-        );
+    tracing::info!(
+        total,
+        success = success_count,
+        errors = error_count,
+        duration_ms,
+        "Marketplace sync job completed"
+    );
 
-        Ok(JobResult::success()
-            .with_stats(success_count, error_count)
-            .with_duration(duration_ms))
+    Ok(JobResult::success()
+        .with_stats(success_count, error_count)
+        .with_duration(duration_ms))
+}
+
+/// Sync one user. Returns `true` on success, `false` on any failure (errors
+/// are logged + persisted via `mark_sync_error`).
+async fn sync_one_user(pool: &PgPool, user_id: &UserId) -> bool {
+    if let Err(e) = generate_and_persist_marketplace(pool, user_id).await {
+        record_sync_error(pool, user_id, &e).await;
+        return false;
+    }
+    if let Err(e) = repositories::marketplace_sync_status::mark_user_synced(pool, user_id).await {
+        tracing::warn!(user_id = %user_id, error = %e, "Failed to mark user synced");
+        return false;
+    }
+    tracing::debug!(user_id = %user_id, "Marketplace synced successfully");
+    true
+}
+
+async fn record_sync_error(pool: &PgPool, user_id: &UserId, err: &MarketplaceError) {
+    let err_msg = format!("{err}");
+    tracing::warn!(user_id = %user_id, error = %err, "Failed to sync marketplace");
+    if let Err(mark_err) =
+        repositories::marketplace_sync_status::mark_sync_error(pool, user_id, &err_msg).await
+    {
+        tracing::warn!(user_id = %user_id, error = %mark_err, "Failed to mark sync error");
+    }
 }
 
 pub async fn generate_and_persist_marketplace(

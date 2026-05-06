@@ -9,6 +9,7 @@ use sqlx::FromRow;
 pub enum RuleType {
     Role,
     Department,
+    User,
 }
 
 impl fmt::Display for RuleType {
@@ -16,6 +17,7 @@ impl fmt::Display for RuleType {
         match self {
             Self::Role => write!(f, "role"),
             Self::Department => write!(f, "department"),
+            Self::User => write!(f, "user"),
         }
     }
 }
@@ -27,6 +29,7 @@ impl TryFrom<String> for RuleType {
         match s.as_str() {
             "role" => Ok(Self::Role),
             "department" => Ok(Self::Department),
+            "user" => Ok(Self::User),
             other => Err(format!("invalid rule type: {other}")),
         }
     }

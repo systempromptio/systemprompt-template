@@ -80,6 +80,7 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
         .merge(my_routes())
         .merge(entity_routes())
         .merge(org_routes())
+        .merge(management_routes())
         .route("/setup", get(handlers::ssr::setup_page))
         .route("/demo-register", get(handlers::ssr::demo_register_page))
         .route("/auth/me", get(middleware::auth_me_handler))
@@ -132,14 +133,85 @@ fn dashboard_routes() -> Router<Arc<PgPool>> {
     Router::new()
         .route(
             "/",
-            get(|| async { axum::response::Redirect::to("/admin/dashboard") }),
+            get(|| async { axum::response::Redirect::to("/admin/overview") }),
         )
         .route("/dashboard", get(handlers::ssr::dashboard_page))
+        .route("/overview", get(handlers::ssr::overview_index_page))
+        .route("/overview/pulse", get(handlers::ssr::overview_pulse_page))
+        .route(
+            "/overview/identity",
+            get(handlers::ssr::overview_identity_page),
+        )
+        .route("/overview/cost", get(handlers::ssr::overview_cost_page))
+        .route(
+            "/overview/governance",
+            get(handlers::ssr::overview_governance_page),
+        )
+        .route(
+            "/overview/services",
+            get(handlers::ssr::overview_services_page),
+        )
         .route(
             "/api/generate-traffic-report",
             post(handlers::ssr::handle_generate_traffic_report),
         )
         .route("/api/sse/dashboard", get(handlers::sse::dashboard_sse))
+        .route("/api/sse/audit", get(handlers::sse::audit_sse))
+        .route(
+            "/api/sse/overview/{pane}",
+            get(handlers::sse::overview_sse),
+        )
+}
+
+fn governance_routes() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route("/governance", get(handlers::ssr::governance_page))
+        .route(
+            "/governance/decisions",
+            get(handlers::ssr::governance_audit_page),
+        )
+        .route(
+            "/governance/decisions/portfolio",
+            get(handlers::ssr::governance_portfolio_page),
+        )
+        .route(
+            "/governance/flow",
+            get(handlers::ssr::governance_flow_page),
+        )
+        .route(
+            "/governance/decisions/{id}",
+            get(handlers::ssr::governance_audit_detail_page),
+        )
+        .route(
+            "/api/governance/decisions.csv",
+            get(handlers::ssr::governance_audit_csv),
+        )
+        .route(
+            "/governance/hooks",
+            get(handlers::ssr::governance_hooks_page),
+        )
+        .route(
+            "/governance/users",
+            get(handlers::ssr::governance_users_page),
+        )
+        .route(
+            "/governance/identity",
+            get(handlers::ssr::governance_identity_page),
+        )
+        .route(
+            "/governance/identity/{id}",
+            get(handlers::ssr::governance_identity_profile_page),
+        )
+        .route(
+            "/governance/{policy_id}",
+            get(handlers::ssr::governance_policy_edit_page),
+        )
+        .route(
+            "/governance/{policy_id}/toggle",
+            post(handlers::ssr::governance_policy_toggle),
+        )
+        .route("/api/chain/{id}", get(handlers::ssr::chain_envelope))
+        .route("/api/search/resolve", get(handlers::ssr::search_resolve))
 }
 
 fn user_page_routes() -> Router<Arc<PgPool>> {
@@ -149,33 +221,11 @@ fn user_page_routes() -> Router<Arc<PgPool>> {
         .route("/events", get(handlers::ssr::events_page))
         .route("/profile", get(handlers::ssr::profile_page))
         .route("/settings", get(handlers::ssr::settings_page))
-        .route("/achievements", get(handlers::ssr::achievements_page))
-        .route("/leaderboard", get(handlers::ssr::leaderboard_page))
         .route("/user", get(handlers::ssr::user_detail_page))
-        .route("/governance", get(handlers::ssr::governance_page))
+        .merge(governance_routes())
         .route(
-            "/governance/decisions",
-            get(handlers::ssr::governance_decisions_page),
-        )
-        .route(
-            "/governance/audit",
-            get(handlers::ssr::governance_audit_page),
-        )
-        .route(
-            "/governance/rules",
-            get(handlers::ssr::governance_rules_page),
-        )
-        .route(
-            "/governance/violations",
-            get(handlers::ssr::governance_violations_page),
-        )
-        .route(
-            "/governance/rate-limits",
-            get(handlers::ssr::governance_rate_limits_page),
-        )
-        .route(
-            "/governance/hooks",
-            get(handlers::ssr::governance_hooks_page),
+            "/api/conversations/{session_id}/raw",
+            get(handlers::ssr::conversations_raw),
         )
         .route("/traces", get(handlers::ssr::traces_page))
         .route("/devices", get(handlers::ssr::devices_page))
@@ -189,6 +239,17 @@ fn user_page_routes() -> Router<Arc<PgPool>> {
             axum::routing::delete(handlers::devices::revoke_cert),
         )
         .route("/access-control", get(handlers::ssr::access_control_page))
+        .route("/gateway", get(handlers::ssr::gateway_page))
+        .route(
+            "/access",
+            get(|| async {
+                axum::response::Redirect::permanent("/admin/access-control?focus=gateway")
+            }),
+        )
+        .route(
+            "/gateway/routes/edit",
+            get(handlers::ssr::gateway_route_edit_page),
+        )
         .route("/analytics", get(handlers::ssr::analytics_overview_page))
         .route(
             "/analytics/agents",
@@ -198,6 +259,10 @@ fn user_page_routes() -> Router<Arc<PgPool>> {
         .route(
             "/analytics/requests",
             get(handlers::ssr::analytics_requests_page),
+        )
+        .route(
+            "/api/analytics/requests.csv",
+            get(handlers::ssr::analytics_requests_csv),
         )
         .route(
             "/analytics/sessions",
@@ -226,8 +291,20 @@ fn user_page_routes() -> Router<Arc<PgPool>> {
             get(handlers::ssr::infra_config_page),
         )
         .route("/mcp/access", get(handlers::ssr::mcp_access_page))
+        .route(
+            "/mcp-servers/{server_id}/access",
+            get(handlers::ssr::mcp_server_access_page),
+        )
         .route("/mcp/tools", get(handlers::ssr::mcp_tools_page))
+        .route(
+            "/mcp/tools/{tool_name}",
+            get(handlers::ssr::mcp_tool_detail_page),
+        )
         .route("/performance/traces", get(handlers::ssr::perf_traces_page))
+        .route(
+            "/performance/traces/{id}",
+            get(handlers::ssr::perf_trace_detail_page),
+        )
         .route(
             "/performance/benchmarks",
             get(handlers::ssr::perf_benchmarks_page),
@@ -270,6 +347,7 @@ fn entity_routes() -> Router<Arc<PgPool>> {
         .route("/agents/config", get(handlers::ssr::agent_config_page))
         .route("/agents/messages", get(handlers::ssr::agent_messages_page))
         .route("/agents/traces", get(handlers::ssr::agent_traces_page))
+        .route("/external-agents", get(handlers::ssr::external_agents_page))
         .route("/hooks", get(handlers::ssr::hooks_page))
         .route("/hooks/edit", get(handlers::ssr::hook_edit_page))
         .route("/mcp-servers", get(handlers::ssr::mcp_servers_page))
@@ -278,6 +356,42 @@ fn entity_routes() -> Router<Arc<PgPool>> {
         .route(
             "/marketplace",
             get(handlers::ssr::marketplace_versions_page),
+        )
+}
+
+fn management_routes() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route(
+            "/management",
+            get(handlers::ssr::management_overview_page),
+        )
+        .route(
+            "/management/users",
+            get(handlers::ssr::users_page),
+        )
+        .route(
+            "/management/user",
+            get(handlers::ssr::user_detail_page),
+        )
+        .route(
+            "/management/departments",
+            get(handlers::ssr::management_departments_page),
+        )
+        .route(
+            "/management/departments/{id}",
+            get(handlers::ssr::management_department_detail_page),
+        )
+        .route(
+            "/management/devices",
+            get(handlers::ssr::management_devices_page),
+        )
+        .route(
+            "/management/skills",
+            get(handlers::ssr::management_skills_page),
+        )
+        .route(
+            "/management/marketplaces",
+            get(handlers::ssr::management_marketplaces_page),
         )
 }
 
