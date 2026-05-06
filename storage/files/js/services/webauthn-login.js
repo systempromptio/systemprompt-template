@@ -11,7 +11,7 @@ import { showToast } from '/js/services/toast.js';
 const CLIENT_ID = 'marketplace-admin';
 const OAUTH_BASE = '/api/v1/core/oauth';
 const LOGIN_PATH = '/admin/login';
-const DEFAULT_REDIRECT = '/control-center';
+const DEFAULT_REDIRECT = '/admin/access/users';
 const signInBtn = document.getElementById('sign-in-btn');
 const emailInput = getEmailInput();
 let isAuthenticating = false;

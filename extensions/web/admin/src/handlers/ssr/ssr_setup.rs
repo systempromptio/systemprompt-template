@@ -68,10 +68,10 @@ pub async fn setup_page(
         SetupPhase {
             number: 4,
             title: String::from("Monitor, Report, and Improve"),
-            description: "Track skill effectiveness with analytics. Identify what is working, retire what is not, and iterate your way to a world-class skill library.",
+            description: "Track skill effectiveness with the CLI. Identify what is working, retire what is not, and iterate your way to a world-class skill library.",
             guide_url: "/documentation/dashboard",
-            action_url: "/control-center",
-            action_label: "Control Center",
+            action_url: "/admin/access/users",
+            action_label: "Open Admin",
             complete: false,
             current: phase3_complete,
         },

@@ -101,34 +101,5 @@ function initSparklines() {
 
 function initGenerateReport() {
     const btn = document.getElementById('generate-profile-report');
-    if (!btn) return;
-
-    btn.addEventListener('click', async () => {
-        btn.disabled = true;
-        btn.textContent = 'Generating...';
-
-        try {
-            const res = await fetch('/control-center/api/generate-profile-report', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
-
-            if (res.ok) {
-                const url = new URL(window.location);
-                url.searchParams.set('tab', 'ai');
-                window.location.href = url.toString();
-            } else {
-                const data = await res.json().catch(() => ({}));
-                const msg = data.message || 'Failed to generate analysis';
-                btn.textContent = msg;
-                setTimeout(() => {
-                    btn.textContent = 'Regenerate';
-                    btn.disabled = false;
-                }, 4000);
-            }
-        } catch {
-            btn.textContent = 'Error - try again';
-            btn.disabled = false;
-        }
-    });
+    if (btn) btn.remove();
 }
