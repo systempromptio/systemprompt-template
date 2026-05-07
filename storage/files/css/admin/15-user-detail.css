@@ -1,0 +1,122 @@
+/* User detail + users-table runtime visualisations */
+
+.agent-pill,
+.device-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+  background: var(--color-surface-2, rgba(0, 0, 0, 0.03));
+  color: var(--color-text, inherit);
+}
+
+.agent-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.55;
+  box-shadow: 0 0 0 0 currentColor;
+}
+
+.agent-pill--live { color: var(--color-success, #15803d); border-color: rgba(21, 128, 61, 0.3); }
+.agent-pill--live .agent-dot { opacity: 1; animation: agent-pulse 1.6s ease-out infinite; }
+.agent-pill--idle { color: var(--color-muted, #6b7280); }
+
+.device-pill--fresh { color: var(--color-success, #15803d); border-color: rgba(21, 128, 61, 0.3); }
+.device-pill--fresh .agent-dot { opacity: 1; animation: agent-pulse 1.6s ease-out infinite; }
+.device-pill--idle  { color: #b45309; border-color: rgba(180, 83, 9, 0.3); }
+.device-pill--stale { color: var(--color-muted, #6b7280); }
+.device-pill--never { color: var(--color-muted, #9ca3af); }
+
+@keyframes agent-pulse {
+  0%   { box-shadow: 0 0 0 0 currentColor; }
+  70%  { box-shadow: 0 0 0 6px rgba(0, 0, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+}
+
+/* Inline edit form on user-detail page */
+.user-edit-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: end;
+}
+
+.form-field--readonly {
+  color: var(--color-muted, #6b7280);
+}
+
+.form-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-muted, #4b5563);
+}
+
+.user-edit-form input[type="text"],
+.user-edit-form input[type="email"],
+.user-edit-form select {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.12));
+  border-radius: 6px;
+  background: var(--color-surface, #fff);
+  color: inherit;
+  font: inherit;
+}
+
+.user-edit-form input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.form-status {
+  font-size: 0.875rem;
+  color: var(--color-muted, #6b7280);
+}
+
+.runtime-meta {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.toolbar--compact {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.card-header h3 { margin: 0; }

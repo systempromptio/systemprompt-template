@@ -10,7 +10,7 @@ pub async fn create_user(
     let user_id_str = req.user_id.as_str().to_string();
     let status = req.status.clone().unwrap_or_else(|| "active".to_string());
     let username = req.email.as_str();
-    sqlx::query_as!(
+    let summary = sqlx::query_as!(
         UserSummary,
         r#"
         INSERT INTO users (id, name, email, display_name, roles, status)
@@ -44,7 +44,49 @@ pub async fn create_user(
         &status,
     )
     .fetch_one(pool)
-    .await
+    .await?;
+
+    grant_default_marketplaces(pool, &user_id_str).await;
+
+    Ok(summary)
+}
+
+/// Grant the new user access to every marketplace flagged `default_included = true`.
+/// No-op + warn if there are no defaults (the admin can assign manually later).
+async fn grant_default_marketplaces(pool: &PgPool, user_id: &str) {
+    let defaults = sqlx::query_scalar::<_, String>(
+        "SELECT DISTINCT entity_id FROM access_control_rules
+         WHERE entity_type = 'marketplace' AND default_included = TRUE",
+    )
+    .fetch_all(pool)
+    .await;
+
+    let Ok(ids) = defaults else {
+        tracing::warn!(user_id, "Failed to look up default marketplaces");
+        return;
+    };
+    if ids.is_empty() {
+        tracing::warn!(
+            user_id,
+            "No marketplace flagged default_included=true; new user has no marketplace access by default"
+        );
+        return;
+    }
+    for entity_id in ids {
+        let res = sqlx::query(
+            "INSERT INTO access_control_rules
+                (entity_type, entity_id, rule_type, rule_value, access, default_included)
+             VALUES ('marketplace', $1, 'user', $2, 'allow', FALSE)
+             ON CONFLICT (entity_type, entity_id, rule_type, rule_value) DO NOTHING",
+        )
+        .bind(&entity_id)
+        .bind(user_id)
+        .execute(pool)
+        .await;
+        if let Err(e) = res {
+            tracing::warn!(user_id, %entity_id, error = %e, "Failed to grant default marketplace");
+        }
+    }
 }
 
 pub async fn update_user(
@@ -71,6 +113,7 @@ pub async fn update_user(
             roles = COALESCE($4, roles),
             status = COALESCE($5, status),
             email_verified = CASE WHEN $6 THEN true ELSE email_verified END,
+            department = COALESCE($7, department),
             updated_at = NOW()
         WHERE id = $1
         RETURNING
@@ -95,6 +138,7 @@ pub async fn update_user(
         roles_update,
         status.as_deref(),
         set_email_verified,
+        req.department.as_deref(),
     )
     .fetch_optional(pool)
     .await
@@ -125,9 +169,6 @@ pub async fn delete_user_complete(pool: &PgPool, user_id: &UserId) -> Result<boo
         .execute(&mut *tx)
         .await?;
     sqlx::query!("DELETE FROM user_mcp_servers WHERE user_id = $1", uid)
-        .execute(&mut *tx)
-        .await?;
-    sqlx::query!("DELETE FROM user_hooks WHERE user_id = $1", uid)
         .execute(&mut *tx)
         .await?;
     sqlx::query!("DELETE FROM plugin_usage_events WHERE user_id = $1", uid)

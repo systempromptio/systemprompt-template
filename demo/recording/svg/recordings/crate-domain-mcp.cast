@@ -32,7 +32,7 @@
 [1.274402, "o", "t"]
 [1.290712, "o", "\r\n"]
 [1.970041, "o", "    \r\n    MCP Servers\r\n    {\r\n      \"servers\": [\r\n"]
-[1.970122, "o", "        {\r\n          \"name\": \"skill-manager\",\r\n          \"display_name\": \"skill-manager\",\r\n          \"enabled\": true,\r\n          \"port\": 5050,\r\n"]
+[1.970122, "o", "        {\r\n          \"name\": \"systemprompt \",\r\n          \"display_name\": \"systemprompt \",\r\n          \"enabled\": true,\r\n          \"port\": 5050,\r\n"]
 [1.970174, "o", "          \"status\": \"ready\",\r\n"]
 [1.970319, "o", "          \"binary_debug\": \"/var/www/html/systemprompt-template/target/debug/systemprompt-mcp-marketplace\",\r\n"]
 [1.970349, "o", "          \"binary_release\": \"/var/www/html/systemprompt-template/target/release/systemprompt-mcp-marketplace\",\r\n          \"debug_created_at\": \"2026-04-15 20:11:29\",\r\n          \"release_created_at\": \"2026-04-15 21:07:36\"\r\n        },\r\n"]

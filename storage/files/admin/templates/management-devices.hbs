@@ -8,7 +8,7 @@
         <div class="kpi-card" role="listitem"><span class="kpi-label">Online (≤5m)</span><span class="kpi-value">{{online}}</span></div>
     </div>
 
-    <div class="toolbar" role="toolbar">
+    <div class="toolbar" role="toolbar" aria-label="Actions">
         <div class="search-group"><input type="text" class="search-input" placeholder="Search by user, device, prefix..." id="device-search"></div>
         <select class="filter-select" id="device-platform-filter">
             <option value="">All platforms</option>
@@ -16,11 +16,14 @@
             <option value="windows">Windows</option>
             <option value="linux">Linux</option>
         </select>
+        <button type="button" class="btn btn-primary" id="btn-add-device" data-action="create-device">+ Add device</button>
     </div>
+    {{> components/create-device-panel user_options=user_options}}
 
+    <section aria-label="Devices list" data-page="devices">
     {{#if devices}}
     {{#> components/data-table}}
-        <thead><tr><th>Device</th><th>Owner</th><th>Department</th><th>Platform</th><th>Hostname</th><th>Last seen</th><th class="col-status">Status</th></tr></thead>
+        <thead><tr><th>Device</th><th>Owner</th><th>Department</th><th>Platform</th><th>Hostname</th><th>Enrolled</th><th>Key created</th><th>Expires</th><th>Last seen</th><th class="col-status">Status</th></tr></thead>
         <tbody>
         {{#each devices}}
         <tr data-platform="{{platform}}" data-search="{{toLowerCase name}} {{toLowerCase (default user_email user_id)}} {{toLowerCase (default hostname "")}} {{toLowerCase key_prefix}}">
@@ -28,10 +31,13 @@
                 <strong>{{name}}</strong><br>
                 <code class="code-inline">{{key_prefix}}</code>
             </td>
-            <td>{{#if user_email}}<a href="/admin/management/user?id={{user_id}}">{{user_email}}</a>{{else}}<a href="/admin/management/user?id={{user_id}}"><code>{{user_id}}</code></a>{{/if}}</td>
-            <td>{{#if department}}<a href="/admin/access-control?department={{department}}" class="badge badge-blue">{{department}}</a>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if user_email}}<a href="/admin/access/user?id={{user_id}}">{{user_email}}</a>{{else}}<a href="/admin/access/user?id={{user_id}}"><code>{{user_id}}</code></a>{{/if}}</td>
+            <td>{{#if department}}<a href="/admin/access/matrix?department={{department}}" class="badge badge-blue">{{department}}</a>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
             <td>{{#if platform}}<span class="badge">{{platform}}{{#if app_version}} <span class="text-muted">{{app_version}}</span>{{/if}}</span>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
             <td>{{#if hostname}}<code class="code-inline">{{hostname}}</code>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if enrolled_at}}<span title="{{formatDate enrolled_at}}">{{relativeTime enrolled_at}}</span>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if created_at}}<span title="{{formatDate created_at}}">{{relativeTime created_at}}</span>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if expires_at}}<span title="{{formatDate expires_at}}">{{relativeTime expires_at}}</span>{{else}}<span class="text-tertiary">Never</span>{{/if}}</td>
             <td>{{#if last_seen_at}}<span title="{{formatDate last_seen_at}}">{{relativeTime last_seen_at}}</span>{{else}}<span class="text-tertiary">Never</span>{{/if}}</td>
             <td class="col-status">{{#if revoked}}<span class="badge badge-gray">Revoked</span>{{else}}<span class="badge badge-green">Active</span>{{/if}}</td>
         </tr>
@@ -41,10 +47,10 @@
     {{else}}
     <div class="empty-state" style="padding:3rem;text-align:center;">
         <h3>No devices linked yet</h3>
-        <p class="text-muted">Users issue PATs from their device settings or pair the desktop app via <code>sp-cowork-auth</code>.</p>
-        <a class="btn btn-primary" href="/cowork-auth/setup">Setup guide</a>
+        <p class="text-muted">Click <strong>+ Add device</strong> to enroll one, or have users issue PATs from their device settings.</p>
     </div>
     {{/if}}
+    </section>
 
     <script>
     (function(){
@@ -63,5 +69,8 @@
         platform?.addEventListener('change', apply);
     })();
     </script>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-devices.js"></script>
     {{/inline}}
 {{/layout}}

@@ -2,7 +2,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::types::departments::{
-    Department, DepartmentInput, DepartmentMember, DepartmentSummary,
+    Department, DepartmentInput, DepartmentMember, DepartmentSummary, DepartmentTopTool,
 };
 
 pub async fn list_departments(pool: &PgPool) -> Result<Vec<DepartmentSummary>, sqlx::Error> {
@@ -12,14 +12,15 @@ pub async fn list_departments(pool: &PgPool) -> Result<Vec<DepartmentSummary>, s
             d.id,
             d.name,
             d.description,
-            d.manager_user_id,
-            mgr.email AS manager_email,
-            COALESCE(mc.member_count, 0)::BIGINT AS member_count,
+            COALESCE(mc.member_count, 0)::BIGINT  AS member_count,
             COALESCE(ac.assignment_count, 0)::BIGINT AS assignment_count,
+            COALESCE(usg.input_tokens, 0)::BIGINT  AS input_tokens,
+            COALESCE(usg.output_tokens, 0)::BIGINT AS output_tokens,
+            COALESCE(usg.requests, 0)::BIGINT      AS requests,
+            COALESCE(usg.cost_microdollars, 0)::BIGINT AS cost_microdollars,
             d.created_at,
             d.updated_at
         FROM departments d
-        LEFT JOIN users mgr ON mgr.id = d.manager_user_id
         LEFT JOIN (
             SELECT department, COUNT(*)::BIGINT AS member_count
             FROM users
@@ -32,6 +33,18 @@ pub async fn list_departments(pool: &PgPool) -> Result<Vec<DepartmentSummary>, s
             WHERE rule_type = 'department'
             GROUP BY rule_value
         ) ac ON ac.rule_value = d.name
+        LEFT JOIN (
+            SELECT
+                u.department AS dept,
+                COALESCE(SUM(ar.input_tokens), 0)::BIGINT  AS input_tokens,
+                COALESCE(SUM(ar.output_tokens), 0)::BIGINT AS output_tokens,
+                COUNT(ar.id)::BIGINT                       AS requests,
+                COALESCE(SUM(ar.cost_microdollars), 0)::BIGINT AS cost_microdollars
+            FROM ai_requests ar
+            JOIN users u ON u.id = ar.user_id
+            WHERE ar.created_at >= NOW() - INTERVAL '30 days'
+            GROUP BY u.department
+        ) usg ON usg.dept = d.name
         ORDER BY d.name
         ",
     )
@@ -41,7 +54,7 @@ pub async fn list_departments(pool: &PgPool) -> Result<Vec<DepartmentSummary>, s
 
 pub async fn get_department(pool: &PgPool, id: &str) -> Result<Option<Department>, sqlx::Error> {
     sqlx::query_as::<_, Department>(
-        "SELECT id, name, description, manager_user_id, created_at, updated_at
+        "SELECT id, name, description, created_at, updated_at
          FROM departments WHERE id = $1",
     )
     .bind(id)
@@ -54,7 +67,7 @@ pub async fn get_department_by_name(
     name: &str,
 ) -> Result<Option<Department>, sqlx::Error> {
     sqlx::query_as::<_, Department>(
-        "SELECT id, name, description, manager_user_id, created_at, updated_at
+        "SELECT id, name, description, created_at, updated_at
          FROM departments WHERE name = $1",
     )
     .bind(name)
@@ -68,14 +81,13 @@ pub async fn create_department(
 ) -> Result<Department, sqlx::Error> {
     let id = Uuid::new_v4().to_string();
     sqlx::query_as::<_, Department>(
-        r"INSERT INTO departments (id, name, description, manager_user_id)
-          VALUES ($1, $2, $3, $4)
-          RETURNING id, name, description, manager_user_id, created_at, updated_at",
+        r"INSERT INTO departments (id, name, description)
+          VALUES ($1, $2, $3)
+          RETURNING id, name, description, created_at, updated_at",
     )
     .bind(&id)
     .bind(&input.name)
     .bind(&input.description)
-    .bind(&input.manager_user_id)
     .fetch_one(pool)
     .await
 }
@@ -88,7 +100,7 @@ pub async fn update_department(
     let mut tx = pool.begin().await?;
 
     let existing: Department = sqlx::query_as::<_, Department>(
-        "SELECT id, name, description, manager_user_id, created_at, updated_at
+        "SELECT id, name, description, created_at, updated_at
          FROM departments WHERE id = $1 FOR UPDATE",
     )
     .bind(id)
@@ -101,15 +113,13 @@ pub async fn update_department(
         r"UPDATE departments
           SET name = $2,
               description = $3,
-              manager_user_id = $4,
               updated_at = NOW()
           WHERE id = $1
-          RETURNING id, name, description, manager_user_id, created_at, updated_at",
+          RETURNING id, name, description, created_at, updated_at",
     )
     .bind(id)
     .bind(&input.name)
     .bind(&input.description)
-    .bind(&input.manager_user_id)
     .fetch_one(&mut *tx)
     .await?;
 
@@ -138,14 +148,22 @@ pub async fn delete_department(pool: &PgPool, id: &str) -> Result<(), sqlx::Erro
     let mut tx = pool.begin().await?;
 
     let dept: Department = sqlx::query_as::<_, Department>(
-        "SELECT id, name, description, manager_user_id, created_at, updated_at
+        "SELECT id, name, description, created_at, updated_at
          FROM departments WHERE id = $1 FOR UPDATE",
     )
     .bind(id)
     .fetch_one(&mut *tx)
     .await?;
 
-    sqlx::query("UPDATE users SET department = '' WHERE department = $1")
+    // The "Default" department is the catch-all and cannot be deleted.
+    if dept.name == "Default" {
+        tx.rollback().await?;
+        return Err(sqlx::Error::Protocol(
+            "the 'Default' department cannot be deleted".into(),
+        ));
+    }
+
+    sqlx::query("UPDATE users SET department = 'Default' WHERE department = $1")
         .bind(&dept.name)
         .execute(&mut *tx)
         .await?;
@@ -172,14 +190,65 @@ pub async fn list_department_members(
     department_name: &str,
 ) -> Result<Vec<DepartmentMember>, sqlx::Error> {
     sqlx::query_as::<_, DepartmentMember>(
-        r"SELECT id, email, display_name, status, roles
-          FROM users
-          WHERE department = $1
-            AND NOT ('anonymous' = ANY(roles))
-            AND email NOT LIKE '%@anonymous.local'
-          ORDER BY email",
+        r"
+        SELECT
+            u.id,
+            u.email,
+            u.display_name,
+            u.status,
+            u.roles,
+            COALESCE(ar.input_tokens, 0)::BIGINT     AS input_tokens,
+            COALESCE(ar.output_tokens, 0)::BIGINT    AS output_tokens,
+            COALESCE(ar.requests, 0)::BIGINT         AS requests,
+            COALESCE(ar.cost_microdollars, 0)::BIGINT AS cost_microdollars,
+            ar.last_active                           AS last_active
+        FROM users u
+        LEFT JOIN (
+            SELECT
+                user_id,
+                COALESCE(SUM(input_tokens), 0)::BIGINT  AS input_tokens,
+                COALESCE(SUM(output_tokens), 0)::BIGINT AS output_tokens,
+                COUNT(*)::BIGINT                        AS requests,
+                COALESCE(SUM(cost_microdollars), 0)::BIGINT AS cost_microdollars,
+                MAX(created_at)                         AS last_active
+            FROM ai_requests
+            WHERE created_at >= NOW() - INTERVAL '30 days'
+            GROUP BY user_id
+        ) ar ON ar.user_id = u.id
+        WHERE u.department = $1
+          AND NOT ('anonymous' = ANY(u.roles))
+          AND u.email NOT LIKE '%@anonymous.local'
+        ORDER BY (COALESCE(ar.input_tokens, 0) + COALESCE(ar.output_tokens, 0)) DESC, u.email
+        ",
     )
     .bind(department_name)
+    .fetch_all(pool)
+    .await
+}
+
+/// Top tools used by members of a department in the last 30 days.
+pub async fn list_department_top_tools(
+    pool: &PgPool,
+    department_name: &str,
+    limit: i64,
+) -> Result<Vec<DepartmentTopTool>, sqlx::Error> {
+    sqlx::query_as::<_, DepartmentTopTool>(
+        r"
+        SELECT
+            COALESCE(p.tool_name, 'unknown') AS tool_name,
+            COALESCE(SUM(p.event_count), 0)::BIGINT AS invocations
+        FROM plugin_usage_daily p
+        JOIN users u ON u.id = p.user_id
+        WHERE u.department = $1
+          AND p.tool_name IS NOT NULL
+          AND p.date >= CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY p.tool_name
+        ORDER BY invocations DESC
+        LIMIT $2
+        ",
+    )
+    .bind(department_name)
+    .bind(limit)
     .fetch_all(pool)
     .await
 }

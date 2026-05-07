@@ -100,31 +100,7 @@ fn access_routes() -> Router<Arc<PgPool>> {
 }
 
 fn catalog_routes() -> Router<Arc<PgPool>> {
-    Router::new()
-        .route("/catalog/agents", get(handlers::ssr::agents_page))
-        .route("/catalog/agents/edit", get(handlers::ssr::agent_edit_page))
-        .route(
-            "/catalog/external-agents",
-            get(handlers::ssr::external_agents_page),
-        )
-        .route(
-            "/catalog/skills",
-            get(handlers::ssr::management_skills_page),
-        )
-        .route("/catalog/skills/edit", get(handlers::ssr::skill_edit_page))
-        .route(
-            "/catalog/mcp-servers",
-            get(handlers::ssr::mcp_servers_page),
-        )
-        .route(
-            "/catalog/mcp-servers/edit",
-            get(handlers::ssr::mcp_edit_page),
-        )
-        .route("/catalog/plugins", get(handlers::ssr::plugins_page))
-        .route(
-            "/catalog/marketplaces",
-            get(handlers::ssr::management_marketplaces_page),
-        )
+    Router::new().route("/catalog", get(handlers::catalog::catalog_page))
 }
 
 fn governance_routes() -> Router<Arc<PgPool>> {

@@ -1,7 +1,7 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title="Governance Policies" subtitle="The modular policy chain that gates every tool call. Each policy is a Rust impl registered via inventory; their order and config live in services/governance/config.yaml."}}
+    {{> components/page-header title="Governance Policies" subtitle="Code-defined policies. Runtime-enforced. Inspect the chain, see what each policy is doing in production."}}
 
     <nav class="tab-nav" aria-label="Governance sections">
         <a href="/admin/governance" class="tab-nav__item tab-nav__item--active">Policies</a>
@@ -13,54 +13,152 @@
 
     <div class="metric-ribbon">
         <div class="metric-ribbon-item">
-            <span class="metric-ribbon-value">{{total}}</span>
-            <span class="metric-ribbon-label">Total Decisions</span>
+            <span class="metric-ribbon-value">{{window_total}}</span>
+            <span class="metric-ribbon-label">Decisions · 24h</span>
         </div>
         <div class="metric-ribbon-item metric-ribbon-success">
-            <span class="metric-ribbon-value">{{allowed}}</span>
-            <span class="metric-ribbon-label">Allowed</span>
+            <span class="metric-ribbon-value">{{window_allowed}}</span>
+            <span class="metric-ribbon-label">Allowed · 24h</span>
         </div>
         <div class="metric-ribbon-item metric-ribbon-danger">
-            <span class="metric-ribbon-value">{{denied}}</span>
-            <span class="metric-ribbon-label">Denied</span>
+            <span class="metric-ribbon-value">{{window_denied}}</span>
+            <span class="metric-ribbon-label">Denied · 24h</span>
         </div>
-        {{#if secret_breaches}}
-        <div class="metric-ribbon-item metric-ribbon-danger">
-            <span class="metric-ribbon-value">{{secret_breaches}}</span>
-            <span class="metric-ribbon-label">Secret Breaches</span>
+        <div class="metric-ribbon-item{{#if window_breaches}} metric-ribbon-danger{{/if}}">
+            <span class="metric-ribbon-value">{{window_breaches}}</span>
+            <span class="metric-ribbon-label">Secret breaches · 24h</span>
         </div>
-        {{/if}}
+        <div class="metric-ribbon-item">
+            <span class="metric-ribbon-value">{{lifetime_total}}</span>
+            <span class="metric-ribbon-label">Decisions · all time</span>
+        </div>
     </div>
 
-    <div class="governance-section">
-        <p class="text-muted" style="margin-bottom: var(--space-4);">
-            Policies execute top-to-bottom; first deny short-circuits the rest. To add a policy:
-            create a new file under <code>extensions/web/admin/src/handlers/webhook/governance/policies/</code>,
-            implement the <code>Policy</code> trait, submit a <code>PolicyRegistration</code>, then list its id in
-            <code>{{config_path}}</code>.
+    <section class="policy-chain-intro">
+        <h2 class="policy-chain-intro__title">Policies are Rust code. Order is config.</h2>
+        <p class="policy-chain-intro__body">
+            Each policy is a <code class="code-inline">Policy</code> trait impl registered at compile time
+            via <code class="code-inline">inventory::submit!</code>. The pipeline driver iterates the
+            ordered, enabled list on every tool call and stops on the first deny.
+            Order, enable/disable, and per-policy parameters live in
+            <code class="code-inline">{{config_path}}</code> — edits there reload without a restart.
         </p>
+        <p class="policy-chain-intro__hint text-muted">
+            To add a policy: create a file under
+            <code class="code-inline">extensions/web/admin/src/handlers/webhook/governance/policies/</code>,
+            implement <code class="code-inline">Policy</code>, submit a <code class="code-inline">PolicyRegistration</code>,
+            then list its id in the YAML.
+        </p>
+    </section>
 
-        {{#if has_policies}}
+    {{#if has_policies}}
+    <ol class="policy-chain" aria-label="Policy chain in execution order">
+        {{#each policies}}
+        <li class="policy-chain__step{{#unless enabled}} policy-chain__step--disabled{{/unless}}">
+            <div class="policy-chain__rail">
+                <span class="policy-chain__order" aria-label="Step {{add @index 1}}">{{add @index 1}}</span>
+                {{#unless @last}}<span class="policy-chain__connector" aria-hidden="true"></span>{{/unless}}
+            </div>
+            <article class="policy-chain__card">
+                <header class="policy-chain__header">
+                    <div class="policy-chain__title">
+                        <a class="policy-chain__name" href="{{edit_url}}">{{name}}</a>
+                        <code class="code-inline policy-chain__id">{{id}}</code>
+                    </div>
+                    {{#if enabled}}
+                    <span class="mcp-badge mcp-badge-success">ENABLED</span>
+                    {{else}}
+                    <span class="mcp-badge">DISABLED</span>
+                    {{/if}}
+                </header>
+
+                <p class="policy-chain__description">{{description}}</p>
+
+                <dl class="policy-chain__meta">
+                    <div class="policy-chain__meta-row">
+                        <dt>As code</dt>
+                        <dd><code class="code-inline">{{source_path}}</code></dd>
+                    </div>
+                    <div class="policy-chain__meta-row">
+                        <dt>Config</dt>
+                        <dd>
+                            {{#if has_params}}
+                            <ul class="policy-chain__params">
+                                {{#each params_preview}}
+                                <li><code class="code-inline">{{key}}</code>: <span class="policy-chain__param-value">{{value}}</span></li>
+                                {{/each}}
+                            </ul>
+                            {{else}}
+                            <span class="text-muted">No tunable parameters</span>
+                            {{/if}}
+                        </dd>
+                    </div>
+                </dl>
+
+                <div class="policy-chain__stats">
+                    <a class="policy-chain__stat policy-chain__stat--allow" href="{{decisions_url}}&outcome=allow">
+                        <span class="policy-chain__stat-value">{{window_allowed}}</span>
+                        <span class="policy-chain__stat-label">Allowed · 24h</span>
+                    </a>
+                    {{#if has_recent_denies}}
+                    <a class="policy-chain__stat policy-chain__stat--deny" href="{{deny_decisions_url}}">
+                        <span class="policy-chain__stat-value">{{window_denied}}</span>
+                        <span class="policy-chain__stat-label">Denied · 24h</span>
+                    </a>
+                    {{else}}
+                    <div class="policy-chain__stat policy-chain__stat--deny policy-chain__stat--zero">
+                        <span class="policy-chain__stat-value">0</span>
+                        <span class="policy-chain__stat-label">Denied · 24h</span>
+                    </div>
+                    {{/if}}
+                    <div class="policy-chain__stat">
+                        <span class="policy-chain__stat-value">{{deny_rate}}</span>
+                        <span class="policy-chain__stat-label">Deny rate · 24h</span>
+                    </div>
+                    <div class="policy-chain__stat">
+                        <span class="policy-chain__stat-value">{{#if last_at}}{{last_at}}{{else}}—{{/if}}</span>
+                        <span class="policy-chain__stat-label">Last fired</span>
+                    </div>
+                </div>
+
+                <footer class="policy-chain__actions">
+                    <a href="{{edit_url}}" class="btn btn-sm btn-outline">Edit config</a>
+                    <a href="{{decisions_url}}" class="btn btn-sm btn-ghost">View decisions</a>
+                </footer>
+            </article>
+        </li>
+        {{/each}}
+    </ol>
+    {{else}}
+    {{> components/empty-state message="No policies registered. Build the workspace and check that extensions/web/admin/src/handlers/webhook/governance/policies/ submits at least one PolicyRegistration."}}
+    {{/if}}
+
+    <section class="enforcement-section">
+        <header class="enforcement-section__header">
+            <h2>Enforcement (last 24h)</h2>
+            <p class="text-muted">What the chain is actually doing — execution counts pulled from <code class="code-inline">governance_decisions</code>.</p>
+        </header>
+
+        <h3 class="enforcement-section__sub">Per-policy execution</h3>
+        {{#if has_enforcement_activity}}
         {{#> components/data-table}}
             <thead><tr>
-                <th>Order</th>
                 <th>Policy</th>
-                <th class="col-multiline">Description</th>
                 <th class="col-status">State</th>
-                <th>Allowed</th>
-                <th>Denied</th>
-                <th class="col-date">Last seen</th>
+                <th class="num">Evaluations</th>
+                <th class="num">Allowed</th>
+                <th class="num">Denied</th>
+                <th class="num">Deny rate</th>
+                <th class="col-date">Last fired</th>
                 <th class="col-status">Actions</th>
             </tr></thead>
             <tbody>
-            {{#each policies}}
-            <tr>
-                <td>{{add @index 1}}</td>
+            {{#each enforcement}}
+            <tr{{#unless enabled}} class="row-muted"{{/unless}}>
                 <td>
-                    <a href="{{edit_url}}"><strong>{{name}}</strong></a><br>
+                    <strong>{{name}}</strong><br>
                     <code class="code-inline">{{id}}</code>
                 </td>
-                <td class="col-multiline text-muted">{{description}}</td>
                 <td class="col-status">
                     {{#if enabled}}
                     <span class="mcp-badge mcp-badge-success">ENABLED</span>
@@ -68,44 +166,110 @@
                     <span class="mcp-badge">DISABLED</span>
                     {{/if}}
                 </td>
-                <td class="text-success">{{allowed}}</td>
-                <td>
+                <td class="num">{{window_evaluations}}</td>
+                <td class="num text-success">{{window_allowed}}</td>
+                <td class="num">
                     {{#if has_recent_denies}}
-                    <a href="/admin/governance/decisions?policy={{id}}&outcome=deny" class="text-danger"><strong>{{denied}}</strong></a>
+                    <a class="text-danger" href="{{deny_decisions_url}}"><strong>{{window_denied}}</strong></a>
                     {{else}}
-                    {{denied}}
+                    {{window_denied}}
                     {{/if}}
                 </td>
-                <td class="col-date">{{last_at}}</td>
+                <td class="num">{{deny_rate}}</td>
+                <td class="col-date">{{#if last_at_window}}{{last_at_window}}{{else}}—{{/if}}</td>
                 <td class="col-status">
-                    <a href="{{edit_url}}" class="btn btn-sm btn-outline">Open</a>
+                    <a href="{{decisions_url}}" class="btn btn-sm btn-outline">Open</a>
                 </td>
             </tr>
             {{/each}}
             </tbody>
         {{/components/data-table}}
         {{else}}
-        {{> components/empty-state message="No policies registered. Build the workspace and check that extensions/web/admin/src/handlers/webhook/governance/policies/ submits at least one PolicyRegistration."}}
+        {{> components/empty-state message="No policy evaluations in the last 24h. Run a few tool calls (or one of the demo/governance/*.sh scripts) to populate this table."}}
         {{/if}}
 
-        {{#if has_orphans}}
-        <h2 style="margin-top: var(--space-6);">Historical (no longer registered)</h2>
-        <p class="text-muted">These policy ids appear in <code>governance_decisions</code> but no Rust impl is currently registered for them — likely renamed or removed.</p>
+        <div class="enforcement-section__grid">
+            <div>
+                <h3 class="enforcement-section__sub">Top denying tool calls · 24h</h3>
+                {{#if has_top_tools}}
+                {{#> components/data-table}}
+                    <thead><tr>
+                        <th>Policy</th>
+                        <th>Tool</th>
+                        <th class="num">Denies</th>
+                        <th class="num">Distinct actors</th>
+                    </tr></thead>
+                    <tbody>
+                    {{#each top_tools}}
+                    <tr>
+                        <td><a href="{{decisions_url}}"><code class="code-inline">{{policy}}</code></a></td>
+                        <td><code class="code-inline">{{tool_name}}</code></td>
+                        <td class="num text-danger"><strong>{{hits}}</strong></td>
+                        <td class="num">{{distinct_actors}}</td>
+                    </tr>
+                    {{/each}}
+                    </tbody>
+                {{/components/data-table}}
+                {{else}}
+                {{> components/empty-state message="No denied tool calls in the last 24h."}}
+                {{/if}}
+            </div>
+
+            <div>
+                <h3 class="enforcement-section__sub">Top denied actors · 24h</h3>
+                {{#if has_top_actors}}
+                {{#> components/data-table}}
+                    <thead><tr>
+                        <th>User</th>
+                        <th class="num">Denies</th>
+                        <th class="num">Secret blocks</th>
+                        <th class="num">Total decisions</th>
+                    </tr></thead>
+                    <tbody>
+                    {{#each top_actors}}
+                    <tr>
+                        <td>
+                            <a href="{{decisions_url}}"><strong>{{display_name}}</strong></a>
+                            {{#if email}}<br><span class="text-muted">{{email}}</span>{{/if}}
+                        </td>
+                        <td class="num text-danger"><strong>{{deny_count}}</strong></td>
+                        <td class="num">{{secret_count}}</td>
+                        <td class="num">{{total}}</td>
+                    </tr>
+                    {{/each}}
+                    </tbody>
+                {{/components/data-table}}
+                {{else}}
+                {{> components/empty-state message="No actor denies in the last 24h."}}
+                {{/if}}
+            </div>
+        </div>
+    </section>
+
+    {{#if has_orphans}}
+    <details class="policy-chain-orphans">
+        <summary>Historical policies (no longer registered) · {{orphans.length}}</summary>
+        <p class="text-muted">These policy ids appear in <code class="code-inline">governance_decisions</code> but no Rust impl is currently registered for them — likely renamed or removed.</p>
         {{#> components/data-table}}
-            <thead><tr><th>Policy id</th><th>Allowed</th><th>Denied</th><th class="col-date">Last seen</th></tr></thead>
+            <thead><tr>
+                <th>Policy id</th>
+                <th class="num">Allowed</th>
+                <th class="num">Denied</th>
+                <th class="col-date">Last seen</th>
+            </tr></thead>
             <tbody>
             {{#each orphans}}
             <tr>
                 <td><code class="code-inline">{{id}}</code></td>
-                <td>{{allowed}}</td>
-                <td>{{denied}}</td>
+                <td class="num">{{allowed}}</td>
+                <td class="num">{{denied}}</td>
                 <td class="col-date">{{last_at}}</td>
             </tr>
             {{/each}}
             </tbody>
         {{/components/data-table}}
-        {{/if}}
-    </div>
+    </details>
+    {{/if}}
 
     {{/inline}}
     {{#*inline "scripts"}}{{/inline}}

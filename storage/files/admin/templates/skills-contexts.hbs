@@ -1,12 +1,251 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title=title}}
-    <p class="text-tertiary">Contexts are conversation containers for agent sessions.</p>
+    {{> components/page-header title=title subtitle="Stateful AI conversations — search by user, drill into the transcript."}}
 
-    <section aria-label="Contexts list">
-        {{> components/empty-state message="No contexts available."}}
+    <section class="kpi-strip" aria-label="Context KPIs">
+      <div class="kpi-card">
+        <span class="kpi-card__label">Contexts</span>
+        <span class="kpi-card__value">{{formatNumber kpis.total_contexts}}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__label">Users</span>
+        <span class="kpi-card__value">{{formatNumber kpis.active_users}}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__label">Requests</span>
+        <span class="kpi-card__value">{{formatNumber kpis.total_requests}}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__label">Messages</span>
+        <span class="kpi-card__value">{{formatNumber kpis.total_messages}}</span>
+        <span class="kpi-card__sub">user prompts + AI responses</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__label">Tokens</span>
+        <span class="kpi-card__value">{{formatNumber kpis.total_tokens}}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__label">Cost</span>
+        <span class="kpi-card__value">${{kpis.total_cost_usd}}</span>
+      </div>
     </section>
+
+    <form class="toolbar" role="search" aria-label="Filter contexts" method="get" id="contexts-filter-form">
+        <div class="search-group">
+            <input type="search" class="search-input" name="q"
+                   placeholder="Search contexts, users, IDs..."
+                   value="{{filter.q}}" aria-label="Search contexts">
+        </div>
+
+        <label class="toolbar__field" aria-label="Filter by user">
+            <span class="toolbar__field-label">User</span>
+            <select name="user_id" class="select" data-autosubmit>
+                <option value="">All users</option>
+                {{#each users_for_filter}}
+                <option value="{{user_id}}" {{#if (eq user_id ../filter.user_id)}}selected{{/if}}>
+                    {{default display_name user_id}}
+                </option>
+                {{/each}}
+            </select>
+        </label>
+
+        <label class="toolbar__field" aria-label="Filter by model">
+            <span class="toolbar__field-label">Model</span>
+            <select name="model" class="select" data-autosubmit>
+                <option value="">All models</option>
+                {{#each models}}
+                <option value="{{this}}" {{#if (eq this ../filter.model)}}selected{{/if}}>{{this}}</option>
+                {{/each}}
+            </select>
+        </label>
+
+        <div class="time-range-pills" role="radiogroup" aria-label="Time range">
+            <label class="pill {{#unless filter.since}}pill--active{{/unless}}">
+                <input type="radio" name="since" value="" {{#unless filter.since}}checked{{/unless}} data-autosubmit>
+                <span>All time</span>
+            </label>
+            <label class="pill {{#if (eq filter.since '24h')}}pill--active{{/if}}">
+                <input type="radio" name="since" value="24h" {{#if (eq filter.since '24h')}}checked{{/if}} data-autosubmit>
+                <span>24h</span>
+            </label>
+            <label class="pill {{#if (eq filter.since '7d')}}pill--active{{/if}}">
+                <input type="radio" name="since" value="7d" {{#if (eq filter.since '7d')}}checked{{/if}} data-autosubmit>
+                <span>7d</span>
+            </label>
+            <label class="pill {{#if (eq filter.since '30d')}}pill--active{{/if}}">
+                <input type="radio" name="since" value="30d" {{#if (eq filter.since '30d')}}checked{{/if}} data-autosubmit>
+                <span>30d</span>
+            </label>
+        </div>
+
+        <input type="hidden" name="view" value="{{filter.view}}" id="contexts-view-input">
+        <noscript><button type="submit" class="btn btn-primary">Apply</button></noscript>
+    </form>
+
+    <nav class="tabs" role="tablist" aria-label="Context views">
+        <button type="button" role="tab"
+                class="tab {{#if view_is_contexts}}tab--active{{/if}}"
+                data-view="contexts"
+                aria-selected="{{#if view_is_contexts}}true{{else}}false{{/if}}">
+            Contexts
+        </button>
+        <button type="button" role="tab"
+                class="tab {{#if view_is_users}}tab--active{{/if}}"
+                data-view="users"
+                aria-selected="{{#if view_is_users}}true{{else}}false{{/if}}">
+            By user
+        </button>
+    </nav>
+
+    {{#if view_is_users}}
+    <section aria-label="Contexts grouped by user" data-page="contexts" data-view="users">
+        {{#if user_summaries}}
+        {{#> components/data-table}}
+            <thead><tr>
+                <th>User</th>
+                <th class="numeric col-numeric">Contexts</th>
+                <th class="numeric col-numeric">Requests</th>
+                <th class="numeric col-numeric">Messages</th>
+                <th class="numeric col-numeric">Tokens</th>
+                <th class="numeric col-numeric">Cost</th>
+                <th>Models</th>
+                <th class="col-date">Last activity</th>
+                <th class="col-actions"></th>
+            </tr></thead>
+            <tbody>
+            {{#each user_summaries}}
+            <tr class="row-expandable" data-user-id="{{user_id}}">
+                <td>
+                    <a href="/admin/user/?id={{user_id}}" class="user-cell">
+                        <span class="avatar avatar-sm">{{initials (default display_name user_id)}}</span>
+                        <span>{{default display_name user_id}}</span>
+                    </a>
+                </td>
+                <td class="numeric" style="font-variant-numeric: tabular-nums;">{{formatNumber context_count}}</td>
+                <td class="numeric" style="font-variant-numeric: tabular-nums;">{{formatNumber request_count}}</td>
+                <td class="numeric" style="font-variant-numeric: tabular-nums;">{{formatNumber message_count}}</td>
+                <td class="numeric" style="font-variant-numeric: tabular-nums;">{{formatNumber total_tokens}}</td>
+                <td class="numeric" style="font-variant-numeric: tabular-nums;">${{cost_usd}}</td>
+                <td>
+                    {{#each models}}<span class="badge badge-blue">{{this}}</span> {{/each}}
+                </td>
+                <td class="col-date">
+                    {{#if last_activity}}<span title="{{formatDate last_activity}}">{{relativeTime last_activity}}</span>
+                    {{else}}<span class="text-tertiary">Never</span>{{/if}}
+                </td>
+                <td class="col-actions">
+                    <button class="btn-actions-trigger row-expand-toggle"
+                            type="button"
+                            aria-expanded="false"
+                            aria-controls="user-contexts-{{user_id}}"
+                            aria-label="Show contexts for {{default display_name user_id}}">&#9662;</button>
+                </td>
+            </tr>
+            <tr class="row-expansion" id="user-contexts-{{user_id}}" hidden>
+                <td colspan="9">
+                    {{#if contexts}}
+                    <table class="data-table data-table--nested">
+                        <thead><tr>
+                            <th>Context</th>
+                            <th>Model</th>
+                            <th class="numeric">Requests</th>
+                            <th class="numeric">Messages</th>
+                            <th class="numeric">Tokens</th>
+                            <th class="numeric">Cost</th>
+                            <th class="col-date">Last activity</th>
+                        </tr></thead>
+                        <tbody>
+                        {{#each contexts}}
+                        <tr>
+                            <td>
+                                <a href="/admin/entities/contexts/{{context_id}}" class="link-strong">
+                                    {{default name context_id}}
+                                </a>
+                            </td>
+                            <td>{{#if model}}<span class="badge badge-blue">{{model}}</span>{{else}}<span class="text-tertiary">&mdash;</span>{{/if}}</td>
+                            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{formatNumber request_count}}</td>
+                            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{formatNumber message_count}}</td>
+                            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{formatNumber total_tokens}}</td>
+                            <td class="numeric" style="font-variant-numeric: tabular-nums;">${{cost_usd}}</td>
+                            <td class="col-date">
+                                {{#if last_activity}}<span title="{{formatDate last_activity}}">{{relativeTime last_activity}}</span>
+                                {{else}}<span class="text-tertiary">&mdash;</span>{{/if}}
+                            </td>
+                        </tr>
+                        {{/each}}
+                        </tbody>
+                    </table>
+                    {{else}}
+                    <p class="text-tertiary" style="padding: var(--space-3);">No contexts in the current filter.</p>
+                    {{/if}}
+                </td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No users with conversation contexts match your filters."}}
+        {{/if}}
+    </section>
+    {{else}}
+    <section aria-label="Contexts list" data-page="contexts" data-view="contexts">
+        {{#if contexts}}
+        {{#> components/data-table}}
+            <thead><tr>
+                <th>User</th>
+                <th>Context</th>
+                <th>Model</th>
+                <th class="numeric col-numeric">Requests</th>
+                <th class="numeric col-numeric">Messages</th>
+                <th class="numeric col-numeric">Tokens</th>
+                <th class="numeric col-numeric">Cost</th>
+                <th class="col-status">Errors</th>
+                <th class="col-date">Last activity</th>
+            </tr></thead>
+            <tbody>
+            {{#each contexts}}
+            <tr data-context-id="{{context_id}}"
+                data-user-id="{{user_id}}"
+                data-search-blob="{{toLowerCase (default display_name user_id)}} {{toLowerCase (default name context_id)}}">
+                <td>
+                    {{#if user_id}}
+                    <a href="/admin/user/?id={{user_id}}" class="user-cell">
+                        <span class="avatar avatar-sm">{{initials (default display_name user_id)}}</span>
+                        <span>{{default display_name user_id}}</span>
+                    </a>
+                    {{else}}<span class="text-tertiary">&mdash;</span>{{/if}}
+                </td>
+                <td>
+                    <a href="/admin/entities/contexts/{{context_id}}" class="link-strong">
+                        {{default name context_id}}
+                    </a>
+                    {{#unless name}}<div class="text-tertiary text-xs">{{context_id}}</div>{{/unless}}
+                </td>
+                <td>{{#if model}}<span class="badge badge-blue">{{model}}</span>{{else}}<span class="text-tertiary">&mdash;</span>{{/if}}</td>
+                <td class="numeric" style="font-variant-numeric: tabular-nums;">{{formatNumber request_count}}</td>
+                <td class="numeric" style="font-variant-numeric: tabular-nums;">{{formatNumber message_count}}</td>
+                <td class="numeric" style="font-variant-numeric: tabular-nums;" title="{{formatNumber input_tokens}} in / {{formatNumber output_tokens}} out">{{formatNumber total_tokens}}</td>
+                <td class="numeric" style="font-variant-numeric: tabular-nums;">${{cost_usd}}</td>
+                <td class="col-status">
+                    {{#if error_count}}<span class="badge badge-danger">{{error_count}}</span>
+                    {{else}}<span class="text-tertiary">0</span>{{/if}}
+                </td>
+                <td class="col-date">
+                    {{#if last_activity}}<span title="{{formatDate last_activity}}">{{relativeTime last_activity}}</span>
+                    {{else}}<span class="text-tertiary">Never</span>{{/if}}
+                </td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state message="No conversation contexts match your filters."}}
+        {{/if}}
+    </section>
+    {{/if}}
     {{/inline}}
-    {{#*inline "scripts"}}{{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-contexts.js"></script>
+    {{/inline}}
 {{/layout}}

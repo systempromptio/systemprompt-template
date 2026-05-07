@@ -34,7 +34,7 @@
 [1.798742, "o", "s"]
 [1.81486, "o", "\r\n"]
 [2.582715, "o", "    \u001b[36m\u001b[0m\r\n    \u001b[36mMCP Server Status\u001b[0m\r\n    \u001b[36m{\u001b[0m\r\n    \u001b[36m  \"servers\": [\u001b[0m\r\n"]
-[2.582851, "o", "    \u001b[36m    {\u001b[0m\r\n    \u001b[36m      \"name\": \"skill-manager\",\u001b[0m\r\n    \u001b[36m      \"port\": 5050,\u001b[0m\r\n    \u001b[36m      \"enabled\": true,\u001b[0m\r\n    \u001b[36m      \"running\": true,\u001b[0m\r\n    \u001b[36m      \"pid\": 34360,\u001b[0m\r\n"]
+[2.582851, "o", "    \u001b[36m    {\u001b[0m\r\n    \u001b[36m      \"name\": \"systemprompt \",\u001b[0m\r\n    \u001b[36m      \"port\": 5050,\u001b[0m\r\n    \u001b[36m      \"enabled\": true,\u001b[0m\r\n    \u001b[36m      \"running\": true,\u001b[0m\r\n    \u001b[36m      \"pid\": 34360,\u001b[0m\r\n"]
 [2.583044, "o", "    \u001b[36m      \"binary\": \"systemprompt-mcp-marketplace\",\u001b[0m\r\n    \u001b[36m      \"release_binary\": \"exists\",\u001b[0m\r\n"]
 [2.583202, "o", "\r\n"]
 [3.584307, "o", "\r\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\r\n\r\n"]

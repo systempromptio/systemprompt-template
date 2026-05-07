@@ -302,7 +302,7 @@
                 <span class="cmd-label">MCP Tool Call &mdash; Authenticated</span>
             </div>
             <div class="cmd-line">
-                <span class="prompt">$</span> plugins mcp call skill-manager list_plugins --profile local
+                <span class="prompt">$</span> plugins mcp call systemprompt systemprompt --args '{"command":"core skills list"}' --profile local
             </div>
             <div class="cmd-body">
                 <table class="detail-table">
@@ -315,7 +315,7 @@
                         <td class="dt-value">
                             <div class="sub-flow">
                                 <div class="sub-step"><span class="sub-num">3a</span><span class="sub-text"><strong>OAuth</strong> &mdash; Client credentials &rarr; access token validated against MCP server</span></div>
-                                <div class="sub-step"><span class="sub-num">3b</span><span class="sub-text"><strong>Execution</strong> &mdash; <span class="code">skill-manager.list_plugins()</span> &rarr; JSON plugin list</span></div>
+                                <div class="sub-step"><span class="sub-num">3b</span><span class="sub-text"><strong>Execution</strong> &mdash; <span class="code">systemprompt(core skills list)</span> &rarr; JSON plugin list</span></div>
                                 <div class="sub-step"><span class="sub-num">3c</span><span class="sub-text"><strong>Recording</strong> &mdash; <span class="code">record_mcp_access()</span> &rarr; INSERT INTO <span class="code">user_activity</span></span></div>
                             </div>
                         </td>

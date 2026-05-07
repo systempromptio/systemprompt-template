@@ -167,6 +167,17 @@ pub struct MatrixSource {
 /// kind that exist on this deployment.
 pub type SectionInput = (String, String, Vec<(String, String, Option<String>)>);
 
+/// Filter a freshly-loaded catalog snapshot down to entries `user_id` is
+/// permitted to see. Wraps [`resolve_user_matrix`] without altering the
+/// existing matrix shape — callers project the section rows themselves.
+pub async fn filter_catalog_for_user(
+    pool: &PgPool,
+    user_id: &str,
+    sections_in: Vec<SectionInput>,
+) -> Result<UserMatrix, sqlx::Error> {
+    resolve_user_matrix(pool, user_id, sections_in).await
+}
+
 pub async fn resolve_user_matrix(
     pool: &PgPool,
     user_id: &str,

@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use axum::extract::{Extension, Path, Query, State};
+use axum::extract::{Extension, Path, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use sqlx::PgPool;
 
 use chrono::{DateTime, Utc};
@@ -69,12 +69,6 @@ pub async fn management_departments_page(
     )
 }
 
-#[derive(Debug, Deserialize)]
-pub struct DepartmentDetailQuery {
-    #[serde(default)]
-    tab: Option<String>,
-}
-
 #[derive(Debug, Serialize)]
 struct DepartmentDetailPageData {
     page: &'static str,
@@ -83,8 +77,11 @@ struct DepartmentDetailPageData {
     members: Vec<crate::types::departments::DepartmentMember>,
     member_count: i64,
     assignments_url: String,
-    tab: String,
-    not_found: bool,
+    top_tools: Vec<crate::types::departments::DepartmentTopTool>,
+    total_input_tokens: i64,
+    total_output_tokens: i64,
+    total_requests: i64,
+    total_cost_microdollars: i64,
 }
 
 #[derive(Debug, sqlx::FromRow)]
@@ -99,6 +96,8 @@ struct DeviceRowDb {
     app_version: Option<String>,
     hostname: Option<String>,
     last_seen_at: Option<DateTime<Utc>>,
+    enrolled_at: Option<DateTime<Utc>>,
+    expires_at: Option<DateTime<Utc>>,
     created_at: Option<DateTime<Utc>>,
     revoked_at: Option<DateTime<Utc>>,
 }
@@ -115,8 +114,16 @@ struct DeviceRow {
     app_version: Option<String>,
     hostname: Option<String>,
     last_seen_at: Option<DateTime<Utc>>,
+    enrolled_at: Option<DateTime<Utc>>,
+    expires_at: Option<DateTime<Utc>>,
     created_at: Option<DateTime<Utc>>,
     revoked: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct DeviceUserOption {
+    user_id: String,
+    label: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -126,6 +133,8 @@ struct ManagementDevicesPageData {
     devices: Vec<DeviceRow>,
     total: usize,
     online: usize,
+    user_options: Vec<DeviceUserOption>,
+    department_options: Vec<String>,
 }
 
 pub async fn management_devices_page(
@@ -151,6 +160,8 @@ pub async fn management_devices_page(
             NULLIF(dal.app_version, '') AS app_version,
             NULLIF(dal.hostname, '') AS hostname,
             COALESCE(dal.last_seen_at, ak.last_used_at) AS last_seen_at,
+            dal.enrolled_at,
+            ak.expires_at,
             ak.created_at,
             ak.revoked_at
         FROM user_api_keys ak
@@ -186,161 +197,58 @@ pub async fn management_devices_page(
             app_version: r.app_version,
             hostname: r.hostname,
             last_seen_at: r.last_seen_at,
+            enrolled_at: r.enrolled_at,
+            expires_at: r.expires_at,
             created_at: r.created_at,
             revoked,
         });
     }
     let total = devices.len();
 
+    let user_options: Vec<DeviceUserOption> = sqlx::query_as::<_, (String, Option<String>, Option<String>)>(
+        r"
+        SELECT u.id::TEXT, u.email::TEXT, COALESCE(NULLIF(u.display_name, ''), NULLIF(u.full_name, ''), NULLIF(u.name, '')) AS display_name
+        FROM users u
+        WHERE NOT ('anonymous' = ANY(u.roles))
+          AND u.email NOT LIKE '%@anonymous.local'
+        ORDER BY COALESCE(NULLIF(u.display_name, ''), u.email::TEXT, u.id::TEXT)
+        ",
+    )
+    .fetch_all(&*pool)
+    .await
+    .unwrap_or_default()
+    .into_iter()
+    .map(|(uid, email, display)| {
+        let label = match (display.as_deref(), email.as_deref()) {
+            (Some(d), Some(e)) => format!("{d} ({e})"),
+            (Some(d), None) => d.to_string(),
+            (None, Some(e)) => e.to_string(),
+            (None, None) => uid.clone(),
+        };
+        DeviceUserOption { user_id: uid, label }
+    })
+    .collect();
+
+    let department_options: Vec<String> = repositories::list_departments(&pool)
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .map(|d| d.name)
+        .collect();
+
     let data = ManagementDevicesPageData {
-        page: "management-devices",
+        page: "devices",
         title: "Devices",
         devices,
         total,
         online,
+        user_options,
+        department_options,
     };
     render_typed_page(&engine, "management-devices", &data, &user_ctx, &mkt_ctx)
 }
 
-#[derive(Debug, Serialize)]
-struct AssignedItem {
-    id: String,
-    name: String,
-    description: Option<String>,
-    departments: i64,
-    users: i64,
-    coverage_label: String,
-}
-
-#[derive(Debug, Serialize)]
-struct ManagementListPageData {
-    page: &'static str,
-    title: &'static str,
-    items: Vec<AssignedItem>,
-    total: usize,
-}
-
-async fn fetch_assigned_skills(pool: &PgPool) -> Vec<AssignedItem> {
-    let query = r"
-        SELECT
-            base.id,
-            base.name,
-            base.description,
-            COALESCE(d.cnt, 0)::BIGINT,
-            COALESCE(u.cnt, 0)::BIGINT
-        FROM (
-            SELECT DISTINCT skill_id AS id, name, description
-            FROM user_skills
-        ) base
-        LEFT JOIN (
-            SELECT entity_id, COUNT(*)::BIGINT AS cnt
-            FROM access_control_rules
-            WHERE entity_type = 'skill' AND rule_type = 'department' AND access = 'allow'
-            GROUP BY entity_id
-        ) d ON d.entity_id = base.id
-        LEFT JOIN (
-            SELECT entity_id, COUNT(*)::BIGINT AS cnt
-            FROM access_control_rules
-            WHERE entity_type = 'skill' AND rule_type = 'user' AND access = 'allow'
-            GROUP BY entity_id
-        ) u ON u.entity_id = base.id
-        ORDER BY base.name
-        ";
-
-    let rows: Vec<(String, String, Option<String>, i64, i64)> = sqlx::query_as(query)
-        .fetch_all(pool)
-        .await
-        .unwrap_or_default();
-
-    rows.into_iter()
-        .map(|(id, name, description, departments, users)| AssignedItem {
-            coverage_label: coverage_label("skill", departments, users),
-            id,
-            name,
-            description,
-            departments,
-            users,
-        })
-        .collect()
-}
-
-fn coverage_label(entity_type: &str, departments: i64, users: i64) -> String {
-    if departments == 0 && users == 0 {
-        format!("Unassigned · open via access matrix to assign this {entity_type}")
-    } else {
-        format!(
-            "{} dept{} · {} user{}",
-            departments,
-            if departments == 1 { "" } else { "s" },
-            users,
-            if users == 1 { "" } else { "s" }
-        )
-    }
-}
-
-fn fetch_marketplace_items() -> Vec<AssignedItem> {
-    crate::services::marketplaces::load_marketplaces()
-        .into_iter()
-        .map(|mp| {
-            let members = (mp.plugins.include.len()
-                + mp.skills.include.len()
-                + mp.agents.include.len()
-                + mp.mcp_servers.len()) as i64;
-            AssignedItem {
-                id: mp.id.as_str().to_string(),
-                name: mp.name,
-                description: Some(mp.description),
-                departments: members,
-                users: 0,
-                coverage_label: format!(
-                    "{} member{}",
-                    members,
-                    if members == 1 { "" } else { "s" }
-                ),
-            }
-        })
-        .collect()
-}
-
-pub async fn management_skills_page(
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
-    State(pool): State<Arc<PgPool>>,
-) -> Response {
-    if !user_ctx.is_admin {
-        return forbidden();
-    }
-    let items = fetch_assigned_skills(&pool).await;
-    let total = items.len();
-    let data = ManagementListPageData {
-        page: "management-skills",
-        title: "Skills",
-        items,
-        total,
-    };
-    render_typed_page(&engine, "management-skills", &data, &user_ctx, &mkt_ctx)
-}
-
-pub async fn management_marketplaces_page(
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
-    State(_pool): State<Arc<PgPool>>,
-) -> Response {
-    if !user_ctx.is_admin {
-        return forbidden();
-    }
-    let items = fetch_marketplace_items();
-    let total = items.len();
-    let data = ManagementListPageData {
-        page: "management-marketplaces",
-        title: "Marketplaces",
-        items,
-        total,
-    };
-    render_typed_page(&engine, "management-marketplaces", &data, &user_ctx, &mkt_ctx)
-}
+// Skills/Marketplaces management list pages were replaced by /admin/catalog.
 
 pub async fn management_department_detail_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -348,7 +256,6 @@ pub async fn management_department_detail_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
-    Query(q): Query<DepartmentDetailQuery>,
 ) -> Response {
     if !user_ctx.is_admin {
         return forbidden();
@@ -367,8 +274,23 @@ pub async fn management_department_detail_page(
         .unwrap_or_default();
     let member_count = members.len() as i64;
 
+    let top_tools = repositories::list_department_top_tools(&pool, &department.name, 10)
+        .await
+        .unwrap_or_default();
+
+    let mut total_input_tokens = 0i64;
+    let mut total_output_tokens = 0i64;
+    let mut total_requests = 0i64;
+    let mut total_cost_microdollars = 0i64;
+    for m in &members {
+        total_input_tokens += m.input_tokens;
+        total_output_tokens += m.output_tokens;
+        total_requests += m.requests;
+        total_cost_microdollars += m.cost_microdollars;
+    }
+
     let assignments_url = format!(
-        "/admin/access-control?department={}",
+        "/admin/access/matrix?department={}",
         url_escape(&department.name)
     );
 
@@ -380,8 +302,11 @@ pub async fn management_department_detail_page(
         members,
         member_count,
         assignments_url,
-        tab: q.tab.unwrap_or_else(|| "members".to_string()),
-        not_found: false,
+        top_tools,
+        total_input_tokens,
+        total_output_tokens,
+        total_requests,
+        total_cost_microdollars,
     };
 
     render_typed_page(

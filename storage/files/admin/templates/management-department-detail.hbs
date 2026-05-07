@@ -3,24 +3,45 @@
     {{#*inline "content"}}
 
     <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="/admin/management">Management</a>
-        <span aria-hidden="true">›</span>
-        <a href="/admin/management/departments">Departments</a>
+        <a href="/admin/access/departments">Departments</a>
         <span aria-hidden="true">›</span>
         <span aria-current="page">{{department.name}}</span>
     </nav>
 
     {{> components/page-header title=department.name subtitle=department.description}}
 
-    <div class="card" style="margin-bottom:1rem;">
-        <nav class="tab-nav" aria-label="Department tabs">
-            <a href="/admin/management/departments/{{department.id}}?tab=members" class="tab-nav__item{{#if (eq tab "members")}} tab-nav__item--active{{/if}}" {{#if (eq tab "members")}}aria-current="page"{{/if}}>Members <span class="badge">{{member_count}}</span></a>
-            <a href="/admin/management/departments/{{department.id}}?tab=assignments" class="tab-nav__item{{#if (eq tab "assignments")}} tab-nav__item--active{{/if}}" {{#if (eq tab "assignments")}}aria-current="page"{{/if}}>Assignments</a>
-            <a href="/admin/management/departments/{{department.id}}?tab=settings" class="tab-nav__item{{#if (eq tab "settings")}} tab-nav__item--active{{/if}}" {{#if (eq tab "settings")}}aria-current="page"{{/if}}>Settings</a>
-        </nav>
-    </div>
+    <section aria-label="Department usage" class="card" style="padding:1.25rem;margin-bottom:1rem;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;">
+            <div><div class="text-muted" style="font-size:.8rem;">Members</div><div style="font-size:1.5rem;font-weight:600;">{{member_count}}</div></div>
+            <div><div class="text-muted" style="font-size:.8rem;">Requests (30d)</div><div style="font-size:1.5rem;font-weight:600;">{{total_requests}}</div></div>
+            <div><div class="text-muted" style="font-size:.8rem;">Tokens in (30d)</div><div style="font-size:1.5rem;font-weight:600;">{{total_input_tokens}}</div></div>
+            <div><div class="text-muted" style="font-size:.8rem;">Tokens out (30d)</div><div style="font-size:1.5rem;font-weight:600;">{{total_output_tokens}}</div></div>
+            <div><div class="text-muted" style="font-size:.8rem;">Cost (30d)</div><div style="font-size:1.5rem;font-weight:600;">{{total_cost_microdollars}} µ$</div></div>
+        </div>
+    </section>
 
-    {{#if (eq tab "members")}}
+    <section aria-label="Permission matrix" class="card" style="padding:1.25rem;margin-bottom:1rem;">
+        <h2 style="margin-top:0;">Permission matrix</h2>
+        <p>Skills, marketplaces, plugins, MCP servers, and gateway routes assigned to <strong>{{department.name}}</strong>. Members inherit everything assigned here. Direct user-level overrides take precedence.</p>
+        <p>
+            <a class="btn btn-primary" href="{{assignments_url}}">Open access matrix filtered to this department →</a>
+        </p>
+        <p class="text-muted" style="font-size:.875rem;">
+            Stored in <code>access_control_rules</code> with <code>rule_type='department'</code> and <code>rule_value='{{department.name}}'</code>. Renaming this department updates those rules automatically.
+        </p>
+    </section>
+
+    {{#if top_tools}}
+    <section aria-label="Top tools" class="card" style="padding:1.25rem;margin-bottom:1rem;">
+        <h2 style="margin-top:0;">Top tools (30d)</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem;">
+            {{#each top_tools}}
+            <span class="badge badge-blue">{{tool_name}} · {{invocations}}</span>
+            {{/each}}
+        </div>
+    </section>
+    {{/if}}
+
     <section aria-label="Department members">
         <div class="toolbar">
             <div class="search-group">
@@ -30,16 +51,28 @@
         </div>
         {{#if members}}
         {{#> components/data-table}}
-            <thead><tr><th>Email</th><th>Display name</th><th>Status</th><th>Roles</th><th class="col-actions"></th></tr></thead>
+            <thead><tr>
+                <th>Email</th>
+                <th>Display name</th>
+                <th>Status</th>
+                <th class="numeric col-numeric">Requests (30d)</th>
+                <th class="numeric col-numeric">Tokens (30d)</th>
+                <th class="numeric col-numeric">Cost (30d)</th>
+                <th>Last active</th>
+                <th class="col-actions"></th>
+            </tr></thead>
             <tbody>
             {{#each members}}
             <tr data-member-email="{{toLowerCase email}}">
-                <td><a href="/admin/management/user?id={{id}}">{{email}}</a></td>
+                <td><a href="/admin/access/user?id={{id}}">{{email}}</a></td>
                 <td>{{#if display_name}}{{display_name}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
                 <td><span class="badge {{#if (eq status "active")}}badge-green{{else}}badge-gray{{/if}}">{{status}}</span></td>
-                <td>{{#each roles}}<span class="badge badge-blue">{{this}}</span> {{/each}}</td>
+                <td class="numeric col-numeric">{{requests}}</td>
+                <td class="numeric col-numeric">{{add input_tokens output_tokens}}</td>
+                <td class="numeric col-numeric">{{cost_microdollars}} µ$</td>
+                <td>{{#if last_active}}{{relativeTime last_active}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
                 <td class="col-actions">
-                    <button type="button" class="btn btn-sm btn-outline" data-unassign-user="{{id}}">Remove</button>
+                    <button type="button" class="btn btn-sm btn-outline" data-unassign-user="{{id}}">Move to Default</button>
                 </td>
             </tr>
             {{/each}}
@@ -56,7 +89,7 @@
     <dialog id="member-add-dialog" class="dialog">
         <form id="member-add-form" class="dialog-form">
             <h3>Add member to {{department.name}}</h3>
-            <label>User ID or email<input type="text" name="user_id" required placeholder="usr_… or user@example.com"></label>
+            <label>User ID<input type="text" name="user_id" required placeholder="usr_…"></label>
             <p class="text-muted" style="font-size:.875rem;">The user's <code>users.department</code> field will be set to <code>{{department.name}}</code>.</p>
             <menu>
                 <button type="button" class="btn btn-sm btn-outline" id="member-add-cancel">Cancel</button>
@@ -65,29 +98,13 @@
             <p id="member-add-error" class="text-danger" style="display:none;"></p>
         </form>
     </dialog>
-    {{/if}}
 
-    {{#if (eq tab "assignments")}}
-    <section aria-label="Department assignments">
-        <div class="card" style="padding:1.5rem;">
-            <p>Assign skills, marketplaces, plugins, MCP servers, and gateway routes to <strong>{{department.name}}</strong>. Members inherit everything assigned here. Direct user-level overrides take precedence.</p>
-            <p style="margin-top:1rem;">
-                <a class="btn btn-primary" href="{{assignments_url}}">Open access matrix filtered to this department →</a>
-            </p>
-            <p class="text-muted" style="font-size:.875rem;margin-top:.75rem;">
-                The access matrix is the source of truth — every department-level grant is stored in <code>access_control_rules</code> with <code>rule_type='department'</code> and <code>rule_value='{{department.name}}'</code>. Renaming this department updates those rules automatically.
-            </p>
-        </div>
-    </section>
-    {{/if}}
-
-    {{#if (eq tab "settings")}}
-    <section aria-label="Department settings">
+    {{#unless (eq department.name "Default")}}
+    <section aria-label="Department settings" style="margin-top:2rem;">
         <form id="dept-settings-form" class="card" style="padding:1.5rem;max-width:560px;">
             <h2 style="margin-top:0;">Settings</h2>
             <label>Name<input type="text" name="name" value="{{department.name}}" required></label>
             <label>Description<textarea name="description" rows="3">{{department.description}}</textarea></label>
-            <label>Manager user ID<input type="text" name="manager_user_id" value="{{department.manager_user_id}}"></label>
             <div style="display:flex;gap:.5rem;margin-top:1rem;">
                 <button type="submit" class="btn btn-primary">Save</button>
                 <button type="button" class="btn btn-danger" id="dept-delete-btn">Delete department</button>
@@ -95,14 +112,13 @@
             <p id="dept-settings-msg" class="text-muted" style="margin-top:.75rem;display:none;"></p>
         </form>
     </section>
-    {{/if}}
+    {{/unless}}
 
     <script>
     (function() {
         const deptId = "{{department.id}}";
         const deptName = "{{department.name}}";
 
-        // Members tab
         const addDlg = document.getElementById('member-add-dialog');
         const addOpen = () => { document.getElementById('member-add-error').style.display = 'none'; addDlg?.showModal(); };
         document.getElementById('btn-add-member')?.addEventListener('click', addOpen);
@@ -126,25 +142,23 @@
         document.querySelectorAll('[data-unassign-user]').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const uid = btn.getAttribute('data-unassign-user');
-                if (!confirm('Remove this user from ' + deptName + '?')) return;
+                if (!confirm('Move this user back to "Default"?')) return;
                 const res = await fetch('/admin/management/users/' + encodeURIComponent(uid) + '/department', {
                     method: 'PUT',
                     headers: {'content-type': 'application/json'},
-                    body: JSON.stringify({ department_name: '' }),
+                    body: JSON.stringify({ department_name: 'Default' }),
                 });
                 if (res.ok) location.reload();
                 else alert('Failed: ' + await res.text());
             });
         });
 
-        // Settings tab
         document.getElementById('dept-settings-form')?.addEventListener('submit', async (ev) => {
             ev.preventDefault();
             const fd = new FormData(ev.target);
             const body = {
                 name: fd.get('name'),
                 description: fd.get('description') || '',
-                manager_user_id: fd.get('manager_user_id') || null,
             };
             const res = await fetch('/admin/management/departments/' + deptId, {
                 method: 'PUT',
@@ -157,13 +171,12 @@
             else { msg.textContent = 'Save failed: ' + await res.text(); }
         });
         document.getElementById('dept-delete-btn')?.addEventListener('click', async () => {
-            if (!confirm('Delete "' + deptName + '"? Members will be unassigned and department-level access rules removed.')) return;
+            if (!confirm('Delete "' + deptName + '"? Members will be reassigned to "Default" and department-level access rules removed.')) return;
             const res = await fetch('/admin/management/departments/' + deptId, { method: 'DELETE' });
-            if (res.ok) location = '/admin/management/departments';
+            if (res.ok) location = '/admin/access/departments';
             else alert('Delete failed: ' + await res.text());
         });
 
-        // Member search
         document.getElementById('member-search')?.addEventListener('input', (ev) => {
             const q = ev.target.value.toLowerCase();
             document.querySelectorAll('[data-member-email]').forEach(row => {

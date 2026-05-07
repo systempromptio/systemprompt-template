@@ -58,7 +58,7 @@ pub async fn governance_audit_detail_page(
     let banner = build_banner(primary, &envelope);
 
     let data = json!({
-        "page": "governance-audit-detail",
+        "page": "request-detail",
         "title": title,
         "summary": summary,
         "primary": primary_json,

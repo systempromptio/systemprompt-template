@@ -224,6 +224,7 @@ pub struct UpdateUserRequest {
     pub email: Option<String>,
     pub roles: Option<Vec<String>>,
     pub is_active: Option<bool>,
+    pub department: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

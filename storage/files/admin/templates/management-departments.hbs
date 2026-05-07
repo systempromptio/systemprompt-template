@@ -13,18 +13,27 @@
     <section aria-label="Departments list" data-page="management-departments">
     {{#if departments}}
     {{#> components/data-table}}
-        <thead><tr><th>Name</th><th>Manager</th><th class="numeric col-numeric">Members</th><th class="numeric col-numeric">Assignments</th><th>Description</th><th class="col-actions"></th></tr></thead>
+        <thead><tr>
+            <th>Name</th>
+            <th class="numeric col-numeric">Members</th>
+            <th class="numeric col-numeric">Assignments</th>
+            <th class="numeric col-numeric">Requests (30d)</th>
+            <th class="numeric col-numeric">Tokens (30d)</th>
+            <th>Description</th>
+            <th class="col-actions"></th>
+        </tr></thead>
         <tbody>
         {{#each departments}}
         <tr data-dept-id="{{id}}" data-dept-name="{{toLowerCase name}}">
-            <td><a href="/admin/management/departments/{{id}}"><strong>{{name}}</strong></a></td>
-            <td>{{#if manager_email}}{{manager_email}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td><a href="/admin/access/departments/{{id}}"><strong>{{name}}</strong></a></td>
             <td class="numeric col-numeric">{{member_count}}</td>
             <td class="numeric col-numeric">{{assignment_count}}</td>
+            <td class="numeric col-numeric">{{requests}}</td>
+            <td class="numeric col-numeric">{{add input_tokens output_tokens}}</td>
             <td>{{description}}</td>
             <td class="col-actions">
-                <a class="btn btn-sm" href="/admin/management/departments/{{id}}">Open</a>
-                <button type="button" class="btn btn-sm btn-danger" data-delete-dept="{{id}}" data-dept-name="{{name}}">Delete</button>
+                <a class="btn btn-sm" href="/admin/access/departments/{{id}}">Open</a>
+                {{#unless (eq name "Default")}}<button type="button" class="btn btn-sm btn-danger" data-delete-dept="{{id}}" data-dept-name="{{name}}">Delete</button>{{/unless}}
             </td>
         </tr>
         {{/each}}
@@ -44,7 +53,6 @@
             <h3>New department</h3>
             <label>Name<input type="text" name="name" required maxlength="64" autocomplete="off" placeholder="e.g. Engineering"></label>
             <label>Description<textarea name="description" rows="2" placeholder="Optional"></textarea></label>
-            <label>Manager user ID<input type="text" name="manager_user_id" placeholder="Optional, e.g. usr_…"></label>
             <menu>
                 <button type="button" class="btn btn-sm btn-outline" id="dept-create-cancel">Cancel</button>
                 <button type="submit" class="btn btn-sm btn-primary">Create</button>
@@ -68,7 +76,6 @@
             const body = {
                 name: fd.get('name'),
                 description: fd.get('description') || '',
-                manager_user_id: fd.get('manager_user_id') || null,
             };
             const res = await fetch('/admin/management/departments', {
                 method: 'POST',
@@ -84,7 +91,7 @@
                 ev.stopPropagation();
                 const id = btn.getAttribute('data-delete-dept');
                 const name = btn.getAttribute('data-dept-name');
-                if (!confirm('Delete department "' + name + '"? Members will be unassigned and department-level access rules removed.')) return;
+                if (!confirm('Delete department "' + name + '"? Members will be reassigned to "Default" and department-level access rules removed.')) return;
                 const res = await fetch('/admin/management/departments/' + id, { method: 'DELETE' });
                 if (res.ok) location.reload();
                 else alert('Delete failed: ' + await res.text());

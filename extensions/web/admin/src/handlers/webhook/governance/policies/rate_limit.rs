@@ -118,5 +118,6 @@ inventory::submit! {
     PolicyRegistration {
         id: ID,
         factory: |v| Box::new(RateLimit::from_yaml(v)),
+        source_path: file!(),
     }
 }

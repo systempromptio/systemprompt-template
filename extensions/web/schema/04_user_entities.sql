@@ -52,42 +52,9 @@ CREATE TABLE IF NOT EXISTS user_agents (
 CREATE INDEX IF NOT EXISTS idx_user_agents_user ON user_agents(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_agents_base ON user_agents(base_agent_id);
 
-CREATE TABLE IF NOT EXISTS hook_overrides (
-    hook_id TEXT PRIMARY KEY,
-    enabled BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS user_hooks (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    hook_id TEXT DEFAULT '',
-    name TEXT NOT NULL DEFAULT '',
-    description TEXT NOT NULL DEFAULT '',
-    event TEXT DEFAULT '',
-    matcher TEXT NOT NULL DEFAULT '*',
-    command TEXT NOT NULL,
-    is_async BOOLEAN NOT NULL DEFAULT false,
-    enabled BOOLEAN NOT NULL DEFAULT true,
-    base_hook_id TEXT,
-    plugin_id TEXT,
-    is_default BOOLEAN NOT NULL DEFAULT false,
-    hook_name TEXT NOT NULL DEFAULT '',
-    event_type TEXT NOT NULL DEFAULT '',
-    hook_type TEXT NOT NULL DEFAULT 'http',
-    url TEXT NOT NULL DEFAULT '',
-    headers JSONB NOT NULL DEFAULT '{}',
-    timeout INT NOT NULL DEFAULT 10,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE(user_id, hook_id)
-);
-CREATE INDEX IF NOT EXISTS idx_user_hooks_user ON user_hooks(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_hooks_base ON user_hooks(base_hook_id);
-CREATE INDEX IF NOT EXISTS idx_user_hooks_plugin ON user_hooks(plugin_id);
-CREATE INDEX IF NOT EXISTS idx_user_hooks_event_type ON user_hooks(event_type);
-CREATE INDEX IF NOT EXISTS idx_user_hooks_default ON user_hooks(user_id, is_default) WHERE is_default = true;
+DROP TABLE IF EXISTS user_plugin_hooks CASCADE;
+DROP TABLE IF EXISTS user_hooks CASCADE;
+DROP TABLE IF EXISTS hook_overrides CASCADE;
 
 CREATE TABLE IF NOT EXISTS user_plugins (
     id TEXT PRIMARY KEY,
@@ -159,16 +126,6 @@ CREATE TABLE IF NOT EXISTS user_plugin_mcp_servers (
 );
 CREATE INDEX IF NOT EXISTS idx_user_plugin_mcp_servers_plugin ON user_plugin_mcp_servers(user_plugin_id);
 CREATE INDEX IF NOT EXISTS idx_user_plugin_mcp_servers_mcp ON user_plugin_mcp_servers(user_mcp_server_id);
-
-CREATE TABLE IF NOT EXISTS user_plugin_hooks (
-    user_plugin_id TEXT NOT NULL REFERENCES user_plugins(id) ON DELETE CASCADE,
-    user_hook_id TEXT NOT NULL REFERENCES user_hooks(id) ON DELETE CASCADE,
-    sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (user_plugin_id, user_hook_id)
-);
-CREATE INDEX IF NOT EXISTS idx_user_plugin_hooks_plugin ON user_plugin_hooks(user_plugin_id);
-CREATE INDEX IF NOT EXISTS idx_user_plugin_hooks_hook ON user_plugin_hooks(user_hook_id);
 
 -- marketplace_sync_status + mark_marketplace_dirty triggers removed:
 -- marketplaces are YAML-defined under services/marketplaces/, no per-user

@@ -188,6 +188,20 @@ pub async fn user_matrix_handler(
             .collect();
         sections.push(("agent".to_string(), "Agents".to_string(), rows));
     }
+    if let Ok(skills) = repositories::list_skill_catalog(&services_path) {
+        let rows: Vec<(String, String, Option<String>)> = skills
+            .into_iter()
+            .map(|s| {
+                let desc = if s.description.is_empty() {
+                    None
+                } else {
+                    Some(s.description)
+                };
+                (s.id.as_str().to_string(), s.name, desc)
+            })
+            .collect();
+        sections.push(("skill".to_string(), "Skills".to_string(), rows));
+    }
 
     match repositories::access_control::resolve_user_matrix(&pool, &user_id, sections).await {
         Ok(matrix) => Json(matrix).into_response(),

@@ -1,10 +1,5 @@
 use serde::Serialize;
 
-#[derive(Serialize, Debug, Clone)]
-pub struct RulesResponse<T> {
-    pub rules: T,
-}
-
 #[derive(Serialize, Debug)]
 pub struct ResolutionTokenResponse {
     pub token: String,
@@ -51,6 +46,4 @@ list_response!(SecretsListResponse, secrets);
 list_response!(JobsListResponse, jobs);
 list_response!(UsersListResponse, users);
 list_response!(EventsListResponse, events);
-list_response!(MarketplaceListResponse, plugins);
-list_response!(SkillIdsListResponse, skill_ids);
 list_response!(AuditLogListResponse, entries);

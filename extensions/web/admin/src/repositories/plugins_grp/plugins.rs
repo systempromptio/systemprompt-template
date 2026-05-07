@@ -1,13 +1,191 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use systemprompt::identifiers::{McpServerId, SkillId};
+use systemprompt::identifiers::{AgentId, McpServerId, SkillId};
 
 use crate::repositories::plugin_resolvers::{
     resolve_all_plugin_skill_ids, resolve_plugin_agents, resolve_plugin_skills,
 };
-use crate::types::{PluginOnboardingConfig, PluginOverview, ROLE_ADMIN};
+use crate::types::{
+    AgentCatalogEntry, PluginOnboardingConfig, PluginOverview, SkillCatalogEntry, ROLE_ADMIN,
+};
 use systemprompt_web_shared::error::MarketplaceError;
+
+/// Walk `services/skills/<id>/config.yaml` and return one catalog row per
+/// skill. Used by the unified `/admin/catalog` page; never writes to disk.
+pub fn list_skill_catalog(services_path: &Path) -> Result<Vec<SkillCatalogEntry>, MarketplaceError> {
+    let skills_path = services_path.join("skills");
+    let mut out: Vec<SkillCatalogEntry> = Vec::new();
+    if !skills_path.exists() {
+        return Ok(out);
+    }
+    for entry in std::fs::read_dir(&skills_path)? {
+        let entry = entry?;
+        let dir = entry.path();
+        if !dir.is_dir() {
+            continue;
+        }
+        let cfg = dir.join("config.yaml");
+        if !cfg.exists() {
+            continue;
+        }
+        let raw = match std::fs::read_to_string(&cfg) {
+            Ok(s) => s,
+            Err(e) => {
+                tracing::warn!(path = %cfg.display(), error = %e, "skipped unreadable skill config");
+                continue;
+            }
+        };
+        let val: serde_yaml::Value = match serde_yaml::from_str(&raw) {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::warn!(path = %cfg.display(), error = %e, "skipped invalid skill yaml");
+                continue;
+            }
+        };
+        let id_str = val
+            .get("id")
+            .and_then(|v| v.as_str())
+            .or_else(|| dir.file_name().and_then(|n| n.to_str()))
+            .unwrap_or("")
+            .to_string();
+        if id_str.is_empty() {
+            continue;
+        }
+        let id = SkillId::new(&id_str);
+        let name = val
+            .get("name")
+            .and_then(|v| v.as_str())
+            .unwrap_or(&id_str)
+            .to_string();
+        let description = val
+            .get("description")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let enabled = val
+            .get("enabled")
+            .and_then(serde_yaml::Value::as_bool)
+            .unwrap_or(true);
+        let source_path = cfg
+            .strip_prefix(services_path)
+            .ok()
+            .and_then(|p| p.to_str())
+            .map_or_else(|| cfg.display().to_string(), |s| format!("services/{s}"));
+        out.push(SkillCatalogEntry {
+            id,
+            name,
+            description,
+            enabled,
+            source_path,
+        });
+    }
+    out.sort_by(|a, b| a.id.as_str().cmp(b.id.as_str()));
+    Ok(out)
+}
+
+/// Walk `services/agents/<id>.yaml` and return one catalog row per agent.
+pub fn list_agent_catalog(services_path: &Path) -> Result<Vec<AgentCatalogEntry>, MarketplaceError> {
+    let agents_path = services_path.join("agents");
+    let mut out: Vec<AgentCatalogEntry> = Vec::new();
+    if !agents_path.exists() {
+        return Ok(out);
+    }
+    for entry in std::fs::read_dir(&agents_path)? {
+        let entry = entry?;
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        if path.extension().and_then(|e| e.to_str()) != Some("yaml") {
+            continue;
+        }
+        let raw = match std::fs::read_to_string(&path) {
+            Ok(s) => s,
+            Err(_) => continue,
+        };
+        let val: serde_yaml::Value = match serde_yaml::from_str(&raw) {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        let source_path = path
+            .strip_prefix(services_path)
+            .ok()
+            .and_then(|p| p.to_str())
+            .map_or_else(|| path.display().to_string(), |s| format!("services/{s}"));
+        let Some(map) = val.get("agents").and_then(|m| m.as_mapping()) else {
+            continue;
+        };
+        for (key, av) in map {
+            let Some(id_str) = key.as_str() else { continue };
+            let id = AgentId::new(id_str);
+            let name = av
+                .get("name")
+                .and_then(|v| v.as_str())
+                .or_else(|| av.get("card").and_then(|c| c.get("displayName")).and_then(|v| v.as_str()))
+                .unwrap_or(id_str)
+                .to_string();
+            let description = av
+                .get("card")
+                .and_then(|c| c.get("description"))
+                .and_then(|v| v.as_str())
+                .or_else(|| av.get("description").and_then(|v| v.as_str()))
+                .unwrap_or("")
+                .to_string();
+            let enabled = av
+                .get("enabled")
+                .and_then(serde_yaml::Value::as_bool)
+                .unwrap_or(true);
+            out.push(AgentCatalogEntry {
+                id,
+                name,
+                description,
+                enabled,
+                source_path: source_path.clone(),
+            });
+        }
+    }
+    out.sort_by(|a, b| a.id.as_str().cmp(b.id.as_str()));
+    Ok(out)
+}
+
+/// Catalog rows for plugins, including the YAML path each was loaded from.
+pub fn list_plugin_catalog(
+    services_path: &Path,
+) -> Result<Vec<crate::types::PluginDetail>, MarketplaceError> {
+    use crate::types::PluginDetail;
+    let skills_path = services_path.join("skills");
+    let agents_path = services_path.join("agents");
+    let mut out: Vec<PluginDetail> = Vec::new();
+    for (_id, plugin, source_path) in super::plugin_loader::load_all_plugins_with_paths()? {
+        let skills: Vec<SkillId> =
+            resolve_all_plugin_skill_ids(&plugin.base, &skills_path, &agents_path)
+                .into_iter()
+                .map(SkillId::from)
+                .collect();
+        out.push(PluginDetail {
+            id: plugin.base.id.to_string(),
+            name: plugin.base.name,
+            description: plugin.base.description,
+            version: plugin.base.version,
+            enabled: plugin.base.enabled,
+            category: plugin.base.category,
+            keywords: plugin.base.keywords,
+            author_name: plugin.base.author.name,
+            roles: plugin.roles,
+            skills,
+            agents: plugin.base.agents.include.into_iter().map(AgentId::from).collect(),
+            mcp_servers: plugin
+                .base
+                .mcp_servers
+                .into_iter()
+                .filter_map(|s| McpServerId::try_new(s).ok())
+                .collect(),
+            source_path,
+        });
+    }
+    Ok(out)
+}
 
 pub fn list_all_skill_ids(services_path: &Path) -> Result<Vec<String>, MarketplaceError> {
     let skills_path = services_path.join("skills");

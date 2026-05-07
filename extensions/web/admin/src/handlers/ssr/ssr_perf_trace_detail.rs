@@ -1,4 +1,4 @@
-//! `/admin/performance/traces/{id}` — Per-trace waterfall page.
+//! `/admin/entities/traces/{id}` — Per-trace waterfall page.
 //!
 //! `id` may be a `session_id` or a `trace_id`. The handler resolves it to a
 //! session id, fetches all spans, and renders a waterfall whose bars are
@@ -63,12 +63,12 @@ pub async fn perf_trace_detail_page(
         .unwrap_or_else(|_| "[]".to_string());
 
     let data = json!({
-        "page": "perf-traces",
+        "page": "trace-detail",
         "title": format!("Trace · {}", short_id(&session_id)),
         "summary": summary,
         "spans": spans_json,
         "spans_payload": spans_payload,
-        "back_url": "/admin/performance/traces",
+        "back_url": "/admin/entities/traces",
     });
 
     super::render_page(&engine, "perf-trace-detail", &data, &user_ctx, &mkt_ctx)

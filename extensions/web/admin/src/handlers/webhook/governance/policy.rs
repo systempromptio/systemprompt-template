@@ -57,9 +57,21 @@ pub trait Policy: Send + Sync {
 pub struct PolicyRegistration {
     pub id: &'static str,
     pub factory: PolicyFactory,
+    /// Source file the policy is defined in (set with `file!()`). Surfaced on
+    /// the dashboard as the "as code" link, communicating that policies are
+    /// real Rust impls rather than YAML rows.
+    pub source_path: &'static str,
 }
 
 inventory::collect!(PolicyRegistration);
+
+/// Source-path lookup for a policy id. Returns the `file!()` set at
+/// `inventory::submit!` time, or an empty string if the id is not registered.
+pub fn source_path_for(id: &str) -> &'static str {
+    inventory::iter::<PolicyRegistration>()
+        .find(|r| r.id == id)
+        .map_or("", |r| r.source_path)
+}
 
 /// Per-policy config block from `services/governance/config.yaml`.
 #[derive(Debug, Clone)]

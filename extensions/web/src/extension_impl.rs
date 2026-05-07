@@ -123,12 +123,11 @@ impl Extension for WebExtension {
             Arc::clone(&pool)
         });
 
-        let tier_cache = admin::tier_enforcement::TierEnforcementCache::new();
-
-        let admin_api = admin::admin_router(Arc::clone(&pool), tier_cache);
+        let admin_api = admin::admin_router(Arc::clone(&pool));
         let webhook_api = admin::hooks_webhook_router(Arc::clone(&write_pool));
         let secrets_api = admin::secrets_router(Arc::clone(&write_pool));
         let cowork_api = admin::cowork_router(Arc::clone(&pool));
+        let share_api = admin::share_manifest_router(Arc::clone(&pool));
         let links_router = api::router(Arc::clone(&pool), self.validated_config.clone());
 
         let api_router = Router::new()
@@ -163,7 +162,6 @@ impl Extension for WebExtension {
                 return Some(ExtensionRouter::public(api_router, "/api/public"));
             }
         };
-        let _ = tier_cache;
         let cowork_auth_router = admin::cowork_auth_ssr_router(Arc::clone(&pool), engine.clone());
         let ssr_router = admin::admin_ssr_router(pool, engine);
 
@@ -171,6 +169,7 @@ impl Extension for WebExtension {
             .nest_service("/admin", ssr_router)
             .nest_service("/cowork-auth", cowork_auth_router)
             .merge(cowork_api)
+            .merge(share_api)
             .nest("/api/public", api_router);
 
         Some(ExtensionRouter::public(combined, "/"))

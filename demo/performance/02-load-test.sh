@@ -186,7 +186,7 @@ echo ""
 echo "=========================================="
 echo "  TEST 4: MCP TOOL CALL LATENCY"
 echo ""
-echo "  5 sequential calls to skill-manager"
+echo "  5 sequential calls to systemprompt MCP"
 echo "  OAuth auth → tool execution → response"
 echo "=========================================="
 echo ""
@@ -195,7 +195,7 @@ ms_now() { python3 -c "import time; print(int(time.time()*1000))"; }
 MCP_TIMES=""
 for i in $(seq 1 5); do
   START_MS=$(ms_now)
-  "$CLI" plugins mcp call skill-manager list_plugins '{}' --profile "$PROFILE" 2>/dev/null | head -1 > /dev/null
+  "$CLI" plugins mcp call systemprompt systemprompt --args '{"command":"core skills list"}' --profile "$PROFILE" 2>/dev/null | head -1 > /dev/null
   END_MS=$(ms_now)
   MS=$(( END_MS - START_MS ))
   MCP_TIMES="$MCP_TIMES $MS"
@@ -207,7 +207,7 @@ MCP_MAX=$(echo "$MCP_TIMES" | awk '{max=0; for(i=1;i<=NF;i++) if($i>max) max=$i;
 
 echo ""
 echo "  ┌────────────────────────────────────────────────────┐"
-echo "  │  MCP: skill-manager list_plugins                   │"
+echo "  │  MCP: systemprompt core skills list                │"
 echo "  ├──────────────────┬─────────────────────────────────┤"
 echo "  │  Average          │  ${MCP_AVG}ms"
 echo "  │  Min / Max        │  ${MCP_MIN}ms / ${MCP_MAX}ms"

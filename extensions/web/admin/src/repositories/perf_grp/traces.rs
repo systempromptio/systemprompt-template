@@ -22,37 +22,62 @@ pub struct TraceSummary {
     pub duration_ms: i64,
     pub user_id: Option<String>,
     pub agent_id: Option<String>,
+    pub agent_scope: Option<String>,
     pub model: Option<String>,
+    pub provider: Option<String>,
     pub span_count: i64,
+    pub request_count: i64,
+    pub tool_call_count: i64,
+    pub governance_count: i64,
+    pub deny_count: i64,
+    pub total_tokens: i64,
+    pub input_tokens: i64,
+    pub output_tokens: i64,
+    pub total_cost_microdollars: i64,
+    pub total_latency_ms: i64,
+    pub cache_hit_any: bool,
+    pub top_tool: Option<String>,
     pub has_error: bool,
     pub has_deny: bool,
 }
 
-/// Raw row tuple returned by the dynamic `fetch_trace_list` query.
-///
-/// Tuple fields, in order: `session_id`, `trace_id`, `started_at`, `ended_at`,
-/// `duration_ms`, `user_id`, `agent_id`, `model`, `span_count`, `has_error`,
-/// `has_deny`, `total_count`.
-type TraceRowTuple = (
-    String,
-    Option<String>,
-    DateTime<Utc>,
-    DateTime<Utc>,
-    i64,
-    Option<String>,
-    Option<String>,
-    Option<String>,
-    i64,
-    bool,
-    bool,
-    i64,
-);
+/// Raw row returned by the dynamic `fetch_trace_list` query.
+#[derive(Debug, sqlx::FromRow)]
+struct TraceRow {
+    session_id: String,
+    trace_id: Option<String>,
+    started_at: DateTime<Utc>,
+    ended_at: DateTime<Utc>,
+    duration_ms: i64,
+    user_id: Option<String>,
+    agent_id: Option<String>,
+    agent_scope: Option<String>,
+    model: Option<String>,
+    provider: Option<String>,
+    span_count: i64,
+    request_count: i64,
+    tool_call_count: i64,
+    governance_count: i64,
+    deny_count: i64,
+    total_tokens: i64,
+    input_tokens: i64,
+    output_tokens: i64,
+    total_cost_microdollars: i64,
+    total_latency_ms: i64,
+    cache_hit_any: bool,
+    top_tool: Option<String>,
+    has_error: bool,
+    has_deny: bool,
+    total_count: i64,
+}
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct TraceFilter<'a> {
     pub user_id: Option<&'a str>,
     pub agent_id: Option<&'a str>,
     pub agent_scope: Option<&'a str>,
+    pub policy: Option<&'a str>,
+    pub decision: Option<&'a str>,
     pub error_only: bool,
     pub deny_only: bool,
 }
@@ -62,6 +87,8 @@ pub enum TraceSortColumn {
     StartedAt,
     Duration,
     SpanCount,
+    Cost,
+    Tokens,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -93,6 +120,10 @@ const fn order_by_clause(sort: TraceSort) -> &'static str {
         (TraceSortColumn::Duration, TraceSortDir::Desc) => "duration_ms DESC",
         (TraceSortColumn::SpanCount, TraceSortDir::Asc) => "span_count ASC",
         (TraceSortColumn::SpanCount, TraceSortDir::Desc) => "span_count DESC",
+        (TraceSortColumn::Cost, TraceSortDir::Asc) => "total_cost_microdollars ASC",
+        (TraceSortColumn::Cost, TraceSortDir::Desc) => "total_cost_microdollars DESC",
+        (TraceSortColumn::Tokens, TraceSortDir::Asc) => "total_tokens ASC",
+        (TraceSortColumn::Tokens, TraceSortDir::Desc) => "total_tokens DESC",
     }
 }
 
@@ -104,21 +135,33 @@ const fn order_by_clause(sort: TraceSort) -> &'static str {
 fn build_trace_list_sql(sort: TraceSort) -> String {
     let order_by = order_by_clause(sort);
     format!(
-        r"WITH all_sessions AS (
-            SELECT session_id, user_id, agent_id, agent_scope,
-                   created_at, decision
-            FROM governance_decisions
+        r"WITH trace_to_session AS (
+            -- Canonical session_id for each trace_id, used to collapse rows
+            -- where governance_decisions.session_id was filled with the
+            -- trace_id (data quirk in older runs).
+            SELECT DISTINCT trace_id, session_id
+            FROM ai_requests
             WHERE created_at >= $1 AND created_at < $2
-              AND session_id IS NOT NULL
+              AND trace_id IS NOT NULL AND session_id IS NOT NULL
+        ),
+        all_sessions AS (
+            SELECT
+                COALESCE(t.session_id, g.session_id) AS session_id,
+                g.user_id, g.agent_id, g.agent_scope,
+                g.created_at, g.decision, 'gov'::text AS source
+            FROM governance_decisions g
+            LEFT JOIN trace_to_session t ON t.trace_id = g.session_id
+            WHERE g.created_at >= $1 AND g.created_at < $2
+              AND g.session_id IS NOT NULL
             UNION ALL
             SELECT session_id, user_id, NULL::text AS agent_id, NULL::text AS agent_scope,
-                   created_at, NULL::text AS decision
+                   created_at, NULL::text AS decision, 'ai'::text AS source
             FROM ai_requests
             WHERE created_at >= $1 AND created_at < $2
               AND session_id IS NOT NULL
             UNION ALL
             SELECT session_id, user_id, NULL::text AS agent_id, NULL::text AS agent_scope,
-                   created_at, NULL::text AS decision
+                   created_at, NULL::text AS decision, 'evt'::text AS source
             FROM plugin_usage_events
             WHERE created_at >= $1 AND created_at < $2
               AND session_id IS NOT NULL
@@ -132,7 +175,8 @@ fn build_trace_list_sql(sort: TraceSort) -> String {
                 MIN(created_at)            AS started_at,
                 MAX(created_at)            AS ended_at,
                 COUNT(*)::bigint           AS span_count,
-                COUNT(*) FILTER (WHERE decision = 'deny')::bigint > 0 AS has_deny
+                COUNT(*) FILTER (WHERE source = 'gov')::bigint        AS governance_count,
+                COUNT(*) FILTER (WHERE decision = 'deny')::bigint     AS deny_count
             FROM all_sessions
             GROUP BY session_id
         ),
@@ -141,11 +185,30 @@ fn build_trace_list_sql(sort: TraceSort) -> String {
                 session_id,
                 (ARRAY_AGG(trace_id ORDER BY created_at DESC))[1]   AS trace_id,
                 (ARRAY_AGG(model    ORDER BY created_at DESC))[1]   AS model,
+                (ARRAY_AGG(provider ORDER BY created_at DESC))[1]   AS provider,
+                COUNT(*)::bigint                                    AS request_count,
+                COALESCE(SUM(tokens_used), 0)::bigint               AS total_tokens,
+                COALESCE(SUM(input_tokens), 0)::bigint              AS input_tokens,
+                COALESCE(SUM(output_tokens), 0)::bigint             AS output_tokens,
+                COALESCE(SUM(cost_microdollars), 0)::bigint         AS total_cost_microdollars,
+                COALESCE(SUM(latency_ms), 0)::bigint                AS total_latency_ms,
+                BOOL_OR(cache_hit)                                  AS cache_hit_any,
                 BOOL_OR(status NOT IN ('ok', 'success', 'completed', 'pending'))
                                                                     AS has_error
             FROM ai_requests
             WHERE created_at >= $1 AND created_at < $2
               AND session_id IS NOT NULL
+            GROUP BY session_id
+        ),
+        tool_meta AS (
+            SELECT
+                session_id,
+                COUNT(*)::bigint                                    AS tool_call_count,
+                MODE() WITHIN GROUP (ORDER BY tool_name)            AS top_tool
+            FROM plugin_usage_events
+            WHERE created_at >= $1 AND created_at < $2
+              AND session_id IS NOT NULL
+              AND tool_name IS NOT NULL
             GROUP BY session_id
         ),
         joined AS (
@@ -156,22 +219,48 @@ fn build_trace_list_sql(sort: TraceSort) -> String {
                 p.agent_scope,
                 p.started_at,
                 p.ended_at,
-                EXTRACT(EPOCH FROM (p.ended_at - p.started_at)) * 1000 AS duration_ms,
+                GREATEST(
+                    (EXTRACT(EPOCH FROM (p.ended_at - p.started_at)) * 1000)::bigint,
+                    COALESCE(a.total_latency_ms, 0)
+                )                                                   AS duration_ms,
                 p.span_count,
-                p.has_deny,
+                COALESCE(a.request_count, 0)        AS request_count,
+                COALESCE(t.tool_call_count, 0)      AS tool_call_count,
+                p.governance_count,
+                p.deny_count,
+                (p.deny_count > 0)                  AS has_deny,
                 a.trace_id,
                 a.model,
-                COALESCE(a.has_error, false) AS has_error
+                a.provider,
+                COALESCE(a.total_tokens, 0)         AS total_tokens,
+                COALESCE(a.input_tokens, 0)         AS input_tokens,
+                COALESCE(a.output_tokens, 0)        AS output_tokens,
+                COALESCE(a.total_cost_microdollars, 0) AS total_cost_microdollars,
+                COALESCE(a.total_latency_ms, 0)     AS total_latency_ms,
+                COALESCE(a.cache_hit_any, false)    AS cache_hit_any,
+                t.top_tool,
+                COALESCE(a.has_error, false)        AS has_error
             FROM per_session p
-            LEFT JOIN ai_meta a ON a.session_id = p.session_id
+            LEFT JOIN ai_meta   a ON a.session_id = p.session_id
+            LEFT JOIN tool_meta t ON t.session_id = p.session_id
         ),
         filtered AS (
-            SELECT * FROM joined
-            WHERE ($3::text IS NULL OR user_id   = $3)
-              AND ($4::text IS NULL OR agent_id  = $4)
-              AND ($5::text IS NULL OR agent_scope = $5)
-              AND (NOT $6 OR has_error = true)
-              AND (NOT $7 OR has_deny  = true)
+            SELECT j.* FROM joined j
+            WHERE ($3::text  IS NULL OR j.user_id     = $3)
+              AND ($4::text  IS NULL OR j.agent_id    = $4)
+              AND ($5::text  IS NULL OR j.agent_scope = $5)
+              AND ($6::text  IS NULL OR EXISTS (
+                    SELECT 1 FROM governance_decisions g
+                    WHERE g.session_id = j.session_id
+                      AND g.created_at >= $1 AND g.created_at < $2
+                      AND g.policy = $6))
+              AND ($7::text  IS NULL OR EXISTS (
+                    SELECT 1 FROM governance_decisions g
+                    WHERE g.session_id = j.session_id
+                      AND g.created_at >= $1 AND g.created_at < $2
+                      AND g.decision = $7))
+              AND (NOT $8 OR j.has_error = true)
+              AND (NOT $9 OR j.has_deny  = true)
         ),
         counted AS (
             SELECT
@@ -184,17 +273,30 @@ fn build_trace_list_sql(sort: TraceSort) -> String {
             trace_id,
             started_at,
             ended_at,
-            duration_ms::bigint AS duration_ms,
+            duration_ms,
             user_id,
             agent_id,
+            agent_scope,
             model,
+            provider,
             span_count,
+            request_count,
+            tool_call_count,
+            governance_count,
+            deny_count,
+            total_tokens,
+            input_tokens,
+            output_tokens,
+            total_cost_microdollars,
+            total_latency_ms,
+            cache_hit_any,
+            top_tool,
             has_error,
             has_deny,
             total_count
         FROM counted
         ORDER BY {order_by}
-        LIMIT $8 OFFSET $9"
+        LIMIT $10 OFFSET $11"
     )
 }
 
@@ -208,12 +310,14 @@ pub async fn fetch_trace_list(
 ) -> Result<(Vec<TraceSummary>, i64), sqlx::Error> {
     let sql = build_trace_list_sql(sort);
 
-    let rows: Vec<TraceRowTuple> = sqlx::query_as(&sql)
+    let rows: Vec<TraceRow> = sqlx::query_as(&sql)
         .bind(range.from)
         .bind(range.to)
         .bind(filter.user_id)
         .bind(filter.agent_id)
         .bind(filter.agent_scope)
+        .bind(filter.policy)
+        .bind(filter.decision)
         .bind(filter.error_only)
         .bind(filter.deny_only)
         .bind(limit)
@@ -221,21 +325,34 @@ pub async fn fetch_trace_list(
         .fetch_all(pool)
         .await?;
 
-    let total = rows.first().map_or(0, |r| r.11);
+    let total = rows.first().map_or(0, |r| r.total_count);
     let summaries = rows
         .into_iter()
         .map(|r| TraceSummary {
-            session_id: r.0,
-            trace_id: r.1,
-            started_at: r.2,
-            ended_at: r.3,
-            duration_ms: r.4,
-            user_id: r.5,
-            agent_id: r.6,
-            model: r.7,
-            span_count: r.8,
-            has_error: r.9,
-            has_deny: r.10,
+            session_id: r.session_id,
+            trace_id: r.trace_id,
+            started_at: r.started_at,
+            ended_at: r.ended_at,
+            duration_ms: r.duration_ms,
+            user_id: r.user_id,
+            agent_id: r.agent_id,
+            agent_scope: r.agent_scope,
+            model: r.model,
+            provider: r.provider,
+            span_count: r.span_count,
+            request_count: r.request_count,
+            tool_call_count: r.tool_call_count,
+            governance_count: r.governance_count,
+            deny_count: r.deny_count,
+            total_tokens: r.total_tokens,
+            input_tokens: r.input_tokens,
+            output_tokens: r.output_tokens,
+            total_cost_microdollars: r.total_cost_microdollars,
+            total_latency_ms: r.total_latency_ms,
+            cache_hit_any: r.cache_hit_any,
+            top_tool: r.top_tool,
+            has_error: r.has_error,
+            has_deny: r.has_deny,
         })
         .collect();
     Ok((summaries, total))
@@ -258,14 +375,22 @@ pub async fn fetch_trace_stats(
     range: TimeRange,
 ) -> Result<TraceStats, sqlx::Error> {
     let row = sqlx::query!(
-        r#"WITH all_sessions AS (
+        r#"WITH trace_to_session AS (
+            SELECT DISTINCT trace_id, session_id
+            FROM ai_requests
+            WHERE created_at >= $1 AND created_at < $2
+              AND trace_id IS NOT NULL AND session_id IS NOT NULL
+        ),
+        all_sessions AS (
             SELECT session_id, created_at, NULL::text AS decision, NULL::text AS status
             FROM plugin_usage_events
             WHERE created_at >= $1 AND created_at < $2 AND session_id IS NOT NULL
             UNION ALL
-            SELECT session_id, created_at, decision, NULL::text
-            FROM governance_decisions
-            WHERE created_at >= $1 AND created_at < $2 AND session_id IS NOT NULL
+            SELECT COALESCE(t.session_id, g.session_id) AS session_id,
+                   g.created_at, g.decision, NULL::text
+            FROM governance_decisions g
+            LEFT JOIN trace_to_session t ON t.trace_id = g.session_id
+            WHERE g.created_at >= $1 AND g.created_at < $2 AND g.session_id IS NOT NULL
             UNION ALL
             SELECT session_id, created_at, NULL::text, status::text
             FROM ai_requests
@@ -425,6 +550,9 @@ async fn fetch_governance_spans(pool: &PgPool, session_id: &str) -> Result<Vec<S
             created_at      AS "created_at!"
         FROM governance_decisions
         WHERE session_id = $1
+           OR session_id IN (
+               SELECT DISTINCT trace_id FROM ai_requests
+               WHERE session_id = $1 AND trace_id IS NOT NULL)
         ORDER BY created_at ASC"#,
         session_id,
     )

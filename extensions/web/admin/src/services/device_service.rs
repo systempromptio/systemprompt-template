@@ -3,7 +3,19 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
 use crate::error::{AdminError, AdminResult};
-use crate::repositories::cowork_grp::{self, IssuedApiKey};
+use crate::repositories::cowork_grp::{self, EnrolledDevice, IssuedApiKey};
+
+pub async fn enroll_device(
+    pool: &PgPool,
+    user_id: &UserId,
+    name: &str,
+    platform: &str,
+    hostname: &str,
+    expires_at: Option<DateTime<Utc>>,
+) -> AdminResult<EnrolledDevice> {
+    let enrolled = cowork_grp::enroll_device(pool, user_id, name, platform, hostname, expires_at).await?;
+    Ok(enrolled)
+}
 
 pub async fn issue_pat(
     pool: &PgPool,

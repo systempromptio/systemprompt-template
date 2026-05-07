@@ -160,7 +160,7 @@
 
 **NARRATOR (during output):**
 
-> Two MCP servers: skill-manager and systemprompt CLI. Both authenticate via OAuth. Both execute a tool. The dashboard shows MCP Server Access with per-server stats and granted/rejected badges.
+> The systemprompt CLI MCP server authenticates via OAuth and executes a tool. The dashboard shows MCP Server Access with per-server stats and granted/rejected badges.
 
 **NARRATOR (pointing to dashboard):**
 

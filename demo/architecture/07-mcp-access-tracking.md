@@ -22,7 +22,7 @@ Demonstrates governance (allow + deny), live MCP tool calls with OAuth, and data
   ┌─────────────────────────────────────────────────────────┐
   │  Part 3: MCP Tool Call                                  │
   │                                                         │
-  │  CLI: plugins mcp call skill-manager list_plugins       │
+  │  CLI: plugins mcp call systemprompt systemprompt        │
   │    │                                                    │
   │    ▼                                                    │
   │  ┌───────────────────────────────────────┐              │
@@ -34,7 +34,7 @@ Demonstrates governance (allow + deny), live MCP tool calls with OAuth, and data
   │                     ▼                                   │
   │  ┌───────────────────────────────────────┐              │
   │  │  Tool Execution                       │              │
-  │  │  skill-manager.list_plugins()         │              │
+  │  │  systemprompt(core skills list)       │              │
   │  │  Returns: plugin list JSON            │              │
   │  └──────────────────┬────────────────────┘              │
   │                     │                                   │

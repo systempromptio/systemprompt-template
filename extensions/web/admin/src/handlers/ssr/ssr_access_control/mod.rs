@@ -80,11 +80,17 @@ pub async fn access_control_page(
     // data via the `/api/admin/access-control/users/{id}/matrix` endpoint.
     let entity_catalogue = builders::build_entity_catalogue(&services_path);
 
-    // Department buckets: render as { department: "...", users: [...] }.
+    // Department buckets: key empty/null department to "Unassigned" so it merges
+    // with the synthetic group fetch_department_stats produces.
     let mut buckets: std::collections::BTreeMap<String, Vec<&UserListRow>> =
         std::collections::BTreeMap::new();
     for u in &users {
-        buckets.entry(u.department.clone()).or_default().push(u);
+        let key = if u.department.is_empty() {
+            "Unassigned".to_string()
+        } else {
+            u.department.clone()
+        };
+        buckets.entry(key).or_default().push(u);
     }
     let dept_groups: Vec<serde_json::Value> = dept_stats
         .iter()
@@ -101,19 +107,18 @@ pub async fn access_control_page(
         })
         .collect();
 
-    let unassigned_users: Vec<serde_json::Value> = buckets
-        .get("")
-        .map(|v| v.iter().map(serialize_user).collect())
-        .unwrap_or_default();
+    let department_names: Vec<&str> = dept_stats
+        .iter()
+        .map(|d| d.department.as_str())
+        .filter(|n| *n != "Unassigned")
+        .collect();
 
-    let unassigned_count = unassigned_users.len();
     let data = json!({
         "page": "access-control",
         "title": "Access Control",
         "known_roles": known_roles,
         "departments": dept_groups,
-        "unassigned_users": unassigned_users,
-        "unassigned_count": unassigned_count,
+        "department_names": department_names,
         "entity_catalogue": entity_catalogue,
         "stats": {
             "department_count": dept_stats.len(),

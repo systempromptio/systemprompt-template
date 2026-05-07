@@ -16,8 +16,6 @@ pub struct EnrichedUserView {
     pub sessions: i64,
     pub bytes: i64,
     pub logins: i64,
-    pub rank_name: String,
-    pub xp: i64,
     #[serde(default)]
     pub department: String,
     #[serde(default)]
@@ -26,6 +24,15 @@ pub struct EnrichedUserView {
     pub assigned_marketplaces_count: i64,
     #[serde(default)]
     pub devices_count: i64,
+    #[serde(default)]
+    pub connected_agents: i64,
+    #[serde(default)]
+    pub total_agents: i64,
+    #[serde(default)]
+    pub lifetime_tokens: i64,
+    /// "fresh" | "idle" | "stale" | "never"
+    #[serde(default)]
+    pub device_freshness: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -53,6 +60,21 @@ pub struct UserDetailPageData {
     pub user_devices: Vec<UserDeviceView>,
     #[serde(default)]
     pub user_devices_count: i64,
+    #[serde(default)]
+    pub departments: Vec<String>,
+    pub runtime: Option<UserRuntimeView>,
+}
+
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct UserRuntimeView {
+    pub connected_agents: i64,
+    pub total_agents: i64,
+    pub tokens_in: i64,
+    pub tokens_out: i64,
+    pub last_bridge_version: Option<String>,
+    pub last_os: Option<String>,
+    pub last_hostname: Option<String>,
+    pub last_heartbeat_at: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize)]

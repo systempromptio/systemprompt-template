@@ -2,7 +2,7 @@
 2026-04-15T09:00:01Z INFO  extensions loaded count=12
 2026-04-15T09:00:02Z INFO  auth module ready audience=a2a,admin,user
 2026-04-15T09:00:02Z WARN  redis cache unreachable host=localhost:6379 — falling back to in-process cache
-2026-04-15T09:00:03Z INFO  mcp servers registered count=2 names=[systemprompt, skill-manager]
+2026-04-15T09:00:03Z INFO  mcp servers registered count=1 names=[systemprompt]
 2026-04-15T09:00:03Z INFO  governance hook pipeline ready rules=[secret_detection, scope_check, tool_blocklist, rate_limit]
 2026-04-15T09:00:04Z INFO  agents ready count=2 names=[developer_agent, associate_agent]
 2026-04-15T09:01:17Z INFO  PreToolUse decision=allow agent=developer_agent tool=Read session=s1

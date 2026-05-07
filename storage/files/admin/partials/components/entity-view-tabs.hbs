@@ -1,0 +1,12 @@
+{{!--
+  Entity-view tabs — Sessions / Traces / Requests / Contexts.
+  Invoke as: {{> components/entity-view-tabs entity_view_tabs}}
+  Context is an array of {key, label, url, active}.
+--}}
+<nav class="sp-tabs" aria-label="Entity views">
+  {{#each this}}
+    <a href="{{this.url}}"
+       class="sp-tab{{#if this.active}} sp-tab--active{{/if}}"
+       {{#if this.active}}aria-current="page"{{/if}}>{{this.label}}</a>
+  {{/each}}
+</nav>

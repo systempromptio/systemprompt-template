@@ -72,6 +72,6 @@
 [2.885766, "o", "s"]
 [2.901952, "o", "\r\n"]
 [3.575011, "o", "    \r\n    Service Status\r\n    associate_agent: agent | running | PID: 79052 | -\r\n    developer_agent: agent | running | PID: 78974 | -\r\n"]
-[3.575098, "o", "    skill-manager: mcp | running | PID: 78886 | -\r\n    systemprompt: mcp | running | PID: 78934 | -\r\n    ℹ 4/4 services running\r\n"]
+[3.575098, "o", "    systemprompt : mcp | running | PID: 78886 | -\r\n    systemprompt: mcp | running | PID: 78934 | -\r\n    ℹ 4/4 services running\r\n"]
 [3.575377, "o", "\r\n"]
 [3.575413, "o", "\u001b[32m\u001b[1m>>> ALLOW\u001b[0m \u001b[32mone supervisor, every service observable from the CLI\u001b[0m\r\n"]

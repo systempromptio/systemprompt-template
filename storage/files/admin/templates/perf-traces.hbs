@@ -4,6 +4,8 @@
         title="Trace Explorer"
         subtitle="Every gateway call, governance decision, and tool invocation grouped into a trace. Click any row to see the full waterfall."}}
 
+    {{> components/entity-view-tabs entity_view_tabs}}
+
     {{> components/time-range time_range}}
     {{> components/identity-filter-ribbon filter_ribbon}}
 
@@ -42,10 +44,14 @@
           <th class="col-date">Started</th>
           <th>Trace</th>
           <th>Identity</th>
+          <th>Agent</th>
           <th>Model</th>
-          <th class="col-num">Spans</th>
+          <th class="col-num">Reqs</th>
+          <th class="col-num">Tools</th>
+          <th class="col-num">Tokens</th>
+          <th class="col-num">Cost</th>
           <th class="col-num">Duration</th>
-          <th class="col-status">Flags</th>
+          <th class="col-status">Status</th>
           <th class="col-actions"></th>
         </tr></thead>
         <tbody>
@@ -53,22 +59,39 @@
         <tr>
           <td class="col-date" title="{{this.started_at}}">{{this.started_at_local}}</td>
           <td>
-            <a href="{{this.detail_url}}" class="trace-row__id">
+            <a href="{{this.detail_url}}" class="trace-row__id" title="{{this.session_id}}">
               <code class="code-inline">{{this.session_id_short}}</code>
             </a>
             {{#if this.trace_id}}<div class="trace-row__trace">trace {{truncate this.trace_id 10}}</div>{{/if}}
           </td>
           <td>
-            {{#if this.user_id}}<code class="code-inline">{{truncate this.user_id 16}}</code>{{else}}—{{/if}}
-            {{#if this.agent_id}}<div class="trace-row__agent">{{this.agent_id}}</div>{{/if}}
+            {{#if this.user_id}}<code class="code-inline" title="{{this.user_id}}">{{truncate this.user_id 12}}</code>{{else}}—{{/if}}
           </td>
-          <td>{{#if this.model}}<code class="code-inline">{{this.model}}</code>{{else}}—{{/if}}</td>
-          <td class="col-num">{{this.span_count}}</td>
-          <td class="col-num">{{this.duration_display}}</td>
+          <td>
+            {{#if this.agent_id}}
+              <code class="code-inline">{{this.agent_id}}</code>
+              {{#if this.agent_scope}}<div class="trace-row__agent">{{this.agent_scope}}</div>{{/if}}
+            {{else}}—{{/if}}
+          </td>
+          <td>
+            {{#if this.model}}
+              <code class="code-inline">{{this.model}}</code>
+              {{#if this.provider}}<div class="trace-row__agent">{{this.provider}}</div>{{/if}}
+            {{else}}—{{/if}}
+          </td>
+          <td class="col-num">{{this.request_count}}</td>
+          <td class="col-num">
+            {{this.tool_call_count}}
+            {{#if this.top_tool}}<div class="trace-row__agent" title="Most-frequent tool">{{this.top_tool}}</div>{{/if}}
+          </td>
+          <td class="col-num" title="Total / input / output">{{this.tokens_display}}</td>
+          <td class="col-num">{{this.cost_display}}</td>
+          <td class="col-num" title="Wall-clock window or sum of latency_ms">{{this.duration_display}}</td>
           <td class="col-status">
-            {{#if this.has_deny}}<span class="mcp-badge mcp-badge-danger">DENY</span>{{/if}}
+            {{#if this.has_deny}}<span class="mcp-badge mcp-badge-danger" title="{{this.deny_count}} denied decision(s)">DENY {{this.deny_count}}</span>{{/if}}
             {{#if this.has_error}}<span class="mcp-badge mcp-badge-warning">ERROR</span>{{/if}}
             {{#unless this.has_deny}}{{#unless this.has_error}}<span class="mcp-badge mcp-badge-success">OK</span>{{/unless}}{{/unless}}
+            {{#if this.cache_hit_any}}<span class="mcp-badge" title="Cache read">CACHE</span>{{/if}}
           </td>
           <td class="col-actions">
             <a href="{{this.detail_url}}" class="btn btn-sm btn-outline">Waterfall</a>

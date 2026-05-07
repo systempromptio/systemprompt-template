@@ -15,16 +15,3 @@ pub fn load_marketplaces() -> Vec<MarketplaceConfig> {
     entries
 }
 
-/// Inverse map: `plugin_id` -> `[(marketplace_id, marketplace_name)]` for badge rendering.
-pub fn plugin_to_marketplaces() -> std::collections::HashMap<String, Vec<(String, String)>> {
-    let mut map: std::collections::HashMap<String, Vec<(String, String)>> =
-        std::collections::HashMap::new();
-    for mp in load_marketplaces() {
-        for plugin_id in &mp.plugins.include {
-            map.entry(plugin_id.clone())
-                .or_default()
-                .push((mp.id.as_str().to_string(), mp.name.clone()));
-        }
-    }
-    map
-}

@@ -86,7 +86,7 @@
 [3.520851, "o", "t"]
 [3.536994, "o", "\r\n"]
 [4.229593, "o", "    \r\n    Agent: developer_agent\r\n    {\r\n"]
-[4.229831, "o", "      \"name\": \"developer_agent\",\r\n      \"display_name\": \"Developer Agent\",\r\n      \"description\": \"Full-access engineering agent for implementation, code review, and administration. Admin scope grants unrestricted tool access.\",\r\n      \"port\": 9101,\r\n      \"endpoint\": \"http://localhost:9101/api/v1/agents/developer_agent\",\r\n      \"enabled\": true,\r\n      \"provider\": \"gemini\",\r\n      \"model\": \"gemini-2.5-pro\",\r\n      \"mcp_servers\": [\r\n        \"systemprompt\",\r\n        \"skill-manager\"\r\n      ],\r\n"]
+[4.229831, "o", "      \"name\": \"developer_agent\",\r\n      \"display_name\": \"Developer Agent\",\r\n      \"description\": \"Full-access engineering agent for implementation, code review, and administration. Admin scope grants unrestricted tool access.\",\r\n      \"port\": 9101,\r\n      \"endpoint\": \"http://localhost:9101/api/v1/agents/developer_agent\",\r\n      \"enabled\": true,\r\n      \"provider\": \"gemini\",\r\n      \"model\": \"gemini-2.5-pro\",\r\n      \"mcp_servers\": [\r\n        \"systemprompt\",\r\n        \"systemprompt \"\r\n      ],\r\n"]
 [4.229875, "o", "      \"skills_count\": 2\r\n    }\r\n"]
 [4.230218, "o", "\r\n"]
 [4.230297, "o", "\u001b[32m\u001b[1m>>> ALLOW\u001b[0m \u001b[32magents as config, validated at load time\u001b[0m\r\n"]
