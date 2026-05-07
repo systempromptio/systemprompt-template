@@ -112,6 +112,7 @@ pub async fn governance_page(
         "has_top_actors": !top_actors_json.is_empty(),
         "orphans": orphan_json,
         "has_orphans": !orphan_json.is_empty(),
+        "orphans_count": orphan_json.len(),
         "config_path": "services/governance/config.yaml",
     });
 

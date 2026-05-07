@@ -3,32 +3,13 @@
     {{#*inline "content"}}
     {{> components/page-header title=title subtitle="Stateful AI conversations — search by user, drill into the transcript."}}
 
-    <section class="kpi-strip" aria-label="Context KPIs">
-      <div class="kpi-card">
-        <span class="kpi-card__label">Contexts</span>
-        <span class="kpi-card__value">{{formatNumber kpis.total_contexts}}</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-card__label">Users</span>
-        <span class="kpi-card__value">{{formatNumber kpis.active_users}}</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-card__label">Requests</span>
-        <span class="kpi-card__value">{{formatNumber kpis.total_requests}}</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-card__label">Messages</span>
-        <span class="kpi-card__value">{{formatNumber kpis.total_messages}}</span>
-        <span class="kpi-card__sub">user prompts + AI responses</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-card__label">Tokens</span>
-        <span class="kpi-card__value">{{formatNumber kpis.total_tokens}}</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-card__label">Cost</span>
-        <span class="kpi-card__value">${{kpis.total_cost_usd}}</span>
-      </div>
+    <section class="contexts-kpis" aria-label="Context KPIs">
+      {{> components/stat-card label="Contexts" value=(formatNumber kpis.total_contexts)}}
+      {{> components/stat-card label="Users"    value=(formatNumber kpis.active_users)}}
+      {{> components/stat-card label="Requests" value=(formatNumber kpis.total_requests)}}
+      {{> components/stat-card label="Messages" value=(formatNumber kpis.total_messages) subtitle="user prompts + AI responses"}}
+      {{> components/stat-card label="Tokens"   value=(formatNumber kpis.total_tokens)}}
+      {{> components/stat-card label="Cost"     value=(concat "$" kpis.total_cost_usd)}}
     </section>
 
     <form class="toolbar" role="search" aria-label="Filter contexts" method="get" id="contexts-filter-form">
@@ -83,15 +64,15 @@
         <noscript><button type="submit" class="btn btn-primary">Apply</button></noscript>
     </form>
 
-    <nav class="tabs" role="tablist" aria-label="Context views">
+    <nav class="sp-tabs" role="tablist" aria-label="Context views">
         <button type="button" role="tab"
-                class="tab {{#if view_is_contexts}}tab--active{{/if}}"
+                class="sp-tab {{#if view_is_contexts}}sp-tab--active{{/if}}"
                 data-view="contexts"
                 aria-selected="{{#if view_is_contexts}}true{{else}}false{{/if}}">
             Contexts
         </button>
         <button type="button" role="tab"
-                class="tab {{#if view_is_users}}tab--active{{/if}}"
+                class="sp-tab {{#if view_is_users}}sp-tab--active{{/if}}"
                 data-view="users"
                 aria-selected="{{#if view_is_users}}true{{else}}false{{/if}}">
             By user

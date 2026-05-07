@@ -12,7 +12,6 @@ mod plugins;
 mod plugins_config;
 mod plugins_requests;
 mod user_context;
-pub mod user_entities;
 pub mod departments;
 pub use departments::{Department, DepartmentInput, DepartmentMember, DepartmentSummary};
 mod users;
@@ -70,8 +69,6 @@ pub struct MarketplaceContext {
     pub total_skills: usize,
     pub agents_count: usize,
     pub mcp_count: usize,
-    pub tier_name: systemprompt_web_shared::TierLevel,
-    pub is_premium: bool,
     pub rank_level: i32,
     pub rank_name: String,
     pub rank_tier: systemprompt_web_shared::RankTier,
@@ -88,17 +85,11 @@ pub use conversation_analytics::{
     EntityEffectiveness, EntityUsageSummary, RateSessionRequest, RateSkillRequest,
     SessionEntityLink, SessionRating, SkillEffectiveness, SkillRating,
 };
-pub use user_entities::{
-    CreateUserMcpServerRequest, CreateUserPluginRequest, UpdateUserMcpServerRequest,
-    UpdateUserPluginRequest, UserMcpServer, UserPlugin, UserPluginWithAssociations,
-};
 pub use users::{
-    AgentSkill, ContentBytes, CookieSession, CreateSkillRequest, CreateUserAgentRequest,
-    CreateUserRequest, DepartmentStats, DetectedEntity, EventTypeCount, JwtIdentity, SkillSecret,
-    ToolUsageCount, UpdateSkillRequest, UpdateUserAgentRequest, UpdateUserRequest,
-    UpdateUserSkillRequest, UpsertSkillSecretRequest, UsageEvent, UserAgent, UserBasicInfo,
-    UserDetail, UserIdentityRow, UserPluginCounts, UserSession, UserSkill, UserSummary, UserTier,
-    UsersQuery,
+    ContentBytes, CookieSession, CreateUserRequest, DepartmentStats, DetectedEntity,
+    EventTypeCount, JwtIdentity, SkillSecret, ToolUsageCount, UpdateUserRequest,
+    UpsertSkillSecretRequest, UsageEvent, UserBasicInfo, UserDetail, UserIdentityRow,
+    UserSession, UserSummary, UserTier, UsersQuery,
 };
 pub use webhook::{
     GovernQuery, HookEventPayload, StatusLinePayload, StatusLineQuery, TrackQuery,

@@ -248,7 +248,7 @@
 
     {{#if has_orphans}}
     <details class="policy-chain-orphans">
-        <summary>Historical policies (no longer registered) · {{orphans.length}}</summary>
+        <summary>Historical policies (no longer registered) · {{orphans_count}}</summary>
         <p class="text-muted">These policy ids appear in <code class="code-inline">governance_decisions</code> but no Rust impl is currently registered for them — likely renamed or removed.</p>
         {{#> components/data-table}}
             <thead><tr>

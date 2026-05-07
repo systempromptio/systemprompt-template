@@ -124,18 +124,6 @@ pub async fn delete_user_complete(pool: &PgPool, user_id: &UserId) -> Result<boo
     sqlx::query!("DELETE FROM skill_secrets WHERE user_id = $1", uid)
         .execute(&mut *tx)
         .await?;
-    sqlx::query!("DELETE FROM user_plugins WHERE user_id = $1", uid)
-        .execute(&mut *tx)
-        .await?;
-    sqlx::query!("DELETE FROM user_skills WHERE user_id = $1", uid)
-        .execute(&mut *tx)
-        .await?;
-    sqlx::query!("DELETE FROM user_agents WHERE user_id = $1", uid)
-        .execute(&mut *tx)
-        .await?;
-    sqlx::query!("DELETE FROM user_mcp_servers WHERE user_id = $1", uid)
-        .execute(&mut *tx)
-        .await?;
     sqlx::query!("DELETE FROM plugin_usage_events WHERE user_id = $1", uid)
         .execute(&mut *tx)
         .await?;
@@ -169,21 +157,6 @@ pub async fn delete_user_complete(pool: &PgPool, user_id: &UserId) -> Result<boo
     sqlx::query!("DELETE FROM user_encryption_keys WHERE user_id = $1", uid)
         .execute(&mut *tx)
         .await?;
-    sqlx::query!(
-        "DELETE FROM user_selected_org_plugins WHERE user_id = $1",
-        uid
-    )
-    .execute(&mut *tx)
-    .await?;
-
-    // marketplace schema tables — runtime query (schema not in compile-time search_path)
-    for table in ["marketplace.subscriptions", "marketplace.paddle_customers"] {
-        sqlx::query(&format!("DELETE FROM {table} WHERE user_id = $1"))
-            .bind(uid)
-            .execute(&mut *tx)
-            .await?;
-    }
-
     let result = sqlx::query!("DELETE FROM users WHERE id = $1", uid)
         .execute(&mut *tx)
         .await?;

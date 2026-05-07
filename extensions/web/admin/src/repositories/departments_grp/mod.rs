@@ -270,17 +270,14 @@ pub async fn list_user_management_aggregates(
         SELECT
             u.id AS user_id,
             COALESCE(u.department, '') AS department,
-            (
-                COALESCE((SELECT COUNT(DISTINCT base_skill_id) FROM user_skills WHERE user_id = u.id), 0)
-                + COALESCE((
-                    SELECT COUNT(DISTINCT acr.entity_id)
-                    FROM access_control_rules acr
-                    WHERE acr.entity_type = 'skill'
-                      AND acr.access = 'allow'
-                      AND ((acr.rule_type = 'department' AND acr.rule_value = u.department)
-                           OR (acr.rule_type = 'user' AND acr.rule_value = u.id))
-                ), 0)
-            )::BIGINT AS assigned_skills_count,
+            COALESCE((
+                SELECT COUNT(DISTINCT acr.entity_id)
+                FROM access_control_rules acr
+                WHERE acr.entity_type = 'skill'
+                  AND acr.access = 'allow'
+                  AND ((acr.rule_type = 'department' AND acr.rule_value = u.department)
+                       OR (acr.rule_type = 'user' AND acr.rule_value = u.id))
+            ), 0)::BIGINT AS assigned_skills_count,
             COALESCE((
                 SELECT COUNT(DISTINCT acr.entity_id)
                 FROM access_control_rules acr

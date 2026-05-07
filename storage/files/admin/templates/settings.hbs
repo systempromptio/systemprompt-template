@@ -96,42 +96,6 @@
     </div>
     </section>
 
-    <section aria-label="Usage and limits">
-    <div class="card mb-6">
-        <div class="card-header">
-            <h2 class="card-title">Usage & Limits</h2>
-            <div class="d-flex align-center gap-2">
-                <span class="badge {{#if is_premium}}badge-success{{else}}badge-secondary{{/if}}">{{tier_name}} Plan</span>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="usage-limits-grid">
-                {{#each usage_items}}
-                <div class="usage-limit-item{{#if is_at_limit}} usage-limit-item--warning{{/if}}">
-                    <div class="usage-limit-header">
-                        <span class="usage-limit-label">{{label}}</span>
-                        <span class="usage-limit-value" style="font-variant-numeric: tabular-nums;">{{current}} / {{#if is_unlimited}}<span class="text-secondary">&infin;</span>{{else}}{{limit_display}}{{/if}}</span>
-                    </div>
-                    {{#unless is_unlimited}}
-                    <div class="usage-limit-bar" role="progressbar" aria-valuenow="{{percentage}}" aria-valuemin="0" aria-valuemax="100" aria-label="{{label}}: {{current}} of {{limit_display}} used">
-                        <div class="usage-limit-fill{{#if is_at_limit}} usage-limit-fill--danger{{/if}}" style="width: {{percentage}}%"></div>
-                    </div>
-                    <span class="usage-limit-pct text-tertiary text-xs">{{percentage}}% used</span>
-                    {{/unless}}
-                    {{#if is_unlimited}}
-                    <div class="usage-limit-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="{{label}}: unlimited">
-                        <div class="usage-limit-fill usage-limit-fill--unlimited w-full"></div>
-                    </div>
-                    <span class="usage-limit-pct text-tertiary text-xs">Unlimited</span>
-                    {{/if}}
-                </div>
-                {{/each}}
-            </div>
-        </div>
-    </div>
-    </section>
-
-
     <section aria-label="Danger zone">
     <div class="card mb-6 card--danger">
         <div class="card-header">

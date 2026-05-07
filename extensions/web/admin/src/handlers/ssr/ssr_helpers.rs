@@ -98,8 +98,6 @@ fn build_marketplace_json(mkt_ctx: &MarketplaceContext) -> serde_json::Value {
         "total_skills": mkt_ctx.total_skills,
         "agents_count": mkt_ctx.agents_count,
         "mcp_count": mkt_ctx.mcp_count,
-        "tier_name": mkt_ctx.tier_name,
-        "is_premium": mkt_ctx.is_premium,
         "rank_level": mkt_ctx.rank_level,
         "rank_name": mkt_ctx.rank_name,
         "rank_tier": mkt_ctx.rank_tier,

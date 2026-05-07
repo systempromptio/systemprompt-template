@@ -158,27 +158,6 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn user_skill_imported(
-        user_id: impl AsRef<str>,
-        bundle_id: &str,
-        imported_count: u32,
-    ) -> Self {
-        let uid = user_id.as_ref();
-        Self {
-            user_id: uid.to_string(),
-            category: ActivityCategory::UserManagement,
-            action: ActivityAction::Imported,
-            entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::UserSkill,
-                entity_id: Some(bundle_id.to_string()),
-                entity_name: Some(bundle_id.to_string()),
-            }),
-            description: format!("Imported {imported_count} skills for user '{uid}'"),
-            metadata: serde_json::json!({}),
-        }
-    }
-
-    #[must_use]
     pub fn tool_used(
         user_id: impl AsRef<str>,
         tool_name: &str,
