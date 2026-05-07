@@ -17,7 +17,7 @@ DROP TABLE IF EXISTS marketplace_versions CASCADE;
 
 CREATE TABLE IF NOT EXISTS access_control_rules (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
-    entity_type TEXT NOT NULL CHECK (entity_type IN ('plugin', 'agent', 'mcp_server', 'skill')),
+    entity_type TEXT NOT NULL CHECK (entity_type IN ('plugin', 'agent', 'mcp_server', 'skill', 'gateway_route')),
     entity_id TEXT NOT NULL,
     rule_type TEXT NOT NULL CHECK (rule_type IN ('role', 'department')),
     rule_value TEXT NOT NULL,

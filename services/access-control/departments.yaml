@@ -17,7 +17,7 @@
 #       description: optional free text
 #
 #   rules:
-#     - entity_type: gateway_route | mcp_server | plugin | agent | marketplace
+#     - entity_type: gateway_route | mcp_server | plugin | agent | marketplace | skill
 #       entity_id:   string id of the entity
 #       access:      allow | deny  (default: allow)
 #       default_included: bool     (default: false)

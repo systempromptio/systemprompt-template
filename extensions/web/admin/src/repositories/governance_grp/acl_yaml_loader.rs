@@ -33,7 +33,7 @@ const LEGACY_GATEWAY_FILE: &str = "gateway/access.yaml";
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct YamlRule {
-    /// One of: `gateway_route`, `mcp_server`, `plugin`, `agent`, `marketplace`.
+    /// One of: `gateway_route`, `mcp_server`, `plugin`, `agent`, `marketplace`, `skill`.
     pub entity_type: String,
     pub entity_id: String,
     /// `allow` or `deny`. Defaults to `allow`.

@@ -220,6 +220,45 @@ pub async fn require_admin_middleware(request: Request, next: Next) -> Response 
     }
 }
 
+/// Restrict non-admin users to the profile page, settings page, and a few
+/// account-management endpoints. Other admin routes redirect to /admin/profile.
+///
+/// Admins pass through unchanged. Anonymous users are handled by
+/// `require_user_middleware` which runs after this layer.
+pub async fn non_admin_gate_middleware(request: Request, next: Next) -> Response {
+    let path = request.uri().path();
+    let user_ctx = request.extensions().get::<UserContext>().cloned();
+
+    let Some(ctx) = user_ctx else {
+        return next.run(request).await;
+    };
+    if ctx.is_admin || ctx.user_id.as_str().is_empty() {
+        return next.run(request).await;
+    }
+
+    if is_non_admin_allowed_path(path) {
+        next.run(request).await
+    } else {
+        axum::response::Redirect::to("/admin/profile").into_response()
+    }
+}
+
+fn is_non_admin_allowed_path(path: &str) -> bool {
+    path.starts_with("/admin/profile")
+        || path.starts_with("/admin/settings")
+        || path.starts_with("/admin/auth/")
+        || path.starts_with("/admin/api/")
+        || path == "/admin/logout"
+        || path == "/admin/login"
+        || path == "/admin/register"
+        || path == "/admin/add-passkey"
+        || path == "/admin/verify-pending"
+        || path == "/admin/setup"
+        || path == "/admin/demo-register"
+        || path == "/admin/"
+        || path == "/admin"
+}
+
 pub async fn auth_me_handler(Extension(user_ctx): Extension<UserContext>) -> Response {
     if user_ctx.user_id.as_str().is_empty() {
         return (StatusCode::UNAUTHORIZED, "Not authenticated").into_response();

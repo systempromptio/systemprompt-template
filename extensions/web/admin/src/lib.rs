@@ -3,6 +3,7 @@ pub mod audit_event_bus;
 pub mod error;
 pub mod event_hub;
 pub(crate) mod handlers;
+pub mod marketplace_filter;
 mod middleware;
 pub mod numeric;
 pub mod repositories;
@@ -75,10 +76,6 @@ pub fn secrets_router(pool: Arc<PgPool>) -> Router {
 
 pub fn cowork_router(pool: Arc<PgPool>) -> Router {
     Router::new()
-        .route(
-            "/v1/cowork/manifest",
-            get(handlers::cowork::manifest::handle),
-        )
         .route("/v1/cowork/whoami", get(handlers::cowork::whoami::handle))
         .route(
             "/v1/cowork/plugins/{plugin_id}/{*path}",

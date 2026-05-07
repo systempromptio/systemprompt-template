@@ -1562,6 +1562,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "glob"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
+
+[[package]]
 name = "governor"
 version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2098,6 +2104,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6cb138bb79a146c1bd460005623e142ef0181e3d0219cb493e02f7d08a35695"
 
 [[package]]
+name = "itertools"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2611,6 +2626,50 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentelemetry"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab70038c28ed37b97d8ed414b6429d343a8bbf44c9f79ec854f3a643029ba6d7"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "js-sys",
+ "pin-project-lite",
+ "thiserror 1.0.69",
+ "tracing",
+]
+
+[[package]]
+name = "opentelemetry-proto"
+version = "0.27.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a6e05acbfada5ec79023c85368af14abd0b307c015e9064d249b2a950ef459a6"
+dependencies = [
+ "opentelemetry",
+ "opentelemetry_sdk",
+ "prost",
+ "tonic",
+]
+
+[[package]]
+name = "opentelemetry_sdk"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "231e9d6ceef9b0b2546ddf52335785ce41252bc7474ee8ba05bfad277be13ab8"
+dependencies = [
+ "async-trait",
+ "futures-channel",
+ "futures-executor",
+ "futures-util",
+ "glob",
+ "opentelemetry",
+ "percent-encoding",
+ "rand 0.8.5",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "option-ext"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2993,6 +3052,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "prost"
+version = "0.13.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2796faa41db3ec313a31f7624d9286acf277b52de526150b7e69f3debf891ee5"
+dependencies = [
+ "bytes",
+ "prost-derive",
+]
+
+[[package]]
+name = "prost-derive"
+version = "0.13.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a56d757972c98b346a9b766e3f02746cde6dd1cd1d1d563472929fdd74bec4d"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -4386,7 +4468,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "axum",
  "chrono",
@@ -4411,6 +4493,7 @@ dependencies = [
  "systemprompt-identifiers",
  "systemprompt-loader",
  "systemprompt-logging",
+ "systemprompt-marketplace",
  "systemprompt-mcp",
  "systemprompt-models",
  "systemprompt-oauth",
@@ -4427,7 +4510,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-agent"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4478,7 +4561,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-ai"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4514,7 +4597,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-analytics"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4541,7 +4624,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-api"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -4562,6 +4645,8 @@ dependencies = [
  "inventory",
  "jsonwebtoken",
  "nix",
+ "opentelemetry-proto",
+ "prost",
  "rand 0.10.1",
  "regex",
  "reqwest 0.12.28",
@@ -4584,6 +4669,7 @@ dependencies = [
  "systemprompt-identifiers",
  "systemprompt-loader",
  "systemprompt-logging",
+ "systemprompt-marketplace",
  "systemprompt-mcp",
  "systemprompt-models",
  "systemprompt-oauth",
@@ -4608,7 +4694,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-cli"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4672,7 +4758,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-client"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "chrono",
  "futures",
@@ -4688,7 +4774,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-cloud"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -4717,7 +4803,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-config"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "base64 0.22.1",
  "rand 0.10.1",
@@ -4735,7 +4821,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-content"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4772,7 +4858,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-database"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4795,7 +4881,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-events"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "axum",
@@ -4810,7 +4896,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-extension"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "axum",
  "inventory",
@@ -4825,7 +4911,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-files"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4856,7 +4942,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-generator"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -4898,7 +4984,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-identifiers"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "chrono",
  "schemars",
@@ -4911,7 +4997,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-loader"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -4927,7 +5013,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-logging"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4956,8 +5042,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "systemprompt-marketplace"
+version = "0.8.0"
+dependencies = [
+ "async-trait",
+ "inventory",
+ "systemprompt-database",
+ "systemprompt-identifiers",
+ "systemprompt-models",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "systemprompt-mcp"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5001,7 +5099,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-mcp-agent"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5022,7 +5120,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-mcp-shared"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "serde_json",
  "sqlx",
@@ -5032,7 +5130,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-models"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5061,7 +5159,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-oauth"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5098,7 +5196,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-provider-contracts"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5114,7 +5212,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-runtime"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "axum",
  "indicatif",
@@ -5131,6 +5229,7 @@ dependencies = [
  "systemprompt-identifiers",
  "systemprompt-loader",
  "systemprompt-logging",
+ "systemprompt-marketplace",
  "systemprompt-models",
  "systemprompt-security",
  "systemprompt-traits",
@@ -5142,7 +5241,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-scheduler"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5175,7 +5274,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-security"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "axum",
@@ -5202,7 +5301,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-sync"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -5236,7 +5335,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-template"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -5253,7 +5352,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-template-provider"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "systemprompt-provider-contracts",
@@ -5263,7 +5362,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-templates"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-trait",
  "handlebars",
@@ -5279,7 +5378,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-traits"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5300,7 +5399,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-users"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5325,10 +5424,11 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-web-admin"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-stream",
+ "async-trait",
  "axum",
  "base64 0.22.1",
  "chacha20poly1305",
@@ -5367,7 +5467,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-web-content"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5441,7 +5541,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-web-jobs"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5466,7 +5566,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-web-shared"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "axum",
  "chrono",
@@ -5484,7 +5584,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-web-site"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5778,6 +5878,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2abe9b86193656635d2411dc43050282ca48aa31c2451210f4202550afb7526"
 dependencies = [
  "winnow",
+]
+
+[[package]]
+name = "tonic"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "877c5b330756d856ffcc4553ab34a5684481ade925ecc54bcd1bf02b1d0d4d52"
+dependencies = [
+ "async-trait",
+ "base64 0.22.1",
+ "bytes",
+ "http",
+ "http-body",
+ "http-body-util",
+ "percent-encoding",
+ "pin-project",
+ "prost",
+ "tokio-stream",
+ "tower-layer",
+ "tower-service",
+ "tracing",
 ]
 
 [[package]]

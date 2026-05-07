@@ -23,6 +23,9 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
             middleware::marketplace_context_middleware,
         ))
         .layer(axum_middleware::from_fn(
+            middleware::non_admin_gate_middleware,
+        ))
+        .layer(axum_middleware::from_fn(
             middleware::require_user_middleware,
         ))
         .layer(axum_middleware::from_fn_with_state(
@@ -66,7 +69,7 @@ fn public_routes() -> Router<Arc<PgPool>> {
 fn root_routes() -> Router<Arc<PgPool>> {
     Router::new().route(
         "/",
-        get(|| async { axum::response::Redirect::to("/admin/access/users") }),
+        get(|| async { axum::response::Redirect::to("/admin/profile") }),
     )
 }
 

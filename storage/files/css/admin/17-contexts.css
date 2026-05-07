@@ -1,10 +1,50 @@
-/* /admin/entities/contexts — list page layout. */
+/* /admin/entities/contexts — list + detail page styles. */
 
-.contexts-kpis {
+.contexts-kpis,
+.kpi-strip {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: var(--sp-space-3);
     margin-bottom: var(--sp-space-5);
+}
+
+.contexts-kpis {
+    grid-template-columns: repeat(6, 1fr);
+}
+
+.kpi-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+    padding: var(--sp-space-4);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: 0 0.375rem 1.125rem 0;
+}
+
+.kpi-card--danger {
+    border-color: color-mix(in oklch, var(--sp-danger) 45%, var(--sp-border-subtle));
+    background: color-mix(in oklch, var(--sp-danger) 4%, var(--sp-bg-surface));
+}
+
+.kpi-card__label {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sp-text-tertiary);
+}
+
+.kpi-card__value {
+    font-size: var(--sp-text-2xl, 1.5rem);
+    font-weight: 700;
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.kpi-card__sub {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
 }
 
 @media (max-width: 1100px) {

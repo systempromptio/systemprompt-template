@@ -1,294 +1,272 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title=title}}
 
-    <section aria-label="Profile overview">
-    <div class="profile-hero">
-        <div class="profile-hero-left">
-            <div class="profile-archetype-badge profile-archetype-badge--{{archetype.id}}">
-                <span class="profile-archetype-icon">{{> profile-archetype-icon id=archetype.id}}</span>
-                <div class="profile-archetype-info">
-                    <h2 class="profile-archetype-name">{{archetype.name}}</h2>
-                    <p class="profile-archetype-desc">{{archetype.description}}</p>
-                    <div class="profile-archetype-confidence">
-                        <div class="profile-confidence-bar" role="progressbar" aria-valuenow="{{archetype.confidence}}" aria-valuemin="0" aria-valuemax="100" aria-label="Archetype confidence">
-                            <div class="profile-confidence-fill" style="width: {{archetype.confidence}}%"></div>
-                        </div>
-                        <span class="profile-confidence-label">{{archetype.confidence}}% match</span>
+    <section class="sp-profile" aria-label="Profile">
+
+        {{!-- HERO ────────────────────────────────────────── --}}
+        <header class="sp-profile-hero">
+            <div class="sp-profile-hero__avatar" aria-hidden="true">
+                {{#if identity.display_name}}{{initials identity.display_name}}{{else}}{{initials identity.email}}{{/if}}
+            </div>
+            <div class="sp-profile-hero__main">
+                <h1 class="sp-profile-hero__name">{{default identity.display_name identity.email}}</h1>
+                <div class="sp-profile-hero__meta">
+                    <span class="sp-profile-hero__email">{{identity.email}}</span>
+                    {{#each identity.roles}}<span class="sp-chip{{#if (eq this "admin")}} sp-chip--accent{{/if}}">{{this}}</span>{{/each}}
+                </div>
+                {{#if identity.tenant_id}}
+                <div class="sp-profile-hero__sub">
+                    <span class="sp-kv"><span class="sp-kv__k">tenant</span><code class="sp-kv__v">{{identity.tenant_id}}</code></span>
+                    {{#if identity.gateway}}<span class="sp-kv"><span class="sp-kv__k">gateway</span><code class="sp-kv__v">{{identity.gateway}}</code></span>{{/if}}
+                </div>
+                {{/if}}
+            </div>
+            <div class="sp-profile-hero__quickstats">
+                <div class="sp-quickstat">
+                    <span class="sp-quickstat__value">{{formatUsd usage.d30.cost_microdollars}}</span>
+                    <span class="sp-quickstat__label">spend · 30d</span>
+                </div>
+                <div class="sp-quickstat">
+                    <span class="sp-quickstat__value">{{formatNumber usage.d30.tokens}}</span>
+                    <span class="sp-quickstat__label">tokens · 30d</span>
+                </div>
+                <div class="sp-quickstat">
+                    <span class="sp-quickstat__value">{{formatNumber usage.conversations.total_conversations}}</span>
+                    <span class="sp-quickstat__label">conversations</span>
+                </div>
+            </div>
+        </header>
+
+        {{!-- TOKEN USAGE — full row of big tiles ──────────── --}}
+        <article class="sp-profile-card sp-profile-card--usage">
+            <header class="sp-profile-card__head">
+                <div class="sp-profile-card__title">
+                    <svg class="sp-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+                    <h2>Token usage</h2>
+                </div>
+                <span class="sp-profile-card__hint">cost · tokens · requests across rolling windows</span>
+            </header>
+            <div class="sp-tile-row">
+                <div class="sp-tile">
+                    <span class="sp-tile__label">24 hours</span>
+                    <span class="sp-tile__value">{{formatUsd usage.d1.cost_microdollars}}</span>
+                    <span class="sp-tile__sub"><b>{{formatNumber usage.d1.tokens}}</b> tokens · <b>{{formatNumber usage.d1.requests}}</b> req</span>
+                    <span class="sp-tile__delta">{{deltaPct usage.d1.cost_microdollars usage.d1.previous_cost_microdollars}}</span>
+                </div>
+                <div class="sp-tile">
+                    <span class="sp-tile__label">7 days</span>
+                    <span class="sp-tile__value">{{formatUsd usage.d7.cost_microdollars}}</span>
+                    <span class="sp-tile__sub"><b>{{formatNumber usage.d7.tokens}}</b> tokens · <b>{{formatNumber usage.d7.requests}}</b> req</span>
+                    <span class="sp-tile__delta">{{deltaPct usage.d7.cost_microdollars usage.d7.previous_cost_microdollars}}</span>
+                </div>
+                <div class="sp-tile sp-tile--featured">
+                    <span class="sp-tile__label">30 days</span>
+                    <span class="sp-tile__value">{{formatUsd usage.d30.cost_microdollars}}</span>
+                    <span class="sp-tile__sub"><b>{{formatNumber usage.d30.tokens}}</b> tokens · <b>{{formatNumber usage.d30.requests}}</b> req</span>
+                    <span class="sp-tile__delta">{{deltaPct usage.d30.cost_microdollars usage.d30.previous_cost_microdollars}}</span>
+                </div>
+            </div>
+        </article>
+
+        {{!-- TWO-COL: MODELS + AGENTS ─────────────────────── --}}
+        <div class="sp-profile-row sp-profile-row--2">
+
+            <article class="sp-profile-card">
+                <header class="sp-profile-card__head">
+                    <div class="sp-profile-card__title">
+                        <svg class="sp-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="M3.27 6.96L12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg>
+                        <h2>Favorite models</h2>
                     </div>
-                </div>
-            </div>
-        </div>
-        {{#if has_gamification}}
-        <div class="profile-hero-right">
-            <div class="profile-rank-card">
-                <span class="profile-rank-level">Rank {{gamification.rank_level}}</span>
-                <span class="profile-rank-name">{{gamification.rank_name}}</span>
-                <div class="profile-xp-bar" role="progressbar" aria-valuenow="{{gamification.xp_pct}}" aria-valuemin="0" aria-valuemax="100" aria-label="XP progress">
-                    <div class="profile-xp-fill" style="width: {{gamification.xp_pct}}%"></div>
-                </div>
-                <span class="profile-xp-label">{{gamification.xp_pct}}% &middot; {{gamification.total_xp}} XP{{#if gamification.next_rank_name}} &middot; Next: {{gamification.next_rank_name}}{{/if}}</span>
-            </div>
-            <div class="profile-streak-row">
-                <span class="profile-streak" title="Current streak">&#128293; {{gamification.current_streak}}d streak</span>
-                <span class="profile-streak-best" title="Longest streak">Best: {{gamification.longest_streak}}d</span>
-                <span class="profile-rank-pos" title="Leaderboard position">#{{gamification.rank_position}}</span>
-            </div>
-        </div>
-        {{/if}}
-    </div>
-    </section>
-
-    {{#if has_metrics}}
-    <div class="profile-tabs">
-        <div class="sp-tabs" role="tablist" aria-label="Profile sections">
-            <button type="button" class="sp-tab sp-tab--active" role="tab" aria-selected="true" data-tab="profile-overview" aria-controls="tab-profile-overview">Profile</button>
-            <button type="button" class="sp-tab" role="tab" aria-selected="false" data-tab="profile-ai" aria-controls="tab-profile-ai">AI Analysis</button>
-        </div>
-    </div>
-
-    <div class="sp-tab-panel" role="tabpanel" id="tab-profile-overview" data-tab-panel="profile-overview">
-
-    <section aria-label="Performance metrics">
-    <div class="profile-grid">
-        <div class="card profile-section">
-            <div class="card-header">
-                <h2 class="card-title">Performance vs Global Average</h2>
-                <span class="profile-period-label">Last 30 days</span>
-            </div>
-            <div class="card-body">
-                <div class="profile-comparison-legend">
-                    <span class="profile-comparison-legend-item profile-comparison-legend-item--user"><span class="profile-comparison-legend-swatch profile-comparison-legend-swatch--user"></span> You</span>
-                    <span class="profile-comparison-legend-item profile-comparison-legend-item--global"><span class="profile-comparison-legend-swatch profile-comparison-legend-swatch--global"></span> Global</span>
-                </div>
-                <div class="profile-comparison-grid">
-                    {{#each comparison}}
-                    <div class="profile-comparison-row">
-                        <span class="profile-comparison-label">{{label}}</span>
-                        <div class="profile-comparison-bars">
-                            <div class="profile-bar-track">
-                                <div class="profile-bar profile-bar--user" style="width: {{bar_pct}}%" title="You: {{user_value}}"></div>
-                                <div class="profile-bar profile-bar--global" style="width: {{global_bar_pct}}%" title="Global: {{global_value}}"></div>
+                    <span class="sp-profile-card__hint">last 30 days</span>
+                </header>
+                {{#if usage.top_models}}
+                <ol class="sp-modellist">
+                    {{#each usage.top_models}}
+                    <li class="sp-modellist__row">
+                        <span class="sp-modellist__rank">{{add @index 1}}</span>
+                        <div class="sp-modellist__main">
+                            <div class="sp-modellist__head">
+                                <span class="sp-modellist__name" title="{{model}}">{{model}}</span>
+                                <span class="sp-modellist__share">{{percent token_share}}</span>
                             </div>
+                            <span class="sp-modellist__bar" aria-hidden="true">
+                                <span class="sp-modellist__fill" style="width: {{percent token_share}}"></span>
+                            </span>
+                            <span class="sp-modellist__meta">{{formatNumber tokens}} tokens · {{formatUsd cost_microdollars}}</span>
                         </div>
-                        <div class="profile-comparison-values">
-                            <span class="profile-val-user">{{user_value}}</span>
-                            <span class="profile-val-sep">vs</span>
-                            <span class="profile-val-global">{{global_value}}</span>
-                        </div>
-                        <span class="profile-comparison-delta profile-comparison-delta--{{sentiment}}">
-                            {{arrow}} {{diff_pct}}
-                        </span>
-                    </div>
+                    </li>
                     {{/each}}
+                </ol>
+                {{else}}
+                <div class="sp-empty">
+                    <svg class="sp-empty__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
+                    <p>No model usage in the last 30 days.</p>
                 </div>
-            </div>
-        </div>
+                {{/if}}
+            </article>
 
-        <div class="profile-sw-grid">
-            {{#if has_strengths}}
-            <div class="card profile-section">
-                <div class="card-header">
-                    <h2 class="card-title">Strengths</h2>
-                </div>
-                <div class="card-body">
-                    {{#each strengths}}
-                    <div class="profile-sw-item profile-sw-item--strength">
-                        <span class="profile-sw-label">{{label}}</span>
-                        <span class="profile-sw-values">{{formatted_user}} vs {{formatted_global}}</span>
-                        <span class="profile-sw-delta profile-sw-delta--positive">+{{deviation_pct}}%</span>
+            <article class="sp-profile-card">
+                <header class="sp-profile-card__head">
+                    <div class="sp-profile-card__title">
+                        <svg class="sp-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><path d="M8 16h.01M16 16h.01"/></svg>
+                        <h2>Available agents</h2>
                     </div>
+                    <span class="sp-chip sp-chip--accent">{{agents.enabled}}/{{agents.total}} enabled</span>
+                </header>
+                {{#if agents.items}}
+                <ul class="sp-agentlist">
+                    {{#each agents.items}}
+                    <li class="sp-agentlist__row" data-enabled="{{enabled}}">
+                        <span class="sp-statusdot {{#if enabled}}sp-statusdot--ok{{else}}sp-statusdot--off{{/if}}" aria-hidden="true"></span>
+                        <span class="sp-agentlist__name">{{default display_name id}}</span>
+                        <span class="sp-agentlist__state">{{#if host_running}}running{{else if enabled}}enabled{{else}}disabled{{/if}}</span>
+                    </li>
                     {{/each}}
+                </ul>
+                {{else}}
+                <div class="sp-empty">
+                    <svg class="sp-empty__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/></svg>
+                    <p>No agents configured.</p>
+                    <small>Add agents under <code>services/agents/*.yaml</code> with <code>show_in_ui: true</code>.</small>
                 </div>
-            </div>
-            {{/if}}
-            {{#if has_weaknesses}}
-            <div class="card profile-section">
-                <div class="card-header">
-                    <h2 class="card-title">Areas for Improvement</h2>
-                </div>
-                <div class="card-body">
-                    {{#each weaknesses}}
-                    <div class="profile-sw-item profile-sw-item--weakness">
-                        <span class="profile-sw-label">{{label}}</span>
-                        <span class="profile-sw-values">{{formatted_user}} vs {{formatted_global}}</span>
-                        <span class="profile-sw-delta profile-sw-delta--negative">{{deviation_pct}}%</span>
-                    </div>
-                    {{/each}}
-                </div>
-            </div>
-            {{/if}}
-        </div>
-    </div>
-    </section>
+                {{/if}}
+            </article>
 
-    {{#if trends.has_trends}}
-    <section aria-label="Daily trends">
-    <div class="card profile-section">
-        <div class="card-header">
-            <h2 class="card-title">Daily Trends vs Global Average</h2>
-        </div>
-        <div class="card-body">
-            <div class="profile-trends-grid">
-                <div class="profile-trend-item">
-                    <span class="profile-trend-label">Quality</span>
-                    <svg class="profile-sparkline" data-values="{{trends.quality.values}}" data-global="{{trends.quality.global_avg}}" viewBox="0 0 120 30" preserveAspectRatio="none" role="img"></svg>
-                </div>
-                <div class="profile-trend-item">
-                    <span class="profile-trend-label">APM</span>
-                    <svg class="profile-sparkline" data-values="{{trends.apm.values}}" data-global="{{trends.apm.global_avg}}" viewBox="0 0 120 30" preserveAspectRatio="none" role="img"></svg>
-                </div>
-                <div class="profile-trend-item">
-                    <span class="profile-trend-label">Sessions</span>
-                    <svg class="profile-sparkline" data-values="{{trends.sessions.values}}" data-global="{{trends.sessions.global_avg}}" viewBox="0 0 120 30" preserveAspectRatio="none" role="img"></svg>
-                </div>
-                <div class="profile-trend-item">
-                    <span class="profile-trend-label">Error Rate</span>
-                    <svg class="profile-sparkline" data-values="{{trends.error_rate.values}}" data-global="{{trends.error_rate.global_avg}}" viewBox="0 0 120 30" preserveAspectRatio="none" role="img"></svg>
-                </div>
-                <div class="profile-trend-item">
-                    <span class="profile-trend-label">Goal Rate</span>
-                    <svg class="profile-sparkline" data-values="{{trends.goal_rate.values}}" data-global="{{trends.goal_rate.global_avg}}" viewBox="0 0 120 30" preserveAspectRatio="none" role="img"></svg>
-                </div>
-                <div class="profile-trend-item">
-                    <span class="profile-trend-label">Tool Diversity</span>
-                    <svg class="profile-sparkline" data-values="{{trends.tool_diversity.values}}" data-global="{{trends.tool_diversity.global_avg}}" viewBox="0 0 120 30" preserveAspectRatio="none" role="img"></svg>
-                </div>
-            </div>
-        </div>
-    </div>
-    </section>
-    {{/if}}
-
-    {{#if has_category_breakdown}}
-    <section aria-label="Work distribution and workspace">
-    <div class="profile-grid">
-        <div class="card profile-section">
-            <div class="card-header">
-                <h2 class="card-title">Work Distribution</h2>
-            </div>
-            <div class="card-body">
-                <div class="profile-category-list">
-                    {{#each category_breakdown}}
-                    <div class="profile-category-row">
-                        <span class="profile-category-label">{{label}}</span>
-                        <div class="profile-category-bar-track" role="progressbar" aria-valuenow="{{pct}}" aria-valuemin="0" aria-valuemax="100" aria-label="{{label}} percentage">
-                            <div class="profile-category-bar" style="width: {{bar_width}}%"></div>
-                        </div>
-                        <span class="profile-category-count">{{count}}</span>
-                        <span class="profile-category-pct">{{pct}}%</span>
-                    </div>
-                    {{/each}}
-                </div>
-            </div>
         </div>
 
-        {{#if entity_counts}}
-        <div class="card profile-section">
-            <div class="card-header">
-                <h2 class="card-title">Workspace</h2>
-            </div>
-            <div class="card-body">
-                <div class="profile-entity-grid">
-                    <div class="profile-entity-card">
-                        <span class="profile-entity-value">{{entity_counts.plugins}}</span>
-                        <span class="profile-entity-label">Plugins</span>
-                    </div>
-                    <div class="profile-entity-card">
-                        <span class="profile-entity-value">{{entity_counts.skills}}</span>
-                        <span class="profile-entity-label">Skills</span>
-                    </div>
-                    <div class="profile-entity-card">
-                        <span class="profile-entity-value">{{entity_counts.agents}}</span>
-                        <span class="profile-entity-label">Agents</span>
-                    </div>
-                    <div class="profile-entity-card">
-                        <span class="profile-entity-value">{{entity_counts.mcp_servers}}</span>
-                        <span class="profile-entity-label">MCP Servers</span>
-                    </div>
+        {{!-- CONVERSATIONS — full row ─────────────────────── --}}
+        <article class="sp-profile-card sp-profile-card--conv">
+            <header class="sp-profile-card__head">
+                <div class="sp-profile-card__title">
+                    <svg class="sp-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <h2>Conversations</h2>
                 </div>
-            </div>
-        </div>
-        {{/if}}
-    </div>
-    </section>
-    {{/if}}
+                <div class="sp-profile-card__stats">
+                    <span class="sp-stat"><b>{{formatNumber usage.conversations.total_conversations}}</b> conversations</span>
+                    <span class="sp-stat-sep">·</span>
+                    <span class="sp-stat"><b>{{formatNumber usage.conversations.total_ai_requests}}</b> requests</span>
+                </div>
+            </header>
 
-    </div>{{!-- end tab-profile-overview --}}
-
-    <div class="sp-tab-panel" role="tabpanel" id="tab-profile-ai" data-tab-panel="profile-ai" hidden>
-
-    <section aria-label="AI analysis">
-    <div class="card profile-section profile-ai-section">
-        <div class="card-header">
-            <h2 class="card-title">AI Analysis</h2>
-            <div class="d-flex align-center gap-2">
-                {{#if has_ai_report}}
-                <span class="text-secondary text-sm">Generated {{ai_report.generated_at}}</span>
-                {{/if}}
-                <button type="button" class="btn btn-primary btn-sm" id="generate-profile-report">
-                    {{#if has_ai_report}}Regenerate{{else}}Generate Analysis{{/if}}
-                </button>
+            {{#if usage.conversations.recent}}
+            <div class="sp-conv-grid">
+                <div class="sp-conv-section">
+                    <h3 class="sp-section-label">By model</h3>
+                    {{#if usage.conversations.by_model}}
+                    <ul class="sp-grouplist">
+                        {{#each usage.conversations.by_model}}
+                        <li>
+                            <span class="sp-grouplist__name" title="{{name}}">{{name}}</span>
+                            <span class="sp-grouplist__meta"><b>{{formatNumber conversations}}</b> conv · <b>{{formatNumber ai_requests}}</b> req</span>
+                        </li>
+                        {{/each}}
+                    </ul>
+                    {{else}}<p class="sp-muted">no data</p>{{/if}}
+                </div>
+                <div class="sp-conv-section">
+                    <h3 class="sp-section-label">By agent</h3>
+                    {{#if usage.conversations.by_agent}}
+                    <ul class="sp-grouplist">
+                        {{#each usage.conversations.by_agent}}
+                        <li>
+                            <span class="sp-grouplist__name" title="{{name}}">{{name}}</span>
+                            <span class="sp-grouplist__meta"><b>{{formatNumber conversations}}</b> conv · <b>{{formatNumber ai_requests}}</b> req</span>
+                        </li>
+                        {{/each}}
+                    </ul>
+                    {{else}}<p class="sp-muted">agent labels are not yet linked to ai_requests in this build.</p>{{/if}}
+                </div>
             </div>
-        </div>
-        <div class="card-body" id="profile-ai-report-body">
-            {{#if has_ai_report}}
-                {{#if ai_report.has_narrative}}
-                <div class="profile-ai-block">
-                    <h3 class="profile-ai-label">Profile Analysis</h3>
-                    <p class="profile-ai-text">{{ai_report.narrative}}</p>
-                </div>
-                {{/if}}
-                {{#if ai_report.has_style}}
-                <div class="profile-ai-block">
-                    <h3 class="profile-ai-label">Your Style</h3>
-                    <p class="profile-ai-text">{{ai_report.style_analysis}}</p>
-                </div>
-                {{/if}}
-                {{#if ai_report.has_comparison}}
-                <div class="profile-ai-block">
-                    <h3 class="profile-ai-label">How You Compare</h3>
-                    <p class="profile-ai-text">{{ai_report.comparison}}</p>
-                </div>
-                {{/if}}
-                {{#if ai_report.has_patterns}}
-                <div class="profile-ai-block">
-                    <h3 class="profile-ai-label">Your Patterns</h3>
-                    <p class="profile-ai-text">{{ai_report.patterns}}</p>
-                </div>
-                {{/if}}
-                {{#if ai_report.has_improvements}}
-                <div class="profile-ai-block profile-ai-block--highlight">
-                    <h3 class="profile-ai-label">How to Improve</h3>
-                    <p class="profile-ai-text">{{ai_report.improvements}}</p>
-                </div>
-                {{/if}}
-                {{#if ai_report.has_tips}}
-                <div class="profile-ai-block profile-ai-block--highlight">
-                    <h3 class="profile-ai-label">Tips for You</h3>
-                    <p class="profile-ai-text">{{ai_report.tips}}</p>
-                </div>
-                {{/if}}
+
+            <h3 class="sp-section-label sp-section-label--rule">Recent activity</h3>
+            <div class="sp-conv-recent-wrap">
+                <table class="sp-conv-table">
+                    <thead>
+                        <tr>
+                            <th>Context</th>
+                            <th>Model</th>
+                            <th>Agent</th>
+                            <th class="sp-conv-table__num">Requests</th>
+                            <th class="sp-conv-table__when">Last activity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each usage.conversations.recent}}
+                        <tr class="sp-conv-table__row" data-href="/admin/entities/contexts/{{context_id}}">
+                            <td class="sp-conv-table__title">
+                                <a href="/admin/entities/contexts/{{context_id}}" title="{{context_id}}">
+                                    {{#if context_name}}{{context_name}}{{else}}<code>{{shortId context_id 12}}</code>{{/if}}
+                                </a>
+                            </td>
+                            <td>{{default model "—"}}</td>
+                            <td>{{default agent_name "—"}}</td>
+                            <td class="sp-conv-table__num">{{formatNumber ai_requests}}</td>
+                            <td class="sp-conv-table__when">{{relativeTime last_activity}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
             {{else}}
-                <p class="profile-ai-empty">No AI analysis generated yet. Click "Generate Analysis" to get a personalised AI-written narrative about your coding style and recommendations.</p>
+            <div class="sp-empty">
+                <svg class="sp-empty__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <p>No conversations yet.</p>
+                <small>Conversations are grouped by <code>context_id</code> on incoming inference requests.</small>
+            </div>
             {{/if}}
+        </article>
+
+        {{!-- TWO-COL: IDENTITY DETAIL + PLAN & GATEWAY ────── --}}
+        <div class="sp-profile-row sp-profile-row--2">
+
+            <article class="sp-profile-card">
+                <header class="sp-profile-card__head">
+                    <div class="sp-profile-card__title">
+                        <svg class="sp-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <h2>Identity</h2>
+                    </div>
+                </header>
+                <dl class="sp-deflist">
+                    {{#if identity.email}}<dt>Email</dt><dd>{{identity.email}}</dd>{{/if}}
+                    {{#if identity.display_name}}<dt>Display name</dt><dd>{{identity.display_name}}</dd>{{/if}}
+                    <dt>User ID</dt><dd><code class="sp-deflist__break">{{identity.user_id}}</code></dd>
+                    {{#if identity.tenant_id}}<dt>Tenant</dt><dd><code class="sp-deflist__break">{{identity.tenant_id}}</code></dd>{{/if}}
+                    {{#if identity.provider}}<dt>Provider</dt><dd>{{identity.provider}}</dd>{{/if}}
+                    {{#if identity.roles}}<dt>Roles</dt><dd class="sp-chip-row">{{#each identity.roles}}<span class="sp-chip{{#if (eq this "admin")}} sp-chip--accent{{/if}}">{{this}}</span>{{/each}}</dd>{{/if}}
+                    {{#if identity.jwt_issuer}}<dt>JWT issuer</dt><dd><code>{{identity.jwt_issuer}}</code></dd>{{/if}}
+                </dl>
+            </article>
+
+            {{#if bridge_profile}}
+            <article class="sp-profile-card">
+                <header class="sp-profile-card__head">
+                    <div class="sp-profile-card__title">
+                        <svg class="sp-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><circle cx="12" cy="12" r="10"/></svg>
+                        <h2>Plan &amp; gateway</h2>
+                    </div>
+                </header>
+                <dl class="sp-deflist">
+                    <dt>Auth scheme</dt><dd><code>{{bridge_profile.auth_scheme}}</code></dd>
+                    <dt>Inference gateway</dt><dd><code class="sp-deflist__break">{{bridge_profile.inference_gateway_base_url}}</code></dd>
+                    {{#if bridge_profile.organization_uuid}}<dt>Organization</dt><dd><code class="sp-deflist__break">{{bridge_profile.organization_uuid}}</code></dd>{{/if}}
+                    <dt>Allowed models</dt><dd><b>{{bridge_profile.models_count}}</b> models{{#if bridge_profile.models}} signed for this user{{/if}}</dd>
+                </dl>
+                {{#if bridge_profile.models}}
+                <details class="sp-allowed-models">
+                    <summary>View {{bridge_profile.models_count}} allowed models</summary>
+                    <ul class="sp-allowed-models__list">
+                        {{#each bridge_profile.models}}<li>{{this}}</li>{{/each}}
+                    </ul>
+                </details>
+                {{/if}}
+            </article>
+            {{/if}}
+
         </div>
-    </div>
+
     </section>
 
-    </div>{{!-- end tab-profile-ai --}}
-
-    {{else}}
-    <div class="card profile-section">
-        <div class="card-body">
-            <p class="profile-empty-text">No usage data available yet. Start using Claude Code and your profile will populate with insights, comparisons, and personalised recommendations.</p>
-        </div>
-    </div>
-    {{/if}}
-
     {{/inline}}
-    {{#*inline "scripts"}}
-    <script data-cfasync="false" src="/js/pages/admin-profile.js?v={{css_version}}" type="module" defer></script>
-    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
 {{/layout}}

@@ -8,7 +8,7 @@
 #
 # Schema:
 #   rules:
-#     - entity_type: gateway_route | mcp_server | plugin | agent | marketplace
+#     - entity_type: gateway_route | mcp_server | plugin | agent | marketplace | skill
 #       entity_id:   string id of the entity
 #       access:      allow | deny  (default: allow)
 #       default_included: bool     (default: false)
@@ -26,4 +26,41 @@
 #     access: allow
 #     roles: [admin]
 
-rules: []
+rules:
+  # enterprise-demo plugin
+  - entity_type: plugin
+    entity_id: enterprise-demo
+    access: allow
+    default_included: true
+    roles: [user]
+
+  # skills shipped with enterprise-demo
+  - entity_type: skill
+    entity_id: example_web_search
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: skill
+    entity_id: use_dangerous_secret
+    access: allow
+    default_included: true
+    roles: [user]
+
+  # agents shipped with enterprise-demo
+  - entity_type: agent
+    entity_id: associate_agent
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: agent
+    entity_id: developer_agent
+    access: allow
+    default_included: true
+    roles: [user]
+
+  # mcp servers shipped with enterprise-demo
+  - entity_type: mcp_server
+    entity_id: systemprompt
+    access: allow
+    default_included: true
+    roles: [user]

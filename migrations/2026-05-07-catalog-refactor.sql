@@ -7,9 +7,9 @@
 
 DROP TABLE IF EXISTS plugin_ratings, plugin_visibility_rules, plugin_installations, plugin_installation_history CASCADE;
 
-DELETE FROM access_control_rules WHERE entity_type = 'marketplace';
+DELETE FROM access_control_rules WHERE entity_type IN ('marketplace', 'gateway_route');
 
 ALTER TABLE access_control_rules DROP CONSTRAINT IF EXISTS access_control_rules_entity_type_check;
-ALTER TABLE access_control_rules ADD CONSTRAINT access_control_rules_entity_type_check CHECK (entity_type IN ('plugin', 'agent', 'mcp_server', 'skill'));
+ALTER TABLE access_control_rules ADD CONSTRAINT access_control_rules_entity_type_check CHECK (entity_type IN ('plugin', 'agent', 'mcp_server', 'skill', 'gateway_route'));
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS share_token_version INT NOT NULL DEFAULT 1;

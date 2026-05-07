@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            model AS \"model!\",\n            COUNT(*)::bigint AS \"requests!\",\n            COALESCE(SUM(tokens_used), 0)::bigint AS \"tokens!\",\n            COALESCE(SUM(cost_microdollars), 0)::bigint AS \"cost!\"\n          FROM ai_requests\n          WHERE user_id = $1\n            AND created_at >= NOW() - INTERVAL '30 days'\n          GROUP BY model\n          ORDER BY SUM(tokens_used) DESC NULLS LAST\n          LIMIT $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "model!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "requests!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "tokens!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "cost!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "775b46e40f825c0764f73049990aa8c12c3e8a93dbc4dc2fd2a1ffd4802174db"
+}

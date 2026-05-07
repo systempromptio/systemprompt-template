@@ -64,6 +64,7 @@ walkdir = { workspace = true }
 url = { workspace = true }
 urlencoding = { workspace = true }
 inventory = { workspace = true }
+async-trait = { workspace = true }
 once_cell = { workspace = true }
 
 [dev-dependencies]

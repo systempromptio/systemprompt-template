@@ -76,28 +76,47 @@
     <section class="overview-pane">
       <h3 class="section-title">Conversation</h3>
       {{#if has_transcript}}
-      <ol class="transcript">
+      <ol class="transcript transcript--compact">
         {{#each transcript}}
+          {{#if is_system}}
+          <li class="transcript__entry transcript__entry--system transcript__system">
+            <hr class="transcript__system-rule" />
+            <span class="transcript__system-label">
+              <span class="transcript__role">system</span>
+              <span class="transcript__time" title="{{ts_full}}">{{ts_local}}</span>
+            </span>
+            <hr class="transcript__system-rule" />
+          </li>
+          {{else if is_tool}}
+          <li class="transcript__entry transcript__entry--tool">
+            <details class="transcript__tool">
+              <summary class="transcript__tool-summary">
+                <span class="transcript__tool-chevron" aria-hidden="true">&rsaquo;</span>
+                <span class="transcript__role">tool</span>
+                <code class="transcript__tool-name code-inline">{{tool_name}}</code>
+                <span class="transcript__time" title="{{ts_full}}">{{ts_local}}</span>
+                <a href="{{request_url}}" class="transcript__req code-inline" title="{{request_id}}">req</a>
+              </summary>
+              <div class="transcript__tool-detail">
+                {{#if tool_input_pretty}}
+                  <details open><summary>Input</summary><pre class="code-block">{{tool_input_pretty}}</pre></details>
+                {{/if}}
+                {{#if tool_result_pretty}}
+                  <details open><summary>Result</summary><pre class="code-block">{{tool_result_pretty}}</pre></details>
+                {{/if}}
+              </div>
+            </details>
+          </li>
+          {{else}}
           <li class="transcript__entry transcript__entry--{{role}}">
             <header class="transcript__head">
               <span class="transcript__role">{{role}}</span>
               <span class="transcript__time" title="{{ts_full}}">{{ts_local}}</span>
               <a href="{{request_url}}" class="transcript__req code-inline" title="{{request_id}}">req</a>
             </header>
-            {{#if is_tool}}
-              <div class="transcript__body">
-                <div class="transcript__tool-name"><strong>{{tool_name}}</strong></div>
-                {{#if tool_input_pretty}}
-                  <details><summary>Input</summary><pre class="code-block">{{tool_input_pretty}}</pre></details>
-                {{/if}}
-                {{#if tool_result_pretty}}
-                  <details><summary>Result</summary><pre class="code-block">{{tool_result_pretty}}</pre></details>
-                {{/if}}
-              </div>
-            {{else}}
-              <pre class="transcript__body code-block">{{content_preview}}</pre>
-            {{/if}}
+            <div class="transcript__body">{{content_preview}}</div>
           </li>
+          {{/if}}
         {{/each}}
       </ol>
       {{else}}

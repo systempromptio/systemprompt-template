@@ -1,11 +1,12 @@
 <aside class="admin-sidebar" id="admin-sidebar">
     <button class="sidebar-close-btn" type="button" aria-label="Close menu">&times;</button>
-    <a href="/admin/access/users" class="admin-sidebar-brand" aria-label="{{default branding.domain "demo.systemprompt.io"}} - Go to admin">
+    <a href="/admin/profile" class="admin-sidebar-brand" aria-label="{{default branding.domain "demo.systemprompt.io"}} - Go to admin">
         <img src="{{default branding.logo_light "/files/images/logo.svg"}}" alt="{{default branding.domain "demo.systemprompt.io"}}" class="admin-logo admin-logo--light" />
         <img src="{{default branding.logo_dark "/files/images/logo-white.svg"}}" alt="{{default branding.domain "demo.systemprompt.io"}}" class="admin-logo admin-logo--dark" />
     </a>
     <nav aria-label="Admin navigation">
 
+        {{#if current_user.is_admin}}
         {{!-- ACCESS — who can do what --}}
         <h2 class="nav-label">Access</h2>
         <a href="/admin/access/users"{{#if (eq page "users")}} class="active" aria-current="page"{{else}}{{#if (eq page "user-detail")}} class="active" aria-current="page"{{/if}}{{/if}}>
@@ -32,7 +33,6 @@
             Catalog
         </a>
 
-        {{#if current_user.is_admin}}
         {{!-- GOVERNANCE — rules, not telemetry --}}
         <h2 class="nav-label">Governance</h2>
         <a href="/admin/governance/policies"{{#if (eq page "governance")}} class="active" aria-current="page"{{else}}{{#if (eq page "governance-policy-edit")}} class="active" aria-current="page"{{/if}}{{/if}}>
