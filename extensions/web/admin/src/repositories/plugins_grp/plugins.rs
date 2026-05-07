@@ -100,13 +100,11 @@ pub fn list_agent_catalog(services_path: &Path) -> Result<Vec<AgentCatalogEntry>
         if path.extension().and_then(|e| e.to_str()) != Some("yaml") {
             continue;
         }
-        let raw = match std::fs::read_to_string(&path) {
-            Ok(s) => s,
-            Err(_) => continue,
+        let Ok(raw) = std::fs::read_to_string(&path) else {
+            continue;
         };
-        let val: serde_yaml::Value = match serde_yaml::from_str(&raw) {
-            Ok(v) => v,
-            Err(_) => continue,
+        let Ok(val): Result<serde_yaml::Value, _> = serde_yaml::from_str(&raw) else {
+            continue;
         };
         let source_path = path
             .strip_prefix(services_path)

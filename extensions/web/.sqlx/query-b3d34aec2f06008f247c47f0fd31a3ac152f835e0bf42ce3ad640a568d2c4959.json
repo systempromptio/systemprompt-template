@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            COALESCE(content_input_bytes, 0) + COALESCE(content_output_bytes, 0) AS total_bytes,\n            EXTRACT(EPOCH FROM (ended_at - started_at))::DOUBLE PRECISION AS duration_secs\n          FROM plugin_session_summaries\n          WHERE user_id = $1\n            AND started_at::date = $2\n            AND ended_at IS NOT NULL\n            AND COALESCE(status, 'active') != 'deleted'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "duration_secs",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Date"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "b3d34aec2f06008f247c47f0fd31a3ac152f835e0bf42ce3ad640a568d2c4959"
+}

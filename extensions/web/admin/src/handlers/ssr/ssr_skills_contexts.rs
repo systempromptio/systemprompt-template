@@ -43,93 +43,14 @@ fn microdollars_to_usd(micro: i64) -> f64 {
     (micro as f64) / 1_000_000.0
 }
 
-pub async fn skills_contexts_page(
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
-    State(pool): State<Arc<PgPool>>,
-    Query(params): Query<ContextsListQuery>,
-) -> Response {
-    if !user_ctx.is_admin {
-        return (
-            axum::http::StatusCode::FORBIDDEN,
-            axum::response::Html(super::ACCESS_DENIED_HTML),
-        )
-            .into_response();
-    }
-
-    let trim_opt = |s: Option<String>| -> Option<String> {
-        s.map(|v| v.trim().to_string()).filter(|v| !v.is_empty())
-    };
-
-    let user_id = trim_opt(params.user_id);
-    let model = trim_opt(params.model);
-    let q = trim_opt(params.q);
-    let since_label = trim_opt(params.since);
-    let since_dt = since_label.as_deref().and_then(since_to_datetime);
-    let view = params
-        .view
-        .as_deref()
-        .map(str::to_lowercase)
-        .filter(|v| v == "users" || v == "contexts")
-        .unwrap_or_else(|| "contexts".to_string());
-
-    let filter = contexts_list::ContextListFilter {
-        user_id: user_id.clone(),
-        model: model.clone(),
-        free_text: q.clone(),
-        since: since_dt,
-        limit: params.limit.unwrap_or(0),
-    };
-
-    let contexts = contexts_list::fetch_context_list(&pool, &filter)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "fetch_context_list failed");
-            Vec::new()
-        });
-
-    let user_summaries = contexts_list::fetch_context_user_summary(&pool, &filter)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "fetch_context_user_summary failed");
-            Vec::new()
-        });
-
-    let kpis = contexts_list::fetch_context_list_kpis(&pool, &filter)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "fetch_context_list_kpis failed");
-            contexts_list::ContextListKpis {
-                total_contexts: 0,
-                active_users: 0,
-                total_requests: 0,
-                total_messages: 0,
-                total_input_tokens: 0,
-                total_output_tokens: 0,
-                total_cost_microdollars: 0,
-            }
-        });
-
-    let models = contexts_list::fetch_distinct_models(&pool)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "fetch_distinct_models failed");
-            Vec::new()
-        });
-
-    let users_for_filter = repositories::list_users(&pool).await.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "list_users failed in contexts page");
-        Vec::new()
-    });
-
-    // Pre-group context list by user_id so the "By user" view can show nested
-    // context rows without a second round-trip.
-    let mut contexts_by_user: std::collections::HashMap<String, Vec<serde_json::Value>> =
+fn group_contexts_by_user(
+    contexts: &[contexts_list::ContextListItem],
+) -> std::collections::HashMap<String, Vec<serde_json::Value>> {
+    let mut out: std::collections::HashMap<String, Vec<serde_json::Value>> =
         std::collections::HashMap::new();
-    for c in &contexts {
+    for c in contexts {
         let key = c.user_id.clone().unwrap_or_else(|| "unknown".to_string());
-        contexts_by_user.entry(key).or_default().push(json!({
+        out.entry(key).or_default().push(json!({
             "context_id":     c.context_id,
             "name":           c.name,
             "model":          c.model,
@@ -141,8 +62,11 @@ pub async fn skills_contexts_page(
             "last_activity":  c.last_activity_at.map(|t| t.to_rfc3339()),
         }));
     }
+    out
+}
 
-    let contexts_json: Vec<serde_json::Value> = contexts
+fn build_contexts_json(contexts: &[contexts_list::ContextListItem]) -> Vec<serde_json::Value> {
+    contexts
         .iter()
         .map(|c| {
             json!({
@@ -164,15 +88,17 @@ pub async fn skills_contexts_page(
                 "last_activity":    c.last_activity_at.map(|t| t.to_rfc3339()),
             })
         })
-        .collect();
+        .collect()
+}
 
-    let user_summaries_json: Vec<serde_json::Value> = user_summaries
+fn build_user_summaries_json(
+    summaries: &[contexts_list::ContextUserSummary],
+    by_user: &std::collections::HashMap<String, Vec<serde_json::Value>>,
+) -> Vec<serde_json::Value> {
+    summaries
         .iter()
         .map(|s| {
-            let nested = contexts_by_user
-                .get(&s.user_id)
-                .cloned()
-                .unwrap_or_default();
+            let nested = by_user.get(&s.user_id).cloned().unwrap_or_default();
             json!({
                 "user_id":        s.user_id,
                 "display_name":   s.display_name,
@@ -189,9 +115,113 @@ pub async fn skills_contexts_page(
                 "contexts":       nested,
             })
         })
-        .collect();
+        .collect()
+}
 
-    let users_for_filter_json: Vec<serde_json::Value> = users_for_filter
+struct ContextsPageInputs {
+    user_id: Option<String>,
+    model: Option<String>,
+    q: Option<String>,
+    since_label: Option<String>,
+    view: String,
+    filter: contexts_list::ContextListFilter,
+}
+
+fn parse_inputs(params: ContextsListQuery) -> ContextsPageInputs {
+    let trim_opt = |s: Option<String>| -> Option<String> {
+        s.map(|v| v.trim().to_string()).filter(|v| !v.is_empty())
+    };
+    let user_id = trim_opt(params.user_id);
+    let model = trim_opt(params.model);
+    let q = trim_opt(params.q);
+    let since_label = trim_opt(params.since);
+    let since_dt = since_label.as_deref().and_then(since_to_datetime);
+    let view = params
+        .view
+        .as_deref()
+        .map(str::to_lowercase)
+        .filter(|v| v == "users" || v == "contexts")
+        .unwrap_or_else(|| "contexts".to_string());
+    let filter = contexts_list::ContextListFilter {
+        user_id: user_id.clone(),
+        model: model.clone(),
+        free_text: q.clone(),
+        since: since_dt,
+        limit: params.limit.unwrap_or(0),
+    };
+    ContextsPageInputs {
+        user_id,
+        model,
+        q,
+        since_label,
+        view,
+        filter,
+    }
+}
+
+struct ContextsPageData {
+    contexts: Vec<contexts_list::ContextListItem>,
+    user_summaries: Vec<contexts_list::ContextUserSummary>,
+    kpis: contexts_list::ContextListKpis,
+    models: Vec<String>,
+    users_for_filter: Vec<crate::types::UserSummary>,
+}
+
+async fn fetch_page_data(
+    pool: &PgPool,
+    filter: &contexts_list::ContextListFilter,
+) -> ContextsPageData {
+    let contexts = contexts_list::fetch_context_list(pool, filter)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "fetch_context_list failed");
+            Vec::new()
+        });
+    let user_summaries = contexts_list::fetch_context_user_summary(pool, filter)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "fetch_context_user_summary failed");
+            Vec::new()
+        });
+    let kpis = contexts_list::fetch_context_list_kpis(pool, filter)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "fetch_context_list_kpis failed");
+            contexts_list::ContextListKpis {
+                total_contexts: 0,
+                active_users: 0,
+                total_requests: 0,
+                total_messages: 0,
+                total_input_tokens: 0,
+                total_output_tokens: 0,
+                total_cost_microdollars: 0,
+            }
+        });
+    let models = contexts_list::fetch_distinct_models(pool)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "fetch_distinct_models failed");
+            Vec::new()
+        });
+    let users_for_filter = repositories::list_users(pool).await.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "list_users failed in contexts page");
+        Vec::new()
+    });
+    ContextsPageData {
+        contexts,
+        user_summaries,
+        kpis,
+        models,
+        users_for_filter,
+    }
+}
+
+fn build_page_json(inputs: &ContextsPageInputs, data: &ContextsPageData) -> serde_json::Value {
+    let contexts_by_user = group_contexts_by_user(&data.contexts);
+    let contexts_json = build_contexts_json(&data.contexts);
+    let user_summaries_json = build_user_summaries_json(&data.user_summaries, &contexts_by_user);
+    let users_for_filter_json: Vec<serde_json::Value> = data
+        .users_for_filter
         .iter()
         .map(|u| {
             json!({
@@ -200,17 +230,16 @@ pub async fn skills_contexts_page(
             })
         })
         .collect();
-
+    let kpis = data.kpis;
     let total_tokens = kpis.total_input_tokens + kpis.total_output_tokens;
     let total_cost_usd = microdollars_to_usd(kpis.total_cost_microdollars);
-
-    let data = json!({
+    json!({
         "page": "contexts",
         "title": "Conversation Contexts",
         "contexts": contexts_json,
         "user_summaries": user_summaries_json,
         "users_for_filter": users_for_filter_json,
-        "models": models,
+        "models": data.models,
         "kpis": {
             "total_contexts":   kpis.total_contexts,
             "active_users":     kpis.active_users,
@@ -220,21 +249,39 @@ pub async fn skills_contexts_page(
             "total_cost_usd":   total_cost_usd,
         },
         "filter": {
-            "user_id":      user_id,
-            "model":        model,
-            "q":            q,
-            "since":        since_label,
-            "view":         view,
+            "user_id": inputs.user_id,
+            "model":   inputs.model,
+            "q":       inputs.q,
+            "since":   inputs.since_label,
+            "view":    inputs.view,
         },
-        "view_is_users":    view == "users",
-        "view_is_contexts": view == "contexts",
+        "view_is_users":    inputs.view == "users",
+        "view_is_contexts": inputs.view == "contexts",
         "page_stats": [
             {"value": kpis.total_contexts, "label": "Contexts"},
             {"value": kpis.active_users, "label": "Users"},
             {"value": kpis.total_requests, "label": "Requests"},
             {"value": kpis.total_messages, "label": "Messages"},
         ],
-    });
+    })
+}
 
-    super::render_page(&engine, "skills-contexts", &data, &user_ctx, &mkt_ctx)
+pub async fn skills_contexts_page(
+    Extension(user_ctx): Extension<UserContext>,
+    Extension(mkt_ctx): Extension<MarketplaceContext>,
+    Extension(engine): Extension<AdminTemplateEngine>,
+    State(pool): State<Arc<PgPool>>,
+    Query(params): Query<ContextsListQuery>,
+) -> Response {
+    if !user_ctx.is_admin {
+        return (
+            axum::http::StatusCode::FORBIDDEN,
+            axum::response::Html(super::ACCESS_DENIED_HTML),
+        )
+            .into_response();
+    }
+    let inputs = parse_inputs(params);
+    let data = fetch_page_data(&pool, &inputs.filter).await;
+    let payload = build_page_json(&inputs, &data);
+    super::render_page(&engine, "skills-contexts", &payload, &user_ctx, &mkt_ctx)
 }

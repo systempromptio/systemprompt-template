@@ -52,7 +52,7 @@ pub struct ContextUserSummary {
     pub distinct_models: Vec<String>,
 }
 
-fn resolved_limit(requested: i64) -> i64 {
+const fn resolved_limit(requested: i64) -> i64 {
     if requested > 0 && requested <= 500 {
         requested
     } else {
@@ -265,7 +265,7 @@ pub async fn fetch_context_user_summary(
         .collect())
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct ContextListKpis {
     pub total_contexts: i64,
     pub active_users: i64,

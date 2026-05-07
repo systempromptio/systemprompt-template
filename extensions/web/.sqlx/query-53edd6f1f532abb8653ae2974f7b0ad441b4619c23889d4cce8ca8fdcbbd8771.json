@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            id,\n            report_date,\n            report_period,\n            report_data,\n            generated_at\n        FROM admin_traffic_reports\n        ORDER BY report_date DESC, generated_at DESC\n        LIMIT 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "report_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 2,
+        "name": "report_period",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "report_data",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
+        "name": "generated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "53edd6f1f532abb8653ae2974f7b0ad441b4619c23889d4cce8ca8fdcbbd8771"
+}

@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH new_client AS (\n                INSERT INTO oauth_clients (client_id, client_secret_hash, client_name,\n                                           token_endpoint_auth_method, client_uri, logo_uri,\n                                           is_active, created_at, updated_at)\n                VALUES ($1, $2, $3, $4, $5, $6, true, $7, $7)\n            ),\n            new_uris AS (\n                INSERT INTO oauth_client_redirect_uris (client_id, redirect_uri, is_primary)\n                SELECT $1, u.uri, u.ord = 1\n                FROM unnest($8::text[]) WITH ORDINALITY AS u(uri, ord)\n            ),\n            new_grants AS (\n                INSERT INTO oauth_client_grant_types (client_id, grant_type)\n                SELECT $1, unnest($9::text[])\n            ),\n            new_responses AS (\n                INSERT INTO oauth_client_response_types (client_id, response_type)\n                SELECT $1, unnest($10::text[])\n            ),\n            new_scopes AS (\n                INSERT INTO oauth_client_scopes (client_id, scope)\n                SELECT $1, unnest($11::text[])\n            )\n            INSERT INTO oauth_client_contacts (client_id, contact_email)\n            SELECT $1, unnest($12::text[])\n            WHERE cardinality($12::text[]) > 0\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Varchar",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fa2efc8378671d8e2e4b92f345be8159c811c94dd07e640353ded3582d2e1a3f"
+}

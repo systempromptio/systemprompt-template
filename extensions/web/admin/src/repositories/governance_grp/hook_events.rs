@@ -77,7 +77,7 @@ pub async fn recent_hook_events(
             status: None,
         });
     }
-    merged.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+    merged.sort_by_key(|e| std::cmp::Reverse(e.created_at));
     merged.truncate(usize::try_from(limit).unwrap_or(50));
     Ok(merged)
 }

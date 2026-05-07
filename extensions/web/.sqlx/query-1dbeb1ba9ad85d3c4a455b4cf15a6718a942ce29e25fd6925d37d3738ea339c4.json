@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT plugin_id as \"plugin_id!\", COALESCE(AVG(rating)::FLOAT8, 0.0) as \"avg_rating!\", COUNT(*)::BIGINT as \"rating_count!\"\n          FROM plugin_ratings\n          WHERE plugin_id = ANY($1)\n          GROUP BY plugin_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "plugin_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "avg_rating!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 2,
+        "name": "rating_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "1dbeb1ba9ad85d3c4a455b4cf15a6718a942ce29e25fd6925d37d3738ea339c4"
+}

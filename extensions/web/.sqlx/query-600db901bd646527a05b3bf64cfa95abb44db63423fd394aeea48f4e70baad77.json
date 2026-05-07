@@ -1,0 +1,149 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO markdown_content (\n                id, slug, title, description, body, author,\n                published_at, keywords, kind, image, category_id, category, source_id,\n                version_hash, links, after_reading_this, related_playbooks, related_code, related_docs, updated_at\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)\n            ON CONFLICT (slug) DO UPDATE SET\n                title = EXCLUDED.title,\n                description = EXCLUDED.description,\n                body = EXCLUDED.body,\n                author = EXCLUDED.author,\n                published_at = EXCLUDED.published_at,\n                keywords = EXCLUDED.keywords,\n                kind = EXCLUDED.kind,\n                image = EXCLUDED.image,\n                category_id = EXCLUDED.category_id,\n                category = EXCLUDED.category,\n                source_id = EXCLUDED.source_id,\n                version_hash = EXCLUDED.version_hash,\n                links = EXCLUDED.links,\n                after_reading_this = EXCLUDED.after_reading_this,\n                related_playbooks = EXCLUDED.related_playbooks,\n                related_code = EXCLUDED.related_code,\n                related_docs = EXCLUDED.related_docs,\n                updated_at = EXCLUDED.updated_at\n            RETURNING id as \"id: ContentId\", slug, title, description, body, author,\n                      published_at, keywords, kind, image,\n                      category_id as \"category_id: CategoryId\",\n                      source_id as \"source_id: SourceId\",\n                      version_hash,\n                      COALESCE(links, '[]'::jsonb) as \"links!\",\n                      COALESCE(after_reading_this, '[]'::jsonb) as \"after_reading_this!\",\n                      COALESCE(related_playbooks, '[]'::jsonb) as \"related_playbooks!\",\n                      COALESCE(related_code, '[]'::jsonb) as \"related_code!\",\n                      COALESCE(related_docs, '[]'::jsonb) as \"related_docs!\",\n                      updated_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: ContentId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "body",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "author",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "published_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "keywords",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "kind",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "image",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "category_id: CategoryId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "source_id: SourceId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "version_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "links!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 14,
+        "name": "after_reading_this!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 15,
+        "name": "related_playbooks!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 16,
+        "name": "related_code!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 17,
+        "name": "related_docs!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 18,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Jsonb",
+        "Jsonb",
+        "Jsonb",
+        "Jsonb",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "600db901bd646527a05b3bf64cfa95abb44db63423fd394aeea48f4e70baad77"
+}

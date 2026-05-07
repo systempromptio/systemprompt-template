@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO banned_ips (\n                ip_address, reason, expires_at, is_permanent,\n                source_fingerprint, ban_source, last_offense_path,\n                last_user_agent, associated_session_ids\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n            ON CONFLICT (ip_address) DO UPDATE SET\n                reason = $2,\n                expires_at = CASE\n                    WHEN banned_ips.is_permanent THEN banned_ips.expires_at\n                    ELSE COALESCE($3, banned_ips.expires_at)\n                END,\n                ban_count = banned_ips.ban_count + 1,\n                is_permanent = banned_ips.is_permanent OR $4,\n                source_fingerprint = COALESCE($5, banned_ips.source_fingerprint),\n                ban_source = $6,\n                last_offense_path = COALESCE($7, banned_ips.last_offense_path),\n                last_user_agent = COALESCE($8, banned_ips.last_user_agent),\n                associated_session_ids = CASE\n                    WHEN $9::TEXT[] IS NOT NULL\n                    THEN array_cat(COALESCE(banned_ips.associated_session_ids, '{}'::TEXT[]), $9)\n                    ELSE banned_ips.associated_session_ids\n                END\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Timestamptz",
+        "Bool",
+        "Text",
+        "Varchar",
+        "Varchar",
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c01d63deb736040f9d0c9056834e7d40568b0839108b00db3f86d365066563db"
+}

@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    COUNT(DISTINCT agent_name)::bigint as \"total_agents!\",\n                    COUNT(*)::bigint as \"total_tasks!\",\n                    COUNT(*) FILTER (WHERE status = 'completed')::bigint as \"completed_tasks!\",\n                    COUNT(*) FILTER (WHERE status = 'failed')::bigint as \"failed_tasks!\",\n                    COALESCE(AVG(execution_time_ms)::float8, 0) as \"avg_execution_time_ms!\"\n                FROM agent_tasks\n                WHERE started_at >= $1 AND started_at < $2\n                  AND agent_name ILIKE $3\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_agents!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_tasks!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "completed_tasks!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "failed_tasks!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "avg_execution_time_ms!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "205cccba83c5f2c0ea3085c2556d8ec1bcd43953ad33c9fbfb470d6b08677944"
+}
