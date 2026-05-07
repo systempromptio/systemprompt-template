@@ -6,10 +6,8 @@ mod dashboard;
 mod dashboard_enterprise;
 mod dashboard_traffic;
 pub mod gateway;
-pub mod hooks;
 pub mod hooks_export;
 mod jobs;
-mod marketplace;
 mod plugins;
 mod plugins_config;
 mod plugins_requests;
@@ -35,21 +33,13 @@ pub use dashboard::{
 pub use gateway::{
     GatewayConfigView, GatewayRouteView, ReorderRoutesRequest, UpdateGatewaySettingsRequest,
 };
-pub use hooks::{
-    CreateUserHookRequest, HookEventTypeStat, HookSummaryStats, HookTimeSeriesBucket, HooksQuery,
-    UpdateUserHookRequest, UserHook, DEFAULT_HOOK_EVENT_TYPES, MY_HOOKS_EVENT_TYPES,
-};
 pub use hooks_export::{HookEventType, HookHandler, HooksFile, HttpHook, MatcherGroup};
 pub use jobs::JobSummary;
-pub use marketplace::{
-    MarketplacePlugin, MarketplaceQuery, PluginRatingAggregate, UpdateVisibilityRequest,
-    VisibilityRule, VisibilityRuleInput,
-};
 pub use plugins_config::{
-    AgentDetail, AgentInfo, AgentSkillInfo, HookCatalogEntry, HookDetail, HookOverview,
-    McpServerDetail, PlatformPluginConfig, PluginDetail, PluginOnboardingConfig,
-    PluginOnboardingDataSource, PluginOnboardingQuestion, PluginOverview, RequiredSecret,
-    SkillInfo,
+    AgentCatalogEntry, AgentDetail, AgentInfo, AgentSkillInfo, ConfiguredHook, HookCatalogEntry,
+    HookDetail, HookOverview, McpServerDetail, PlatformPluginConfig, PluginDetail,
+    PluginOnboardingConfig, PluginOnboardingDataSource, PluginOnboardingQuestion, PluginOverview,
+    RequiredSecret, SkillCatalogEntry, SkillInfo,
 };
 pub use plugins_requests::{
     CreateAgentRequest, CreateHookRequest, CreateMcpRequest, CreatePluginRequest, EnvVarEntry,

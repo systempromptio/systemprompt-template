@@ -16,6 +16,7 @@ const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
 let entityCatalogue = { gateway_routes: [], mcp_servers: [], plugins: [], agents: [] };
 let knownRoles = ['admin', 'developer', 'analyst', 'viewer'];
+let departmentNames = [];
 
 function readEmbedded(id, fallback) {
     const el = document.getElementById(id);
@@ -251,16 +252,50 @@ async function renderUserMatrix(userId, displayName) {
         })
         .join('');
 
+    const currentDept = u.department || '';
+    const deptOptions = ['<option value="">Unassigned</option>']
+        .concat(
+            departmentNames.map(
+                (n) =>
+                    `<option value="${escapeHtml(n)}"${n === currentDept ? ' selected' : ''}>${escapeHtml(n)}</option>`,
+            ),
+        )
+        .join('');
     matrix.innerHTML = `
       <div class="ac-user-header">
         <h2>${escapeHtml(u.display_name || u.email || u.id)}</h2>
         <div class="ac-user-meta">
-          ${escapeHtml(u.email || '')} · roles: ${(u.roles || []).map(escapeHtml).join(', ') || '<em>none</em>'} · department: ${escapeHtml(u.department || '—')}
+          <span>${escapeHtml(u.email || '')}</span>
+          <span>·</span>
+          <span>roles: ${(u.roles || []).map(escapeHtml).join(', ') || '<em>none</em>'}</span>
+          <span>·</span>
+          <label>department:
+            <select data-action="assign-dept" aria-label="Assign department">
+              ${deptOptions}
+            </select>
+          </label>
         </div>
       </div>
       <p>Per-user overrides are saved to this instance's database only and are intentionally never written back to YAML.</p>
       ${sections}
     `;
+
+    const deptSelect = matrix.querySelector('select[data-action="assign-dept"]');
+    if (deptSelect) {
+        deptSelect.addEventListener('change', async () => {
+            const value = deptSelect.value;
+            try {
+                await api(`/management/users/${encodeURIComponent(userId)}/department`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ department_name: value }),
+                });
+                renderUserMatrix(userId, displayName);
+            } catch (e) {
+                alert('Failed to assign department: ' + e.message);
+                deptSelect.value = currentDept;
+            }
+        });
+    }
 
     matrix.querySelectorAll('.ac-override button').forEach((btn) => {
         btn.addEventListener('click', async () => {
@@ -362,11 +397,32 @@ function bindYamlCopy() {
 
 // ---------- New department modal ---------- //
 
+function showDeptError(msg) {
+    const err = $('#ac-new-dept-error');
+    if (!err) return;
+    if (msg) {
+        err.textContent = msg;
+        err.hidden = false;
+    } else {
+        err.textContent = '';
+        err.hidden = true;
+    }
+}
+
 async function saveNewDepartment() {
     const name = $('#ac-new-dept-name').value.trim();
     const desc = $('#ac-new-dept-desc').value.trim();
+    showDeptError('');
     if (!name) {
-        alert('Name is required');
+        showDeptError('Name is required');
+        return;
+    }
+    if (name.toLowerCase() === 'unassigned') {
+        showDeptError('"Unassigned" is reserved for users without a department.');
+        return;
+    }
+    if (departmentNames.some((n) => n.toLowerCase() === name.toLowerCase())) {
+        showDeptError('A department with that name already exists.');
         return;
     }
     try {
@@ -376,7 +432,7 @@ async function saveNewDepartment() {
         });
         window.location.reload();
     } catch (e) {
-        alert('Failed to create department: ' + e.message);
+        showDeptError(e.message || 'Failed to create department');
     }
 }
 
@@ -385,6 +441,7 @@ async function saveNewDepartment() {
 function init() {
     entityCatalogue = readEmbedded('ac-entity-catalogue', entityCatalogue);
     knownRoles = readEmbedded('ac-known-roles', knownRoles);
+    departmentNames = readEmbedded('ac-departments', departmentNames) || [];
 
     document.addEventListener('click', (ev) => {
         const target = ev.target.closest('[data-action]');
@@ -407,7 +464,12 @@ function init() {
     bindYamlCopy();
 
     $('#ac-show-yaml').addEventListener('click', showYamlModal);
-    $('#ac-new-department').addEventListener('click', () => openModal('#ac-new-dept-modal'));
+    $('#ac-new-department').addEventListener('click', () => {
+        $('#ac-new-dept-name').value = '';
+        $('#ac-new-dept-desc').value = '';
+        showDeptError('');
+        openModal('#ac-new-dept-modal');
+    });
     $('#ac-modal-overlay').addEventListener('click', closeModals);
     $('#ac-yaml-close').addEventListener('click', closeModals);
     $('#ac-new-dept-close').addEventListener('click', closeModals);

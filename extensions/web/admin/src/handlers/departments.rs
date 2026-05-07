@@ -43,12 +43,16 @@ pub async fn create_department_handler(
     if trimmed.is_empty() {
         return (StatusCode::BAD_REQUEST, "name must not be empty").into_response();
     }
+    if trimmed.eq_ignore_ascii_case("unassigned") {
+        return (
+            StatusCode::BAD_REQUEST,
+            "\"Unassigned\" is reserved for users without a department",
+        )
+            .into_response();
+    }
     let normalized = DepartmentInput {
         name: trimmed.to_string(),
         description: input.description,
-        manager_user_id: input
-            .manager_user_id
-            .filter(|s| !s.trim().is_empty()),
     };
     match repositories::create_department(&pool, &normalized).await {
         Ok(dept) => (StatusCode::CREATED, Json(dept)).into_response(),
@@ -75,12 +79,16 @@ pub async fn update_department_handler(
     if trimmed.is_empty() {
         return (StatusCode::BAD_REQUEST, "name must not be empty").into_response();
     }
+    if trimmed.eq_ignore_ascii_case("unassigned") {
+        return (
+            StatusCode::BAD_REQUEST,
+            "\"Unassigned\" is reserved for users without a department",
+        )
+            .into_response();
+    }
     let normalized = DepartmentInput {
         name: trimmed.to_string(),
         description: input.description,
-        manager_user_id: input
-            .manager_user_id
-            .filter(|s| !s.trim().is_empty()),
     };
     match repositories::update_department(&pool, &id, &normalized).await {
         Ok(dept) => Json(dept).into_response(),

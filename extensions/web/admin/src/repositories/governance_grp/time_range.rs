@@ -1,5 +1,6 @@
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
+use sqlx::PgPool;
 
 /// Query parameters parsed from `?from=&to=&preset=` on audit pages.
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -95,4 +96,33 @@ fn parse_rfc3339(s: &str) -> Option<DateTime<Utc>> {
     DateTime::parse_from_rfc3339(s)
         .ok()
         .map(|dt| dt.with_timezone(&Utc))
+}
+
+/// Resolve a fixed [`TimeRangePreset`] (not Custom) to a concrete window
+/// anchored at `now()`. Returns the same window `parse_time_range` would have
+/// produced for the matching preset string.
+pub fn preset_to_range(preset: TimeRangePreset) -> TimeRange {
+    let now = Utc::now();
+    let d = preset.duration().unwrap_or_else(|| Duration::hours(24));
+    TimeRange {
+        from: now - d,
+        to: now,
+        preset,
+    }
+}
+
+/// Cheap probe for the auto-widen path: just count rows in `ai_requests`
+/// inside the candidate window. Used to decide whether the default 24h
+/// window has data, or whether to fall back to a wider preset.
+pub async fn count_requests_in_range(pool: &PgPool, range: TimeRange) -> Result<i64, sqlx::Error> {
+    let row = sqlx::query!(
+        r#"SELECT COUNT(*)::bigint AS "count!"
+           FROM ai_requests
+           WHERE created_at >= $1 AND created_at < $2"#,
+        range.from,
+        range.to,
+    )
+    .fetch_one(pool)
+    .await?;
+    Ok(row.count)
 }

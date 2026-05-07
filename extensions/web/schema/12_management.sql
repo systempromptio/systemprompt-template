@@ -1,18 +1,16 @@
 -- Consolidated schema: Management section (departments + desktop app status)
 --
--- Departments become a first-class CRUD entity backing the existing free-text
--- users.department field. Skill assignment via access_control_rules is enabled
--- by widening the entity_type check. Desktop app linking is captured per device.
+-- Departments back the `users.department` field with a first-class table.
+-- Skill assignment via access_control_rules is enabled by widening the
+-- entity_type check. Desktop app linking is captured per device.
 
 CREATE TABLE IF NOT EXISTS departments (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
     name TEXT NOT NULL UNIQUE,
     description TEXT NOT NULL DEFAULT '',
-    manager_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_departments_manager ON departments(manager_user_id);
 
 -- Backfill from any existing free-text departments on users.
 INSERT INTO departments (name)

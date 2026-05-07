@@ -17,20 +17,76 @@
     </div>
 
     <div class="card mb-6">
-        <h3>Profile</h3>
-        <table class="data-table"><tbody>
-            <tr><td><strong>User ID</strong></td><td>{{user.user_id}}</td></tr>
-            {{#if user.display_name}}<tr><td><strong>Display Name</strong></td><td>{{user.display_name}}</td></tr>{{/if}}
-            {{#if user.email}}<tr><td><strong>Email</strong></td><td>{{user.email}}</td></tr>{{/if}}
-            {{#if user.roles}}<tr><td><strong>Roles</strong></td><td>{{#each user.roles}}<span class="badge badge-blue">{{this}}</span> {{/each}}</td></tr>{{/if}}
-            <tr><td><strong>Status</strong></td><td>{{#if user.is_active}}<span class="badge badge-green">Active</span>{{else}}<span class="badge badge-gray">Inactive</span>{{/if}}</td></tr>
-            <tr><td><strong>Member Since</strong></td><td>{{formatDate user.created_at}}</td></tr>
-        </tbody></table>
+        <div class="card-header">
+            <h3>Profile</h3>
+            <span class="text-muted">Edit display name, email, roles, department, and status.</span>
+        </div>
+        <form id="user-edit-form" class="user-edit-form" data-user-id="{{user.user_id}}" novalidate>
+            <div class="form-grid">
+                <label class="form-field">
+                    <span class="form-label">User ID</span>
+                    <input type="text" value="{{user.user_id}}" disabled>
+                </label>
+                <label class="form-field">
+                    <span class="form-label">Display Name</span>
+                    <input type="text" name="display_name" value="{{default user.display_name ""}}">
+                </label>
+                <label class="form-field">
+                    <span class="form-label">Email</span>
+                    <input type="email" name="email" value="{{default user.email ""}}">
+                </label>
+                <label class="form-field">
+                    <span class="form-label">Department</span>
+                    <select name="department">
+                        <option value=""{{#unless user_department}} selected{{/unless}}>Unassigned</option>
+                        {{#each departments}}
+                        <option value="{{this}}"{{#if (eq this ../user_department)}} selected{{/if}}>{{this}}</option>
+                        {{/each}}
+                    </select>
+                </label>
+                <label class="form-field">
+                    <span class="form-label">Roles</span>
+                    <input type="text" name="roles" value="{{#each user.roles}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}" placeholder="comma-separated">
+                </label>
+                <label class="form-field form-field--inline">
+                    <input type="checkbox" name="is_active"{{#if user.is_active}} checked{{/if}}>
+                    <span class="form-label">Active</span>
+                </label>
+                <div class="form-field form-field--readonly">
+                    <span class="form-label">Member Since</span>
+                    <div>{{formatDate user.created_at}}</div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save changes</button>
+                <button type="reset" class="btn btn-outline">Reset</button>
+                <span class="form-status" id="user-edit-status" aria-live="polite"></span>
+            </div>
+        </form>
     </div>
 
-    <div class="card mb-6 text-center">
-        <a href="/admin/my/activity" class="btn btn-primary">View Full Activity Dashboard</a>
+    {{#if runtime}}
+    <div class="card mb-6">
+        <h3>Runtime</h3>
+        <div class="dashboard-grid stats-grid-4col">
+            {{> components/stat-card label="Connected agents" value=(concat runtime.connected_agents "/" runtime.total_agents)}}
+            {{> components/stat-card label="Tokens in" value=(formatNumber runtime.tokens_in)}}
+            {{> components/stat-card label="Tokens out" value=(formatNumber runtime.tokens_out)}}
+            {{#if runtime.last_heartbeat_at}}
+            {{> components/stat-card label="Last heartbeat" value=(relativeTime runtime.last_heartbeat_at)}}
+            {{else}}
+            {{> components/stat-card label="Last heartbeat" value="Never"}}
+            {{/if}}
+        </div>
+        {{#if runtime.last_bridge_version}}
+        <p class="text-muted runtime-meta">
+            Most recent bridge: <code class="code-inline">{{runtime.last_bridge_version}}</code>
+            on <code class="code-inline">{{runtime.last_os}}</code>
+            {{#if runtime.last_hostname}}({{runtime.last_hostname}}){{/if}}
+        </p>
+        {{/if}}
     </div>
+    {{/if}}
 
     {{#if user.activity_summary}}
     <div class="card mb-6">
@@ -67,20 +123,36 @@
         {{/if}}
     </div>
 
-    {{#if has_effective_permissions}}
-    <div class="card">
-        <h3>Effective Permissions</h3>
-        <p class="text-muted">Computed live by the authz resolver against this user's roles and department. Click any decision to jump to the matrix cell that controls it.</p>
+    <div class="card mb-6">
+        <h3>Department &amp; assignments</h3>
+        <div class="dashboard-grid stats-grid-4col">
+            {{#if user_department}}
+            {{> components/stat-card label="Department" value=user_department}}
+            {{else}}
+            {{> components/stat-card label="Department" value="Unassigned"}}
+            {{/if}}
+            {{> components/stat-card label="Effective skills" value=(default user_assignments.skills_count 0)}}
+            {{> components/stat-card label="Marketplaces" value=(default user_assignments.marketplaces_count 0)}}
+            {{> components/stat-card label="Active devices" value=(default user_devices_count 0)}}
+        </div>
+        <p class="text-muted runtime-meta">
+            Assignments are stored in <code class="code-inline">access_control_rules</code>. Manage in the
+            <a href="/admin/access-control?user_id={{user.user_id}}">access matrix</a>.
+        </p>
+    </div>
 
-        <h4>Gateway Routes</h4>
+    {{#if has_effective_permissions}}
+    <div class="card mb-6">
+        <h3>Effective permissions — Gateway routes</h3>
+        <p class="text-muted">Computed live by the authz resolver against this user's roles and department.</p>
         {{#if effective_permissions.gateway_routes}}
-        <table class="table table-compact">
-            <thead><tr><th>Route</th><th>Decision</th><th>Decided by</th></tr></thead>
+        <table class="data-table">
+            <thead><tr><th>Route</th><th class="col-status">Decision</th><th>Decided by</th></tr></thead>
             <tbody>
             {{#each effective_permissions.gateway_routes}}
               <tr>
-                <td><code>{{this.entity_id}}</code></td>
-                <td>
+                <td><code class="code-inline">{{this.entity_id}}</code></td>
+                <td class="col-status">
                   {{#if (eq this.decision "allow")}}
                     <span class="badge badge-green">ALLOW</span>
                   {{else}}
@@ -95,16 +167,18 @@
         {{else}}
         {{> components/empty-state message="No gateway routes configured."}}
         {{/if}}
+    </div>
 
-        <h4>MCP Servers</h4>
+    <div class="card mb-6">
+        <h3>Effective permissions — MCP servers</h3>
         {{#if effective_permissions.mcp_servers}}
-        <table class="table table-compact">
-            <thead><tr><th>Server</th><th>Decision</th><th>Decided by</th></tr></thead>
+        <table class="data-table">
+            <thead><tr><th>Server</th><th class="col-status">Decision</th><th>Decided by</th></tr></thead>
             <tbody>
             {{#each effective_permissions.mcp_servers}}
               <tr>
-                <td><code>{{this.entity_id}}</code></td>
-                <td>
+                <td><code class="code-inline">{{this.entity_id}}</code></td>
+                <td class="col-status">
                   {{#if (eq this.decision "allow")}}
                     <span class="badge badge-green">ALLOW</span>
                   {{else}}
@@ -122,49 +196,19 @@
     </div>
     {{/if}}
 
-    <div class="card">
-        <h3>Department &amp; assignments</h3>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
-            <div>
-                <span class="kpi-label">Department</span>
-                <div style="margin-top:.25rem;">
-                    {{#if user_department}}
-                        <a href="/admin/access-control?department={{user_department}}" class="badge badge-blue">{{user_department}}</a>
-                    {{else}}<span class="text-tertiary">Unassigned</span>{{/if}}
-                </div>
-            </div>
-            <div>
-                <span class="kpi-label">Effective skills</span>
-                <div style="margin-top:.25rem;font-size:1.25rem;">{{default user_assignments.skills_count 0}}</div>
-            </div>
-            <div>
-                <span class="kpi-label">Marketplaces</span>
-                <div style="margin-top:.25rem;font-size:1.25rem;">{{default user_assignments.marketplaces_count 0}}</div>
-            </div>
-            <div>
-                <span class="kpi-label">Active devices</span>
-                <div style="margin-top:.25rem;font-size:1.25rem;">{{default user_devices_count 0}}</div>
-            </div>
-        </div>
-        <p class="text-muted" style="font-size:.875rem;margin-top:.75rem;">
-            Assignments are stored in <code>access_control_rules</code>. Manage in the
-            <a href="/admin/access-control?user_id={{user.user_id}}">access matrix</a>.
-        </p>
-    </div>
-
-    <div class="card">
+    <div class="card mb-6">
         <h3>Devices</h3>
         {{#if user_devices}}
-        <table class="table table-compact">
-            <thead><tr><th>Name</th><th>Prefix</th><th>Platform</th><th>Last seen</th><th></th></tr></thead>
+        <table class="data-table">
+            <thead><tr><th>Name</th><th>Prefix</th><th>Platform</th><th class="col-date">Last seen</th><th class="col-status">Status</th></tr></thead>
             <tbody>
             {{#each user_devices}}
             <tr>
-                <td><code>{{name}}</code></td>
+                <td><code class="code-inline">{{name}}</code></td>
                 <td><code class="code-inline">{{key_prefix}}</code></td>
-                <td>{{#if platform}}<span class="badge">{{platform}}{{#if app_version}} {{app_version}}{{/if}}</span>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
-                <td>{{#if last_seen_at}}<span title="{{formatDate last_seen_at}}">{{relativeTime last_seen_at}}</span>{{else}}<span class="text-tertiary">Never</span>{{/if}}</td>
-                <td>{{#if revoked}}<span class="badge badge-gray">Revoked</span>{{else}}<span class="badge badge-green">Active</span>{{/if}}</td>
+                <td>{{#if platform}}<span class="badge badge-blue">{{platform}}{{#if app_version}} {{app_version}}{{/if}}</span>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+                <td class="col-date">{{#if last_seen_at}}<span title="{{formatDate last_seen_at}}">{{relativeTime last_seen_at}}</span>{{else}}<span class="text-tertiary">Never</span>{{/if}}</td>
+                <td class="col-status">{{#if revoked}}<span class="badge badge-gray">Revoked</span>{{else}}<span class="badge badge-green">Active</span>{{/if}}</td>
             </tr>
             {{/each}}
             </tbody>
@@ -172,7 +216,7 @@
         {{else}}
         {{> components/empty-state message="No devices linked."}}
         {{/if}}
-        <div style="margin-top:.75rem;display:flex;gap:.5rem;">
+        <div class="toolbar toolbar--compact">
             <a class="btn btn-sm btn-primary" href="/admin/devices">Issue PAT</a>
             <a class="btn btn-sm btn-outline" href="/cowork-auth/device-link?prefill_user={{user.user_id}}">Link desktop app</a>
         </div>
@@ -202,5 +246,6 @@
     {{/if}}
     {{/inline}}
     {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-user-detail.js"></script>
     {{/inline}}
 {{/layout}}

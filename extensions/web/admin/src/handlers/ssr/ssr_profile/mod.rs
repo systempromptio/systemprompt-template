@@ -42,10 +42,6 @@ pub async fn profile_page(
         profile_reports::fetch_profile_report(pool.as_ref(), user_id.as_str()),
     );
 
-    let hooks_count = crate::repositories::user_hooks::list_user_hooks(&pool, &user_ctx.user_id)
-        .await
-        .map_or(0, |h| h.len());
-
     let gamification_profile: Option<crate::types::UserGamificationProfile> = None;
     let data = build_profile_page_data(&ProfilePageInput {
         user_metrics: &user_metrics,
@@ -55,7 +51,6 @@ pub async fn profile_page(
         stored_report: stored_report.as_ref(),
         gamification_profile: gamification_profile.as_ref(),
         mkt_ctx: &mkt_ctx,
-        hooks_count,
     });
 
     super::render_page(&engine, "profile", &data, &user_ctx, &mkt_ctx)
@@ -69,7 +64,6 @@ struct ProfilePageInput<'a> {
     stored_report: Option<&'a profile_reports::ProfileReportRow>,
     gamification_profile: Option<&'a crate::types::UserGamificationProfile>,
     mkt_ctx: &'a MarketplaceContext,
-    hooks_count: usize,
 }
 
 fn build_profile_page_data(input: &ProfilePageInput<'_>) -> serde_json::Value {
@@ -78,7 +72,6 @@ fn build_profile_page_data(input: &ProfilePageInput<'_>) -> serde_json::Value {
         "skills": input.mkt_ctx.total_skills,
         "agents": input.mkt_ctx.agents_count,
         "mcp_servers": input.mkt_ctx.mcp_count,
-        "hooks": input.hooks_count,
     });
     let archetype_result = archetype::classify_archetype(input.user_metrics, input.global_averages);
     let (strengths, weaknesses) =

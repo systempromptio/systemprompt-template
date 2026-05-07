@@ -24,11 +24,19 @@ pub fn list_mcp_servers(services_path: &Path) -> Result<Vec<McpServerDetail>, Ma
             Ok(c) => c,
             Err(_) => continue,
         };
+        let rel_source = path
+            .strip_prefix(services_path)
+            .ok()
+            .and_then(|p| p.to_str())
+            .map_or_else(
+                || format!("services/mcp/{}", path.file_name().and_then(|n| n.to_str()).unwrap_or("")),
+                |s| format!("services/{s}"),
+            );
         if let Some(mcp_map) = config.get("mcp_servers").and_then(|m| m.as_mapping()) {
             for (key, val) in mcp_map {
                 if let Some(server_id) = key.as_str() {
                     if let Ok(id) = McpServerId::try_new(server_id) {
-                        servers.push(parse_server_detail(id, val));
+                        servers.push(parse_server_detail(id, val, rel_source.clone()));
                     }
                 }
             }
@@ -38,7 +46,11 @@ pub fn list_mcp_servers(services_path: &Path) -> Result<Vec<McpServerDetail>, Ma
     Ok(servers)
 }
 
-fn parse_server_detail(server_id: McpServerId, val: &serde_yaml::Value) -> McpServerDetail {
+fn parse_server_detail(
+    server_id: McpServerId,
+    val: &serde_yaml::Value,
+    source_path: String,
+) -> McpServerDetail {
     let binary = val
         .get("binary")
         .and_then(|v| v.as_str())
@@ -104,6 +116,7 @@ fn parse_server_detail(server_id: McpServerId, val: &serde_yaml::Value) -> McpSe
         oauth_scopes,
         oauth_audience,
         removable: true,
+        source_path,
     }
 }
 

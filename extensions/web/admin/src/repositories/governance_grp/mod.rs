@@ -8,6 +8,7 @@ pub mod gateway;
 pub mod acl_yaml_loader;
 pub mod gateway_acl;
 pub mod governance;
+pub mod hook_events;
 pub mod identity;
 pub mod jobs;
 pub mod paged;

@@ -99,8 +99,8 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
             put(handlers::update_user_handler).delete(handlers::delete_user_handler),
         )
         .route(
-            "/marketplace-plugins/{plugin_id}/visibility",
-            put(handlers::update_visibility_handler),
+            "/users/{user_id}/share-token",
+            post(handlers::share::issue_share_token_handler),
         )
         .route(
             "/demo-register",
@@ -143,6 +143,10 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
             "/management/users/{user_id}/department",
             put(handlers::departments::assign_user_to_department_handler),
         )
+        .route(
+            "/management/devices",
+            post(handlers::devices::enroll_device),
+        )
         .with_state(Arc::clone(write_pool))
 }
 
@@ -151,18 +155,6 @@ pub fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
         .route("/dashboard", get(handlers::dashboard_handler))
         .route("/plugins", get(handlers::list_plugins_handler))
         .route(
-            "/plugins/all-skills",
-            get(handlers::list_all_skills_handler),
-        )
-        .route(
-            "/plugins/{plugin_id}",
-            get(handlers::get_plugin_detail_handler),
-        )
-        .route(
-            "/plugins/{plugin_id}/skills",
-            get(handlers::get_plugin_skills_handler),
-        )
-        .route(
             "/plugins/{plugin_id}/env",
             get(handlers::list_plugin_env_handler),
         )
@@ -170,9 +162,5 @@ pub fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
         .route("/skills/{skill_id}", get(handlers::get_skill_handler))
         .route("/agents", get(handlers::list_agents_handler))
         .route("/agents/{agent_id}", get(handlers::get_agent_handler))
-        .route(
-            "/marketplace-plugins",
-            get(handlers::list_marketplace_handler),
-        )
         .with_state(Arc::clone(read_pool))
 }

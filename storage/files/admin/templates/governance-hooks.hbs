@@ -3,49 +3,81 @@
     {{#*inline "content"}}
 
     {{> components/page-header title=hero_title subtitle=hero_subtitle}}
-    <p class="text-secondary">Read-only view. Use <a href="/admin/hooks">/admin/hooks</a> to edit.</p>
 
-    <section class="stat-card-grid">
-        {{> components/stat-card label="Total Hooks" value=total}}
-        {{> components/stat-card label="System" value=system}}
-        {{> components/stat-card label="Enabled" value=enabled variant="success"}}
+    <section class="stats-grid-3col">
+        {{> components/stat-card label="Configured" value=configured}}
+        {{> components/stat-card label="PreToolUse fired (24h)" value=pretool_fired}}
+        {{> components/stat-card label="PostToolUse fired (24h)" value=posttool_fired variant="success"}}
     </section>
 
-    {{#if has_hooks}}
+    <h2 class="section-title">Configured hooks</h2>
+    <p class="text-secondary">Declared under <code class="code-inline">plugins.&lt;id&gt;.hooks</code> in <code class="code-inline">services/plugins/*/config.yaml</code>.</p>
+
+    {{#if has_configured}}
     {{#> components/data-table}}
         <thead><tr>
-            <th class="col-multiline">Hook</th><th>Plugin</th><th class="col-status">Event</th><th>Matcher</th><th>Async</th><th class="col-status">Enabled</th><th class="col-status">Valid</th>
+            <th>Plugin</th>
+            <th class="col-status">Event</th>
+            <th>Matcher</th>
+            <th>Command</th>
+            <th class="col-status">Async</th>
+            <th class="col-status">Timeout</th>
         </tr></thead>
         <tbody>
-        {{#each hooks}}
+        {{#each configured_hooks}}
         <tr>
-            <td class="col-multiline">
-                {{> components/table-cell-stacked primary=id secondary=name}}
-            </td>
             <td>{{plugin_id}}</td>
             <td class="col-status"><span class="badge badge-info">{{event}}</span></td>
             <td><code class="code-inline">{{matcher}}</code></td>
-            <td>{{#if is_async}}yes{{else}}no{{/if}}</td>
+            <td><code class="code-inline">{{command}}</code></td>
+            <td class="col-status">{{#if is_async}}yes{{else}}no{{/if}}</td>
+            <td class="col-status">{{#if timeout_ms}}{{timeout_ms}}ms{{else}}—{{/if}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    {{> components/empty-state message="No hooks declared in any plugin YAML."}}
+    {{/if}}
+
+    <h2 class="section-title">Recent activity</h2>
+    <p class="text-secondary">Snapshot of the last 50 hook events ingested by <code class="code-inline">/api/public/hooks/govern</code> and <code class="code-inline">/api/public/hooks/track</code>.</p>
+
+    {{#if has_recent}}
+    {{#> components/data-table}}
+        <thead><tr>
+            <th>Time</th>
+            <th class="col-status">Kind</th>
+            <th>Plugin</th>
+            <th>Tool</th>
+            <th>User</th>
+            <th class="col-status">Status</th>
+        </tr></thead>
+        <tbody>
+        {{#each recent_events}}
+        <tr>
+            <td><code class="code-inline">{{created_at}}</code></td>
+            <td class="col-status"><span class="badge badge-info">{{kind}}</span></td>
+            <td>{{plugin_id}}</td>
+            <td>{{tool_name}}</td>
+            <td>{{user_id}}</td>
             <td class="col-status">
-                {{#if enabled}}
-                    <span class="mcp-badge mcp-badge-success">ENABLED</span>
-                {{else}}
-                    <span class="mcp-badge">DISABLED</span>
-                {{/if}}
-            </td>
-            <td class="col-status">
-                {{#if valid}}
-                    <span class="mcp-badge mcp-badge-success">VALID</span>
-                {{else}}
-                    <span class="mcp-badge mcp-badge-danger">INVALID</span>
-                {{/if}}
+                {{#if status}}
+                    {{#if (eq status "allow")}}
+                        <span class="mcp-badge mcp-badge-success">ALLOW</span>
+                    {{else}}{{#if (eq status "deny")}}
+                        <span class="mcp-badge mcp-badge-danger">DENY</span>
+                    {{else}}
+                        <span class="mcp-badge">{{status}}</span>
+                    {{/if}}{{/if}}
+                {{else}}—{{/if}}
             </td>
         </tr>
         {{/each}}
         </tbody>
     {{/components/data-table}}
     {{else}}
-    {{> components/empty-state message="No hooks configured."}}
+    {{> components/empty-state message="No hook events ingested yet."}}
     {{/if}}
 
     {{/inline}}

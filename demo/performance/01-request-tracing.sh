@@ -379,7 +379,7 @@ echo "  │ p50 / p90 / p99  │ ${TRACK_P50} / ${TRACK_P90} / ${TRACK_P99}ms"
 echo "  └──────────────────┴──────────────┘"
 echo ""
 
-echo "  5c. MCP tool call (list_plugins)"
+echo "  5c. MCP tool call (systemprompt: core skills list)"
 echo "      OAuth authentication → tool execution → structured response"
 echo ""
 
@@ -387,7 +387,7 @@ ms_now() { python3 -c "import time; print(int(time.time()*1000))"; }
 MCP_TIMES=""
 for i in $(seq 1 5); do
   START_MS=$(ms_now)
-  "$CLI" plugins mcp call skill-manager list_plugins '{}' --profile "$PROFILE" 2>/dev/null | head -1 > /dev/null
+  "$CLI" plugins mcp call systemprompt systemprompt --args '{"command":"core skills list"}' --profile "$PROFILE" 2>/dev/null | head -1 > /dev/null
   END_MS=$(ms_now)
   MS=$(( END_MS - START_MS ))
   MCP_TIMES="$MCP_TIMES $MS"

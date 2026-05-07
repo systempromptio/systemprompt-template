@@ -1,4 +1,4 @@
-//! `/admin/analytics/requests` — Inference Requests gateway log.
+//! `/admin/entities/requests` — Inference Requests gateway log.
 //!
 //! Reads the `/v1/messages` gateway spine from `ai_requests` (NOT
 //! `plugin_usage_events`). KPI strip + latency histogram + cost-over-time +
@@ -22,15 +22,18 @@ use crate::repositories::analytics_grp::request_stats::{
     RequestStats,
 };
 use crate::repositories::analytics_grp::requests::{
-    fetch_requests_paged, RequestFilter, RequestRow, RequestSortColumn, RequestSortSpec, SortDir,
+    fetch_request_filter_options, fetch_requests_paged, RequestFilter, RequestFilterOptions,
+    RequestRow, RequestSortColumn, RequestSortSpec, SortDir,
 };
-use crate::repositories::governance_grp::time_range::{parse_time_range, TimeRangeQuery};
+use crate::repositories::governance_grp::time_range::{
+    count_requests_in_range, parse_time_range, preset_to_range, TimeRangePreset, TimeRangeQuery,
+};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
 use super::ACCESS_DENIED_HTML;
 
-const BASE_URL: &str = "/admin/analytics/requests";
+const BASE_URL: &str = "/admin/entities/requests";
 const PAGE_SIZE: i64 = 50;
 
 #[derive(Debug, Deserialize)]
@@ -60,7 +63,9 @@ pub async fn analytics_requests_page(
         return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
     }
 
-    let range = parse_time_range(&TimeRangeQuery {
+    let user_picked_range = query.preset.is_some()
+        || (query.from.is_some() && query.to.is_some());
+    let initial_range = parse_time_range(&TimeRangeQuery {
         from: query.from.clone(),
         to: query.to.clone(),
         preset: query.preset.clone(),
@@ -70,11 +75,36 @@ pub async fn analytics_requests_page(
     let page = query.page.unwrap_or(0).max(0);
     let offset = page * PAGE_SIZE;
 
-    let (paged, stats_res, hist_res, cost_res) = tokio::join!(
+    // Sensible default: when the user did not pick a window and the default
+    // 24h is empty, widen progressively (7d -> 30d) so the page actually shows
+    // data. If the user explicitly chose a preset, respect it.
+    let (range, auto_widened): (_, Option<&'static str>) = if user_picked_range {
+        (initial_range, None)
+    } else {
+        let mut chosen = initial_range;
+        let mut widened: Option<&'static str> = None;
+        for (label, preset) in [
+            ("24h", TimeRangePreset::Hours24),
+            ("7d", TimeRangePreset::Days7),
+            ("30d", TimeRangePreset::Days30),
+        ] {
+            let candidate = preset_to_range(preset);
+            let count = count_requests_in_range(&pool, candidate).await.unwrap_or(0);
+            if count > 0 {
+                chosen = candidate;
+                widened = if label == "24h" { None } else { Some(label) };
+                break;
+            }
+        }
+        (chosen, widened)
+    };
+
+    let (paged, stats_res, hist_res, cost_res, options_res) = tokio::join!(
         fetch_requests_paged(&pool, &filter, range, sort, PAGE_SIZE, offset),
         fetch_request_stats(&pool, range),
         fetch_latency_histogram(&pool, range),
         fetch_cost_over_time(&pool, range),
+        fetch_request_filter_options(&pool, range),
     );
 
     let (rows, total_count) = paged.unwrap_or_else(|e| {
@@ -93,6 +123,10 @@ pub async fn analytics_requests_page(
         tracing::warn!(error = %e, "fetch_cost_over_time failed");
         Vec::new()
     });
+    let options = options_res.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "fetch_request_filter_options failed");
+        RequestFilterOptions::default()
+    });
 
     let total_pages = if total_count == 0 {
         1
@@ -100,11 +134,16 @@ pub async fn analytics_requests_page(
         (total_count + PAGE_SIZE - 1) / PAGE_SIZE
     };
     let pagination = build_pagination(&query, page, total_pages);
+    let search_query = query.q.clone().unwrap_or_default();
+    let has_active_filters = filter.model.is_some()
+        || filter.provider.is_some()
+        || filter.status.is_some()
+        || !search_query.is_empty();
 
     let data = json!({
-        "page": "analytics-requests",
+        "page": "requests",
         "title": "Inference Requests",
-        "time_range": time_range_context(&query, &range),
+        "time_range": time_range_context(&query, &range, auto_widened),
         "stats": stats_to_json(&stats),
         "histogram": hist.iter().map(latency_bucket_to_json).collect::<Vec<_>>(),
         "histogram_max": hist.iter().map(|b| b.count).max().unwrap_or(0),
@@ -114,8 +153,11 @@ pub async fn analytics_requests_page(
         "has_rows": !rows.is_empty(),
         "total_count": total_count,
         "pagination": pagination,
-        "search_query": query.q.clone().unwrap_or_default(),
-        "csv_url": csv_url(&query),
+        "search_query": search_query,
+        "filters": filters_to_json(&filter, &options),
+        "has_active_filters": has_active_filters,
+        "clear_url": clear_url(&query),
+        "base_url": BASE_URL,
     });
 
     super::render_page(&engine, "analytics-requests", &data, &user_ctx, &mkt_ctx)
@@ -236,12 +278,13 @@ fn format_cost(microdollars: Option<i64>) -> String {
 fn time_range_context(
     query: &RequestsQuery,
     range: &crate::repositories::governance_grp::time_range::TimeRange,
+    auto_widened: Option<&'static str>,
 ) -> serde_json::Value {
     let preset = query.preset.clone().unwrap_or_else(|| {
         if query.from.is_some() && query.to.is_some() {
             "custom".to_string()
         } else {
-            "24h".to_string()
+            auto_widened.unwrap_or("24h").to_string()
         }
     });
     let qs = preserved_query_string(query, &["preset", "from", "to"]);
@@ -256,7 +299,40 @@ fn time_range_context(
         "to": range.to.to_rfc3339(),
         "base_url": BASE_URL,
         "query": q_suffix,
+        "auto_widened": auto_widened,
     })
+}
+
+fn filters_to_json(filter: &RequestFilter, options: &RequestFilterOptions) -> serde_json::Value {
+    json!({
+        "model": filter.model,
+        "provider": filter.provider,
+        "status": filter.status,
+        "options": {
+            "models": options.models,
+            "providers": options.providers,
+            "statuses": options.statuses,
+        },
+    })
+}
+
+fn clear_url(query: &RequestsQuery) -> String {
+    // Preserve only the time-range params. Drop filters, search, sort, page.
+    let mut parts: Vec<String> = Vec::new();
+    if let Some(p) = query.preset.as_deref().filter(|s| !s.is_empty()) {
+        parts.push(format!("preset={}", urlencode(p)));
+    }
+    if let Some(f) = query.from.as_deref().filter(|s| !s.is_empty()) {
+        parts.push(format!("from={}", urlencode(f)));
+    }
+    if let Some(t) = query.to.as_deref().filter(|s| !s.is_empty()) {
+        parts.push(format!("to={}", urlencode(t)));
+    }
+    if parts.is_empty() {
+        BASE_URL.to_string()
+    } else {
+        format!("{BASE_URL}?{}", parts.join("&"))
+    }
 }
 
 fn preserved_query_string(query: &RequestsQuery, drop: &[&str]) -> String {
@@ -310,11 +386,3 @@ fn build_pagination(query: &RequestsQuery, page: i64, total_pages: i64) -> serde
     })
 }
 
-fn csv_url(query: &RequestsQuery) -> String {
-    let qs = preserved_query_string(query, &["page", "sort", "dir"]);
-    if qs.is_empty() {
-        "/admin/api/analytics/requests.csv".to_string()
-    } else {
-        format!("/admin/api/analytics/requests.csv?{qs}")
-    }
-}

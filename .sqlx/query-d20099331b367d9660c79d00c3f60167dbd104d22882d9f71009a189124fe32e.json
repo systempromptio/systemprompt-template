@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO bridge_sessions (\n                session_id, user_id, tenant_id, bridge_version, os, hostname,\n                last_heartbeat_at, last_activity_at,\n                forwarded_total, tokens_in_total, tokens_out_total\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7, $8, $9, $10)\n            ON CONFLICT (session_id) DO UPDATE SET\n                last_heartbeat_at = NOW(),\n                last_activity_at = COALESCE(EXCLUDED.last_activity_at, bridge_sessions.last_activity_at),\n                bridge_version = EXCLUDED.bridge_version,\n                os = EXCLUDED.os,\n                hostname = EXCLUDED.hostname,\n                tenant_id = EXCLUDED.tenant_id,\n                forwarded_total = EXCLUDED.forwarded_total,\n                tokens_in_total = EXCLUDED.tokens_in_total,\n                tokens_out_total = EXCLUDED.tokens_out_total\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d20099331b367d9660c79d00c3f60167dbd104d22882d9f71009a189124fe32e"
+}

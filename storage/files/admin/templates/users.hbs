@@ -14,7 +14,19 @@
     <section aria-label="Users list" data-page="users">
     {{#if users}}
     {{#> components/data-table}}
-        <thead><tr><th>User</th><th>Department</th><th class="numeric col-numeric" title="Effective skills (direct + department)">Skills</th><th class="numeric col-numeric" title="Marketplaces (direct + department)">Marketplaces</th><th class="numeric col-numeric" title="Active PATs / enrolled devices">Devices</th><th>Rank</th><th class="numeric col-numeric">Sessions</th><th class="col-status">Status</th><th class="col-date">Last Active</th><th class="col-actions"></th></tr></thead>
+        <thead><tr>
+            <th>User</th>
+            <th>Department</th>
+            <th class="numeric col-numeric" title="Marketplaces (direct + department)">Marketplaces</th>
+            <th class="numeric col-numeric" title="Effective skills (direct + department)">Skills</th>
+            <th class="col-status" title="Connected bridge sessions / total enabled agents">Agents</th>
+            <th class="col-status" title="Active PATs / enrolled devices, coloured by last-seen">Devices</th>
+            <th class="numeric col-numeric" title="Lifetime tokens consumed via bridge sessions">Tokens</th>
+            <th class="numeric col-numeric">Sessions</th>
+            <th class="col-status">Status</th>
+            <th class="col-date">Last Active</th>
+            <th class="col-actions"></th>
+        </tr></thead>
         <tbody>
         {{#each users}}
         <tr data-user-name="{{toLowerCase (default display_name user_id)}}" data-user-email="{{toLowerCase (default email "")}}">
@@ -24,11 +36,28 @@
                     <span>{{default display_name user_id}}</span>
                 </a>
             </td>
-            <td>{{#if department}}<a href="/admin/access-control?department={{department}}" class="badge badge-blue">{{department}}</a>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
-            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{assigned_skills_count}}</td>
+            <td>{{#if department}}<a href="/admin/access-control?department={{department}}" class="badge badge-blue">{{department}}</a>{{else}}<span class="badge badge-gray">Unassigned</span>{{/if}}</td>
             <td class="numeric" style="font-variant-numeric: tabular-nums;">{{assigned_marketplaces_count}}</td>
-            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{#if devices_count}}<span class="badge badge-green" title="{{devices_count}} active device{{#unless (eq devices_count 1)}}s{{/unless}}">{{devices_count}}</span>{{else}}<span class="text-tertiary">0</span>{{/if}}</td>
-            <td>{{default rank_name "-"}}</td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{assigned_skills_count}}</td>
+            <td class="col-status">
+                {{#if total_agents}}
+                    <span class="agent-pill {{#if connected_agents}}agent-pill--live{{else}}agent-pill--idle{{/if}}" title="{{connected_agents}} of {{total_agents}} agent{{#unless (eq total_agents 1)}}s{{/unless}} connected">
+                        <span class="agent-dot"></span>{{connected_agents}}/{{total_agents}}
+                    </span>
+                {{else}}
+                    <span class="text-tertiary">0</span>
+                {{/if}}
+            </td>
+            <td class="col-status">
+                {{#if devices_count}}
+                    <span class="device-pill device-pill--{{device_freshness}}" title="{{devices_count}} device{{#unless (eq devices_count 1)}}s{{/unless}} ({{device_freshness}})">
+                        <span class="agent-dot"></span>{{devices_count}}
+                    </span>
+                {{else}}
+                    <span class="text-tertiary">0</span>
+                {{/if}}
+            </td>
+            <td class="numeric" style="font-variant-numeric: tabular-nums;" title="{{lifetime_tokens}} tokens">{{#if lifetime_tokens}}{{formatNumber lifetime_tokens}}{{else}}<span class="text-tertiary">0</span>{{/if}}</td>
             <td class="numeric" style="font-variant-numeric: tabular-nums;">{{sessions}}</td>
             <td class="col-status">{{#if is_active}}<span class="badge badge-success">Active</span>{{else}}<span class="badge badge-secondary">Inactive</span>{{/if}}</td>
             <td class="col-date">{{#if last_active}}<span title="{{formatDate last_active}}">{{relativeTime last_active}}</span>{{else}}Never{{/if}}</td>

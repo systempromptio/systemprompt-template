@@ -6,7 +6,6 @@ pub struct EntityCountsRow {
     pub skills: i64,
     pub agents: i64,
     pub mcp_servers: i64,
-    pub hooks: i64,
 }
 
 pub async fn get_entity_counts(
@@ -18,8 +17,7 @@ pub async fn get_entity_counts(
             COALESCE((SELECT COUNT(*) FROM user_plugins WHERE user_id = $1), 0)::BIGINT AS "plugins!",
             COALESCE((SELECT COUNT(*) FROM user_skills WHERE user_id = $1), 0)::BIGINT AS "skills!",
             COALESCE((SELECT COUNT(*) FROM user_agents WHERE user_id = $1), 0)::BIGINT AS "agents!",
-            COALESCE((SELECT COUNT(*) FROM user_mcp_servers WHERE user_id = $1), 0)::BIGINT AS "mcp_servers!",
-            COALESCE((SELECT COUNT(*) FROM user_hooks WHERE user_id = $1), 0)::BIGINT AS "hooks!""#,
+            COALESCE((SELECT COUNT(*) FROM user_mcp_servers WHERE user_id = $1), 0)::BIGINT AS "mcp_servers!""#,
         user_id,
     )
     .fetch_one(pool)
@@ -29,6 +27,5 @@ pub async fn get_entity_counts(
         skills: row.skills,
         agents: row.agents,
         mcp_servers: row.mcp_servers,
-        hooks: row.hooks,
     })
 }

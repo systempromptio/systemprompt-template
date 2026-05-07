@@ -12,7 +12,7 @@
 #     → secret_injection rule triggers → permissionDecision: "deny"
 #
 #   Part 3 — MCP tool call (authenticated):
-#     `plugins mcp call skill-manager list_plugins`
+#     `plugins mcp call systemprompt systemprompt --args '{"command":"core skills list"}'`
 #     → OAuth authentication → tool executes → result returned
 #     → Access recorded in user_activity table
 #

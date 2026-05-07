@@ -25,31 +25,11 @@
             Access matrix
         </a>
 
-        {{!-- CATALOG — what's installed / available --}}
+        {{!-- CATALOG — what's loaded from services/*.yaml --}}
         <h2 class="nav-label">Catalog</h2>
-        <a href="/admin/catalog/marketplaces"{{#if (eq page "marketplaces")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6l1-3h10l1 3M2 6v8h12V6M2 6h12M6 9h4"/></svg>
-            Marketplaces
-        </a>
-        <a href="/admin/catalog/plugins"{{#if (eq page "plugins")}} class="active" aria-current="page"{{/if}}>
+        <a href="/admin/catalog"{{#if (eq page "catalog")}} class="active" aria-current="page"{{/if}}>
             <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M3 3h4v4H3zM9 3h4v4H9zM3 9h4v4H3zM9 9h4v4H9z"/></svg>
-            Plugins
-        </a>
-        <a href="/admin/catalog/skills"{{#if (eq page "skills")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1l2 4 4 .5-3 3 1 4-4-2-4 2 1-4-3-3 4-.5z" stroke-linejoin="round"/></svg>
-            Skills
-        </a>
-        <a href="/admin/catalog/mcp-servers"{{#if (eq page "mcp-servers")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h3M11 8h3M5 5l3 3-3 3M11 5L8 8l3 3"/></svg>
-            MCP servers
-        </a>
-        <a href="/admin/catalog/agents"{{#if (eq page "agents")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a4 4 0 014 4v1h1a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1h1V5a4 4 0 014-4zm0 2a2 2 0 00-2 2v1h4V5a2 2 0 00-2-2z"/></svg>
-            Agents
-        </a>
-        <a href="/admin/catalog/external-agents"{{#if (eq page "external-agents")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="8" rx="1"/><path d="M5 14h6M8 11v3"/></svg>
-            External agents
+            Catalog
         </a>
 
         {{#if current_user.is_admin}}
@@ -59,7 +39,7 @@
             <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L2 4v4c0 3.3 2.6 6.4 6 7 3.4-.6 6-3.7 6-7V4L8 1zm0 2.2L12 5.5v2.8c0 2.4-1.7 4.6-4 5.2-2.3-.6-4-2.8-4-5.2V5.5L8 3.2z"/></svg>
             Policies
         </a>
-        <a href="/admin/governance/hooks"{{#if (eq page "governance-hooks")}} class="active" aria-current="page"{{else}}{{#if (eq page "hooks")}} class="active" aria-current="page"{{/if}}{{/if}}>
+        <a href="/admin/governance/hooks"{{#if (eq page "governance-hooks")}} class="active" aria-current="page"{{/if}}>
             <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v6a3 3 0 003 3h7M10 9l3 3-3 3"/></svg>
             Hooks
         </a>
@@ -89,14 +69,6 @@
         <a href="/admin/profile"{{#if (eq page "profile")}} class="active" aria-current="page"{{/if}}>
             <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
             Profile
-        </a>
-        <a href="/cowork-auth/setup"{{#if (eq page "cowork-setup")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zM5.5 5.5a.5.5 0 01.5-.5h4a.5.5 0 010 1h-1v4a.5.5 0 01-1 0V6H6a.5.5 0 01-.5-.5z"/></svg>
-            Connect Claude
-        </a>
-        <a href="/admin/setup"{{#if (eq page "setup")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8z"/><path d="M11.28 5.72a.75.75 0 010 1.06l-4 4a.75.75 0 01-1.06 0l-2-2a.75.75 0 111.06-1.06L6.75 9.19l3.47-3.47a.75.75 0 011.06 0z"/></svg>
-            Setup guide
         </a>
         <a href="/admin/settings"{{#if (eq page "settings")}} class="active" aria-current="page"{{/if}}>
             <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 100 6.492 3.246 3.246 0 000-6.492zM5.754 8a2.246 2.246 0 114.492 0 2.246 2.246 0 01-4.492 0z"/></svg>

@@ -12,7 +12,6 @@ pub mod session_summary;
 use crate::event_hub::EventHub;
 use crate::repositories::webhook;
 use crate::types::webhook::{HookEvent, HookEventPayload};
-use crate::types::EVENT_SESSION_START;
 use auth::extract_and_validate_jwt;
 use axum::{
     extract::{Extension, State},
@@ -28,7 +27,6 @@ use systemprompt::identifiers::{SessionId, UserId};
 pub async fn handle_hook_track(
     Extension(event_hub): Extension<EventHub>,
     Extension(ai_service): Extension<Option<Arc<AiService>>>,
-    Extension(tier_cache): Extension<crate::tier_enforcement::TierEnforcementCache>,
     State(pool): State<Arc<PgPool>>,
     headers: HeaderMap,
     Json(raw): Json<serde_json::Value>,
@@ -41,9 +39,6 @@ pub async fn handle_hook_track(
     let (payload, warnings) = HookEventPayload::from_value(raw);
     if matches!(&payload.event, HookEvent::PreToolUse(_)) {
         return StatusCode::OK.into_response();
-    }
-    if let Some(resp) = check_tier_limits(&tier_cache, &pool, &user_id, &payload).await {
-        return resp;
     }
     log_payload_warnings(&payload, &warnings);
 
@@ -64,25 +59,9 @@ pub async fn handle_hook_track(
         event_hub: &event_hub,
         ai_service: ai_service.as_ref(),
         jwt_token: &jwt_token,
-        tier_cache: &tier_cache,
     })
     .await;
     StatusCode::OK.into_response()
-}
-
-async fn check_tier_limits(
-    tier_cache: &crate::tier_enforcement::TierEnforcementCache,
-    pool: &PgPool,
-    user_id: &UserId,
-    payload: &HookEventPayload,
-) -> Option<Response> {
-    if let Some(resp) = check_event_limit(tier_cache, pool, user_id).await {
-        return Some(resp);
-    }
-    if payload.event_name() == EVENT_SESSION_START {
-        return check_session_limit(tier_cache, pool, user_id).await;
-    }
-    None
 }
 
 fn log_payload_warnings(payload: &HookEventPayload, warnings: &[String]) {
@@ -102,7 +81,6 @@ struct DispatchContext<'a> {
     event_hub: &'a EventHub,
     ai_service: Option<&'a Arc<AiService>>,
     jwt_token: &'a str,
-    tier_cache: &'a crate::tier_enforcement::TierEnforcementCache,
 }
 
 async fn dispatch_inserted_event(ctx: &DispatchContext<'_>) {
@@ -119,7 +97,6 @@ async fn dispatch_inserted_event(ctx: &DispatchContext<'_>) {
         event_hub: ctx.event_hub,
         ai_service: ctx.ai_service,
         jwt_token: ctx.jwt_token,
-        tier_cache: ctx.tier_cache,
     })
     .await;
 }
@@ -153,64 +130,4 @@ async fn insert_hook_event(pool: &PgPool, user_id: &UserId, payload: &HookEventP
             false
         }
     }
-}
-
-async fn check_event_limit(
-    tier_cache: &crate::tier_enforcement::TierEnforcementCache,
-    pool: &PgPool,
-    user_id: &UserId,
-) -> Option<Response> {
-    let event_check = crate::tier_enforcement::check_limit(
-        tier_cache,
-        pool,
-        user_id,
-        crate::tier_limits::LimitCheck::IngestEvent,
-    )
-    .await;
-    if !event_check.allowed {
-        tracing::info!(user_id = %user_id, "Hook event rejected: daily event limit reached");
-        return Some(
-            (
-                StatusCode::TOO_MANY_REQUESTS,
-                Json(serde_json::json!({
-                    "error": "daily_event_limit_reached",
-                    "message": event_check.reason,
-                    "limit": event_check.limit_value,
-                    "current": event_check.current_value,
-                })),
-            )
-                .into_response(),
-        );
-    }
-    None
-}
-
-async fn check_session_limit(
-    tier_cache: &crate::tier_enforcement::TierEnforcementCache,
-    pool: &PgPool,
-    user_id: &UserId,
-) -> Option<Response> {
-    let session_check = crate::tier_enforcement::check_limit(
-        tier_cache,
-        pool,
-        user_id,
-        crate::tier_limits::LimitCheck::IngestSession,
-    )
-    .await;
-    if !session_check.allowed {
-        tracing::info!(user_id = %user_id, "Hook event rejected: daily session limit reached");
-        return Some(
-            (
-                StatusCode::TOO_MANY_REQUESTS,
-                Json(serde_json::json!({
-                    "error": "daily_session_limit_reached",
-                    "message": session_check.reason,
-                    "limit": session_check.limit_value,
-                    "current": session_check.current_value,
-                })),
-            )
-                .into_response(),
-        );
-    }
-    None
 }

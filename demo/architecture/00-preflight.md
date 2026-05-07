@@ -22,7 +22,7 @@
   │  Service Registry (database)                    │
   │  Queries: agents, MCP servers                   │
   │  • 3 agents (developer, associate, admin)       │
-  │  • 2 MCP servers (systemprompt, skill-manager)  │
+  │  • 1 MCP server (systemprompt)                  │
   └─────────────────────────────────────────────────┘
 
   Step 2: Admin Session Token

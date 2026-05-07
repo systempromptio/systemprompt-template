@@ -20,7 +20,7 @@ Runs a live agent through the platform runtime, showing AI reasoning, MCP tool c
   ┌─────────────────────────────────────────────────────────┐
   │  Agent Process (developer_agent)                        │
   │  Scope: admin                                           │
-  │  MCP servers: systemprompt, skill-manager                │
+  │  MCP servers: systemprompt                              │
   │  Skills: loaded from agent config                       │
   └──────────────────────┬──────────────────────────────────┘
                          │

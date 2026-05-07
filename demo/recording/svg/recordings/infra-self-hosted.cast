@@ -64,7 +64,7 @@
 [4.008823, "o", "s"]
 [4.024795, "o", "\r\n"]
 [4.850313, "o", "    \r\n    Service Status\r\n"]
-[4.850458, "o", "    developer_agent: agent | running | PID: 34622 | -\r\n    associate_agent: agent | running | PID: 34589 | -\r\n    systemprompt: mcp | running | PID: 34515 | -\r\n    skill-manager: mcp | running | PID: 34360 | -\r\n    ℹ 4/4 services running\r\n"]
+[4.850458, "o", "    developer_agent: agent | running | PID: 34622 | -\r\n    associate_agent: agent | running | PID: 34589 | -\r\n    systemprompt: mcp | running | PID: 34515 | -\r\n    systemprompt : mcp | running | PID: 34360 | -\r\n    ℹ 4/4 services running\r\n"]
 [4.850599, "o", "\r\n"]
 [5.851702, "o", "\r\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\r\n\r\n"]
 [5.851831, "o", "\u001b[36m──\u001b[0m \u001b[1m\u001b[97mDatabase\u001b[0m\r\n\u001b[2m   PostgreSQL — the only runtime dependency\u001b[0m\r\n\r\n"]

@@ -10,8 +10,6 @@ mod routes;
 pub(crate) mod services;
 pub mod slack_alerts;
 pub mod templates;
-pub mod tier_enforcement;
-pub mod tier_limits;
 pub mod types;
 
 use std::sync::Arc;
@@ -42,7 +40,15 @@ pub fn hooks_webhook_router(pool: Arc<PgPool>) -> Router {
         .route("/hooks/transcript", post(handlers::track_transcript_event))
         .layer(Extension(event_hub::EventHub::default()))
         .layer(Extension(None::<Arc<systemprompt::ai::AiService>>))
-        .layer(Extension(tier_enforcement::TierEnforcementCache::default()))
+        .with_state(pool)
+}
+
+pub fn share_manifest_router(pool: Arc<PgPool>) -> Router {
+    Router::new()
+        .route(
+            "/share/manifest/{token}",
+            get(handlers::share::public_manifest_handler),
+        )
         .with_state(pool)
 }
 
@@ -81,16 +87,12 @@ pub fn cowork_router(pool: Arc<PgPool>) -> Router {
         .with_state(pool)
 }
 
-pub fn admin_router(
-    read_pool: Arc<PgPool>,
-    tier_cache: tier_enforcement::TierEnforcementCache,
-) -> Router {
+pub fn admin_router(read_pool: Arc<PgPool>) -> Router {
     let admin_only = routes::build_admin_only_routes(&read_pool, &read_pool);
     let auth_reads = routes::build_auth_read_routes(&read_pool);
 
     admin_only
         .merge(auth_reads)
-        .layer(Extension(tier_cache))
         .layer(axum_middleware::from_fn(
             middleware::require_auth_middleware,
         ))

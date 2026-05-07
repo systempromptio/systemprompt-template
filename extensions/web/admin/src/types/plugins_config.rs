@@ -68,6 +68,17 @@ pub struct PluginOverview {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct ConfiguredHook {
+    pub id: String,
+    pub plugin_id: String,
+    pub event: String,
+    pub matcher: String,
+    pub command: String,
+    pub is_async: bool,
+    pub timeout_ms: Option<u32>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct HookOverview {
     pub event: String,
     pub matcher: String,
@@ -144,6 +155,26 @@ pub struct AgentDetail {
     pub skills: Vec<AgentSkillInfo>,
 }
 
+/// Catalog row for a top-level skill defined under `services/skills/*.yaml`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SkillCatalogEntry {
+    pub id: SkillId,
+    pub name: String,
+    pub description: String,
+    pub enabled: bool,
+    pub source_path: String,
+}
+
+/// Catalog row for a top-level agent defined under `services/agents/*.yaml`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentCatalogEntry {
+    pub id: AgentId,
+    pub name: String,
+    pub description: String,
+    pub enabled: bool,
+    pub source_path: String,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct McpServerDetail {
     pub id: McpServerId,
@@ -160,6 +191,10 @@ pub struct McpServerDetail {
     pub oauth_audience: String,
     #[serde(default = "super::plugins::default_true")]
     pub removable: bool,
+    /// YAML file this entry was loaded from, relative to the services directory
+    /// (e.g. `services/mcp/openai.yaml`). Empty for legacy/in-memory entries.
+    #[serde(default)]
+    pub source_path: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
@@ -218,4 +253,9 @@ pub struct PluginDetail {
     pub skills: Vec<SkillId>,
     pub agents: Vec<AgentId>,
     pub mcp_servers: Vec<McpServerId>,
+    /// YAML file this entry was loaded from, relative to the services directory
+    /// (e.g. `services/plugins/enterprise-demo/config.yaml`). Empty for
+    /// in-memory entries.
+    #[serde(default)]
+    pub source_path: String,
 }

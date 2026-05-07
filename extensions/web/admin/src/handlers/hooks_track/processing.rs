@@ -25,7 +25,6 @@ pub struct ProcessInsertedEventParams<'a> {
     pub event_hub: &'a EventHub,
     pub ai_service: Option<&'a Arc<AiService>>,
     pub jwt_token: &'a str,
-    pub tier_cache: &'a crate::tier_enforcement::TierEnforcementCache,
 }
 
 pub async fn process_inserted_event(params: &ProcessInsertedEventParams<'_>) {
@@ -161,46 +160,7 @@ async fn handle_prompt_title(
 }
 
 async fn handle_session_analysis(params: &ProcessInsertedEventParams<'_>) {
-    let pool = params.pool;
-    let user_id = params.user_id;
-    let session_id = params.session_id;
-    let payload = params.payload;
-
-    let can_analyse = crate::tier_enforcement::check_limit(
-        params.tier_cache,
-        pool,
-        user_id,
-        crate::tier_limits::LimitCheck::FeatureAccess(
-            crate::tier_limits::Feature::AiSessionAnalysis,
-        ),
-    )
-    .await;
-
-    if can_analyse.allowed {
-        run_ai_analysis(params).await;
-    } else {
-        tracing::info!(
-            user_id = user_id.as_str(),
-            session_id = session_id.as_str(),
-            "Skipping AI session analysis: tier check denied"
-        );
-        if let HookEvent::Stop(ref stop_data) = payload.event {
-            if let Some(ref msg) = stop_data.last_assistant_message {
-                if !msg.is_empty() {
-                    let title = helpers::derive_title(msg);
-                    let summary = helpers::truncate(msg, 2000);
-                    usage_aggregations::update_session_ai_summary_with_title(
-                        pool,
-                        session_id,
-                        Some(&title),
-                        &summary,
-                        "",
-                    )
-                    .await;
-                }
-            }
-        }
-    }
+    run_ai_analysis(params).await;
 }
 
 async fn handle_session_end(params: &ProcessInsertedEventParams<'_>) {
@@ -232,18 +192,6 @@ async fn handle_apm_and_concurrent(params: &ProcessInsertedEventParams<'_>) {
     let pool = params.pool;
     let user_id = params.user_id;
     let session_id = params.session_id;
-
-    let can_apm = crate::tier_enforcement::check_limit(
-        params.tier_cache,
-        pool,
-        user_id,
-        crate::tier_limits::LimitCheck::FeatureAccess(crate::tier_limits::Feature::ApmMetrics),
-    )
-    .await;
-
-    if !can_apm.allowed {
-        return;
-    }
 
     let (apm, eapm) =
         crate::repositories::apm_metrics::calculate_session_apm(pool, session_id.as_str()).await;

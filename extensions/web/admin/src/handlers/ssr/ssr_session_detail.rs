@@ -95,7 +95,7 @@ pub async fn session_detail_page(
         "has_contexts": !contexts.is_empty(),
         "has_traces": !traces.is_empty(),
         "has_requests": !requests.is_empty(),
-        "back_url": "/admin/users/sessions",
+        "back_url": "/admin/entities/sessions",
     });
 
     super::render_page(&engine, "session-detail", &data, &user_ctx, &mkt_ctx)

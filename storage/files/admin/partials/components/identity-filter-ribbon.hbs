@@ -21,30 +21,42 @@
   {{/each}}
 
   <div class="filter-ribbon__groups">
-    {{> components/filter-ribbon-group
-        param="user_id"
-        title="User"
-        options=options.users}}
-    {{> components/filter-ribbon-group
-        param="tenant_id"
-        title="Tenant"
-        options=options.tenants}}
-    {{> components/filter-ribbon-group
-        param="agent_id"
-        title="Agent"
-        options=options.agents}}
-    {{> components/filter-ribbon-group
-        param="agent_scope"
-        title="Scope"
-        options=options.agent_scopes}}
-    {{> components/filter-ribbon-group
-        param="policy"
-        title="Policy"
-        options=options.policies}}
-    {{> components/filter-ribbon-group
-        param="decision"
-        title="Decision"
-        options=options.decisions}}
+    {{#if options.users}}
+      {{> components/filter-ribbon-group
+          param="user_id"
+          title="User"
+          options=options.users}}
+    {{/if}}
+    {{#if options.tenants}}
+      {{> components/filter-ribbon-group
+          param="tenant_id"
+          title="Tenant"
+          options=options.tenants}}
+    {{/if}}
+    {{#if options.agents}}
+      {{> components/filter-ribbon-group
+          param="agent_id"
+          title="Agent"
+          options=options.agents}}
+    {{/if}}
+    {{#if options.agent_scopes}}
+      {{> components/filter-ribbon-group
+          param="agent_scope"
+          title="Scope"
+          options=options.agent_scopes}}
+    {{/if}}
+    {{#if options.policies}}
+      {{> components/filter-ribbon-group
+          param="policy"
+          title="Policy"
+          options=options.policies}}
+    {{/if}}
+    {{#if options.decisions}}
+      {{> components/filter-ribbon-group
+          param="decision"
+          title="Decision"
+          options=options.decisions}}
+    {{/if}}
   </div>
 
   <div class="filter-ribbon__actions">

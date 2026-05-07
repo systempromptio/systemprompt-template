@@ -73,6 +73,93 @@ pub async fn issue_api_key(
     })
 }
 
+#[derive(Debug)]
+pub struct EnrolledDevice {
+    pub id: String,
+    pub user_id: String,
+    pub name: String,
+    pub key_prefix: String,
+    pub secret: String,
+    pub platform: String,
+    pub hostname: String,
+    pub created_at: Option<DateTime<Utc>>,
+    pub enrolled_at: DateTime<Utc>,
+    pub expires_at: Option<DateTime<Utc>>,
+}
+
+pub async fn enroll_device(
+    pool: &PgPool,
+    user_id: &UserId,
+    name: &str,
+    platform: &str,
+    hostname: &str,
+    expires_at: Option<DateTime<Utc>>,
+) -> Result<EnrolledDevice> {
+    let trimmed = name.trim();
+    if trimmed.is_empty() {
+        return Err(CoworkRepoError::Validation(
+            "Device name must not be empty".into(),
+        ));
+    }
+    let platform_norm = platform.trim().to_lowercase();
+    if !matches!(platform_norm.as_str(), "macos" | "windows" | "linux") {
+        return Err(CoworkRepoError::Validation(
+            "Platform must be one of macos, windows, linux".into(),
+        ));
+    }
+    let hostname_norm = hostname.trim().to_string();
+
+    let id = format!("ak_{}", Uuid::new_v4().simple());
+    let (secret, key_prefix, key_hash) = generate_secret();
+
+    let mut tx = pool.begin().await?;
+
+    let key_row = sqlx::query!(
+        r#"
+        INSERT INTO user_api_keys (id, user_id, name, key_prefix, key_hash, expires_at)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING created_at, expires_at
+        "#,
+        id,
+        user_id.as_str(),
+        trimmed,
+        key_prefix,
+        key_hash,
+        expires_at,
+    )
+    .fetch_one(&mut *tx)
+    .await?;
+
+    let link_row = sqlx::query!(
+        r#"
+        INSERT INTO device_app_links (device_id, user_id, app_platform, app_version, hostname)
+        VALUES ($1, $2, $3, '', $4)
+        RETURNING enrolled_at
+        "#,
+        id,
+        user_id.as_str(),
+        platform_norm,
+        hostname_norm,
+    )
+    .fetch_one(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+
+    Ok(EnrolledDevice {
+        id,
+        user_id: user_id.as_str().to_string(),
+        name: trimmed.to_string(),
+        key_prefix,
+        secret,
+        platform: platform_norm,
+        hostname: hostname_norm,
+        created_at: Some(key_row.created_at),
+        enrolled_at: link_row.enrolled_at,
+        expires_at: key_row.expires_at,
+    })
+}
+
 pub async fn list_api_keys_for_user(pool: &PgPool, user_id: &UserId) -> Result<Vec<ApiKeyRow>> {
     let rows = sqlx::query_as!(
         ApiKeyRow,

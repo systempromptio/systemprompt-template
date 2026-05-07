@@ -6,6 +6,12 @@
 
     {{> components/time-range time_range}}
 
+    {{#if time_range.auto_widened}}
+    <p class="audit-toolbar__notice text-muted text-xs">
+        No inference requests in the last 24h — auto-widened to last {{time_range.auto_widened}}.
+    </p>
+    {{/if}}
+
     <section class="kpi-strip" aria-label="Request KPIs">
         <div class="kpi-card">
             <span class="kpi-card__label">Requests</span>
@@ -59,14 +65,48 @@
         </section>
     </div>
 
-    <form method="get" action="/admin/analytics/requests" class="toolbar audit-toolbar">
+    <form method="get" action="{{base_url}}" class="toolbar audit-toolbar">
         <input type="hidden" name="preset" value="{{time_range.preset}}">
         <input type="hidden" name="from" value="{{time_range.from}}">
         <input type="hidden" name="to" value="{{time_range.to}}">
+
+        <label class="filter-field">
+            <span class="filter-field__label">Model</span>
+            <select name="model" class="filter-select">
+                <option value="">All models</option>
+                {{#each filters.options.models}}
+                <option value="{{this}}"{{#if (eq this ../filters.model)}} selected{{/if}}>{{this}}</option>
+                {{/each}}
+            </select>
+        </label>
+
+        <label class="filter-field">
+            <span class="filter-field__label">Provider</span>
+            <select name="provider" class="filter-select">
+                <option value="">All providers</option>
+                {{#each filters.options.providers}}
+                <option value="{{this}}"{{#if (eq this ../filters.provider)}} selected{{/if}}>{{this}}</option>
+                {{/each}}
+            </select>
+        </label>
+
+        <label class="filter-field">
+            <span class="filter-field__label">Status</span>
+            <select name="status" class="filter-select">
+                <option value="">All statuses</option>
+                {{#each filters.options.statuses}}
+                <option value="{{this}}"{{#if (eq this ../filters.status)}} selected{{/if}}>{{this}}</option>
+                {{/each}}
+            </select>
+        </label>
+
         <input type="text" name="q" placeholder="Search user / model / trace_id / error..."
                value="{{search_query}}" class="search-input">
-        <button type="submit" class="btn btn-sm">Search</button>
-        <a href="{{csv_url}}" class="btn btn-sm btn-outline" download>Export CSV</a>
+
+        <button type="submit" class="btn btn-sm">Apply</button>
+        {{#if has_active_filters}}
+        <a href="{{clear_url}}" class="btn btn-sm btn-outline">Clear</a>
+        {{/if}}
         <span class="text-muted audit-toolbar__count">
             {{total_count}} request{{#unless (eq total_count 1)}}s{{/unless}}
         </span>

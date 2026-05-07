@@ -1,19 +1,20 @@
 # Department definitions and department-scoped access control rules.
 #
 # This file is the BOOTSTRAP source of truth. On startup the publish pipeline:
-#   1. Upserts each department by `name` into the `departments` table
-#      (resolving `manager_email` to a `users.id` if a matching user exists).
+#   1. Upserts each department by `name` into the `departments` table.
 #   2. Upserts each rule into `access_control_rules` (rule_type=department).
 #
 # Dashboard edits write to the database only — there is NO write-back to this
 # file. To make a department or rule permanent across deployments, edit this
 # file in the source repo and redeploy.
 #
+# A "Default" department is created automatically by the schema and contains
+# every user without an explicit assignment. It cannot be deleted.
+#
 # Schema:
 #   departments:
-#     - name:         unique department name
-#       description:  optional free text
-#       manager_email: optional; resolved to users.id at load time
+#     - name:        unique department name
+#       description: optional free text
 #
 #   rules:
 #     - entity_type: gateway_route | mcp_server | plugin | agent | marketplace

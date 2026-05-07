@@ -318,3 +318,41 @@ impl HelperDef for DefaultHelper {
         Ok(())
     }
 }
+
+#[derive(Debug, Clone, Copy)]
+pub struct FormatNumberHelper;
+impl HelperDef for FormatNumberHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        h: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let n = h.param(0).and_then(|v| v.value().as_i64()).unwrap_or(0);
+        let abs = n.unsigned_abs();
+        let formatted = if abs >= 1_000_000_000 {
+            format!("{:.1}B", n as f64 / 1_000_000_000.0)
+        } else if abs >= 1_000_000 {
+            format!("{:.1}M", n as f64 / 1_000_000.0)
+        } else if abs >= 1_000 {
+            let s = n.to_string();
+            let bytes = s.as_bytes();
+            let neg = bytes.first() == Some(&b'-');
+            let digits = if neg { &bytes[1..] } else { bytes };
+            let mut grouped = String::new();
+            for (i, c) in digits.iter().enumerate() {
+                if i > 0 && (digits.len() - i) % 3 == 0 {
+                    grouped.push(',');
+                }
+                grouped.push(*c as char);
+            }
+            if neg { format!("-{grouped}") } else { grouped }
+        } else {
+            n.to_string()
+        };
+        out.write(&formatted)?;
+        Ok(())
+    }
+}

@@ -23,6 +23,14 @@ fn parse_plugin_config_file(path: &std::path::Path) -> Result<PluginConfigFile, 
 }
 
 pub fn load_all_plugins() -> Result<Vec<(String, PlatformPluginConfig)>, MarketplaceError> {
+    Ok(load_all_plugins_with_paths()?
+        .into_iter()
+        .map(|(id, cfg, _path)| (id, cfg))
+        .collect())
+}
+
+pub fn load_all_plugins_with_paths(
+) -> Result<Vec<(String, PlatformPluginConfig, String)>, MarketplaceError> {
     let dir = plugins_dir()?;
     if !dir.exists() {
         return Ok(Vec::new());
@@ -32,7 +40,9 @@ pub fn load_all_plugins() -> Result<Vec<(String, PlatformPluginConfig)>, Marketp
         MarketplaceError::Internal(format!("Failed to read {}: {e}", dir.display()))
     })?;
 
-    let mut out: Vec<(String, PlatformPluginConfig)> = Vec::new();
+    let services_dir = dir.parent().map(std::path::Path::to_path_buf);
+
+    let mut out: Vec<(String, PlatformPluginConfig, String)> = Vec::new();
     for entry in entries {
         let entry = match entry {
             Ok(e) => e,
@@ -52,7 +62,15 @@ pub fn load_all_plugins() -> Result<Vec<(String, PlatformPluginConfig)>, Marketp
         match parse_plugin_config_file(&config_path) {
             Ok(pf) => {
                 let id = pf.plugin.id.to_string();
-                out.push((id, PlatformPluginConfig::from_base(pf.plugin)));
+                let source_path = services_dir
+                    .as_ref()
+                    .and_then(|sd| config_path.strip_prefix(sd).ok())
+                    .and_then(|p| p.to_str())
+                    .map_or_else(
+                        || config_path.display().to_string(),
+                        |s| format!("services/{s}"),
+                    );
+                out.push((id, PlatformPluginConfig::from_base(pf.plugin), source_path));
             }
             Err(e) => {
                 tracing::warn!(path = %config_path.display(), error = %e, "skipped invalid plugin config");

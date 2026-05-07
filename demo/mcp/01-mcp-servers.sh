@@ -22,7 +22,4 @@ run_cli_head 30 plugins mcp tools
 subheader "STEP 3: MCP Tools — systemprompt server only"
 run_cli_head 30 plugins mcp tools --server systemprompt
 
-subheader "STEP 4: MCP Tools — skill-manager server only"
-run_cli_head 30 plugins mcp tools --server skill-manager
-
 header "MCP SERVER DEMO COMPLETE"

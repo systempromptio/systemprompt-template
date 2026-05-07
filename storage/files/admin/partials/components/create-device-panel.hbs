@@ -1,0 +1,43 @@
+<div class="panel-overlay" id="create-device-overlay"></div>
+<div class="side-panel" id="create-device-panel" role="dialog" aria-modal="true" aria-labelledby="create-device-title">
+    <div class="panel-header">
+        <h2 id="create-device-title">Add Device</h2>
+        <button type="button" class="panel-close" aria-label="Close panel">&times;</button>
+    </div>
+    <div class="panel-body">
+        <div class="form-group">
+            <label for="new-device-name">Device name</label>
+            <input class="field-input" type="text" id="new-device-name" placeholder="Ed's MacBook Pro" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label for="new-device-user">Owner</label>
+            <select class="field-input" id="new-device-user">
+                <option value="">-- Select user --</option>
+                {{#each user_options}}
+                <option value="{{user_id}}">{{label}}</option>
+                {{/each}}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="new-device-platform">Platform</label>
+            <select class="field-input" id="new-device-platform">
+                <option value="macos">macOS</option>
+                <option value="windows">Windows</option>
+                <option value="linux">Linux</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="new-device-hostname">Hostname (optional)</label>
+            <input class="field-input" type="text" id="new-device-hostname" placeholder="ed-macbook.local" autocomplete="off">
+        </div>
+        <div class="form-group" id="new-device-secret-group" hidden>
+            <label for="new-device-secret">Personal Access Token</label>
+            <textarea class="field-input" id="new-device-secret" rows="2" readonly></textarea>
+            <p class="text-muted" style="font-size:0.85rem;margin-top:0.25rem;">Copy this token now — it will not be shown again.</p>
+        </div>
+    </div>
+    <div class="panel-footer">
+        <button type="button" class="btn btn-secondary" data-action="cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" data-action="save">Create Device</button>
+    </div>
+</div>

@@ -75,5 +75,6 @@ inventory::submit! {
     PolicyRegistration {
         id: ID,
         factory: |v| Box::new(ToolBlocklist::from_yaml(v)),
+        source_path: file!(),
     }
 }

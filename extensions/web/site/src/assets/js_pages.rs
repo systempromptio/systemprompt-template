@@ -11,6 +11,7 @@ pub(super) fn page_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
     let pages = storage_js.join("pages");
     vec![
         page_js!(&pages, "admin-access.js"),
+        page_js!(&pages, "admin-devices.js"),
         page_js!(&pages, "admin-access-control.js"),
         page_js!(&pages, "admin-access-panel.js"),
         page_js!(&pages, "admin-agent-edit.js"),

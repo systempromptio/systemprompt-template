@@ -1,8 +1,8 @@
-//! `/admin/performance/traces` — Trace Explorer list page.
+//! `/admin/entities/traces` — Trace Explorer list page.
 //!
 //! Replaces the old plugin-events recap with a true trace list bound to the
 //! shared time-range + identity-filter-ribbon URL contract. Each row links to
-//! the per-trace waterfall at `/admin/performance/traces/{session_id}`.
+//! the per-trace waterfall at `/admin/entities/traces/{session_id}`.
 
 use std::sync::Arc;
 
@@ -31,7 +31,7 @@ use crate::types::{MarketplaceContext, UserContext};
 
 use super::ACCESS_DENIED_HTML;
 
-const BASE_URL: &str = "/admin/performance/traces";
+const BASE_URL: &str = "/admin/entities/traces";
 const PAGE_SIZE: i64 = 50;
 
 #[derive(Debug, Deserialize)]
@@ -42,6 +42,8 @@ pub struct TraceListQuery {
     pub user_id: Option<String>,
     pub agent_id: Option<String>,
     pub agent_scope: Option<String>,
+    pub policy: Option<String>,
+    pub decision: Option<String>,
     pub error_only: Option<String>,
     pub deny_only: Option<String>,
     pub sort: Option<String>,
@@ -70,6 +72,8 @@ pub async fn perf_traces_page(
         user_id: empty_to_none(query.user_id.as_deref()),
         agent_id: empty_to_none(query.agent_id.as_deref()),
         agent_scope: empty_to_none(query.agent_scope.as_deref()),
+        policy: empty_to_none(query.policy.as_deref()),
+        decision: empty_to_none(query.decision.as_deref()),
         error_only: query.error_only.as_deref() == Some("true"),
         deny_only: query.deny_only.as_deref() == Some("true"),
     };
@@ -96,9 +100,11 @@ pub async fn perf_traces_page(
     let total_pages = if total == 0 { 1 } else { (total + PAGE_SIZE - 1) / PAGE_SIZE };
     let pagination = build_pagination(&query, page, total_pages);
 
+    let view_qs = view_tabs_qs(range, &preset);
     let data = json!({
-        "page": "perf-traces",
+        "page": "traces",
         "title": "Trace Explorer",
+        "entity_view_tabs": entity_view_tabs("traces", &view_qs),
         "time_range": time_range_context(range, &preset),
         "filter_ribbon": {
             "base_url": BASE_URL,
@@ -151,6 +157,8 @@ fn sort_from_query(query: &TraceListQuery) -> TraceSort {
     let column = match query.sort.as_deref() {
         Some("duration") => TraceSortColumn::Duration,
         Some("spans") => TraceSortColumn::SpanCount,
+        Some("cost") => TraceSortColumn::Cost,
+        Some("tokens") => TraceSortColumn::Tokens,
         _ => TraceSortColumn::StartedAt,
     };
     let dir = match query.dir.as_deref() {
@@ -165,6 +173,8 @@ const fn sort_col_to_str(c: TraceSortColumn) -> &'static str {
         TraceSortColumn::StartedAt => "started_at",
         TraceSortColumn::Duration => "duration",
         TraceSortColumn::SpanCount => "spans",
+        TraceSortColumn::Cost => "cost",
+        TraceSortColumn::Tokens => "tokens",
     }
 }
 
@@ -173,6 +183,36 @@ const fn sort_dir_to_str(d: TraceSortDir) -> &'static str {
         TraceSortDir::Asc => "asc",
         TraceSortDir::Desc => "desc",
     }
+}
+
+fn view_tabs_qs(range: TimeRange, preset: &str) -> String {
+    format!(
+        "preset={}&from={}&to={}",
+        urlencode(preset),
+        urlencode(&range.from.to_rfc3339()),
+        urlencode(&range.to.to_rfc3339()),
+    )
+}
+
+fn entity_view_tabs(active: &str, qs: &str) -> serde_json::Value {
+    const TABS: &[(&str, &str, &str)] = &[
+        ("sessions", "Sessions", "/admin/entities/sessions"),
+        ("traces", "Traces", "/admin/entities/traces"),
+        ("requests", "Requests", "/admin/entities/requests"),
+        ("contexts", "Contexts", "/admin/entities/contexts"),
+    ];
+    let items: Vec<_> = TABS
+        .iter()
+        .map(|(key, label, url)| {
+            json!({
+                "key": key,
+                "label": label,
+                "url": format!("{url}?{qs}"),
+                "active": *key == active,
+            })
+        })
+        .collect();
+    serde_json::Value::Array(items)
 }
 
 fn time_range_context(range: TimeRange, preset: &str) -> serde_json::Value {
@@ -209,6 +249,8 @@ fn build_chips(query: &TraceListQuery) -> Vec<serde_json::Value> {
         ("user_id", "User"),
         ("agent_id", "Agent"),
         ("agent_scope", "Scope"),
+        ("policy", "Policy"),
+        ("decision", "Decision"),
     ];
     let mut chips = Vec::new();
     for (param, label) in GROUPS {
@@ -216,6 +258,8 @@ fn build_chips(query: &TraceListQuery) -> Vec<serde_json::Value> {
             "user_id" => query.user_id.as_deref(),
             "agent_id" => query.agent_id.as_deref(),
             "agent_scope" => query.agent_scope.as_deref(),
+            "policy" => query.policy.as_deref(),
+            "decision" => query.decision.as_deref(),
             _ => None,
         };
         let Some(v) = empty_to_none(val) else { continue };
@@ -239,13 +283,15 @@ fn chip_remove_url(query: &TraceListQuery, drop: &str) -> String {
 }
 
 fn preserved_query_string(query: &TraceListQuery, drop: &[&str]) -> String {
-    let pairs: [(&str, Option<&str>); 10] = [
+    let pairs: [(&str, Option<&str>); 12] = [
         ("preset", query.preset.as_deref()),
         ("from", query.from.as_deref()),
         ("to", query.to.as_deref()),
         ("user_id", query.user_id.as_deref()),
         ("agent_id", query.agent_id.as_deref()),
         ("agent_scope", query.agent_scope.as_deref()),
+        ("policy", query.policy.as_deref()),
+        ("decision", query.decision.as_deref()),
         ("error_only", query.error_only.as_deref()),
         ("deny_only", query.deny_only.as_deref()),
         ("sort", query.sort.as_deref()),
@@ -266,13 +312,29 @@ fn annotate_options(
     options: &FilterOptions,
     filter: &TraceFilter<'_>,
 ) -> serde_json::Value {
-    json!({
-        "users":        annotate_group(&options.users,        filter.user_id),
-        "agents":       annotate_group(&options.agents,       filter.agent_id),
-        "agent_scopes": annotate_group(&options.agent_scopes, filter.agent_scope),
-        "policies":     Vec::<serde_json::Value>::new(),
-        "decisions":    Vec::<serde_json::Value>::new(),
-    })
+    let mut out = serde_json::Map::new();
+    if !options.users.is_empty() {
+        out.insert("users".into(), annotate_group(&options.users, filter.user_id).into());
+    }
+    if !options.agents.is_empty() {
+        out.insert("agents".into(), annotate_group(&options.agents, filter.agent_id).into());
+    }
+    if !options.agent_scopes.is_empty() {
+        out.insert(
+            "agent_scopes".into(),
+            annotate_group(&options.agent_scopes, filter.agent_scope).into(),
+        );
+    }
+    if !options.policies.is_empty() {
+        out.insert("policies".into(), annotate_group(&options.policies, filter.policy).into());
+    }
+    if !options.decisions.is_empty() {
+        out.insert(
+            "decisions".into(),
+            annotate_group(&options.decisions, filter.decision).into(),
+        );
+    }
+    serde_json::Value::Object(out)
 }
 
 fn annotate_group(items: &[FilterOption], selected: Option<&str>) -> Vec<serde_json::Value> {
@@ -324,8 +386,8 @@ fn serde_stats(s: &TraceStats) -> serde_json::Value {
 }
 
 fn trace_to_json(t: &TraceSummary) -> serde_json::Value {
-    let short = if t.session_id.len() > 16 {
-        t.session_id[..16].to_string()
+    let short = if t.session_id.len() > 12 {
+        format!("{}…", &t.session_id[..12])
     } else {
         t.session_id.clone()
     };
@@ -343,12 +405,57 @@ fn trace_to_json(t: &TraceSummary) -> serde_json::Value {
         "duration_display": format_duration(t.duration_ms),
         "user_id": t.user_id,
         "agent_id": t.agent_id,
+        "agent_scope": t.agent_scope,
         "model": t.model,
+        "provider": t.provider,
         "span_count": t.span_count,
+        "request_count": t.request_count,
+        "tool_call_count": t.tool_call_count,
+        "governance_count": t.governance_count,
+        "deny_count": t.deny_count,
+        "total_tokens": t.total_tokens,
+        "tokens_display": format_tokens(t.total_tokens, t.input_tokens, t.output_tokens),
+        "cost_display": format_cost(t.total_cost_microdollars),
+        "total_cost_microdollars": t.total_cost_microdollars,
+        "latency_display": format_duration(t.total_latency_ms),
+        "cache_hit_any": t.cache_hit_any,
+        "top_tool": t.top_tool,
         "has_error": t.has_error,
         "has_deny": t.has_deny,
         "detail_url": format!("{BASE_URL}/{}", urlencode(&t.session_id)),
     })
+}
+
+fn format_tokens(total: i64, input: i64, output: i64) -> String {
+    if total <= 0 {
+        return "—".to_string();
+    }
+    format!("{} ({} in / {} out)", short_num(total), short_num(input), short_num(output))
+}
+
+fn short_num(n: i64) -> String {
+    let abs = n.unsigned_abs();
+    if abs >= 1_000_000 {
+        format!("{:.1}M", n as f64 / 1_000_000.0)
+    } else if abs >= 1_000 {
+        format!("{:.1}k", n as f64 / 1_000.0)
+    } else {
+        n.to_string()
+    }
+}
+
+fn format_cost(micros: i64) -> String {
+    if micros <= 0 {
+        return "—".to_string();
+    }
+    let dollars = micros as f64 / 1_000_000.0;
+    if dollars >= 1.0 {
+        format!("${dollars:.2}")
+    } else if dollars >= 0.01 {
+        format!("${dollars:.4}")
+    } else {
+        format!("${dollars:.6}")
+    }
 }
 
 fn format_duration(ms: i64) -> String {

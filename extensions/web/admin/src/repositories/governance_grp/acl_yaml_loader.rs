@@ -77,10 +77,6 @@ pub struct YamlDepartment {
     pub name: String,
     #[serde(default)]
     pub description: String,
-    /// Email of the manager user; resolved to `users.id` at load time.
-    /// Skipped with a warning if no matching user exists yet.
-    #[serde(default)]
-    pub manager_email: Option<String>,
 }
 
 /// Counts surfaced to the publish pipeline log.
@@ -317,32 +313,15 @@ async fn upsert_department(
     pool: &PgPool,
     dept: &YamlDepartment,
 ) -> Result<(), MarketplaceError> {
-    let manager_id = match &dept.manager_email {
-        Some(email) if !email.trim().is_empty() => {
-            let row: Option<(String,)> =
-                sqlx::query_as("SELECT id FROM users WHERE lower(email) = lower($1) LIMIT 1")
-                    .bind(email)
-                    .fetch_optional(pool)
-                    .await?;
-            if row.is_none() {
-                tracing::warn!(department = %dept.name, manager_email = %email, "manager_email did not match any user; department will be created without manager");
-            }
-            row.map(|(id,)| id)
-        }
-        _ => None,
-    };
-
     sqlx::query(
-        "INSERT INTO departments (name, description, manager_user_id)
-         VALUES ($1, $2, $3)
+        "INSERT INTO departments (name, description)
+         VALUES ($1, $2)
          ON CONFLICT (name) DO UPDATE
             SET description = EXCLUDED.description,
-                manager_user_id = COALESCE(EXCLUDED.manager_user_id, departments.manager_user_id),
                 updated_at = NOW()",
     )
     .bind(&dept.name)
     .bind(&dept.description)
-    .bind(&manager_id)
     .execute(pool)
     .await?;
     Ok(())

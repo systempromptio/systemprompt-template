@@ -1,4 +1,5 @@
 pub mod access_control;
+pub mod catalog;
 pub mod cowork;
 pub mod demo_register;
 pub mod departments;
@@ -10,16 +11,14 @@ pub mod gateway_catalog;
 pub mod hooks_track;
 mod jobs;
 pub mod magic_link;
-mod marketplace;
 mod plugins;
-mod plugins_crud;
 mod plugins_env;
-mod plugins_skills;
 pub mod public_register;
 pub mod resources;
 pub mod responses;
 pub mod secrets;
 pub mod shared;
+pub mod share;
 pub mod ssr;
 mod users;
 mod webhook;
@@ -31,11 +30,8 @@ pub use gateway::{
     reorder_gateway_routes_handler, update_gateway_route_handler, update_gateway_settings_handler,
 };
 pub use jobs::list_jobs_handler;
-pub use marketplace::{list_marketplace_handler, update_visibility_handler};
 pub use plugins::{get_skill_handler, list_plugins_handler, list_skills_handler};
-pub use plugins_crud::get_plugin_detail_handler;
 pub use plugins_env::list_plugin_env_handler;
-pub use plugins_skills::{get_plugin_skills_handler, list_all_skills_handler};
 pub use resources::{get_agent_handler, list_agents_handler};
 pub use users::extract_user_from_cookie;
 pub use users::{

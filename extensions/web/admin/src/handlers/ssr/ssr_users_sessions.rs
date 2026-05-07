@@ -28,7 +28,7 @@ pub async fn users_sessions_page(
     });
 
     let data = json!({
-        "page": "users-sessions",
+        "page": "sessions",
         "title": "User Sessions",
         "cli_command": "systemprompt admin session show",
         "cli_command_list": "systemprompt admin session list",

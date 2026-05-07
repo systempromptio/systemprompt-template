@@ -165,7 +165,7 @@
 [10.442211, "o", "s"]
 [10.458187, "o", "\r\n"]
 [11.308606, "o", "    \u001b[36m\u001b[0m\r\n    \u001b[36mMCP Server Status\u001b[0m\r\n    \u001b[36m{\u001b[0m\r\n"]
-[11.308678, "o", "    \u001b[36m  \"servers\": [\u001b[0m\r\n    \u001b[36m    {\u001b[0m\r\n    \u001b[36m      \"name\": \"skill-manager\",\u001b[0m\r\n"]
+[11.308678, "o", "    \u001b[36m  \"servers\": [\u001b[0m\r\n    \u001b[36m    {\u001b[0m\r\n    \u001b[36m      \"name\": \"systemprompt \",\u001b[0m\r\n"]
 [11.30882, "o", "    \u001b[36m      \"port\": 5050,\u001b[0m\r\n    \u001b[36m      \"enabled\": true,\u001b[0m\r\n    \u001b[36m      \"running\": true,\u001b[0m\r\n    \u001b[36m      \"pid\": 14116,\u001b[0m\r\n"]
 [11.308946, "o", "    \u001b[36m      \"binary\": \"systemprompt-mcp-marketplace\",\u001b[0m\r\n    \u001b[36m      \"release_binary\": \"exists\",\u001b[0m\r\n"]
 [11.309022, "o", "\r\n"]

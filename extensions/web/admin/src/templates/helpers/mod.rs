@@ -2,14 +2,15 @@ mod helpers_format;
 mod helpers_logic;
 
 use helpers_format::{
-    ConcatHelper, CssVersionHelper, DefaultHelper, FormatDateHelper, GovernanceColorHelper,
-    InitialsHelper, JsonHelper, RelativeTimeHelper, ToLowerCaseHelper, ToUpperCaseHelper,
-    TruncateHelper,
+    ConcatHelper, CssVersionHelper, DefaultHelper, FormatDateHelper, FormatNumberHelper,
+    GovernanceColorHelper, InitialsHelper, JsonHelper, RelativeTimeHelper, ToLowerCaseHelper,
+    ToUpperCaseHelper, TruncateHelper,
 };
 use helpers_logic::{AddHelper, EqHelper, GtHelper, NotHelper, SubHelper};
 
 pub fn register_helpers(hbs: &mut handlebars::Handlebars<'static>) {
     hbs.register_helper("formatDate", Box::new(FormatDateHelper));
+    hbs.register_helper("formatNumber", Box::new(FormatNumberHelper));
     hbs.register_helper("relativeTime", Box::new(RelativeTimeHelper));
     hbs.register_helper("initials", Box::new(InitialsHelper));
     hbs.register_helper("truncate", Box::new(TruncateHelper));

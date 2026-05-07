@@ -57,31 +57,6 @@
                 </ul>
             </div>
             {{/each}}
-
-            {{#if unassigned_count}}
-            <div class="ac-tree-dept" data-dept="">
-                <button type="button" class="ac-dept-row ac-dept-unassigned" data-action="select-dept" data-dept="">
-                    <span class="ac-dept-name"><em>Unassigned</em></span>
-                    <span class="ac-dept-count">{{unassigned_count}}</span>
-                </button>
-                <ul class="ac-dept-users" role="list">
-                    {{#each unassigned_users}}
-                    <li>
-                        <button type="button" class="ac-user-row {{#unless is_active}}is-inactive{{/unless}}"
-                                data-action="select-user"
-                                data-user-id="{{id}}"
-                                data-user-display="{{display_name}}"
-                                data-user-email="{{email}}">
-                            <span class="ac-user-name">{{display_name}}</span>
-                            <span class="ac-user-roles">
-                                {{#each roles}}<span class="ac-role-chip">{{this}}</span>{{/each}}
-                            </span>
-                        </button>
-                    </li>
-                    {{/each}}
-                </ul>
-            </div>
-            {{/if}}
         </aside>
 
         <!-- Center pane: switches between welcome / dept editor / user matrix -->
@@ -133,15 +108,17 @@
         <div class="ac-modal-body">
             <label class="ac-field">
                 <span>Name</span>
-                <input type="text" id="ac-new-dept-name" class="search-input" placeholder="e.g. Engineering">
+                <input type="text" id="ac-new-dept-name" class="search-input" placeholder="e.g. Engineering" autocomplete="off" maxlength="64">
             </label>
             <label class="ac-field">
                 <span>Description (optional)</span>
-                <input type="text" id="ac-new-dept-desc" class="search-input">
+                <input type="text" id="ac-new-dept-desc" class="search-input" autocomplete="off">
             </label>
+            <p class="ac-form-error" id="ac-new-dept-error" hidden></p>
             <p class="ac-modal-hint">
                 Saving creates the department in this instance's database.
-                To make it part of the bootstrap baseline, add it to
+                <strong>Unassigned</strong> is reserved for users without a department.
+                To make a department part of the bootstrap baseline, add it to
                 <code>services/access-control/departments.yaml</code> in the source repo.
             </p>
             <div class="ac-modal-actions">
@@ -154,6 +131,7 @@
     <!-- Embedded data for the JS controller. -->
     <script type="application/json" id="ac-entity-catalogue">{{{json entity_catalogue}}}</script>
     <script type="application/json" id="ac-known-roles">{{{json known_roles}}}</script>
+    <script type="application/json" id="ac-departments">{{{json department_names}}}</script>
 
     {{/inline}}
     {{#*inline "scripts"}}

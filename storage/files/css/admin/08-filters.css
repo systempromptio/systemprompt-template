@@ -102,4 +102,28 @@
     line-height: 1;
 }
 
+.filter-field {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+}
+
+.filter-field__label {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    color: var(--sp-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1;
+}
+
+.filter-field .filter-select {
+    min-width: 9rem;
+}
+
+.audit-toolbar__notice {
+    margin: -0.5rem 0 0.5rem;
+}
+
 }

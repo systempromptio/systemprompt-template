@@ -11,27 +11,41 @@ use axum::{
 };
 use sqlx::PgPool;
 
-use super::types::{EnrichedUserView, UserDetailPageData, UsersPageData};
-use crate::repositories::UserRank;
+use super::types::{EnrichedUserView, UserDetailPageData, UserRuntimeView, UsersPageData};
 
-fn enrich_users_with_ranks(
+fn freshness_for(ts: Option<chrono::DateTime<chrono::Utc>>) -> &'static str {
+    match ts {
+        None => "never",
+        Some(t) => {
+            let age = chrono::Utc::now() - t;
+            if age < chrono::Duration::minutes(5) {
+                "fresh"
+            } else if age < chrono::Duration::hours(1) {
+                "idle"
+            } else {
+                "stale"
+            }
+        }
+    }
+}
+
+fn enrich_users(
     users: &[crate::types::UserSummary],
-    rank_rows: &[UserRank],
     aggregates: &[repositories::UserManagementAggregate],
+    runtime: &[repositories::UserRuntimeAggregate],
 ) -> Vec<EnrichedUserView> {
-    let rank_map: std::collections::HashMap<&str, &UserRank> =
-        rank_rows.iter().map(|r| (r.user_id.as_str(), r)).collect();
     let agg_map: std::collections::HashMap<&str, &repositories::UserManagementAggregate> =
         aggregates.iter().map(|a| (a.user_id.as_str(), a)).collect();
+    let rt_map: std::collections::HashMap<&str, &repositories::UserRuntimeAggregate> =
+        runtime.iter().map(|r| (r.user_id.as_str(), r)).collect();
 
     users
         .iter()
         .map(|u| {
-            let (rank_name, xp) = rank_map.get(u.user_id.as_str()).map_or_else(
-                || ("-".to_string(), 0),
-                |rank| (rank.rank_name.clone(), rank.total_xp),
-            );
             let agg = agg_map.get(u.user_id.as_str());
+            let rt = rt_map.get(u.user_id.as_str());
+            let device_freshness =
+                freshness_for(rt.and_then(|r| r.newest_device_seen_at)).to_string();
             EnrichedUserView {
                 user_id: u.user_id.to_string(),
                 display_name: u.display_name.clone(),
@@ -47,12 +61,14 @@ fn enrich_users_with_ranks(
                 sessions: u.sessions,
                 bytes: u.bytes,
                 logins: u.logins,
-                rank_name,
-                xp,
                 department: agg.map(|a| a.department.clone()).unwrap_or_default(),
                 assigned_skills_count: agg.map_or(0, |a| a.assigned_skills_count),
                 assigned_marketplaces_count: agg.map_or(0, |a| a.assigned_marketplaces_count),
                 devices_count: agg.map_or(0, |a| a.devices_count),
+                connected_agents: rt.map_or(0, |r| r.connected_agents),
+                total_agents: rt.map_or(0, |r| r.total_agents),
+                lifetime_tokens: rt.map_or(0, |r| r.lifetime_tokens),
+                device_freshness,
             }
         })
         .collect()
@@ -81,14 +97,6 @@ pub async fn users_page(
     let active_users = users.iter().filter(|u| u.is_active).count();
     let total_events: i64 = users.iter().map(|u| u.total_events).sum();
 
-    let rank_rows: Vec<UserRank> =
-        repositories::fetch_user_ranks(&pool)
-            .await
-            .unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to fetch user ranks");
-                Vec::new()
-            });
-
     let aggregates = repositories::list_user_management_aggregates(&pool)
         .await
         .unwrap_or_else(|e| {
@@ -96,7 +104,14 @@ pub async fn users_page(
             Vec::new()
         });
 
-    let enriched_users = enrich_users_with_ranks(&users, &rank_rows, &aggregates);
+    let runtime = repositories::list_user_runtime_aggregates(&pool)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to fetch user runtime aggregates");
+            Vec::new()
+        });
+
+    let enriched_users = enrich_users(&users, &aggregates, &runtime);
 
     let data = UsersPageData {
         page: "users",
@@ -201,6 +216,13 @@ async fn collect_user_devices(
         .collect()
 }
 
+async fn fetch_departments(pool: &PgPool) -> Vec<String> {
+    sqlx::query_scalar::<_, String>("SELECT name FROM departments ORDER BY name")
+        .fetch_all(pool)
+        .await
+        .unwrap_or_default()
+}
+
 pub async fn user_detail_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
@@ -229,6 +251,8 @@ pub async fn user_detail_page(
             user_assignments: super::types::UserAssignmentSummary::default(),
             user_devices: Vec::new(),
             user_devices_count: 0,
+            departments: Vec::new(),
+            runtime: None,
         };
         let value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Null);
         return super::render_page(&engine, "user-detail", &value, &user_ctx, &mkt_ctx);
@@ -258,6 +282,25 @@ pub async fn user_detail_page(
             ),
         };
 
+    let runtime = match detail.as_ref() {
+        Some(d) => repositories::get_user_runtime_detail(&pool, d.user_id.as_str())
+            .await
+            .ok()
+            .map(|r| UserRuntimeView {
+                connected_agents: r.connected_agents,
+                total_agents: r.total_agents,
+                tokens_in: r.tokens_in,
+                tokens_out: r.tokens_out,
+                last_bridge_version: r.last_bridge_version,
+                last_os: r.last_os,
+                last_hostname: r.last_hostname,
+                last_heartbeat_at: r.last_heartbeat_at.map(|t| t.to_rfc3339()),
+            }),
+        None => None,
+    };
+
+    let departments = fetch_departments(&pool).await;
+
     let data = UserDetailPageData {
         page: "user-detail",
         title: "User Detail",
@@ -268,6 +311,8 @@ pub async fn user_detail_page(
         user_assignments,
         user_devices,
         user_devices_count,
+        departments,
+        runtime,
     };
     let mut value = serde_json::to_value(&data).unwrap_or(serde_json::Value::Null);
     if let (serde_json::Value::Object(ref mut map), Some(eff)) = (&mut value, effective) {

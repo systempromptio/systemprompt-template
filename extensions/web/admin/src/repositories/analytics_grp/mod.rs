@@ -9,6 +9,7 @@ pub mod request_stats;
 pub mod requests;
 pub mod services_health;
 pub mod context_detail;
+pub mod contexts_list;
 pub mod session_detail;
 pub mod sessions;
 pub mod tools;

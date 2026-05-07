@@ -72,6 +72,7 @@ pub fn create_mcp_server(
         oauth_scopes: req.oauth_scopes,
         oauth_audience: req.oauth_audience,
         removable: true,
+        source_path: String::new(),
     })
 }
 
