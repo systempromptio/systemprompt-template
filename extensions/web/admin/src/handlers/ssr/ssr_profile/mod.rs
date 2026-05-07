@@ -1,20 +1,15 @@
-mod analysis;
-mod archetype;
-mod data_loading;
-mod trends;
+use std::sync::Arc;
 
-use crate::repositories::{daily_summaries, profile_reports, session_analyses};
-use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
 use axum::{
     extract::{Extension, State},
     response::Response,
 };
-use serde_json::json;
 use sqlx::PgPool;
-use std::sync::Arc;
 
-const PROFILE_PERIOD_DAYS: i32 = 30;
+use crate::handlers::ssr::ssr_helpers::render_typed_page;
+use crate::services::bridge_profile;
+use crate::templates::AdminTemplateEngine;
+use crate::types::{MarketplaceContext, UserContext};
 
 pub async fn profile_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -22,96 +17,6 @@ pub async fn profile_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
-    let user_id = &user_ctx.user_id;
-
-    let (
-        daily_summaries_data,
-        global_averages,
-        user_metrics,
-        recent_analyses,
-        stored_report,
-    ) = tokio::join!(
-        daily_summaries::fetch_recent_daily_summaries(pool.as_ref(), user_id.as_str(), 30),
-        daily_summaries::fetch_global_averages(pool.as_ref()),
-        profile_reports::fetch_user_aggregate_metrics(
-            pool.as_ref(),
-            user_id.as_str(),
-            PROFILE_PERIOD_DAYS
-        ),
-        session_analyses::fetch_recent_analyses(&pool, user_id, 50),
-        profile_reports::fetch_profile_report(pool.as_ref(), user_id.as_str()),
-    );
-
-    let gamification_profile: Option<crate::types::UserGamificationProfile> = None;
-    let data = build_profile_page_data(&ProfilePageInput {
-        user_metrics: &user_metrics,
-        global_averages: &global_averages,
-        daily_summaries_data: &daily_summaries_data,
-        recent_analyses: &recent_analyses,
-        stored_report: stored_report.as_ref(),
-        gamification_profile: gamification_profile.as_ref(),
-        mkt_ctx: &mkt_ctx,
-    });
-
-    super::render_page(&engine, "profile", &data, &user_ctx, &mkt_ctx)
+    let data = bridge_profile::build_bridge_profile_data(pool, &user_ctx).await;
+    render_typed_page(&engine, "profile", &data, &user_ctx, &mkt_ctx)
 }
-
-struct ProfilePageInput<'a> {
-    user_metrics: &'a profile_reports::UserAggregateMetrics,
-    global_averages: &'a daily_summaries::GlobalAverages,
-    daily_summaries_data: &'a [daily_summaries::DailySummaryRow],
-    recent_analyses: &'a [session_analyses::SessionAnalysisRow],
-    stored_report: Option<&'a profile_reports::ProfileReportRow>,
-    gamification_profile: Option<&'a crate::types::UserGamificationProfile>,
-    mkt_ctx: &'a MarketplaceContext,
-}
-
-fn build_profile_page_data(input: &ProfilePageInput<'_>) -> serde_json::Value {
-    let entity_counts = json!({
-        "plugins": input.mkt_ctx.total_plugins,
-        "skills": input.mkt_ctx.total_skills,
-        "agents": input.mkt_ctx.agents_count,
-        "mcp_servers": input.mkt_ctx.mcp_count,
-    });
-    let archetype_result = archetype::classify_archetype(input.user_metrics, input.global_averages);
-    let (strengths, weaknesses) =
-        analysis::compute_strengths_weaknesses(input.user_metrics, input.global_averages);
-    let trend_data = trends::build_trend_data(input.daily_summaries_data, input.global_averages);
-    let comparison_grid =
-        data_loading::build_comparison_grid(input.user_metrics, input.global_averages);
-    let category_breakdown = data_loading::build_category_breakdown(input.recent_analyses);
-
-    let strengths_json =
-        serde_json::to_value(&strengths).unwrap_or(serde_json::Value::Array(vec![]));
-    let weaknesses_json =
-        serde_json::to_value(&weaknesses).unwrap_or(serde_json::Value::Array(vec![]));
-    let metrics_json = serde_json::to_value(input.user_metrics)
-        .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
-
-    json!({
-        "page": "profile",
-        "title": "Profile & Insights",
-        "archetype": {
-            "id": archetype_result.id,
-            "name": archetype_result.name,
-            "description": archetype_result.description,
-            "confidence": archetype_result.confidence,
-        },
-        "strengths": strengths_json,
-        "has_strengths": !strengths.is_empty(),
-        "weaknesses": weaknesses_json,
-        "has_weaknesses": !weaknesses.is_empty(),
-        "metrics": metrics_json,
-        "has_metrics": input.user_metrics.total_days > 0,
-        "comparison": comparison_grid,
-        "trends": trend_data,
-        "category_breakdown": category_breakdown,
-        "has_category_breakdown": !category_breakdown.is_empty(),
-        "entity_counts": entity_counts,
-        "has_gamification": input.gamification_profile.is_some(),
-        "gamification": data_loading::build_gamification_data(input.gamification_profile),
-        "ai_report": data_loading::build_ai_report_data(input.stored_report),
-        "has_ai_report": input.stored_report.is_some_and(|r| r.ai_narrative.is_some()),
-    })
-}
-

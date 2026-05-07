@@ -48,6 +48,10 @@ struct CatalogPageData {
     plugins: Vec<CatalogRow>,
     mcp_servers: Vec<CatalogRow>,
     agents: Vec<CatalogRow>,
+    skills_count: usize,
+    plugins_count: usize,
+    mcp_servers_count: usize,
+    agents_count: usize,
     total: usize,
     types: Vec<&'static str>,
 }
@@ -149,15 +153,49 @@ pub async fn catalog_page(
     };
 
     let raw = load_raw_catalog(&services_path);
+    let (skills, plugins, mcp_servers, agents) = build_catalog_sections(&pool, raw).await;
 
+    let skills_count = skills.len();
+    let plugins_count = plugins.len();
+    let mcp_servers_count = mcp_servers.len();
+    let agents_count = agents.len();
+    let total = skills_count + plugins_count + mcp_servers_count + agents_count;
+
+    let data = CatalogPageData {
+        page: "catalog",
+        title: "Catalog",
+        types: vec![ENTITY_SKILL, ENTITY_PLUGIN, ENTITY_MCP_SERVER, ENTITY_AGENT],
+        skills,
+        plugins,
+        mcp_servers,
+        agents,
+        skills_count,
+        plugins_count,
+        mcp_servers_count,
+        agents_count,
+        total,
+    };
+
+    render_typed_page(&engine, "catalog", &data, &user_ctx, &mkt_ctx)
+}
+
+async fn build_catalog_sections(
+    pool: &PgPool,
+    raw: RawCatalog,
+) -> (
+    Vec<CatalogRow>,
+    Vec<CatalogRow>,
+    Vec<CatalogRow>,
+    Vec<CatalogRow>,
+) {
     let (skill_counts, plugin_counts, mcp_counts, agent_counts) = tokio::join!(
-        assignment_counts_by_type(&pool, ENTITY_SKILL),
-        assignment_counts_by_type(&pool, ENTITY_PLUGIN),
-        assignment_counts_by_type(&pool, ENTITY_MCP_SERVER),
-        assignment_counts_by_type(&pool, ENTITY_AGENT),
+        assignment_counts_by_type(pool, ENTITY_SKILL),
+        assignment_counts_by_type(pool, ENTITY_PLUGIN),
+        assignment_counts_by_type(pool, ENTITY_MCP_SERVER),
+        assignment_counts_by_type(pool, ENTITY_AGENT),
     );
 
-    let skills: Vec<CatalogRow> = raw
+    let skills = raw
         .skills
         .into_iter()
         .map(|s| {
@@ -175,7 +213,7 @@ pub async fn catalog_page(
         })
         .collect();
 
-    let plugins: Vec<CatalogRow> = raw
+    let plugins = raw
         .plugins
         .into_iter()
         .map(|p| {
@@ -192,7 +230,7 @@ pub async fn catalog_page(
         })
         .collect();
 
-    let mcp_servers: Vec<CatalogRow> = raw
+    let mcp_servers = raw
         .mcp_servers
         .into_iter()
         .map(|m| {
@@ -210,7 +248,7 @@ pub async fn catalog_page(
         })
         .collect();
 
-    let agents: Vec<CatalogRow> = raw
+    let agents = raw
         .agents
         .into_iter()
         .map(|a| {
@@ -228,18 +266,5 @@ pub async fn catalog_page(
         })
         .collect();
 
-    let total = skills.len() + plugins.len() + mcp_servers.len() + agents.len();
-
-    let data = CatalogPageData {
-        page: "catalog",
-        title: "Catalog",
-        types: vec![ENTITY_SKILL, ENTITY_PLUGIN, ENTITY_MCP_SERVER, ENTITY_AGENT],
-        skills,
-        plugins,
-        mcp_servers,
-        agents,
-        total,
-    };
-
-    render_typed_page(&engine, "catalog", &data, &user_ctx, &mkt_ctx)
+    (skills, plugins, mcp_servers, agents)
 }

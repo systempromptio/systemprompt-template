@@ -99,6 +99,7 @@
 [data-section="mcp-servers"],[data-section="mcp-edit"]{ --sp-section-color: var(--sp-section-dashboard); }
 [data-section="jobs"],   [data-section="events"]      { --sp-section-color: var(--sp-section-users); }
 [data-section="leaderboard"],[data-section="achievements"] { --sp-section-color: var(--sp-section-dashboard); }
+[data-section="contexts"], [data-section="context-detail"] { --sp-section-color: var(--sp-section-dashboard); }
 
 .section-title {
     font-size: var(--sp-text-md);

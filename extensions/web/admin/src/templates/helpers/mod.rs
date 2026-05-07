@@ -2,9 +2,10 @@ mod helpers_format;
 mod helpers_logic;
 
 use helpers_format::{
-    ConcatHelper, CssVersionHelper, DefaultHelper, FormatDateHelper, FormatNumberHelper,
-    GovernanceColorHelper, InitialsHelper, JsonHelper, RelativeTimeHelper, ToLowerCaseHelper,
-    ToUpperCaseHelper, TruncateHelper,
+    ConcatHelper, CssVersionHelper, DefaultHelper, DeltaPctHelper, FormatDateHelper,
+    FormatNumberHelper, FormatUsdHelper, GovernanceColorHelper, InitialsHelper, JsonHelper,
+    PercentHelper, RelativeTimeHelper, ShortIdHelper, ToLowerCaseHelper, ToUpperCaseHelper,
+    TruncateHelper,
 };
 use helpers_logic::{AddHelper, EqHelper, GtHelper, NotHelper, SubHelper};
 
@@ -26,4 +27,8 @@ pub fn register_helpers(hbs: &mut handlebars::Handlebars<'static>) {
     hbs.register_helper("not", Box::new(NotHelper));
     hbs.register_helper("add", Box::new(AddHelper));
     hbs.register_helper("sub", Box::new(SubHelper));
+    hbs.register_helper("formatUsd", Box::new(FormatUsdHelper));
+    hbs.register_helper("percent", Box::new(PercentHelper));
+    hbs.register_helper("deltaPct", Box::new(DeltaPctHelper));
+    hbs.register_helper("shortId", Box::new(ShortIdHelper));
 }
