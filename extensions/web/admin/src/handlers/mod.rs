@@ -30,7 +30,7 @@ pub use gateway::{
     reorder_gateway_routes_handler, update_gateway_route_handler, update_gateway_settings_handler,
 };
 pub use jobs::list_jobs_handler;
-pub use plugins::{get_skill_handler, list_plugins_handler, list_skills_handler};
+pub use plugins::list_plugins_handler;
 pub use plugins_env::list_plugin_env_handler;
 pub use resources::{get_agent_handler, list_agents_handler};
 pub use users::extract_user_from_cookie;

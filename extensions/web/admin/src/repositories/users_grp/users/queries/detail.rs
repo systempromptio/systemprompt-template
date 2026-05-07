@@ -2,7 +2,6 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 
 use crate::activity;
-use crate::repositories::user_skills;
 use crate::types::{EventTypeCount, ToolUsageCount, UserSession, UserSummary};
 
 pub async fn find_user_detail(
@@ -26,7 +25,7 @@ pub async fn find_user_detail(
             (SELECT a2.entity_name FROM user_activity a2
              WHERE a2.user_id = u.id AND a2.entity_name IS NOT NULL
              ORDER BY a2.created_at DESC LIMIT 1) AS last_tool,
-            COALESCE(s.skill_count, 0)::BIGINT AS "custom_skills_count!",
+            0::BIGINT AS "custom_skills_count!",
             NULL::TEXT AS preferred_client,
             COALESCE(pe.prompt_count, 0)::BIGINT AS "prompts!",
             COALESCE(pe.session_count, 0)::BIGINT AS "sessions!",
@@ -34,10 +33,6 @@ pub async fn find_user_detail(
             COALESCE(COUNT(DISTINCT a.id) FILTER (WHERE a.category = 'login'), 0)::BIGINT AS "logins!"
         FROM users u
         LEFT JOIN user_activity a ON a.user_id = u.id
-        LEFT JOIN (
-            SELECT user_id, COUNT(*)::BIGINT AS skill_count
-            FROM user_skills GROUP BY user_id
-        ) s ON s.user_id = u.id
         LEFT JOIN (
             SELECT user_id,
                    COUNT(*) FILTER (WHERE event_type LIKE '%UserPromptSubmit%')::BIGINT AS prompt_count,
@@ -57,7 +52,7 @@ pub async fn find_user_detail(
         ) mcp ON mcp.user_id = u.id
         WHERE u.id = $1
         GROUP BY u.id, u.created_at, u.name, u.display_name, u.full_name, u.email,
-                 u.roles, u.status, s.skill_count, pe.prompt_count, pe.session_count,
+                 u.roles, u.status, pe.prompt_count, pe.session_count,
                  bytes.total_bytes, pe.last_pe, mcp.last_mcp"#,
         user_id.as_str(),
     )
@@ -76,12 +71,6 @@ async fn build_user_detail(
     user_id: &UserId,
     summary: UserSummary,
 ) -> Result<Option<crate::types::UserDetail>, sqlx::Error> {
-    let skills = user_skills::list_user_skills(pool, user_id)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(user_id = %user_id, error = %e, "Failed to load user skills");
-            Vec::new()
-        });
     let recent_activity = activity::queries::list_user_recent_activity(pool, user_id.as_str())
         .await
         .unwrap_or_else(|e| {
@@ -128,7 +117,6 @@ async fn build_user_detail(
         custom_skills_count: summary.custom_skills_count,
         preferred_client: summary.preferred_client,
         created_at,
-        skills,
         recent_activity,
         activity_summary,
         sessions,

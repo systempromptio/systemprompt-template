@@ -85,8 +85,6 @@ pub async fn marketplace_context_middleware(
         total_skills: counts.total_skills,
         agents_count: counts.agents_count,
         mcp_count: counts.mcp_count,
-        tier_name: systemprompt_web_shared::TierLevel::Free,
-        is_premium: false,
         rank_level: 1,
         rank_name: String::from("Beginner"),
         rank_tier: systemprompt_web_shared::RankTier::Bronze,

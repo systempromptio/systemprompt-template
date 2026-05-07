@@ -158,8 +158,6 @@ pub fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
             "/plugins/{plugin_id}/env",
             get(handlers::list_plugin_env_handler),
         )
-        .route("/skills", get(handlers::list_skills_handler))
-        .route("/skills/{skill_id}", get(handlers::get_skill_handler))
         .route("/agents", get(handlers::list_agents_handler))
         .route("/agents/{agent_id}", get(handlers::get_agent_handler))
         .with_state(Arc::clone(read_pool))

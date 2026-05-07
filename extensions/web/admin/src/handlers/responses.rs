@@ -40,7 +40,6 @@ macro_rules! list_response {
 }
 
 list_response!(PluginsListResponse, plugins);
-list_response!(SkillsListResponse, skills);
 list_response!(AgentsListResponse, agents);
 list_response!(SecretsListResponse, secrets);
 list_response!(JobsListResponse, jobs);

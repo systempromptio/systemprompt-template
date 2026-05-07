@@ -1,6 +1,5 @@
 pub mod activity_grp;
 pub mod analytics_grp;
-pub mod control_center_grp;
 pub mod cowork_grp;
 pub mod dashboard_grp;
 pub mod departments_grp;
@@ -48,24 +47,9 @@ pub use plugins::{
 };
 pub use plugins_grp::hooks::list_configured_hooks;
 
-pub use user_agents::{
-    create_user_agent, delete_user_agent, fetch_agent_plugin_assignments, get_or_create_user_agent,
-    list_user_agents, update_user_agent,
-};
-pub use user_plugin_detail::get_plugin_with_associations;
-pub use user_plugins::{
-    count_user_plugin_items, create_user_plugin, delete_user_plugin, find_plugin_with_associations,
-    find_user_plugin, is_entity_in_platform_plugin, list_user_plugins, list_user_plugins_enriched,
-    set_plugin_agents, set_plugin_mcp_servers, set_plugin_skills, update_user_plugin,
-};
 pub use user_queries::{
     fetch_department_stats, fetch_user_identity_rows, IdentitySort,
     SortDir as IdentitySortDir,
-};
-pub use user_skills::{
-    create_user_skill, delete_user_skill, fetch_agent_usage_counts, fetch_skill_avg_ratings,
-    fetch_skill_usage_counts, find_agent_skill, get_or_create_user_skill, list_agent_skills,
-    list_user_skills, update_user_skill,
 };
 pub use users::{
     create_user, delete_user, delete_user_complete, fetch_distinct_roles, fetch_user_ranks,

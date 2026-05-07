@@ -105,8 +105,6 @@ pub enum ActivityEntity {
     User,
     Prompt,
     Agent,
-    UserSkill,
-    UserAgent,
     Tool,
     GatewayRoute,
 }
@@ -129,8 +127,6 @@ impl AsRef<str> for ActivityEntity {
             Self::User => "user",
             Self::Prompt => "prompt",
             Self::Agent => "agent",
-            Self::UserSkill => "user_skill",
-            Self::UserAgent => "user_agent",
             Self::Tool => "tool",
             Self::GatewayRoute => "gateway_route",
         }
@@ -248,8 +244,6 @@ pub const fn entity_label(entity: ActivityEntity) -> &'static str {
         ActivityEntity::User => "user",
         ActivityEntity::Prompt => "prompt",
         ActivityEntity::Session => "session",
-        ActivityEntity::UserSkill => "user skill",
-        ActivityEntity::UserAgent => "user agent",
         ActivityEntity::Tool => "tool",
         ActivityEntity::GatewayRoute => "gateway route",
     }

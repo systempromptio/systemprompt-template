@@ -227,15 +227,9 @@
                 {{#if has_ai_report}}
                 <span class="text-secondary text-sm">Generated {{ai_report.generated_at}}</span>
                 {{/if}}
-                {{#if current_user.is_admin}}
                 <button type="button" class="btn btn-primary btn-sm" id="generate-profile-report">
                     {{#if has_ai_report}}Regenerate{{else}}Generate Analysis{{/if}}
                 </button>
-                {{else}}{{#if marketplace.is_premium}}
-                <button type="button" class="btn btn-primary btn-sm" id="generate-profile-report">
-                    {{#if has_ai_report}}Regenerate{{else}}Generate Analysis{{/if}}
-                </button>
-                {{/if}}{{/if}}
             </div>
         </div>
         <div class="card-body" id="profile-ai-report-body">

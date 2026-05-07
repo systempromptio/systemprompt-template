@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use systemprompt::identifiers::{AgentId, CategoryId, Email, SkillId, SourceId, UserId};
+use systemprompt::identifiers::{Email, SkillId, UserId};
 
 use super::super::activity;
 
@@ -35,7 +35,6 @@ pub struct UserDetail {
     pub custom_skills_count: i64,
     pub preferred_client: Option<String>,
     pub created_at: DateTime<Utc>,
-    pub skills: Vec<UserSkill>,
     pub recent_activity: Vec<activity::ActivityTimelineEvent>,
     pub activity_summary: Vec<activity::ActivityCategorySummary>,
     pub sessions: Vec<UserSession>,
@@ -77,90 +76,6 @@ pub struct UsageEvent {
     pub metadata: serde_json::Value,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct UserSkill {
-    pub id: String,
-    pub user_id: UserId,
-    pub skill_id: SkillId,
-    pub name: String,
-    pub description: String,
-    pub content: String,
-    pub enabled: bool,
-    pub version: String,
-    pub tags: Vec<String>,
-    pub base_skill_id: Option<SkillId>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct AgentSkill {
-    pub skill_id: SkillId,
-    pub name: String,
-    pub description: String,
-    pub enabled: bool,
-    pub tags: Option<Vec<String>>,
-    pub category_id: Option<CategoryId>,
-    pub source_id: SourceId,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct CreateSkillRequest {
-    pub skill_id: SkillId,
-    pub name: String,
-    #[serde(default)]
-    pub description: String,
-    #[serde(default)]
-    pub content: String,
-    #[serde(default)]
-    pub tags: Vec<String>,
-    #[serde(default)]
-    pub base_skill_id: Option<SkillId>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct UserAgent {
-    pub id: String,
-    pub user_id: UserId,
-    pub agent_id: AgentId,
-    pub name: String,
-    pub description: String,
-    pub system_prompt: String,
-    pub enabled: bool,
-    pub base_agent_id: Option<AgentId>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct CreateUserAgentRequest {
-    pub agent_id: AgentId,
-    pub name: String,
-    #[serde(default)]
-    pub description: String,
-    #[serde(default)]
-    pub system_prompt: String,
-    #[serde(default)]
-    pub base_agent_id: Option<AgentId>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct UpdateUserSkillRequest {
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub content: Option<String>,
-    pub tags: Option<Vec<String>>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct UpdateUserAgentRequest {
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub system_prompt: Option<String>,
-}
-
 #[derive(Debug, Clone)]
 pub struct UserBasicInfo {
     pub display_name: String,
@@ -173,14 +88,6 @@ pub struct CookieSession {
     pub user_id: UserId,
     pub username: String,
     pub email: Email,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct UserPluginCounts {
-    pub plugins: usize,
-    pub skills: usize,
-    pub agents: usize,
-    pub mcp_servers: usize,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -240,15 +147,6 @@ pub struct SkillSecret {
 pub struct UpsertSkillSecretRequest {
     pub var_name: String,
     pub var_value: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct UpdateSkillRequest {
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub content: Option<String>,
-    pub enabled: Option<bool>,
-    pub tags: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize)]

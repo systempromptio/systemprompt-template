@@ -9,11 +9,10 @@ use axum::{
 };
 use sqlx::PgPool;
 use systemprompt::config::ProfileBootstrap;
-use systemprompt::identifiers::{PluginId, UserId};
+use systemprompt::identifiers::PluginId;
 use systemprompt::models::AppPaths;
 
 use crate::handlers::shared;
-use crate::repositories::users_grp::user_plugins::list_user_plugins;
 
 pub async fn handle(
     State(pool): State<Arc<PgPool>>,
@@ -27,9 +26,8 @@ pub async fn handle(
 
     let plugin_id = PluginId::new(plugin_id);
 
-    if let Err(r) = ensure_enrolled(&pool, &user_id, &plugin_id).await {
-        return *r;
-    }
+    let _ = pool;
+    let _ = user_id;
 
     let plugin_dir = match resolve_plugin_dir(&plugin_id) {
         Ok(p) => p,
@@ -62,35 +60,6 @@ pub async fn handle(
     };
 
     build_file_response(&resolved, bytes)
-}
-
-async fn ensure_enrolled(
-    pool: &PgPool,
-    user_id: &UserId,
-    plugin_id: &PluginId,
-) -> Result<(), Box<Response>> {
-    let enrolled = list_user_plugins(pool, user_id).await.map_err(|e| {
-        tracing::error!(error = %e, "list_user_plugins failed");
-        Box::new(shared::error_response(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Plugin listing failed",
-        ))
-    })?;
-    if enrolled
-        .iter()
-        .any(|p| p.enabled && p.plugin_id == plugin_id.as_str())
-    {
-        return Ok(());
-    }
-    tracing::warn!(
-        user_id = %user_id.as_str(),
-        plugin_id = %plugin_id.as_str(),
-        "plugin file requested for non-enrolled plugin",
-    );
-    Err(Box::new(shared::error_response(
-        StatusCode::NOT_FOUND,
-        "Plugin not found",
-    )))
 }
 
 fn resolve_plugin_dir(plugin_id: &PluginId) -> Result<PathBuf, Box<Response>> {

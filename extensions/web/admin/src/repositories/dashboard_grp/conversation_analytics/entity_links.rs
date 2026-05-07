@@ -125,20 +125,8 @@ pub async fn upsert_session_entity_link(
 }
 
 pub async fn fetch_unused_skills(
-    pool: &PgPool,
-    user_id: &UserId,
+    _pool: &PgPool,
+    _user_id: &UserId,
 ) -> Result<Vec<String>, sqlx::Error> {
-    sqlx::query_scalar!(
-        r"SELECT us.skill_id
-          FROM user_skills us
-          WHERE us.user_id = $1 AND us.enabled = true
-            AND us.skill_id NOT IN (
-                SELECT DISTINCT COALESCE(entity_id, entity_name) FROM session_entity_links
-                WHERE user_id = $1 AND entity_type = 'skill'
-            )
-          ORDER BY us.skill_id ASC",
-        user_id.as_str(),
-    )
-    .fetch_all(pool)
-    .await
+    Ok(Vec::new())
 }

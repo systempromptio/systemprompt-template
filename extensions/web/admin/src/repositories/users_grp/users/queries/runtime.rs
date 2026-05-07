@@ -29,8 +29,7 @@ pub async fn list_user_runtime_aggregates(
             FROM bridge_sessions GROUP BY user_id
         ) bs ON bs.user_id = u.id
         LEFT JOIN (
-            SELECT user_id, COUNT(*)::BIGINT AS total_agents
-            FROM user_agents WHERE enabled = TRUE GROUP BY user_id
+            SELECT NULL::TEXT AS user_id, 0::BIGINT AS total_agents WHERE FALSE
         ) ua ON ua.user_id = u.id
         LEFT JOIN (
             SELECT user_id, MAX(last_seen_at) AS newest_seen
@@ -77,13 +76,8 @@ pub async fn get_user_runtime_detail(
     .fetch_one(pool)
     .await?;
 
-    let total_agents = sqlx::query_scalar!(
-        r#"SELECT COUNT(*)::BIGINT AS "c!" FROM user_agents WHERE user_id = $1 AND enabled = TRUE"#,
-        user_id
-    )
-    .fetch_one(pool)
-    .await
-    .unwrap_or(0);
+    let _ = user_id;
+    let total_agents: i64 = 0;
 
     let latest = sqlx::query!(
         r#"
