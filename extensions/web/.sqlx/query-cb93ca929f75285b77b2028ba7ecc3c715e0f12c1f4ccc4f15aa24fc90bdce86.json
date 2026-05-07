@@ -1,0 +1,136 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                f.id, f.path, f.public_url, f.mime_type, f.size_bytes, f.ai_content,\n                f.metadata, f.user_id, f.session_id, f.trace_id, f.context_id, f.created_at, f.updated_at, f.deleted_at,\n                cf.id as cf_id, cf.content_id, cf.file_id as cf_file_id, cf.role, cf.display_order, cf.created_at as cf_created_at\n            FROM files f\n            INNER JOIN content_files cf ON cf.file_id = f.id\n            WHERE cf.content_id = $1 AND f.deleted_at IS NULL\n            ORDER BY cf.display_order ASC, cf.created_at ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "path",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "public_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "mime_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "ai_content",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 7,
+        "name": "user_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "session_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "trace_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "context_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "deleted_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 14,
+        "name": "cf_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "content_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "cf_file_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 17,
+        "name": "role",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 18,
+        "name": "display_order",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 19,
+        "name": "cf_created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "cb93ca929f75285b77b2028ba7ecc3c715e0f12c1f4ccc4f15aa24fc90bdce86"
+}

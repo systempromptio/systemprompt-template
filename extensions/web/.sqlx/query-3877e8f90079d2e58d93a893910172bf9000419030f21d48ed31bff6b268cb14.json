@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE task_execution_steps SET\n                    status = $2,\n                    completed_at = $3,\n                    duration_ms = $4\n                WHERE step_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3877e8f90079d2e58d93a893910172bf9000419030f21d48ed31bff6b268cb14"
+}

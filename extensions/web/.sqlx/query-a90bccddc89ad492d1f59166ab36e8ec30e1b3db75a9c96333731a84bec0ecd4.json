@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            id as \"id!\",\n            artifact_id as \"artifact_id!: ArtifactId\",\n            context_id as \"context_id!: ContextId\",\n            part_kind as \"part_kind!\",\n            sequence_number as \"sequence_number!\",\n            text_content,\n            file_name,\n            file_mime_type,\n            file_uri,\n            file_bytes,\n            data_content,\n            metadata\n        FROM artifact_parts WHERE artifact_id = ANY($1) ORDER BY artifact_id, sequence_number ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "artifact_id!: ArtifactId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "context_id!: ContextId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "part_kind!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "sequence_number!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "text_content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "file_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "file_mime_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "file_uri",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "file_bytes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "data_content",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 11,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "a90bccddc89ad492d1f59166ab36e8ec30e1b3db75a9c96333731a84bec0ecd4"
+}

@@ -106,6 +106,6 @@ pub async fn get_user_runtime_detail(
         last_bridge_version: latest.as_ref().map(|r| r.bridge_version.clone()),
         last_os: latest.as_ref().map(|r| r.os.clone()),
         last_hostname: latest.as_ref().map(|r| r.hostname.clone()),
-        last_heartbeat_at: latest.and_then(|r| Some(r.last_heartbeat_at)),
+        last_heartbeat_at: latest.map(|r| r.last_heartbeat_at),
     })
 }

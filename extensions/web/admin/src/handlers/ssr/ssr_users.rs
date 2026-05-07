@@ -14,19 +14,16 @@ use sqlx::PgPool;
 use super::types::{EnrichedUserView, UserDetailPageData, UserRuntimeView, UsersPageData};
 
 fn freshness_for(ts: Option<chrono::DateTime<chrono::Utc>>) -> &'static str {
-    match ts {
-        None => "never",
-        Some(t) => {
-            let age = chrono::Utc::now() - t;
-            if age < chrono::Duration::minutes(5) {
-                "fresh"
-            } else if age < chrono::Duration::hours(1) {
-                "idle"
-            } else {
-                "stale"
-            }
+    ts.map_or("never", |t| {
+        let age = chrono::Utc::now() - t;
+        if age < chrono::Duration::minutes(5) {
+            "fresh"
+        } else if age < chrono::Duration::hours(1) {
+            "idle"
+        } else {
+            "stale"
         }
-    }
+    })
 }
 
 fn enrich_users(

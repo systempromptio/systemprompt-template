@@ -167,9 +167,10 @@ pub struct MatrixSource {
 /// kind that exist on this deployment.
 pub type SectionInput = (String, String, Vec<(String, String, Option<String>)>);
 
-/// Filter a freshly-loaded catalog snapshot down to entries `user_id` is
-/// permitted to see. Wraps [`resolve_user_matrix`] without altering the
-/// existing matrix shape — callers project the section rows themselves.
+/// Filter a catalog snapshot down to entries `user_id` is allowed to see.
+///
+/// Wraps [`resolve_user_matrix`] without altering the matrix shape —
+/// callers project the section rows themselves.
 pub async fn filter_catalog_for_user(
     pool: &PgPool,
     user_id: &str,

@@ -46,47 +46,12 @@ pub async fn create_user(
     .fetch_one(pool)
     .await?;
 
-    grant_default_marketplaces(pool, &user_id_str).await;
+    // marketplace entity_type was removed from access_control_rules; new
+    // users get access via role/department defaults seeded in YAML or via the
+    // admin matrix UI.
+    let _ = user_id_str;
 
     Ok(summary)
-}
-
-/// Grant the new user access to every marketplace flagged `default_included = true`.
-/// No-op + warn if there are no defaults (the admin can assign manually later).
-async fn grant_default_marketplaces(pool: &PgPool, user_id: &str) {
-    let defaults = sqlx::query_scalar::<_, String>(
-        "SELECT DISTINCT entity_id FROM access_control_rules
-         WHERE entity_type = 'marketplace' AND default_included = TRUE",
-    )
-    .fetch_all(pool)
-    .await;
-
-    let Ok(ids) = defaults else {
-        tracing::warn!(user_id, "Failed to look up default marketplaces");
-        return;
-    };
-    if ids.is_empty() {
-        tracing::warn!(
-            user_id,
-            "No marketplace flagged default_included=true; new user has no marketplace access by default"
-        );
-        return;
-    }
-    for entity_id in ids {
-        let res = sqlx::query(
-            "INSERT INTO access_control_rules
-                (entity_type, entity_id, rule_type, rule_value, access, default_included)
-             VALUES ('marketplace', $1, 'user', $2, 'allow', FALSE)
-             ON CONFLICT (entity_type, entity_id, rule_type, rule_value) DO NOTHING",
-        )
-        .bind(&entity_id)
-        .bind(user_id)
-        .execute(pool)
-        .await;
-        if let Err(e) = res {
-            tracing::warn!(user_id, %entity_id, error = %e, "Failed to grant default marketplace");
-        }
-    }
 }
 
 pub async fn update_user(

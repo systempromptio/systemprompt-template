@@ -134,8 +134,10 @@ const fn order_by_clause(sort: TraceSort) -> &'static str {
 /// count of distinct sessions matching the filter (without pagination).
 fn build_trace_list_sql(sort: TraceSort) -> String {
     let order_by = order_by_clause(sort);
-    format!(
-        r"WITH trace_to_session AS (
+    format!("{TRACE_LIST_SQL_BODY} ORDER BY {order_by} LIMIT $10 OFFSET $11")
+}
+
+const TRACE_LIST_SQL_BODY: &str = r"WITH trace_to_session AS (
             -- Canonical session_id for each trace_id, used to collapse rows
             -- where governance_decisions.session_id was filled with the
             -- trace_id (data quirk in older runs).
@@ -294,11 +296,7 @@ fn build_trace_list_sql(sort: TraceSort) -> String {
             has_error,
             has_deny,
             total_count
-        FROM counted
-        ORDER BY {order_by}
-        LIMIT $10 OFFSET $11"
-    )
-}
+        FROM counted";
 
 pub async fn fetch_trace_list(
     pool: &PgPool,

@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO device_app_links (device_id, user_id, app_platform, app_version, hostname)\n        VALUES ($1, $2, $3, '', $4)\n        RETURNING enrolled_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "enrolled_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "399ed59bdc75e48ece05a4e2617925a05976f4e4adcc6753495ffa5dcc59b5cf"
+}
