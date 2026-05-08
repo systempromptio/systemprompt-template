@@ -1,0 +1,12 @@
+id: example_hook
+name: Example Hook
+description: Demonstration of a marketplace-distributed hook.
+version: "1.0.0"
+enabled: true
+event: PreToolUse
+matcher: "*"
+command: "echo 'pre-tool-use fired'"
+async: false
+category: custom
+tags: []
+visible_to: []
