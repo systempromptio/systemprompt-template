@@ -1,61 +1,79 @@
 use std::path::Path;
 
-use systemprompt::models::{HookEventsConfig, HookMatcher};
+use systemprompt::models::{DiskHookConfig, HOOK_CONFIG_FILENAME};
 use systemprompt_web_shared::error::MarketplaceError;
 
 use crate::types::ConfiguredHook;
 
 pub fn list_configured_hooks(
-    _services_path: &Path,
+    services_path: &Path,
     roles: &[String],
 ) -> Result<Vec<ConfiguredHook>, MarketplaceError> {
     use crate::types::ROLE_ADMIN;
     let is_admin = roles.iter().any(|r| r == ROLE_ADMIN);
+
+    let hooks_dir = services_path.join("hooks");
+    if !hooks_dir.is_dir() {
+        return Ok(Vec::new());
+    }
+
     let mut out = Vec::new();
-    for (_id, plugin) in super::plugin_loader::load_all_plugins()? {
-        if !plugin.base.enabled && !is_admin {
+    let read = std::fs::read_dir(&hooks_dir)?;
+    for entry in read {
+        let entry = entry?;
+        let path = entry.path();
+        if !path.is_dir() {
             continue;
         }
-        if !is_admin && !plugin.roles.is_empty() && !plugin.roles.iter().any(|r| roles.contains(r))
+
+        let config_path = path.join(HOOK_CONFIG_FILENAME);
+        if !config_path.exists() {
+            continue;
+        }
+
+        let dir_name = path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("")
+            .to_string();
+
+        let Ok(text) = std::fs::read_to_string(&config_path) else {
+            continue;
+        };
+        let config: DiskHookConfig = match serde_yaml::from_str(&text) {
+            Ok(c) => c,
+            Err(e) => {
+                tracing::warn!(path = %config_path.display(), error = %e, "parse hook config");
+                continue;
+            },
+        };
+
+        if !config.enabled && !is_admin {
+            continue;
+        }
+        if !is_admin
+            && !config.visible_to.is_empty()
+            && !config.visible_to.iter().any(|r| roles.contains(r))
         {
             continue;
         }
-        let plugin_id = plugin.base.id.to_string();
-        flatten_into(&plugin_id, &plugin.base.hooks, &mut out);
-    }
-    Ok(out)
-}
 
-fn flatten_into(plugin_id: &str, hooks: &HookEventsConfig, out: &mut Vec<ConfiguredHook>) {
-    let groups: [(&str, &[HookMatcher]); 10] = [
-        ("PreToolUse", &hooks.pre_tool_use),
-        ("PostToolUse", &hooks.post_tool_use),
-        ("PostToolUseFailure", &hooks.post_tool_use_failure),
-        ("SessionStart", &hooks.session_start),
-        ("SessionEnd", &hooks.session_end),
-        ("UserPromptSubmit", &hooks.user_prompt_submit),
-        ("Notification", &hooks.notification),
-        ("Stop", &hooks.stop),
-        ("SubagentStart", &hooks.subagent_start),
-        ("SubagentStop", &hooks.subagent_stop),
-    ];
-    for (event, matchers) in groups {
-        for matcher in matchers {
-            for (idx, action) in matcher.hooks.iter().enumerate() {
-                out.push(ConfiguredHook {
-                    id: format!("{plugin_id}:{event}:{}:{idx}", matcher.matcher),
-                    plugin_id: plugin_id.to_string(),
-                    event: event.to_string(),
-                    matcher: matcher.matcher.clone(),
-                    command: action
-                        .command
-                        .clone()
-                        .or_else(|| action.prompt.clone())
-                        .unwrap_or_default(),
-                    is_async: action.r#async,
-                    timeout_ms: action.timeout,
-                });
-            }
-        }
+        let id_str = if config.id.as_str().is_empty() {
+            dir_name
+        } else {
+            config.id.as_str().to_string()
+        };
+
+        out.push(ConfiguredHook {
+            id: id_str.clone(),
+            plugin_id: id_str,
+            event: config.event.as_str().to_string(),
+            matcher: config.matcher.clone(),
+            command: config.command.clone(),
+            is_async: config.is_async,
+            timeout_ms: None,
+        });
     }
+
+    Ok(out)
 }
