@@ -926,7 +926,8 @@ header.admin-header,
 .admin-main .toolbar,
 .admin-main .usage-chart-container,
 .admin-main .cc-stats-bar {
-    margin-left: calc(-1 * var(--sp-space-6));
+    margin-left: calc(-1 * var(--sp-space-10));
+    margin-right: calc(-1 * var(--sp-space-10));
     border-radius: 0 0.375rem 1.125rem 0;
     border-left: none;
 }
@@ -2139,6 +2140,73 @@ h2.nav-label {
     font-size: 0.8em;
     color: var(--sp-text-tertiary);
     margin-top: 0.125rem;
+}
+
+.data-table tbody.table-group + tbody.table-group .table-group-header th {
+    border-top: 1px solid var(--sp-border-default);
+}
+
+.data-table .table-group-header th {
+    background: var(--sp-bg-surface-raised);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: var(--sp-space-2) var(--sp-space-4);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.table-group-title {
+    color: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+}
+
+.table-group-title:hover .table-group-name {
+    color: var(--sp-accent);
+}
+
+.table-group-name {
+    color: var(--sp-text-primary);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.table-group-count {
+    color: var(--sp-text-tertiary);
+    font-weight: 500;
+    font-size: var(--sp-text-xs);
+}
+
+.table-group-stats {
+    float: right;
+    color: var(--sp-text-tertiary);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.user-cell-text {
+    display: inline-flex;
+    flex-direction: column;
+    line-height: 1.2;
+    min-width: 0;
+}
+
+.user-cell-name {
+    color: var(--sp-text-primary);
+    font-weight: 500;
+}
+
+.user-cell-email {
+    font-size: 0.78em;
+    color: var(--sp-text-tertiary);
+    margin-top: 0.1rem;
 }
 
 }
@@ -8558,4 +8626,126 @@ html, body {
     font-size: var(--sp-text-sm);
     margin: 0;
     font-style: italic;
+}
+
+/* Admin /access/devices — grouped table + create panel install block */
+
+.devices-grouped table.data-table {
+    border-collapse: collapse;
+}
+
+.devices-grouped tbody tr.group-start > td {
+    border-top: 1px solid var(--color-border, #2a2f3a);
+}
+
+.devices-grouped td.owner-cell {
+    vertical-align: middle;
+    background: var(--color-surface-alt, rgba(255, 255, 255, 0.02));
+    font-weight: 500;
+}
+
+.devices-grouped td.owner-cell a {
+    text-decoration: none;
+}
+
+#create-device-panel .field-hint {
+    margin-top: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted, rgba(255, 255, 255, 0.6));
+    line-height: 1.4;
+}
+
+#create-device-panel .field-hint code {
+    font-size: 0.85em;
+    padding: 0 0.2rem;
+}
+
+#create-device-panel details.form-advanced {
+    margin-top: 0.5rem;
+    padding: 0.5rem 0;
+    border-top: 1px dashed var(--color-border, #2a2f3a);
+}
+
+#create-device-panel details.form-advanced > summary {
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--color-text-muted, rgba(255, 255, 255, 0.7));
+    padding: 0.25rem 0;
+    user-select: none;
+}
+
+#create-device-panel details.form-advanced[open] > summary {
+    margin-bottom: 0.75rem;
+}
+
+.install-block {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border, #2a2f3a);
+    border-radius: 0.5rem;
+    background: var(--color-surface-alt, rgba(255, 255, 255, 0.02));
+}
+
+.install-block h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+}
+
+.install-block .install-intro {
+    font-size: 0.9rem;
+    color: var(--color-text-muted, rgba(255, 255, 255, 0.7));
+    margin: 0 0 0.75rem;
+    line-height: 1.5;
+}
+
+.install-block .download-link,
+.install-block .install-guide-link {
+    color: var(--color-primary, #4a9eff);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.install-block .download-link:hover,
+.install-block .install-guide-link:hover {
+    text-decoration: underline;
+}
+
+.install-block .snippet-wrap {
+    position: relative;
+    margin: 0.75rem 0;
+}
+
+.install-block pre {
+    background: var(--color-surface, #14171f);
+    border: 1px solid var(--color-border, #2a2f3a);
+    border-radius: 0.375rem;
+    padding: 0.75rem 0.9rem;
+    margin: 0;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.55;
+}
+
+.install-block pre code {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    color: var(--color-text, #e8eaed);
+    white-space: pre;
+}
+
+.install-block .btn-copy-snippet {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.4rem;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.55rem;
+}
+
+#create-device-panel .panel-footer-state {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+#create-device-panel .panel-footer-state[hidden] {
+    display: none;
 }
