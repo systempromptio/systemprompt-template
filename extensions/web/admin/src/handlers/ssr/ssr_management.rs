@@ -118,6 +118,88 @@ struct DeviceRow {
     expires_at: Option<DateTime<Utc>>,
     created_at: Option<DateTime<Utc>>,
     revoked: bool,
+    owner_rowspan: u32,
+    group_start: bool,
+}
+
+fn build_device_rows(rows: Vec<DeviceRowDb>) -> (Vec<DeviceRow>, usize) {
+    let now = Utc::now();
+    let mut devices = Vec::with_capacity(rows.len());
+    let mut online = 0usize;
+    for r in rows {
+        let revoked = r.revoked_at.is_some();
+        if !revoked {
+            if let Some(ts) = r.last_seen_at {
+                if (now - ts).num_minutes() < 5 {
+                    online += 1;
+                }
+            }
+        }
+        devices.push(DeviceRow {
+            id: r.id,
+            name: r.name,
+            key_prefix: r.key_prefix,
+            user_id: r.user_id,
+            user_email: r.user_email,
+            department: r.department,
+            platform: r.platform,
+            app_version: r.app_version,
+            hostname: r.hostname,
+            last_seen_at: r.last_seen_at,
+            enrolled_at: r.enrolled_at,
+            expires_at: r.expires_at,
+            created_at: r.created_at,
+            revoked,
+            owner_rowspan: 0,
+            group_start: false,
+        });
+    }
+    (devices, online)
+}
+
+async fn load_device_user_options(pool: &PgPool) -> Vec<DeviceUserOption> {
+    sqlx::query_as::<_, (String, Option<String>, Option<String>)>(
+        r"
+        SELECT u.id::TEXT, u.email::TEXT, COALESCE(NULLIF(u.display_name, ''), NULLIF(u.full_name, ''), NULLIF(u.name, '')) AS display_name
+        FROM users u
+        WHERE NOT ('anonymous' = ANY(u.roles))
+          AND u.email NOT LIKE '%@anonymous.local'
+        ORDER BY COALESCE(NULLIF(u.display_name, ''), u.email::TEXT, u.id::TEXT)
+        ",
+    )
+    .fetch_all(pool)
+    .await
+    .unwrap_or_default()
+    .into_iter()
+    .map(|(uid, email, display)| {
+        let label = match (display.as_deref(), email.as_deref()) {
+            (Some(d), Some(e)) => format!("{d} ({e})"),
+            (Some(d), None) => d.to_string(),
+            (None, Some(e)) => e.to_string(),
+            (None, None) => uid.clone(),
+        };
+        DeviceUserOption { user_id: uid, label }
+    })
+    .collect()
+}
+
+fn owner_key(d: &DeviceRow) -> &str {
+    d.user_email.as_deref().unwrap_or(d.user_id.as_str())
+}
+
+fn compute_owner_rowspans(devices: &mut [DeviceRow]) {
+    let mut i = 0;
+    while i < devices.len() {
+        let key = owner_key(&devices[i]).to_owned();
+        let mut j = i + 1;
+        while j < devices.len() && owner_key(&devices[j]) == key {
+            j += 1;
+        }
+        let span = u32::try_from(j - i).unwrap_or(1);
+        devices[i].owner_rowspan = span;
+        devices[i].group_start = true;
+        i = j;
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -167,67 +249,20 @@ pub async fn management_devices_page(
         FROM user_api_keys ak
         LEFT JOIN users u ON u.id = ak.user_id
         LEFT JOIN device_app_links dal ON dal.device_id = ak.id
-        ORDER BY ak.revoked_at IS NOT NULL, ak.last_used_at DESC NULLS LAST, ak.created_at DESC
+        ORDER BY ak.revoked_at IS NOT NULL,
+                 COALESCE(u.email::TEXT, ak.user_id::TEXT),
+                 ak.created_at DESC
         ",
     )
     .fetch_all(&*pool)
     .await
     .unwrap_or_default();
 
-    let now = Utc::now();
-    let mut devices = Vec::with_capacity(rows.len());
-    let mut online = 0usize;
-    for r in rows {
-        let revoked = r.revoked_at.is_some();
-        if !revoked {
-            if let Some(ts) = r.last_seen_at {
-                if (now - ts).num_minutes() < 5 {
-                    online += 1;
-                }
-            }
-        }
-        devices.push(DeviceRow {
-            id: r.id,
-            name: r.name,
-            key_prefix: r.key_prefix,
-            user_id: r.user_id,
-            user_email: r.user_email,
-            department: r.department,
-            platform: r.platform,
-            app_version: r.app_version,
-            hostname: r.hostname,
-            last_seen_at: r.last_seen_at,
-            enrolled_at: r.enrolled_at,
-            expires_at: r.expires_at,
-            created_at: r.created_at,
-            revoked,
-        });
-    }
+    let (mut devices, online) = build_device_rows(rows);
     let total = devices.len();
+    compute_owner_rowspans(&mut devices);
 
-    let user_options: Vec<DeviceUserOption> = sqlx::query_as::<_, (String, Option<String>, Option<String>)>(
-        r"
-        SELECT u.id::TEXT, u.email::TEXT, COALESCE(NULLIF(u.display_name, ''), NULLIF(u.full_name, ''), NULLIF(u.name, '')) AS display_name
-        FROM users u
-        WHERE NOT ('anonymous' = ANY(u.roles))
-          AND u.email NOT LIKE '%@anonymous.local'
-        ORDER BY COALESCE(NULLIF(u.display_name, ''), u.email::TEXT, u.id::TEXT)
-        ",
-    )
-    .fetch_all(&*pool)
-    .await
-    .unwrap_or_default()
-    .into_iter()
-    .map(|(uid, email, display)| {
-        let label = match (display.as_deref(), email.as_deref()) {
-            (Some(d), Some(e)) => format!("{d} ({e})"),
-            (Some(d), None) => d.to_string(),
-            (None, Some(e)) => e.to_string(),
-            (None, None) => uid.clone(),
-        };
-        DeviceUserOption { user_id: uid, label }
-    })
-    .collect();
+    let user_options = load_device_user_options(&pool).await;
 
     let department_options: Vec<String> = repositories::list_departments(&pool)
         .await

@@ -2,6 +2,48 @@ import { apiFetch } from '../services/api.js';
 import { showToast } from '../services/toast.js';
 import { on } from '../services/events.js';
 
+const INSTALL_TEMPLATES = {
+  macos: {
+    title: 'Install on macOS',
+    intro: 'Run the following on the target Mac. The Homebrew tap installs the Systemprompt Cowork app and the systemprompt-bridge CLI; the login command registers this device against the gateway using the PAT above.',
+    downloadLabel: 'Download .dmg from GitHub Releases',
+    downloadHref: 'https://github.com/systempromptio/systemprompt-template/releases/latest',
+    guideHref: '/docs/cowork/install-macos',
+    snippet: ({ pat, origin }) => [
+      'brew tap systempromptio/tap',
+      'brew install --cask cowork',
+      `systemprompt-bridge login ${pat} --gateway ${origin}`,
+      'open -a "Systemprompt Cowork"'
+    ].join('\n'),
+  },
+  windows: {
+    title: 'Install on Windows',
+    intro: 'Run the following in PowerShell on the target Windows machine. Scoop installs the systemprompt-bridge CLI; the login command registers this device against the gateway using the PAT above.',
+    downloadLabel: 'Download .msi from GitHub Releases',
+    downloadHref: 'https://github.com/systempromptio/systemprompt-template/releases/latest',
+    guideHref: '/docs/cowork/install-windows',
+    snippet: ({ pat, origin }) => [
+      'scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket',
+      'scoop install systemprompt-bridge',
+      `systemprompt-bridge login ${pat} --gateway ${origin}`
+    ].join('\n'),
+  },
+  linux: {
+    title: 'Install on Linux',
+    intro: 'Download the prebuilt systemprompt-bridge binary, install it onto your PATH, then register the device with the gateway using the PAT above.',
+    downloadLabel: 'Download Linux binary from GitHub Releases',
+    downloadHref: 'https://github.com/systempromptio/systemprompt-template/releases/latest',
+    guideHref: '/docs/cowork/device-auth',
+    snippet: ({ pat, origin }) => [
+      'curl -sSL -o systemprompt-bridge \\',
+      '  https://github.com/systempromptio/systemprompt-template/releases/latest/download/systemprompt-bridge-x86_64-unknown-linux-gnu',
+      'chmod +x systemprompt-bridge',
+      'sudo install -m 0755 systemprompt-bridge /usr/local/bin/systemprompt-bridge',
+      `systemprompt-bridge login ${pat} --gateway ${origin}`
+    ].join('\n'),
+  },
+};
+
 const openCreatePanel = () => {
   const overlay = document.getElementById('create-device-overlay');
   const panel = document.getElementById('create-device-panel');
@@ -20,6 +62,37 @@ const closeCreatePanel = () => {
   if (overlay) overlay.classList.remove('open');
 };
 
+const setPanelState = (state, ctx = {}) => {
+  const formState = document.getElementById('new-device-form-state');
+  const successState = document.getElementById('new-device-success-state');
+  if (formState) formState.hidden = state !== 'form';
+  if (successState) successState.hidden = state !== 'success';
+  document.querySelectorAll('.panel-footer-state').forEach((el) => {
+    el.hidden = el.getAttribute('data-state') !== state;
+  });
+
+  if (state === 'success') {
+    const tpl = INSTALL_TEMPLATES[ctx.platform] || INSTALL_TEMPLATES.macos;
+    const origin = window.location.origin;
+    const snippet = tpl.snippet({ pat: ctx.secret || '', origin });
+    const secretEl = document.getElementById('new-device-secret');
+    if (secretEl) secretEl.value = ctx.secret || '';
+    const titleEl = document.getElementById('new-device-install-title');
+    if (titleEl) titleEl.textContent = tpl.title;
+    const introEl = document.getElementById('new-device-install-intro');
+    if (introEl) introEl.textContent = tpl.intro;
+    const dlEl = document.getElementById('new-device-download-link');
+    if (dlEl) {
+      dlEl.textContent = `${tpl.downloadLabel} →`;
+      dlEl.href = tpl.downloadHref;
+    }
+    const guideEl = document.getElementById('new-device-install-guide');
+    if (guideEl) guideEl.href = tpl.guideHref;
+    const snippetEl = document.getElementById('new-device-install-snippet');
+    if (snippetEl) snippetEl.textContent = snippet;
+  }
+};
+
 const resetForm = () => {
   for (const id of ['new-device-name', 'new-device-hostname', 'new-device-secret']) {
     const el = document.getElementById(id);
@@ -29,8 +102,21 @@ const resetForm = () => {
   if (userSel) userSel.value = '';
   const platformSel = document.getElementById('new-device-platform');
   if (platformSel) platformSel.value = 'macos';
-  const secretGroup = document.getElementById('new-device-secret-group');
-  if (secretGroup) secretGroup.hidden = true;
+  const snippetEl = document.getElementById('new-device-install-snippet');
+  if (snippetEl) snippetEl.textContent = '';
+  setPanelState('form');
+};
+
+const copyCurrentSnippet = async () => {
+  const snippetEl = document.getElementById('new-device-install-snippet');
+  const text = snippetEl ? snippetEl.textContent : '';
+  if (!text) { showToast('Nothing to copy yet', 'error'); return; }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('Install snippet copied', 'success');
+  } catch {
+    showToast('Copy failed', 'error');
+  }
 };
 
 const bindCreatePanel = () => {
@@ -39,7 +125,14 @@ const bindCreatePanel = () => {
   on('click', '#create-device-panel [data-action="cancel"]', () => {
     closeCreatePanel();
     resetForm();
+  });
+  on('click', '#create-device-panel [data-action="done"]', () => {
+    closeCreatePanel();
+    resetForm();
     window.location.reload();
+  });
+  on('click', '#create-device-panel [data-action="copy-snippet"]', () => {
+    copyCurrentSnippet();
   });
   on('click', '#create-device-panel [data-action="save"]', async () => {
     const name = document.getElementById('new-device-name').value.trim();
@@ -55,10 +148,7 @@ const bindCreatePanel = () => {
       });
       showToast('Device enrolled', 'success');
       if (result && result.secret) {
-        const secretEl = document.getElementById('new-device-secret');
-        const secretGroup = document.getElementById('new-device-secret-group');
-        if (secretEl) secretEl.value = result.secret;
-        if (secretGroup) secretGroup.hidden = false;
+        setPanelState('success', { platform, secret: result.secret });
       } else {
         closeCreatePanel();
         resetForm();
