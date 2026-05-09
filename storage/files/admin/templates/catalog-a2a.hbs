@@ -1,0 +1,61 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title subtitle="Agent-to-agent (A2A) agents loaded from services/agents/*.yaml. These run as standalone services and connect to the gateway as peers. Edit YAML on disk and restart to change."}}
+
+    <div class="toolbar" role="toolbar" aria-label="A2A agent filters">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Search agents…" id="catalog-search" aria-label="Search agents">
+        </div>
+        <div class="filter-chips" role="group">
+            <span class="chip active">{{agents_count}} agent{{#unless (eq agents_count 1)}}s{{/unless}}</span>
+        </div>
+    </div>
+
+    {{#if agents_count}}
+    {{#> components/data-table}}
+        <thead><tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Enabled</th>
+            <th>Source</th>
+            <th class="numeric col-numeric">Assignments</th>
+            <th class="col-actions"></th>
+        </tr></thead>
+        <tbody>
+        {{#each agents}}
+        <tr data-type="agent" data-search="agent {{toLowerCase name}} {{toLowerCase id}} {{toLowerCase source_path}}">
+            <td><code class="code-inline">{{id}}</code></td>
+            <td>{{name}}</td>
+            <td>{{#if description}}{{description}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if enabled}}<span class="badge badge-success">enabled</span>{{else}}<span class="badge badge-muted">disabled</span>{{/if}}</td>
+            <td><code class="code-inline">{{source_path}}</code></td>
+            <td class="numeric col-numeric">{{assignment_count}}</td>
+            <td class="col-actions"><a class="btn btn-sm btn-outline" href="{{matrix_url}}">Access →</a></td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    <div class="empty-state" style="padding:3rem;text-align:center;">
+        <h3>No A2A agents configured</h3>
+        <p class="text-muted">Add agent YAML under <code>services/agents/</code> and restart.</p>
+    </div>
+    {{/if}}
+
+    <script>
+    (function(){
+      const search = document.getElementById('catalog-search');
+      function apply(){
+        const q = (search?.value || '').toLowerCase();
+        document.querySelectorAll('tr[data-type]').forEach(function(row){
+          const s = row.getAttribute('data-search') || '';
+          row.style.display = !q || s.includes(q) ? '' : 'none';
+        });
+      }
+      search?.addEventListener('input', apply);
+    })();
+    </script>
+    {{/inline}}
+{{/layout}}

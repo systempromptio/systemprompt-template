@@ -156,4 +156,71 @@
     margin-top: 0.125rem;
 }
 
+.data-table tbody.table-group + tbody.table-group .table-group-header th {
+    border-top: 1px solid var(--sp-border-default);
+}
+
+.data-table .table-group-header th {
+    background: var(--sp-bg-surface-raised);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: var(--sp-space-2) var(--sp-space-4);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.table-group-title {
+    color: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+}
+
+.table-group-title:hover .table-group-name {
+    color: var(--sp-accent);
+}
+
+.table-group-name {
+    color: var(--sp-text-primary);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.table-group-count {
+    color: var(--sp-text-tertiary);
+    font-weight: 500;
+    font-size: var(--sp-text-xs);
+}
+
+.table-group-stats {
+    float: right;
+    color: var(--sp-text-tertiary);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.user-cell-text {
+    display: inline-flex;
+    flex-direction: column;
+    line-height: 1.2;
+    min-width: 0;
+}
+
+.user-cell-name {
+    color: var(--sp-text-primary);
+    font-weight: 500;
+}
+
+.user-cell-email {
+    font-size: 0.78em;
+    color: var(--sp-text-tertiary);
+    margin-top: 0.1rem;
+}
+
 }

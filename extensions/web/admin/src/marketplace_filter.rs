@@ -106,16 +106,18 @@ impl MarketplaceFilter for TemplateMarketplaceFilter {
             .collect();
         let skill_ids: Vec<String> = candidate.skills.iter().map(|s| s.id.to_string()).collect();
         let agent_ids: Vec<String> = candidate.agents.iter().map(|a| a.id.to_string()).collect();
+        let hook_ids: Vec<String> = candidate.hooks.iter().map(|h| h.id.to_string()).collect();
         let mcp_ids: Vec<String> = candidate
             .managed_mcp_servers
             .iter()
             .map(|m| m.name.to_string())
             .collect();
 
-        let (keep_plugins, keep_skills, keep_agents, keep_mcp) = tokio::try_join!(
+        let (keep_plugins, keep_skills, keep_agents, keep_hooks, keep_mcp) = tokio::try_join!(
             self.keep_ids(uid, &roles, &department, EntityKind::Plugin, &plugin_ids),
             self.keep_ids(uid, &roles, &department, EntityKind::Skill, &skill_ids),
             self.keep_ids(uid, &roles, &department, EntityKind::Agent, &agent_ids),
+            self.keep_ids(uid, &roles, &department, EntityKind::Hook, &hook_ids),
             self.keep_ids(uid, &roles, &department, EntityKind::McpServer, &mcp_ids),
         )?;
 
@@ -134,6 +136,11 @@ impl MarketplaceFilter for TemplateMarketplaceFilter {
                 .agents
                 .into_iter()
                 .filter(|a| keep_agents.contains(a.id.as_str()))
+                .collect(),
+            hooks: candidate
+                .hooks
+                .into_iter()
+                .filter(|h| keep_hooks.contains(h.id.as_str()))
                 .collect(),
             managed_mcp_servers: candidate
                 .managed_mcp_servers

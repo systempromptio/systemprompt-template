@@ -258,8 +258,41 @@ pub struct UserManagementAggregate {
     pub user_id: String,
     pub department: String,
     pub assigned_skills_count: i64,
-    pub assigned_marketplaces_count: i64,
     pub devices_count: i64,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct UserMarketplaceOverride {
+    pub user_id: String,
+    pub department: String,
+    pub entity_id: String,
+    pub access: String,
+}
+
+/// Loads `access_control_rules` rows scoped to marketplaces, joined to users so
+/// each row carries the user_id for direct mapping. A user receives overrides
+/// from rules that match either their own id or their department.
+pub async fn list_user_marketplace_overrides(
+    pool: &PgPool,
+) -> Result<Vec<UserMarketplaceOverride>, sqlx::Error> {
+    sqlx::query_as::<_, UserMarketplaceOverride>(
+        r"
+        SELECT
+            u.id AS user_id,
+            COALESCE(u.department, '') AS department,
+            acr.entity_id,
+            acr.access
+        FROM users u
+        JOIN access_control_rules acr
+          ON acr.entity_type = 'marketplace'
+         AND ((acr.rule_type = 'user' AND acr.rule_value = u.id)
+              OR (acr.rule_type = 'department' AND acr.rule_value = u.department))
+        WHERE NOT ('anonymous' = ANY(u.roles))
+        ",
+    )
+    .fetch_all(pool)
+    .await
 }
 
 pub async fn list_user_management_aggregates(
@@ -279,17 +312,10 @@ pub async fn list_user_management_aggregates(
                        OR (acr.rule_type = 'user' AND acr.rule_value = u.id))
             ), 0)::BIGINT AS assigned_skills_count,
             COALESCE((
-                SELECT COUNT(DISTINCT acr.entity_id)
-                FROM access_control_rules acr
-                WHERE acr.entity_type = 'marketplace'
-                  AND acr.access = 'allow'
-                  AND ((acr.rule_type = 'department' AND acr.rule_value = u.department)
-                       OR (acr.rule_type = 'user' AND acr.rule_value = u.id))
-            ), 0)::BIGINT AS assigned_marketplaces_count,
-            COALESCE((
                 SELECT COUNT(*) FROM user_api_keys
                 WHERE user_id = u.id AND revoked_at IS NULL
-            ), 0)::BIGINT AS devices_count
+            ), 0)::BIGINT AS devices_count,
+            u.created_at
         FROM users u
         WHERE NOT ('anonymous' = ANY(u.roles))
         ",

@@ -3,6 +3,7 @@ use std::sync::Arc;
 use systemprompt::identifiers::UserId;
 
 use crate::repositories;
+use crate::services::marketplaces::load_marketplaces;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{IdQuery, MarketplaceContext, UserContext};
 use axum::{
@@ -11,7 +12,10 @@ use axum::{
 };
 use sqlx::PgPool;
 
-use super::types::{EnrichedUserView, UserDetailPageData, UserRuntimeView, UsersPageData};
+use super::types::{
+    DepartmentGroup, EnrichedUserView, UserDetailPageData, UserMarketplaceRef, UserRuntimeView,
+    UsersPageData,
+};
 
 fn freshness_for(ts: Option<chrono::DateTime<chrono::Utc>>) -> &'static str {
     ts.map_or("never", |t| {
@@ -26,15 +30,61 @@ fn freshness_for(ts: Option<chrono::DateTime<chrono::Utc>>) -> &'static str {
     })
 }
 
+/// Resolve effective marketplaces for a user: every YAML-defined marketplace is
+/// granted by default, then `access_control_rules` rows (matching the user's id
+/// or department) are applied as allow/deny overrides.
+fn resolve_marketplaces(
+    yaml_defaults: &[(String, String)],
+    overrides: &[&repositories::UserMarketplaceOverride],
+) -> Vec<UserMarketplaceRef> {
+    let mut entries: Vec<UserMarketplaceRef> = yaml_defaults
+        .iter()
+        .map(|(id, name)| UserMarketplaceRef {
+            id: id.clone(),
+            name: name.clone(),
+            source: "default",
+        })
+        .collect();
+
+    for ovr in overrides {
+        match ovr.access.as_str() {
+            "allow" => {
+                if !entries.iter().any(|e| e.id == ovr.entity_id) {
+                    let name = yaml_defaults
+                        .iter()
+                        .find(|(id, _)| id == &ovr.entity_id)
+                        .map(|(_, n)| n.clone())
+                        .unwrap_or_else(|| ovr.entity_id.clone());
+                    entries.push(UserMarketplaceRef {
+                        id: ovr.entity_id.clone(),
+                        name,
+                        source: "override",
+                    });
+                }
+            }
+            "deny" => entries.retain(|e| e.id != ovr.entity_id),
+            _ => {}
+        }
+    }
+    entries
+}
+
 fn enrich_users(
     users: &[crate::types::UserSummary],
     aggregates: &[repositories::UserManagementAggregate],
     runtime: &[repositories::UserRuntimeAggregate],
+    overrides: &[repositories::UserMarketplaceOverride],
+    yaml_marketplaces: &[(String, String)],
 ) -> Vec<EnrichedUserView> {
     let agg_map: std::collections::HashMap<&str, &repositories::UserManagementAggregate> =
         aggregates.iter().map(|a| (a.user_id.as_str(), a)).collect();
     let rt_map: std::collections::HashMap<&str, &repositories::UserRuntimeAggregate> =
         runtime.iter().map(|r| (r.user_id.as_str(), r)).collect();
+    let mut ovr_map: std::collections::HashMap<&str, Vec<&repositories::UserMarketplaceOverride>> =
+        std::collections::HashMap::new();
+    for o in overrides {
+        ovr_map.entry(o.user_id.as_str()).or_default().push(o);
+    }
 
     users
         .iter()
@@ -43,6 +93,11 @@ fn enrich_users(
             let rt = rt_map.get(u.user_id.as_str());
             let device_freshness =
                 freshness_for(rt.and_then(|r| r.newest_device_seen_at)).to_string();
+            let user_overrides = ovr_map
+                .get(u.user_id.as_str())
+                .cloned()
+                .unwrap_or_default();
+            let marketplaces = resolve_marketplaces(yaml_marketplaces, &user_overrides);
             EnrichedUserView {
                 user_id: u.user_id.to_string(),
                 display_name: u.display_name.clone(),
@@ -59,8 +114,9 @@ fn enrich_users(
                 bytes: u.bytes,
                 logins: u.logins,
                 department: agg.map(|a| a.department.clone()).unwrap_or_default(),
+                created_at: agg.map(|a| a.created_at.to_rfc3339()).unwrap_or_default(),
+                marketplaces,
                 assigned_skills_count: agg.map_or(0, |a| a.assigned_skills_count),
-                assigned_marketplaces_count: agg.map_or(0, |a| a.assigned_marketplaces_count),
                 devices_count: agg.map_or(0, |a| a.devices_count),
                 connected_agents: rt.map_or(0, |r| r.connected_agents),
                 total_agents: rt.map_or(0, |r| r.total_agents),
@@ -69,6 +125,55 @@ fn enrich_users(
             }
         })
         .collect()
+}
+
+/// Group enriched users by department. "Default" first, then alphabetical;
+/// users with no department go last as "Unassigned".
+fn group_by_department(users: Vec<EnrichedUserView>) -> Vec<DepartmentGroup> {
+    let mut buckets: std::collections::BTreeMap<String, Vec<EnrichedUserView>> =
+        std::collections::BTreeMap::new();
+    for u in users {
+        let key = if u.department.is_empty() {
+            "Unassigned".to_string()
+        } else {
+            u.department.clone()
+        };
+        buckets.entry(key).or_default().push(u);
+    }
+
+    let mut groups: Vec<DepartmentGroup> = buckets
+        .into_iter()
+        .map(|(department, mut users)| {
+            users.sort_by(|a, b| {
+                let an = a.display_name.as_deref().unwrap_or(&a.user_id);
+                let bn = b.display_name.as_deref().unwrap_or(&b.user_id);
+                an.to_lowercase().cmp(&bn.to_lowercase())
+            });
+            let total_tokens = users.iter().map(|u| u.lifetime_tokens).sum();
+            let total_sessions = users.iter().map(|u| u.sessions).sum();
+            DepartmentGroup {
+                user_count: users.len(),
+                total_tokens,
+                total_sessions,
+                department,
+                users,
+            }
+        })
+        .collect();
+
+    groups.sort_by(|a, b| {
+        fn rank(name: &str) -> u8 {
+            match name {
+                "Default" => 0,
+                "Unassigned" => 2,
+                _ => 1,
+            }
+        }
+        rank(&a.department)
+            .cmp(&rank(&b.department))
+            .then_with(|| a.department.to_lowercase().cmp(&b.department.to_lowercase()))
+    });
+    groups
 }
 
 pub async fn users_page(
@@ -108,12 +213,26 @@ pub async fn users_page(
             Vec::new()
         });
 
-    let enriched_users = enrich_users(&users, &aggregates, &runtime);
+    let overrides = repositories::list_user_marketplace_overrides(&pool)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to fetch marketplace overrides");
+            Vec::new()
+        });
+
+    let yaml_marketplaces: Vec<(String, String)> = load_marketplaces()
+        .into_iter()
+        .map(|m| (m.id.to_string(), m.name.clone()))
+        .collect();
+
+    let enriched_users =
+        enrich_users(&users, &aggregates, &runtime, &overrides, &yaml_marketplaces);
+    let groups = group_by_department(enriched_users);
 
     let data = UsersPageData {
         page: "users",
         title: "Users",
-        users: enriched_users,
+        groups,
         total_users,
         active_users,
         total_events,
@@ -156,10 +275,24 @@ async fn collect_user_detail_extras(
     if let Ok(rows) = repositories::list_user_management_aggregates(pool).await {
         if let Some(row) = rows.into_iter().find(|r| r.user_id == d.user_id.as_str()) {
             assignments.skills_count = row.assigned_skills_count;
-            assignments.marketplaces_count = row.assigned_marketplaces_count;
             devices_count = row.devices_count;
         }
     }
+
+    let yaml_marketplaces: Vec<(String, String)> = load_marketplaces()
+        .into_iter()
+        .map(|m| (m.id.to_string(), m.name.clone()))
+        .collect();
+    let user_overrides: Vec<repositories::UserMarketplaceOverride> =
+        repositories::list_user_marketplace_overrides(pool)
+            .await
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|o| o.user_id == d.user_id.as_str())
+            .collect();
+    let override_refs: Vec<&repositories::UserMarketplaceOverride> = user_overrides.iter().collect();
+    assignments.marketplaces = resolve_marketplaces(&yaml_marketplaces, &override_refs);
+    assignments.marketplaces_count = assignments.marketplaces.len() as i64;
 
     let devices = collect_user_devices(pool, d).await;
 

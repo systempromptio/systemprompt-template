@@ -1,12 +1,17 @@
-//! Unified read-only `/admin/catalog` page.
+//! Read-only catalog admin pages, split into three views:
 //!
-//! Aggregates skills, plugins, MCP servers and agents from the YAML services
-//! tree, augments each row with assignment counts pulled from
-//! `access_control_rules`, and renders the `catalog` Handlebars template.
+//! - `/admin/catalog/marketplace` — install-able units (skills, plugins, MCP
+//!   servers) loaded from `services/*.yaml`. Mirrors Anthropic's plugin
+//!   marketplace mental model.
+//! - `/admin/catalog/a2a` — A2A agents from `services/agents/*.yaml`. These
+//!   run as standalone services and connect to the gateway as peers.
+//! - `/admin/catalog/external` — external host apps from
+//!   `services/external_agents/*.yaml` (Claude Desktop, Codex CLI). They
+//!   connect via `systemprompt-bridge` and the `enabled` flag here mirrors
+//!   what surfaces on `/admin/profile` under "Available agents".
 //!
-//! This page is strictly read-only: there are no POST/PUT/DELETE companion
-//! routes. Operators edit `services/*.yaml` and restart; the dashboard is a
-//! viewer.
+//! All three pages are strictly read-only: there are no POST/PUT/DELETE
+//! companion routes. Operators edit `services/*.yaml` and restart.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -41,29 +46,52 @@ struct CatalogRow {
 }
 
 #[derive(Debug, Serialize)]
-struct CatalogPageData {
+struct MarketplacePageData {
     page: &'static str,
     title: &'static str,
     skills: Vec<CatalogRow>,
     plugins: Vec<CatalogRow>,
     mcp_servers: Vec<CatalogRow>,
-    agents: Vec<CatalogRow>,
     skills_count: usize,
     plugins_count: usize,
     mcp_servers_count: usize,
-    agents_count: usize,
     total: usize,
     types: Vec<&'static str>,
+}
+
+#[derive(Debug, Serialize)]
+struct A2aPageData {
+    page: &'static str,
+    title: &'static str,
+    agents: Vec<CatalogRow>,
+    agents_count: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct ExternalAgentRow {
+    id: String,
+    display_name: String,
+    kind: String,
+    enabled: bool,
+    description: String,
+    platforms: Vec<String>,
+    docs_url: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct ExternalPageData {
+    page: &'static str,
+    title: &'static str,
+    agents: Vec<ExternalAgentRow>,
+    agents_count: usize,
+    enabled_count: usize,
 }
 
 fn matrix_url(entity_type: &str, entity_id: &str) -> String {
     format!("/admin/access/matrix?entity_type={entity_type}&entity_id={entity_id}")
 }
 
-async fn assignment_counts_by_type(
-    pool: &PgPool,
-    entity_type: &str,
-) -> HashMap<String, i64> {
+async fn assignment_counts_by_type(pool: &PgPool, entity_type: &str) -> HashMap<String, i64> {
     let rows = sqlx::query_as::<_, (String, i64)>(
         "SELECT entity_id, COUNT(*)::BIGINT
          FROM access_control_rules
@@ -101,50 +129,22 @@ fn build_row(
     }
 }
 
-struct RawCatalog {
-    skills: Vec<crate::types::SkillCatalogEntry>,
-    plugins: Vec<crate::types::PluginDetail>,
-    mcp_servers: Vec<crate::types::McpServerDetail>,
-    agents: Vec<crate::types::AgentCatalogEntry>,
+fn forbidden() -> Response {
+    (
+        StatusCode::FORBIDDEN,
+        Html("<h1>Access Denied</h1><p>Admin access required.</p>"),
+    )
+        .into_response()
 }
 
-fn load_raw_catalog(services_path: &std::path::Path) -> RawCatalog {
-    let skills = repositories::list_skill_catalog(services_path).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to load skill catalog");
-        Vec::new()
-    });
-    let plugins = repositories::list_plugin_catalog(services_path).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to load plugin catalog");
-        Vec::new()
-    });
-    let mcp_servers = repositories::mcp_servers::list_mcp_servers(services_path).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to load MCP catalog");
-        Vec::new()
-    });
-    let agents = repositories::list_agent_catalog(services_path).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to load agent catalog");
-        Vec::new()
-    });
-    RawCatalog {
-        skills,
-        plugins,
-        mcp_servers,
-        agents,
-    }
-}
-
-pub async fn catalog_page(
+pub async fn marketplace_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
     if !user_ctx.is_admin {
-        return (
-            StatusCode::FORBIDDEN,
-            Html("<h1>Access Denied</h1><p>Admin access required.</p>"),
-        )
-            .into_response();
+        return forbidden();
     }
 
     let services_path = match shared::get_services_path() {
@@ -152,51 +152,27 @@ pub async fn catalog_page(
         Err(r) => return *r,
     };
 
-    let raw = load_raw_catalog(&services_path);
-    let (skills, plugins, mcp_servers, agents) = build_catalog_sections(&pool, raw).await;
+    let raw_skills = repositories::list_skill_catalog(&services_path).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to load skill catalog");
+        Vec::new()
+    });
+    let raw_plugins = repositories::list_plugin_catalog(&services_path).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to load plugin catalog");
+        Vec::new()
+    });
+    let raw_mcp =
+        repositories::mcp_servers::list_mcp_servers(&services_path).unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to load MCP catalog");
+            Vec::new()
+        });
 
-    let skills_count = skills.len();
-    let plugins_count = plugins.len();
-    let mcp_servers_count = mcp_servers.len();
-    let agents_count = agents.len();
-    let total = skills_count + plugins_count + mcp_servers_count + agents_count;
-
-    let data = CatalogPageData {
-        page: "catalog",
-        title: "Catalog",
-        types: vec![ENTITY_SKILL, ENTITY_PLUGIN, ENTITY_MCP_SERVER, ENTITY_AGENT],
-        skills,
-        plugins,
-        mcp_servers,
-        agents,
-        skills_count,
-        plugins_count,
-        mcp_servers_count,
-        agents_count,
-        total,
-    };
-
-    render_typed_page(&engine, "catalog", &data, &user_ctx, &mkt_ctx)
-}
-
-async fn build_catalog_sections(
-    pool: &PgPool,
-    raw: RawCatalog,
-) -> (
-    Vec<CatalogRow>,
-    Vec<CatalogRow>,
-    Vec<CatalogRow>,
-    Vec<CatalogRow>,
-) {
-    let (skill_counts, plugin_counts, mcp_counts, agent_counts) = tokio::join!(
-        assignment_counts_by_type(pool, ENTITY_SKILL),
-        assignment_counts_by_type(pool, ENTITY_PLUGIN),
-        assignment_counts_by_type(pool, ENTITY_MCP_SERVER),
-        assignment_counts_by_type(pool, ENTITY_AGENT),
+    let (skill_counts, plugin_counts, mcp_counts) = tokio::join!(
+        assignment_counts_by_type(&pool, ENTITY_SKILL),
+        assignment_counts_by_type(&pool, ENTITY_PLUGIN),
+        assignment_counts_by_type(&pool, ENTITY_MCP_SERVER),
     );
 
-    let skills = raw
-        .skills
+    let skills: Vec<CatalogRow> = raw_skills
         .into_iter()
         .map(|s| {
             let id_str = s.id.as_str().to_string();
@@ -213,8 +189,7 @@ async fn build_catalog_sections(
         })
         .collect();
 
-    let plugins = raw
-        .plugins
+    let plugins: Vec<CatalogRow> = raw_plugins
         .into_iter()
         .map(|p| {
             let count = plugin_counts.get(&p.id).copied().unwrap_or(0);
@@ -230,8 +205,7 @@ async fn build_catalog_sections(
         })
         .collect();
 
-    let mcp_servers = raw
-        .mcp_servers
+    let mcp_servers: Vec<CatalogRow> = raw_mcp
         .into_iter()
         .map(|m| {
             let id_str = m.id.as_str().to_string();
@@ -248,8 +222,49 @@ async fn build_catalog_sections(
         })
         .collect();
 
-    let agents = raw
-        .agents
+    let skills_count = skills.len();
+    let plugins_count = plugins.len();
+    let mcp_servers_count = mcp_servers.len();
+    let total = skills_count + plugins_count + mcp_servers_count;
+
+    let data = MarketplacePageData {
+        page: "marketplace",
+        title: "Marketplace",
+        types: vec![ENTITY_SKILL, ENTITY_PLUGIN, ENTITY_MCP_SERVER],
+        skills,
+        plugins,
+        mcp_servers,
+        skills_count,
+        plugins_count,
+        mcp_servers_count,
+        total,
+    };
+
+    render_typed_page(&engine, "catalog-marketplace", &data, &user_ctx, &mkt_ctx)
+}
+
+pub async fn a2a_agents_page(
+    Extension(user_ctx): Extension<UserContext>,
+    Extension(mkt_ctx): Extension<MarketplaceContext>,
+    Extension(engine): Extension<AdminTemplateEngine>,
+    State(pool): State<Arc<PgPool>>,
+) -> Response {
+    if !user_ctx.is_admin {
+        return forbidden();
+    }
+
+    let services_path = match shared::get_services_path() {
+        Ok(p) => p,
+        Err(r) => return *r,
+    };
+
+    let raw_agents = repositories::list_agent_catalog(&services_path).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to load agent catalog");
+        Vec::new()
+    });
+    let agent_counts = assignment_counts_by_type(&pool, ENTITY_AGENT).await;
+
+    let agents: Vec<CatalogRow> = raw_agents
         .into_iter()
         .map(|a| {
             let id_str = a.id.as_str().to_string();
@@ -266,5 +281,53 @@ async fn build_catalog_sections(
         })
         .collect();
 
-    (skills, plugins, mcp_servers, agents)
+    let agents_count = agents.len();
+
+    let data = A2aPageData {
+        page: "a2a-agents",
+        title: "A2A agents",
+        agents,
+        agents_count,
+    };
+
+    render_typed_page(&engine, "catalog-a2a", &data, &user_ctx, &mkt_ctx)
+}
+
+pub async fn external_agents_page(
+    Extension(user_ctx): Extension<UserContext>,
+    Extension(mkt_ctx): Extension<MarketplaceContext>,
+    Extension(engine): Extension<AdminTemplateEngine>,
+    State(_pool): State<Arc<PgPool>>,
+) -> Response {
+    if !user_ctx.is_admin {
+        return forbidden();
+    }
+
+    let raw = repositories::external_agents_grp::list_external_agents();
+
+    let agents: Vec<ExternalAgentRow> = raw
+        .into_iter()
+        .map(|e| ExternalAgentRow {
+            id: e.id,
+            display_name: e.display_name,
+            kind: e.kind,
+            enabled: e.enabled,
+            description: e.description,
+            platforms: e.platforms,
+            docs_url: e.docs_url,
+        })
+        .collect();
+
+    let agents_count = agents.len();
+    let enabled_count = agents.iter().filter(|a| a.enabled).count();
+
+    let data = ExternalPageData {
+        page: "external-agents",
+        title: "External agents",
+        agents,
+        agents_count,
+        enabled_count,
+    };
+
+    render_typed_page(&engine, "catalog-external", &data, &user_ctx, &mkt_ctx)
 }

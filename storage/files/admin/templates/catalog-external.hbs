@@ -1,0 +1,65 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/page-header title=title subtitle="Host apps that connect via systemprompt-bridge. Loaded from services/external_agents/*.yaml. The enabled state below is reflected on your Profile under Available agents when the Systemprompt app is installed."}}
+
+    <div class="toolbar" role="toolbar" aria-label="External agent filters">
+        <div class="search-group">
+            <input type="text" class="search-input" placeholder="Search external agents…" id="catalog-search" aria-label="Search external agents">
+        </div>
+        <div class="filter-chips" role="group">
+            <span class="chip active">{{enabled_count}}/{{agents_count}} enabled</span>
+        </div>
+    </div>
+
+    {{#if agents_count}}
+    {{#> components/data-table}}
+        <thead><tr>
+            <th>ID (bridge host)</th>
+            <th>Name</th>
+            <th>Kind</th>
+            <th>Description</th>
+            <th>Platforms</th>
+            <th>Enabled</th>
+            <th class="col-actions">Docs</th>
+        </tr></thead>
+        <tbody>
+        {{#each agents}}
+        <tr data-type="external" data-search="{{toLowerCase id}} {{toLowerCase display_name}} {{toLowerCase kind}}">
+            <td><code class="code-inline">{{id}}</code></td>
+            <td>{{display_name}}</td>
+            <td><span class="badge">{{kind}}</span></td>
+            <td>{{#if description}}{{description}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td>
+                {{#each platforms}}<span class="badge badge-muted">{{this}}</span> {{/each}}
+            </td>
+            <td>{{#if enabled}}<span class="badge badge-success">enabled</span>{{else}}<span class="badge badge-muted">disabled</span>{{/if}}</td>
+            <td class="col-actions">
+                {{#if docs_url}}<a class="btn btn-sm btn-outline" href="{{docs_url}}" target="_blank" rel="noopener noreferrer">Docs →</a>{{else}}<span class="text-tertiary">—</span>{{/if}}
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/data-table}}
+    {{else}}
+    <div class="empty-state" style="padding:3rem;text-align:center;">
+        <h3>No external agents configured</h3>
+        <p class="text-muted">Add YAML under <code>services/external_agents/</code> and restart. Each <code>id</code> must equal the bridge's <code>HostApp::id()</code>.</p>
+    </div>
+    {{/if}}
+
+    <script>
+    (function(){
+      const search = document.getElementById('catalog-search');
+      function apply(){
+        const q = (search?.value || '').toLowerCase();
+        document.querySelectorAll('tr[data-type]').forEach(function(row){
+          const s = row.getAttribute('data-search') || '';
+          row.style.display = !q || s.includes(q) ? '' : 'none';
+        });
+      }
+      search?.addEventListener('input', apply);
+    })();
+    </script>
+    {{/inline}}
+{{/layout}}

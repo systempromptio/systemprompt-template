@@ -6,8 +6,8 @@ use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use super::{
-    ContentIngestionJob, ContentPrerenderJob, CopyExtensionAssetsJob, LlmsTxtGenerationJob,
-    RobotsTxtGenerationJob, SitemapGenerationJob,
+    BundleAdminCssJob, BundleAdminJsJob, ContentIngestionJob, ContentPrerenderJob,
+    CopyExtensionAssetsJob, LlmsTxtGenerationJob, RobotsTxtGenerationJob, SitemapGenerationJob,
 };
 use crate::error::JobError;
 use systemprompt_web_shared::error::MarketplaceError;
@@ -44,6 +44,38 @@ impl PublishPipelineJob {
             }
             Err(e) => {
                 tracing::error!(error = %e, "Content ingestion failed");
+                stats.record_failure();
+            }
+        }
+    }
+
+    async fn run_bundle_admin_css(&self, stats: &mut PipelineStats) {
+        match BundleAdminCssJob::execute_bundle().await {
+            Ok(result) => {
+                tracing::debug!(
+                    bundled = result.items_processed.unwrap_or(0),
+                    "Admin CSS bundle completed"
+                );
+                stats.record_success();
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "Admin CSS bundle failed");
+                stats.record_failure();
+            }
+        }
+    }
+
+    async fn run_bundle_admin_js(&self, stats: &mut PipelineStats) {
+        match BundleAdminJsJob::execute_bundle().await {
+            Ok(result) => {
+                tracing::debug!(
+                    bundled = result.items_processed.unwrap_or(0),
+                    "Admin JS bundle completed"
+                );
+                stats.record_success();
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "Admin JS bundle failed");
                 stats.record_failure();
             }
         }
@@ -253,6 +285,8 @@ impl PublishPipelineJob {
 
         self.run_acl_yaml_load(paths, db_pool, &mut stats).await;
         self.run_ingestion(ctx, &mut stats).await;
+        self.run_bundle_admin_css(&mut stats).await;
+        self.run_bundle_admin_js(&mut stats).await;
         self.run_asset_copy(paths, &mut stats).await;
         self.run_prerender(ctx, &mut stats).await;
         self.run_page_prerender(paths, db_pool, &mut stats).await;
