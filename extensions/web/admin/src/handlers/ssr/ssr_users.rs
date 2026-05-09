@@ -48,19 +48,16 @@ fn resolve_marketplaces(
 
     for ovr in overrides {
         match ovr.access.as_str() {
-            "allow" => {
-                if !entries.iter().any(|e| e.id == ovr.entity_id) {
-                    let name = yaml_defaults
-                        .iter()
-                        .find(|(id, _)| id == &ovr.entity_id)
-                        .map(|(_, n)| n.clone())
-                        .unwrap_or_else(|| ovr.entity_id.clone());
-                    entries.push(UserMarketplaceRef {
-                        id: ovr.entity_id.clone(),
-                        name,
-                        source: "override",
-                    });
-                }
+            "allow" if !entries.iter().any(|e| e.id == ovr.entity_id) => {
+                let name = yaml_defaults
+                    .iter()
+                    .find(|(id, _)| id == &ovr.entity_id)
+                    .map_or_else(|| ovr.entity_id.clone(), |(_, n)| n.clone());
+                entries.push(UserMarketplaceRef {
+                    id: ovr.entity_id.clone(),
+                    name,
+                    source: "override",
+                });
             }
             "deny" => entries.retain(|e| e.id != ovr.entity_id),
             _ => {}
@@ -222,7 +219,7 @@ pub async fn users_page(
 
     let yaml_marketplaces: Vec<(String, String)> = load_marketplaces()
         .into_iter()
-        .map(|m| (m.id.to_string(), m.name.clone()))
+        .map(|m| (m.id.to_string(), m.name))
         .collect();
 
     let enriched_users =
@@ -281,7 +278,7 @@ async fn collect_user_detail_extras(
 
     let yaml_marketplaces: Vec<(String, String)> = load_marketplaces()
         .into_iter()
-        .map(|m| (m.id.to_string(), m.name.clone()))
+        .map(|m| (m.id.to_string(), m.name))
         .collect();
     let user_overrides: Vec<repositories::UserMarketplaceOverride> =
         repositories::list_user_marketplace_overrides(pool)

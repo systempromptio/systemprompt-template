@@ -26,9 +26,3 @@ templates:
   feature-page:
     content_types:
       - feature-page
-  playbooks-list:
-    content_types:
-      - playbooks-list
-  playbook-post:
-    content_types:
-      - playbook

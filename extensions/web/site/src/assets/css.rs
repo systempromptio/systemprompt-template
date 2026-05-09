@@ -12,11 +12,9 @@ pub(super) fn css_assets(storage_css: &Path) -> Vec<AssetDefinition> {
     v.extend(homepage_css(storage_css));
     v.extend(blog_css(storage_css));
     v.extend(docs_css(storage_css));
-    v.extend(paper_css(storage_css));
     v.extend(feature_page_css(storage_css));
     v.extend(syntax_css(storage_css));
     v.extend(feature_base_css(storage_css));
-    v.extend(playbook_css(storage_css));
     v
 }
 
@@ -47,14 +45,6 @@ fn homepage_css(p: &Path) -> Vec<AssetDefinition> {
         css!(p, "homepage-sections-traits.css"),
         css!(p, "homepage-sections-faq.css"),
         css!(p, "homepage-features.css"),
-        css!(p, "homepage-playbooks-section.css"),
-        css!(p, "homepage-playbooks-featured.css"),
-        css!(p, "homepage-playbooks-actions.css"),
-        css!(p, "homepage-playbooks-categories.css"),
-        css!(p, "homepage-playbooks-links.css"),
-        css!(p, "homepage-playbooks-ctas.css"),
-        css!(p, "homepage-playbooks-status.css"),
-        css!(p, "homepage-playbooks-modal.css"),
         css!(p, "homepage-architecture.css"),
     ]
 }
@@ -111,14 +101,6 @@ fn docs_css(p: &Path) -> Vec<AssetDefinition> {
     ]
 }
 
-fn paper_css(p: &Path) -> Vec<AssetDefinition> {
-    vec![
-        css!(p, "paper-layout.css"),
-        css!(p, "paper-content.css"),
-        css!(p, "paper-components.css"),
-    ]
-}
-
 fn feature_page_css(p: &Path) -> Vec<AssetDefinition> {
     vec![
         css!(p, "feature-page-hero.css"),
@@ -136,17 +118,6 @@ fn feature_base_css(p: &Path) -> Vec<AssetDefinition> {
         css!(p, "content-cards-base.css"),
         css!(p, "content-cards-categories.css"),
         css!(p, "content-cards-list.css"),
-    ]
-}
-
-fn playbook_css(p: &Path) -> Vec<AssetDefinition> {
-    vec![
-        css!(p, "playbook-layout.css"),
-        css!(p, "playbook-list.css"),
-        css!(p, "playbook-post.css"),
-        css!(p, "playbook-content.css"),
-        css!(p, "playbook-grid.css"),
-        css!(p, "playbook-cards.css"),
     ]
 }
 

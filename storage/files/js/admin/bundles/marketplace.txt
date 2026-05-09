@@ -1,3 +1,0 @@
-marketplace-plugins.js
-marketplace-versions.js
-marketplaces.js

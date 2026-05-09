@@ -4,7 +4,7 @@ use serde::Serialize;
 pub struct UserMarketplaceRef {
     pub id: String,
     pub name: String,
-    /// "default" (granted via YAML baseline) or "override" (granted via access_control_rules).
+    /// "default" (granted via YAML baseline) or "override" (granted via `access_control_rules`).
     pub source: &'static str,
 }
 
