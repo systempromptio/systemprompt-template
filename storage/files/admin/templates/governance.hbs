@@ -3,12 +3,12 @@
     {{#*inline "content"}}
     {{> components/page-header title="Governance Policies" subtitle="Code-defined policies. Runtime-enforced. Inspect the chain, see what each policy is doing in production."}}
 
-    <nav class="tab-nav" aria-label="Governance sections">
-        <a href="/admin/governance" class="tab-nav__item tab-nav__item--active">Policies</a>
-        <a href="/admin/governance/decisions" class="tab-nav__item">Decisions</a>
-        <a href="/admin/governance/identity" class="tab-nav__item">Identity</a>
-        <a href="/admin/governance/users" class="tab-nav__item">Users</a>
-        <a href="/admin/governance/hooks" class="tab-nav__item">Hooks</a>
+    <nav class="sp-tabs" role="tablist" aria-label="Governance sections">
+        <a href="/admin/governance" class="sp-tab sp-tab--active" role="tab">Policies</a>
+        <a href="/admin/governance/decisions" class="sp-tab" role="tab">Decisions</a>
+        <a href="/admin/governance/identity" class="sp-tab" role="tab">Identity</a>
+        <a href="/admin/governance/users" class="sp-tab" role="tab">Users</a>
+        <a href="/admin/governance/hooks" class="sp-tab" role="tab">Hooks</a>
     </nav>
 
     <div class="metric-ribbon">

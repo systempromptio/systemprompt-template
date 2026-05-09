@@ -12,59 +12,72 @@
     {{> components/create-user-panel}}
 
     <section aria-label="Users list" data-page="users">
-    {{#if users}}
+    {{#if groups}}
     {{#> components/data-table}}
         <thead><tr>
             <th>User</th>
-            <th>Department</th>
-            <th class="numeric col-numeric" title="Marketplaces (direct + department)">Marketplaces</th>
-            <th class="numeric col-numeric" title="Effective skills (direct + department)">Skills</th>
-            <th class="col-status" title="Connected bridge sessions / total enabled agents">Agents</th>
+            <th>Roles</th>
+            <th title="Marketplaces granted by YAML default plus any DB overrides">Marketplaces</th>
             <th class="col-status" title="Active PATs / enrolled devices, coloured by last-seen">Devices</th>
             <th class="numeric col-numeric" title="Lifetime tokens consumed via bridge sessions">Tokens</th>
             <th class="numeric col-numeric">Sessions</th>
+            <th>Client</th>
             <th class="col-status">Status</th>
+            <th class="col-date">Joined</th>
             <th class="col-date">Last Active</th>
             <th class="col-actions"></th>
         </tr></thead>
-        <tbody>
-        {{#each users}}
-        <tr data-user-name="{{toLowerCase (default display_name user_id)}}" data-user-email="{{toLowerCase (default email "")}}">
-            <td>
-                <a href="/admin/user/?id={{user_id}}" class="user-cell">
-                    <span class="avatar avatar-sm">{{initials (default display_name user_id)}}</span>
-                    <span>{{default display_name user_id}}</span>
-                </a>
-            </td>
-            <td>{{#if department}}<a href="/admin/access-control?department={{department}}" class="badge badge-blue">{{department}}</a>{{else}}<span class="badge badge-gray">Unassigned</span>{{/if}}</td>
-            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{assigned_marketplaces_count}}</td>
-            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{assigned_skills_count}}</td>
-            <td class="col-status">
-                {{#if total_agents}}
-                    <span class="agent-pill {{#if connected_agents}}agent-pill--live{{else}}agent-pill--idle{{/if}}" title="{{connected_agents}} of {{total_agents}} agent{{#unless (eq total_agents 1)}}s{{/unless}} connected">
-                        <span class="agent-dot"></span>{{connected_agents}}/{{total_agents}}
+        {{#each groups}}
+        <tbody class="table-group" data-department="{{department}}">
+            <tr class="table-group-header">
+                <th colspan="11">
+                    <a href="/admin/access-control?department={{department}}" class="table-group-title">
+                        <span class="table-group-name">{{department}}</span>
+                        <span class="table-group-count">{{user_count}} user{{#unless (eq user_count 1)}}s{{/unless}}</span>
+                    </a>
+                    <span class="table-group-stats">
+                        {{#if total_tokens}}<span title="Lifetime tokens">{{formatNumber total_tokens}} tokens</span>{{/if}}
+                        {{#if total_sessions}}<span title="Total sessions">&middot; {{total_sessions}} sessions</span>{{/if}}
                     </span>
-                {{else}}
-                    <span class="text-tertiary">0</span>
-                {{/if}}
-            </td>
-            <td class="col-status">
-                {{#if devices_count}}
-                    <span class="device-pill device-pill--{{device_freshness}}" title="{{devices_count}} device{{#unless (eq devices_count 1)}}s{{/unless}} ({{device_freshness}})">
-                        <span class="agent-dot"></span>{{devices_count}}
-                    </span>
-                {{else}}
-                    <span class="text-tertiary">0</span>
-                {{/if}}
-            </td>
-            <td class="numeric" style="font-variant-numeric: tabular-nums;" title="{{lifetime_tokens}} tokens">{{#if lifetime_tokens}}{{formatNumber lifetime_tokens}}{{else}}<span class="text-tertiary">0</span>{{/if}}</td>
-            <td class="numeric" style="font-variant-numeric: tabular-nums;">{{sessions}}</td>
-            <td class="col-status">{{#if is_active}}<span class="badge badge-success">Active</span>{{else}}<span class="badge badge-secondary">Inactive</span>{{/if}}</td>
-            <td class="col-date">{{#if last_active}}<span title="{{formatDate last_active}}">{{relativeTime last_active}}</span>{{else}}Never{{/if}}</td>
-            <td class="col-actions"><button class="btn-actions-trigger" data-user-id="{{user_id}}" aria-label="Actions for {{default display_name user_id}}" aria-haspopup="true" aria-expanded="false" type="button">&#8943;</button></td>
-        </tr>
-        {{/each}}
+                </th>
+            </tr>
+            {{#each users}}
+            <tr data-user-name="{{toLowerCase (default display_name user_id)}}" data-user-email="{{toLowerCase (default email "")}}">
+                <td>
+                    <a href="/admin/user/?id={{user_id}}" class="user-cell">
+                        <span class="avatar avatar-sm">{{initials (default display_name user_id)}}</span>
+                        <span class="user-cell-text">
+                            <span class="user-cell-name">{{default display_name user_id}}</span>
+                            {{#if email}}<span class="user-cell-email">{{email}}</span>{{/if}}
+                        </span>
+                    </a>
+                </td>
+                <td>
+                    {{#if roles}}{{#each roles}}<span class="badge badge-gray">{{this}}</span> {{/each}}{{else}}<span class="text-tertiary">—</span>{{/if}}
+                </td>
+                <td>
+                    {{#if marketplaces}}{{#each marketplaces}}<a href="/admin/catalog?marketplace={{id}}" class="badge {{#if (eq source "override")}}badge-blue{{else}}badge-orange{{/if}}" title="{{#if (eq source "override")}}DB override{{else}}YAML default{{/if}}">{{name}}</a> {{/each}}{{else}}<span class="text-tertiary">None</span>{{/if}}
+                </td>
+                <td class="col-status">
+                    {{#if devices_count}}
+                        <span class="device-pill device-pill--{{device_freshness}}" title="{{devices_count}} device{{#unless (eq devices_count 1)}}s{{/unless}} ({{device_freshness}})">
+                            <span class="agent-dot"></span>{{devices_count}}
+                        </span>
+                    {{else}}
+                        <span class="text-tertiary">0</span>
+                    {{/if}}
+                </td>
+                <td class="numeric" style="font-variant-numeric: tabular-nums;" title="{{lifetime_tokens}} tokens">{{#if lifetime_tokens}}{{formatNumber lifetime_tokens}}{{else}}<span class="text-tertiary">0</span>{{/if}}</td>
+                <td class="numeric" style="font-variant-numeric: tabular-nums;">{{sessions}}</td>
+                <td>{{#if preferred_client}}<span class="badge badge-gray">{{preferred_client}}</span>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+                <td class="col-status">{{#if is_active}}<span class="badge badge-success">Active</span>{{else}}<span class="badge badge-secondary">Inactive</span>{{/if}}</td>
+                <td class="col-date">{{#if created_at}}<span title="{{formatDate created_at}}">{{relativeTime created_at}}</span>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+                <td class="col-date">{{#if last_active}}<span title="{{formatDate last_active}}">{{relativeTime last_active}}</span>{{else}}Never{{/if}}</td>
+                <td class="col-actions"><button class="btn-actions-trigger" data-user-id="{{user_id}}" aria-label="Actions for {{default display_name user_id}}" aria-haspopup="true" aria-expanded="false" type="button">&#8943;</button></td>
+            </tr>
+            {{/each}}
         </tbody>
+        {{/each}}
     {{/components/data-table}}
     {{else}}
     {{> components/empty-state message="No users found."}}

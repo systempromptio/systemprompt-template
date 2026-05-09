@@ -1,18 +1,17 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title=title subtitle="Read-only view of all skills, plugins, MCP servers, and agents loaded from services/*.yaml. Edit YAML on disk and restart to change."}}
+    {{> components/page-header title=title subtitle="Skills, plugins, and MCP servers loaded from services/*.yaml. This mirrors Anthropic's plugin marketplace model — bundled, install-able units. Edit YAML on disk and restart to change."}}
 
-    <div class="toolbar" role="toolbar" aria-label="Catalog filters">
+    <div class="toolbar" role="toolbar" aria-label="Marketplace filters">
         <div class="search-group">
-            <input type="text" class="search-input" placeholder="Search catalog…" id="catalog-search" aria-label="Search catalog">
+            <input type="text" class="search-input" placeholder="Search marketplace…" id="catalog-search" aria-label="Search marketplace">
         </div>
         <div class="filter-chips" role="group" aria-label="Filter by type">
             <button type="button" class="chip active" data-filter="all">All ({{total}})</button>
             <button type="button" class="chip" data-filter="skill">Skills ({{skills_count}})</button>
             <button type="button" class="chip" data-filter="plugin">Plugins ({{plugins_count}})</button>
             <button type="button" class="chip" data-filter="mcp_server">MCP servers ({{mcp_servers_count}})</button>
-            <button type="button" class="chip" data-filter="agent">Agents ({{agents_count}})</button>
         </div>
     </div>
 
@@ -65,24 +64,12 @@
             <td class="col-actions"><a class="btn btn-sm btn-outline" href="{{matrix_url}}">Access →</a></td>
         </tr>
         {{/each}}
-        {{#each agents}}
-        <tr data-type="agent" data-search="agent {{toLowerCase name}} {{toLowerCase id}} {{toLowerCase source_path}}">
-            <td><span class="badge">agent</span></td>
-            <td><code class="code-inline">{{id}}</code></td>
-            <td>{{name}}</td>
-            <td>{{#if description}}{{description}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
-            <td>{{#if enabled}}<span class="badge badge-success">enabled</span>{{else}}<span class="badge badge-muted">disabled</span>{{/if}}</td>
-            <td><code class="code-inline">{{source_path}}</code></td>
-            <td class="numeric col-numeric">{{assignment_count}}</td>
-            <td class="col-actions"><a class="btn btn-sm btn-outline" href="{{matrix_url}}">Access →</a></td>
-        </tr>
-        {{/each}}
         </tbody>
     {{/components/data-table}}
     {{else}}
     <div class="empty-state" style="padding:3rem;text-align:center;">
-        <h3>Catalog is empty</h3>
-        <p class="text-muted">No skills, plugins, MCP servers, or agents are configured. Add YAML under <code>services/</code> and restart.</p>
+        <h3>Marketplace is empty</h3>
+        <p class="text-muted">No skills, plugins, or MCP servers configured. Add YAML under <code>services/</code> and restart.</p>
     </div>
     {{/if}}
 

@@ -135,8 +135,15 @@
             {{> components/stat-card label="Marketplaces" value=(default user_assignments.marketplaces_count 0)}}
             {{> components/stat-card label="Active devices" value=(default user_devices_count 0)}}
         </div>
+        {{#if user_assignments.marketplaces}}
+        <p>
+        {{#each user_assignments.marketplaces}}
+            <a href="/admin/catalog?marketplace={{id}}" class="badge {{#if (eq source "override")}}badge-blue{{else}}badge-orange{{/if}}" title="{{#if (eq source "override")}}DB override{{else}}YAML default{{/if}}">{{name}}</a>
+        {{/each}}
+        </p>
+        {{/if}}
         <p class="text-muted runtime-meta">
-            Assignments are stored in <code class="code-inline">access_control_rules</code>. Manage in the
+            Marketplace baseline comes from <code class="code-inline">services/marketplaces/*/config.yaml</code>; per-user / per-department allow/deny overrides live in <code class="code-inline">access_control_rules</code>. Manage in the
             <a href="/admin/access-control?user_id={{user.user_id}}">access matrix</a>.
         </p>
     </div>

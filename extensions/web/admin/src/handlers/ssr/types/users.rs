@@ -1,6 +1,23 @@
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
+pub struct UserMarketplaceRef {
+    pub id: String,
+    pub name: String,
+    /// "default" (granted via YAML baseline) or "override" (granted via access_control_rules).
+    pub source: &'static str,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DepartmentGroup {
+    pub department: String,
+    pub users: Vec<EnrichedUserView>,
+    pub user_count: usize,
+    pub total_tokens: i64,
+    pub total_sessions: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct EnrichedUserView {
     pub user_id: String,
     pub display_name: Option<String>,
@@ -19,9 +36,11 @@ pub struct EnrichedUserView {
     #[serde(default)]
     pub department: String,
     #[serde(default)]
-    pub assigned_skills_count: i64,
+    pub created_at: String,
     #[serde(default)]
-    pub assigned_marketplaces_count: i64,
+    pub marketplaces: Vec<UserMarketplaceRef>,
+    #[serde(default)]
+    pub assigned_skills_count: i64,
     #[serde(default)]
     pub devices_count: i64,
     #[serde(default)]
@@ -39,7 +58,7 @@ pub struct EnrichedUserView {
 pub struct UsersPageData {
     pub page: &'static str,
     pub title: &'static str,
-    pub users: Vec<EnrichedUserView>,
+    pub groups: Vec<DepartmentGroup>,
     pub total_users: usize,
     pub active_users: usize,
     pub total_events: i64,
@@ -81,6 +100,8 @@ pub struct UserRuntimeView {
 pub struct UserAssignmentSummary {
     pub skills_count: i64,
     pub marketplaces_count: i64,
+    #[serde(default)]
+    pub marketplaces: Vec<UserMarketplaceRef>,
 }
 
 #[derive(Debug, Clone, Serialize)]

@@ -103,7 +103,20 @@ fn access_routes() -> Router<Arc<PgPool>> {
 }
 
 fn catalog_routes() -> Router<Arc<PgPool>> {
-    Router::new().route("/catalog", get(handlers::catalog::catalog_page))
+    Router::new()
+        .route(
+            "/catalog",
+            get(|| async { axum::response::Redirect::permanent("/admin/catalog/marketplace") }),
+        )
+        .route(
+            "/catalog/marketplace",
+            get(handlers::catalog::marketplace_page),
+        )
+        .route("/catalog/a2a", get(handlers::catalog::a2a_agents_page))
+        .route(
+            "/catalog/external",
+            get(handlers::catalog::external_agents_page),
+        )
 }
 
 fn governance_routes() -> Router<Arc<PgPool>> {

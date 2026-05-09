@@ -12,7 +12,8 @@
 .admin-main .toolbar,
 .admin-main .usage-chart-container,
 .admin-main .cc-stats-bar {
-    margin-left: calc(-1 * var(--sp-space-6));
+    margin-left: calc(-1 * var(--sp-space-10));
+    margin-right: calc(-1 * var(--sp-space-10));
     border-radius: 0 0.375rem 1.125rem 0;
     border-left: none;
 }
