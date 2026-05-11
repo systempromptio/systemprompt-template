@@ -162,7 +162,7 @@ async fn write_documentation_section(
     repo: &systemprompt::content::ContentRepository,
     base_url: &str,
 ) -> Result<(), JobError> {
-    use systemprompt::identifiers::SourceId;
+    use systemprompt::identifiers::{LocaleCode, SourceId};
 
     writeln!(content, "## Documentation")?;
     writeln!(content)?;
@@ -172,7 +172,8 @@ async fn write_documentation_section(
     if let Some(source) = config.content_sources.get("documentation") {
         if source.enabled {
             let source_id = SourceId::new(&source.source_id);
-            if let Ok(docs) = repo.list_by_source(&source_id).await {
+            let locale = LocaleCode::new("en");
+            if let Ok(docs) = repo.list_by_source(&source_id, &locale).await {
                 let prefixes = [
                     ("services", "Services"),
                     ("extensions", "Extensions"),
@@ -222,7 +223,7 @@ async fn write_blog_section(
     repo: &systemprompt::content::ContentRepository,
     base_url: &str,
 ) -> Result<(), JobError> {
-    use systemprompt::identifiers::SourceId;
+    use systemprompt::identifiers::{LocaleCode, SourceId};
 
     writeln!(content, "## Blog")?;
     writeln!(content)?;
@@ -232,7 +233,8 @@ async fn write_blog_section(
     if let Some(source) = config.content_sources.get("blog") {
         if source.enabled {
             let source_id = SourceId::new(&source.source_id);
-            if let Ok(posts) = repo.list_by_source(&source_id).await {
+            let locale = LocaleCode::new("en");
+            if let Ok(posts) = repo.list_by_source(&source_id, &locale).await {
                 for post in posts.iter().take(15) {
                     let url = format!("{}/blog/{}", base_url, post.slug);
                     writeln!(content, "- [{}]({}): {}", post.title, url, post.description)?;
