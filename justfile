@@ -474,6 +474,8 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     JSON
     fi
     mkdir -p "$ROOT/web/dist"
+    echo "Building binaries (release, full workspace)..."
+    just build --release
     echo "Starting local Postgres via Docker..."
     just db-up local
     echo "Waiting for Postgres to accept connections on localhost:${PG_PORT}..."
@@ -493,6 +495,8 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
         fi
         sleep 1
     done
+    echo "Running database migrations..."
+    just migrate
     echo "Publishing assets..."
     just publish
     echo ""
