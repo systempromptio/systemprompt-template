@@ -122,6 +122,13 @@ build *FLAGS:
     if [ "$USE_OFFLINE" = "true" ]; then
         SQLX_OFFLINE=true cargo build --workspace {{FLAGS}}
     else
+        # Apply pending schema migrations before the online sqlx compile-time
+        # check sees the live DB. Build the CLI in offline mode first so
+        # drift between checked-in `.sqlx/` and the unmigrated live schema
+        # can't deadlock the bootstrap.
+        echo "Applying pending migrations before online build..."
+        SQLX_OFFLINE=true cargo build -p systemprompt-cli --quiet
+        target/debug/systemprompt infra db migrate
         SQLX_OFFLINE=false cargo build --workspace {{FLAGS}}
     fi
 
