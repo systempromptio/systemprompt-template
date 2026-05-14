@@ -28,7 +28,10 @@ impl PageDataProvider for HomepagePageDataProvider {
         vec!["homepage".to_string()]
     }
 
-    async fn provide_page_data(&self, _ctx: &PageContext<'_>) -> Result<Value, systemprompt::traits::ProviderError> {
+    async fn provide_page_data(
+        &self,
+        _ctx: &PageContext<'_>,
+    ) -> Result<Value, systemprompt::traits::ProviderError> {
         let config = (*self.config).clone();
         let config_value = serde_json::to_value(&config)?;
         Ok(serde_json::json!({ "site": { "homepage": config_value } }))

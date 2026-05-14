@@ -104,7 +104,7 @@ pub async fn govern_authz(
 
     let decision = resolve(
         &rules,
-        req.user_id.as_str(),
+        &req.user_id,
         &req.roles,
         &req.department,
         default_included,

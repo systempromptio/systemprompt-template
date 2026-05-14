@@ -10,6 +10,7 @@ use std::sync::Arc;
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::config::ProfileBootstrap;
+use systemprompt::identifiers::TenantId;
 use systemprompt::models::Config;
 use uuid::Uuid;
 
@@ -274,7 +275,7 @@ fn read_tenant_id() -> Option<String> {
     bootstrap
         .cloud
         .as_ref()
-        .and_then(|cloud| cloud.tenant_id.clone())
+        .and_then(|cloud| cloud.tenant_id.as_ref().map(|id| id.as_str().to_string()))
 }
 
 fn build_bridge_profile_block() -> Option<BridgeProfileBlock> {
@@ -292,7 +293,7 @@ fn build_bridge_profile_block() -> Option<BridgeProfileBlock> {
     let organization_uuid = profile
         .cloud
         .as_ref()
-        .and_then(|cloud| cloud.tenant_id.as_deref())
+        .and_then(|cloud| cloud.tenant_id.as_ref().map(TenantId::as_str))
         .map(canonicalize_org_uuid);
 
     let models_count = models.len();

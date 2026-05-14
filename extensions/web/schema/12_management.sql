@@ -1,8 +1,10 @@
--- Consolidated schema: Management section (departments + desktop app status)
+-- Management section: departments + desktop app device linkage.
 --
 -- Departments back the `users.department` field with a first-class table.
 -- Skill assignment via access_control_rules is enabled by widening the
--- entity_type check. Desktop app linking is captured per device.
+-- entity_type check (see migrations/008_management.sql for the constraint
+-- swap on pre-existing installs). Backfill of legacy free-text departments
+-- and the constraint update live in the same migration.
 
 CREATE TABLE IF NOT EXISTS departments (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
@@ -11,18 +13,6 @@ CREATE TABLE IF NOT EXISTS departments (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
--- Backfill from any existing free-text departments on users.
-INSERT INTO departments (name)
-SELECT DISTINCT department
-FROM users
-WHERE department IS NOT NULL AND department <> ''
-ON CONFLICT (name) DO NOTHING;
-
--- Allow access_control_rules to govern skills as well (was: plugin/agent/mcp_server/marketplace).
-ALTER TABLE access_control_rules DROP CONSTRAINT IF EXISTS access_control_rules_entity_type_check;
-ALTER TABLE access_control_rules ADD CONSTRAINT access_control_rules_entity_type_check
-    CHECK (entity_type IN ('plugin', 'agent', 'mcp_server', 'marketplace', 'skill', 'gateway_route'));
 
 -- Desktop app linkage. device_id matches the cowork api_key id or device_cert id
 -- depending on enrolment mode; both are TEXT, so we keep this loose intentionally.

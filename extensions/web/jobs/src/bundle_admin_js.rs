@@ -198,7 +198,10 @@ impl Job for BundleAdminJsJob {
         true
     }
 
-    async fn execute(&self, _ctx: &JobContext) -> Result<JobResult, systemprompt::traits::ProviderError> {
+    async fn execute(
+        &self,
+        _ctx: &JobContext,
+    ) -> Result<JobResult, systemprompt::traits::ProviderError> {
         Ok(Self::execute_bundle().await?)
     }
 }

@@ -29,7 +29,9 @@ pub fn get_profile_path() -> Result<PathBuf, Box<Response>> {
         .map(PathBuf::from)
         .map_err(|e| {
             tracing::error!(error = %e, "Failed to get profile path");
-            boxed_error_response(StatusCode::INTERNAL_SERVER_ERROR, "Failed to load profile path")
+            boxed_error_response(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to load profile path",
+            )
         })
 }
-

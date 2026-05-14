@@ -344,9 +344,10 @@ pub async fn fetch_tool_top_actors(
     limit: i64,
 ) -> Result<Vec<ToolTopActor>, sqlx::Error> {
     match group {
-        ToolActorGroup::User => sqlx::query_as!(
-            ToolTopActor,
-            r#"SELECT
+        ToolActorGroup::User => {
+            sqlx::query_as!(
+                ToolTopActor,
+                r#"SELECT
                 g.user_id as "identity_id!",
                 COALESCE(u.display_name, u.full_name, u.name, u.email, g.user_id)
                     as "label!",
@@ -359,16 +360,18 @@ pub async fn fetch_tool_top_actors(
               GROUP BY g.user_id, u.display_name, u.full_name, u.name, u.email
               ORDER BY COUNT(*) FILTER (WHERE g.decision = 'deny') DESC, COUNT(*) DESC
               LIMIT $4"#,
-            range.from,
-            range.to,
-            tool_name,
-            limit,
-        )
-        .fetch_all(pool)
-        .await,
-        ToolActorGroup::Agent => sqlx::query_as!(
-            ToolTopActor,
-            r#"SELECT
+                range.from,
+                range.to,
+                tool_name,
+                limit,
+            )
+            .fetch_all(pool)
+            .await
+        }
+        ToolActorGroup::Agent => {
+            sqlx::query_as!(
+                ToolTopActor,
+                r#"SELECT
                 COALESCE(g.agent_id, '')   as "identity_id!",
                 COALESCE(g.agent_id, '—')  as "label!",
                 COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint as "deny_count!",
@@ -380,12 +383,13 @@ pub async fn fetch_tool_top_actors(
               GROUP BY g.agent_id
               ORDER BY COUNT(*) FILTER (WHERE g.decision = 'deny') DESC, COUNT(*) DESC
               LIMIT $4"#,
-            range.from,
-            range.to,
-            tool_name,
-            limit,
-        )
-        .fetch_all(pool)
-        .await,
+                range.from,
+                range.to,
+                tool_name,
+                limit,
+            )
+            .fetch_all(pool)
+            .await
+        }
     }
 }

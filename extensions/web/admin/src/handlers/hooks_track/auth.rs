@@ -4,7 +4,7 @@ use axum::{
     response::Response,
 };
 use systemprompt::config::SecretsBootstrap;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{SessionId, UserId};
 use systemprompt::models::auth::JwtAudience;
 use systemprompt::models::Config;
 use systemprompt::oauth::validate_jwt_token;
@@ -57,7 +57,8 @@ pub fn extract_and_validate_jwt(
     })?;
     let plugin_id = claims
         .session_id
-        .as_deref()
+        .as_ref()
+        .map(SessionId::as_str)
         .and_then(|s| s.strip_prefix("plugin_"))
         .unwrap_or("")
         .to_string();

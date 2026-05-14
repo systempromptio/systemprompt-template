@@ -47,7 +47,7 @@ impl From<anyhow::Error> for JobError {
 
 impl From<JobError> for ProviderError {
     fn from(err: JobError) -> Self {
-        Self::Internal(anyhow::Error::from(err))
+        Self::Internal(err.to_string())
     }
 }
 

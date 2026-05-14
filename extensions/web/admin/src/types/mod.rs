@@ -5,6 +5,7 @@ pub mod conversation_analytics;
 mod dashboard;
 mod dashboard_enterprise;
 mod dashboard_traffic;
+pub mod departments;
 pub mod gateway;
 pub mod hooks_export;
 mod jobs;
@@ -12,7 +13,6 @@ mod plugins;
 mod plugins_config;
 mod plugins_requests;
 mod user_context;
-pub mod departments;
 pub use departments::{Department, DepartmentInput, DepartmentMember, DepartmentSummary};
 mod users;
 pub mod webhook;
@@ -24,10 +24,9 @@ pub use dashboard::{
     HourlyActivity, IncidentGroup, LeaderboardEntry, McpAccessEvent, McpAccessSummary, ModelUsage,
     PaginationQuery, ProjectActivity, RealtimePulse, RecentMcpError, SkillCount, TimeSeriesBucket,
     TokenUsageRow, ToolSuccessRate, TopActor, TopPageDailyBucket, TopPolicy, TopUser,
-    TrafficCountryBucket, TrafficData,
-    TrafficDevice, TrafficGeo, TrafficKpis, TrafficReadingPattern, TrafficSource,
-    TrafficTimeBucket, TrafficTopPage, UnlockedAchievement, UserGamificationProfile,
-    WindowedCounts,
+    TrafficCountryBucket, TrafficData, TrafficDevice, TrafficGeo, TrafficKpis,
+    TrafficReadingPattern, TrafficSource, TrafficTimeBucket, TrafficTopPage, UnlockedAchievement,
+    UserGamificationProfile, WindowedCounts,
 };
 pub use gateway::{
     GatewayConfigView, GatewayRouteView, ReorderRoutesRequest, UpdateGatewaySettingsRequest,
@@ -88,8 +87,8 @@ pub use conversation_analytics::{
 pub use users::{
     ContentBytes, CookieSession, CreateUserRequest, DepartmentStats, DetectedEntity,
     EventTypeCount, JwtIdentity, SkillSecret, ToolUsageCount, UpdateUserRequest,
-    UpsertSkillSecretRequest, UsageEvent, UserBasicInfo, UserDetail, UserIdentityRow,
-    UserSession, UserSummary, UserTier, UsersQuery,
+    UpsertSkillSecretRequest, UsageEvent, UserBasicInfo, UserDetail, UserIdentityRow, UserSession,
+    UserSummary, UserTier, UsersQuery,
 };
 pub use webhook::{
     GovernQuery, HookEventPayload, StatusLinePayload, StatusLineQuery, TrackQuery,

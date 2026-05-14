@@ -35,7 +35,10 @@ impl ComponentRenderer for CliRemoteAnimationPartialRenderer {
         ))
     }
 
-    async fn render(&self, _ctx: &ComponentContext<'_>) -> Result<RenderedComponent, ProviderError> {
+    async fn render(
+        &self,
+        _ctx: &ComponentContext<'_>,
+    ) -> Result<RenderedComponent, ProviderError> {
         Ok(RenderedComponent::new(self.variable_name(), ""))
     }
 
@@ -73,7 +76,10 @@ impl ComponentRenderer for RustMeshAnimationPartialRenderer {
         ))
     }
 
-    async fn render(&self, _ctx: &ComponentContext<'_>) -> Result<RenderedComponent, ProviderError> {
+    async fn render(
+        &self,
+        _ctx: &ComponentContext<'_>,
+    ) -> Result<RenderedComponent, ProviderError> {
         Ok(RenderedComponent::new(self.variable_name(), ""))
     }
 
@@ -111,7 +117,10 @@ impl ComponentRenderer for MemoryLoopAnimationPartialRenderer {
         ))
     }
 
-    async fn render(&self, _ctx: &ComponentContext<'_>) -> Result<RenderedComponent, ProviderError> {
+    async fn render(
+        &self,
+        _ctx: &ComponentContext<'_>,
+    ) -> Result<RenderedComponent, ProviderError> {
         Ok(RenderedComponent::new(self.variable_name(), ""))
     }
 
@@ -149,7 +158,10 @@ impl ComponentRenderer for AgenticMeshAnimationPartialRenderer {
         ))
     }
 
-    async fn render(&self, _ctx: &ComponentContext<'_>) -> Result<RenderedComponent, ProviderError> {
+    async fn render(
+        &self,
+        _ctx: &ComponentContext<'_>,
+    ) -> Result<RenderedComponent, ProviderError> {
         Ok(RenderedComponent::new(self.variable_name(), ""))
     }
 
@@ -187,7 +199,10 @@ impl ComponentRenderer for ArchitectureDiagramPartialRenderer {
         ))
     }
 
-    async fn render(&self, _ctx: &ComponentContext<'_>) -> Result<RenderedComponent, ProviderError> {
+    async fn render(
+        &self,
+        _ctx: &ComponentContext<'_>,
+    ) -> Result<RenderedComponent, ProviderError> {
         Ok(RenderedComponent::new(self.variable_name(), ""))
     }
 

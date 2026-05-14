@@ -3,8 +3,8 @@
 -- Fires a `pg_notify('audit_events', <json>)` whenever a row is inserted into
 -- `governance_decisions` or `ai_requests`. The Rust admin extension subscribes
 -- via PgListener and fans the payload out to SSE clients on
--- `/admin/api/sse/audit`. Idempotent — uses CREATE OR REPLACE FUNCTION and
--- DROP TRIGGER IF EXISTS so re-runs are safe.
+-- `/admin/api/sse/audit`. CREATE OR REPLACE TRIGGER (PG14+) keeps the file
+-- declarative and idempotent across re-runs.
 
 CREATE OR REPLACE FUNCTION audit_event_notify_governance()
 RETURNS TRIGGER AS $$
@@ -45,8 +45,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS audit_event_notify_governance_trg ON governance_decisions;
-CREATE TRIGGER audit_event_notify_governance_trg
+CREATE OR REPLACE TRIGGER audit_event_notify_governance_trg
     AFTER INSERT ON governance_decisions
     FOR EACH ROW
     EXECUTE FUNCTION audit_event_notify_governance();
@@ -92,8 +91,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS audit_event_notify_ai_requests_trg ON ai_requests;
-CREATE TRIGGER audit_event_notify_ai_requests_trg
+CREATE OR REPLACE TRIGGER audit_event_notify_ai_requests_trg
     AFTER INSERT ON ai_requests
     FOR EACH ROW
     EXECUTE FUNCTION audit_event_notify_ai_requests();
@@ -123,8 +121,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS audit_event_notify_plugin_usage_trg ON plugin_usage_events;
-CREATE TRIGGER audit_event_notify_plugin_usage_trg
+CREATE OR REPLACE TRIGGER audit_event_notify_plugin_usage_trg
     AFTER INSERT ON plugin_usage_events
     FOR EACH ROW
     EXECUTE FUNCTION audit_event_notify_plugin_usage();

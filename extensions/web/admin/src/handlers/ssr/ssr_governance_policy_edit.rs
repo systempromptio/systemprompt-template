@@ -45,16 +45,19 @@ pub async fn governance_policy_edit_page(
     // across an await point and the future would lose its Send impl.
     let snapshot: Option<(String, String, String, String, bool, String)> = {
         let chain = governance::chain();
-        let result = chain.iter().find(|(_, p)| p.id() == policy_id).map(|(cfg, p)| {
-            (
-                p.id().to_string(),
-                p.name().to_string(),
-                p.description().to_string(),
-                serde_yaml::to_string(&cfg.params).unwrap_or_default(),
-                cfg.enabled,
-                p.id().to_string(),
-            )
-        });
+        let result = chain
+            .iter()
+            .find(|(_, p)| p.id() == policy_id)
+            .map(|(cfg, p)| {
+                (
+                    p.id().to_string(),
+                    p.name().to_string(),
+                    p.description().to_string(),
+                    serde_yaml::to_string(&cfg.params).unwrap_or_default(),
+                    cfg.enabled,
+                    p.id().to_string(),
+                )
+            });
         result
     };
 
@@ -64,7 +67,13 @@ pub async fn governance_policy_edit_page(
             "title": "Unknown policy",
             "policy_id": policy_id,
         });
-        return super::render_page(&engine, "governance-unknown-policy", &data, &user_ctx, &mkt_ctx);
+        return super::render_page(
+            &engine,
+            "governance-unknown-policy",
+            &data,
+            &user_ctx,
+            &mkt_ctx,
+        );
     };
 
     let recent = repositories::governance::list_decisions_for_policy(
@@ -113,7 +122,13 @@ pub async fn governance_policy_edit_page(
         "config_path": "services/governance/config.yaml",
     });
 
-    super::render_page(&engine, "governance-policy-edit", &data, &user_ctx, &mkt_ctx)
+    super::render_page(
+        &engine,
+        "governance-policy-edit",
+        &data,
+        &user_ctx,
+        &mkt_ctx,
+    )
 }
 
 #[derive(Debug, Deserialize)]
@@ -158,8 +173,8 @@ fn update_enabled_in_yaml(policy_id: &str, enabled: bool) -> Result<(), String> 
     let bootstrap = ProfileBootstrap::get().map_err(|e| e.to_string())?;
     let path = std::path::PathBuf::from(&bootstrap.paths.services).join("governance/config.yaml");
 
-    let text = std::fs::read_to_string(&path)
-        .map_err(|e| format!("read {}: {e}", path.display()))?;
+    let text =
+        std::fs::read_to_string(&path).map_err(|e| format!("read {}: {e}", path.display()))?;
     let mut root: serde_yaml::Value =
         serde_yaml::from_str(&text).map_err(|e| format!("parse YAML: {e}"))?;
 

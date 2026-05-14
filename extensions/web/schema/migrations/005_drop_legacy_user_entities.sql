@@ -1,6 +1,6 @@
--- All per-user entity tables (skills, agents, plugins, MCP servers, hooks)
--- have been removed: plugins/skills/agents/MCP servers are now defined in
--- services/*.yaml only, and there is no longer any per-user CRUD surface.
+-- Per-user entity tables (skills, agents, plugins, MCP servers, hooks) were
+-- removed: those are now defined in services/*.yaml only. Drop any stragglers
+-- from older deployments.
 
 DROP TABLE IF EXISTS user_plugin_mcp_servers CASCADE;
 DROP TABLE IF EXISTS user_plugin_agents CASCADE;

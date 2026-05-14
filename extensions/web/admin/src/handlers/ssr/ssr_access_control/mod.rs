@@ -95,9 +95,8 @@ pub async fn access_control_page(
     let dept_groups: Vec<serde_json::Value> = dept_stats
         .iter()
         .map(|d| {
-            let users_in: &[&UserListRow] = buckets
-                .get(&d.department)
-                .map_or(&[][..], Vec::as_slice);
+            let users_in: &[&UserListRow] =
+                buckets.get(&d.department).map_or(&[][..], Vec::as_slice);
             json!({
                 "name": d.department,
                 "user_count": d.user_count,

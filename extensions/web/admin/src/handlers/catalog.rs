@@ -160,11 +160,10 @@ pub async fn marketplace_page(
         tracing::warn!(error = %e, "Failed to load plugin catalog");
         Vec::new()
     });
-    let raw_mcp =
-        repositories::mcp_servers::list_mcp_servers(&services_path).unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to load MCP catalog");
-            Vec::new()
-        });
+    let raw_mcp = repositories::mcp_servers::list_mcp_servers(&services_path).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to load MCP catalog");
+        Vec::new()
+    });
 
     let (skill_counts, plugin_counts, mcp_counts) = tokio::join!(
         assignment_counts_by_type(&pool, ENTITY_SKILL),

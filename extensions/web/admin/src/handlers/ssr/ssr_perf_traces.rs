@@ -97,7 +97,11 @@ pub async fn perf_traces_page(
     });
     let options = options_res.unwrap_or_default();
 
-    let total_pages = if total == 0 { 1 } else { (total + PAGE_SIZE - 1) / PAGE_SIZE };
+    let total_pages = if total == 0 {
+        1
+    } else {
+        (total + PAGE_SIZE - 1) / PAGE_SIZE
+    };
     let pagination = build_pagination(&query, page, total_pages);
 
     let view_qs = view_tabs_qs(range, &preset);
@@ -262,7 +266,9 @@ fn build_chips(query: &TraceListQuery) -> Vec<serde_json::Value> {
             "decision" => query.decision.as_deref(),
             _ => None,
         };
-        let Some(v) = empty_to_none(val) else { continue };
+        let Some(v) = empty_to_none(val) else {
+            continue;
+        };
         chips.push(json!({
             "group_label": label,
             "label": v,
@@ -308,16 +314,19 @@ fn preserved_query_string(query: &TraceListQuery, drop: &[&str]) -> String {
         .join("&")
 }
 
-fn annotate_options(
-    options: &FilterOptions,
-    filter: &TraceFilter<'_>,
-) -> serde_json::Value {
+fn annotate_options(options: &FilterOptions, filter: &TraceFilter<'_>) -> serde_json::Value {
     let mut out = serde_json::Map::new();
     if !options.users.is_empty() {
-        out.insert("users".into(), annotate_group(&options.users, filter.user_id).into());
+        out.insert(
+            "users".into(),
+            annotate_group(&options.users, filter.user_id).into(),
+        );
     }
     if !options.agents.is_empty() {
-        out.insert("agents".into(), annotate_group(&options.agents, filter.agent_id).into());
+        out.insert(
+            "agents".into(),
+            annotate_group(&options.agents, filter.agent_id).into(),
+        );
     }
     if !options.agent_scopes.is_empty() {
         out.insert(
@@ -326,7 +335,10 @@ fn annotate_options(
         );
     }
     if !options.policies.is_empty() {
-        out.insert("policies".into(), annotate_group(&options.policies, filter.policy).into());
+        out.insert(
+            "policies".into(),
+            annotate_group(&options.policies, filter.policy).into(),
+        );
     }
     if !options.decisions.is_empty() {
         out.insert(
@@ -351,11 +363,7 @@ fn annotate_group(items: &[FilterOption], selected: Option<&str>) -> Vec<serde_j
         .collect()
 }
 
-fn build_pagination(
-    query: &TraceListQuery,
-    page: i64,
-    total_pages: i64,
-) -> serde_json::Value {
+fn build_pagination(query: &TraceListQuery, page: i64, total_pages: i64) -> serde_json::Value {
     let qs = preserved_query_string(query, &["page"]);
     let prefix = if qs.is_empty() {
         format!("{BASE_URL}?")
@@ -430,7 +438,12 @@ fn format_tokens(total: i64, input: i64, output: i64) -> String {
     if total <= 0 {
         return "—".to_string();
     }
-    format!("{} ({} in / {} out)", short_num(total), short_num(input), short_num(output))
+    format!(
+        "{} ({} in / {} out)",
+        short_num(total),
+        short_num(input),
+        short_num(output)
+    )
 }
 
 fn short_num(n: i64) -> String {

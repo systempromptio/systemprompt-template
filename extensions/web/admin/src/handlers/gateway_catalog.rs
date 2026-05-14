@@ -20,6 +20,8 @@ use axum::{
 use serde::Serialize;
 use sqlx::PgPool;
 
+use systemprompt::identifiers::UserId;
+
 use crate::handlers::shared;
 use crate::repositories::{
     self,
@@ -64,19 +66,18 @@ pub async fn for_user_handler(
         }
     };
 
-    let (user_roles, department) = match repositories::get_user_roles_department(&pool, &user_id)
-        .await
-    {
-        Ok(Some(rd)) => rd,
-        Ok(None) => return shared::error_response(StatusCode::NOT_FOUND, "User not found"),
-        Err(e) => {
-            tracing::error!(error = %e, user_id, "Failed to load user roles");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Failed to load user",
-            );
-        }
-    };
+    let (user_roles, department) =
+        match repositories::get_user_roles_department(&pool, &user_id).await {
+            Ok(Some(rd)) => rd,
+            Ok(None) => return shared::error_response(StatusCode::NOT_FOUND, "User not found"),
+            Err(e) => {
+                tracing::error!(error = %e, user_id, "Failed to load user roles");
+                return shared::error_response(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Failed to load user",
+                );
+            }
+        };
 
     match collect_allowed_routes(&pool, &cfg.routes, &user_id, &user_roles, &department).await {
         Ok(routes) => Json(CatalogResponse { user_id, routes }).into_response(),
@@ -109,7 +110,13 @@ async fn collect_allowed_routes(
                 false
             });
         if matches!(
-            gateway_acl::resolve(&rules, user_id, user_roles, department, default_included),
+            gateway_acl::resolve(
+                &rules,
+                &UserId::new(user_id),
+                user_roles,
+                department,
+                default_included
+            ),
             Decision::Allow
         ) {
             allowed.push(CatalogEntry {
@@ -202,8 +209,7 @@ pub async fn detect_after_the_fact(
             continue;
         };
         let Some((user_roles, department)) =
-            repositories::get_user_roles_department(pool, &row.user_id)
-                .await?
+            repositories::get_user_roles_department(pool, &row.user_id).await?
         else {
             continue;
         };
@@ -211,7 +217,7 @@ pub async fn detect_after_the_fact(
         let default_included = gateway_acl::get_default_included(pool, &route.id).await?;
         if let Decision::Deny { reason, .. } = gateway_acl::resolve(
             &rules,
-            &row.user_id,
+            &UserId::new(&row.user_id),
             &user_roles,
             &department,
             default_included,

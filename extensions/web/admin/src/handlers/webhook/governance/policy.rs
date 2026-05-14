@@ -97,14 +97,15 @@ impl PolicyChain {
             .iter()
             .map(|e| (&e.config, e.instance.as_ref()))
     }
-
 }
 
 /// Process-wide, hot-reloadable policy chain.
 static CHAIN: LazyLock<RwLock<PolicyChain>> = LazyLock::new(|| RwLock::new(load_chain()));
 
 pub fn chain() -> std::sync::RwLockReadGuard<'static, PolicyChain> {
-    CHAIN.read().unwrap_or_else(std::sync::PoisonError::into_inner)
+    CHAIN
+        .read()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 /// Re-read `services/governance/config.yaml` and rebuild the chain.
@@ -228,4 +229,3 @@ fn default_configs() -> Vec<PolicyConfig> {
     })
     .collect()
 }
-

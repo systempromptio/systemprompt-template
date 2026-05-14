@@ -44,8 +44,14 @@ pub async fn update_entity_rules_handler(
     Path((entity_type, entity_id)): Path<(String, String)>,
     Json(body): Json<UpdateEntityRulesRequest>,
 ) -> Response {
-    if !["plugin", "agent", "mcp_server", "marketplace", "gateway_route"]
-        .contains(&entity_type.as_str())
+    if ![
+        "plugin",
+        "agent",
+        "mcp_server",
+        "marketplace",
+        "gateway_route",
+    ]
+    .contains(&entity_type.as_str())
     {
         return (
             StatusCode::BAD_REQUEST,
@@ -71,12 +77,7 @@ pub async fn update_entity_rules_handler(
                 tokio::spawn(async move {
                     activity::record(
                         &pool_arc,
-                        NewActivity::entity_updated(
-                            &uid,
-                            ActivityEntity::GatewayRoute,
-                            &eid,
-                            &eid,
-                        ),
+                        NewActivity::entity_updated(&uid, ActivityEntity::GatewayRoute, &eid, &eid),
                     )
                     .await;
                 });

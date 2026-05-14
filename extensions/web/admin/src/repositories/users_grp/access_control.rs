@@ -274,8 +274,7 @@ fn resolve_effective(
                 }
             }
             RuleType::Role => {
-                if user.roles.iter().any(|x| x == &r.rule_value)
-                    && (role_rule.is_none() || is_deny)
+                if user.roles.iter().any(|x| x == &r.rule_value) && (role_rule.is_none() || is_deny)
                 {
                     role_rule = Some(r);
                 }

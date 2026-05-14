@@ -341,7 +341,11 @@ fn parse_turns(input: &ParseInput<'_>) -> Vec<TranscriptTurn> {
             let raw_text = extract_content_text(entry);
             let (redacted_text, redactions_applied) = redact_text(&raw_text);
             let content_redacted = Some(redacted_text);
-            let content = if input.include_raw { Some(raw_text) } else { None };
+            let content = if input.include_raw {
+                Some(raw_text)
+            } else {
+                None
+            };
 
             let tool_calls = entry
                 .get("tool_calls")
@@ -378,10 +382,7 @@ fn parse_turns(input: &ParseInput<'_>) -> Vec<TranscriptTurn> {
 
 fn parse_tool_call(v: &serde_json::Value) -> ToolCall {
     ToolCall {
-        id: v
-            .get("id")
-            .and_then(|x| x.as_str())
-            .map(String::from),
+        id: v.get("id").and_then(|x| x.as_str()).map(String::from),
         name: v
             .get("name")
             .or_else(|| v.get("tool_name"))
@@ -439,23 +440,23 @@ fn extract_content_text(entry: &serde_json::Value) -> String {
 /// Returns `(redacted_text, count_of_redactions)`.
 pub fn redact_text(input: &str) -> (String, u32) {
     const PREFIX_PATTERNS: &[(&str, &str)] = &[
-        ("AKIA",         "aws_access_key"),
-        ("ASIA",         "aws_session_key"),
-        ("ghp_",         "github_token"),
-        ("github_pat_",  "github_token"),
-        ("gho_",         "github_oauth"),
-        ("ghu_",         "github_user_token"),
-        ("ghs_",         "github_server_token"),
-        ("ghr_",         "github_refresh"),
-        ("glpat-",       "gitlab_token"),
-        ("xoxb-",        "slack_bot_token"),
-        ("xoxp-",        "slack_user_token"),
-        ("sk-ant-",      "anthropic_api_key"),
-        ("sk-proj-",     "openai_api_key"),
-        ("sk_live_",     "stripe_secret_key"),
-        ("rk_live_",     "stripe_restricted_key"),
-        ("AIza",         "google_api_key"),
-        ("SG.",          "sendgrid_api_key"),
+        ("AKIA", "aws_access_key"),
+        ("ASIA", "aws_session_key"),
+        ("ghp_", "github_token"),
+        ("github_pat_", "github_token"),
+        ("gho_", "github_oauth"),
+        ("ghu_", "github_user_token"),
+        ("ghs_", "github_server_token"),
+        ("ghr_", "github_refresh"),
+        ("glpat-", "gitlab_token"),
+        ("xoxb-", "slack_bot_token"),
+        ("xoxp-", "slack_user_token"),
+        ("sk-ant-", "anthropic_api_key"),
+        ("sk-proj-", "openai_api_key"),
+        ("sk_live_", "stripe_secret_key"),
+        ("rk_live_", "stripe_restricted_key"),
+        ("AIza", "google_api_key"),
+        ("SG.", "sendgrid_api_key"),
     ];
 
     let mut out = String::with_capacity(input.len());
@@ -509,10 +510,7 @@ fn match_governance(
         .find(|r| r.decision == "deny")
         .or_else(|| rows.first())?;
 
-    let rule_count = i32::try_from(
-        row.evaluated_rules.as_array().map_or(0, Vec::len),
-    )
-    .unwrap_or(0);
+    let rule_count = i32::try_from(row.evaluated_rules.as_array().map_or(0, Vec::len)).unwrap_or(0);
 
     Some(TurnGovernance {
         decision: row.decision.clone(),
@@ -536,8 +534,7 @@ mod tests {
 
     #[test]
     fn redact_anthropic_key() {
-        let (out, n) =
-            redact_text("call sk-ant-api03-abc and also AIzaSyAbCdEfG please");
+        let (out, n) = redact_text("call sk-ant-api03-abc and also AIzaSyAbCdEfG please");
         assert_eq!(n, 2);
         assert!(out.contains("[REDACTED:anthropic_api_key]"));
         assert!(out.contains("[REDACTED:google_api_key]"));

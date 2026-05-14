@@ -173,11 +173,13 @@ async fn fetch_decisions(
     .fetch_all(pool)
     .await?;
 
-    let slots = rows.first().map_or_else(DecisionUserSlots::default, |r| DecisionUserSlots {
-        user_id: r.user_id.clone(),
-        agent_id: r.agent_id.clone(),
-        agent_scope: r.agent_scope.clone(),
-    });
+    let slots = rows
+        .first()
+        .map_or_else(DecisionUserSlots::default, |r| DecisionUserSlots {
+            user_id: r.user_id.clone(),
+            agent_id: r.agent_id.clone(),
+            agent_scope: r.agent_scope.clone(),
+        });
 
     let stages = rows
         .into_iter()

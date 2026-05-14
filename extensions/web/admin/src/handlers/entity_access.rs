@@ -168,14 +168,12 @@ pub async fn set_entity_default_handler(
         .set_default_included(kind, &entity_id, body.default_included)
         .await
     {
-        Ok(()) => {
-            Json(serde_json::json!({
-                "entity_type": entity_type,
-                "entity_id": entity_id,
-                "default_included": body.default_included,
-            }))
-            .into_response()
-        }
+        Ok(()) => Json(serde_json::json!({
+            "entity_type": entity_type,
+            "entity_id": entity_id,
+            "default_included": body.default_included,
+        }))
+        .into_response(),
         Err(e) => {
             tracing::error!(error = %e, entity_type, entity_id, "set_default_included failed");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
@@ -335,7 +333,10 @@ fn collect_entity_ids(entity_type: &str) -> Result<Vec<String>, Box<Response>> {
                     "Failed to load MCP servers",
                 ))
             })?;
-            Ok(servers.into_iter().map(|s| s.id.as_str().to_string()).collect())
+            Ok(servers
+                .into_iter()
+                .map(|s| s.id.as_str().to_string())
+                .collect())
         }
         _ => Ok(Vec::new()),
     }

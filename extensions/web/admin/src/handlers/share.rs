@@ -117,12 +117,10 @@ pub async fn issue_share_token_handler(
             );
         }
     };
-    let row = sqlx::query_as::<_, (i32,)>(
-        "SELECT share_token_version FROM users WHERE id = $1",
-    )
-    .bind(&target_user_id)
-    .fetch_optional(&*pool)
-    .await;
+    let row = sqlx::query_as::<_, (i32,)>("SELECT share_token_version FROM users WHERE id = $1")
+        .bind(&target_user_id)
+        .fetch_optional(&*pool)
+        .await;
     let version = match row {
         Ok(Some((v,))) => v,
         Ok(None) => return shared::error_response(StatusCode::NOT_FOUND, "User not found"),
@@ -197,10 +195,7 @@ pub async fn public_manifest_handler(
     }
 }
 
-async fn build_user_manifest(
-    pool: &PgPool,
-    user_id: &str,
-) -> Result<ManifestResponse, Response> {
+async fn build_user_manifest(pool: &PgPool, user_id: &str) -> Result<ManifestResponse, Response> {
     let services_path = shared::get_services_path().map_err(|r| *r)?;
     let mut sections_in: Vec<repositories::access_control::SectionInput> = Vec::new();
 
@@ -293,4 +288,3 @@ async fn build_user_manifest(
         sections,
     })
 }
-

@@ -29,7 +29,12 @@ pub fn list_mcp_servers(services_path: &Path) -> Result<Vec<McpServerDetail>, Ma
             .ok()
             .and_then(|p| p.to_str())
             .map_or_else(
-                || format!("services/mcp/{}", path.file_name().and_then(|n| n.to_str()).unwrap_or("")),
+                || {
+                    format!(
+                        "services/mcp/{}",
+                        path.file_name().and_then(|n| n.to_str()).unwrap_or("")
+                    )
+                },
                 |s| format!("services/{s}"),
             );
         if let Some(mcp_map) = config.get("mcp_servers").and_then(|m| m.as_mapping()) {

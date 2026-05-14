@@ -38,11 +38,7 @@ pub async fn conversations_raw(
     }
 
     match fetch_raw_turns(&pool, &session_id).await {
-        Ok(Some(turns)) => Json(RawTranscriptEnvelope {
-            session_id,
-            turns,
-        })
-        .into_response(),
+        Ok(Some(turns)) => Json(RawTranscriptEnvelope { session_id, turns }).into_response(),
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(e) => {
             tracing::error!(error = %e, session_id = %session_id, "fetch_raw_turns failed");

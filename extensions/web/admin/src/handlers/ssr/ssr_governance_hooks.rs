@@ -29,8 +29,8 @@ pub async fn governance_hooks_page(
         Err(r) => return *r,
     };
 
-    let configured_hooks =
-        repositories::list_configured_hooks(&services_path, &user_ctx.roles).unwrap_or_else(|e| {
+    let configured_hooks = repositories::list_configured_hooks(&services_path, &user_ctx.roles)
+        .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "list_configured_hooks failed");
             Vec::new()
         });
@@ -41,10 +41,9 @@ pub async fn governance_hooks_page(
     let posttool_fired = repositories::governance_grp::hook_events::count_posttool_fired_24h(&pool)
         .await
         .unwrap_or(0);
-    let recent_events =
-        repositories::governance_grp::hook_events::recent_hook_events(&pool, 50)
-            .await
-            .unwrap_or_default();
+    let recent_events = repositories::governance_grp::hook_events::recent_hook_events(&pool, 50)
+        .await
+        .unwrap_or_default();
 
     let recent_events_view: Vec<serde_json::Value> = recent_events
         .into_iter()

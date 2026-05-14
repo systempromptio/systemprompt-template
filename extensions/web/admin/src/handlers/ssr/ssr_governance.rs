@@ -211,9 +211,7 @@ fn build_orphans_json(
 
 /// Per-policy enforcement table (24h). Reshape `policies_json` sorted by
 /// denied DESC so operators see the busiest deniers first.
-fn build_enforcement_json(
-    policies_json: &[serde_json::Value],
-) -> (Vec<serde_json::Value>, bool) {
+fn build_enforcement_json(policies_json: &[serde_json::Value]) -> (Vec<serde_json::Value>, bool) {
     let mut rows: Vec<serde_json::Value> = policies_json.to_vec();
     rows.sort_by(|a, b| {
         let bd = a_i64(b, "window_denied");
@@ -267,9 +265,7 @@ fn build_top_actors_json(top_actors: &[crate::types::TopActor]) -> Vec<serde_jso
 }
 
 fn a_i64(v: &serde_json::Value, key: &str) -> i64 {
-    v.get(key)
-        .and_then(serde_json::Value::as_i64)
-        .unwrap_or(0)
+    v.get(key).and_then(serde_json::Value::as_i64).unwrap_or(0)
 }
 
 fn format_local(t: chrono::DateTime<chrono::Utc>) -> String {
@@ -297,11 +293,7 @@ fn render_params_preview(params: &YamlValue) -> Vec<serde_json::Value> {
             YamlValue::Bool(b) => b.to_string(),
             YamlValue::Number(n) => n.to_string(),
             YamlValue::String(s) => s.clone(),
-            YamlValue::Sequence(seq) => seq
-                .iter()
-                .map(yaml_inline)
-                .collect::<Vec<_>>()
-                .join(", "),
+            YamlValue::Sequence(seq) => seq.iter().map(yaml_inline).collect::<Vec<_>>().join(", "),
             YamlValue::Mapping(_) | YamlValue::Tagged(_) => yaml_inline(v),
         };
         out.push(json!({ "key": key, "value": value_str }));

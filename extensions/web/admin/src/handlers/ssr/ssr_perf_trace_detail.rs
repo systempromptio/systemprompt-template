@@ -59,8 +59,7 @@ pub async fn perf_trace_detail_page(
 
     let summary = build_summary(&session_id, &spans);
     let spans_json = spans.iter().map(span_to_json).collect::<Vec<_>>();
-    let spans_payload = serde_json::to_string(&spans_json)
-        .unwrap_or_else(|_| "[]".to_string());
+    let spans_payload = serde_json::to_string(&spans_json).unwrap_or_else(|_| "[]".to_string());
 
     let data = json!({
         "page": "trace-detail",
