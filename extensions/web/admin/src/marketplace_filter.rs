@@ -16,11 +16,10 @@ use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::UserId;
 use systemprompt::marketplace::{
-    MarketplaceCandidate, MarketplaceFilter, MarketplaceFilterError,
-    register_marketplace_filter,
+    register_marketplace_filter, MarketplaceCandidate, MarketplaceFilter, MarketplaceFilterError,
 };
 use systemprompt_security::authz::{
-    AccessControlRepository, Decision, EntityKind, resolve as resolve_access,
+    resolve as resolve_access, AccessControlRepository, Decision, EntityKind,
 };
 
 use crate::repositories::users_grp::users::get_user_roles_department;
@@ -80,7 +79,13 @@ impl TemplateMarketplaceFilter {
                 .get_default_included(kind, id)
                 .await
                 .unwrap_or(false);
-            let decision = resolve_access(entity_rules, user_id, roles, department, default_included);
+            let decision = resolve_access(
+                entity_rules,
+                &UserId::new(user_id),
+                roles,
+                department,
+                default_included,
+            );
             if matches!(decision, Decision::Allow) {
                 keep.insert(id.clone());
             }
@@ -99,11 +104,7 @@ impl MarketplaceFilter for TemplateMarketplaceFilter {
         let (roles, department) = self.user_principal(user_id).await?;
         let uid = user_id.as_str();
 
-        let plugin_ids: Vec<String> = candidate
-            .plugins
-            .iter()
-            .map(|p| p.id.to_string())
-            .collect();
+        let plugin_ids: Vec<String> = candidate.plugins.iter().map(|p| p.id.to_string()).collect();
         let skill_ids: Vec<String> = candidate.skills.iter().map(|s| s.id.to_string()).collect();
         let agent_ids: Vec<String> = candidate.agents.iter().map(|a| a.id.to_string()).collect();
         let hook_ids: Vec<String> = candidate.hooks.iter().map(|h| h.id.to_string()).collect();

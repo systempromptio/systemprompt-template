@@ -2,8 +2,7 @@
 -- a department. The "Default" department is the catch-all for any user whose
 -- `users.department` was empty.
 --
--- Idempotent: safe to run on fresh installs (no-ops the DROP) and on existing
--- DBs (drops the column + index, backfills users, seeds the default).
+-- Idempotent across fresh installs (no-ops the DROP) and existing DBs.
 
 ALTER TABLE departments DROP COLUMN IF EXISTS manager_user_id;
 DROP INDEX IF EXISTS idx_departments_manager;

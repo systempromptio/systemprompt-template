@@ -1,8 +1,8 @@
 mod audit;
 mod authz;
 mod handler;
-pub mod policy;
 mod policies;
+pub mod policy;
 mod rules;
 mod scope;
 mod secrets;

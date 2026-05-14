@@ -12,7 +12,8 @@ use sqlx::PgPool;
 use crate::repositories::governance_grp::time_range::TimeRange;
 
 /// Fixed latency-histogram bin edges (ms). The final bin is open-ended.
-pub const LATENCY_BIN_EDGES_MS: [f64; 8] = [50.0, 100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0, 10_000.0];
+pub const LATENCY_BIN_EDGES_MS: [f64; 8] =
+    [50.0, 100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0, 10_000.0];
 
 /// KPI strip for the page header.
 #[derive(Debug, Clone, Copy, Default, Serialize)]

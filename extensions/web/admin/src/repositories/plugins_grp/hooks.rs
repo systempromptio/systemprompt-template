@@ -45,7 +45,7 @@ pub fn list_configured_hooks(
             Err(e) => {
                 tracing::warn!(path = %config_path.display(), error = %e, "parse hook config");
                 continue;
-            },
+            }
         };
 
         if !config.enabled && !is_admin {

@@ -27,7 +27,7 @@ use crate::{
         ContentPrerenderJob, CopyExtensionAssetsJob, LlmsTxtGenerationJob, PublishPipelineJob,
         RobotsTxtGenerationJob, SitemapGenerationJob,
     },
-    schemas::schema_definitions,
+    schemas::{migrations, schema_definitions},
 };
 
 use crate::extension::WebExtension;
@@ -110,6 +110,10 @@ impl Extension for WebExtension {
 
     fn schemas(&self) -> Vec<SchemaDefinition> {
         schema_definitions()
+    }
+
+    fn migrations(&self) -> Vec<Migration> {
+        migrations()
     }
 
     fn router(&self, ctx: &dyn ExtensionContext) -> Option<ExtensionRouter> {
@@ -219,4 +223,3 @@ impl Extension for WebExtension {
         web_assets(paths)
     }
 }
-

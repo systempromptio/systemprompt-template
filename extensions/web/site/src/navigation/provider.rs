@@ -38,7 +38,10 @@ impl PageDataProvider for NavigationPageDataProvider {
         vec![]
     }
 
-    async fn provide_page_data(&self, _ctx: &PageContext<'_>) -> Result<Value, systemprompt::traits::ProviderError> {
+    async fn provide_page_data(
+        &self,
+        _ctx: &PageContext<'_>,
+    ) -> Result<Value, systemprompt::traits::ProviderError> {
         Ok(serde_json::json!({
             "site": {
                 "header_nav": &self.config.header,

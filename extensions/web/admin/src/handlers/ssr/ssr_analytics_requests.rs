@@ -63,8 +63,7 @@ pub async fn analytics_requests_page(
         return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
     }
 
-    let user_picked_range = query.preset.is_some()
-        || (query.from.is_some() && query.to.is_some());
+    let user_picked_range = query.preset.is_some() || (query.from.is_some() && query.to.is_some());
     let initial_range = parse_time_range(&TimeRangeQuery {
         from: query.from.clone(),
         to: query.to.clone(),
@@ -385,4 +384,3 @@ fn build_pagination(query: &RequestsQuery, page: i64, total_pages: i64) -> serde
         "next_url": next_url,
     })
 }
-

@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 use systemprompt_security::authz::{
     resolve, AccessControlRepository, AccessRule, Decision, EntityKind,
 };
@@ -101,9 +102,18 @@ fn decide(
     department: &str,
     default_included: bool,
 ) -> EntityDecision {
-    let dec = resolve(rules, user_id, user_roles, department, default_included);
+    let dec = resolve(
+        rules,
+        &UserId::new(user_id),
+        user_roles,
+        department,
+        default_included,
+    );
     let (decision, reason) = match dec {
-        Decision::Allow => ("allow".to_string(), allow_reason(rules, user_id, user_roles, department, default_included)),
+        Decision::Allow => (
+            "allow".to_string(),
+            allow_reason(rules, user_id, user_roles, department, default_included),
+        ),
         Decision::Deny { reason, .. } => ("deny".to_string(), reason),
     };
     EntityDecision {
@@ -112,7 +122,11 @@ fn decide(
         reason,
         matrix_url: format!(
             "/admin/access?tab={}#{}",
-            if entity_type == "gateway_route" { "gateway" } else { "mcp" },
+            if entity_type == "gateway_route" {
+                "gateway"
+            } else {
+                "mcp"
+            },
             entity_id
         ),
     }
@@ -128,10 +142,9 @@ fn allow_reason(
     default_included: bool,
 ) -> String {
     use systemprompt_security::authz::{Access, RuleType};
-    if rules
-        .iter()
-        .any(|r| r.rule_type == RuleType::User && r.rule_value == user_id && r.access == Access::Allow)
-    {
+    if rules.iter().any(|r| {
+        r.rule_type == RuleType::User && r.rule_value == user_id && r.access == Access::Allow
+    }) {
         return format!("user-level allow: {user_id}");
     }
     if let Some(rule) = rules.iter().find(|r| {
@@ -164,7 +177,10 @@ fn collect_gateway_ids() -> Result<Vec<String>, String> {
 fn collect_mcp_ids() -> Result<Vec<String>, String> {
     let services_path = shared_path_or_err(shared::get_services_path())?;
     let servers = mcp_servers::list_mcp_servers(&services_path).map_err(|e| e.to_string())?;
-    Ok(servers.into_iter().map(|s| s.id.as_str().to_string()).collect())
+    Ok(servers
+        .into_iter()
+        .map(|s| s.id.as_str().to_string())
+        .collect())
 }
 
 fn shared_path_or_err(
@@ -172,4 +188,3 @@ fn shared_path_or_err(
 ) -> Result<std::path::PathBuf, String> {
     r.map_err(|_| "path lookup failed".to_string())
 }
-

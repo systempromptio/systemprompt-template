@@ -14,4 +14,3 @@ pub fn load_marketplaces() -> Vec<MarketplaceConfig> {
     entries.sort_by(|a, b| a.id.as_str().cmp(b.id.as_str()));
     entries
 }
-

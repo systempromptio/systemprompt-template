@@ -42,8 +42,7 @@ pub async fn governance_audit_detail_page(
         Ok(None) => return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response(),
         Err(e) => {
             tracing::error!(error = %e, id = %id, "fetch_decision_chain failed");
-            return (StatusCode::INTERNAL_SERVER_ERROR, Html(NOT_FOUND_HTML))
-                .into_response();
+            return (StatusCode::INTERNAL_SERVER_ERROR, Html(NOT_FOUND_HTML)).into_response();
         }
     };
 
@@ -71,7 +70,13 @@ pub async fn governance_audit_detail_page(
         "back_url": "/admin/governance/decisions",
     });
 
-    super::render_page(&engine, "governance-audit-detail", &data, &user_ctx, &mkt_ctx)
+    super::render_page(
+        &engine,
+        "governance-audit-detail",
+        &data,
+        &user_ctx,
+        &mkt_ctx,
+    )
 }
 
 /// Pin the page to the request the user clicked when possible — fall back
@@ -143,15 +148,19 @@ fn build_banner(
     let status = primary.map(|r| r.status.as_str());
     let error_message = primary.and_then(|r| r.error_message.as_deref());
     let failed = status.is_some_and(is_failed_status);
-    let denial = env.decisions.iter().find(|d| d.decision == "deny").map(|d| {
-        json!({
-            "policy": d.policy,
-            "reason": d.reason,
-            "tool_name": d.tool_name,
-            "decision_id": d.id,
-            "evaluated_rules": d.evaluated_rules,
-        })
-    });
+    let denial = env
+        .decisions
+        .iter()
+        .find(|d| d.decision == "deny")
+        .map(|d| {
+            json!({
+                "policy": d.policy,
+                "reason": d.reason,
+                "tool_name": d.tool_name,
+                "decision_id": d.id,
+                "evaluated_rules": d.evaluated_rules,
+            })
+        });
     if !failed && denial.is_none() && error_message.is_none() {
         return None;
     }

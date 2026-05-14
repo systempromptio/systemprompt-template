@@ -348,7 +348,11 @@ impl HelperDef for FormatNumberHelper {
                 }
                 grouped.push(*c as char);
             }
-            if neg { format!("-{grouped}") } else { grouped }
+            if neg {
+                format!("-{grouped}")
+            } else {
+                grouped
+            }
         } else {
             n.to_string()
         };

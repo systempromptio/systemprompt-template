@@ -13,7 +13,8 @@ pub async fn enroll_device(
     hostname: &str,
     expires_at: Option<DateTime<Utc>>,
 ) -> AdminResult<EnrolledDevice> {
-    let enrolled = cowork_grp::enroll_device(pool, user_id, name, platform, hostname, expires_at).await?;
+    let enrolled =
+        cowork_grp::enroll_device(pool, user_id, name, platform, hostname, expires_at).await?;
     Ok(enrolled)
 }
 

@@ -16,7 +16,7 @@ use systemprompt_security::authz::{
     AccessControlRepository, AuthzError, EntityKind, UpsertRuleParams,
 };
 
-pub use systemprompt_security::authz::{Access, AccessRule, Decision, RuleType, resolve};
+pub use systemprompt_security::authz::{resolve, Access, AccessRule, Decision, RuleType};
 
 const ENTITY_TYPE: EntityKind = EntityKind::GatewayRoute;
 
@@ -84,10 +84,7 @@ pub async fn set_default_included(
         .map_err(|e| map_err(&e))
 }
 
-pub async fn get_default_included(
-    pool: &PgPool,
-    route_id: &str,
-) -> Result<bool, sqlx::Error> {
+pub async fn get_default_included(pool: &PgPool, route_id: &str) -> Result<bool, sqlx::Error> {
     repo(pool)
         .get_default_included(ENTITY_TYPE, route_id)
         .await

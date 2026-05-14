@@ -90,10 +90,7 @@ fn enrich_users(
             let rt = rt_map.get(u.user_id.as_str());
             let device_freshness =
                 freshness_for(rt.and_then(|r| r.newest_device_seen_at)).to_string();
-            let user_overrides = ovr_map
-                .get(u.user_id.as_str())
-                .cloned()
-                .unwrap_or_default();
+            let user_overrides = ovr_map.get(u.user_id.as_str()).cloned().unwrap_or_default();
             let marketplaces = resolve_marketplaces(yaml_marketplaces, &user_overrides);
             EnrichedUserView {
                 user_id: u.user_id.to_string(),
@@ -166,9 +163,11 @@ fn group_by_department(users: Vec<EnrichedUserView>) -> Vec<DepartmentGroup> {
                 _ => 1,
             }
         }
-        rank(&a.department)
-            .cmp(&rank(&b.department))
-            .then_with(|| a.department.to_lowercase().cmp(&b.department.to_lowercase()))
+        rank(&a.department).cmp(&rank(&b.department)).then_with(|| {
+            a.department
+                .to_lowercase()
+                .cmp(&b.department.to_lowercase())
+        })
     });
     groups
 }
@@ -222,8 +221,13 @@ pub async fn users_page(
         .map(|m| (m.id.to_string(), m.name))
         .collect();
 
-    let enriched_users =
-        enrich_users(&users, &aggregates, &runtime, &overrides, &yaml_marketplaces);
+    let enriched_users = enrich_users(
+        &users,
+        &aggregates,
+        &runtime,
+        &overrides,
+        &yaml_marketplaces,
+    );
     let groups = group_by_department(enriched_users);
 
     let data = UsersPageData {
@@ -287,7 +291,8 @@ async fn collect_user_detail_extras(
             .into_iter()
             .filter(|o| o.user_id == d.user_id.as_str())
             .collect();
-    let override_refs: Vec<&repositories::UserMarketplaceOverride> = user_overrides.iter().collect();
+    let override_refs: Vec<&repositories::UserMarketplaceOverride> =
+        user_overrides.iter().collect();
     assignments.marketplaces = resolve_marketplaces(&yaml_marketplaces, &override_refs);
     assignments.marketplaces_count = assignments.marketplaces.len() as i64;
 
@@ -449,9 +454,7 @@ pub async fn user_detail_page(
         );
         map.insert(
             "has_effective_permissions".to_string(),
-            serde_json::Value::Bool(
-                !eff.gateway_routes.is_empty() || !eff.mcp_servers.is_empty(),
-            ),
+            serde_json::Value::Bool(!eff.gateway_routes.is_empty() || !eff.mcp_servers.is_empty()),
         );
     }
     super::render_page(&engine, "user-detail", &value, &user_ctx, &mkt_ctx)

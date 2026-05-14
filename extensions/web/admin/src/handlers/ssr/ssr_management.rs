@@ -297,11 +297,7 @@ pub async fn management_department_detail_page(
     }
 
     let Ok(Some(department)) = repositories::get_department(&pool, &id).await else {
-        return (
-            StatusCode::NOT_FOUND,
-            Html("<h1>Department not found</h1>"),
-        )
-            .into_response();
+        return (StatusCode::NOT_FOUND, Html("<h1>Department not found</h1>")).into_response();
     };
 
     let members = repositories::list_department_members(&pool, &department.name)

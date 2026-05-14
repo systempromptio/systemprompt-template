@@ -25,14 +25,6 @@ CREATE TABLE IF NOT EXISTS markdown_content (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Extension columns (ADD IF NOT EXISTS for when core creates the table first)
-ALTER TABLE markdown_content ADD COLUMN IF NOT EXISTS image_optimization_status TEXT;
-ALTER TABLE markdown_content ADD COLUMN IF NOT EXISTS category TEXT;
-ALTER TABLE markdown_content ADD COLUMN IF NOT EXISTS after_reading_this JSONB NOT NULL DEFAULT '[]'::jsonb;
-ALTER TABLE markdown_content ADD COLUMN IF NOT EXISTS related_playbooks JSONB NOT NULL DEFAULT '[]'::jsonb;
-ALTER TABLE markdown_content ADD COLUMN IF NOT EXISTS related_code JSONB NOT NULL DEFAULT '[]'::jsonb;
-ALTER TABLE markdown_content ADD COLUMN IF NOT EXISTS related_docs JSONB NOT NULL DEFAULT '[]'::jsonb;
-
 CREATE INDEX IF NOT EXISTS idx_markdown_content_category ON markdown_content(category_id);
 CREATE INDEX IF NOT EXISTS idx_markdown_content_source ON markdown_content(source_id);
 CREATE INDEX IF NOT EXISTS idx_markdown_content_published ON markdown_content(published_at DESC);

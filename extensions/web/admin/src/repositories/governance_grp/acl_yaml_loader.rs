@@ -178,7 +178,11 @@ async fn load_legacy_gateway_file(
 
         for (values, rule_type, access) in [
             (&entry.allow.roles, RuleType::Role, Access::Allow),
-            (&entry.allow.departments, RuleType::Department, Access::Allow),
+            (
+                &entry.allow.departments,
+                RuleType::Department,
+                Access::Allow,
+            ),
             (&entry.deny.roles, RuleType::Role, Access::Deny),
             (&entry.deny.departments, RuleType::Department, Access::Deny),
         ] {
@@ -232,7 +236,10 @@ fn parse_rule_kind_access(
     rule: &YamlRule,
     report: &mut LoadReport,
 ) -> Option<(systemprompt_security::authz::EntityKind, Access)> {
-    let kind = match rule.entity_type.parse::<systemprompt_security::authz::EntityKind>() {
+    let kind = match rule
+        .entity_type
+        .parse::<systemprompt_security::authz::EntityKind>()
+    {
         Ok(k) => k,
         Err(e) => {
             tracing::warn!(error = %e, entity_type = %rule.entity_type, entity_id = %rule.entity_id, "yaml rule has invalid entity_type, skipping");
@@ -309,10 +316,7 @@ async fn apply_rules(
     Ok(())
 }
 
-async fn upsert_department(
-    pool: &PgPool,
-    dept: &YamlDepartment,
-) -> Result<(), MarketplaceError> {
+async fn upsert_department(pool: &PgPool, dept: &YamlDepartment) -> Result<(), MarketplaceError> {
     sqlx::query(
         "INSERT INTO departments (name, description)
          VALUES ($1, $2)

@@ -368,10 +368,7 @@ pub struct TraceStats {
 }
 
 /// Per-session percentile stats over the same window as the list.
-pub async fn fetch_trace_stats(
-    pool: &PgPool,
-    range: TimeRange,
-) -> Result<TraceStats, sqlx::Error> {
+pub async fn fetch_trace_stats(pool: &PgPool, range: TimeRange) -> Result<TraceStats, sqlx::Error> {
     let row = sqlx::query!(
         r#"WITH trace_to_session AS (
             SELECT DISTINCT trace_id, session_id
@@ -488,10 +485,7 @@ impl SpanStatus {
 }
 
 /// Resolve `id` (a `session_id` or `trace_id`) to an absolute `session_id`.
-pub async fn resolve_trace_session(
-    pool: &PgPool,
-    id: &str,
-) -> Result<Option<String>, sqlx::Error> {
+pub async fn resolve_trace_session(pool: &PgPool, id: &str) -> Result<Option<String>, sqlx::Error> {
     if let Some(row) = sqlx::query!(
         r#"SELECT session_id AS "session_id!"
            FROM ai_requests
@@ -671,10 +665,7 @@ async fn fetch_event_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span>,
             } else {
                 SpanKind::Tool
             };
-            let name = e
-                .tool_name
-                .clone()
-                .unwrap_or_else(|| e.event_type.clone());
+            let name = e.tool_name.clone().unwrap_or_else(|| e.event_type.clone());
             let status = if e.event_type.contains("Failure") || e.event_type.contains("Error") {
                 SpanStatus::Error
             } else {
@@ -698,10 +689,7 @@ async fn fetch_event_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span>,
         .collect())
 }
 
-pub async fn fetch_trace_spans(
-    pool: &PgPool,
-    session_id: &str,
-) -> Result<Vec<Span>, sqlx::Error> {
+pub async fn fetch_trace_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span>, sqlx::Error> {
     let mut spans = fetch_governance_spans(pool, session_id).await?;
     spans.extend(fetch_request_spans(pool, session_id).await?);
     spans.extend(fetch_event_spans(pool, session_id).await?);

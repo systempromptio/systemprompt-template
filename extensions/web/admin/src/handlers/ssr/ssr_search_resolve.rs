@@ -41,7 +41,11 @@ pub async fn search_resolve(
     let raw = query.q.unwrap_or_default();
     let trimmed = raw.trim();
     if trimmed.is_empty() || trimmed.len() > 128 {
-        return Json(SearchResponse { kind: "none", url: None }).into_response();
+        return Json(SearchResponse {
+            kind: "none",
+            url: None,
+        })
+        .into_response();
     }
 
     match resolve_id(&pool, trimmed).await {
@@ -53,9 +57,17 @@ pub async fn search_resolve(
                 ResolvedKind::Session => ("session", format!("/admin/sessions/{encoded}")),
                 ResolvedKind::Context => ("context", format!("/admin/contexts/{encoded}")),
             };
-            Json(SearchResponse { kind, url: Some(url) }).into_response()
+            Json(SearchResponse {
+                kind,
+                url: Some(url),
+            })
+            .into_response()
         }
-        Ok(None) => Json(SearchResponse { kind: "none", url: None }).into_response(),
+        Ok(None) => Json(SearchResponse {
+            kind: "none",
+            url: None,
+        })
+        .into_response(),
         Err(e) => {
             tracing::error!(error = %e, q = %trimmed, "search_resolve failed");
             StatusCode::INTERNAL_SERVER_ERROR.into_response()

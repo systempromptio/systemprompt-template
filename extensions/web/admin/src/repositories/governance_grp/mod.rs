@@ -1,3 +1,4 @@
+pub mod acl_yaml_loader;
 pub mod agents;
 pub mod anomalies;
 pub mod audit;
@@ -5,7 +6,6 @@ pub mod chain;
 pub mod effective;
 pub mod filter_options;
 pub mod gateway;
-pub mod acl_yaml_loader;
 pub mod gateway_acl;
 pub mod governance;
 pub mod hook_events;

@@ -16,9 +16,10 @@ async fn main() -> Result<()> {
     let profile = ProfileBootstrap::init().context("Failed to initialize profile")?;
     SecretsBootstrap::init().context("Failed to initialize secrets")?;
     init_config().context("Failed to initialize configuration")?;
-    if let Err(e) =
-        systemprompt_security::authz::install_from_governance_config(profile.governance.as_ref(), None)
-    {
+    if let Err(e) = systemprompt_security::authz::install_from_governance_config(
+        profile.governance.as_ref(),
+        None,
+    ) {
         tracing::warn!(error = %e, "install_from_governance_config failed");
     }
 
@@ -28,13 +29,16 @@ async fn main() -> Result<()> {
             .context("Failed to initialize application context")?,
     );
 
-    let service_id = McpServerId::from_env().unwrap_or_else(|_| {
-        tracing::warn!(
-            default = DEFAULT_SERVICE_ID,
-            "MCP_SERVICE_ID not set, using default"
-        );
-        McpServerId::new(DEFAULT_SERVICE_ID)
-    });
+    let service_id = env::var("MCP_SERVICE_ID").map_or_else(
+        |_| {
+            tracing::warn!(
+                default = DEFAULT_SERVICE_ID,
+                "MCP_SERVICE_ID not set, using default"
+            );
+            McpServerId::new(DEFAULT_SERVICE_ID)
+        },
+        McpServerId::new,
+    );
 
     let port = env::var("MCP_PORT").map_or_else(
         |_| {

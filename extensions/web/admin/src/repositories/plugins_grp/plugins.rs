@@ -13,7 +13,9 @@ use systemprompt_web_shared::error::MarketplaceError;
 
 /// Walk `services/skills/<id>/config.yaml` and return one catalog row per
 /// skill. Used by the unified `/admin/catalog` page; never writes to disk.
-pub fn list_skill_catalog(services_path: &Path) -> Result<Vec<SkillCatalogEntry>, MarketplaceError> {
+pub fn list_skill_catalog(
+    services_path: &Path,
+) -> Result<Vec<SkillCatalogEntry>, MarketplaceError> {
     let skills_path = services_path.join("skills");
     let mut out: Vec<SkillCatalogEntry> = Vec::new();
     if !skills_path.exists() {
@@ -85,7 +87,9 @@ pub fn list_skill_catalog(services_path: &Path) -> Result<Vec<SkillCatalogEntry>
 }
 
 /// Walk `services/agents/<id>.yaml` and return one catalog row per agent.
-pub fn list_agent_catalog(services_path: &Path) -> Result<Vec<AgentCatalogEntry>, MarketplaceError> {
+pub fn list_agent_catalog(
+    services_path: &Path,
+) -> Result<Vec<AgentCatalogEntry>, MarketplaceError> {
     let agents_path = services_path.join("agents");
     let mut out: Vec<AgentCatalogEntry> = Vec::new();
     if !agents_path.exists() {
@@ -120,7 +124,11 @@ pub fn list_agent_catalog(services_path: &Path) -> Result<Vec<AgentCatalogEntry>
             let name = av
                 .get("name")
                 .and_then(|v| v.as_str())
-                .or_else(|| av.get("card").and_then(|c| c.get("displayName")).and_then(|v| v.as_str()))
+                .or_else(|| {
+                    av.get("card")
+                        .and_then(|c| c.get("displayName"))
+                        .and_then(|v| v.as_str())
+                })
                 .unwrap_or(id_str)
                 .to_string();
             let description = av
@@ -172,7 +180,13 @@ pub fn list_plugin_catalog(
             author_name: plugin.base.author.name,
             roles: plugin.roles,
             skills,
-            agents: plugin.base.agents.include.into_iter().map(AgentId::from).collect(),
+            agents: plugin
+                .base
+                .agents
+                .include
+                .into_iter()
+                .map(AgentId::from)
+                .collect(),
             mcp_servers: plugin
                 .base
                 .mcp_servers

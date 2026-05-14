@@ -226,7 +226,6 @@ impl PublishPipelineJob {
         }
     }
 
-
     async fn run_asset_organization(&self, paths: &AppPaths, stats: &mut PipelineStats) {
         let dist_dir = paths.web().dist().to_path_buf();
         match organize_dist_assets(&dist_dir).await {
@@ -260,7 +259,10 @@ impl Job for PublishPipelineJob {
         true
     }
 
-    async fn execute(&self, ctx: &JobContext) -> Result<JobResult, systemprompt::traits::ProviderError> {
+    async fn execute(
+        &self,
+        ctx: &JobContext,
+    ) -> Result<JobResult, systemprompt::traits::ProviderError> {
         Ok(self.execute_inner(ctx).await?)
     }
 }
@@ -290,7 +292,8 @@ impl PublishPipelineJob {
         self.run_asset_copy(paths, &mut stats).await;
         self.run_prerender(ctx, &mut stats).await;
         self.run_page_prerender(paths, db_pool, &mut stats).await;
-        self.run_derived_files(ctx, paths, db_pool, &mut stats).await;
+        self.run_derived_files(ctx, paths, db_pool, &mut stats)
+            .await;
         let _ = (paths, db_pool);
         stats.record_success();
         self.run_asset_organization(paths, &mut stats).await;

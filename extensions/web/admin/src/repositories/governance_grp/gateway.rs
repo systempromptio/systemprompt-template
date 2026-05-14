@@ -1,5 +1,5 @@
-use std::collections::BTreeMap;
 use std::collections::hash_map::DefaultHasher;
+use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
 
@@ -34,7 +34,10 @@ fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
     let model_pattern = map.get(Value::from("model_pattern"))?.as_str()?.to_string();
     let provider = map.get(Value::from("provider"))?.as_str()?.to_string();
     let endpoint = map.get(Value::from("endpoint"))?.as_str()?.to_string();
-    let api_key_secret = map.get(Value::from("api_key_secret"))?.as_str()?.to_string();
+    let api_key_secret = map
+        .get(Value::from("api_key_secret"))?
+        .as_str()?
+        .to_string();
     let upstream_model = map
         .get(Value::from("upstream_model"))
         .and_then(Value::as_str)
@@ -188,7 +191,10 @@ pub fn validate_route(route: &GatewayRouteView) -> Result<(), MarketplaceError> 
 pub fn ensure_route_ids(profile_path: &Path) -> Result<bool, MarketplaceError> {
     let mut doc = read_profile(profile_path)?;
     let mut changed = false;
-    let Some(gateway) = doc.as_mapping_mut().and_then(|m| m.get_mut(Value::from("gateway"))) else {
+    let Some(gateway) = doc
+        .as_mapping_mut()
+        .and_then(|m| m.get_mut(Value::from("gateway")))
+    else {
         return Ok(false);
     };
     let Some(routes) = gateway
@@ -274,9 +280,9 @@ pub fn get_gateway_config(profile_path: &Path) -> Result<GatewayConfigView, Mark
 }
 
 fn ensure_gateway_mut(doc: &mut Value) -> Result<&mut Mapping, MarketplaceError> {
-    let root = doc.as_mapping_mut().ok_or_else(|| {
-        MarketplaceError::Internal("profile YAML root is not a mapping".into())
-    })?;
+    let root = doc
+        .as_mapping_mut()
+        .ok_or_else(|| MarketplaceError::Internal("profile YAML root is not a mapping".into()))?;
     if !root.contains_key(Value::from("gateway")) {
         root.insert(Value::from("gateway"), Value::Mapping(Mapping::new()));
     }
@@ -339,8 +345,11 @@ pub fn create_route(
     ensure_route_ids(profile_path)?;
     let mut to_insert = route.clone();
     if to_insert.id.trim().is_empty() {
-        to_insert.id =
-            synthesize_route_id(&to_insert.model_pattern, &to_insert.provider, &to_insert.endpoint);
+        to_insert.id = synthesize_route_id(
+            &to_insert.model_pattern,
+            &to_insert.provider,
+            &to_insert.endpoint,
+        );
     }
     let mut doc = read_profile(profile_path)?;
     let new_index = {
@@ -432,7 +441,9 @@ pub fn reorder_routes(profile_path: &Path, order: &[usize]) -> Result<(), Market
 /// using the same first-match-wins glob semantics the gateway uses.
 #[must_use]
 pub fn find_matching_route_index(routes: &[GatewayRouteView], model: &str) -> Option<usize> {
-    routes.iter().position(|r| glob_match(&r.model_pattern, model))
+    routes
+        .iter()
+        .position(|r| glob_match(&r.model_pattern, model))
 }
 
 /// Sibling to [`find_matching_route_index`] that returns the route reference
@@ -528,10 +539,7 @@ mod tests {
             find_matching_route(&routes, "claude-3").map(|r| r.id.as_str()),
             Some("claude-abc123"),
         );
-        assert_eq!(
-            find_route_index_by_id(&routes, "star-def456"),
-            Some(1),
-        );
+        assert_eq!(find_route_index_by_id(&routes, "star-def456"), Some(1),);
     }
 
     #[test]

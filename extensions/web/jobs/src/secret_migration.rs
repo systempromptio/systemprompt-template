@@ -27,49 +27,52 @@ impl Job for SecretMigrationJob {
         false
     }
 
-    async fn execute(&self, ctx: &JobContext) -> Result<JobResult, systemprompt::traits::ProviderError> {
+    async fn execute(
+        &self,
+        ctx: &JobContext,
+    ) -> Result<JobResult, systemprompt::traits::ProviderError> {
         Ok(execute_inner(ctx).await?)
     }
 }
 
 async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
-        let start = std::time::Instant::now();
+    let start = std::time::Instant::now();
 
-        let Ok(master_key) = secret_crypto::load_master_key() else {
-            return Ok(JobResult::success().with_stats(0, 0).with_duration(0));
-        };
+    let Ok(master_key) = secret_crypto::load_master_key() else {
+        return Ok(JobResult::success().with_stats(0, 0).with_duration(0));
+    };
 
-        let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-            "Database not available in job context".to_string(),
-        ))?;
+    let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
+        "Database not available in job context".to_string(),
+    ))?;
 
-        let pool = db.pool().ok_or(MarketplaceError::Internal(
-            "PgPool not available from database".to_string(),
-        ))?;
+    let pool = db.pool().ok_or(MarketplaceError::Internal(
+        "PgPool not available from database".to_string(),
+    ))?;
 
-        let rows = fetch_unencrypted_secrets(&pool).await?;
+    let rows = fetch_unencrypted_secrets(&pool).await?;
 
-        if rows.is_empty() {
-            let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
-            return Ok(JobResult::success()
-                .with_stats(0, 0)
-                .with_duration(duration_ms));
-        }
-
-        let (success_count, error_count) = migrate_secrets(&pool, &rows, &master_key).await;
-
+    if rows.is_empty() {
         let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+        return Ok(JobResult::success()
+            .with_stats(0, 0)
+            .with_duration(duration_ms));
+    }
 
-        tracing::info!(
-            migrated = success_count,
-            errors = error_count,
-            duration_ms,
-            "Secret migration job completed"
-        );
+    let (success_count, error_count) = migrate_secrets(&pool, &rows, &master_key).await;
 
-        Ok(JobResult::success()
-            .with_stats(success_count, error_count)
-            .with_duration(duration_ms))
+    let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+
+    tracing::info!(
+        migrated = success_count,
+        errors = error_count,
+        duration_ms,
+        "Secret migration job completed"
+    );
+
+    Ok(JobResult::success()
+        .with_stats(success_count, error_count)
+        .with_duration(duration_ms))
 }
 
 struct UnencryptedSecretRow {

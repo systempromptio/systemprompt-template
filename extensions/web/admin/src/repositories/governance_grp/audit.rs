@@ -6,6 +6,4 @@
 //! tool-use governance handler, `gateway_catalog` inserts) so they can switch
 //! to core without churning every import in one PR.
 
-pub use systemprompt_security::authz::{
-    GovernanceDecisionRecord, insert_governance_decision,
-};
+pub use systemprompt_security::authz::{insert_governance_decision, GovernanceDecisionRecord};

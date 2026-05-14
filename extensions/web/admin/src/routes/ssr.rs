@@ -121,10 +121,7 @@ fn catalog_routes() -> Router<Arc<PgPool>> {
 
 fn governance_routes() -> Router<Arc<PgPool>> {
     Router::new()
-        .route(
-            "/governance/policies",
-            get(handlers::ssr::governance_page),
-        )
+        .route("/governance/policies", get(handlers::ssr::governance_page))
         .route(
             "/governance/policies/{policy_id}",
             get(handlers::ssr::governance_policy_edit_page),
@@ -161,10 +158,7 @@ fn entity_routes() -> Router<Arc<PgPool>> {
             "/entities/sessions/{session_id}",
             get(handlers::ssr::session_detail_page),
         )
-        .route(
-            "/entities/traces",
-            get(handlers::ssr::perf_traces_page),
-        )
+        .route("/entities/traces", get(handlers::ssr::perf_traces_page))
         .route(
             "/entities/traces/{trace_id}",
             get(handlers::ssr::perf_trace_detail_page),

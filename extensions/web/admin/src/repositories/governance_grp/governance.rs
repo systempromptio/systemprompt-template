@@ -96,9 +96,7 @@ pub struct PerPolicyCounts {
 
 /// One row per `policy` value seen in `governance_decisions`. Used by the
 /// Policies dashboard to show recent activity next to each registered policy.
-pub async fn fetch_per_policy_counts(
-    pool: &PgPool,
-) -> Result<Vec<PerPolicyCounts>, sqlx::Error> {
+pub async fn fetch_per_policy_counts(pool: &PgPool) -> Result<Vec<PerPolicyCounts>, sqlx::Error> {
     let rows = sqlx::query_as::<_, (String, i64, i64, Option<chrono::DateTime<chrono::Utc>>)>(
         r"SELECT
             policy,
