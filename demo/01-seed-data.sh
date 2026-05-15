@@ -4,16 +4,15 @@
 # re-post governance events and create additional contexts.
 #
 # What this populates:
-#   1. Skills synced to database (agent_skills)
-#   2. Contexts (demo-review, incident-response, onboarding)
-#   3. Files uploaded from demo/fixtures/ (uploads, user_activity)
-#   4. Governance decisions — allow, scope_restriction, secret_injection,
+#   1. Contexts (demo-review, incident-response, onboarding)
+#   2. Files uploaded from demo/fixtures/ (uploads, user_activity)
+#   3. Governance decisions — allow, scope_restriction, secret_injection,
 #      tool_blocklist — across 5 sessions, both agents, 6 tool names
 #      (governance_decisions)
-#   5. PostToolUse tracking events across sessions (plugin_usage_events)
-#   6. Synthetic page view traffic — 100 rows into engagement_events +
+#   4. PostToolUse tracking events across sessions (plugin_usage_events)
+#   5. Synthetic page view traffic — 100 rows into engagement_events +
 #      user_sessions (real analytics tables that power the traffic dashboard)
-#   7. Content ingestion (markdown_content)
+#   6. Content ingestion (markdown_content)
 #
 # Optional:
 #   SEED_AGENT_RUN=1 ./demo/01-seed-data.sh
@@ -29,14 +28,8 @@ load_token
 
 header "SEED DATA" "Populating Enterprise Demo with baseline state"
 
-# ── STEP 1: Skills sync ────────────────────────
-subheader "STEP 1: Sync skills to database"
-cmd "systemprompt core skills sync --direction to-db --yes"
-"$CLI" core skills sync --direction to-db --yes --profile "$PROFILE" 2>&1 | tail -5 | sed 's/^/  /' || true
-echo ""
-
-# ── STEP 2: Contexts ───────────────────────────
-subheader "STEP 2: Create contexts"
+# ── STEP 1: Contexts ───────────────────────────
+subheader "STEP 1: Create contexts"
 for ctx in demo-review incident-response onboarding; do
   info "Creating context: $ctx"
   "$CLI" core contexts create --name "$ctx" --profile "$PROFILE" > /dev/null 2>&1 || true
@@ -44,8 +37,8 @@ done
 pass "3 contexts ensured"
 echo ""
 
-# ── STEP 3: Files ──────────────────────────────
-subheader "STEP 3: Upload sample files"
+# ── STEP 2: Files ──────────────────────────────
+subheader "STEP 2: Upload sample files"
 CONTEXT_ID=$("$CLI" --json core contexts list --profile "$PROFILE" 2>/dev/null \
   | grep -oE '"id":\s*"[^"]+"' | head -1 | sed -E 's/.*"([^"]+)"$/\1/')
 if [[ -z "$CONTEXT_ID" ]]; then
@@ -60,8 +53,8 @@ done
 pass "Fixture files uploaded (documents, images, audio)"
 echo ""
 
-# ── STEP 4: Governance decisions ───────────────
-subheader "STEP 4: Generate governance decisions"
+# ── STEP 3: Governance decisions ───────────────
+subheader "STEP 3: Generate governance decisions"
 
 gov() {
   local session="$1" agent="$2" tool="$3" input="$4"
@@ -122,8 +115,8 @@ done
 pass "4 tool_blocklist denial events"
 echo ""
 
-# ── STEP 5: Synthetic page view traffic ────────
-subheader "STEP 5: Generate synthetic page view traffic"
+# ── STEP 4: Synthetic page view traffic ────────
+subheader "STEP 4: Generate synthetic page view traffic"
 # Inserts directly into the real analytics tables that power the traffic
 # dashboard (engagement_events + user_sessions) so every KPI — top pages,
 # referrer split, geo split, device breakdown — has live data. Uses psql
@@ -137,7 +130,12 @@ else
   psql "$DB_URL" -v ON_ERROR_STOP=1 -q <<'SQL' > /dev/null
   WITH dims AS (
     SELECT
-      (SELECT id FROM users WHERE email = 'demo@systemprompt.io' LIMIT 1) AS demo_user_id,
+      -- engagement_events.user_id is NOT NULL; fall back to any existing
+      -- user when the demo account is absent so synthetic traffic still seeds.
+      COALESCE(
+        (SELECT id FROM users WHERE email = 'demo@systemprompt.io' LIMIT 1),
+        (SELECT id FROM users ORDER BY created_at LIMIT 1)
+      ) AS demo_user_id,
       ARRAY['/dashboard','/admin/plugins','/admin/agents','/admin/skills','/admin/governance','/content/guides/ai-governance','/content/guides/claude-code','/analytics/costs','/analytics/traffic','/infra/logs']::text[] AS paths,
       ARRAY['google','hackernews','twitter','reddit','Direct']::text[] AS sources,
       ARRAY['US','GB','DE','FR','JP','AU','CA','SE','IN','BR']::text[] AS countries,
@@ -185,15 +183,15 @@ SQL
 fi
 echo ""
 
-# ── STEP 6: Content ingestion ──────────────────
-subheader "STEP 6: Ingest content"
+# ── STEP 5: Content ingestion ──────────────────
+subheader "STEP 5: Ingest content"
 cmd "systemprompt infra jobs run blog_content_ingestion"
 "$CLI" infra jobs run blog_content_ingestion --profile "$PROFILE" 2>&1 | tail -3 | sed 's/^/  /' || true
 echo ""
 
-# ── STEP 7: Optional real agent run ────────────
+# ── STEP 6: Optional real agent run ────────────
 if [[ "${SEED_AGENT_RUN:-0}" = "1" ]]; then
-  subheader "STEP 7: Real agent invocation (costs tokens)"
+  subheader "STEP 6: Real agent invocation (costs tokens)"
   cmd "systemprompt admin agents message developer_agent --blocking"
   "$CLI" admin agents message developer_agent \
     --message "Summarise the governance pipeline in three bullet points." \
@@ -203,38 +201,6 @@ else
   info "Skipping real agent run (set SEED_AGENT_RUN=1 to enable)"
   echo ""
 fi
-
-# ── Install demo plugin for the authenticated user ─────
-# Cowork sync is scoped per-user. Without this step, a freshly set-up template
-# shows zero plugins/skills/agents/MCP in the manifest, and the Cowork desktop
-# app receives an empty bundle. Forking enterprise-demo materialises
-# user_plugins + user_plugin_skills + user_plugin_agents + user_plugin_mcp_servers
-# rows for the current session's user.
-subheader "Install enterprise-demo plugin for current user"
-EXISTING=$(curl -s "$BASE_URL/api/public/admin/user/plugins" \
-  -H "Authorization: Bearer $TOKEN" \
-  | grep -o '"base_plugin_id":"enterprise-demo"' | head -1)
-if [[ -n "$EXISTING" ]]; then
-  info "enterprise-demo already installed for this user (skipping fork)"
-else
-  FORK_RESP=$(curl -s -o /tmp/fork_resp.json -w '%{http_code}' \
-    -X POST "$BASE_URL/api/public/admin/user/fork/plugin" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" \
-    -d '{"org_plugin_id":"enterprise-demo"}')
-  if [[ "$FORK_RESP" == "201" ]]; then
-    FORK_JSON=$(cat /tmp/fork_resp.json)
-    FSKILLS=$(printf '%s' "$FORK_JSON" | sed -n 's/.*"forked_skills":[[:space:]]*\([0-9]*\).*/\1/p' | head -1)
-    FAGENTS=$(printf '%s' "$FORK_JSON" | sed -n 's/.*"forked_agents":[[:space:]]*\([0-9]*\).*/\1/p' | head -1)
-    pass "Forked enterprise-demo (skills=${FSKILLS:-?}, agents=${FAGENTS:-?})"
-  else
-    warn "Fork returned HTTP $FORK_RESP"
-    cat /tmp/fork_resp.json 2>/dev/null | head -c 500
-    echo ""
-  fi
-  rm -f /tmp/fork_resp.json
-fi
-echo ""
 
 # ── Verify ─────────────────────────────────────
 subheader "Verify seed data"
@@ -246,17 +212,15 @@ count() {
 
 DECISIONS=$(count governance_decisions)
 EVENTS=$(count plugin_usage_events)
-SKILLS=$(count agent_skills)
 CONTENT=$(count markdown_content)
 ACTIVITY=$(count user_activity)
-CONTEXTS=$(count contexts)
+CONTEXTS=$(count user_contexts)
 
 echo "  governance_decisions: ${DECISIONS:-0} rows"
 echo "  plugin_usage_events:  ${EVENTS:-0} rows"
-echo "  agent_skills:         ${SKILLS:-0} rows"
 echo "  markdown_content:     ${CONTENT:-0} rows"
 echo "  user_activity:        ${ACTIVITY:-0} rows"
-echo "  contexts:             ${CONTEXTS:-0} rows"
+echo "  user_contexts:        ${CONTEXTS:-0} rows"
 echo ""
 
 header "SEED DATA COMPLETE" "All demos now have rich baseline data to display"
