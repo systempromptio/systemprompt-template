@@ -2,7 +2,6 @@ use systemprompt::extension::prelude::{Migration, SchemaDefinition};
 
 pub const SCHEMA_CONTENT: &str = include_str!("../schema/01_content.sql");
 pub const SCHEMA_CAMPAIGNS: &str = include_str!("../schema/02_campaigns.sql");
-pub const SCHEMA_USERS: &str = include_str!("../schema/03_users.sql");
 pub const SCHEMA_PLUGIN_USAGE: &str = include_str!("../schema/05_plugin_usage.sql");
 pub const SCHEMA_MARKETPLACE: &str = include_str!("../schema/06_marketplace.sql");
 pub const SCHEMA_ANALYTICS: &str = include_str!("../schema/07_analytics.sql");
@@ -14,7 +13,6 @@ pub const SCHEMA_MANAGEMENT: &str = include_str!("../schema/12_management.sql");
 
 pub fn schema_definitions() -> Vec<SchemaDefinition> {
     vec![
-        SchemaDefinition::new("", SCHEMA_USERS),
         SchemaDefinition::new("", SCHEMA_CONTENT),
         SchemaDefinition::new("", SCHEMA_CAMPAIGNS),
         SchemaDefinition::new("", SCHEMA_PLUGIN_USAGE),
