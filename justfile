@@ -68,7 +68,16 @@ build *FLAGS:
 build *FLAGS:
     #!/usr/bin/env bash
     set -euo pipefail
-    export SYSTEMPROMPT_PROFILE="${SYSTEMPROMPT_PROFILE:-}"
+    # Default to the `local` profile when one is set up but no SYSTEMPROMPT_PROFILE
+    # is explicitly exported — keeps the in-build migrate step from failing
+    # with "Profile '' not found" on a fresh clone where setup-local writes
+    # secrets.json before invoking `just build`.
+    SECRETS_FILE_DEFAULT_PROFILE="{{justfile_directory()}}/.systemprompt/profiles/local/secrets.json"
+    if [ -z "${SYSTEMPROMPT_PROFILE:-}" ] && [ -f "$SECRETS_FILE_DEFAULT_PROFILE" ]; then
+        export SYSTEMPROMPT_PROFILE="local"
+    else
+        export SYSTEMPROMPT_PROFILE="${SYSTEMPROMPT_PROFILE:-}"
+    fi
     # aws-lc-sys refuses to build with GCC <10 due to bug #95189.
     # Force clang if available so release (LTO) builds succeed.
     if command -v clang >/dev/null 2>&1; then
