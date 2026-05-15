@@ -33,11 +33,10 @@ CREATE INDEX IF NOT EXISTS idx_markdown_content_version_hash ON markdown_content
 CREATE INDEX IF NOT EXISTS idx_markdown_content_kind ON markdown_content(kind);
 CREATE INDEX IF NOT EXISTS idx_markdown_content_links ON markdown_content USING GIN (links);
 CREATE INDEX IF NOT EXISTS idx_markdown_content_public ON markdown_content(public) WHERE public = true;
-CREATE INDEX IF NOT EXISTS idx_markdown_content_after_reading_this ON markdown_content USING GIN (after_reading_this);
-CREATE INDEX IF NOT EXISTS idx_markdown_content_related_playbooks ON markdown_content USING GIN (related_playbooks);
-CREATE INDEX IF NOT EXISTS idx_markdown_content_related_code ON markdown_content USING GIN (related_code);
-CREATE INDEX IF NOT EXISTS idx_markdown_content_related_docs ON markdown_content USING GIN (related_docs);
-CREATE INDEX IF NOT EXISTS idx_markdown_content_category_filter ON markdown_content(category);
+-- Indexes on `after_reading_this`, `related_playbooks`, `related_code`,
+-- `related_docs`, and `category` are created at the end of migration 001
+-- (these columns are added by that migration on installs where core's
+-- `markdown_content` table already exists without them).
 
 CREATE TABLE IF NOT EXISTS markdown_categories (
     id TEXT PRIMARY KEY,
