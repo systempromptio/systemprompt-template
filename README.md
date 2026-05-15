@@ -259,7 +259,7 @@ Each recording is a live capture of the named script running against the binary.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/infra-deploy-anywhere.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/infra-deploy-anywhere.svg"><img src="demo/recording/svg/output/dark/infra-deploy-anywhere.svg" alt="Deploy anywhere" width="820"></picture>
 
-<sub>Profile YAML promotes environments without rebuilding · <code>./demo/cloud/01-cloud-auth.sh</code> · <a href="https://systemprompt.io/features/deploy-anywhere">Feature</a></sub>
+<sub>Profile YAML promotes environments without rebuilding · <code>./demo/cloud/01-cloud-overview.sh</code> · <a href="https://systemprompt.io/features/deploy-anywhere">Feature</a></sub>
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/infra-control-plane.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/infra-control-plane.svg"><img src="demo/recording/svg/output/dark/infra-control-plane.svg" alt="Unified control plane" width="820"></picture>
 
@@ -267,7 +267,7 @@ Each recording is a live capture of the named script running against the binary.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/infra-open-standards.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/infra-open-standards.svg"><img src="demo/recording/svg/output/dark/infra-open-standards.svg" alt="Open standards" width="820"></picture>
 
-<sub>MCP, OAuth 2.0, PostgreSQL, Git · zero proprietary protocols · <code>./demo/mcp/01-servers.sh</code> · <a href="https://systemprompt.io/features/no-vendor-lock-in">Feature</a></sub>
+<sub>MCP, OAuth 2.0, PostgreSQL, Git · zero proprietary protocols · <code>./demo/mcp/01-mcp-servers.sh</code> · <a href="https://systemprompt.io/features/no-vendor-lock-in">Feature</a></sub>
 
 ---
 
@@ -275,7 +275,7 @@ Each recording is a live capture of the named script running against the binary.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-mcp.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-mcp.svg"><img src="demo/recording/svg/output/dark/cap-mcp.svg" alt="MCP governance" width="820"></picture>
 
-<sub>Each MCP server is an isolated OAuth2 resource server with per-server scope validation · <code>./demo/mcp/02-access-tracking.sh</code> · <a href="https://systemprompt.io/features/mcp-governance">Feature</a></sub>
+<sub>Each MCP server is an isolated OAuth2 resource server with per-server scope validation · <code>./demo/mcp/02-mcp-access-tracking.sh</code> · <a href="https://systemprompt.io/features/mcp-governance">Feature</a></sub>
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-analytics.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-analytics.svg"><img src="demo/recording/svg/output/dark/cap-analytics.svg" alt="Analytics and observability" width="820"></picture>
 
@@ -283,7 +283,7 @@ Each recording is a live capture of the named script running against the binary.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-agents.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-agents.svg"><img src="demo/recording/svg/output/dark/cap-agents.svg" alt="Closed-loop agents" width="820"></picture>
 
-<sub>Agents query their own error rate, cost, and latency via MCP tools and adjust · <code>./demo/agents/03-tracing.sh</code> · <a href="https://systemprompt.io/features/closed-loop-agents">Feature</a></sub>
+<sub>Agents query their own error rate, cost, and latency via MCP tools and adjust · <code>./demo/agents/04-agent-tracing.sh</code> · <a href="https://systemprompt.io/features/closed-loop-agents">Feature</a></sub>
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-compliance.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-compliance.svg"><img src="demo/recording/svg/output/dark/cap-compliance.svg" alt="Compliance" width="820"></picture>
 
@@ -295,11 +295,11 @@ Each recording is a live capture of the named script running against the binary.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-any-agent.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-any-agent.svg"><img src="demo/recording/svg/output/dark/int-any-agent.svg" alt="Any AI agent" width="820"></picture>
 
-<sub>Anthropic, OpenAI, Gemini swap at the profile level · cost attribution in integer microdollars · <code>./demo/agents/01-agents.sh</code> · <a href="https://systemprompt.io/features/any-ai-agent">Feature</a></sub>
+<sub>Anthropic, OpenAI, Gemini swap at the profile level · cost attribution in integer microdollars · <code>./demo/agents/01-list-agents.sh</code> · <a href="https://systemprompt.io/features/any-ai-agent">Feature</a></sub>
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-cowork.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-cowork.svg"><img src="demo/recording/svg/output/dark/int-cowork.svg" alt="Claude Desktop & Cowork" width="820"></picture>
 
-<sub>Skills persist across sessions via OAuth2 · <code>./demo/skills/01-skills.sh</code> · <a href="https://systemprompt.io/features/cowork">Feature</a></sub>
+<sub>Skills persist across sessions via OAuth2 · <code>./demo/skills/01-skill-lifecycle.sh</code> · <a href="https://systemprompt.io/features/cowork">Feature</a></sub>
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-web-publisher.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-web-publisher.svg"><img src="demo/recording/svg/output/dark/int-web-publisher.svg" alt="Web server & publisher" width="820"></picture>
 
@@ -307,7 +307,7 @@ Each recording is a live capture of the named script running against the binary.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-extensions.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-extensions.svg"><img src="demo/recording/svg/output/dark/int-extensions.svg" alt="Extensible architecture" width="820"></picture>
 
-<sub>Your code compiles into your binary via the <code>Extension</code> trait · no runtime reflection · <code>./demo/skills/05-plugins.sh</code> · <a href="https://systemprompt.io/features/extensible-architecture">Feature</a></sub>
+<sub>Your code compiles into your binary via the <code>Extension</code> trait · no runtime reflection · <code>./demo/skills/04-plugin-management.sh</code> · <a href="https://systemprompt.io/features/extensible-architecture">Feature</a></sub>
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-benchmark.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-benchmark.svg"><img src="demo/recording/svg/output/dark/int-benchmark.svg" alt="Governance benchmark" width="820"></picture>
 
