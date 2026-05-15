@@ -328,7 +328,7 @@ async fn fetch_summary(
         ai_summary: r.ai_summary,
         ai_tags: r.ai_tags,
         model: r.model,
-        status: Some(r.status),
+        status: r.status,
         started_at: r.started_at,
         ended_at: r.ended_at,
     }))

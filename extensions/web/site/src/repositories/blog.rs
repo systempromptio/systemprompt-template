@@ -7,15 +7,16 @@ pub async fn list_blog_posts(pool: &PgPool) -> Result<Vec<BlogPost>, sqlx::Error
         BlogPost,
         r#"
         SELECT
-            slug,
-            title,
-            description,
-            image,
-            category,
-            published_at
-        FROM markdown_content
-        WHERE source_id = 'blog'
-        ORDER BY published_at DESC
+            mc.slug,
+            mc.title,
+            mc.description,
+            mc.image,
+            mce.category,
+            mc.published_at
+        FROM markdown_content mc
+        LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
+        WHERE mc.source_id = 'blog'
+        ORDER BY mc.published_at DESC
         "#
     )
     .fetch_all(pool)

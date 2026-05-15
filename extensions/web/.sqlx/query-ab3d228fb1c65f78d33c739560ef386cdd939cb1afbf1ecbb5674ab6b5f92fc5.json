@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM skill_ratings WHERE user_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ab3d228fb1c65f78d33c739560ef386cdd939cb1afbf1ecbb5674ab6b5f92fc5"
+}

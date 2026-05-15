@@ -159,7 +159,7 @@ pub async fn fetch_conversation_list(
             user_id: r.user_id,
             plugin_id: r.plugin_id,
             model: r.model,
-            status: Some(r.status),
+            status: r.status,
             ai_title: r.ai_title,
             started_at: r.started_at,
             total_input_tokens: r.total_input_tokens,

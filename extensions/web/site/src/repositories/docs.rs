@@ -17,14 +17,15 @@ pub async fn get_doc_content(
     let row = sqlx::query!(
         r#"
         SELECT
-            slug,
-            kind,
-            source_id,
-            COALESCE(after_reading_this, '[]'::jsonb) as "after_reading_this!",
-            COALESCE(related_playbooks, '[]'::jsonb) as "related_playbooks!",
-            COALESCE(related_code, '[]'::jsonb) as "related_code!"
-        FROM markdown_content
-        WHERE id = $1
+            mc.slug,
+            mc.kind,
+            mc.source_id,
+            COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
+            COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
+            COALESCE(mce.related_code, '[]'::jsonb) as "related_code!"
+        FROM markdown_content mc
+        LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
+        WHERE mc.id = $1
         "#,
         content_id
     )

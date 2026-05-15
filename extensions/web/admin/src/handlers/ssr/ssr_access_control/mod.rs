@@ -39,12 +39,13 @@ async fn fetch_users_for_tree(pool: &PgPool) -> Vec<UserListRow> {
               u.email,
               COALESCE(u.display_name, u.full_name, u.name) AS display_name,
               u.roles,
-              COALESCE(u.department, '') AS department,
+              COALESCE(upe.department, '') AS department,
               (u.status = 'active') AS is_active
            FROM users u
+           LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
            WHERE NOT ('anonymous' = ANY(u.roles))
              AND u.email NOT LIKE '%@anonymous.local'
-           ORDER BY COALESCE(u.department, ''), COALESCE(u.display_name, u.email)",
+           ORDER BY COALESCE(upe.department, ''), COALESCE(u.display_name, u.email)",
     )
     .fetch_all(pool)
     .await

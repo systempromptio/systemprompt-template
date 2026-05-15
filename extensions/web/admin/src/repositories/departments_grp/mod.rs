@@ -23,7 +23,7 @@ pub async fn list_departments(pool: &PgPool) -> Result<Vec<DepartmentSummary>, s
         FROM departments d
         LEFT JOIN (
             SELECT department, COUNT(*)::BIGINT AS member_count
-            FROM users
+            FROM user_profile_ext
             WHERE department IS NOT NULL AND department <> ''
             GROUP BY department
         ) mc ON mc.department = d.name
@@ -35,15 +35,15 @@ pub async fn list_departments(pool: &PgPool) -> Result<Vec<DepartmentSummary>, s
         ) ac ON ac.rule_value = d.name
         LEFT JOIN (
             SELECT
-                u.department AS dept,
+                upe.department AS dept,
                 COALESCE(SUM(ar.input_tokens), 0)::BIGINT  AS input_tokens,
                 COALESCE(SUM(ar.output_tokens), 0)::BIGINT AS output_tokens,
                 COUNT(ar.id)::BIGINT                       AS requests,
                 COALESCE(SUM(ar.cost_microdollars), 0)::BIGINT AS cost_microdollars
             FROM ai_requests ar
-            JOIN users u ON u.id = ar.user_id
+            JOIN user_profile_ext upe ON upe.user_id = ar.user_id
             WHERE ar.created_at >= NOW() - INTERVAL '30 days'
-            GROUP BY u.department
+            GROUP BY upe.department
         ) usg ON usg.dept = d.name
         ORDER BY d.name
         ",
@@ -215,7 +215,8 @@ pub async fn list_department_members(
             WHERE created_at >= NOW() - INTERVAL '30 days'
             GROUP BY user_id
         ) ar ON ar.user_id = u.id
-        WHERE u.department = $1
+        JOIN user_profile_ext upe ON upe.user_id = u.id
+        WHERE upe.department = $1
           AND NOT ('anonymous' = ANY(u.roles))
           AND u.email NOT LIKE '%@anonymous.local'
         ORDER BY (COALESCE(ar.input_tokens, 0) + COALESCE(ar.output_tokens, 0)) DESC, u.email
@@ -238,8 +239,8 @@ pub async fn list_department_top_tools(
             COALESCE(p.tool_name, 'unknown') AS tool_name,
             COALESCE(SUM(p.event_count), 0)::BIGINT AS invocations
         FROM plugin_usage_daily p
-        JOIN users u ON u.id = p.user_id
-        WHERE u.department = $1
+        JOIN user_profile_ext upe ON upe.user_id = p.user_id
+        WHERE upe.department = $1
           AND p.tool_name IS NOT NULL
           AND p.date >= CURRENT_DATE - INTERVAL '30 days'
         GROUP BY p.tool_name
@@ -282,14 +283,15 @@ pub async fn list_user_marketplace_overrides(
         r"
         SELECT
             u.id AS user_id,
-            COALESCE(u.department, '') AS department,
+            COALESCE(upe.department, '') AS department,
             acr.entity_id,
             acr.access
         FROM users u
+        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
         JOIN access_control_rules acr
           ON acr.entity_type = 'marketplace'
          AND ((acr.rule_type = 'user' AND acr.rule_value = u.id)
-              OR (acr.rule_type = 'department' AND acr.rule_value = u.department))
+              OR (acr.rule_type = 'department' AND acr.rule_value = COALESCE(upe.department, '')))
         WHERE NOT ('anonymous' = ANY(u.roles))
         ",
     )
@@ -304,13 +306,13 @@ pub async fn list_user_management_aggregates(
         r"
         SELECT
             u.id AS user_id,
-            COALESCE(u.department, '') AS department,
+            COALESCE(upe.department, '') AS department,
             COALESCE((
                 SELECT COUNT(DISTINCT acr.entity_id)
                 FROM access_control_rules acr
                 WHERE acr.entity_type = 'skill'
                   AND acr.access = 'allow'
-                  AND ((acr.rule_type = 'department' AND acr.rule_value = u.department)
+                  AND ((acr.rule_type = 'department' AND acr.rule_value = COALESCE(upe.department, ''))
                        OR (acr.rule_type = 'user' AND acr.rule_value = u.id))
             ), 0)::BIGINT AS assigned_skills_count,
             COALESCE((
@@ -319,6 +321,7 @@ pub async fn list_user_management_aggregates(
             ), 0)::BIGINT AS devices_count,
             u.created_at
         FROM users u
+        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
         WHERE NOT ('anonymous' = ANY(u.roles))
         ",
     )

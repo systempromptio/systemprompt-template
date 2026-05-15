@@ -116,6 +116,14 @@ impl Extension for WebExtension {
         migrations()
     }
 
+    fn dependencies(&self) -> Vec<&'static str> {
+        vec!["content", "users", "authz"]
+    }
+
+    fn cross_extension_tables(&self) -> Vec<&'static str> {
+        vec!["markdown_content", "users"]
+    }
+
     fn router(&self, ctx: &dyn ExtensionContext) -> Option<ExtensionRouter> {
         use axum::routing::post;
 
@@ -205,10 +213,6 @@ impl Extension for WebExtension {
 
     fn priority(&self) -> u32 {
         100
-    }
-
-    fn migration_weight(&self) -> u32 {
-        1000
     }
 
     fn config_prefix(&self) -> Option<&str> {

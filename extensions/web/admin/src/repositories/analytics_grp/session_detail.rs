@@ -74,7 +74,7 @@ pub async fn fetch_session_header(
             COALESCE(s.session_id, r.session_id) AS "session_id!",
             COALESCE(s.user_id, r.user_id)       AS "user_id?",
             u.display_name                       AS "display_name?",
-            u.department                         AS "department?",
+            upe.department                       AS "department?",
             COALESCE(s.started_at, r.first_seen) AS "started_at?",
             COALESCE(s.ended_at, r.last_seen)    AS "last_activity_at?",
             s.status                             AS "status?",
@@ -95,6 +95,7 @@ pub async fn fetch_session_header(
         FULL OUTER JOIN plugin_session_summaries s
           ON s.session_id = r.session_id
         LEFT JOIN users u ON u.id = COALESCE(s.user_id, r.user_id)
+        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
         WHERE COALESCE(s.session_id, r.session_id) = $1
         LIMIT 1
         "#,

@@ -1,7 +1,7 @@
 //! [`MarketplaceFilter`] implementation for the systemprompt template.
 //!
-//! Resolves a user's `(roles, department)` from the `users` table and
-//! consults `access_control_rules` rows keyed by the entity's own
+//! Resolves a user's `(roles, department)` from `users` joined to
+//! `user_profile_ext` and consults `access_control_rules` rows keyed by the entity's own
 //! [`EntityKind`] (`Plugin`, `Skill`, `Agent`, `McpServer`) to decide
 //! which marketplace items the gateway should sign for that user.
 //!

@@ -18,19 +18,20 @@ impl ContentQueryRepository {
         sqlx::query_as!(
             Content,
             r#"
-            SELECT id as "id: ContentId", slug, title, description, body, author,
-                   published_at, keywords, kind, image,
-                   category_id as "category_id: CategoryId",
-                   source_id as "source_id: SourceId",
-                   version_hash,
-                   COALESCE(links, '[]'::jsonb) as "links!",
-                   COALESCE(after_reading_this, '[]'::jsonb) as "after_reading_this!",
-                   COALESCE(related_playbooks, '[]'::jsonb) as "related_playbooks!",
-                   COALESCE(related_code, '[]'::jsonb) as "related_code!",
-                   COALESCE(related_docs, '[]'::jsonb) as "related_docs!",
-                   updated_at
-            FROM markdown_content
-            WHERE id = $1
+            SELECT mc.id as "id: ContentId", mc.slug, mc.title, mc.description, mc.body, mc.author,
+                   mc.published_at, mc.keywords, mc.kind, mc.image,
+                   mc.category_id as "category_id: CategoryId",
+                   mc.source_id as "source_id: SourceId",
+                   mc.version_hash,
+                   COALESCE(mc.links, '[]'::jsonb) as "links!",
+                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
+                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
+                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!",
+                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!",
+                   mc.updated_at
+            FROM markdown_content mc
+            LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
+            WHERE mc.id = $1
             "#,
             id.as_str()
         )
@@ -42,19 +43,20 @@ impl ContentQueryRepository {
         sqlx::query_as!(
             Content,
             r#"
-            SELECT id as "id: ContentId", slug, title, description, body, author,
-                   published_at, keywords, kind, image,
-                   category_id as "category_id: CategoryId",
-                   source_id as "source_id: SourceId",
-                   version_hash,
-                   COALESCE(links, '[]'::jsonb) as "links!",
-                   COALESCE(after_reading_this, '[]'::jsonb) as "after_reading_this!",
-                   COALESCE(related_playbooks, '[]'::jsonb) as "related_playbooks!",
-                   COALESCE(related_code, '[]'::jsonb) as "related_code!",
-                   COALESCE(related_docs, '[]'::jsonb) as "related_docs!",
-                   updated_at
-            FROM markdown_content
-            WHERE slug = $1
+            SELECT mc.id as "id: ContentId", mc.slug, mc.title, mc.description, mc.body, mc.author,
+                   mc.published_at, mc.keywords, mc.kind, mc.image,
+                   mc.category_id as "category_id: CategoryId",
+                   mc.source_id as "source_id: SourceId",
+                   mc.version_hash,
+                   COALESCE(mc.links, '[]'::jsonb) as "links!",
+                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
+                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
+                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!",
+                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!",
+                   mc.updated_at
+            FROM markdown_content mc
+            LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
+            WHERE mc.slug = $1
             "#,
             slug
         )
@@ -70,19 +72,20 @@ impl ContentQueryRepository {
         sqlx::query_as!(
             Content,
             r#"
-            SELECT id as "id: ContentId", slug, title, description, body, author,
-                   published_at, keywords, kind, image,
-                   category_id as "category_id: CategoryId",
-                   source_id as "source_id: SourceId",
-                   version_hash,
-                   COALESCE(links, '[]'::jsonb) as "links!",
-                   COALESCE(after_reading_this, '[]'::jsonb) as "after_reading_this!",
-                   COALESCE(related_playbooks, '[]'::jsonb) as "related_playbooks!",
-                   COALESCE(related_code, '[]'::jsonb) as "related_code!",
-                   COALESCE(related_docs, '[]'::jsonb) as "related_docs!",
-                   updated_at
-            FROM markdown_content
-            WHERE source_id = $1 AND slug = $2
+            SELECT mc.id as "id: ContentId", mc.slug, mc.title, mc.description, mc.body, mc.author,
+                   mc.published_at, mc.keywords, mc.kind, mc.image,
+                   mc.category_id as "category_id: CategoryId",
+                   mc.source_id as "source_id: SourceId",
+                   mc.version_hash,
+                   COALESCE(mc.links, '[]'::jsonb) as "links!",
+                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
+                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
+                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!",
+                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!",
+                   mc.updated_at
+            FROM markdown_content mc
+            LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
+            WHERE mc.source_id = $1 AND mc.slug = $2
             "#,
             source_id.as_str(),
             slug
@@ -95,19 +98,20 @@ impl ContentQueryRepository {
         sqlx::query_as!(
             Content,
             r#"
-            SELECT id as "id: ContentId", slug, title, description, body, author,
-                   published_at, keywords, kind, image,
-                   category_id as "category_id: CategoryId",
-                   source_id as "source_id: SourceId",
-                   version_hash,
-                   COALESCE(links, '[]'::jsonb) as "links!",
-                   COALESCE(after_reading_this, '[]'::jsonb) as "after_reading_this!",
-                   COALESCE(related_playbooks, '[]'::jsonb) as "related_playbooks!",
-                   COALESCE(related_code, '[]'::jsonb) as "related_code!",
-                   COALESCE(related_docs, '[]'::jsonb) as "related_docs!",
-                   updated_at
-            FROM markdown_content
-            ORDER BY published_at DESC
+            SELECT mc.id as "id: ContentId", mc.slug, mc.title, mc.description, mc.body, mc.author,
+                   mc.published_at, mc.keywords, mc.kind, mc.image,
+                   mc.category_id as "category_id: CategoryId",
+                   mc.source_id as "source_id: SourceId",
+                   mc.version_hash,
+                   COALESCE(mc.links, '[]'::jsonb) as "links!",
+                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
+                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
+                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!",
+                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!",
+                   mc.updated_at
+            FROM markdown_content mc
+            LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
+            ORDER BY mc.published_at DESC
             LIMIT $1 OFFSET $2
             "#,
             limit,
@@ -121,20 +125,21 @@ impl ContentQueryRepository {
         sqlx::query_as!(
             Content,
             r#"
-            SELECT id as "id: ContentId", slug, title, description, body, author,
-                   published_at, keywords, kind, image,
-                   category_id as "category_id: CategoryId",
-                   source_id as "source_id: SourceId",
-                   version_hash,
-                   COALESCE(links, '[]'::jsonb) as "links!",
-                   COALESCE(after_reading_this, '[]'::jsonb) as "after_reading_this!",
-                   COALESCE(related_playbooks, '[]'::jsonb) as "related_playbooks!",
-                   COALESCE(related_code, '[]'::jsonb) as "related_code!",
-                   COALESCE(related_docs, '[]'::jsonb) as "related_docs!",
-                   updated_at
-            FROM markdown_content
-            WHERE source_id = $1
-            ORDER BY published_at DESC
+            SELECT mc.id as "id: ContentId", mc.slug, mc.title, mc.description, mc.body, mc.author,
+                   mc.published_at, mc.keywords, mc.kind, mc.image,
+                   mc.category_id as "category_id: CategoryId",
+                   mc.source_id as "source_id: SourceId",
+                   mc.version_hash,
+                   COALESCE(mc.links, '[]'::jsonb) as "links!",
+                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
+                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
+                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!",
+                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!",
+                   mc.updated_at
+            FROM markdown_content mc
+            LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
+            WHERE mc.source_id = $1
+            ORDER BY mc.published_at DESC
             "#,
             source_id.as_str()
         )
@@ -146,19 +151,20 @@ impl ContentQueryRepository {
         sqlx::query_as!(
             Content,
             r#"
-            SELECT id as "id: ContentId", slug, title, description, body, author,
-                   published_at, keywords, kind, image,
-                   category_id as "category_id: CategoryId",
-                   source_id as "source_id: SourceId",
-                   version_hash,
-                   COALESCE(links, '[]'::jsonb) as "links!",
-                   COALESCE(after_reading_this, '[]'::jsonb) as "after_reading_this!",
-                   COALESCE(related_playbooks, '[]'::jsonb) as "related_playbooks!",
-                   COALESCE(related_code, '[]'::jsonb) as "related_code!",
-                   COALESCE(related_docs, '[]'::jsonb) as "related_docs!",
-                   updated_at
-            FROM markdown_content
-            ORDER BY published_at DESC
+            SELECT mc.id as "id: ContentId", mc.slug, mc.title, mc.description, mc.body, mc.author,
+                   mc.published_at, mc.keywords, mc.kind, mc.image,
+                   mc.category_id as "category_id: CategoryId",
+                   mc.source_id as "source_id: SourceId",
+                   mc.version_hash,
+                   COALESCE(mc.links, '[]'::jsonb) as "links!",
+                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
+                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
+                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!",
+                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!",
+                   mc.updated_at
+            FROM markdown_content mc
+            LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
+            ORDER BY mc.published_at DESC
             LIMIT $1 OFFSET $2
             "#,
             limit,

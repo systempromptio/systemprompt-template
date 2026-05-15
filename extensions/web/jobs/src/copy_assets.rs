@@ -16,7 +16,8 @@ impl CopyExtensionAssetsJob {
 
         tracing::info!("Copy extension assets job started");
 
-        let registry = ExtensionRegistry::discover();
+        let registry =
+            ExtensionRegistry::discover().map_err(|e| JobError::other(e.to_string()))?;
         let assets = registry.all_required_assets(paths);
 
         if assets.is_empty() {

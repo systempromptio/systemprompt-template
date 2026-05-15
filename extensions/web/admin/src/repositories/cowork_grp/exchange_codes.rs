@@ -23,7 +23,7 @@ pub async fn issue_exchange_code(pool: &PgPool, user_id: &UserId) -> Result<Issu
     let expires_at = Utc::now() + ChronoDuration::seconds(EXCHANGE_CODE_TTL_SECONDS);
 
     sqlx::query!(
-        "INSERT INTO cowork_exchange_codes (code_hash, user_id, expires_at) VALUES ($1, $2, $3)",
+        "INSERT INTO bridge_exchange_codes (code_hash, user_id, expires_at) VALUES ($1, $2, $3)",
         code_hash,
         user_id.as_str(),
         expires_at,

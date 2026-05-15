@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH ranked AS (\n            SELECT\n              context_id,\n              MAX(created_at) AS last_activity,\n              COUNT(*)::bigint AS ai_requests,\n              MAX(model) AS model\n            FROM ai_requests\n            WHERE user_id = $1\n              AND context_id IS NOT NULL\n              AND created_at >= NOW() - INTERVAL '30 days'\n            GROUP BY context_id\n          )\n          SELECT\n            ranked.context_id AS \"context_id!\",\n            uc.name           AS \"context_name?\",\n            ranked.last_activity AS \"last_activity!\",\n            ranked.ai_requests AS \"ai_requests!\",\n            ranked.model\n          FROM ranked\n          LEFT JOIN user_contexts uc ON uc.context_id = ranked.context_id\n          ORDER BY ranked.last_activity DESC\n          LIMIT 5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "context_name?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "last_activity!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "ai_requests!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "model",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "eb6a531032cdc0c6ee03b47d5a5a693abb884e283fe09a543b759ff864cfe2c3"
+}

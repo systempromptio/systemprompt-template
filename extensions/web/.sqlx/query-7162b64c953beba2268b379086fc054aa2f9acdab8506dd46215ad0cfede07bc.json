@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            COALESCE(entity_name, 'unknown') AS \"server_name!\",\n            COALESCE(action, 'unknown') AS \"action!\",\n            COALESCE(description, '') AS \"description!\",\n            created_at AS \"created_at!\"\n        FROM user_activity\n        WHERE category = 'mcp_access'\n        ORDER BY created_at DESC\n        LIMIT 20",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "server_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "action!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "description!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "7162b64c953beba2268b379086fc054aa2f9acdab8506dd46215ad0cfede07bc"
+}

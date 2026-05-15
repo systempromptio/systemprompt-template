@@ -118,6 +118,21 @@ fi
 
 echo ""
 
+# The admin session login (Step 2) and dashboard fetch (Step 3) both require
+# the HTTP API server. Probe it now so a stopped platform fails here with a
+# clear message instead of surfacing later as a misleading "user not found".
+# curl prints `000` as the status on a failed connection; `|| true` keeps
+# `set -e` happy without appending a second value to the captured output.
+API_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/admin/" 2>/dev/null || true)
+if [[ -z "$API_HEALTH" || "$API_HEALTH" == "000" ]]; then
+  echo "  ERROR: API server unreachable at $BASE_URL." >&2
+  echo "  The database may be up, but the HTTP server is not running." >&2
+  echo "  Start the platform first:  just start" >&2
+  exit 1
+fi
+echo "  API server: reachable ($BASE_URL -> HTTP $API_HEALTH)"
+echo ""
+
 # ──────────────────────────────────────────────
 #  STEP 2: Create local admin session
 # ──────────────────────────────────────────────
@@ -144,29 +159,52 @@ if [[ -z "$CLOUD_EMAIL" && -f "$PROJECT_DIR/.systemprompt/credentials.json" ]]; 
 fi
 CLOUD_EMAIL="${CLOUD_EMAIL:-admin@localhost.dev}"
 
-# Try login first; if user not found, auto-create and retry
-ADMIN_TOKEN=$("$CLI" admin session login --email "$CLOUD_EMAIL" --token-only --profile "$PROFILE" 2>/dev/null | tail -1)
+# Extract a bare JWT from CLI output. `--token-only` still emits a
+# `[profile: …]` banner line, so a blind `tail -1` can capture the banner
+# instead of the token — match the JWT shape (three base64url segments).
+_extract_jwt() {
+  grep -oE 'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+' | head -1
+}
 
-if [[ -z "$ADMIN_TOKEN" || ! "$ADMIN_TOKEN" == eyJ* ]]; then
+# Try login first; if (and only if) the user is missing, auto-create and retry.
+LOGIN_OUTPUT=$("$CLI" admin session login --email "$CLOUD_EMAIL" --token-only --profile "$PROFILE" 2>&1)
+ADMIN_TOKEN=$(printf '%s\n' "$LOGIN_OUTPUT" | _extract_jwt)
+
+if [[ -z "$ADMIN_TOKEN" ]]; then
+  # A connection failure is not a missing user — creating the user would not
+  # help, and the duplicate-key noise only obscures the real cause.
+  if printf '%s' "$LOGIN_OUTPUT" | grep -qiE 'connection refused|tcp connect error|error sending request|connect error'; then
+    echo "  ERROR: API server unreachable at $BASE_URL." >&2
+    echo "  Start the platform first:  just start" >&2
+    exit 1
+  fi
+
   echo "  Admin user not found — creating automatically..."
   echo ""
 
-  # Create user and promote to admin
+  # Create the user and promote to admin. `users create` is idempotent for
+  # the demo's purposes: a duplicate-email error just means the user already
+  # exists — which is success — and the search + promote below still apply.
   "$CLI" admin users create --name "admin" --email "$CLOUD_EMAIL" --profile "$PROFILE" 2>&1 || true
   USER_ID=$("$CLI" admin users search "$CLOUD_EMAIL" --profile "$PROFILE" 2>/dev/null \
     | sed -n 's/.*"id":[[:space:]]*"\([^"]*\)".*/\1/p' | head -1 || true)
   if [[ -n "$USER_ID" ]]; then
     "$CLI" admin users role promote "$USER_ID" --profile "$PROFILE" 2>&1 || true
-    echo "  Created admin user: $CLOUD_EMAIL ($USER_ID)"
+    echo "  Admin user ready: $CLOUD_EMAIL ($USER_ID)"
     echo ""
+  else
+    echo "  ERROR: Could not create or locate admin user $CLOUD_EMAIL." >&2
+    exit 1
   fi
 
-  # Retry login
-  ADMIN_TOKEN=$("$CLI" admin session login --email "$CLOUD_EMAIL" --token-only --profile "$PROFILE" 2>/dev/null | tail -1)
+  # Retry login now that the user exists.
+  LOGIN_OUTPUT=$("$CLI" admin session login --email "$CLOUD_EMAIL" --token-only --profile "$PROFILE" 2>&1)
+  ADMIN_TOKEN=$(printf '%s\n' "$LOGIN_OUTPUT" | _extract_jwt)
 
-  if [[ -z "$ADMIN_TOKEN" || ! "$ADMIN_TOKEN" == eyJ* ]]; then
-    echo "  ERROR: Could not obtain admin session token after user creation." >&2
-    echo "  Is the database running? Try: just start" >&2
+  if [[ -z "$ADMIN_TOKEN" ]]; then
+    echo "  ERROR: Could not obtain an admin session token for $CLOUD_EMAIL." >&2
+    echo "  The login command reported:" >&2
+    printf '%s\n' "$LOGIN_OUTPUT" | sed 's/^/    /' >&2
     exit 1
   fi
 fi

@@ -18,9 +18,10 @@ pub async fn list_timeline(
                 a.entity_type, a.entity_name, a.description, a.created_at
             FROM user_activity a
             JOIN users u ON u.id = a.user_id
+            JOIN user_profile_ext upe ON upe.user_id = u.id
             WHERE NOT ('anonymous' = ANY(u.roles))
               AND u.email NOT LIKE '%@anonymous.local'
-              AND u.department = $1
+              AND upe.department = $1
             ORDER BY a.created_at DESC LIMIT 50"#,
             dept
         )

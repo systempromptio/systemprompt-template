@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT bridge_version, os, hostname, last_heartbeat_at\n        FROM bridge_sessions\n        WHERE user_id = $1\n        ORDER BY last_heartbeat_at DESC\n        LIMIT 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "bridge_version",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "os",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "hostname",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_heartbeat_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "273bccc7a200cc1017b54a91b7f95599354c4565a37084dc022544ba87cd7c65"
+}
