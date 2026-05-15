@@ -105,12 +105,13 @@ pub async fn fetch_user_identity_rows(
     let count_sql = r"
         SELECT COUNT(*)::BIGINT
         FROM users u
+        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
         WHERE NOT ('anonymous' = ANY(u.roles))
           AND u.email NOT LIKE '%@anonymous.local'
           AND ($1::text IS NULL
                OR LOWER(COALESCE(u.display_name, u.full_name, u.name, '')) LIKE $1
                OR LOWER(COALESCE(u.email, '')) LIKE $1
-               OR LOWER(COALESCE(u.department, '')) LIKE $1)
+               OR LOWER(COALESCE(upe.department, '')) LIKE $1)
     ";
 
     let total: i64 = sqlx::query_scalar(count_sql)
@@ -124,7 +125,7 @@ pub async fn fetch_user_identity_rows(
             u.id AS user_id,
             COALESCE(u.display_name, u.full_name, u.name) AS display_name,
             u.email AS email,
-            COALESCE(NULLIF(u.department, ''), 'Unassigned') AS department,
+            COALESCE(NULLIF(upe.department, ''), 'Unassigned') AS department,
             (u.status = 'active') AS is_active,
             ar.last_active AS last_active,
             COALESCE(ar.requests, 0)::BIGINT AS requests,
@@ -159,12 +160,13 @@ pub async fn fetch_user_identity_rows(
             FROM governance_decisions
             GROUP BY user_id
         ) g ON g.user_id = u.id
+        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
         WHERE NOT ('anonymous' = ANY(u.roles))
           AND u.email NOT LIKE '%@anonymous.local'
           AND ($1::text IS NULL
                OR LOWER(COALESCE(u.display_name, u.full_name, u.name, '')) LIKE $1
                OR LOWER(COALESCE(u.email, '')) LIKE $1
-               OR LOWER(COALESCE(u.department, '')) LIKE $1)
+               OR LOWER(COALESCE(upe.department, '')) LIKE $1)
         ORDER BY {order}
         LIMIT $2 OFFSET $3
         ",
@@ -186,7 +188,7 @@ pub async fn fetch_department_stats(
     sqlx::query_as::<_, crate::types::DepartmentStats>(
         r"
         SELECT
-            COALESCE(NULLIF(u.department, ''), 'Unassigned') AS department,
+            COALESCE(NULLIF(upe.department, ''), 'Unassigned') AS department,
             COUNT(DISTINCT u.id)::BIGINT AS user_count,
             COUNT(DISTINCT u.id) FILTER (WHERE u.status = 'active')::BIGINT AS active_count,
             COALESCE(SUM(ev.event_count), 0)::BIGINT AS total_events,
@@ -217,9 +219,10 @@ pub async fn fetch_department_stats(
             FROM plugin_usage_daily
             GROUP BY user_id
         ) tok ON tok.user_id = u.id
+        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
         WHERE NOT ('anonymous' = ANY(u.roles))
           AND u.email NOT LIKE '%@anonymous.local'
-        GROUP BY COALESCE(NULLIF(u.department, ''), 'Unassigned')
+        GROUP BY COALESCE(NULLIF(upe.department, ''), 'Unassigned')
         ORDER BY user_count DESC
         ",
     )

@@ -68,7 +68,9 @@ pub async fn update_user(
     });
     let set_email_verified = req.is_active == Some(true);
     let roles_update: Option<&[String]> = req.roles.as_deref();
-    sqlx::query_as!(
+    let mut tx = pool.begin().await?;
+
+    let summary = sqlx::query_as!(
         UserSummary,
         r#"
         UPDATE users
@@ -78,7 +80,6 @@ pub async fn update_user(
             roles = COALESCE($4, roles),
             status = COALESCE($5, status),
             email_verified = CASE WHEN $6 THEN true ELSE email_verified END,
-            department = COALESCE($7, department),
             updated_at = NOW()
         WHERE id = $1
         RETURNING
@@ -103,10 +104,28 @@ pub async fn update_user(
         roles_update,
         status.as_deref(),
         set_email_verified,
-        req.department.as_deref(),
     )
-    .fetch_optional(pool)
-    .await
+    .fetch_optional(&mut *tx)
+    .await?;
+
+    if summary.is_some() {
+        if let Some(department) = req.department.as_deref() {
+            sqlx::query!(
+                r#"
+                INSERT INTO user_profile_ext (user_id, department)
+                VALUES ($1, $2)
+                ON CONFLICT (user_id) DO UPDATE SET department = EXCLUDED.department
+                "#,
+                user_id.as_str(),
+                department,
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+    }
+
+    tx.commit().await?;
+    Ok(summary)
 }
 
 pub async fn delete_user(pool: &PgPool, user_id: &UserId) -> Result<bool, sqlx::Error> {

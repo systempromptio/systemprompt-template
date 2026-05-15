@@ -217,12 +217,14 @@ async fn fetch_user_for_matrix(
     user_id: &str,
 ) -> Result<UserMatrixUser, sqlx::Error> {
     let row = sqlx::query!(
-        r#"SELECT id,
-                  email,
-                  COALESCE(display_name, full_name, name) AS display_name,
-                  roles AS "roles!: Vec<String>",
-                  department
-           FROM users WHERE id = $1"#,
+        r#"SELECT u.id,
+                  u.email,
+                  COALESCE(u.display_name, u.full_name, u.name) AS display_name,
+                  u.roles AS "roles!: Vec<String>",
+                  COALESCE(upe.department, 'Default') AS "department!"
+           FROM users u
+           LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
+           WHERE u.id = $1"#,
         user_id
     )
     .fetch_one(pool)

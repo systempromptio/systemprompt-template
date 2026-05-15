@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT u.roles, COALESCE(upe.department, 'Default') AS \"department!\"\n        FROM users u\n        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id\n        WHERE u.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "roles",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 1,
+        "name": "department!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "12c0ea997e8743562eb4a9aa77f1d5473cbd696f45b420a89a2be96a93786a33"
+}

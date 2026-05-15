@@ -95,28 +95,6 @@ pub struct Content {
 }
 
 impl Content {
-    pub const COLUMNS: &'static str = r#"
-        id as "id: ContentId",
-        slug,
-        title,
-        description,
-        body,
-        author,
-        published_at,
-        keywords,
-        kind,
-        image,
-        category_id as "category_id: CategoryId",
-        source_id as "source_id: SourceId",
-        version_hash,
-        COALESCE(links, '[]'::jsonb) as "links!",
-        COALESCE(after_reading_this, '[]'::jsonb) as "after_reading_this!",
-        COALESCE(related_playbooks, '[]'::jsonb) as "related_playbooks!",
-        COALESCE(related_code, '[]'::jsonb) as "related_code!",
-        COALESCE(related_docs, '[]'::jsonb) as "related_docs!",
-        updated_at
-    "#;
-
     pub fn links_metadata(&self) -> Result<Vec<ContentLinkMetadata>, serde_json::Error> {
         serde_json::from_value(self.links.clone())
     }

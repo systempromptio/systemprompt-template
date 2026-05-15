@@ -237,7 +237,7 @@ pub async fn management_devices_page(
             ak.key_prefix,
             ak.user_id,
             u.email::TEXT AS user_email,
-            NULLIF(u.department, '') AS department,
+            NULLIF(upe.department, '') AS department,
             dal.app_platform AS platform,
             NULLIF(dal.app_version, '') AS app_version,
             NULLIF(dal.hostname, '') AS hostname,
@@ -248,6 +248,7 @@ pub async fn management_devices_page(
             ak.revoked_at
         FROM user_api_keys ak
         LEFT JOIN users u ON u.id = ak.user_id
+        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
         LEFT JOIN device_app_links dal ON dal.device_id = ak.id
         ORDER BY ak.revoked_at IS NOT NULL,
                  COALESCE(u.email::TEXT, ak.user_id::TEXT),

@@ -57,7 +57,10 @@ BEGIN
         RETURN;
     END IF;
 
-    SELECT ARRAY_AGG(id) INTO user_ids FROM users WHERE department != '' AND department IS NOT NULL;
+    SELECT ARRAY_AGG(u.id) INTO user_ids
+    FROM users u
+    JOIN user_profile_ext upe ON upe.user_id = u.id
+    WHERE upe.department <> '' AND upe.department IS NOT NULL;
 
     IF user_ids IS NULL OR array_length(user_ids, 1) IS NULL THEN
         RAISE NOTICE 'No users with departments found, skipping gamification seed';
