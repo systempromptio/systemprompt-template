@@ -21,8 +21,10 @@ BEGIN
         sev := 'info';
     END IF;
 
-    SELECT display_name, department INTO u_display, u_department
-    FROM users WHERE id = NEW.user_id;
+    SELECT u.display_name, upe.department INTO u_display, u_department
+    FROM users u
+    LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
+    WHERE u.id = NEW.user_id;
 
     PERFORM pg_notify(
         'audit_events',
@@ -64,8 +66,10 @@ BEGIN
         sev := 'info';
     END IF;
 
-    SELECT display_name, department INTO u_display, u_department
-    FROM users WHERE id = NEW.user_id;
+    SELECT u.display_name, upe.department INTO u_display, u_department
+    FROM users u
+    LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
+    WHERE u.id = NEW.user_id;
 
     PERFORM pg_notify(
         'audit_events',

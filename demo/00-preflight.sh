@@ -167,7 +167,9 @@ _extract_jwt() {
 }
 
 # Try login first; if (and only if) the user is missing, auto-create and retry.
-LOGIN_OUTPUT=$("$CLI" admin session login --email "$CLOUD_EMAIL" --token-only --profile "$PROFILE" 2>&1)
+# `|| true` keeps `set -e` from aborting here: a missing user is an expected
+# first-run state handled by the auto-create block below.
+LOGIN_OUTPUT=$("$CLI" admin session login --email "$CLOUD_EMAIL" --token-only --profile "$PROFILE" 2>&1 || true)
 ADMIN_TOKEN=$(printf '%s\n' "$LOGIN_OUTPUT" | _extract_jwt)
 
 if [[ -z "$ADMIN_TOKEN" ]]; then
@@ -198,7 +200,7 @@ if [[ -z "$ADMIN_TOKEN" ]]; then
   fi
 
   # Retry login now that the user exists.
-  LOGIN_OUTPUT=$("$CLI" admin session login --email "$CLOUD_EMAIL" --token-only --profile "$PROFILE" 2>&1)
+  LOGIN_OUTPUT=$("$CLI" admin session login --email "$CLOUD_EMAIL" --token-only --profile "$PROFILE" 2>&1 || true)
   ADMIN_TOKEN=$(printf '%s\n' "$LOGIN_OUTPUT" | _extract_jwt)
 
   if [[ -z "$ADMIN_TOKEN" ]]; then
