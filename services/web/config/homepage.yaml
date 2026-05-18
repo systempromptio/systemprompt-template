@@ -12,7 +12,7 @@ hero:
   cta: "Quick Start"
   cta_url: "#quick-start"
   cta_secondary: "Read the Docs"
-  cta_secondary_url: "/documentation"
+  cta_secondary_url: "https://systemprompt.io/documentation/"
 
 demos:
   title: "Demo Catalogue"

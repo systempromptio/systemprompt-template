@@ -52,8 +52,8 @@ pub(super) const PLATFORM_CATEGORIES: &[CategoryMeta] = &[
             StepMeta {
                 script: "01-skill-lifecycle.sh",
                 label: "Walk the skill lifecycle",
-                narrative: "Lists every database-synced skill, prints local-vs-remote sync status, and then walks services/skills/ on disk so you see each skill YAML that ships with the template and the structured header of the first one. This is the fastest way to answer \"what does a skill look like on disk?\".",
-                outcome: "You see the synced skill catalog, a sync report telling you whether cloud and local copies match, and the concrete on-disk YAMLs under services/skills/ with the first one previewed.",
+                narrative: "Lists every database-synced skill alongside its on-disk config path, then walks services/skills/ on disk so you see each skill YAML that ships with the template and the structured header of the first one. This is the fastest way to answer \"what does a skill look like on disk?\".",
+                outcome: "You see the synced skill catalog with each skill's file path, and the concrete on-disk YAMLs under services/skills/ with the first one previewed.",
             },
             StepMeta {
                 script: "02-content-management.sh",
