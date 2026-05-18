@@ -246,6 +246,32 @@ start-release:
 migrate:
     {{CLI}} infra db migrate
 
+# When an already-applied migration file is edited (e.g. a seed fix), its
+# stored checksum stops matching the file and `migrate` / `start` refuse to
+# proceed. This re-aligns the tracking table by dropping the drifted rows and
+# re-applying those migrations — every migration is idempotent (guarded seeds
+# or CREATE ... IF NOT EXISTS), so re-running them re-records the current
+# checksum without touching your data.
+# Repair migration checksum drift in place — no data loss, no destructive reset.
+# NOTE: swap this body for `{{CLI}} infra db migrate-repair --apply` once the
+# core release exposing that subcommand is published and pinned here.
+repair-migrations:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    drift=$({{CLI}} infra db migrate-status 2>&1 \
+        | awk '/stored=/ && /current=/ { for (i = 1; i <= NF; i++) if ($i ~ /^v[0-9]+$/) print $(i-1), substr($i, 2) + 0 }' \
+        || true)
+    if [ -z "$drift" ]; then
+        echo "✓ No migration checksum drift — nothing to repair."
+        exit 0
+    fi
+    echo "$drift" | while read -r ext ver; do
+        echo "→ Repairing drifted migration: $ext v$ver"
+        {{CLI}} infra db execute "DELETE FROM extension_migrations WHERE extension_id = '$ext' AND version = $ver" >/dev/null 2>&1
+    done
+    {{CLI}} infra db migrate
+    {{CLI}} infra db migrate-status 2>&1 | grep -E 'Applied:|drift' || true
+
 # Per-clone docker compose project name. Derived from the absolute justfile directory
 # so a second clone on the same host gets its own containers and volumes.
 _project_name TENANT:
@@ -266,11 +292,6 @@ db-down TENANT="local":
 # Show PostgreSQL logs for a specific tenant
 db-logs TENANT="local":
     docker compose -p "$(just _project_name {{TENANT}})" -f .systemprompt/docker/{{TENANT}}.yaml logs -f
-
-# Reset database (stop, remove volume, start fresh)
-db-reset TENANT="local":
-    docker compose -p "$(just _project_name {{TENANT}})" -f .systemprompt/docker/{{TENANT}}.yaml down -v
-    docker compose -p "$(just _project_name {{TENANT}})" -f .systemprompt/docker/{{TENANT}}.yaml up -d
 
 # List all tenant databases
 db-list:
