@@ -1,7 +1,6 @@
 use crate::cli;
 use crate::error::SystempromptToolError;
 use crate::tools::{self, CliInput, SERVER_NAME};
-use async_trait::async_trait;
 use rmcp::model::{
     CallToolRequestParams, CallToolResult, Icon, Implementation, InitializeRequestParams,
     InitializeResult, ListResourcesResult, ListToolsResult, PaginatedRequestParams,
@@ -55,7 +54,6 @@ struct SystempromptToolHandler {
     auth_token: String,
 }
 
-#[async_trait]
 impl McpToolHandler for SystempromptToolHandler {
     type Input = CliInput;
     type Output = CliArtifact;
