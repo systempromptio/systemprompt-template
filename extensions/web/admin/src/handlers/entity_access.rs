@@ -266,7 +266,6 @@ pub async fn apply_template_handler(
 
     for eid in &entity_ids {
         if body.action == "clear" {
-            // Delete any existing rule matching subject_type+subject_value.
             let existing = r.list_rules_for_entity(kind, eid).await.unwrap_or_default();
             for rule in existing {
                 if rule.rule_type == rule_type && rule.rule_value == body.subject_value {

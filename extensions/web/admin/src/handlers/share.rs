@@ -78,7 +78,6 @@ fn verify(secret: &[u8], token: &str) -> Option<(String, i32)> {
     let ver_s = String::from_utf8(b64.decode(parts[1]).ok()?).ok()?;
     let version: i32 = ver_s.parse().ok()?;
     let expected = sign(secret, &user_id, version);
-    // Constant-time compare on the produced strings.
     if expected.len() != token.len() {
         return None;
     }
@@ -107,22 +106,24 @@ pub async fn issue_share_token_handler(
     if !user_ctx.is_admin {
         return shared::error_response(StatusCode::FORBIDDEN, "Admin access required");
     }
-    let secret = match SecretsBootstrap::jwt_secret() {
+    let secret = match SecretsBootstrap::manifest_signing_secret_seed() {
         Ok(s) => s,
         Err(e) => {
-            tracing::error!(error = %e, "Failed to load JWT secret for share token");
+            tracing::error!(error = %e, "Failed to load manifest signing seed for share token");
             return shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Failed to load secret",
             );
         }
     };
-    let row = sqlx::query_as::<_, (i32,)>("SELECT share_token_version FROM users WHERE id = $1")
-        .bind(&target_user_id)
-        .fetch_optional(&*pool)
-        .await;
+    let row = sqlx::query!(
+        "SELECT share_token_version FROM user_profile_ext WHERE user_id = $1",
+        target_user_id,
+    )
+    .fetch_optional(&*pool)
+    .await;
     let version = match row {
-        Ok(Some((v,))) => v,
+        Ok(Some(r)) => r.share_token_version,
         Ok(None) => return shared::error_response(StatusCode::NOT_FOUND, "User not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to load share_token_version");
@@ -132,7 +133,7 @@ pub async fn issue_share_token_handler(
             );
         }
     };
-    let token = sign(secret.as_bytes(), &target_user_id, version);
+    let token = sign(&secret, &target_user_id, version);
     let url = format!("/share/manifest/{token}");
     Json(ShareTokenResponse { token, url }).into_response()
 }
@@ -161,29 +162,35 @@ pub async fn public_manifest_handler(
     State(pool): State<Arc<PgPool>>,
     Path(token): Path<String>,
 ) -> Response {
-    let secret = match SecretsBootstrap::jwt_secret() {
+    let secret = match SecretsBootstrap::manifest_signing_secret_seed() {
         Ok(s) => s,
         Err(e) => {
-            tracing::error!(error = %e, "Failed to load JWT secret for manifest");
+            tracing::error!(error = %e, "Failed to load manifest signing seed");
             return shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Failed to load secret",
             );
         }
     };
-    let Some((user_id, version)) = verify(secret.as_bytes(), &token) else {
+    let Some((user_id, version)) = verify(&secret, &token) else {
         return shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or revoked token");
     };
 
-    // Re-check version against DB to honour revocation via bumping the column.
-    let current: Option<(i32,)> =
-        sqlx::query_as::<_, (i32,)>("SELECT share_token_version FROM users WHERE id = $1")
-            .bind(&user_id)
-            .fetch_optional(&*pool)
-            .await
-            .unwrap_or(None);
-    let Some((current_version,)) = current else {
-        return shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or revoked token");
+    let current_version = match sqlx::query!(
+        "SELECT share_token_version FROM user_profile_ext WHERE user_id = $1",
+        user_id,
+    )
+    .fetch_optional(&*pool)
+    .await
+    {
+        Ok(Some(row)) => row.share_token_version,
+        Ok(None) => {
+            return shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or revoked token");
+        }
+        Err(e) => {
+            tracing::warn!(error = %e, "Failed to load share_token_version for verification");
+            return shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or revoked token");
+        }
     };
     if current_version != version {
         return shared::error_response(StatusCode::UNAUTHORIZED, "Token has been revoked");

@@ -1,0 +1,110 @@
+# API tier — horizontally scaled, stateless.
+#
+# The API tier is the part of systemprompt that DOES scale horizontally: each
+# pod is stateless and serves /api/v1 traffic. `replicas` is a placeholder —
+# tune it or attach an HPA.
+#
+# The scaled-api profile (mounted from the ConfigMap) has the scheduler
+# DISABLED so that no API pod runs cron jobs — cron is owned exclusively by the
+# single-replica scheduler Deployment. This is a deployment-time mitigation for
+# the single-node scheduler limitation, NOT a fix.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: systemprompt-api
+  labels:
+    app.kubernetes.io/name: systemprompt
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: scaled-stack
+spec:
+  # PLACEHOLDER replica count — safe to scale; pods are stateless.
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: systemprompt
+      app.kubernetes.io/component: api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: systemprompt
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: scaled-stack
+    spec:
+      containers:
+        - name: systemprompt
+          # Replace with your published image (or build & push from Dockerfile).
+          image: ghcr.io/systempromptio/systemprompt-template:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: DATABASE_URL
+              value: "postgres://systemprompt:$(POSTGRES_PASSWORD)@postgres-primary:5432/systemprompt"
+            - name: PG_HOST
+              value: "postgres-primary"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: systemprompt-secrets
+                  key: POSTGRES_PASSWORD
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: systemprompt-secrets
+                  key: ANTHROPIC_API_KEY
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: systemprompt-secrets
+                  key: OPENAI_API_KEY
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: systemprompt-secrets
+                  key: GEMINI_API_KEY
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: systemprompt-secrets
+                  key: JWT_SECRET
+          volumeMounts:
+            # The entrypoint forces SYSTEMPROMPT_PROFILE to this exact path and
+            # skips generation when the file exists — mounting the scaled-api
+            # profile here is the only reliable injection point.
+            - name: profile
+              mountPath: /app/services/profiles/docker/profile.yaml
+              subPath: profile-scaled-api.yaml
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            initialDelaySeconds: 40
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "768Mi"
+      volumes:
+        - name: profile
+          configMap:
+            name: systemprompt-profiles

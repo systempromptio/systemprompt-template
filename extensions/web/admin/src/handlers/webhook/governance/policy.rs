@@ -140,8 +140,6 @@ fn load_chain() -> PolicyChain {
         });
     }
 
-    // Any registered policy that the YAML didn't mention — instantiate with
-    // empty params and disabled, so the dashboard can still show it.
     let mentioned: std::collections::HashSet<String> =
         entries.iter().map(|e| e.config.id.clone()).collect();
     for r in inventory::iter::<PolicyRegistration>() {

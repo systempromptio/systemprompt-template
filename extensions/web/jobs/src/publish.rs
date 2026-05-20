@@ -226,6 +226,36 @@ impl PublishPipelineJob {
         }
     }
 
+    /// Project `services/ai/gateway-policies.yaml` into `ai_gateway_policies`.
+    ///
+    /// Mirrors [`Self::run_acl_yaml_load`]: the gateway policy (the inference
+    /// model allow-list — a security control) ships as version-controlled
+    /// config and is reconciled into the DB at every server boot, rather than
+    /// being seeded by a one-off SQL script.
+    async fn run_gateway_policy_load(
+        &self,
+        paths: &AppPaths,
+        db_pool: &DbPool,
+        stats: &mut PipelineStats,
+    ) {
+        let services_path = paths.system().services().to_path_buf();
+        match systemprompt::ai::load_gateway_policies_from_yaml(db_pool, &services_path).await {
+            Ok(report) => {
+                tracing::debug!(
+                    inserted = report.inserted,
+                    updated = report.updated,
+                    deleted = report.deleted,
+                    "gateway-policy YAML load completed"
+                );
+                stats.record_success();
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "gateway-policy YAML load failed");
+                stats.record_failure();
+            }
+        }
+    }
+
     async fn run_asset_organization(&self, paths: &AppPaths, stats: &mut PipelineStats) {
         let dist_dir = paths.web().dist().to_path_buf();
         match organize_dist_assets(&dist_dir).await {
@@ -254,11 +284,6 @@ impl Job for PublishPipelineJob {
     fn schedule(&self) -> &'static str {
         "0 */15 * * * *"
     }
-
-    fn run_on_startup(&self) -> bool {
-        true
-    }
-
     async fn execute(
         &self,
         ctx: &JobContext,
@@ -281,11 +306,13 @@ impl PublishPipelineJob {
             ))?
             .as_ref();
 
-        tracing::info!("Publish pipeline started");
+        tracing::info!(actor = %ctx.actor().user_id.as_str(), "Publish pipeline started");
 
         let mut stats = PipelineStats::default();
 
         self.run_acl_yaml_load(paths, db_pool, &mut stats).await;
+        self.run_gateway_policy_load(paths, db_pool, &mut stats)
+            .await;
         self.run_ingestion(ctx, &mut stats).await;
         self.run_bundle_admin_css(&mut stats).await;
         self.run_bundle_admin_js(&mut stats).await;

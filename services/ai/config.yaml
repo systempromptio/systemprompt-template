@@ -4,23 +4,30 @@ ai:
   sampling:
     enable_smart_routing: false
     fallback_enabled: true
+  # `endpoint: ${VAR}` is resolved from the secrets store at startup (same
+  # mechanism as api_key). Air-gapped deployments set the *_ENDPOINT secret to
+  # an internal mock URL; when the var is absent (normal local/cloud dev) the
+  # provider falls back to its built-in external URL — so this is a no-op for
+  # non-air-gapped profiles.
   providers:
     anthropic:
       enabled: true
-      google_search_enabled: true
+      google_search_enabled: false
       api_key: ${ANTHROPIC_API_KEY}
+      endpoint: ${ANTHROPIC_ENDPOINT}
       default_model: claude-sonnet-4-20250514
     openai:
       enabled: true
       api_key: ${OPENAI_API_KEY}
+      endpoint: ${OPENAI_ENDPOINT}
       default_model: gpt-4-turbo
-      google_search_enabled: true
+      google_search_enabled: false
     gemini:
       enabled: true
       api_key: ${GEMINI_API_KEY}
-      endpoint: https://generativelanguage.googleapis.com/v1beta
+      endpoint: ${GEMINI_ENDPOINT}
       default_model: gemini-2.5-flash
-      google_search_enabled: true
+      google_search_enabled: false
   mcp:
     auto_discover: true
     connect_timeout_ms: 5000

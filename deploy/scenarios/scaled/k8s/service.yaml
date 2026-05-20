@@ -1,0 +1,24 @@
+# ClusterIP Service fronting the API pods ONLY.
+#
+# The selector matches `component: api` exclusively — the single scheduler pod
+# is intentionally NOT in this Service. The scheduler serves no external
+# traffic; it only runs cron jobs. Keeping it out of the Service guarantees no
+# request is ever load-balanced onto it.
+apiVersion: v1
+kind: Service
+metadata:
+  name: systemprompt-api
+  labels:
+    app.kubernetes.io/name: systemprompt
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: scaled-stack
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: systemprompt
+    app.kubernetes.io/component: api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP

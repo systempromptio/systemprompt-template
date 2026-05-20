@@ -1,0 +1,32 @@
+# Gateway policy baseline — the version-controlled source of truth for the
+# `ai_gateway_policies` table.
+#
+# The publish_pipeline job (run_gateway_policy_load) ingests this file into the
+# DB at every server boot, the same way services/access-control/*.yaml is
+# ingested. The gateway model allow-list is a SECURITY CONTROL: a `/v1/messages`
+# request for any model NOT listed below is rejected with HTTP 403 before any
+# upstream provider call is made.
+#
+# This replaces the old demo/scenarios/airgap/00-seed-policy.sh raw-SQL seed —
+# the policy now ships as config rather than being created as a side effect of
+# a test script.
+#
+# Schema of each `spec` (see systemprompt_ai::GatewayPolicySpec):
+#   allowed_models:            list of permitted model ids (omit = allow all)
+#   max_input_tokens_per_call: optional per-call input-token ceiling
+#   max_tool_depth:            optional tool-recursion ceiling
+#   quota_windows:             optional rolling quota windows
+#   safety:                    optional scanner / blocked-category config
+
+policies:
+  - name: default-model-allowlist
+    enabled: true
+    spec:
+      # Models any deployment profile (local, docker, air-gap) legitimately
+      # routes. The air-gap governance proof (03-governance.sh) sends a model
+      # deliberately absent from this list to assert the 403 deny path.
+      allowed_models:
+        - claude-haiku-4-5
+        - claude-sonnet-4-20250514
+        - gpt-4-turbo
+        - gemini-2.5-flash

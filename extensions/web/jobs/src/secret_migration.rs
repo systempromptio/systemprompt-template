@@ -3,7 +3,9 @@ use systemprompt::identifiers::UserId;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::error::JobError;
-use systemprompt_web_admin::repositories::{secret_crypto, secret_keys};
+use systemprompt_web_admin::repositories::secrets_grp::{
+    secret_crypto, secret_keys, secret_migration,
+};
 use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -22,11 +24,6 @@ impl Job for SecretMigrationJob {
     fn schedule(&self) -> &'static str {
         "0 0 * * * *"
     }
-
-    fn run_on_startup(&self) -> bool {
-        false
-    }
-
     async fn execute(
         &self,
         ctx: &JobContext,
@@ -50,7 +47,11 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         "PgPool not available from database".to_string(),
     ))?;
 
-    let rows = fetch_unencrypted_secrets(&pool).await?;
+    let actor_user = &ctx.actor().user_id;
+
+    let rows = secret_migration::fetch_unencrypted_secrets(pool.as_ref())
+        .await
+        .map_err(MarketplaceError::Database)?;
 
     if rows.is_empty() {
         let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
@@ -59,11 +60,12 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
             .with_duration(duration_ms));
     }
 
-    let (success_count, error_count) = migrate_secrets(&pool, &rows, &master_key).await;
+    let (success_count, error_count) = migrate_secrets(&pool, &rows, &master_key, actor_user).await;
 
     let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 
     tracing::info!(
+        actor = %actor_user.as_str(),
         migrated = success_count,
         errors = error_count,
         duration_ms,
@@ -75,51 +77,26 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         .with_duration(duration_ms))
 }
 
-struct UnencryptedSecretRow {
-    id: String,
-    user_id: String,
-    var_name: String,
-    var_value: String,
-}
-
-async fn fetch_unencrypted_secrets(
-    pool: &std::sync::Arc<sqlx::PgPool>,
-) -> Result<Vec<(String, String, String, String)>, MarketplaceError> {
-    let rows = sqlx::query_as!(
-        UnencryptedSecretRow,
-        "SELECT id, user_id, var_name, var_value FROM plugin_env_vars \
-         WHERE is_secret = true AND (encrypted_value IS NULL OR key_version = 0) \
-         AND var_value != '' LIMIT 100",
-    )
-    .fetch_all(pool.as_ref())
-    .await
-    .map_err(MarketplaceError::Database)?;
-    Ok(rows
-        .into_iter()
-        .map(|r| (r.id, r.user_id, r.var_name, r.var_value))
-        .collect())
-}
-
 async fn migrate_secrets(
     pool: &std::sync::Arc<sqlx::PgPool>,
-    rows: &[(String, String, String, String)],
+    rows: &[secret_migration::UnencryptedSecret],
     master_key: &[u8; 32],
+    actor: &UserId,
 ) -> (u64, u64) {
     let mut success_count = 0u64;
     let mut error_count = 0u64;
 
-    for (id, user_id, var_name, var_value) in rows {
-        let result =
-            encrypt_and_store_secret(pool, id, user_id, var_name, var_value, master_key).await;
+    for row in rows {
+        let result = encrypt_and_store_secret(pool, row, master_key, actor).await;
 
         match result {
             Ok(()) => {
                 success_count += 1;
-                tracing::debug!(id = %id, user_id = %user_id, var_name = %var_name, "Migrated secret");
+                tracing::debug!(id = %row.id, user_id = %row.user_id, var_name = %row.var_name, "Migrated secret");
             }
             Err(e) => {
                 error_count += 1;
-                tracing::warn!(id = %id, user_id = %user_id, error = %e, "Failed to migrate secret");
+                tracing::warn!(id = %row.id, user_id = %row.user_id, error = %e, "Failed to migrate secret");
             }
         }
     }
@@ -129,50 +106,33 @@ async fn migrate_secrets(
 
 async fn encrypt_and_store_secret(
     pool: &std::sync::Arc<sqlx::PgPool>,
-    id: &str,
-    user_id: &str,
-    var_name: &str,
-    var_value: &str,
+    row: &secret_migration::UnencryptedSecret,
     master_key: &[u8; 32],
+    actor: &UserId,
 ) -> Result<(), MarketplaceError> {
-    let dek = secret_keys::get_or_create_user_dek(pool, &UserId::new(user_id), master_key)
+    let dek = secret_keys::get_or_create_user_dek(pool, &UserId::new(&row.user_id), master_key)
         .await
         .map_err(|e| MarketplaceError::Internal(format!("DEK error: {e}")))?;
 
     let nonce = secret_crypto::generate_nonce();
-    let encrypted = secret_crypto::encrypt(&dek, &nonce, var_value.as_bytes())
+    let encrypted = secret_crypto::encrypt(&dek, &nonce, row.var_value.as_bytes())
         .map_err(|e| MarketplaceError::Internal(format!("Encryption error: {e}")))?;
 
-    let key_version: i32 = sqlx::query_scalar!(
-        "SELECT key_version FROM user_encryption_keys WHERE user_id = $1",
-        user_id
-    )
-    .fetch_one(pool.as_ref())
-    .await
-    .unwrap_or(1);
+    let key_version = secret_migration::fetch_key_version(pool.as_ref(), &row.user_id).await;
 
-    sqlx::query!(
-        "UPDATE plugin_env_vars SET encrypted_value = $1, value_nonce = $2, \
-         key_version = $3, var_value = '', updated_at = NOW() WHERE id = $4",
+    secret_migration::update_encrypted_value(
+        pool.as_ref(),
+        &row.id,
         &encrypted,
         nonce.as_slice(),
         key_version,
-        id,
     )
-    .execute(pool.as_ref())
     .await
     .map_err(|e| MarketplaceError::Internal(format!("Update error: {e}")))?;
 
-    let audit_id = uuid::Uuid::new_v4().to_string();
-    let _ = sqlx::query!(
-        "INSERT INTO secret_audit_log (id, user_id, plugin_id, var_name, action, actor_id) \
-         VALUES ($1, $2, '', $3, 'updated', 'system')",
-        audit_id,
-        user_id,
-        var_name,
-    )
-    .execute(pool.as_ref())
-    .await;
+    let _ =
+        secret_migration::insert_migration_audit(pool.as_ref(), &row.user_id, &row.var_name, actor)
+            .await;
 
     Ok(())
 }

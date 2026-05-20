@@ -1,0 +1,39 @@
+{
+  "thresholds": {
+    "p95_ms": 300,
+    "p99_ms": 600,
+    "max_error_rate": 0.005
+  },
+  "scenarios": {
+    "governance-only": {
+      "requests": 13459,
+      "p50_ms": 14,
+      "p95_ms": 18,
+      "p99_ms": 21,
+      "error_rate": 0.0,
+      "passed": true,
+      "time_series": [
+        {
+          "window_start_secs": 0,
+          "requests": 10019,
+          "error_rate": 0.0,
+          "p50_ms": 14,
+          "p95_ms": 18,
+          "p99_ms": 21
+        },
+        {
+          "window_start_secs": 60,
+          "requests": 3440,
+          "error_rate": 0.0,
+          "p50_ms": 14,
+          "p95_ms": 17,
+          "p99_ms": 20
+        }
+      ]
+    }
+  },
+  "aggregate": {
+    "total_requests": 13459,
+    "all_passed": true
+  }
+}

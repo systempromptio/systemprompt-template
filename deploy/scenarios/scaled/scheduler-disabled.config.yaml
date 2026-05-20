@@ -1,0 +1,41 @@
+# Scheduler-disable override — scaled deployment.
+#
+# WHAT THIS IS
+# A complete, valid drop-in replacement for services/scheduler/config.yaml.
+# In the scaled stack it is bind-mounted (read-only) onto
+# /app/services/scheduler/config.yaml inside EVERY `app` (API) replica. The
+# dedicated `scheduler` node does NOT get this file — it keeps the default
+# config, so it is the one and only node that executes cron jobs.
+#
+# WHY IT EXISTS — the single-node scheduler limit
+# The scheduler runs an in-process tokio cron loop with no cross-replica
+# coordination. If N API replicas each loaded the default scheduler config,
+# every scheduled job (database_cleanup, cleanup_*, publish_pipeline, ...)
+# would fire N times concurrently — duplicate execution, racing cleanups,
+# wasted publish-pipeline runs.
+#
+# `SchedulerConfig` in systemprompt-core carries a `distributed_lock: bool`
+# field, but as of this writing it is DEAD CONFIG: it is declared in
+# crates/shared/models/src/services/scheduler.rs and consumed nowhere in the
+# scheduler runtime (crates/app/scheduler/). Job de-duplication relies only on
+# an in-process tokio::Mutex, which does not span replicas. There is also no
+# profile-schema scheduler toggle (`Profile` has no scheduler section), so the
+# disable cannot be expressed in profile.yaml either.
+#
+# THE MITIGATION (this file)
+# Disabling the scheduler on the API replicas via this bind-mount, and running
+# exactly one dedicated `scheduler` node, is the deployment-time mitigation —
+# NOT a fix. It works, but it makes the scheduler a single point of failure:
+# if the `scheduler` node is down, no cron jobs run at all.
+#
+# TECH DEBT — needs a real fix
+# The proper fix is in systemprompt-core: make the scheduler acquire a
+# Postgres advisory lock (pg_try_advisory_lock) — or implement leader
+# election — per job before dispatch, gated by the existing
+# `distributed_lock` flag, so any replica can run the scheduler and jobs still
+# fire exactly once. Until that lands, this override file and the single
+# `scheduler` node are a documented workaround, not a supported topology.
+
+scheduler:
+  enabled: false
+  jobs: []

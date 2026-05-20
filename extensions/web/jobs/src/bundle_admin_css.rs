@@ -114,11 +114,6 @@ impl Job for BundleAdminCssJob {
     fn schedule(&self) -> &'static str {
         "0 */15 * * * *"
     }
-
-    fn run_on_startup(&self) -> bool {
-        true
-    }
-
     async fn execute(
         &self,
         _ctx: &JobContext,

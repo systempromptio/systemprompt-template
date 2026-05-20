@@ -284,8 +284,6 @@ pub async fn management_devices_page(
     render_typed_page(&engine, "management-devices", &data, &user_ctx, &mkt_ctx)
 }
 
-// Skills/Marketplaces management list pages were replaced by /admin/catalog.
-
 pub async fn management_department_detail_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,

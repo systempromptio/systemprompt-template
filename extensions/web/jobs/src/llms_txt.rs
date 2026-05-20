@@ -24,11 +24,6 @@ impl Job for LlmsTxtGenerationJob {
     fn schedule(&self) -> &'static str {
         "0 0 * * * *"
     }
-
-    fn run_on_startup(&self) -> bool {
-        false
-    }
-
     async fn execute(
         &self,
         ctx: &JobContext,

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use systemprompt::ai::{AiMessage, AiRequest, AiService, StructuredOutputOptions};
 use systemprompt::identifiers::{AgentName, ContextId, SessionId, TraceId, UserId};
-use systemprompt::models::auth::UserType;
+use systemprompt::models::auth::{AuthenticatedUser, UserType};
 use systemprompt::models::execution::context::RequestContext;
 
 use crate::repositories::{session_analyses, usage_aggregations};
@@ -129,7 +129,15 @@ pub fn build_request_context(
         ContextId::new(""),
         AgentName::new("hook-summary"),
     )
-    .with_user_id(user_id.clone())
+    .with_user(AuthenticatedUser::new(
+        user_id
+            .as_str()
+            .parse()
+            .unwrap_or_else(|_| uuid::Uuid::nil()),
+        user_id.as_str().to_string(),
+        String::new(),
+        Vec::new(),
+    ))
     .with_auth_token(jwt_token)
     .with_user_type(UserType::User)
 }

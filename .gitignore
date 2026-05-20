@@ -171,6 +171,9 @@ storage/github-marketplaces/
 .claude/worktrees/
 demo/.token
 
+# Scaled-scenario load-test result artifacts (keep dir via .gitkeep)
+demo/scenarios/scaled/results/*.json
+
 # Stray Outlook image paste artifacts
 /image*.png
 /.claude/

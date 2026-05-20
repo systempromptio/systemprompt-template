@@ -17,6 +17,7 @@ use axum::{
     Json,
 };
 use sqlx::PgPool;
+use systemprompt::identifiers::Actor;
 use systemprompt_security::authz::{
     resolve, AccessControlRepository, AccessRule, AuthzDecision, AuthzRequest, Decision,
 };
@@ -73,9 +74,10 @@ async fn audit_decision(
         "justification": justification_opt,
         "rules": rules,
     });
+    let actor = Actor::user(req.user_id.clone());
     let record = GovernanceDecisionRecord {
         id: &id,
-        user_id: req.user_id.as_str(),
+        actor: &actor,
         session_id: req.trace_id.as_str(),
         tool_name: &req.entity_id,
         agent_id: None,
@@ -85,6 +87,7 @@ async fn audit_decision(
         reason: &reason_str,
         evaluated_rules: &evaluated,
         plugin_id: None,
+        act_chain: &[],
     };
     if let Err(e) = insert_governance_decision(pool, &record).await {
         tracing::error!(error = %e, "Failed to record authz decision");

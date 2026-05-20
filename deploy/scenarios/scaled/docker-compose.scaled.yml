@@ -1,0 +1,218 @@
+# Scaled / distributed deployment topology for systemprompt-template.
+#
+# Topology:
+#   lb (nginx)  ──►  app x N   ──►  postgres-primary
+#                    scheduler ──►  postgres-primary
+#                    postgres-replica  ◄── streaming replication from primary
+#
+# Run from the repo root:
+#   docker compose -f deploy/scenarios/scaled/docker-compose.scaled.yml up --build --scale app=3 -d
+#
+# Key topology decisions:
+#   * The API tier (`app`) scales horizontally — it is stateless. It is therefore
+#     declared WITHOUT a fixed host port so `--scale app=N` works; only the LB is
+#     published.
+#   * The `scheduler` is pinned to exactly ONE replica. The scheduler / cron engine
+#     is single-node-bound: running it on every API replica would execute every cron
+#     job N times. A dedicated single node is the deployment-time mitigation.
+#   * API replicas bind-mount a scheduler-disable override onto the global scheduler
+#     config so they never run cron jobs — this is a mitigation, NOT a fix for the
+#     single-node scheduler limitation.
+#
+# Build context is the repo root (`../../..` relative to this file).
+
+services:
+  # ── Postgres primary ──────────────────────────────────────────────────────
+  # Accepts all writes and streams WAL to the replica.
+  postgres-primary:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: systemprompt
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-systemprompt}
+      POSTGRES_DB: systemprompt
+      # Replication role used by postgres-replica's pg_basebackup.
+      POSTGRES_REPLICATION_USER: replicator
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD:-replicator}
+    # wal_level=replica + replication slots make this a streaming-replication
+    # primary. host-based auth for the replicator role is opened on the bridge
+    # network only (containers, never the host).
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "max_wal_senders=10"
+      - "-c"
+      - "max_replication_slots=10"
+      - "-c"
+      - "hot_standby=on"
+      - "-c"
+      - "listen_addresses=*"
+    volumes:
+      - postgres_primary_data:/var/lib/postgresql/data
+      # Creates the replicator role + opens pg_hba for replication on first init.
+      - ./postgres/primary-init.sh:/docker-entrypoint-initdb.d/10-replication.sh:ro
+    networks:
+      - scaled
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U systemprompt -d systemprompt"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Postgres read replica ─────────────────────────────────────────────────
+  # Hot standby initialised from the primary via pg_basebackup. NOTE: the engine
+  # does NOT currently route read traffic here (no read/write split in the app) —
+  # the replica is wired for topology realism and failover headroom only. See the
+  # "DB read-replica routing" row in the findings table.
+  postgres-replica:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    user: postgres
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    environment:
+      PGUSER: replicator
+      PGPASSWORD: ${POSTGRES_REPLICATION_PASSWORD:-replicator}
+      PGDATA: /var/lib/postgresql/data
+    # On an empty PGDATA, clone the primary with pg_basebackup (-R writes the
+    # standby.signal + primary_conninfo). On a populated PGDATA, just start.
+    entrypoint:
+      - "bash"
+      - "-c"
+      - |
+        set -e
+        if [ -z "$$(ls -A "$$PGDATA" 2>/dev/null)" ]; then
+          echo "Cloning primary via pg_basebackup..."
+          until pg_basebackup -h postgres-primary -p 5432 -D "$$PGDATA" -U replicator -Fp -Xs -P -R; do
+            echo "pg_basebackup failed, retrying in 3s..."
+            sleep 3
+          done
+          chmod 0700 "$$PGDATA"
+        fi
+        exec docker-entrypoint.sh postgres -c hot_standby=on
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+    networks:
+      - scaled
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U replicator -d systemprompt"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # ── API tier (horizontally scaled) ────────────────────────────────────────
+  # Stateless. Start N copies with `--scale app=N`. No host port is published so
+  # scaling does not collide; the LB is the single ingress.
+  app:
+    build:
+      context: ../../..
+      dockerfile: deploy/scenarios/scaled/Dockerfile.scaled-prebuilt
+    restart: unless-stopped
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    env_file: ../../../.env
+    environment:
+      # All app replicas write to the primary.
+      DATABASE_URL: postgres://systemprompt:${POSTGRES_PASSWORD:-systemprompt}@postgres-primary:5432/systemprompt
+      PG_HOST: postgres-primary
+    # Internal port only — never published. The LB reaches every replica via
+    # docker DNS round-robin on `app:8080`.
+    expose:
+      - "8080"
+    # Seed the scaled-api profile into each replica's own writable copy before
+    # the real entrypoint runs. The profile cannot be bind-mounted directly onto
+    # /app/services/profiles/docker/profile.yaml: the engine rewrites (normalises)
+    # the profile during init, which fails on a read-only mount — and a single
+    # writable host file shared by N replicas would race. Copying the read-only
+    # seed into each container's own layer gives every replica an independent,
+    # writable profile while the committed seed stays pristine.
+    entrypoint:
+      - "sh"
+      - "-c"
+      - "mkdir -p /app/services/profiles/docker && cp /seed/profile.yaml /app/services/profiles/docker/profile.yaml && exec /app/entrypoint.sh"
+    volumes:
+      - ../../../.systemprompt/profiles/scaled-api/profile.yaml:/seed/profile.yaml:ro
+      # Disable the scheduler on every API replica. Without this, all N replicas
+      # would run the 5 cron jobs concurrently. Deployment-time mitigation for the
+      # single-node scheduler limitation — NOT a fix.
+      - ./scheduler-disabled.config.yaml:/app/services/scheduler/config.yaml:ro
+    networks:
+      - scaled
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      start_period: 40s
+      retries: 5
+
+  # ── Scheduler node (exactly one) ──────────────────────────────────────────
+  # The ONLY node that runs cron jobs. Pinned to a single replica because the
+  # cron / scheduler engine is single-node-bound — multiple schedulers would
+  # double-execute every job. It uses the default (enabled) scheduler config:
+  # no scheduler-disable override is mounted here.
+  scheduler:
+    build:
+      context: ../../..
+      dockerfile: deploy/scenarios/scaled/Dockerfile.scaled-prebuilt
+    restart: unless-stopped
+    deploy:
+      # Hard constraint: there must never be more than one scheduler.
+      replicas: 1
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    env_file: ../../../.env
+    environment:
+      DATABASE_URL: postgres://systemprompt:${POSTGRES_PASSWORD:-systemprompt}@postgres-primary:5432/systemprompt
+      PG_HOST: postgres-primary
+    expose:
+      - "8080"
+    # Seed the scaled-scheduler profile into the node's own writable copy — see
+    # the `app` service for why the profile is copied rather than bind-mounted.
+    # NO scheduler-disable override is mounted here: this node runs cron jobs.
+    entrypoint:
+      - "sh"
+      - "-c"
+      - "mkdir -p /app/services/profiles/docker && cp /seed/profile.yaml /app/services/profiles/docker/profile.yaml && exec /app/entrypoint.sh"
+    volumes:
+      - ../../../.systemprompt/profiles/scaled-scheduler/profile.yaml:/seed/profile.yaml:ro
+    networks:
+      - scaled
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      start_period: 40s
+      retries: 5
+
+  # ── Load balancer ─────────────────────────────────────────────────────────
+  # nginx round-robins across all `app` replicas. Single published ingress.
+  lb:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      # Host 8088 → container 80. The only port exposed to the host.
+      - "${LB_PORT:-8088}:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - scaled
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/lb-health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+networks:
+  scaled:
+    driver: bridge
+
+volumes:
+  postgres_primary_data:
+  postgres_replica_data:

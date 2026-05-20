@@ -5,7 +5,6 @@ pub mod whoami;
 use axum::body::Body;
 use axum::http::{HeaderMap, Response, StatusCode};
 use sqlx::PgPool;
-use systemprompt::config::SecretsBootstrap;
 use systemprompt::identifiers::UserId;
 use systemprompt::models::auth::JwtAudience;
 use systemprompt::models::Config;
@@ -24,14 +23,6 @@ pub(super) fn validate_cowork_jwt(headers: &HeaderMap) -> Result<UserId, Box<Res
             shared::boxed_error_response(StatusCode::UNAUTHORIZED, "Missing Authorization header")
         })?;
 
-    let jwt_secret = SecretsBootstrap::jwt_secret().map_err(|e| {
-        tracing::error!(error = %e, "Failed to load JWT secret");
-        shared::boxed_error_response(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Internal configuration error",
-        )
-    })?;
-
     let jwt_issuer = Config::get()
         .map_err(|e| {
             tracing::error!(error = %e, "Failed to load config");
@@ -43,7 +34,7 @@ pub(super) fn validate_cowork_jwt(headers: &HeaderMap) -> Result<UserId, Box<Res
         .jwt_issuer
         .clone();
 
-    let claims = validate_jwt_token(token, jwt_secret, &jwt_issuer, &[JwtAudience::Bridge])
+    let claims = validate_jwt_token(token, &jwt_issuer, &[JwtAudience::Bridge])
         .map_err(|err| {
             tracing::warn!(error = %err, "Cowork JWT validation failed");
             shared::boxed_error_response(StatusCode::UNAUTHORIZED, "Invalid or expired token")

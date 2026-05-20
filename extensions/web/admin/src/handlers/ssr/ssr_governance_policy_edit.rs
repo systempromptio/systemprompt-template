@@ -40,9 +40,6 @@ pub async fn governance_policy_edit_page(
         return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
     }
 
-    // Snapshot what we need from the registry (which is behind a sync
-    // RwLock) BEFORE any .await, otherwise the read-guard would be held
-    // across an await point and the future would lose its Send impl.
     let snapshot: Option<(String, String, String, String, bool, String)> = {
         let chain = governance::chain();
         let result = chain
@@ -203,8 +200,6 @@ fn update_enabled_in_yaml(policy_id: &str, enabled: bool) -> Result<(), String> 
     }
 
     if !found {
-        // Append a new entry so the toggle still works for a policy that was
-        // registered but never explicitly listed in YAML.
         let mut map = serde_yaml::Mapping::new();
         map.insert(
             serde_yaml::Value::String("id".to_string()),

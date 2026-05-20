@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT COUNT(*)::BIGINT as \"count!\"\n        FROM user_sessions\n        WHERE ended_at IS NULL AND last_activity_at < $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "b391576442afcba89694b0ed9fba31ec8baf3b2bc83a9de449b38462aa9f7020"
+}

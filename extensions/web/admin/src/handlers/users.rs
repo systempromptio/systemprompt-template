@@ -7,7 +7,6 @@ use axum::{
     Json,
 };
 use sqlx::PgPool;
-use systemprompt::config::SecretsBootstrap;
 use systemprompt::models::auth::JwtAudience;
 use systemprompt::models::Config;
 use systemprompt::oauth::validate_jwt_token;
@@ -29,14 +28,12 @@ pub fn extract_user_from_cookie(
 ) -> Result<crate::types::CookieSession, String> {
     let token = extract_token_from_headers(headers)?;
 
-    let jwt_secret =
-        SecretsBootstrap::jwt_secret().map_err(|e| format!("Failed to load JWT secret: {e}"))?;
     let jwt_issuer = Config::get()
         .map_err(|e| format!("Failed to load config: {e}"))?
         .jwt_issuer
         .clone();
 
-    let claims = validate_jwt_token(&token, jwt_secret, &jwt_issuer, &[JwtAudience::Api])
+    let claims = validate_jwt_token(&token, &jwt_issuer, &[JwtAudience::Api])
         .map_err(|e| format!("JWT validation failed: {e}"))?;
 
     let email =

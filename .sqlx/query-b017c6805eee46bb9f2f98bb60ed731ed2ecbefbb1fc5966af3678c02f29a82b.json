@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM access_control_rules\n         WHERE rule_type = 'department' AND rule_value = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b017c6805eee46bb9f2f98bb60ed731ed2ecbefbb1fc5966af3678c02f29a82b"
+}

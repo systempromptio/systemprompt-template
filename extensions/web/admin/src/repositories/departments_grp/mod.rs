@@ -124,18 +124,20 @@ pub async fn update_department(
     .await?;
 
     if renamed {
-        sqlx::query("UPDATE users SET department = $2 WHERE department = $1")
-            .bind(&existing.name)
-            .bind(&updated.name)
-            .execute(&mut *tx)
-            .await?;
-        sqlx::query(
+        sqlx::query!(
+            "UPDATE user_profile_ext SET department = $2 WHERE department = $1",
+            existing.name,
+            updated.name,
+        )
+        .execute(&mut *tx)
+        .await?;
+        sqlx::query!(
             "UPDATE access_control_rules
              SET rule_value = $2, updated_at = NOW()
              WHERE rule_type = 'department' AND rule_value = $1",
+            existing.name,
+            updated.name,
         )
-        .bind(&existing.name)
-        .bind(&updated.name)
         .execute(&mut *tx)
         .await?;
     }
@@ -155,7 +157,6 @@ pub async fn delete_department(pool: &PgPool, id: &str) -> Result<(), sqlx::Erro
     .fetch_one(&mut *tx)
     .await?;
 
-    // The "Default" department is the catch-all and cannot be deleted.
     if dept.name == "Default" {
         tx.rollback().await?;
         return Err(sqlx::Error::Protocol(
@@ -163,21 +164,22 @@ pub async fn delete_department(pool: &PgPool, id: &str) -> Result<(), sqlx::Erro
         ));
     }
 
-    sqlx::query("UPDATE users SET department = 'Default' WHERE department = $1")
-        .bind(&dept.name)
-        .execute(&mut *tx)
-        .await?;
-
-    sqlx::query(
-        "DELETE FROM access_control_rules
-         WHERE rule_type = 'department' AND rule_value = $1",
+    sqlx::query!(
+        "UPDATE user_profile_ext SET department = 'Default' WHERE department = $1",
+        dept.name,
     )
-    .bind(&dept.name)
     .execute(&mut *tx)
     .await?;
 
-    sqlx::query("DELETE FROM departments WHERE id = $1")
-        .bind(id)
+    sqlx::query!(
+        "DELETE FROM access_control_rules
+         WHERE rule_type = 'department' AND rule_value = $1",
+        dept.name,
+    )
+    .execute(&mut *tx)
+    .await?;
+
+    sqlx::query!("DELETE FROM departments WHERE id = $1", id)
         .execute(&mut *tx)
         .await?;
 
@@ -334,10 +336,14 @@ pub async fn assign_user_to_department(
     user_id: &str,
     department_name: &str,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query("UPDATE users SET department = $2 WHERE id = $1")
-        .bind(user_id)
-        .bind(department_name)
-        .execute(pool)
-        .await?;
+    sqlx::query!(
+        r"INSERT INTO user_profile_ext (user_id, department)
+          VALUES ($1, $2)
+          ON CONFLICT (user_id) DO UPDATE SET department = EXCLUDED.department",
+        user_id,
+        department_name,
+    )
+    .execute(pool)
+    .await?;
     Ok(())
 }

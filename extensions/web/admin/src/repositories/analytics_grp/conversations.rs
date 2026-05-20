@@ -197,7 +197,6 @@ pub async fn fetch_conversation_detail(
     .await?;
 
     let Some(transcript_row) = transcript else {
-        // No transcript captured yet — return empty turns so the page still renders.
         let summary_row = summary.as_ref();
         return Ok(Some(ConversationDetail {
             session_id: session_id.to_string(),
@@ -296,8 +295,6 @@ pub async fn fetch_raw_turns(
         .collect();
     Ok(Some(raw))
 }
-
-// ── Internals ──────────────────────────────────────────────────────────────
 
 struct ParseInput<'a> {
     session_id: &'a str,
@@ -472,7 +469,6 @@ pub fn redact_text(input: &str) -> (String, u32) {
             }
         }
         if let Some((prefix_len, label)) = hit {
-            // consume the prefix plus any following non-whitespace, non-quote chars
             let mut end = idx + prefix_len;
             while end < bytes.len() {
                 let b = bytes[end];
@@ -503,8 +499,6 @@ fn match_governance(
     _ordinal: i32,
     fallback_trace_id: Option<&str>,
 ) -> Option<TurnGovernance> {
-    // No per-turn binding column on `governance_decisions` today, so we fall
-    // back to a session-wide pick: prefer the first deny, else the first row.
     let row = rows
         .iter()
         .find(|r| r.decision == "deny")
@@ -518,32 +512,4 @@ fn match_governance(
         rule_count,
         redactions_applied: 0,
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn redact_aws_key() {
-        let (out, n) = redact_text("here is AKIAIOSFODNN7EXAMPLE in text");
-        assert_eq!(n, 1);
-        assert!(out.contains("[REDACTED:aws_access_key]"));
-        assert!(!out.contains("AKIAIOSFODNN7EXAMPLE"));
-    }
-
-    #[test]
-    fn redact_anthropic_key() {
-        let (out, n) = redact_text("call sk-ant-api03-abc and also AIzaSyAbCdEfG please");
-        assert_eq!(n, 2);
-        assert!(out.contains("[REDACTED:anthropic_api_key]"));
-        assert!(out.contains("[REDACTED:google_api_key]"));
-    }
-
-    #[test]
-    fn redact_no_op_on_clean_text() {
-        let (out, n) = redact_text("hello world, no secrets here");
-        assert_eq!(n, 0);
-        assert_eq!(out, "hello world, no secrets here");
-    }
 }

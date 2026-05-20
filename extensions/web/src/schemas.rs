@@ -1,4 +1,4 @@
-use systemprompt::extension::prelude::{Migration, SchemaDefinition, extension_migrations};
+use systemprompt::extension::prelude::{extension_migrations, Migration, SchemaDefinition};
 
 pub const SCHEMA_PLUGIN_USAGE: &str = include_str!("../schema/05_plugin_usage.sql");
 pub const SCHEMA_ANALYTICS: &str = include_str!("../schema/07_analytics.sql");

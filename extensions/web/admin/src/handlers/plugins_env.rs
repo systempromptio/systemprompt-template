@@ -23,13 +23,14 @@ pub async fn list_plugin_env_handler(
     headers: HeaderMap,
     Query(query): Query<UserQuery>,
 ) -> Response {
-    let default_user_id = UserId::new("admin");
-    let user_id = match super::extract_user_from_cookie(&headers) {
-        Ok(session) => UserId::new(&session.user_id),
-        Err(_) => query
-            .user_id
-            .as_ref()
-            .map_or_else(|| default_user_id.clone(), UserId::new),
+    let cookie_uid = super::extract_user_from_cookie(&headers)
+        .ok()
+        .map(|s| s.user_id);
+    let Some(user_id) = resolve_principal(
+        cookie_uid.as_ref().map(UserId::as_str),
+        query.user_id.as_deref(),
+    ) else {
+        return shared::error_response(StatusCode::UNAUTHORIZED, "missing principal");
     };
 
     let definitions = load_plugin_variable_defs(&plugin_id).unwrap_or_else(|e| {
@@ -76,6 +77,17 @@ pub async fn list_plugin_env_handler(
         missing_required,
     })
     .into_response()
+}
+
+/// Resolve the principal for a plugin-env request from already-validated inputs.
+///
+/// Returns `Some(UserId)` only when an authenticated cookie session or an
+/// explicit `user_id` query parameter is present. Never synthesizes.
+pub fn resolve_principal(
+    cookie_user_id: Option<&str>,
+    query_user_id: Option<&str>,
+) -> Option<UserId> {
+    cookie_user_id.or(query_user_id).map(UserId::new)
 }
 
 fn load_plugin_variable_defs(

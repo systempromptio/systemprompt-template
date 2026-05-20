@@ -22,8 +22,6 @@ pub(super) fn evaluate(ctx: &GovernanceContext<'_>) -> RuleEvaluation {
 
     let chain = policy::chain();
     for (cfg, policy) in chain.iter() {
-        // Always emit a row, even for disabled policies, so the dashboard can
-        // see the chain shape at a glance.
         if !cfg.enabled {
             rules.push(EvaluatedRule {
                 rule: leak_id(policy.id()),

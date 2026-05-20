@@ -554,7 +554,6 @@ async fn fetch_governance_spans(pool: &PgPool, session_id: &str) -> Result<Vec<S
     Ok(decisions
         .into_iter()
         .map(|d| {
-            // governance_decisions has no latency column; treat decisions as point-in-time spans.
             let started = d.created_at;
             let status = if d.decision == "deny" {
                 SpanStatus::Deny

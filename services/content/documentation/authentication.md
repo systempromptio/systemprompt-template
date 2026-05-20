@@ -136,3 +136,43 @@ The admin dashboard enforces authentication at the routing level:
 | `/admin/api/*` (write operations) | Requires valid session + admin role for admin-only endpoints |
 
 Pages that require admin privileges (such as Access Control and user management) perform an additional `is_admin` check and return HTTP 403 with an "Admin access required" message if the user lacks the admin role.
+
+## System-originated actions
+
+Every action recorded by the platform — including scheduled jobs, hooks, and MCP-server invocations — traces to a real `users` row. There is no separate "system user" or synthesized principal. The platform refuses to attribute work to an invented identity.
+
+### How ownership is declared
+
+Each scheduled job in `services/scheduler/config.yaml` carries an explicit `owner:` field naming an existing admin user:
+
+```yaml
+- name: publish_pipeline
+  extension: web
+  owner: admin
+  schedule: "0 */15 * * * *"
+  enabled: true
+```
+
+At startup the scheduler resolves `owner:` to a `users.id`. If the named user does not exist or is inactive, startup fails loudly — the platform refuses to run with unowned jobs. To change ownership, edit the YAML and restart.
+
+### How attribution flows
+
+The resolved owner becomes `JobContext.actor` for every `execute()` call. Job implementations consume it through `ctx.actor()` and pass it to any audit-row write. Governance audit rows carry three fields that together give full forensic clarity:
+
+| Column | Meaning |
+|--------|---------|
+| `user_id` | The accountable principal — a real `users.id`. |
+| `actor_kind` | The surface that ran the action: `user`, `job`, `mcp`. |
+| `actor_id` | A label for that surface (job name, MCP server name, etc.). |
+
+A direct human action shows as `(user_id = alice, actor_kind = 'user', actor_id = 'alice')`. A scheduled job owned by Alice shows as `(user_id = alice, actor_kind = 'job', actor_id = 'publish_pipeline')`. Same accountability column, different surface, queryable separately:
+
+```sql
+SELECT actor_kind, user_id, COUNT(*)
+FROM governance_decisions
+GROUP BY actor_kind, user_id;
+```
+
+### Why no separate "system" user
+
+A dedicated "system" identity would be either a synthesized principal (impersonation) or a backdoor account with no real human accountability. Neither passes the "every action traces to a real user" bar. The designated owner is a normal admin who legitimately authorized the platform's existence by installing it — same accountability model as a unix crontab. Compromising the designated owner is exactly as bad as compromising that admin's credentials directly; there is no additional power and no amplification path.

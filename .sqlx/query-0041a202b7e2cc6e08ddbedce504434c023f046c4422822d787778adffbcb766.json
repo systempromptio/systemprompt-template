@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE user_sessions\n            SET ended_at = $1\n            WHERE user_id = $2 AND ended_at IS NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0041a202b7e2cc6e08ddbedce504434c023f046c4422822d787778adffbcb766"
+}

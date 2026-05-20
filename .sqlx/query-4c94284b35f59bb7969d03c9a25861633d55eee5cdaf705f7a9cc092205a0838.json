@@ -1,0 +1,133 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO fingerprint_reputation (\n                fingerprint_hash, last_ip_address, last_user_agent,\n                associated_user_ids, total_session_count\n            )\n            VALUES ($1, $2, $3, $4, 1)\n            ON CONFLICT (fingerprint_hash) DO UPDATE SET\n                last_seen_at = CURRENT_TIMESTAMP,\n                last_ip_address = COALESCE($2, fingerprint_reputation.last_ip_address),\n                last_user_agent = COALESCE($3, fingerprint_reputation.last_user_agent),\n                total_session_count = fingerprint_reputation.total_session_count + 1,\n                associated_user_ids = CASE\n                    WHEN array_length($4, 1) > 0 AND NOT ($4[1] = ANY(fingerprint_reputation.associated_user_ids))\n                    THEN array_cat(fingerprint_reputation.associated_user_ids, $4)\n                    ELSE fingerprint_reputation.associated_user_ids\n                END,\n                updated_at = CURRENT_TIMESTAMP\n            RETURNING\n                fingerprint_hash,\n                first_seen_at,\n                last_seen_at,\n                total_session_count,\n                active_session_count,\n                total_request_count,\n                requests_last_hour,\n                peak_requests_per_minute,\n                sustained_high_velocity_minutes,\n                is_flagged,\n                flag_reason,\n                flagged_at,\n                reputation_score,\n                abuse_incidents,\n                last_abuse_at,\n                last_ip_address,\n                last_user_agent,\n                associated_user_ids,\n                updated_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "fingerprint_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "first_seen_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "last_seen_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_session_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "active_session_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "total_request_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "requests_last_hour",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "peak_requests_per_minute",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 8,
+        "name": "sustained_high_velocity_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "is_flagged",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "flag_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "flagged_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "reputation_score",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "abuse_incidents",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 14,
+        "name": "last_abuse_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 15,
+        "name": "last_ip_address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "last_user_agent",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 17,
+        "name": "associated_user_ids",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 18,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "4c94284b35f59bb7969d03c9a25861633d55eee5cdaf705f7a9cc092205a0838"
+}

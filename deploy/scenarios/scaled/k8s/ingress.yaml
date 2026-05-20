@@ -1,0 +1,36 @@
+# Ingress fronting the API Service.
+#
+# Routes external traffic to the `systemprompt-api` ClusterIP Service (API pods
+# only — never the scheduler). Annotations disable response buffering and raise
+# the proxy read timeout so SSE / streaming gateway responses are not buffered
+# or cut short — the k8s equivalent of the nginx.conf SSE tuning in the compose
+# stack. Annotations shown are for the ingress-nginx controller; adjust for your
+# controller.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: systemprompt-api
+  labels:
+    app.kubernetes.io/name: systemprompt
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: scaled-stack
+  annotations:
+    # SSE-friendly: no buffering, long-lived upstream connections.
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+spec:
+  # ingressClassName: nginx   # set to your controller's class
+  rules:
+    # PLACEHOLDER host — replace with the real DNS name.
+    - host: scaled.systemprompt.example
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: systemprompt-api
+                port:
+                  name: http

@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    COUNT(*) FILTER (WHERE is_bot = false AND is_behavioral_bot = false AND is_scanner = false AND landing_page IS NOT NULL AND request_count > 0)::bigint as \"human!\",\n                    COUNT(*) FILTER (WHERE is_bot = true OR is_behavioral_bot = true OR is_scanner = true OR landing_page IS NULL OR request_count = 0)::bigint as \"bot!\"\n                FROM user_sessions\n                WHERE started_at >= $1 AND started_at < $2\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "human!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "bot!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "d09fc6f4e861e4ec40d92d6ec94ccf07b9180f1092c5735e66f8324b7d8139c9"
+}

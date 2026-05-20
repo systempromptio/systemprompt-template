@@ -1,0 +1,35 @@
+# ConfigMap holding the systemprompt profile YAML for each tier.
+#
+# Two distinct profiles are mounted into two distinct Deployments:
+#   * profile-scaled-api      → api-deployment   (scheduler DISABLED)
+#   * profile-scaled-scheduler→ scheduler-deployment (scheduler ENABLED)
+#
+# These are PLACEHOLDERS. In a real cluster, generate them from
+# `.systemprompt/profiles/scaled-api/profile.yaml` and
+# `.systemprompt/profiles/scaled-scheduler/profile.yaml`, e.g.:
+#   kubectl create configmap systemprompt-profiles \
+#     --from-file=profile-scaled-api.yaml=.systemprompt/profiles/scaled-api/profile.yaml \
+#     --from-file=profile-scaled-scheduler.yaml=.systemprompt/profiles/scaled-scheduler/profile.yaml \
+#     --dry-run=client -o yaml | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: systemprompt-profiles
+  labels:
+    app.kubernetes.io/name: systemprompt
+    app.kubernetes.io/part-of: scaled-stack
+data:
+  # PLACEHOLDER — replace with the real scaled-api profile contents.
+  # Scheduler MUST be disabled here so API pods never run cron jobs.
+  profile-scaled-api.yaml: |
+    name: scaled-api
+    display_name: Scaled API
+    # ... full profile body supplied at deploy time ...
+    # scheduler runs on the dedicated scheduler Deployment only.
+
+  # PLACEHOLDER — replace with the real scaled-scheduler profile contents.
+  # Scheduler enabled — this profile is used only by scheduler-deployment.
+  profile-scaled-scheduler.yaml: |
+    name: scaled-scheduler
+    display_name: Scaled Scheduler
+    # ... full profile body supplied at deploy time ...
