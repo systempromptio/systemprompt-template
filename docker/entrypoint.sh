@@ -4,20 +4,32 @@
 # waits for Postgres, runs migrations, starts the server.
 set -eu
 
-PROFILE_DIR="/app/services/profiles/docker"
+PROFILE_DIR="${SYSTEMPROMPT_PROFILE_DIR:-/app/services/profiles/docker}"
 PROFILE_FILE="$PROFILE_DIR/profile.yaml"
 SECRETS_FILE="$PROFILE_DIR/secrets.json"
 
-if [ -z "${ANTHROPIC_API_KEY:-}" ] && [ -z "${OPENAI_API_KEY:-}" ] && [ -z "${GEMINI_API_KEY:-}" ]; then
-    echo "ERROR: set at least one of ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY in .env" >&2
-    exit 1
-fi
+if [ -n "${SYSTEMPROMPT_PROFILE_DIR:-}" ]; then
+    # A profile directory was supplied (e.g. bind-mounted air-gap profile).
+    # Do not generate anything — just validate the expected files exist.
+    if [ ! -f "$PROFILE_FILE" ]; then
+        echo "ERROR: SYSTEMPROMPT_PROFILE_DIR is set but $PROFILE_FILE is missing." >&2
+        exit 1
+    fi
+    if [ ! -f "$SECRETS_FILE" ]; then
+        echo "ERROR: SYSTEMPROMPT_PROFILE_DIR is set but $SECRETS_FILE is missing." >&2
+        exit 1
+    fi
+else
+    if [ -z "${ANTHROPIC_API_KEY:-}" ] && [ -z "${OPENAI_API_KEY:-}" ] && [ -z "${GEMINI_API_KEY:-}" ]; then
+        echo "ERROR: set at least one of ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY in .env" >&2
+        exit 1
+    fi
 
-mkdir -p "$PROFILE_DIR"
+    mkdir -p "$PROFILE_DIR"
 
-if [ ! -f "$PROFILE_FILE" ]; then
-    echo "Writing profile.yaml..."
-    cat > "$PROFILE_FILE" <<YAML
+    if [ ! -f "$PROFILE_FILE" ]; then
+        echo "Writing profile.yaml..."
+        cat > "$PROFILE_FILE" <<YAML
 name: docker
 display_name: Docker
 target: local
@@ -119,6 +131,7 @@ if [ ! -f "$SECRETS_FILE" ]; then
             gemini:    (if $gemini    == "" then null else $gemini    end)
         }' > "$SECRETS_FILE"
     chmod 600 "$SECRETS_FILE"
+    fi
 fi
 
 export SYSTEMPROMPT_PROFILE="$PROFILE_FILE"
@@ -140,6 +153,9 @@ echo "Postgres is ready."
 
 echo "Running database migrations..."
 /app/bin/systemprompt infra db migrate
+
+echo "Ensuring bootstrap admin user..."
+/app/bin/systemprompt admin bootstrap
 
 echo "Starting services..."
 exec /app/bin/systemprompt infra services start --foreground
