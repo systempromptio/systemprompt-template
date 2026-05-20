@@ -1,0 +1,140 @@
+# Air-gapped deployment scenario for systemprompt-template.
+#
+# Topology — two networks:
+#   airgap-internal  (internal: true)  postgres, mock-inference, app, monitor
+#                    No container on this network can reach the public
+#                    internet: an internal network has no gateway/NAT.
+#   airgap-ingress   (normal bridge)   ingress proxy only
+#                    The single demarcation point: it forwards the operator's
+#                    host port to the app. The `app` itself is NEVER on this
+#                    network, so the system under test cannot egress.
+#
+# Why an ingress proxy: Docker silently drops published ports for a container
+# attached only to an `internal: true` network (no host-routable path). The
+# proxy is the air-gap equivalent of a bastion / load balancer in front of a
+# closed system — dumb TCP forward, runs no systemprompt code.
+#
+# Build contexts:
+#   - app:            the template repo root (../../..)
+#   - mock-inference: the sibling systemprompt-core repo, because the mock
+#                     crate lives there and must not be copied into this repo.
+#
+# Run from this directory:
+#   docker compose -f docker-compose.airgap.yml up --build
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: systemprompt
+      POSTGRES_PASSWORD: systemprompt
+      POSTGRES_DB: systemprompt
+    # Tuning for the audit-spine write pattern (~4 writes/request:
+    # governance_decisions + ai_requests INSERT + logs + ai_requests UPDATE).
+    # Under load the default config stalls on WAL fsync (LWLock:WALWrite /
+    # IO:WalSync waits) — especially on a slow/virtualised disk.
+    #   synchronous_commit=off  — commits no longer block on WAL fsync. The
+    #     DB stays crash-consistent; only the last <1s of audit rows are at
+    #     risk on an OS-level crash. Acceptable for an evaluation/demo stack.
+    #     A production air-gap deployment on durable (NVMe) storage should
+    #     keep this `on` and rely on fast local fsync instead.
+    #   max_wal_size / checkpoint_completion_target — fewer, smoother
+    #     checkpoints.  wal_compression — less WAL IO.
+    command:
+      - postgres
+      - -c
+      - synchronous_commit=off
+      - -c
+      - max_wal_size=2GB
+      - -c
+      - checkpoint_completion_target=0.9
+      - -c
+      - wal_compression=on
+      - -c
+      - shared_buffers=256MB
+    volumes:
+      - airgap_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U systemprompt -d systemprompt"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - airgap-internal
+
+  mock-inference:
+    build:
+      # Build context IS the sibling core repo so the mock crate is reachable;
+      # the Dockerfile path is therefore relative to that core repo root.
+      context: ../../../../systemprompt-core
+      dockerfile: ../systemprompt-template/deploy/scenarios/airgap/mock-inference.Dockerfile
+    restart: unless-stopped
+    networks:
+      - airgap-internal
+
+  app:
+    build:
+      context: ../../..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mock-inference:
+        condition: service_started
+    environment:
+      SYSTEMPROMPT_PROFILE_DIR: /app/services/profiles/airgap
+      # Pin SYSTEMPROMPT_PROFILE for the container base env so `docker compose
+      # exec app systemprompt ...` (db seeds, token minting) resolves the
+      # air-gap profile — not the Dockerfile's default `docker` profile path.
+      SYSTEMPROMPT_PROFILE: /app/services/profiles/airgap/profile.yaml
+      DATABASE_URL: postgres://systemprompt:systemprompt@postgres:5432/systemprompt
+    volumes:
+      # Read-only: the air-gap profile directory is immutable infrastructure.
+      # The secrets subsystem tolerates a read-only profile dir — the only
+      # boot-time write was the manifest signing seed, which is now supplied
+      # via secrets.json (manifest_signing_secret_seed) and the subsystem
+      # degrades to an ephemeral seed if the dir is not writable.
+      - ../../../.systemprompt/profiles/airgap:/app/services/profiles/airgap:ro
+    # NOTE: no `ports:` — the app is reachable only from inside airgap-internal.
+    # Operator access is via the `ingress` proxy below.
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    networks:
+      - airgap-internal
+
+  monitor:
+    image: nicolaka/netshoot
+    restart: unless-stopped
+    command: sleep infinity
+    networks:
+      - airgap-internal
+
+  ingress:
+    # Dumb TCP forwarder: host:AIRGAP_HTTP_PORT -> app:8080. The only service
+    # bridging airgap-internal to the operator. Runs no systemprompt code.
+    image: alpine/socat
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started
+    command: TCP-LISTEN:8090,fork,reuseaddr TCP:app:8080
+    ports:
+      - "${AIRGAP_HTTP_PORT:-8090}:8090"
+    networks:
+      - airgap-internal
+      - airgap-ingress
+
+volumes:
+  airgap_postgres_data:
+
+networks:
+  airgap-internal:
+    internal: true
+  airgap-ingress:
+    driver: bridge

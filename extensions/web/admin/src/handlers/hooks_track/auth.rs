@@ -3,7 +3,6 @@ use axum::{
     http::{HeaderMap, StatusCode},
     response::Response,
 };
-use systemprompt::config::SecretsBootstrap;
 use systemprompt::identifiers::{SessionId, UserId};
 use systemprompt::models::auth::JwtAudience;
 use systemprompt::models::Config;
@@ -22,13 +21,6 @@ pub fn extract_and_validate_jwt(
                 "Missing Authorization header",
             ))
         })?;
-    let jwt_secret = SecretsBootstrap::jwt_secret().map_err(|e| {
-        tracing::error!(error = %e, "Failed to load JWT secret");
-        Box::new(shared::error_response(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Internal configuration error",
-        ))
-    })?;
     let jwt_issuer = Config::get()
         .map_err(|e| {
             tracing::error!(error = %e, "Failed to load config");
@@ -41,7 +33,6 @@ pub fn extract_and_validate_jwt(
         .clone();
     let claims = validate_jwt_token(
         token,
-        jwt_secret,
         &jwt_issuer,
         &[
             JwtAudience::Resource("plugin".to_string()),

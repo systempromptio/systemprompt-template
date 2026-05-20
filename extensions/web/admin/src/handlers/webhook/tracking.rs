@@ -11,7 +11,7 @@ use systemprompt::models::auth::JwtAudience;
 
 use crate::types::webhook::{StatusLinePayload, StatusLineQuery};
 
-use super::helpers::{extract_bearer_token, get_jwt_config};
+use super::helpers::{extract_bearer_token, get_jwt_issuer};
 
 pub async fn track_statusline_event(
     State(_pool): State<Arc<PgPool>>,
@@ -28,7 +28,7 @@ pub async fn track_statusline_event(
             .into_response();
     };
 
-    let (jwt_secret, jwt_issuer) = match get_jwt_config() {
+    let jwt_issuer = match get_jwt_issuer() {
         Ok(v) => v,
         Err(e) => {
             tracing::error!(error = %e, "Failed to load JWT config");
@@ -42,7 +42,6 @@ pub async fn track_statusline_event(
 
     if let Err(e) = systemprompt::oauth::validate_jwt_token(
         token,
-        &jwt_secret,
         &jwt_issuer,
         &[
             JwtAudience::Resource("hook".to_string()),

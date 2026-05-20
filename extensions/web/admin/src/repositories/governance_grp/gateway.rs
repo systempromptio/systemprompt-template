@@ -69,7 +69,7 @@ fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
     })
 }
 
-fn slugify_pattern(pattern: &str) -> String {
+pub fn slugify_pattern(pattern: &str) -> String {
     let mut out = String::with_capacity(pattern.len());
     let mut last_dash = false;
     for ch in pattern.chars() {
@@ -111,7 +111,7 @@ fn slugify_pattern(pattern: &str) -> String {
     out
 }
 
-fn synthesize_route_id(model_pattern: &str, provider: &str, endpoint: &str) -> String {
+pub fn synthesize_route_id(model_pattern: &str, provider: &str, endpoint: &str) -> String {
     let mut hasher = DefaultHasher::new();
     model_pattern.hash(&mut hasher);
     provider.hash(&mut hasher);
@@ -462,15 +462,13 @@ pub fn find_route_index_by_id(routes: &[GatewayRouteView], id: &str) -> Option<u
     routes.iter().position(|r| r.id == id)
 }
 
-fn glob_match(pattern: &str, value: &str) -> bool {
+pub fn glob_match(pattern: &str, value: &str) -> bool {
     if pattern == "*" {
         return true;
     }
     if !pattern.contains('*') {
         return pattern == value;
     }
-    // Simple two-segment glob (prefix*, *suffix, prefix*suffix). Mirrors the
-    // common cases in GatewayRoute patterns ("claude-*", "*-latest").
     let parts: Vec<&str> = pattern.split('*').collect();
     if parts.len() == 2 {
         let (prefix, suffix) = (parts[0], parts[1]);
@@ -478,7 +476,6 @@ fn glob_match(pattern: &str, value: &str) -> bool {
             && value.ends_with(suffix)
             && value.len() >= prefix.len() + suffix.len();
     }
-    // Fallback: every literal segment must appear in order.
     let mut cursor = 0usize;
     for (i, segment) in parts.iter().enumerate() {
         if segment.is_empty() {
@@ -498,175 +495,4 @@ fn glob_match(pattern: &str, value: &str) -> bool {
         }
     }
     true
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn glob_matches_exact_and_wildcard() {
-        assert!(glob_match("*", "anything"));
-        assert!(glob_match("claude-*", "claude-sonnet"));
-        assert!(!glob_match("claude-*", "gpt-4"));
-        assert!(glob_match("gpt-4", "gpt-4"));
-        assert!(glob_match("*-latest", "gpt-4-latest"));
-    }
-
-    #[test]
-    fn first_match_wins() {
-        let routes = vec![
-            GatewayRouteView {
-                id: "claude-abc123".into(),
-                model_pattern: "claude-*".into(),
-                provider: "a".into(),
-                endpoint: "https://a".into(),
-                api_key_secret: "k".into(),
-                ..Default::default()
-            },
-            GatewayRouteView {
-                id: "star-def456".into(),
-                model_pattern: "*".into(),
-                provider: "b".into(),
-                endpoint: "https://b".into(),
-                api_key_secret: "k".into(),
-                ..Default::default()
-            },
-        ];
-        assert_eq!(find_matching_route_index(&routes, "claude-3"), Some(0));
-        assert_eq!(find_matching_route_index(&routes, "gpt-4"), Some(1));
-        assert_eq!(
-            find_matching_route(&routes, "claude-3").map(|r| r.id.as_str()),
-            Some("claude-abc123"),
-        );
-        assert_eq!(find_route_index_by_id(&routes, "star-def456"), Some(1),);
-    }
-
-    #[test]
-    fn rejects_inline_secret() {
-        let route = GatewayRouteView {
-            model_pattern: "*".into(),
-            provider: "anthropic".into(),
-            endpoint: "https://api.anthropic.com".into(),
-            api_key_secret: "sk-abc123".into(),
-            ..Default::default()
-        };
-        assert!(validate_route(&route).is_err());
-    }
-
-    #[test]
-    fn slugify_replaces_star_and_non_alnum() {
-        assert_eq!(slugify_pattern("*"), "star");
-        assert_eq!(slugify_pattern("claude-*"), "claude-star");
-        assert_eq!(slugify_pattern("*-latest"), "star-latest");
-        assert_eq!(slugify_pattern("GPT-4"), "gpt-4");
-        assert_eq!(slugify_pattern("foo.bar/baz"), "foo-bar-baz");
-        assert_eq!(slugify_pattern(""), "route");
-    }
-
-    #[test]
-    fn synthesized_id_is_stable() {
-        let a = synthesize_route_id("claude-*", "anthropic", "https://api.anthropic.com");
-        let b = synthesize_route_id("claude-*", "anthropic", "https://api.anthropic.com");
-        assert_eq!(a, b);
-        assert!(a.starts_with("claude-star-"));
-        let c = synthesize_route_id("claude-*", "anthropic", "https://other.example");
-        assert_ne!(a, c);
-    }
-
-    #[test]
-    fn ensure_route_ids_backfills_missing_then_idempotent() {
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("profile.yaml");
-        std::fs::write(
-            &path,
-            r"gateway:
-  enabled: true
-  routes:
-    - model_pattern: claude-*
-      provider: anthropic
-      endpoint: https://api.anthropic.com
-      api_key_secret: anthropic_key
-    - model_pattern: '*'
-      provider: openai
-      endpoint: https://api.openai.com
-      api_key_secret: openai_key
-",
-        )
-        .unwrap();
-
-        let changed = ensure_route_ids(&path).unwrap();
-        assert!(changed, "first call should backfill ids");
-
-        let cfg = get_gateway_config(&path).unwrap();
-        assert_eq!(cfg.routes.len(), 2);
-        assert!(!cfg.routes[0].id.is_empty());
-        assert!(!cfg.routes[1].id.is_empty());
-        assert_ne!(cfg.routes[0].id, cfg.routes[1].id);
-
-        let id0_before = cfg.routes[0].id.clone();
-        let id1_before = cfg.routes[1].id.clone();
-
-        let changed_again = ensure_route_ids(&path).unwrap();
-        assert!(!changed_again, "second call should be a no-op");
-
-        let cfg2 = get_gateway_config(&path).unwrap();
-        assert_eq!(cfg2.routes[0].id, id0_before);
-        assert_eq!(cfg2.routes[1].id, id1_before);
-    }
-
-    #[test]
-    fn ids_stable_across_reorder() {
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("profile.yaml");
-        std::fs::write(
-            &path,
-            r"gateway:
-  enabled: true
-  routes:
-    - model_pattern: claude-*
-      provider: anthropic
-      endpoint: https://api.anthropic.com
-      api_key_secret: anthropic_key
-    - model_pattern: '*'
-      provider: openai
-      endpoint: https://api.openai.com
-      api_key_secret: openai_key
-",
-        )
-        .unwrap();
-        let cfg = get_gateway_config(&path).unwrap();
-        let id0 = cfg.routes[0].id.clone();
-        let id1 = cfg.routes[1].id.clone();
-
-        reorder_routes(&path, &[1, 0]).unwrap();
-        let cfg2 = get_gateway_config(&path).unwrap();
-        assert_eq!(cfg2.routes[0].id, id1);
-        assert_eq!(cfg2.routes[1].id, id0);
-    }
-
-    #[test]
-    fn create_route_rejects_duplicate_id() {
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("profile.yaml");
-        std::fs::write(
-            &path,
-            r"gateway:
-  enabled: true
-  routes: []
-",
-        )
-        .unwrap();
-        let route = GatewayRouteView {
-            id: "fixed-id".into(),
-            model_pattern: "claude-*".into(),
-            provider: "anthropic".into(),
-            endpoint: "https://api.anthropic.com".into(),
-            api_key_secret: "anthropic_key".into(),
-            ..Default::default()
-        };
-        create_route(&path, &route).unwrap();
-        let err = create_route(&path, &route).unwrap_err();
-        assert!(matches!(err, MarketplaceError::BadRequest(_)));
-    }
 }

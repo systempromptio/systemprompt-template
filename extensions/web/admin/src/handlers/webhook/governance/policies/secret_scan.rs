@@ -59,7 +59,6 @@ impl Policy for SecretScan {
                 )),
             };
         }
-        // Extra (config-supplied) patterns: same prefix-match contract.
         if let Some(input) = ctx.tool_input {
             let mut strings = Vec::new();
             collect_strings(input, &mut strings);

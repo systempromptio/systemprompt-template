@@ -46,9 +46,6 @@ pub async fn create_user(
     .fetch_one(pool)
     .await?;
 
-    // marketplace entity_type was removed from access_control_rules; new
-    // users get access via role/department defaults seeded in YAML or via the
-    // admin matrix UI.
     let _ = user_id_str;
 
     Ok(summary)

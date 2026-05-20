@@ -317,15 +317,15 @@ async fn apply_rules(
 }
 
 async fn upsert_department(pool: &PgPool, dept: &YamlDepartment) -> Result<(), MarketplaceError> {
-    sqlx::query(
+    sqlx::query!(
         "INSERT INTO departments (name, description)
          VALUES ($1, $2)
          ON CONFLICT (name) DO UPDATE
             SET description = EXCLUDED.description,
                 updated_at = NOW()",
+        dept.name,
+        dept.description,
     )
-    .bind(&dept.name)
-    .bind(&dept.description)
     .execute(pool)
     .await?;
     Ok(())

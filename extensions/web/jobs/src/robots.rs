@@ -22,11 +22,6 @@ impl Job for RobotsTxtGenerationJob {
     fn schedule(&self) -> &'static str {
         "0 0 * * * *"
     }
-
-    fn run_on_startup(&self) -> bool {
-        true
-    }
-
     async fn execute(
         &self,
         ctx: &JobContext,

@@ -76,13 +76,8 @@ pub async fn access_control_page(
     let users = fetch_users_for_tree(&pool).await;
     let known_roles = vec!["admin", "developer", "analyst", "viewer"];
 
-    // Lightweight catalogue of every entity admins might want to assign
-    // department/role rules to. The user-permission matrix loads its own rich
-    // data via the `/api/admin/access-control/users/{id}/matrix` endpoint.
     let entity_catalogue = builders::build_entity_catalogue(&services_path);
 
-    // Department buckets: key empty/null department to "Unassigned" so it merges
-    // with the synthetic group fetch_department_stats produces.
     let mut buckets: std::collections::BTreeMap<String, Vec<&UserListRow>> =
         std::collections::BTreeMap::new();
     for u in &users {

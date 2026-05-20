@@ -31,7 +31,7 @@ pub use gateway::{
 };
 pub use jobs::list_jobs_handler;
 pub use plugins::list_plugins_handler;
-pub use plugins_env::list_plugin_env_handler;
+pub use plugins_env::{list_plugin_env_handler, resolve_principal};
 pub use resources::{get_agent_handler, list_agents_handler};
 pub use users::extract_user_from_cookie;
 pub use users::{

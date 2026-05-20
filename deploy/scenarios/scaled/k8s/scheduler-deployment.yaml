@@ -1,0 +1,107 @@
+# Scheduler tier — exactly ONE replica.
+#
+# WHY replicas: 1 (strict): the systemprompt scheduler / cron engine is
+# single-node-bound. Each running scheduler independently fires every cron job,
+# so two scheduler pods would double-execute all jobs. This Deployment is pinned
+# to one replica and uses `strategy: Recreate` so a rollout TERMINATES the old
+# pod before starting the new one — RollingUpdate would briefly run two
+# schedulers and cause duplicate cron execution.
+#
+# This is a deployment-time mitigation for the single-node scheduler
+# limitation, NOT a fix. Do not raise `replicas` and do not add an HPA here.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: systemprompt-scheduler
+  labels:
+    app.kubernetes.io/name: systemprompt
+    app.kubernetes.io/component: scheduler
+    app.kubernetes.io/part-of: scaled-stack
+spec:
+  # STRICT: must remain 1. See header comment.
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: systemprompt
+      app.kubernetes.io/component: scheduler
+  strategy:
+    # Recreate guarantees at-most-one scheduler pod across rollouts.
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: systemprompt
+        app.kubernetes.io/component: scheduler
+        app.kubernetes.io/part-of: scaled-stack
+    spec:
+      containers:
+        - name: systemprompt
+          image: ghcr.io/systempromptio/systemprompt-template:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: DATABASE_URL
+              value: "postgres://systemprompt:$(POSTGRES_PASSWORD)@postgres-primary:5432/systemprompt"
+            - name: PG_HOST
+              value: "postgres-primary"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: systemprompt-secrets
+                  key: POSTGRES_PASSWORD
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: systemprompt-secrets
+                  key: ANTHROPIC_API_KEY
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: systemprompt-secrets
+                  key: OPENAI_API_KEY
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: systemprompt-secrets
+                  key: GEMINI_API_KEY
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: systemprompt-secrets
+                  key: JWT_SECRET
+          volumeMounts:
+            # scaled-scheduler profile — scheduler ENABLED. This is the only
+            # node that runs cron jobs.
+            - name: profile
+              mountPath: /app/services/profiles/docker/profile.yaml
+              subPath: profile-scaled-scheduler.yaml
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            initialDelaySeconds: 40
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "768Mi"
+      volumes:
+        - name: profile
+          configMap:
+            name: systemprompt-profiles

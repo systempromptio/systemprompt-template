@@ -1,5 +1,13 @@
 # Scheduler Configuration
-# Background jobs and scheduled tasks
+# Background jobs and scheduled tasks.
+#
+# Every job declares an explicit `owner:` — a real users.name that authorizes
+# this job's actions. The configured owner becomes JobContext.actor for every
+# `execute()` call and is the principal recorded in audit rows.
+#
+# No "system" user. No magic strings. `admin` is the bootstrap admin user
+# created at install time (`just setup-local`). Deployments that want a
+# different authorizer should change `owner:` to a different admin's username.
 
 scheduler:
   enabled: true
@@ -7,31 +15,31 @@ scheduler:
     # Core jobs (defined in systemprompt-core)
     - name: cleanup_anonymous_users
       extension: core
-      job: cleanup_anonymous_users
+      owner: admin
       schedule: "0 0 3 * * *"
       enabled: true
 
     - name: cleanup_empty_contexts
       extension: core
-      job: cleanup_empty_contexts
+      owner: admin
       schedule: "0 0 * * * *"
       enabled: true
 
     - name: cleanup_inactive_sessions
       extension: core
-      job: cleanup_inactive_sessions
+      owner: admin
       schedule: "0 0 * * * *"
       enabled: true
 
     - name: database_cleanup
       extension: core
-      job: database_cleanup
+      owner: admin
       schedule: "0 0 4 * * *"
       enabled: true
 
     # Web extension jobs (publishing pipeline)
     - name: publish_pipeline
       extension: web
-      job: publish_pipeline
+      owner: admin
       schedule: "0 */15 * * * *"
       enabled: true

@@ -74,9 +74,6 @@ pub async fn analytics_requests_page(
     let page = query.page.unwrap_or(0).max(0);
     let offset = page * PAGE_SIZE;
 
-    // Sensible default: when the user did not pick a window and the default
-    // 24h is empty, widen progressively (7d -> 30d) so the page actually shows
-    // data. If the user explicitly chose a preset, respect it.
     let (range, auto_widened): (_, Option<&'static str>) = if user_picked_range {
         (initial_range, None)
     } else {
@@ -316,7 +313,6 @@ fn filters_to_json(filter: &RequestFilter, options: &RequestFilterOptions) -> se
 }
 
 fn clear_url(query: &RequestsQuery) -> String {
-    // Preserve only the time-range params. Drop filters, search, sort, page.
     let mut parts: Vec<String> = Vec::new();
     if let Some(p) = query.preset.as_deref().filter(|s| !s.is_empty()) {
         parts.push(format!("preset={}", urlencode(p)));

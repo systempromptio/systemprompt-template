@@ -45,8 +45,3 @@ plugin:
             async: true
             timeout: 3000
             statusMessage: "Tracking tool usage for analytics"
-  scripts:
-    - name: seed-demo
-      source: "demo/01-seed-data.sh"
-    - name: sweep
-      source: "demo/sweep.sh"

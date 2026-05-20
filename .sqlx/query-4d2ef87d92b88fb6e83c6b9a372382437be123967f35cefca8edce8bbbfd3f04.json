@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            request_count::BIGINT as request_count,\n            EXTRACT(EPOCH FROM (last_activity_at - started_at))::BIGINT as duration_seconds\n        FROM user_sessions\n        WHERE session_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "request_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "duration_seconds",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "4d2ef87d92b88fb6e83c6b9a372382437be123967f35cefca8edce8bbbfd3f04"
+}

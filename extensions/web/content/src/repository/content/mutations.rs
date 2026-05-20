@@ -43,6 +43,7 @@ impl ContentMutationRepository {
         Self { pool }
     }
 
+    #[allow(clippy::cognitive_complexity)]
     pub async fn create(&self, params: &CreateContentParams) -> Result<Content, sqlx::Error> {
         let id = ContentId::new(uuid::Uuid::new_v4().to_string());
         let now = Utc::now();

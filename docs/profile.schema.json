@@ -1,0 +1,796 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Profile",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "target": {
+      "$ref": "#/$defs/ProfileType",
+      "default": "local"
+    },
+    "site": {
+      "$ref": "#/$defs/SiteConfig"
+    },
+    "database": {
+      "$ref": "#/$defs/DatabaseConfig"
+    },
+    "server": {
+      "$ref": "#/$defs/ServerConfig"
+    },
+    "paths": {
+      "$ref": "#/$defs/PathsConfig"
+    },
+    "security": {
+      "$ref": "#/$defs/SecurityConfig"
+    },
+    "rate_limits": {
+      "$ref": "#/$defs/RateLimitsConfig"
+    },
+    "runtime": {
+      "$ref": "#/$defs/RuntimeConfig",
+      "default": {
+        "environment": "development",
+        "log_level": "normal",
+        "output_format": "text",
+        "no_color": false,
+        "non_interactive": false
+      }
+    },
+    "cloud": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CloudConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "secrets": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SecretsConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "extensions": {
+      "$ref": "#/$defs/ExtensionsConfig",
+      "default": {
+        "disabled": []
+      }
+    },
+    "gateway": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GatewayConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "governance": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GovernanceConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "display_name",
+    "site",
+    "database",
+    "server",
+    "paths",
+    "security",
+    "rate_limits"
+  ],
+  "$defs": {
+    "ProfileType": {
+      "type": "string",
+      "enum": [
+        "local",
+        "cloud"
+      ]
+    },
+    "SiteConfig": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "github_link": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "DatabaseConfig": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "external_db_access": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ]
+    },
+    "ServerConfig": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "api_server_url": {
+          "type": "string"
+        },
+        "api_internal_url": {
+          "type": "string"
+        },
+        "api_external_url": {
+          "type": "string"
+        },
+        "use_https": {
+          "type": "boolean",
+          "default": false
+        },
+        "cors_allowed_origins": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "content_negotiation": {
+          "$ref": "#/$defs/ContentNegotiationConfig",
+          "default": {
+            "enabled": false,
+            "markdown_suffix": ".md"
+          }
+        },
+        "security_headers": {
+          "$ref": "#/$defs/SecurityHeadersConfig",
+          "default": {
+            "enabled": true,
+            "hsts": "max-age=63072000; includeSubDomains; preload",
+            "frame_options": "DENY",
+            "content_type_options": "nosniff",
+            "referrer_policy": "strict-origin-when-cross-origin",
+            "permissions_policy": "camera=(), microphone=(), geolocation=()",
+            "content_security_policy": null
+          }
+        },
+        "instance_id": {
+          "description": "Stable identifier for this replica. Empty/unset resolves to the\nOS hostname (or a generated short id) at config build time.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "max_concurrent_streams": {
+          "description": "Global cap on concurrent A2A SSE streams for this replica.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0,
+          "default": 256
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "port",
+        "api_server_url",
+        "api_internal_url",
+        "api_external_url"
+      ]
+    },
+    "ContentNegotiationConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "markdown_suffix": {
+          "type": "string",
+          "default": ".md"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SecurityHeadersConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "hsts": {
+          "type": "string",
+          "default": "max-age=63072000; includeSubDomains; preload"
+        },
+        "frame_options": {
+          "type": "string",
+          "default": "DENY"
+        },
+        "content_type_options": {
+          "type": "string",
+          "default": "nosniff"
+        },
+        "referrer_policy": {
+          "type": "string",
+          "default": "strict-origin-when-cross-origin"
+        },
+        "permissions_policy": {
+          "type": "string",
+          "default": "camera=(), microphone=(), geolocation=()"
+        },
+        "content_security_policy": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false
+    },
+    "PathsConfig": {
+      "type": "object",
+      "properties": {
+        "system": {
+          "type": "string"
+        },
+        "services": {
+          "type": "string"
+        },
+        "bin": {
+          "type": "string"
+        },
+        "web_path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "storage": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "geoip_database": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "services",
+        "bin"
+      ]
+    },
+    "SecurityConfig": {
+      "type": "object",
+      "properties": {
+        "jwt_issuer": {
+          "type": "string"
+        },
+        "jwt_access_token_expiration": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "jwt_refresh_token_expiration": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "jwt_audiences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/JwtAudience"
+          }
+        },
+        "allow_registration": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "jwt_issuer",
+        "jwt_access_token_expiration",
+        "jwt_refresh_token_expiration",
+        "jwt_audiences"
+      ]
+    },
+    "JwtAudience": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "web",
+            "api",
+            "a2a",
+            "mcp",
+            "internal",
+            "bridge",
+            "hook"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "RateLimitsConfig": {
+      "type": "object",
+      "properties": {
+        "disabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "oauth_public_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 10
+        },
+        "oauth_auth_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 10
+        },
+        "contexts_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 100
+        },
+        "tasks_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 50
+        },
+        "artifacts_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 50
+        },
+        "agent_registry_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 50
+        },
+        "agents_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 20
+        },
+        "mcp_registry_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 50
+        },
+        "mcp_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 200
+        },
+        "stream_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 100
+        },
+        "content_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 50
+        },
+        "burst_multiplier": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 3
+        },
+        "tier_multipliers": {
+          "$ref": "#/$defs/TierMultipliers",
+          "default": {
+            "admin": 10.0,
+            "user": 1.0,
+            "a2a": 5.0,
+            "mcp": 5.0,
+            "service": 5.0,
+            "anon": 0.5
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "TierMultipliers": {
+      "type": "object",
+      "properties": {
+        "admin": {
+          "type": "number",
+          "format": "double",
+          "default": 10.0
+        },
+        "user": {
+          "type": "number",
+          "format": "double",
+          "default": 1.0
+        },
+        "a2a": {
+          "type": "number",
+          "format": "double",
+          "default": 5.0
+        },
+        "mcp": {
+          "type": "number",
+          "format": "double",
+          "default": 5.0
+        },
+        "service": {
+          "type": "number",
+          "format": "double",
+          "default": 5.0
+        },
+        "anon": {
+          "type": "number",
+          "format": "double",
+          "default": 0.5
+        }
+      },
+      "additionalProperties": false
+    },
+    "RuntimeConfig": {
+      "type": "object",
+      "properties": {
+        "environment": {
+          "$ref": "#/$defs/Environment",
+          "default": "development"
+        },
+        "log_level": {
+          "$ref": "#/$defs/LogLevel",
+          "default": "normal"
+        },
+        "output_format": {
+          "$ref": "#/$defs/OutputFormat",
+          "default": "text"
+        },
+        "no_color": {
+          "type": "boolean",
+          "default": false
+        },
+        "non_interactive": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "Environment": {
+      "type": "string",
+      "enum": [
+        "development",
+        "test",
+        "staging",
+        "production"
+      ]
+    },
+    "LogLevel": {
+      "type": "string",
+      "enum": [
+        "quiet",
+        "normal",
+        "verbose",
+        "debug"
+      ]
+    },
+    "OutputFormat": {
+      "type": "string",
+      "enum": [
+        "text",
+        "json",
+        "yaml"
+      ]
+    },
+    "CloudConfig": {
+      "type": "object",
+      "properties": {
+        "tenant_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "validation": {
+          "$ref": "#/$defs/CloudValidationMode",
+          "default": "strict"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CloudValidationMode": {
+      "type": "string",
+      "enum": [
+        "strict",
+        "warn",
+        "skip"
+      ]
+    },
+    "SecretsConfig": {
+      "type": "object",
+      "properties": {
+        "secrets_path": {
+          "type": "string"
+        },
+        "validation": {
+          "$ref": "#/$defs/SecretsValidationMode",
+          "default": "warn"
+        },
+        "source": {
+          "$ref": "#/$defs/SecretsSource"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "secrets_path",
+        "source"
+      ]
+    },
+    "SecretsValidationMode": {
+      "type": "string",
+      "enum": [
+        "strict",
+        "warn",
+        "skip"
+      ]
+    },
+    "SecretsSource": {
+      "type": "string",
+      "enum": [
+        "file",
+        "env"
+      ]
+    },
+    "ExtensionsConfig": {
+      "type": "object",
+      "properties": {
+        "disabled": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "GatewayConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "routes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GatewayRoute"
+          },
+          "default": []
+        },
+        "catalog_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "auth_scheme": {
+          "type": "string",
+          "default": "bearer"
+        },
+        "inference_path_prefix": {
+          "type": "string",
+          "default": "/v1"
+        }
+      },
+      "additionalProperties": false
+    },
+    "GatewayRoute": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "default": ""
+        },
+        "model_pattern": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "api_key_secret": {
+          "type": "string"
+        },
+        "upstream_model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "extra_headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "pricing": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelPricing"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "model_pattern",
+        "provider",
+        "endpoint",
+        "api_key_secret"
+      ]
+    },
+    "ModelPricing": {
+      "type": "object",
+      "properties": {
+        "input_per_million": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+        "output_per_million": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+        "per_image_cents": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double",
+          "default": null
+        }
+      }
+    },
+    "GovernanceConfig": {
+      "type": "object",
+      "properties": {
+        "authz": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AuthzConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false
+    },
+    "AuthzConfig": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "$ref": "#/$defs/AuthzHookConfig"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "hook"
+      ]
+    },
+    "AuthzHookConfig": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/AuthzMode"
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 500
+        },
+        "acknowledgement": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ]
+    },
+    "AuthzMode": {
+      "type": "string",
+      "enum": [
+        "webhook",
+        "disabled",
+        "unrestricted"
+      ]
+    }
+  }
+}

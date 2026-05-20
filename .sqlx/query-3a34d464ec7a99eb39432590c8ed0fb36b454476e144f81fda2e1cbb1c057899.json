@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT user_id as \"user_id?: UserId\"\n        FROM user_sessions\n        WHERE session_id = $1 AND revoked_at IS NULL\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id?: UserId",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "3a34d464ec7a99eb39432590c8ed0fb36b454476e144f81fda2e1cbb1c057899"
+}

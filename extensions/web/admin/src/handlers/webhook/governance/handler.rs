@@ -20,7 +20,7 @@ use super::types::{
     AuditParams, AuditRecord, AuthDenialParams, GovernanceContext, GovernanceDecision,
     GovernanceResponse, HookSpecificOutput, RuleEvaluation,
 };
-use crate::handlers::webhook::helpers::{extract_bearer_token, get_jwt_config};
+use crate::handlers::webhook::helpers::{extract_bearer_token, get_jwt_issuer};
 
 fn build_deny_response(reason: &str) -> Response {
     let response = GovernanceResponse {
@@ -86,7 +86,7 @@ fn authenticate_request(
         return Err(Box::new(build_deny_response(reason)));
     };
 
-    let (jwt_secret, jwt_issuer) = match get_jwt_config() {
+    let jwt_issuer = match get_jwt_issuer() {
         Ok(v) => v,
         Err(e) => {
             tracing::error!(error = %e, "Failed to load JWT config");
@@ -98,7 +98,6 @@ fn authenticate_request(
 
     let claims = systemprompt::oauth::validate_jwt_token(
         token,
-        &jwt_secret,
         &jwt_issuer,
         &[
             JwtAudience::Resource("hook".to_string()),
@@ -173,7 +172,7 @@ fn build_evaluation_response(evaluation: &RuleEvaluation) -> Response {
 fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
     let p = params.pool.clone();
     let record = AuditRecord {
-        user_id: UserId::anonymous(),
+        user_id: systemprompt::identifiers::bootstrap::anonymous(),
         session_id: params.session_id.clone(),
         tool_name: params.tool_name.to_string(),
         agent_id: params.agent_id.map(str::to_string),

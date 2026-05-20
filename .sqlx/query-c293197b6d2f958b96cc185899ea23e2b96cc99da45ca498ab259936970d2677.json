@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE mcp_sessions\n            SET status = 'closed', last_activity_at = NOW()\n            WHERE session_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c293197b6d2f958b96cc185899ea23e2b96cc99da45ca498ab259936970d2677"
+}

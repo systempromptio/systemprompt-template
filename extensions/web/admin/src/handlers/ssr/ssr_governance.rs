@@ -185,7 +185,6 @@ fn format_deny_rate(denied: i64, evaluations: i64) -> String {
     if evaluations <= 0 {
         return "—".to_string();
     }
-    #[allow(clippy::cast_precision_loss)]
     let r = (denied as f64 / evaluations as f64) * 100.0;
     format!("{r:.1}%")
 }

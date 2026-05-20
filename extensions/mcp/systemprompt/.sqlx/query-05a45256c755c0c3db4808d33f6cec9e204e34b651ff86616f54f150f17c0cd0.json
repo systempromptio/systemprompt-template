@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT name FROM ai_gateway_policies",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "05a45256c755c0c3db4808d33f6cec9e204e34b651ff86616f54f150f17c0cd0"
+}

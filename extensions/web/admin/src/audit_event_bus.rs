@@ -65,7 +65,6 @@ fn spawn_listener(pool: Arc<PgPool>, sender: broadcast::Sender<String>) {
                         match listener.recv().await {
                             Ok(notification) => {
                                 let payload = notification.payload().to_string();
-                                // Drop on overflow — slow subscribers fall behind silently.
                                 let _ = sender.send(payload);
                             }
                             Err(e) => {

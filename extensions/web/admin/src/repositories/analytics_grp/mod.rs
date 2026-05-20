@@ -1,4 +1,5 @@
 pub mod agents;
+pub mod content_rollup;
 pub mod context_detail;
 pub mod contexts_list;
 pub mod conversations;
