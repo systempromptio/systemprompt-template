@@ -136,19 +136,19 @@ build *FLAGS:
         # drift between checked-in `.sqlx/` and the unmigrated live schema
         # can't deadlock the bootstrap.
         echo "Applying pending migrations before online build..."
-        SQLX_OFFLINE=true cargo build -p systemprompt-cli --quiet
+        SQLX_OFFLINE=true cargo build --bin systemprompt --quiet
         target/debug/systemprompt infra db migrate
         SQLX_OFFLINE=false cargo build --workspace {{FLAGS}}
     fi
 
 # Clippy (Windows) - always uses offline mode
 [windows]
-clippy *FLAGS:
+clippy *FLAGS: lint-no-synthesis
     $env:SQLX_OFFLINE="true"; cargo clippy --workspace {{FLAGS}} -- -D warnings
 
 # Clippy (Unix) - tries database, falls back to offline
 [unix]
-clippy *FLAGS:
+clippy *FLAGS: lint-no-synthesis
     #!/usr/bin/env bash
     set -euo pipefail
     SECRETS_FILE="{{justfile_directory()}}/.systemprompt/profiles/local/secrets.json"
@@ -186,6 +186,29 @@ clippy *FLAGS:
         SQLX_OFFLINE=true cargo clippy --workspace {{FLAGS}} -- -D warnings
     else
         SQLX_OFFLINE=false cargo clippy --workspace {{FLAGS}} -- -D warnings
+    fi
+
+# Structural guard: no string-literal `UserId::new("...")` in extension code.
+# String literals are how principal synthesis sneaks in — every legitimate
+# UserId::new call takes a validated identifier as a variable, never a literal.
+# Allowlisted: test code (regression tests intentionally construct ids) and
+# any future bootstrap/provisioning module.
+lint-no-synthesis:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    hits=$(grep -rEn 'UserId::new\("' extensions/ \
+        --include='*.rs' \
+        --exclude-dir=tests \
+        --exclude-dir=bootstrap \
+        || true)
+    if [ -n "$hits" ]; then
+        echo "error: forbidden synthesized principal — UserId::new with string literal"
+        echo "$hits"
+        echo
+        echo "UserId::new must take a validated identifier (from cookie, query,"
+        echo "JWT claim, or DB row), never a hard-coded literal. If this is"
+        echo "legitimate bootstrap code, move it to extensions/**/bootstrap/."
+        exit 1
     fi
 
 # Prepare SQLx offline query cache (requires running database)
@@ -511,6 +534,8 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     done
     echo "Running database migrations..."
     just migrate
+    echo "Ensuring bootstrap admin user..."
+    {{CLI}} admin bootstrap
     echo "Publishing assets..."
     just publish
     echo ""
@@ -617,6 +642,54 @@ docker-test:
     just build-all
     just docker-build test
     @echo "Docker build successful! Image: systemprompt-template:test"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# AIR-GAPPED SCENARIO
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Bring up the network-isolated air-gap stack (postgres + mock-inference + app + monitor + ingress)
+airgap-up:
+    docker compose -f deploy/scenarios/airgap/docker-compose.airgap.yml up -d --build
+
+# Tear down the air-gap stack and remove its volumes
+airgap-down:
+    docker compose -f deploy/scenarios/airgap/docker-compose.airgap.yml down -v
+
+# Run the air-gap demo scripts in sequence, stopping on first failure.
+# The gateway policy is no longer seeded by a script — it ships as
+# services/ai/gateway-policies.yaml and is ingested by the publish_pipeline
+# job at server boot.
+airgap-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ./demo/scenarios/airgap/01-egress-assert.sh
+    ./demo/scenarios/airgap/02-load.sh
+    ./demo/scenarios/airgap/03-governance.sh
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SCALED / DISTRIBUTED SCENARIO
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Bring up the multi-replica scaled stack (postgres primary/replica + N app replicas + 1 scheduler + nginx LB)
+scaled-up REPLICAS="3":
+    docker compose -f deploy/scenarios/scaled/docker-compose.scaled.yml up -d --build --scale app={{REPLICAS}}
+
+# Tear down the scaled stack and remove its volumes
+scaled-down:
+    docker compose -f deploy/scenarios/scaled/docker-compose.scaled.yml down -v
+
+# Run the scaled demo scripts in sequence, stopping on first failure.
+# Skips 02-soak.sh — that is the long (~1h) sustained soak; run it on its own
+# when needed: ./demo/scenarios/scaled/02-soak.sh
+scaled-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    chmod +x demo/scenarios/scaled/01-load.sh \
+             demo/scenarios/scaled/03-replica-distribution.sh \
+             demo/scenarios/scaled/04-scheduler-isolation.sh
+    ./demo/scenarios/scaled/01-load.sh
+    ./demo/scenarios/scaled/03-replica-distribution.sh
+    ./demo/scenarios/scaled/04-scheduler-isolation.sh
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ADMIN & PLUGINS
