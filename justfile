@@ -283,6 +283,11 @@ start-release:
 
 # Run migrations
 migrate:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -z "${SYSTEMPROMPT_PROFILE:-}" ]; then
+        export SYSTEMPROMPT_PROFILE="{{justfile_directory()}}/.systemprompt/profiles/local/profile.yaml"
+    fi
     {{CLI}} infra db migrate
 
 # When an already-applied migration file is edited (e.g. a seed fix), its
@@ -356,6 +361,7 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     GEMINI_KEY="{{GEMINI_KEY}}"
     HTTP_PORT="{{HTTP_PORT}}"
     PG_PORT="{{PG_PORT}}"
+    export SYSTEMPROMPT_PROFILE="$PROFILE_DIR/profile.yaml"
     # Only demand keys when there's nothing to preserve. A developer who keeps
     # .systemprompt/ across reclones (the documented key-preservation pattern)
     # should be able to re-run setup-local with no args to bring Postgres +
@@ -444,6 +450,8 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
       web_path: null
       storage: $ROOT/storage
       geoip_database: null
+    system_admin:
+      username: admin
     security:
       jwt_issuer: systemprompt-local
       jwt_access_token_expiration: 2592000
@@ -511,14 +519,14 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     fi
     if [ ! -f "$PROFILE_DIR/secrets.json" ]; then
         echo "Writing local secrets.json..."
-        JWT_SECRET=$(head -c 48 /dev/urandom | base64 | tr -d '+/=' | head -c 64)
+        OAUTH_AT_REST_PEPPER=$(head -c 48 /dev/urandom | base64 | tr -d '+/=' | head -c 64)
         json_field() { if [ -n "${1:-}" ]; then printf '"%s"' "$1"; else printf 'null'; fi; }
         ANTHROPIC_JSON=$(json_field "$ANTHROPIC_KEY")
         OPENAI_JSON=$(json_field "$OPENAI_KEY")
         GEMINI_JSON=$(json_field "$GEMINI_KEY")
         cat > "$PROFILE_DIR/secrets.json" <<JSON
     {
-      "jwt_secret": "$JWT_SECRET",
+      "oauth_at_rest_pepper": "$OAUTH_AT_REST_PEPPER",
       "database_url": "postgres://systemprompt:123@localhost:${PG_PORT}/systemprompt",
       "anthropic": $ANTHROPIC_JSON,
       "openai": $OPENAI_JSON,
@@ -634,6 +642,11 @@ web-assets:
 
 # Publish: compile templates, bundle CSS/JS, copy assets, prerender content
 publish:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -z "${SYSTEMPROMPT_PROFILE:-}" ]; then
+        export SYSTEMPROMPT_PROFILE="{{justfile_directory()}}/.systemprompt/profiles/local/profile.yaml"
+    fi
     {{CLI}} infra jobs run publish_pipeline
 
 # Build web assets only (templates + CSS + JS + copy to dist)
