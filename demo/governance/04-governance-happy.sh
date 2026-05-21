@@ -11,7 +11,7 @@
 #      - tool_input: {"file_path": "/src/main.rs"}
 #   3. Shows full JSON response: permissionDecision: "allow"
 #      - scope_check: admin scope passes for any tool
-#      - secret_injection: tool_input contains no secrets
+#      - secret_scan: tool_input contains no secrets
 #      - rate_limit: well within limits
 #   4. Audits governance_decisions table showing evaluated_rules column
 #
@@ -35,7 +35,7 @@ echo "    1. POST /api/public/hooks/govern"
 echo "    2. agent_id=developer_agent (admin scope)"
 echo "    3. tool_name=Read, tool_input={file_path}"
 echo "    4. scope_check: PASS (admin scope)"
-echo "    5. secret_injection: PASS (clean input)"
+echo "    5. secret_scan: PASS (clean input)"
 echo "    6. rate_limit: PASS (within limits)"
 echo "    7. permissionDecision: allow"
 echo "=========================================="
@@ -86,7 +86,7 @@ echo "  Most recent governance decision (with evaluated_rules):"
 
 echo ""
 echo "  Expected: decision=allow, all 3 rules passed"
-echo "  (scope_check: PASS, secret_injection: PASS, rate_limit: PASS)"
+echo "  (scope_check: PASS, secret_scan: PASS, rate_limit: PASS)"
 
 echo ""
 echo "=========================================="

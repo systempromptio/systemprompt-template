@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE plugin_session_summaries\n              SET status = $1, updated_at = NOW()\n              WHERE user_id = $2 AND session_id = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4e28edc9d5bfe6a8451089ea3b3ae9c903256c69b727366fdae541a76777d2e4"
+}

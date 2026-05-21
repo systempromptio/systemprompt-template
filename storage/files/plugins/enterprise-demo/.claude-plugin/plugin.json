@@ -4,5 +4,10 @@
   "version": "2.0.0",
   "author": {
     "name": "systemprompt.io"
-  }
+  },
+  "keywords": [
+    "governance",
+    "demo",
+    "enterprise"
+  ]
 }

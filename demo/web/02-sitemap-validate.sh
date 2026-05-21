@@ -15,7 +15,7 @@ run_cli_reshape_json() {
   local display="systemprompt $*"
   cmd "$display"
   local output preamble body reshaped
-  output=$("$CLI" "$@" --profile "$PROFILE" 2>&1)
+  output=$("$CLI" "$@" --profile "$PROFILE" 2>&1 || true)
   preamble=$(echo "$output" | awk '/^\{/{exit} {print}')
   body=$(echo "$output" | awk '/^\{/{flag=1} flag{print}')
   [[ -n "$preamble" ]] && echo "$preamble" | sed 's/^/  /'

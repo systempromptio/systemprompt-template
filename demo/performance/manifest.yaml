@@ -1,0 +1,32 @@
+steps:
+  - script: 01-request-tracing.sh
+    label: Trace one governance request end-to-end
+    narrative: >
+      Fires a real PreToolUse governance call plus a PostToolUse track
+      event, then queries governance_decisions and plugin_usage_events to
+      show the typed IDs that landed, pulls the trace and request logs
+      for the call, and prints the router-to-audit flow map annotated
+      with the Rust struct at each stage. Every layer is compile-time
+      checked — serde at the boundary, newtypes in the handler, sqlx::query!
+      against the live schema.
+    outcome: >
+      You see the request payload, the response, the matching rows in
+      governance_decisions and plugin_usage_events, the trace and
+      request log entries, and a six-stage flow map from Axum router
+      through JWT, scope resolution, rule engine, async audit write,
+      and response.
+  - script: 02-load-test.sh
+    label: Run a 2,000-request production load test
+    narrative: >
+      Uses hey to drive 500 governance requests at 50 concurrent, 500
+      track requests at 50 concurrent, 1,000 sustained governance
+      requests at 100 concurrent, and 5 MCP tool calls, then reads the
+      Postgres pool stats and counts the audit rows that landed. This is
+      what a single box does under real concurrency — no AI calls, pure
+      platform infrastructure.
+    outcome: >
+      You see throughput in req/s and p50/p90/p99 latency for each of
+      three load profiles, MCP tool call latency, live Postgres pool
+      occupancy, a decisions-written audit query confirming zero dropped
+      requests, and a capacity estimate in concurrent developers per
+      instance.

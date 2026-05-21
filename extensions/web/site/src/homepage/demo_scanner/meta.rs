@@ -1,10 +1,3 @@
-pub(super) struct StepMeta {
-    pub(super) script: &'static str,
-    pub(super) label: &'static str,
-    pub(super) narrative: &'static str,
-    pub(super) outcome: &'static str,
-}
-
 pub(super) struct CategoryMeta {
     pub(super) id: &'static str,
     pub(super) title: &'static str,
@@ -12,7 +5,6 @@ pub(super) struct CategoryMeta {
     pub(super) story: &'static str,
     pub(super) cost: &'static str,
     pub(super) feature_url: &'static str,
-    pub(super) steps: &'static [StepMeta],
 }
 
 pub(super) struct PillarMeta {

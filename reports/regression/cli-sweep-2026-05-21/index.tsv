@@ -1,0 +1,152 @@
+1	0	help_root	/var/www/html/systemprompt-template/target/debug/systemprompt --help
+2	0	version	/var/www/html/systemprompt-template/target/debug/systemprompt --version
+3	0	help_core	/var/www/html/systemprompt-template/target/debug/systemprompt core --help
+4	0	help_infra	/var/www/html/systemprompt-template/target/debug/systemprompt infra --help
+5	0	help_admin	/var/www/html/systemprompt-template/target/debug/systemprompt admin --help
+6	0	help_cloud	/var/www/html/systemprompt-template/target/debug/systemprompt cloud --help
+7	0	help_analytics	/var/www/html/systemprompt-template/target/debug/systemprompt analytics --help
+8	0	help_web	/var/www/html/systemprompt-template/target/debug/systemprompt web --help
+9	0	help_plugins	/var/www/html/systemprompt-template/target/debug/systemprompt plugins --help
+10	0	help_build	/var/www/html/systemprompt-template/target/debug/systemprompt build --help
+11	0	help_core_skills	/var/www/html/systemprompt-template/target/debug/systemprompt core skills --help
+12	0	help_core_content	/var/www/html/systemprompt-template/target/debug/systemprompt core content --help
+13	0	help_core_files	/var/www/html/systemprompt-template/target/debug/systemprompt core files --help
+14	0	help_core_contexts	/var/www/html/systemprompt-template/target/debug/systemprompt core contexts --help
+15	0	help_core_plugins	/var/www/html/systemprompt-template/target/debug/systemprompt core plugins --help
+16	0	help_core_hooks	/var/www/html/systemprompt-template/target/debug/systemprompt core hooks --help
+17	0	help_core_artifacts	/var/www/html/systemprompt-template/target/debug/systemprompt core artifacts --help
+18	0	core_skills_list	/var/www/html/systemprompt-template/target/debug/systemprompt core skills list
+19	0	core_skills_list_json	/var/www/html/systemprompt-template/target/debug/systemprompt core skills list --json
+20	0	core_content_list	/var/www/html/systemprompt-template/target/debug/systemprompt core content list
+21	0	core_files_list	/var/www/html/systemprompt-template/target/debug/systemprompt core files list
+22	0	core_contexts_list	/var/www/html/systemprompt-template/target/debug/systemprompt core contexts list
+23	0	core_plugins_list	/var/www/html/systemprompt-template/target/debug/systemprompt core plugins list
+24	0	core_plugins_validate	/var/www/html/systemprompt-template/target/debug/systemprompt core plugins validate
+25	0	core_hooks_list	/var/www/html/systemprompt-template/target/debug/systemprompt core hooks list
+26	0	core_hooks_validate	/var/www/html/systemprompt-template/target/debug/systemprompt core hooks validate
+27	0	help_infra_services	/var/www/html/systemprompt-template/target/debug/systemprompt infra services --help
+28	0	help_infra_db	/var/www/html/systemprompt-template/target/debug/systemprompt infra db --help
+29	0	help_infra_jobs	/var/www/html/systemprompt-template/target/debug/systemprompt infra jobs --help
+30	0	help_infra_logs	/var/www/html/systemprompt-template/target/debug/systemprompt infra logs --help
+31	0	infra_services_status	/var/www/html/systemprompt-template/target/debug/systemprompt infra services status
+32	0	infra_jobs_list	/var/www/html/systemprompt-template/target/debug/systemprompt infra jobs list
+33	0	infra_logs_help	/var/www/html/systemprompt-template/target/debug/systemprompt infra logs --help
+34	0	infra_logs_request_list	/var/www/html/systemprompt-template/target/debug/systemprompt infra logs request list --limit 5
+35	0	infra_logs_trace_list	/var/www/html/systemprompt-template/target/debug/systemprompt infra logs trace list --limit 5
+36	0	infra_db_help	/var/www/html/systemprompt-template/target/debug/systemprompt infra db --help
+37	2	infra_db_migrations_list	/var/www/html/systemprompt-template/target/debug/systemprompt infra db migrations list
+38	0	help_admin_users	/var/www/html/systemprompt-template/target/debug/systemprompt admin users --help
+39	0	help_admin_agents	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents --help
+40	0	help_admin_config	/var/www/html/systemprompt-template/target/debug/systemprompt admin config --help
+41	0	help_admin_session	/var/www/html/systemprompt-template/target/debug/systemprompt admin session --help
+42	0	help_admin_bridge	/var/www/html/systemprompt-template/target/debug/systemprompt admin bridge --help
+43	0	help_admin_access-control	/var/www/html/systemprompt-template/target/debug/systemprompt admin access-control --help
+44	0	help_admin_keys	/var/www/html/systemprompt-template/target/debug/systemprompt admin keys --help
+45	0	help_admin_setup	/var/www/html/systemprompt-template/target/debug/systemprompt admin setup --help
+46	0	help_admin_bootstrap	/var/www/html/systemprompt-template/target/debug/systemprompt admin bootstrap --help
+47	2	admin_session_current	/var/www/html/systemprompt-template/target/debug/systemprompt admin session current
+48	0	admin_session_list	/var/www/html/systemprompt-template/target/debug/systemprompt admin session list
+49	0	admin_users_list	/var/www/html/systemprompt-template/target/debug/systemprompt admin users list --limit 5
+50	0	admin_users_count	/var/www/html/systemprompt-template/target/debug/systemprompt admin users count
+51	0	admin_users_stats	/var/www/html/systemprompt-template/target/debug/systemprompt admin users stats
+52	0	admin_agents_list	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents list
+53	0	admin_agents_registry	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents registry
+54	0	admin_agents_validate	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents validate
+55	0	admin_agents_status_dev	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents status developer_agent
+56	0	admin_agents_status_assoc	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents status associate_agent
+57	2	admin_agents_tools_dev	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents tools --agent developer_agent
+58	2	admin_agents_tools_assoc	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents tools --agent associate_agent
+59	2	admin_agents_logs_dev	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents logs developer_agent --tail 20
+60	2	admin_config_paths_list	/var/www/html/systemprompt-template/target/debug/systemprompt admin config paths list
+61	2	admin_config_runtime_list	/var/www/html/systemprompt-template/target/debug/systemprompt admin config runtime list
+62	2	admin_config_server_list	/var/www/html/systemprompt-template/target/debug/systemprompt admin config server list
+63	2	admin_config_security_list	/var/www/html/systemprompt-template/target/debug/systemprompt admin config security list
+64	0	admin_config_provider_list	/var/www/html/systemprompt-template/target/debug/systemprompt admin config provider list
+65	2	admin_config_ratelimits_list	/var/www/html/systemprompt-template/target/debug/systemprompt admin config rate-limits list
+66	2	admin_keys_list	/var/www/html/systemprompt-template/target/debug/systemprompt admin keys list
+67	0	admin_bridge_list	/var/www/html/systemprompt-template/target/debug/systemprompt admin bridge list
+68	2	admin_access_control_export	/var/www/html/systemprompt-template/target/debug/systemprompt admin access-control export
+69	0	help_cloud_auth	/var/www/html/systemprompt-template/target/debug/systemprompt cloud auth --help
+70	0	help_cloud_init	/var/www/html/systemprompt-template/target/debug/systemprompt cloud init --help
+71	0	help_cloud_tenant	/var/www/html/systemprompt-template/target/debug/systemprompt cloud tenant --help
+72	0	help_cloud_profile	/var/www/html/systemprompt-template/target/debug/systemprompt cloud profile --help
+73	0	help_cloud_deploy	/var/www/html/systemprompt-template/target/debug/systemprompt cloud deploy --help
+74	0	help_cloud_status	/var/www/html/systemprompt-template/target/debug/systemprompt cloud status --help
+75	0	help_cloud_restart	/var/www/html/systemprompt-template/target/debug/systemprompt cloud restart --help
+76	0	help_cloud_sync	/var/www/html/systemprompt-template/target/debug/systemprompt cloud sync --help
+77	0	help_cloud_secrets	/var/www/html/systemprompt-template/target/debug/systemprompt cloud secrets --help
+78	0	help_cloud_dockerfile	/var/www/html/systemprompt-template/target/debug/systemprompt cloud dockerfile --help
+79	0	help_cloud_db	/var/www/html/systemprompt-template/target/debug/systemprompt cloud db --help
+80	0	help_cloud_domain	/var/www/html/systemprompt-template/target/debug/systemprompt cloud domain --help
+81	0	cloud_auth_whoami	/var/www/html/systemprompt-template/target/debug/systemprompt cloud auth whoami
+82	2	cloud_auth_status	/var/www/html/systemprompt-template/target/debug/systemprompt cloud auth status
+83	0	cloud_status	/var/www/html/systemprompt-template/target/debug/systemprompt cloud status
+84	0	cloud_profile_list	/var/www/html/systemprompt-template/target/debug/systemprompt cloud profile list
+85	0	cloud_tenant_list	/var/www/html/systemprompt-template/target/debug/systemprompt cloud tenant list
+86	2	cloud_sync_status	/var/www/html/systemprompt-template/target/debug/systemprompt cloud sync status
+87	2	cloud_secrets_list	/var/www/html/systemprompt-template/target/debug/systemprompt cloud secrets list
+88	2	cloud_domain_list	/var/www/html/systemprompt-template/target/debug/systemprompt cloud domain list
+89	0	help_analytics_overview	/var/www/html/systemprompt-template/target/debug/systemprompt analytics overview --help
+90	0	help_analytics_conversations	/var/www/html/systemprompt-template/target/debug/systemprompt analytics conversations --help
+91	0	help_analytics_agents	/var/www/html/systemprompt-template/target/debug/systemprompt analytics agents --help
+92	0	help_analytics_tools	/var/www/html/systemprompt-template/target/debug/systemprompt analytics tools --help
+93	0	help_analytics_requests	/var/www/html/systemprompt-template/target/debug/systemprompt analytics requests --help
+94	0	help_analytics_sessions	/var/www/html/systemprompt-template/target/debug/systemprompt analytics sessions --help
+95	0	help_analytics_content	/var/www/html/systemprompt-template/target/debug/systemprompt analytics content --help
+96	0	help_analytics_traffic	/var/www/html/systemprompt-template/target/debug/systemprompt analytics traffic --help
+97	0	help_analytics_costs	/var/www/html/systemprompt-template/target/debug/systemprompt analytics costs --help
+98	0	analytics_overview	/var/www/html/systemprompt-template/target/debug/systemprompt analytics overview
+99	0	analytics_conversations_list	/var/www/html/systemprompt-template/target/debug/systemprompt analytics conversations list --limit 5
+100	0	analytics_agents_list	/var/www/html/systemprompt-template/target/debug/systemprompt analytics agents list
+101	0	analytics_tools_list	/var/www/html/systemprompt-template/target/debug/systemprompt analytics tools list
+102	0	analytics_requests_list	/var/www/html/systemprompt-template/target/debug/systemprompt analytics requests list --limit 5
+103	2	analytics_sessions_list	/var/www/html/systemprompt-template/target/debug/systemprompt analytics sessions list --limit 5
+104	2	analytics_content_list	/var/www/html/systemprompt-template/target/debug/systemprompt analytics content list
+105	2	analytics_traffic_list	/var/www/html/systemprompt-template/target/debug/systemprompt analytics traffic list
+106	2	analytics_costs_list	/var/www/html/systemprompt-template/target/debug/systemprompt analytics costs list
+107	0	help_web_content-types	/var/www/html/systemprompt-template/target/debug/systemprompt web content-types --help
+108	0	help_web_templates	/var/www/html/systemprompt-template/target/debug/systemprompt web templates --help
+109	0	help_web_assets	/var/www/html/systemprompt-template/target/debug/systemprompt web assets --help
+110	0	help_web_sitemap	/var/www/html/systemprompt-template/target/debug/systemprompt web sitemap --help
+111	0	help_web_validate	/var/www/html/systemprompt-template/target/debug/systemprompt web validate --help
+112	0	web_content_types_list	/var/www/html/systemprompt-template/target/debug/systemprompt web content-types list
+113	0	web_templates_list	/var/www/html/systemprompt-template/target/debug/systemprompt web templates list
+114	0	web_assets_list	/var/www/html/systemprompt-template/target/debug/systemprompt web assets list
+115	2	web_sitemap_list	/var/www/html/systemprompt-template/target/debug/systemprompt web sitemap list
+116	0	web_validate	/var/www/html/systemprompt-template/target/debug/systemprompt web validate
+117	0	plugins_list	/var/www/html/systemprompt-template/target/debug/systemprompt plugins list
+118	1	plugins_show	/var/www/html/systemprompt-template/target/debug/systemprompt plugins show systemprompt
+119	0	plugins_validate	/var/www/html/systemprompt-template/target/debug/systemprompt plugins validate
+120	0	plugins_config	/var/www/html/systemprompt-template/target/debug/systemprompt plugins config
+121	0	plugins_capabilities	/var/www/html/systemprompt-template/target/debug/systemprompt plugins capabilities
+122	0	plugins_mcp_help	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp --help
+123	0	plugins_mcp_list	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp list
+124	0	plugins_mcp_status	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp status
+125	0	plugins_mcp_validate	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp validate
+126	0	plugins_mcp_tools	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp tools
+127	1	plugins_mcp_list_packages	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp list-packages
+128	0	plugins_mcp_logs_sp	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp logs systemprompt --tail 20
+129	2	mcp_call_core_skills_list	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp call systemprompt systemprompt {"command":"core skills list"}
+130	2	mcp_call_core_content_list	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp call systemprompt systemprompt {"command":"core content list"}
+131	2	mcp_call_infra_services_status	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp call systemprompt systemprompt {"command":"infra services status"}
+132	2	mcp_call_admin_agents_list	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp call systemprompt systemprompt {"command":"admin agents list"}
+133	2	mcp_call_analytics_overview	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp call systemprompt systemprompt {"command":"analytics overview"}
+134	2	mcp_call_web_validate	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp call systemprompt systemprompt {"command":"web validate"}
+135	2	mcp_call_plugins_list	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp call systemprompt systemprompt {"command":"plugins list"}
+136	2	mcp_call_help	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp call systemprompt systemprompt {"command":"--help"}
+137	2	mcp_call_invalid	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp call systemprompt systemprompt {"command":"nonsense-domain whatever"}
+138	2	mcp_call_malformed_json	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp call systemprompt systemprompt not-json
+139	2	mcp_call_missing_command	/var/www/html/systemprompt-template/target/debug/systemprompt plugins mcp call systemprompt systemprompt {}
+140	2	a2a_message_blocking_dev	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents message --agent developer_agent --message List the available skills using the systemprompt tool. --blocking --timeout 60
+141	2	a2a_message_blocking_assoc	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents message --agent associate_agent --message What MCP tools do you have access to? --blocking --timeout 60
+142	2	a2a_message_nonexistent	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents message --agent nonexistent_agent --message test --blocking --timeout 10
+143	2	a2a_message_missing	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents message --agent developer_agent --blocking --timeout 10
+144	2	a2a_message_short_timeout	/var/www/html/systemprompt-template/target/debug/systemprompt admin agents message --agent developer_agent --message Take your time. --blocking --timeout 1
+145	0	flag_json	/var/www/html/systemprompt-template/target/debug/systemprompt --json admin agents list
+146	0	flag_yaml	/var/www/html/systemprompt-template/target/debug/systemprompt --yaml admin agents list
+147	0	flag_quiet	/var/www/html/systemprompt-template/target/debug/systemprompt --quiet admin agents list
+148	0	flag_verbose	/var/www/html/systemprompt-template/target/debug/systemprompt --verbose admin agents list
+149	0	flag_nocolor	/var/www/html/systemprompt-template/target/debug/systemprompt --no-color admin agents list
+150	0	flag_noninter	/var/www/html/systemprompt-template/target/debug/systemprompt --non-interactive admin agents list
+151	0	post_request_list	/var/www/html/systemprompt-template/target/debug/systemprompt infra logs request list --limit 10
+152	0	post_trace_list	/var/www/html/systemprompt-template/target/debug/systemprompt infra logs trace list --limit 10

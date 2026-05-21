@@ -13,15 +13,9 @@ const DEFAULT_PORT: u16 = 5010;
 async fn main() -> Result<()> {
     systemprompt::logging::init_console_logging();
 
-    let profile = ProfileBootstrap::init().context("Failed to initialize profile")?;
+    ProfileBootstrap::init().context("Failed to initialize profile")?;
     SecretsBootstrap::init().context("Failed to initialize secrets")?;
     init_config().context("Failed to initialize configuration")?;
-    if let Err(e) = systemprompt_security::authz::install_from_governance_config(
-        profile.governance.as_ref(),
-        None,
-    ) {
-        tracing::warn!(error = %e, "install_from_governance_config failed");
-    }
 
     let ctx = Arc::new(
         AppContext::new()
@@ -53,8 +47,12 @@ async fn main() -> Result<()> {
         },
     );
 
-    let server = SystempromptServer::new(Arc::clone(ctx.db_pool()), service_id.clone())
-        .context("Failed to initialize SystempromptServer")?;
+    let server = SystempromptServer::new(
+        Arc::clone(ctx.db_pool()),
+        service_id.clone(),
+        Arc::clone(ctx.authz_hook()),
+    )
+    .context("Failed to initialize SystempromptServer")?;
     let router = systemprompt::mcp::create_router(
         server,
         ctx.db_pool(),

@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO oauth_state_bindings\n             (state_token_hash, return_to, client_id, redirect_uri, created_at, expires_at)\n             VALUES ($1, $2, $3, $4, now(), $5)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4c9047bfe9e855223e228724586af32cdf8ce41fe0ed50350467911cb2f8d597"
+}

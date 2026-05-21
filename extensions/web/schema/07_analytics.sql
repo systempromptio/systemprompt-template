@@ -103,4 +103,4 @@ CREATE INDEX IF NOT EXISTS idx_session_transcripts_jsonb ON session_transcripts 
 -- (`systemprompt_security::authz::AuthzExtension`). The table and its indexes
 -- are created from `crates/infra/security/src/authz/schema/governance_decisions.sql`
 -- before this analytics extension runs (migration_weight 110 vs analytics ~200).
--- Triggers that depend on the table live in 11_audit_event_notify.sql.
+-- Triggers that depend on the table live in 14_audit_event_notify.sql.

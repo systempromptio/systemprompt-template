@@ -166,8 +166,7 @@ pub async fn fetch_violation_counts(
             COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS deny_count,
             COUNT(*) FILTER (
                 WHERE g.decision = 'deny'
-                  AND (g.policy = 'secret_scan' OR g.policy = 'secret_injection'
-                       OR g.reason ILIKE '%secret%')
+                  AND (g.policy = 'secret_scan' OR g.reason ILIKE '%secret%')
             )::bigint AS secret_breach_count,
             COUNT(*) FILTER (
                 WHERE g.decision = 'deny'

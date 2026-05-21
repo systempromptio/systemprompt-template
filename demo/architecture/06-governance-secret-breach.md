@@ -23,7 +23,7 @@ Tests the secret detection rule with 4 direct API calls: AWS key, GitHub PAT, pr
   │                                                         │
   │  Rule 1: scope_check → PASS (admin scope)              │
   │                                                         │
-  │  Rule 2: secret_injection                               │
+  │  Rule 2: secret_scan                               │
   │    Scans ALL string values in tool_input recursively    │
   │    Pattern matching:                                    │
   │      AKIA[0-9A-Z]{16}  → AWS Access Key                │
@@ -32,13 +32,13 @@ Tests the secret detection rule with 4 direct API calls: AWS key, GitHub PAT, pr
   │    → FAIL (secret detected)                             │
   │                                                         │
   │  decision = "deny"                                      │
-  │  policy = "secret_injection"                            │
+  │  policy = "secret_scan"                            │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
   ┌─────────────────────────────────────────────────────────┐
   │  Audit: INSERT governance_decisions                     │
-  │  decision="deny", policy="secret_injection"             │
+  │  decision="deny", policy="secret_scan"             │
   │  reason: type of secret detected                        │
   │  Note: the secret value itself is NOT stored            │
   └──────────────────────┬──────────────────────────────────┘

@@ -100,8 +100,14 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         "Write PgPool not available from database".to_string(),
     ))?;
 
-    let config = BlogConfigValidated::load_from_env_or_default()
-        .map_err(|e| MarketplaceError::Internal(format!("Failed to load blog config: {e}")))?;
+    let Some(config) = BlogConfigValidated::load_from_env_or_none()
+        .map_err(|e| MarketplaceError::Internal(format!("Failed to load blog config: {e}")))?
+    else {
+        tracing::debug!(
+            "Blog content ingestion skipped: no blog config configured for this profile"
+        );
+        return Ok(JobResult::success().with_message("skipped: no blog config"));
+    };
 
     let delete_orphans = std::env::var("CONTENT_INGESTION_DELETE_ORPHANS")
         .is_ok_and(|v| v.eq_ignore_ascii_case("true") || v == "1");

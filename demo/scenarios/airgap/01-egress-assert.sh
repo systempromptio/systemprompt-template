@@ -237,6 +237,58 @@ else
 fi
 
 # ──────────────────────────────────────────────
+#  MEASUREMENT 3: DNS + ROUTE — name resolution and external routing fail
+# ──────────────────────────────────────────────
+# TCP egress is closed by `internal: true`, but a thorough reviewer asks the
+# next two questions: can the container resolve external names, and is there
+# any route off the sealed subnet? Prove both negatives from the monitor
+# sidecar — same network namespace as `app`, so what fails for monitor would
+# fail for app.
+subheader "MEASUREMENT 3: DNS + ROUTE" "External name resolution and routing both fail"
+
+step "Resolve api.anthropic.com from inside airgap-internal — expect FAIL"
+cmd "docker compose ... exec -T monitor getent hosts api.anthropic.com"
+if mon getent hosts api.anthropic.com >/dev/null 2>&1; then
+  fail "api.anthropic.com resolved from inside the sealed network — DNS is reachable"
+  FAILURES=$((FAILURES + 1))
+else
+  pass "DNS resolution for external host failed — no resolver path off airgap-internal"
+fi
+
+step "TCP to 1.1.1.1:443 from inside airgap-internal — expect FAIL"
+cmd "docker compose ... exec -T monitor curl -sS --connect-timeout 3 -o /dev/null https://1.1.1.1"
+# Don't parse %{http_code} — on a no-route failure curl prints "000" AND exits
+# non-zero, which would double-up via `|| echo`. Use the exit code directly.
+ROUTE_ERR=$(mon curl -sS --connect-timeout 3 -o /dev/null https://1.1.1.1 2>&1 || true)
+ROUTE_EXIT=$("${COMPOSE[@]}" exec -T monitor sh -c 'curl -sS --connect-timeout 3 -o /dev/null https://1.1.1.1 >/dev/null 2>&1; echo $?' 2>/dev/null | tr -d '\r\n ')
+if [[ "$ROUTE_EXIT" != "0" ]]; then
+  pass "No route to 1.1.1.1 (curl exit=$ROUTE_EXIT) — sealed network has no default gateway"
+  [[ -n "$ROUTE_ERR" ]] && info "curl: $(printf '%s' "$ROUTE_ERR" | head -1)"
+else
+  fail "Reached 1.1.1.1 successfully (curl exit=0) — external routing exists"
+  FAILURES=$((FAILURES + 1))
+fi
+
+# ──────────────────────────────────────────────
+#  MEASUREMENT 4: PROFILE DIR IS READ-ONLY (enforced by kernel, not config)
+# ──────────────────────────────────────────────
+subheader "MEASUREMENT 4: READ-ONLY MOUNT" "Profile dir cannot be tampered with at runtime"
+
+step "Attempt to write into /app/services/profiles/airgap inside the app container"
+cmd "docker compose ... exec -T app sh -c 'touch /app/services/profiles/airgap/tamper.test'"
+TOUCH_OUT=$("${COMPOSE[@]}" exec -T app sh -c 'touch /app/services/profiles/airgap/tamper.test' 2>&1 || true)
+if printf '%s' "$TOUCH_OUT" | grep -qiE 'read-only|read only|erofs'; then
+  pass "Write rejected with read-only error — :ro mount enforced by the kernel"
+  info "kernel: $(printf '%s' "$TOUCH_OUT" | head -1)"
+else
+  fail "Write to profile dir did not return read-only error:"
+  printf '%s\n' "$TOUCH_OUT" | sed 's/^/    /'
+  # Defensive cleanup in case the write actually succeeded.
+  "${COMPOSE[@]}" exec -T app sh -c 'rm -f /app/services/profiles/airgap/tamper.test' >/dev/null 2>&1 || true
+  FAILURES=$((FAILURES + 1))
+fi
+
+# ──────────────────────────────────────────────
 #  SUMMARY
 # ──────────────────────────────────────────────
 divider
@@ -244,6 +296,8 @@ if [[ "$FAILURES" -eq 0 ]]; then
   header "EGRESS ASSERTION: PASS" "The air-gapped stack is a closed system"
   pass "Network measurement: zero connections left airgap-internal"
   pass "Application measurement: governance-denied requests never reached the mock"
+  pass "DNS + route measurement: external resolution and routing both fail"
+  pass "Read-only measurement: profile dir tamper attempt rejected by kernel"
   exit 0
 else
   header "EGRESS ASSERTION: FAIL" "$FAILURES check(s) failed"

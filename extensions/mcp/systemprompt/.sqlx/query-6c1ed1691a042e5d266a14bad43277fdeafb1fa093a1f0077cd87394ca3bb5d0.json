@@ -1,0 +1,101 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT f.id, f.path, f.public_url, f.mime_type, f.size_bytes, f.ai_content,\n                   f.metadata, f.user_id as \"user_id: UserId\", f.session_id as \"session_id: SessionId\", f.trace_id as \"trace_id: TraceId\", f.context_id as \"context_id: ContextId\", f.created_at, f.updated_at, f.deleted_at\n            FROM files f\n            INNER JOIN content_files cf ON cf.file_id = f.id\n            WHERE cf.content_id = $1\n              AND cf.role = $2\n              AND f.deleted_at IS NULL\n            LIMIT 1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "path",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "public_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "mime_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "ai_content",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 7,
+        "name": "user_id: UserId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "session_id: SessionId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "trace_id: TraceId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "context_id: ContextId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "deleted_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "6c1ed1691a042e5d266a14bad43277fdeafb1fa093a1f0077cd87394ca3bb5d0"
+}

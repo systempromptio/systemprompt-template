@@ -1,0 +1,37 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COALESCE(at.agent_name, 'unattributed') as \"name!\",\n                COUNT(DISTINCT r.context_id)::bigint as \"conversations!\",\n                COUNT(*)::bigint as \"ai_requests!\"\n            FROM ai_requests r\n            LEFT JOIN agent_tasks at ON at.task_id = r.task_id\n            WHERE r.created_at >= $1 AND r.created_at < $2\n              AND r.user_id = $3\n              AND r.context_id IS NOT NULL\n            GROUP BY COALESCE(at.agent_name, 'unattributed')\n            ORDER BY COUNT(DISTINCT r.context_id) DESC\n            LIMIT $4\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "conversations!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "ai_requests!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "07e3d722a4f97ea44dbe125c0cc2780072a6816378a2efd3c3dbe5ffc84cab7c"
+}

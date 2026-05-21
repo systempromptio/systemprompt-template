@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO link_clicks (\n                id, link_id, session_id, user_id, context_id, task_id,\n                referrer_page, referrer_url, clicked_at, user_agent, ip_address,\n                device_type, country, is_first_click, is_conversion\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e875f85ca77c8f85482847552a5d0147df8b4e1eb791a331f16ce989ac276ffd"
+}

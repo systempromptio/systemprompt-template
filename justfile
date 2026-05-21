@@ -236,8 +236,24 @@ prepare:
         echo "Run 'just db-up' first to start the database"
         exit 1
     fi
+    # Apply pending migrations before sqlx prepare — otherwise the macros
+    # see a schema older than the code references and fail with
+    # "relation ... does not exist". Skipped if no CLI binary exists yet
+    # (first-time bootstrap before any build).
+    if [ -x "{{CLI}}" ]; then
+        echo "Applying pending migrations..."
+        {{CLI}} infra db migrate
+    else
+        echo "Warning: no systemprompt binary yet; skipping migrate step."
+        echo "  If sqlx prepare fails with 'relation does not exist',"
+        echo "  build first ('just build') then re-run 'just prepare'."
+    fi
     echo "Preparing SQLx offline cache..."
     export DATABASE_URL="$DB_URL"
+    # Drop any stale incremental sqlx artifacts so the query macros re-run
+    # against the freshly-migrated schema. Without this, target/ may cache
+    # check results from before the migrations were applied.
+    cargo clean -p systemprompt-database 2>/dev/null || true
     # Workspace-level prepare (catches lib crates)
     cargo sqlx prepare --workspace
     # Per-crate prepare for binary/extension crates that cargo sqlx skips
@@ -665,6 +681,47 @@ airgap-test:
     ./demo/scenarios/airgap/01-egress-assert.sh
     ./demo/scenarios/airgap/02-load.sh
     ./demo/scenarios/airgap/03-governance.sh
+
+# Reproducibility proof: tear down (incl. volumes), bring back up reusing the
+# already-built image, run the full assertion suite from zero state. Prints
+# wall-clock time. Use this in front of a reviewer who wants to see the demo
+# work from a clean container + clean database, without a 10-minute image
+# rebuild. Image-level reproducibility is a separate concern — see
+# demo/scenarios/airgap/architecture.md §9 (the [patch.crates-io] block
+# requires systemprompt-core >= 0.10.4 to be published before the image can
+# be rebuilt from this repo in isolation).
+airgap-fresh-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    COMPOSE_FILE="deploy/scenarios/airgap/docker-compose.airgap.yml"
+    # Refuse to run if the image isn't already built — the rebuild path needs
+    # the sibling systemprompt-core repo and a 10-minute window, and silently
+    # falling into that on a demo machine is a bad surprise.
+    if ! docker image inspect airgap-app >/dev/null 2>&1 \
+       && ! docker compose -f "$COMPOSE_FILE" config --images 2>/dev/null | head -1 | xargs -I{} docker image inspect {} >/dev/null 2>&1; then
+      echo "ERROR: app image not present. First-time build needed:" >&2
+      echo "  just airgap-up   # builds the image (~10 min, needs ../systemprompt-core)" >&2
+      exit 1
+    fi
+    START=$(date +%s)
+    just airgap-down
+    # No --build: reuse the existing image. This is the from-zero DATA reset,
+    # not the from-zero BUILD reset.
+    docker compose -f "$COMPOSE_FILE" up -d
+    echo "Waiting for app healthcheck..."
+    for i in $(seq 1 120); do
+      if curl -fsS -o /dev/null "http://localhost:${AIRGAP_HTTP_PORT:-8090}/api/v1/health" 2>/dev/null; then
+        echo "App healthy after ${i}s"
+        break
+      fi
+      sleep 1
+    done
+    just airgap-test
+    END=$(date +%s)
+    echo ""
+    echo "═══════════════════════════════════════════════════════"
+    echo "  FRESH AIR-GAP RUN COMPLETE in $((END - START))s"
+    echo "═══════════════════════════════════════════════════════"
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SCALED / DISTRIBUTED SCENARIO

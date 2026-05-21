@@ -1,0 +1,12 @@
+steps:
+  - script: 01-cloud-overview.sh
+    label: Check identity, status, and profiles
+    narrative: >
+      Runs cloud auth whoami, cloud status, and cloud profile list against
+      the active profile. One command surface covers who you are, what's
+      deployed, and which environments you can target — the same binary
+      that ran every previous demo.
+    outcome: >
+      You see your authenticated identity, the current deployment state,
+      and every profile available for promotion from local to managed
+      cloud.

@@ -7,15 +7,15 @@
 #
 #   Test 1 — AWS Access Key:
 #     tool_input contains "AKIAIOSFODNN7EXAMPLE" in a curl command
-#     → secret_injection rule detects AWS key pattern → DENY
+#     → secret_scan rule detects AWS key pattern → DENY
 #
 #   Test 2 — GitHub PAT:
 #     tool_input writes "ghp_ABCDEFghijklmnop..." to a .env file
-#     → secret_injection rule detects GitHub PAT pattern → DENY
+#     → secret_scan rule detects GitHub PAT pattern → DENY
 #
 #   Test 3 — Private Key:
 #     tool_input writes "-----BEGIN RSA PRIVATE KEY-----" to .ssh/id_rsa
-#     → secret_injection rule detects PEM key header → DENY
+#     → secret_scan rule detects PEM key header → DENY
 #
 #   Test 4 — Clean input (control):
 #     tool_input reads a normal .rs source file
@@ -26,7 +26,7 @@
 #   injection attacks that trick the LLM into leaking credentials.
 #
 # Flow per test:
-#   curl → POST /hooks/govern → JWT auth → secret_injection scan
+#   curl → POST /hooks/govern → JWT auth → secret_scan scan
 #   → pattern match on tool_input values → DENY (or ALLOW for clean input)
 #
 # Cost: Free (direct API calls, no AI)
@@ -167,7 +167,7 @@ echo "=========================================="
 echo "  AUDIT COMMANDS (run manually):"
 echo "  $CLI infra db query \"SELECT * FROM governance_decisions WHERE session_id = 'demo-secret-breach' ORDER BY created_at\""
 echo ""
-echo "  Tests 1-3: DENIED (secret_injection)"
+echo "  Tests 1-3: DENIED (secret_scan)"
 echo "  Test 4:    ALLOWED (clean input)"
 echo ""
 echo "  The governance layer blocks plaintext"

@@ -275,7 +275,7 @@ cat <<'FLOW'
   ┌─────────────────────────────────────────────────────────┐
   │  Rule Engine  rules::evaluate(&pool, &ctx)              │
   │    ├─ scope_check      : agent vs tool requirements     │
-  │    ├─ secret_injection  : scan tool_input for secrets    │
+  │    ├─ secret_scan  : scan tool_input for secrets    │
   │    └─ rate_limit        : 300 calls/min per session      │
   │  Returns: Vec<RuleEvaluation { rule, result, detail }>  │
   └──────────────────────┬──────────────────────────────────┘

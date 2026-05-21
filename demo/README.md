@@ -103,7 +103,7 @@ Organized by the three pillars of [systemprompt.io](https://systemprompt.io): **
 | `agents/03-agent-messaging.sh` | Full agent pipeline with AI (~$0.01) |
 | `agents/04-agent-tracing.sh` | Traces, artifacts, cost attribution |
 | `agents/05-agent-registry.sh` | A2A gateway, agent logs |
-| `users/01-user-crud.sh` | User listing, counts, stats, search |
+| `users/01-user-listing.sh` | User listing, counts, stats, search |
 | `users/02-role-management.sh` | User details and role inspection |
 | `users/03-session-management.sh` | Current session, available profiles |
 | `users/04-ip-ban.sh` | Add/remove IP bans with verification |

@@ -6,34 +6,34 @@
   },
   "scenarios": {
     "gateway-inference": {
-      "requests": 4244,
-      "p50_ms": 14,
-      "p95_ms": 18,
-      "p99_ms": 197,
+      "requests": 4650,
+      "p50_ms": 13,
+      "p95_ms": 17,
+      "p99_ms": 98,
       "error_rate": 0.0,
       "passed": true,
       "time_series": [
         {
           "window_start_secs": 0,
-          "requests": 2301,
+          "requests": 2330,
           "error_rate": 0.0,
           "p50_ms": 13,
-          "p95_ms": 19,
-          "p99_ms": 235
+          "p95_ms": 18,
+          "p99_ms": 48
         },
         {
           "window_start_secs": 60,
-          "requests": 1943,
+          "requests": 2320,
           "error_rate": 0.0,
-          "p50_ms": 14,
-          "p95_ms": 17,
-          "p99_ms": 149
+          "p50_ms": 12,
+          "p95_ms": 16,
+          "p99_ms": 112
         }
       ]
     }
   },
   "aggregate": {
-    "total_requests": 4244,
+    "total_requests": 4650,
     "all_passed": true
   }
 }

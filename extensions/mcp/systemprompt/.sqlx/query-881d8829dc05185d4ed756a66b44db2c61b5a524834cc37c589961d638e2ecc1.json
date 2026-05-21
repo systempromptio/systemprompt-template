@@ -1,0 +1,68 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE task_execution_steps SET\n                status = $2,\n                completed_at = $3,\n                duration_ms = $4,\n                content = $5\n            WHERE step_id = $1\n            RETURNING step_id, task_id as \"task_id!: TaskId\", status, content,\n                    started_at as \"started_at!\", completed_at, duration_ms, error_message",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "step_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "task_id!: TaskId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "content",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
+        "name": "started_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "completed_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "duration_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "error_message",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Int4",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "881d8829dc05185d4ed756a66b44db2c61b5a524834cc37c589961d638e2ecc1"
+}

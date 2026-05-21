@@ -1,0 +1,56 @@
+steps:
+  - script: 01-skill-lifecycle.sh
+    label: Walk the skill lifecycle
+    narrative: >
+      Lists every database-synced skill alongside its on-disk config path,
+      then walks services/skills/ on disk so you see each skill YAML that
+      ships with the template and the structured header of the first one.
+      This is the fastest way to answer "what does a skill look like on
+      disk?".
+    outcome: >
+      You see the synced skill catalog with each skill's file path, and
+      the concrete on-disk YAMLs under services/skills/ with the first
+      one previewed.
+  - script: 02-content-management.sh
+    label: Inspect the content skills retrieve from
+    narrative: >
+      Lists the content store, searches it for "governance", ranks
+      popular documentation entries, and prints ingestion status for the
+      documentation source. Content is what gives a skill grounded
+      answers instead of hallucinations.
+    outcome: >
+      You get a catalog of indexed content, a live keyword search result,
+      a popularity ranking, and an ingestion health report for the
+      documentation source.
+  - script: 03-file-management.sh
+    label: Drop down to the files backing content
+    narrative: >
+      Lists managed files, shows the upload configuration including size
+      and type limits, and prints aggregate file statistics. This is the
+      layer most content platforms hide — the script shows it is just
+      another CLI surface.
+    outcome: >
+      You see the managed file inventory, the concrete upload policy the
+      platform enforces, and total counts and size by type.
+  - script: 04-plugin-management.sh
+    label: Package skills into a plugin
+    narrative: >
+      Lists core plugins, walks services/plugins/ on disk to preview each
+      plugin YAML (including enterprise-demo and how it bundles skills,
+      MCP servers, and hooks), lists and validates hooks, then lists
+      loaded extensions and their capabilities. Plugins are the unit of
+      distribution — this is how a skill reaches other installations.
+    outcome: >
+      You see the plugin manifests on disk, the hook inventory with a
+      green validation result, and the extension capability table that
+      tells you exactly what the runtime exposes.
+  - script: 05-contexts.sh
+    label: Bind everything to a live context
+    narrative: >
+      Lists existing contexts, creates a new one, shows it, renames it,
+      deletes it, and re-lists to prove cleanup worked. Contexts are the
+      conversation containers every agent session attaches to, so this is
+      where skills, content, and artifacts meet at runtime.
+    outcome: >
+      You watch a full create-read-update-delete cycle against real
+      storage, with the final list confirming the context was removed.

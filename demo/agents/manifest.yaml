@@ -1,0 +1,55 @@
+steps:
+  - script: 01-list-agents.sh
+    label: Discover the agents the platform ships with
+    narrative: >
+      Lists every configured agent via admin agents list, shows process
+      status, then prints the full config for developer_agent (admin scope)
+      and associate_agent (user scope) side by side so you can see exactly
+      how a scoped-down role differs from a privileged one.
+    outcome: >
+      Two-row agent roster, a running-agent status table, and two concrete
+      YAML configs with oauth scopes, port, endpoint, and skill assignments.
+  - script: 02-agent-config.sh
+    label: Validate configs and inspect tool scopes
+    narrative: >
+      Shows live process status, then validates both developer_agent and
+      associate_agent and enumerates the MCP tools each one can actually
+      call. The difference is the point: the user-scoped associate cannot
+      reach admin-only MCP tools because the governance scope_check rule
+      denies them at the hook.
+    outcome: >
+      A process status table plus validated configs and two tool inventories
+      that diverge exactly at the admin-only MCP surface.
+  - script: 03-agent-messaging.sh
+    label: Send a real message and let the agent work
+    narrative: >
+      Creates a context, messages developer_agent with "List all agents
+      running on this platform" in blocking mode, then retrieves the
+      structured artifact it produced. This is the only step that spends
+      money and the only one that exercises the full runtime — A2A message →
+      agent server → AI call → MCP tool use → artifact.
+    outcome: >
+      A reply, an artifact attached to the context, a structured response
+      with tool use events, and a dashboard link scoped to the exact
+      session_id so you can replay the whole thing visually.
+  - script: 04-agent-tracing.sh
+    label: Replay what just happened
+    narrative: >
+      Pulls the most recent execution traces, expands the latest one to show
+      every event, lists artifacts produced during the run, and breaks cost
+      down by agent. Nothing is mocked — this reads the same tables the
+      dashboard reads.
+    outcome: >
+      The trace shows AI requests, MCP tool calls with arguments, latency
+      per step, and a dollar figure attributed to developer_agent.
+  - script: 05-agent-registry.sh
+    label: See the agents as discoverable services
+    narrative: >
+      Queries the A2A gateway registry so you can see how other agents and
+      external callers discover these workers, then tails the process logs
+      for each agent. A2A is what makes this a platform rather than a single
+      chatbot.
+    outcome: >
+      The registry shows both developer_agent and associate_agent registered
+      with the A2A gateway, and the per-agent logs pull live stdout from the
+      running processes.

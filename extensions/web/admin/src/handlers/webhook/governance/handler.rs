@@ -9,6 +9,7 @@ use axum::{
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 use systemprompt::models::auth::JwtAudience;
+use systemprompt::oauth::OauthError;
 
 use crate::types::webhook::GovernQuery;
 use crate::types::webhook::HookEventPayload;
@@ -96,6 +97,7 @@ fn authenticate_request(
         }
     };
 
+    let expected_aud = "hook|plugin|api";
     let claims = systemprompt::oauth::validate_jwt_token(
         token,
         &jwt_issuer,
@@ -106,13 +108,72 @@ fn authenticate_request(
         ],
     )
     .map_err(|e| {
-        tracing::warn!(error = %e, "Governance webhook JWT validation failed");
+        log_jwt_failure(&e, expected_aud, &jwt_issuer);
         let reason = "Invalid or expired token — tool call blocked";
         spawn_auth_denial(denial_params, reason);
         Box::new(build_deny_response(reason))
     })?;
 
     Ok(UserId::new(&claims.sub))
+}
+
+fn log_jwt_failure(err: &OauthError, expected_aud: &str, issuer: &str) {
+    match err {
+        OauthError::TokenAlgMismatch { got, expected } => {
+            log_jwt_alg_mismatch(got, expected, expected_aud, issuer);
+        }
+        OauthError::TokenMissingKid => log_jwt_missing_kid(expected_aud, issuer),
+        OauthError::TokenUnknownKid { kid } => log_jwt_unknown_kid(kid, expected_aud, issuer),
+        OauthError::Expired(reason) => log_jwt_expired(reason, expected_aud, issuer),
+        other => log_jwt_other(other, expected_aud, issuer),
+    }
+}
+
+fn log_jwt_alg_mismatch(got: &str, expected: &str, expected_aud: &str, issuer: &str) {
+    tracing::warn!(
+        got_alg = %got,
+        expected_alg = %expected,
+        expected_aud,
+        issuer,
+        "Governance webhook JWT rejected: signing algorithm mismatch"
+    );
+}
+
+fn log_jwt_missing_kid(expected_aud: &str, issuer: &str) {
+    tracing::warn!(
+        expected_alg = "RS256",
+        expected_aud,
+        issuer,
+        "Governance webhook JWT rejected: missing `kid` header"
+    );
+}
+
+fn log_jwt_unknown_kid(kid: &str, expected_aud: &str, issuer: &str) {
+    tracing::warn!(
+        kid = %kid,
+        expected_aud,
+        issuer,
+        "Governance webhook JWT rejected: unknown signing key — token was minted under a \
+         different RSA authority"
+    );
+}
+
+fn log_jwt_expired(reason: &str, expected_aud: &str, issuer: &str) {
+    tracing::warn!(
+        reason = %reason,
+        expected_aud,
+        issuer,
+        "Governance webhook JWT rejected: token expired"
+    );
+}
+
+fn log_jwt_other(err: &OauthError, expected_aud: &str, issuer: &str) {
+    tracing::warn!(
+        error = %err,
+        expected_aud,
+        issuer,
+        "Governance webhook JWT validation failed"
+    );
 }
 
 struct EvaluateInput<'a> {
@@ -177,7 +238,7 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
         tool_name: params.tool_name.to_string(),
         agent_id: params.agent_id.map(str::to_string),
         agent_scope: "unauthenticated".to_string(),
-        decision: GovernanceDecision::Deny.to_string(),
+        decision: GovernanceDecision::Deny,
         policy: "auth_failure".to_string(),
         reason: reason.to_string(),
         evaluated_rules: serde_json::json!([{"rule": "authentication", "result": "fail", "detail": reason}]),
@@ -185,7 +246,15 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
     };
 
     tokio::spawn(async move {
-        audit::record_decision(&p, &record).await;
+        if let Err(e) = audit::record_decision(&p, &record).await {
+            tracing::error!(
+                target: "governance.audit.write_failed",
+                error = %e,
+                policy = %record.policy,
+                session_id = %record.session_id,
+                "governance audit write failed; row dropped",
+            );
+        }
     });
 }
 
@@ -197,7 +266,7 @@ fn spawn_audit_recording(params: &AuditParams<'_>) {
         tool_name: params.tool_name.to_string(),
         agent_id: params.agent_id.map(str::to_string),
         agent_scope: params.agent_scope.to_string(),
-        decision: params.evaluation.decision.to_string(),
+        decision: params.evaluation.decision,
         policy: params.evaluation.policy.clone().into_owned(),
         reason: params.evaluation.reason.clone().into_owned(),
         evaluated_rules: serde_json::to_value(&params.evaluation.rules).unwrap_or_else(|e| {
@@ -208,6 +277,14 @@ fn spawn_audit_recording(params: &AuditParams<'_>) {
     };
 
     tokio::spawn(async move {
-        audit::record_decision(&p, &record).await;
+        if let Err(e) = audit::record_decision(&p, &record).await {
+            tracing::error!(
+                target: "governance.audit.write_failed",
+                error = %e,
+                policy = %record.policy,
+                session_id = %record.session_id,
+                "governance audit write failed; row dropped",
+            );
+        }
     });
 }

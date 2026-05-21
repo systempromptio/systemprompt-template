@@ -1,0 +1,52 @@
+steps:
+  - script: 01-services.sh
+    label: Check service health
+    narrative: >
+      Runs infra services status and then --detailed to show the agent and
+      MCP server processes the platform supervises, with pids, ports, and
+      health. This is the first thing you reach for when something feels
+      wrong.
+    outcome: >
+      You see the systemprompt MCP server running as a supervised process,
+      plus any configured agents, with health and lifecycle hooks for
+      start/stop/restart/cleanup.
+  - script: 02-database.sh
+    label: Inspect the Postgres schema
+    narrative: >
+      Walks the database from the outside in: connection info, table list,
+      schema of governance_decisions, indexes, row counts, size, a live
+      read-only SQL query, migration status, and schema validation.
+      Nothing is hidden behind an ORM.
+    outcome: >
+      You see the real schema, a live SELECT against governance_decisions
+      grouped by decision, and a passing migration and schema validation
+      check.
+  - script: 03-jobs.sh
+    label: Audit scheduled background jobs
+    narrative: >
+      Lists every registered background job, shows one job's schedule and
+      config, then prints execution history. This is how you answer "what
+      runs on its own, and did the last run succeed?"
+    outcome: >
+      You see the registered jobs, a specific job's cron schedule and
+      configuration, and the last N executions with status and duration.
+  - script: 04-logs.sh
+    label: Tail logs, traces, and AI requests
+    narrative: >
+      Runs infra logs view, summary, search, then trace list, request
+      list, and tools list. Application logs, per-request traces, AI call
+      logs, and MCP tool executions are all first-class and queryable
+      from one CLI.
+    outcome: >
+      You see recent log lines, a level-aggregated summary, keyword
+      search, execution traces, AI request records, and MCP tool call
+      history — enough to debug any failure end-to-end.
+  - script: 05-config.sh
+    label: Review runtime configuration
+    narrative: >
+      Shows the merged config, the files it came from, validation status,
+      runtime values, filesystem paths, and the active AI provider.
+      Config is files on disk you can diff, not a mystery service.
+    outcome: >
+      You see the effective configuration, the source files that produced
+      it, a green validation check, and the current AI provider binding.

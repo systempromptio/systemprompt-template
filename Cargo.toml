@@ -25,7 +25,7 @@ opt-level = "z"
 
 [workspace.package]
 edition = "2021"
-version = "0.9.2"
+version = "0.11.0"
 authors = ["systemprompt.io <ed@systemprompt.io>"]
 license = "MIT"
 
@@ -244,40 +244,38 @@ workspace = true
 # systemprompt-core checkout so changes there are picked up without a
 # crates.io release.
 #
-# CURRENTLY ENABLED: the air-gap evaluation work depends on systemprompt-core
-# changes (gateway-policy ingestion, AI endpoint secret expansion, profile
-# JSON schema, read-only-profile-dir tolerance) not yet in a published release.
-# Before this branch lands, publish systemprompt-core (>= 0.10.4), bump the
-# `systemprompt`/`systemprompt-security` versions above, and re-comment this
-# block.
-[patch.crates-io]
-systemprompt = { path = "../systemprompt-core/systemprompt" }
-systemprompt-models = { path = "../systemprompt-core/crates/shared/models" }
-systemprompt-traits = { path = "../systemprompt-core/crates/shared/traits" }
-systemprompt-identifiers = { path = "../systemprompt-core/crates/shared/identifiers" }
-systemprompt-extension = { path = "../systemprompt-core/crates/shared/extension" }
-systemprompt-provider-contracts = { path = "../systemprompt-core/crates/shared/provider-contracts" }
-systemprompt-client = { path = "../systemprompt-core/crates/shared/client" }
-systemprompt-template-provider = { path = "../systemprompt-core/crates/shared/template-provider" }
-systemprompt-database = { path = "../systemprompt-core/crates/infra/database" }
-systemprompt-events = { path = "../systemprompt-core/crates/infra/events" }
-systemprompt-security = { path = "../systemprompt-core/crates/infra/security" }
-systemprompt-config = { path = "../systemprompt-core/crates/infra/config" }
-systemprompt-logging = { path = "../systemprompt-core/crates/infra/logging" }
-systemprompt-loader = { path = "../systemprompt-core/crates/infra/loader" }
-systemprompt-cloud = { path = "../systemprompt-core/crates/infra/cloud" }
-systemprompt-users = { path = "../systemprompt-core/crates/domain/users" }
-systemprompt-oauth = { path = "../systemprompt-core/crates/domain/oauth" }
-systemprompt-files = { path = "../systemprompt-core/crates/domain/files" }
-systemprompt-analytics = { path = "../systemprompt-core/crates/domain/analytics" }
-systemprompt-content = { path = "../systemprompt-core/crates/domain/content" }
-systemprompt-ai = { path = "../systemprompt-core/crates/domain/ai" }
-systemprompt-mcp = { path = "../systemprompt-core/crates/domain/mcp" }
-systemprompt-agent = { path = "../systemprompt-core/crates/domain/agent" }
-systemprompt-templates = { path = "../systemprompt-core/crates/domain/templates" }
-systemprompt-runtime = { path = "../systemprompt-core/crates/app/runtime" }
-systemprompt-scheduler = { path = "../systemprompt-core/crates/app/scheduler" }
-systemprompt-generator = { path = "../systemprompt-core/crates/app/generator" }
-systemprompt-sync = { path = "../systemprompt-core/crates/app/sync" }
-systemprompt-api = { path = "../systemprompt-core/crates/entry/api" }
-systemprompt-cli = { path = "../systemprompt-core/crates/entry/cli" }
+# CURRENTLY DISABLED: building against published systemprompt-core 0.11.0
+# (pinned in [workspace.dependencies] above). Re-enable by uncommenting the
+# block below when doing cross-repo work against a local checkout of
+# systemprompt-core; re-comment before building images or shipping.
+# [patch.crates-io]
+# systemprompt = { path = "../systemprompt-core/systemprompt" }
+# systemprompt-models = { path = "../systemprompt-core/crates/shared/models" }
+# systemprompt-traits = { path = "../systemprompt-core/crates/shared/traits" }
+# systemprompt-identifiers = { path = "../systemprompt-core/crates/shared/identifiers" }
+# systemprompt-extension = { path = "../systemprompt-core/crates/shared/extension" }
+# systemprompt-provider-contracts = { path = "../systemprompt-core/crates/shared/provider-contracts" }
+# systemprompt-client = { path = "../systemprompt-core/crates/shared/client" }
+# systemprompt-template-provider = { path = "../systemprompt-core/crates/shared/template-provider" }
+# systemprompt-database = { path = "../systemprompt-core/crates/infra/database" }
+# systemprompt-events = { path = "../systemprompt-core/crates/infra/events" }
+# systemprompt-security = { path = "../systemprompt-core/crates/infra/security" }
+# systemprompt-config = { path = "../systemprompt-core/crates/infra/config" }
+# systemprompt-logging = { path = "../systemprompt-core/crates/infra/logging" }
+# systemprompt-loader = { path = "../systemprompt-core/crates/infra/loader" }
+# systemprompt-cloud = { path = "../systemprompt-core/crates/infra/cloud" }
+# systemprompt-users = { path = "../systemprompt-core/crates/domain/users" }
+# systemprompt-oauth = { path = "../systemprompt-core/crates/domain/oauth" }
+# systemprompt-files = { path = "../systemprompt-core/crates/domain/files" }
+# systemprompt-analytics = { path = "../systemprompt-core/crates/domain/analytics" }
+# systemprompt-content = { path = "../systemprompt-core/crates/domain/content" }
+# systemprompt-ai = { path = "../systemprompt-core/crates/domain/ai" }
+# systemprompt-mcp = { path = "../systemprompt-core/crates/domain/mcp" }
+# systemprompt-agent = { path = "../systemprompt-core/crates/domain/agent" }
+# systemprompt-templates = { path = "../systemprompt-core/crates/domain/templates" }
+# systemprompt-runtime = { path = "../systemprompt-core/crates/app/runtime" }
+# systemprompt-scheduler = { path = "../systemprompt-core/crates/app/scheduler" }
+# systemprompt-generator = { path = "../systemprompt-core/crates/app/generator" }
+# systemprompt-sync = { path = "../systemprompt-core/crates/app/sync" }
+# systemprompt-api = { path = "../systemprompt-core/crates/entry/api" }
+# systemprompt-cli = { path = "../systemprompt-core/crates/entry/cli" }

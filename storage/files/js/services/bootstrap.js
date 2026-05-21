@@ -4,9 +4,7 @@ import { initSidebar } from './sidebar.js';
 import { initTheme } from './theme.js';
 import { initHeaderActions } from './header-actions.js';
 import { initHeaderSearch } from './header-search.js';
-import { initInstallWidget } from './install-widget.js';
 import { initLogout, initUserDisplay, getUserContext } from './auth.js';
-import { initOnboardingBanner } from './onboarding-banner.js';
 
 setCloseMenus(closeAllMenus);
 initDelegation();
@@ -15,8 +13,6 @@ initSidebar();
 initTheme();
 initHeaderActions();
 initHeaderSearch();
-initInstallWidget();
 initLogout();
 initUserDisplay();
 getUserContext();
-initOnboardingBanner();

@@ -6,7 +6,7 @@
 # What this populates:
 #   1. Contexts (demo-review, incident-response, onboarding)
 #   2. Files uploaded from demo/fixtures/ (uploads, user_activity)
-#   3. Governance decisions — allow, scope_restriction, secret_injection,
+#   3. Governance decisions — allow, scope_restriction, secret_scan,
 #      tool_blocklist — across 5 sessions, both agents, 6 tool names
 #      (governance_decisions)
 #   4. PostToolUse tracking events across sessions (plugin_usage_events)
@@ -104,7 +104,7 @@ for i in 1 2 3; do
   gov "$s" developer_agent Write '{"content":"AKIA1234567890ABCDEF"}'
   gov "$s" associate_agent Write '{"content":"sk-ant-demo-FAKE1234567890"}'
 done
-pass "6 secret_injection denial events"
+pass "6 secret_scan denial events"
 
 # Destructive blocklist hits from associate_agent
 for i in 1 2; do

@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT role, LEFT(content, 500) as content_preview, sequence_number\n           FROM ai_request_messages\n           WHERE request_id = $1\n           ORDER BY sequence_number",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "role",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "content_preview",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "sequence_number",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false
+    ]
+  },
+  "hash": "beb619e12ced9bdbf6d5d04e77396beca54e866a1fe522aa0ff49b16211798d5"
+}

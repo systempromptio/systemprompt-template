@@ -1,0 +1,74 @@
+steps:
+  - script: 01-overview.sh
+    label: Open the 24h and 7d overview
+    narrative: >
+      Runs analytics overview for the last 24 hours and then --since 7d.
+      One command gives you the same top-of-funnel numbers the admin
+      dashboard shows — request volume, agent activity, cost, errors.
+    outcome: >
+      You see a 24h and 7d snapshot of request count, active agents, total
+      cost, and error rate in a single table.
+  - script: 02-agent-analytics.sh
+    label: Drill into agent performance
+    narrative: >
+      Aggregate stats, a ranked list of every agent with metrics, 7-day
+      trends, and a deep-dive into developer_agent. This is how you find
+      the one agent quietly burning budget or failing silently.
+    outcome: >
+      You see a per-agent table with request count, success rate, and
+      latency, a 7-day trend line, and a per-agent deep dive for
+      developer_agent.
+  - script: 03-cost-analytics.sh
+    label: Break cost down by model and agent
+    narrative: >
+      Prints the cost summary, then breaks it down by model and by agent,
+      then shows 7-day trends. This is your finance conversation: Haiku is
+      80% of calls and 12% of cost; Opus is the opposite.
+    outcome: >
+      You see total spend, cost split by model, cost split by agent, and a
+      7-day cost trend — attributable to the row.
+  - script: 04-request-analytics.sh
+    label: Inspect the raw request stream
+    narrative: >
+      Shows request stats, the last 24 hours of individual AI calls, the
+      model usage distribution, and 7-day volume trends. Every row is a
+      real request you can click through to the full audit log.
+    outcome: >
+      You see request-level rows with model, latency, and token counts,
+      the model distribution, and a 7-day volume trend.
+  - script: 05-session-analytics.sh
+    label: Zoom into sessions — stats, trends, and live
+    narrative: >
+      Runs analytics sessions stats, a 7-day trend line, and the live
+      active-session view. Sessions answer "who's using it right now" and
+      "is usage trending up".
+    outcome: >
+      Aggregate session counts, a 7-day trend, and a live list of sessions
+      currently open against the platform.
+  - script: 06-content-traffic.sh
+    label: Break down content and traffic
+    narrative: >
+      analytics content stats, top pages, 7-day content trends, traffic
+      sources, geo distribution, and device breakdown. Same binary that
+      governs agents also tells you where your readers come from.
+    outcome: >
+      Content engagement stats, top pages, traffic source and geo split,
+      and a device breakdown for the public site.
+  - script: 07-conversations.sh
+    label: Inspect agent conversations
+    narrative: >
+      Prints conversation stats, 7-day trends, and the 20 most recent
+      conversations. Every agent session is a conversation you can list
+      and replay — no black-box chat log.
+    outcome: >
+      Counts and a 7-day trend for conversations, plus a list of the 20
+      most recent with agent, status, and turn count.
+  - script: 08-tool-analytics.sh
+    label: Close the loop on tool usage
+    narrative: >
+      analytics tools stats, a ranked list of tools with per-tool metrics,
+      and a 7-day trend. Tells you which MCP tools your agents are
+      actually reaching for and whether usage is shifting.
+    outcome: >
+      Per-tool call counts, latency, and error rate, plus a 7-day trend
+      showing whether any tool is spiking or quietly dying.

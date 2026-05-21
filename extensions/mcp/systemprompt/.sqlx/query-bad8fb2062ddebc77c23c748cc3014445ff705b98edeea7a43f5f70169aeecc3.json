@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COALESCE(SUM(cost_microdollars), 0)::bigint as total_cost_microdollars,\n            COALESCE(SUM(COALESCE(input_tokens, 0) + COALESCE(output_tokens, 0)), 0)::bigint as total_tokens,\n            COALESCE(SUM(input_tokens), 0)::bigint as total_input_tokens,\n            COALESCE(SUM(output_tokens), 0)::bigint as total_output_tokens,\n            COUNT(*)::bigint as request_count,\n            COALESCE(SUM(latency_ms), 0)::bigint as total_latency_ms\n        FROM ai_requests\n        WHERE trace_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_cost_microdollars",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_tokens",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "total_input_tokens",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_output_tokens",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "request_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "total_latency_ms",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "bad8fb2062ddebc77c23c748cc3014445ff705b98edeea7a43f5f70169aeecc3"
+}

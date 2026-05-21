@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                campaign_id as \"campaign_id!: CampaignId\",\n                COALESCE(SUM(click_count), 0)::bigint as \"total_clicks!\",\n                COUNT(*)::bigint as \"link_count!\",\n                COUNT(DISTINCT source_content_id) as unique_visitors,\n                COALESCE(SUM(conversion_count), 0)::bigint as conversion_count\n            FROM campaign_links\n            WHERE campaign_id = $1\n            GROUP BY campaign_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "campaign_id!: CampaignId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_clicks!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "link_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "unique_visitors",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "conversion_count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "943db435b4ec664c3385ad7d273cb89947e575913cbaf4b63f7b32aef6bb2501"
+}

@@ -37,7 +37,6 @@ pub async fn fetch_governance_counts_in_range(
             COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS "denied!",
             COUNT(*) FILTER (
                 WHERE policy = 'secret_scan'
-                   OR policy = 'secret_injection'
                    OR reason ILIKE '%secret%'
             )::bigint AS "secret_scan!",
             COUNT(*) FILTER (
@@ -133,7 +132,7 @@ pub async fn fetch_decision_buckets(
                  OR (
                        $4 = 'secret'
                        AND (
-                            g.policy IN ('secret_scan', 'secret_injection')
+                            g.policy = 'secret_scan'
                             OR ($5::bool AND g.reason ILIKE '%secret%')
                        )
                     )
