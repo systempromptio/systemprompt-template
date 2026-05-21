@@ -82,6 +82,21 @@ if [[ -z "$TOKEN" ]]; then
 fi
 pass "Admin token acquired (${#TOKEN} chars)"
 
+# Extract the session_id from the JWT — the gateway enforces strict
+# x-session-id == token.session_id matching for /v1/messages.
+_jwt_session_id() {
+  local payload pad
+  payload=$(printf '%s' "$1" | cut -d. -f2)
+  pad=$(( (4 - ${#payload} % 4) % 4 ))
+  printf '%s' "$payload"; printf '%.0s=' $(seq 1 $pad)
+}
+SESSION_ID=$(_jwt_session_id "$TOKEN" | tr '_-' '/+' | base64 -d 2>/dev/null \
+  | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+if [[ -z "$SESSION_ID" ]]; then
+  fail "Could not extract session_id from the minted JWT"
+  exit 1
+fi
+
 # The existing governance scripts read demo/.token via TOKEN_FILE.
 echo "$TOKEN" > "$TOKEN_FILE"
 info "Token written to $TOKEN_FILE for the governance scripts"
@@ -168,7 +183,7 @@ step "POST /v1/messages with allowed model claude-haiku-4-5"
 cmd "curl -X POST $BASE_URL/v1/messages   (model=claude-haiku-4-5)"
 ALLOWED_BODY=$(curl -s -m 15 -X POST \
   -H "Authorization: Bearer $TOKEN" \
-  -H "x-session-id: airgap-routing-allowed" \
+  -H "x-session-id: $SESSION_ID" \
   -H "Content-Type: application/json" \
   -d "$ALLOWED_PAYLOAD" \
   -w $'\n%{http_code}' \
@@ -201,7 +216,7 @@ step "POST /v1/messages with denied model claude-opus-forbidden-99"
 cmd "curl -X POST $BASE_URL/v1/messages   (model=claude-opus-forbidden-99)"
 DENIED_BODY=$(curl -s -m 15 -X POST \
   -H "Authorization: Bearer $TOKEN" \
-  -H "x-session-id: airgap-routing-denied" \
+  -H "x-session-id: $SESSION_ID" \
   -H "Content-Type: application/json" \
   -d "$DENIED_PAYLOAD" \
   -w $'\n%{http_code}' \

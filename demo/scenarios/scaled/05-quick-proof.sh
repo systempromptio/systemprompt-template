@@ -31,12 +31,31 @@ N="${N:-600}"
 C="${C:-60}"
 SESSION="quickproof-$(date +%s)"
 
+# Classify target so the banner and verdict don't lie about what was tested.
+# The scaled stack's nginx LB lives on :8088; anything else is "single
+# instance" (a `just start` dev binary or an arbitrary host).
+if [[ "$TARGET_URL" == *":8088"* ]]; then
+  MODE="scaled"
+  MODE_LABEL="nginx LB -> N app replicas ($TARGET_URL)"
+else
+  MODE="single"
+  MODE_LABEL="single instance ($TARGET_URL) — fairness check will be trivial"
+fi
+
 echo ""
 echo "=========================================="
 echo "  SCALED QUICK PROOF: ${N} reqs / ${C} concurrent"
-echo "  LB ${LB_URL} -> N app replicas"
+echo "  Target: ${MODE_LABEL}"
+echo "  Session: ${SESSION}"
 echo "=========================================="
 echo ""
+
+if [[ "$MODE" == "single" ]]; then
+  echo "  NOTE: not hitting the scaled stack. To prove multi-replica fairness:"
+  echo "    just scaled-up REPLICAS=3"
+  echo "    TARGET_URL=http://localhost:8088 $0"
+  echo ""
+fi
 
 # ── Preflight: target must be reachable ────────
 if ! curl -fsS -o /dev/null --max-time 5 "$TARGET_URL/api/v1/health"; then
@@ -48,7 +67,22 @@ fi
 echo "  Healthy at $TARGET_URL"
 echo ""
 
+# ── Baseline: prove the session is unique (audit row count starts at 0) ──
+BASELINE_ROWS=$("$CLI" infra db query \
+  "SELECT count(*) AS n FROM governance_decisions WHERE session_id = '$SESSION'" \
+  --profile "$PROFILE" 2>/dev/null \
+  | grep -oE '"n": [0-9]+' | head -1 | awk '{print $2}')
+BASELINE_ROWS="${BASELINE_ROWS:-0}"
+echo "  Baseline audit rows for session: ${BASELINE_ROWS} (expected 0)"
+echo ""
+
 install_hey || exit 1
+
+# jq is required for parsing CLI db-query JSON output.
+if ! command -v jq >/dev/null 2>&1; then
+  echo "  FAIL: jq not installed. brew install jq  /  apt-get install jq" >&2
+  exit 1
+fi
 
 # ── Fire the load through the LB ───────────────
 echo "------------------------------------------"
@@ -109,8 +143,11 @@ else
 fi
 
 # ── Audit-spine assertion ──────────────────────
+# Pull row count, decision/policy distribution, and time range in a single
+# query so we can show the user the audit spine actually moved — not just that
+# a number changed.
 echo "------------------------------------------"
-echo "  Audit spine: counting rows for ${SESSION}"
+echo "  Audit spine: querying Postgres for ${SESSION}"
 echo "------------------------------------------"
 echo ""
 
@@ -119,26 +156,79 @@ AUDIT_ROWS=$("$CLI" infra db query \
   --profile "$PROFILE" 2>/dev/null \
   | grep -oE '"n": [0-9]+' | head -1 | awk '{print $2}')
 AUDIT_ROWS="${AUDIT_ROWS:-0}"
+AUDIT_DELTA=$(( AUDIT_ROWS - BASELINE_ROWS ))
+
+# Server-side time range — derives true ingest throughput independent of hey.
+TIME_RANGE_JSON=$("$CLI" infra db query \
+  "SELECT min(created_at) AS first_seen, max(created_at) AS last_seen, EXTRACT(EPOCH FROM (max(created_at) - min(created_at)))::float AS span_s FROM governance_decisions WHERE session_id = '$SESSION'" \
+  --profile "$PROFILE" 2>/dev/null)
+FIRST_SEEN=$(echo "$TIME_RANGE_JSON" | jq -r '.rows[0].first_seen // "?"' 2>/dev/null)
+LAST_SEEN=$(echo "$TIME_RANGE_JSON"  | jq -r '.rows[0].last_seen  // "?"' 2>/dev/null)
+SPAN_S=$(echo "$TIME_RANGE_JSON"     | jq -r '.rows[0].span_s     // 0'   2>/dev/null)
+SERVER_RPS="n/a"
+if [[ -n "$SPAN_S" && "$SPAN_S" != "0" && "${AUDIT_ROWS:-0}" -gt 0 ]]; then
+  SERVER_RPS=$(awk -v n="$AUDIT_ROWS" -v s="$SPAN_S" 'BEGIN { if (s>0) printf "%.0f", n/s; else print "n/a" }')
+fi
+
+# Decision / policy histogram — proves the four-stage pipeline actually ran
+# and shows whether decisions were allow/deny/etc. The CLI returns a JSON
+# document with object keys in non-deterministic order, so parse via jq.
+echo "  Decision histogram:"
+HIST_JSON=$("$CLI" infra db query \
+  "SELECT decision, policy, count(*) AS n FROM governance_decisions WHERE session_id = '$SESSION' GROUP BY decision, policy ORDER BY n DESC" \
+  --profile "$PROFILE" 2>/dev/null)
+echo "$HIST_JSON" | jq -r '.rows[] | "    \(.n) × decision=\(.decision) policy=\(.policy)"' 2>/dev/null \
+  || echo "    (no rows)"
+echo ""
+
+# Sample three audit rows so the user can eyeball real data, not a count.
+echo "  Sample audit rows (first 3 of ${AUDIT_ROWS}):"
+SAMPLE_JSON=$("$CLI" infra db query \
+  "SELECT id, tool_name, decision, policy, plugin_id, created_at FROM governance_decisions WHERE session_id = '$SESSION' ORDER BY created_at LIMIT 3" \
+  --profile "$PROFILE" 2>/dev/null)
+echo "$SAMPLE_JSON" | jq -r '.rows[] | "    \(.created_at)  id=\(.id)  tool=\(.tool_name)  decision=\(.decision)  policy=\(.policy)  plugin=\(.plugin_id)"' 2>/dev/null \
+  || echo "    (none)"
+echo ""
 
 # ── Verdict ────────────────────────────────────
 echo "=========================================="
 echo "  VERDICT"
 echo "=========================================="
 echo ""
-printf "  Throughput through LB        %s req/s\n" "${RPS:-?}"
+printf "  Mode                         %s\n" "$MODE"
+printf "  Client throughput (hey)      %s req/s\n" "${RPS:-?}"
+printf "  Server-side throughput       %s req/s  (audit rows / DB time span)\n" "$SERVER_RPS"
 printf "  Latency  p50 / p99           %sms / %sms\n" "${P50:-?}" "${P99:-?}"
 printf "  Replicas hit (x-served-by)   %d\n" "$REPLICA_COUNT"
 printf "  Fairness (max/min hits)      %s\n" "$FAIRNESS"
 printf "  HTTP 200 / requests sent     %s / %s\n" "${OK_COUNT:-?}" "$N"
-printf "  Audit rows for session       %s\n" "$AUDIT_ROWS"
+printf "  Audit rows: baseline -> now  %s -> %s   (delta %s, expected %s)\n" \
+  "$BASELINE_ROWS" "$AUDIT_ROWS" "$AUDIT_DELTA" "$N"
+printf "  Audit time range             %s -> %s  (%ss)\n" \
+  "${FIRST_SEEN:-?}" "${LAST_SEEN:-?}" "${SPAN_S:-?}"
 echo ""
 
 VERDICT=0
 [[ "${OK_COUNT:-0}" == "$N" ]] || { echo "  FAIL: not all requests returned 200"; VERDICT=1; }
-[[ "${AUDIT_ROWS:-0}" == "$N" ]] || { echo "  FAIL: audit row count != requests sent (single-spine claim violated)"; VERDICT=1; }
-(( FAIR_OK == 1 )) || { echo "  FAIL: replica fairness ratio > 1.5"; VERDICT=1; }
+[[ "${AUDIT_DELTA:-0}" == "$N" ]] || { echo "  FAIL: audit delta != requests sent (single-spine claim violated)"; VERDICT=1; }
+if [[ "$MODE" == "scaled" ]]; then
+  (( FAIR_OK == 1 )) || { echo "  FAIL: replica fairness ratio > 1.5"; VERDICT=1; }
+  (( REPLICA_COUNT >= 2 )) || { echo "  FAIL: expected ≥2 replicas in scaled mode, saw ${REPLICA_COUNT}"; VERDICT=1; }
+fi
 
 if (( VERDICT == 0 )); then
-  echo "  PASS: LB spreads evenly · every request audited · single spine."
+  if [[ "$MODE" == "scaled" ]]; then
+    echo "  PASS: LB spreads evenly · every request audited · single spine."
+  else
+    echo "  PASS (single-instance): every request audited · single spine."
+    echo "        (fairness not exercised — re-run with scaled stack for that claim)"
+  fi
 fi
+
+echo ""
+echo "  See the rows yourself:"
+echo "    $CLI infra db query \"SELECT * FROM governance_decisions WHERE session_id = '$SESSION' LIMIT 10\" --profile $PROFILE"
+echo "    $CLI infra logs trace list --limit 20"
+echo ""
+
 exit "$VERDICT"
