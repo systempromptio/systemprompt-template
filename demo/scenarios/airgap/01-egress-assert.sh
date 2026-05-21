@@ -82,6 +82,23 @@ if [[ -z "$TOKEN" ]]; then
 fi
 pass "Admin token acquired (${#TOKEN} chars)"
 
+# Extract the session_id from the JWT payload — the gateway enforces strict
+# x-session-id == token.session_id matching, so the burst headers below must
+# carry the token's own session id, not a free-form label.
+_jwt_session_id() {
+  local payload pad
+  payload=$(printf '%s' "$1" | cut -d. -f2)
+  pad=$(( (4 - ${#payload} % 4) % 4 ))
+  printf '%s' "$payload"; printf '%.0s=' $(seq 1 $pad)
+}
+SESSION_ID=$(_jwt_session_id "$TOKEN" | tr '_-' '/+' | base64 -d 2>/dev/null \
+  | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+if [[ -z "$SESSION_ID" ]]; then
+  fail "Could not extract session_id from the minted JWT"
+  exit 1
+fi
+pass "Session id extracted: $SESSION_ID"
+
 # ──────────────────────────────────────────────
 #  MEASUREMENT 1: NETWORK — zero connections leave airgap-internal
 # ──────────────────────────────────────────────
@@ -112,7 +129,7 @@ BURST_PAYLOAD='{"model":"claude-haiku-4-5","max_tokens":16,"messages":[{"role":"
 for _ in $(seq 1 20); do
   curl -s -o /dev/null -m 5 -X POST \
     -H "Authorization: Bearer $TOKEN" \
-    -H "x-session-id: airgap-egress-burst" \
+    -H "x-session-id: $SESSION_ID" \
     -H "Content-Type: application/json" \
     -d "$BURST_PAYLOAD" \
     "$BASE_URL/v1/messages" >/dev/null 2>&1 || true
@@ -207,7 +224,7 @@ DENIED_OTHER=0
 for _ in $(seq 1 25); do
   CODE=$(curl -s -o /dev/null -w "%{http_code}" -m 5 -X POST \
     -H "Authorization: Bearer $TOKEN" \
-    -H "x-session-id: airgap-egress-denied" \
+    -H "x-session-id: $SESSION_ID" \
     -H "Content-Type: application/json" \
     -d "$DENIED_PAYLOAD" \
     "$BASE_URL/v1/messages" 2>/dev/null || echo "000")

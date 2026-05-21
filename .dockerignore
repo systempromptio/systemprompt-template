@@ -1,4 +1,6 @@
-# target/  # TEMP for Dockerfile.scaled-prebuilt; revert before commit
+target/
+!target/release/systemprompt
+!target/release/systemprompt-mcp-agent
 .git/
 node_modules/
 web/dist/
