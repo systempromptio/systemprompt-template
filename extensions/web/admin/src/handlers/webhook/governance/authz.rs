@@ -20,6 +20,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::Actor;
 use systemprompt_security::authz::{
     resolve, AccessControlRepository, AccessRule, AuthzDecision, AuthzRequest, Decision,
+    DecisionTag,
 };
 
 use crate::repositories::governance_grp::{insert_governance_decision, GovernanceDecisionRecord};
@@ -54,12 +55,12 @@ async fn audit_decision(
     default_included: bool,
     decision: &Decision,
 ) {
-    let (decision_str, reason_str, justification_opt) = match decision {
-        Decision::Allow => ("allow", String::new(), None),
+    let (decision_tag, reason_str, justification_opt) = match decision {
+        Decision::Allow => (DecisionTag::Allow, String::new(), None),
         Decision::Deny {
             reason,
             justification,
-        } => ("deny", reason.clone(), justification.clone()),
+        } => (DecisionTag::Deny, reason.clone(), justification.clone()),
     };
     let id = uuid::Uuid::new_v4().to_string();
     let entity_type_str = req.entity_type.as_str();
@@ -82,7 +83,7 @@ async fn audit_decision(
         tool_name: &req.entity_id,
         agent_id: None,
         agent_scope: entity_type_str,
-        decision: decision_str,
+        decision: decision_tag,
         policy: POLICY_NAME,
         reason: &reason_str,
         evaluated_rules: &evaluated,

@@ -27,7 +27,7 @@ pub fn input_schema() -> serde_json::Value {
         "properties": {
             "command": {
                 "type": "string",
-                "description": "The CLI command to execute (without 'systemprompt' prefix). Examples: 'plugins run discord send \"message\"', 'core playbooks list'"
+                "description": "The CLI command to execute (without 'systemprompt' prefix). Examples: 'plugins run discord send \"message\"', 'core skills list'"
             }
         },
         "required": ["command"]
@@ -76,16 +76,15 @@ fn create_tool(def: &ToolDef<'_>) -> Tool {
 #[must_use]
 pub fn list_tools() -> Vec<Tool> {
     let desc = format!("Execute SystemPrompt CLI commands. Pass the command WITHOUT the 'systemprompt' prefix.\n\n\
-        MANDATORY FIRST STEP: Run 'core playbooks show guide_start' before any task.\n\n\
         Common commands:\n  \
-        - core playbooks show guide_start: Load the getting started guide (ALWAYS DO THIS FIRST)\n  \
-        - core playbooks show <id>: Load a playbook\n  \
-        - core playbooks list: List playbooks\n  \
+        - core skills list: List installed skills\n  \
+        - core skills show <id>: Show a skill's config and instruction body\n  \
+        - core content list: List markdown content\n  \
         - plugins run discord send \"message\": Send Discord notification\n  \
         - plugins run discord send \"message\" --channel <id>: Send to specific channel\n  \
         - admin agents list: List agents\n\n\
-        Example: {{\"command\": \"core playbooks show guide_start\"}}\n\n\
-        Full documentation: {WEBSITE_URL}/playbooks");
+        Example: {{\"command\": \"core skills list\"}}\n\n\
+        Full documentation: {WEBSITE_URL}/docs");
     vec![create_tool(&ToolDef {
         server_name: SERVER_NAME,
         name: "systemprompt",

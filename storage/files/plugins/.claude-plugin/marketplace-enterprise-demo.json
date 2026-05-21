@@ -1,0 +1,11 @@
+{
+  "name": "enterprise-demo",
+  "owner": {
+    "name": "systemprompt.io"
+  },
+  "metadata": {
+    "description": "Reference marketplace shipping the governance demo plugin, its skills, agents, and MCP servers.",
+    "version": "2.0.0"
+  },
+  "plugins": []
+}

@@ -9,7 +9,7 @@
 #
 #   Part 2 — Governance DENIED:
 #     curl POST /hooks/govern with AWS key in Bash command
-#     → secret_injection rule triggers → permissionDecision: "deny"
+#     → secret_scan rule triggers → permissionDecision: "deny"
 #
 #   Part 3 — MCP tool call (authenticated):
 #     `plugins mcp call systemprompt systemprompt --args '{"command":"core skills list"}'`

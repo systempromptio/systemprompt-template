@@ -281,7 +281,7 @@
                 <table class="detail-table">
                     <tr>
                         <td class="dt-label">What happens</td>
-                        <td class="dt-value">scope_check passes (admin), but secret_injection detects AWS key pattern &rarr; <span class="badge b-deny">DENY</span>.</td>
+                        <td class="dt-value">scope_check passes (admin), but secret_scan detects AWS key pattern &rarr; <span class="badge b-deny">DENY</span>.</td>
                     </tr>
                     <tr>
                         <td class="dt-label">Output</td>
@@ -289,7 +289,7 @@
                     </tr>
                     <tr>
                         <td class="dt-label" style="color:var(--brand-400)">Why</td>
-                        <td class="dt-value"><strong>Independent rule enforcement</strong> &mdash; scope doesn't override security. Even though the agent has admin scope, the secret_injection rule blocks the call. Rules are evaluated independently.</td>
+                        <td class="dt-value"><strong>Independent rule enforcement</strong> &mdash; scope doesn't override security. Even though the agent has admin scope, the secret_scan rule blocks the call. Rules are evaluated independently.</td>
                     </tr>
                 </table>
             </div>

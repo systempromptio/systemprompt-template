@@ -1,0 +1,19 @@
+steps:
+  - script: 01-web-config.sh
+    label: Inspect the content model
+    narrative: >
+      Lists the registered content types, templates, and static assets
+      that drive the site. Everything the web extension renders is
+      declared config you can diff in git — no hidden CMS.
+    outcome: >
+      You see the full set of content types, Tera templates, and asset
+      bundles that compose systemprompt.io.
+  - script: 02-sitemap-validate.sh
+    label: Show the sitemap and validate
+    narrative: >
+      Prints the sitemap configuration and then runs web validate, which
+      type-checks templates, asset references, and routing before
+      anything ships. This is the same command wired into CI.
+    outcome: >
+      A green validation report plus the live sitemap structure — proof
+      the site builds deterministically from config.

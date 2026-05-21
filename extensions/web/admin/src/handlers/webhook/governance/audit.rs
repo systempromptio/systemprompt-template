@@ -5,7 +5,10 @@ use crate::repositories::governance_grp::{insert_governance_decision, Governance
 
 use super::types::AuditRecord;
 
-pub(super) async fn record_decision(pool: &PgPool, record: &AuditRecord) {
+pub(super) async fn record_decision(
+    pool: &PgPool,
+    record: &AuditRecord,
+) -> Result<(), sqlx::Error> {
     let id = uuid::Uuid::new_v4().to_string();
     let actor = Actor::from_tool_name(
         record.user_id.clone(),
@@ -19,7 +22,7 @@ pub(super) async fn record_decision(pool: &PgPool, record: &AuditRecord) {
         tool_name: &record.tool_name,
         agent_id: record.agent_id.as_deref(),
         agent_scope: &record.agent_scope,
-        decision: &record.decision,
+        decision: record.decision.into(),
         policy: &record.policy,
         reason: &record.reason,
         evaluated_rules: &record.evaluated_rules,
@@ -27,7 +30,5 @@ pub(super) async fn record_decision(pool: &PgPool, record: &AuditRecord) {
         act_chain: &[],
     };
 
-    if let Err(e) = insert_governance_decision(pool, &dec_record).await {
-        tracing::error!(error = %e, "Failed to record governance decision");
-    }
+    insert_governance_decision(pool, &dec_record).await
 }

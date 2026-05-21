@@ -12,6 +12,7 @@ use std::sync::Arc;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::{McpExecutionId, McpServerId};
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
+use systemprompt::security::authz::SharedAuthzHook;
 use systemprompt::mcp::repository::ToolUsageRepository;
 use systemprompt::mcp::{
     build_artifact_viewer_resource, build_experimental_capabilities, read_artifact_viewer_resource,
@@ -28,10 +29,15 @@ pub struct SystempromptServer {
     service_id: McpServerId,
     db_pool: DbPool,
     executor: McpToolExecutor,
+    authz_hook: SharedAuthzHook,
 }
 
 impl SystempromptServer {
-    pub fn new(db_pool: DbPool, service_id: McpServerId) -> Result<Self, SystempromptToolError> {
+    pub fn new(
+        db_pool: DbPool,
+        service_id: McpServerId,
+        authz_hook: SharedAuthzHook,
+    ) -> Result<Self, SystempromptToolError> {
         let tool_usage_repo = Arc::new(
             ToolUsageRepository::new(&db_pool)
                 .map_err(|e| SystempromptToolError::Internal(e.to_string()))?,
@@ -46,6 +52,7 @@ impl SystempromptServer {
             service_id,
             db_pool,
             executor,
+            authz_hook,
         })
     }
 }
@@ -115,8 +122,9 @@ async fn authenticate_tool_request(
     tool_name: &str,
     service_id: &str,
     ctx: &RequestContext<RoleServer>,
+    authz_hook: &SharedAuthzHook,
 ) -> Result<(SysRequestContext, String), McpError> {
-    let rbac_result = enforce_rbac_from_registry(ctx, service_id).await;
+    let rbac_result = enforce_rbac_from_registry(ctx, service_id, authz_hook).await;
 
     match rbac_result {
         Ok(result) => {
@@ -201,9 +209,9 @@ impl ServerHandler for SystempromptServer {
             .with_website_url(WEBSITE_URL),
         )
         .with_instructions(
-            format!("Execute SystemPrompt CLI commands. MANDATORY FIRST STEP: Run 'core playbooks show guide_start' \
-             before any task. Playbooks: 'core playbooks show <id>' or 'core playbooks list'. \
-             Discord: 'plugins run discord send \"message\"'. Full documentation: {WEBSITE_URL}/playbooks"),
+            format!("Execute SystemPrompt CLI commands. Skills: 'core skills list' or 'core skills show <id>'. \
+             Content: 'core content list'. Agents: 'admin agents list'. \
+             Discord: 'plugins run discord send \"message\"'. Full documentation: {WEBSITE_URL}/docs"),
         )
     }
 
@@ -243,6 +251,7 @@ impl ServerHandler for SystempromptServer {
             &tool_name,
             self.service_id.as_str(),
             &ctx,
+            &self.authz_hook,
         )
         .await?;
 
@@ -273,7 +282,7 @@ impl ServerHandler for SystempromptServer {
         Ok(build_artifact_viewer_resource(&ArtifactViewerConfig {
             server_name: SERVER_NAME,
             title: "systemprompt.io Artifact Viewer",
-            description: "Interactive UI viewer for systemprompt.io artifacts. Renders playbooks, lists, \
+            description: "Interactive UI viewer for systemprompt.io artifacts. Renders tables, lists, \
                          and text content with syntax highlighting. Template receives artifact data \
                          dynamically via MCP Apps ui/notifications/tool-result protocol.",
             template: ARTIFACT_VIEWER_TEMPLATE,

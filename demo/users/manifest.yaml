@@ -1,0 +1,39 @@
+steps:
+  - script: 01-user-listing.sh
+    label: List, count, stat, and search the user directory
+    narrative: >
+      Runs admin users list, count, stats, and search admin to show the
+      full directory, aggregate counts, and a keyword lookup. This is the
+      baseline inventory every reviewer asks for.
+    outcome: >
+      A paginated user list, a total count, a stats summary, and matching
+      rows for the admin search term.
+  - script: 02-role-management.sh
+    label: Drill into a single user and read their role assignment
+    narrative: >
+      Grabs the first user ID from admin users list and pipes it into
+      admin users show. You see the role, scope, and metadata the
+      governance layer will key off of.
+    outcome: >
+      A full user record with role, scope, and audit fields — the data
+      governance rules match against.
+  - script: 03-session-management.sh
+    label: Prove the current session and list available profiles
+    narrative: >
+      Calls admin session show to display who the CLI is authenticated as,
+      then admin session list to show every profile the operator can
+      switch into. This is how you confirm blast radius before running
+      anything mutating.
+    outcome: >
+      Current session identity with auth source, plus the full list of
+      named profiles available for switching.
+  - script: 04-ip-ban.sh
+    label: Add, verify, and revoke an IP ban end to end
+    narrative: >
+      Lists current bans, adds 192.168.99.99 with a reason, lists again to
+      confirm, then removes it and lists a third time. A full mutation
+      cycle in one script, leaving no residue behind.
+    outcome: >
+      The test IP appears in the ban list after add, disappears after
+      remove, and the before and after lists match — the abuse-response
+      lever is real and reversible.

@@ -57,7 +57,7 @@ Direct call to the governance API simulating a Claude Code PreToolUse hook. Admi
   │  Rule 1: scope_check                                    │
   │    admin scope → all tools allowed → PASS               │
   │                                                         │
-  │  Rule 2: secret_injection                               │
+  │  Rule 2: secret_scan                               │
   │    scan tool_input for AWS keys, PATs, PEM → PASS       │
   │                                                         │
   │  Rule 3: rate_limit                                     │

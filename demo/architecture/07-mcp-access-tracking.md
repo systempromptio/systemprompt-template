@@ -16,7 +16,7 @@ Demonstrates governance (allow + deny), live MCP tool calls with OAuth, and data
   ┌─────────────────────────────────────────────────────────┐
   │  Part 2: Governance DENY                                │
   │  curl → POST /hooks/govern                              │
-  │  AWS key in Bash command → secret_injection → DENY      │
+  │  AWS key in Bash command → secret_scan → DENY      │
   └─────────────────────────────────────────────────────────┘
                          │
   ┌─────────────────────────────────────────────────────────┐

@@ -10,8 +10,6 @@ pub const STATUS_DELETED: &str = "deleted";
 
 pub const DECISION_DENY: &str = "deny";
 
-pub const POLICY_SECRET_INJECTION: &str = "secret_injection";
-
 pub const PERMISSION_MODE_PLAN: &str = "plan";
 
 pub const SERVER_TYPE_INTERNAL: &str = "internal";

@@ -140,6 +140,21 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
+# Print the actual denied rows — counting is not evidence; the row itself is.
+# A military reviewer wants to see decision + rule + agent_id, not a count.
+step "2e — show the denied audit rows (decision, policy fired, tool, session, reason)"
+cmd "systemprompt infra db query \"SELECT decision, policy, tool_name, session_id, reason FROM governance_decisions WHERE session_id LIKE 'airgap-gov-%' AND decision = 'deny' ORDER BY created_at DESC\""
+DENY_ROWS=$(app_cli infra db query \
+  "SELECT decision, policy, tool_name, session_id, reason FROM governance_decisions WHERE session_id LIKE 'airgap-gov-%' AND decision = 'deny' ORDER BY created_at DESC LIMIT 10;" 2>/dev/null || true)
+if printf '%s' "$DENY_ROWS" | grep -q '"decision"[[:space:]]*:[[:space:]]*"deny"'; then
+  pass "Denied decisions audited with rule attribution:"
+  printf '%s\n' "$DENY_ROWS" | sed 's/^/    /'
+else
+  fail "No denied rows found in governance_decisions for session airgap-gov-%"
+  printf '%s\n' "$DENY_ROWS" | sed 's/^/    /'
+  FAILURES=$((FAILURES + 1))
+fi
+
 # ──────────────────────────────────────────────
 #  STEP 3: Routing proof — allowed -> 200 via mock, denied -> 403
 # ──────────────────────────────────────────────

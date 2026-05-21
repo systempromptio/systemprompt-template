@@ -5,6 +5,8 @@ mod meta;
 use std::fs;
 use std::path::Path;
 
+use serde::Deserialize;
+
 use super::config::{DemoCategory, DemoPillar, DemoStep, DemosConfig, QuickStartStep};
 use categories_capabilities::CAPABILITY_CATEGORIES;
 use categories_platform::PLATFORM_CATEGORIES;
@@ -46,6 +48,19 @@ const PILLARS: &[PillarMeta] = &[
     },
 ];
 
+#[derive(Debug, Deserialize)]
+struct CategoryManifest {
+    steps: Vec<ManifestStep>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ManifestStep {
+    script: String,
+    label: String,
+    narrative: String,
+    outcome: String,
+}
+
 pub fn scan_demos(demo_root: &Path) -> anyhow::Result<DemosConfig> {
     if !demo_root.is_dir() {
         anyhow::bail!("demo root not found: {}", demo_root.display());
@@ -67,7 +82,18 @@ pub fn scan_demos(demo_root: &Path) -> anyhow::Result<DemosConfig> {
             );
             continue;
         }
-        let steps = build_category_steps(&dir, meta);
+        let steps = match build_category_steps(&dir, meta) {
+            Ok(steps) => steps,
+            Err(err) => {
+                tracing::warn!(
+                    category = meta.id,
+                    path = %dir.display(),
+                    error = %err,
+                    "demo_scanner: skipping category — manifest invalid"
+                );
+                continue;
+            }
+        };
         if steps.is_empty() {
             continue;
         }
@@ -164,29 +190,41 @@ fn scan_quick_start(demo_root: &Path) -> Vec<QuickStartStep> {
     steps
 }
 
-fn build_category_steps(dir: &Path, meta: &CategoryMeta) -> Vec<DemoStep> {
-    let mut out = Vec::new();
-    for step in meta.steps {
-        let path = dir.join(step.script);
-        let Ok(content) = fs::read_to_string(&path) else {
+fn build_category_steps(dir: &Path, meta: &CategoryMeta) -> anyhow::Result<Vec<DemoStep>> {
+    let manifest_path = dir.join("manifest.yaml");
+    if !manifest_path.is_file() {
+        return Ok(Vec::new());
+    }
+
+    let raw = fs::read_to_string(&manifest_path)
+        .map_err(|e| anyhow::anyhow!("read {}: {e}", manifest_path.display()))?;
+    let manifest: CategoryManifest = serde_yaml::from_str(&raw)
+        .map_err(|e| anyhow::anyhow!("parse {}: {e}", manifest_path.display()))?;
+
+    let mut out = Vec::with_capacity(manifest.steps.len());
+    for step in manifest.steps {
+        let script_path = dir.join(&step.script);
+        let Ok(content) = fs::read_to_string(&script_path) else {
             tracing::warn!(
                 category = meta.id,
-                script = step.script,
-                "demo_scanner: missing script — skipping step"
+                script = %step.script,
+                path = %script_path.display(),
+                "demo_scanner: manifest references missing script — fix the .sh file or remove the \
+                 entry from manifest.yaml"
             );
             continue;
         };
         let commands = extract_commands(&content);
         out.push(DemoStep {
             path: format!("demo/{}/{}", meta.id, step.script),
-            name: step.script.to_string(),
-            label: step.label.to_string(),
-            narrative: step.narrative.to_string(),
-            outcome: step.outcome.to_string(),
+            name: step.script,
+            label: step.label,
+            narrative: step.narrative,
+            outcome: step.outcome,
             commands,
         });
     }
-    out
+    Ok(out)
 }
 
 fn extract_commands(content: &str) -> Vec<String> {

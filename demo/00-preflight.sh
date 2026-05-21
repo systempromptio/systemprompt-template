@@ -91,6 +91,43 @@ echo "=========================================="
 echo ""
 
 # ──────────────────────────────────────────────
+#  STEP 0: Cloud credentials check
+# ──────────────────────────────────────────────
+# The CLI prints a WARN line on every invocation when cloud creds are
+# expired (or missing). Detect it up-front so the operator sees one clear
+# actionable line here, and downstream cloud-dependent demos can skip.
+# Demos that don't need cloud are unaffected — local profile keeps working.
+CLOUD_OFFLINE=0
+set +e
+WHOAMI_OUTPUT=$("$CLI" cloud auth whoami 2>&1)
+set -e
+if printf '%s' "$WHOAMI_OUTPUT" | grep -qiE 'token (status:[[:space:]]*)?expired|credentials unavailable|not authenticated'; then
+  CLOUD_OFFLINE=1
+  CRED_FILE="$PROJECT_DIR/.systemprompt/credentials.json"
+  EXP_NOTE=""
+  if [[ -f "$CRED_FILE" ]]; then
+    EXP_NOTE=$(python3 -c "
+import json, base64, datetime, sys
+try:
+    tok = json.load(open('$CRED_FILE')).get('api_token','')
+    payload = tok.split('.')[1]
+    payload += '=' * (4 - len(payload) % 4)
+    claims = json.loads(base64.urlsafe_b64decode(payload))
+    exp = claims.get('exp', 0)
+    if exp:
+        print(datetime.datetime.fromtimestamp(exp).strftime('%Y-%m-%d'))
+except Exception:
+    pass
+" 2>/dev/null || true)
+  fi
+  echo "  NOTE: Cloud credentials expired${EXP_NOTE:+ ($EXP_NOTE)}."
+  echo "        Local-profile demos will continue normally."
+  echo "        Run 'systemprompt cloud auth login' if you need cloud sync."
+  echo ""
+fi
+export CLOUD_OFFLINE
+
+# ──────────────────────────────────────────────
 #  STEP 1: Service health
 # ──────────────────────────────────────────────
 echo "------------------------------------------"
@@ -222,33 +259,34 @@ echo ""
 #  STEP 3: Extract plugin token from dashboard
 # ──────────────────────────────────────────────
 echo "------------------------------------------"
-echo "  STEP 3: Extract SYSTEMPROMPT_TOKEN from dashboard"
+echo "  STEP 3: Mint SYSTEMPROMPT_TOKEN via admin keys issue-plugin-token"
 echo ""
-echo "  The admin token is used as a session cookie to fetch"
-echo "  $BASE_URL/admin/profile — the same page you see in"
-echo "  the browser. The plugin token is embedded in the"
-echo "  'Share & Install' widget HTML."
+echo "  Calls the CLI subcommand that lands in core post-0.11:"
+echo "    systemprompt admin keys issue-plugin-token --token-only \\"
+echo "      --email admin@localhost.dev --profile local"
+echo ""
+echo "  Mints an RS256 JWT with aud=[api,plugin], plugin_id=cowork-bundle,"
+echo "  365-day expiry — used by Claude Code hooks and any scope=plugin client."
 echo "------------------------------------------"
 echo ""
 
-PLUGIN_TOKEN=$(curl -s -b "access_token=$ADMIN_TOKEN" "$BASE_URL/admin/profile" \
-  | sed -n 's/.*data-copy="\(eyJ[^"]*\)".*/\1/p' | head -1)
+PLUGIN_TOKEN=$("$CLI" admin keys issue-plugin-token --token-only \
+  --email admin@localhost.dev --profile local 2>/dev/null | tail -1)
 
 if [[ -z "$PLUGIN_TOKEN" || ! "$PLUGIN_TOKEN" == eyJ* ]]; then
-  echo "  WARNING: Could not extract plugin token from dashboard."
-  echo "  Falling back to admin token (works for all demo endpoints)."
-  PLUGIN_TOKEN="$ADMIN_TOKEN"
-  echo ""
-else
-  echo "  Plugin token / SYSTEMPROMPT_TOKEN (${#PLUGIN_TOKEN} chars):"
-  echo ""
-  decode_jwt "$PLUGIN_TOKEN"
-  echo ""
-  echo "  scope=service — this is what Claude Code hooks send."
-  echo "  session_id=plugin_cowork-bundle — identifies the plugin."
-  echo "  365-day expiry — long-lived for unattended hook calls."
-  echo ""
+  echo "  ERROR: 'admin keys issue-plugin-token' did not return a JWT." >&2
+  echo "  Re-run manually for diagnostics:" >&2
+  echo "    $CLI admin keys issue-plugin-token --email admin@localhost.dev --profile local" >&2
+  exit 1
 fi
+
+echo "  Plugin token / SYSTEMPROMPT_TOKEN (${#PLUGIN_TOKEN} chars):"
+echo ""
+decode_jwt "$PLUGIN_TOKEN"
+echo ""
+echo "  aud=[api,plugin], plugin_id=cowork-bundle — what Claude Code hooks send."
+echo "  365-day expiry — long-lived for unattended hook calls."
+echo ""
 
 # ──────────────────────────────────────────────
 #  STEP 4: Compare the two tokens
@@ -279,7 +317,7 @@ echo ""
 echo "  WHY RUST: Token generation uses SessionGenerator::new(secret, issuer)"
 echo "  with a typed SessionParams struct. UserId, SessionId, UserType are"
 echo "  newtypes — the compiler prevents mixing them up. The jsonwebtoken"
-echo "  crate signs with HS256. All claims are validated on every request"
+echo "  crate signs with RS256 (kid-pinned). All claims are validated on every request"
 echo "  via validate_jwt_token() which returns typed JwtClaims, not a map."
 echo ""
 

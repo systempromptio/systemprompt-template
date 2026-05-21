@@ -1,0 +1,84 @@
+steps:
+  - script: 01-happy-path.sh
+    label: Walk the full hook → allow → execute path
+    narrative: >
+      POSTs a PreToolUse hook for developer_agent calling
+      mcp__systemprompt__systemprompt — the CLI-wrapper tool exposed by the
+      systemprompt MCP server — sees governance return allow, then actually
+      invokes the tool via the CLI with {command: "admin agents list"} so you
+      watch the same request land in the real agent runtime. This is the
+      Claude Code hook workflow end to end.
+    outcome: >
+      An allow response from /hooks/govern, a live agents listing returned by
+      the systemprompt MCP server, and a matching row in governance_decisions
+      tied to session demo-happy-path.
+  - script: 02-refused-path.sh
+    label: Deny a user-scope agent reaching for an admin MCP tool
+    narrative: >
+      Fires the same hook as associate_agent — a user-scope identity — against
+      the admin-only mcp__systemprompt__list_agents tool. The scope_restriction
+      rule fires at the governance layer, which is the backup line of defense
+      behind tool mapping.
+    outcome: >
+      A deny response citing scope_restriction, plus the matching deny row in
+      governance_decisions — proof that even if tool mapping is bypassed,
+      governance still holds.
+  - script: 03-audit-trail.sh
+    label: Query the decisions table and break down cost by agent
+    narrative: >
+      Runs infra db query against governance_decisions to pull the last five
+      decisions with agent, scope, policy, and reason, then calls analytics
+      costs breakdown --by agent. This is the evidence you hand to a
+      compliance reviewer.
+    outcome: >
+      A table showing the allow and deny records from the previous steps with
+      policy names and reasons, plus per-agent cost totals.
+  - script: 04-governance-happy.sh
+    label: Allow a clean admin call and show every rule that fired
+    narrative: >
+      POSTs a PreToolUse hook for developer_agent calling Read with a plain
+      file path, then dumps the evaluated_rules column. You see scope_check,
+      secret_scan, and rate_limit each return PASS — not a black-box allow.
+    outcome: >
+      The API returns permissionDecision: allow and the audit row lists all
+      three rules with PASS reasons.
+  - script: 05-governance-denied.sh
+    label: Deny a user-scope agent and a destructive tool in one run
+    narrative: >
+      Fires two hook calls as associate_agent: one reaches for an admin-only
+      MCP tool, the other calls delete_agent. scope_check blocks the first;
+      scope_check and blocklist both trigger on the second.
+    outcome: >
+      Two deny responses with distinct policy IDs, logged to
+      governance_decisions so you can see the reason Claude Code would
+      surface to the agent.
+  - script: 06-secret-breach.sh
+    label: Block an AWS key, a GitHub PAT, and a private key in tool input
+    narrative: >
+      Sends four PreToolUse hooks as admin-scope developer_agent: a Bash curl
+      carrying AKIA..., a Write dropping ghp_... into .env, a Write piping a
+      PEM key into id_rsa, and a clean Read as control. Secret detection
+      overrides scope.
+    outcome: >
+      Three denies (secret_scan) and one allow, all attributed to an admin
+      agent in the audit table — proof the safety net holds against
+      prompt-injection exfiltration.
+  - script: 07-rate-limiting.sh
+    label: Inspect the rate limit, security, and server config
+    narrative: >
+      Calls admin config rate-limits show and compare, then admin config
+      security show and admin config server show. These are the ceilings that
+      cap a runaway agent before governance rules even fire.
+    outcome: >
+      Concrete numbers for per-tier request limits, security posture, and
+      server knobs — the config you would tune in production.
+  - script: 08-hooks.sh
+    label: List every registered hook and validate the wiring
+    narrative: >
+      Runs core hooks list to show every PreToolUse, PostToolUse, and
+      lifecycle hook across installed plugins, then core hooks validate to
+      confirm each one resolves. This is the extension surface for your own
+      policies.
+    outcome: >
+      A validated hook inventory with plugin, event, and handler — the exact
+      place you'd drop a custom rule.

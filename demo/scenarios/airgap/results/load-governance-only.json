@@ -6,34 +6,34 @@
   },
   "scenarios": {
     "governance-only": {
-      "requests": 13459,
-      "p50_ms": 14,
-      "p95_ms": 18,
-      "p99_ms": 21,
+      "requests": 13690,
+      "p50_ms": 13,
+      "p95_ms": 17,
+      "p99_ms": 22,
       "error_rate": 0.0,
       "passed": true,
       "time_series": [
         {
           "window_start_secs": 0,
-          "requests": 10019,
+          "requests": 10223,
           "error_rate": 0.0,
-          "p50_ms": 14,
-          "p95_ms": 18,
-          "p99_ms": 21
+          "p50_ms": 13,
+          "p95_ms": 17,
+          "p99_ms": 23
         },
         {
           "window_start_secs": 60,
-          "requests": 3440,
+          "requests": 3467,
           "error_rate": 0.0,
-          "p50_ms": 14,
+          "p50_ms": 13,
           "p95_ms": 17,
-          "p99_ms": 20
+          "p99_ms": 21
         }
       ]
     }
   },
   "aggregate": {
-    "total_requests": 13459,
+    "total_requests": 13690,
     "all_passed": true
   }
 }

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE content_files\n            SET role = $1\n            WHERE file_id = $2 AND content_id = $3\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b096e1ff09f0760c3ab2e8e405de63cf4f8456a84e6349c0bb090025c5b85d89"
+}

@@ -233,7 +233,7 @@
 
     <div class="content">
         <p class="intro">
-            Direct call to the governance API simulating a Claude Code PreToolUse hook. Admin-scope agent with clean tool input &mdash; all <strong>3 rules pass</strong>. Uses <code>Read</code> tool (not MCP) to exercise scope_check, secret_injection, and rate_limit. Cost: <strong>free</strong>.
+            Direct call to the governance API simulating a Claude Code PreToolUse hook. Admin-scope agent with clean tool input &mdash; all <strong>3 rules pass</strong>. Uses <code>Read</code> tool (not MCP) to exercise scope_check, secret_scan, and rate_limit. Cost: <strong>free</strong>.
         </p>
 
         <!-- ═══ Step 1: Agent Calls MCP Tool ═══ -->
@@ -301,7 +301,7 @@
                             Three rules evaluated in order:
                             <div class="sub-flow">
                                 <div class="sub-step"><span class="sub-num">3a</span><span class="sub-text"><strong>scope_check</strong> &mdash; admin scope &rarr; all tools allowed &rarr; <span class="badge b-pass">PASS</span></span></div>
-                                <div class="sub-step"><span class="sub-num">3b</span><span class="sub-text"><strong>secret_injection</strong> &mdash; scan tool_input for AWS keys, PATs, PEM &rarr; <span class="badge b-pass">PASS</span> (clean)</span></div>
+                                <div class="sub-step"><span class="sub-num">3b</span><span class="sub-text"><strong>secret_scan</strong> &mdash; scan tool_input for AWS keys, PATs, PEM &rarr; <span class="badge b-pass">PASS</span> (clean)</span></div>
                                 <div class="sub-step"><span class="sub-num">3c</span><span class="sub-text"><strong>rate_limit</strong> &mdash; &lt;300 calls/min this session &rarr; <span class="badge b-pass">PASS</span></span></div>
                             </div>
                         </td>

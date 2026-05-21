@@ -111,20 +111,17 @@ impl BlogConfigValidated {
         Self::validate(raw, base_path)
     }
 
-    pub fn load_from_env_or_default() -> Result<Arc<Self>, ExtensionConfigErrors> {
-        let config_path = std::env::var("BLOG_CONFIG")
-            .unwrap_or_else(|_| "./services/config/blog.yaml".to_string());
-
-        let path = Path::new(&config_path);
-        if path.exists() {
-            Self::load_from_file(path).map(Arc::new)
+    /// Load `services/config/blog.yaml` resolved via the profile-aware [`AppPaths`].
+    ///
+    /// Returns `Ok(None)` when no blog config file exists — a valid "blog disabled"
+    /// state, not a degraded one. Returns `Ok(Some(_))` when the file parses and
+    /// validates. Returns `Err` only on read/parse/validation failures.
+    pub fn load_from_env_or_none() -> Result<Option<Arc<Self>>, ExtensionConfigErrors> {
+        let config_path = resolve_blog_config_path();
+        if config_path.exists() {
+            Self::load_from_file(&config_path).map(|c| Some(Arc::new(c)))
         } else {
-            tracing::warn!(
-                path = %config_path,
-                "Blog config not found, using defaults"
-            );
-            let raw = BlogConfigRaw::default();
-            Self::validate(raw, Path::new(".")).map(Arc::new)
+            Ok(None)
         }
     }
 
@@ -229,6 +226,19 @@ fn validate_content_source(
         enabled: src.enabled,
         override_existing: src.override_existing,
     })
+}
+
+fn resolve_blog_config_path() -> PathBuf {
+    if let Ok(override_path) = std::env::var("BLOG_CONFIG") {
+        return PathBuf::from(override_path);
+    }
+    ProfileBootstrap::get()
+        .map_err(|e| e.to_string())
+        .and_then(|profile| AppPaths::from_profile(&profile.paths).map_err(|e| e.to_string()))
+        .map_or_else(
+            |_| PathBuf::from("./services/config/blog.yaml"),
+            |paths| paths.system().services().join("config/blog.yaml"),
+        )
 }
 
 fn resolve_content_source_path(path: &str, base_path: &Path) -> PathBuf {

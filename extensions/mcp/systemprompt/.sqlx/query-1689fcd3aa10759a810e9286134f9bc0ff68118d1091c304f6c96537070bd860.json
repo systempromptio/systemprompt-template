@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH browser_counts AS (\n                SELECT\n                    COALESCE(browser, 'Unknown') as browser,\n                    COUNT(*) as count\n                FROM user_sessions\n                WHERE started_at >= NOW() - INTERVAL '7 days'\n                  AND is_bot = false AND is_behavioral_bot = false AND is_scanner = false\n                GROUP BY browser\n            ),\n            total AS (\n                SELECT SUM(count) as total FROM browser_counts\n            )\n            SELECT\n                bc.browser as \"browser!\",\n                bc.count as \"count!\",\n                CASE WHEN t.total > 0\n                    THEN (bc.count::float / t.total * 100.0)\n                    ELSE 0.0\n                END as \"percentage!\"\n            FROM browser_counts bc, total t\n            ORDER BY bc.count DESC\n            LIMIT $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "browser!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "percentage!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "1689fcd3aa10759a810e9286134f9bc0ff68118d1091c304f6c96537070bd860"
+}

@@ -39,7 +39,7 @@ Simulates a Claude Code PreToolUse hook workflow. Governance ALLOWS an admin-sco
   ┌─────────────────────────────────────────────────────────┐
   │  Rule Engine: rules::evaluate()                         │
   │  scope_check: admin → PASS                              │
-  │  secret_injection: clean input → PASS                   │
+  │  secret_scan: clean input → PASS                   │
   │  rate_limit: within limits → PASS                       │
   │  decision = "allow"                                     │
   └──────────────────────┬──────────────────────────────────┘

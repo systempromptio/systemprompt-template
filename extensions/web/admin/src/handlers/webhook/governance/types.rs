@@ -4,6 +4,7 @@ use std::fmt;
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt_security::authz::DecisionTag;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -17,6 +18,15 @@ impl fmt::Display for GovernanceDecision {
         match self {
             Self::Allow => f.write_str("allow"),
             Self::Deny => f.write_str("deny"),
+        }
+    }
+}
+
+impl From<GovernanceDecision> for DecisionTag {
+    fn from(d: GovernanceDecision) -> Self {
+        match d {
+            GovernanceDecision::Allow => Self::Allow,
+            GovernanceDecision::Deny => Self::Deny,
         }
     }
 }
@@ -68,7 +78,7 @@ pub(super) struct AuditRecord {
     pub tool_name: String,
     pub agent_id: Option<String>,
     pub agent_scope: String,
-    pub decision: String,
+    pub decision: GovernanceDecision,
     pub policy: String,
     pub reason: String,
     pub evaluated_rules: serde_json::Value,
