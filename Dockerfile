@@ -26,8 +26,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     cargo build --release --workspace \
     && mkdir -p /out/bin \
     && cp target/release/systemprompt /out/bin/ \
-    && cp target/release/systemprompt-mcp-agent /out/bin/ \
-    && cp target/release/systemprompt-mcp-marketplace /out/bin/
+    && cp target/release/systemprompt-mcp-agent /out/bin/
 
 FROM debian:bookworm-slim AS runtime
 

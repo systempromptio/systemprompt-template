@@ -1,5 +1,7 @@
 # Internal docs (strategy, plans, QA playbooks) — kept local, not published
 /docs-internal/
+/reports/
+demo/RELEASE-TEST-REPORT-*.md
 
 # Rust build artifacts
 /target/
