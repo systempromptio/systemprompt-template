@@ -16,16 +16,21 @@
 #
 #   The platform issues two kinds of JWT, both signed by the same secret:
 #
-#   Admin session token (scope=admin, 24h):
+#   Admin session token (scope=admin, user_type=admin, 24h):
 #     CLI commands, dashboard cookie, full API access
 #
-#   Plugin token / SYSTEMPROMPT_TOKEN (scope=service, 365 days):
-#     Claude Code hooks send this as Authorization: Bearer <token>
-#     Events tracked with this token appear on the user's dashboard
-#     Shown in the "Share & Install" widget at /admin/profile
+#   Plugin token / SYSTEMPROMPT_TOKEN (scope=admin, user_type=admin, 365d):
+#     Claude Code hooks send this as Authorization: Bearer <token>.
+#     NOTE: in core v0.11.0, `admin keys issue-plugin-token` hardcodes
+#     Permission::Admin, so user_type derives to Admin (not Service).
+#     aud=[api,plugin] because `resource: Some("plugin")` is merged into
+#     the aud array in domain/oauth/services/generation.rs:96-99. The
+#     session_id is a fresh sess_<uuid> (NOT plugin_<id>) — the plugin
+#     identity is carried by the separate plugin_id claim.
+#     Tracked as tech debt in systemprompt-core/issues.md.
 #
-#   Both share the same user_id (sub claim) so events from either
-#   token appear under the same user in the dashboard.
+#   Both tokens are minted for the SAME --email so the dashboard
+#   groups events under one user (sub claim).
 #
 # WHY RUST: JWT claims are a typed struct — UserId, SessionId, UserType,
 #   RateLimitTier are all newtypes enforced at compile time. The signing
@@ -261,22 +266,28 @@ echo ""
 echo "------------------------------------------"
 echo "  STEP 3: Mint SYSTEMPROMPT_TOKEN via admin keys issue-plugin-token"
 echo ""
-echo "  Calls the CLI subcommand that lands in core post-0.11:"
+echo "  Calls the CLI subcommand that lands in core 0.11:"
 echo "    systemprompt admin keys issue-plugin-token --token-only \\"
-echo "      --email admin@localhost.dev --profile local"
+echo "      --email $CLOUD_EMAIL --profile $PROFILE"
 echo ""
-echo "  Mints an RS256 JWT with aud=[api,plugin], plugin_id=cowork-bundle,"
-echo "  365-day expiry — used by Claude Code hooks and any scope=plugin client."
+echo "  Mints an RS256 JWT, 365-day expiry. The aud claim ends up as"
+echo "  [api, plugin] because the handler sets audience=[Api] AND"
+echo "  resource=Some(\"plugin\"); the JWT builder merges resource into"
+echo "  aud (domain/oauth/services/generation.rs:96-99). The plugin"
+echo "  identity is also carried explicitly via the plugin_id claim."
+echo ""
+echo "  Caveat: the handler hardcodes Permission::Admin (issue_plugin_token.rs:91-97),"
+echo "  so user_type derives to Admin — see systemprompt-core/issues.md."
 echo "------------------------------------------"
 echo ""
 
 PLUGIN_TOKEN=$("$CLI" admin keys issue-plugin-token --token-only \
-  --email admin@localhost.dev --profile local 2>/dev/null | tail -1)
+  --email "$CLOUD_EMAIL" --profile "$PROFILE" 2>/dev/null | tail -1)
 
 if [[ -z "$PLUGIN_TOKEN" || ! "$PLUGIN_TOKEN" == eyJ* ]]; then
   echo "  ERROR: 'admin keys issue-plugin-token' did not return a JWT." >&2
   echo "  Re-run manually for diagnostics:" >&2
-  echo "    $CLI admin keys issue-plugin-token --email admin@localhost.dev --profile local" >&2
+  echo "    $CLI admin keys issue-plugin-token --email $CLOUD_EMAIL --profile $PROFILE" >&2
   exit 1
 fi
 
@@ -295,18 +306,24 @@ echo "------------------------------------------"
 echo "  STEP 4: Two tokens, same user, same secret"
 echo "------------------------------------------"
 echo ""
-echo "  ┌──────────────────┬──────────────────┬──────────────────────┐"
-echo "  │                  │ Admin session     │ Plugin token         │"
-echo "  ├──────────────────┼──────────────────┼──────────────────────┤"
-echo "  │ scope            │ admin            │ service              │"
-echo "  │ user_type        │ admin            │ service              │"
-echo "  │ expiry           │ 24 hours         │ 365 days             │"
-echo "  │ session_id       │ sess_<uuid>      │ plugin_cowork-bundle │"
-echo "  │ used by          │ CLI, dashboard   │ Claude Code hooks    │"
-echo "  │ sub (user_id)    │ same             │ same                 │"
-echo "  │ iss (issuer)     │ same             │ same                 │"
-echo "  │ signing key      │ same jwt_secret  │ same jwt_secret      │"
-echo "  └──────────────────┴──────────────────┴──────────────────────┘"
+echo "  ┌──────────────────┬──────────────────────┬──────────────────────────┐"
+echo "  │                  │ Admin session        │ Plugin token             │"
+echo "  ├──────────────────┼──────────────────────┼──────────────────────────┤"
+echo "  │ scope            │ admin                │ admin                    │"
+echo "  │ user_type        │ admin                │ admin (derived from      │"
+echo "  │                  │                      │   hardcoded Perm::Admin) │"
+echo "  │ expiry           │ 24 hours             │ 365 days                 │"
+echo "  │ session_id       │ sess_<uuid>          │ sess_<uuid> (fresh)      │"
+echo "  │ aud              │ [web,api,a2a,mcp]    │ [api, plugin]            │"
+echo "  │ plugin_id        │ —                    │ cowork-bundle            │"
+echo "  │ used by          │ CLI, dashboard       │ Claude Code hooks        │"
+echo "  │ sub (user_id)    │ same                 │ same                     │"
+echo "  │ iss (issuer)     │ same                 │ same                     │"
+echo "  │ signing key      │ same jwt_secret      │ same jwt_secret          │"
+echo "  └──────────────────┴──────────────────────┴──────────────────────────┘"
+echo ""
+echo "  Both rows above are taken from the live JWTs decoded in Steps 2-3."
+echo "  Plugin-identity is carried by the plugin_id claim, not session_id."
 echo ""
 echo "  Both tokens are signed by the jwt_secret in:"
 echo "    .systemprompt/profiles/local/secrets.json"

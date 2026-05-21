@@ -260,7 +260,8 @@ cat <<'FLOW'
   ┌─────────────────────────────────────────────────────────┐
   │  JWT Validation                                         │
   │  extract_bearer_token(headers) → validate_jwt_token()   │
-  │  Claims: { sub: UserId, aud: ["hook","plugin","api"] }  │
+  │  Claims: { sub: UserId, aud: ["api","plugin"],          │
+  │            plugin_id: "<id>", scope: "admin" }          │
   └──────────────────────┬──────────────────────────────────┘
                          │
                          ▼
