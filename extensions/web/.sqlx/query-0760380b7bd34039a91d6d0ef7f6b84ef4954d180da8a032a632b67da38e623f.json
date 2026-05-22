@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO oauth_jti_revocations (jti, user_id, exp)\n             VALUES ($1, $2, $3)\n             ON CONFLICT (jti) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0760380b7bd34039a91d6d0ef7f6b84ef4954d180da8a032a632b67da38e623f"
+}

@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COUNT(*) FILTER (WHERE ee.created_at::date = $1)::BIGINT as \"today!\",\n            COUNT(*) FILTER (WHERE ee.created_at::date = $2)::BIGINT as \"yesterday!\",\n            COUNT(*) FILTER (WHERE ee.created_at >= NOW() - INTERVAL '7 days')::FLOAT8 / 7.0 as \"avg_7d!\",\n            COUNT(*) FILTER (WHERE ee.created_at >= NOW() - INTERVAL '14 days')::FLOAT8 / 14.0 as \"avg_14d!\",\n            COUNT(*) FILTER (WHERE ee.created_at >= NOW() - INTERVAL '30 days')::FLOAT8 / 30.0 as \"avg_30d!\",\n            COALESCE(AVG(LEAST(NULLIF(ee.time_on_page_ms, 0), 600000)) FILTER (WHERE ee.created_at::date = $1), 0.0)::FLOAT8 as \"avg_time_today!\",\n            COALESCE(AVG(LEAST(NULLIF(ee.time_on_page_ms, 0), 600000)) FILTER (WHERE ee.created_at::date = $2), 0.0)::FLOAT8 as \"avg_time_yesterday!\",\n            COALESCE(AVG(LEAST(NULLIF(ee.time_on_page_ms, 0), 600000)) FILTER (WHERE ee.created_at >= NOW() - INTERVAL '7 days'), 0.0)::FLOAT8 as \"avg_time_7d!\",\n            COALESCE(AVG(LEAST(NULLIF(ee.time_on_page_ms, 0), 600000)) FILTER (WHERE ee.created_at >= NOW() - INTERVAL '14 days'), 0.0)::FLOAT8 as \"avg_time_14d!\",\n            COALESCE(AVG(LEAST(NULLIF(ee.time_on_page_ms, 0), 600000)) FILTER (WHERE ee.created_at >= NOW() - INTERVAL '30 days'), 0.0)::FLOAT8 as \"avg_time_30d!\"\n        FROM engagement_events ee\n        JOIN user_sessions us ON us.session_id = ee.session_id\n        WHERE ee.created_at >= NOW() - INTERVAL '31 days'\n          AND NOT us.is_bot AND NOT us.is_scanner\n          AND NOT COALESCE(us.is_behavioral_bot, false)\n          AND us.request_count > 0\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "today!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "yesterday!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "avg_7d!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "avg_14d!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "avg_30d!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "avg_time_today!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 6,
+        "name": "avg_time_yesterday!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 7,
+        "name": "avg_time_7d!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 8,
+        "name": "avg_time_14d!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 9,
+        "name": "avg_time_30d!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Date",
+        "Date"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "b76555bb3325b612135e51cd49da141f3d4645aeb36c11b747e2119bcb4b9981"
+}

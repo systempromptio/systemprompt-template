@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n                COALESCE(g.agent_id, '')   as \"identity_id!\",\n                COALESCE(g.agent_id, '—')  as \"label!\",\n                COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint as \"deny_count!\",\n                COUNT(*)::bigint as \"total_count!\"\n              FROM governance_decisions g\n              WHERE g.created_at >= $1 AND g.created_at < $2\n                AND g.tool_name = $3\n                AND g.agent_id IS NOT NULL\n              GROUP BY g.agent_id\n              ORDER BY COUNT(*) FILTER (WHERE g.decision = 'deny') DESC, COUNT(*) DESC\n              LIMIT $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "identity_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "label!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "deny_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "ca23d0afa832a906c52f78cee893dca9af3ee5fbee3629cfcb51e3d5fc1f84e8"
+}

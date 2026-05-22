@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                s.step_order,\n                COUNT(*) FILTER (WHERE fp.current_step >= s.step_order) as \"entered_count!\",\n                COUNT(*) FILTER (WHERE fp.current_step > s.step_order) as \"exited_count!\"\n            FROM UNNEST($3::int4[]) AS s(step_order)\n            LEFT JOIN funnel_progress fp\n                ON fp.funnel_id = $1 AND fp.created_at >= $2\n            GROUP BY s.step_order\n            ORDER BY s.step_order\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "step_order",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "entered_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "exited_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Int4Array"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "d0fa691cee9f11aeb817e77cc043ea420e918b3f4fa39a1d2bf94128bb342657"
+}

@@ -194,80 +194,111 @@ done < <(jq -r 'to_entries[] | "\(.key)\t\(.value)"' <<<"$SERVED_BY")
 # ── PART (b): cross-replica event-bus fan-out ──
 divider
 subheader "PART (b): event bus — cross-replica delivery via PostgresEventBridge"
-info "This part PASSES by observing cross-replica fan-out:"
-info "the event/SSE bus is relayed across replicas by PostgresEventBridge."
-info "An event published on replica A IS delivered to a subscriber on replica B."
+info "Subscribe on replica B, route a real A2A event on replica A as the same"
+info "user, and assert replica B receives it. Delivery across two processes is"
+info "the empirical proof that PostgresEventBridge relays the bus across replicas."
 
-REPLICA_A="${REPLICA_IPS[0]}"
-REPLICA_B="${REPLICA_IPS[1]}"
+# The demo user's token authenticates the SSE subscription, the context create,
+# and the event route. The subscriber and publisher MUST be the same user — the
+# A2A broadcaster is user-scoped, so the relayed event is only delivered to that
+# user's connections. Requires demo/.token (run 00-preflight.sh first).
+load_token
+
+# Run all curls from inside an app replica: it has curl (its healthcheck uses it)
+# and sits on the scaled network so it can reach every replica by container IP.
+# nginx:alpine ships wget, not curl, so the lb container cannot drive these.
+EXEC_CID="${REPLICA_IDS[0]}"
+REPLICA_A="${REPLICA_IPS[0]}"   # publisher: routes the event
+REPLICA_B="${REPLICA_IPS[1]}"   # subscriber: must receive it cross-process
+info "exec host  -> app replica ${EXEC_CID:0:12}"
 info "publisher  -> replica A: $REPLICA_A"
 info "subscriber -> replica B: $REPLICA_B"
 
-# Subscribe on replica B: open an SSE stream from inside the docker network,
-# capture whatever arrives within the listen window into a file.
+# Real core surfaces (core 0.11):
+#   POST /api/v1/core/contexts/            -> create a context owned by the user
+#   GET  /api/v1/stream/a2a                -> SSE stream of the user's A2A events
+#   POST /api/v1/core/contexts/{id}/events -> forward_event -> EventRouter::route_a2a
+# route_a2a writes an event_outbox row + Postgres NOTIFY; the PostgresEventBridge
+# on every replica consumes it and re-injects into the local A2A_BROADCASTER.
+CONTEXTS_PATH="/api/v1/core/contexts"
+A2A_STREAM_PATH="/api/v1/stream/a2a"
 EVENT_TOKEN="scaled-evt-$(date +%s)-$RANDOM"
 LISTEN_SECS=12
-SSE_PATH="/api/v1/events"   # SSE stream endpoint (cross-replica via PostgresEventBridge)
-PUB_PATH="/api/v1/events/publish"
 
-step "Opening SSE stream on replica B for ${LISTEN_SECS}s"
-SSE_CAPTURE=$(mktemp)
-# Run the SSE listener in the background INSIDE the lb container's network.
-"${DC[@]}" exec -T lb sh -c \
-  "timeout ${LISTEN_SECS} curl -fsS -N --max-time ${LISTEN_SECS} \
-     -H 'Accept: text/event-stream' \
-     http://${REPLICA_B}:${APP_PORT}${SSE_PATH} 2>/dev/null" \
-  > "$SSE_CAPTURE" 2>/dev/null &
-SSE_PID=$!
+# Defaults so the artifact + verdict are well-defined even if setup fails early.
+CROSS_DELIVERED=false
+EVENT_OK=0
+EVENT_STATUS="not run"
+PUBLISH_STATUS="000"
+CONTEXT_ID=""
 
-# Give the subscriber a moment to fully establish before publishing.
-sleep 3
-
-step "Publishing event via replica A (token: $EVENT_TOKEN)"
-PUBLISH_STATUS=$("${DC[@]}" exec -T lb sh -c \
-  "curl -sS -o /dev/null -w '%{http_code}' --max-time 5 -X POST \
+# forward_event refuses to route unless the caller owns the target context, so
+# create one first (via replica A, as the demo user).
+step "Creating a context on replica A (owned by the demo user)"
+# No trailing slash on the collection POST: the trailing slash 308-redirects.
+CREATE_RESP=$(docker exec "$EXEC_CID" sh -c \
+  "curl -sSL --max-time 8 -X POST \
+     -H 'Authorization: Bearer $TOKEN' \
      -H 'Content-Type: application/json' \
-     -d '{\"event\":\"scaled.demo\",\"token\":\"${EVENT_TOKEN}\"}' \
-     http://${REPLICA_A}:${APP_PORT}${PUB_PATH} 2>/dev/null" 2>/dev/null || echo "000")
-info "publish HTTP status: $PUBLISH_STATUS"
+     -d '{\"name\":\"scaled-event-proof\"}' \
+     http://${REPLICA_A}:${APP_PORT}${CONTEXTS_PATH}" 2>/dev/null || true)
+CONTEXT_ID=$(echo "$CREATE_RESP" | jq -r '.data.context_id // empty' 2>/dev/null)
 
-# Wait for the listener window to close.
-wait "$SSE_PID" 2>/dev/null || true
-
-# ── Assess outcome ─────────────────────────────
-divider
-step "Checking whether replica B received the event"
-
-# A 401/403/404 on the publish endpoint means the empirical relay check is
-# inconclusive — we never actually published anything, so a non-delivery on
-# the subscriber is not evidence of relay failure. The cross-replica relay
-# itself is regression-tested in core (crates/tests/integration/events/
-# cross_replica.rs); the template-level empirical check requires a publish
-# surface this scaled stack does not expose unauthenticated.
-PUBLISH_OK=0
-if [[ "$PUBLISH_STATUS" =~ ^2[0-9][0-9]$ ]]; then PUBLISH_OK=1; fi
-
-if grep -q "$EVENT_TOKEN" "$SSE_CAPTURE" 2>/dev/null; then
-  CROSS_DELIVERED=true
-  EVENT_STATUS="delivered"
-  pass "Replica B RECEIVED the event published on replica A."
-  info "PostgresEventBridge relayed via Postgres LISTEN/NOTIFY — bus scales."
-  EVENT_OK=1
-elif (( PUBLISH_OK == 0 )); then
-  CROSS_DELIVERED=false
-  EVENT_STATUS="inconclusive (publish HTTP $PUBLISH_STATUS)"
-  warn "Publish endpoint returned $PUBLISH_STATUS — cross-replica relay check is"
-  warn "inconclusive (nothing was published). Core's integration test"
-  warn "crates/tests/integration/events/cross_replica.rs covers the relay."
-  EVENT_OK=1   # do not fail the demo on an inconclusive run
+if [[ -z "$CONTEXT_ID" ]]; then
+  fail "Could not create a context for the event proof — cannot prove cross-replica delivery."
+  info "create response: ${CREATE_RESP:0:300}"
+  EVENT_STATUS="setup failed (context create)"
 else
-  CROSS_DELIVERED=false
-  EVENT_STATUS="not delivered"
-  fail "Replica B received NOTHING despite a successful publish ($PUBLISH_STATUS)."
-  warn "PostgresEventBridge appears not to be relaying — investigate."
-  EVENT_OK=0
+  pass "context created: $CONTEXT_ID"
+
+  step "Opening A2A SSE stream on replica B for ${LISTEN_SECS}s"
+  SSE_CAPTURE=$(mktemp)
+  docker exec "$EXEC_CID" sh -c \
+    "timeout ${LISTEN_SECS} curl -fsS -N --max-time ${LISTEN_SECS} \
+       -H 'Authorization: Bearer $TOKEN' \
+       -H 'Accept: text/event-stream' \
+       http://${REPLICA_B}:${APP_PORT}${A2A_STREAM_PATH}" \
+    > "$SSE_CAPTURE" 2>/dev/null &
+  SSE_PID=$!
+
+  # Let the subscriber fully establish (and its bridge LISTEN settle) before routing.
+  sleep 3
+
+  step "Routing an A2A event on replica A (token: $EVENT_TOKEN)"
+  TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  TASK_ID=$(uuidgen 2>/dev/null | tr 'A-Z' 'a-z' || cat /proc/sys/kernel/random/uuid 2>/dev/null)
+  EVENT_BODY="{\"protocol\":\"a2a\",\"event\":{\"type\":\"TASK_STATUS_UPDATE\",\"timestamp\":\"${TS}\",\"taskId\":\"${TASK_ID}\",\"contextId\":\"${CONTEXT_ID}\",\"state\":\"TASK_STATE_WORKING\",\"message\":\"${EVENT_TOKEN}\"}}"
+  PUBLISH_STATUS=$(docker exec "$EXEC_CID" sh -c \
+    "curl -sS -o /dev/null -w '%{http_code}' --max-time 8 -X POST \
+       -H 'Authorization: Bearer $TOKEN' \
+       -H 'Content-Type: application/json' \
+       -d '$EVENT_BODY' \
+       http://${REPLICA_A}:${APP_PORT}${CONTEXTS_PATH}/${CONTEXT_ID}/events" 2>/dev/null || echo "000")
+  info "forward_event HTTP status: $PUBLISH_STATUS"
+
+  # Wait for the listen window to close, then check what replica B captured.
+  wait "$SSE_PID" 2>/dev/null || true
+
+  divider
+  step "Checking whether replica B received the event routed on replica A"
+  if grep -q "$EVENT_TOKEN" "$SSE_CAPTURE" 2>/dev/null; then
+    CROSS_DELIVERED=true
+    EVENT_STATUS="delivered"
+    EVENT_OK=1
+    pass "Replica B RECEIVED the A2A event routed on replica A."
+    info "PostgresEventBridge relayed it via Postgres LISTEN/NOTIFY — the bus scales across replicas."
+  elif [[ "$PUBLISH_STATUS" =~ ^2[0-9][0-9]$ ]]; then
+    EVENT_STATUS="not delivered (route HTTP $PUBLISH_STATUS)"
+    fail "Replica B received NOTHING despite forward_event returning $PUBLISH_STATUS."
+    warn "PostgresEventBridge appears not to be relaying — investigate cross-replica fan-out."
+  else
+    EVENT_STATUS="route failed (HTTP $PUBLISH_STATUS)"
+    fail "forward_event returned $PUBLISH_STATUS — the event was never routed."
+    warn "Check the token audience/scope and context ownership. SSE capture (first 300B):"
+    head -c 300 "$SSE_CAPTURE" 2>/dev/null | sed 's/^/    /'
+  fi
+  rm -f "$SSE_CAPTURE"
 fi
-rm -f "$SSE_CAPTURE"
 
 # ── Persist artifact ───────────────────────────
 jq -n \
@@ -288,7 +319,8 @@ jq -n \
        cross_replica_event_delivered: $cross_delivered,
        expected_cross_replica_delivered: true,
        status: $event_status,
-       note: "PostgresEventBridge relays events across replicas via Postgres LISTEN/NOTIFY. The template-level empirical check requires an unauthenticated publish surface this scaled stack does not expose; core's integration test crates/tests/integration/events/cross_replica.rs is the authoritative regression."
+       method: "create context + GET /api/v1/stream/a2a on replica B + POST /api/v1/core/contexts/{id}/events on replica A (forward_event -> EventRouter::route_a2a)",
+       note: "An A2A event routed on replica A is delivered to a subscriber on replica B via PostgresEventBridge (event_outbox + Postgres LISTEN/NOTIFY). The core integration test crates/tests/integration/events/cross_replica.rs is the authoritative regression for the relay itself."
      },
      passed: ($spread_ok and ($cross_delivered == true))
    }' > "$OUT_FILE"

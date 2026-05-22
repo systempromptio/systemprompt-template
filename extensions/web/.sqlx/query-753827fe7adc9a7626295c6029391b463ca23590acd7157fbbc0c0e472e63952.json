@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO access_control_rules\n                    (id, entity_type, entity_id, rule_type, rule_value, access, default_included)\n                VALUES ($1, $2, $3, 'role', $4, 'allow', true)\n                ON CONFLICT (entity_type, entity_id, rule_type, rule_value)\n                DO UPDATE SET default_included = true, updated_at = NOW()\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "753827fe7adc9a7626295c6029391b463ca23590acd7157fbbc0c0e472e63952"
+}

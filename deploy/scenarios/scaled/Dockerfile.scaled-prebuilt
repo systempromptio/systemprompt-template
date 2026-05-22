@@ -31,9 +31,14 @@ WORKDIR /app
 
 RUN mkdir -p /app/bin /app/logs /app/storage /app/web /app/services/profiles/docker
 
-# Host-built release binaries (the whole point of this Dockerfile).
-COPY target/release/systemprompt              /app/bin/systemprompt
-COPY target/release/systemprompt-mcp-agent    /app/bin/systemprompt-mcp-agent
+# Host-built release binaries (the whole point of this Dockerfile), staged into
+# a real directory inside the build context. We cannot COPY target/release/*
+# directly: `target` is a symlink to a shared cargo cache OUTSIDE the context
+# (~/.cache/cargo-target), and buildkit refuses to follow symlinks that escape
+# the context. `just scaled-up` / run.sh dereference-copy the binaries into
+# deploy/scenarios/scaled/.bin/ (gitignored) before building.
+COPY deploy/scenarios/scaled/.bin/systemprompt            /app/bin/systemprompt
+COPY deploy/scenarios/scaled/.bin/systemprompt-mcp-agent  /app/bin/systemprompt-mcp-agent
 # systemprompt-mcp-marketplace is built by `just build-mcp` (CLI-driven) not by
 # `cargo build --workspace`. Omitted here — the scaled stress test does not
 # spawn it. If a marketplace-using scenario is added later, run `just build-mcp`

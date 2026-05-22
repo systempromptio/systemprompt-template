@@ -52,7 +52,10 @@ _derive_base_url() {
 BASE_URL="${BASE_URL:-$(_derive_base_url)}"
 
 load_token() {
-  TOKEN="${1:-}"
+  # Precedence: explicit arg > exported $TOKEN env > demo/.token file. The env
+  # path lets an orchestrator (e.g. scaled/run.sh) inject a token signed by a
+  # different profile's secret without clobbering the on-disk local token.
+  TOKEN="${1:-${TOKEN:-}}"
   if [[ -z "$TOKEN" && -f "$TOKEN_FILE" ]]; then
     TOKEN=$(cat "$TOKEN_FILE")
   fi

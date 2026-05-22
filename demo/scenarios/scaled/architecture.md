@@ -170,16 +170,28 @@ replica A                 postgres                  replica B
    │                          │                         │ → subscriber receives
 ```
 
-The scaled `03-replica-distribution.sh` part (b) is the live proof:
+The scaled `03-replica-distribution.sh` part (b) is the live proof, driven
+entirely through real, authenticated core surfaces (core 0.11):
 
-1. Discover replica container IPs with `docker inspect`.
-2. From inside the docker network (`docker compose exec lb`), open an SSE
-   subscription against replica B's `:8080`.
-3. POST a publish to replica A's `:8080`.
-4. Assert the SSE stream on B received the event.
+1. Discover replica container IPs with `docker inspect`; run all curls from
+   inside an `app` replica (it ships `curl`; `nginx:alpine` only has `wget`).
+2. Create a context owned by the demo user on replica A
+   (`POST /api/v1/core/contexts/`).
+3. Open an SSE subscription on replica **B** for that user's A2A events
+   (`GET /api/v1/stream/a2a`).
+4. Route a real `A2AEvent::TaskStatusUpdate` on replica **A**
+   (`POST /api/v1/core/contexts/{id}/events` → `forward_event` →
+   `EventRouter::route_a2a`), tagged with a unique token.
+5. Assert replica B's SSE stream received that token.
 
-That delivery — across processes — is the empirical evidence that the bus
-scales across nodes.
+`route_a2a` writes an `event_outbox` row and emits a Postgres `NOTIFY`; the
+`PostgresEventBridge` on replica B consumes it and re-injects into the local
+user-scoped `A2A_BROADCASTER`. That delivery — across two processes — is the
+empirical evidence that the bus scales across nodes. The A2A broadcaster is
+user-scoped, so the subscriber and the router must authenticate as the same
+user; the orchestrator mints a token signed by the scaled stack's own secret
+(see `run.sh`) because the scaled-api profile's `jwt_secret` differs from the
+local profile's.
 
 ---
 
@@ -201,25 +213,29 @@ scales across nodes.
    └──────────────────────────────────────────────────────────┘
 ```
 
-**Why deployment-time, not code-time.** `SchedulerConfig` in core has a
-`distributed_lock: bool` field — but it is **dead config**: declared in the
-shared model, consumed nowhere in `crates/app/scheduler/`. Job de-duplication
-relies only on an in-process `tokio::Mutex`, which does not cross replicas.
-The `Profile` schema has no scheduler section, so the disable cannot be
-expressed in `profile.yaml` either.
+**Two independent layers now guard against double-execution.**
 
-The mitigation is the bind-mount of
-`deploy/scenarios/scaled/scheduler-disabled.config.yaml` onto
-`/app/services/scheduler/config.yaml` for every `app` replica. The dedicated
-`scheduler` service is `deploy.replicas: 1` (a hard constraint) and does
-**not** receive the override — it keeps the default config and is therefore
-the one and only node that runs cron jobs.
+1. **Code-time (core 0.11): a real distributed lock.** `SchedulerConfig
+   .distributed_lock` defaults to `true` and is now wired through
+   `crates/app/scheduler/src/services/scheduling/dispatch.rs`: before running a
+   job, a replica calls `try_acquire_job_lock` (a Postgres advisory lock) and
+   skips the tick if a peer already holds it (`event =
+   "scheduler.job.skipped_by_lock"`). So even if N replicas all had the
+   scheduler enabled, each scheduled tick would execute on exactly one of them.
+   This supersedes the earlier "dead config" state — the flag is live.
 
-This is documented in the override file's own header as **tech debt**, not a
-supported topology: the proper fix is a Postgres advisory lock per job
-(`pg_try_advisory_lock`) inside the scheduler runtime, gated by the existing
-`distributed_lock` flag. Until that lands, the scheduler is a single point of
-failure — if its node is down, no cron jobs run.
+2. **Deployment-time (this stack): scheduler disabled on the API tier.** Every
+   `app` replica bind-mounts
+   `deploy/scenarios/scaled/scheduler-disabled.config.yaml` onto
+   `/app/services/scheduler/config.yaml` (`enabled: false`), so the cron loop
+   never starts there at all. The dedicated `scheduler` service is
+   `deploy.replicas: 1` and keeps the default (enabled) config. This belt-and-
+   suspenders layer keeps the API tier doing nothing but serve requests, and is
+   what `04-scheduler-isolation.sh` observes.
+
+The `Profile` schema still has no scheduler section, so the per-replica disable
+is expressed via the bind-mounted YAML override rather than `profile.yaml` — see
+*Known limits*.
 
 `04-scheduler-isolation.sh` watches a window covering at least one scheduled
 run and asserts:
@@ -259,6 +275,37 @@ The replica is wired for **topology realism and failover headroom**. The
 engine has no DB read/write split today, so reads still hit the primary. This
 is intentional and called out in the findings table as an open item.
 
+The replica clones the primary with `pg_basebackup`. Its entrypoint runs as
+**root** so it can `chown` the freshly-mounted (root-owned) named volume to the
+`postgres` user before cloning, then `docker-entrypoint.sh` drops privileges
+itself. (Running the container as `user: postgres` instead left the volume
+root-owned and looped on `pg_wal: Permission denied`.)
+
+---
+
+## 7a. Authentication — the shared RSA signing key
+
+Every authenticated path (the gateway, `/api/v1/core/contexts`,
+`/api/v1/stream/*`, the governance hook) is RS256-validated. The stack mints
+and validates JWTs with an **RSA signing key** at
+`signing_key_path: /app/services/profiles/docker/signing_key.pem`.
+
+- The committed seed lives at
+  `.systemprompt/profiles/scaled-api/signing_key.pem` (generate with
+  `systemprompt admin keys generate --output <path>`), copied into every `app`
+  and `scheduler` replica by the entrypoint. **All replicas share one key**, so
+  a token minted on any replica validates on every other — required for the LB
+  to round-robin authenticated requests and for the cross-replica SSE proof.
+- Without the key file the stack cannot mint or validate **any** token and
+  every authenticated request 401s. (This was the original demo failure: the
+  scaled profile shipped no key and used a relative `signing_key_path` that
+  resolved to a nonexistent `/app/signing_key.pem`.)
+- `SYSTEMPROMPT_PROFILE` is pinned in each service's compose `environment:` so
+  the host `.env` (loaded via `env_file:`) cannot leak a host-absolute profile
+  path into the container and break in-container CLI calls.
+- `run.sh` mints an admin token inside an `app` replica via
+  `admin session login --token-only` and exports it to the proof scripts.
+
 ---
 
 ## 8. The four scripts
@@ -286,24 +333,30 @@ pressure, leak-led p95 creep.
 
 ### `03-replica-distribution.sh` — LB spread + cross-replica fan-out
 
-Part (a): runs the `lb-fairness` scenario; buckets responses by
+Part (a): runs the `lb-fairness` scenario through the LB; buckets responses by
 `x-served-by`; asserts each replica's share is within ±`SPREAD_TOL` of 1/N.
-Per-replica addressing: scaled `app` replicas publish no host ports, so the
-script discovers container IPs with `docker inspect` and curls them from
-inside the network via `docker compose exec lb`.
+Scaled `app` replicas publish no host ports, so for part (b) the script
+discovers container IPs with `docker inspect` and reaches them from inside the
+network via `docker exec <app-replica>` (which has `curl`).
 
-Part (b): SSE subscription on replica B + publish on replica A + assert
-delivery — the live `PostgresEventBridge` proof described in §5.
+Part (b): create a context, subscribe to the A2A SSE stream on replica B,
+route a real A2A event on replica A, assert delivery — the live
+`PostgresEventBridge` proof described in §5. All curls run from inside an `app`
+replica (it has `curl`; `nginx:alpine` only ships `wget`).
 
 ### `04-scheduler-isolation.sh` — no duplicate cron execution
 
-Watches a window (default 6 min — long enough to cover at least one
-scheduled run) and:
+Proves which node runs the cron engine, independent of cron timing:
 
-1. Reads `infra jobs history` to confirm jobs *did* run.
-2. Greps each container's logs for scheduler-execution markers
-   (`scheduler|scheduled job|job .*(executed|running|dispatch|trigger)|cron`).
-3. Asserts markers appear on `scheduler` and on **no** `app` replica.
+1. Scans each container's **full** log (via `docker logs <cid>` — *not*
+   `docker compose logs`, which takes a service name and silently returns
+   nothing for a container id) for cron-engine markers
+   (`Scheduler started`, `tokio_cron_scheduler`, job-dispatch wording),
+   excluding the disabled-path lines.
+2. Asserts the engine started on the `scheduler` node (>0 markers) and on **no**
+   `app` replica (0 markers each) — the deployment-time isolation.
+3. `infra jobs history` is read as a soft confirmation that jobs exist; it is
+   not the pass condition (per-job dispatch is debug-level and cadence-bound).
 
 ---
 
@@ -313,10 +366,15 @@ scheduled run) and:
   for topology realism and failover headroom only — all reads currently hit
   the primary. Adding a read/write split (e.g. dual `DATABASE_URL` /
   `DATABASE_WRITE_URL` already supported by `Secrets`) is open work.
-- **Scheduler distributed lock is dead config.** `SchedulerConfig
-  .distributed_lock` is declared but unread. Proper fix: implement a
-  `pg_try_advisory_lock`-gated dispatch in `crates/app/scheduler/`. Until
-  then, the single-node `scheduler` service is a SPoF.
+- **Scheduler distributed lock is now live (was previously dead config).**
+  `SchedulerConfig.distributed_lock` defaults to `true` and gates a Postgres
+  advisory-lock claim in `crates/app/scheduler/src/services/scheduling/dispatch.rs`,
+  so cron ticks de-duplicate across replicas. The deployment-time
+  scheduler-disable mount is therefore now a second, belt-and-suspenders layer
+  rather than the sole guard. Remaining open item: with `deploy.replicas: 1` the
+  dedicated `scheduler` node is still a single point of *availability* (if it is
+  down, no cron runs) even though it is no longer a correctness risk — running
+  the scheduler on >1 node with the lock enabled would remove that SPoF.
 - **`Profile` schema has no scheduler section.** The disable cannot be
   expressed in `profile.yaml`; the bind-mounted YAML override is the only
   way to disable scheduler per replica. A `scheduler` field in `Profile`

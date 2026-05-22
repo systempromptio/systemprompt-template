@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT entity_type, entity_name, usage_count\n           FROM session_entity_links\n           WHERE session_id = $1\n           ORDER BY usage_count DESC\n           LIMIT 50",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "entity_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "entity_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "usage_count",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "5d2762d422f924b4025b70986e7f603a472f537e1b57fda01642ec236f9f423a"
+}

@@ -684,6 +684,86 @@ airgap-up:
 airgap-down:
     docker compose -f deploy/scenarios/airgap/docker-compose.airgap.yml down -v
 
+# ONE-COMMAND air-gap proof. Ensures the sealed stack is up (builds the image
+# only if it is missing), warm-builds the loadtest crate so the run emits no
+# compiler spew, runs all three assertion scripts (01 egress, 02 load,
+# 03 governance) WITHOUT dying on the first failure, then prints a single
+# PASS/FAIL summary. Leaves the stack up for inspection by default — pass
+# TEARDOWN=true to remove it (and its volumes) at the end.
+#
+#   just airgap                # run, leave stack up
+#   just airgap TEARDOWN=true  # run, then tear down
+airgap TEARDOWN="false":
+    #!/usr/bin/env bash
+    set -uo pipefail
+    COMPOSE_FILE="deploy/scenarios/airgap/docker-compose.airgap.yml"
+    PORT="${AIRGAP_HTTP_PORT:-8090}"
+    LOADTEST_MANIFEST="../systemprompt-core/crates/tests/loadtest/Cargo.toml"
+
+    # 1. Ensure the stack is up. Build the image only if it is not present yet
+    #    (a first-time build pulls in ../systemprompt-core and takes ~10 min).
+    if curl -fsS -o /dev/null --max-time 3 "http://localhost:${PORT}/api/v1/health" 2>/dev/null; then
+      echo "  air-gap stack already healthy on :${PORT}"
+    else
+      if docker compose -f "$COMPOSE_FILE" config --images 2>/dev/null \
+         | xargs -r -I{} docker image inspect {} >/dev/null 2>&1; then
+        echo "  air-gap image present — starting stack (no rebuild)"
+        docker compose -f "$COMPOSE_FILE" up -d
+      else
+        echo "  air-gap image missing — building stack (first run, ~10 min)"
+        docker compose -f "$COMPOSE_FILE" up -d --build
+      fi
+      echo "  waiting for app healthcheck on :${PORT} ..."
+      for i in $(seq 1 120); do
+        if curl -fsS -o /dev/null "http://localhost:${PORT}/api/v1/health" 2>/dev/null; then
+          echo "  app healthy after ${i}s"
+          break
+        fi
+        sleep 1
+      done
+    fi
+
+    # 2. Warm-build the loadtest crate quietly so STEP 02's `cargo run` emits no
+    #    build output mid-demo. Non-fatal: 02-load.sh re-checks the manifest.
+    if [[ -f "$LOADTEST_MANIFEST" ]]; then
+      echo "  warm-building the loadtest crate ..."
+      cargo build --quiet --manifest-path "$LOADTEST_MANIFEST" 2>/dev/null || true
+    fi
+
+    # 3. Run all three scripts, capturing each exit code (do NOT stop on first
+    #    failure — the operator must see the full picture).
+    declare -A RESULT
+    for s in 01-egress-assert 02-load 03-governance; do
+      echo ""
+      if "./demo/scenarios/airgap/${s}.sh"; then
+        RESULT[$s]="PASS"
+      else
+        RESULT[$s]="FAIL"
+      fi
+    done
+
+    # 4. Single PASS/FAIL summary.
+    echo ""
+    echo "══════════════════════════════════════════════════════════"
+    echo "  AIR-GAP PROOF SUMMARY"
+    echo "══════════════════════════════════════════════════════════"
+    OVERALL=0
+    for s in 01-egress-assert 02-load 03-governance; do
+      printf "  %-22s %s\n" "$s" "${RESULT[$s]}"
+      [[ "${RESULT[$s]}" == "PASS" ]] || OVERALL=1
+    done
+    echo "══════════════════════════════════════════════════════════"
+    [[ "$OVERALL" -eq 0 ]] && echo "  RESULT: PASS" || echo "  RESULT: FAIL"
+
+    # 5. Optional teardown.
+    if [[ "{{TEARDOWN}}" == "true" ]]; then
+      echo ""
+      echo "  TEARDOWN=true — removing the air-gap stack and volumes"
+      just airgap-down
+    fi
+
+    exit "$OVERALL"
+
 # Run the air-gap demo scripts in sequence, stopping on first failure.
 # The gateway policy is no longer seeded by a script — it ships as
 # services/ai/gateway-policies.yaml and is ingested by the publish_pipeline
@@ -742,15 +822,39 @@ airgap-fresh-test:
 
 # Bring up the multi-replica scaled stack (postgres primary/replica + N app replicas + 1 scheduler + nginx LB)
 scaled-up REPLICAS="3":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Stage the host-built binaries into a real dir inside the build context —
+    # `target` is a symlink to a shared cargo cache that buildkit can't follow.
+    if [[ ! -x target/release/systemprompt || ! -x target/release/systemprompt-mcp-agent ]]; then
+        echo "ERROR: release binaries missing. Run: just build --release" >&2
+        exit 1
+    fi
+    mkdir -p deploy/scenarios/scaled/.bin
+    cp -L target/release/systemprompt           deploy/scenarios/scaled/.bin/systemprompt
+    cp -L target/release/systemprompt-mcp-agent deploy/scenarios/scaled/.bin/systemprompt-mcp-agent
     docker compose -f deploy/scenarios/scaled/docker-compose.scaled.yml up -d --build --scale app={{REPLICAS}}
 
 # Tear down the scaled stack and remove its volumes
 scaled-down:
     docker compose -f deploy/scenarios/scaled/docker-compose.scaled.yml down -v
 
-# Run the scaled demo scripts in sequence, stopping on first failure.
-# Skips 02-soak.sh — that is the long (~1h) sustained soak; run it on its own
-# when needed: ./demo/scenarios/scaled/02-soak.sh
+# ONE COMMAND: reset → build → up → wait-for-health → mint token → run all fast
+# proofs → capture logs → single verdict. Leaves the stack up by default.
+#   just scaled-demo                # 3 replicas, stack left up
+#   REPLICAS=5 just scaled-demo     # scale wider
+#   KEEP=0 just scaled-demo         # tear down at the end
+#   SOAK=1 just scaled-demo         # also run the ~1h soak (long!)
+scaled-demo:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    chmod +x demo/scenarios/scaled/run.sh
+    ./demo/scenarios/scaled/run.sh
+
+# Run the scaled demo scripts in sequence against an ALREADY-RUNNING stack.
+# Prefer `just scaled-demo` (full lifecycle). Use this only when the stack is
+# already up and healthy. Skips 02-soak.sh — the long (~1h) sustained soak; run
+# it on its own when needed: ./demo/scenarios/scaled/02-soak.sh
 scaled-test:
     #!/usr/bin/env bash
     set -euo pipefail

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(SUM(tokens_used), 0)::bigint AS \"tokens!\"\n           FROM ai_requests\n           WHERE user_id = $1\n             AND created_at >= NOW() - INTERVAL '30 days'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tokens!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "0feaae1db78ef4706c4b21bab391ec07512e8f676087ae5780e7d6ce0fb23b07"
+}

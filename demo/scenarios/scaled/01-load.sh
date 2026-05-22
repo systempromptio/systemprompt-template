@@ -77,18 +77,25 @@ divider
 step "Running distributed load test against the LB"
 
 # `--profile scaled` is the high-concurrency ramp (100 -> 1000 virtual users).
-# `--scenario api-latency` exercises the unauthenticated public surface (/health
-# + /.well-known/agent.json) — exactly what a misbehaving Claude Code client or
-# k8s probe will hammer at scale, and the surface whose tail latency the LB
-# must hold under load. It never touches the paid `gateway-inference`
-# scenario, so this run costs nothing.
+# `--scenario lb-fairness` hammers the unauthenticated `/health` probe through
+# the LB — the surface a k8s liveness check or a misbehaving client hits at
+# scale, and the one whose tail latency the LB must hold under load. It returns
+# 200 on every replica, so the error rate reflects real failures, not a route
+# mismatch. (The `api-latency` scenario also probes /.well-known/agent.json,
+# which core 0.11 serves at /.well-known/agent-card.json — that 404 alone blew
+# the <=2% error SLO every run, which is why we drive lb-fairness here instead.)
+# It never touches the paid `gateway-inference` scenario, so this run is free.
 cmd "cargo run --manifest-path <loadtest>/Cargo.toml -- \\
-      --profile scaled --scenario api-latency \\
+      --profile scaled --scenario lb-fairness \\
       --base-url $LB_URL --output json --out-file results/load.json"
 
+# Pass a token if the orchestrator exported one. lb-fairness only hits public
+# /health so it does not need auth, but supplying the token stops the runner
+# from trying (and noisily failing) to auto-acquire one via host profile lookup.
 if ! cargo run --quiet --release --manifest-path "$LOADTEST_MANIFEST" -- \
       --profile scaled \
-      --scenario api-latency \
+      --scenario lb-fairness \
+      --token "${TOKEN:-anon}" \
       --base-url "$LB_URL" \
       --output json \
       --out-file "$OUT_FILE"; then

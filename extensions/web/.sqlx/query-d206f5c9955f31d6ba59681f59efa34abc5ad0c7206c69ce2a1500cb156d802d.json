@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            entity_type AS \"entity_type!\",\n            entity_name AS \"entity_name!\",\n            MAX(last_seen_at) AS \"last_used!\"\n        FROM session_entity_links\n        WHERE user_id = $1\n        GROUP BY entity_type, entity_name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "entity_type!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "entity_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "last_used!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "d206f5c9955f31d6ba59681f59efa34abc5ad0c7206c69ce2a1500cb156d802d"
+}
