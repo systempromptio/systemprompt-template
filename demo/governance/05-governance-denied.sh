@@ -75,7 +75,7 @@ echo "  rule: scope_check — user scope cannot access mcp__systemprompt__* tool
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -102,7 +102,7 @@ echo "  Also triggers: scope_check (user scope + mcp__systemprompt__* tool)"
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

@@ -151,7 +151,7 @@ if [[ $STATUS_EXIT -ne 0 ]]; then
   # If grep found nothing, try a direct process check
   echo "  Checking processes directly..."
   echo ""
-  HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/admin/" 2>/dev/null || echo "000")
+  HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/admin/" 2>/dev/null || echo "000")
   echo "  HTTP service: $HTTP_STATUS (http://localhost:8080)"
   "$CLI" infra services status 2>/dev/null | tail -10 || echo "  (service status unavailable)"
 else

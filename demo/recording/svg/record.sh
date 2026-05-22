@@ -65,8 +65,9 @@ if [[ $DRY_RUN -eq 0 ]]; then
   need asciinema "Install with: pipx install asciinema"
   need svg-term  "Install with: npm i -g svg-term-cli"
 
-  if ! curl -sf -o /dev/null http://localhost:8080/; then
-    echo "ERROR: server not responding at http://localhost:8080 — run: just start" >&2
+  BASE_URL="${BASE_URL:-http://localhost:8080}"
+  if ! curl -sf -o /dev/null "${BASE_URL}/"; then
+    echo "ERROR: server not responding at ${BASE_URL} — run: just start" >&2
     exit 1
   fi
   if [[ ! -f "$SCRIPT_DIR/../../.token" ]]; then
