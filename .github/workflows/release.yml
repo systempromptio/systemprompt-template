@@ -1,41 +1,41 @@
-name: Release (cowork client bundle)
+name: Release (bridge client bundle)
 
-# Publishes the cowork client CLI bundle — precompiled binaries downloaded from
+# Publishes the bridge client bundle — precompiled binaries downloaded from
 # systempromptio/systemprompt-core and re-attached to a template GH Release.
-# Cowork is the CLIENT-side CLI that runs on developer workstations (macOS,
-# Windows, Linux) and talks to a running systemprompt-gateway.
+# The bridge is the CLIENT-side agent that runs on developer workstations
+# (macOS, Windows, Linux) and talks to a running systemprompt-gateway.
 #
 # The gateway itself (the server) is a SEPARATE product published by the
 # private systemprompt-deploy repo on `v*` tags. This workflow does not
 # produce gateway assets.
 #
-# Triggered on tags matching `cowork-v*` so the two product streams never
+# Triggered on tags matching `bridge-v*` so the two product streams never
 # collide on the same release.
 
 on:
   push:
     tags:
-      - "cowork-v*"
+      - "bridge-v*"
   workflow_dispatch:
     inputs:
       tag:
-        description: "Template tag to (re)publish (e.g. cowork-v0.3.3)"
+        description: "Template tag to (re)publish (e.g. bridge-v0.9.0)"
         required: true
-      cowork_tag:
-        description: "systemprompt-core cowork release tag to bundle (Linux/Win/aarch64-mac)"
+      bridge_tag:
+        description: "systemprompt-core bridge release tag to bundle (Linux/Win/aarch64-mac)"
         required: true
-        default: "v0.3.3"
-      cowork_mac_x64_tag:
-        description: "systemprompt-core cowork-mac release tag for Intel macOS zip"
-        required: true
-        default: "cowork-mac-v0.3.2"
+        default: "bridge-v0.9.0"
+      bridge_mac_x64_tag:
+        description: "systemprompt-core bridge-mac release tag for Intel macOS zip (blank to skip)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
 
 jobs:
   publish:
-    name: Publish cowork client bundle release
+    name: Publish bridge client bundle release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -48,42 +48,47 @@ jobs:
           else
             echo "template_tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
-          cowork_tag="${{ inputs.cowork_tag }}"
-          echo "cowork_tag=${cowork_tag:-v0.3.3}" >> "$GITHUB_OUTPUT"
-          mac_tag="${{ inputs.cowork_mac_x64_tag }}"
-          echo "cowork_mac_x64_tag=${mac_tag:-cowork-mac-v0.3.2}" >> "$GITHUB_OUTPUT"
+          bridge_tag="${{ inputs.bridge_tag }}"
+          echo "bridge_tag=${bridge_tag:-${GITHUB_REF_NAME}}" >> "$GITHUB_OUTPUT"
+          echo "bridge_mac_x64_tag=${{ inputs.bridge_mac_x64_tag }}" >> "$GITHUB_OUTPUT"
 
-      - name: Download cowork artifacts from systemprompt-core
+      - name: Download bridge artifacts from systemprompt-core
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p dist
-          gh release download "${{ steps.tags.outputs.cowork_tag }}" \
+          gh release download "${{ steps.tags.outputs.bridge_tag }}" \
             --repo systempromptio/systemprompt-core \
             --dir dist \
-            --pattern 'systemprompt-cowork-*' \
+            --pattern 'systemprompt-bridge-*' \
             --pattern 'SHA256SUMS*'
-          gh release download "${{ steps.tags.outputs.cowork_mac_x64_tag }}" \
-            --repo systempromptio/systemprompt-core \
-            --dir dist \
-            --pattern 'systemprompt-cowork-macos-x64*' || echo "no macOS x64 zip in ${{ steps.tags.outputs.cowork_mac_x64_tag }}"
-          # Rename anything SHA256SUMS* → SHA256SUMS.cowork* so the cowork release
+          mac_tag="${{ steps.tags.outputs.bridge_mac_x64_tag }}"
+          if [ -n "$mac_tag" ]; then
+            gh release download "$mac_tag" \
+              --repo systempromptio/systemprompt-core \
+              --dir dist \
+              --pattern 'systemprompt-bridge-macos-x64*' || echo "no macOS x64 zip in $mac_tag"
+          else
+            echo "no bridge_mac_x64_tag supplied; skipping Intel macOS zip"
+          fi
+          # Rename anything SHA256SUMS* → SHA256SUMS.bridge* so the bridge release
           # never collides semantically with the gateway SHA256SUMS.gateway series.
           cd dist
-          [ -f SHA256SUMS ] && mv SHA256SUMS SHA256SUMS.cowork || true
-          [ -f SHA256SUMS.sig ] && mv SHA256SUMS.sig SHA256SUMS.cowork.sig || true
-          [ -f SHA256SUMS.pem ] && mv SHA256SUMS.pem SHA256SUMS.cowork.pem || true
+          [ -f SHA256SUMS ] && mv SHA256SUMS SHA256SUMS.bridge || true
+          [ -f SHA256SUMS.sig ] && mv SHA256SUMS.sig SHA256SUMS.bridge.sig || true
+          [ -f SHA256SUMS.pem ] && mv SHA256SUMS.pem SHA256SUMS.bridge.pem || true
           ls -la
 
       - name: Generate release notes
         id: notes
         run: |
           cat > notes.md <<'EOF'
-          # systemprompt-cowork ${{ steps.tags.outputs.template_tag }}
+          # systemprompt-bridge ${{ steps.tags.outputs.template_tag }}
 
-          **Client install bundle for macOS + Windows + Linux.** Installs the `cowork`
-          CLI on a developer workstation. Cowork talks to a running
-          **systemprompt-gateway** for device auth + code-worktree operations.
+          **Client install bundle for macOS + Windows + Linux.** Installs the
+          `systemprompt-bridge` agent on a developer workstation. The bridge talks
+          to a running **systemprompt-gateway** for device auth + code-worktree
+          operations.
 
           > Looking for the **gateway** server (to deploy into Kubernetes / Docker /
           > a Linux VM / PaaS)? It's a separate product published under `v*` tags —
@@ -91,9 +96,8 @@ jobs:
 
           ## What's in this release
 
-          Bundles cowork binaries from [systempromptio/systemprompt-core](https://github.com/systempromptio/systemprompt-core):
-          - Linux x86_64, Windows x86_64, macOS aarch64 (cosign-signed) — [${{ steps.tags.outputs.cowork_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.cowork_tag }})
-          - macOS x86_64 zip — [${{ steps.tags.outputs.cowork_mac_x64_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.cowork_mac_x64_tag }})
+          Bundles bridge binaries from [systempromptio/systemprompt-core](https://github.com/systempromptio/systemprompt-core):
+          - Linux x86_64, Windows x86_64, macOS aarch64 (cosign-signed) — [${{ steps.tags.outputs.bridge_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.bridge_tag }})
 
           ## Install
 
@@ -113,8 +117,8 @@ jobs:
             <file>
           ```
 
-          `SHA256SUMS.cowork` is also signed. See `bin/cowork/CHANGELOG.md` in
-          systemprompt-core for the cowork changelog.
+          `SHA256SUMS.bridge` is also signed. See `bin/bridge/CHANGELOG.md` in
+          systemprompt-core for the bridge changelog.
           EOF
 
       - name: Create or update template release
@@ -122,7 +126,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="${{ steps.tags.outputs.template_tag }}"
-          title="systemprompt-cowork $tag"
+          title="systemprompt-bridge $tag"
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release edit "$tag" --title "$title" --notes-file notes.md
           else
