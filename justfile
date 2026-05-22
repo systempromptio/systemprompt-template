@@ -728,6 +728,9 @@ airgap TEARDOWN="false":
     if [[ -f "$LOADTEST_MANIFEST" ]]; then
       echo "  warm-building the loadtest crate ..."
       cargo build --quiet --manifest-path "$LOADTEST_MANIFEST" 2>/dev/null || true
+    else
+      echo "  loadtest crate not found at ${LOADTEST_MANIFEST} — skipping warm-build" >&2
+      echo "  (it is unpublished systemprompt-core dev tooling; 02-load.sh will build it on demand if present)" >&2
     fi
 
     # 3. Run all three scripts, capturing each exit code (do NOT stop on first
