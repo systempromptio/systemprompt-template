@@ -1,4 +1,4 @@
-# Windows Cowork → Gateway → MiniMax Demo
+# Windows bridge → Gateway → MiniMax Demo
 
 End-to-end runbook for demoing Claude for Work on Windows routing every inference request through this gateway to MiniMax. Same governance pipeline as any other `/v1/messages` call — one row per request in the audit table.
 
@@ -75,7 +75,7 @@ If step 4 fails, stop — the server build is broken and no Windows flow will wo
 
 Latest Windows build is in **[bridge-v0.9.0](https://github.com/systempromptio/systemprompt-template/releases/tag/bridge-v0.9.0)** — asset `systemprompt-bridge-x86_64-pc-windows-msvc.exe`.
 
-Easiest: `scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket && scoop install cowork`. Manual:
+Easiest: `scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket && scoop install bridge`. Manual:
 
 ```powershell
 $dir = "C:\Program Files\systemprompt"
@@ -140,7 +140,7 @@ curl -H "Authorization: Bearer $env:TOKEN" http://<host>:8080/api/v1/core/oauth/
 
 ## 7. Point Claude for Work at the gateway
 
-The simplest path: in the Cowork Desktop GUI, open the **Agents** tab and click **Enable** on the Claude Desktop card, then **Generate profile** and **Install profile**. The bridge writes the credential-helper config and the inference base URL into Claude Desktop's managed profile in one click.
+The simplest path: in the bridge Desktop GUI, open the **Agents** tab and click **Enable** on the Claude Desktop card, then **Generate profile** and **Install profile**. The bridge writes the credential-helper config and the inference base URL into Claude Desktop's managed profile in one click.
 
 Manual fallback — Claude Desktop → **Enterprise → Settings → Inference**:
 
@@ -198,4 +198,4 @@ Revoke the PAT from `/admin/devices` on the gateway.
 - Gateway capabilities probe: `GET /v1/auth/cowork/capabilities`
 - PAT exchange: `POST /v1/auth/cowork/pat` with `Authorization: Bearer sp-live-...`
 - Full auth / flow spec: `docs/manual-cowork-test.md`
-- Device cert (mTLS) enrollment: `docs/cowork-device-auth.md`
+- Device cert (mTLS) enrollment: [`device-auth.md`](device-auth.md)

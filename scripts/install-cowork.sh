@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
-# cowork (client CLI) installer — developer-workstation companion to the gateway.
+# bridge (client) installer — developer-workstation companion to the gateway.
 #
-# Installs the cowork binary from the latest cowork-v* release on
+# Installs the systemprompt-bridge binary from the latest bridge-v* release on
 # systempromptio/systemprompt-template. For the gateway server, use
 # install-gateway.sh.
 #
 # Usage:   curl -sSL https://raw.githubusercontent.com/systempromptio/systemprompt-template/main/scripts/install-cowork.sh | sh
-#          ... | sh -s -- --version cowork-v0.3.3 --prefix /usr/local
+#          ... | sh -s -- --version bridge-v0.9.0 --prefix /usr/local
 
 set -euo pipefail
 
 REPO="systempromptio/systemprompt-template"
-BIN_NAME="cowork"
+BIN_NAME="systemprompt-bridge"
 VERSION="latest"
 PREFIX=""
 
-log()  { printf '\033[0;36m[cowork]\033[0m %s\n' "$*" >&2; }
-warn() { printf '\033[0;33m[cowork]\033[0m %s\n' "$*" >&2; }
-die()  { printf '\033[0;31m[cowork] error:\033[0m %s\n' "$*" >&2; exit 1; }
+log()  { printf '\033[0;36m[bridge]\033[0m %s\n' "$*" >&2; }
+warn() { printf '\033[0;33m[bridge]\033[0m %s\n' "$*" >&2; }
+die()  { printf '\033[0;31m[bridge] error:\033[0m %s\n' "$*" >&2; exit 1; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -40,30 +40,28 @@ uname_m=$(uname -m)
 case "$uname_s" in
   linux)
     case "$uname_m" in
-      x86_64|amd64)    asset_pattern='systemprompt-cowork-x86_64-unknown-linux-gnu' ;;
-      aarch64|arm64)   asset_pattern='systemprompt-cowork-aarch64-unknown-linux-gnu' ;;
-      *) die "unsupported Linux arch: $uname_m" ;;
+      x86_64|amd64)    asset_pattern='systemprompt-bridge-x86_64-unknown-linux-gnu' ;;
+      *) die "unsupported Linux arch: $uname_m (only x86_64 is published)" ;;
     esac
     ext="" ;;
   darwin)
     case "$uname_m" in
-      arm64|aarch64) asset_pattern='systemprompt-cowork-macos-aarch64' ;;
-      x86_64|amd64)  asset_pattern='systemprompt-cowork-macos-x64' ;;
-      *) die "unsupported macOS arch: $uname_m" ;;
+      arm64|aarch64) asset_pattern='systemprompt-bridge-aarch64-apple-darwin' ;;
+      *) die "unsupported macOS arch: $uname_m (only Apple Silicon is published)" ;;
     esac
     ext="" ;;
   msys*|mingw*|cygwin*)
-    die "On Windows use Scoop: scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket && scoop install cowork" ;;
+    die "On Windows use Scoop: scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket && scoop install bridge" ;;
   *) die "unsupported OS: $uname_s" ;;
 esac
 
 if [ "$VERSION" = "latest" ]; then
-  log "resolving latest cowork-v* release..."
+  log "resolving latest bridge-v* release..."
   VERSION=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases" \
-    | grep -oE '"tag_name"\s*:\s*"cowork-v[^"]+"' \
+    | grep -oE '"tag_name"\s*:\s*"bridge-v[^"]+"' \
     | head -n1 \
     | sed -E 's/.*"([^"]+)"$/\1/')
-  [ -n "$VERSION" ] || die "could not resolve latest cowork-v* release"
+  [ -n "$VERSION" ] || die "could not resolve latest bridge-v* release"
 fi
 
 log "installing ${BIN_NAME} ${VERSION} (asset: ${asset_pattern}${ext})"
@@ -73,12 +71,12 @@ trap 'rm -rf "$tmp"' EXIT
 
 base="https://github.com/${REPO}/releases/download/${VERSION}"
 
-# cowork assets from systemprompt-core are typically raw binaries, not tarballs
+# bridge assets are raw binaries, not tarballs.
 log "downloading ${asset_pattern}${ext}..."
-if ! curl -fsSL "${base}/${asset_pattern}${ext}" -o "${tmp}/cowork"; then
+if ! curl -fsSL "${base}/${asset_pattern}${ext}" -o "${tmp}/${BIN_NAME}"; then
   die "asset not found: ${base}/${asset_pattern}${ext}"
 fi
-chmod +x "${tmp}/cowork"
+chmod +x "${tmp}/${BIN_NAME}"
 
 if [ -z "$PREFIX" ]; then
   if [ "$(id -u)" -eq 0 ]; then
@@ -90,14 +88,14 @@ fi
 
 dest="${PREFIX}/bin"
 mkdir -p "$dest"
-install -m 0755 "${tmp}/cowork" "${dest}/cowork"
+install -m 0755 "${tmp}/${BIN_NAME}" "${dest}/${BIN_NAME}"
 
-log "installed cowork to ${dest}/cowork"
+log "installed ${BIN_NAME} to ${dest}/${BIN_NAME}"
 
 case ":$PATH:" in
   *":${dest}:"*) ;;
   *) warn "add ${dest} to your PATH: export PATH=\"${dest}:\$PATH\"" ;;
 esac
 
-log "verify: cowork --version"
-log "configure: cowork config set gateway.url https://your-gateway.example.com"
+log "verify: ${BIN_NAME} --version"
+log "configure: ${BIN_NAME} config set gateway.url https://your-gateway.example.com"
