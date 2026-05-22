@@ -1,6 +1,6 @@
 target/
-!target/release/systemprompt
-!target/release/systemprompt-mcp-agent
+# Scaled scenario binaries are staged into deploy/scenarios/scaled/.bin/ (a real
+# dir inside the context) because `target` is a symlink escaping the context.
 .git/
 node_modules/
 web/dist/

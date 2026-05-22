@@ -49,6 +49,15 @@ services:
       - "hot_standby=on"
       - "-c"
       - "listen_addresses=*"
+      # Connection ceiling. Each app/scheduler node opens an sqlx pool of up to 50
+      # (hardcoded in core's build_pool_options()), plus per-agent and MCP pools,
+      # and the replica consumes WAL-sender slots. The postgres default of 100 is
+      # exhausted under the `scaled` load profile (ramps to 1000 virtual users
+      # across N replicas) — the primary then dies with "too many clients already"
+      # and takes the whole stack down. 400 covers 3 app + 1 scheduler under load
+      # with headroom; raise alongside REPLICAS if you scale past ~6 nodes.
+      - "-c"
+      - "max_connections=400"
     volumes:
       - postgres_primary_data:/var/lib/postgresql/data
       # Creates the replicator role + opens pg_hba for replication on first init.
@@ -69,7 +78,11 @@ services:
   postgres-replica:
     image: postgres:18-alpine
     restart: unless-stopped
-    user: postgres
+    # Runs as root so the entrypoint can chown the fresh named volume (mounted
+    # root:root) to the postgres user before cloning — pg_basebackup runs as
+    # `postgres` via su-exec, and docker-entrypoint.sh drops to postgres itself.
+    # (Setting `user: postgres` here is what previously left the volume
+    # root-owned, so pg_basebackup hit "pg_wal: Permission denied" in a loop.)
     depends_on:
       postgres-primary:
         condition: service_healthy
@@ -84,15 +97,23 @@ services:
       - "-c"
       - |
         set -e
+        chown -R postgres:postgres "$$PGDATA"
         if [ -z "$$(ls -A "$$PGDATA" 2>/dev/null)" ]; then
           echo "Cloning primary via pg_basebackup..."
+          # Run pg_basebackup as root (a client tool, it does not refuse root)
+          # writing into the dir, then hand ownership to postgres. Avoids a
+          # dependency on su-exec/gosu being on PATH in this image.
           until pg_basebackup -h postgres-primary -p 5432 -D "$$PGDATA" -U replicator -Fp -Xs -P -R; do
             echo "pg_basebackup failed, retrying in 3s..."
             sleep 3
           done
           chmod 0700 "$$PGDATA"
+          chown -R postgres:postgres "$$PGDATA"
         fi
-        exec docker-entrypoint.sh postgres -c hot_standby=on
+        # max_connections must be >= the primary's (400) or hot-standby recovery
+        # aborts with "insufficient parameter settings". Keep these in lockstep
+        # with the primary's `command:` above.
+        exec docker-entrypoint.sh postgres -c hot_standby=on -c max_connections=400
     volumes:
       - postgres_replica_data:/var/lib/postgresql/data
     networks:
@@ -119,6 +140,11 @@ services:
       # All app replicas write to the primary.
       DATABASE_URL: postgres://systemprompt:${POSTGRES_PASSWORD:-systemprompt}@postgres-primary:5432/systemprompt
       PG_HOST: postgres-primary
+      # Pin the in-container profile path. Without this, the host `.env` loaded
+      # via env_file leaks a host-absolute SYSTEMPROMPT_PROFILE into the
+      # container, so the CLI (and any in-container token mint) resolves a
+      # profile path that does not exist here. (Matches the airgap stack.)
+      SYSTEMPROMPT_PROFILE: /app/services/profiles/docker/profile.yaml
     # Internal port only — never published. The LB reaches every replica via
     # docker DNS round-robin on `app:8080`.
     expose:
@@ -133,10 +159,15 @@ services:
     entrypoint:
       - "sh"
       - "-c"
-      - "mkdir -p /app/services/profiles/docker && cp /seed/profile.yaml /app/services/profiles/docker/profile.yaml && cp /seed/secrets.json /app/services/profiles/docker/secrets.json && exec /app/entrypoint.sh"
+      - "mkdir -p /app/services/profiles/docker && cp /seed/profile.yaml /app/services/profiles/docker/profile.yaml && cp /seed/secrets.json /app/services/profiles/docker/secrets.json && cp /seed/signing_key.pem /app/services/profiles/docker/signing_key.pem && exec /app/entrypoint.sh"
     volumes:
       - ../../../.systemprompt/profiles/scaled-api/profile.yaml:/seed/profile.yaml:ro
       - ../../../.systemprompt/profiles/scaled-api/secrets.json:/seed/secrets.json:ro
+      # RSA signing key — shared by every app replica so a token minted on one
+      # replica validates on all of them (and on the SSE subscriber replica).
+      # Without it the stack cannot mint or validate any JWT (every auth path
+      # 401s). See architecture.md §"Authentication".
+      - ../../../.systemprompt/profiles/scaled-api/signing_key.pem:/seed/signing_key.pem:ro
       # Disable the scheduler on every API replica. Without this, all N replicas
       # would run the 5 cron jobs concurrently. Deployment-time mitigation for the
       # single-node scheduler limitation — NOT a fix.
@@ -170,6 +201,9 @@ services:
     environment:
       DATABASE_URL: postgres://systemprompt:${POSTGRES_PASSWORD:-systemprompt}@postgres-primary:5432/systemprompt
       PG_HOST: postgres-primary
+      # See the `app` service: pin the in-container profile path so env_file's
+      # host-absolute SYSTEMPROMPT_PROFILE does not leak in.
+      SYSTEMPROMPT_PROFILE: /app/services/profiles/docker/profile.yaml
     expose:
       - "8080"
     # Seed the scaled-scheduler profile into the node's own writable copy — see
@@ -178,10 +212,11 @@ services:
     entrypoint:
       - "sh"
       - "-c"
-      - "mkdir -p /app/services/profiles/docker && cp /seed/profile.yaml /app/services/profiles/docker/profile.yaml && cp /seed/secrets.json /app/services/profiles/docker/secrets.json && exec /app/entrypoint.sh"
+      - "mkdir -p /app/services/profiles/docker && cp /seed/profile.yaml /app/services/profiles/docker/profile.yaml && cp /seed/secrets.json /app/services/profiles/docker/secrets.json && cp /seed/signing_key.pem /app/services/profiles/docker/signing_key.pem && exec /app/entrypoint.sh"
     volumes:
       - ../../../.systemprompt/profiles/scaled-scheduler/profile.yaml:/seed/profile.yaml:ro
       - ../../../.systemprompt/profiles/scaled-scheduler/secrets.json:/seed/secrets.json:ro
+      - ../../../.systemprompt/profiles/scaled-scheduler/signing_key.pem:/seed/signing_key.pem:ro
     networks:
       - scaled
     healthcheck:
@@ -206,7 +241,10 @@ services:
     networks:
       - scaled
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/lb-health || exit 1"]
+      # Use 127.0.0.1, not localhost: nginx listens IPv4-only, but `localhost`
+      # resolves to ::1 first inside the container → connection refused → the LB
+      # is wrongly marked unhealthy even while it serves traffic fine on IPv4.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/lb-health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5

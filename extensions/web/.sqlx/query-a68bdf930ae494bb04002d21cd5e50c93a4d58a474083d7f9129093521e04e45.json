@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO departments (name, description)\n         VALUES ($1, $2)\n         ON CONFLICT (name) DO UPDATE\n            SET description = EXCLUDED.description,\n                updated_at = NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a68bdf930ae494bb04002d21cd5e50c93a4d58a474083d7f9129093521e04e45"
+}

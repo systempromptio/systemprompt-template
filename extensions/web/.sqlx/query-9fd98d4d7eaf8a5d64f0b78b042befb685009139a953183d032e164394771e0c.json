@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            page_url,\n            COUNT(*)::BIGINT AS \"events!\",\n            COUNT(DISTINCT session_id)::BIGINT AS \"sessions!\",\n            COALESCE(AVG(LEAST(NULLIF(time_on_page_ms, 0), 600000)), 0)::DOUBLE PRECISION AS \"avg_time_ms!\"\n        FROM engagement_events\n        WHERE created_at >= CURRENT_DATE\n          AND time_on_page_ms > 0\n        GROUP BY page_url\n        ORDER BY 2 DESC\n        LIMIT 3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "page_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "events!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "sessions!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "avg_time_ms!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "9fd98d4d7eaf8a5d64f0b78b042befb685009139a953183d032e164394771e0c"
+}

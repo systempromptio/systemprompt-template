@@ -17,8 +17,15 @@
 # Per-replica addressing: `app` replicas have no host ports; we read their
 # logs directly with `docker compose logs`.
 #
+# The decisive, timing-independent signal is which node STARTED the cron engine:
+# the scheduler node logs `Scheduler started` (+ tokio_cron_scheduler activity),
+# every API replica logs nothing of the sort because its scheduler is disabled.
+# We scan each container's FULL log (not a trailing window) so the proof does
+# not depend on a cron job happening to fire during the watch — per-job dispatch
+# is debug-level and the jobs' cadence may exceed any reasonable demo window.
+#
 # Environment overrides:
-#   WATCH_SECONDS  window to watch for a scheduled run (default 360 = 6 min)
+#   WATCH_SECONDS  settle time before sampling (default 30s)
 #
 # Cost: Free.
 
@@ -30,14 +37,15 @@ COMPOSE_FILE="$PROJECT_DIR/deploy/scenarios/scaled/docker-compose.scaled.yml"
 LB_URL="http://localhost:8088"
 RESULTS_DIR="$DEMO_ROOT/scenarios/scaled/results"
 OUT_FILE="$RESULTS_DIR/scheduler-isolation.json"
-WATCH_SECONDS="${WATCH_SECONDS:-360}"
+WATCH_SECONDS="${WATCH_SECONDS:-30}"
 
 DC=(docker compose -f "$COMPOSE_FILE")
 
-# Log markers that indicate a scheduler actually fired a job. The scheduler
-# extension logs around job dispatch — match broadly and case-insensitively
-# so a wording change does not silently break the assertion.
-SCHED_MARKER='scheduler|scheduled job|job .*(executed|running|dispatch|trigger)|cron'
+# Markers that indicate the cron ENGINE is live on a node: the scheduler
+# service logs "Scheduler started" and the tokio_cron_scheduler library logs
+# its setup; per-job dispatch wording is also matched as a bonus. Excludes the
+# disabled-path lines so an API replica's "Scheduler is disabled" never counts.
+SCHED_MARKER='Scheduler started|tokio_cron_scheduler|scheduled job|job .*(executed|completed|dispatch|trigger)'
 
 header "SCALED DEMO 4: SCHEDULER ISOLATION" "exactly one node runs cron jobs"
 
@@ -123,10 +131,15 @@ fi
 divider
 step "Inspecting per-container logs for job-execution markers"
 
-# Count scheduler-execution log lines emitted within the watch window.
+# Count cron-engine log lines across the container's FULL log (the decisive
+# "Scheduler started" signal is emitted once at boot). Excludes disabled-path
+# lines so a correctly-disabled API replica scores 0.
 count_sched_lines() {
   local cid="$1"
-  "${DC[@]}" logs --since "$WATCH_SECONDS"s "$cid" 2>/dev/null \
+  # Plain `docker logs <cid>`, NOT `docker compose logs <cid>`: compose logs
+  # takes a service name and returns nothing for a container id, which silently
+  # zeroed every count and made this assertion meaningless.
+  docker logs "$cid" 2>&1 \
     | grep -iE "$SCHED_MARKER" \
     | grep -ivE 'disabled|skipping|not enabled|scheduler: *false' \
     | grep -cE '.' || true
@@ -157,21 +170,20 @@ step "Verdict"
 
 VERDICT=0
 
-# (1) The scheduler node must show activity (otherwise nothing ran at all).
+# (1) The scheduler node must run the cron engine (otherwise nothing schedules).
 if (( SCHED_HITS > 0 )); then
-  pass "scheduler node executed jobs ($SCHED_HITS marker lines)"
+  pass "scheduler node runs the cron engine ($SCHED_HITS marker lines)"
 else
-  warn "scheduler node showed no execution markers within the window."
-  warn "Either no cron job was due (widen WATCH_SECONDS) or the scheduler is"
-  warn "not running — this test cannot confirm isolation without a real run."
+  warn "scheduler node shows no cron-engine markers — the scheduler service may"
+  warn "not have started. Inspect: ${DC[*]} logs scheduler"
   VERDICT=1
 fi
 
-# (2) No app replica may execute jobs — this is the core isolation assertion.
+# (2) No app replica may run the cron engine — the core isolation assertion.
 if (( APP_OFFENDERS == 0 )); then
-  pass "no app replica executed any scheduled job — zero duplicate execution"
+  pass "no app replica runs the cron engine — zero duplicate execution"
 else
-  fail "$APP_OFFENDERS app replica(s) executed scheduled jobs — isolation BROKEN"
+  fail "$APP_OFFENDERS app replica(s) run the cron engine — isolation BROKEN"
   fail "The scheduler-disabled profile/override is not applied to all replicas."
   VERDICT=1
 fi
@@ -199,9 +211,10 @@ pass "report written: results/scheduler-isolation.json"
 divider
 if (( VERDICT == 0 )); then
   pass "SCHEDULER ISOLATION VERIFIED"
-  info "Exactly one node runs cron jobs; API replicas never duplicate them."
-  info "Note: this is a deployment-time mitigation, not a code-level fix —"
-  info "the scheduler remains single-node-bound by design."
+  info "Exactly one node runs the cron engine; API replicas never duplicate it."
+  info "Two layers guard this: the deployment-time scheduler-disable on every API"
+  info "replica (observed here), plus core 0.11's distributed advisory-lock that"
+  info "de-duplicates ticks across replicas (SchedulerConfig.distributed_lock)."
 else
   fail "SCHEDULER ISOLATION CHECK FAILED — see results/scheduler-isolation.json"
 fi

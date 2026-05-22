@@ -37,10 +37,11 @@ LOADTEST_MANIFEST="$CORE_DIR/crates/tests/loadtest/Cargo.toml"
 # Demo admin email used for token self-acquisition by the loadtest.
 ADMIN_EMAIL="${SYSTEMPROMPT_ADMIN_EMAIL:-airgap-admin@demo.systemprompt.io}"
 
-# Airgap thresholds (frozen contract). error_rate is a decimal fraction,
-# so 0.5% == 0.005.
-GOV_P95_MAX_MS=300
-ERROR_RATE_MAX=0.005
+# The pass/fail SLO is owned by the airgap profile in the core loadtest
+# (crates/tests/loadtest/src/config.rs): the early-deny governance path on a
+# fast budget, the gateway-inference path on a relaxed upstream budget. This
+# script reports each scenario's verdict rather than re-deriving thresholds, so
+# the contract lives in exactly one place.
 
 mkdir -p "$RESULTS_DIR"
 
@@ -147,18 +148,22 @@ run_loadtest() {
   local scenario="$1" out_file="$2"
   step "Loadtest scenario: $scenario"
   cmd "cargo run --manifest-path ../systemprompt-core/crates/tests/loadtest/Cargo.toml -- --profile airgap --scenario $scenario --base-url $BASE_URL --token *** --output json --out-file $out_file"
-  if ! cargo run --quiet --manifest-path "$LOADTEST_MANIFEST" -- \
+  local rc=0
+  cargo run --quiet --manifest-path "$LOADTEST_MANIFEST" -- \
       --profile airgap \
       --scenario "$scenario" \
       --base-url "$BASE_URL" \
       --token "$LOAD_TOKEN" \
       --output json \
-      --out-file "$out_file"; then
-    fail "Loadtest scenario '$scenario' exited non-zero"
-    FAILURES=$((FAILURES + 1))
-  fi
+      --out-file "$out_file" || rc=$?
+
+  # The loadtest applies the airgap profile's per-scenario SLO and exits
+  # non-zero (rc) if that scenario's contract is breached. A genuinely
+  # incomplete run (no JSON) is a hard failure here; the SLO verdict itself is
+  # read back from each scenario's `passed` field in STEP 4, so the operator
+  # always sees the full picture before the run aborts.
   if [[ ! -s "$out_file" ]]; then
-    fail "Loadtest scenario '$scenario' produced no JSON at $out_file"
+    fail "Loadtest scenario '$scenario' produced no JSON at $out_file (rc=$rc)"
     FAILURES=$((FAILURES + 1))
   else
     pass "Wrote results: $out_file"
@@ -180,63 +185,59 @@ if [[ "$FAILURES" -ne 0 ]]; then
 fi
 
 # ──────────────────────────────────────────────
-#  STEP 4: Parse JSON, check thresholds
+#  STEP 4: Read the per-scenario SLO verdict
 # ──────────────────────────────────────────────
-subheader "STEP 4: Threshold checks" "governance p95 <= ${GOV_P95_MAX_MS}ms, error <= 0.5%"
+subheader "STEP 4: SLO verdict" "Per-scenario thresholds owned by the airgap profile (core)"
 
 if ! command -v jq >/dev/null 2>&1; then
   fail "jq is required to parse loadtest JSON results — install jq and re-run"
   exit 1
 fi
 
-# Loadtest JSON shape (core, reporters/json.rs):
+# Loadtest JSON shape (core, reporters/json.rs): each scenario carries its own
+# SLO and verdict —
 #   { "scenarios": { "<name>": { "requests", "p50_ms", "p95_ms", "p99_ms",
-#                                "error_rate", "passed" } },
+#                                "error_rate", "passed",
+#                                "thresholds": { p95_ms, p99_ms, max_error_rate } } },
 #     "aggregate": { "total_requests", "all_passed" } }
-# Each run is invoked with a single --scenario, so .scenarios has one entry.
-# error_rate is a decimal fraction (0.0..1.0), NOT a percentage.
+# The airgap profile gives the early-deny governance path a fast SLO and the
+# gateway-inference path a relaxed upstream SLO, so `passed` is authoritative
+# and scenario-appropriate. This step reports it; it does not re-derive it.
 json_field() {
-  # $1 = file, $2 = field within the (single) scenario object
+  # $1 = file, $2 = jq path within the (single) scenario object
   jq -r --arg f "$2" '(.scenarios | to_entries[0].value)[$f] // empty' "$1" 2>/dev/null || true
 }
-
-GW_REQS=$(json_field "$GW_JSON" requests)
-GW_ERR=$(json_field "$GW_JSON" error_rate)
-
-GOV_P95=$(json_field "$GOV_JSON" p95_ms)
-GOV_ERR=$(json_field "$GOV_JSON" error_rate)
-GOV_REQS=$(json_field "$GOV_JSON" requests)
-
-# error_rate -> percentage for display.
 pct() { awk -v r="$1" 'BEGIN{ if (r=="") print ""; else printf "%.3f", r*100 }'; }
-info "gateway-inference: requests=$GW_REQS  error_rate=$(pct "$GW_ERR")%"
-info "governance-only:   requests=$GOV_REQS  p95=${GOV_P95}ms  error_rate=$(pct "$GOV_ERR")%"
-echo ""
 
-# Floating-point comparison via awk (portable, no bc dependency).
-fgt() { awk -v a="$1" -v b="$2" 'BEGIN{exit !(a>b)}'; }
+# $1 = label, $2 = json file
+report_scenario() {
+  local label="$1" file="$2"
+  local reqs p95 p99 err passed tp95 tp99 terr
+  reqs=$(json_field "$file" requests)
+  p95=$(json_field "$file" p95_ms)
+  p99=$(json_field "$file" p99_ms)
+  err=$(json_field "$file" error_rate)
+  passed=$(json_field "$file" passed)
+  tp95=$(jq -r '(.scenarios|to_entries[0].value).thresholds.p95_ms // empty' "$file" 2>/dev/null)
+  tp99=$(jq -r '(.scenarios|to_entries[0].value).thresholds.p99_ms // empty' "$file" 2>/dev/null)
+  terr=$(jq -r '(.scenarios|to_entries[0].value).thresholds.max_error_rate // empty' "$file" 2>/dev/null)
 
-if [[ -z "$GOV_P95" ]]; then
-  fail "Could not read governance-only p95 latency from $GOV_JSON"
-  FAILURES=$((FAILURES + 1))
-elif fgt "$GOV_P95" "$GOV_P95_MAX_MS"; then
-  fail "governance-only p95 ${GOV_P95}ms exceeds threshold ${GOV_P95_MAX_MS}ms"
-  FAILURES=$((FAILURES + 1))
-else
-  pass "governance-only p95 ${GOV_P95}ms within ${GOV_P95_MAX_MS}ms"
-fi
-
-for pair in "gateway-inference:$GW_ERR" "governance-only:$GOV_ERR"; do
-  name="${pair%%:*}"; rate="${pair##*:}"
-  if [[ -z "$rate" ]]; then
-    warn "$name: error rate not present in JSON — skipping that check"
-  elif fgt "$rate" "$ERROR_RATE_MAX"; then
-    fail "$name error rate $(pct "$rate")% exceeds threshold 0.5%"
-    FAILURES=$((FAILURES + 1))
+  info "$label: requests=$reqs  p95=${p95}ms  p99=${p99}ms  error_rate=$(pct "$err")%"
+  info "  SLO: p95<=${tp95}ms  p99<=${tp99}ms  error<=$(pct "$terr")%"
+  if [[ "$passed" == "true" ]]; then
+    pass "$label met its SLO"
   else
-    pass "$name error rate $(pct "$rate")% within 0.5%"
+    fail "$label breached its SLO (passed=$passed)"
+    FAILURES=$((FAILURES + 1))
   fi
-done
+}
+
+report_scenario "gateway-inference" "$GW_JSON"
+echo ""
+report_scenario "governance-only" "$GOV_JSON"
+
+# Request count needed by STEP 5's mock-correlation tolerance.
+GW_REQS=$(json_field "$GW_JSON" requests)
 
 # ──────────────────────────────────────────────
 #  STEP 5: Mock /stats correlation (measured as deltas)

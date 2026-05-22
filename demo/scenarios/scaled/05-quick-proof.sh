@@ -42,6 +42,30 @@ else
   MODE_LABEL="single instance ($TARGET_URL) — fairness check will be trivial"
 fi
 
+# Audit-spine queries must hit the DB the target actually writes to. In scaled
+# mode that is the scaled stack's own primary (inside the postgres-primary
+# container), NOT the host `local` profile DB — querying the wrong DB is what
+# made this proof report a false "audit delta 0" failure. In single mode, use
+# the host CLI against the active profile.
+SCALED_COMPOSE="$PROJECT_DIR/deploy/scenarios/scaled/docker-compose.scaled.yml"
+db_scalar() {  # $1 = SQL returning a single scalar; echoes the raw value
+  if [[ "$MODE" == "scaled" ]]; then
+    docker compose -f "$SCALED_COMPOSE" exec -T postgres-primary \
+      psql -U systemprompt -d systemprompt -tAc "$1" 2>/dev/null | tr -d '[:space:]'
+  else
+    "$CLI" infra db query "$1" --profile "$PROFILE" 2>/dev/null \
+      | grep -oE '[0-9]+(\.[0-9]+)?' | head -1
+  fi
+}
+db_rows() {  # $1 = SQL; echoes pipe-separated rows (scaled) or CLI JSON (single)
+  if [[ "$MODE" == "scaled" ]]; then
+    docker compose -f "$SCALED_COMPOSE" exec -T postgres-primary \
+      psql -U systemprompt -d systemprompt -tA -F '|' -c "$1" 2>/dev/null
+  else
+    "$CLI" infra db query "$1" --profile "$PROFILE" 2>/dev/null
+  fi
+}
+
 echo ""
 echo "=========================================="
 echo "  SCALED QUICK PROOF: ${N} reqs / ${C} concurrent"
@@ -68,10 +92,8 @@ echo "  Healthy at $TARGET_URL"
 echo ""
 
 # ── Baseline: prove the session is unique (audit row count starts at 0) ──
-BASELINE_ROWS=$("$CLI" infra db query \
-  "SELECT count(*) AS n FROM governance_decisions WHERE session_id = '$SESSION'" \
-  --profile "$PROFILE" 2>/dev/null \
-  | grep -oE '"n": [0-9]+' | head -1 | awk '{print $2}')
+BASELINE_ROWS=$(db_scalar \
+  "SELECT count(*) AS n FROM governance_decisions WHERE session_id = '$SESSION'")
 BASELINE_ROWS="${BASELINE_ROWS:-0}"
 echo "  Baseline audit rows for session: ${BASELINE_ROWS} (expected 0)"
 echo ""
@@ -151,43 +173,44 @@ echo "  Audit spine: querying Postgres for ${SESSION}"
 echo "------------------------------------------"
 echo ""
 
-AUDIT_ROWS=$("$CLI" infra db query \
-  "SELECT count(*) AS n FROM governance_decisions WHERE session_id = '$SESSION'" \
-  --profile "$PROFILE" 2>/dev/null \
-  | grep -oE '"n": [0-9]+' | head -1 | awk '{print $2}')
+AUDIT_ROWS=$(db_scalar \
+  "SELECT count(*) AS n FROM governance_decisions WHERE session_id = '$SESSION'")
 AUDIT_ROWS="${AUDIT_ROWS:-0}"
 AUDIT_DELTA=$(( AUDIT_ROWS - BASELINE_ROWS ))
 
-# Server-side time range — derives true ingest throughput independent of hey.
-TIME_RANGE_JSON=$("$CLI" infra db query \
-  "SELECT min(created_at) AS first_seen, max(created_at) AS last_seen, EXTRACT(EPOCH FROM (max(created_at) - min(created_at)))::float AS span_s FROM governance_decisions WHERE session_id = '$SESSION'" \
-  --profile "$PROFILE" 2>/dev/null)
-FIRST_SEEN=$(echo "$TIME_RANGE_JSON" | jq -r '.rows[0].first_seen // "?"' 2>/dev/null)
-LAST_SEEN=$(echo "$TIME_RANGE_JSON"  | jq -r '.rows[0].last_seen  // "?"' 2>/dev/null)
-SPAN_S=$(echo "$TIME_RANGE_JSON"     | jq -r '.rows[0].span_s     // 0'   2>/dev/null)
+# Server-side ingest span — derives true throughput independent of hey.
+SPAN_S=$(db_scalar \
+  "SELECT EXTRACT(EPOCH FROM (max(created_at) - min(created_at)))::float FROM governance_decisions WHERE session_id = '$SESSION'")
+FIRST_SEEN=$(db_scalar "SELECT min(created_at) FROM governance_decisions WHERE session_id = '$SESSION'")
+LAST_SEEN=$(db_scalar "SELECT max(created_at) FROM governance_decisions WHERE session_id = '$SESSION'")
+FIRST_SEEN="${FIRST_SEEN:-?}"; LAST_SEEN="${LAST_SEEN:-?}"; SPAN_S="${SPAN_S:-0}"
 SERVER_RPS="n/a"
 if [[ -n "$SPAN_S" && "$SPAN_S" != "0" && "${AUDIT_ROWS:-0}" -gt 0 ]]; then
   SERVER_RPS=$(awk -v n="$AUDIT_ROWS" -v s="$SPAN_S" 'BEGIN { if (s>0) printf "%.0f", n/s; else print "n/a" }')
 fi
 
-# Decision / policy histogram — proves the four-stage pipeline actually ran
-# and shows whether decisions were allow/deny/etc. The CLI returns a JSON
-# document with object keys in non-deterministic order, so parse via jq.
+# Decision / policy histogram — proves the four-stage pipeline actually ran.
 echo "  Decision histogram:"
-HIST_JSON=$("$CLI" infra db query \
-  "SELECT decision, policy, count(*) AS n FROM governance_decisions WHERE session_id = '$SESSION' GROUP BY decision, policy ORDER BY n DESC" \
-  --profile "$PROFILE" 2>/dev/null)
-echo "$HIST_JSON" | jq -r '.rows[] | "    \(.n) × decision=\(.decision) policy=\(.policy)"' 2>/dev/null \
-  || echo "    (no rows)"
+HIST=$(db_rows \
+  "SELECT count(*) AS n, decision, policy FROM governance_decisions WHERE session_id = '$SESSION' GROUP BY decision, policy ORDER BY n DESC")
+if [[ "$MODE" == "scaled" ]]; then
+  echo "$HIST" | awk -F'|' 'NF>=3 { printf "    %s × decision=%s policy=%s\n", $1,$2,$3 }' || echo "    (no rows)"
+  [[ -z "$HIST" ]] && echo "    (no rows)"
+else
+  echo "$HIST" | jq -r '.rows[] | "    \(.n) × decision=\(.decision) policy=\(.policy)"' 2>/dev/null || echo "    (no rows)"
+fi
 echo ""
 
 # Sample three audit rows so the user can eyeball real data, not a count.
 echo "  Sample audit rows (first 3 of ${AUDIT_ROWS}):"
-SAMPLE_JSON=$("$CLI" infra db query \
-  "SELECT id, tool_name, decision, policy, plugin_id, created_at FROM governance_decisions WHERE session_id = '$SESSION' ORDER BY created_at LIMIT 3" \
-  --profile "$PROFILE" 2>/dev/null)
-echo "$SAMPLE_JSON" | jq -r '.rows[] | "    \(.created_at)  id=\(.id)  tool=\(.tool_name)  decision=\(.decision)  policy=\(.policy)  plugin=\(.plugin_id)"' 2>/dev/null \
-  || echo "    (none)"
+SAMPLE=$(db_rows \
+  "SELECT created_at, id, tool_name, decision, policy, plugin_id FROM governance_decisions WHERE session_id = '$SESSION' ORDER BY created_at LIMIT 3")
+if [[ "$MODE" == "scaled" ]]; then
+  echo "$SAMPLE" | awk -F'|' 'NF>=6 { printf "    %s  id=%s  tool=%s  decision=%s  policy=%s  plugin=%s\n", $1,$2,$3,$4,$5,$6 }' || echo "    (none)"
+  [[ -z "$SAMPLE" ]] && echo "    (none)"
+else
+  echo "$SAMPLE" | jq -r '.rows[] | "    \(.created_at)  id=\(.id)  tool=\(.tool_name)  decision=\(.decision)  policy=\(.policy)  plugin=\(.plugin_id)"' 2>/dev/null || echo "    (none)"
+fi
 echo ""
 
 # ── Verdict ────────────────────────────────────
@@ -227,7 +250,12 @@ fi
 
 echo ""
 echo "  See the rows yourself:"
-echo "    $CLI infra db query \"SELECT * FROM governance_decisions WHERE session_id = '$SESSION' LIMIT 10\" --profile $PROFILE"
+if [[ "$MODE" == "scaled" ]]; then
+  echo "    docker compose -f $SCALED_COMPOSE exec -T postgres-primary \\"
+  echo "      psql -U systemprompt -d systemprompt -c \"SELECT * FROM governance_decisions WHERE session_id = '$SESSION' LIMIT 10\""
+else
+  echo "    $CLI infra db query \"SELECT * FROM governance_decisions WHERE session_id = '$SESSION' LIMIT 10\" --profile $PROFILE"
+fi
 echo "    $CLI infra logs trace list --limit 20"
 echo ""
 

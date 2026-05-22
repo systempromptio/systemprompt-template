@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO markdown_content_enrichment (\n                content_id, category, after_reading_this,\n                related_playbooks, related_code, related_docs, updated_at\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7)\n            ON CONFLICT (content_id) DO UPDATE SET\n                category = EXCLUDED.category,\n                after_reading_this = EXCLUDED.after_reading_this,\n                related_playbooks = EXCLUDED.related_playbooks,\n                related_code = EXCLUDED.related_code,\n                related_docs = EXCLUDED.related_docs,\n                updated_at = EXCLUDED.updated_at\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Jsonb",
+        "Jsonb",
+        "Jsonb",
+        "Jsonb",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4a6ccc4cbf182baa60173aed86cc1ee8a58196700991c46cbfa0a4addb96c180"
+}

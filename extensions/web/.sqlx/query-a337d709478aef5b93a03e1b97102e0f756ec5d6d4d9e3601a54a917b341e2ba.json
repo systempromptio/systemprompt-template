@@ -1,0 +1,101 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, path, public_url, mime_type, size_bytes, ai_content, metadata,\n                   user_id as \"user_id: UserId\", session_id as \"session_id: SessionId\",\n                   trace_id as \"trace_id: TraceId\", context_id as \"context_id: ContextId\",\n                   created_at, updated_at, deleted_at\n            FROM files\n            WHERE path ILIKE $1 AND deleted_at IS NULL\n            ORDER BY created_at DESC\n            LIMIT $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "path",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "public_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "mime_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "ai_content",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 7,
+        "name": "user_id: UserId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "session_id: SessionId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "trace_id: TraceId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "context_id: ContextId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "deleted_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "a337d709478aef5b93a03e1b97102e0f756ec5d6d4d9e3601a54a917b341e2ba"
+}

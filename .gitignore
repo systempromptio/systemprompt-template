@@ -176,6 +176,12 @@ demo/.token
 # Scaled-scenario load-test result artifacts (keep dir via .gitkeep)
 demo/scenarios/scaled/results/*.json
 
+# Air-gap-scenario load-test result artifacts (keep dir via .gitkeep)
+demo/scenarios/airgap/results/*.json
+
 # Stray Outlook image paste artifacts
 /image*.png
 /.claude/
+
+# Scaled scenario: staged release binaries for the Docker build (see Dockerfile.scaled-prebuilt)
+deploy/scenarios/scaled/.bin/
