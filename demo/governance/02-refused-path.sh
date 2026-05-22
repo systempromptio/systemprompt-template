@@ -57,7 +57,7 @@ echo "  tool=mcp__systemprompt__list_agents"
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
