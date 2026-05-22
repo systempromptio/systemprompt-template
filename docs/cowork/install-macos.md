@@ -20,7 +20,7 @@ The cask installs `Systemprompt Cowork.app` into `/Applications` and symlinks `s
 
 ## Option 2 — direct download from GitHub Releases
 
-Bundles are published on the template repo under the `cowork-v*` tag series (artifact names retained for backward compatibility). Pick the matching architecture:
+The branded `.app`/`.dmg` bundles are published on the template repo under the `cowork-v*` tag series (artifact names retained for backward compatibility); the raw `systemprompt-bridge` binaries ship on the `bridge-v*` track. Pick the matching architecture:
 
 ```bash
 # Apple Silicon (M1/M2/M3/M4)
@@ -42,7 +42,7 @@ If you only need the headless binary (Claude Desktop credential-helper slot, CI)
 
 ```bash
 curl -sSL -o systemprompt-bridge \
-  https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.7.0/systemprompt-bridge-aarch64-apple-darwin
+  https://github.com/systempromptio/systemprompt-template/releases/download/bridge-v0.9.0/systemprompt-bridge-aarch64-apple-darwin
 chmod +x systemprompt-bridge
 sudo install -m 0755 systemprompt-bridge /usr/local/bin/systemprompt-bridge
 ```
@@ -50,7 +50,7 @@ sudo install -m 0755 systemprompt-bridge /usr/local/bin/systemprompt-bridge
 Verify the SHA256:
 
 ```bash
-curl -sSL -O https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.7.0/SHA256SUMS.bridge
+curl -sSL -O https://github.com/systempromptio/systemprompt-template/releases/download/bridge-v0.9.0/SHA256SUMS.bridge
 shasum -a 256 -c SHA256SUMS.bridge --ignore-missing
 ```
 
