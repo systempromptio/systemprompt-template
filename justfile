@@ -515,6 +515,13 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
           provider: gemini
           endpoint: https://generativelanguage.googleapis.com/v1beta
           api_key_secret: gemini
+    governance:
+      authz:
+        hook:
+          mode: webhook
+          url: http://localhost:${HTTP_PORT}/api/public/govern/authz
+          timeout_ms: 1000
+          acknowledgement: null
     YAML
     fi
     if [ ! -f "$PROFILE_DIR/secrets.json" ]; then
@@ -560,6 +567,10 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     just migrate
     echo "Ensuring bootstrap admin user..."
     {{CLI}} admin bootstrap
+    if [ ! -f "$ROOT/signing_key.pem" ]; then
+        echo "Generating JWT signing key..."
+        {{CLI}} admin keys generate --output "$ROOT/signing_key.pem"
+    fi
     echo "Publishing assets..."
     just publish
     echo ""
