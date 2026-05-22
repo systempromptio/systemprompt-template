@@ -407,7 +407,7 @@ Routes evaluate in order; first `model_pattern` match wins. `upstream_model` ali
 - `POST /mtls` — `501` (device-cert exchange not yet wired).
 - `GET /capabilities` — `{"modes":["pat"]}`; probes advertise which exchange modes this deployment accepts.
 
-The helper writes the signed JWT + expiry to the OS cache dir with mode `0600`. Stdout contract is exactly one JSON object; all diagnostics go to stderr. Released out-of-band as `cowork-v*` tags. Install / configure / wire-up steps below.
+The helper writes the signed JWT + expiry to the OS cache dir with mode `0600`. Stdout contract is exactly one JSON object; all diagnostics go to stderr. Released out-of-band as `bridge-v*` tags. Install / configure / wire-up steps below.
 
 **Extensible provider registry.** `GatewayRoute.provider` is a free-form string resolved at dispatch time against a startup-built registry. Extension crates register new upstreams with:
 
@@ -426,20 +426,20 @@ The `GatewayUpstream` trait (`async fn proxy(&self, ctx: UpstreamCtx<'_>)`) is t
 
 ### Install the Cowork credential helper
 
-The `systemprompt-cowork` binary is the **Credential helper script** slot in Claude for Work. It turns a PAT into a short-lived JWT that Claude Desktop merges into every inference request routed at this binary. Download the prebuilt Windows or Linux binary from [systempromptio/systemprompt-core releases](https://github.com/systempromptio/systemprompt-core/releases/tag/cowork-v0.3.0); macOS builds from source on any Mac.
+The `systemprompt-bridge` binary is the **Credential helper script** slot in Claude for Work. It turns a PAT into a short-lived JWT that Claude Desktop merges into every inference request routed at this binary. Download the prebuilt macOS, Windows, or Linux binary from [systempromptio/systemprompt-core releases](https://github.com/systempromptio/systemprompt-core/releases/tag/bridge-v0.9.0).
 
-Current release: **[cowork-v0.3.0](https://github.com/systempromptio/systemprompt-core/releases/tag/cowork-v0.3.0)** — Linux x86_64 + Windows x86_64 (mingw ABI). macOS build is pending a Mac-hosted CI.
+Current release: **[bridge-v0.9.0](https://github.com/systempromptio/systemprompt-core/releases/tag/bridge-v0.9.0)** — Linux x86_64, Windows x86_64 (MSVC ABI), macOS aarch64 (cosign-signed).
 
 #### 1. Download
 
 **Linux x86_64**
 
 ```bash
-curl -fsSL -o /usr/local/bin/systemprompt-cowork \
-  https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.3.0/systemprompt-cowork-x86_64-unknown-linux-gnu
-chmod +x /usr/local/bin/systemprompt-cowork
-curl -fsSL https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.3.0/systemprompt-cowork-x86_64-unknown-linux-gnu.sha256 \
-  | sha256sum -c --ignore-missing
+curl -fsSL -o /usr/local/bin/systemprompt-bridge \
+  https://github.com/systempromptio/systemprompt-core/releases/download/bridge-v0.9.0/systemprompt-bridge-x86_64-unknown-linux-gnu
+chmod +x /usr/local/bin/systemprompt-bridge
+curl -fsSL -O https://github.com/systempromptio/systemprompt-core/releases/download/bridge-v0.9.0/SHA256SUMS
+sha256sum -c SHA256SUMS --ignore-missing
 ```
 
 **Windows x86_64** (PowerShell as Administrator):
@@ -448,8 +448,8 @@ curl -fsSL https://github.com/systempromptio/systemprompt-core/releases/download
 $dir = "C:\Program Files\systemprompt"
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 Invoke-WebRequest `
-  -Uri "https://github.com/systempromptio/systemprompt-core/releases/download/cowork-v0.3.0/systemprompt-cowork-x86_64-pc-windows-gnu.exe" `
-  -OutFile "$dir\systemprompt-cowork.exe"
+  -Uri "https://github.com/systempromptio/systemprompt-core/releases/download/bridge-v0.9.0/systemprompt-bridge-x86_64-pc-windows-msvc.exe" `
+  -OutFile "$dir\systemprompt-bridge.exe"
 [Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$dir", "User")
 ```
 

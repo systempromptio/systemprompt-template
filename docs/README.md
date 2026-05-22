@@ -7,7 +7,7 @@ User-facing docs for the two products published out of this repository.
 | | What it is | Where it runs | Tag series |
 |---|---|---|---|
 | **systemprompt-gateway** (server) | AI governance gateway — Rust HTTP server + Postgres + MCP extensions | Kubernetes / Docker / Linux VM / PaaS | `v*` |
-| **systemprompt-cowork** (client) | `cowork` CLI for developer workstations — device auth + code-worktree ops against a running gateway | macOS / Windows / Linux laptops | `cowork-v*` |
+| **systemprompt-cowork** (client) | `cowork` CLI for developer workstations — device auth + code-worktree ops against a running gateway | macOS / Windows / Linux laptops | `bridge-v*` |
 
 Pick the product first, then the install channel.
 
@@ -30,7 +30,7 @@ Choose the channel that fits your environment. Each doc is a copy-paste recipe.
 
 ## Install Cowork (client)
 
-The Cowork Desktop app — a single `systemprompt-bridge` binary with a native GUI on macOS and Windows. Renamed from `cowork → bridge` in v0.7.0; user-facing branding ("Systemprompt Cowork", `cowork-v*` release tag series, Scoop package `cowork`) is unchanged.
+The Cowork Desktop app — a single `systemprompt-bridge` binary with a native GUI on macOS and Windows. Renamed from `cowork → bridge` in v0.7.0; the binaries now ship on the `bridge-v*` release tag series, while user-facing branding ("Systemprompt Cowork", Scoop package `cowork`) is unchanged.
 
 | Platform | Doc |
 |---|---|

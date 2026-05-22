@@ -1,6 +1,6 @@
 # Install Cowork via Scoop (Windows)
 
-This doc installs the Cowork Desktop app on a Windows workstation using [Scoop](https://scoop.sh). The Scoop manifest pulls `systemprompt-bridge.exe` (renamed from `cowork` in v0.7.0) from the latest `cowork-v*` release.
+This doc installs the Cowork Desktop app on a Windows workstation using [Scoop](https://scoop.sh). The Scoop manifest pulls `systemprompt-bridge.exe` (renamed from `cowork` in v0.7.0) from the latest `bridge-v*` release.
 
 The gateway (server) does not ship a Windows binary — deploy it via Docker / GHCR / Helm / Linux package on a Linux host.
 
