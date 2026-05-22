@@ -1,6 +1,6 @@
 # Install the gateway binary (from GitHub Releases)
 
-Installs the `systemprompt-gateway` server binary. For the cowork client CLI, see [../cowork/](../cowork/).
+Installs the `systemprompt-gateway` server binary. For the bridge client, see [../cowork/](../cowork/).
 
 Single-shell installer:
 

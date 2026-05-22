@@ -358,7 +358,7 @@ Manual install is tested and works end-to-end today; signed installers, MDM pack
 </details>
 
 <details>
-<summary><strong>Advanced — gateway routes, Cowork install, org-plugins sync</strong></summary>
+<summary><strong>Advanced — gateway routes, bridge install, org-plugins sync</strong></summary>
 
 <br>
 
@@ -400,7 +400,7 @@ gateway:
 
 Routes evaluate in order; first `model_pattern` match wins. `upstream_model` aliases a client-requested model to a different upstream name without the client knowing.
 
-**Cowork credential helper endpoints.** `systemprompt-cowork` is a standalone ~2.4 MB Rust binary (no `tokio`, no `sqlx`, no `axum`) that trades a lower-privilege credential for a short-lived JWT. Progressive capability ladder — mTLS → dashboard session → PAT — mounted under `/v1/gateway/auth/cowork/`:
+**Bridge credential helper endpoints.** `systemprompt-bridge` is a standalone ~2.4 MB Rust binary (no `tokio`, no `sqlx`, no `axum`) that trades a lower-privilege credential for a short-lived JWT. Progressive capability ladder — mTLS → dashboard session → PAT — mounted under `/v1/gateway/auth/cowork/`:
 
 - `POST /pat` — `Authorization: Bearer <pat>` → `{token, ttl, headers}` with a fresh JWT and the canonical identity header map (`x-user-id`, `x-session-id`, `x-trace-id`, `x-client-id`, `x-tenant-id`, `x-policy-version`, `x-call-source`).
 - `POST /session` — `501` (dashboard-cookie exchange not yet wired).
@@ -424,7 +424,7 @@ The `GatewayUpstream` trait (`async fn proxy(&self, ctx: UpstreamCtx<'_>)`) is t
 
 ---
 
-### Install the Cowork credential helper
+### Install the bridge credential helper
 
 The `systemprompt-bridge` binary is the **Credential helper script** slot in Claude for Work. It turns a PAT into a short-lived JWT that Claude Desktop merges into every inference request routed at this binary. Download the prebuilt macOS, Windows, or Linux binary from [systempromptio/systemprompt-core releases](https://github.com/systempromptio/systemprompt-core/releases/tag/bridge-v0.9.0).
 
@@ -460,17 +460,17 @@ Windows Smart Screen will flag the unsigned binary on first run → "More info" 
 ```bash
 git clone https://github.com/systempromptio/systemprompt-core.git
 cd systemprompt-core
-cargo build --manifest-path bin/cowork/Cargo.toml --release \
+cargo build --manifest-path bin/bridge/Cargo.toml --release \
   --target "$(rustc -vV | awk '/host:/ {print $2}')"
 sudo install -m 755 \
-  "bin/cowork/target/$(rustc -vV | awk '/host:/ {print $2}')/release/systemprompt-cowork" \
+  "bin/bridge/target/$(rustc -vV | awk '/host:/ {print $2}')/release/systemprompt-bridge" \
   /usr/local/bin/
 ```
 
 #### 2. Configure
 
-Linux/macOS: `~/.config/systemprompt/systemprompt-cowork.toml`
-Windows: `%APPDATA%\systemprompt\systemprompt-cowork.toml`
+Linux/macOS: `~/.config/systemprompt/systemprompt-bridge.toml`
+Windows: `%APPDATA%\systemprompt\systemprompt-bridge.toml`
 
 ```toml
 [gateway]
@@ -480,13 +480,13 @@ url = "http://localhost:8080"   # for the local-trial template; swap to your pro
 token = "sp-live-your-personal-access-token"
 ```
 
-Issue a PAT from the running binary with `systemprompt admin users pat issue <user-id> --name cowork-laptop`. Absent config sections are silently skipped. Dev overrides: `SP_COWORK_GATEWAY_URL`, `SP_COWORK_PAT`.
+Issue a PAT from the running binary with `systemprompt admin users pat issue <user-id> --name bridge-laptop`. Absent config sections are silently skipped. Dev overrides: `SP_BRIDGE_GATEWAY_URL`, `SP_BRIDGE_PAT`.
 
 #### 3. Verify
 
 ```bash
-systemprompt-cowork           # prints exactly one JSON {token, ttl, headers}
-systemprompt-cowork --check   # exits 0 if a token can be issued
+systemprompt-bridge           # prints exactly one JSON {token, ttl, headers}
+systemprompt-bridge --check   # exits 0 if a token can be issued
 ```
 
 Diagnostics go to stderr only. The stdout JSON matches Anthropic's `inferenceCredentialHelper` contract byte-for-byte.
@@ -495,20 +495,20 @@ Diagnostics go to stderr only. The stdout JSON matches Anthropic's `inferenceCre
 
 In Claude Desktop **Enterprise → Settings → Inference**:
 
-- **Credential helper script**: `/usr/local/bin/systemprompt-cowork` (or `C:\Program Files\systemprompt\systemprompt-cowork.exe`).
+- **Credential helper script**: `/usr/local/bin/systemprompt-bridge` (or `C:\Program Files\systemprompt\systemprompt-bridge.exe`).
 - **API base URL**: the `gateway.url` from your TOML.
 
 Every Claude Desktop request now lands a row in `ai_requests` with `user_id`, `tenant_id`, `session_id`, `trace_id`, tokens, cost, and latency — identical governance to every other tool call. Run `systemprompt infra logs audit <request-id> --full` after a prompt to see the trace end-to-end.
 
 #### 5. (Optional) Install the `org-plugins/` sync agent
 
-The same binary manages Cowork's signed plugin / managed-MCP mount:
+The same binary manages the bridge's signed plugin / managed-MCP mount:
 
 ```bash
-systemprompt-cowork install     # register launchd (macOS) / scheduled task (Windows) / systemd --user (Linux)
-systemprompt-cowork sync        # pull signed plugin manifest + allowlist now
-systemprompt-cowork validate    # verify the ed25519 signature
-systemprompt-cowork uninstall   # remove
+systemprompt-bridge install     # register launchd (macOS) / scheduled task (Windows) / systemd --user (Linux)
+systemprompt-bridge sync        # pull signed plugin manifest + allowlist now
+systemprompt-bridge validate    # verify the ed25519 signature
+systemprompt-bridge uninstall   # remove
 ```
 
 Mount targets: `/Library/Application Support/Claude/org-plugins/` (macOS), `C:\ProgramData\Claude\org-plugins\` (Windows), `${XDG_DATA_HOME:-$HOME/.local/share}/Claude/org-plugins/` (Linux).

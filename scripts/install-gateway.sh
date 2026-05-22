@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # systemprompt-gateway installer — https://get.systemprompt.io
 #
-# Installs the gateway SERVER binary. For the cowork client CLI, use
+# Installs the gateway SERVER binary. For the bridge client, use
 # scripts/install-cowork.sh or see docs/cowork/.
 #
 # Usage:   curl -sSL get.systemprompt.io | sh
@@ -45,7 +45,7 @@ case "$uname_s" in
   linux)  os="linux" ;;
   darwin) os="darwin" ;;
   msys*|mingw*|cygwin*)
-    die "The gateway is Linux/macOS-only. On Windows install cowork instead: docs/cowork/scoop.md" ;;
+    die "The gateway is Linux/macOS-only. On Windows install the bridge instead: docs/cowork/scoop.md" ;;
   *) die "unsupported OS: $uname_s" ;;
 esac
 
@@ -59,13 +59,14 @@ target="${os}-${arch}"
 
 if [ "$VERSION" = "latest" ]; then
   log "resolving latest gateway release..."
-  # List releases and pick the first tag that does NOT start with cowork-v
+  # Gateway releases are tagged v* (e.g. v0.4.0); client tracks use other
+  # prefixes (cowork-v*, bridge-v*, bridge-mac-v*). Positively match v<digit>.
   VERSION=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases" \
     | grep -oE '"tag_name"\s*:\s*"[^"]+"' \
     | sed -E 's/.*"([^"]+)"$/\1/' \
-    | grep -v '^cowork-' \
+    | grep -E '^v[0-9]' \
     | head -n1)
-  [ -n "$VERSION" ] || die "could not resolve latest gateway release (v*, excluding cowork-v*)"
+  [ -n "$VERSION" ] || die "could not resolve latest gateway release (v*)"
 fi
 
 # Strip leading 'v' for filename: v0.3.5 → 0.3.5

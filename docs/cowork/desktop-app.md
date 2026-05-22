@@ -1,6 +1,6 @@
-# Cowork Desktop app
+# The bridge Desktop app
 
-The Cowork Desktop app is the user-facing companion to a running [systemprompt-gateway](../install/ghcr.md). It is a single native binary — `systemprompt-bridge` — that does three jobs:
+The bridge Desktop app is the user-facing companion to a running [systemprompt-gateway](../install/ghcr.md). It is a single native binary — `systemprompt-bridge` — that does three jobs:
 
 1. **Credential helper.** Emits Anthropic's `inferenceCredentialHelper` JSON envelope (`{ token, ttl, headers }`) on stdout when invoked by Claude Desktop.
 2. **Local inference proxy.** Loopback HTTP listener on `127.0.0.1:48217` that swaps the long-lived loopback secret for a short-lived JWT before forwarding to the gateway. The JWT never leaves the host.
@@ -8,7 +8,7 @@ The Cowork Desktop app is the user-facing companion to a running [systemprompt-g
 
 On macOS and Windows it now ships with a native GUI (winit + wry); on Linux the same binary still runs headless from the shell.
 
-> **Naming note.** The crate and binary were renamed from `cowork` to `bridge` in v0.7.0. Public-facing branding stays "Cowork" — the macOS bundle is `Systemprompt Cowork.app` and Claude Desktop's host integration is still labelled "Cowork". Internally the executable is `systemprompt-bridge` (Linux/Windows) or `systemprompt-cowork` inside the .app (macOS, renamed by the bundler for parity with prior installs). Existing release tags (`cowork-v*`) continue to publish artifacts.
+> **Naming note.** The crate and binary were renamed from `cowork` to `bridge` in v0.7.0; the executable is `systemprompt-bridge` on macOS, Linux, and Windows. Claude Desktop's host integration is still labelled "Cowork". Binaries now ship under the `bridge-v*` release tag series and install as the `bridge` Homebrew formula / Scoop package; the legacy `cowork` package is retained for existing installs.
 
 ---
 
@@ -98,7 +98,7 @@ After install, see [device-auth.md](device-auth.md) for credential modes and [wi
 
 ## Links
 
-- [systemprompt.io](https://systemprompt.io/?utm_source=cowork-desktop&utm_medium=docs)
+- [systemprompt.io](https://systemprompt.io/?utm_source=bridge-desktop&utm_medium=docs)
 - [systemprompt-core on GitHub](https://github.com/systempromptio/systemprompt-core)
 - [Bridge changelog](https://github.com/systempromptio/systemprompt-core/blob/main/bin/bridge/CHANGELOG.md)
 - [LICENSE](../../LICENSE)

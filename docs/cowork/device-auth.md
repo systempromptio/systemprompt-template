@@ -1,4 +1,4 @@
-# Cowork device authentication
+# Bridge device authentication
 
 The `systemprompt-bridge` binary (formerly `sp-cowork-auth` / `systemprompt-cowork`, renamed in v0.7.0) exchanges a local credential for a short-lived JWT + canonical identity header envelope that the Claude for Work client forwards to the gateway. Three modes are supported; pick the one that matches your device posture.
 

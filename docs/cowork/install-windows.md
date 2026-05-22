@@ -1,18 +1,18 @@
-# Install Cowork on Windows
+# Install the systemprompt bridge on Windows
 
-The Cowork Desktop app is the **client-side companion** to a running [systemprompt-gateway](../install/ghcr.md). On Windows it ships as `systemprompt-bridge.exe` — a single native binary that exposes both a credential-helper CLI and a Desktop GUI (winit + wry, MSVC build).
+The bridge is the **client-side companion** to a running [systemprompt-gateway](../install/ghcr.md). On Windows it ships as `systemprompt-bridge.exe` — a single native binary that exposes both a credential-helper CLI and a Desktop GUI (winit + wry, MSVC build).
 
 If you're looking to deploy the **server** (the gateway), see [../install/](../install/) instead.
 
 For the full GUI tour, see [desktop-app.md](desktop-app.md).
 
-> **v0.7.0 rename note.** The crate and binary were renamed `cowork → bridge` in the v0.7.0 release. The Windows executable is `systemprompt-bridge.exe`. The Claude Desktop host integration is still labelled "Cowork".
+> **Naming note.** The crate and binary were renamed `cowork → bridge` in v0.7.0; the Windows executable is `systemprompt-bridge.exe`. The Claude Desktop host-integration label is still "Cowork". The Scoop package is now named `bridge`; the legacy `cowork` package is retained for existing installs.
 
 ## Option 1 — Scoop bucket (recommended)
 
 ```powershell
 scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket
-scoop install systemprompt/cowork
+scoop install systemprompt/bridge
 systemprompt-bridge --version
 systemprompt-bridge gui      # opens the Desktop app
 ```
@@ -85,7 +85,7 @@ For a full Windows runbook against a MiniMax-routed gateway, see [windows-minima
 ## Uninstall
 
 ```powershell
-scoop uninstall cowork                                    # Scoop
+scoop uninstall bridge                                    # Scoop
 Remove-Item "C:\Program Files\systemprompt\systemprompt-bridge.exe"   # manual install
 ```
 
@@ -101,7 +101,7 @@ This removes `%APPDATA%\systemprompt\systemprompt-bridge.toml`, `%LOCALAPPDATA%\
 
 - [Desktop app overview](desktop-app.md)
 - [Device auth modes](device-auth.md)
-- [systemprompt.io](https://systemprompt.io/?utm_source=cowork-windows&utm_medium=install_doc)
-- [Documentation](https://systemprompt.io/documentation/?utm_source=cowork-windows&utm_medium=install_doc)
+- [systemprompt.io](https://systemprompt.io/?utm_source=bridge-windows&utm_medium=install_doc)
+- [Documentation](https://systemprompt.io/documentation/?utm_source=bridge-windows&utm_medium=install_doc)
 - [systemprompt-template on GitHub](https://github.com/systempromptio/systemprompt-template)
 - [LICENSE](../../LICENSE)

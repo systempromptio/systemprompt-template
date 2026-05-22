@@ -1,44 +1,26 @@
-# Install Cowork on macOS
+# Install the systemprompt bridge on macOS
 
-The Cowork Desktop app is the **client-side companion** to a running [systemprompt-gateway](../install/ghcr.md). It now ships as a native `.app` bundle (`Systemprompt Cowork.app`) wrapping the `systemprompt-bridge` binary — credential helper, signed-manifest sync agent, and local inference proxy in a single launchable app.
+The bridge is the **client-side companion** to a running [systemprompt-gateway](../install/ghcr.md). It ships as a single `systemprompt-bridge` binary that is, at once, the credential helper, the signed-manifest sync agent, the local inference proxy, and a native desktop GUI (`systemprompt-bridge gui`).
 
 If you're looking to deploy the **server** (the gateway), see [../install/](../install/) instead.
 
 For the full GUI tour, see [desktop-app.md](desktop-app.md).
 
-> **v0.7.0 rename note.** The crate and binary were renamed `cowork → bridge` in the v0.7.0 release. The macOS `.app` is still branded "Systemprompt Cowork" and Claude Desktop's host integration label is unchanged. Inside the bundle the executable is `systemprompt-cowork` (parity with prior installs); on Linux/Windows the binary is `systemprompt-bridge`.
+> **Naming note.** The crate and binary were renamed `cowork → bridge` in v0.7.0; the binary is `systemprompt-bridge` on macOS, Linux, and Windows. The Claude Desktop host-integration label is still "Cowork". The Homebrew formula and Scoop package are now named `bridge`; the legacy `cowork` package is retained for existing installs.
 
 ## Option 1 — Homebrew tap (recommended)
 
 ```bash
 brew tap systempromptio/tap
-brew install --cask cowork
-open -a "Systemprompt Cowork"
+brew install systempromptio/tap/bridge
+systemprompt-bridge gui
 ```
 
-The cask installs `Systemprompt Cowork.app` into `/Applications` and symlinks `systemprompt-bridge` onto your `PATH`.
+The formula installs `systemprompt-bridge` onto your `PATH`. Launch the GUI with `systemprompt-bridge gui`.
 
 ## Option 2 — direct download from GitHub Releases
 
-The branded `.app`/`.dmg` bundles are published on the template repo under the `cowork-v*` tag series (artifact names retained for backward compatibility); the raw `systemprompt-bridge` binaries ship on the `bridge-v*` track. Pick the matching architecture:
-
-```bash
-# Apple Silicon (M1/M2/M3/M4)
-curl -sSL -o SystempromptCowork.dmg \
-  https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.7.0/SystempromptCowork-aarch64-apple-darwin.dmg
-
-# Intel Mac
-curl -sSL -o SystempromptCowork.dmg \
-  https://github.com/systempromptio/systemprompt-template/releases/download/cowork-v0.7.0/SystempromptCowork-x86_64-apple-darwin.dmg
-
-hdiutil attach SystempromptCowork.dmg
-cp -R "/Volumes/Systemprompt Cowork/Systemprompt Cowork.app" /Applications/
-hdiutil detach "/Volumes/Systemprompt Cowork"
-xattr -dr com.apple.quarantine "/Applications/Systemprompt Cowork.app"
-open -a "Systemprompt Cowork"
-```
-
-If you only need the headless binary (Claude Desktop credential-helper slot, CI):
+The `systemprompt-bridge` binaries ship under the `bridge-v*` tag series:
 
 ```bash
 curl -sSL -o systemprompt-bridge \
@@ -67,7 +49,7 @@ cosign verify-blob \
 
 ## First-run
 
-Launch `Systemprompt Cowork.app` and the **Setup wizard** opens automatically. Two steps:
+Run `systemprompt-bridge gui` and the **Setup wizard** opens automatically. Two steps:
 
 1. Paste the gateway URL and a PAT (or pick session / mTLS).
 2. Enable each host integration you want managed (Claude Desktop, Codex CLI, …). Hosts default to **disabled** — nothing is silently probed.
@@ -87,9 +69,8 @@ See [device-auth.md](device-auth.md) for the auth-mode options.
 ## Uninstall
 
 ```bash
-brew uninstall --cask cowork                     # Homebrew
-rm -rf "/Applications/Systemprompt Cowork.app"   # manual install
-rm /usr/local/bin/systemprompt-bridge            # headless binary
+brew uninstall systempromptio/tap/bridge     # Homebrew
+rm /usr/local/bin/systemprompt-bridge        # manual install
 ```
 
 To also wipe credentials and cache:
@@ -104,7 +85,7 @@ This removes `~/.config/systemprompt/systemprompt-bridge.toml`, `~/Library/Cache
 
 - [Desktop app overview](desktop-app.md)
 - [Device auth modes](device-auth.md)
-- [systemprompt.io](https://systemprompt.io/?utm_source=cowork-macos&utm_medium=install_doc)
-- [Documentation](https://systemprompt.io/documentation/?utm_source=cowork-macos&utm_medium=install_doc)
+- [systemprompt.io](https://systemprompt.io/?utm_source=bridge-macos&utm_medium=install_doc)
+- [Documentation](https://systemprompt.io/documentation/?utm_source=bridge-macos&utm_medium=install_doc)
 - [systemprompt-template on GitHub](https://github.com/systempromptio/systemprompt-template)
 - [LICENSE](../../LICENSE)

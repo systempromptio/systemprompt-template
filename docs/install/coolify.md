@@ -1,6 +1,6 @@
 # Deploy the gateway to Coolify
 
-Deploys the `systemprompt-gateway` server on [Coolify](https://coolify.io), a self-hostable Heroku-style platform. The service template provisions the gateway + Postgres from the GHCR image. For the cowork client CLI, see [../cowork/](../cowork/).
+Deploys the `systemprompt-gateway` server on [Coolify](https://coolify.io), a self-hostable Heroku-style platform. The service template provisions the gateway + Postgres from the GHCR image. For the bridge client, see [../cowork/](../cowork/).
 
 ## Install from the Coolify community templates
 

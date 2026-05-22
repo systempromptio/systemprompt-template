@@ -1,6 +1,6 @@
-# Install Cowork via Scoop (Windows)
+# Install the systemprompt bridge via Scoop (Windows)
 
-This doc installs the Cowork Desktop app on a Windows workstation using [Scoop](https://scoop.sh). The Scoop manifest pulls `systemprompt-bridge.exe` (renamed from `cowork` in v0.7.0) from the latest `bridge-v*` release.
+This doc installs the bridge on a Windows workstation using [Scoop](https://scoop.sh). The Scoop manifest pulls `systemprompt-bridge.exe` (renamed from `cowork` in v0.7.0) from the latest `bridge-v*` release.
 
 The gateway (server) does not ship a Windows binary — deploy it via Docker / GHCR / Helm / Linux package on a Linux host.
 
@@ -13,27 +13,27 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
 ```
 
-## Install Cowork
+## Install the bridge
 
 ```powershell
 scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket
-scoop install cowork
+scoop install bridge
 systemprompt-bridge --version
 systemprompt-bridge gui      # launch the Desktop app
 ```
 
-The Scoop package name is `cowork` (unchanged); the binary it shims onto your `PATH` is `systemprompt-bridge.exe`.
+The Scoop package name is `bridge`; the binary it shims onto your `PATH` is `systemprompt-bridge.exe`. The legacy `cowork` package is retained for existing installs.
 
 ## Upgrade
 
 ```powershell
-scoop update cowork
+scoop update bridge
 ```
 
 ## Uninstall
 
 ```powershell
-scoop uninstall cowork
+scoop uninstall bridge
 ```
 
 ## Configure against a gateway
@@ -54,4 +54,4 @@ systemprompt-bridge status
 
 See [desktop-app.md](desktop-app.md), [device-auth.md](device-auth.md), and [windows-minimax-demo.md](windows-minimax-demo.md).
 
-Docs: https://systemprompt.io/documentation/?utm_source=cowork-scoop&utm_medium=install_doc
+Docs: https://systemprompt.io/documentation/?utm_source=bridge-scoop&utm_medium=install_doc

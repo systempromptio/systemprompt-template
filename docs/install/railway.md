@@ -1,6 +1,6 @@
 # Deploy the gateway to Railway
 
-One-click deploy of the `systemprompt-gateway` server on [Railway](https://railway.com). For the cowork client CLI, see [../cowork/](../cowork/).
+One-click deploy of the `systemprompt-gateway` server on [Railway](https://railway.com). For the bridge client, see [../cowork/](../cowork/).
 
 ## Deploy
 
