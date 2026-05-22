@@ -396,6 +396,15 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
         echo "Building debug binary..."
         just build
     fi
+    # Resolve the binary at runtime: the {{CLI}} variable is evaluated by `just`
+    # at parse time, so on a cold clone (no binary yet) it expands to an error
+    # stub — useless for the bootstrap/keygen calls below, which run only after
+    # the build above has produced the binary.
+    if [ -x target/release/systemprompt ]; then
+        BIN="$ROOT/target/release/systemprompt"
+    else
+        BIN="$ROOT/target/debug/systemprompt"
+    fi
     mkdir -p "$PROFILE_DIR" "$DOCKER_DIR"
     if [ ! -f "$DOCKER_DIR/local.yaml" ]; then
         echo "Writing Docker compose for local Postgres (host port $PG_PORT)..."
@@ -566,10 +575,10 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     echo "Running database migrations..."
     just migrate
     echo "Ensuring bootstrap admin user..."
-    {{CLI}} admin bootstrap
+    "$BIN" admin bootstrap
     if [ ! -f "$ROOT/signing_key.pem" ]; then
         echo "Generating JWT signing key..."
-        {{CLI}} admin keys generate --output "$ROOT/signing_key.pem"
+        "$BIN" admin keys generate --output "$ROOT/signing_key.pem"
     fi
     echo "Publishing assets..."
     just publish
