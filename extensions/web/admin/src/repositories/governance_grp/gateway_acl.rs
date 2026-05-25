@@ -7,13 +7,16 @@
 //! to [`systemprompt_security::authz::AccessControlRepository`] with
 //! `entity_type = "gateway_route"`. Use the core repository directly for any
 //! new entity types (`mcp_server`, etc.).
+//!
+//! Note: `default_included` lives on `access_control_entities` post-migration
+//! 007, fetched via [`get_entity`] / [`upsert_entity`].
 
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt_security::authz::{
-    AccessControlRepository, AuthzError, EntityKind, UpsertRuleParams,
+    AccessControlRepository, AuthzError, EntityKind, EntityRow, UpsertRuleParams,
 };
 
 pub use systemprompt_security::authz::{resolve, Access, AccessRule, Decision, RuleType};
@@ -73,20 +76,24 @@ pub async fn delete_rule(pool: &PgPool, rule_id: &str) -> Result<bool, sqlx::Err
     repo(pool).delete_rule(&id).await.map_err(|e| map_err(&e))
 }
 
-pub async fn set_default_included(
+pub async fn get_entity(
     pool: &PgPool,
     route_id: &str,
-    value: bool,
-) -> Result<(), sqlx::Error> {
+) -> Result<Option<EntityRow>, sqlx::Error> {
     repo(pool)
-        .set_default_included(ENTITY_TYPE, route_id, value)
+        .get_entity(ENTITY_TYPE, route_id)
         .await
         .map_err(|e| map_err(&e))
 }
 
-pub async fn get_default_included(pool: &PgPool, route_id: &str) -> Result<bool, sqlx::Error> {
+pub async fn upsert_entity(
+    pool: &PgPool,
+    route_id: &str,
+    default_included: bool,
+    source: &str,
+) -> Result<(), sqlx::Error> {
     repo(pool)
-        .get_default_included(ENTITY_TYPE, route_id)
+        .upsert_entity(ENTITY_TYPE, route_id, default_included, source)
         .await
         .map_err(|e| map_err(&e))
 }

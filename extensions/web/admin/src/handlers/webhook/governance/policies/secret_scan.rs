@@ -57,7 +57,7 @@ impl GovernancePolicy for SecretScan {
         if let Some((name, redacted)) = detect_secrets(Some(tool_input_value)) {
             return Decision::Deny {
                 reason: DenyReason::SecretLeak {
-                    pattern_id: SecretPatternId::new(name.clone()),
+                    pattern_id: SecretPatternId::new(name),
                     location: SecretLocation::new("tool_input", redacted),
                 },
             };

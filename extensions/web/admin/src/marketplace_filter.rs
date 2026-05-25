@@ -95,9 +95,11 @@ impl TemplateMarketplaceFilter {
             let entity_rules = bulk.get(id).map_or(&[][..], Vec::as_slice);
             let default_included = self
                 .repo
-                .get_default_included(kind, id)
+                .get_entity(kind, id)
                 .await
-                .unwrap_or(false);
+                .ok()
+                .flatten()
+                .map(|e| e.default_included);
             let entity = entity_ref_for(kind, id);
             let uid = UserId::new(user_id);
             let decision = resolve_access(ResolveInput {
@@ -106,7 +108,7 @@ impl TemplateMarketplaceFilter {
                 user_id: &uid,
                 user_roles: roles,
                 department,
-                default_included: Some(default_included),
+                default_included,
             });
             if matches!(decision, Decision::Allow { .. }) {
                 keep.insert(id.clone());

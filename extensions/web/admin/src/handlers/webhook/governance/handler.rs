@@ -88,10 +88,10 @@ pub async fn govern_tool_use(
     let audit = DecisionAudit {
         decision: decision.clone(),
         principal: PrincipalSnapshot {
-            user_id: user_id.clone(),
+            user_id,
             session_id: session_id.clone(),
             agent_id: agent_id.map(str::to_string),
-            agent_scope: agent_scope.clone(),
+            agent_scope,
         },
         target: AuditTarget {
             tool_name: tool_name.to_string(),
@@ -145,28 +145,30 @@ fn authenticate_request(
 }
 
 fn log_jwt_failure(err: &OauthError, expected_aud: &str, issuer: &str) {
+    let (detail, message) = jwt_failure_detail(err);
+    tracing::warn!(detail = %detail, expected_aud, issuer, "{}", message);
+}
+
+fn jwt_failure_detail(err: &OauthError) -> (String, &'static str) {
     match err {
-        OauthError::TokenAlgMismatch { got, expected } => {
-            tracing::warn!(got_alg = %got, expected_alg = %expected, expected_aud, issuer,
-                "Governance webhook JWT rejected: signing algorithm mismatch");
-        }
-        OauthError::TokenMissingKid => {
-            tracing::warn!(expected_alg = "RS256", expected_aud, issuer,
-                "Governance webhook JWT rejected: missing `kid` header");
-        }
-        OauthError::TokenUnknownKid { kid } => {
-            tracing::warn!(kid = %kid, expected_aud, issuer,
-                "Governance webhook JWT rejected: unknown signing key — token was minted under a \
-                 different RSA authority");
-        }
-        OauthError::Expired(reason) => {
-            tracing::warn!(reason = %reason, expected_aud, issuer,
-                "Governance webhook JWT rejected: token expired");
-        }
-        other => {
-            tracing::warn!(error = %other, expected_aud, issuer,
-                "Governance webhook JWT validation failed");
-        }
+        OauthError::TokenAlgMismatch { got, expected } => (
+            format!("alg got={got} expected={expected}"),
+            "Governance webhook JWT rejected: signing algorithm mismatch",
+        ),
+        OauthError::TokenMissingKid => (
+            "missing kid header".to_string(),
+            "Governance webhook JWT rejected: missing `kid` header",
+        ),
+        OauthError::TokenUnknownKid { kid } => (
+            format!("unknown kid={kid}"),
+            "Governance webhook JWT rejected: unknown signing key — token was minted under a \
+             different RSA authority",
+        ),
+        OauthError::Expired(reason) => (
+            format!("expired: {reason}"),
+            "Governance webhook JWT rejected: token expired",
+        ),
+        other => (format!("{other}"), "Governance webhook JWT validation failed"),
     }
 }
 
@@ -276,7 +278,7 @@ fn allow_detail(matched_by: &MatchedBy) -> String {
 }
 
 fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
-    let p = params.pool.clone();
+    let p = Arc::<sqlx::Pool<sqlx::Postgres>>::clone(params.pool);
     let audit = DecisionAudit {
         decision: deny_for_auth_failure(reason),
         principal: PrincipalSnapshot {
@@ -299,7 +301,7 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
 }
 
 fn spawn_audit_recording(pool: &Arc<PgPool>, audit: DecisionAudit) {
-    let p = pool.clone();
+    let p = Arc::<sqlx::Pool<sqlx::Postgres>>::clone(pool);
     tokio::spawn(async move {
         let session_id = audit.principal.session_id.clone();
         if let Err(e) = audit::record_decision(&p, &audit).await {
