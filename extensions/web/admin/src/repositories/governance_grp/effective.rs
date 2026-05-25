@@ -10,9 +10,9 @@ use std::sync::Arc;
 
 use serde::Serialize;
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{McpServerId, RouteId, UserId};
 use systemprompt_security::authz::{
-    resolve, AccessControlRepository, AccessRule, Decision, EntityKind,
+    resolve, AccessControlRepository, AccessRule, Decision, EntityKind, EntityRef, ResolveInput,
 };
 
 use crate::handlers::shared;
@@ -58,15 +58,16 @@ pub async fn compute_effective_permissions(
             .get_default_included(EntityKind::GatewayRoute, id)
             .await
             .unwrap_or(false);
-        gateway_routes.push(decide(
-            id,
-            "gateway_route",
-            &rules,
+        gateway_routes.push(decide(DecideArgs {
+            entity_id: id,
+            entity_type: "gateway_route",
+            entity: EntityRef::GatewayRoute(RouteId::new(id.clone())),
+            rules: &rules,
             user_id,
             user_roles,
             department,
             default_included,
-        ));
+        }));
     }
 
     let mut mcp_servers = Vec::with_capacity(mcp_ids.len());
@@ -76,15 +77,16 @@ pub async fn compute_effective_permissions(
             .get_default_included(EntityKind::McpServer, id)
             .await
             .unwrap_or(false);
-        mcp_servers.push(decide(
-            id,
-            "mcp_server",
-            &rules,
+        mcp_servers.push(decide(DecideArgs {
+            entity_id: id,
+            entity_type: "mcp_server",
+            entity: EntityRef::McpServer(McpServerId::new(id.clone())),
+            rules: &rules,
             user_id,
             user_roles,
             department,
             default_included,
-        ));
+        }));
     }
 
     EffectivePermissions {
@@ -93,28 +95,43 @@ pub async fn compute_effective_permissions(
     }
 }
 
-fn decide(
-    entity_id: &str,
-    entity_type: &str,
-    rules: &[AccessRule],
-    user_id: &str,
-    user_roles: &[String],
-    department: &str,
+struct DecideArgs<'a> {
+    entity_id: &'a str,
+    entity_type: &'a str,
+    entity: EntityRef,
+    rules: &'a [AccessRule],
+    user_id: &'a str,
+    user_roles: &'a [String],
+    department: &'a str,
     default_included: bool,
-) -> EntityDecision {
-    let dec = resolve(
+}
+
+fn decide(args: DecideArgs<'_>) -> EntityDecision {
+    let DecideArgs {
+        entity_id,
+        entity_type,
+        entity,
         rules,
-        &UserId::new(user_id),
+        user_id,
         user_roles,
         department,
         default_included,
-    );
+    } = args;
+    let uid = UserId::new(user_id);
+    let dec = resolve(ResolveInput {
+        entity: &entity,
+        rules,
+        user_id: &uid,
+        user_roles,
+        department,
+        default_included: Some(default_included),
+    });
     let (decision, reason) = match dec {
-        Decision::Allow => (
+        Decision::Allow { .. } => (
             "allow".to_string(),
             allow_reason(rules, user_id, user_roles, department, default_included),
         ),
-        Decision::Deny { reason, .. } => ("deny".to_string(), reason),
+        Decision::Deny { reason } => ("deny".to_string(), reason.to_string()),
     };
     EntityDecision {
         entity_id: entity_id.to_string(),

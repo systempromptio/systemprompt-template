@@ -14,13 +14,32 @@ use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{
+    AgentId, MarketplaceId, McpServerId, PluginId, SkillId, UserId,
+};
 use systemprompt::marketplace::{
     register_marketplace_filter, MarketplaceCandidate, MarketplaceFilter, MarketplaceFilterError,
 };
 use systemprompt_security::authz::{
-    resolve as resolve_access, AccessControlRepository, Decision, EntityKind,
+    resolve as resolve_access, AccessControlRepository, Decision, EntityKind, EntityRef,
+    ResolveInput,
 };
+
+fn entity_ref_for(kind: EntityKind, id: &str) -> EntityRef {
+    match kind {
+        EntityKind::Plugin => EntityRef::Plugin(PluginId::new(id)),
+        EntityKind::Skill => EntityRef::Skill(SkillId::new(id)),
+        EntityKind::Agent => EntityRef::Agent(AgentId::new(id)),
+        EntityKind::McpServer => EntityRef::McpServer(McpServerId::new(id)),
+        EntityKind::Marketplace => EntityRef::Marketplace(MarketplaceId::new(id)),
+        // TODO(governance-mesh): marketplace filter is never invoked with
+        // GatewayRoute/Hook kinds today; if that changes, route them via the
+        // typed RouteId / HookId constructors instead of this fallback.
+        EntityKind::GatewayRoute | EntityKind::Hook => {
+            EntityRef::McpServer(McpServerId::new(id))
+        }
+    }
+}
 
 use crate::repositories::users_grp::users::get_user_roles_department;
 
@@ -79,14 +98,17 @@ impl TemplateMarketplaceFilter {
                 .get_default_included(kind, id)
                 .await
                 .unwrap_or(false);
-            let decision = resolve_access(
-                entity_rules,
-                &UserId::new(user_id),
-                roles,
+            let entity = entity_ref_for(kind, id);
+            let uid = UserId::new(user_id);
+            let decision = resolve_access(ResolveInput {
+                entity: &entity,
+                rules: entity_rules,
+                user_id: &uid,
+                user_roles: roles,
                 department,
-                default_included,
-            );
-            if matches!(decision, Decision::Allow) {
+                default_included: Some(default_included),
+            });
+            if matches!(decision, Decision::Allow { .. }) {
                 keep.insert(id.clone());
             }
         }
