@@ -168,7 +168,10 @@ fn jwt_failure_detail(err: &OauthError) -> (String, &'static str) {
             format!("expired: {reason}"),
             "Governance webhook JWT rejected: token expired",
         ),
-        other => (format!("{other}"), "Governance webhook JWT validation failed"),
+        other => (
+            format!("{other}"),
+            "Governance webhook JWT validation failed",
+        ),
     }
 }
 

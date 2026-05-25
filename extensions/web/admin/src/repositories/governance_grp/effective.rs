@@ -57,7 +57,9 @@ pub async fn compute_effective_permissions(
         let default_included = repo
             .get_entity(EntityKind::GatewayRoute, id)
             .await
-            .inspect_err(|e| tracing::warn!(error = %e, id = %id, "effective: gateway get_entity failed"))
+            .inspect_err(
+                |e| tracing::warn!(error = %e, id = %id, "effective: gateway get_entity failed"),
+            )
             .ok()
             .flatten()
             .map(|e| e.default_included);
@@ -79,7 +81,9 @@ pub async fn compute_effective_permissions(
         let default_included = repo
             .get_entity(EntityKind::McpServer, id)
             .await
-            .inspect_err(|e| tracing::warn!(error = %e, id = %id, "effective: mcp get_entity failed"))
+            .inspect_err(
+                |e| tracing::warn!(error = %e, id = %id, "effective: mcp get_entity failed"),
+            )
             .ok()
             .flatten()
             .map(|e| e.default_included);

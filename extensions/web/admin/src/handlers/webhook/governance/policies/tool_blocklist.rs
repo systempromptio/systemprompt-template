@@ -52,10 +52,7 @@ impl GovernancePolicy for ToolBlocklist {
     }
     fn evaluate(&self, ctx: &PolicyContext<'_>) -> Decision {
         let tool_str = ctx.tool.as_str();
-        let matched = self
-            .patterns
-            .iter()
-            .find(|p| tool_str.contains(p.as_str()));
+        let matched = self.patterns.iter().find(|p| tool_str.contains(p.as_str()));
 
         match matched {
             Some(p) if ctx.access_scope != AccessScope::Admin => Decision::Deny {

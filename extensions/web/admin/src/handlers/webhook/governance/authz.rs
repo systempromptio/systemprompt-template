@@ -40,13 +40,10 @@ async fn load_rules(
             tracing::error!(error = %e, entity_type = %kind, entity_id = %id, "list_rules_for_entity failed");
             (StatusCode::INTERNAL_SERVER_ERROR, "list_rules failed").into_response()
         })?;
-    let entity = repo
-        .get_entity(kind, id)
-        .await
-        .map_err(|e| {
-            tracing::error!(error = %e, entity_type = %kind, entity_id = %id, "get_entity failed");
-            (StatusCode::INTERNAL_SERVER_ERROR, "get_entity failed").into_response()
-        })?;
+    let entity = repo.get_entity(kind, id).await.map_err(|e| {
+        tracing::error!(error = %e, entity_type = %kind, entity_id = %id, "get_entity failed");
+        (StatusCode::INTERNAL_SERVER_ERROR, "get_entity failed").into_response()
+    })?;
     Ok((rules, entity))
 }
 

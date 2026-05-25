@@ -7,7 +7,6 @@ use systemprompt_web_shared::error::MarketplaceError;
 
 use super::types::{DailySummaryInput, DailySummaryRow, GlobalAverages, UpsertCloned};
 
-
 pub async fn upsert_daily_summary(
     pool: &PgPool,
     user_id: &str,

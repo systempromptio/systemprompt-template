@@ -290,7 +290,11 @@ fn build_bridge_profile_block() -> Option<BridgeProfileBlock> {
     let inference_gateway_base_url = format!("{base}{prefix}");
 
     let models: Vec<String> = gateway.catalog.as_ref().map_or_else(Vec::new, |catalog| {
-        catalog.models.iter().map(|m| m.id.as_str().to_owned()).collect()
+        catalog
+            .models
+            .iter()
+            .map(|m| m.id.as_str().to_owned())
+            .collect()
     });
 
     let organization_uuid = profile
