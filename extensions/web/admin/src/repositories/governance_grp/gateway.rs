@@ -10,7 +10,6 @@ use crate::types::{GatewayConfigView, GatewayRouteView, UpdateGatewaySettingsReq
 
 const DEFAULT_AUTH_SCHEME: &str = "bearer";
 const DEFAULT_INFERENCE_PATH_PREFIX: &str = "/v1";
-const INLINE_SECRET_PREFIXES: &[&str] = &["sk-", "sk_", "sp-live-", "sp_live_", "Bearer "];
 
 fn read_profile(profile_path: &Path) -> Result<Value, MarketplaceError> {
     let content = std::fs::read_to_string(profile_path)?;
@@ -33,11 +32,6 @@ fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
     let map = val.as_mapping()?;
     let model_pattern = map.get(Value::from("model_pattern"))?.as_str()?.to_string();
     let provider = map.get(Value::from("provider"))?.as_str()?.to_string();
-    let endpoint = map.get(Value::from("endpoint"))?.as_str()?.to_string();
-    let api_key_secret = map
-        .get(Value::from("api_key_secret"))?
-        .as_str()?
-        .to_string();
     let upstream_model = map
         .get(Value::from("upstream_model"))
         .and_then(Value::as_str)
@@ -55,15 +49,13 @@ fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
         .get(Value::from("id"))
         .and_then(Value::as_str)
         .map_or_else(
-            || synthesize_route_id(&model_pattern, &provider, &endpoint),
+            || synthesize_route_id(&model_pattern, &provider),
             ToString::to_string,
         );
     Some(GatewayRouteView {
         id,
         model_pattern,
         provider,
-        endpoint,
-        api_key_secret,
         upstream_model,
         extra_headers,
     })
@@ -111,11 +103,10 @@ pub fn slugify_pattern(pattern: &str) -> String {
     out
 }
 
-pub fn synthesize_route_id(model_pattern: &str, provider: &str, endpoint: &str) -> String {
+pub fn synthesize_route_id(model_pattern: &str, provider: &str) -> String {
     let mut hasher = DefaultHasher::new();
     model_pattern.hash(&mut hasher);
     provider.hash(&mut hasher);
-    endpoint.hash(&mut hasher);
     let h = hasher.finish();
     let hash6: String = format!("{h:016x}").chars().take(6).collect();
     format!("{}-{}", slugify_pattern(model_pattern), hash6)
@@ -124,7 +115,7 @@ pub fn synthesize_route_id(model_pattern: &str, provider: &str, endpoint: &str) 
 fn route_to_yaml(route: &GatewayRouteView) -> Value {
     let mut map = Mapping::new();
     let id = if route.id.trim().is_empty() {
-        synthesize_route_id(&route.model_pattern, &route.provider, &route.endpoint)
+        synthesize_route_id(&route.model_pattern, &route.provider)
     } else {
         route.id.clone()
     };
@@ -134,11 +125,6 @@ fn route_to_yaml(route: &GatewayRouteView) -> Value {
         Value::from(route.model_pattern.clone()),
     );
     map.insert(Value::from("provider"), Value::from(route.provider.clone()));
-    map.insert(Value::from("endpoint"), Value::from(route.endpoint.clone()));
-    map.insert(
-        Value::from("api_key_secret"),
-        Value::from(route.api_key_secret.clone()),
-    );
     if let Some(upstream) = &route.upstream_model {
         map.insert(Value::from("upstream_model"), Value::from(upstream.clone()));
     }
@@ -160,27 +146,6 @@ pub fn validate_route(route: &GatewayRouteView) -> Result<(), MarketplaceError> 
     }
     if route.provider.trim().is_empty() {
         return Err(MarketplaceError::BadRequest("provider is required".into()));
-    }
-    if route.endpoint.trim().is_empty() {
-        return Err(MarketplaceError::BadRequest("endpoint is required".into()));
-    }
-    if !route.endpoint.starts_with("http://") && !route.endpoint.starts_with("https://") {
-        return Err(MarketplaceError::BadRequest(
-            "endpoint must start with http:// or https://".into(),
-        ));
-    }
-    let secret = route.api_key_secret.trim();
-    if secret.is_empty() {
-        return Err(MarketplaceError::BadRequest(
-            "api_key_secret is required (name of a secret in secrets.json, not the value)".into(),
-        ));
-    }
-    for prefix in INLINE_SECRET_PREFIXES {
-        if secret.starts_with(prefix) {
-            return Err(MarketplaceError::BadRequest(format!(
-                "api_key_secret must be a secret name, not an inline value (got something starting with `{prefix}`)"
-            )));
-        }
     }
     Ok(())
 }
@@ -225,12 +190,7 @@ pub fn ensure_route_ids(profile_path: &Path) -> Result<bool, MarketplaceError> {
             .and_then(Value::as_str)
             .unwrap_or_default()
             .to_string();
-        let endpoint = map
-            .get(Value::from("endpoint"))
-            .and_then(Value::as_str)
-            .unwrap_or_default()
-            .to_string();
-        let id = synthesize_route_id(&model_pattern, &provider, &endpoint);
+        let id = synthesize_route_id(&model_pattern, &provider);
         map.insert(Value::from("id"), Value::from(id));
         changed = true;
     }
@@ -345,11 +305,7 @@ pub fn create_route(
     ensure_route_ids(profile_path)?;
     let mut to_insert = route.clone();
     if to_insert.id.trim().is_empty() {
-        to_insert.id = synthesize_route_id(
-            &to_insert.model_pattern,
-            &to_insert.provider,
-            &to_insert.endpoint,
-        );
+        to_insert.id = synthesize_route_id(&to_insert.model_pattern, &to_insert.provider);
     }
     let mut doc = read_profile(profile_path)?;
     let new_index = {

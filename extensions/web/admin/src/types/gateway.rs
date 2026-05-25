@@ -8,8 +8,6 @@ pub struct GatewayRouteView {
     pub id: String,
     pub model_pattern: String,
     pub provider: String,
-    pub endpoint: String,
-    pub api_key_secret: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub upstream_model: Option<String>,
     #[serde(default)]

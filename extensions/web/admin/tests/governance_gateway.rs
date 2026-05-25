@@ -11,12 +11,8 @@ const TWO_ROUTE_PROFILE: &str = r"gateway:
   routes:
     - model_pattern: claude-*
       provider: anthropic
-      endpoint: https://api.anthropic.com
-      api_key_secret: anthropic_key
     - model_pattern: '*'
       provider: openai
-      endpoint: https://api.openai.com
-      api_key_secret: openai_key
 ";
 
 #[test]
@@ -35,16 +31,12 @@ fn first_match_wins() {
             id: "claude-abc123".into(),
             model_pattern: "claude-*".into(),
             provider: "a".into(),
-            endpoint: "https://a".into(),
-            api_key_secret: "k".into(),
             ..Default::default()
         },
         GatewayRouteView {
             id: "star-def456".into(),
             model_pattern: "*".into(),
             provider: "b".into(),
-            endpoint: "https://b".into(),
-            api_key_secret: "k".into(),
             ..Default::default()
         },
     ];
@@ -58,15 +50,18 @@ fn first_match_wins() {
 }
 
 #[test]
-fn rejects_inline_secret() {
-    let route = GatewayRouteView {
-        model_pattern: "*".into(),
+fn validate_rejects_empty_required_fields() {
+    let no_pattern = GatewayRouteView {
         provider: "anthropic".into(),
-        endpoint: "https://api.anthropic.com".into(),
-        api_key_secret: "sk-abc123".into(),
         ..Default::default()
     };
-    assert!(validate_route(&route).is_err());
+    assert!(validate_route(&no_pattern).is_err());
+
+    let no_provider = GatewayRouteView {
+        model_pattern: "*".into(),
+        ..Default::default()
+    };
+    assert!(validate_route(&no_provider).is_err());
 }
 
 #[test]
@@ -81,12 +76,12 @@ fn slugify_replaces_star_and_non_alnum() {
 
 #[test]
 fn synthesized_id_is_stable() {
-    let a = synthesize_route_id("claude-*", "anthropic", "https://api.anthropic.com");
-    let b = synthesize_route_id("claude-*", "anthropic", "https://api.anthropic.com");
+    let a = synthesize_route_id("claude-*", "anthropic");
+    let b = synthesize_route_id("claude-*", "anthropic");
     assert_eq!(a, b);
     assert!(a.starts_with("claude-star-"));
-    let c = synthesize_route_id("claude-*", "anthropic", "https://other.example");
-    assert_ne!(a, c);
+    let c = synthesize_route_id("claude-*", "openai");
+    assert_ne!(a, c, "provider change must produce a different id");
 }
 
 #[test]
@@ -147,8 +142,6 @@ fn create_route_rejects_duplicate_id() -> anyhow::Result<()> {
         id: "fixed-id".into(),
         model_pattern: "claude-*".into(),
         provider: "anthropic".into(),
-        endpoint: "https://api.anthropic.com".into(),
-        api_key_secret: "anthropic_key".into(),
         ..Default::default()
     };
     create_route(&path, &route)?;
