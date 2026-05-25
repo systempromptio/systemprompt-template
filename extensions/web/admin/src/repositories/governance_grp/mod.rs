@@ -1,4 +1,6 @@
 pub mod acl_yaml_loader;
+pub mod acl_yaml_snapshot;
+pub mod acl_yaml_types;
 pub mod agents;
 pub mod anomalies;
 pub mod audit;

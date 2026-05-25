@@ -13,126 +13,24 @@
 //! - `services/access-control/departments.yaml` — department definitions
 //!   plus department-scoped allow/deny rules.
 //!
-//! Wire shapes ([`YamlRule`] etc.) deserialise straight into the typed
-//! `EntityKind` / `Access` / `RuleType` enums from `systemprompt_security`,
-//! so invalid `entity_type` / `access` values fail at parse time rather than
-//! producing a runtime skip in the loader.
+//! Wire types live in [`super::acl_yaml_types`]; that module enforces
+//! schema invariants (e.g. exactly-one of `entity_id` / `entity_match`) at
+//! parse time, so this loader only handles the apply phase.
 
 use std::path::Path;
 use std::sync::Arc;
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use sqlx::PgPool;
-use systemprompt_security::authz::{
-    Access, AccessControlRepository, EntityKind, RuleType, UpsertRuleParams,
-};
+use systemprompt_security::authz::{AccessControlRepository, RuleType, UpsertRuleParams};
 use systemprompt_web_shared::error::MarketplaceError;
+
+use super::acl_yaml_types::{
+    glob_matches, DepartmentsDoc, LoadReport, RolesDoc, RuleTarget, YamlDepartment, YamlRule,
+};
 
 const ROLES_FILE: &str = "access-control/roles.yaml";
 const DEPARTMENTS_FILE: &str = "access-control/departments.yaml";
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct YamlRule {
-    pub entity_type: EntityKind,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub entity_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub entity_match: Option<String>,
-    #[serde(default = "default_allow")]
-    pub access: Access,
-    #[serde(default)]
-    pub default_included: bool,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub roles: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub departments: Vec<String>,
-}
-
-impl YamlRule {
-    // Why: refusing both-set protects against an `entity_match` that resolves
-    // to one literal id silently masking a typo in `entity_id`; refusing
-    // neither-set protects against a rule that grants nothing.
-    fn validate_target(&self) -> Result<(), MarketplaceError> {
-        match (&self.entity_id, &self.entity_match) {
-            (Some(_), Some(_)) => Err(MarketplaceError::Internal(format!(
-                "rule for entity_type={} sets both entity_id and entity_match; pick one",
-                self.entity_type.as_str()
-            ))),
-            (None, None) => Err(MarketplaceError::Internal(format!(
-                "rule for entity_type={} sets neither entity_id nor entity_match",
-                self.entity_type.as_str()
-            ))),
-            _ => Ok(()),
-        }
-    }
-}
-
-/// Tiny `*`-glob matcher. The only patterns we expect in practice are `"*"`
-/// and `"prefix*"` / `"*suffix"`; pulling in `globset` for this is overkill.
-fn glob_matches(pattern: &str, candidate: &str) -> bool {
-    let parts: Vec<&str> = pattern.split('*').collect();
-    if parts.len() == 1 {
-        return pattern == candidate;
-    }
-    let first = parts[0];
-    let last = parts[parts.len() - 1];
-    if !candidate.starts_with(first) || !candidate.ends_with(last) {
-        return false;
-    }
-    if first.len() + last.len() > candidate.len() {
-        return false;
-    }
-    let mut cursor = first.len();
-    let end = candidate.len() - last.len();
-    for part in &parts[1..parts.len() - 1] {
-        if part.is_empty() {
-            continue;
-        }
-        match candidate[cursor..end].find(part) {
-            Some(pos) => cursor += pos + part.len(),
-            None => return false,
-        }
-    }
-    true
-}
-
-const fn default_allow() -> Access {
-    Access::Allow
-}
-
-#[derive(Debug, Default, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct DepartmentsDoc {
-    #[serde(default)]
-    pub departments: Vec<YamlDepartment>,
-    #[serde(default)]
-    pub rules: Vec<YamlRule>,
-}
-
-#[derive(Debug, Default, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct RolesDoc {
-    #[serde(default)]
-    pub rules: Vec<YamlRule>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct YamlDepartment {
-    pub name: String,
-    #[serde(default)]
-    pub description: String,
-}
-
-#[derive(Debug, Default, Clone, Copy)]
-pub struct LoadReport {
-    pub departments_upserted: usize,
-    pub rules_upserted: usize,
-    pub rules_skipped: usize,
-    pub glob_rules_expanded: usize,
-    pub glob_entities_matched: usize,
-}
 
 pub async fn load_from_yaml(
     pool: &PgPool,
@@ -208,7 +106,6 @@ async fn apply_one_rule(
     scope: RuleScope,
     report: &mut LoadReport,
 ) -> Result<(), MarketplaceError> {
-    rule.validate_target()?;
     let source_label = match scope {
         RuleScope::RolesOnly => "roles.yaml",
         RuleScope::DepartmentsOnly => "departments.yaml",
@@ -219,7 +116,7 @@ async fn apply_one_rule(
         report.rules_skipped += 1;
         return Ok(());
     }
-    if rule.entity_match.is_some() {
+    if matches!(rule.target, RuleTarget::Match(_)) {
         report.glob_rules_expanded += 1;
         report.glob_entities_matched += target_ids.len();
     }
@@ -268,21 +165,20 @@ async fn resolve_target_ids(
     repo: &AccessControlRepository,
     rule: &YamlRule,
 ) -> Result<Vec<String>, MarketplaceError> {
-    if let Some(literal) = rule.entity_id.as_deref() {
-        return Ok(vec![literal.to_owned()]);
+    match &rule.target {
+        RuleTarget::Id(literal) => Ok(vec![literal.clone()]),
+        RuleTarget::Match(pattern) => {
+            let catalog = repo
+                .list_entities(rule.entity_type)
+                .await
+                .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
+            Ok(catalog
+                .into_iter()
+                .filter(|row| glob_matches(pattern, &row.id))
+                .map(|row| row.id)
+                .collect())
+        }
     }
-    let Some(pattern) = rule.entity_match.as_deref() else {
-        return Ok(Vec::new());
-    };
-    let catalog = repo
-        .list_entities(rule.entity_type)
-        .await
-        .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
-    Ok(catalog
-        .into_iter()
-        .filter(|row| glob_matches(pattern, &row.id))
-        .map(|row| row.id)
-        .collect())
 }
 
 async fn apply_rules(
