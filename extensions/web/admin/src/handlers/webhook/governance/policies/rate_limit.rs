@@ -14,14 +14,17 @@ use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
 use serde_yaml::Value as YamlValue;
-use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt::identifiers::{PolicyId, SessionId, UserId};
+use systemprompt_security::authz::{Decision, DenyReason, MatchedBy};
+use systemprompt_security::policy::{GovernancePolicy, PolicyContext, RateLimitWindow};
 
-use super::super::policy::{Policy, PolicyContext, PolicyOutcome, PolicyRegistration};
+use super::super::policy::PolicyRegistration;
 
 const ID: &str = "rate_limit";
 const DEFAULT_WINDOW_SECS: u64 = 60;
 const DEFAULT_LIMIT: usize = 300;
 
+#[derive(Debug)]
 pub struct RateLimit {
     window_secs: u64,
     limit: usize,
@@ -74,9 +77,9 @@ fn key_for(session_id: &SessionId, user_id: &UserId) -> String {
     k
 }
 
-impl Policy for RateLimit {
-    fn id(&self) -> &'static str {
-        ID
+impl GovernancePolicy for RateLimit {
+    fn id(&self) -> PolicyId {
+        PolicyId::new(ID)
     }
     fn name(&self) -> &'static str {
         "Rate Limit"
@@ -85,30 +88,35 @@ impl Policy for RateLimit {
         "Sliding-window per-session per-user request limiter. Stops a single \
          caller from monopolising the gateway or exfiltrating data via volume."
     }
-    fn evaluate(&self, ctx: &PolicyContext<'_>) -> PolicyOutcome {
+    fn evaluate(&self, ctx: &PolicyContext<'_>) -> Decision {
         let key = key_for(ctx.session_id, ctx.user_id);
         let count = COUNTERS
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .check_and_record(&key, self.window_secs, self.limit);
 
+        let window = RateLimitWindow {
+            name: ID.to_string(),
+            seconds: self.window_secs,
+            limit: self.limit as u64,
+        };
+
         if count >= self.limit {
-            PolicyOutcome::Deny {
-                reason: format!(
-                    "Rate limit exceeded: {count}/{} calls in {}s window",
-                    self.limit, self.window_secs
-                ),
-                detail: Cow::Owned(format!(
-                    "{count}/{} calls in {}s window — limit exceeded",
-                    self.limit, self.window_secs
-                )),
+            Decision::Deny {
+                reason: DenyReason::RateLimitExceeded {
+                    window,
+                    retry_after_ms: self.window_secs.saturating_mul(1000),
+                },
             }
         } else {
-            PolicyOutcome::Allow {
-                detail: Cow::Owned(format!(
-                    "{count}/{} calls in {}s window",
-                    self.limit, self.window_secs
-                )),
+            Decision::Allow {
+                matched_by: MatchedBy::PolicyAllow {
+                    policy_id: PolicyId::new(ID),
+                    detail: Cow::Owned(format!(
+                        "{count}/{} calls in {}s window",
+                        self.limit, self.window_secs
+                    )),
+                },
             }
         }
     }

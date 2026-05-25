@@ -7,32 +7,46 @@ use axum::{
     Json,
 };
 use sqlx::PgPool;
-use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt::identifiers::{McpToolName, SessionId, UserId};
 use systemprompt::models::auth::JwtAudience;
 use systemprompt::oauth::OauthError;
+use systemprompt_security::authz::{Decision, DenyReason, MatchedBy};
+use systemprompt_security::policy::{AgentScope, McpToolInput, PolicyContext};
 
+use crate::handlers::webhook::helpers::{extract_bearer_token, get_jwt_issuer};
 use crate::types::webhook::GovernQuery;
 use crate::types::webhook::HookEventPayload;
 
 use super::audit;
-use super::rules;
+use super::policy::{self, PolicyConfig};
 use super::scope;
 use super::types::{
-    AuditParams, AuditRecord, AuthDenialParams, GovernanceContext, GovernanceDecision,
-    GovernanceResponse, HookSpecificOutput, RuleEvaluation,
+    AuditTarget, AuthDenialParams, ChainEntryOutcome, ChainEntryResult, DecisionAudit,
+    GovernanceDecision, GovernanceResponse, HookSpecificOutput, PrincipalSnapshot,
 };
-use crate::handlers::webhook::helpers::{extract_bearer_token, get_jwt_issuer};
 
-fn build_deny_response(reason: &str) -> Response {
+fn build_response(decision: &Decision) -> Response {
+    let permission_decision = GovernanceDecision::from_decision(decision);
+    let permission_decision_reason = match decision {
+        Decision::Allow { .. } => None,
+        Decision::Deny { reason } => Some(format!("[GOVERNANCE] {reason}")),
+    };
     let response = GovernanceResponse {
         hook_specific_output: HookSpecificOutput {
             hook_event_name: "PreToolUse",
-            permission_decision: GovernanceDecision::Deny,
-            permission_decision_reason: Some(format!("[GOVERNANCE] {reason}")),
+            permission_decision,
+            permission_decision_reason,
         },
     };
-
     (StatusCode::OK, Json(response)).into_response()
+}
+
+fn deny_for_auth_failure(reason: &str) -> Decision {
+    Decision::Deny {
+        reason: DenyReason::HookUnavailable {
+            policy: format!("auth_failure: {reason}"),
+        },
+    }
 }
 
 pub async fn govern_tool_use(
@@ -63,18 +77,31 @@ pub async fn govern_tool_use(
 
     let agent_scope = agent_id.map_or_else(|| "unknown".to_string(), scope::resolve_agent_scope);
 
-    let evaluation = evaluate_and_audit(&EvaluateInput {
-        pool: &pool,
-        payload: &payload,
+    let (decision, chain) = evaluate(&EvaluateInput {
         tool_name,
         session_id: &session_id,
         user_id: &user_id,
-        agent_id,
         agent_scope: &agent_scope,
-        plugin_id,
+        tool_input: payload.tool_input(),
     });
 
-    build_evaluation_response(&evaluation)
+    let audit = DecisionAudit {
+        decision: decision.clone(),
+        principal: PrincipalSnapshot {
+            user_id: user_id.clone(),
+            session_id: session_id.clone(),
+            agent_id: agent_id.map(str::to_string),
+            agent_scope: agent_scope.clone(),
+        },
+        target: AuditTarget {
+            tool_name: tool_name.to_string(),
+            plugin_id: plugin_id.map(str::to_string),
+        },
+        chain,
+    };
+    spawn_audit_recording(&pool, audit);
+
+    build_response(&decision)
 }
 
 fn authenticate_request(
@@ -84,7 +111,7 @@ fn authenticate_request(
     let Some(token) = extract_bearer_token(headers) else {
         let reason = "Missing Authorization header — tool call blocked";
         spawn_auth_denial(denial_params, reason);
-        return Err(Box::new(build_deny_response(reason)));
+        return Err(Box::new(build_response(&deny_for_auth_failure(reason))));
     };
 
     let jwt_issuer = match get_jwt_issuer() {
@@ -93,7 +120,7 @@ fn authenticate_request(
             tracing::error!(error = %e, "Failed to load JWT config");
             let reason = "Internal configuration error — tool call blocked";
             spawn_auth_denial(denial_params, reason);
-            return Err(Box::new(build_deny_response(reason)));
+            return Err(Box::new(build_response(&deny_for_auth_failure(reason))));
         }
     };
 
@@ -111,7 +138,7 @@ fn authenticate_request(
         log_jwt_failure(&e, expected_aud, &jwt_issuer);
         let reason = "Invalid or expired token — tool call blocked";
         spawn_auth_denial(denial_params, reason);
-        Box::new(build_deny_response(reason))
+        Box::new(build_response(&deny_for_auth_failure(reason)))
     })?;
 
     Ok(UserId::new(&claims.sub))
@@ -120,169 +147,166 @@ fn authenticate_request(
 fn log_jwt_failure(err: &OauthError, expected_aud: &str, issuer: &str) {
     match err {
         OauthError::TokenAlgMismatch { got, expected } => {
-            log_jwt_alg_mismatch(got, expected, expected_aud, issuer);
+            tracing::warn!(got_alg = %got, expected_alg = %expected, expected_aud, issuer,
+                "Governance webhook JWT rejected: signing algorithm mismatch");
         }
-        OauthError::TokenMissingKid => log_jwt_missing_kid(expected_aud, issuer),
-        OauthError::TokenUnknownKid { kid } => log_jwt_unknown_kid(kid, expected_aud, issuer),
-        OauthError::Expired(reason) => log_jwt_expired(reason, expected_aud, issuer),
-        other => log_jwt_other(other, expected_aud, issuer),
+        OauthError::TokenMissingKid => {
+            tracing::warn!(expected_alg = "RS256", expected_aud, issuer,
+                "Governance webhook JWT rejected: missing `kid` header");
+        }
+        OauthError::TokenUnknownKid { kid } => {
+            tracing::warn!(kid = %kid, expected_aud, issuer,
+                "Governance webhook JWT rejected: unknown signing key — token was minted under a \
+                 different RSA authority");
+        }
+        OauthError::Expired(reason) => {
+            tracing::warn!(reason = %reason, expected_aud, issuer,
+                "Governance webhook JWT rejected: token expired");
+        }
+        other => {
+            tracing::warn!(error = %other, expected_aud, issuer,
+                "Governance webhook JWT validation failed");
+        }
     }
 }
 
-fn log_jwt_alg_mismatch(got: &str, expected: &str, expected_aud: &str, issuer: &str) {
-    tracing::warn!(
-        got_alg = %got,
-        expected_alg = %expected,
-        expected_aud,
-        issuer,
-        "Governance webhook JWT rejected: signing algorithm mismatch"
-    );
-}
-
-fn log_jwt_missing_kid(expected_aud: &str, issuer: &str) {
-    tracing::warn!(
-        expected_alg = "RS256",
-        expected_aud,
-        issuer,
-        "Governance webhook JWT rejected: missing `kid` header"
-    );
-}
-
-fn log_jwt_unknown_kid(kid: &str, expected_aud: &str, issuer: &str) {
-    tracing::warn!(
-        kid = %kid,
-        expected_aud,
-        issuer,
-        "Governance webhook JWT rejected: unknown signing key — token was minted under a \
-         different RSA authority"
-    );
-}
-
-fn log_jwt_expired(reason: &str, expected_aud: &str, issuer: &str) {
-    tracing::warn!(
-        reason = %reason,
-        expected_aud,
-        issuer,
-        "Governance webhook JWT rejected: token expired"
-    );
-}
-
-fn log_jwt_other(err: &OauthError, expected_aud: &str, issuer: &str) {
-    tracing::warn!(
-        error = %err,
-        expected_aud,
-        issuer,
-        "Governance webhook JWT validation failed"
-    );
-}
-
 struct EvaluateInput<'a> {
-    pool: &'a Arc<PgPool>,
-    payload: &'a HookEventPayload,
     tool_name: &'a str,
     session_id: &'a SessionId,
     user_id: &'a UserId,
-    agent_id: Option<&'a str>,
     agent_scope: &'a str,
-    plugin_id: Option<&'a str>,
+    tool_input: Option<&'a serde_json::Value>,
 }
 
-fn evaluate_and_audit(input: &EvaluateInput<'_>) -> RuleEvaluation {
-    let ctx = GovernanceContext {
-        tool_name: input.tool_name,
-        agent_scope: input.agent_scope,
-        session_id: input.session_id,
-        user_id: input.user_id,
-        tool_input: input.payload.tool_input(),
-    };
+/// Iterates the configured policy chain in order, calling each enabled
+/// `GovernancePolicy::evaluate` and stopping on the first deny. Emits a
+/// per-entry trace so the audit row preserves the full evaluation order, not
+/// just the first-deny.
+fn evaluate(input: &EvaluateInput<'_>) -> (Decision, Vec<ChainEntryOutcome>) {
+    // Inject the OAuth scope label into the wrapped tool_input under a
+    // reserved key so scope_check and tool_blocklist can read it. Core's
+    // PolicyContext is deployment-agnostic by design; this JSON-boundary
+    // wrapper is the agreed plumbing.
+    let mut tool_input_value = input
+        .tool_input
+        .cloned()
+        .unwrap_or_else(|| serde_json::Value::Object(serde_json::Map::new()));
+    if let Some(map) = tool_input_value.as_object_mut() {
+        map.insert(
+            super::SCOPE_LABEL_KEY.to_string(),
+            serde_json::Value::String(input.agent_scope.to_string()),
+        );
+    }
+    let tool_input = McpToolInput::new(tool_input_value);
 
-    let evaluation = rules::evaluate(&ctx);
-
-    spawn_audit_recording(&AuditParams {
-        pool: input.pool,
-        user_id: input.user_id,
-        session_id: input.session_id,
-        tool_name: input.tool_name,
-        agent_id: input.agent_id,
-        agent_scope: input.agent_scope,
-        evaluation: &evaluation,
-        plugin_id: input.plugin_id,
-    });
-
-    evaluation
-}
-
-fn build_evaluation_response(evaluation: &RuleEvaluation) -> Response {
-    let deny_reason = if evaluation.decision == GovernanceDecision::Deny {
-        Some(format!("[GOVERNANCE] {}", evaluation.reason))
-    } else {
-        None
-    };
-
-    let response = GovernanceResponse {
-        hook_specific_output: HookSpecificOutput {
-            hook_event_name: "PreToolUse",
-            permission_decision: evaluation.decision,
-            permission_decision_reason: deny_reason,
+    let ctx = PolicyContext {
+        tool: McpToolName::new(input.tool_name),
+        agent_scope: AgentScope::User {
+            user_id: input.user_id.clone(),
         },
+        session_id: input.session_id,
+        user_id: input.user_id,
+        tool_input: &tool_input,
     };
 
-    (StatusCode::OK, Json(response)).into_response()
+    let mut chain_trace: Vec<ChainEntryOutcome> = Vec::new();
+    let mut denied: Option<Decision> = None;
+
+    let chain = policy::chain();
+    for (cfg, policy) in chain.iter() {
+        if !cfg.enabled {
+            chain_trace.push(disabled_entry(cfg));
+            continue;
+        }
+        if denied.is_some() {
+            chain_trace.push(skipped_after_deny(cfg));
+            continue;
+        }
+        let decision = policy.evaluate(&ctx);
+        match &decision {
+            Decision::Allow { matched_by } => {
+                chain_trace.push(ChainEntryOutcome {
+                    policy_id: policy.id(),
+                    result: ChainEntryResult::Pass,
+                    detail: allow_detail(matched_by),
+                });
+            }
+            Decision::Deny { reason } => {
+                chain_trace.push(ChainEntryOutcome {
+                    policy_id: policy.id(),
+                    result: ChainEntryResult::Fail,
+                    detail: reason.to_string(),
+                });
+                denied = Some(decision);
+            }
+        }
+    }
+    drop(chain);
+
+    let final_decision = denied.unwrap_or(Decision::Allow {
+        matched_by: MatchedBy::DefaultIncluded,
+    });
+    (final_decision, chain_trace)
+}
+
+fn disabled_entry(cfg: &PolicyConfig) -> ChainEntryOutcome {
+    ChainEntryOutcome {
+        policy_id: systemprompt::identifiers::PolicyId::new(cfg.id.clone()),
+        result: ChainEntryResult::Skip,
+        detail: "Policy disabled in services/governance/config.yaml".to_string(),
+    }
+}
+
+fn skipped_after_deny(cfg: &PolicyConfig) -> ChainEntryOutcome {
+    ChainEntryOutcome {
+        policy_id: systemprompt::identifiers::PolicyId::new(cfg.id.clone()),
+        result: ChainEntryResult::Skip,
+        detail: "Skipped — already denied by an earlier policy".to_string(),
+    }
+}
+
+fn allow_detail(matched_by: &MatchedBy) -> String {
+    match matched_by {
+        MatchedBy::PolicyAllow { detail, .. } => detail.to_string(),
+        MatchedBy::UserAllow => "user allow".to_string(),
+        MatchedBy::RoleAllow { role } => format!("role allow: {role}"),
+        MatchedBy::DepartmentAllow { department } => format!("department allow: {department}"),
+        MatchedBy::DefaultIncluded => "default included".to_string(),
+    }
 }
 
 fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
     let p = params.pool.clone();
-    let record = AuditRecord {
-        user_id: systemprompt::identifiers::bootstrap::anonymous(),
-        session_id: params.session_id.clone(),
-        tool_name: params.tool_name.to_string(),
-        agent_id: params.agent_id.map(str::to_string),
-        agent_scope: "unauthenticated".to_string(),
-        decision: GovernanceDecision::Deny,
-        policy: "auth_failure".to_string(),
-        reason: reason.to_string(),
-        evaluated_rules: serde_json::json!([{"rule": "authentication", "result": "fail", "detail": reason}]),
-        plugin_id: params.plugin_id.map(str::to_string),
+    let audit = DecisionAudit {
+        decision: deny_for_auth_failure(reason),
+        principal: PrincipalSnapshot {
+            user_id: systemprompt::identifiers::bootstrap::anonymous(),
+            session_id: params.session_id.clone(),
+            agent_id: params.agent_id.map(str::to_string),
+            agent_scope: "unauthenticated".to_string(),
+        },
+        target: AuditTarget {
+            tool_name: params.tool_name.to_string(),
+            plugin_id: params.plugin_id.map(str::to_string),
+        },
+        chain: vec![ChainEntryOutcome {
+            policy_id: systemprompt::identifiers::PolicyId::new("authentication"),
+            result: ChainEntryResult::Fail,
+            detail: reason.to_string(),
+        }],
     };
-
-    tokio::spawn(async move {
-        if let Err(e) = audit::record_decision(&p, &record).await {
-            tracing::error!(
-                target: "governance.audit.write_failed",
-                error = %e,
-                policy = %record.policy,
-                session_id = %record.session_id,
-                "governance audit write failed; row dropped",
-            );
-        }
-    });
+    spawn_audit_recording(&p, audit);
 }
 
-fn spawn_audit_recording(params: &AuditParams<'_>) {
-    let p = params.pool.clone();
-    let record = AuditRecord {
-        user_id: params.user_id.clone(),
-        session_id: params.session_id.clone(),
-        tool_name: params.tool_name.to_string(),
-        agent_id: params.agent_id.map(str::to_string),
-        agent_scope: params.agent_scope.to_string(),
-        decision: params.evaluation.decision,
-        policy: params.evaluation.policy.clone().into_owned(),
-        reason: params.evaluation.reason.clone().into_owned(),
-        evaluated_rules: serde_json::to_value(&params.evaluation.rules).unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to serialize governance evaluation rules");
-            serde_json::Value::Null
-        }),
-        plugin_id: params.plugin_id.map(str::to_string),
-    };
-
+fn spawn_audit_recording(pool: &Arc<PgPool>, audit: DecisionAudit) {
+    let p = pool.clone();
     tokio::spawn(async move {
-        if let Err(e) = audit::record_decision(&p, &record).await {
+        let session_id = audit.principal.session_id.clone();
+        if let Err(e) = audit::record_decision(&p, &audit).await {
             tracing::error!(
                 target: "governance.audit.write_failed",
                 error = %e,
-                policy = %record.policy,
-                session_id = %record.session_id,
+                session_id = %session_id,
                 "governance audit write failed; row dropped",
             );
         }

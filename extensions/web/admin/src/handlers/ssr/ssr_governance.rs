@@ -132,12 +132,14 @@ fn build_policies_json(
 
 fn build_policy_row(
     cfg: &governance::policy::PolicyConfig,
-    p: &dyn governance::policy::Policy,
+    p: &dyn governance::policy::GovernancePolicy,
     lifetime_by_id: &mut HashMap<String, repositories::governance::PerPolicyCounts>,
     window_by_id: &mut HashMap<String, repositories::governance::PerPolicyCounts>,
 ) -> serde_json::Value {
-    let life = lifetime_by_id.remove(p.id());
-    let win = window_by_id.remove(p.id());
+    let id = p.id();
+    let id_str = id.as_str();
+    let life = lifetime_by_id.remove(id_str);
+    let win = window_by_id.remove(id_str);
     let lifetime_allowed = life.as_ref().map_or(0, |s| s.allowed);
     let lifetime_denied = life.as_ref().map_or(0, |s| s.denied);
     let window_allowed = win.as_ref().map_or(0, |s| s.allowed);
@@ -156,11 +158,11 @@ fn build_policy_row(
     let params_preview = render_params_preview(&cfg.params);
     let deny_rate = format_deny_rate(window_denied, window_evals);
     json!({
-        "id": p.id(),
+        "id": id_str,
         "name": p.name(),
         "description": p.description(),
         "enabled": cfg.enabled,
-        "source_path": governance::policy::source_path_for(p.id()),
+        "source_path": governance::policy::source_path_for(id_str),
         "params_preview": params_preview,
         "has_params": !params_preview.is_empty(),
         "lifetime_allowed": lifetime_allowed,
@@ -172,11 +174,10 @@ fn build_policy_row(
         "has_recent_denies": window_denied > 0,
         "last_at": last_at,
         "last_at_window": last_at_window,
-        "edit_url": format!("/admin/governance/{}", p.id()),
-        "decisions_url": format!("/admin/governance/decisions?policy={}", p.id()),
+        "edit_url": format!("/admin/governance/{id_str}"),
+        "decisions_url": format!("/admin/governance/decisions?policy={id_str}"),
         "deny_decisions_url": format!(
-            "/admin/governance/decisions?policy={}&outcome=deny",
-            p.id()
+            "/admin/governance/decisions?policy={id_str}&outcome=deny"
         ),
     })
 }

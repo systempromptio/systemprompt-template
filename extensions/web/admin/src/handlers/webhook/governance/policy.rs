@@ -1,72 +1,48 @@
-//! Modular policy framework.
+//! Modular governance policy framework — template side.
 //!
-//! Each policy is a Rust struct implementing [`Policy`], registered at
-//! compile-time via [`inventory::submit!`]. The pipeline driver iterates the
-//! enabled, ordered list from `services/governance/config.yaml`, calling each
-//! [`Policy::evaluate`] and stopping on the first deny. Adding a new policy is
-//! a single new file plus one `inventory::submit!` line — no edits to the
-//! pipeline driver, no recompile of the rest of the workspace.
+//! Policies implement [`systemprompt_security::policy::GovernancePolicy`]
+//! from core and return the shared [`Decision`] / [`DenyReason`] types, so
+//! the audit row shape and CLI view are identical to the user→entity authz
+//! plane. The template owns three concerns that core's plain
+//! [`systemprompt_security::policy::GovernanceChain`] doesn't:
+//!
+//! 1. **Compile-time registration** via the `inventory` crate so adding a
+//!    policy is one new file + one `inventory::submit!`.
+//! 2. **Per-policy YAML config** from `services/governance/config.yaml`
+//!    (enabled flag, per-policy params).
+//! 3. **Hot reload** so the policy editor save handler can rebuild the chain
+//!    without restarting the server.
+//!
+//! Each entry carries the resolved [`PolicyConfig`] alongside the boxed
+//! `GovernancePolicy` impl. The pipeline driver in [`super::rules_runner`]
+//! iterates entries, honours `enabled`, and emits a per-entry trace for the
+//! audit row.
 
-use std::borrow::Cow;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{LazyLock, RwLock};
 
 use serde_yaml::Value as YamlValue;
 use systemprompt::config::ProfileBootstrap;
-use systemprompt::identifiers::{SessionId, UserId};
 
-/// Factory function that turns a YAML config block into a boxed [`Policy`].
-type PolicyFactory = fn(&YamlValue) -> Box<dyn Policy>;
+pub use systemprompt_security::policy::GovernancePolicy;
 
-/// Inputs every policy receives. Borrowed; cheap to construct per request.
-pub struct PolicyContext<'a> {
-    pub tool_name: &'a str,
-    pub agent_scope: &'a str,
-    pub session_id: &'a SessionId,
-    pub user_id: &'a UserId,
-    pub tool_input: Option<&'a serde_json::Value>,
-}
-
-/// Outcome of one policy's evaluation.
-pub enum PolicyOutcome {
-    Allow {
-        detail: Cow<'static, str>,
-    },
-    Deny {
-        reason: String,
-        detail: Cow<'static, str>,
-    },
-}
-
-/// Contract every governance policy implements.
-pub trait Policy: Send + Sync {
-    /// Stable identifier (lowercase `snake_case`). Stored in `governance_decisions.policy`.
-    fn id(&self) -> &'static str;
-    /// Human-readable label for the dashboard.
-    fn name(&self) -> &'static str;
-    /// One-sentence description shown on the dashboard.
-    fn description(&self) -> &'static str;
-    /// Per-call evaluation. Pure for everything except `rate_limit` (in-memory window).
-    fn evaluate(&self, ctx: &PolicyContext<'_>) -> PolicyOutcome;
-}
+/// Factory function that turns a YAML config block into a boxed [`GovernancePolicy`].
+type PolicyFactory = fn(&YamlValue) -> Box<dyn GovernancePolicy>;
 
 /// Compile-time registration. Each built-in lives in its own file and submits
-/// one of these. Adding a third-party policy means creating a new submodule
-/// and one `inventory::submit!` block.
+/// one of these.
 pub struct PolicyRegistration {
     pub id: &'static str,
     pub factory: PolicyFactory,
     /// Source file the policy is defined in (set with `file!()`). Surfaced on
-    /// the dashboard as the "as code" link, communicating that policies are
-    /// real Rust impls rather than YAML rows.
+    /// the dashboard as the "as code" link.
     pub source_path: &'static str,
 }
 
 inventory::collect!(PolicyRegistration);
 
-/// Source-path lookup for a policy id. Returns the `file!()` set at
-/// `inventory::submit!` time, or an empty string if the id is not registered.
+/// Source-path lookup for a policy id.
 pub fn source_path_for(id: &str) -> &'static str {
     inventory::iter::<PolicyRegistration>()
         .find(|r| r.id == id)
@@ -88,11 +64,11 @@ pub struct PolicyChain {
 
 struct ChainEntry {
     config: PolicyConfig,
-    instance: Box<dyn Policy>,
+    instance: Box<dyn GovernancePolicy>,
 }
 
 impl PolicyChain {
-    pub fn iter(&self) -> impl Iterator<Item = (&PolicyConfig, &dyn Policy)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&PolicyConfig, &dyn GovernancePolicy)> {
         self.entries
             .iter()
             .map(|e| (&e.config, e.instance.as_ref()))
@@ -109,8 +85,6 @@ pub fn chain() -> std::sync::RwLockReadGuard<'static, PolicyChain> {
 }
 
 /// Re-read `services/governance/config.yaml` and rebuild the chain.
-/// Called from the policy editor save handler so config edits take effect
-/// without restarting the server.
 pub fn reload() {
     let new_chain = load_chain();
     if let Ok(mut guard) = CHAIN.write() {
@@ -210,8 +184,6 @@ fn parse_policies(root: &YamlValue) -> Option<Vec<PolicyConfig>> {
     Some(out)
 }
 
-/// Defaults match the historical pre-modular pipeline order/behaviour so the
-/// system stays safe even with no YAML on disk.
 fn default_configs() -> Vec<PolicyConfig> {
     [
         ("secret_scan", YamlValue::Null),
