@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.11.2 — 2026-05-25
+
+Aligned with `systemprompt-core` 0.11.2: the gateway model allow-list moves from `services/ai/gateway-policies.yaml` into the profile catalog (`.systemprompt/profiles/<name>/catalog.yaml`).
+
+### Breaking
+
+- **`services/ai/gateway-policies.yaml` no longer carries `allowed_models:`.** Core's `GatewayPolicySpec` has dropped the field; the spec uses `deny_unknown_fields`, so a stale `allowed_models:` will fail boot. Exposed-model declarations move to the profile catalog instead.
+
+### Added
+
+- **Profile gateway catalog (`gateway.catalog_path`)** points at a sibling `catalog.yaml` declaring providers + models (with optional aliases). The dispatcher's `is_model_exposed` gate consults the catalog before route resolution, so a wildcard route (`claude-*`) cannot leak a model the catalog has not declared. Adding a model means editing one file.
+- **`just setup-local`** generates the catalog alongside the profile so fresh clones have a consistent baseline.
+
+### Changed
+
+- **`demo/scenarios/airgap/architecture.md`** updated to reflect the new gate ordering and that policies carry quotas/safety only.
+- **`services/content/documentation/gateway-api.md`** points operators at the catalog as the model-exposure surface.
+
 ## 0.11.0 — 2026-05-21
 
 Aligned with `systemprompt-core` 0.11. Workspace version bumped from 0.9.2 → 0.11.0.
