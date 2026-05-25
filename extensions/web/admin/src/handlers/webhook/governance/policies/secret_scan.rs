@@ -6,12 +6,16 @@
 use std::borrow::Cow;
 
 use serde_yaml::Value as YamlValue;
+use systemprompt::identifiers::{PolicyId, SecretPatternId};
+use systemprompt_security::authz::{Decision, DenyReason, MatchedBy};
+use systemprompt_security::policy::{GovernancePolicy, PolicyContext, SecretLocation};
 
-use super::super::policy::{Policy, PolicyContext, PolicyOutcome, PolicyRegistration};
+use super::super::policy::PolicyRegistration;
 use super::super::secrets::detect_secrets;
 
 const ID: &str = "secret_scan";
 
+#[derive(Debug)]
 pub struct SecretScan {
     extra_patterns: Vec<(String, String)>,
 }
@@ -37,9 +41,9 @@ impl SecretScan {
     }
 }
 
-impl Policy for SecretScan {
-    fn id(&self) -> &'static str {
-        ID
+impl GovernancePolicy for SecretScan {
+    fn id(&self) -> PolicyId {
+        PolicyId::new(ID)
     }
     fn name(&self) -> &'static str {
         "Secret Scan"
@@ -48,35 +52,35 @@ impl Policy for SecretScan {
         "Block tool calls whose input contains an AWS key, GitHub PAT, PEM block, \
          connection string, or other plaintext credential pattern."
     }
-    fn evaluate(&self, ctx: &PolicyContext<'_>) -> PolicyOutcome {
-        if let Some((name, redacted)) = detect_secrets(ctx.tool_input) {
-            return PolicyOutcome::Deny {
-                reason: format!(
-                    "SECURITY BREACH: Plaintext secret detected in tool input — {name} ({redacted})"
-                ),
-                detail: Cow::Owned(format!(
-                    "Plaintext secret detected: {name} — matched '{redacted}' in tool_input"
-                )),
+    fn evaluate(&self, ctx: &PolicyContext<'_>) -> Decision {
+        let tool_input_value = ctx.tool_input.as_value();
+        if let Some((name, redacted)) = detect_secrets(Some(tool_input_value)) {
+            return Decision::Deny {
+                reason: DenyReason::SecretLeak {
+                    pattern_id: SecretPatternId::new(name.clone()),
+                    location: SecretLocation::new("tool_input", redacted),
+                },
             };
         }
-        if let Some(input) = ctx.tool_input {
-            let mut strings = Vec::new();
-            collect_strings(input, &mut strings);
-            for s in &strings {
-                for (name, prefix) in &self.extra_patterns {
-                    if s.contains(prefix.as_str()) {
-                        return PolicyOutcome::Deny {
-                            reason: format!(
-                                "SECURITY BREACH: Plaintext secret detected in tool input — {name}"
-                            ),
-                            detail: Cow::Owned(format!("Custom pattern matched: {name}")),
-                        };
-                    }
+        let mut strings = Vec::new();
+        collect_strings(tool_input_value, &mut strings);
+        for s in &strings {
+            for (name, prefix) in &self.extra_patterns {
+                if s.contains(prefix.as_str()) {
+                    return Decision::Deny {
+                        reason: DenyReason::SecretLeak {
+                            pattern_id: SecretPatternId::new(name.clone()),
+                            location: SecretLocation::new("tool_input", "custom_pattern"),
+                        },
+                    };
                 }
             }
         }
-        PolicyOutcome::Allow {
-            detail: Cow::Borrowed("No plaintext secrets detected in tool input"),
+        Decision::Allow {
+            matched_by: MatchedBy::PolicyAllow {
+                policy_id: PolicyId::new(ID),
+                detail: Cow::Borrowed("No plaintext secrets detected in tool input"),
+            },
         }
     }
 }

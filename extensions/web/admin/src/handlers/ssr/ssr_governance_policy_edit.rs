@@ -44,15 +44,16 @@ pub async fn governance_policy_edit_page(
         let chain = governance::chain();
         let result = chain
             .iter()
-            .find(|(_, p)| p.id() == policy_id)
+            .find(|(_, p)| p.id().as_str() == policy_id)
             .map(|(cfg, p)| {
+                let id = p.id().as_str().to_string();
                 (
-                    p.id().to_string(),
+                    id.clone(),
                     p.name().to_string(),
                     p.description().to_string(),
                     serde_yaml::to_string(&cfg.params).unwrap_or_default(),
                     cfg.enabled,
-                    p.id().to_string(),
+                    id,
                 )
             });
         result

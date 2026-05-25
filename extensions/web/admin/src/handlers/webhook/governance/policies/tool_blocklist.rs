@@ -9,13 +9,17 @@
 use std::borrow::Cow;
 
 use serde_yaml::Value as YamlValue;
+use systemprompt::identifiers::{McpToolName, PolicyId};
+use systemprompt_security::authz::{Decision, DenyReason, MatchedBy};
+use systemprompt_security::policy::{GovernancePolicy, PolicyContext};
 
-use super::super::policy::{Policy, PolicyContext, PolicyOutcome, PolicyRegistration};
+use super::super::policy::PolicyRegistration;
 use crate::types::SCOPE_ADMIN;
 
 const ID: &str = "tool_blocklist";
 const DEFAULT_PATTERNS: &[&str] = &["delete", "drop", "destroy"];
 
+#[derive(Debug)]
 pub struct ToolBlocklist {
     patterns: Vec<String>,
 }
@@ -36,9 +40,17 @@ impl ToolBlocklist {
     }
 }
 
-impl Policy for ToolBlocklist {
-    fn id(&self) -> &'static str {
-        ID
+/// See [`super::scope_check::scope_label`] for the rationale on reading the
+/// scope label from the wrapped tool input.
+fn scope_label<'a>(ctx: &'a PolicyContext<'_>) -> &'a str {
+    ctx.tool_input
+        .as_str(super::super::SCOPE_LABEL_KEY)
+        .unwrap_or("unknown")
+}
+
+impl GovernancePolicy for ToolBlocklist {
+    fn id(&self) -> PolicyId {
+        PolicyId::new(ID)
     }
     fn name(&self) -> &'static str {
         "Tool Blocklist"
@@ -47,25 +59,26 @@ impl Policy for ToolBlocklist {
         "Block tool names containing destructive substrings (e.g. delete/drop/destroy) \
          for any agent without admin scope."
     }
-    fn evaluate(&self, ctx: &PolicyContext<'_>) -> PolicyOutcome {
+    fn evaluate(&self, ctx: &PolicyContext<'_>) -> Decision {
+        let tool_str = ctx.tool.as_str();
+        let scope = scope_label(ctx);
         let matched = self
             .patterns
             .iter()
-            .find(|p| ctx.tool_name.contains(p.as_str()));
+            .find(|p| tool_str.contains(p.as_str()));
 
         match matched {
-            Some(p) if ctx.agent_scope != SCOPE_ADMIN => PolicyOutcome::Deny {
-                reason: format!(
-                    "Destructive tool '{}' blocked for {} scope (matched pattern '{}')",
-                    ctx.tool_name, ctx.agent_scope, p
-                ),
-                detail: Cow::Owned(format!(
-                    "Tool '{}' matches blocklist pattern '{}'",
-                    ctx.tool_name, p
-                )),
+            Some(p) if scope != SCOPE_ADMIN => Decision::Deny {
+                reason: DenyReason::ToolBlocked {
+                    tool: McpToolName::new(tool_str),
+                    list_id: p.clone(),
+                },
             },
-            _ => PolicyOutcome::Allow {
-                detail: Cow::Borrowed("Tool not on restricted list"),
+            _ => Decision::Allow {
+                matched_by: MatchedBy::PolicyAllow {
+                    policy_id: PolicyId::new(ID),
+                    detail: Cow::Borrowed("Tool not on restricted list"),
+                },
             },
         }
     }

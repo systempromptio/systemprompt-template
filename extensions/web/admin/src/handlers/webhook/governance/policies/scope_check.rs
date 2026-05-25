@@ -1,6 +1,9 @@
 //! `scope_check`: gate admin-only tools by agent scope.
 //!
-//! Configurable via:
+//! Reads the OAuth scope label ("admin" / "user" / "unknown") from
+//! `ctx.extras.scope_label` — the template plumbs this in
+//! [`super::super::handler`] before invoking the chain. Configurable via:
+//!
 //! ```yaml
 //! - id: scope_check
 //!   admin_only_prefixes:
@@ -10,13 +13,17 @@
 use std::borrow::Cow;
 
 use serde_yaml::Value as YamlValue;
+use systemprompt::identifiers::{McpToolName, PolicyId};
+use systemprompt_security::authz::{Decision, DenyReason, MatchedBy};
+use systemprompt_security::policy::{GovernancePolicy, PolicyContext};
 
-use super::super::policy::{Policy, PolicyContext, PolicyOutcome, PolicyRegistration};
+use super::super::policy::PolicyRegistration;
 use crate::types::{SCOPE_ADMIN, SCOPE_UNKNOWN};
 
 const ID: &str = "scope_check";
 const DEFAULT_ADMIN_ONLY_PREFIXES: &[&str] = &["mcp__systemprompt__"];
 
+#[derive(Debug)]
 pub struct ScopeCheck {
     admin_only_prefixes: Vec<String>,
 }
@@ -44,9 +51,19 @@ impl ScopeCheck {
     }
 }
 
-impl Policy for ScopeCheck {
-    fn id(&self) -> &'static str {
-        ID
+/// The template handler injects the OAuth scope label
+/// (`SCOPE_LABEL_KEY`) into the wrapped `tool_input` value before invoking
+/// the chain. Core's [`PolicyContext`] doesn't carry deployment-specific
+/// principal metadata, so the JSON-boundary wrapper is the agreed plumbing.
+fn scope_label<'a>(ctx: &'a PolicyContext<'_>) -> &'a str {
+    ctx.tool_input
+        .as_str(super::super::SCOPE_LABEL_KEY)
+        .unwrap_or(SCOPE_UNKNOWN)
+}
+
+impl GovernancePolicy for ScopeCheck {
+    fn id(&self) -> PolicyId {
+        PolicyId::new(ID)
     }
     fn name(&self) -> &'static str {
         "Scope Check"
@@ -55,44 +72,42 @@ impl Policy for ScopeCheck {
         "Block non-admin agents from calling tools whose name starts with an \
          admin-only prefix (default: mcp__systemprompt__)."
     }
-    fn evaluate(&self, ctx: &PolicyContext<'_>) -> PolicyOutcome {
-        if ctx.agent_scope == SCOPE_ADMIN {
-            return PolicyOutcome::Allow {
-                detail: Cow::Borrowed("admin scope grants unrestricted tool access"),
+    fn evaluate(&self, ctx: &PolicyContext<'_>) -> Decision {
+        let scope = scope_label(ctx);
+        if scope == SCOPE_ADMIN {
+            return Decision::Allow {
+                matched_by: MatchedBy::PolicyAllow {
+                    policy_id: PolicyId::new(ID),
+                    detail: Cow::Borrowed("admin scope grants unrestricted tool access"),
+                },
             };
         }
 
+        let tool_str = ctx.tool.as_str();
         let requires_admin = self
             .admin_only_prefixes
             .iter()
-            .any(|prefix| ctx.tool_name.starts_with(prefix.as_str()));
+            .any(|prefix| tool_str.starts_with(prefix.as_str()));
 
         if requires_admin {
-            return PolicyOutcome::Deny {
-                reason: format!(
-                    "{} scope cannot access admin-only tool: {}",
-                    ctx.agent_scope, ctx.tool_name
-                ),
-                detail: Cow::Owned(format!(
-                    "{} scope cannot access tools matching admin-only prefixes",
-                    ctx.agent_scope
-                )),
+            return Decision::Deny {
+                reason: DenyReason::ScopeViolation {
+                    tool: McpToolName::new(tool_str),
+                    missing_scope: SCOPE_ADMIN.to_string(),
+                },
             };
         }
 
-        if ctx.agent_scope == SCOPE_UNKNOWN {
-            PolicyOutcome::Allow {
-                detail: Cow::Borrowed(
-                    "Agent scope could not be resolved; allowed for non-admin tool",
-                ),
-            }
+        let detail = if scope == SCOPE_UNKNOWN {
+            Cow::Borrowed("Agent scope could not be resolved; allowed for non-admin tool")
         } else {
-            PolicyOutcome::Allow {
-                detail: Cow::Owned(format!(
-                    "{} scope is allowed for tool: {}",
-                    ctx.agent_scope, ctx.tool_name
-                )),
-            }
+            Cow::Owned(format!("{scope} scope is allowed for tool: {tool_str}"))
+        };
+        Decision::Allow {
+            matched_by: MatchedBy::PolicyAllow {
+                policy_id: PolicyId::new(ID),
+                detail,
+            },
         }
     }
 }
