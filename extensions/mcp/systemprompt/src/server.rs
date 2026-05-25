@@ -12,7 +12,6 @@ use std::sync::Arc;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::{McpExecutionId, McpServerId};
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
-use systemprompt::security::authz::SharedAuthzHook;
 use systemprompt::mcp::repository::ToolUsageRepository;
 use systemprompt::mcp::{
     build_artifact_viewer_resource, build_experimental_capabilities, read_artifact_viewer_resource,
@@ -20,6 +19,7 @@ use systemprompt::mcp::{
 };
 use systemprompt::models::artifacts::{CliArtifact, CommandResultRaw, TextArtifact};
 use systemprompt::models::execution::context::RequestContext as SysRequestContext;
+use systemprompt::security::authz::SharedAuthzHook;
 use systemprompt_mcp_shared::{record_mcp_access, record_mcp_access_rejected};
 
 const ARTIFACT_VIEWER_TEMPLATE: &str = include_str!("../templates/artifact-viewer.html");

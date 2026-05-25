@@ -1,4 +1,10 @@
 //! Paginated decisions listing for the audit explorer page.
+//!
+//! `DecisionRow` and `PagedRow` deliberately surface `evaluated_rules` as
+//! untyped JSON: the audit blob is typed (`DecisionAudit`) on the writing
+//! side, and the dashboard renders it generically here. Reintroducing the
+//! typed shape at the read boundary would couple the explorer to every
+//! `DecisionAudit` schema change for no rendering benefit.
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
@@ -81,11 +87,6 @@ pub struct DecisionRow {
     pub created_at: DateTime<Utc>,
 }
 
-/// Fetch a page of governance decisions with `ai_requests` enrichment.
-///
-/// LEFT JOINs `ai_requests` on `session_id` (the only column shared by both
-/// tables) to surface `cost_microdollars`, `latency_ms`, and `trace_id`.
-/// Returns `(rows, total_count)`.
 pub async fn fetch_decisions_paged(
     pool: &PgPool,
     filter: &DecisionFilter,

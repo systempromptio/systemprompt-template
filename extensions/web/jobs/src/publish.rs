@@ -359,7 +359,8 @@ impl PublishPipelineJob {
 
         let mut stats = PipelineStats::default();
 
-        self.run_governance_bootstrap(paths, db_pool, &mut stats).await;
+        self.run_governance_bootstrap(paths, db_pool, &mut stats)
+            .await;
         self.run_ingestion(ctx, &mut stats).await;
         self.run_bundle_admin_css(&mut stats).await;
         self.run_bundle_admin_js(&mut stats).await;
@@ -391,7 +392,9 @@ systemprompt::traits::submit_job!(&PublishPipelineJob);
 
 async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<(usize, usize), JobError> {
     let pool = db_pool.pool().ok_or_else(|| {
-        JobError::from(MarketplaceError::Internal("db pool unavailable".to_string()))
+        JobError::from(MarketplaceError::Internal(
+            "db pool unavailable".to_string(),
+        ))
     })?;
     let profile_path = systemprompt::config::ProfileBootstrap::get_path()
         .map(std::path::PathBuf::from)
@@ -404,10 +407,7 @@ async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<(usize, usize), 
     let mut failed = 0usize;
     for route in &cfg.routes {
         match systemprompt_web_admin::repositories::governance_grp::gateway_acl::upsert_entity(
-            &pool,
-            &route.id,
-            false,
-            &source,
+            &pool, &route.id, false, &source,
         )
         .await
         {
