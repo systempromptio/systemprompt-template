@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 
 #[derive(Debug, Clone)]
-pub struct CoworkUserRow {
+pub struct BridgeUserRow {
     pub id: String,
     pub name: String,
     pub email: String,
@@ -9,10 +9,10 @@ pub struct CoworkUserRow {
     pub roles: Vec<String>,
 }
 
-pub async fn find_cowork_user(
+pub async fn find_bridge_user(
     pool: &PgPool,
     user_id: &str,
-) -> Result<Option<CoworkUserRow>, sqlx::Error> {
+) -> Result<Option<BridgeUserRow>, sqlx::Error> {
     let row = sqlx::query!(
         r#"SELECT id, name, email, display_name,
                   COALESCE(roles, '{}') as "roles!: Vec<String>"
@@ -21,7 +21,7 @@ pub async fn find_cowork_user(
     )
     .fetch_optional(pool)
     .await?;
-    Ok(row.map(|r| CoworkUserRow {
+    Ok(row.map(|r| BridgeUserRow {
         id: r.id,
         name: r.name,
         email: r.email,

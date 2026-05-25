@@ -25,7 +25,7 @@ Every section below is a fenced code block — open this file in your editor, cl
 - [Scenarios — factsheet proofs](#scenarios--factsheet-proofs)
   - [Air-gap scenario](#air-gap-scenario)
   - [Scaled scenario](#scaled-scenario)
-- [Connecting the Cowork desktop app](#connecting-the-cowork-desktop-app)
+- [Connecting the Bridge desktop app](#connecting-the-bridge-desktop-app)
 - [Troubleshooting](#troubleshooting)
 - [Verification status](#verification-status)
 
@@ -468,7 +468,7 @@ just scaled-down
 
 ---
 
-## Connecting the Cowork desktop app
+## Connecting the Bridge desktop app
 
 The `enterprise-demo` plugin, its skills, agents, and MCP servers ship with the template, but plugin assignment is **per-user** — `setup-local` populates the global registry and `01-seed-data.sh` forks `enterprise-demo` into the active session's user. Whoever is authenticated when you run the seed gets the plugin.
 
@@ -495,17 +495,17 @@ curl -X POST http://localhost:8080/api/public/admin/user/fork/plugin \
   -d '{"org_plugin_id":"enterprise-demo"}'
 ```
 
-Build and wire up the cowork helper (from systemprompt-core):
+Build and wire up the bridge helper (from systemprompt-core):
 
 ```bash
-cargo build --release --manifest-path bin/cowork/Cargo.toml
-BIN=bin/cowork/target/release/systemprompt-cowork
+cargo build --release --manifest-path bin/bridge/Cargo.toml
+BIN=bin/bridge/target/release/systemprompt-bridge
 "$BIN" login sp-live-... --gateway http://localhost:8080
 "$BIN" install --apply
 "$BIN" sync
 ```
 
-Cmd+Q Cowork and relaunch. It now reads `inferenceProvider=gateway` from the MDM keys and routes every request through `http://localhost:8080` with a JWT minted by the helper.
+Cmd+Q Bridge and relaunch. It now reads `inferenceProvider=gateway` from the MDM keys and routes every request through `http://localhost:8080` with a JWT minted by the helper.
 
 Verify:
 
@@ -516,10 +516,10 @@ Verify:
 
 If `sync` reports `0 plugins / 0 skills / 0 agents / 0 MCP`, the authenticated user has no forked plugin — re-run the fork POST above with the correct user's token.
 
-Revert Cowork to direct Anthropic:
+Revert Bridge to direct Anthropic:
 
 ```bash
-systemprompt-cowork uninstall
+systemprompt-bridge uninstall
 ```
 
 then Cmd+Q and relaunch.

@@ -5,7 +5,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use uuid::Uuid;
 
-use super::error::{CoworkRepoError, Result};
+use super::error::{BridgeRepoError, Result};
 
 pub const API_KEY_PREFIX: &str = "sp-live-";
 const SECRET_BYTES: usize = 32;
@@ -40,7 +40,7 @@ pub async fn issue_api_key(
 ) -> Result<IssuedApiKey> {
     let trimmed = name.trim();
     if trimmed.is_empty() {
-        return Err(CoworkRepoError::Validation(
+        return Err(BridgeRepoError::Validation(
             "PAT name must not be empty".into(),
         ));
     }
@@ -97,13 +97,13 @@ pub async fn enroll_device(
 ) -> Result<EnrolledDevice> {
     let trimmed = name.trim();
     if trimmed.is_empty() {
-        return Err(CoworkRepoError::Validation(
+        return Err(BridgeRepoError::Validation(
             "Device name must not be empty".into(),
         ));
     }
     let platform_norm = platform.trim().to_lowercase();
     if !matches!(platform_norm.as_str(), "macos" | "windows" | "linux") {
-        return Err(CoworkRepoError::Validation(
+        return Err(BridgeRepoError::Validation(
             "Platform must be one of macos, windows, linux".into(),
         ));
     }

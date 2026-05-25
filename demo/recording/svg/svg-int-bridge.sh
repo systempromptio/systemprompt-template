@@ -1,10 +1,10 @@
 #!/bin/bash
-# SVG RECORDING: Claude Desktop & Cowork
+# SVG RECORDING: Claude Desktop & Bridge
 # Skills persist across sessions — governed, synced, delivered via MCP.
 set -e
 source "$(dirname "$0")/_colors.sh"
 
-header "COWORK" "Skills synced to Claude Desktop — governed at every step"
+header "BRIDGE" "Skills synced to Claude Desktop — governed at every step"
 pause 1
 
 # ── Skill catalogue ──

@@ -3,7 +3,7 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use thiserror::Error;
 
-use crate::repositories::cowork_grp::CoworkRepoError;
+use crate::repositories::bridge_grp::BridgeRepoError;
 use crate::repositories::secret_crypto::SecretCryptoError;
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -27,8 +27,8 @@ pub enum AdminError {
     #[error("Database error: {0}")]
     Database(#[from] sqlx::Error),
 
-    #[error("Cowork repository error: {0}")]
-    CoworkRepo(CoworkRepoError),
+    #[error("Bridge repository error: {0}")]
+    BridgeRepo(BridgeRepoError),
 
     #[error("Marketplace error: {0}")]
     Marketplace(MarketplaceError),
@@ -56,13 +56,13 @@ impl AdminError {
                 StatusCode::NOT_FOUND
             }
             Self::BadRequest(_)
-            | Self::CoworkRepo(CoworkRepoError::Validation(_))
+            | Self::BridgeRepo(BridgeRepoError::Validation(_))
             | Self::Marketplace(MarketplaceError::BadRequest(_)) => StatusCode::BAD_REQUEST,
             Self::Unauthorized(_) => StatusCode::UNAUTHORIZED,
             Self::Forbidden(_) => StatusCode::FORBIDDEN,
             Self::Conflict(_) => StatusCode::CONFLICT,
             Self::Database(_)
-            | Self::CoworkRepo(_)
+            | Self::BridgeRepo(_)
             | Self::Marketplace(_)
             | Self::Crypto(_)
             | Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
@@ -76,21 +76,21 @@ impl AdminError {
             | Self::Unauthorized(msg)
             | Self::Forbidden(msg)
             | Self::Conflict(msg)
-            | Self::CoworkRepo(CoworkRepoError::Validation(msg))
+            | Self::BridgeRepo(BridgeRepoError::Validation(msg))
             | Self::Marketplace(
                 MarketplaceError::BadRequest(msg) | MarketplaceError::NotFound(msg),
             ) => msg.clone(),
             Self::Crypto(_) => "Internal configuration error".to_string(),
-            Self::Database(_) | Self::CoworkRepo(_) | Self::Marketplace(_) | Self::Internal(_) => {
+            Self::Database(_) | Self::BridgeRepo(_) | Self::Marketplace(_) | Self::Internal(_) => {
                 "Internal server error".to_string()
             }
         }
     }
 }
 
-impl From<CoworkRepoError> for AdminError {
-    fn from(value: CoworkRepoError) -> Self {
-        Self::CoworkRepo(value)
+impl From<BridgeRepoError> for AdminError {
+    fn from(value: BridgeRepoError) -> Self {
+        Self::BridgeRepo(value)
     }
 }
 

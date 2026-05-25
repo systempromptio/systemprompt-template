@@ -8,7 +8,7 @@
 //!
 //! The split between siblings is the layering boundary:
 //!
-//! - `admin` — SSR dashboard, governance webhooks, cowork plane.
+//! - `admin` — SSR dashboard, governance webhooks, bridge plane.
 //! - `content` — content ingestion, repositories, search, link analytics.
 //! - `jobs` — `publish_pipeline` and its sub-jobs (asset copy, prerender,
 //!   sitemap, llms.txt, secret migration, content analytics).

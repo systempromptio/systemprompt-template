@@ -18,15 +18,15 @@
                 <strong class="text-primary">{{user_email}}</strong>.
             </p>
             <p class="text-sm text-tertiary mb-4">
-                Only approve if you started <code>sp-cowork-auth</code> yourself on this machine. The helper will receive a one-time code (valid for 120&nbsp;seconds) and exchange it for a short-lived JWT.
+                Only approve if you started <code>sp-bridge-auth</code> yourself on this machine. The helper will receive a one-time code (valid for 120&nbsp;seconds) and exchange it for a short-lived JWT.
             </p>
 
             <div class="form-actions" style="display: flex; gap: 0.75rem;">
-                <form method="POST" action="/cowork-auth/device-link/approve" style="flex: 1;">
+                <form method="POST" action="/bridge-auth/device-link/approve" style="flex: 1;">
                     <input type="hidden" name="redirect" value="{{redirect}}">
                     <button type="submit" class="btn btn-primary w-full">Allow</button>
                 </form>
-                <form method="POST" action="/cowork-auth/device-link/deny" style="flex: 1;">
+                <form method="POST" action="/bridge-auth/device-link/deny" style="flex: 1;">
                     <input type="hidden" name="redirect" value="{{redirect}}">
                     <button type="submit" class="btn btn-secondary w-full">Deny</button>
                 </form>

@@ -11,7 +11,7 @@
 //!   validation). Handlers and jobs call services, not the repository
 //!   directly.
 //! - [`api`] — handler-shaped helpers that adapt service output to the
-//!   admin/cowork HTTP layer.
+//!   admin/bridge HTTP layer.
 
 pub mod api;
 pub mod repository;

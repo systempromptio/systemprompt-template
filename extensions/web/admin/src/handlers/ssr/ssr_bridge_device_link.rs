@@ -8,7 +8,7 @@ use serde_json::json;
 use sqlx::PgPool;
 use systemprompt_web_shared::html_escape;
 
-use crate::repositories::cowork_grp;
+use crate::repositories::bridge_grp;
 use crate::templates::AdminTemplateEngine;
 use crate::types::UserContext;
 
@@ -40,10 +40,10 @@ pub async fn device_link_page(
         obj.insert("redirect_host".to_string(), json!(host));
     }
 
-    match engine.render("cowork-device-link", &data) {
+    match engine.render("bridge-device-link", &data) {
         Ok(html) => Html(html).into_response(),
         Err(e) => {
-            tracing::error!(error = ?e, "Cowork device-link page render failed");
+            tracing::error!(error = ?e, "Bridge device-link page render failed");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Html(format!(
@@ -65,10 +65,10 @@ pub async fn device_link_approve(
         return bad_redirect_response(&form.redirect);
     }
 
-    let issued = match cowork_grp::issue_exchange_code(&pool, &user_ctx.user_id).await {
+    let issued = match bridge_grp::issue_exchange_code(&pool, &user_ctx.user_id).await {
         Ok(c) => c,
         Err(e) => {
-            tracing::error!(error = %e, "Failed to issue cowork exchange code");
+            tracing::error!(error = %e, "Failed to issue bridge exchange code");
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Html("<h1>Internal Error</h1><p>Failed to issue exchange code.</p>"),
@@ -115,7 +115,7 @@ fn validate_loopback_redirect(redirect: &str) -> Option<String> {
 fn bad_redirect_response(redirect: &str) -> Response {
     tracing::warn!(
         redirect,
-        "Rejected cowork device-link redirect (non-loopback)"
+        "Rejected bridge device-link redirect (non-loopback)"
     );
     (
         StatusCode::BAD_REQUEST,

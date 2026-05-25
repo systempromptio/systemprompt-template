@@ -14,7 +14,7 @@ use systemprompt::identifiers::TenantId;
 use systemprompt::models::Config;
 use uuid::Uuid;
 
-use crate::repositories::cowork_grp::find_cowork_user;
+use crate::repositories::bridge_grp::find_bridge_user;
 use crate::repositories::profile_grp::usage as usage_repo;
 use crate::types::UserContext;
 
@@ -173,7 +173,7 @@ pub async fn build_bridge_profile_data(
     let user_id_conv = user_id.clone();
     let user_id_user = user_id.clone();
 
-    let (d1, d7, d30, top_models, conversations, cowork_user) = tokio::join!(
+    let (d1, d7, d30, top_models, conversations, bridge_user) = tokio::join!(
         async move {
             usage_repo::fetch_usage_window(&pool_for_d1, &user_id_d1, 1)
                 .await
@@ -200,17 +200,17 @@ pub async fn build_bridge_profile_data(
                 .unwrap_or_default()
         },
         async move {
-            find_cowork_user(&pool_for_user, &user_id_user)
+            find_bridge_user(&pool_for_user, &user_id_user)
                 .await
                 .inspect_err(|e| {
-                    tracing::warn!(error = %e, user_id = %user_id_user, "bridge_profile: find_cowork_user failed");
+                    tracing::warn!(error = %e, user_id = %user_id_user, "bridge_profile: find_bridge_user failed");
                 })
                 .ok()
                 .flatten()
         }
     );
 
-    let display_name = cowork_user.as_ref().and_then(|u| u.display_name.clone());
+    let display_name = bridge_user.as_ref().and_then(|u| u.display_name.clone());
 
     let (jwt_issuer, gateway_url) = read_config_strings();
     let bridge_profile = build_bridge_profile_block();

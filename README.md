@@ -8,7 +8,7 @@
 
 # Own how your organization uses AI.
 
-One self-hosted binary governs inference, auditing, evals, and every tool call across your AI fleet. Native integration with Claude Cowork. Works with any agent, any model, any provider.
+One self-hosted binary governs inference, auditing, evals, and every tool call across your AI fleet. Native integration with Claude Bridge. Works with any agent, any model, any provider.
 
 This repository is the evaluation template: clone it, compile it, point Claude for Work, Claude Code, or any Anthropic-SDK client at `http://localhost:8080`, and every request lands on a host you operate — on your network, in your air-gap, under your audit table. Single Rust binary, one PostgreSQL, four commands from `git clone` to serving inference. Built for SOC 2, ISO 27001, HIPAA, and the OWASP Agentic Top 10.
 
@@ -297,9 +297,9 @@ Each recording is a live capture of the named script running against the binary.
 
 <sub>Anthropic, OpenAI, Gemini swap at the profile level · cost attribution in integer microdollars · <code>./demo/agents/01-list-agents.sh</code> · <a href="https://systemprompt.io/features/any-ai-agent">Feature</a></sub>
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-cowork.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-cowork.svg"><img src="demo/recording/svg/output/dark/int-cowork.svg" alt="Claude Desktop & Cowork" width="820"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-bridge.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-bridge.svg"><img src="demo/recording/svg/output/dark/int-bridge.svg" alt="Claude Desktop & Bridge" width="820"></picture>
 
-<sub>Skills persist across sessions via OAuth2 · <code>./demo/skills/01-skill-lifecycle.sh</code> · <a href="https://systemprompt.io/features/cowork">Feature</a></sub>
+<sub>Skills persist across sessions via OAuth2 · <code>./demo/skills/01-skill-lifecycle.sh</code> · <a href="https://systemprompt.io/features/bridge">Feature</a></sub>
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-web-publisher.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-web-publisher.svg"><img src="demo/recording/svg/output/dark/int-web-publisher.svg" alt="Web server & publisher" width="820"></picture>
 
@@ -324,7 +324,7 @@ Claude for Work ships with extension points for inference, identity, and audit. 
 
 ```
   Managed Device                 Enterprise Gateway              Upstream Inference
-  (Cowork via MDM)               (this binary, your VPC)         (pluggable)
+  (Bridge via MDM)               (this binary, your VPC)         (pluggable)
   ───────────────── ──────────▶  ─────────────────────  ──────▶  ─────────────────
   Credential helper              /v1/messages                    Anthropic direct
   Managed MCP list               Governance pipeline             Bedrock / Vertex
@@ -400,7 +400,7 @@ gateway:
 
 Routes evaluate in order; first `model_pattern` match wins. `upstream_model` aliases a client-requested model to a different upstream name without the client knowing.
 
-**Bridge credential helper endpoints.** `systemprompt-bridge` is a standalone ~2.4 MB Rust binary (no `tokio`, no `sqlx`, no `axum`) that trades a lower-privilege credential for a short-lived JWT. Progressive capability ladder — mTLS → dashboard session → PAT — mounted under `/v1/gateway/auth/cowork/`:
+**Bridge credential helper endpoints.** `systemprompt-bridge` is a standalone ~2.4 MB Rust binary (no `tokio`, no `sqlx`, no `axum`) that trades a lower-privilege credential for a short-lived JWT. Progressive capability ladder — mTLS → dashboard session → PAT — mounted under `/v1/gateway/auth/bridge/`:
 
 - `POST /pat` — `Authorization: Bearer <pat>` → `{token, ttl, headers}` with a fresh JWT and the canonical identity header map (`x-user-id`, `x-session-id`, `x-trace-id`, `x-client-id`, `x-tenant-id`, `x-policy-version`, `x-call-source`).
 - `POST /session` — `501` (dashboard-cookie exchange not yet wired).

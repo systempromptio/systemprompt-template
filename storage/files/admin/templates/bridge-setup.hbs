@@ -1,4 +1,4 @@
-{{#> layout title="Connect your workstation" page="cowork-setup"}}
+{{#> layout title="Connect your workstation" page="bridge-setup"}}
     {{#*inline "head_extra"}}
     <style>
       .setup-step { display: grid; grid-template-columns: 3rem 1fr; gap: 1rem; align-items: start; padding: 1.25rem 0; border-bottom: 1px solid var(--border, #e5e7eb); }
@@ -124,7 +124,7 @@ enabled = true
             </p>
 
             <h3>Session &amp; mTLS modes</h3>
-            <p>See <code>systemprompt-core/bin/bridge/README.md</code> for browser-consent (session) and OS-keystore-certificate (mTLS) flows, including the <code>systemprompt admin cowork enroll-cert</code> step required for mTLS.</p>
+            <p>See <code>systemprompt-core/bin/bridge/README.md</code> for browser-consent (session) and OS-keystore-certificate (mTLS) flows, including the <code>systemprompt admin bridge enroll-cert</code> step required for mTLS.</p>
         </div>
     </details>
 
@@ -148,7 +148,7 @@ enabled = true
         cta.textContent = ARTIFACTS[platform].label;
 
         const pill = document.getElementById("gateway-pill");
-        fetch(GATEWAY + "/v1/auth/cowork/capabilities")
+        fetch(GATEWAY + "/v1/auth/bridge/capabilities")
             .then(r => {
                 if (r.ok) {
                     pill.className = "pill ok";
