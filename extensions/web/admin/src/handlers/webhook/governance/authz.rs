@@ -20,7 +20,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::Actor;
 use systemprompt_security::authz::{
     resolve, AccessControlRepository, AccessRule, AuthzDecision, AuthzRequest, Decision,
-    DecisionTag,
+    DecisionTag, ResolveInput,
 };
 
 use crate::repositories::governance_grp::{insert_governance_decision, GovernanceDecisionRecord};
@@ -57,13 +57,11 @@ async fn audit_decision(
     default_included: bool,
     decision: &Decision,
 ) {
-    let (decision_tag, reason_str, justification_opt) = match decision {
-        Decision::Allow => (DecisionTag::Allow, String::new(), None),
-        Decision::Deny {
-            reason,
-            justification,
-        } => (DecisionTag::Deny, reason.clone(), justification.clone()),
-    };
+    let (decision_tag, reason_str, justification_opt): (DecisionTag, String, Option<String>) =
+        match decision {
+            Decision::Allow { .. } => (DecisionTag::Allow, String::new(), None),
+            Decision::Deny { reason } => (DecisionTag::Deny, reason.to_string(), None),
+        };
     let id = uuid::Uuid::new_v4().to_string();
     let entity_type_str = req.entity.kind().as_str();
     let entity_id_str = req.entity.id_str();
@@ -109,19 +107,20 @@ pub async fn govern_authz(
         Err(resp) => return resp,
     };
 
-    let decision = resolve(
-        &rules,
-        &req.user_id,
-        &req.roles,
-        &req.department,
-        default_included,
-    );
+    let decision = resolve(ResolveInput {
+        entity: &req.entity,
+        rules: &rules,
+        user_id: &req.user_id,
+        user_roles: &req.roles,
+        department: &req.department,
+        default_included: Some(default_included),
+    });
 
     audit_decision(&pool, &req, &rules, default_included, &decision).await;
 
     let resp = match decision {
-        Decision::Allow => AuthzDecision::Allow,
-        Decision::Deny { reason, .. } => AuthzDecision::Deny {
+        Decision::Allow { .. } => AuthzDecision::Allow,
+        Decision::Deny { reason } => AuthzDecision::Deny {
             reason,
             policy: POLICY_NAME.to_string(),
         },

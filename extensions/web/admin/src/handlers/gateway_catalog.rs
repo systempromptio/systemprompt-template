@@ -20,7 +20,8 @@ use axum::{
 use serde::Serialize;
 use sqlx::PgPool;
 
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{RouteId, UserId};
+use systemprompt_security::authz::{EntityRef, ResolveInput};
 
 use crate::handlers::shared;
 use crate::repositories::{
@@ -109,15 +110,18 @@ async fn collect_allowed_routes(
                 tracing::error!(error = %e, route_id = %route.id, "Failed to load default flag");
                 false
             });
+        let entity = EntityRef::GatewayRoute(RouteId::new(route.id.clone()));
+        let uid = UserId::new(user_id);
         if matches!(
-            gateway_acl::resolve(
-                &rules,
-                &UserId::new(user_id),
+            gateway_acl::resolve(ResolveInput {
+                entity: &entity,
+                rules: &rules,
+                user_id: &uid,
                 user_roles,
                 department,
-                default_included
-            ),
-            Decision::Allow
+                default_included: Some(default_included),
+            }),
+            Decision::Allow { .. }
         ) {
             allowed.push(CatalogEntry {
                 id: route.id.clone(),
@@ -215,14 +219,18 @@ pub async fn detect_after_the_fact(
         };
         let rules = gateway_acl::list_rules_for_route(pool, &route.id).await?;
         let default_included = gateway_acl::get_default_included(pool, &route.id).await?;
-        if let Decision::Deny { reason, .. } = gateway_acl::resolve(
-            &rules,
-            &UserId::new(&row.user_id),
-            &user_roles,
-            &department,
-            default_included,
-        ) {
+        let entity = EntityRef::GatewayRoute(RouteId::new(route.id.clone()));
+        let uid = UserId::new(&row.user_id);
+        if let Decision::Deny { reason } = gateway_acl::resolve(ResolveInput {
+            entity: &entity,
+            rules: &rules,
+            user_id: &uid,
+            user_roles: &user_roles,
+            department: &department,
+            default_included: Some(default_included),
+        }) {
             let decision_id = uuid::Uuid::new_v4().to_string();
+            let reason_str = reason.to_string();
             let evaluated = serde_json::json!({
                 "ai_request_id": row.id,
                 "model": row.model,
@@ -240,7 +248,7 @@ pub async fn detect_after_the_fact(
                 row.model,
                 "inference",
                 "deny_after_the_fact",
-                reason,
+                reason_str,
                 evaluated,
             )
             .execute(pool)
