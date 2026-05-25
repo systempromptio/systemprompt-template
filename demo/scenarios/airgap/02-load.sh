@@ -5,11 +5,11 @@
 # the airgap performance thresholds, all inside the sealed network.
 #
 # Steps:
-#   1. Verify the gateway policy — the `ai_gateway_policies` row that
-#      allow-lists `claude-haiku-4-5` is now ingested from
-#      services/ai/gateway-policies.yaml by the publish_pipeline job at
-#      server boot (see scenario architecture.md). This step only confirms
-#      it landed; if it did not, ingestion failed and the run aborts.
+#   1. Verify the gateway policy — the `ai_gateway_policies` row carrying
+#      quotas/safety is ingested from services/gateway/policies.yaml by the
+#      publish_pipeline job at server boot. Model exposure now lives in the
+#      profile catalog, not the policy spec. This step only confirms the
+#      policy landed; if it did not, ingestion failed and the run aborts.
 #   2. Ensure the demo admin user exists (create + promote, mirroring
 #      00-preflight.sh) and export SYSTEMPROMPT_ADMIN_EMAIL so the loadtest
 #      self-acquires a token on the cloud-less air-gap profile.
@@ -72,21 +72,21 @@ FAILURES=0
 # ──────────────────────────────────────────────
 #  STEP 1: Verify the gateway policy
 # ──────────────────────────────────────────────
-subheader "STEP 1: Verify gateway policy" "claude-haiku-4-5 allow-listed (config-driven)"
+subheader "STEP 1: Verify gateway policy" "ingested from services/gateway/policies.yaml"
 
-# The gateway policy is no longer seeded by this script. It ships as
-# version-controlled config — services/ai/gateway-policies.yaml — and the
-# publish_pipeline job ingests it into ai_gateway_policies at server boot
-# (run_gateway_policy_load), mirroring the access-control YAML loader. Here we
-# only confirm the policy landed; if it did not, ingestion failed.
+# Policies (quotas/safety) ship as version-controlled config in
+# services/gateway/policies.yaml; the publish_pipeline job ingests them into
+# ai_gateway_policies at server boot. Model exposure is owned by the profile
+# catalog, not this row. We confirm the policy ingestion landed; the catalog
+# gate is asserted by the deny-path in 03-governance.sh.
 step "Confirming the gateway policy was ingested from YAML at server boot"
-cmd "systemprompt infra db query \"SELECT spec FROM ai_gateway_policies WHERE enabled = true\""
-POLICY_CHECK=$(db_query "SELECT spec FROM ai_gateway_policies WHERE enabled = true;" 2>/dev/null || true)
-if printf '%s' "$POLICY_CHECK" | grep -q 'claude-haiku-4-5'; then
-  pass "Confirmed: claude-haiku-4-5 is allow-listed in ai_gateway_policies"
+cmd "systemprompt infra db query \"SELECT COUNT(*) FROM ai_gateway_policies WHERE enabled = true\""
+POLICY_COUNT=$(db_query "SELECT COUNT(*) FROM ai_gateway_policies WHERE enabled = true;" 2>/dev/null | grep -oE '[0-9]+' | head -1 || true)
+if [ "${POLICY_COUNT:-0}" -ge 1 ]; then
+  pass "Confirmed: $POLICY_COUNT enabled gateway-policy row(s) ingested"
 else
-  fail "claude-haiku-4-5 is NOT allow-listed — gateway-policy YAML ingestion did not run"
-  echo "  Check services/ai/gateway-policies.yaml and the publish_pipeline job logs:"
+  fail "No enabled gateway-policy rows — YAML ingestion did not run"
+  echo "  Check services/gateway/policies.yaml and the publish_pipeline job logs:"
   echo "    systemprompt infra logs view --level error --since 5m"
   exit 1
 fi
