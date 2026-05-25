@@ -18,10 +18,12 @@
 #        - POST /v1/messages with a DENIED model
 #          -> expect 403 with "not permitted by gateway policy".
 #
-# Run AFTER `just airgap-up`. The gateway policy is ingested from
-# services/ai/gateway-policies.yaml by the publish_pipeline job at server
-# boot — no script-side seeding needed. Cost: Free (mock inference, no
-# external calls).
+# Run AFTER `just airgap-up`. Model exposure is owned by the profile
+# catalog (.systemprompt/profiles/airgap/catalog.yaml); the dispatcher's
+# is_model_exposed gate rejects an un-cataloged model with 403 before any
+# upstream call. Policies (quotas/safety) ship via
+# services/gateway/policies.yaml. Cost: Free (mock inference, no external
+# calls).
 
 set -e
 

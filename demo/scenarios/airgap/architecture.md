@@ -6,7 +6,7 @@ operator's host to the mock inference endpoint and back — fully sealed.
 
 > **Source files referenced.** `deploy/scenarios/airgap/docker-compose.airgap.yml`,
 > `.systemprompt/profiles/airgap/profile.yaml`,
-> `services/ai/gateway-policies.yaml`, `services/ai/config.yaml`,
+> `services/gateway/policies.yaml`, `services/ai/config.yaml`,
 > `extensions/web/jobs/src/publish.rs`, and the four scripts in this directory.
 > The mock inference server lives in the sibling
 > `../systemprompt-core/crates/tests/mock-inference/`.
@@ -117,7 +117,7 @@ docker compose up
         │
         ├─ scheduler dispatches publish_pipeline (run_on_startup=true)
         │    → run_acl_yaml_load        (services/access-control/*.yaml)
-        │    → run_gateway_policy_load  (services/ai/gateway-policies.yaml)  ← WS1
+        │    → run_gateway_policy_load  (services/gateway/policies.yaml)  ← WS1
         │         systemprompt_ai::load_gateway_policies_from_yaml(db, paths)
         │         GatewayPolicyIngestionService::ingest_config(
         │           override_existing: true, delete_orphans: true)
@@ -130,7 +130,7 @@ docker compose up
 The publish_pipeline step that matters for this scenario is
 **`run_gateway_policy_load`** in `extensions/web/jobs/src/publish.rs`. It calls
 the core `load_from_yaml` entry in `crates/domain/ai/src/services/gateway/`,
-which reads `services/ai/gateway-policies.yaml`, deserialises it into
+which reads `services/gateway/policies.yaml`, deserialises it into
 `GatewayPolicyConfig` (`#[serde(deny_unknown_fields)]`), validates names, and
 reconciles the rows with the DB. `delete_orphans: true` means any policy
 removed from the YAML is also removed from the table — the DB stays exactly
@@ -286,7 +286,7 @@ The committed configs that close the system:
 | `.systemprompt/profiles/airgap/profile.yaml` | `gateway.routes[*].endpoint = http://mock-inference:8080`; route IDs aligned to `services/gateway/access.yaml`'s `default_included` entries; `runtime.log_level: normal`; `cloud.tenant_id: null`; all three `api_*_url` pinned to in-container `:8080`. | Gateway never tries to dial Anthropic/OpenAI/Gemini; RBAC matches the routes so no `authz denied: not assigned`. |
 | `.systemprompt/profiles/airgap/secrets.json.example` | `*_ENDPOINT` keys → mock URL; `manifest_signing_secret_seed`; no upstream provider api_key needed. | AI service providers (`config.yaml`) resolve their endpoints to the mock; missing api_key + present endpoint keeps the provider enabled (WS2). |
 | `.systemprompt/profiles/airgap/catalog.yaml` | Declares the exposed models — referenced by `gateway.catalog_path` in profile.yaml. | Single source of truth for what `/v1/messages` accepts; dispatch and `/profile` both derive from it. |
-| `services/ai/gateway-policies.yaml` | Per-call ceilings, quotas, safety. Model exposure is NOT here. | Policy concerns kept separate from the model registry. |
+| `services/gateway/policies.yaml` | Per-call ceilings, quotas, safety. Model exposure is NOT here. | Policy concerns kept separate from the model registry. |
 | `services/ai/config.yaml` | Provider `endpoint: ${ANTHROPIC_ENDPOINT}` (and openai/gemini equivalents). | Endpoint interpolation lets the air-gap `secrets.json` point providers at the mock with no code changes. |
 
 Validate any profile before boot:

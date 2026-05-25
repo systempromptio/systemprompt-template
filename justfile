@@ -820,9 +820,9 @@ airgap TEARDOWN="false":
     exit "$OVERALL"
 
 # Run the air-gap demo scripts in sequence, stopping on first failure.
-# The gateway policy is no longer seeded by a script — it ships as
-# services/ai/gateway-policies.yaml and is ingested by the publish_pipeline
-# job at server boot.
+# Policies (quotas/safety) ship as services/gateway/policies.yaml and are
+# ingested by the publish_pipeline job at server boot. Model exposure lives
+# in the profile catalog (.systemprompt/profiles/airgap/catalog.yaml).
 airgap-test:
     #!/usr/bin/env bash
     set -euo pipefail

@@ -226,7 +226,7 @@ impl PublishPipelineJob {
         }
     }
 
-    /// Project `services/ai/gateway-policies.yaml` into `ai_gateway_policies`.
+    /// Project `services/gateway/policies.yaml` into `ai_gateway_policies`.
     ///
     /// Mirrors [`Self::run_acl_yaml_load`]: the gateway policy (the inference
     /// model allow-list — a security control) ships as version-controlled
