@@ -15,7 +15,7 @@ Aligned with `systemprompt-core` 0.11.2: the gateway model allow-list moves from
 
 ### Changed
 
-- **`services/ai/gateway-policies.yaml` renamed to `services/gateway/policies.yaml`.** Tracks core's loader path move. Core keeps a one-release fallback on the old path with a deprecation warn; remove it from your deployment before 0.12.
+- **`services/ai/gateway-policies.yaml` renamed to `services/gateway/policies.yaml`.** Tracks core's loader path move. The one-release fallback that briefly lived in core was removed before 0.11.2 ships — deployments still on the legacy path MUST move the file before upgrading (see core's 0.11.2 breaking notes).
 - **`demo/scenarios/airgap/{02-load.sh,03-governance.sh,architecture.md}`** updated to reflect the new gate ordering, the new policy path, and that policies carry quotas/safety only.
 - **`services/content/documentation/gateway-api.md`** points operators at the catalog as the model-exposure surface.
 - **`justfile airgap-test` comment** updated to point at the new policy path.

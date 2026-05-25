@@ -31,18 +31,20 @@ async fn load_rules(
     repo: &AccessControlRepository,
     req: &AuthzRequest,
 ) -> Result<(Vec<AccessRule>, bool), Response> {
+    let kind = req.entity.kind();
+    let id = req.entity.id_str();
     let rules = repo
-        .list_rules_for_entity(req.entity_type, &req.entity_id)
+        .list_rules_for_entity(kind, id)
         .await
         .map_err(|e| {
-            tracing::error!(error = %e, entity_type = %req.entity_type, entity_id = %req.entity_id, "list_rules_for_entity failed");
+            tracing::error!(error = %e, entity_type = %kind, entity_id = %id, "list_rules_for_entity failed");
             (StatusCode::INTERNAL_SERVER_ERROR, "list_rules failed").into_response()
         })?;
     let default_included = repo
-        .get_default_included(req.entity_type, &req.entity_id)
+        .get_default_included(kind, id)
         .await
         .map_err(|e| {
-            tracing::error!(error = %e, entity_type = %req.entity_type, entity_id = %req.entity_id, "get_default_included failed");
+            tracing::error!(error = %e, entity_type = %kind, entity_id = %id, "get_default_included failed");
             (StatusCode::INTERNAL_SERVER_ERROR, "get_default_included failed").into_response()
         })?;
     Ok((rules, default_included))
@@ -63,10 +65,11 @@ async fn audit_decision(
         } => (DecisionTag::Deny, reason.clone(), justification.clone()),
     };
     let id = uuid::Uuid::new_v4().to_string();
-    let entity_type_str = req.entity_type.as_str();
+    let entity_type_str = req.entity.kind().as_str();
+    let entity_id_str = req.entity.id_str();
     let evaluated = serde_json::json!({
         "entity_type": entity_type_str,
-        "entity_id": req.entity_id,
+        "entity_id": entity_id_str,
         "trace_id": req.trace_id.as_str(),
         "roles": req.roles,
         "department": req.department,
@@ -80,7 +83,7 @@ async fn audit_decision(
         id: &id,
         actor: &actor,
         session_id: req.trace_id.as_str(),
-        tool_name: &req.entity_id,
+        tool_name: entity_id_str,
         agent_id: None,
         agent_scope: entity_type_str,
         decision: decision_tag,
