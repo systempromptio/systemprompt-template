@@ -306,7 +306,7 @@ _project_name TENANT:
     #!/usr/bin/env bash
     set -euo pipefail
     HASH=$(printf '%s' "{{justfile_directory()}}" | { sha256sum 2>/dev/null || shasum -a 256; } | cut -c1-8)
-    LEAF=$(basename "{{justfile_directory()}}" | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+    LEAF=$(basename "{{justfile_directory()}}" | tr '_' '-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
     printf 'sp-%s-%s-%s\n' "$LEAF" "$HASH" "{{TENANT}}"
 
 # Start PostgreSQL for a specific tenant (default: local)
@@ -512,16 +512,10 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
       routes:
         - model_pattern: "claude-*"
           provider: anthropic
-          endpoint: https://api.anthropic.com/v1
-          api_key_secret: anthropic
         - model_pattern: "gpt-*"
           provider: openai
-          endpoint: https://api.openai.com/v1
-          api_key_secret: openai
         - model_pattern: "gemini-*"
           provider: gemini
-          endpoint: https://generativelanguage.googleapis.com/v1beta
-          api_key_secret: gemini
     governance:
       authz:
         hook:

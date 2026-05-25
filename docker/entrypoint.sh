@@ -101,16 +101,10 @@ gateway:
   routes:
     - model_pattern: "claude-*"
       provider: anthropic
-      endpoint: https://api.anthropic.com/v1
-      api_key_secret: anthropic
     - model_pattern: "gpt-*"
       provider: openai
-      endpoint: https://api.openai.com/v1
-      api_key_secret: openai
     - model_pattern: "gemini-*"
       provider: gemini
-      endpoint: https://generativelanguage.googleapis.com/v1beta
-      api_key_secret: gemini
 YAML
 fi
 
