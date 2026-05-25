@@ -15,28 +15,57 @@ use super::super::secrets::detect_secrets;
 
 const ID: &str = "secret_scan";
 
+/// Operator-defined extra pattern loaded from
+/// `services/governance/config.yaml`. `id` is derived from `name` at load
+/// time via [`slugify`] so the runtime referent stays stable; collisions are
+/// logged and the duplicate is dropped.
+#[derive(Debug, Clone)]
+struct ExtraPattern {
+    id: String,
+    name: String,
+    prefix: String,
+}
+
 #[derive(Debug)]
 pub struct SecretScan {
-    extra_patterns: Vec<(String, String)>,
+    extra_patterns: Vec<ExtraPattern>,
 }
 
 impl SecretScan {
     fn from_yaml(v: &YamlValue) -> Self {
-        let extra = v
+        let extras = v
             .get("extra_patterns")
             .and_then(|s| s.as_sequence())
             .map(|seq| {
-                seq.iter()
-                    .filter_map(|p| {
-                        let name = p.get("name").and_then(|n| n.as_str())?;
-                        let prefix = p.get("prefix").and_then(|n| n.as_str())?;
-                        Some((name.to_string(), prefix.to_string()))
-                    })
-                    .collect::<Vec<_>>()
+                let mut out: Vec<ExtraPattern> = Vec::new();
+                for entry in seq {
+                    let Some(name) = entry.get("name").and_then(|n| n.as_str()) else {
+                        continue;
+                    };
+                    let Some(prefix) = entry.get("prefix").and_then(|n| n.as_str()) else {
+                        continue;
+                    };
+                    let id = slugify(name);
+                    if out.iter().any(|p| p.id == id) {
+                        tracing::error!(
+                            extra_pattern_name = %name,
+                            extra_pattern_id = %id,
+                            "secret_scan: duplicate extra_pattern id derived from name; \
+                             keeping first occurrence and skipping the duplicate"
+                        );
+                        continue;
+                    }
+                    out.push(ExtraPattern {
+                        id,
+                        name: name.to_string(),
+                        prefix: prefix.to_string(),
+                    });
+                }
+                out
             })
             .unwrap_or_default();
         Self {
-            extra_patterns: extra,
+            extra_patterns: extras,
         }
     }
 }
@@ -54,10 +83,11 @@ impl GovernancePolicy for SecretScan {
     }
     fn evaluate(&self, ctx: &PolicyContext<'_>) -> Decision {
         let tool_input_value = ctx.tool_input.as_value();
-        if let Some((name, redacted)) = detect_secrets(Some(tool_input_value)) {
+        if let Some((pattern, redacted)) = detect_secrets(Some(tool_input_value)) {
             return Decision::Deny {
                 reason: DenyReason::SecretLeak {
-                    pattern_id: SecretPatternId::new(name),
+                    pattern_id: SecretPatternId::new(pattern.id),
+                    pattern_name: Cow::Borrowed(pattern.name),
                     location: SecretLocation::new("tool_input", redacted),
                 },
             };
@@ -65,11 +95,12 @@ impl GovernancePolicy for SecretScan {
         let mut strings = Vec::new();
         collect_strings(tool_input_value, &mut strings);
         for s in &strings {
-            for (name, prefix) in &self.extra_patterns {
-                if s.contains(prefix.as_str()) {
+            for extra in &self.extra_patterns {
+                if s.contains(extra.prefix.as_str()) {
                     return Decision::Deny {
                         reason: DenyReason::SecretLeak {
-                            pattern_id: SecretPatternId::new(name.clone()),
+                            pattern_id: SecretPatternId::new(extra.id.clone()),
+                            pattern_name: Cow::Owned(extra.name.clone()),
                             location: SecretLocation::new("tool_input", "custom_pattern"),
                         },
                     };
@@ -100,6 +131,35 @@ fn collect_strings(value: &serde_json::Value, out: &mut Vec<String>) {
         }
         _ => {}
     }
+}
+
+fn slugify(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    let mut last_was_dash = false;
+    for ch in input.chars() {
+        let mapped = if ch.is_ascii_alphanumeric() {
+            Some(ch.to_ascii_lowercase())
+        } else if ch.is_whitespace() || matches!(ch, '_' | '-' | '/' | '(' | ')' | '.') {
+            Some('-')
+        } else {
+            None
+        };
+        if let Some(c) = mapped {
+            if c == '-' {
+                if !last_was_dash && !out.is_empty() {
+                    out.push('-');
+                    last_was_dash = true;
+                }
+            } else {
+                out.push(c);
+                last_was_dash = false;
+            }
+        }
+    }
+    while out.ends_with('-') {
+        out.pop();
+    }
+    out
 }
 
 inventory::submit! {

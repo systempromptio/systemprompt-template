@@ -21,9 +21,6 @@ pub const IMPORT_TARGET_USER: &str = "user";
 
 pub const ROLE_ADMIN: &str = "admin";
 
-pub const SCOPE_ADMIN: &str = "admin";
-pub const SCOPE_UNKNOWN: &str = "unknown";
-
 pub const ACTION_GRANTED: &str = "granted";
 
 pub const PLUGIN_ID_SYSTEMPROMPT: &str = "systemprompt";

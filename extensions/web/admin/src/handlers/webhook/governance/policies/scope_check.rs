@@ -1,8 +1,8 @@
-//! `scope_check`: gate admin-only tools by agent scope.
+//! `scope_check`: gate admin-only tools by [`AccessScope`].
 //!
-//! Reads the OAuth scope label ("admin" / "user" / "unknown") from
-//! `ctx.extras.scope_label` — the template plumbs this in
-//! [`super::super::handler`] before invoking the chain. Configurable via:
+//! Reads the typed `ctx.access_scope` populated by the template handler from
+//! the agent's YAML `oauth.scopes` (see
+//! [`super::super::scope::resolve_agent_scope`]). Configurable via:
 //!
 //! ```yaml
 //! - id: scope_check
@@ -15,10 +15,9 @@ use std::borrow::Cow;
 use serde_yaml::Value as YamlValue;
 use systemprompt::identifiers::{McpToolName, PolicyId};
 use systemprompt_security::authz::{Decision, DenyReason, MatchedBy};
-use systemprompt_security::policy::{GovernancePolicy, PolicyContext};
+use systemprompt_security::policy::{types::AccessScope, GovernancePolicy, PolicyContext};
 
 use super::super::policy::PolicyRegistration;
-use crate::types::{SCOPE_ADMIN, SCOPE_UNKNOWN};
 
 const ID: &str = "scope_check";
 const DEFAULT_ADMIN_ONLY_PREFIXES: &[&str] = &["mcp__systemprompt__"];
@@ -51,16 +50,6 @@ impl ScopeCheck {
     }
 }
 
-/// The template handler injects the OAuth scope label
-/// (`SCOPE_LABEL_KEY`) into the wrapped `tool_input` value before invoking
-/// the chain. Core's [`PolicyContext`] doesn't carry deployment-specific
-/// principal metadata, so the JSON-boundary wrapper is the agreed plumbing.
-fn scope_label<'a>(ctx: &'a PolicyContext<'_>) -> &'a str {
-    ctx.tool_input
-        .as_str(super::super::SCOPE_LABEL_KEY)
-        .unwrap_or(SCOPE_UNKNOWN)
-}
-
 impl GovernancePolicy for ScopeCheck {
     fn id(&self) -> PolicyId {
         PolicyId::new(ID)
@@ -73,8 +62,7 @@ impl GovernancePolicy for ScopeCheck {
          admin-only prefix (default: mcp__systemprompt__)."
     }
     fn evaluate(&self, ctx: &PolicyContext<'_>) -> Decision {
-        let scope = scope_label(ctx);
-        if scope == SCOPE_ADMIN {
+        if ctx.access_scope == AccessScope::Admin {
             return Decision::Allow {
                 matched_by: MatchedBy::PolicyAllow {
                     policy_id: PolicyId::new(ID),
@@ -93,15 +81,16 @@ impl GovernancePolicy for ScopeCheck {
             return Decision::Deny {
                 reason: DenyReason::ScopeViolation {
                     tool: McpToolName::new(tool_str),
-                    missing_scope: SCOPE_ADMIN.to_string(),
+                    required: AccessScope::Admin,
                 },
             };
         }
 
-        let detail = if scope == SCOPE_UNKNOWN {
-            Cow::Borrowed("Agent scope could not be resolved; allowed for non-admin tool")
-        } else {
-            Cow::Owned(format!("{scope} scope is allowed for tool: {tool_str}"))
+        let detail = match ctx.access_scope {
+            AccessScope::Unknown => {
+                Cow::Borrowed("Agent scope could not be resolved; allowed for non-admin tool")
+            }
+            scope => Cow::Owned(format!("{scope} scope is allowed for tool: {tool_str}")),
         };
         Decision::Allow {
             matched_by: MatchedBy::PolicyAllow {

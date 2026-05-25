@@ -1,3 +1,23 @@
+//! Background jobs for the web extension.
+//!
+//! Every job in this crate implements the core `Job` trait and is registered
+//! with the scheduler at extension boot. They split into three families:
+//!
+//! - **Publish pipeline** ([`PublishPipelineJob`]) — runs at server startup
+//!   and orchestrates ACL/profile/config bootstrap, asset copy, content
+//!   ingestion, prerender, sitemap/robots/llms.txt generation, and secret
+//!   migration. Sub-jobs are individually addressable via the CLI for
+//!   targeted re-runs.
+//! - **Build helpers** ([`BundleAdminCssJob`], [`BundleAdminJsJob`],
+//!   [`CopyExtensionAssetsJob`], [`ContentPrerenderJob`]) — emit the static
+//!   surface under `web/dist/` consumed by the SSR layer.
+//! - **Analytics / housekeeping** ([`ContentAnalyticsAggregationJob`],
+//!   [`SecretMigrationJob`], the daily summary jobs in [`daily_summary`])
+//!   — periodic rollups and one-shot migrations.
+//!
+//! Errors normalise on [`JobError`]; the scheduler logs and surfaces them
+//! through `infra logs trace`.
+
 mod error;
 
 mod bundle_admin_css;

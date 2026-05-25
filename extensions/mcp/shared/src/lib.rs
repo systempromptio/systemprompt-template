@@ -1,3 +1,11 @@
+//! Shared persistence helpers for MCP extension crates.
+//!
+//! Both functions exposed here ([`record_mcp_access`] and
+//! [`record_mcp_access_rejected`]) are best-effort: they log a `tracing::warn!`
+//! and return on any DB failure, so an MCP request that has already cleared
+//! authz is never blocked by an audit-row insert. Callers do not need to
+//! propagate errors.
+
 use systemprompt::database::DbPool;
 
 mod repositories;

@@ -2,19 +2,20 @@
 //!
 //! Three families of helpers are exposed:
 //!
-//! * [`fetch_governance_counts_in_range`] — total / allow / deny + per-policy
+//! - [`fetch_governance_counts_in_range`] — total / allow / deny + per-policy
 //!   counts for the supplied window.
-//! * [`fetch_decision_buckets`] — equal-width time buckets across the window
+//! - [`fetch_decision_buckets`] — equal-width time buckets across the window
 //!   for the stacked-area chart and KPI sparklines, optionally filtered to a
-//!   policy family.
-//! * [`fetch_top_denies`] — top-N denies grouped by `tool_name` or `agent_scope`.
+//!   policy family. Empty buckets are returned with zero counts so callers
+//!   always get exactly `n_buckets` rows in index order.
+//! - [`fetch_top_denies`] — top-N denies grouped by `tool_name` or
+//!   `agent_scope`; rows with NULL or empty group values are excluded.
 
 use serde::Serialize;
 use sqlx::PgPool;
 
 use super::time_range::TimeRange;
 
-/// Counts within a single window, broken down by policy family.
 #[derive(Debug, Clone, Copy, Default, Serialize)]
 pub struct GovernanceCountsByPolicy {
     pub total: i64,
@@ -25,7 +26,6 @@ pub struct GovernanceCountsByPolicy {
     pub rate_limit: i64,
 }
 
-/// Aggregate decision counts inside `range`, classifying by policy family.
 pub async fn fetch_governance_counts_in_range(
     pool: &PgPool,
     range: TimeRange,
@@ -63,13 +63,13 @@ pub async fn fetch_governance_counts_in_range(
     })
 }
 
-/// Filter for [`fetch_decision_buckets`].
 #[derive(Debug, Clone, Copy, Default)]
 pub struct BucketFilter {
-    /// Restrict to rows whose `policy` is in this set (when non-empty).
     pub policies: BucketPolicyFilter,
-    /// When true, additionally include rows whose reason matches the secret
-    /// regex (used by the Secret-scan KPI sparkline).
+    /// When true, additionally include rows whose `reason` matches the secret
+    /// regex — used by the Secret-scan KPI sparkline to also surface denies
+    /// whose policy isn't literally `secret_scan` but whose reason names a
+    /// secret pattern.
     pub include_secret_reason: bool,
 }
 
@@ -82,7 +82,6 @@ pub enum BucketPolicyFilter {
     RateLimit,
 }
 
-/// One time bucket with allow / deny counts.
 #[derive(Debug, Clone, Copy, Serialize)]
 pub struct DecisionBucket {
     pub bucket_index: i32,
@@ -90,11 +89,6 @@ pub struct DecisionBucket {
     pub deny: i64,
 }
 
-/// Split `range` into `n_buckets` equal-width time buckets and count decisions.
-///
-/// Each returned row contains the allow / deny totals inside its bucket. Empty
-/// buckets are returned with zero counts so the caller always gets exactly
-/// `n_buckets` rows in index order.
 pub async fn fetch_decision_buckets(
     pool: &PgPool,
     range: TimeRange,
@@ -183,7 +177,6 @@ const fn bucket_filter_tag(p: BucketPolicyFilter) -> &'static str {
     }
 }
 
-/// Group dimension for [`fetch_top_denies`].
 #[derive(Debug, Clone, Copy)]
 pub enum TopDenyGroup {
     Tool,
@@ -197,39 +190,56 @@ pub struct TopDeny {
     pub deny_count: i64,
 }
 
-/// Top-N denies grouped by tool or agent scope inside the window. NULL group
-/// values are excluded.
 pub async fn fetch_top_denies(
     pool: &PgPool,
     range: TimeRange,
     group_by: TopDenyGroup,
     limit: i64,
 ) -> Result<Vec<TopDeny>, sqlx::Error> {
-    let group_expr = match group_by {
-        TopDenyGroup::Tool => "g.tool_name",
-        TopDenyGroup::AgentScope => "g.agent_scope",
-    };
-
-    let sql = format!(
-        r"SELECT
-            {group_expr} AS key,
-            COUNT(*)::bigint AS deny_count
-        FROM governance_decisions g
-        WHERE g.decision = 'deny'
-          AND g.created_at >= $1 AND g.created_at < $2
-          AND {group_expr} IS NOT NULL
-          AND {group_expr} <> ''
-        GROUP BY {group_expr}
-        ORDER BY deny_count DESC
-        LIMIT $3",
-    );
-
-    let rows: Vec<(String, i64)> = sqlx::query_as(&sql)
-        .bind(range.from)
-        .bind(range.to)
-        .bind(limit)
+    let rows = match group_by {
+        TopDenyGroup::Tool => sqlx::query!(
+            r#"SELECT
+                g.tool_name AS "key!",
+                COUNT(*)::bigint AS "deny_count!"
+            FROM governance_decisions g
+            WHERE g.decision = 'deny'
+              AND g.created_at >= $1 AND g.created_at < $2
+              AND g.tool_name IS NOT NULL
+              AND g.tool_name <> ''
+            GROUP BY g.tool_name
+            ORDER BY COUNT(*) DESC
+            LIMIT $3"#,
+            range.from,
+            range.to,
+            limit,
+        )
         .fetch_all(pool)
-        .await?;
+        .await?
+        .into_iter()
+        .map(|r| (r.key, r.deny_count))
+        .collect::<Vec<_>>(),
+        TopDenyGroup::AgentScope => sqlx::query!(
+            r#"SELECT
+                g.agent_scope AS "key!",
+                COUNT(*)::bigint AS "deny_count!"
+            FROM governance_decisions g
+            WHERE g.decision = 'deny'
+              AND g.created_at >= $1 AND g.created_at < $2
+              AND g.agent_scope IS NOT NULL
+              AND g.agent_scope <> ''
+            GROUP BY g.agent_scope
+            ORDER BY COUNT(*) DESC
+            LIMIT $3"#,
+            range.from,
+            range.to,
+            limit,
+        )
+        .fetch_all(pool)
+        .await?
+        .into_iter()
+        .map(|r| (r.key, r.deny_count))
+        .collect::<Vec<_>>(),
+    };
 
     Ok(rows
         .into_iter()

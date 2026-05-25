@@ -155,7 +155,6 @@ pub struct AgentDetail {
     pub skills: Vec<AgentSkillInfo>,
 }
 
-/// Catalog row for a top-level skill defined under `services/skills/*.yaml`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SkillCatalogEntry {
     pub id: SkillId,
@@ -165,7 +164,6 @@ pub struct SkillCatalogEntry {
     pub source_path: String,
 }
 
-/// Catalog row for a top-level agent defined under `services/agents/*.yaml`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentCatalogEntry {
     pub id: AgentId,

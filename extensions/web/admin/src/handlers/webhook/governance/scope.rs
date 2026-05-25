@@ -1,16 +1,16 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use systemprompt::config::ProfileBootstrap;
+use systemprompt_security::policy::types::AccessScope;
 
-pub fn resolve_agent_scope(agent_id: &str) -> String {
+pub fn resolve_agent_scope(agent_id: &str) -> AccessScope {
     let map = load_all_agent_scopes();
-    map.get(agent_id)
-        .cloned()
-        .unwrap_or_else(|| "unknown".to_string())
+    map.get(agent_id).copied().unwrap_or(AccessScope::Unknown)
 }
 
-fn load_all_agent_scopes() -> HashMap<String, String> {
+fn load_all_agent_scopes() -> HashMap<String, AccessScope> {
     let mut scopes = HashMap::new();
 
     let Ok(services_path) = ProfileBootstrap::get().map(|p| PathBuf::from(&p.paths.services))
@@ -41,7 +41,10 @@ fn load_all_agent_scopes() -> HashMap<String, String> {
     scopes
 }
 
-fn extract_scopes_from_config(config: &serde_yaml::Value, scopes: &mut HashMap<String, String>) {
+fn extract_scopes_from_config(
+    config: &serde_yaml::Value,
+    scopes: &mut HashMap<String, AccessScope>,
+) {
     let Some(agents_map) = config.get("agents").and_then(|a| a.as_mapping()) else {
         return;
     };
@@ -51,13 +54,13 @@ fn extract_scopes_from_config(config: &serde_yaml::Value, scopes: &mut HashMap<S
             continue;
         };
 
-        if let Some(s) = extract_scope_for_agent(agent_val) {
-            scopes.insert(agent_id.to_string(), s);
+        if let Some(scope) = extract_scope_for_agent(agent_val) {
+            scopes.insert(agent_id.to_string(), scope);
         }
     }
 }
 
-fn extract_scope_for_agent(agent_val: &serde_yaml::Value) -> Option<String> {
+fn extract_scope_for_agent(agent_val: &serde_yaml::Value) -> Option<AccessScope> {
     if let Some(scope) = agent_val
         .get("oauth")
         .and_then(|o| o.get("scopes"))
@@ -65,7 +68,7 @@ fn extract_scope_for_agent(agent_val: &serde_yaml::Value) -> Option<String> {
         .and_then(|seq| seq.first())
         .and_then(|s| s.as_str())
     {
-        return Some(scope.to_string());
+        return Some(parse_scope(scope));
     }
 
     let security = agent_val
@@ -80,9 +83,23 @@ fn extract_scope_for_agent(agent_val: &serde_yaml::Value) -> Option<String> {
             .and_then(|seq| seq.first())
             .and_then(|s| s.as_str())
         {
-            return Some(scope.to_string());
+            return Some(parse_scope(scope));
         }
     }
 
     None
+}
+
+fn parse_scope(s: &str) -> AccessScope {
+    // Why: YAML values outside {admin, user, unknown} are operator typos.
+    // Surface them as a warning and fall through to Unknown rather than
+    // silently masquerading as Admin.
+    AccessScope::from_str(s).unwrap_or_else(|err| {
+        tracing::warn!(
+            value = %s,
+            error = %err,
+            "unrecognised oauth scope in agent YAML; treating as unknown"
+        );
+        AccessScope::Unknown
+    })
 }

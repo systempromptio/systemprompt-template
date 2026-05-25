@@ -11,10 +11,9 @@ use std::borrow::Cow;
 use serde_yaml::Value as YamlValue;
 use systemprompt::identifiers::{McpToolName, PolicyId};
 use systemprompt_security::authz::{Decision, DenyReason, MatchedBy};
-use systemprompt_security::policy::{GovernancePolicy, PolicyContext};
+use systemprompt_security::policy::{types::AccessScope, GovernancePolicy, PolicyContext};
 
 use super::super::policy::PolicyRegistration;
-use crate::types::SCOPE_ADMIN;
 
 const ID: &str = "tool_blocklist";
 const DEFAULT_PATTERNS: &[&str] = &["delete", "drop", "destroy"];
@@ -40,14 +39,6 @@ impl ToolBlocklist {
     }
 }
 
-/// See [`super::scope_check::scope_label`] for the rationale on reading the
-/// scope label from the wrapped tool input.
-fn scope_label<'a>(ctx: &'a PolicyContext<'_>) -> &'a str {
-    ctx.tool_input
-        .as_str(super::super::SCOPE_LABEL_KEY)
-        .unwrap_or("unknown")
-}
-
 impl GovernancePolicy for ToolBlocklist {
     fn id(&self) -> PolicyId {
         PolicyId::new(ID)
@@ -61,14 +52,13 @@ impl GovernancePolicy for ToolBlocklist {
     }
     fn evaluate(&self, ctx: &PolicyContext<'_>) -> Decision {
         let tool_str = ctx.tool.as_str();
-        let scope = scope_label(ctx);
         let matched = self
             .patterns
             .iter()
             .find(|p| tool_str.contains(p.as_str()));
 
         match matched {
-            Some(p) if scope != SCOPE_ADMIN => Decision::Deny {
+            Some(p) if ctx.access_scope != AccessScope::Admin => Decision::Deny {
                 reason: DenyReason::ToolBlocked {
                     tool: McpToolName::new(tool_str),
                     list_id: p.clone(),
