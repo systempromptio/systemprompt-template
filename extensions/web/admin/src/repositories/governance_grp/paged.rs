@@ -142,6 +142,9 @@ pub async fn fetch_decisions_paged(
         LIMIT $10 OFFSET $11",
     );
 
+    // Why: {order} is built from the GovernanceDecisionSort closed enum
+    // (sort.order_by()) and interpolates a multi-column ORDER BY expression
+    // that PG cannot parameterise.
     let rows = sqlx::query_as::<_, PagedRow>(&sql)
         .bind(range.from)
         .bind(range.to)

@@ -167,6 +167,9 @@ pub async fn list_events(
         LIMIT ${limit_idx} OFFSET ${offset_idx}"
     );
 
+    // Why: data_sql appends an optional ILIKE filter and bind-position counter
+    // built at runtime from the EventsQuery struct. The bind list is variable-
+    // length so query_as! (which fixes arity at compile time) cannot express it.
     let mut data_q = sqlx::query_as::<_, EventRow>(&data_sql);
     for b in &binds {
         data_q = data_q.bind(b);

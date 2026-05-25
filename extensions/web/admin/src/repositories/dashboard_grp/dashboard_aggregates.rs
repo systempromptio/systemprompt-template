@@ -97,6 +97,10 @@ pub async fn fetch_usage_timeseries(
         GROUP BY b.bucket
         ORDER BY b.bucket"
     );
+    // Why: SQL interpolates closed-set literals ({trunc}, {interval},
+    // {bucket_interval}) into date_trunc and generate_series arguments — these
+    // are not parameterisable in PG. Converting to query_as! would require a
+    // closed-enum match × 6 variants per call site, doubling the body.
     sqlx::query_as::<_, TimeSeriesBucket>(&sql)
         .fetch_all(pool)
         .await
@@ -161,6 +165,7 @@ pub async fn fetch_user_usage_timeseries(
         GROUP BY b.bucket
         ORDER BY b.bucket"
     );
+    // Why: same closed-set literal interpolation as fetch_usage_timeseries.
     sqlx::query_as::<_, TimeSeriesBucket>(&sql)
         .bind(user_id)
         .fetch_all(pool)

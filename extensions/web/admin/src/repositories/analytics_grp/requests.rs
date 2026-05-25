@@ -224,6 +224,7 @@ pub async fn fetch_requests_paged(
         LIMIT $9 OFFSET $10",
     );
 
+    // Why: {order} interpolates ORDER BY built from a closed sort enum.
     let rows = sqlx::query_as::<_, RequestRowWithTotal>(&sql)
         .bind(range.from)
         .bind(range.to)
