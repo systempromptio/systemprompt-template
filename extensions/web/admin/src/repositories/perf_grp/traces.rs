@@ -306,6 +306,9 @@ pub async fn fetch_trace_list(
 ) -> Result<(Vec<TraceSummary>, i64), sqlx::Error> {
     let sql = build_trace_list_sql(sort);
 
+    // Why: SQL ORDER BY clause is built from a closed TraceSort match in
+    // build_trace_list_sql — five sort columns × two directions. Macro form
+    // would require ten query_as! variants per call site.
     let rows: Vec<TraceRow> = sqlx::query_as(&sql)
         .bind(range.from)
         .bind(range.to)

@@ -38,14 +38,15 @@ pub async fn fetch_session_events(
     session_id: &SessionId,
     user_id: &UserId,
 ) -> Result<Vec<EventRow>, sqlx::Error> {
-    sqlx::query_as::<_, EventRow>(
+    sqlx::query_as!(
+        EventRow,
         r"SELECT event_type, tool_name, cwd
           FROM plugin_usage_events
           WHERE session_id = $1 AND user_id = $2
           ORDER BY created_at ASC",
+        session_id.as_str(),
+        user_id.as_str(),
     )
-    .bind(session_id.as_str())
-    .bind(user_id.as_str())
     .fetch_all(pool)
     .await
 }

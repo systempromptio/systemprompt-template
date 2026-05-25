@@ -1,0 +1,80 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COALESCE(NULLIF(upe.department, ''), 'Unassigned') AS \"department!\",\n            COUNT(DISTINCT u.id)::BIGINT AS \"user_count!\",\n            COUNT(DISTINCT u.id) FILTER (WHERE u.status = 'active')::BIGINT AS \"active_count!\",\n            COALESCE(SUM(ev.event_count), 0)::BIGINT AS \"total_events!\",\n            COUNT(DISTINCT u.id) FILTER (WHERE ev.last_event >= NOW() - INTERVAL '24 hours')::BIGINT AS \"active_24h!\",\n            COUNT(DISTINCT u.id) FILTER (WHERE ev.last_event >= NOW() - INTERVAL '7 days')::BIGINT AS \"active_7d!\",\n            COALESCE(SUM(tok.total_tokens), 0)::BIGINT AS \"total_tokens!\",\n            COALESCE(SUM(ev.prompt_count), 0)::BIGINT AS \"total_prompts!\",\n            COALESCE(SUM(ev.session_count), 0)::BIGINT AS \"total_sessions!\",\n            COALESCE(SUM(ev.sessions_this_week), 0)::BIGINT AS \"sessions_this_week!\",\n            COALESCE(SUM(ev.sessions_prev_week), 0)::BIGINT AS \"sessions_prev_week!\"\n        FROM users u\n        LEFT JOIN (\n            SELECT\n                user_id,\n                COUNT(*)::BIGINT AS event_count,\n                COUNT(*) FILTER (WHERE event_type LIKE '%UserPromptSubmit%')::BIGINT AS prompt_count,\n                COUNT(DISTINCT session_id)::BIGINT AS session_count,\n                COUNT(DISTINCT session_id) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::BIGINT AS sessions_this_week,\n                COUNT(DISTINCT session_id) FILTER (WHERE created_at >= NOW() - INTERVAL '14 days' AND created_at < NOW() - INTERVAL '7 days')::BIGINT AS sessions_prev_week,\n                MAX(created_at) AS last_event\n            FROM plugin_usage_events\n            GROUP BY user_id\n        ) ev ON ev.user_id = u.id\n        LEFT JOIN (\n            SELECT\n                user_id,\n                (COALESCE(SUM(total_input_tokens), 0) + COALESCE(SUM(total_output_tokens), 0))::BIGINT AS total_tokens\n            FROM plugin_usage_daily\n            GROUP BY user_id\n        ) tok ON tok.user_id = u.id\n        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id\n        WHERE NOT ('anonymous' = ANY(u.roles))\n          AND u.email NOT LIKE '%@anonymous.local'\n        GROUP BY COALESCE(NULLIF(upe.department, ''), 'Unassigned')\n        ORDER BY 2 DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "department!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "active_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_events!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "active_24h!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "active_7d!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "total_tokens!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "total_prompts!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "total_sessions!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "sessions_this_week!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
+        "name": "sessions_prev_week!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "b6dd5f7224a1cc6e34b801f7137900a7d621526d81be0fc03779d602b896c705"
+}

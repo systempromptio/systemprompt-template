@@ -180,6 +180,9 @@ pub async fn fetch_violation_counts(
           LIMIT 200",
     );
 
+    // Why: {identity_expr} interpolates a column reference (g.user_id /
+    // g.agent_id / g.agent_scope) chosen from the IdentityGroupBy closed enum.
+    // PG does not allow column identifiers as parameters.
     let rows = sqlx::query_as::<_, ViolationCountsRow>(&sql)
         .bind(range.from)
         .bind(range.to)

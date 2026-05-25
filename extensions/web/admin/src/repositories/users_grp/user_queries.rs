@@ -172,6 +172,10 @@ pub async fn fetch_user_identity_rows(
         ",
     );
 
+    // Why: 14 sort columns × 2 directions × 2 queries (count + rows) = 56
+    // query_as! variants if we expanded to a closed-enum match. The {order}
+    // value is built from a hard-coded match on UserSort and is never user
+    // input; keeping the runtime-string form is safer than the explosion.
     let rows = sqlx::query_as::<_, crate::types::UserIdentityRow>(&rows_sql)
         .bind(search_pattern.as_deref())
         .bind(limit)
@@ -185,20 +189,21 @@ pub async fn fetch_user_identity_rows(
 pub async fn fetch_department_stats(
     pool: &PgPool,
 ) -> Result<Vec<crate::types::DepartmentStats>, sqlx::Error> {
-    sqlx::query_as::<_, crate::types::DepartmentStats>(
-        r"
+    sqlx::query_as!(
+        crate::types::DepartmentStats,
+        r#"
         SELECT
-            COALESCE(NULLIF(upe.department, ''), 'Unassigned') AS department,
-            COUNT(DISTINCT u.id)::BIGINT AS user_count,
-            COUNT(DISTINCT u.id) FILTER (WHERE u.status = 'active')::BIGINT AS active_count,
-            COALESCE(SUM(ev.event_count), 0)::BIGINT AS total_events,
-            COUNT(DISTINCT u.id) FILTER (WHERE ev.last_event >= NOW() - INTERVAL '24 hours')::BIGINT AS active_24h,
-            COUNT(DISTINCT u.id) FILTER (WHERE ev.last_event >= NOW() - INTERVAL '7 days')::BIGINT AS active_7d,
-            COALESCE(SUM(tok.total_tokens), 0)::BIGINT AS total_tokens,
-            COALESCE(SUM(ev.prompt_count), 0)::BIGINT AS total_prompts,
-            COALESCE(SUM(ev.session_count), 0)::BIGINT AS total_sessions,
-            COALESCE(SUM(ev.sessions_this_week), 0)::BIGINT AS sessions_this_week,
-            COALESCE(SUM(ev.sessions_prev_week), 0)::BIGINT AS sessions_prev_week
+            COALESCE(NULLIF(upe.department, ''), 'Unassigned') AS "department!",
+            COUNT(DISTINCT u.id)::BIGINT AS "user_count!",
+            COUNT(DISTINCT u.id) FILTER (WHERE u.status = 'active')::BIGINT AS "active_count!",
+            COALESCE(SUM(ev.event_count), 0)::BIGINT AS "total_events!",
+            COUNT(DISTINCT u.id) FILTER (WHERE ev.last_event >= NOW() - INTERVAL '24 hours')::BIGINT AS "active_24h!",
+            COUNT(DISTINCT u.id) FILTER (WHERE ev.last_event >= NOW() - INTERVAL '7 days')::BIGINT AS "active_7d!",
+            COALESCE(SUM(tok.total_tokens), 0)::BIGINT AS "total_tokens!",
+            COALESCE(SUM(ev.prompt_count), 0)::BIGINT AS "total_prompts!",
+            COALESCE(SUM(ev.session_count), 0)::BIGINT AS "total_sessions!",
+            COALESCE(SUM(ev.sessions_this_week), 0)::BIGINT AS "sessions_this_week!",
+            COALESCE(SUM(ev.sessions_prev_week), 0)::BIGINT AS "sessions_prev_week!"
         FROM users u
         LEFT JOIN (
             SELECT
@@ -223,8 +228,8 @@ pub async fn fetch_department_stats(
         WHERE NOT ('anonymous' = ANY(u.roles))
           AND u.email NOT LIKE '%@anonymous.local'
         GROUP BY COALESCE(NULLIF(upe.department, ''), 'Unassigned')
-        ORDER BY user_count DESC
-        ",
+        ORDER BY 2 DESC
+        "#,
     )
     .fetch_all(pool)
     .await
