@@ -11,7 +11,7 @@ use systemprompt::identifiers::{McpToolName, SessionId, UserId};
 use systemprompt::models::auth::JwtAudience;
 use systemprompt::oauth::OauthError;
 use systemprompt_security::authz::{Decision, DenyReason, MatchedBy};
-use systemprompt_security::policy::{AgentScope, McpToolInput, PolicyContext};
+use systemprompt_security::policy::{types::AccessScope, AgentScope, McpToolInput, PolicyContext};
 
 use crate::handlers::webhook::helpers::{extract_bearer_token, get_jwt_issuer};
 use crate::types::webhook::GovernQuery;
@@ -75,13 +75,13 @@ pub async fn govern_tool_use(
         Err(resp) => return *resp,
     };
 
-    let agent_scope = agent_id.map_or_else(|| "unknown".to_string(), scope::resolve_agent_scope);
+    let agent_scope = agent_id.map_or(AccessScope::Unknown, scope::resolve_agent_scope);
 
     let (decision, chain) = evaluate(&EvaluateInput {
         tool_name,
         session_id: &session_id,
         user_id: &user_id,
-        agent_scope: &agent_scope,
+        agent_scope,
         tool_input: payload.tool_input(),
     });
 
@@ -176,7 +176,7 @@ struct EvaluateInput<'a> {
     tool_name: &'a str,
     session_id: &'a SessionId,
     user_id: &'a UserId,
-    agent_scope: &'a str,
+    agent_scope: AccessScope,
     tool_input: Option<&'a serde_json::Value>,
 }
 
@@ -185,27 +185,19 @@ struct EvaluateInput<'a> {
 /// per-entry trace so the audit row preserves the full evaluation order, not
 /// just the first-deny.
 fn evaluate(input: &EvaluateInput<'_>) -> (Decision, Vec<ChainEntryOutcome>) {
-    // Inject the OAuth scope label into the wrapped tool_input under a
-    // reserved key so scope_check and tool_blocklist can read it. Core's
-    // PolicyContext is deployment-agnostic by design; this JSON-boundary
-    // wrapper is the agreed plumbing.
-    let mut tool_input_value = input
-        .tool_input
-        .cloned()
-        .unwrap_or_else(|| serde_json::Value::Object(serde_json::Map::new()));
-    if let Some(map) = tool_input_value.as_object_mut() {
-        map.insert(
-            super::SCOPE_LABEL_KEY.to_string(),
-            serde_json::Value::String(input.agent_scope.to_string()),
-        );
-    }
-    let tool_input = McpToolInput::new(tool_input_value);
+    let tool_input = McpToolInput::new(
+        input
+            .tool_input
+            .cloned()
+            .unwrap_or_else(|| serde_json::Value::Object(serde_json::Map::new())),
+    );
 
     let ctx = PolicyContext {
         tool: McpToolName::new(input.tool_name),
         agent_scope: AgentScope::User {
             user_id: input.user_id.clone(),
         },
+        access_scope: input.agent_scope,
         session_id: input.session_id,
         user_id: input.user_id,
         tool_input: &tool_input,
@@ -285,7 +277,9 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
             user_id: systemprompt::identifiers::bootstrap::anonymous(),
             session_id: params.session_id.clone(),
             agent_id: params.agent_id.map(str::to_string),
-            agent_scope: "unauthenticated".to_string(),
+            // Why: authentication failed before any scope could be resolved.
+            // Unknown is the documented "could-not-resolve" fallback variant.
+            agent_scope: AccessScope::Unknown,
         },
         target: AuditTarget {
             tool_name: params.tool_name.to_string(),

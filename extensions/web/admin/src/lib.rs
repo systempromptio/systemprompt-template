@@ -1,3 +1,22 @@
+//! Admin extension for the Enterprise Demo template.
+//!
+//! Wires the admin dashboard, governance webhooks, cowork plane, and
+//! supporting services onto a shared `PgPool`. Public surface is grouped by
+//! concern:
+//!
+//! - [`admin_router`] — the SSR dashboard (auth-gated; admin-only and
+//!   authenticated-read routes are layered together).
+//! - [`hooks_webhook_router`] — the four governance webhooks called by
+//!   gateway / MCP / Claude Code (`/hooks/track`, `/hooks/govern`,
+//!   `/govern/authz`, statusline/transcript ingest).
+//! - [`secrets_router`], [`share_manifest_router`], [`cowork_router`] —
+//!   per-plugin secret resolution, public manifest sharing, and the cowork
+//!   plugin-file plane.
+//!
+//! [`repositories`] owns every `sqlx` call; handlers/services never touch
+//! the DB directly. Errors normalise on `error::MarketplaceError` via the
+//! `MarketplaceError` re-export in [`systemprompt_web_shared`].
+
 pub mod activity;
 pub mod audit_event_bus;
 pub mod error;

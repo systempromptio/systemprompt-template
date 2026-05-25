@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)\n         VALUES ($1, $2, false, 'admin:dashboard')\n         ON CONFLICT (entity_type, entity_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c813690ced2defb1fbc46de7441573e54c2661778dfb596406b46b6e6b04db28"
+}

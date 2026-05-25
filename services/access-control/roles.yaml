@@ -64,3 +64,53 @@ rules:
     access: allow
     default_included: true
     roles: [user]
+
+  # gateway routes shipped with enterprise-demo
+  - entity_type: gateway_route
+    entity_id: claude-star-3cbb7d
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: gateway_route
+    entity_id: gpt-star-e2e01
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: gateway_route
+    entity_id: gemini-star-minimax
+    access: allow
+    default_included: true
+    roles: [user]
+
+  # gateway models (catalog ids — see .systemprompt/profiles/*/catalog.yaml).
+  # The gateway runs a two-pass authz (model + route); both must allow.
+  - entity_type: gateway_model
+    entity_id: claude-haiku-4-5
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: gateway_model
+    entity_id: claude-sonnet-4-20250514
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: gateway_model
+    entity_id: claude-opus-4-7
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: gateway_model
+    entity_id: claude-opus-4-7[1m]
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: gateway_model
+    entity_id: gpt-4-turbo
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: gateway_model
+    entity_id: gemini-2.5-flash
+    access: allow
+    default_included: true
+    roles: [user]

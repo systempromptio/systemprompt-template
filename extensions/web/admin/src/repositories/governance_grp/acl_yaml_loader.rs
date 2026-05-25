@@ -1,54 +1,55 @@
 //! Bootstrap loader: `services/access-control/*.yaml` → DB.
 //!
 //! YAML is the declarative source of truth committed to the source repo.
-//! On every server startup the [`PublishPipelineJob`] calls
-//! [`load_from_yaml`] which upserts rule and department rows into the runtime
-//! database. There is no write-back: dashboard edits live only in the DB of
-//! the instance that received them, so multiple deployments sharing the same
-//! YAML baseline can drift independently without trampling each other.
+//! On every server startup the publish pipeline calls [`load_from_yaml`],
+//! which upserts entity and rule rows into the runtime database. There is no
+//! write-back: dashboard edits live only in the DB of the instance that
+//! received them, so deployments sharing the same YAML baseline can drift
+//! independently without trampling each other.
 //!
-//! Two files are read (both optional, missing-file = no-op):
+//! Two files are read (both optional; missing-file = no-op):
 //!
 //! - `services/access-control/roles.yaml` — role-scoped allow/deny rules.
 //! - `services/access-control/departments.yaml` — department definitions
 //!   plus department-scoped allow/deny rules.
+//!
+//! Wire shapes ([`YamlRule`] etc.) deserialise straight into the typed
+//! `EntityKind` / `Access` / `RuleType` enums from `systemprompt_security`,
+//! so invalid `entity_type` / `access` values fail at parse time rather than
+//! producing a runtime skip in the loader.
 
 use std::path::Path;
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-use systemprompt_security::authz::{Access, AccessControlRepository, RuleType, UpsertRuleParams};
+use systemprompt_security::authz::{
+    Access, AccessControlRepository, EntityKind, RuleType, UpsertRuleParams,
+};
 use systemprompt_web_shared::error::MarketplaceError;
 
 const ROLES_FILE: &str = "access-control/roles.yaml";
 const DEPARTMENTS_FILE: &str = "access-control/departments.yaml";
 
-/// Per-rule entry in `roles.yaml` and the `rules:` block of `departments.yaml`.
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct YamlRule {
-    /// One of: `gateway_route`, `mcp_server`, `plugin`, `agent`, `marketplace`, `skill`.
-    pub entity_type: String,
+    pub entity_type: EntityKind,
     pub entity_id: String,
-    /// `allow` or `deny`. Defaults to `allow`.
-    #[serde(default = "default_access")]
-    pub access: String,
+    #[serde(default = "default_allow")]
+    pub access: Access,
     #[serde(default)]
     pub default_included: bool,
-    /// Roles to bind. Used in `roles.yaml`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub roles: Vec<String>,
-    /// Department names to bind. Used in `departments.yaml`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub departments: Vec<String>,
 }
 
-fn default_access() -> String {
-    "allow".to_owned()
+const fn default_allow() -> Access {
+    Access::Allow
 }
 
-/// `departments.yaml` top-level shape.
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct DepartmentsDoc {
@@ -58,7 +59,6 @@ pub struct DepartmentsDoc {
     pub rules: Vec<YamlRule>,
 }
 
-/// `roles.yaml` top-level shape.
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct RolesDoc {
@@ -74,7 +74,6 @@ pub struct YamlDepartment {
     pub description: String,
 }
 
-/// Counts surfaced to the publish pipeline log.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct LoadReport {
     pub departments_upserted: usize,
@@ -82,8 +81,6 @@ pub struct LoadReport {
     pub rules_skipped: usize,
 }
 
-/// Read all YAML files under `services_path` and apply them to the DB.
-/// Idempotent. Missing files are no-ops.
 pub async fn load_from_yaml(
     pool: &PgPool,
     services_path: &Path,
@@ -150,48 +147,24 @@ enum RuleScope {
     DepartmentsOnly,
 }
 
-fn parse_rule_kind_access(
-    rule: &YamlRule,
-    report: &mut LoadReport,
-) -> Option<(systemprompt_security::authz::EntityKind, Access)> {
-    let kind = match rule
-        .entity_type
-        .parse::<systemprompt_security::authz::EntityKind>()
-    {
-        Ok(k) => k,
-        Err(e) => {
-            tracing::warn!(error = %e, entity_type = %rule.entity_type, entity_id = %rule.entity_id, "yaml rule has invalid entity_type, skipping");
-            report.rules_skipped += 1;
-            return None;
-        }
-    };
-    let access = match rule.access.as_str() {
-        "allow" => Access::Allow,
-        "deny" => Access::Deny,
-        other => {
-            tracing::warn!(access = other, entity_id = %rule.entity_id, "yaml rule has invalid access, skipping");
-            report.rules_skipped += 1;
-            return None;
-        }
-    };
-    Some((kind, access))
-}
-
 async fn apply_one_rule(
     repo: &AccessControlRepository,
     rule: &YamlRule,
     scope: RuleScope,
-    kind: systemprompt_security::authz::EntityKind,
-    access: Access,
     report: &mut LoadReport,
 ) -> Result<(), MarketplaceError> {
     let source_label = match scope {
         RuleScope::RolesOnly => "roles.yaml",
         RuleScope::DepartmentsOnly => "departments.yaml",
     };
-    repo.upsert_entity(kind, &rule.entity_id, rule.default_included, source_label)
-        .await
-        .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
+    repo.upsert_entity(
+        rule.entity_type,
+        &rule.entity_id,
+        rule.default_included,
+        source_label,
+    )
+    .await
+    .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
 
     let (rule_type, values, justification) = match scope {
         RuleScope::RolesOnly => (
@@ -208,11 +181,11 @@ async fn apply_one_rule(
 
     for value in values {
         repo.upsert_rule(UpsertRuleParams {
-            entity_type: kind,
+            entity_type: rule.entity_type,
             entity_id: &rule.entity_id,
             rule_type,
             rule_value: value,
-            access,
+            access: rule.access,
             justification: Some(justification),
         })
         .await
@@ -230,10 +203,7 @@ async fn apply_rules(
 ) -> Result<(), MarketplaceError> {
     let repo = AccessControlRepository::from_pool(Arc::new(pool.clone()));
     for rule in rules {
-        let Some((kind, access)) = parse_rule_kind_access(rule, report) else {
-            continue;
-        };
-        apply_one_rule(&repo, rule, scope, kind, access, report).await?;
+        apply_one_rule(&repo, rule, scope, report).await?;
     }
     Ok(())
 }
@@ -253,11 +223,11 @@ async fn upsert_department(pool: &PgPool, dept: &YamlDepartment) -> Result<(), M
     Ok(())
 }
 
-#[derive(Default, Serialize)]
+#[derive(Serialize)]
 struct EntityKey {
-    entity_type: String,
+    entity_type: EntityKind,
     entity_id: String,
-    access: String,
+    access: Access,
     default_included: bool,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     roles: Vec<String>,
@@ -270,41 +240,47 @@ struct Snapshot {
     rules: Vec<EntityKey>,
 }
 
-/// Read-only "Show as YAML" affordance for the admin UI.
-///
-/// Renders the current DB ACL state as a YAML snippet matching the loader's
-/// schema, so admins can copy-paste instance-local edits back into the
-/// committed baseline.
 pub async fn render_yaml_snapshot(pool: &PgPool) -> Result<String, MarketplaceError> {
     use std::collections::BTreeMap;
 
-    let rows: Vec<(String, String, String, String, String, bool)> = sqlx::query_as(
-        "SELECT r.entity_type, r.entity_id, r.rule_type, r.rule_value, r.access,
-                COALESCE(e.default_included, false)
-         FROM access_control_rules r
-         LEFT JOIN access_control_entities e
-            ON e.entity_type = r.entity_type AND e.entity_id = r.entity_id
-         WHERE r.rule_type IN ('role', 'department')
-         ORDER BY r.entity_type, r.entity_id, r.access, r.rule_type, r.rule_value",
+    let rows = sqlx::query!(
+        r#"SELECT r.entity_type,
+                  r.entity_id,
+                  r.rule_type as "rule_type: RuleType",
+                  r.rule_value,
+                  r.access as "access: Access",
+                  COALESCE(e.default_included, false) as "default_included!"
+           FROM access_control_rules r
+           LEFT JOIN access_control_entities e
+              ON e.entity_type = r.entity_type AND e.entity_id = r.entity_id
+           WHERE r.rule_type IN ('role', 'department')
+           ORDER BY r.entity_type, r.entity_id, r.access, r.rule_type, r.rule_value"#,
     )
     .fetch_all(pool)
     .await?;
 
     let mut by_key: BTreeMap<(String, String, String), EntityKey> = BTreeMap::new();
-    for (entity_type, entity_id, rule_type, rule_value, access, default_included) in rows {
-        let key = (entity_type.clone(), entity_id.clone(), access.clone());
+    for row in rows {
+        let entity_type: EntityKind = row.entity_type.parse().map_err(|e| {
+            MarketplaceError::Internal(format!("unknown entity_type in DB row: {e}"))
+        })?;
+        let key = (
+            entity_type.as_str().to_owned(),
+            row.entity_id.clone(),
+            row.access.to_string(),
+        );
         let entry = by_key.entry(key).or_insert_with(|| EntityKey {
-            entity_type: entity_type.clone(),
-            entity_id: entity_id.clone(),
-            access: access.clone(),
-            default_included,
+            entity_type,
+            entity_id: row.entity_id,
+            access: row.access,
+            default_included: row.default_included,
             roles: Vec::new(),
             departments: Vec::new(),
         });
-        if rule_type == "role" {
-            entry.roles.push(rule_value);
-        } else if rule_type == "department" {
-            entry.departments.push(rule_value);
+        match row.rule_type {
+            RuleType::Role => entry.roles.push(row.rule_value),
+            RuleType::Department => entry.departments.push(row.rule_value),
+            RuleType::User => {}
         }
     }
 

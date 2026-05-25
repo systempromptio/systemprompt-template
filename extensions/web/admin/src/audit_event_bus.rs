@@ -32,12 +32,11 @@ impl AuditEventBus {
 
 static BUS: OnceLock<AuditEventBus> = OnceLock::new();
 
-/// Returns the global bus, spawning the background listener on first call.
+/// Bus accessor that survives a missing `audit_events` channel.
 ///
-/// Subsequent calls reuse the same broadcast sender. If the listener fails
-/// to start (e.g. the `audit_events` channel doesn't exist yet because the
-/// migration hasn't run), the bus is still returned and callers receive an
-/// empty stream — the SSE endpoint reports keep-alives but no payloads.
+/// If the listener fails to start (e.g. the `audit_events` channel doesn't
+/// exist yet because the migration hasn't run), the bus is still returned and
+/// SSE subscribers receive an empty stream — keep-alives but no payloads.
 pub fn get_or_init(pool: Arc<PgPool>) -> AuditEventBus {
     BUS.get_or_init(|| {
         let (sender, _) = broadcast::channel::<String>(BROADCAST_CAPACITY);
@@ -65,6 +64,9 @@ fn spawn_listener(pool: Arc<PgPool>, sender: broadcast::Sender<String>) {
                         match listener.recv().await {
                             Ok(notification) => {
                                 let payload = notification.payload().to_string();
+                                // Why: `broadcast::Sender::send` returns Err when there are
+                                // zero subscribers. That's a normal idle state for this bus
+                                // — no SSE clients connected — not a failure to log.
                                 let _ = sender.send(payload);
                             }
                             Err(e) => {

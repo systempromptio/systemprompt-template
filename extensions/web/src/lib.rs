@@ -1,3 +1,21 @@
+//! Web extension facade for the Enterprise Demo template.
+//!
+//! Aggregates the five web sibling crates (`admin`, `content`, `jobs`,
+//! `shared`, `site`) into a single `WebExtension` registered with the core
+//! runtime. Most of this crate is re-exports — the actual extension entry
+//! point is [`extension::WebExtension`], which advertises required assets,
+//! HTTP routes, page data providers, and jobs to the host binary.
+//!
+//! The split between siblings is the layering boundary:
+//!
+//! - `admin` — SSR dashboard, governance webhooks, cowork plane.
+//! - `content` — content ingestion, repositories, search, link analytics.
+//! - `jobs` — `publish_pipeline` and its sub-jobs (asset copy, prerender,
+//!   sitemap, llms.txt, secret migration, content analytics).
+//! - `shared` — config schemas, error types, branding, ID newtypes,
+//!   HTML-escape helpers.
+//! - `site` — public homepage / blog / docs / features content providers.
+
 mod config_loader;
 pub mod extension;
 mod extension_impl;

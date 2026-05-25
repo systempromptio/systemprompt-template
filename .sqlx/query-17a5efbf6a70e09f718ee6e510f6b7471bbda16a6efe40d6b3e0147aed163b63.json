@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.entity_type,\n                  r.entity_id,\n                  r.rule_type as \"rule_type: RuleType\",\n                  r.rule_value,\n                  r.access as \"access: Access\",\n                  COALESCE(e.default_included, false) as \"default_included!\"\n           FROM access_control_rules r\n           LEFT JOIN access_control_entities e\n              ON e.entity_type = r.entity_type AND e.entity_id = r.entity_id\n           WHERE r.rule_type IN ('role', 'department')\n           ORDER BY r.entity_type, r.entity_id, r.access, r.rule_type, r.rule_value",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "entity_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "entity_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "rule_type: RuleType",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "rule_value",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "access: Access",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "default_included!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "17a5efbf6a70e09f718ee6e510f6b7471bbda16a6efe40d6b3e0147aed163b63"
+}

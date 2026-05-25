@@ -12,6 +12,7 @@ use std::sync::Arc;
 use sqlx::PgPool;
 use systemprompt::identifiers::{PolicyId, SessionId, UserId};
 use systemprompt_security::authz::{Decision, DecisionTag};
+use systemprompt_security::policy::types::AccessScope;
 
 /// Anthropic-mandated wire enum for `permissionDecision`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -84,7 +85,7 @@ pub struct PrincipalSnapshot {
     pub user_id: UserId,
     pub session_id: SessionId,
     pub agent_id: Option<String>,
-    pub agent_scope: String,
+    pub agent_scope: AccessScope,
 }
 
 /// What the chain was asked to evaluate.

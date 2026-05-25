@@ -1,3 +1,22 @@
+//! Shared types for the web extension siblings.
+//!
+//! No business logic — only the cross-cutting primitives the other web
+//! crates need to agree on:
+//!
+//! - [`config`] / [`config_errors`] — typed YAML schemas with
+//!   `#[serde(deny_unknown_fields)]` plus the error type that surfaces
+//!   misconfigurations at startup.
+//! - [`error::MarketplaceError`] — the unified error sink for admin/jobs
+//!   code; implements `IntoResponse` for axum handlers.
+//! - [`ids`] — newtype wrappers around `String` for entity IDs that escape
+//!   the web layer (`MarketplaceId`, `PluginId`, `TraceId`, etc.). For
+//!   identifiers that originate in `systemprompt_identifiers`, prefer those
+//!   directly.
+//! - [`models`] — content/link/search wire types shared between the
+//!   content extension and the admin dashboard.
+//! - [`BrandingConfig`] — branding fields parsed from `services/web/config.yaml`.
+//! - [`html_escape`] — escape helper re-exported as `utils::html_escape`.
+
 pub mod config;
 pub mod config_errors;
 pub mod error;

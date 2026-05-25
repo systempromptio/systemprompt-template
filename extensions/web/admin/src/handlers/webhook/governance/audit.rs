@@ -39,7 +39,7 @@ pub(super) async fn record_decision(
         session_id: audit.principal.session_id.as_str(),
         tool_name: &audit.target.tool_name,
         agent_id: audit.principal.agent_id.as_deref(),
-        agent_scope: &audit.principal.agent_scope,
+        agent_scope: Some(audit.principal.agent_scope),
         decision: decision_tag,
         policy: &policy_str,
         reason: &reason_str,
