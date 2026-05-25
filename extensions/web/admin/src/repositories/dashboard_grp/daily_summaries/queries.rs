@@ -7,17 +7,6 @@ use systemprompt_web_shared::error::MarketplaceError;
 
 use super::types::{DailySummaryInput, DailySummaryRow, GlobalAverages, UpsertCloned};
 
-const SELECT_COLUMNS: &str = r"summary_date, session_count, avg_quality_score,
-    goals_achieved, goals_partial, goals_failed,
-    total_prompts, total_tool_uses, total_errors,
-    summary, patterns, skill_gaps, top_recommendation,
-    daily_xp, tags,
-    avg_apm, peak_apm, avg_eapm, peak_concurrency, avg_concurrency,
-    total_input_bytes, total_output_bytes, peak_throughput_bps,
-    tool_diversity, multitasking_score, session_velocity, achievements_unlocked,
-    highlights, trends, category_distribution, plugins_count, skills_count, agents_count, mcp_servers_count, hooks_count,
-    health_score, skill_effectiveness,
-    avg_session_duration_minutes, avg_turns_per_session, total_corrections, avg_automation_ratio, plan_mode_sessions";
 
 pub async fn upsert_daily_summary(
     pool: &PgPool,
@@ -117,11 +106,26 @@ pub async fn fetch_daily_summary(
     user_id: &str,
     date: NaiveDate,
 ) -> Option<DailySummaryRow> {
-    sqlx::query_as::<_, DailySummaryRow>(&format!(
-        "SELECT {SELECT_COLUMNS} FROM daily_summaries WHERE user_id = $1 AND summary_date = $2"
-    ))
-    .bind(user_id)
-    .bind(date)
+    sqlx::query_as!(
+        DailySummaryRow,
+        r#"SELECT summary_date, session_count, avg_quality_score,
+            goals_achieved, goals_partial, goals_failed,
+            total_prompts, total_tool_uses, total_errors,
+            summary, patterns, skill_gaps, top_recommendation,
+            daily_xp, tags,
+            avg_apm, peak_apm, avg_eapm, peak_concurrency, avg_concurrency,
+            total_input_bytes, total_output_bytes, peak_throughput_bps,
+            tool_diversity, multitasking_score, session_velocity, achievements_unlocked,
+            highlights, trends, category_distribution,
+            plugins_count, skills_count, agents_count, mcp_servers_count, hooks_count,
+            health_score, skill_effectiveness,
+            avg_session_duration_minutes, avg_turns_per_session, total_corrections,
+            avg_automation_ratio, plan_mode_sessions
+           FROM daily_summaries
+           WHERE user_id = $1 AND summary_date = $2"#,
+        user_id,
+        date,
+    )
     .fetch_optional(pool)
     .await
     .map_err(|e| {
@@ -136,11 +140,28 @@ pub async fn fetch_recent_daily_summaries(
     user_id: &str,
     limit: i64,
 ) -> Vec<DailySummaryRow> {
-    sqlx::query_as::<_, DailySummaryRow>(&format!(
-        "SELECT {SELECT_COLUMNS} FROM daily_summaries WHERE user_id = $1 ORDER BY summary_date DESC LIMIT $2"
-    ))
-    .bind(user_id)
-    .bind(limit)
+    sqlx::query_as!(
+        DailySummaryRow,
+        r#"SELECT summary_date, session_count, avg_quality_score,
+            goals_achieved, goals_partial, goals_failed,
+            total_prompts, total_tool_uses, total_errors,
+            summary, patterns, skill_gaps, top_recommendation,
+            daily_xp, tags,
+            avg_apm, peak_apm, avg_eapm, peak_concurrency, avg_concurrency,
+            total_input_bytes, total_output_bytes, peak_throughput_bps,
+            tool_diversity, multitasking_score, session_velocity, achievements_unlocked,
+            highlights, trends, category_distribution,
+            plugins_count, skills_count, agents_count, mcp_servers_count, hooks_count,
+            health_score, skill_effectiveness,
+            avg_session_duration_minutes, avg_turns_per_session, total_corrections,
+            avg_automation_ratio, plan_mode_sessions
+           FROM daily_summaries
+           WHERE user_id = $1
+           ORDER BY summary_date DESC
+           LIMIT $2"#,
+        user_id,
+        limit,
+    )
     .fetch_all(pool)
     .await
     .unwrap_or_else(|e| {

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE mcp_sessions\n            SET last_activity_at = NOW(),\n                expires_at = NOW() + INTERVAL '24 hours'\n            WHERE session_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5902d452136544eeaf7bd1edad6eccdad72ddb8bd4ee162c835c56a10762d44f"
+}

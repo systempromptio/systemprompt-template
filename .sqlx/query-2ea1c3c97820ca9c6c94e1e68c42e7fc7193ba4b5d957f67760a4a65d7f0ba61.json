@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n                COALESCE(g.agent_id, '') AS \"identity_id!\",\n                g.policy AS \"policy!\",\n                COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS \"deny_count!\",\n                COUNT(*)::bigint AS \"total_count!\"\n              FROM governance_decisions g\n              WHERE g.created_at >= $1 AND g.created_at < $2\n              GROUP BY COALESCE(g.agent_id, ''), g.policy\n              HAVING COUNT(*) FILTER (WHERE g.decision = 'deny') > 0\n              ORDER BY 3 DESC, 4 DESC\n              LIMIT 500",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "identity_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "policy!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "deny_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "2ea1c3c97820ca9c6c94e1e68c42e7fc7193ba4b5d957f67760a4a65d7f0ba61"
+}

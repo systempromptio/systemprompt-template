@@ -202,6 +202,9 @@ pub async fn build_bridge_profile_data(
         async move {
             find_cowork_user(&pool_for_user, &user_id_user)
                 .await
+                .inspect_err(|e| {
+                    tracing::warn!(error = %e, user_id = %user_id_user, "bridge_profile: find_cowork_user failed");
+                })
                 .ok()
                 .flatten()
         }

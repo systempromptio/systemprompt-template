@@ -81,6 +81,7 @@ async fn has_recent_login(pool: &PgPool, user_id: &str) -> bool {
     )
     .fetch_one(pool)
     .await
+    .inspect_err(|e| tracing::warn!(error = %e, "activity_grp: dedupe count query failed"))
     .ok()
     .flatten()
     .unwrap_or(0)
@@ -95,6 +96,7 @@ async fn has_recent_tool_usage(pool: &PgPool, user_id: &str, tool_name: &str) ->
     )
     .fetch_one(pool)
     .await
+    .inspect_err(|e| tracing::warn!(error = %e, "activity_grp: dedupe count query failed"))
     .ok()
     .flatten()
     .unwrap_or(0)
@@ -108,6 +110,7 @@ async fn has_recent_mcp_rejected(pool: &PgPool, server_name: &str) -> bool {
     )
     .fetch_one(pool)
     .await
+    .inspect_err(|e| tracing::warn!(error = %e, "activity_grp: dedupe count query failed"))
     .ok()
     .flatten()
     .unwrap_or(0)
@@ -121,6 +124,7 @@ async fn has_session_started(pool: &PgPool, entity_id: &str) -> bool {
     )
     .fetch_one(pool)
     .await
+    .inspect_err(|e| tracing::warn!(error = %e, "activity_grp: dedupe count query failed"))
     .ok()
     .flatten()
     .unwrap_or(0)

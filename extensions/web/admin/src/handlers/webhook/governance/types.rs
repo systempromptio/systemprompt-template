@@ -59,13 +59,10 @@ pub struct HookSpecificOutput {
     pub permission_decision_reason: Option<String>,
 }
 
-/// Per-policy outcome in the audit trace.
 #[derive(Debug, Serialize, Clone)]
 #[serde(tag = "result", rename_all = "lowercase")]
 pub enum ChainEntryResult {
-    /// Policy was enabled and produced an allow.
     Pass,
-    /// Policy was enabled and produced a deny.
     Fail,
     /// Policy was disabled in config, or skipped after a prior deny.
     Skip,
@@ -88,7 +85,6 @@ pub struct PrincipalSnapshot {
     pub agent_scope: AccessScope,
 }
 
-/// What the chain was asked to evaluate.
 #[derive(Debug, Serialize, Clone)]
 pub struct AuditTarget {
     pub tool_name: String,

@@ -92,20 +92,20 @@ fn matrix_url(entity_type: &str, entity_id: &str) -> String {
 }
 
 async fn assignment_counts_by_type(pool: &PgPool, entity_type: &str) -> HashMap<String, i64> {
-    let rows = sqlx::query_as::<_, (String, i64)>(
-        "SELECT entity_id, COUNT(*)::BIGINT
-         FROM access_control_rules
-         WHERE entity_type = $1
-         GROUP BY entity_id",
+    let rows = sqlx::query!(
+        r#"SELECT entity_id, COUNT(*)::BIGINT AS "count!"
+           FROM access_control_rules
+           WHERE entity_type = $1
+           GROUP BY entity_id"#,
+        entity_type,
     )
-    .bind(entity_type)
     .fetch_all(pool)
     .await
     .unwrap_or_else(|e| {
         tracing::warn!(error = %e, entity_type, "Failed to load assignment counts");
         Vec::new()
     });
-    rows.into_iter().collect()
+    rows.into_iter().map(|r| (r.entity_id, r.count)).collect()
 }
 
 fn build_row(

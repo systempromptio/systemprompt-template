@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COALESCE(SUM(cost_microdollars)::float / 1000000.0, 0.0) as \"total_cost!\",\n                COALESCE(SUM(cost_microdollars) FILTER (WHERE created_at > $1)::float / 1000000.0, 0.0) as \"cost_24h!\",\n                COALESCE(SUM(cost_microdollars) FILTER (WHERE created_at > $2)::float / 1000000.0, 0.0) as \"cost_7d!\",\n                COALESCE(SUM(cost_microdollars) FILTER (WHERE created_at > $3)::float / 1000000.0, 0.0) as \"cost_30d!\",\n                COALESCE(AVG(cost_microdollars)::float / 1000000.0, 0.0) as \"avg_cost_per_request!\"\n            FROM ai_requests\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_cost!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 1,
+        "name": "cost_24h!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 2,
+        "name": "cost_7d!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "cost_30d!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "avg_cost_per_request!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "850f50ec12f66c28971ce1f5c25a490ca0c0ef7c5d79e13acb430827586b1ad8"
+}

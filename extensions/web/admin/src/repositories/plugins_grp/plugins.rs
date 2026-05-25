@@ -69,6 +69,8 @@ pub fn list_skill_catalog(
             .get("enabled")
             .and_then(serde_yaml::Value::as_bool)
             .unwrap_or(true);
+        // Why: `strip_prefix` returns Err when the path isn't under services_path
+        // (e.g. an absolute legacy entry); fall back to the full display path.
         let source_path = cfg
             .strip_prefix(services_path)
             .ok()
@@ -110,6 +112,7 @@ pub fn list_agent_catalog(
         let Ok(val): Result<serde_yaml::Value, _> = serde_yaml::from_str(&raw) else {
             continue;
         };
+        // Why: see `list_skill_catalog` — same fallback semantics on prefix miss.
         let source_path = path
             .strip_prefix(services_path)
             .ok()

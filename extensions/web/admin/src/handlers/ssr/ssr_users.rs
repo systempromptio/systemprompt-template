@@ -267,6 +267,7 @@ async fn collect_user_detail_extras(
 ) -> UserDetailExtras {
     let (roles, department) = repositories::get_user_roles_department(pool, d.user_id.as_str())
         .await
+        .inspect_err(|e| tracing::warn!(error = %e, user_id = %d.user_id, "ssr_users: get_user_roles_department failed"))
         .ok()
         .flatten()
         .unwrap_or_else(|| (Vec::new(), String::new()));
@@ -321,15 +322,21 @@ async fn collect_user_devices(
     let app_links: std::collections::HashMap<
         String,
         (String, String, Option<chrono::DateTime<chrono::Utc>>),
-    > = sqlx::query_as::<_, (String, String, String, Option<chrono::DateTime<chrono::Utc>>)>(
-        "SELECT device_id, app_platform, app_version, last_seen_at FROM device_app_links WHERE user_id = $1",
+    > = sqlx::query!(
+        r#"SELECT device_id AS "device_id!",
+                  app_platform AS "app_platform!",
+                  app_version AS "app_version!",
+                  last_seen_at
+             FROM device_app_links
+             WHERE user_id = $1"#,
+        d.user_id.as_str(),
     )
-    .bind(d.user_id.as_str())
     .fetch_all(pool)
     .await
+    .inspect_err(|e| tracing::warn!(error = %e, "ssr_users: load device app_links failed"))
     .unwrap_or_default()
     .into_iter()
-    .map(|(id, p, v, ts)| (id, (p, v, ts)))
+    .map(|r| (r.device_id, (r.app_platform, r.app_version, r.last_seen_at)))
     .collect();
 
     pats.into_iter()
@@ -349,9 +356,10 @@ async fn collect_user_devices(
 }
 
 async fn fetch_departments(pool: &PgPool) -> Vec<String> {
-    sqlx::query_scalar::<_, String>("SELECT name FROM departments ORDER BY name")
+    sqlx::query_scalar!("SELECT name FROM departments ORDER BY name")
         .fetch_all(pool)
         .await
+        .inspect_err(|e| tracing::warn!(error = %e, "ssr_users: load departments failed"))
         .unwrap_or_default()
 }
 

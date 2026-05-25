@@ -3,6 +3,7 @@
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt_security::policy::types::AccessScope;
 
 use super::time_range::TimeRange;
 
@@ -10,7 +11,7 @@ use super::time_range::TimeRange;
 pub struct DecisionFilter {
     pub user_id: Option<String>,
     pub agent_id: Option<String>,
-    pub agent_scope: Option<String>,
+    pub agent_scope: Option<AccessScope>,
     pub policy: Option<String>,
     pub decision: Option<String>,
     pub tool_name: Option<String>,
@@ -68,7 +69,7 @@ pub struct DecisionRow {
     pub session_id: String,
     pub tool_name: String,
     pub agent_id: Option<String>,
-    pub agent_scope: Option<String>,
+    pub agent_scope: Option<AccessScope>,
     pub decision: String,
     pub policy: String,
     pub reason: String,
@@ -146,7 +147,7 @@ pub async fn fetch_decisions_paged(
         .bind(range.to)
         .bind(filter.user_id.as_deref())
         .bind(filter.agent_id.as_deref())
-        .bind(filter.agent_scope.as_deref())
+        .bind(filter.agent_scope)
         .bind(filter.policy.as_deref())
         .bind(filter.decision.as_deref())
         .bind(filter.tool_name.as_deref())
@@ -188,7 +189,7 @@ struct PagedRow {
     session_id: String,
     tool_name: String,
     agent_id: Option<String>,
-    agent_scope: Option<String>,
+    agent_scope: Option<AccessScope>,
     decision: String,
     policy: String,
     reason: String,

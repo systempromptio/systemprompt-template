@@ -25,6 +25,9 @@ pub fn list_mcp_servers(services_path: &Path) -> Result<Vec<McpServerDetail>, Ma
             Err(_) => continue,
         };
         let rel_source = path
+            // Why: strip_prefix returns Err when the path isn't under services_path
+            // (e.g. an absolute legacy entry); the fallback constructs a synthetic
+            // path string instead of bailing.
             .strip_prefix(services_path)
             .ok()
             .and_then(|p| p.to_str())

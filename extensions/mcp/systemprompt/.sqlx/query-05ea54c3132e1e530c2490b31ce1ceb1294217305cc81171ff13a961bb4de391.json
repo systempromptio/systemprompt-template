@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT tool_name as \"tool_name!\", tool_input as \"tool_input!\",\n            sequence_number as \"sequence_number!\"\n        FROM ai_request_tool_calls WHERE request_id = $1 ORDER BY sequence_number\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tool_name!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "tool_input!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "sequence_number!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "05ea54c3132e1e530c2490b31ce1ceb1294217305cc81171ff13a961bb4de391"
+}

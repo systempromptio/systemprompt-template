@@ -35,7 +35,10 @@ const DEPARTMENTS_FILE: &str = "access-control/departments.yaml";
 #[serde(deny_unknown_fields)]
 pub struct YamlRule {
     pub entity_type: EntityKind,
-    pub entity_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entity_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entity_match: Option<String>,
     #[serde(default = "default_allow")]
     pub access: Access,
     #[serde(default)]
@@ -44,6 +47,54 @@ pub struct YamlRule {
     pub roles: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub departments: Vec<String>,
+}
+
+impl YamlRule {
+    /// Enforce exactly-one of `entity_id` / `entity_match`. Operators can fix
+    /// the offending stanza from this message alone — both field names are
+    /// surfaced verbatim.
+    fn validate_target(&self) -> Result<(), MarketplaceError> {
+        match (&self.entity_id, &self.entity_match) {
+            (Some(_), Some(_)) => Err(MarketplaceError::Internal(format!(
+                "rule for entity_type={} sets both entity_id and entity_match; pick one",
+                self.entity_type.as_str()
+            ))),
+            (None, None) => Err(MarketplaceError::Internal(format!(
+                "rule for entity_type={} sets neither entity_id nor entity_match",
+                self.entity_type.as_str()
+            ))),
+            _ => Ok(()),
+        }
+    }
+}
+
+/// Tiny `*`-glob matcher. The only patterns we expect in practice are `"*"`
+/// and `"prefix*"` / `"*suffix"`; pulling in `globset` for this is overkill.
+fn glob_matches(pattern: &str, candidate: &str) -> bool {
+    let parts: Vec<&str> = pattern.split('*').collect();
+    if parts.len() == 1 {
+        return pattern == candidate;
+    }
+    let first = parts[0];
+    let last = parts[parts.len() - 1];
+    if !candidate.starts_with(first) || !candidate.ends_with(last) {
+        return false;
+    }
+    if first.len() + last.len() > candidate.len() {
+        return false;
+    }
+    let mut cursor = first.len();
+    let end = candidate.len() - last.len();
+    for part in &parts[1..parts.len() - 1] {
+        if part.is_empty() {
+            continue;
+        }
+        match candidate[cursor..end].find(part) {
+            Some(pos) => cursor += pos + part.len(),
+            None => return false,
+        }
+    }
+    true
 }
 
 const fn default_allow() -> Access {
@@ -79,6 +130,8 @@ pub struct LoadReport {
     pub departments_upserted: usize,
     pub rules_upserted: usize,
     pub rules_skipped: usize,
+    pub glob_rules_expanded: usize,
+    pub glob_entities_matched: usize,
 }
 
 pub async fn load_from_yaml(
@@ -94,6 +147,8 @@ pub async fn load_from_yaml(
         departments = report.departments_upserted,
         rules = report.rules_upserted,
         skipped = report.rules_skipped,
+        glob_rules = report.glob_rules_expanded,
+        glob_entities = report.glob_entities_matched,
         "bootstrap_yaml_loaded"
     );
     Ok(report)
@@ -153,18 +208,21 @@ async fn apply_one_rule(
     scope: RuleScope,
     report: &mut LoadReport,
 ) -> Result<(), MarketplaceError> {
+    rule.validate_target()?;
     let source_label = match scope {
         RuleScope::RolesOnly => "roles.yaml",
         RuleScope::DepartmentsOnly => "departments.yaml",
     };
-    repo.upsert_entity(
-        rule.entity_type,
-        &rule.entity_id,
-        rule.default_included,
-        source_label,
-    )
-    .await
-    .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
+
+    let target_ids = resolve_target_ids(repo, rule).await?;
+    if target_ids.is_empty() {
+        report.rules_skipped += 1;
+        return Ok(());
+    }
+    if rule.entity_match.is_some() {
+        report.glob_rules_expanded += 1;
+        report.glob_entities_matched += target_ids.len();
+    }
 
     let (rule_type, values, justification) = match scope {
         RuleScope::RolesOnly => (
@@ -179,20 +237,52 @@ async fn apply_one_rule(
         ),
     };
 
-    for value in values {
-        repo.upsert_rule(UpsertRuleParams {
-            entity_type: rule.entity_type,
-            entity_id: &rule.entity_id,
-            rule_type,
-            rule_value: value,
-            access: rule.access,
-            justification: Some(justification),
-        })
+    for target_id in &target_ids {
+        repo.upsert_entity(
+            rule.entity_type,
+            target_id,
+            rule.default_included,
+            source_label,
+        )
         .await
         .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
-        report.rules_upserted += 1;
+
+        for value in values {
+            repo.upsert_rule(UpsertRuleParams {
+                entity_type: rule.entity_type,
+                entity_id: target_id,
+                rule_type,
+                rule_value: value,
+                access: rule.access,
+                justification: Some(justification),
+            })
+            .await
+            .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
+            report.rules_upserted += 1;
+        }
     }
     Ok(())
+}
+
+async fn resolve_target_ids(
+    repo: &AccessControlRepository,
+    rule: &YamlRule,
+) -> Result<Vec<String>, MarketplaceError> {
+    if let Some(literal) = rule.entity_id.as_deref() {
+        return Ok(vec![literal.to_owned()]);
+    }
+    let Some(pattern) = rule.entity_match.as_deref() else {
+        return Ok(Vec::new());
+    };
+    let catalog = repo
+        .list_entities(rule.entity_type)
+        .await
+        .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
+    Ok(catalog
+        .into_iter()
+        .filter(|row| glob_matches(pattern, &row.id))
+        .map(|row| row.id)
+        .collect())
 }
 
 async fn apply_rules(

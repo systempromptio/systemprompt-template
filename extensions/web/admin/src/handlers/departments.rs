@@ -139,6 +139,7 @@ pub async fn assign_user_to_department_handler(
     if !dept_name.is_empty()
         && repositories::get_department_by_name(&pool, dept_name)
             .await
+            .inspect_err(|e| tracing::warn!(error = %e, dept_name, "get_department_by_name failed"))
             .ok()
             .flatten()
             .is_none()

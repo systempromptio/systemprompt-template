@@ -2,7 +2,7 @@ use std::fmt;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
+use sqlx::{Decode, Encode, FromRow, Postgres, Type, postgres::PgTypeInfo};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -35,6 +35,40 @@ impl TryFrom<String> for RuleType {
     }
 }
 
+impl Type<Postgres> for RuleType {
+    fn type_info() -> PgTypeInfo {
+        <String as Type<Postgres>>::type_info()
+    }
+    fn compatible(ty: &PgTypeInfo) -> bool {
+        <String as Type<Postgres>>::compatible(ty)
+    }
+}
+
+impl<'r> Decode<'r, Postgres> for RuleType {
+    fn decode(
+        value: <Postgres as sqlx::Database>::ValueRef<'r>,
+    ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+        let s = <String as Decode<Postgres>>::decode(value)?;
+        Self::try_from(s).map_err(Into::into)
+    }
+}
+
+impl<'q> Encode<'q, Postgres> for RuleType {
+    fn encode_by_ref(
+        &self,
+        buf: &mut <Postgres as sqlx::Database>::ArgumentBuffer<'q>,
+    ) -> Result<sqlx::encode::IsNull, Box<dyn std::error::Error + Send + Sync>> {
+        <&str as Encode<Postgres>>::encode_by_ref(
+            &match self {
+                Self::Role => "role",
+                Self::Department => "department",
+                Self::User => "user",
+            },
+            buf,
+        )
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum AccessDecision {
@@ -60,6 +94,39 @@ impl TryFrom<String> for AccessDecision {
             "deny" => Ok(Self::Deny),
             other => Err(format!("invalid access decision: {other}")),
         }
+    }
+}
+
+impl Type<Postgres> for AccessDecision {
+    fn type_info() -> PgTypeInfo {
+        <String as Type<Postgres>>::type_info()
+    }
+    fn compatible(ty: &PgTypeInfo) -> bool {
+        <String as Type<Postgres>>::compatible(ty)
+    }
+}
+
+impl<'r> Decode<'r, Postgres> for AccessDecision {
+    fn decode(
+        value: <Postgres as sqlx::Database>::ValueRef<'r>,
+    ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+        let s = <String as Decode<Postgres>>::decode(value)?;
+        Self::try_from(s).map_err(Into::into)
+    }
+}
+
+impl<'q> Encode<'q, Postgres> for AccessDecision {
+    fn encode_by_ref(
+        &self,
+        buf: &mut <Postgres as sqlx::Database>::ArgumentBuffer<'q>,
+    ) -> Result<sqlx::encode::IsNull, Box<dyn std::error::Error + Send + Sync>> {
+        <&str as Encode<Postgres>>::encode_by_ref(
+            &match self {
+                Self::Allow => "allow",
+                Self::Deny => "deny",
+            },
+            buf,
+        )
     }
 }
 

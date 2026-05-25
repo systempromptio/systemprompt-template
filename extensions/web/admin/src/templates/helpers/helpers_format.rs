@@ -248,6 +248,9 @@ impl HelperDef for CssVersionHelper {
                     std::path::PathBuf::from(".")
                 })
                 .join("storage/files/css/css-manifest.json");
+            // Why: a missing/corrupt CSS manifest at template-render time falls
+            // back to "0" — the helper exists to bust browser caches, not to
+            // halt rendering. Errors are absorbed deliberately.
             std::fs::read_to_string(&path)
                 .ok()
                 .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())

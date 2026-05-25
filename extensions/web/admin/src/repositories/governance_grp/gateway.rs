@@ -412,7 +412,6 @@ pub fn find_matching_route<'a>(
     routes.iter().find(|r| glob_match(&r.model_pattern, model))
 }
 
-/// Locate the index of a route by its stable `id`.
 #[must_use]
 pub fn find_route_index_by_id(routes: &[GatewayRouteView], id: &str) -> Option<usize> {
     routes.iter().position(|r| r.id == id)

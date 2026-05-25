@@ -158,27 +158,33 @@ fn build_device_rows(rows: Vec<DeviceRowDb>) -> (Vec<DeviceRow>, usize) {
 }
 
 async fn load_device_user_options(pool: &PgPool) -> Vec<DeviceUserOption> {
-    sqlx::query_as::<_, (String, Option<String>, Option<String>)>(
-        r"
-        SELECT u.id::TEXT, u.email::TEXT, COALESCE(NULLIF(u.display_name, ''), NULLIF(u.full_name, ''), NULLIF(u.name, '')) AS display_name
+    sqlx::query!(
+        r#"
+        SELECT u.id::TEXT AS "uid!",
+               u.email::TEXT AS "email?",
+               COALESCE(NULLIF(u.display_name, ''), NULLIF(u.full_name, ''), NULLIF(u.name, '')) AS "display?"
         FROM users u
         WHERE NOT ('anonymous' = ANY(u.roles))
           AND u.email NOT LIKE '%@anonymous.local'
         ORDER BY COALESCE(NULLIF(u.display_name, ''), u.email::TEXT, u.id::TEXT)
-        ",
+        "#,
     )
     .fetch_all(pool)
     .await
+    .inspect_err(|e| tracing::warn!(error = %e, "ssr_management: load device user options failed"))
     .unwrap_or_default()
     .into_iter()
-    .map(|(uid, email, display)| {
-        let label = match (display.as_deref(), email.as_deref()) {
+    .map(|r| {
+        let label = match (r.display.as_deref(), r.email.as_deref()) {
             (Some(d), Some(e)) => format!("{d} ({e})"),
             (Some(d), None) => d.to_string(),
             (None, Some(e)) => e.to_string(),
-            (None, None) => uid.clone(),
+            (None, None) => r.uid.clone(),
         };
-        DeviceUserOption { user_id: uid, label }
+        DeviceUserOption {
+            user_id: r.uid,
+            label,
+        }
     })
     .collect()
 }
@@ -229,23 +235,24 @@ pub async fn management_devices_page(
         return forbidden();
     }
 
-    let rows: Vec<DeviceRowDb> = sqlx::query_as::<_, DeviceRowDb>(
-        r"
+    let rows: Vec<DeviceRowDb> = sqlx::query_as!(
+        DeviceRowDb,
+        r#"
         SELECT
-            ak.id,
-            ak.name,
-            ak.key_prefix,
-            ak.user_id,
-            u.email::TEXT AS user_email,
-            NULLIF(upe.department, '') AS department,
-            dal.app_platform AS platform,
-            NULLIF(dal.app_version, '') AS app_version,
-            NULLIF(dal.hostname, '') AS hostname,
-            COALESCE(dal.last_seen_at, ak.last_used_at) AS last_seen_at,
-            dal.enrolled_at,
-            ak.expires_at,
-            ak.created_at,
-            ak.revoked_at
+            ak.id AS "id!",
+            ak.name AS "name!",
+            ak.key_prefix AS "key_prefix!",
+            ak.user_id AS "user_id!",
+            u.email::TEXT AS "user_email?",
+            NULLIF(upe.department, '') AS "department?",
+            dal.app_platform AS "platform?",
+            NULLIF(dal.app_version, '') AS "app_version?",
+            NULLIF(dal.hostname, '') AS "hostname?",
+            COALESCE(dal.last_seen_at, ak.last_used_at) AS "last_seen_at?",
+            dal.enrolled_at AS "enrolled_at?",
+            ak.expires_at AS "expires_at?",
+            ak.created_at AS "created_at?",
+            ak.revoked_at AS "revoked_at?"
         FROM user_api_keys ak
         LEFT JOIN users u ON u.id = ak.user_id
         LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
@@ -253,10 +260,11 @@ pub async fn management_devices_page(
         ORDER BY ak.revoked_at IS NOT NULL,
                  COALESCE(u.email::TEXT, ak.user_id::TEXT),
                  ak.created_at DESC
-        ",
+        "#,
     )
     .fetch_all(&*pool)
     .await
+    .inspect_err(|e| tracing::warn!(error = %e, "ssr_management: load devices failed"))
     .unwrap_or_default();
 
     let (mut devices, online) = build_device_rows(rows);

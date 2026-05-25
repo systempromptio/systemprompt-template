@@ -3,6 +3,8 @@ use systemprompt::config::SecretsBootstrap;
 const SLACK_MAX_LENGTH: usize = 39_000;
 
 fn alert_channel() -> Option<String> {
+    // Why: secrets are loaded lazily; an empty/missing bootstrap is the
+    // "Slack alerts disabled" state and must not log on every alert path.
     SecretsBootstrap::get()
         .ok()
         .and_then(|s| s.get("activity_report_slack_channel").cloned())

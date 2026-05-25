@@ -180,7 +180,6 @@ pub async fn fetch_governance_events(pool: &PgPool) -> Result<Vec<GovernanceEven
     .await
 }
 
-/// Counts within a sliding time window ending at `now()`.
 pub async fn fetch_windowed_counts(
     pool: &PgPool,
     window_seconds: i64,

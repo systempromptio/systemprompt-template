@@ -283,7 +283,7 @@ The committed configs that close the system:
 
 | File | What it pins | Why it matters |
 |------|--------------|----------------|
-| `.systemprompt/profiles/airgap/profile.yaml` | `gateway.routes[*].endpoint = http://mock-inference:8080`; route IDs aligned to `services/gateway/access.yaml`'s `default_included` entries; `runtime.log_level: normal`; `cloud.tenant_id: null`; all three `api_*_url` pinned to in-container `:8080`. | Gateway never tries to dial Anthropic/OpenAI/Gemini; RBAC matches the routes so no `authz denied: not assigned`. |
+| `.systemprompt/profiles/airgap/profile.yaml` | `gateway.routes[*].endpoint = http://mock-inference:8080`; route IDs aligned to the `gateway_route` grants in `services/access-control/roles.yaml`; `runtime.log_level: normal`; `cloud.tenant_id: null`; all three `api_*_url` pinned to in-container `:8080`. | Gateway never tries to dial Anthropic/OpenAI/Gemini; RBAC matches the routes so no `authz denied: not assigned`. |
 | `.systemprompt/profiles/airgap/secrets.json.example` | `*_ENDPOINT` keys → mock URL; `manifest_signing_secret_seed`; no upstream provider api_key needed. | AI service providers (`config.yaml`) resolve their endpoints to the mock; missing api_key + present endpoint keeps the provider enabled (WS2). |
 | `.systemprompt/profiles/airgap/catalog.yaml` | Declares the exposed models — referenced by `gateway.catalog_path` in profile.yaml. | Single source of truth for what `/v1/messages` accepts; dispatch and `/profile` both derive from it. |
 | `services/gateway/policies.yaml` | Per-call ceilings, quotas, safety. Model exposure is NOT here. | Policy concerns kept separate from the model registry. |

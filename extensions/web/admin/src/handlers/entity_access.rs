@@ -215,6 +215,7 @@ pub async fn list_all_entity_access_handler(
         let default_included = r
             .get_entity(kind, eid)
             .await
+            .inspect_err(|e| tracing::warn!(error = %e, eid = %eid, "entity_access: get_entity failed"))
             .ok()
             .flatten()
             .is_some_and(|e| e.default_included);

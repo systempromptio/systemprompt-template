@@ -183,13 +183,15 @@ pub async fn list_events(
 }
 
 pub async fn list_event_breakdown(pool: &PgPool) -> Result<Vec<EventBreakdown>, sqlx::Error> {
-    let sql = r"SELECT p.event_type, COUNT(*)::BIGINT AS count
-        FROM plugin_usage_events p
-        JOIN users u ON u.id = p.user_id
-        WHERE NOT ('anonymous' = ANY(u.roles)) AND u.email NOT LIKE '%@anonymous.local'
-        GROUP BY p.event_type
-        ORDER BY count DESC";
-    sqlx::query_as::<_, EventBreakdown>(sql)
-        .fetch_all(pool)
-        .await
+    sqlx::query_as!(
+        EventBreakdown,
+        r#"SELECT p.event_type, COUNT(*)::BIGINT AS "count!"
+           FROM plugin_usage_events p
+           JOIN users u ON u.id = p.user_id
+           WHERE NOT ('anonymous' = ANY(u.roles)) AND u.email NOT LIKE '%@anonymous.local'
+           GROUP BY p.event_type
+           ORDER BY COUNT(*) DESC"#,
+    )
+    .fetch_all(pool)
+    .await
 }

@@ -33,19 +33,20 @@ struct UserListRow {
 }
 
 async fn fetch_users_for_tree(pool: &PgPool) -> Vec<UserListRow> {
-    sqlx::query_as::<_, UserListRow>(
-        r"SELECT
-              u.id,
-              u.email,
-              COALESCE(u.display_name, u.full_name, u.name) AS display_name,
-              u.roles,
-              COALESCE(upe.department, '') AS department,
-              (u.status = 'active') AS is_active
+    sqlx::query_as!(
+        UserListRow,
+        r#"SELECT
+              u.id AS "id!",
+              u.email AS "email!",
+              COALESCE(u.display_name, u.full_name, u.name) AS "display_name?",
+              u.roles AS "roles!",
+              COALESCE(upe.department, '') AS "department!",
+              (u.status = 'active') AS "is_active!"
            FROM users u
            LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
            WHERE NOT ('anonymous' = ANY(u.roles))
              AND u.email NOT LIKE '%@anonymous.local'
-           ORDER BY COALESCE(upe.department, ''), COALESCE(u.display_name, u.email)",
+           ORDER BY COALESCE(upe.department, ''), COALESCE(u.display_name, u.email)"#,
     )
     .fetch_all(pool)
     .await
