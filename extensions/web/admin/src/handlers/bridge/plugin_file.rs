@@ -19,7 +19,7 @@ pub async fn handle(
     AxumPath((plugin_id, relative_path)): AxumPath<(String, String)>,
     headers: HeaderMap,
 ) -> Response {
-    let user_id = match super::validate_cowork_jwt(&headers) {
+    let user_id = match super::validate_bridge_jwt(&headers) {
         Ok(id) => id,
         Err(r) => return *r,
     };

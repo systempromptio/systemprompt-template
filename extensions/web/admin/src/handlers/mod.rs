@@ -1,6 +1,6 @@
 pub mod access_control;
 pub mod catalog;
-pub mod cowork;
+pub mod bridge;
 pub mod demo_register;
 pub mod departments;
 pub mod devices;

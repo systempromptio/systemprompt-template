@@ -1,6 +1,6 @@
 //! Admin extension for the Enterprise Demo template.
 //!
-//! Wires the admin dashboard, governance webhooks, cowork plane, and
+//! Wires the admin dashboard, governance webhooks, bridge plane, and
 //! supporting services onto a shared `PgPool`. Public surface is grouped by
 //! concern:
 //!
@@ -9,8 +9,8 @@
 //! - [`hooks_webhook_router`] — the four governance webhooks called by
 //!   gateway / MCP / Claude Code (`/hooks/track`, `/hooks/govern`,
 //!   `/govern/authz`, statusline/transcript ingest).
-//! - [`secrets_router`], [`share_manifest_router`], [`cowork_router`] —
-//!   per-plugin secret resolution, public manifest sharing, and the cowork
+//! - [`secrets_router`], [`share_manifest_router`], [`bridge_router`] —
+//!   per-plugin secret resolution, public manifest sharing, and the bridge
 //!   plugin-file plane.
 //!
 //! [`repositories`] owns every `sqlx` call; handlers/services never touch
@@ -41,11 +41,11 @@ use axum::{
 };
 use sqlx::PgPool;
 
-pub use routes::{admin_ssr_router, cowork_auth_ssr_router};
+pub use routes::{admin_ssr_router, bridge_auth_ssr_router};
 pub use types::{CreateUserRequest, MarketplaceContext, UsageEvent, UserContext, UserSummary};
 
 pub mod test_support {
-    pub use crate::handlers::cowork::plugin_file::resolve_within;
+    pub use crate::handlers::bridge::plugin_file::resolve_within;
     pub use crate::handlers::resolve_principal;
 }
 
@@ -94,12 +94,11 @@ pub fn secrets_router(pool: Arc<PgPool>) -> Router {
         .with_state(pool)
 }
 
-pub fn cowork_router(pool: Arc<PgPool>) -> Router {
+pub fn bridge_router(pool: Arc<PgPool>) -> Router {
     Router::new()
-        .route("/v1/cowork/whoami", get(handlers::cowork::whoami::handle))
         .route(
-            "/v1/cowork/plugins/{plugin_id}/{*path}",
-            get(handlers::cowork::plugin_file::handle),
+            "/v1/bridge/plugins/{plugin_id}/{*path}",
+            get(handlers::bridge::plugin_file::handle),
         )
         .with_state(pool)
 }

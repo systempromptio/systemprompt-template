@@ -10,9 +10,9 @@ use tower_http::normalize_path::NormalizePathLayer;
 
 use super::super::{handlers, middleware, templates::AdminTemplateEngine};
 
-pub fn cowork_auth_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Router {
+pub fn bridge_auth_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Router {
     let inner = Router::new()
-        .route("/setup", get(handlers::ssr::cowork_setup_page))
+        .route("/setup", get(handlers::ssr::bridge_setup_page))
         .route("/device-link", get(handlers::ssr::device_link_page))
         .route(
             "/device-link/approve",

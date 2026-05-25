@@ -5,15 +5,15 @@ import { on } from '../services/events.js';
 const INSTALL_TEMPLATES = {
   macos: {
     title: 'Install on macOS',
-    intro: 'Run the following on the target Mac. The Homebrew tap installs the Systemprompt Cowork app and the systemprompt-bridge CLI; the login command registers this device against the gateway using the PAT above.',
+    intro: 'Run the following on the target Mac. The Homebrew tap installs the Systemprompt Bridge app and the systemprompt-bridge CLI; the login command registers this device against the gateway using the PAT above.',
     downloadLabel: 'Download .dmg from GitHub Releases',
     downloadHref: 'https://github.com/systempromptio/systemprompt-template/releases/latest',
-    guideHref: '/docs/cowork/install-macos',
+    guideHref: '/docs/bridge/install-macos',
     snippet: ({ pat, origin }) => [
       'brew tap systempromptio/tap',
-      'brew install --cask cowork',
+      'brew install --cask bridge',
       `systemprompt-bridge login ${pat} --gateway ${origin}`,
-      'open -a "Systemprompt Cowork"'
+      'open -a "Systemprompt Bridge"'
     ].join('\n'),
   },
   windows: {
@@ -21,7 +21,7 @@ const INSTALL_TEMPLATES = {
     intro: 'Run the following in PowerShell on the target Windows machine. Scoop installs the systemprompt-bridge CLI; the login command registers this device against the gateway using the PAT above.',
     downloadLabel: 'Download .msi from GitHub Releases',
     downloadHref: 'https://github.com/systempromptio/systemprompt-template/releases/latest',
-    guideHref: '/docs/cowork/install-windows',
+    guideHref: '/docs/bridge/install-windows',
     snippet: ({ pat, origin }) => [
       'scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket',
       'scoop install systemprompt-bridge',
@@ -33,7 +33,7 @@ const INSTALL_TEMPLATES = {
     intro: 'Download the prebuilt systemprompt-bridge binary, install it onto your PATH, then register the device with the gateway using the PAT above.',
     downloadLabel: 'Download Linux binary from GitHub Releases',
     downloadHref: 'https://github.com/systempromptio/systemprompt-template/releases/latest',
-    guideHref: '/docs/cowork/device-auth',
+    guideHref: '/docs/bridge/device-auth',
     snippet: ({ pat, origin }) => [
       'curl -sSL -o systemprompt-bridge \\',
       '  https://github.com/systempromptio/systemprompt-template/releases/latest/download/systemprompt-bridge-x86_64-unknown-linux-gnu',

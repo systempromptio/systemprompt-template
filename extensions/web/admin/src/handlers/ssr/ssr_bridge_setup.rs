@@ -18,7 +18,7 @@ struct SetupPageData {
     download_base_url: &'static str,
 }
 
-pub async fn cowork_setup_page(
+pub async fn bridge_setup_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -29,7 +29,7 @@ pub async fn cowork_setup_page(
         user_email: user_ctx.email.to_string(),
         download_base_url: DOWNLOAD_BASE_URL,
     };
-    render_typed_page(&engine, "cowork-setup", &data, &user_ctx, &mkt_ctx)
+    render_typed_page(&engine, "bridge-setup", &data, &user_ctx, &mkt_ctx)
 }
 
 fn derive_gateway_url(headers: &HeaderMap) -> String {

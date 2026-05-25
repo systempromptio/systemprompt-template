@@ -15,7 +15,7 @@ pub(super) const PLATFORM_CATEGORIES: &[CategoryMeta] = &[
         tagline: "Skills, the content that grounds them, and the contexts that ship them to live agents.",
         story: "\"Skill\" is a loaded word, so this walkthrough defines it by showing the whole supply chain. It starts with the skill lifecycle commands, moves to the content store that skills retrieve from, then to the managed file system that backs the content, then to the plugin package that bundles skills and hooks for distribution, and ends at contexts — the conversation containers every agent session binds to. By the end you can trace a skill from on-disk markdown to a live agent reply.",
         cost: "",
-        feature_url: "https://systemprompt.io/features/cowork",
+        feature_url: "https://systemprompt.io/features/bridge",
     },
     CategoryMeta {
         id: "web",

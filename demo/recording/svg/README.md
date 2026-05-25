@@ -34,7 +34,7 @@ svg/
 ├── svg-cap-agents.sh
 ├── svg-cap-compliance.sh
 ├── svg-int-any-agent.sh           # Integrations pillar
-├── svg-int-cowork.sh
+├── svg-int-bridge.sh
 ├── svg-int-web-publisher.sh
 ├── svg-int-extensions.sh
 ├── svg-int-benchmark.sh

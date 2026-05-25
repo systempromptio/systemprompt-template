@@ -316,7 +316,7 @@ async fn collect_user_devices(
     pool: &PgPool,
     d: &crate::types::UserDetail,
 ) -> Vec<super::types::UserDeviceView> {
-    let Ok(pats) = repositories::cowork_grp::list_api_keys_for_user(pool, &d.user_id).await else {
+    let Ok(pats) = repositories::bridge_grp::list_api_keys_for_user(pool, &d.user_id).await else {
         return Vec::new();
     };
     let app_links: std::collections::HashMap<
