@@ -508,10 +508,8 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
       disabled: []
     gateway:
       enabled: true
+      catalog_path: catalog.yaml
       routes:
-        # Claude Cowork / any Anthropic-SDK client hitting /v1/messages.
-        # model_pattern matches the exact id Cowork sends (e.g. claude-sonnet-4-6,
-        # claude-opus-4-7); raw body passes through — no upstream_model remap.
         - model_pattern: "claude-*"
           provider: anthropic
           endpoint: https://api.anthropic.com/v1
@@ -531,6 +529,40 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
           url: http://localhost:${HTTP_PORT}/api/public/govern/authz
           timeout_ms: 1000
           acknowledgement: null
+    YAML
+    fi
+    if [ ! -f "$PROFILE_DIR/catalog.yaml" ]; then
+        echo "Writing local catalog.yaml..."
+        cat > "$PROFILE_DIR/catalog.yaml" <<YAML
+    providers:
+      - name: anthropic
+        endpoint: https://api.anthropic.com/v1
+        api_key_secret: anthropic
+      - name: openai
+        endpoint: https://api.openai.com/v1
+        api_key_secret: openai
+      - name: gemini
+        endpoint: https://generativelanguage.googleapis.com/v1beta
+        api_key_secret: gemini
+
+    models:
+      - id: claude-haiku-4-5
+        provider: anthropic
+        display_name: Claude Haiku 4.5
+      - id: claude-sonnet-4-20250514
+        provider: anthropic
+        display_name: Claude Sonnet 4
+      - id: claude-opus-4-7
+        provider: anthropic
+        aliases:
+          - claude-opus-4-7[1m]
+        display_name: Claude Opus 4.7
+      - id: gpt-4-turbo
+        provider: openai
+        display_name: GPT-4 Turbo
+      - id: gemini-2.5-flash
+        provider: gemini
+        display_name: Gemini 2.5 Flash
     YAML
     fi
     if [ ! -f "$PROFILE_DIR/secrets.json" ]; then

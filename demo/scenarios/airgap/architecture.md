@@ -158,15 +158,15 @@ operator (host) ──curl──► localhost:8090
                   │                                              │
                   │  1. authenticate(jwt | x-api-key)            │
                   │  2. require x-session-id header  ──► 400 if absent
-                  │  3. find_route(model)            ──► 404 if no match
-                  │  4. enforce_authz_for_route       ──► 403 if denied
+                  │  3. is_model_exposed(model)      ──► 403 if not in catalog
+                  │  4. find_route(model)            ──► 404 if no match
+                  │  5. enforce_authz_for_route       ──► 403 if denied
                   │       └─ message names route id+model+remedy (WS5 #9)
-                  │  5. PolicyResolver.resolve()                 │
+                  │  6. PolicyResolver.resolve()                 │
                   │       ai_gateway_policies (cached 60s)       │
-                  │       GatewayPolicySpec.model_allowed(model) │
-                  │       not allowed ──► 403 "model not permitted"
-                  │  6. canonical → outbound adapter             │
-                  │  7. POST to provider endpoint                │
+                  │       quotas + safety; not model exposure    │
+                  │  7. canonical → outbound adapter             │
+                  │  8. POST to provider endpoint                │
                   │       provider.endpoint resolved from        │
                   │       expand_secrets(${ANTHROPIC_ENDPOINT})  │
                   │       → http://mock-inference:8080           │
@@ -208,10 +208,9 @@ operator (host) ──curl──► localhost:8090
 ```
 operator ──curl model=claude-opus-forbidden-99──► ingress ──► app
                                                                 │
-                                                  enforce_authz_for_route ✔
-                                                  PolicyResolver.resolve()
-                                                       allowed_models = [haiku, sonnet, gpt-4-turbo, gemini-2.5-flash]
-                                                  model NOT in allowed_models
+                                                  is_model_exposed(model)
+                                                       catalog: [haiku, sonnet, opus-4-7, gpt-4-turbo, gemini-2.5-flash]
+                                                  model NOT in catalog
                                                                 │
                                                           HTTP 403
                                                   "model not permitted by gateway policy"
@@ -286,7 +285,8 @@ The committed configs that close the system:
 |------|--------------|----------------|
 | `.systemprompt/profiles/airgap/profile.yaml` | `gateway.routes[*].endpoint = http://mock-inference:8080`; route IDs aligned to `services/gateway/access.yaml`'s `default_included` entries; `runtime.log_level: normal`; `cloud.tenant_id: null`; all three `api_*_url` pinned to in-container `:8080`. | Gateway never tries to dial Anthropic/OpenAI/Gemini; RBAC matches the routes so no `authz denied: not assigned`. |
 | `.systemprompt/profiles/airgap/secrets.json.example` | `*_ENDPOINT` keys → mock URL; `manifest_signing_secret_seed`; no upstream provider api_key needed. | AI service providers (`config.yaml`) resolve their endpoints to the mock; missing api_key + present endpoint keeps the provider enabled (WS2). |
-| `services/ai/gateway-policies.yaml` | `allowed_models: [claude-haiku-4-5, claude-sonnet-4-…, gpt-4-turbo, gemini-2.5-flash]`. | The single source of truth for the model allow-list; ingested at every boot, no scripted seeding. |
+| `.systemprompt/profiles/airgap/catalog.yaml` | Declares the exposed models — referenced by `gateway.catalog_path` in profile.yaml. | Single source of truth for what `/v1/messages` accepts; dispatch and `/profile` both derive from it. |
+| `services/ai/gateway-policies.yaml` | Per-call ceilings, quotas, safety. Model exposure is NOT here. | Policy concerns kept separate from the model registry. |
 | `services/ai/config.yaml` | Provider `endpoint: ${ANTHROPIC_ENDPOINT}` (and openai/gemini equivalents). | Endpoint interpolation lets the air-gap `secrets.json` point providers at the mock with no code changes. |
 
 Validate any profile before boot:

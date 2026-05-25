@@ -49,10 +49,13 @@ The `x-session-id` header is **mandatory**. A request without it is rejected wit
 
 ## Model allow-listing
 
-The gateway policy (`ai_gateway_policies`, sourced from
-`services/ai/gateway-policies.yaml`) is the inference-model allow-list. A request whose
-`model` is not in `allowed_models` is denied with `403` before any upstream call —
-this is the egress control an air-gapped deployment relies on.
+The profile's gateway catalog (`gateway.catalog_path`, e.g.
+`.systemprompt/profiles/local/catalog.yaml`) declares the models this deployment
+exposes. A request whose `model` is not in the catalog is denied with `403` before
+any upstream call — this is the egress control an air-gapped deployment relies on.
+
+Both the dispatch gate (`GatewayConfig::is_model_exposed`) and the `/profile`
+model list derive from the catalog, so adding a model means editing one file.
 
 Gateway-route RBAC additionally keys on the route `id`. If the caller's role or
 department is not assigned to the route (and the route is not `default_included`), the
