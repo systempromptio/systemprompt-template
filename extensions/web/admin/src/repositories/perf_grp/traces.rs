@@ -12,7 +12,6 @@ use sqlx::PgPool;
 
 use crate::repositories::governance_grp::time_range::TimeRange;
 
-/// One row per session in the window — feeds the list page.
 #[derive(Debug, Clone, Serialize)]
 pub struct TraceSummary {
     pub session_id: String,
@@ -41,7 +40,6 @@ pub struct TraceSummary {
     pub has_deny: bool,
 }
 
-/// Raw row returned by the dynamic `fetch_trace_list` query.
 #[derive(Debug, sqlx::FromRow)]
 struct TraceRow {
     session_id: String,
@@ -356,7 +354,6 @@ pub async fn fetch_trace_list(
     Ok((summaries, total))
 }
 
-/// Aggregate stats for the list page header (p50/p95/p99).
 #[derive(Debug, Clone, Copy, Default, Serialize)]
 pub struct TraceStats {
     pub total_traces: i64,
@@ -528,7 +525,6 @@ pub async fn resolve_trace_session(pool: &PgPool, id: &str) -> Result<Option<Str
     Ok(None)
 }
 
-/// Fetches all spans for one trace (`session_id`), ordered by start time.
 async fn fetch_governance_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span>, sqlx::Error> {
     let decisions = sqlx::query!(
         r#"SELECT

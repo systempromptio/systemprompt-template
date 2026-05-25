@@ -1,0 +1,69 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO access_control_rules (id, entity_type, entity_id, rule_type, rule_value, access)\n               VALUES ($1, $2, $3, $4, $5, $6)\n               RETURNING id, entity_type, entity_id,\n                         rule_type as \"rule_type!: RuleType\",\n                         rule_value,\n                         access as \"access!: AccessDecision\",\n                         created_at, updated_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "entity_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "entity_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "rule_type!: RuleType",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "rule_value",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "access!: AccessDecision",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "8da4d88b7204bac82bb1608e17da458fd5557fbeca16660ce4ee15c275ba02b1"
+}

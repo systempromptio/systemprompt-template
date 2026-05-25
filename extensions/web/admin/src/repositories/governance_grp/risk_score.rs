@@ -87,7 +87,6 @@ fn config_path() -> Option<PathBuf> {
     Some(PathBuf::from(&bootstrap.paths.services).join("governance/risk_score.yaml"))
 }
 
-/// Per-identity violation counts read from the live DB.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ViolationCounts {
     pub deny_count: i64,

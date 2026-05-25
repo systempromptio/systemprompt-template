@@ -23,6 +23,9 @@ pub async fn list_plugin_env_handler(
     headers: HeaderMap,
     Query(query): Query<UserQuery>,
 ) -> Response {
+    // Why: cookie absence is the "logged-out" branch, not an error — the
+    // handler falls through to `resolve_principal` to honour the explicit
+    // `user_id` query parameter.
     let cookie_uid = super::extract_user_from_cookie(&headers)
         .ok()
         .map(|s| s.user_id);

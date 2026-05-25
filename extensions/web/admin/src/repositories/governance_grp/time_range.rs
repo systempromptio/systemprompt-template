@@ -93,6 +93,8 @@ pub fn parse_time_range(query: &TimeRangeQuery) -> TimeRange {
 }
 
 fn parse_rfc3339(s: &str) -> Option<DateTime<Utc>> {
+    // Why: malformed input from user-supplied query strings is the "None"
+    // branch — the standard carve-out for parse failures.
     DateTime::parse_from_rfc3339(s)
         .ok()
         .map(|dt| dt.with_timezone(&Utc))

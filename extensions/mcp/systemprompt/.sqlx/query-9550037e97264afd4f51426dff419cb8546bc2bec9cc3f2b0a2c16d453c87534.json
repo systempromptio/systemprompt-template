@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM oauth_jti_revocations WHERE exp < NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "9550037e97264afd4f51426dff419cb8546bc2bec9cc3f2b0a2c16d453c87534"
+}

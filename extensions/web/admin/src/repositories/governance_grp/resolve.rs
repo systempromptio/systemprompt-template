@@ -18,7 +18,6 @@ pub enum ResolvedKind {
 #[derive(Debug, Clone, Serialize)]
 pub struct ResolvedId {
     pub kind: ResolvedKind,
-    /// Canonical id for the detail page route.
     pub id: String,
 }
 

@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                ctx.context_id as \"context_id!: ContextId\",\n                ctx.last_activity as \"last_activity!\",\n                ctx.ai_requests as \"ai_requests!\",\n                last_req.model,\n                last_task.agent_name\n            FROM (\n                SELECT\n                    r.context_id,\n                    MAX(r.created_at) AS last_activity,\n                    COUNT(*) AS ai_requests\n                FROM ai_requests r\n                WHERE r.user_id = $1\n                  AND r.created_at < $2\n                  AND r.context_id IS NOT NULL\n                GROUP BY r.context_id\n                ORDER BY MAX(r.created_at) DESC\n                LIMIT $3\n            ) ctx\n            LEFT JOIN LATERAL (\n                SELECT model, task_id FROM ai_requests\n                WHERE context_id = ctx.context_id\n                ORDER BY created_at DESC\n                LIMIT 1\n            ) last_req ON TRUE\n            LEFT JOIN agent_tasks last_task ON last_task.task_id = last_req.task_id\n            ORDER BY ctx.last_activity DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id!: ContextId",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "last_activity!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "ai_requests!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "model",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "agent_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null,
+      true,
+      true
+    ]
+  },
+  "hash": "cca5ea554d27d672ef76f9a5f03768cd2332242cdb28f6fed03d6681493d483d"
+}

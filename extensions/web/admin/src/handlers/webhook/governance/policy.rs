@@ -27,7 +27,6 @@ use systemprompt::config::ProfileBootstrap;
 
 pub use systemprompt_security::policy::GovernancePolicy;
 
-/// Factory function that turns a YAML config block into a boxed [`GovernancePolicy`].
 type PolicyFactory = fn(&YamlValue) -> Box<dyn GovernancePolicy>;
 
 /// Compile-time registration. Each built-in lives in its own file and submits
@@ -42,7 +41,6 @@ pub struct PolicyRegistration {
 
 inventory::collect!(PolicyRegistration);
 
-/// Source-path lookup for a policy id.
 pub fn source_path_for(id: &str) -> &'static str {
     inventory::iter::<PolicyRegistration>()
         .find(|r| r.id == id)
@@ -57,7 +55,6 @@ pub struct PolicyConfig {
     pub params: YamlValue,
 }
 
-/// Resolved, ordered, instantiated policy chain.
 pub struct PolicyChain {
     entries: Vec<ChainEntry>,
 }

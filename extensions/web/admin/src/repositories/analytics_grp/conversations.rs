@@ -15,7 +15,6 @@ use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::PgPool;
 
-/// One row in the left-pane session list.
 #[derive(Debug, Clone, Serialize)]
 pub struct ConversationListItem {
     pub session_id: String,
@@ -31,7 +30,6 @@ pub struct ConversationListItem {
     pub deny_count: i64,
 }
 
-/// Filter inputs for the left-pane query (all optional).
 #[derive(Debug, Clone, Default)]
 pub struct ConversationListFilter {
     pub user_id: Option<String>,
@@ -42,7 +40,6 @@ pub struct ConversationListFilter {
     pub limit: i64,
 }
 
-/// One enriched turn for the right-pane render.
 #[derive(Debug, Clone, Serialize)]
 pub struct TranscriptTurn {
     pub id: String,
@@ -80,7 +77,6 @@ pub struct TurnGovernance {
     pub redactions_applied: u32,
 }
 
-/// Top-level detail returned by `fetch_conversation_detail`.
 #[derive(Debug, Clone, Serialize)]
 pub struct ConversationDetail {
     pub session_id: String,

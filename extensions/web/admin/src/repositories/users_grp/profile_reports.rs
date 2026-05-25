@@ -63,17 +63,19 @@ pub struct UserAggregateMetrics {
 }
 
 pub async fn fetch_profile_report(pool: &PgPool, user_id: &str) -> Option<ProfileReportRow> {
-    sqlx::query_as::<_, ProfileReportRow>(
-        r"SELECT
-            user_id, archetype, archetype_description, archetype_confidence,
+    sqlx::query_as!(
+        ProfileReportRow,
+        r#"SELECT
+            user_id AS "user_id: UserId",
+            archetype, archetype_description, archetype_confidence,
             strengths, weaknesses,
             ai_narrative, ai_style_analysis, ai_comparison,
             ai_patterns, ai_improvements, ai_tips,
             metrics_snapshot, period_days, generated_at
           FROM user_profile_reports
-          WHERE user_id = $1",
+          WHERE user_id = $1"#,
+        user_id,
     )
-    .bind(user_id)
     .fetch_optional(pool)
     .await
     .map_err(|e| {
@@ -201,8 +203,9 @@ struct AggRow {
 }
 
 async fn fetch_aggregate_row(pool: &PgPool, user_id: &str, days: i32) -> Option<AggRow> {
-    sqlx::query_as::<_, AggRow>(
-        r"SELECT
+    sqlx::query_as!(
+        AggRow,
+        r#"SELECT
             COUNT(*)::BIGINT AS total_days,
             SUM(session_count)::BIGINT AS total_sessions,
             AVG(avg_quality_score)::FLOAT8 AS avg_quality,
@@ -223,10 +226,10 @@ async fn fetch_aggregate_row(pool: &PgPool, user_id: &str, days: i32) -> Option<
             AVG(avg_concurrency)::FLOAT8 AS avg_concurrency
           FROM daily_summaries
           WHERE user_id = $1
-            AND summary_date >= CURRENT_DATE - $2",
+            AND summary_date >= CURRENT_DATE - MAKE_INTERVAL(days => $2)"#,
+        user_id,
+        days,
     )
-    .bind(user_id)
-    .bind(days)
     .fetch_optional(pool)
     .await
     .map_err(|e| {
@@ -247,21 +250,22 @@ async fn fetch_category_distribution(
         total: Option<i64>,
     }
 
-    let rows = sqlx::query_as::<_, CatRow>(
-        r"SELECT category, SUM(count)::BIGINT AS total
+    let rows = sqlx::query_as!(
+        CatRow,
+        r#"SELECT category, SUM(count)::BIGINT AS total
           FROM (
             SELECT jsonb_object_keys(category_distribution) AS category,
                    (category_distribution ->> jsonb_object_keys(category_distribution))::BIGINT AS count
             FROM daily_summaries
             WHERE user_id = $1
-              AND summary_date >= CURRENT_DATE - $2
+              AND summary_date >= CURRENT_DATE - MAKE_INTERVAL(days => $2)
               AND category_distribution IS NOT NULL
           ) sub
           GROUP BY category
-          ORDER BY total DESC",
+          ORDER BY total DESC"#,
+        user_id,
+        days,
     )
-    .bind(user_id)
-    .bind(days)
     .fetch_all(pool)
     .await
     .unwrap_or_else(|e| {

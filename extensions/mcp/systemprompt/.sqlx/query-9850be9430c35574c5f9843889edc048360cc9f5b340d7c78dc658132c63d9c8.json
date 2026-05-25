@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM webauthn_setup_tokens\n            WHERE (expires_at < CURRENT_TIMESTAMP - INTERVAL '24 hours')\n               OR (used_at IS NOT NULL AND used_at < CURRENT_TIMESTAMP - INTERVAL '24 hours')\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "9850be9430c35574c5f9843889edc048360cc9f5b340d7c78dc658132c63d9c8"
+}

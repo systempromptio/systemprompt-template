@@ -9,6 +9,7 @@ pub async fn count_recent_setup_tokens(pool: &PgPool, email: &str) -> i64 {
     )
     .fetch_one(pool)
     .await
+    .inspect_err(|e| tracing::warn!(error = %e, email, "count_recent_setup_tokens failed"))
     .ok()
     .flatten()
     .unwrap_or(0)
