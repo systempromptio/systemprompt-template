@@ -104,12 +104,13 @@ async fn collect_allowed_routes(
                     "Failed to load ACL rules",
                 ))
             })?;
-        let default_included = gateway_acl::get_default_included(pool, &route.id)
+        let default_included = gateway_acl::get_entity(pool, &route.id)
             .await
             .unwrap_or_else(|e| {
-                tracing::error!(error = %e, route_id = %route.id, "Failed to load default flag");
-                false
-            });
+                tracing::error!(error = %e, route_id = %route.id, "Failed to load catalog entity");
+                None
+            })
+            .map(|e| e.default_included);
         let entity = EntityRef::GatewayRoute(RouteId::new(route.id.clone()));
         let uid = UserId::new(user_id);
         if matches!(
@@ -119,7 +120,7 @@ async fn collect_allowed_routes(
                 user_id: &uid,
                 user_roles,
                 department,
-                default_included: Some(default_included),
+                default_included,
             }),
             Decision::Allow { .. }
         ) {
@@ -218,7 +219,9 @@ pub async fn detect_after_the_fact(
             continue;
         };
         let rules = gateway_acl::list_rules_for_route(pool, &route.id).await?;
-        let default_included = gateway_acl::get_default_included(pool, &route.id).await?;
+        let default_included = gateway_acl::get_entity(pool, &route.id)
+            .await?
+            .map(|e| e.default_included);
         let entity = EntityRef::GatewayRoute(RouteId::new(route.id.clone()));
         let uid = UserId::new(&row.user_id);
         if let Decision::Deny { reason } = gateway_acl::resolve(ResolveInput {
@@ -227,7 +230,7 @@ pub async fn detect_after_the_fact(
             user_id: &uid,
             user_roles: &user_roles,
             department: &department,
-            default_included: Some(default_included),
+            default_included,
         }) {
             let decision_id = uuid::Uuid::new_v4().to_string();
             let reason_str = reason.to_string();

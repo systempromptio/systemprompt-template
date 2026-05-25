@@ -1,4 +1,4 @@
-//! Wire and audit types for the `/api/public/hooks/govern` PreToolUse webhook.
+//! Wire and audit types for the `/api/public/hooks/govern` `PreToolUse` webhook.
 //!
 //! The on-the-wire response shape is dictated by the Anthropic Claude Code
 //! hook contract ([`HookSpecificOutput`]). Internally everything is typed —

@@ -12,10 +12,6 @@
 //! - `services/access-control/roles.yaml` — role-scoped allow/deny rules.
 //! - `services/access-control/departments.yaml` — department definitions
 //!   plus department-scoped allow/deny rules.
-//!
-//! For backward compatibility the legacy `services/gateway/access.yaml` —
-//! a previous gateway-only ACL export — is still read if present, but is
-//! never written.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -27,7 +23,6 @@ use systemprompt_web_shared::error::MarketplaceError;
 
 const ROLES_FILE: &str = "access-control/roles.yaml";
 const DEPARTMENTS_FILE: &str = "access-control/departments.yaml";
-const LEGACY_GATEWAY_FILE: &str = "gateway/access.yaml";
 
 /// Per-rule entry in `roles.yaml` and the `rules:` block of `departments.yaml`.
 #[derive(Debug, Deserialize, Serialize)]
@@ -97,7 +92,6 @@ pub async fn load_from_yaml(
 
     load_departments_file(pool, services_path, &mut report).await?;
     load_roles_file(pool, services_path, &mut report).await?;
-    load_legacy_gateway_file(pool, services_path, &mut report).await?;
 
     tracing::info!(
         departments = report.departments_upserted,
@@ -150,82 +144,6 @@ async fn load_roles_file(
     apply_rules(pool, &doc.rules, RuleScope::RolesOnly, report).await
 }
 
-/// Backward-compat reader for the previous DB→YAML export shape.
-async fn load_legacy_gateway_file(
-    pool: &PgPool,
-    services_path: &Path,
-    report: &mut LoadReport,
-) -> Result<(), MarketplaceError> {
-    let path = services_path.join(LEGACY_GATEWAY_FILE);
-    let content = match tokio::fs::read_to_string(&path).await {
-        Ok(s) => s,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-        Err(e) => return Err(e.into()),
-    };
-
-    let doc: LegacyDoc = serde_yaml::from_str(&content)
-        .map_err(|e| MarketplaceError::Internal(format!("{LEGACY_GATEWAY_FILE}: {e}")))?;
-
-    let repo = AccessControlRepository::from_pool(Arc::new(pool.clone()));
-    for (route_id, entry) in &doc.routes {
-        repo.set_default_included(
-            systemprompt_security::authz::EntityKind::GatewayRoute,
-            route_id,
-            entry.default_included,
-        )
-        .await
-        .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
-
-        for (values, rule_type, access) in [
-            (&entry.allow.roles, RuleType::Role, Access::Allow),
-            (
-                &entry.allow.departments,
-                RuleType::Department,
-                Access::Allow,
-            ),
-            (&entry.deny.roles, RuleType::Role, Access::Deny),
-            (&entry.deny.departments, RuleType::Department, Access::Deny),
-        ] {
-            for value in values {
-                repo.upsert_rule(UpsertRuleParams {
-                    entity_type: systemprompt_security::authz::EntityKind::GatewayRoute,
-                    entity_id: route_id,
-                    rule_type,
-                    rule_value: value,
-                    access,
-                    justification: Some("legacy gateway/access.yaml"),
-                })
-                .await
-                .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
-                report.rules_upserted += 1;
-            }
-        }
-    }
-    Ok(())
-}
-
-#[derive(Debug, Default, Deserialize)]
-struct LegacyBuckets {
-    #[serde(default)]
-    roles: Vec<String>,
-    #[serde(default)]
-    departments: Vec<String>,
-}
-#[derive(Debug, Default, Deserialize)]
-struct LegacyEntry {
-    #[serde(default)]
-    default_included: bool,
-    #[serde(default)]
-    allow: LegacyBuckets,
-    #[serde(default)]
-    deny: LegacyBuckets,
-}
-#[derive(Debug, Default, Deserialize)]
-struct LegacyDoc {
-    #[serde(default)]
-    routes: std::collections::BTreeMap<String, LegacyEntry>,
-}
-
 #[derive(Debug, Clone, Copy)]
 enum RuleScope {
     RolesOnly,
@@ -267,7 +185,11 @@ async fn apply_one_rule(
     access: Access,
     report: &mut LoadReport,
 ) -> Result<(), MarketplaceError> {
-    repo.set_default_included(kind, &rule.entity_id, rule.default_included)
+    let source_label = match scope {
+        RuleScope::RolesOnly => "roles.yaml",
+        RuleScope::DepartmentsOnly => "departments.yaml",
+    };
+    repo.upsert_entity(kind, &rule.entity_id, rule.default_included, source_label)
         .await
         .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
 
@@ -357,10 +279,13 @@ pub async fn render_yaml_snapshot(pool: &PgPool) -> Result<String, MarketplaceEr
     use std::collections::BTreeMap;
 
     let rows: Vec<(String, String, String, String, String, bool)> = sqlx::query_as(
-        "SELECT entity_type, entity_id, rule_type, rule_value, access, default_included
-         FROM access_control_rules
-         WHERE rule_type IN ('role', 'department')
-         ORDER BY entity_type, entity_id, access, rule_type, rule_value",
+        "SELECT r.entity_type, r.entity_id, r.rule_type, r.rule_value, r.access,
+                COALESCE(e.default_included, false)
+         FROM access_control_rules r
+         LEFT JOIN access_control_entities e
+            ON e.entity_type = r.entity_type AND e.entity_id = r.entity_id
+         WHERE r.rule_type IN ('role', 'department')
+         ORDER BY r.entity_type, r.entity_id, r.access, r.rule_type, r.rule_value",
     )
     .fetch_all(pool)
     .await?;

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::Serialize;
 use sqlx::PgPool;
 
@@ -7,7 +9,7 @@ use crate::types::access_control::{
 
 pub async fn list_all_rules(pool: &PgPool) -> Result<Vec<AccessControlRule>, sqlx::Error> {
     sqlx::query_as::<_, AccessControlRule>(
-        "SELECT id, entity_type, entity_id, rule_type, rule_value, access, default_included, created_at, updated_at
+        "SELECT id, entity_type, entity_id, rule_type, rule_value, access, created_at, updated_at
          FROM access_control_rules
          ORDER BY entity_type, entity_id, rule_type, rule_value",
     )
@@ -21,7 +23,7 @@ pub async fn list_rules_for_entity(
     entity_id: &str,
 ) -> Result<Vec<AccessControlRule>, sqlx::Error> {
     sqlx::query_as::<_, AccessControlRule>(
-        "SELECT id, entity_type, entity_id, rule_type, rule_value, access, default_included, created_at, updated_at
+        "SELECT id, entity_type, entity_id, rule_type, rule_value, access, created_at, updated_at
          FROM access_control_rules
          WHERE entity_type = $1 AND entity_id = $2
          ORDER BY rule_type, rule_value",
@@ -32,6 +34,10 @@ pub async fn list_rules_for_entity(
     .await
 }
 
+/// Replace every grant on `(entity_type, entity_id)` with `rules`.
+///
+/// Ensures the entity catalog row exists before inserting grants — the FK
+/// added in core migration 007 rejects orphan rules.
 pub async fn set_entity_rules(
     pool: &PgPool,
     entity_type: &str,
@@ -39,6 +45,16 @@ pub async fn set_entity_rules(
     rules: &[AccessControlRuleInput],
 ) -> Result<Vec<AccessControlRule>, sqlx::Error> {
     let mut tx = pool.begin().await?;
+
+    sqlx::query!(
+        "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
+         VALUES ($1, $2, false, 'admin:dashboard')
+         ON CONFLICT (entity_type, entity_id) DO NOTHING",
+        entity_type,
+        entity_id,
+    )
+    .execute(&mut *tx)
+    .await?;
 
     sqlx::query!(
         "DELETE FROM access_control_rules WHERE entity_type = $1 AND entity_id = $2",
@@ -54,9 +70,9 @@ pub async fn set_entity_rules(
         let rule_type_str = rule.rule_type.to_string();
         let access_str = rule.access.to_string();
         let row = sqlx::query_as::<_, AccessControlRule>(
-            r"INSERT INTO access_control_rules (id, entity_type, entity_id, rule_type, rule_value, access, default_included)
-              VALUES ($1, $2, $3, $4, $5, $6, $7)
-              RETURNING id, entity_type, entity_id, rule_type, rule_value, access, default_included, created_at, updated_at",
+            r"INSERT INTO access_control_rules (id, entity_type, entity_id, rule_type, rule_value, access)
+              VALUES ($1, $2, $3, $4, $5, $6)
+              RETURNING id, entity_type, entity_id, rule_type, rule_value, access, created_at, updated_at",
         )
         .bind(&id)
         .bind(entity_type)
@@ -64,7 +80,6 @@ pub async fn set_entity_rules(
         .bind(&rule_type_str)
         .bind(&rule.rule_value)
         .bind(&access_str)
-        .bind(rule.default_included)
         .fetch_one(&mut *tx)
         .await?;
         results.push(row);
@@ -84,6 +99,16 @@ pub async fn bulk_set_rules(
 
     for (entity_type, entity_id) in entities {
         sqlx::query!(
+            "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
+             VALUES ($1, $2, false, 'admin:dashboard')
+             ON CONFLICT (entity_type, entity_id) DO NOTHING",
+            entity_type,
+            entity_id,
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        sqlx::query!(
             "DELETE FROM access_control_rules WHERE entity_type = $1 AND entity_id = $2",
             entity_type,
             entity_id
@@ -96,15 +121,14 @@ pub async fn bulk_set_rules(
             let rule_type_str = rule.rule_type.to_string();
             let access_str = rule.access.to_string();
             sqlx::query!(
-                r"INSERT INTO access_control_rules (id, entity_type, entity_id, rule_type, rule_value, access, default_included)
-                  VALUES ($1, $2, $3, $4, $5, $6, $7)",
+                r"INSERT INTO access_control_rules (id, entity_type, entity_id, rule_type, rule_value, access)
+                  VALUES ($1, $2, $3, $4, $5, $6)",
                 id,
                 entity_type,
                 entity_id,
                 rule_type_str,
                 rule.rule_value,
                 access_str,
-                rule.default_included,
             )
             .execute(&mut *tx)
             .await?;
@@ -124,7 +148,7 @@ pub async fn bulk_set_rules(
 ///   1. user-scoped rule (deny > allow)
 ///   2. department-scoped rule (deny > allow)
 ///   3. role-scoped rule (deny > allow)
-///   4. entity's `default_included` flag
+///   4. entity's `default_included` flag (from `access_control_entities`)
 #[derive(Debug, Serialize)]
 pub struct UserMatrix {
     pub user: UserMatrixUser,
@@ -186,13 +210,23 @@ pub async fn resolve_user_matrix(
 ) -> Result<UserMatrix, sqlx::Error> {
     let user = fetch_user_for_matrix(pool, user_id).await?;
     let all_rules = list_all_rules(pool).await?;
+    let defaults = load_entity_defaults(pool).await?;
 
     let mut sections: Vec<MatrixSection> = Vec::with_capacity(sections_in.len());
     for (entity_type, label, rows_in) in sections_in {
         let mut out_rows = Vec::with_capacity(rows_in.len());
         for (entity_id, name, desc) in rows_in {
-            let (effective, source, default_included) =
-                resolve_effective(&all_rules, &entity_type, &entity_id, &user);
+            let default_included = defaults
+                .get(&(entity_type.clone(), entity_id.clone()))
+                .copied()
+                .unwrap_or(false);
+            let (effective, source) = resolve_effective(
+                &all_rules,
+                &entity_type,
+                &entity_id,
+                &user,
+                default_included,
+            );
             out_rows.push(MatrixRow {
                 entity_id,
                 entity_name: name,
@@ -210,6 +244,22 @@ pub async fn resolve_user_matrix(
     }
 
     Ok(UserMatrix { user, sections })
+}
+
+async fn load_entity_defaults(
+    pool: &PgPool,
+) -> Result<HashMap<(String, String), bool>, sqlx::Error> {
+    let rows = sqlx::query!(
+        r#"SELECT entity_type, entity_id, default_included
+           FROM access_control_entities"#
+    )
+    .fetch_all(pool)
+    .await?;
+    let mut out = HashMap::with_capacity(rows.len());
+    for row in rows {
+        out.insert((row.entity_type, row.entity_id), row.default_included);
+    }
+    Ok(out)
 }
 
 async fn fetch_user_for_matrix(
@@ -248,8 +298,8 @@ fn resolve_effective(
     entity_type: &str,
     entity_id: &str,
     user: &UserMatrixUser,
-) -> (String, MatrixSource, bool) {
-    let mut default_included = false;
+    default_included: bool,
+) -> (String, MatrixSource) {
     let mut user_rule: Option<&AccessControlRule> = None;
     let mut dept_rule: Option<&AccessControlRule> = None;
     let mut role_rule: Option<&AccessControlRule> = None;
@@ -257,9 +307,6 @@ fn resolve_effective(
     for r in all_rules {
         if r.entity_type != entity_type || r.entity_id != entity_id {
             continue;
-        }
-        if r.default_included {
-            default_included = true;
         }
         let is_deny = r.access == AccessDecision::Deny;
         match r.rule_type {
@@ -292,7 +339,6 @@ fn resolve_effective(
                 layer: "user".into(),
                 detail: format!("user:{} {}", user.id, r.access),
             },
-            default_included,
         );
     }
     if let Some(r) = dept_rule {
@@ -302,7 +348,6 @@ fn resolve_effective(
                 layer: "department".into(),
                 detail: format!("department:{} {}", r.rule_value, r.access),
             },
-            default_included,
         );
     }
     if let Some(r) = role_rule {
@@ -312,7 +357,6 @@ fn resolve_effective(
                 layer: "role".into(),
                 detail: format!("role:{} {}", r.rule_value, r.access),
             },
-            default_included,
         );
     }
 
@@ -327,6 +371,5 @@ fn resolve_effective(
                 "no rule matched".into()
             },
         },
-        default_included,
     )
 }

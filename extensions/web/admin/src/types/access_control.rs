@@ -73,7 +73,6 @@ pub struct AccessControlRule {
     pub rule_value: String,
     #[sqlx(try_from = "String")]
     pub access: AccessDecision,
-    pub default_included: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -83,8 +82,6 @@ pub struct AccessControlRuleInput {
     pub rule_type: RuleType,
     pub rule_value: String,
     pub access: AccessDecision,
-    #[serde(default)]
-    pub default_included: bool,
 }
 
 #[derive(Debug, Deserialize)]

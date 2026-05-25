@@ -54,10 +54,11 @@ pub async fn list_entity_access_handler(
             return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error");
         }
     };
-    let default_included = match r.get_default_included(kind, &entity_id).await {
-        Ok(v) => v,
+    let default_included = match r.get_entity(kind, &entity_id).await {
+        Ok(Some(entity)) => entity.default_included,
+        Ok(None) => false,
         Err(e) => {
-            tracing::error!(error = %e, entity_type, entity_id, "get_default_included failed");
+            tracing::error!(error = %e, entity_type, entity_id, "get_entity failed");
             return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error");
         }
     };
@@ -165,7 +166,7 @@ pub async fn set_entity_default_handler(
         Err(r) => return *r,
     };
     match repo(&pool)
-        .set_default_included(kind, &entity_id, body.default_included)
+        .upsert_entity(kind, &entity_id, body.default_included, "admin:dashboard")
         .await
     {
         Ok(()) => Json(serde_json::json!({
@@ -175,7 +176,7 @@ pub async fn set_entity_default_handler(
         }))
         .into_response(),
         Err(e) => {
-            tracing::error!(error = %e, entity_type, entity_id, "set_default_included failed");
+            tracing::error!(error = %e, entity_type, entity_id, "upsert_entity failed");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
         }
     }
@@ -211,7 +212,12 @@ pub async fn list_all_entity_access_handler(
     };
     let mut entries: Vec<serde_json::Value> = Vec::with_capacity(entity_ids.len());
     for eid in &entity_ids {
-        let default_included = r.get_default_included(kind, eid).await.unwrap_or(false);
+        let default_included = r
+            .get_entity(kind, eid)
+            .await
+            .ok()
+            .flatten()
+            .is_some_and(|e| e.default_included);
         let rules: Vec<AccessRule> = bulk.get(eid).cloned().unwrap_or_default();
         entries.push(serde_json::json!({
             "entity_id": eid,

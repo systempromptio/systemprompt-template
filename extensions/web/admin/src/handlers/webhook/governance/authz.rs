@@ -20,7 +20,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::Actor;
 use systemprompt_security::authz::{
     resolve, AccessControlRepository, AccessRule, AuthzDecision, AuthzRequest, Decision,
-    DecisionTag, ResolveInput,
+    DecisionTag, EntityRow, ResolveInput,
 };
 
 use crate::repositories::governance_grp::{insert_governance_decision, GovernanceDecisionRecord};
@@ -30,7 +30,7 @@ const POLICY_NAME: &str = "authz";
 async fn load_rules(
     repo: &AccessControlRepository,
     req: &AuthzRequest,
-) -> Result<(Vec<AccessRule>, bool), Response> {
+) -> Result<(Vec<AccessRule>, Option<EntityRow>), Response> {
     let kind = req.entity.kind();
     let id = req.entity.id_str();
     let rules = repo
@@ -40,21 +40,21 @@ async fn load_rules(
             tracing::error!(error = %e, entity_type = %kind, entity_id = %id, "list_rules_for_entity failed");
             (StatusCode::INTERNAL_SERVER_ERROR, "list_rules failed").into_response()
         })?;
-    let default_included = repo
-        .get_default_included(kind, id)
+    let entity = repo
+        .get_entity(kind, id)
         .await
         .map_err(|e| {
-            tracing::error!(error = %e, entity_type = %kind, entity_id = %id, "get_default_included failed");
-            (StatusCode::INTERNAL_SERVER_ERROR, "get_default_included failed").into_response()
+            tracing::error!(error = %e, entity_type = %kind, entity_id = %id, "get_entity failed");
+            (StatusCode::INTERNAL_SERVER_ERROR, "get_entity failed").into_response()
         })?;
-    Ok((rules, default_included))
+    Ok((rules, entity))
 }
 
 async fn audit_decision(
     pool: &PgPool,
     req: &AuthzRequest,
     rules: &[AccessRule],
-    default_included: bool,
+    entity: Option<&EntityRow>,
     decision: &Decision,
 ) {
     let (decision_tag, reason_str, justification_opt): (DecisionTag, String, Option<String>) =
@@ -72,7 +72,7 @@ async fn audit_decision(
         "roles": req.roles,
         "department": req.department,
         "context": req.context,
-        "default_included": default_included,
+        "entity": entity,
         "justification": justification_opt,
         "rules": rules,
     });
@@ -102,7 +102,7 @@ pub async fn govern_authz(
 ) -> Response {
     let repo = AccessControlRepository::from_pool(Arc::clone(&pool));
 
-    let (rules, default_included) = match load_rules(&repo, &req).await {
+    let (rules, entity) = match load_rules(&repo, &req).await {
         Ok(v) => v,
         Err(resp) => return resp,
     };
@@ -113,10 +113,10 @@ pub async fn govern_authz(
         user_id: &req.user_id,
         user_roles: &req.roles,
         department: &req.department,
-        default_included: Some(default_included),
+        default_included: entity.as_ref().map(|e| e.default_included),
     });
 
-    audit_decision(&pool, &req, &rules, default_included, &decision).await;
+    audit_decision(&pool, &req, &rules, entity.as_ref(), &decision).await;
 
     let resp = match decision {
         Decision::Allow { .. } => AuthzDecision::Allow,

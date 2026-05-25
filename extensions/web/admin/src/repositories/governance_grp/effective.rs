@@ -55,9 +55,11 @@ pub async fn compute_effective_permissions(
     for id in &gateway_ids {
         let rules = gateway_rules.get(id).cloned().unwrap_or_default();
         let default_included = repo
-            .get_default_included(EntityKind::GatewayRoute, id)
+            .get_entity(EntityKind::GatewayRoute, id)
             .await
-            .unwrap_or(false);
+            .ok()
+            .flatten()
+            .map(|e| e.default_included);
         gateway_routes.push(decide(DecideArgs {
             entity_id: id,
             entity_type: "gateway_route",
@@ -74,9 +76,11 @@ pub async fn compute_effective_permissions(
     for id in &mcp_ids {
         let rules = mcp_rules.get(id).cloned().unwrap_or_default();
         let default_included = repo
-            .get_default_included(EntityKind::McpServer, id)
+            .get_entity(EntityKind::McpServer, id)
             .await
-            .unwrap_or(false);
+            .ok()
+            .flatten()
+            .map(|e| e.default_included);
         mcp_servers.push(decide(DecideArgs {
             entity_id: id,
             entity_type: "mcp_server",
@@ -103,7 +107,7 @@ struct DecideArgs<'a> {
     user_id: &'a str,
     user_roles: &'a [String],
     department: &'a str,
-    default_included: bool,
+    default_included: Option<bool>,
 }
 
 fn decide(args: DecideArgs<'_>) -> EntityDecision {
@@ -124,12 +128,18 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
         user_id: &uid,
         user_roles,
         department,
-        default_included: Some(default_included),
+        default_included,
     });
     let (decision, reason) = match dec {
         Decision::Allow { .. } => (
             "allow".to_string(),
-            allow_reason(rules, user_id, user_roles, department, default_included),
+            allow_reason(
+                rules,
+                user_id,
+                user_roles,
+                department,
+                default_included.unwrap_or(false),
+            ),
         ),
         Decision::Deny { reason } => ("deny".to_string(), reason.to_string()),
     };

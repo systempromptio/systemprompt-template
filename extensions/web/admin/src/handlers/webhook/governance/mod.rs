@@ -16,4 +16,4 @@ pub use policy::{chain, reload};
 /// ("admin" / "user" / "unknown") to policies that gate on admin status.
 /// Lives on the boundary wrapper because core's [`PolicyContext`] is
 /// deliberately deployment-agnostic.
-pub(crate) const SCOPE_LABEL_KEY: &str = "__systemprompt_scope_label";
+pub const SCOPE_LABEL_KEY: &str = "__systemprompt_scope_label";

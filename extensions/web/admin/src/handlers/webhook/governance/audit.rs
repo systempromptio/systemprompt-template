@@ -27,8 +27,7 @@ pub(super) async fn record_decision(
                 .chain
                 .iter()
                 .find(|e| matches!(e.result, super::types::ChainEntryResult::Fail))
-                .map(|e| e.policy_id.as_str().to_string())
-                .unwrap_or_else(|| "unknown".to_string());
+                .map_or_else(|| "unknown".to_string(), |e| e.policy_id.as_str().to_string());
             (DecisionTag::Deny, reason.to_string(), policy_str)
         }
     };
