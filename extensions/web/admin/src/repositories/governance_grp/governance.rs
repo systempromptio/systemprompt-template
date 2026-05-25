@@ -8,26 +8,32 @@ pub async fn list_governance_decisions(
     pool: &PgPool,
     search: Option<&str>,
 ) -> Result<Vec<GovernanceDecisionRow>, sqlx::Error> {
-    let search_pattern = search.filter(|s| !s.is_empty()).map(|s| format!("%{s}%"));
+    let pattern = search.filter(|s| !s.is_empty()).map(|s| format!("%{s}%"));
 
-    if let Some(ref pattern) = search_pattern {
-        sqlx::query_as::<_, GovernanceDecisionRow>(
-            "SELECT id, user_id, tool_name, agent_id, agent_scope, decision, policy, reason, created_at \
-             FROM governance_decisions \
-             WHERE user_id ILIKE $1 OR tool_name ILIKE $1 OR decision ILIKE $1 \
-                OR reason ILIKE $1 OR policy ILIKE $1 OR agent_scope ILIKE $1 \
-             ORDER BY created_at DESC \
-             LIMIT 200",
+    if let Some(p) = pattern {
+        sqlx::query_as!(
+            GovernanceDecisionRow,
+            r#"SELECT id, user_id as "user_id!: _", tool_name,
+                      agent_id as "agent_id: _", agent_scope,
+                      decision, policy, reason, created_at
+               FROM governance_decisions
+               WHERE user_id ILIKE $1 OR tool_name ILIKE $1 OR decision ILIKE $1
+                  OR reason ILIKE $1 OR policy ILIKE $1 OR agent_scope ILIKE $1
+               ORDER BY created_at DESC
+               LIMIT 200"#,
+            p,
         )
-        .bind(pattern)
         .fetch_all(pool)
         .await
     } else {
-        sqlx::query_as::<_, GovernanceDecisionRow>(
-            "SELECT id, user_id, tool_name, agent_id, agent_scope, decision, policy, reason, created_at \
-             FROM governance_decisions \
-             ORDER BY created_at DESC \
-             LIMIT 200",
+        sqlx::query_as!(
+            GovernanceDecisionRow,
+            r#"SELECT id, user_id as "user_id!: _", tool_name,
+                      agent_id as "agent_id: _", agent_scope,
+                      decision, policy, reason, created_at
+               FROM governance_decisions
+               ORDER BY created_at DESC
+               LIMIT 200"#,
         )
         .fetch_all(pool)
         .await
@@ -43,21 +49,21 @@ pub struct GovernanceCounts {
 }
 
 pub async fn fetch_governance_counts(pool: &PgPool) -> Result<GovernanceCounts, sqlx::Error> {
-    let row = sqlx::query_as::<_, (i64, i64, i64, i64)>(
-        r"SELECT
-            COUNT(*)::bigint,
-            COUNT(*) FILTER (WHERE decision = 'allow')::bigint,
-            COUNT(*) FILTER (WHERE decision = 'deny')::bigint,
-            COUNT(*) FILTER (WHERE reason ILIKE '%secret%')::bigint
-        FROM governance_decisions",
+    let row = sqlx::query!(
+        r#"SELECT
+            COUNT(*)::bigint AS "total!",
+            COUNT(*) FILTER (WHERE decision = 'allow')::bigint AS "allowed!",
+            COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS "denied!",
+            COUNT(*) FILTER (WHERE reason ILIKE '%secret%')::bigint AS "secret_breaches!"
+        FROM governance_decisions"#,
     )
     .fetch_one(pool)
     .await?;
     Ok(GovernanceCounts {
-        total: row.0,
-        allowed: row.1,
-        denied: row.2,
-        secret_breaches: row.3,
+        total: row.total,
+        allowed: row.allowed,
+        denied: row.denied,
+        secret_breaches: row.secret_breaches,
     })
 }
 
@@ -66,23 +72,23 @@ pub async fn fetch_governance_counts_windowed(
     pool: &PgPool,
     window_seconds: i64,
 ) -> Result<GovernanceCounts, sqlx::Error> {
-    let row = sqlx::query_as::<_, (i64, i64, i64, i64)>(
-        r"SELECT
-            COUNT(*)::bigint,
-            COUNT(*) FILTER (WHERE decision = 'allow')::bigint,
-            COUNT(*) FILTER (WHERE decision = 'deny')::bigint,
-            COUNT(*) FILTER (WHERE reason ILIKE '%secret%')::bigint
+    let row = sqlx::query!(
+        r#"SELECT
+            COUNT(*)::bigint AS "total!",
+            COUNT(*) FILTER (WHERE decision = 'allow')::bigint AS "allowed!",
+            COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS "denied!",
+            COUNT(*) FILTER (WHERE reason ILIKE '%secret%')::bigint AS "secret_breaches!"
         FROM governance_decisions
-        WHERE created_at > now() - make_interval(secs => $1::double precision)",
+        WHERE created_at > now() - make_interval(secs => $1::double precision)"#,
+        window_seconds as f64,
     )
-    .bind(window_seconds)
     .fetch_one(pool)
     .await?;
     Ok(GovernanceCounts {
-        total: row.0,
-        allowed: row.1,
-        denied: row.2,
-        secret_breaches: row.3,
+        total: row.total,
+        allowed: row.allowed,
+        denied: row.denied,
+        secret_breaches: row.secret_breaches,
     })
 }
 
@@ -97,24 +103,24 @@ pub struct PerPolicyCounts {
 /// One row per `policy` value seen in `governance_decisions`. Used by the
 /// Policies dashboard to show recent activity next to each registered policy.
 pub async fn fetch_per_policy_counts(pool: &PgPool) -> Result<Vec<PerPolicyCounts>, sqlx::Error> {
-    let rows = sqlx::query_as::<_, (String, i64, i64, Option<chrono::DateTime<chrono::Utc>>)>(
-        r"SELECT
+    let rows = sqlx::query!(
+        r#"SELECT
             policy,
-            COUNT(*) FILTER (WHERE decision = 'allow')::bigint,
-            COUNT(*) FILTER (WHERE decision = 'deny')::bigint,
-            MAX(created_at)
+            COUNT(*) FILTER (WHERE decision = 'allow')::bigint AS "allowed!",
+            COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS "denied!",
+            MAX(created_at) AS last_at
         FROM governance_decisions
-        GROUP BY policy",
+        GROUP BY policy"#,
     )
     .fetch_all(pool)
     .await?;
     Ok(rows
         .into_iter()
-        .map(|(policy, allowed, denied, last_at)| PerPolicyCounts {
-            policy,
-            allowed,
-            denied,
-            last_at,
+        .map(|r| PerPolicyCounts {
+            policy: r.policy,
+            allowed: r.allowed,
+            denied: r.denied,
+            last_at: r.last_at,
         })
         .collect())
 }
@@ -125,26 +131,26 @@ pub async fn fetch_per_policy_counts_windowed(
     pool: &PgPool,
     window_seconds: i64,
 ) -> Result<Vec<PerPolicyCounts>, sqlx::Error> {
-    let rows = sqlx::query_as::<_, (String, i64, i64, Option<chrono::DateTime<chrono::Utc>>)>(
-        r"SELECT
+    let rows = sqlx::query!(
+        r#"SELECT
             policy,
-            COUNT(*) FILTER (WHERE decision = 'allow')::bigint,
-            COUNT(*) FILTER (WHERE decision = 'deny')::bigint,
-            MAX(created_at)
+            COUNT(*) FILTER (WHERE decision = 'allow')::bigint AS "allowed!",
+            COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS "denied!",
+            MAX(created_at) AS last_at
         FROM governance_decisions
         WHERE created_at > now() - make_interval(secs => $1::double precision)
-        GROUP BY policy",
+        GROUP BY policy"#,
+        window_seconds as f64,
     )
-    .bind(window_seconds)
     .fetch_all(pool)
     .await?;
     Ok(rows
         .into_iter()
-        .map(|(policy, allowed, denied, last_at)| PerPolicyCounts {
-            policy,
-            allowed,
-            denied,
-            last_at,
+        .map(|r| PerPolicyCounts {
+            policy: r.policy,
+            allowed: r.allowed,
+            denied: r.denied,
+            last_at: r.last_at,
         })
         .collect())
 }
@@ -156,25 +162,30 @@ pub async fn list_decisions_for_policy(
     policy_id: &str,
     limit: i64,
 ) -> Result<Vec<GovernanceDecisionRow>, sqlx::Error> {
-    sqlx::query_as::<_, GovernanceDecisionRow>(
-        "SELECT id, user_id, tool_name, agent_id, agent_scope, decision, policy, reason, created_at \
-         FROM governance_decisions \
-         WHERE policy = $1 \
-         ORDER BY created_at DESC \
-         LIMIT $2",
+    sqlx::query_as!(
+        GovernanceDecisionRow,
+        r#"SELECT id, user_id as "user_id!: _", tool_name,
+                  agent_id as "agent_id: _", agent_scope,
+                  decision, policy, reason, created_at
+           FROM governance_decisions
+           WHERE policy = $1
+           ORDER BY created_at DESC
+           LIMIT $2"#,
+        policy_id,
+        limit,
     )
-    .bind(policy_id)
-    .bind(limit)
     .fetch_all(pool)
     .await
 }
 
 pub async fn fetch_governance_events(pool: &PgPool) -> Result<Vec<GovernanceEvent>, sqlx::Error> {
-    sqlx::query_as::<_, GovernanceEvent>(
-        r"SELECT id, user_id, tool_name, agent_id, decision, reason, created_at
-        FROM governance_decisions
-        ORDER BY created_at DESC
-        LIMIT 50",
+    sqlx::query_as!(
+        GovernanceEvent,
+        r#"SELECT id, user_id as "user_id!: _", tool_name,
+                  agent_id as "agent_id: _", decision, reason, created_at
+           FROM governance_decisions
+           ORDER BY created_at DESC
+           LIMIT 50"#,
     )
     .fetch_all(pool)
     .await
@@ -184,26 +195,26 @@ pub async fn fetch_windowed_counts(
     pool: &PgPool,
     window_seconds: i64,
 ) -> Result<WindowedCounts, sqlx::Error> {
-    let row = sqlx::query_as::<_, (i64, i64, i64, i64)>(
-        r"SELECT
-            COUNT(*)::bigint,
-            COUNT(*) FILTER (WHERE decision = 'deny')::bigint,
+    let row = sqlx::query!(
+        r#"SELECT
+            COUNT(*)::bigint AS "decisions!",
+            COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS "denied!",
             COUNT(*) FILTER (
                 WHERE decision = 'deny'
                   AND (policy = 'secret_scan' OR reason ILIKE '%secret%')
-            )::bigint,
-            COUNT(DISTINCT user_id)::bigint
+            )::bigint AS "secret_blocks!",
+            COUNT(DISTINCT user_id)::bigint AS "distinct_actors!"
         FROM governance_decisions
-        WHERE created_at > now() - make_interval(secs => $1::double precision)",
+        WHERE created_at > now() - make_interval(secs => $1::double precision)"#,
+        window_seconds as f64,
     )
-    .bind(window_seconds)
     .fetch_one(pool)
     .await?;
     Ok(WindowedCounts {
-        decisions: row.0,
-        denied: row.1,
-        secret_blocks: row.2,
-        distinct_actors: row.3,
+        decisions: row.decisions,
+        denied: row.denied,
+        secret_blocks: row.secret_blocks,
+        distinct_actors: row.distinct_actors,
     })
 }
 
@@ -214,8 +225,8 @@ pub async fn fetch_baseline_window_samples(
     window_seconds: i64,
     lookback_days: i64,
 ) -> Result<Vec<WindowedCounts>, sqlx::Error> {
-    let rows = sqlx::query_as::<_, (i64, i64, i64, i64)>(
-        r"WITH live_start AS (
+    let rows = sqlx::query!(
+        r#"WITH live_start AS (
             SELECT now() - make_interval(secs => $1::double precision) AS ts
         ),
         buckets AS (
@@ -226,30 +237,30 @@ pub async fn fetch_baseline_window_samples(
             ) AS bucket_start
         )
         SELECT
-            COALESCE(COUNT(g.id), 0)::bigint,
-            COALESCE(COUNT(g.id) FILTER (WHERE g.decision = 'deny'), 0)::bigint,
+            COALESCE(COUNT(g.id), 0)::bigint AS "decisions!",
+            COALESCE(COUNT(g.id) FILTER (WHERE g.decision = 'deny'), 0)::bigint AS "denied!",
             COALESCE(COUNT(g.id) FILTER (
                 WHERE g.decision = 'deny'
                   AND (g.policy = 'secret_scan' OR g.reason ILIKE '%secret%')
-            ), 0)::bigint,
-            COALESCE(COUNT(DISTINCT g.user_id), 0)::bigint
+            ), 0)::bigint AS "secret_blocks!",
+            COALESCE(COUNT(DISTINCT g.user_id), 0)::bigint AS "distinct_actors!"
         FROM buckets b
         LEFT JOIN governance_decisions g
             ON g.created_at >= b.bucket_start
            AND g.created_at <  b.bucket_start + make_interval(secs => $1::double precision)
-        GROUP BY b.bucket_start",
+        GROUP BY b.bucket_start"#,
+        window_seconds as f64,
+        lookback_days as i32,
     )
-    .bind(window_seconds)
-    .bind(lookback_days)
     .fetch_all(pool)
     .await?;
     Ok(rows
         .into_iter()
         .map(|r| WindowedCounts {
-            decisions: r.0,
-            denied: r.1,
-            secret_blocks: r.2,
-            distinct_actors: r.3,
+            decisions: r.decisions,
+            denied: r.denied,
+            secret_blocks: r.secret_blocks,
+            distinct_actors: r.distinct_actors,
         })
         .collect())
 }
@@ -259,26 +270,27 @@ pub async fn fetch_top_actors(
     window_seconds: i64,
     limit: i64,
 ) -> Result<Vec<TopActor>, sqlx::Error> {
-    sqlx::query_as::<_, TopActor>(
-        r"SELECT
-            g.user_id::TEXT AS user_id,
-            COALESCE(u.display_name, u.full_name, u.name, u.email, g.user_id) AS display_name,
+    sqlx::query_as!(
+        TopActor,
+        r#"SELECT
+            g.user_id::TEXT AS "user_id!",
+            COALESCE(u.display_name, u.full_name, u.name, u.email, g.user_id) AS "display_name!",
             u.email::TEXT AS email,
-            COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS deny_count,
+            COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS "deny_count!",
             COUNT(*) FILTER (
                 WHERE g.decision = 'deny'
                   AND (g.policy = 'secret_scan' OR g.reason ILIKE '%secret%')
-            )::bigint AS secret_count,
-            COUNT(*)::bigint AS total
+            )::bigint AS "secret_count!",
+            COUNT(*)::bigint AS "total!"
         FROM governance_decisions g
         LEFT JOIN users u ON u.id = g.user_id
         WHERE g.created_at > now() - make_interval(secs => $1::double precision)
         GROUP BY g.user_id, u.display_name, u.full_name, u.name, u.email
-        ORDER BY deny_count DESC, total DESC
-        LIMIT $2",
+        ORDER BY 4 DESC, 6 DESC
+        LIMIT $2"#,
+        window_seconds as f64,
+        limit,
     )
-    .bind(window_seconds)
-    .bind(limit)
     .fetch_all(pool)
     .await
 }
@@ -288,21 +300,22 @@ pub async fn fetch_top_policies(
     window_seconds: i64,
     limit: i64,
 ) -> Result<Vec<TopPolicy>, sqlx::Error> {
-    sqlx::query_as::<_, TopPolicy>(
-        r"SELECT
+    sqlx::query_as!(
+        TopPolicy,
+        r#"SELECT
             policy,
             tool_name,
-            COUNT(*)::bigint AS hits,
-            COUNT(DISTINCT user_id)::bigint AS distinct_actors
+            COUNT(*)::bigint AS "hits!",
+            COUNT(DISTINCT user_id)::bigint AS "distinct_actors!"
         FROM governance_decisions
         WHERE decision = 'deny'
           AND created_at > now() - make_interval(secs => $1::double precision)
         GROUP BY policy, tool_name
-        ORDER BY hits DESC
-        LIMIT $2",
+        ORDER BY 3 DESC
+        LIMIT $2"#,
+        window_seconds as f64,
+        limit,
     )
-    .bind(window_seconds)
-    .bind(limit)
     .fetch_all(pool)
     .await
 }
@@ -312,28 +325,29 @@ pub async fn fetch_grouped_incidents(
     window_seconds: i64,
     limit: i64,
 ) -> Result<Vec<IncidentGroup>, sqlx::Error> {
-    sqlx::query_as::<_, IncidentGroup>(
-        r"SELECT
+    sqlx::query_as!(
+        IncidentGroup,
+        r#"SELECT
             g.agent_id,
-            g.user_id::TEXT AS user_id,
+            g.user_id::TEXT AS "user_id!",
             COALESCE(u.display_name, u.full_name, u.name, u.email) AS display_name,
             g.policy,
             g.tool_name,
-            COUNT(*)::bigint AS attempts,
-            MIN(g.created_at) AS first_seen,
-            MAX(g.created_at) AS last_seen,
-            COALESCE((ARRAY_AGG(g.reason ORDER BY g.created_at DESC))[1], '') AS sample_reason
+            COUNT(*)::bigint AS "attempts!",
+            MIN(g.created_at) AS "first_seen!",
+            MAX(g.created_at) AS "last_seen!",
+            COALESCE((ARRAY_AGG(g.reason ORDER BY g.created_at DESC))[1], '') AS "sample_reason!"
         FROM governance_decisions g
         LEFT JOIN users u ON u.id = g.user_id
         WHERE g.decision = 'deny'
           AND g.created_at > now() - make_interval(secs => $1::double precision)
         GROUP BY g.agent_id, g.user_id, u.display_name, u.full_name, u.name, u.email,
                  g.policy, g.tool_name
-        ORDER BY attempts DESC, last_seen DESC
-        LIMIT $2",
+        ORDER BY 6 DESC, 8 DESC
+        LIMIT $2"#,
+        window_seconds as f64,
+        limit,
     )
-    .bind(window_seconds)
-    .bind(limit)
     .fetch_all(pool)
     .await
 }
