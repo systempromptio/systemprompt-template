@@ -6,18 +6,19 @@ use crate::types::departments::{
 };
 
 pub async fn list_departments(pool: &PgPool) -> Result<Vec<DepartmentSummary>, sqlx::Error> {
-    sqlx::query_as::<_, DepartmentSummary>(
-        r"
+    sqlx::query_as!(
+        DepartmentSummary,
+        r#"
         SELECT
             d.id,
             d.name,
-            d.description,
-            COALESCE(mc.member_count, 0)::BIGINT  AS member_count,
-            COALESCE(ac.assignment_count, 0)::BIGINT AS assignment_count,
-            COALESCE(usg.input_tokens, 0)::BIGINT  AS input_tokens,
-            COALESCE(usg.output_tokens, 0)::BIGINT AS output_tokens,
-            COALESCE(usg.requests, 0)::BIGINT      AS requests,
-            COALESCE(usg.cost_microdollars, 0)::BIGINT AS cost_microdollars,
+            d.description as "description!",
+            COALESCE(mc.member_count, 0)::BIGINT  AS "member_count!",
+            COALESCE(ac.assignment_count, 0)::BIGINT AS "assignment_count!",
+            COALESCE(usg.input_tokens, 0)::BIGINT  AS "input_tokens!",
+            COALESCE(usg.output_tokens, 0)::BIGINT AS "output_tokens!",
+            COALESCE(usg.requests, 0)::BIGINT      AS "requests!",
+            COALESCE(usg.cost_microdollars, 0)::BIGINT AS "cost_microdollars!",
             d.created_at,
             d.updated_at
         FROM departments d
@@ -46,18 +47,19 @@ pub async fn list_departments(pool: &PgPool) -> Result<Vec<DepartmentSummary>, s
             GROUP BY upe.department
         ) usg ON usg.dept = d.name
         ORDER BY d.name
-        ",
+        "#,
     )
     .fetch_all(pool)
     .await
 }
 
 pub async fn get_department(pool: &PgPool, id: &str) -> Result<Option<Department>, sqlx::Error> {
-    sqlx::query_as::<_, Department>(
-        "SELECT id, name, description, created_at, updated_at
-         FROM departments WHERE id = $1",
+    sqlx::query_as!(
+        Department,
+        r#"SELECT id, name, description as "description!", created_at, updated_at
+           FROM departments WHERE id = $1"#,
+        id,
     )
-    .bind(id)
     .fetch_optional(pool)
     .await
 }
@@ -66,11 +68,12 @@ pub async fn get_department_by_name(
     pool: &PgPool,
     name: &str,
 ) -> Result<Option<Department>, sqlx::Error> {
-    sqlx::query_as::<_, Department>(
-        "SELECT id, name, description, created_at, updated_at
-         FROM departments WHERE name = $1",
+    sqlx::query_as!(
+        Department,
+        r#"SELECT id, name, description as "description!", created_at, updated_at
+           FROM departments WHERE name = $1"#,
+        name,
     )
-    .bind(name)
     .fetch_optional(pool)
     .await
 }
@@ -80,14 +83,15 @@ pub async fn create_department(
     input: &DepartmentInput,
 ) -> Result<Department, sqlx::Error> {
     let id = Uuid::new_v4().to_string();
-    sqlx::query_as::<_, Department>(
-        r"INSERT INTO departments (id, name, description)
-          VALUES ($1, $2, $3)
-          RETURNING id, name, description, created_at, updated_at",
+    sqlx::query_as!(
+        Department,
+        r#"INSERT INTO departments (id, name, description)
+           VALUES ($1, $2, $3)
+           RETURNING id, name, description as "description!", created_at, updated_at"#,
+        id,
+        input.name,
+        input.description,
     )
-    .bind(&id)
-    .bind(&input.name)
-    .bind(&input.description)
     .fetch_one(pool)
     .await
 }
@@ -99,27 +103,29 @@ pub async fn update_department(
 ) -> Result<Department, sqlx::Error> {
     let mut tx = pool.begin().await?;
 
-    let existing: Department = sqlx::query_as::<_, Department>(
-        "SELECT id, name, description, created_at, updated_at
-         FROM departments WHERE id = $1 FOR UPDATE",
+    let existing = sqlx::query_as!(
+        Department,
+        r#"SELECT id, name, description as "description!", created_at, updated_at
+           FROM departments WHERE id = $1 FOR UPDATE"#,
+        id,
     )
-    .bind(id)
     .fetch_one(&mut *tx)
     .await?;
 
     let renamed = existing.name != input.name;
 
-    let updated: Department = sqlx::query_as::<_, Department>(
-        r"UPDATE departments
-          SET name = $2,
-              description = $3,
-              updated_at = NOW()
-          WHERE id = $1
-          RETURNING id, name, description, created_at, updated_at",
+    let updated = sqlx::query_as!(
+        Department,
+        r#"UPDATE departments
+           SET name = $2,
+               description = $3,
+               updated_at = NOW()
+           WHERE id = $1
+           RETURNING id, name, description as "description!", created_at, updated_at"#,
+        id,
+        input.name,
+        input.description,
     )
-    .bind(id)
-    .bind(&input.name)
-    .bind(&input.description)
     .fetch_one(&mut *tx)
     .await?;
 
@@ -149,11 +155,12 @@ pub async fn update_department(
 pub async fn delete_department(pool: &PgPool, id: &str) -> Result<(), sqlx::Error> {
     let mut tx = pool.begin().await?;
 
-    let dept: Department = sqlx::query_as::<_, Department>(
-        "SELECT id, name, description, created_at, updated_at
-         FROM departments WHERE id = $1 FOR UPDATE",
+    let dept = sqlx::query_as!(
+        Department,
+        r#"SELECT id, name, description as "description!", created_at, updated_at
+           FROM departments WHERE id = $1 FOR UPDATE"#,
+        id,
     )
-    .bind(id)
     .fetch_one(&mut *tx)
     .await?;
 
@@ -191,18 +198,19 @@ pub async fn list_department_members(
     pool: &PgPool,
     department_name: &str,
 ) -> Result<Vec<DepartmentMember>, sqlx::Error> {
-    sqlx::query_as::<_, DepartmentMember>(
-        r"
+    sqlx::query_as!(
+        DepartmentMember,
+        r#"
         SELECT
             u.id,
             u.email,
             u.display_name,
-            u.status,
-            u.roles,
-            COALESCE(ar.input_tokens, 0)::BIGINT     AS input_tokens,
-            COALESCE(ar.output_tokens, 0)::BIGINT    AS output_tokens,
-            COALESCE(ar.requests, 0)::BIGINT         AS requests,
-            COALESCE(ar.cost_microdollars, 0)::BIGINT AS cost_microdollars,
+            u.status as "status!",
+            u.roles as "roles!: Vec<String>",
+            COALESCE(ar.input_tokens, 0)::BIGINT     AS "input_tokens!",
+            COALESCE(ar.output_tokens, 0)::BIGINT    AS "output_tokens!",
+            COALESCE(ar.requests, 0)::BIGINT         AS "requests!",
+            COALESCE(ar.cost_microdollars, 0)::BIGINT AS "cost_microdollars!",
             ar.last_active                           AS last_active
         FROM users u
         LEFT JOIN (
@@ -222,9 +230,9 @@ pub async fn list_department_members(
           AND NOT ('anonymous' = ANY(u.roles))
           AND u.email NOT LIKE '%@anonymous.local'
         ORDER BY (COALESCE(ar.input_tokens, 0) + COALESCE(ar.output_tokens, 0)) DESC, u.email
-        ",
+        "#,
+        department_name,
     )
-    .bind(department_name)
     .fetch_all(pool)
     .await
 }
@@ -235,23 +243,24 @@ pub async fn list_department_top_tools(
     department_name: &str,
     limit: i64,
 ) -> Result<Vec<DepartmentTopTool>, sqlx::Error> {
-    sqlx::query_as::<_, DepartmentTopTool>(
-        r"
+    sqlx::query_as!(
+        DepartmentTopTool,
+        r#"
         SELECT
-            COALESCE(p.tool_name, 'unknown') AS tool_name,
-            COALESCE(SUM(p.event_count), 0)::BIGINT AS invocations
+            COALESCE(p.tool_name, 'unknown') AS "tool_name!",
+            COALESCE(SUM(p.event_count), 0)::BIGINT AS "invocations!"
         FROM plugin_usage_daily p
         JOIN user_profile_ext upe ON upe.user_id = p.user_id
         WHERE upe.department = $1
           AND p.tool_name IS NOT NULL
           AND p.date >= CURRENT_DATE - INTERVAL '30 days'
         GROUP BY p.tool_name
-        ORDER BY invocations DESC
+        ORDER BY 2 DESC
         LIMIT $2
-        ",
+        "#,
+        department_name,
+        limit,
     )
-    .bind(department_name)
-    .bind(limit)
     .fetch_all(pool)
     .await
 }
@@ -281,11 +290,12 @@ pub struct UserMarketplaceOverride {
 pub async fn list_user_marketplace_overrides(
     pool: &PgPool,
 ) -> Result<Vec<UserMarketplaceOverride>, sqlx::Error> {
-    sqlx::query_as::<_, UserMarketplaceOverride>(
-        r"
+    sqlx::query_as!(
+        UserMarketplaceOverride,
+        r#"
         SELECT
-            u.id AS user_id,
-            COALESCE(upe.department, '') AS department,
+            u.id AS "user_id!",
+            COALESCE(upe.department, '') AS "department!",
             acr.entity_id,
             acr.access
         FROM users u
@@ -295,7 +305,7 @@ pub async fn list_user_marketplace_overrides(
          AND ((acr.rule_type = 'user' AND acr.rule_value = u.id)
               OR (acr.rule_type = 'department' AND acr.rule_value = COALESCE(upe.department, '')))
         WHERE NOT ('anonymous' = ANY(u.roles))
-        ",
+        "#,
     )
     .fetch_all(pool)
     .await
@@ -304,11 +314,12 @@ pub async fn list_user_marketplace_overrides(
 pub async fn list_user_management_aggregates(
     pool: &PgPool,
 ) -> Result<Vec<UserManagementAggregate>, sqlx::Error> {
-    sqlx::query_as::<_, UserManagementAggregate>(
-        r"
+    sqlx::query_as!(
+        UserManagementAggregate,
+        r#"
         SELECT
-            u.id AS user_id,
-            COALESCE(upe.department, '') AS department,
+            u.id AS "user_id!",
+            COALESCE(upe.department, '') AS "department!",
             COALESCE((
                 SELECT COUNT(DISTINCT acr.entity_id)
                 FROM access_control_rules acr
@@ -316,16 +327,16 @@ pub async fn list_user_management_aggregates(
                   AND acr.access = 'allow'
                   AND ((acr.rule_type = 'department' AND acr.rule_value = COALESCE(upe.department, ''))
                        OR (acr.rule_type = 'user' AND acr.rule_value = u.id))
-            ), 0)::BIGINT AS assigned_skills_count,
+            ), 0)::BIGINT AS "assigned_skills_count!",
             COALESCE((
                 SELECT COUNT(*) FROM user_api_keys
                 WHERE user_id = u.id AND revoked_at IS NULL
-            ), 0)::BIGINT AS devices_count,
+            ), 0)::BIGINT AS "devices_count!",
             u.created_at
         FROM users u
         LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
         WHERE NOT ('anonymous' = ANY(u.roles))
-        ",
+        "#,
     )
     .fetch_all(pool)
     .await
