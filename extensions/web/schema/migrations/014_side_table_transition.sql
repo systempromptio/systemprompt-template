@@ -43,24 +43,42 @@ DROP INDEX IF EXISTS idx_markdown_content_related_docs;
 DROP INDEX IF EXISTS idx_markdown_content_category_filter;
 
 DO $$
+DECLARE
+    has_department BOOLEAN;
+    has_share_token_version BOOLEAN;
 BEGIN
-    IF EXISTS (
+    SELECT EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_name = 'users' AND column_name = 'department'
-    ) THEN
+    ) INTO has_department;
+
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'users' AND column_name = 'share_token_version'
+    ) INTO has_share_token_version;
+
+    IF has_department THEN
         INSERT INTO departments (name)
         SELECT DISTINCT department
         FROM users
         WHERE department IS NOT NULL AND department <> ''
         ON CONFLICT (name) DO NOTHING;
 
-        INSERT INTO user_profile_ext (user_id, department, share_token_version)
-        SELECT
-            id,
-            COALESCE(NULLIF(department, ''), 'Default'),
-            COALESCE(share_token_version, 1)
-        FROM users
-        ON CONFLICT (user_id) DO NOTHING;
+        IF has_share_token_version THEN
+            EXECUTE 'INSERT INTO user_profile_ext (user_id, department, share_token_version)
+                     SELECT id,
+                            COALESCE(NULLIF(department, ''''), ''Default''),
+                            COALESCE(share_token_version, 1)
+                     FROM users
+                     ON CONFLICT (user_id) DO NOTHING';
+        ELSE
+            INSERT INTO user_profile_ext (user_id, department)
+            SELECT
+                id,
+                COALESCE(NULLIF(department, ''), 'Default')
+            FROM users
+            ON CONFLICT (user_id) DO NOTHING;
+        END IF;
     END IF;
 END $$;
 
