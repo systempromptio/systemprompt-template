@@ -185,3 +185,5 @@ demo/scenarios/airgap/results/*.json
 
 # Scaled scenario: staged release binaries for the Docker build (see Dockerfile.scaled-prebuilt)
 deploy/scenarios/scaled/.bin/
+# Airgap scenario: same pattern as scaled — host-built binaries staged into the image
+deploy/scenarios/airgap/.bin/
