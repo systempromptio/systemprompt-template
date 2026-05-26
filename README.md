@@ -378,25 +378,21 @@ Profile YAML:
 ```yaml
 gateway:
   enabled: true
+  catalog:
+    path: catalog.yaml
   routes:
     - model_pattern: "claude-*"
       provider: anthropic
-      endpoint: "https://api.anthropic.com/v1"
-      api_key_secret: "anthropic_api_key"
     - model_pattern: "moonshot-*"
       provider: moonshot
-      endpoint: "https://api.moonshot.cn/v1"
-      api_key_secret: "kimi_api_key"
       upstream_model: "moonshot-v1-8k"
     - model_pattern: "MiniMax-*"
       provider: minimax
-      endpoint: "https://api.minimax.io/anthropic"
-      api_key_secret: "minimax"
     - model_pattern: "*"
       provider: anthropic
-      endpoint: "https://api.anthropic.com/v1"
-      api_key_secret: "anthropic_api_key"
 ```
+
+Provider endpoints and `api_key_secret` live in the catalog (inline under `catalog:` or in the sibling `catalog.yaml` referenced by `catalog.path`).
 
 Routes evaluate in order; first `model_pattern` match wins. `upstream_model` aliases a client-requested model to a different upstream name without the client knowing.
 

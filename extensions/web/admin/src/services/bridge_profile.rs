@@ -283,7 +283,11 @@ fn read_tenant_id() -> Option<String> {
 
 fn build_bridge_profile_block() -> Option<BridgeProfileBlock> {
     let profile = ProfileBootstrap::get().ok()?;
-    let gateway = profile.gateway.as_ref().filter(|g| g.enabled)?;
+    let gateway = profile
+        .gateway
+        .as_ref()
+        .and_then(systemprompt::models::profile::GatewayState::resolved)
+        .filter(|g| g.enabled)?;
 
     let base = profile.server.api_external_url.trim_end_matches('/');
     let prefix = gateway.inference_path_prefix.trim_end_matches('/');

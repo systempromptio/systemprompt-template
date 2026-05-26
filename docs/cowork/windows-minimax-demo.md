@@ -14,18 +14,18 @@ No YAML edits needed. `.systemprompt/profiles/local/profile.yaml` ships with:
 ```yaml
 gateway:
   enabled: true
+  catalog:
+    path: catalog.yaml
   routes:
     - model_pattern: "claude-*"
       provider: minimax
-      endpoint: "https://api.minimax.io/anthropic/v1"
-      api_key_secret: minimax
       upstream_model: MiniMax-M1
     - model_pattern: "*"
       provider: minimax
-      endpoint: "https://api.minimax.io/anthropic/v1"
-      api_key_secret: minimax
       upstream_model: MiniMax-M1
 ```
+
+Provider endpoint and `api_key_secret` are declared once in the catalog file.
 
 Every model string — including `claude-*` strings that Claude Desktop sends — is aliased onto `MiniMax-M1` via `upstream_model`. The client never sees the rewrite.
 

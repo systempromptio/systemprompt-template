@@ -51,7 +51,7 @@ impl TemplateMarketplaceFilter {
     /// pool is not Postgres-backed.
     pub fn from_db(db: &DbPool) -> Result<Arc<dyn MarketplaceFilter>, MarketplaceFilterError> {
         let pool = db
-            .read_pool_arc()
+            .pool_arc()
             .map_err(|e| MarketplaceFilterError::Backend(e.to_string()))?;
         Ok(Arc::new(Self {
             repo: AccessControlRepository::from_pool(Arc::clone(&pool)),

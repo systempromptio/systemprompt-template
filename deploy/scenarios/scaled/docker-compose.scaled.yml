@@ -159,9 +159,11 @@ services:
     entrypoint:
       - "sh"
       - "-c"
-      - "mkdir -p /app/services/profiles/docker && cp /seed/profile.yaml /app/services/profiles/docker/profile.yaml && cp /seed/secrets.json /app/services/profiles/docker/secrets.json && cp /seed/signing_key.pem /app/services/profiles/docker/signing_key.pem && exec /app/entrypoint.sh"
+      - "mkdir -p /app/services/profiles/docker && cp /seed/profile.yaml /app/services/profiles/docker/profile.yaml && cp /seed/catalog.yaml /app/services/profiles/docker/catalog.yaml && cp /seed/secrets.json /app/services/profiles/docker/secrets.json && cp /seed/signing_key.pem /app/services/profiles/docker/signing_key.pem && exec /app/entrypoint.sh"
     volumes:
       - ../../../.systemprompt/profiles/scaled-api/profile.yaml:/seed/profile.yaml:ro
+      # 0.11.2: gateway.catalog_path resolves relative to the profile dir.
+      - ../../../.systemprompt/profiles/scaled-api/catalog.yaml:/seed/catalog.yaml:ro
       - ../../../.systemprompt/profiles/scaled-api/secrets.json:/seed/secrets.json:ro
       # RSA signing key — shared by every app replica so a token minted on one
       # replica validates on all of them (and on the SSE subscriber replica).
@@ -212,9 +214,10 @@ services:
     entrypoint:
       - "sh"
       - "-c"
-      - "mkdir -p /app/services/profiles/docker && cp /seed/profile.yaml /app/services/profiles/docker/profile.yaml && cp /seed/secrets.json /app/services/profiles/docker/secrets.json && cp /seed/signing_key.pem /app/services/profiles/docker/signing_key.pem && exec /app/entrypoint.sh"
+      - "mkdir -p /app/services/profiles/docker && cp /seed/profile.yaml /app/services/profiles/docker/profile.yaml && cp /seed/catalog.yaml /app/services/profiles/docker/catalog.yaml && cp /seed/secrets.json /app/services/profiles/docker/secrets.json && cp /seed/signing_key.pem /app/services/profiles/docker/signing_key.pem && exec /app/entrypoint.sh"
     volumes:
       - ../../../.systemprompt/profiles/scaled-scheduler/profile.yaml:/seed/profile.yaml:ro
+      - ../../../.systemprompt/profiles/scaled-scheduler/catalog.yaml:/seed/catalog.yaml:ro
       - ../../../.systemprompt/profiles/scaled-scheduler/secrets.json:/seed/secrets.json:ro
       - ../../../.systemprompt/profiles/scaled-scheduler/signing_key.pem:/seed/signing_key.pem:ro
     networks:

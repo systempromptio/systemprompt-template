@@ -75,8 +75,12 @@ services:
 
   app:
     build:
+      # Use the host-built binary so the path-patched sibling systemprompt-core
+      # (which the demo needs for SYSTEMPROMPT_TRUSTED_HTTP_HOSTS support, and
+      # any other unreleased core change) is actually in the image. The default
+      # in-Docker cargo build would silently fall back to the crates.io pin.
       context: ../../..
-      dockerfile: Dockerfile
+      dockerfile: deploy/scenarios/airgap/Dockerfile.airgap-prebuilt
     restart: unless-stopped
     depends_on:
       postgres:
@@ -90,6 +94,12 @@ services:
       # air-gap profile — not the Dockerfile's default `docker` profile path.
       SYSTEMPROMPT_PROFILE: /app/services/profiles/airgap/profile.yaml
       DATABASE_URL: postgres://systemprompt:systemprompt@postgres:5432/systemprompt
+      # SSRF guard opt-in (0.11.x): the airgap demo's mock-inference is reachable
+      # only over http on the sealed `airgap-internal` bridge. validate_outbound_url
+      # blocks non-loopback http by default; this allowlist names the single trusted
+      # in-network hostname so the gateway catalog passes validation. Default-empty
+      # everywhere else, so no production deployment changes behaviour.
+      SYSTEMPROMPT_TRUSTED_HTTP_HOSTS: mock-inference
     volumes:
       # Read-only: the air-gap profile directory is immutable infrastructure.
       # The secrets subsystem tolerates a read-only profile dir — the only
@@ -97,13 +107,13 @@ services:
       # via secrets.json (manifest_signing_secret_seed) and the subsystem
       # degrades to an ephemeral seed if the dir is not writable.
       - ../../../.systemprompt/profiles/airgap:/app/services/profiles/airgap:ro
-      # Read-only: services/ai/ holds gateway-policies.yaml (the model
-      # allow-list — the security control) plus config.yaml. Mounted so the
+      # Read-only: services/gateway/ holds policies.yaml (gateway policy
+      # baseline — per-call ceilings, quota windows, safety). Mounted so the
       # publish_pipeline ingestion job picks up the current committed YAML
       # at every boot, even if the image was built before a YAML edit.
-      # Without this overlay, a fresh-DB boot has no allow-list row and the
-      # gateway falls open to every model — observed during fresh-test
-      # development. See airgap-fresh-test in the justfile.
+      # 0.11.2 moved the file from services/ai/gateway-policies.yaml to
+      # services/gateway/policies.yaml (see systemprompt::ai::GATEWAY_POLICIES_FILE).
+      - ../../../services/gateway:/app/services/gateway:ro
       - ../../../services/ai:/app/services/ai:ro
     # NOTE: no `ports:` — the app is reachable only from inside airgap-internal.
     # Operator access is via the `ingress` proxy below.

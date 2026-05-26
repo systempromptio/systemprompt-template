@@ -49,9 +49,9 @@ The `x-session-id` header is **mandatory**. A request without it is rejected wit
 
 ## Model allow-listing
 
-The profile's gateway catalog (`gateway.catalog_path`, e.g.
-`.systemprompt/profiles/local/catalog.yaml`) declares the models this deployment
-exposes. A request whose `model` is not in the catalog is denied with `403` before
+The profile's gateway catalog (`gateway.catalog.path`, e.g.
+`.systemprompt/profiles/local/catalog.yaml`, or inline under `gateway.catalog:`)
+declares the models this deployment exposes. A request whose `model` is not in the catalog is denied with `403` before
 any upstream call — this is the egress control an air-gapped deployment relies on.
 
 Both the dispatch gate (`GatewayConfig::is_model_exposed`) and the `/profile`
