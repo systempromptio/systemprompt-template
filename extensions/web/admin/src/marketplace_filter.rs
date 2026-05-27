@@ -104,12 +104,12 @@ impl TemplateMarketplaceFilter {
                 .map(|e| e.default_included);
             let entity = entity_ref_for(kind, id);
             let uid = UserId::new(user_id);
+            let _ = department;
             let decision = resolve_access(ResolveInput {
                 entity: &entity,
                 rules: entity_rules,
                 user_id: &uid,
                 user_roles: roles,
-                department,
                 default_included,
             });
             if matches!(decision, Decision::Allow { .. }) {

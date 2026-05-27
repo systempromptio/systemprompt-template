@@ -84,7 +84,6 @@ fn parse_rule_type(s: &str) -> Option<RuleType> {
     match s {
         "user" => Some(RuleType::User),
         "role" => Some(RuleType::Role),
-        "department" => Some(RuleType::Department),
         _ => None,
     }
 }

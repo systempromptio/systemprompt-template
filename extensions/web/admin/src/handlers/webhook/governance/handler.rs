@@ -267,7 +267,6 @@ fn allow_detail(matched_by: &MatchedBy) -> String {
         MatchedBy::PolicyAllow { detail, .. } => detail.to_string(),
         MatchedBy::UserAllow => "user allow".to_string(),
         MatchedBy::RoleAllow { role } => format!("role allow: {role}"),
-        MatchedBy::DepartmentAllow { department } => format!("department allow: {department}"),
         MatchedBy::DefaultIncluded => "default included".to_string(),
     }
 }

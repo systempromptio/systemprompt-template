@@ -67,7 +67,7 @@ async fn audit_decision(
         "entity_id": entity_id_str,
         "trace_id": req.trace_id.as_str(),
         "roles": req.roles,
-        "department": req.department,
+        "attributes": req.attributes,
         "context": req.context,
         "entity": entity,
         "justification": justification_opt,
@@ -112,7 +112,6 @@ pub async fn govern_authz(
         rules: &rules,
         user_id: &req.user_id,
         user_roles: &req.roles,
-        department: &req.department,
         default_included: entity.as_ref().map(|e| e.default_included),
     });
 

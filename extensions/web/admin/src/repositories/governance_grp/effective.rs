@@ -128,12 +128,12 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
         default_included,
     } = args;
     let uid = UserId::new(user_id);
+    let _ = department;
     let dec = resolve(ResolveInput {
         entity: &entity,
         rules,
         user_id: &uid,
         user_roles,
-        department,
         default_included,
     });
     let (decision, reason) = match dec {
@@ -187,14 +187,7 @@ fn allow_reason(
     }) {
         return format!("role allow: {}", rule.rule_value);
     }
-    if let Some(rule) = rules.iter().find(|r| {
-        r.rule_type == RuleType::Department
-            && r.access == Access::Allow
-            && r.rule_value == department
-            && !department.is_empty()
-    }) {
-        return format!("department allow: {}", rule.rule_value);
-    }
+    let _ = department;
     if default_included {
         return "default included".to_string();
     }

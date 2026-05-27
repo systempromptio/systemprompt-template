@@ -1,4 +1,4 @@
-//! DB -> YAML snapshot of role/department access-control rules.
+//! DB -> YAML snapshot of role access-control rules.
 //!
 //! Inverse of [`super::acl_yaml_loader`]: collapses joined
 //! `access_control_rules` and `access_control_entities` rows back into the
@@ -20,8 +20,6 @@ struct EntityKey {
     default_included: bool,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     roles: Vec<String>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    departments: Vec<String>,
 }
 
 #[derive(Serialize)]
@@ -40,7 +38,7 @@ pub async fn render_yaml_snapshot(pool: &PgPool) -> Result<String, MarketplaceEr
            FROM access_control_rules r
            LEFT JOIN access_control_entities e
               ON e.entity_type = r.entity_type AND e.entity_id = r.entity_id
-           WHERE r.rule_type IN ('role', 'department')
+           WHERE r.rule_type = 'role'
            ORDER BY r.entity_type, r.entity_id, r.access, r.rule_type, r.rule_value"#,
     )
     .fetch_all(pool)
@@ -62,11 +60,9 @@ pub async fn render_yaml_snapshot(pool: &PgPool) -> Result<String, MarketplaceEr
             access: row.access,
             default_included: row.default_included,
             roles: Vec::new(),
-            departments: Vec::new(),
         });
         match row.rule_type {
             RuleType::Role => entry.roles.push(row.rule_value),
-            RuleType::Department => entry.departments.push(row.rule_value),
             RuleType::User => {}
         }
     }

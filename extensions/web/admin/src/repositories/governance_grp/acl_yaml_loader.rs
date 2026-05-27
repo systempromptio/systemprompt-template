@@ -127,11 +127,12 @@ async fn apply_one_rule(
             &rule.roles,
             "services/access-control/roles.yaml",
         ),
-        RuleScope::DepartmentsOnly => (
-            RuleType::Department,
-            &rule.departments,
-            "services/access-control/departments.yaml",
-        ),
+        RuleScope::DepartmentsOnly => {
+            // 0.12.0: RuleType::Department removed from core. Department-as-rule
+            // moves out; departments.yaml `rules:` entries no longer materialise
+            // into access_control_rules.
+            return Ok(());
+        }
     };
 
     for target_id in &target_ids {

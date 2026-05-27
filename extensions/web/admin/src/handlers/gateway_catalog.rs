@@ -91,7 +91,7 @@ async fn collect_allowed_routes(
     routes: &[GatewayRouteView],
     user_id: &str,
     user_roles: &[String],
-    department: &str,
+    _department: &str,
 ) -> Result<Vec<CatalogEntry>, Box<Response>> {
     let mut allowed = Vec::with_capacity(routes.len());
     for route in routes {
@@ -119,7 +119,6 @@ async fn collect_allowed_routes(
                 rules: &rules,
                 user_id: &uid,
                 user_roles,
-                department,
                 default_included,
             }),
             Decision::Allow { .. }
@@ -224,12 +223,12 @@ pub async fn detect_after_the_fact(
             .map(|e| e.default_included);
         let entity = EntityRef::GatewayRoute(RouteId::new(route.id.clone()));
         let uid = UserId::new(&row.user_id);
+        let _ = &department;
         if let Decision::Deny { reason } = gateway_acl::resolve(ResolveInput {
             entity: &entity,
             rules: &rules,
             user_id: &uid,
             user_roles: &user_roles,
-            department: &department,
             default_included,
         }) {
             let decision_id = uuid::Uuid::new_v4().to_string();

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT entity_type, entity_id, rule_type, rule_value, access, justification\n            FROM access_control_rules\n            WHERE rule_type IN ('role', 'department')\n            ORDER BY entity_type, entity_id, access, rule_type, rule_value\n            ",
+  "query": "\n            SELECT entity_type, entity_id, rule_type, rule_value, access, justification\n            FROM access_control_rules\n            WHERE rule_type = 'role'\n            ORDER BY entity_type, entity_id, access, rule_type, rule_value\n            ",
   "describe": {
     "columns": [
       {
@@ -46,5 +46,5 @@
       true
     ]
   },
-  "hash": "ec99e32a4621d609941c7cec7a87bfedbe31ac26b89a3c5925a4a2f4f9890108"
+  "hash": "c518c45252ce066157222aab51b000f7acc2dc7711623f2ce4b86b23871de488"
 }
