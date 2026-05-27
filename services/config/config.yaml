@@ -16,7 +16,6 @@ includes:
   # via the aggregator would require a `web:` wrapper, which is incompatible.
   - ../ai/config.yaml
   - ../scheduler/config.yaml
-  - ../content/config.yaml
 
   # Agents (flat, wrapped in `agents:` map)
   - ../agents/developer_agent.yaml

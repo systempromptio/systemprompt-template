@@ -508,7 +508,8 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
       disabled: []
     gateway:
       enabled: true
-      catalog_path: catalog.yaml
+      catalog:
+        path: catalog.yaml
       routes:
         - model_pattern: "claude-*"
           provider: anthropic
