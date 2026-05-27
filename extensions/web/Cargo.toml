@@ -26,7 +26,7 @@ systemprompt-web-jobs = { workspace = true }
 
 # Extension framework — direct dep so the `extension_migrations!()` macro
 # expansion (`::systemprompt_extension::Migration`) resolves.
-systemprompt-extension = "0.12.0"
+systemprompt-extension = "0.12.1"
 
 # Database access
 sqlx = { workspace = true }
@@ -81,7 +81,7 @@ zip = { workspace = true }
 tempfile = { workspace = true }
 
 [build-dependencies]
-systemprompt-extension = "0.12.0"
+systemprompt-extension = "0.12.1"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }
