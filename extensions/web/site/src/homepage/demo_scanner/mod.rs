@@ -234,9 +234,21 @@ fn extract_commands(content: &str) -> Vec<String> {
         let cmd = CLI_PREFIXES
             .iter()
             .find_map(|prefix| {
-                trimmed
-                    .strip_prefix(prefix)
-                    .map(|args| format!("systemprompt {}", args.trim()))
+                trimmed.strip_prefix(prefix).map(|args| {
+                    // `run_cli_head` takes a leading numeric line-limit before
+                    // the real subcommand; drop it so the rendered command is
+                    // the actual CLI invocation, not `systemprompt 40 …`.
+                    let trimmed_args = args.trim();
+                    let cleaned = if *prefix == "run_cli_head " {
+                        trimmed_args
+                            .split_once(char::is_whitespace)
+                            .filter(|(head, _)| head.chars().all(|c| c.is_ascii_digit()))
+                            .map_or(trimmed_args, |(_, rest)| rest.trim_start())
+                    } else {
+                        trimmed_args
+                    };
+                    format!("systemprompt {cleaned}")
+                })
             })
             .or_else(|| {
                 trimmed

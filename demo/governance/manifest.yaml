@@ -64,21 +64,25 @@ steps:
       agent in the audit table — proof the safety net holds against
       prompt-injection exfiltration.
   - script: 07-rate-limiting.sh
-    label: Inspect the rate limit, security, and server config
+    label: Exceed the rate-limit policy and watch governance deny
     narrative: >
-      Calls admin config rate-limits show and compare, then admin config
-      security show and admin config server show. These are the ceilings that
-      cap a runaway agent before governance rules even fire.
+      Shows the HTTP rate-limit config, then reads the governance rate_limit
+      policy (requests_per_window / window_secs) and fires that many PreToolUse
+      calls plus an overshoot from one fresh session_id against /hooks/govern.
+      The sliding-window limiter trips inside the policy pipeline and starts
+      returning deny.
     outcome: >
-      Concrete numbers for per-tier request limits, security posture, and
-      server knobs — the config you would tune in production.
+      A live allow vs deny tally for one session, followed by an audit query
+      attributing every deny to policy=rate_limit with a RateLimitWindow
+      reason — proof the limiter actually fires, not just that it's configured.
   - script: 08-hooks.sh
-    label: List every registered hook and validate the wiring
+    label: List, validate, and fire a hook end-to-end
     narrative: >
-      Runs core hooks list to show every PreToolUse, PostToolUse, and
-      lifecycle hook across installed plugins, then core hooks validate to
-      confirm each one resolves. This is the extension surface for your own
-      policies.
+      Lists every PreToolUse, PostToolUse, and lifecycle hook across installed
+      plugins and validates the wiring, then POSTs a synthetic PostToolUse to
+      /hooks/track — the exact wire path Claude Code uses to report a local
+      hook fire — and reads the inserted row back out of plugin_usage_events.
     outcome: >
-      A validated hook inventory with plugin, event, and handler — the exact
-      place you'd drop a custom rule.
+      A validated hook inventory plus a fresh plugin_usage_events row keyed on
+      a one-shot session_id — proof the hook-tracking path is wired into the
+      audit store, not just the manifest.
