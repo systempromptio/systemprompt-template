@@ -22,6 +22,9 @@ marketplace:
   # services/config/config.yaml's `includes:` list.
   skills:
     include: []
-  mcp_servers: []
+  mcp_servers:
+    source: explicit
+    include: []
+    exclude: []
   agents:
     include: []

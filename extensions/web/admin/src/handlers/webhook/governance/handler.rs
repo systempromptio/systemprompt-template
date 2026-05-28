@@ -276,7 +276,7 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
     let audit = DecisionAudit {
         decision: deny_for_auth_failure(reason),
         principal: PrincipalSnapshot {
-            user_id: systemprompt::identifiers::bootstrap::anonymous(),
+            user_id: UserId::new("anonymous"),
             session_id: params.session_id.clone(),
             agent_id: params.agent_id.map(str::to_string),
             // Why: authentication failed before any scope could be resolved.

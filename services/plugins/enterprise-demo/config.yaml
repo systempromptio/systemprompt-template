@@ -26,8 +26,14 @@ plugin:
       - associate_agent
     exclude: []
   mcp_servers:
-    - systemprompt
-  content_sources: []
+    source: explicit
+    include:
+      - systemprompt
+    exclude: []
+  content_sources:
+    source: explicit
+    include: []
+    exclude: []
   hooks:
     PreToolUse:
       - matcher: "*"
