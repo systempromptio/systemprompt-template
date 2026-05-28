@@ -31,11 +31,6 @@ agents:
       security:
         - oauth2:
             - user
-      skills:
-        - id: example_web_search
-          name: Example Web Search
-          description: "A simple demonstration skill that searches the web for information"
-          tags: [example, demo, web-search]
     metadata:
       systemPrompt: |
         You are associate_agent — a restricted user-scope assistant for research and documentation in the Enterprise

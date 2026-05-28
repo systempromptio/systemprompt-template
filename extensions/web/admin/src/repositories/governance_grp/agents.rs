@@ -1,7 +1,9 @@
+use std::collections::HashMap;
 use std::path::Path;
 
+use crate::repositories::plugins_grp::plugins::list_skill_catalog;
 use crate::types::{AgentDetail, AgentSkillInfo, CreateAgentRequest, UpdateAgentRequest};
-use systemprompt::identifiers::{AgentId, McpServerId, SkillId};
+use systemprompt::identifiers::{AgentId, McpServerId};
 use systemprompt_web_shared::error::MarketplaceError;
 
 const DEFAULT_AGENT_PORT: u16 = 9100;
@@ -12,6 +14,22 @@ pub fn list_agents(services_path: &Path) -> Result<Vec<AgentDetail>, Marketplace
     if !agents_dir.exists() {
         return Ok(agents);
     }
+    // Skill metadata is sourced once from the skill catalog and looked up by id;
+    // agents only declare flat `metadata.skills: [id]` and never duplicate name/description.
+    let skill_catalog: HashMap<String, AgentSkillInfo> = list_skill_catalog(services_path)
+        .unwrap_or_default()
+        .into_iter()
+        .map(|entry| {
+            (
+                entry.id.as_str().to_string(),
+                AgentSkillInfo {
+                    id: entry.id,
+                    name: entry.name,
+                    description: entry.description,
+                },
+            )
+        })
+        .collect();
     for entry in std::fs::read_dir(&agents_dir)? {
         let entry = entry?;
         let path = entry.path();
@@ -27,7 +45,7 @@ pub fn list_agents(services_path: &Path) -> Result<Vec<AgentDetail>, Marketplace
         if let Some(agents_map) = config.get("agents").and_then(|a| a.as_mapping()) {
             for (key, val) in agents_map {
                 if let Some(agent_id) = key.as_str() {
-                    agents.push(parse_agent_detail(agent_id, val));
+                    agents.push(parse_agent_detail(agent_id, val, &skill_catalog));
                 }
             }
         }
@@ -36,7 +54,11 @@ pub fn list_agents(services_path: &Path) -> Result<Vec<AgentDetail>, Marketplace
     Ok(agents)
 }
 
-fn parse_agent_detail(agent_id: &str, val: &serde_yaml::Value) -> AgentDetail {
+fn parse_agent_detail(
+    agent_id: &str,
+    val: &serde_yaml::Value,
+    skill_catalog: &HashMap<String, AgentSkillInfo>,
+) -> AgentDetail {
     AgentDetail {
         id: AgentId::from(agent_id),
         name: val
@@ -86,25 +108,23 @@ fn parse_agent_detail(agent_id: &str, val: &serde_yaml::Value) -> AgentDetail {
                     .filter_map(|v| v.as_str().and_then(|s| McpServerId::try_new(s).ok()))
                     .collect()
             }),
-        skills: parse_agent_skills(val),
-    }
-}
-
-fn parse_agent_skills(val: &serde_yaml::Value) -> Vec<AgentSkillInfo> {
-    val.get("card")
-        .and_then(|c| c.get("skills"))
-        .and_then(|s| s.as_sequence())
-        .map_or_else(Vec::new, |seq| {
-            seq.iter()
-                .filter_map(|skill| {
-                    Some(AgentSkillInfo {
-                        id: SkillId::from(skill.get("id")?.as_str()?),
-                        name: skill.get("name")?.as_str()?.to_string(),
-                        description: skill.get("description")?.as_str()?.to_string(),
+        skills: val
+            .get("metadata")
+            .and_then(|m| m.get("skills"))
+            .and_then(|s| s.as_sequence())
+            .map_or_else(Vec::new, |seq| {
+                seq.iter()
+                    .filter_map(|v| v.as_str())
+                    .filter_map(|id| {
+                        skill_catalog.get(id).map(|info| AgentSkillInfo {
+                            id: info.id.clone(),
+                            name: info.name.clone(),
+                            description: info.description.clone(),
+                        })
                     })
-                })
-                .collect()
-        })
+                    .collect()
+            }),
+    }
 }
 
 pub fn find_agent(

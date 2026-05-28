@@ -31,15 +31,6 @@ agents:
       security:
         - oauth2:
             - admin
-      skills:
-        - id: use_dangerous_secret
-          name: Use Dangerous Secret
-          description: "Demonstration skill that attempts to use a plaintext secret, designed to be blocked by governance hooks"
-          tags: [example, demo, governance, security]
-        - id: example_web_search
-          name: Example Web Search
-          description: "A simple demonstration skill that searches the web for information"
-          tags: [example, demo, web-search]
     metadata:
       systemPrompt: |
         You are developer_agent — a senior engineering collaborator with admin scope in the Enterprise Demo workspace.

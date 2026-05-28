@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::path::Path;
 
 use crate::types::{AgentInfo, RequiredSecret, SkillInfo};
@@ -6,43 +5,33 @@ use crate::types::{AgentInfo, RequiredSecret, SkillInfo};
 pub fn resolve_all_plugin_skill_ids(
     plugin: &systemprompt::models::PluginConfig,
     skills_path: &Path,
-    agents_path: &Path,
+    _agents_path: &Path,
 ) -> Vec<String> {
-    let mut skill_ids: Vec<String> =
-        if plugin.skills.source == systemprompt::models::ComponentSource::Explicit {
-            plugin
-                .skills
-                .include
-                .iter()
-                .filter(|id| skills_path.join(id).exists())
-                .cloned()
-                .collect()
-        } else {
-            let mut ids = Vec::new();
-            if let Ok(entries) = std::fs::read_dir(skills_path) {
-                for entry in entries.flatten() {
-                    if !entry.path().is_dir() {
-                        continue;
-                    }
-                    let skill_id = entry.file_name().to_string_lossy().into_owned();
-                    if plugin.skills.exclude.contains(&skill_id) {
-                        continue;
-                    }
-                    ids.push(skill_id);
+    if plugin.skills.source == systemprompt::models::ComponentSource::Explicit {
+        plugin
+            .skills
+            .include
+            .iter()
+            .filter(|id| skills_path.join(id).exists())
+            .cloned()
+            .collect()
+    } else {
+        let mut ids = Vec::new();
+        if let Ok(entries) = std::fs::read_dir(skills_path) {
+            for entry in entries.flatten() {
+                if !entry.path().is_dir() {
+                    continue;
                 }
+                let skill_id = entry.file_name().to_string_lossy().into_owned();
+                if plugin.skills.exclude.contains(&skill_id) {
+                    continue;
+                }
+                ids.push(skill_id);
             }
-            ids.sort();
-            ids
-        };
-
-    let existing: HashSet<String> = skill_ids.iter().cloned().collect();
-    for agent_skill in collect_agent_skills(&plugin.agents.include, agents_path) {
-        if !existing.contains(&agent_skill) && skills_path.join(&agent_skill).exists() {
-            skill_ids.push(agent_skill);
         }
+        ids.sort();
+        ids
     }
-
-    skill_ids
 }
 
 pub fn resolve_plugin_skills(
@@ -106,47 +95,6 @@ fn read_skill_config(skill_dir: &Path, skill_id: &str) -> (String, String, Vec<R
         .and_then(|v| serde_yaml::from_value(v.clone()).ok())
         .unwrap_or_else(Vec::new);
     (name, desc, required_secrets)
-}
-
-pub fn collect_agent_skills(agent_ids: &[String], agents_path: &Path) -> Vec<String> {
-    let mut skills = Vec::new();
-    if !agents_path.exists() {
-        return skills;
-    }
-    let Ok(entries) = std::fs::read_dir(agents_path) else {
-        return skills;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        let ext = path.extension().and_then(|e| e.to_str());
-        if ext != Some("yaml") && ext != Some("yml") {
-            continue;
-        }
-        let Ok(content) = std::fs::read_to_string(&path) else {
-            continue;
-        };
-        let Ok(config) = serde_yaml::from_str::<serde_yaml::Value>(&content) else {
-            continue;
-        };
-        let Some(agents) = config.get("agents") else {
-            continue;
-        };
-        for agent_id in agent_ids {
-            if let Some(agent_skills) = agents
-                .get(agent_id)
-                .and_then(|a| a.get("metadata"))
-                .and_then(|m| m.get("skills"))
-                .and_then(|s| s.as_sequence())
-            {
-                for skill in agent_skills {
-                    if let Some(id) = skill.as_str() {
-                        skills.push(id.to_string());
-                    }
-                }
-            }
-        }
-    }
-    skills
 }
 
 pub fn resolve_plugin_agents(
