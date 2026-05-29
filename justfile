@@ -466,6 +466,7 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
       jwt_access_token_expiration: 2592000
       jwt_refresh_token_expiration: 15552000
       jwt_audiences: [web, api, a2a, mcp]
+      allowed_resource_audiences: [hook]
     rate_limits:
       disabled: true
       oauth_public_per_second: 10
