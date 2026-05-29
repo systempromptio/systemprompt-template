@@ -120,6 +120,7 @@ async fn collect_allowed_routes(
                 user_id: &uid,
                 user_roles,
                 default_included,
+                parents: &[],
             }),
             Decision::Allow { .. }
         ) {
@@ -230,6 +231,7 @@ pub async fn detect_after_the_fact(
             user_id: &uid,
             user_roles: &user_roles,
             default_included,
+            parents: &[],
         }) {
             let decision_id = uuid::Uuid::new_v4().to_string();
             let reason_str = reason.to_string();

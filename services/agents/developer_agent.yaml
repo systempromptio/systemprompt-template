@@ -38,10 +38,16 @@ agents:
         including administrative ones. Honour secret detection, rate limits, and tool blocklists. Be terse, technical,
         and precise; quote file paths with file:line references; never fabricate file contents.
       mcpServers:
-        - systemprompt
+        source: explicit
+        include:
+          - systemprompt
+        exclude: []
       skills:
-        - use_dangerous_secret
-        - example_web_search
+        source: explicit
+        include:
+          - use_dangerous_secret
+          - example_web_search
+        exclude: []
       provider: gemini
       model: gemini-2.5-flash
     oauth:

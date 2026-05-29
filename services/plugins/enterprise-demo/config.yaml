@@ -31,7 +31,7 @@ plugin:
       - systemprompt
     exclude: []
   content_sources:
-    source: explicit
+    source: instance
     include: []
     exclude: []
   hooks:

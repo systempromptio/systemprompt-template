@@ -111,6 +111,7 @@ impl TemplateMarketplaceFilter {
                 user_id: &uid,
                 user_roles: roles,
                 default_included,
+                parents: &[],
             });
             if matches!(decision, Decision::Allow { .. }) {
                 keep.insert(id.clone());
@@ -174,6 +175,11 @@ impl MarketplaceFilter for TemplateMarketplaceFilter {
                 .into_iter()
                 .filter(|m| keep_mcp.contains(m.name.as_str()))
                 .collect(),
+            // Carry the owning marketplace context through unchanged; the
+            // filter only shrinks entry lists, it must not drop the scope the
+            // gateway attached.
+            marketplace_id: candidate.marketplace_id,
+            access: candidate.access,
         })
     }
 }

@@ -40,7 +40,7 @@ pub fn build_entity_plugin_maps(
                 .push(Arc::clone(&plugin_entry));
         }
 
-        for mcp_id in &plugin.mcp_servers {
+        for mcp_id in &plugin.mcp_servers.include {
             mcp_map
                 .entry(mcp_id.clone())
                 .or_default()

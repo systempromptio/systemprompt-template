@@ -135,6 +135,7 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
         user_id: &uid,
         user_roles,
         default_included,
+        parents: &[],
     });
     let (decision, reason) = match dec {
         Decision::Allow { .. } => (

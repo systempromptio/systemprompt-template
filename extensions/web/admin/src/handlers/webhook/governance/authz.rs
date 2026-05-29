@@ -113,6 +113,7 @@ pub async fn govern_authz(
         user_id: &req.user_id,
         user_roles: &req.roles,
         default_included: entity.as_ref().map(|e| e.default_included),
+        parents: &[],
     });
 
     audit_decision(&pool, &req, &rules, entity.as_ref(), &decision).await;

@@ -193,6 +193,7 @@ pub fn list_plugin_catalog(
             mcp_servers: plugin
                 .base
                 .mcp_servers
+                .include
                 .into_iter()
                 .filter_map(|s| McpServerId::try_new(s).ok())
                 .collect(),
@@ -285,7 +286,7 @@ pub fn count_marketplace_items(
         counts.total_skills +=
             resolve_all_plugin_skill_ids(&plugin.base, &skills_path, &agents_path).len();
         counts.agents_count += plugin.base.agents.include.len();
-        counts.mcp_count += plugin.base.mcp_servers.len();
+        counts.mcp_count += plugin.base.mcp_servers.include.len();
     }
 
     Ok(counts)
@@ -326,6 +327,7 @@ pub fn list_plugins_for_roles_full(
             mcp_servers: plugin
                 .base
                 .mcp_servers
+                .include
                 .into_iter()
                 .filter_map(|s| McpServerId::try_new(s).ok())
                 .collect(),

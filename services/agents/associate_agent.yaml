@@ -38,9 +38,15 @@ agents:
         the governance hook with policy: scope_restriction. Hand off admin tasks to developer_agent. Be concise, cite
         sources, never guess file contents.
       mcpServers:
-        - systemprompt
+        source: explicit
+        include:
+          - systemprompt
+        exclude: []
       skills:
-        - example_web_search
+        source: explicit
+        include:
+          - example_web_search
+        exclude: []
       provider: gemini
       model: gemini-2.5-flash
     oauth:
