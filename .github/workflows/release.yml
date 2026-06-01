@@ -24,7 +24,7 @@ on:
       bridge_tag:
         description: "systemprompt-core bridge release tag to bundle (Linux/Win/aarch64-mac)"
         required: true
-        default: "bridge-v0.9.1"
+        default: "bridge-v0.10.0"
       bridge_mac_x64_tag:
         description: "systemprompt-core bridge-mac release tag for Intel macOS zip (blank to skip)"
         required: false

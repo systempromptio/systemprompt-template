@@ -73,7 +73,7 @@ If step 4 fails, stop — the server build is broken and no Windows flow will wo
 
 ## 4. Install the bridge on the Windows machine
 
-Latest Windows build is in **[bridge-v0.9.0](https://github.com/systempromptio/systemprompt-template/releases/tag/bridge-v0.9.0)** — asset `systemprompt-bridge-x86_64-pc-windows-msvc.exe`.
+Latest Windows build is in **[bridge-v0.10.0](https://github.com/systempromptio/systemprompt-template/releases/tag/bridge-v0.10.0)** — asset `systemprompt-bridge-x86_64-pc-windows-msvc.exe`.
 
 Easiest: `scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket && scoop install bridge`. Manual:
 
@@ -82,7 +82,7 @@ $dir = "C:\Program Files\systemprompt"
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 
 Invoke-WebRequest `
-  -Uri "https://github.com/systempromptio/systemprompt-template/releases/download/bridge-v0.9.0/systemprompt-bridge-x86_64-pc-windows-msvc.exe" `
+  -Uri "https://github.com/systempromptio/systemprompt-template/releases/download/bridge-v0.10.0/systemprompt-bridge-x86_64-pc-windows-msvc.exe" `
   -OutFile "$dir\systemprompt-bridge.exe"
 
 [Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$dir", "User")

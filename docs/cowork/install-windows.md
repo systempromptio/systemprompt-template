@@ -26,7 +26,7 @@ $dir = "C:\Program Files\systemprompt"
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 
 Invoke-WebRequest `
-  -Uri https://github.com/systempromptio/systemprompt-template/releases/download/bridge-v0.9.0/systemprompt-bridge-x86_64-pc-windows-msvc.exe `
+  -Uri https://github.com/systempromptio/systemprompt-template/releases/download/bridge-v0.10.0/systemprompt-bridge-x86_64-pc-windows-msvc.exe `
   -OutFile "$dir\systemprompt-bridge.exe"
 
 [Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$dir", "User")
@@ -38,7 +38,7 @@ Verify the SHA256:
 
 ```powershell
 Invoke-WebRequest `
-  -Uri https://github.com/systempromptio/systemprompt-template/releases/download/bridge-v0.9.0/SHA256SUMS.bridge `
+  -Uri https://github.com/systempromptio/systemprompt-template/releases/download/bridge-v0.10.0/SHA256SUMS.bridge `
   -OutFile SHA256SUMS.bridge
 Get-FileHash "$dir\systemprompt-bridge.exe" -Algorithm SHA256
 # Compare against the line ending in `systemprompt-bridge-x86_64-pc-windows-msvc.exe`
