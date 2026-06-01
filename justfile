@@ -452,6 +452,11 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
                 --api-server-url "http://localhost:${HTTP_PORT}" \
                 --api-internal-url "http://localhost:${HTTP_PORT}" \
                 --api-external-url "http://localhost:${HTTP_PORT}"
+            # The authz hook URL is an absolute webhook target baked at
+            # `admin setup` time on the default port; re-point it at the
+            # chosen port so the gateway's govern callback reaches this server.
+            "$BIN" admin config governance set --mode webhook \
+                --url "http://localhost:${HTTP_PORT}/api/public/govern/authz"
         fi
     fi
     mkdir -p "$ROOT/web/dist"
