@@ -28,8 +28,11 @@
 #     roles: [admin]
 
 rules:
-  # enterprise-demo plugin
-  - entity_type: plugin
+  # enterprise-demo marketplace. The bridge manifest filter resolves this rule
+  # and cascades it onto every member skill/agent/mcp that lacks an own rule
+  # (see marketplace_filter.rs). Mirrors marketplace.access in
+  # services/marketplaces/enterprise-demo/config.yaml.
+  - entity_type: marketplace
     entity_id: enterprise-demo
     access: allow
     default_included: true

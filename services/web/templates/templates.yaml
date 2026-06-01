@@ -4,7 +4,11 @@ templates:
       - blog
   blog-list:
     content_types:
-      - blog
+      - blog-list
   docs-page:
     content_types:
+      - guide
+      - reference
+      - tutorial
+      - docs
       - documentation

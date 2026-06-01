@@ -23,7 +23,7 @@ opt-level = "z"
 
 [workspace.package]
 edition = "2021"
-version = "0.12.0"
+version = "0.14.0"
 authors = ["systemprompt.io <ed@systemprompt.io>"]
 license = "MIT"
 
@@ -31,8 +31,8 @@ license = "MIT"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.13.0", default-features = false, features = ["core", "database", "config"] }
-systemprompt-security = { version = "0.13.0" }
+systemprompt = { version = "0.14.0", default-features = false, features = ["core", "database", "config"] }
+systemprompt-security = { version = "0.14.0" }
 
 # ============================================
 # LOCAL EXTENSIONS

@@ -1,0 +1,12 @@
+id: track
+name: Tool Usage Tracking
+description: PostToolUse hook — records tool usage for analytics after each call.
+version: "2.0.0"
+enabled: true
+event: PostToolUse
+matcher: "*"
+command: "curl -s -X POST http://localhost:3000/api/public/hooks/track?plugin_id=enterprise-demo"
+async: true
+category: custom
+tags: [governance, demo, analytics]
+visible_to: []

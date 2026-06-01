@@ -35,18 +35,23 @@ header "SKILLS: PLUGINS & HOOKS" "Plugin inspection, hook management"
 subheader "STEP 1: List Database-Synced Plugins"
 run_cli_head 30 core plugins list
 
-subheader "STEP 2: Nested plugin directories on disk"
-PLUGINS_DIR="$PROJECT_DIR/services/plugins"
-echo "  \$ ls $PLUGINS_DIR/*/config.yaml"
+subheader "STEP 2: Marketplace catalogues on disk"
+# Content reaches the client via the marketplace -> synthetic
+# `systemprompt-managed` plugin path, not via standalone plugin bundles.
+# The marketplace config is the authoritative catalogue.
+MARKETPLACES_DIR="$PROJECT_DIR/services/marketplaces"
+echo "  \$ ls $MARKETPLACES_DIR/*/config.yaml"
 echo ""
-for cfg in "$PLUGINS_DIR"/*/config.yaml; do
+for cfg in "$MARKETPLACES_DIR"/*/config.yaml; do
   [[ -f "$cfg" ]] || continue
   echo "$cfg" | sed "s|$PROJECT_DIR/||" | sed 's/^/    /'
 done
 echo ""
 
-subheader "STEP 3: Show enterprise-demo plugin"
-run_cli_head 40 core plugins show enterprise-demo
+subheader "STEP 3: Show enterprise-demo marketplace catalogue"
+echo "  \$ cat services/marketplaces/enterprise-demo/config.yaml"
+echo ""
+sed 's/^/    /' "$MARKETPLACES_DIR/enterprise-demo/config.yaml" | head -40
 
 subheader "STEP 4: List Hooks"
 run_cli_head 20 core hooks list

@@ -37,11 +37,17 @@ This repository is the evaluation template: clone it, compile it, point Claude f
 ```bash
 git clone https://github.com/systempromptio/systemprompt-template
 cd systemprompt-template
-just setup-local <anthropic_key> [openai_key] [gemini_key]   # writes profile, starts Postgres, runs publish pipeline
-just start                                                   # serves governance + agents + MCP + admin on :8080
+just setup-local            # prompts: pick a provider (Gemini/Anthropic/OpenAI), enter its key
+just start                  # serves governance + agents + MCP + admin on :8080
 ```
 
-One AI key is required; the other two are optional. Running a second clone side-by-side? `just setup-local <keys> 8081 5433`. Discover the CLI with `systemprompt --help`.
+Run with no key and `setup-local` asks which provider you have and prompts for its key; the provider you choose becomes the default (it is set as `ai.default_provider`, the other providers are disabled, and the gateway falls back to it). You can also pass keys non-interactively — the first one given becomes the default:
+
+```bash
+just setup-local <anthropic_key> [openai_key] [gemini_key]   # writes profile, starts Postgres, runs publish pipeline
+```
+
+Running a second clone side-by-side? `just setup-local <keys> "" "" 8081 5433`. Discover the CLI with `systemprompt --help`.
 
 <details>
 <summary><strong>Prerequisites</strong></summary>
@@ -54,7 +60,7 @@ One AI key is required; the other two are optional. Running a second clone side-
 | **Rust 1.75+** | Compiles the workspace binary | [rustup.rs](https://rustup.rs/) |
 | **`just`** | Task runner | [just.systems](https://just.systems/) |
 | **`jq`, `yq`** | JSON and YAML processing in the scripts | `brew install jq yq` / `apt install jq yq` |
-| **AI API keys** | One key per provider enabled in `services/ai/config.yaml`. Shipped config enables Anthropic, OpenAI, Gemini (default `gemini`). Disable providers you don't want or pass all three. | Provider dashboards |
+| **AI API keys** | At least one of Anthropic, OpenAI, or Gemini. `setup-local` writes the chosen provider's key into the profile and sets it as `ai.default_provider` in `services/ai/config.yaml`, disabling the providers you didn't supply. Pass several keys to enable several providers. | Provider dashboards |
 | **Ports 8080 + 5432** | HTTP + PostgreSQL | Free on localhost |
 
 </details>
@@ -422,9 +428,9 @@ The `GatewayUpstream` trait (`async fn proxy(&self, ctx: UpstreamCtx<'_>)`) is t
 
 ### Install the bridge credential helper
 
-The `systemprompt-bridge` binary is the **Credential helper script** slot in Claude for Work. It turns a PAT into a short-lived JWT that Claude Desktop merges into every inference request routed at this binary. Download the prebuilt macOS, Windows, or Linux binary from [systempromptio/systemprompt-core releases](https://github.com/systempromptio/systemprompt-core/releases/tag/bridge-v0.9.0).
+The `systemprompt-bridge` binary is the **Credential helper script** slot in Claude for Work. It turns a PAT into a short-lived JWT that Claude Desktop merges into every inference request routed at this binary. Download the prebuilt macOS, Windows, or Linux binary from [systempromptio/systemprompt-core releases](https://github.com/systempromptio/systemprompt-core/releases/tag/bridge-v0.10.0).
 
-Current release: **[bridge-v0.9.0](https://github.com/systempromptio/systemprompt-core/releases/tag/bridge-v0.9.0)** — Linux x86_64, Windows x86_64 (MSVC ABI), macOS aarch64 (cosign-signed).
+Current release: **[bridge-v0.10.0](https://github.com/systempromptio/systemprompt-core/releases/tag/bridge-v0.10.0)** — Linux x86_64, Windows x86_64 (MSVC ABI), macOS aarch64 (cosign-signed).
 
 #### 1. Download
 
@@ -432,9 +438,9 @@ Current release: **[bridge-v0.9.0](https://github.com/systempromptio/systempromp
 
 ```bash
 curl -fsSL -o /usr/local/bin/systemprompt-bridge \
-  https://github.com/systempromptio/systemprompt-core/releases/download/bridge-v0.9.0/systemprompt-bridge-x86_64-unknown-linux-gnu
+  https://github.com/systempromptio/systemprompt-core/releases/download/bridge-v0.10.0/systemprompt-bridge-x86_64-unknown-linux-gnu
 chmod +x /usr/local/bin/systemprompt-bridge
-curl -fsSL -O https://github.com/systempromptio/systemprompt-core/releases/download/bridge-v0.9.0/SHA256SUMS
+curl -fsSL -O https://github.com/systempromptio/systemprompt-core/releases/download/bridge-v0.10.0/SHA256SUMS
 sha256sum -c SHA256SUMS --ignore-missing
 ```
 
@@ -444,7 +450,7 @@ sha256sum -c SHA256SUMS --ignore-missing
 $dir = "C:\Program Files\systemprompt"
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 Invoke-WebRequest `
-  -Uri "https://github.com/systempromptio/systemprompt-core/releases/download/bridge-v0.9.0/systemprompt-bridge-x86_64-pc-windows-msvc.exe" `
+  -Uri "https://github.com/systempromptio/systemprompt-core/releases/download/bridge-v0.10.0/systemprompt-bridge-x86_64-pc-windows-msvc.exe" `
   -OutFile "$dir\systemprompt-bridge.exe"
 [Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$dir", "User")
 ```

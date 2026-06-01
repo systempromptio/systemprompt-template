@@ -12,7 +12,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # First-time setup: writes .systemprompt/profiles/local/, starts Docker Postgres,
-# runs publish_pipeline. At least one AI key is required.
+# runs publish_pipeline. With no key arg, the CLI prompts for which provider to
+# use; the chosen provider becomes ai.default_provider (others disabled) and the
+# gateway default. Passing keys is non-interactive — the first becomes default.
+just setup-local                                                          # interactive provider pick
 just setup-local <anthropic_key> [openai_key] [gemini_key] [http_port=8080] [pg_port=5432]
 
 # Build (auto-uses live DB if reachable, else SQLX_OFFLINE=true)

@@ -362,35 +362,27 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     HTTP_PORT="{{HTTP_PORT}}"
     PG_PORT="{{PG_PORT}}"
     export SYSTEMPROMPT_PROFILE="$PROFILE_DIR/profile.yaml"
-    # Only demand keys when there's nothing to preserve. A developer who keeps
-    # .systemprompt/ across reclones (the documented key-preservation pattern)
-    # should be able to re-run setup-local with no args to bring Postgres +
-    # web/dist back up without being asked for keys again.
-    if [ ! -f "$PROFILE_DIR/secrets.json" ] && [ -z "$ANTHROPIC_KEY" ] && [ -z "$OPENAI_KEY" ] && [ -z "$GEMINI_KEY" ]; then
+    # Whether a key was passed as a positional arg. When none is and there is
+    # nothing to preserve, generation still needs a provider: on a TTY we let
+    # `admin setup` drive its own "Select your AI provider" menu (the CLI owns
+    # the prompt); off a TTY we cannot prompt, so keys must come as args. A
+    # developer who keeps .systemprompt/ across reclones re-runs with no args
+    # and is never asked again (the profile.yaml guard below skips generation).
+    HAS_KEY=false
+    if [ -n "$ANTHROPIC_KEY" ] || [ -n "$OPENAI_KEY" ] || [ -n "$GEMINI_KEY" ]; then
+        HAS_KEY=true
+    fi
+    if [ "$HAS_KEY" = false ] && [ ! -f "$PROFILE_DIR/secrets.json" ] && [ ! -t 0 ]; then
         echo ""
         echo "================================================================"
-        echo "  setup-local needs at least one AI provider API key"
+        echo "  setup-local needs an AI provider API key"
         echo "================================================================"
         echo ""
-        echo "  The platform requires at least one of: Anthropic, OpenAI, or Gemini."
-        echo "  Keys are written into the local profile at:"
-        echo "    .systemprompt/profiles/local/secrets.json"
+        echo "  Not running on a TTY, so the provider menu can't be shown."
+        echo "  Pass a key as an argument (one of Anthropic, OpenAI, Gemini):"
+        echo "    just setup-local <anthropic_key> [openai_key] [gemini_key]"
         echo ""
-        echo "  Press Enter to skip a provider."
-        echo ""
-        if [ ! -t 0 ]; then
-            echo "  ERROR: not running on a TTY — pass keys as recipe args:"
-            echo "    just setup-local <anthropic_key> <openai_key> <gemini_key>"
-            exit 1
-        fi
-        read -r -p "  Anthropic API key: " ANTHROPIC_KEY || true
-        read -r -p "  OpenAI API key:    " OPENAI_KEY || true
-        read -r -p "  Gemini API key:    " GEMINI_KEY || true
-        if [ -z "$ANTHROPIC_KEY" ] && [ -z "$OPENAI_KEY" ] && [ -z "$GEMINI_KEY" ]; then
-            echo ""
-            echo "  ERROR: no key provided. Aborting."
-            exit 1
-        fi
+        exit 1
     fi
     if [ ! -x target/debug/systemprompt ] && [ ! -x target/release/systemprompt ]; then
         echo "Building debug binary..."
@@ -431,152 +423,36 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     YAML
     fi
     if [ ! -f "$PROFILE_DIR/profile.yaml" ]; then
-        echo "Writing local profile.yaml..."
-        cat > "$PROFILE_DIR/profile.yaml" <<YAML
-    name: local
-    display_name: Local Development
-    target: local
-    site:
-      name: systemprompt.io
-      github_link: null
-    database:
-      type: postgres
-      external_db_access: false
-    server:
-      host: 127.0.0.1
-      port: ${HTTP_PORT}
-      api_server_url: http://localhost:${HTTP_PORT}
-      api_internal_url: http://localhost:${HTTP_PORT}
-      api_external_url: http://localhost:${HTTP_PORT}
-      use_https: false
-      cors_allowed_origins:
-      - http://localhost:${HTTP_PORT}
-      - http://localhost:5173
-    paths:
-      system: $ROOT
-      services: $ROOT/services
-      bin: $ROOT/target/debug
-      web_path: null
-      storage: $ROOT/storage
-      geoip_database: null
-    system_admin:
-      username: admin
-    security:
-      jwt_issuer: systemprompt-local
-      jwt_access_token_expiration: 2592000
-      jwt_refresh_token_expiration: 15552000
-      jwt_audiences: [web, api, a2a, mcp]
-      allowed_resource_audiences: [hook]
-    rate_limits:
-      disabled: true
-      oauth_public_per_second: 10
-      oauth_auth_per_second: 10
-      contexts_per_second: 100
-      tasks_per_second: 50
-      artifacts_per_second: 50
-      agent_registry_per_second: 50
-      agents_per_second: 20
-      mcp_registry_per_second: 50
-      mcp_per_second: 200
-      stream_per_second: 100
-      content_per_second: 50
-      burst_multiplier: 3
-      tier_multipliers:
-        admin: 10.0
-        user: 1.0
-        a2a: 5.0
-        mcp: 5.0
-        service: 5.0
-        anon: 0.5
-    runtime:
-      environment: development
-      log_level: verbose
-      output_format: text
-      no_color: false
-      non_interactive: false
-    cloud:
-      # tenant_id must be null for local profiles. Any non-null value (even
-      # "local") makes systemprompt-cloud's SessionKey::from_tenant_id treat
-      # the profile as a remote tenant, which gates every CLI subcommand
-      # behind 'systemprompt cloud auth login' — breaking all demos.
-      tenant_id: null
-      validation: warn
-    secrets:
-      secrets_path: ./secrets.json
-      validation: warn
-      source: file
-    extensions:
-      disabled: []
-    gateway:
-      enabled: true
-      catalog:
-        path: catalog.yaml
-      routes:
-        - model_pattern: "claude-*"
-          provider: anthropic
-        - model_pattern: "gpt-*"
-          provider: openai
-        - model_pattern: "gemini-*"
-          provider: gemini
-    governance:
-      authz:
-        hook:
-          mode: webhook
-          url: http://localhost:${HTTP_PORT}/api/public/govern/authz
-          timeout_ms: 1000
-          acknowledgement: null
-    YAML
-    fi
-    if [ ! -f "$PROFILE_DIR/catalog.yaml" ]; then
-        echo "Writing local catalog.yaml..."
-        cat > "$PROFILE_DIR/catalog.yaml" <<YAML
-    providers:
-      - name: anthropic
-        endpoint: https://api.anthropic.com/v1
-        api_key_secret: anthropic
-      - name: openai
-        endpoint: https://api.openai.com/v1
-        api_key_secret: openai
-      - name: gemini
-        endpoint: https://generativelanguage.googleapis.com/v1beta
-        api_key_secret: gemini
-
-    models:
-      - id: claude-haiku-4-5
-        provider: anthropic
-        display_name: Claude Haiku 4.5
-      - id: claude-sonnet-4-20250514
-        provider: anthropic
-        display_name: Claude Sonnet 4
-      - id: claude-opus-4-7
-        provider: anthropic
-        aliases:
-          - claude-opus-4-7[1m]
-        display_name: Claude Opus 4.7
-      - id: gpt-4-turbo
-        provider: openai
-        display_name: GPT-4 Turbo
-      - id: gemini-2.5-flash
-        provider: gemini
-        display_name: Gemini 2.5 Flash
-    YAML
-    fi
-    if [ ! -f "$PROFILE_DIR/secrets.json" ]; then
-        echo "Writing local secrets.json..."
-        OAUTH_AT_REST_PEPPER=$(head -c 48 /dev/urandom | base64 | tr -d '+/=' | head -c 64)
-        json_field() { if [ -n "${1:-}" ]; then printf '"%s"' "$1"; else printf 'null'; fi; }
-        ANTHROPIC_JSON=$(json_field "$ANTHROPIC_KEY")
-        OPENAI_JSON=$(json_field "$OPENAI_KEY")
-        GEMINI_JSON=$(json_field "$GEMINI_KEY")
-        cat > "$PROFILE_DIR/secrets.json" <<JSON
-    {
-      "oauth_at_rest_pepper": "$OAUTH_AT_REST_PEPPER",
-      "database_url": "postgres://systemprompt:123@localhost:${PG_PORT}/systemprompt",
-      "anthropic": $ANTHROPIC_JSON,
-      "openai": $OPENAI_JSON,
-      "gemini": $GEMINI_JSON
-    }
-    JSON
+        echo "Generating profile + catalog + secrets via 'admin setup'..."
+        if [ "$HAS_KEY" = true ]; then
+            # Keys supplied as args: fully non-interactive. The default provider
+            # is the first key given, so the generated config (catalog, gateway
+            # default, ai/config.yaml) is consistent with the single key.
+            KEY_ARGS=()
+            DEFAULT_PROVIDER=""
+            if [ -n "$ANTHROPIC_KEY" ]; then KEY_ARGS+=(--anthropic-key "$ANTHROPIC_KEY"); [ -z "$DEFAULT_PROVIDER" ] && DEFAULT_PROVIDER=anthropic; fi
+            if [ -n "$OPENAI_KEY" ]; then KEY_ARGS+=(--openai-key "$OPENAI_KEY"); [ -z "$DEFAULT_PROVIDER" ] && DEFAULT_PROVIDER=openai; fi
+            if [ -n "$GEMINI_KEY" ]; then KEY_ARGS+=(--gemini-key "$GEMINI_KEY"); [ -z "$DEFAULT_PROVIDER" ] && DEFAULT_PROVIDER=gemini; fi
+            "$BIN" admin setup --yes --no-migrate --environment local \
+                --db-host localhost --db-port "$PG_PORT" \
+                --db-user systemprompt --db-password 123 --db-name systemprompt \
+                --default-provider "$DEFAULT_PROVIDER" \
+                "${KEY_ARGS[@]}"
+        else
+            # No key arg: let the CLI prompt for which provider to use. DB,
+            # environment, and migrations stay non-interactive (flags + env);
+            # only the provider selection is interactive, and the chosen
+            # provider becomes the default.
+            SYSTEMPROMPT_NON_INTERACTIVE=1 "$BIN" admin setup --no-migrate --environment local \
+                --db-host localhost --db-port "$PG_PORT" \
+                --db-user systemprompt --db-password 123 --db-name systemprompt
+        fi
+        if [ "$HTTP_PORT" != "8080" ]; then
+            "$BIN" admin config server set --port "$HTTP_PORT" \
+                --api-server-url "http://localhost:${HTTP_PORT}" \
+                --api-internal-url "http://localhost:${HTTP_PORT}" \
+                --api-external-url "http://localhost:${HTTP_PORT}"
+        fi
     fi
     mkdir -p "$ROOT/web/dist"
     echo "Building binaries (release, full workspace)..."

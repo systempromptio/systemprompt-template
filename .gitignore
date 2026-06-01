@@ -3,6 +3,13 @@
 /reports/
 demo/RELEASE-TEST-REPORT-*.md
 
+# Client-personalized factsheet PDFs are ignored by default.
+# Whitelist each PDF that is cleared for publishing.
+pdf/*.pdf
+!pdf/systemprompt-io-factsheet.pdf
+!pdf/systemprompt-io-factsheet-scaled.pdf
+!pdf/systemprompt-io-factsheet-airgap.pdf
+
 # Rust build artifacts
 /target/
 **/target/

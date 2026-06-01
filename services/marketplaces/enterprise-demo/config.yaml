@@ -14,17 +14,29 @@ marketplace:
   license: proprietary
   category: governance
 
-  # All ids must resolve to top-level resources defined in services/.
-  # Loader (in core) validates referential integrity at startup.
-  # Skills/agents/mcp_servers/plugins live in the database — the YAML
-  # bootstrap loader (commit 1803f2d) seeds them at startup. Keeping the
-  # marketplace shell empty avoids needing every entity declared in
-  # services/config/config.yaml's `includes:` list.
+  access:
+    default_included: true
+    roles: [user]
+    justification: "Public enterprise governance evaluation demo"
+
+  # This YAML is the authoritative catalogue for the enterprise-demo
+  # marketplace. All ids must resolve to top-level resources defined under
+  # services/ (auto-discovered from nested dirs). The loader (in core)
+  # validates referential integrity at startup; the bridge manifest endpoint
+  # scopes its response to these include lists before RBAC/ABAC filtering, then
+  # packs the result into the synthetic `systemprompt-managed` plugin. The
+  # PreToolUse/PostToolUse governance hooks are top-level resources under
+  # services/hooks/{govern,track}/ and flow into the manifest globally.
   skills:
-    include: []
+    include:
+      - use_dangerous_secret
+      - example_web_search
   mcp_servers:
     source: explicit
-    include: []
+    include:
+      - systemprompt
     exclude: []
   agents:
-    include: []
+    include:
+      - developer_agent
+      - associate_agent

@@ -1,14 +1,9 @@
 ai:
-  default_provider: "anthropic"
+  default_provider: anthropic
   default_max_output_tokens: 4096
   sampling:
     enable_smart_routing: false
     fallback_enabled: true
-  # `endpoint: ${VAR}` is resolved from the secrets store at startup (same
-  # mechanism as api_key). Air-gapped deployments set the *_ENDPOINT secret to
-  # an internal mock URL; when the var is absent (normal local/cloud dev) the
-  # provider falls back to its built-in external URL — so this is a no-op for
-  # non-air-gapped profiles.
   providers:
     anthropic:
       enabled: true

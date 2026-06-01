@@ -1,0 +1,12 @@
+id: govern
+name: Governance Check
+description: PreToolUse governance hook — validates each tool call against policy before it executes.
+version: "2.0.0"
+enabled: true
+event: PreToolUse
+matcher: "*"
+command: "curl -s -X POST http://localhost:3000/api/public/hooks/govern?plugin_id=enterprise-demo"
+async: false
+category: custom
+tags: [governance, demo]
+visible_to: []
