@@ -97,7 +97,7 @@ services:
       # SSRF guard opt-in (0.11.x): the airgap demo's mock-inference is reachable
       # only over http on the sealed `airgap-internal` bridge. validate_outbound_url
       # blocks non-loopback http by default; this allowlist names the single trusted
-      # in-network hostname so the gateway catalog passes validation. Default-empty
+      # in-network hostname so the provider registry passes validation. Default-empty
       # everywhere else, so no production deployment changes behaviour.
       SYSTEMPROMPT_TRUSTED_HTTP_HOSTS: mock-inference
     volumes:

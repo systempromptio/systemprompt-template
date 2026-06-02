@@ -19,9 +19,9 @@
 #          -> expect 403 with "not permitted by gateway policy".
 #
 # Run AFTER `just airgap-up`. Model exposure is owned by the profile
-# catalog (.systemprompt/profiles/airgap/catalog.yaml); the dispatcher's
-# is_model_exposed gate rejects an un-cataloged model with 403 before any
-# upstream call. Policies (quotas/safety) ship via
+# provider registry (profile.providers in .systemprompt/profiles/airgap/
+# profile.yaml); the dispatcher's is_model_exposed gate rejects an unexposed
+# model with 403 before any upstream call. Policies (quotas/safety) ship via
 # services/gateway/policies.yaml. Cost: Free (mock inference, no external
 # calls).
 

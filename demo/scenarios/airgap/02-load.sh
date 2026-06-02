@@ -7,8 +7,9 @@
 # Steps:
 #   1. Verify the gateway policy — the `ai_gateway_policies` row carrying
 #      quotas/safety is ingested from services/gateway/policies.yaml by the
-#      publish_pipeline job at server boot. Model exposure now lives in the
-#      profile catalog, not the policy spec. This step only confirms the
+#      publish_pipeline job at server boot. Model exposure lives in the
+#      profile provider registry (profile.providers), not the policy spec.
+#      This step only confirms the
 #      policy landed; if it did not, ingestion failed and the run aborts.
 #   2. Ensure the demo admin user exists (create + promote, mirroring
 #      00-preflight.sh) and export SYSTEMPROMPT_ADMIN_EMAIL so the loadtest
@@ -77,8 +78,9 @@ subheader "STEP 1: Verify gateway policy" "ingested from services/gateway/polici
 # Policies (quotas/safety) ship as version-controlled config in
 # services/gateway/policies.yaml; the publish_pipeline job ingests them into
 # ai_gateway_policies at server boot. Model exposure is owned by the profile
-# catalog, not this row. We confirm the policy ingestion landed; the catalog
-# gate is asserted by the deny-path in 03-governance.sh.
+# provider registry (profile.providers), not this row. We confirm the policy
+# ingestion landed; the exposure gate is asserted by the deny-path in
+# 03-governance.sh.
 step "Confirming the gateway policy was ingested from YAML at server boot"
 cmd "systemprompt infra db query \"SELECT COUNT(*) FROM ai_gateway_policies WHERE enabled = true\""
 POLICY_COUNT=$(db_query "SELECT COUNT(*) FROM ai_gateway_policies WHERE enabled = true;" 2>/dev/null | grep -oE '[0-9]+' | head -1 || true)

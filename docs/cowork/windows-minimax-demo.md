@@ -12,10 +12,16 @@ End-to-end runbook for demoing Claude for Work on Windows routing every inferenc
 No YAML edits needed. `.systemprompt/profiles/local/profile.yaml` ships with:
 
 ```yaml
+providers:
+  - name: minimax
+    protocol: anthropic
+    endpoint: https://api.minimax.io/anthropic/v1
+    api_key_secret: minimax
+    models:
+      - id: MiniMax-M1
 gateway:
   enabled: true
-  catalog:
-    path: catalog.yaml
+  default_provider: minimax
   routes:
     - model_pattern: "claude-*"
       provider: minimax
@@ -25,7 +31,7 @@ gateway:
       upstream_model: MiniMax-M1
 ```
 
-Provider endpoint and `api_key_secret` are declared once in the catalog file.
+Provider endpoint and `api_key_secret` are declared once in the `providers` registry.
 
 Every model string — including `claude-*` strings that Claude Desktop sends — is aliased onto `MiniMax-M1` via `upstream_model`. The client never sees the rewrite.
 

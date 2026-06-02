@@ -31,6 +31,9 @@
     "rate_limits": {
       "$ref": "#/$defs/RateLimitsConfig"
     },
+    "system_admin": {
+      "$ref": "#/$defs/SystemAdminConfig"
+    },
     "runtime": {
       "$ref": "#/$defs/RuntimeConfig",
       "default": {
@@ -69,10 +72,14 @@
         "disabled": []
       }
     },
+    "providers": {
+      "$ref": "#/$defs/ProviderRegistry",
+      "default": []
+    },
     "gateway": {
       "anyOf": [
         {
-          "$ref": "#/$defs/GatewayConfig"
+          "$ref": "#/$defs/GatewayConfigSpec"
         },
         {
           "type": "null"
@@ -101,7 +108,8 @@
     "server",
     "paths",
     "security",
-    "rate_limits"
+    "rate_limits",
+    "system_admin"
   ],
   "$defs": {
     "ProfileType": {
@@ -211,6 +219,14 @@
           "format": "uint",
           "minimum": 0,
           "default": 256
+        },
+        "trusted_proxies": {
+          "description": "CIDR ranges whose immediate-peer requests are allowed to set\n`X-Forwarded-For`, `X-Real-IP`, and `CF-Connecting-IP`. Empty\nmeans the platform treats every connection as direct and ignores\nthose headers — the only safe default behind no proxy. Each entry\nis a CIDR string (e.g. `10.0.0.0/8`, `192.168.1.0/24`,\n`2001:db8::/32`). Single addresses without a `/` are accepted as\n`/32` (IPv4) or `/128` (IPv6).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
         }
       },
       "additionalProperties": false,
@@ -334,9 +350,26 @@
             "$ref": "#/$defs/JwtAudience"
           }
         },
+        "allowed_resource_audiences": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
         "allow_registration": {
           "type": "boolean",
           "default": true
+        },
+        "signing_key_path": {
+          "type": "string",
+          "default": "signing_key.pem"
+        },
+        "trusted_issuers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TrustedIssuer"
+          }
         }
       },
       "additionalProperties": false,
@@ -364,6 +397,26 @@
         {
           "type": "string"
         }
+      ]
+    },
+    "TrustedIssuer": {
+      "type": "object",
+      "properties": {
+        "issuer": {
+          "type": "string"
+        },
+        "jwks_uri": {
+          "type": "string"
+        },
+        "audience": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "issuer",
+        "jwks_uri",
+        "audience"
       ]
     },
     "RateLimitsConfig": {
@@ -495,6 +548,19 @@
       },
       "additionalProperties": false
     },
+    "SystemAdminConfig": {
+      "description": "Profile-supplied configuration for the platform owner. Must resolve at\nstartup to an active user row carrying the `admin` role; the platform\nrefuses to boot otherwise.",
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "username"
+      ]
+    },
     "RuntimeConfig": {
       "type": "object",
       "properties": {
@@ -619,7 +685,212 @@
       },
       "additionalProperties": false
     },
-    "GatewayConfig": {
+    "ProviderRegistry": {
+      "description": "The `profile.providers` section: the registry of upstream providers.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ProviderEntry"
+      }
+    },
+    "ProviderEntry": {
+      "description": "One upstream provider declared once: connectivity + the models it serves.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "protocol": {
+          "$ref": "#/$defs/WireProtocol"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "api_key_secret": {
+          "type": "string"
+        },
+        "extra_headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProviderModel"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "protocol",
+        "endpoint",
+        "api_key_secret"
+      ]
+    },
+    "WireProtocol": {
+      "description": "The wire-format family a provider's endpoint speaks.",
+      "type": "string",
+      "enum": [
+        "anthropic",
+        "openai-chat",
+        "openai-responses",
+        "gemini"
+      ]
+    },
+    "ProviderModel": {
+      "description": "One model served by a provider: identity, routing, and economics.\n\nA model's full description lives here exactly once: identity and routing\n(id, aliases, `upstream_model`, pricing) alongside agent-side capabilities\nand limits.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "upstream_model": {
+          "description": "Vendor-side model name to send upstream when it differs from\n[`Self::id`] (the external-facing name). `None` forwards `id`\nunchanged.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pricing": {
+          "$ref": "#/$defs/ModelPricing",
+          "default": {
+            "input_per_million": 0.0,
+            "output_per_million": 0.0,
+            "per_image_cents": null
+          }
+        },
+        "capabilities": {
+          "$ref": "#/$defs/ModelCapabilities",
+          "default": {
+            "vision": false,
+            "audio_input": false,
+            "video_input": false,
+            "image_generation": false,
+            "audio_generation": false,
+            "streaming": false,
+            "tools": false,
+            "structured_output": false,
+            "system_prompts": false,
+            "image_resolution_config": false
+          }
+        },
+        "limits": {
+          "$ref": "#/$defs/ModelLimits",
+          "default": {
+            "context_window": 0,
+            "max_output_tokens": 0
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ]
+    },
+    "ModelPricing": {
+      "type": "object",
+      "properties": {
+        "input_per_million": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+        "output_per_million": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+        "per_image_cents": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double",
+          "default": null
+        }
+      }
+    },
+    "ModelCapabilities": {
+      "type": "object",
+      "properties": {
+        "vision": {
+          "type": "boolean",
+          "default": false
+        },
+        "audio_input": {
+          "type": "boolean",
+          "default": false
+        },
+        "video_input": {
+          "type": "boolean",
+          "default": false
+        },
+        "image_generation": {
+          "type": "boolean",
+          "default": false
+        },
+        "audio_generation": {
+          "type": "boolean",
+          "default": false
+        },
+        "streaming": {
+          "type": "boolean",
+          "default": false
+        },
+        "tools": {
+          "type": "boolean",
+          "default": false
+        },
+        "structured_output": {
+          "type": "boolean",
+          "default": false
+        },
+        "system_prompts": {
+          "type": "boolean",
+          "default": false
+        },
+        "image_resolution_config": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "ModelLimits": {
+      "type": "object",
+      "properties": {
+        "context_window": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 0
+        },
+        "max_output_tokens": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 0
+        },
+        "max_thinking_budget": {
+          "description": "Maximum extended-thinking / reasoning budget (in tokens) the upstream\naccepts for this model. `None` means the provider validates the budget\nitself (Anthropic) or maps it to an effort bucket (OpenAI); set it for\nproviders that reject an out-of-range numeric budget (Gemini: 24576 for\nflash, 32768 for pro). The gateway clamps the requested budget to this.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        }
+      }
+    },
+    "GatewayConfigSpec": {
+      "description": "On-disk gateway configuration: the exact shape accepted under\n`gateway:` in a profile YAML document.\n\nProject to the runtime [`GatewayConfig`] via [`Self::resolve`].",
       "type": "object",
       "properties": {
         "enabled": {
@@ -633,7 +904,8 @@
           },
           "default": []
         },
-        "catalog_path": {
+        "default_provider": {
+          "description": "Provider that absorbs any model not matched by an explicit `route`.\nWhen set, the gateway stops being a closed allowlist: an unmatched\nmodel is forwarded to this provider instead of denied.",
           "type": [
             "string",
             "null"
@@ -663,12 +935,6 @@
         "provider": {
           "type": "string"
         },
-        "endpoint": {
-          "type": "string"
-        },
-        "api_key_secret": {
-          "type": "string"
-        },
         "upstream_model": {
           "type": [
             "string",
@@ -695,33 +961,8 @@
       "additionalProperties": false,
       "required": [
         "model_pattern",
-        "provider",
-        "endpoint",
-        "api_key_secret"
+        "provider"
       ]
-    },
-    "ModelPricing": {
-      "type": "object",
-      "properties": {
-        "input_per_million": {
-          "type": "number",
-          "format": "double",
-          "default": 0.0
-        },
-        "output_per_million": {
-          "type": "number",
-          "format": "double",
-          "default": 0.0
-        },
-        "per_image_cents": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double",
-          "default": null
-        }
-      }
     },
     "GovernanceConfig": {
       "type": "object",
@@ -788,6 +1029,7 @@
       "type": "string",
       "enum": [
         "webhook",
+        "extension",
         "disabled",
         "unrestricted"
       ]

@@ -283,11 +283,10 @@ The committed configs that close the system:
 
 | File | What it pins | Why it matters |
 |------|--------------|----------------|
-| `.systemprompt/profiles/airgap/profile.yaml` | `gateway.routes[*].endpoint = http://mock-inference:8080`; route IDs aligned to the `gateway_route` grants in `services/access-control/roles.yaml`; `runtime.log_level: normal`; `cloud.tenant_id: null`; all three `api_*_url` pinned to in-container `:8080`. | Gateway never tries to dial Anthropic/OpenAI/Gemini; RBAC matches the routes so no `authz denied: not assigned`. |
-| `.systemprompt/profiles/airgap/secrets.json.example` | `*_ENDPOINT` keys → mock URL; `manifest_signing_secret_seed`; no upstream provider api_key needed. | AI service providers (`config.yaml`) resolve their endpoints to the mock; missing api_key + present endpoint keeps the provider enabled (WS2). |
-| `.systemprompt/profiles/airgap/catalog.yaml` | Declares the exposed models — referenced by `gateway.catalog.path` in profile.yaml. | Single source of truth for what `/v1/messages` accepts; dispatch and `/profile` both derive from it. |
-| `services/gateway/policies.yaml` | Per-call ceilings, quotas, safety. Model exposure is NOT here. | Policy concerns kept separate from the model registry. |
-| `services/ai/config.yaml` | Provider `endpoint: ${ANTHROPIC_ENDPOINT}` (and openai/gemini equivalents). | Endpoint interpolation lets the air-gap `secrets.json` point providers at the mock with no code changes. |
+| `.systemprompt/profiles/airgap/profile.yaml` | `providers` declares one `anthropic` entry with `endpoint: http://mock-inference:8080` and `api_key_secret: internal_api_key`, serving the exposed model catalog; `gateway.routes` map `claude-*`/`gpt-*` onto it (route IDs aligned to the `gateway_route` grants in `services/access-control/roles.yaml`); `runtime.log_level: normal`; `cloud.tenant_id: null`; all three `api_*_url` pinned to in-container `:8080`. | Every route resolves to the mock provider, so the gateway never dials Anthropic/OpenAI/Gemini; the registry is the single source of what `/v1/messages` and `/profile` expose; RBAC matches the routes so no `authz denied: not assigned`. The mock's non-loopback `http` endpoint is permitted only because the stack sets `SYSTEMPROMPT_TRUSTED_HTTP_HOSTS: mock-inference`. |
+| `.systemprompt/profiles/airgap/secrets.json.example` | `internal_api_key` (the registry's `api_key_secret`); `manifest_signing_secret_seed`; no real upstream provider api_key needed. | The mock accepts any credential; nothing dials a real vendor, so the sealed network needs no genuine provider keys. |
+| `services/gateway/policies.yaml` | Per-call ceilings, quotas, safety. Model exposure is NOT here. | Policy concerns kept separate from the provider registry. |
+| `services/ai/config.yaml` | Per-provider AI *policy* only — `enabled` and `default_model`; connectivity lives in `profile.providers`. | Enables the providers and picks agent-side defaults; it carries no endpoints or keys. |
 
 Validate any profile before boot:
 

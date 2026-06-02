@@ -423,11 +423,12 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     YAML
     fi
     if [ ! -f "$PROFILE_DIR/profile.yaml" ]; then
-        echo "Generating profile + catalog + secrets via 'admin setup'..."
+        echo "Generating profile + provider registry + secrets via 'admin setup'..."
         if [ "$HAS_KEY" = true ]; then
             # Keys supplied as args: fully non-interactive. The default provider
-            # is the first key given, so the generated config (catalog, gateway
-            # default, ai/config.yaml) is consistent with the single key.
+            # is the first key given, so the generated config (the providers
+            # registry, gateway default, ai/config.yaml) is consistent with the
+            # single key.
             KEY_ARGS=()
             DEFAULT_PROVIDER=""
             if [ -n "$ANTHROPIC_KEY" ]; then KEY_ARGS+=(--anthropic-key "$ANTHROPIC_KEY"); [ -z "$DEFAULT_PROVIDER" ] && DEFAULT_PROVIDER=anthropic; fi
@@ -699,7 +700,8 @@ airgap TEARDOWN="false":
 # Run the air-gap demo scripts in sequence, stopping on first failure.
 # Policies (quotas/safety) ship as services/gateway/policies.yaml and are
 # ingested by the publish_pipeline job at server boot. Model exposure lives
-# in the profile catalog (.systemprompt/profiles/airgap/catalog.yaml).
+# in the profile provider registry (profile.providers in
+# .systemprompt/profiles/airgap/profile.yaml).
 airgap-test:
     #!/usr/bin/env bash
     set -euo pipefail
