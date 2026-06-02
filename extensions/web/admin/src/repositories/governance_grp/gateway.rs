@@ -219,19 +219,6 @@ pub fn get_gateway_config(profile_path: &Path) -> Result<GatewayConfigView, Mark
         .and_then(Value::as_str)
         .unwrap_or(DEFAULT_INFERENCE_PATH_PREFIX)
         .to_string();
-    let catalog_node = gateway.and_then(|g| g.get("catalog"));
-    let catalog_path = catalog_node
-        .and_then(|c| c.get("path"))
-        .and_then(Value::as_str)
-        .map(ToString::to_string);
-    if catalog_path.is_none()
-        && catalog_node
-            .is_some_and(|c| c.get("providers").is_some() || c.get("models").is_some())
-    {
-        tracing::warn!(
-            "admin UI does not yet edit inline gateway catalogs; edit the profile YAML directly"
-        );
-    }
     let routes = gateway
         .and_then(|g| g.get("routes"))
         .and_then(Value::as_sequence)
@@ -242,7 +229,6 @@ pub fn get_gateway_config(profile_path: &Path) -> Result<GatewayConfigView, Mark
         enabled,
         auth_scheme,
         inference_path_prefix,
-        catalog_path,
         routes,
         profile_path: profile_path.display().to_string(),
     })
@@ -283,28 +269,6 @@ pub fn update_gateway_settings(
                 Value::from("inference_path_prefix"),
                 Value::from(prefix.clone()),
             );
-        }
-        if let Some(catalog) = &req.catalog_path {
-            let trimmed = catalog.trim();
-            if trimmed.is_empty() {
-                if let Some(Value::Mapping(cat_map)) = gw.get_mut(Value::from("catalog")) {
-                    cat_map.remove(Value::from("path"));
-                    if cat_map.is_empty() {
-                        gw.remove(Value::from("catalog"));
-                    }
-                }
-            } else {
-                let entry = gw
-                    .entry(Value::from("catalog"))
-                    .or_insert_with(|| Value::Mapping(Mapping::new()));
-                if let Some(cat_map) = entry.as_mapping_mut() {
-                    cat_map.insert(Value::from("path"), Value::from(trimmed.to_owned()));
-                } else {
-                    return Err(MarketplaceError::Internal(
-                        "gateway.catalog is not a mapping".into(),
-                    ));
-                }
-            }
         }
     }
     write_profile(profile_path, &doc)?;

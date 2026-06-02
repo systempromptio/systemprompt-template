@@ -198,113 +198,6 @@ impl PublishPipelineJob {
         self.run_feed(paths, db_pool, stats).await;
     }
 
-    /// Register every entity referenced by the on-disk profile (gateway
-    /// routes, MCP servers, etc.) in `access_control_entities` *before* the
-    /// access-control YAML loader runs. Migration 007 added an FK from
-    /// `access_control_rules.(entity_type, entity_id)` to this catalog, so
-    /// any rule pointing at a route that was not declared in the profile
-    /// would otherwise be rejected.
-    ///
-    /// Three-stage governance bootstrap, in dependency order:
-    /// 1. Register catalog entities the FK on `access_control_rules` needs.
-    /// 2. Apply role/department grants from `services/access-control/`.
-    /// 3. Project the gateway model allow-list into `ai_gateway_policies`.
-    async fn run_governance_bootstrap(
-        &self,
-        paths: &AppPaths,
-        db_pool: &DbPool,
-        stats: &mut PipelineStats,
-    ) {
-        self.run_access_entity_bootstrap(paths, db_pool, stats)
-            .await;
-        self.run_acl_yaml_load(paths, db_pool, stats).await;
-        self.run_gateway_policy_load(paths, db_pool, stats).await;
-    }
-
-    /// Gateway routes is the only kind handled here; the rest
-    /// (`mcp_server`, plugin, agent, skill, marketplace) will be filled in
-    /// by their own bootstrap passes as task #3 lands the `entity_match`
-    /// glob loader.
-    async fn run_access_entity_bootstrap(
-        &self,
-        _paths: &AppPaths,
-        db_pool: &DbPool,
-        stats: &mut PipelineStats,
-    ) {
-        match bootstrap_gateway_entities(db_pool).await {
-            Ok((registered, failed)) => {
-                tracing::debug!(registered, failed, "entity-bootstrap completed");
-                if failed == 0 {
-                    stats.record_success();
-                } else {
-                    stats.record_failure();
-                }
-            }
-            Err(e) => {
-                tracing::warn!(error = %e, "entity-bootstrap skipped");
-                stats.record_failure();
-            }
-        }
-    }
-
-    async fn run_acl_yaml_load(
-        &self,
-        paths: &AppPaths,
-        db_pool: &DbPool,
-        stats: &mut PipelineStats,
-    ) {
-        let services_path = paths.system().services().to_path_buf();
-        let Some(pool) = db_pool.pool() else {
-            tracing::warn!("access-control YAML load skipped: db pool unavailable");
-            stats.record_failure();
-            return;
-        };
-        match systemprompt_web_admin::repositories::governance_grp::acl_yaml_loader::load_from_yaml(
-            &pool,
-            &services_path,
-        )
-        .await
-        {
-            Ok(_report) => {
-                stats.record_success();
-            }
-            Err(e) => {
-                tracing::error!(error = %e, "access-control YAML load failed");
-                stats.record_failure();
-            }
-        }
-    }
-
-    /// Project `services/gateway/policies.yaml` into `ai_gateway_policies`.
-    ///
-    /// Mirrors [`Self::run_acl_yaml_load`]: the gateway policy (the inference
-    /// model allow-list — a security control) ships as version-controlled
-    /// config and is reconciled into the DB at every server boot, rather than
-    /// being seeded by a one-off SQL script.
-    async fn run_gateway_policy_load(
-        &self,
-        paths: &AppPaths,
-        db_pool: &DbPool,
-        stats: &mut PipelineStats,
-    ) {
-        let services_path = paths.system().services().to_path_buf();
-        match systemprompt::ai::load_gateway_policies_from_yaml(db_pool, &services_path).await {
-            Ok(report) => {
-                tracing::debug!(
-                    inserted = report.inserted,
-                    updated = report.updated,
-                    deleted = report.deleted,
-                    "gateway-policy YAML load completed"
-                );
-                stats.record_success();
-            }
-            Err(e) => {
-                tracing::error!(error = %e, "gateway-policy YAML load failed");
-                stats.record_failure();
-            }
-        }
-    }
-
     async fn run_asset_organization(&self, paths: &AppPaths, stats: &mut PipelineStats) {
         let dist_dir = paths.web().dist().to_path_buf();
         match organize_dist_assets(&dist_dir).await {
@@ -359,8 +252,6 @@ impl PublishPipelineJob {
 
         let mut stats = PipelineStats::default();
 
-        self.run_governance_bootstrap(paths, db_pool, &mut stats)
-            .await;
         self.run_ingestion(ctx, &mut stats).await;
         self.run_bundle_admin_css(&mut stats).await;
         self.run_bundle_admin_js(&mut stats).await;
@@ -389,34 +280,3 @@ impl PublishPipelineJob {
 }
 
 systemprompt::traits::submit_job!(&PublishPipelineJob);
-
-async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<(usize, usize), JobError> {
-    let pool = db_pool.pool().ok_or_else(|| {
-        JobError::from(MarketplaceError::Internal(
-            "db pool unavailable".to_string(),
-        ))
-    })?;
-    let profile_path = systemprompt::config::ProfileBootstrap::get_path()
-        .map(std::path::PathBuf::from)
-        .map_err(|e| MarketplaceError::Internal(format!("profile path unavailable: {e}")))?;
-    let cfg = systemprompt_web_admin::repositories::get_gateway_config(&profile_path)
-        .map_err(|e| MarketplaceError::Internal(format!("gateway config unavailable: {e}")))?;
-
-    let source = format!("profile:{}", profile_path.display());
-    let mut registered = 0usize;
-    let mut failed = 0usize;
-    for route in &cfg.routes {
-        match systemprompt_web_admin::repositories::governance_grp::gateway_acl::upsert_entity(
-            &pool, &route.id, false, &source,
-        )
-        .await
-        {
-            Ok(()) => registered += 1,
-            Err(e) => {
-                tracing::error!(error = %e, route_id = %route.id, "entity-bootstrap: upsert_entity failed");
-                failed += 1;
-            }
-        }
-    }
-    Ok((registered, failed))
-}

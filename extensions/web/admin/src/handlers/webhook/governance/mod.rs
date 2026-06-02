@@ -4,7 +4,7 @@ mod handler;
 mod policies;
 pub mod policy;
 mod scope;
-mod secrets;
+pub(crate) mod secrets;
 mod types;
 
 pub use authz::govern_authz;

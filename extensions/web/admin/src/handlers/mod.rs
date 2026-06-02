@@ -21,7 +21,7 @@ pub mod share;
 pub mod shared;
 pub mod ssr;
 mod users;
-mod webhook;
+pub(crate) mod webhook;
 
 pub use webhook::{govern_authz, govern_tool_use, track_statusline_event, track_transcript_event};
 

@@ -82,15 +82,3 @@ pub async fn get_entity(pool: &PgPool, route_id: &str) -> Result<Option<EntityRo
         .await
         .map_err(|e| map_err(&e))
 }
-
-pub async fn upsert_entity(
-    pool: &PgPool,
-    route_id: &str,
-    default_included: bool,
-    source: &str,
-) -> Result<(), sqlx::Error> {
-    repo(pool)
-        .upsert_entity(ENTITY_TYPE, route_id, default_included, source)
-        .await
-        .map_err(|e| map_err(&e))
-}

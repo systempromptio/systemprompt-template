@@ -21,6 +21,7 @@ pub mod activity;
 pub mod audit_event_bus;
 pub mod error;
 pub mod event_hub;
+pub mod gateway_safety;
 pub(crate) mod handlers;
 pub mod marketplace_filter;
 mod middleware;

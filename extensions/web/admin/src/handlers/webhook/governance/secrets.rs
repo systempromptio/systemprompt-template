@@ -194,6 +194,20 @@ fn collect_strings(value: &serde_json::Value, out: &mut Vec<String>) {
     }
 }
 
+/// Scan a flat string for the first matching secret pattern, returning a
+/// redacted excerpt. Shares [`SECRET_PATTERNS`] with the governance webhook so
+/// the gateway safety scanner and the tool-use governor flag the same
+/// credentials.
+pub fn scan_str_for_secret(text: &str) -> Option<String> {
+    for pattern in SECRET_PATTERNS {
+        if let Some(match_start) = text.find(pattern.prefix) {
+            let snippet_end = (match_start + 12).min(text.len());
+            return Some(format!("{}...[REDACTED]", &text[match_start..snippet_end]));
+        }
+    }
+    None
+}
+
 pub(super) fn detect_secrets(
     tool_input: Option<&serde_json::Value>,
 ) -> Option<(&'static SecretPattern, String)> {

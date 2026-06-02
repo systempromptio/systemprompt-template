@@ -24,8 +24,8 @@ use crate::{
     assets::web_assets,
     jobs::{
         BundleAdminCssJob, BundleAdminJsJob, ContentAnalyticsAggregationJob, ContentIngestionJob,
-        ContentPrerenderJob, CopyExtensionAssetsJob, LlmsTxtGenerationJob, PublishPipelineJob,
-        RobotsTxtGenerationJob, SitemapGenerationJob,
+        ContentPrerenderJob, CopyExtensionAssetsJob, GovernanceBootstrapJob, LlmsTxtGenerationJob,
+        PublishPipelineJob, RobotsTxtGenerationJob, SitemapGenerationJob,
     },
     schemas::{migrations, schema_definitions},
 };
@@ -205,6 +205,7 @@ impl Extension for WebExtension {
             Arc::new(LlmsTxtGenerationJob),
             Arc::new(RobotsTxtGenerationJob),
             Arc::new(PublishPipelineJob),
+            Arc::new(GovernanceBootstrapJob),
             Arc::new(ContentAnalyticsAggregationJob),
             Arc::new(BundleAdminCssJob),
             Arc::new(BundleAdminJsJob),

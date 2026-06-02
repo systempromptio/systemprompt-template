@@ -19,7 +19,6 @@ pub struct GatewayConfigView {
     pub enabled: bool,
     pub auth_scheme: String,
     pub inference_path_prefix: String,
-    pub catalog_path: Option<String>,
     pub routes: Vec<GatewayRouteView>,
     pub profile_path: String,
 }
@@ -29,7 +28,6 @@ pub struct UpdateGatewaySettingsRequest {
     pub enabled: Option<bool>,
     pub auth_scheme: Option<String>,
     pub inference_path_prefix: Option<String>,
-    pub catalog_path: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
