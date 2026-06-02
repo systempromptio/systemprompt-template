@@ -49,6 +49,31 @@ rules:
     access: allow
     default_included: true
     roles: [user]
+  - entity_type: skill
+    entity_id: trace_gateway_messages
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: skill
+    entity_id: view_governance_logs
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: skill
+    entity_id: manage_services
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: skill
+    entity_id: inspect_mcp_and_skills
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: skill
+    entity_id: systemprompt_cli
+    access: allow
+    default_included: true
+    roles: [user]
 
   # agents shipped with enterprise-demo
   - entity_type: agent
