@@ -107,9 +107,9 @@ echo "  Admin calls systemprompt core skills list"
 echo "------------------------------------------"
 echo ""
 
-"$CLI" plugins mcp call systemprompt systemprompt \
+"$CLI" --json plugins mcp call systemprompt systemprompt \
   --args '{"command":"core skills list"}' --profile "$PROFILE" 2>&1 \
-  | grep -E '"success"|"server"|"tool"|"execution_time_ms"'
+  | grep -E '"success"|"server"|"tool"'
 
 echo ""
 echo "  ✓ OAuth authenticated → tool executed"

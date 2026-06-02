@@ -147,7 +147,7 @@ assert_decision "GitHub PAT in Write content" deny \
   '{"hook_event_name":"PreToolUse","tool_name":"Write","tool_input":{"file_path":"/app/.env","content":"GITHUB_TOKEN=ghp_ABCDEFghijklmnop1234567890abcdef"},"agent_id":"developer_agent","session_id":"airgap-gov-pat","cwd":"/app"}'
 
 step "2d — audit trail: decisions persisted to governance_decisions"
-AUDIT_COUNT=$(app_cli infra db query \
+AUDIT_COUNT=$(app_cli --json infra db query \
   "SELECT count(*) AS n FROM governance_decisions WHERE session_id LIKE 'airgap-gov-%';" 2>/dev/null \
   | grep -oE '"n":[[:space:]]*"?[0-9]+' | grep -oE '[0-9]+' | head -1)
 if [[ -n "$AUDIT_COUNT" && "$AUDIT_COUNT" -ge 3 ]]; then
@@ -161,7 +161,7 @@ fi
 # A military reviewer wants to see decision + rule + agent_id, not a count.
 step "2e — show the denied audit rows (decision, policy fired, tool, session, reason)"
 cmd "systemprompt infra db query \"SELECT decision, policy, tool_name, session_id, reason FROM governance_decisions WHERE session_id LIKE 'airgap-gov-%' AND decision = 'deny' ORDER BY created_at DESC\""
-DENY_ROWS=$(app_cli infra db query \
+DENY_ROWS=$(app_cli --json infra db query \
   "SELECT decision, policy, tool_name, session_id, reason FROM governance_decisions WHERE session_id LIKE 'airgap-gov-%' AND decision = 'deny' ORDER BY created_at DESC LIMIT 10;" 2>/dev/null || true)
 if printf '%s' "$DENY_ROWS" | grep -q '"decision"[[:space:]]*:[[:space:]]*"deny"'; then
   pass "Denied decisions audited with rule attribution:"

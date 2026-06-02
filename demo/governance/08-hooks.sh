@@ -94,12 +94,15 @@ ROWS=$("$CLI" infra db query \
 echo "$ROWS" | sed 's/^/  /'
 
 # Fail loud if the row never landed — this is the actual proof, not the 200.
-if echo "$ROWS" | grep -q '"row_count": 1'; then
+COUNT=$("$CLI" --json --profile "$PROFILE" infra db query \
+  "SELECT COUNT(*)::int AS c FROM plugin_usage_events WHERE session_id = '$SID'" \
+  2>/dev/null | sed -n 's/.*"c"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/p' | head -1)
+if [[ "${COUNT:-0}" -eq 1 ]]; then
   echo ""
   pass "Hook fire recorded — 1 row in plugin_usage_events for session $SID"
 else
   echo ""
-  fail "Hook fire NOT recorded — expected 1 row, got something else"
+  fail "Hook fire NOT recorded — expected 1 row, got ${COUNT:-0}"
   exit 1
 fi
 

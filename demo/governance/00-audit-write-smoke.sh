@@ -21,7 +21,7 @@ curl -fsS -X POST "$BASE_URL/api/public/hooks/govern?plugin_id=enterprise-demo" 
 # Audit write is fire-and-forget via tokio::spawn — give it a beat to land.
 sleep 1
 
-count=$("$CLI" --profile "$PROFILE" infra db query \
+count=$("$CLI" --json --profile "$PROFILE" infra db query \
   "SELECT COUNT(*)::int AS c FROM governance_decisions WHERE session_id = '$SID'" \
   2>/dev/null | sed -n 's/.*"c"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/p' | head -1)
 
