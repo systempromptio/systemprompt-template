@@ -1,0 +1,80 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            d.id,\n            d.name,\n            d.description as \"description!\",\n            COALESCE(mc.member_count, 0)::BIGINT  AS \"member_count!\",\n            COALESCE(ac.assignment_count, 0)::BIGINT AS \"assignment_count!\",\n            COALESCE(usg.input_tokens, 0)::BIGINT  AS \"input_tokens!\",\n            COALESCE(usg.output_tokens, 0)::BIGINT AS \"output_tokens!\",\n            COALESCE(usg.requests, 0)::BIGINT      AS \"requests!\",\n            COALESCE(usg.cost_microdollars, 0)::BIGINT AS \"cost_microdollars!\",\n            d.created_at,\n            d.updated_at\n        FROM departments d\n        LEFT JOIN (\n            SELECT department, COUNT(*)::BIGINT AS member_count\n            FROM user_profile_ext\n            WHERE department IS NOT NULL AND department <> ''\n            GROUP BY department\n        ) mc ON mc.department = d.name\n        LEFT JOIN (\n            SELECT rule_value, COUNT(*)::BIGINT AS assignment_count\n            FROM access_control_rules\n            WHERE rule_type = 'department'\n            GROUP BY rule_value\n        ) ac ON ac.rule_value = d.name\n        LEFT JOIN (\n            SELECT\n                upe.department AS dept,\n                COALESCE(SUM(ar.input_tokens), 0)::BIGINT  AS input_tokens,\n                COALESCE(SUM(ar.output_tokens), 0)::BIGINT AS output_tokens,\n                COUNT(ar.id)::BIGINT                       AS requests,\n                COALESCE(SUM(ar.cost_microdollars), 0)::BIGINT AS cost_microdollars\n            FROM ai_requests ar\n            JOIN user_profile_ext upe ON upe.user_id = ar.user_id\n            WHERE ar.created_at >= NOW() - INTERVAL '30 days'\n            GROUP BY upe.department\n        ) usg ON usg.dept = d.name\n        ORDER BY d.name\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "description!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "member_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "assignment_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "input_tokens!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "output_tokens!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "requests!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "cost_microdollars!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      false,
+      false
+    ]
+  },
+  "hash": "bc1708ce88bb9aba3b89f1038a1bbdfabd1ed7fd2ba9e7a4dfd285c14ff64440"
+}

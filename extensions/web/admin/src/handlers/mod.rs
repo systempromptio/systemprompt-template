@@ -1,6 +1,6 @@
 pub mod access_control;
-pub mod catalog;
 pub mod bridge;
+pub mod catalog;
 pub mod demo_register;
 pub mod departments;
 pub mod devices;
@@ -21,7 +21,7 @@ pub mod share;
 pub mod shared;
 pub mod ssr;
 mod users;
-pub(crate) mod webhook;
+pub mod webhook;
 
 pub use webhook::{govern_authz, govern_tool_use, track_statusline_event, track_transcript_event};
 

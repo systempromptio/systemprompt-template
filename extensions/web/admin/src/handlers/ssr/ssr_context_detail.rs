@@ -65,17 +65,7 @@ pub async fn context_detail_page(
 
     let kpis = kpis_res.unwrap_or_else(|e| {
         tracing::warn!(error = %e, "fetch_context_kpis failed");
-        ContextKpis {
-            request_count: 0,
-            trace_count: 0,
-            error_count: 0,
-            total_input_tokens: 0,
-            total_output_tokens: 0,
-            total_cost_microdollars: 0,
-            first_request_at: None,
-            last_request_at: None,
-            model: None,
-        }
+        default_kpis()
     });
     let requests = requests_res.unwrap_or_else(|e| {
         tracing::warn!(error = %e, "fetch_context_requests failed");
@@ -90,13 +80,38 @@ pub async fn context_detail_page(
         Vec::new()
     });
 
-    let transcript = build_transcript(&messages, &tool_calls);
+    let data = build_detail_data(&header, &kpis, &requests, &messages, &tool_calls);
 
-    let data = json!({
+    super::render_page(&engine, "context-detail", &data, &user_ctx, &mkt_ctx)
+}
+
+const fn default_kpis() -> ContextKpis {
+    ContextKpis {
+        request_count: 0,
+        trace_count: 0,
+        error_count: 0,
+        total_input_tokens: 0,
+        total_output_tokens: 0,
+        total_cost_microdollars: 0,
+        first_request_at: None,
+        last_request_at: None,
+        model: None,
+    }
+}
+
+fn build_detail_data(
+    header: &ContextHeader,
+    kpis: &ContextKpis,
+    requests: &[ContextRequestRow],
+    messages: &[ContextMessageRow],
+    tool_calls: &[ContextToolCallRow],
+) -> Value {
+    let transcript = build_transcript(messages, tool_calls);
+    json!({
         "page": "context-detail",
         "title": format!("Context · {}", short_id(&header.context_id)),
-        "header": header_json(&header),
-        "kpis": kpis_json(&kpis),
+        "header": header_json(header),
+        "kpis": kpis_json(kpis),
         "transcript": transcript,
         "has_transcript": !messages.is_empty() || !tool_calls.is_empty(),
         "requests": requests.iter().map(request_json).collect::<Vec<_>>(),
@@ -110,9 +125,7 @@ pub async fn context_detail_page(
             .session_id
             .as_ref()
             .map_or_else(|| "Live ticker".to_string(), |_| "Session".to_string()),
-    });
-
-    super::render_page(&engine, "context-detail", &data, &user_ctx, &mkt_ctx)
+    })
 }
 
 fn header_json(h: &ContextHeader) -> Value {

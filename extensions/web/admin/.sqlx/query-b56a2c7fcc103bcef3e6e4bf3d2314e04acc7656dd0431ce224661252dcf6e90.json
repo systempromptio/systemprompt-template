@@ -1,0 +1,105 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE users\n        SET\n            display_name = COALESCE($2, display_name),\n            email = COALESCE($3, email),\n            roles = COALESCE($4, roles),\n            status = COALESCE($5, status),\n            email_verified = CASE WHEN $6 THEN true ELSE email_verified END,\n            updated_at = NOW()\n        WHERE id = $1\n        RETURNING\n            id AS \"user_id!\",\n            COALESCE(display_name, name) AS display_name,\n            email AS \"email: _\",\n            roles AS \"roles!: Vec<String>\",\n            (status = 'active') AS \"is_active!\",\n            updated_at AS \"last_active!\",\n            0::BIGINT AS \"total_events!\",\n            NULL::TEXT AS last_tool,\n            0::BIGINT AS \"custom_skills_count!\",\n            NULL::TEXT AS preferred_client,\n            0::BIGINT AS \"prompts!\",\n            0::BIGINT AS \"sessions!\",\n            0::BIGINT AS \"bytes!\",\n            0::BIGINT AS \"logins!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "email: _",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "roles!: Vec<String>",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 4,
+        "name": "is_active!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "last_active!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "total_events!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "last_tool",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "custom_skills_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "preferred_client",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "prompts!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 11,
+        "name": "sessions!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 12,
+        "name": "bytes!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 13,
+        "name": "logins!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Varchar",
+        "Varchar",
+        "TextArray",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      false,
+      null,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "b56a2c7fcc103bcef3e6e4bf3d2314e04acc7656dd0431ce224661252dcf6e90"
+}

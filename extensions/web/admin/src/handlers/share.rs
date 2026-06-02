@@ -202,67 +202,57 @@ pub async fn public_manifest_handler(
     }
 }
 
-async fn build_user_manifest(pool: &PgPool, user_id: &str) -> Result<ManifestResponse, Response> {
-    let services_path = shared::get_services_path().map_err(|r| *r)?;
+fn opt_desc(desc: String) -> Option<String> {
+    if desc.is_empty() {
+        None
+    } else {
+        Some(desc)
+    }
+}
+
+fn collect_manifest_sections(
+    services_path: &std::path::Path,
+) -> Vec<repositories::access_control::SectionInput> {
     let mut sections_in: Vec<repositories::access_control::SectionInput> = Vec::new();
 
-    if let Ok(servers) = repositories::mcp_servers::list_mcp_servers(&services_path) {
+    if let Ok(servers) = repositories::mcp_servers::list_mcp_servers(services_path) {
         let rows = servers
             .into_iter()
             .map(|s| {
                 let id = s.id.as_str().to_string();
-                let desc = if s.description.is_empty() {
-                    None
-                } else {
-                    Some(s.description)
-                };
-                (id.clone(), id, desc)
+                (id.clone(), id, opt_desc(s.description))
             })
             .collect();
         sections_in.push(("mcp_server".into(), "MCP servers".into(), rows));
     }
-    if let Ok(plugins) = repositories::list_plugin_catalog(&services_path) {
+    if let Ok(plugins) = repositories::list_plugin_catalog(services_path) {
         let rows = plugins
             .into_iter()
-            .map(|p| {
-                let desc = if p.description.is_empty() {
-                    None
-                } else {
-                    Some(p.description)
-                };
-                (p.id, p.name, desc)
-            })
+            .map(|p| (p.id, p.name, opt_desc(p.description)))
             .collect();
         sections_in.push(("plugin".into(), "Plugins".into(), rows));
     }
-    if let Ok(agents) = repositories::list_agent_catalog(&services_path) {
+    if let Ok(agents) = repositories::list_agent_catalog(services_path) {
         let rows = agents
             .into_iter()
-            .map(|a| {
-                let desc = if a.description.is_empty() {
-                    None
-                } else {
-                    Some(a.description)
-                };
-                (a.id.as_str().to_string(), a.name, desc)
-            })
+            .map(|a| (a.id.as_str().to_string(), a.name, opt_desc(a.description)))
             .collect();
         sections_in.push(("agent".into(), "Agents".into(), rows));
     }
-    if let Ok(skills) = repositories::list_skill_catalog(&services_path) {
+    if let Ok(skills) = repositories::list_skill_catalog(services_path) {
         let rows = skills
             .into_iter()
-            .map(|s| {
-                let desc = if s.description.is_empty() {
-                    None
-                } else {
-                    Some(s.description)
-                };
-                (s.id.as_str().to_string(), s.name, desc)
-            })
+            .map(|s| (s.id.as_str().to_string(), s.name, opt_desc(s.description)))
             .collect();
         sections_in.push(("skill".into(), "Skills".into(), rows));
     }
+
+    sections_in
+}
+
+async fn build_user_manifest(pool: &PgPool, user_id: &str) -> Result<ManifestResponse, Response> {
+    let services_path = shared::get_services_path().map_err(|r| *r)?;
+    let sections_in = collect_manifest_sections(&services_path);
 
     let matrix = repositories::access_control::filter_catalog_for_user(pool, user_id, sections_in)
         .await

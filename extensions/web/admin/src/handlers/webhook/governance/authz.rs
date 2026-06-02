@@ -8,7 +8,8 @@
 //! on. The audit row's `policy` is `authz` regardless of `entity_type`, so
 //! `infra logs audit` can correlate gateway and MCP decisions in one stream.
 
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
+use std::time::{Duration, Instant};
 
 use axum::{
     extract::State,
@@ -17,15 +18,72 @@ use axum::{
     Json,
 };
 use sqlx::PgPool;
-use systemprompt::identifiers::Actor;
+use systemprompt::identifiers::{Actor, MarketplaceId};
 use systemprompt_security::authz::{
     resolve, AccessControlRepository, AccessRule, AuthzDecision, AuthzRequest, Decision,
-    DecisionTag, EntityRow, ResolveInput,
+    DecisionTag, EntityKind, EntityRef, EntityRow, ResolveInput, ResolveParent,
 };
+use tokio::sync::RwLock;
 
 use crate::repositories::governance_grp::{insert_governance_decision, GovernanceDecisionRecord};
 
 const POLICY_NAME: &str = "authz";
+
+struct CachedMarketplaceParents {
+    entries: Vec<(EntityRef, Vec<AccessRule>, Option<bool>)>,
+    fetched_at: Instant,
+}
+
+static MARKETPLACE_PARENT_CACHE: LazyLock<RwLock<Option<CachedMarketplaceParents>>> =
+    LazyLock::new(|| RwLock::new(None));
+const MARKETPLACE_PARENT_TTL: Duration = Duration::from_mins(5);
+
+async fn marketplace_parent_entries(
+    repo: &AccessControlRepository,
+) -> Vec<(EntityRef, Vec<AccessRule>, Option<bool>)> {
+    {
+        let cache = MARKETPLACE_PARENT_CACHE.read().await;
+        if let Some(ref cached) = *cache {
+            if cached.fetched_at.elapsed() < MARKETPLACE_PARENT_TTL {
+                return cached.entries.clone();
+            }
+        }
+    }
+
+    let entries = match repo.list_entities(EntityKind::Marketplace).await {
+        Ok(rows) => {
+            let mut out = Vec::with_capacity(rows.len());
+            for row in rows {
+                let rules = repo
+                    .list_rules_for_entity(EntityKind::Marketplace, &row.id)
+                    .await
+                    .unwrap_or_else(|e| {
+                        tracing::warn!(error = %e, marketplace_id = %row.id, "marketplace_parent_entries: rules lookup failed; treating marketplace as no-rules");
+                        Vec::new()
+                    });
+                out.push((
+                    EntityRef::Marketplace(MarketplaceId::new(&row.id)),
+                    rules,
+                    Some(row.default_included),
+                ));
+            }
+            out
+        }
+        Err(e) => {
+            tracing::warn!(error = %e, "marketplace_parent_entries: list_entities failed; resolving without cascade parent");
+            Vec::new()
+        }
+    };
+
+    {
+        let mut cache = MARKETPLACE_PARENT_CACHE.write().await;
+        *cache = Some(CachedMarketplaceParents {
+            entries: entries.clone(),
+            fetched_at: Instant::now(),
+        });
+    }
+    entries
+}
 
 async fn load_rules(
     repo: &AccessControlRepository,
@@ -107,13 +165,23 @@ pub async fn govern_authz(
         Err(resp) => return resp,
     };
 
+    let mp_entries = marketplace_parent_entries(&repo).await;
+    let parents: Vec<ResolveParent<'_>> = mp_entries
+        .iter()
+        .map(|(entity, rules, default_included)| ResolveParent {
+            entity,
+            rules,
+            default_included: *default_included,
+        })
+        .collect();
+
     let decision = resolve(ResolveInput {
         entity: &req.entity,
         rules: &rules,
         user_id: &req.user_id,
         user_roles: &req.roles,
         default_included: entity.as_ref().map(|e| e.default_included),
-        parents: &[],
+        parents: &parents,
     });
 
     audit_decision(&pool, &req, &rules, entity.as_ref(), &decision).await;

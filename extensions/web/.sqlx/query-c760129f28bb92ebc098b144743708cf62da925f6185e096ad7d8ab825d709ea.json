@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*) FROM marketplace.magic_link_tokens\n         WHERE email = $1 AND created_at > NOW() - INTERVAL '15 minutes'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c760129f28bb92ebc098b144743708cf62da925f6185e096ad7d8ab825d709ea"
+}

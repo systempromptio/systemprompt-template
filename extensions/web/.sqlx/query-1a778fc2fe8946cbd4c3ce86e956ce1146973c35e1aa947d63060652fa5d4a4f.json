@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            (CASE $3\n                WHEN 'user' THEN g.user_id\n                WHEN 'agent' THEN COALESCE(g.agent_id, '')\n                ELSE COALESCE(g.agent_scope, '')\n            END) AS \"identity_id!\",\n            COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS \"deny_count!\",\n            COUNT(*) FILTER (\n                WHERE g.decision = 'deny'\n                  AND (g.policy = 'secret_scan' OR g.reason ILIKE '%secret%')\n            )::bigint AS \"secret_breach_count!\",\n            COUNT(*) FILTER (\n                WHERE g.decision = 'deny'\n                  AND (g.policy = 'scope_check' OR g.policy = 'scope')\n            )::bigint AS \"scope_violation_count!\",\n            COUNT(*)::bigint AS \"activity_volume!\"\n          FROM governance_decisions g\n          WHERE g.created_at >= $1 AND g.created_at < $2\n          GROUP BY 1\n          HAVING COUNT(*) FILTER (WHERE g.decision = 'deny') > 0\n          ORDER BY COUNT(*) FILTER (WHERE g.decision = 'deny') DESC, COUNT(*) DESC\n          LIMIT 200",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "identity_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "deny_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "secret_breach_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "scope_violation_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "activity_volume!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "1a778fc2fe8946cbd4c3ce86e956ce1146973c35e1aa947d63060652fa5d4a4f"
+}

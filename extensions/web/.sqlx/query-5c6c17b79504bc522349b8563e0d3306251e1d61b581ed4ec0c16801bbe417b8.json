@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT achievement_id AS \"achievement_id!\"\n           FROM user_achievements\n           WHERE user_id = $1 AND unlocked_at::date = CURRENT_DATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "achievement_id!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5c6c17b79504bc522349b8563e0d3306251e1d61b581ed4ec0c16801bbe417b8"
+}

@@ -53,17 +53,22 @@ impl Default for SortSpec {
     }
 }
 
-impl SortSpec {
-    const fn order_by(self) -> &'static str {
-        match (self.column, self.dir) {
-            (SortColumn::CreatedAt, SortDir::Asc) => "g.created_at ASC",
-            (SortColumn::CreatedAt, SortDir::Desc) => "g.created_at DESC",
-            (SortColumn::Cost, SortDir::Asc) => "ar.cost_microdollars ASC NULLS LAST",
-            (SortColumn::Cost, SortDir::Desc) => "ar.cost_microdollars DESC NULLS LAST",
-            (SortColumn::Latency, SortDir::Asc) => "ar.latency_ms ASC NULLS LAST",
-            (SortColumn::Latency, SortDir::Desc) => "ar.latency_ms DESC NULLS LAST",
-            (SortColumn::Policy, SortDir::Asc) => "g.policy ASC",
-            (SortColumn::Policy, SortDir::Desc) => "g.policy DESC",
+impl SortColumn {
+    const fn sql_key(self) -> &'static str {
+        match self {
+            Self::CreatedAt => "created_at",
+            Self::Cost => "cost",
+            Self::Latency => "latency",
+            Self::Policy => "policy",
+        }
+    }
+}
+
+impl SortDir {
+    const fn sql_key(self) -> &'static str {
+        match self {
+            Self::Asc => "asc",
+            Self::Desc => "desc",
         }
     }
 }
@@ -101,9 +106,13 @@ pub async fn fetch_decisions_paged(
         .filter(|s| !s.is_empty())
         .map(|s| format!("%{s}%"));
 
-    let order = sort.order_by();
-    let sql = format!(
-        r"WITH joined AS (
+    let sort_col = sort.column.sql_key();
+    let sort_dir = sort.dir.sql_key();
+    let agent_scope = filter.agent_scope.as_ref().map(|s| s.as_str());
+
+    let rows = sqlx::query_as!(
+        PagedRow,
+        r#"WITH joined AS (
             SELECT
                 g.id, g.user_id, g.session_id, g.tool_name, g.agent_id, g.agent_scope,
                 g.decision, g.policy, g.reason, g.evaluated_rules, g.plugin_id,
@@ -133,55 +142,49 @@ pub async fn fetch_decisions_paged(
                    OR COALESCE(g.agent_scope, '') ILIKE $9)
         )
         SELECT
-            id, user_id, session_id, tool_name, agent_id, agent_scope,
-            decision, policy, reason,
-            COALESCE(evaluated_rules, '[]'::jsonb) as evaluated_rules,
-            plugin_id, trace_id, cost_microdollars, latency_ms, created_at,
-            (SELECT COUNT(*) FROM joined)::bigint AS total_count
+            id AS "id!",
+            user_id AS "user_id!",
+            session_id AS "session_id!",
+            tool_name AS "tool_name!",
+            agent_id,
+            agent_scope AS "agent_scope: AccessScope",
+            decision AS "decision!",
+            policy AS "policy!",
+            reason AS "reason!",
+            COALESCE(evaluated_rules, '[]'::jsonb) AS "evaluated_rules!",
+            plugin_id, trace_id, cost_microdollars, latency_ms,
+            created_at AS "created_at!",
+            (SELECT COUNT(*) FROM joined)::bigint AS "total_count!"
         FROM joined
-        ORDER BY {order}
-        LIMIT $10 OFFSET $11",
-    );
-
-    // Why: {order} is built from the GovernanceDecisionSort closed enum
-    // (sort.order_by()) and interpolates a multi-column ORDER BY expression
-    // that PG cannot parameterise.
-    let rows = sqlx::query_as::<_, PagedRow>(&sql)
-        .bind(range.from)
-        .bind(range.to)
-        .bind(filter.user_id.as_deref())
-        .bind(filter.agent_id.as_deref())
-        .bind(filter.agent_scope)
-        .bind(filter.policy.as_deref())
-        .bind(filter.decision.as_deref())
-        .bind(filter.tool_name.as_deref())
-        .bind(search_pattern.as_deref())
-        .bind(limit)
-        .bind(offset)
-        .fetch_all(pool)
-        .await?;
+        ORDER BY
+            (CASE WHEN $12 = 'created_at' AND $13 = 'asc'  THEN created_at END) ASC  NULLS LAST,
+            (CASE WHEN $12 = 'created_at' AND $13 = 'desc' THEN created_at END) DESC NULLS LAST,
+            (CASE WHEN $12 = 'cost'    AND $13 = 'asc'  THEN cost_microdollars END) ASC  NULLS LAST,
+            (CASE WHEN $12 = 'cost'    AND $13 = 'desc' THEN cost_microdollars END) DESC NULLS LAST,
+            (CASE WHEN $12 = 'latency' AND $13 = 'asc'  THEN latency_ms END) ASC  NULLS LAST,
+            (CASE WHEN $12 = 'latency' AND $13 = 'desc' THEN latency_ms END) DESC NULLS LAST,
+            (CASE WHEN $12 = 'policy'  AND $13 = 'asc'  THEN policy END) ASC  NULLS LAST,
+            (CASE WHEN $12 = 'policy'  AND $13 = 'desc' THEN policy END) DESC NULLS LAST
+        LIMIT $10 OFFSET $11"#,
+        range.from,
+        range.to,
+        filter.user_id.as_deref(),
+        filter.agent_id.as_deref(),
+        agent_scope,
+        filter.policy.as_deref(),
+        filter.decision.as_deref(),
+        filter.tool_name.as_deref(),
+        search_pattern.as_deref(),
+        limit,
+        offset,
+        sort_col,
+        sort_dir,
+    )
+    .fetch_all(pool)
+    .await?;
 
     let total = rows.first().map_or(0, |r| r.total_count);
-    let decisions = rows
-        .into_iter()
-        .map(|r| DecisionRow {
-            id: r.id,
-            user_id: r.user_id,
-            session_id: r.session_id,
-            tool_name: r.tool_name,
-            agent_id: r.agent_id,
-            agent_scope: r.agent_scope,
-            decision: r.decision,
-            policy: r.policy,
-            reason: r.reason,
-            evaluated_rules: r.evaluated_rules,
-            plugin_id: r.plugin_id,
-            trace_id: r.trace_id,
-            cost_microdollars: r.cost_microdollars,
-            latency_ms: r.latency_ms,
-            created_at: r.created_at,
-        })
-        .collect();
+    let decisions = rows.into_iter().map(DecisionRow::from).collect();
 
     Ok((decisions, total))
 }
@@ -204,4 +207,26 @@ struct PagedRow {
     latency_ms: Option<i32>,
     created_at: DateTime<Utc>,
     total_count: i64,
+}
+
+impl From<PagedRow> for DecisionRow {
+    fn from(r: PagedRow) -> Self {
+        Self {
+            id: r.id,
+            user_id: r.user_id,
+            session_id: r.session_id,
+            tool_name: r.tool_name,
+            agent_id: r.agent_id,
+            agent_scope: r.agent_scope,
+            decision: r.decision,
+            policy: r.policy,
+            reason: r.reason,
+            evaluated_rules: r.evaluated_rules,
+            plugin_id: r.plugin_id,
+            trace_id: r.trace_id,
+            cost_microdollars: r.cost_microdollars,
+            latency_ms: r.latency_ms,
+            created_at: r.created_at,
+        }
+    }
 }

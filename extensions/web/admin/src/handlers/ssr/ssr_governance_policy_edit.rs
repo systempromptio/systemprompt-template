@@ -40,26 +40,9 @@ pub async fn governance_policy_edit_page(
         return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
     }
 
-    let snapshot: Option<(String, String, String, String, bool, String)> = {
-        let chain = governance::chain();
-        let result = chain
-            .iter()
-            .find(|(_, p)| p.id().as_str() == policy_id)
-            .map(|(cfg, p)| {
-                let id = p.id().as_str().to_string();
-                (
-                    id.clone(),
-                    p.name().to_string(),
-                    p.description().to_string(),
-                    serde_yaml::to_string(&cfg.params).unwrap_or_default(),
-                    cfg.enabled,
-                    id,
-                )
-            });
-        result
-    };
-
-    let Some((id_str, name, description, params_yaml, enabled, lookup_id)) = snapshot else {
+    let Some((id_str, name, description, params_yaml, enabled, lookup_id)) =
+        find_policy_snapshot(&policy_id)
+    else {
         let data = json!({
             "page": "governance",
             "title": "Unknown policy",
@@ -85,25 +68,7 @@ pub async fn governance_policy_edit_page(
         Vec::new()
     });
 
-    let recent_json: Vec<serde_json::Value> = recent
-        .iter()
-        .map(|r| {
-            json!({
-                "id": r.id,
-                "user_id": r.user_id,
-                "tool_name": r.tool_name,
-                "agent_id": r.agent_id,
-                "agent_scope": r.agent_scope,
-                "decision": r.decision,
-                "is_denied": r.decision == DECISION_DENY,
-                "reason": r.reason,
-                "created_at": r.created_at
-                    .with_timezone(&chrono::Local)
-                    .format("%Y-%m-%d %H:%M:%S")
-                    .to_string(),
-            })
-        })
-        .collect();
+    let recent_json = recent_decisions_json(&recent);
 
     let data = json!({
         "page": "governance",
@@ -127,6 +92,49 @@ pub async fn governance_policy_edit_page(
         &user_ctx,
         &mkt_ctx,
     )
+}
+
+type PolicySnapshot = (String, String, String, String, bool, String);
+
+fn find_policy_snapshot(policy_id: &str) -> Option<PolicySnapshot> {
+    let chain = governance::chain();
+    let snapshot = chain
+        .iter()
+        .find(|(_, p)| p.id().as_str() == policy_id)
+        .map(|(cfg, p)| {
+            let id = p.id().as_str().to_string();
+            (
+                id.clone(),
+                p.name().to_string(),
+                p.description().to_string(),
+                serde_yaml::to_string(&cfg.params).unwrap_or_default(),
+                cfg.enabled,
+                id,
+            )
+        });
+    snapshot
+}
+
+fn recent_decisions_json(recent: &[crate::types::GovernanceDecisionRow]) -> Vec<serde_json::Value> {
+    recent
+        .iter()
+        .map(|r| {
+            json!({
+                "id": r.id,
+                "user_id": r.user_id,
+                "tool_name": r.tool_name,
+                "agent_id": r.agent_id,
+                "agent_scope": r.agent_scope,
+                "decision": r.decision,
+                "is_denied": r.decision == DECISION_DENY,
+                "reason": r.reason,
+                "created_at": r.created_at
+                    .with_timezone(&chrono::Local)
+                    .format("%Y-%m-%d %H:%M:%S")
+                    .to_string(),
+            })
+        })
+        .collect()
 }
 
 #[derive(Debug, Deserialize)]

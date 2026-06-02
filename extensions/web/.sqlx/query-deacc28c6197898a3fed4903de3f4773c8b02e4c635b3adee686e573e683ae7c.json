@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!\",\n                  request_id as \"request_id!\",\n                  trace_id,\n                  provider as \"provider!\",\n                  model as \"model!\",\n                  status as \"status!\",\n                  input_tokens,\n                  output_tokens,\n                  COALESCE(cost_microdollars, 0)::bigint as \"cost_microdollars!\",\n                  latency_ms,\n                  error_message,\n                  created_at as \"created_at!\"\n           FROM ai_requests\n           WHERE session_id = $1\n           ORDER BY created_at ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "request_id!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "trace_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "provider!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "model!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "status!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "input_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "output_tokens",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "cost_microdollars!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "latency_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "error_message",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      null,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "deacc28c6197898a3fed4903de3f4773c8b02e4c635b3adee686e573e683ae7c"
+}

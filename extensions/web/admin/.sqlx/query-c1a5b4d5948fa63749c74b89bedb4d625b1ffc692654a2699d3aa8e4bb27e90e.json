@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO funnel_progress (\n                id, funnel_id, session_id, current_step, step_timestamps, created_at, updated_at\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $6)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "Jsonb",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c1a5b4d5948fa63749c74b89bedb4d625b1ffc692654a2699d3aa8e4bb27e90e"
+}

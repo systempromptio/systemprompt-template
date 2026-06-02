@@ -1,0 +1,80 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            p.id AS \"id!\",\n            p.user_id AS \"user_id!: UserId\",\n            COALESCE(u.display_name, u.full_name, u.name, u.email, p.user_id) AS \"display_name!\",\n            u.email AS \"email?: Email\",\n            p.session_id AS \"session_id!: SessionId\",\n            p.event_type AS \"event_type!\",\n            p.tool_name,\n            p.plugin_id,\n            p.metadata AS \"metadata!\",\n            p.created_at AS \"created_at!\"\n        FROM plugin_usage_events p\n        JOIN users u ON u.id = p.user_id\n        WHERE p.user_id = $1\n          AND ($2::text IS NULL\n               OR p.id ILIKE $2\n               OR p.tool_name ILIKE $2\n               OR p.event_type ILIKE $2\n               OR p.session_id ILIKE $2)\n          AND ($3::text IS NULL OR p.event_type = $3)\n        ORDER BY p.created_at DESC\n        LIMIT $4 OFFSET $5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: UserId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "email?: Email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "session_id!: SessionId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "event_type!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "tool_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "plugin_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "metadata!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "650d2a5faef2d7a74189ec5e57c5a9a0b14f207812e3671c219eba2c63f9d0ec"
+}

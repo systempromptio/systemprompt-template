@@ -136,9 +136,30 @@ pub async fn user_matrix_handler(
         Err(r) => return *r,
     };
 
+    let sections = build_matrix_sections(&services_path, &profile_path);
+
+    match repositories::access_control::resolve_user_matrix(&pool, &user_id, sections).await {
+        Ok(matrix) => Json(matrix).into_response(),
+        Err(e) => {
+            tracing::error!(error = %e, user_id, "Failed to resolve user matrix");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": "Internal server error"})),
+            )
+                .into_response()
+        }
+    }
+}
+
+fn build_matrix_sections(
+    services_path: &std::path::Path,
+    profile_path: &std::path::Path,
+) -> Vec<repositories::access_control::SectionInput> {
+    // Each source is best-effort: a config that fails to load is skipped so the
+    // matrix renders whatever resolved instead of failing the whole view.
     let mut sections: Vec<repositories::access_control::SectionInput> = Vec::new();
 
-    if let Ok(cfg) = repositories::get_gateway_config(&profile_path) {
+    if let Ok(cfg) = repositories::get_gateway_config(profile_path) {
         let rows = cfg
             .routes
             .into_iter()
@@ -153,7 +174,7 @@ pub async fn user_matrix_handler(
             rows,
         ));
     }
-    if let Ok(servers) = repositories::mcp_servers::list_mcp_servers(&services_path) {
+    if let Ok(servers) = repositories::mcp_servers::list_mcp_servers(services_path) {
         let rows: Vec<(String, String, Option<String>)> = servers
             .into_iter()
             .map(|s| {
@@ -169,14 +190,14 @@ pub async fn user_matrix_handler(
         sections.push(("mcp_server".to_string(), "MCP servers".to_string(), rows));
     }
     let admin_roles = vec!["admin".to_string()];
-    if let Ok(plugins) = repositories::list_plugins_for_roles(&services_path, &admin_roles) {
+    if let Ok(plugins) = repositories::list_plugins_for_roles(services_path, &admin_roles) {
         let rows: Vec<(String, String, Option<String>)> = plugins
             .into_iter()
             .map(|p| (p.id, p.name, Some(p.description)))
             .collect();
         sections.push(("plugin".to_string(), "Plugins".to_string(), rows));
     }
-    if let Ok(agents) = repositories::list_agents(&services_path) {
+    if let Ok(agents) = repositories::list_agents(services_path) {
         let rows: Vec<(String, String, Option<String>)> = agents
             .into_iter()
             .map(|a| {
@@ -189,7 +210,7 @@ pub async fn user_matrix_handler(
             .collect();
         sections.push(("agent".to_string(), "Agents".to_string(), rows));
     }
-    if let Ok(skills) = repositories::list_skill_catalog(&services_path) {
+    if let Ok(skills) = repositories::list_skill_catalog(services_path) {
         let rows: Vec<(String, String, Option<String>)> = skills
             .into_iter()
             .map(|s| {
@@ -204,17 +225,7 @@ pub async fn user_matrix_handler(
         sections.push(("skill".to_string(), "Skills".to_string(), rows));
     }
 
-    match repositories::access_control::resolve_user_matrix(&pool, &user_id, sections).await {
-        Ok(matrix) => Json(matrix).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, user_id, "Failed to resolve user matrix");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal server error"})),
-            )
-                .into_response()
-        }
-    }
+    sections
 }
 
 /// Read-only YAML rendering of the current DB state of role/department rules.

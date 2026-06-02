@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT status, COUNT(*)::bigint as cnt\n            FROM users\n            WHERE status != $1\n            GROUP BY status\n            ORDER BY cnt DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "cnt",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "656754a9af450f12951a943e233482b4c42ef9e3d8c8edc28c9a687b3efb7422"
+}

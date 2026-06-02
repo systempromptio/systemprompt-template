@@ -190,7 +190,8 @@ pub struct McpServerDetail {
     #[serde(default = "super::plugins::default_true")]
     pub removable: bool,
     /// YAML file this entry was loaded from, relative to the services directory
-    /// (e.g. `services/mcp/openai.yaml`). Empty for legacy/in-memory entries.
+    /// (e.g. `services/mcp/openai.yaml`). Empty when the entry was just created
+    /// via a mutation and not yet re-read from disk.
     #[serde(default)]
     pub source_path: String,
 }

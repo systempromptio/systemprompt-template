@@ -1,7 +1,5 @@
-use std::fmt::Write;
-
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{Email, SessionId, UserId};
 
 use crate::types::{EventRow, EventTypeCount, EventsQuery, EventsResponse, UsageEvent};
 
@@ -29,58 +27,63 @@ pub async fn list_user_events(
     user_id: &UserId,
     query: &EventsQuery,
 ) -> Result<EventsResponse, sqlx::Error> {
-    let mut where_clause = String::from(" WHERE p.user_id = $1");
-    let mut bind_idx = 1u32;
-    let mut binds: Vec<String> = vec![user_id.as_str().to_string()];
+    let search_pattern = query
+        .search
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .map(|s| format!("%{s}%"));
+    let event_type = query.event_type.as_deref();
 
-    if let Some(ref search) = query.search {
-        bind_idx += 1;
-        let pattern = format!("%{search}%");
-        let _ = write!(
-            where_clause,
-            " AND (p.id ILIKE ${bind_idx} OR p.tool_name ILIKE ${bind_idx} OR p.event_type ILIKE ${bind_idx} OR p.session_id ILIKE ${bind_idx})",
-        );
-        binds.push(pattern);
-    }
-    if let Some(ref et) = query.event_type {
-        bind_idx += 1;
-        let _ = write!(where_clause, " AND p.event_type = ${bind_idx}");
-        binds.push(et.clone());
-    }
+    let total = sqlx::query_scalar!(
+        r#"SELECT COALESCE(COUNT(*), 0)::BIGINT AS "count!"
+           FROM plugin_usage_events p
+           JOIN users u ON u.id = p.user_id
+           WHERE p.user_id = $1
+             AND ($2::text IS NULL
+                  OR p.id ILIKE $2
+                  OR p.tool_name ILIKE $2
+                  OR p.event_type ILIKE $2
+                  OR p.session_id ILIKE $2)
+             AND ($3::text IS NULL OR p.event_type = $3)"#,
+        user_id.as_str(),
+        search_pattern.as_deref(),
+        event_type,
+    )
+    .fetch_one(pool)
+    .await?;
 
-    let count_sql = format!(
-        "SELECT COALESCE(COUNT(*), 0)::BIGINT FROM plugin_usage_events p JOIN users u ON u.id = p.user_id{where_clause}"
-    );
-    let mut count_q = sqlx::query_scalar::<_, i64>(&count_sql);
-    for b in &binds {
-        count_q = count_q.bind(b);
-    }
-    let total = count_q.fetch_one(pool).await?;
-
-    let limit_idx = bind_idx + 1;
-    let offset_idx = bind_idx + 2;
-
-    let data_sql = format!(
-        r"SELECT
-            p.id, p.user_id,
-            COALESCE(u.display_name, u.full_name, u.name, u.email, p.user_id) AS display_name,
-            u.email, p.session_id, p.event_type, p.tool_name, p.metadata, p.created_at
+    let events = sqlx::query_as!(
+        EventRow,
+        r#"SELECT
+            p.id AS "id!",
+            p.user_id AS "user_id!: UserId",
+            COALESCE(u.display_name, u.full_name, u.name, u.email, p.user_id) AS "display_name!",
+            u.email AS "email?: Email",
+            p.session_id AS "session_id!: SessionId",
+            p.event_type AS "event_type!",
+            p.tool_name,
+            p.plugin_id,
+            p.metadata AS "metadata!",
+            p.created_at AS "created_at!"
         FROM plugin_usage_events p
         JOIN users u ON u.id = p.user_id
-        {where_clause}
+        WHERE p.user_id = $1
+          AND ($2::text IS NULL
+               OR p.id ILIKE $2
+               OR p.tool_name ILIKE $2
+               OR p.event_type ILIKE $2
+               OR p.session_id ILIKE $2)
+          AND ($3::text IS NULL OR p.event_type = $3)
         ORDER BY p.created_at DESC
-        LIMIT ${limit_idx} OFFSET ${offset_idx}"
-    );
-
-    // Why: data_sql appends optional ILIKE filters and a variable-length bind
-    // list built at runtime from EventsQuery; query_as! fixes arity at compile
-    // time.
-    let mut data_q = sqlx::query_as::<_, EventRow>(&data_sql);
-    for b in &binds {
-        data_q = data_q.bind(b);
-    }
-    data_q = data_q.bind(query.limit).bind(query.offset);
-    let events = data_q.fetch_all(pool).await?;
+        LIMIT $4 OFFSET $5"#,
+        user_id.as_str(),
+        search_pattern.as_deref(),
+        event_type,
+        query.limit,
+        query.offset,
+    )
+    .fetch_all(pool)
+    .await?;
 
     Ok(EventsResponse {
         events,

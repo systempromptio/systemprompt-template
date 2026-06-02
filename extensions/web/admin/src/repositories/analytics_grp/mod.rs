@@ -21,8 +21,6 @@ pub use conversations::{
     ConversationListFilter, ConversationListItem, RawTurnBody, TranscriptTurn,
 };
 pub use overview::{get_overview, OverviewRow};
-pub use requests::{
-    get_request_stats, list_recent_gateway_requests, RecentGatewayRequestRow, RequestStatsRow,
-};
+pub use requests::{list_recent_gateway_requests, RecentGatewayRequestRow};
 pub use sessions::{list_sessions, SessionRow};
 pub use tools::{list_tools, ToolRow};

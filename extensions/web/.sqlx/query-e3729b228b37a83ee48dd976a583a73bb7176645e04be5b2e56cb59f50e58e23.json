@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH live_start AS (\n            SELECT now() - make_interval(secs => $1::double precision) AS ts\n        ),\n        buckets AS (\n            SELECT generate_series(\n                date_trunc('minute', now() - make_interval(days => $2::int)),\n                (SELECT ts FROM live_start) - make_interval(secs => $1::double precision),\n                make_interval(secs => $1::double precision)\n            ) AS bucket_start\n        )\n        SELECT\n            COALESCE(COUNT(g.id), 0)::bigint AS \"decisions!\",\n            COALESCE(COUNT(g.id) FILTER (WHERE g.decision = 'deny'), 0)::bigint AS \"denied!\",\n            COALESCE(COUNT(g.id) FILTER (\n                WHERE g.decision = 'deny'\n                  AND (g.policy = 'secret_scan' OR g.reason ILIKE '%secret%')\n            ), 0)::bigint AS \"secret_blocks!\",\n            COALESCE(COUNT(DISTINCT g.user_id), 0)::bigint AS \"distinct_actors!\"\n        FROM buckets b\n        LEFT JOIN governance_decisions g\n            ON g.created_at >= b.bucket_start\n           AND g.created_at <  b.bucket_start + make_interval(secs => $1::double precision)\n        GROUP BY b.bucket_start",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "decisions!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "denied!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "secret_blocks!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "distinct_actors!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Float8",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "e3729b228b37a83ee48dd976a583a73bb7176645e04be5b2e56cb59f50e58e23"
+}

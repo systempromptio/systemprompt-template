@@ -102,10 +102,6 @@ pub async fn marketplace_context_middleware(
 }
 
 async fn get_cached_marketplace(roles: &[String]) -> (MarketplaceCounts, String) {
-    use super::repositories;
-    use systemprompt::config::ProfileBootstrap;
-    use systemprompt::models::Config;
-
     {
         let cache = MARKETPLACE_CACHE.read().await;
         if let Some(ref cached) = *cache {
@@ -123,8 +119,26 @@ async fn get_cached_marketplace(roles: &[String]) -> (MarketplaceCounts, String)
         }
     }
 
-    let roles = roles.to_vec();
-    let (counts, site_url) = tokio::task::spawn_blocking(move || {
+    let (counts, site_url) = compute_marketplace_counts(roles.to_vec()).await;
+
+    {
+        let mut cache = MARKETPLACE_CACHE.write().await;
+        *cache = Some(CachedMarketplace {
+            counts,
+            site_url: site_url.clone(),
+            fetched_at: Instant::now(),
+        });
+    }
+
+    (counts, site_url)
+}
+
+async fn compute_marketplace_counts(roles: Vec<String>) -> (MarketplaceCounts, String) {
+    use super::repositories;
+    use systemprompt::config::ProfileBootstrap;
+    use systemprompt::models::Config;
+
+    tokio::task::spawn_blocking(move || {
         let site_url = Config::get().map_or_else(
             |_| String::new(),
             |c| c.api_external_url.trim_end_matches('/').to_string(),
@@ -164,18 +178,7 @@ async fn get_cached_marketplace(roles: &[String]) -> (MarketplaceCounts, String)
             },
             String::new(),
         )
-    });
-
-    {
-        let mut cache = MARKETPLACE_CACHE.write().await;
-        *cache = Some(CachedMarketplace {
-            counts,
-            site_url: site_url.clone(),
-            fetched_at: Instant::now(),
-        });
-    }
-
-    (counts, site_url)
+    })
 }
 
 pub async fn require_user_middleware(request: Request, next: Next) -> Response {

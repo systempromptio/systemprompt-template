@@ -51,59 +51,58 @@ pub async fn fetch_usage_timeseries(
     } else {
         "day"
     };
-    let sql = format!(
-        r"WITH buckets AS (
+    sqlx::query_as!(
+        TimeSeriesBucket,
+        r#"WITH buckets AS (
             SELECT generate_series(
-                date_trunc('{trunc}', NOW() - INTERVAL '{interval}'),
+                date_trunc($1, NOW() - $2::text::interval),
                 NOW(),
-                INTERVAL '{bucket_interval}'
+                $3::text::interval
             ) AS bucket
         ),
         activity AS (
             SELECT
-                date_trunc('{trunc}', a.created_at) AS bucket,
+                date_trunc($1, a.created_at) AS bucket,
                 0::BIGINT AS mcp_calls,
                 COUNT(*) FILTER (WHERE a.category = 'marketplace_edit')::BIGINT AS edits,
                 COUNT(DISTINCT a.user_id)::BIGINT AS active_users,
                 COUNT(*) FILTER (WHERE a.category = 'login')::BIGINT AS logins,
                 0::BIGINT AS mcp_errors
             FROM user_activity a
-            WHERE a.created_at >= NOW() - INTERVAL '{interval}'
+            WHERE a.created_at >= NOW() - $2::text::interval
             GROUP BY 1
         ),
         mcp AS (
             SELECT
-                date_trunc('{trunc}', m.created_at) AS bucket,
+                date_trunc($1, m.created_at) AS bucket,
                 COUNT(*)::BIGINT AS mcp_calls,
                 0::BIGINT AS edits,
                 0::BIGINT AS active_users,
                 0::BIGINT AS logins,
                 COUNT(*) FILTER (WHERE m.status = 'failed')::BIGINT AS mcp_errors
             FROM mcp_tool_executions m
-            WHERE m.created_at >= NOW() - INTERVAL '{interval}'
+            WHERE m.created_at >= NOW() - $2::text::interval
             GROUP BY 1
         )
         SELECT
-            b.bucket,
-            COALESCE(SUM(d.mcp_calls), 0)::BIGINT AS tool_uses,
-            COALESCE(SUM(d.edits), 0)::BIGINT AS prompts,
-            COALESCE(SUM(d.active_users), 0)::BIGINT AS active_users,
-            COALESCE(SUM(d.logins), 0)::BIGINT AS sessions,
-            COALESCE(SUM(d.mcp_errors), 0)::BIGINT AS errors
+            b.bucket AS "bucket!",
+            COALESCE(SUM(d.mcp_calls), 0)::BIGINT AS "tool_uses!",
+            COALESCE(SUM(d.edits), 0)::BIGINT AS "prompts!",
+            COALESCE(SUM(d.active_users), 0)::BIGINT AS "active_users!",
+            COALESCE(SUM(d.logins), 0)::BIGINT AS "sessions!",
+            COALESCE(SUM(d.mcp_errors), 0)::BIGINT AS "errors!"
         FROM buckets b
         LEFT JOIN (
             SELECT * FROM activity UNION ALL SELECT * FROM mcp
         ) d ON d.bucket = b.bucket
         GROUP BY b.bucket
-        ORDER BY b.bucket"
-    );
-    // Why: SQL interpolates closed-set literals ({trunc}, {interval},
-    // {bucket_interval}) into date_trunc and generate_series arguments — these
-    // are not parameterisable in PG. Converting to query_as! would require a
-    // closed-enum match × 6 variants per call site, doubling the body.
-    sqlx::query_as::<_, TimeSeriesBucket>(&sql)
-        .fetch_all(pool)
-        .await
+        ORDER BY b.bucket"#,
+        trunc,
+        interval,
+        bucket_interval,
+    )
+    .fetch_all(pool)
+    .await
 }
 
 pub async fn fetch_user_usage_timeseries(
@@ -117,59 +116,61 @@ pub async fn fetch_user_usage_timeseries(
     } else {
         "day"
     };
-    let sql = format!(
-        r"WITH buckets AS (
+    sqlx::query_as!(
+        TimeSeriesBucket,
+        r#"WITH buckets AS (
             SELECT generate_series(
-                date_trunc('{trunc}', NOW() - INTERVAL '{interval}'),
+                date_trunc($2, NOW() - $3::text::interval),
                 NOW(),
-                INTERVAL '{bucket_interval}'
+                $4::text::interval
             ) AS bucket
         ),
         activity AS (
             SELECT
-                date_trunc('{trunc}', a.created_at) AS bucket,
+                date_trunc($2, a.created_at) AS bucket,
                 0::BIGINT AS mcp_calls,
                 COUNT(*) FILTER (WHERE a.category = 'marketplace_edit')::BIGINT AS edits,
                 1::BIGINT AS active_users,
                 COUNT(*) FILTER (WHERE a.category = 'login')::BIGINT AS logins,
                 0::BIGINT AS mcp_errors
             FROM user_activity a
-            WHERE a.created_at >= NOW() - INTERVAL '{interval}'
+            WHERE a.created_at >= NOW() - $3::text::interval
               AND a.user_id = $1
             GROUP BY 1
         ),
         mcp AS (
             SELECT
-                date_trunc('{trunc}', m.created_at) AS bucket,
+                date_trunc($2, m.created_at) AS bucket,
                 COUNT(*)::BIGINT AS mcp_calls,
                 0::BIGINT AS edits,
                 0::BIGINT AS active_users,
                 0::BIGINT AS logins,
                 COUNT(*) FILTER (WHERE m.status = 'failed')::BIGINT AS mcp_errors
             FROM mcp_tool_executions m
-            WHERE m.created_at >= NOW() - INTERVAL '{interval}'
+            WHERE m.created_at >= NOW() - $3::text::interval
               AND m.user_id = $1
             GROUP BY 1
         )
         SELECT
-            b.bucket,
-            COALESCE(SUM(d.mcp_calls), 0)::BIGINT AS tool_uses,
-            COALESCE(SUM(d.edits), 0)::BIGINT AS prompts,
-            COALESCE(SUM(d.active_users), 0)::BIGINT AS active_users,
-            COALESCE(SUM(d.logins), 0)::BIGINT AS sessions,
-            COALESCE(SUM(d.mcp_errors), 0)::BIGINT AS errors
+            b.bucket AS "bucket!",
+            COALESCE(SUM(d.mcp_calls), 0)::BIGINT AS "tool_uses!",
+            COALESCE(SUM(d.edits), 0)::BIGINT AS "prompts!",
+            COALESCE(SUM(d.active_users), 0)::BIGINT AS "active_users!",
+            COALESCE(SUM(d.logins), 0)::BIGINT AS "sessions!",
+            COALESCE(SUM(d.mcp_errors), 0)::BIGINT AS "errors!"
         FROM buckets b
         LEFT JOIN (
             SELECT * FROM activity UNION ALL SELECT * FROM mcp
         ) d ON d.bucket = b.bucket
         GROUP BY b.bucket
-        ORDER BY b.bucket"
-    );
-    // Why: same closed-set literal interpolation as fetch_usage_timeseries.
-    sqlx::query_as::<_, TimeSeriesBucket>(&sql)
-        .bind(user_id)
-        .fetch_all(pool)
-        .await
+        ORDER BY b.bucket"#,
+        user_id,
+        trunc,
+        interval,
+        bucket_interval,
+    )
+    .fetch_all(pool)
+    .await
 }
 
 pub async fn fetch_active_users_24h(pool: &PgPool) -> Result<i64, sqlx::Error> {

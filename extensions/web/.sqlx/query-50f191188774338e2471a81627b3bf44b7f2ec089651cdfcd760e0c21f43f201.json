@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO user_profile_ext (user_id, department)\n                VALUES ($1, $2)\n                ON CONFLICT (user_id) DO UPDATE SET department = EXCLUDED.department\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "50f191188774338e2471a81627b3bf44b7f2ec089651cdfcd760e0c21f43f201"
+}

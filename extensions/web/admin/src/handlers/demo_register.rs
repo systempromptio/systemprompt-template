@@ -18,6 +18,21 @@ pub struct DemoRegisterRequest {
     pub role: String,
 }
 
+/// Derive a stable, URL-safe `UserId` from an email's local part, falling back
+/// to `"user"` when sanitisation leaves nothing usable.
+fn derive_user_id(email_str: &str) -> UserId {
+    let local_part = email_str.split('@').next().unwrap_or("user");
+    let sanitized = local_part
+        .replace(|c: char| !c.is_alphanumeric() && c != '-' && c != '_', "-")
+        .trim_matches('-')
+        .to_string();
+    UserId::new(if sanitized.is_empty() {
+        "user".to_string()
+    } else {
+        sanitized
+    })
+}
+
 pub async fn create_demo_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
@@ -41,16 +56,7 @@ pub async fn create_demo_user_handler(
         return shared::error_response(StatusCode::BAD_REQUEST, "Invalid email address");
     };
 
-    let local_part = email_str.split('@').next().unwrap_or("user");
-    let sanitized = local_part
-        .replace(|c: char| !c.is_alphanumeric() && c != '-' && c != '_', "-")
-        .trim_matches('-')
-        .to_string();
-    let user_id = UserId::new(if sanitized.is_empty() {
-        "user".to_string()
-    } else {
-        sanitized
-    });
+    let user_id = derive_user_id(&email_str);
 
     let roles = match body.role.as_str() {
         "admin" => vec!["admin".to_string()],

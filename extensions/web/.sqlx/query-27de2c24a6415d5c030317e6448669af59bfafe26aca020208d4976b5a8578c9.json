@@ -1,0 +1,87 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT s.session_id    AS \"session_id!\",\n               s.user_id       AS \"user_id!\",\n               s.plugin_id,\n               s.model,\n               s.status,\n               s.ai_title,\n               s.started_at,\n               COALESCE(s.total_input_tokens, 0)::bigint  AS \"total_input_tokens!\",\n               COALESCE(s.total_output_tokens, 0)::bigint AS \"total_output_tokens!\",\n               COALESCE(g.intervention_count, 0)::bigint  AS \"governance_intervention_count!\",\n               COALESCE(g.deny_count, 0)::bigint          AS \"deny_count!\"\n        FROM plugin_session_summaries s\n        LEFT JOIN (\n            SELECT session_id,\n                   COUNT(*)                                            AS intervention_count,\n                   COUNT(*) FILTER (WHERE decision = 'deny')           AS deny_count\n            FROM governance_decisions\n            GROUP BY session_id\n        ) g ON g.session_id = s.session_id\n        LEFT JOIN session_transcripts t ON t.session_id = s.session_id\n        WHERE ($1::text IS NULL OR s.user_id   = $1)\n          AND ($2::text IS NULL OR s.plugin_id = $2)\n          AND ($3::timestamptz IS NULL OR s.started_at >= $3)\n          AND ($4::timestamptz IS NULL OR s.started_at <  $4)\n          AND ($5::text IS NULL\n               OR s.ai_title ILIKE $5\n               OR s.ai_summary ILIKE $5\n               OR t.transcript::text ILIKE $5)\n        ORDER BY s.started_at DESC NULLS LAST\n        LIMIT $6\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "plugin_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "model",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "ai_title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "started_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "total_input_tokens!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "total_output_tokens!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "governance_intervention_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
+        "name": "deny_count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "27de2c24a6415d5c030317e6448669af59bfafe26aca020208d4976b5a8578c9"
+}

@@ -153,41 +153,38 @@ pub async fn fetch_violation_counts(
     range: TimeRange,
     group_by: IdentityGroupBy,
 ) -> Result<Vec<(String, ViolationCounts)>, sqlx::Error> {
-    let identity_expr = match group_by {
-        IdentityGroupBy::User => "g.user_id",
-        IdentityGroupBy::Agent => "COALESCE(g.agent_id, '')",
-        IdentityGroupBy::AgentScope => "COALESCE(g.agent_scope, '')",
-    };
+    let group_key = group_by.as_str();
 
-    let sql = format!(
-        r"SELECT
-            {identity_expr} AS identity_id,
-            COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS deny_count,
+    let rows = sqlx::query_as!(
+        ViolationCountsRow,
+        r#"SELECT
+            (CASE $3
+                WHEN 'user' THEN g.user_id
+                WHEN 'agent' THEN COALESCE(g.agent_id, '')
+                ELSE COALESCE(g.agent_scope, '')
+            END) AS "identity_id!",
+            COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS "deny_count!",
             COUNT(*) FILTER (
                 WHERE g.decision = 'deny'
                   AND (g.policy = 'secret_scan' OR g.reason ILIKE '%secret%')
-            )::bigint AS secret_breach_count,
+            )::bigint AS "secret_breach_count!",
             COUNT(*) FILTER (
                 WHERE g.decision = 'deny'
                   AND (g.policy = 'scope_check' OR g.policy = 'scope')
-            )::bigint AS scope_violation_count,
-            COUNT(*)::bigint AS activity_volume
+            )::bigint AS "scope_violation_count!",
+            COUNT(*)::bigint AS "activity_volume!"
           FROM governance_decisions g
           WHERE g.created_at >= $1 AND g.created_at < $2
-          GROUP BY identity_id
+          GROUP BY 1
           HAVING COUNT(*) FILTER (WHERE g.decision = 'deny') > 0
-          ORDER BY deny_count DESC, activity_volume DESC
-          LIMIT 200",
-    );
-
-    // Why: {identity_expr} interpolates a column reference (g.user_id /
-    // g.agent_id / g.agent_scope) chosen from the IdentityGroupBy closed enum.
-    // PG does not allow column identifiers as parameters.
-    let rows = sqlx::query_as::<_, ViolationCountsRow>(&sql)
-        .bind(range.from)
-        .bind(range.to)
-        .fetch_all(pool)
-        .await?;
+          ORDER BY COUNT(*) FILTER (WHERE g.decision = 'deny') DESC, COUNT(*) DESC
+          LIMIT 200"#,
+        range.from,
+        range.to,
+        group_key,
+    )
+    .fetch_all(pool)
+    .await?;
 
     Ok(rows
         .into_iter()

@@ -1,0 +1,106 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            user_id AS \"user_id: UserId\",\n            archetype, archetype_description, archetype_confidence,\n            strengths, weaknesses,\n            ai_narrative, ai_style_analysis, ai_comparison,\n            ai_patterns, ai_improvements, ai_tips,\n            metrics_snapshot, period_days, generated_at\n          FROM user_profile_reports\n          WHERE user_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id: UserId",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "archetype",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "archetype_description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "archetype_confidence",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 4,
+        "name": "strengths",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 5,
+        "name": "weaknesses",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 6,
+        "name": "ai_narrative",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "ai_style_analysis",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "ai_comparison",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "ai_patterns",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "ai_improvements",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "ai_tips",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "metrics_snapshot",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 13,
+        "name": "period_days",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 14,
+        "name": "generated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "d479585f3b757b8d9836b9eda0dcdaea7bb65bc3f88c06488919a248eb111fae"
+}

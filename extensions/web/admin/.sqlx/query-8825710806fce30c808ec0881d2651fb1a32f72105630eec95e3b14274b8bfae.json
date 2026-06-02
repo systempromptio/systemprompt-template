@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COUNT(DISTINCT context_id)::bigint as \"conversations!\",\n                COUNT(*)::bigint as \"ai_requests!\"\n            FROM ai_requests\n            WHERE created_at >= $1 AND created_at < $2\n              AND user_id = $3\n              AND context_id IS NOT NULL\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "conversations!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "ai_requests!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "8825710806fce30c808ec0881d2651fb1a32f72105630eec95e3b14274b8bfae"
+}

@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COALESCE(SUM(CASE WHEN event_type = 'user_created' AND remote_created_at::date = $1 THEN 1 ELSE 0 END), 0)::BIGINT as \"signups_today!\",\n            COALESCE(SUM(CASE WHEN event_type = 'user_created' AND remote_created_at::date = $2 THEN 1 ELSE 0 END), 0)::BIGINT as \"signups_yesterday!\",\n            COALESCE(SUM(CASE WHEN event_type = 'user_created' THEN 1 ELSE 0 END), 0)::FLOAT8 / 30.0 as \"signups_30d_avg!\",\n            COALESCE(SUM(CASE WHEN event_type IN ('session_created', 'login') AND remote_created_at::date = $1 THEN 1 ELSE 0 END), 0)::BIGINT as \"logins_today!\",\n            COALESCE(SUM(CASE WHEN event_type IN ('session_created', 'login') AND remote_created_at::date = $2 THEN 1 ELSE 0 END), 0)::BIGINT as \"logins_yesterday!\",\n            COALESCE(SUM(CASE WHEN event_type IN ('session_created', 'login') THEN 1 ELSE 0 END), 0)::FLOAT8 / 30.0 as \"logins_30d_avg!\",\n            COUNT(DISTINCT CASE WHEN remote_created_at::date = $1 THEN user_id END)::BIGINT as \"unique_today!\",\n            COUNT(DISTINCT CASE WHEN remote_created_at::date = $2 THEN user_id END)::BIGINT as \"unique_yesterday!\"\n        FROM tenant_activity\n        WHERE remote_created_at >= NOW() - INTERVAL '31 days'\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "signups_today!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "signups_yesterday!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "signups_30d_avg!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "logins_today!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "logins_yesterday!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "logins_30d_avg!",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 6,
+        "name": "unique_today!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "unique_yesterday!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Date",
+        "Date"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "db0c37b4169a5e90c124bac757ea7f6be80f692f6ac02e3b4e40aac08b356f53"
+}

@@ -35,6 +35,19 @@ impl IdentitySort {
             Self::DisplayName => "name",
         }
     }
+
+    /// Bound text key naming the column the `ORDER BY` `CASE` ladder switches on.
+    const fn sql_key(self) -> &'static str {
+        match self {
+            Self::LastActive => "last_active",
+            Self::Sessions => "sessions",
+            Self::Contexts => "contexts",
+            Self::Tokens => "tokens",
+            Self::Denies => "denies",
+            Self::Cost => "cost",
+            Self::DisplayName => "display_name",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -58,26 +71,13 @@ impl SortDir {
             Self::Desc => "desc",
         }
     }
-}
 
-const fn order_clause(sort: IdentitySort, dir: SortDir) -> &'static str {
-    match (sort, dir) {
-        (IdentitySort::LastActive, SortDir::Asc) => "last_active ASC NULLS LAST",
-        (IdentitySort::LastActive, SortDir::Desc) => "last_active DESC NULLS LAST",
-        (IdentitySort::Sessions, SortDir::Asc) => "sessions ASC, last_active DESC NULLS LAST",
-        (IdentitySort::Sessions, SortDir::Desc) => "sessions DESC, last_active DESC NULLS LAST",
-        (IdentitySort::Contexts, SortDir::Asc) => "contexts ASC, last_active DESC NULLS LAST",
-        (IdentitySort::Contexts, SortDir::Desc) => "contexts DESC, last_active DESC NULLS LAST",
-        (IdentitySort::Tokens, SortDir::Asc) => "tokens ASC, last_active DESC NULLS LAST",
-        (IdentitySort::Tokens, SortDir::Desc) => "tokens DESC, last_active DESC NULLS LAST",
-        (IdentitySort::Denies, SortDir::Asc) => "denies ASC, last_active DESC NULLS LAST",
-        (IdentitySort::Denies, SortDir::Desc) => "denies DESC, last_active DESC NULLS LAST",
-        (IdentitySort::Cost, SortDir::Asc) => "cost_microdollars ASC, last_active DESC NULLS LAST",
-        (IdentitySort::Cost, SortDir::Desc) => {
-            "cost_microdollars DESC, last_active DESC NULLS LAST"
+    /// Bound text key naming the direction the `ORDER BY` `CASE` ladder uses.
+    const fn sql_key(self) -> &'static str {
+        match self {
+            Self::Asc => "asc",
+            Self::Desc => "desc",
         }
-        (IdentitySort::DisplayName, SortDir::Asc) => "display_name ASC NULLS LAST",
-        (IdentitySort::DisplayName, SortDir::Desc) => "display_name DESC NULLS LAST",
     }
 }
 
@@ -100,10 +100,12 @@ pub async fn fetch_user_identity_rows(
         .filter(|s| !s.is_empty())
         .map(|s| format!("%{}%", s.to_lowercase()));
 
-    let order = order_clause(sort, dir);
+    let sort_col = sort.sql_key();
+    let sort_dir = dir.sql_key();
 
-    let count_sql = r"
-        SELECT COUNT(*)::BIGINT
+    let total: i64 = sqlx::query_scalar!(
+        r#"
+        SELECT COUNT(*)::BIGINT AS "count!"
         FROM users u
         LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
         WHERE NOT ('anonymous' = ANY(u.roles))
@@ -112,31 +114,38 @@ pub async fn fetch_user_identity_rows(
                OR LOWER(COALESCE(u.display_name, u.full_name, u.name, '')) LIKE $1
                OR LOWER(COALESCE(u.email, '')) LIKE $1
                OR LOWER(COALESCE(upe.department, '')) LIKE $1)
-    ";
+        "#,
+        search_pattern.as_deref(),
+    )
+    .fetch_one(pool)
+    .await?;
 
-    let total: i64 = sqlx::query_scalar(count_sql)
-        .bind(search_pattern.as_deref())
-        .fetch_one(pool)
-        .await?;
-
-    let rows_sql = format!(
-        r"
+    // The sort is the closed `IdentitySort` × `SortDir`; each `(column, dir)`
+    // pair is bound as text ($4/$5) and selected by a per-key `CASE` in the
+    // `ORDER BY`. The trailing `last_active DESC NULLS LAST` tiebreaker is
+    // itself gated on the column key so it applies ONLY to the columns that
+    // had it in the original `order_clause` (sessions/contexts/tokens/denies/
+    // cost) and stays inert for `last_active`/`display_name`, reproducing the
+    // original ordering exactly.
+    let rows = sqlx::query_as!(
+        crate::types::UserIdentityRow,
+        r#"
         SELECT
-            u.id AS user_id,
-            COALESCE(u.display_name, u.full_name, u.name) AS display_name,
-            u.email AS email,
-            COALESCE(NULLIF(upe.department, ''), 'Unassigned') AS department,
-            (u.status = 'active') AS is_active,
-            ar.last_active AS last_active,
-            COALESCE(ar.requests, 0)::BIGINT AS requests,
-            COALESCE(ar.sessions, 0)::BIGINT AS sessions,
-            COALESCE(ar.contexts, 0)::BIGINT AS contexts,
-            COALESCE(ar.models, 0)::BIGINT AS models,
-            COALESCE(ar.tokens, 0)::BIGINT AS tokens,
-            COALESCE(ar.cost_microdollars, 0)::BIGINT AS cost_microdollars,
-            COALESCE(g.denies, 0)::BIGINT AS denies,
-            COALESCE(g.secret_breaches, 0)::BIGINT AS secret_breaches,
-            COALESCE(g.scope_violations, 0)::BIGINT AS scope_violations
+            u.id AS "user_id!",
+            COALESCE(u.display_name, u.full_name, u.name) AS "display_name?",
+            u.email AS "email?",
+            COALESCE(NULLIF(upe.department, ''), 'Unassigned') AS "department!",
+            (u.status = 'active') AS "is_active!",
+            ar.last_active AS "last_active?",
+            COALESCE(ar.requests, 0)::BIGINT AS "requests!",
+            COALESCE(ar.sessions, 0)::BIGINT AS "sessions!",
+            COALESCE(ar.contexts, 0)::BIGINT AS "contexts!",
+            COALESCE(ar.models, 0)::BIGINT AS "models!",
+            COALESCE(ar.tokens, 0)::BIGINT AS "tokens!",
+            COALESCE(ar.cost_microdollars, 0)::BIGINT AS "cost_microdollars!",
+            COALESCE(g.denies, 0)::BIGINT AS "denies!",
+            COALESCE(g.secret_breaches, 0)::BIGINT AS "secret_breaches!",
+            COALESCE(g.scope_violations, 0)::BIGINT AS "scope_violations!"
         FROM users u
         LEFT JOIN (
             SELECT
@@ -167,21 +176,32 @@ pub async fn fetch_user_identity_rows(
                OR LOWER(COALESCE(u.display_name, u.full_name, u.name, '')) LIKE $1
                OR LOWER(COALESCE(u.email, '')) LIKE $1
                OR LOWER(COALESCE(upe.department, '')) LIKE $1)
-        ORDER BY {order}
+        ORDER BY
+            (CASE WHEN $4 = 'last_active' AND $5 = 'asc'  THEN ar.last_active END) ASC  NULLS LAST,
+            (CASE WHEN $4 = 'last_active' AND $5 = 'desc' THEN ar.last_active END) DESC NULLS LAST,
+            (CASE WHEN $4 = 'sessions' AND $5 = 'asc'  THEN COALESCE(ar.sessions, 0) END) ASC  NULLS LAST,
+            (CASE WHEN $4 = 'sessions' AND $5 = 'desc' THEN COALESCE(ar.sessions, 0) END) DESC NULLS LAST,
+            (CASE WHEN $4 = 'contexts' AND $5 = 'asc'  THEN COALESCE(ar.contexts, 0) END) ASC  NULLS LAST,
+            (CASE WHEN $4 = 'contexts' AND $5 = 'desc' THEN COALESCE(ar.contexts, 0) END) DESC NULLS LAST,
+            (CASE WHEN $4 = 'tokens' AND $5 = 'asc'  THEN COALESCE(ar.tokens, 0) END) ASC  NULLS LAST,
+            (CASE WHEN $4 = 'tokens' AND $5 = 'desc' THEN COALESCE(ar.tokens, 0) END) DESC NULLS LAST,
+            (CASE WHEN $4 = 'denies' AND $5 = 'asc'  THEN COALESCE(g.denies, 0) END) ASC  NULLS LAST,
+            (CASE WHEN $4 = 'denies' AND $5 = 'desc' THEN COALESCE(g.denies, 0) END) DESC NULLS LAST,
+            (CASE WHEN $4 = 'cost' AND $5 = 'asc'  THEN COALESCE(ar.cost_microdollars, 0) END) ASC  NULLS LAST,
+            (CASE WHEN $4 = 'cost' AND $5 = 'desc' THEN COALESCE(ar.cost_microdollars, 0) END) DESC NULLS LAST,
+            (CASE WHEN $4 = 'display_name' AND $5 = 'asc'  THEN COALESCE(u.display_name, u.full_name, u.name) END) ASC  NULLS LAST,
+            (CASE WHEN $4 = 'display_name' AND $5 = 'desc' THEN COALESCE(u.display_name, u.full_name, u.name) END) DESC NULLS LAST,
+            (CASE WHEN $4 IN ('sessions','contexts','tokens','denies','cost') THEN ar.last_active END) DESC NULLS LAST
         LIMIT $2 OFFSET $3
-        ",
-    );
-
-    // Why: 14 sort columns × 2 directions × 2 queries (count + rows) = 56
-    // query_as! variants if we expanded to a closed-enum match. The {order}
-    // value is built from a hard-coded match on UserSort and is never user
-    // input; keeping the runtime-string form is safer than the explosion.
-    let rows = sqlx::query_as::<_, crate::types::UserIdentityRow>(&rows_sql)
-        .bind(search_pattern.as_deref())
-        .bind(limit)
-        .bind(offset)
-        .fetch_all(pool)
-        .await?;
+        "#,
+        search_pattern.as_deref(),
+        limit,
+        offset,
+        sort_col,
+        sort_dir,
+    )
+    .fetch_all(pool)
+    .await?;
 
     Ok((rows, total))
 }

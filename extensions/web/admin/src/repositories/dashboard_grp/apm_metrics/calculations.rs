@@ -109,7 +109,7 @@ fn sweep_line_concurrency(
     for (time, delta) in &events {
         if let Some(prev) = prev_time {
             let dt = numeric::seconds_to_f64((*time - prev).num_seconds());
-            weighted_sum += f64::from(current) * dt;
+            weighted_sum = f64::from(current).mul_add(dt, weighted_sum);
         }
         current += delta;
         peak = peak.max(current);
@@ -198,15 +198,15 @@ pub async fn calculate_multitasking_score(
     peak_concurrency: i32,
     session_count: i32,
 ) -> f32 {
-    let subagent_spawns: i64 = sqlx::query_scalar::<_, i64>(
-        r"SELECT COALESCE(SUM(subagent_spawns), 0)::bigint
+    let subagent_spawns: i64 = sqlx::query_scalar!(
+        r#"SELECT COALESCE(SUM(subagent_spawns), 0)::bigint AS "spawns!"
           FROM plugin_session_summaries
           WHERE user_id = $1
             AND started_at::date = $2
-            AND COALESCE(status, 'active') != 'deleted'",
+            AND COALESCE(status, 'active') != 'deleted'"#,
+        user_id,
+        date,
     )
-    .bind(user_id)
-    .bind(date)
     .fetch_one(pool)
     .await
     .unwrap_or(0);

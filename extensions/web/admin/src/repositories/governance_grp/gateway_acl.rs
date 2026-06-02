@@ -9,7 +9,7 @@
 //! new entity types (`mcp_server`, etc.).
 //!
 //! Note: `default_included` lives on `access_control_entities` post-migration
-//! 007, fetched via [`get_entity`] / [`upsert_entity`].
+//! 007, fetched via `get_entity` / `upsert_entity`.
 
 use std::collections::HashMap;
 use std::sync::Arc;

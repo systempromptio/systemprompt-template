@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n              u.id AS \"id!\",\n              u.email AS \"email!\",\n              COALESCE(u.display_name, u.full_name, u.name) AS \"display_name?\",\n              u.roles AS \"roles!\",\n              COALESCE(upe.department, '') AS \"department!\",\n              (u.status = 'active') AS \"is_active!\"\n           FROM users u\n           LEFT JOIN user_profile_ext upe ON upe.user_id = u.id\n           WHERE NOT ('anonymous' = ANY(u.roles))\n             AND u.email NOT LIKE '%@anonymous.local'\n           ORDER BY COALESCE(upe.department, ''), COALESCE(u.display_name, u.email)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "email!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "roles!",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 4,
+        "name": "department!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_active!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "5e179568aee6a410c9b96b415adab31da11eba86e00934bc86a8b01bd8d3f279"
+}

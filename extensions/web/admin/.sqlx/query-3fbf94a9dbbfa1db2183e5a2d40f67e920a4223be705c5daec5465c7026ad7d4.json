@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT c.id as \"id: _\", c.slug as \"slug!\", c.title as \"title!\",\n                   c.description as \"description!\", c.image,\n                   c.source_id as \"source_id: _\", c.category_id as \"category_id: _\",\n                   COALESCE(m.total_views, 0) as \"view_count!\"\n            FROM markdown_content c\n            LEFT JOIN content_performance_metrics m ON c.id = m.content_id\n            WHERE c.category_id = $1\n            ORDER BY m.total_views DESC NULLS LAST\n            LIMIT $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "slug!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "title!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "image",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "source_id: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "category_id: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "view_count!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      null
+    ]
+  },
+  "hash": "3fbf94a9dbbfa1db2183e5a2d40f67e920a4223be705c5daec5465c7026ad7d4"
+}
