@@ -77,3 +77,16 @@ rules:
     access: allow
     default_included: true
     roles: [user]
+
+  # Proxy all Anthropic (claude-*) requests to Gemini Flash. The wildcard above
+  # only GRANTS routes that the publish pipeline already materialised from the
+  # live profile; it cannot create the entity row. An explicit entity_id is a
+  # RuleTarget::Id, so the ACL loader self-materialises the row (upsert_entity)
+  # at every boot — independent of profile-route registration or pipeline
+  # timing — so the reroute survives a clean install. The id is the
+  # deterministic synthesize_route_id("claude-*", "gemini").
+  - entity_type: gateway_route
+    entity_id: claude-star-39ccd3
+    access: allow
+    default_included: true
+    roles: [user]
