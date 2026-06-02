@@ -3,10 +3,9 @@ use axum::{
     http::{HeaderMap, StatusCode},
     response::Response,
 };
-use systemprompt::identifiers::{SessionId, UserId};
-use systemprompt::models::auth::JwtAudience;
+use systemprompt::identifiers::UserId;
 use systemprompt::models::Config;
-use systemprompt::oauth::validate_jwt_token;
+use systemprompt_security::HookTokenValidator;
 
 pub fn extract_and_validate_jwt(
     headers: &HeaderMap,
@@ -31,27 +30,25 @@ pub fn extract_and_validate_jwt(
         })?
         .jwt_issuer
         .clone();
-    let claims = validate_jwt_token(
-        token,
-        &jwt_issuer,
-        &[
-            JwtAudience::Resource("plugin".to_string()),
-            JwtAudience::Api,
-        ],
-    )
-    .map_err(|e| {
-        tracing::warn!(error = %e, "Hook tracking JWT validation failed");
-        Box::new(shared::error_response(
-            StatusCode::UNAUTHORIZED,
-            "Invalid or expired token",
-        ))
-    })?;
-    let plugin_id = claims
-        .session_id
-        .as_ref()
-        .map(SessionId::as_str)
-        .and_then(|s| s.strip_prefix("plugin_"))
-        .unwrap_or("")
-        .to_string();
-    Ok((UserId::new(claims.sub), plugin_id, token.to_string()))
+    // Validate with the canonical hook-token validator (same path the gateway's
+    // `/hooks/govern` endpoint uses): `aud` must contain `hook`, the `hook:track`
+    // scope must be present, and the `plugin_id` claim must be set. Hook tokens
+    // are minted with `audience=hook` + `scope=hook:govern hook:track`; the prior
+    // hand-rolled check accepted `api`/`plugin` instead and rejected every real
+    // hook token with InvalidAudience. `None` skips the request-vs-claim plugin_id
+    // cross-check because this endpoint takes no plugin_id path/query binding.
+    let claims = HookTokenValidator::new(jwt_issuer)
+        .validate_track(token, None)
+        .map_err(|e| {
+            tracing::warn!(error = %e, "Hook tracking JWT validation failed");
+            Box::new(shared::error_response(
+                StatusCode::UNAUTHORIZED,
+                "Invalid or expired token",
+            ))
+        })?;
+    Ok((
+        claims.subject,
+        claims.plugin_id.as_str().to_string(),
+        token.to_string(),
+    ))
 }
