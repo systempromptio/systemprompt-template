@@ -43,3 +43,15 @@ scheduler:
       owner: admin
       schedule: "0 */15 * * * *"
       enabled: true
+
+  # Run once, serially, at startup before the cron loop begins.
+  #
+  # governance_bootstrap is boot-only: it has no `jobs` entry (so it is never
+  # cron-scheduled) and declares an empty schedule. Its owner defaults to the
+  # system admin. It materialises the profile's gateway-route entities and
+  # projects services/access-control + gateway-policy YAML into the authz tables
+  # so authorization is correct at app start.
+  bootstrap_jobs:
+    - governance_bootstrap
+    - database_cleanup
+    - cleanup_inactive_sessions

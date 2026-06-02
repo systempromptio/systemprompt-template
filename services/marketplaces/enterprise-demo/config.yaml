@@ -31,6 +31,11 @@ marketplace:
     include:
       - use_dangerous_secret
       - example_web_search
+      - systemprompt_cli
+      - view_governance_logs
+      - trace_gateway_messages
+      - manage_services
+      - inspect_mcp_and_skills
   mcp_servers:
     source: explicit
     include:

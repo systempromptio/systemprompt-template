@@ -1,0 +1,12 @@
+id: inspect_mcp_and_skills
+name: Inspect MCP and Skills
+description: "List and call MCP tools through the admin systemprompt MCP server, check server health, and sync the skills catalogue via the CLI"
+enabled: true
+file: SKILL.md
+tags:
+  - cli
+  - mcp
+  - skills
+  - admin
+  - systemprompt
+category: mcp

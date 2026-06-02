@@ -1,0 +1,12 @@
+id: manage_services
+name: Manage Services
+description: "Start, inspect, and troubleshoot the running stack - services, database, and scheduled jobs - via the systemprompt CLI"
+enabled: true
+file: SKILL.md
+tags:
+  - cli
+  - operations
+  - services
+  - database
+  - admin
+category: operations

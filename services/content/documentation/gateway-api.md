@@ -49,13 +49,16 @@ The `x-session-id` header is **mandatory**. A request without it is rejected wit
 
 ## Model allow-listing
 
-The profile's gateway catalog (`gateway.catalog.path`, e.g.
-`.systemprompt/profiles/local/catalog.yaml`, or inline under `gateway.catalog:`)
-declares the models this deployment exposes. A request whose `model` is not in the catalog is denied with `403` before
-any upstream call — this is the egress control an air-gapped deployment relies on.
+The profile's provider registry (`profile.providers`, e.g. in
+`.systemprompt/profiles/local/profile.yaml`) declares every provider and the
+models it serves; those model ids are the deployment's allow-list. A request
+whose `model` is neither declared in the registry nor matched by a gateway route
+(or absorbed by `gateway.default_provider`) is denied with `403` before any
+upstream call — this is the egress control an air-gapped deployment relies on.
 
 Both the dispatch gate (`GatewayConfig::is_model_exposed`) and the `/profile`
-model list derive from the catalog, so adding a model means editing one file.
+model list derive from the registry, so adding a model means editing the
+`providers` block.
 
 Gateway-route RBAC additionally keys on the route `id`. If the caller's role or
 department is not assigned to the route (and the route is not `default_included`), the

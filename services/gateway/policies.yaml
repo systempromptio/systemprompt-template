@@ -1,12 +1,21 @@
 # Gateway policy baseline. Ingested into `ai_gateway_policies` at boot by
-# run_gateway_policy_load. Carries per-call ceilings, quota_windows, and
-# safety config. Model exposure lives in the profile's gateway catalog
-# (.systemprompt/profiles/<name>/catalog.yaml), not here.
+# run_gateway_policy_load. Carries quota_windows and safety config. Model
+# exposure lives in the profile's provider registry (profile.providers in
+# .systemprompt/profiles/<name>/profile.yaml), not here.
 #
 # Spec fields (systemprompt_ai::GatewayPolicySpec):
-#   max_input_tokens_per_call, max_tool_depth, quota_windows, safety
+#   quota_windows, safety { scanners, block_categories }
+#
+# safety.scanners names resolve against the gateway's SafetyScannerRegistry:
+# the built-in `heuristic` scanner plus any extension-registered scanner. The
+# admin extension registers `secrets` (extensions/web/admin/src/gateway_safety.rs).
+# A request whose content yields a finding in `block_categories` is denied with
+# 403 before the upstream call, with an `ai_safety_findings` audit row.
 
 policies:
   - name: default-quotas
     enabled: true
-    spec: {}
+    spec:
+      safety:
+        scanners: [heuristic, secrets]
+        block_categories: [secret]
