@@ -71,18 +71,22 @@ pub async fn govern_tool_use(
         headers: &headers,
     };
 
-    let user_id = match authenticate_request(&headers, &denial_params) {
-        Ok(uid) => uid,
+    let principal = match authenticate_request(&headers, &denial_params) {
+        Ok(p) => p,
         Err(resp) => return *resp,
     };
+    let user_id = principal.user_id;
 
-    let agent_scope = agent_id.map_or(AccessScope::Unknown, scope::resolve_agent_scope);
+    let access_scope = match agent_id {
+        Some(id) => scope::higher_privilege(principal.access_scope, scope::resolve_agent_scope(id)),
+        None => principal.access_scope,
+    };
 
     let (decision, chain) = evaluate(&EvaluateInput {
         tool_name,
         session_id: &session_id,
         user_id: &user_id,
-        agent_scope,
+        access_scope,
         tool_input: payload.tool_input(),
     });
 
@@ -92,7 +96,7 @@ pub async fn govern_tool_use(
             user_id,
             session_id: session_id.clone(),
             agent_id: agent_id.map(str::to_string),
-            agent_scope,
+            agent_scope: access_scope,
         },
         target: AuditTarget {
             tool_name: tool_name.to_string(),

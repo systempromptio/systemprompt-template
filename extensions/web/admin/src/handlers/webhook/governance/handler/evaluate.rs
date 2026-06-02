@@ -16,7 +16,7 @@ pub(super) struct EvaluateInput<'a> {
     pub(super) tool_name: &'a str,
     pub(super) session_id: &'a SessionId,
     pub(super) user_id: &'a UserId,
-    pub(super) agent_scope: AccessScope,
+    pub(super) access_scope: AccessScope,
     pub(super) tool_input: Option<&'a serde_json::Value>,
 }
 
@@ -33,7 +33,7 @@ pub(super) fn evaluate(input: &EvaluateInput<'_>) -> (Decision, Vec<ChainEntryOu
         agent_scope: AgentScope::User {
             user_id: input.user_id.clone(),
         },
-        access_scope: input.agent_scope,
+        access_scope: input.access_scope,
         session_id: input.session_id,
         user_id: input.user_id,
         tool_input: &tool_input,

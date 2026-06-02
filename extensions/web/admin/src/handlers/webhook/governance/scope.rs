@@ -3,11 +3,30 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use systemprompt::config::ProfileBootstrap;
+use systemprompt::models::auth::Permission;
 use systemprompt_security::policy::types::AccessScope;
 
 pub fn resolve_agent_scope(agent_id: &str) -> AccessScope {
     let map = load_all_agent_scopes();
     map.get(agent_id).copied().unwrap_or(AccessScope::Unknown)
+}
+
+pub fn scope_from_permissions(perms: &[Permission]) -> AccessScope {
+    if perms.contains(&Permission::Admin) {
+        AccessScope::Admin
+    } else if perms.contains(&Permission::User) {
+        AccessScope::User
+    } else {
+        AccessScope::Unknown
+    }
+}
+
+pub const fn higher_privilege(a: AccessScope, b: AccessScope) -> AccessScope {
+    match (a, b) {
+        (AccessScope::Admin, _) | (_, AccessScope::Admin) => AccessScope::Admin,
+        (AccessScope::User, _) | (_, AccessScope::User) => AccessScope::User,
+        _ => AccessScope::Unknown,
+    }
 }
 
 fn load_all_agent_scopes() -> HashMap<String, AccessScope> {

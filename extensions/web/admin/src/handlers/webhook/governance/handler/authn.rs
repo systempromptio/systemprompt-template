@@ -8,11 +8,18 @@ use systemprompt::identifiers::UserId;
 use systemprompt::models::auth::JwtAudience;
 use systemprompt::oauth::OauthError;
 use systemprompt_security::authz::{Decision, DenyReason};
+use systemprompt_security::policy::types::AccessScope;
 
 use crate::handlers::webhook::helpers::{extract_bearer_token, get_jwt_issuer};
 
+use super::super::scope::scope_from_permissions;
 use super::super::types::AuthDenialParams;
 use super::{build_response, spawn_auth_denial};
+
+pub(super) struct Principal {
+    pub user_id: UserId,
+    pub access_scope: AccessScope,
+}
 
 pub(super) fn deny_for_auth_failure(reason: &str) -> Decision {
     Decision::Deny {
@@ -25,7 +32,7 @@ pub(super) fn deny_for_auth_failure(reason: &str) -> Decision {
 pub(super) fn authenticate_request(
     headers: &HeaderMap,
     denial_params: &AuthDenialParams<'_>,
-) -> Result<UserId, Box<Response>> {
+) -> Result<Principal, Box<Response>> {
     let Some(token) = extract_bearer_token(headers) else {
         let reason = "Missing Authorization header — tool call blocked";
         spawn_auth_denial(denial_params, reason);
@@ -59,7 +66,15 @@ pub(super) fn authenticate_request(
         Box::new(build_response(&deny_for_auth_failure(reason)))
     })?;
 
-    Ok(UserId::new(&claims.sub))
+    let mut access_scope = scope_from_permissions(claims.permissions());
+    if access_scope != AccessScope::Admin && claims.roles.iter().any(|r| r == "admin") {
+        access_scope = AccessScope::Admin;
+    }
+
+    Ok(Principal {
+        user_id: UserId::new(&claims.sub),
+        access_scope,
+    })
 }
 
 fn log_jwt_failure(err: &OauthError, expected_aud: &str, issuer: &str) {
