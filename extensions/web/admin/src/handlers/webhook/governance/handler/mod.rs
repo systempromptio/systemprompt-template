@@ -10,14 +10,14 @@ use axum::{
     extract::{Query, State},
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
-    Json,
+    Extension, Json,
 };
 use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
+use systemprompt::oauth::SessionCreationService;
 use systemprompt_security::authz::Decision;
 use systemprompt_security::policy::types::AccessScope;
 
-use crate::repositories::ensure_anonymous_principal;
 use crate::types::webhook::GovernQuery;
 use crate::types::webhook::HookEventPayload;
 
@@ -49,6 +49,7 @@ fn build_response(decision: &Decision) -> Response {
 
 pub async fn govern_tool_use(
     State(pool): State<Arc<PgPool>>,
+    Extension(session_service): Extension<Arc<SessionCreationService>>,
     headers: HeaderMap,
     Query(query): Query<GovernQuery>,
     Json(raw): Json<serde_json::Value>,
@@ -66,6 +67,8 @@ pub async fn govern_tool_use(
         tool_name,
         agent_id,
         plugin_id,
+        session_service: &session_service,
+        headers: &headers,
     };
 
     let user_id = match authenticate_request(&headers, &denial_params) {
@@ -109,14 +112,15 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
     let tool_name = params.tool_name.to_string();
     let agent_id = params.agent_id.map(str::to_string);
     let plugin_id = params.plugin_id.map(str::to_string);
+    let session_service = Arc::clone(params.session_service);
+    let headers = params.headers.clone();
 
     tokio::spawn(async move {
-        // Authentication failed before any real user was resolved. Core removed
-        // the fabricated `UserId::anonymous()` sentinel: every UserId must be a
-        // real `users` row, so resolve the standing anonymous principal to carry
-        // the audit's foreign key.
-        let user_id = match ensure_anonymous_principal(&pool).await {
-            Ok(uid) => uid,
+        // Authentication failed before any real user was resolved. Every UserId
+        // must be a real `users` row, so provision the anonymous principal for
+        // this fingerprint (idempotent upsert) to carry the audit's foreign key.
+        let user_id = match session_service.ensure_anonymous_user(&headers, None).await {
+            Ok((uid, _fingerprint)) => uid,
             Err(e) => {
                 tracing::error!(
                     target: "governance.audit.write_failed",

@@ -50,7 +50,10 @@ pub mod test_support {
     pub use crate::handlers::resolve_principal;
 }
 
-pub fn hooks_webhook_router(pool: Arc<PgPool>) -> Router {
+pub fn hooks_webhook_router(
+    pool: Arc<PgPool>,
+    session_service: Arc<systemprompt::oauth::SessionCreationService>,
+) -> Router {
     Router::new()
         .route(
             "/hooks/track",
@@ -62,6 +65,7 @@ pub fn hooks_webhook_router(pool: Arc<PgPool>) -> Router {
         .route("/hooks/transcript", post(handlers::track_transcript_event))
         .layer(Extension(event_hub::EventHub::default()))
         .layer(Extension(None::<Arc<systemprompt::ai::AiService>>))
+        .layer(Extension(session_service))
         .with_state(pool)
 }
 

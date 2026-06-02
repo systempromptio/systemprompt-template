@@ -3,34 +3,6 @@ use systemprompt::identifiers::UserId;
 
 use crate::types::{CreateUserRequest, UpdateUserRequest, UserSummary};
 
-/// Resolves the standing anonymous principal row used to attribute governance
-/// audits for requests that fail authentication before any real user is known.
-///
-/// Core removed the `UserId::anonymous()` sentinel: every `UserId` must be a
-/// real `users` row. This idempotently provisions one dedicated row and returns
-/// its id, so a pre-auth denial still records a valid foreign key without
-/// fabricating a sentinel.
-pub async fn ensure_anonymous_principal(pool: &PgPool) -> Result<UserId, sqlx::Error> {
-    let id = sqlx::query_scalar!(
-        r#"
-        INSERT INTO users (id, name, email, display_name, roles, status)
-        VALUES (
-            'anonymous-governance',
-            'anonymous_governance',
-            'governance@anonymous.local',
-            'Anonymous (governance)',
-            ARRAY['anonymous'],
-            'active'
-        )
-        ON CONFLICT (id) DO UPDATE SET updated_at = NOW()
-        RETURNING id
-        "#,
-    )
-    .fetch_one(pool)
-    .await?;
-    Ok(UserId::new(id))
-}
-
 pub async fn create_user(
     pool: &PgPool,
     req: &CreateUserRequest,

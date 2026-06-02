@@ -2,9 +2,12 @@ use std::sync::Arc;
 
 use axum::Router;
 
+use systemprompt::analytics::AnalyticsService;
 use systemprompt::database::Database;
 use systemprompt::extension::prelude::*;
+use systemprompt::oauth::SessionCreationService;
 use systemprompt::traits::Job;
+use systemprompt::users::UserService;
 
 use crate::blog::{BlogListPageDataProvider, BlogPostPageDataProvider};
 use crate::config_loader;
@@ -135,8 +138,15 @@ impl Extension for WebExtension {
             Arc::clone(&pool)
         });
 
+        let dbpool = Arc::new(Database::from_pools(
+            Arc::clone(&pool),
+            Some(Arc::clone(&write_pool)),
+        ));
+        let session_service = Self::build_session_service(&dbpool)?;
+
         let admin_api = admin::admin_router(Arc::clone(&pool));
-        let webhook_api = admin::hooks_webhook_router(Arc::clone(&write_pool));
+        let webhook_api =
+            admin::hooks_webhook_router(Arc::clone(&write_pool), Arc::clone(&session_service));
         let secrets_api = admin::secrets_router(Arc::clone(&write_pool));
         let bridge_api = admin::bridge_router(Arc::clone(&pool));
         let share_api = admin::share_manifest_router(Arc::clone(&pool));
@@ -226,5 +236,20 @@ impl Extension for WebExtension {
 
     fn required_assets(&self, paths: &dyn AssetPaths) -> Vec<AssetDefinition> {
         web_assets(paths)
+    }
+}
+
+impl WebExtension {
+    fn build_session_service(dbpool: &Arc<Database>) -> Option<Arc<SessionCreationService>> {
+        let user = UserService::new(dbpool)
+            .map_err(|e| tracing::error!(error = %e, "Failed to build user service"))
+            .ok()?;
+        let analytics = AnalyticsService::new(dbpool, None, None)
+            .map_err(|e| tracing::error!(error = %e, "Failed to build analytics service"))
+            .ok()?;
+        Some(Arc::new(SessionCreationService::new(
+            Arc::new(analytics),
+            Arc::new(user),
+        )))
     }
 }

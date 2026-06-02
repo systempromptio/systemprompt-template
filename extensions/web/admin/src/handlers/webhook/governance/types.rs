@@ -6,11 +6,13 @@
 //! through [`ChainEntryOutcome`]; the previous `serde_json::json!` blobs are
 //! gone.
 
+use axum::http::HeaderMap;
 use serde::Serialize;
 use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::{PolicyId, SessionId, UserId};
+use systemprompt::oauth::SessionCreationService;
 use systemprompt_security::authz::{Decision, DecisionTag};
 use systemprompt_security::policy::types::AccessScope;
 
@@ -110,4 +112,6 @@ pub(super) struct AuthDenialParams<'a> {
     pub tool_name: &'a str,
     pub agent_id: Option<&'a str>,
     pub plugin_id: Option<&'a str>,
+    pub session_service: &'a Arc<SessionCreationService>,
+    pub headers: &'a HeaderMap,
 }

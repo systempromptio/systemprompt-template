@@ -52,8 +52,8 @@ pub use user_queries::{
     fetch_department_stats, fetch_user_identity_rows, IdentitySort, SortDir as IdentitySortDir,
 };
 pub use users::{
-    create_user, delete_user, delete_user_complete, ensure_anonymous_principal,
-    fetch_distinct_roles, fetch_user_ranks, fetch_user_roles, find_user_detail,
+    create_user, delete_user, delete_user_complete, fetch_distinct_roles, fetch_user_ranks,
+    fetch_user_roles, find_user_detail,
     get_user_event_type_counts, get_user_roles_department, get_user_runtime_detail,
     get_user_sessions, get_user_top_tools, get_user_usage, list_user_events,
     list_user_runtime_aggregates, list_users, update_user, UserRank, UserRuntimeAggregate,
