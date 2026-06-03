@@ -6,27 +6,17 @@ marketplace:
   visibility: public
   author:
     name: systemprompt.io
-    email: support@systemprompt.io
+    email: ed@systemprompt.io
   keywords:
     - governance
     - demo
     - enterprise
   license: proprietary
   category: governance
-
   access:
     default_included: true
     roles: [user]
     justification: "Public enterprise governance evaluation demo"
-
-  # This YAML is the authoritative catalogue for the enterprise-demo
-  # marketplace. All ids must resolve to top-level resources defined under
-  # services/ (auto-discovered from nested dirs). The loader (in core)
-  # validates referential integrity at startup; the bridge manifest endpoint
-  # scopes its response to these include lists before RBAC/ABAC filtering, then
-  # packs the result into the synthetic `systemprompt-managed` plugin. The
-  # PreToolUse/PostToolUse governance hooks are top-level resources under
-  # services/hooks/{govern,track}/ and flow into the manifest globally.
   skills:
     include:
       - use_dangerous_secret
