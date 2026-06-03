@@ -18,7 +18,7 @@ use super::{build_response, spawn_auth_denial};
 
 pub(super) struct Principal {
     pub user_id: UserId,
-    pub access_scope: AccessScope,
+    pub token_scope: AccessScope,
 }
 
 pub(super) fn deny_for_auth_failure(reason: &str) -> Decision {
@@ -66,14 +66,9 @@ pub(super) fn authenticate_request(
         Box::new(build_response(&deny_for_auth_failure(reason)))
     })?;
 
-    let mut access_scope = scope_from_permissions(claims.permissions());
-    if access_scope != AccessScope::Admin && claims.roles.iter().any(|r| r == "admin") {
-        access_scope = AccessScope::Admin;
-    }
-
     Ok(Principal {
         user_id: UserId::new(&claims.sub),
-        access_scope,
+        token_scope: scope_from_permissions(claims.permissions()),
     })
 }
 

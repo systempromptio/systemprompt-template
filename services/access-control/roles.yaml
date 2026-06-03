@@ -70,7 +70,7 @@ rules:
     entity_match: "*"
     access: allow
     default_included: true
-    roles: [user]
+    roles: [user, admin]
 
   # Proxy all Anthropic (claude-*) requests to Gemini Flash. The wildcard above
   # only GRANTS routes that the publish pipeline already materialised from the

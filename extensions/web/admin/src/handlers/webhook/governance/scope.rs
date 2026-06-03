@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use sqlx::PgPool;
 use systemprompt::config::ProfileBootstrap;
 use systemprompt::models::auth::Permission;
 use systemprompt_security::policy::types::AccessScope;
@@ -9,6 +10,29 @@ use systemprompt_security::policy::types::AccessScope;
 pub fn resolve_agent_scope(agent_id: &str) -> AccessScope {
     let map = load_all_agent_scopes();
     map.get(agent_id).copied().unwrap_or(AccessScope::Unknown)
+}
+
+pub async fn scope_from_user_roles(pool: &PgPool, user_id: &str) -> AccessScope {
+    match crate::repositories::get_user_roles_department(pool, user_id).await {
+        Ok(Some((roles, _dept))) => {
+            if roles.iter().any(|r| r == "admin") {
+                AccessScope::Admin
+            } else if roles.iter().any(|r| r == "user") {
+                AccessScope::User
+            } else {
+                AccessScope::Unknown
+            }
+        }
+        Ok(None) => AccessScope::Unknown,
+        Err(e) => {
+            tracing::warn!(
+                error = %e,
+                %user_id,
+                "governance: user role lookup failed; no DB-derived scope"
+            );
+            AccessScope::Unknown
+        }
+    }
 }
 
 pub fn scope_from_permissions(perms: &[Permission]) -> AccessScope {

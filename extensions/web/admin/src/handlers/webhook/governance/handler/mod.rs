@@ -77,10 +77,11 @@ pub async fn govern_tool_use(
     };
     let user_id = principal.user_id;
 
-    let access_scope = match agent_id {
-        Some(id) => scope::higher_privilege(principal.access_scope, scope::resolve_agent_scope(id)),
-        None => principal.access_scope,
-    };
+    let db_scope = scope::scope_from_user_roles(&pool, user_id.as_str()).await;
+    let principal_scope = scope::higher_privilege(principal.token_scope, db_scope);
+    let access_scope = agent_id.map_or(principal_scope, |id| {
+        scope::higher_privilege(principal_scope, scope::resolve_agent_scope(id))
+    });
 
     let (decision, chain) = evaluate(&EvaluateInput {
         tool_name,
