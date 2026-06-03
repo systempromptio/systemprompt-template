@@ -22,6 +22,20 @@ session_id  ->  context_id  ->  task_id  ->  trace_id  ->  request_id
 No single command returns all of it; compose the steps. Where there is no dedicated command for a link, use
 `infra db query` (read-only SQL).
 
+### Two anchors: pick the right starting id
+
+The conversation type determines which id anchors the reconstruction:
+
+- **Gateway-client conversations** (Claude Desktop, Cowork, any Anthropic-SDK client hitting `/v1/messages`)
+  are keyed on `session_id`. Start from `session_id` and walk to `ai_requests` directly (the path in steps
+  3-5 below).
+- **A2A / internal agent runs** (an agent driven via `admin agents message … --context-id`) do **not** share
+  the gateway `session_id`. They are grouped by `context_id`, and the `agent_tasks` table is the bridge:
+  `context_id` -> `agent_tasks` (one row per turn) -> `trace_id` / `request_id`. Use the `context_id` path in
+  step 6 below to reconstruct these.
+
+Both are first-class; reach for `session_id` for gateway clients and `context_id` for agent runs.
+
 ## How to Use
 
 ### 1. Find the live conversation
@@ -67,6 +81,33 @@ systemprompt infra logs trace show <trace_id> --all
 systemprompt infra db query "SELECT decision, tool_name, policy, reason, created_at FROM governance_decisions WHERE session_id = '<session_id>' ORDER BY created_at DESC"
 systemprompt analytics costs summary --since 24h      # spend over the window
 ```
+
+### 6. Reconstruct an A2A agent run via `context_id`
+
+Internal agent runs are not gateway sessions, so steps 3-5's `session_id` lookups return nothing for them.
+Anchor on `context_id` instead and use `agent_tasks` as the bridge — one row per turn, carrying `task_id`,
+`session_id`, `trace_id`, `agent_name`, `user_id`, and the `started_at`/`completed_at` window:
+
+```bash
+# the agent's turns for this conversation:
+systemprompt infra db query "SELECT task_id, agent_name, user_id, session_id, trace_id, started_at, completed_at FROM agent_tasks WHERE context_id = '<context_id>' ORDER BY started_at"
+
+# per turn, reconstruct execution and requests:
+systemprompt infra logs trace show <trace_id> --all
+systemprompt infra logs audit <request_id> --full
+```
+
+The agent's own tool calls are governed under a **separate MCP session**, so `governance_decisions` rows for
+the run are not keyed by the conversation `session_id`. Join them by `user_id` within the turn's time window:
+
+```bash
+systemprompt infra db query "SELECT decision, tool_name, policy, reason, created_at FROM governance_decisions WHERE user_id = '<user_id>' AND created_at BETWEEN '<started_at>' AND '<completed_at>' ORDER BY created_at"
+```
+
+> Residual nit (not blocking): `governance_decisions` carries no `context_id`/`task_id` column, so the
+> agent-tool join is `user_id` + time window rather than a direct key. Adding `context_id`/`task_id` to
+> `governance_decisions` would make this an exact join — a possible small core enhancement, logged but not
+> done here.
 
 ### Typical workflow
 

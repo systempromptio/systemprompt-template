@@ -1,24 +1,39 @@
 #!/bin/bash
 # DEMO 5: GOVERNANCE DENIED PATH
-# Shows the backend rejecting tool calls for a user-scope agent
+# Shows the backend rejecting tool calls for a genuinely user-scope caller, and
+# asserts the real decision rather than narrating one.
+#
+# Identity model (the honest part):
+#   Governance derives access scope from the CALLER'S LIVE DB ROLES. This script
+#   sends every deny request with the user-scope plugin token from
+#   demo/.token.user (minted by 00-preflight.sh for demo_user@demo.local, DB role
+#   `user`). That token resolves to User scope, so scope_check and tool_blocklist
+#   genuinely deny. The admin demo/.token would be ALLOWED by both policies
+#   (admins are exempt) — which is exactly why the deny demo uses this token.
 #
 # What this does:
 #   Part 1 — Scope restriction denial:
-#     1. Gets auth token from demo/.token (set by 00-preflight.sh)
+#     1. Loads the user-scope token from demo/.token.user (set by 00-preflight.sh)
 #     2. POSTs directly to /api/public/hooks/govern with:
 #        - tool_name: mcp__systemprompt__list_agents (admin-only MCP tool)
 #        - agent_id: associate_agent (user scope)
-#     3. Shows raw JSON response: permissionDecision: "deny"
+#     3. Captures the JSON response and asserts permissionDecision == deny
 #        - scope_check rule fails: user scope cannot access mcp__systemprompt__* tools
 #
 #   Part 2 — Blocklist denial:
 #     1. POSTs directly to /api/public/hooks/govern with:
-#        - tool_name: mcp__systemprompt__delete_agent (destructive MCP tool)
+#        - tool_name: delete_records (destructive name, NOT admin-prefixed)
 #        - agent_id: associate_agent (user scope)
-#        - tool_input: {"agent_id":"test"}
-#     2. Shows raw JSON response: permissionDecision: "deny"
-#        - Both scope_check AND blocklist rules trigger on this call
-#        - Blocklist catches destructive operations (delete_*) regardless of scope
+#        - tool_input: {"table":"users"}
+#     2. Captures the JSON response and asserts permissionDecision == deny
+#        - tool_blocklist is the policy that fires and is audited here. We use a
+#          NON-admin-prefixed destructive name on purpose: an
+#          mcp__systemprompt__delete_* tool would be short-circuited by
+#          scope_check (it runs first), so the deny would be attributed to
+#          scope_check, not tool_blocklist. delete_records passes scope_check
+#          (not admin-only) and is then denied by tool_blocklist.
+#        - tool_blocklist catches destructive names (delete/drop/destroy) for
+#          user/non-admin scope (admins are exempt).
 #
 # What Claude Code does with a deny response:
 #   1. The PreToolUse hook returns permissionDecision: "deny" with a reason
@@ -40,7 +55,7 @@ source "$(cd "$(dirname "$0")/.." && pwd)/_common.sh"
 echo ""
 echo "=========================================="
 echo "  DEMO 5: GOVERNANCE — DENIED PATH"
-echo "  associate_agent — user scope, governance blocks MCP"
+echo "  demo_user — real user scope, governance blocks MCP"
 echo ""
 echo "  Flow:"
 echo "    1. Agent calls MCP tool"
@@ -53,30 +68,25 @@ echo "    7. Claude Code BLOCKS the tool call"
 echo "=========================================="
 echo ""
 
-# Load token from demo/.token (set by 00-preflight.sh)
-TOKEN="${1:-}"
-if [[ -z "$TOKEN" && -f "$TOKEN_FILE" ]]; then
-  TOKEN=$(cat "$TOKEN_FILE")
-fi
-
-if [[ -z "$TOKEN" ]]; then
-  echo "ERROR: No token. Run demo/00-preflight.sh first, or pass token as argument." >&2
-  exit 1
-fi
+# Load the user-scope token from demo/.token.user (set by 00-preflight.sh).
+# Governance derives scope from the caller's live DB role, so this token
+# resolves to User scope and the deny policies genuinely fire.
+load_user_token "${1:-}"
 
 # ──────────────────────────────────────────────
 #  PART 1: Scope restriction — user cannot access admin tools
 # ──────────────────────────────────────────────
 echo "------------------------------------------"
 echo "  PART 1: Scope restriction denial"
+echo "  identity: demo_user (user scope, token-derived from DB role)"
 echo "  tool: mcp__systemprompt__list_agents"
 echo "  agent: associate_agent (user scope)"
 echo "  rule: scope_check — user scope cannot access mcp__systemprompt__* tools"
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
-  -H "Authorization: Bearer $TOKEN" \
+RESPONSE=$(curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
+  -H "Authorization: Bearer $USER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "hook_event_name": "PreToolUse",
@@ -84,10 +94,11 @@ curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" 
     "agent_id": "associate_agent",
     "session_id": "demo-governance-denied",
     "cwd": "/var/www/html/systemprompt-template"
-  }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+  }')
+echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
 
 echo ""
-echo "  ^ scope_check DENIED: user scope cannot call mcp__systemprompt__* tools"
+assert_decision "$RESPONSE" "deny" "scope_check denies admin tool for user scope"
 echo ""
 
 # ──────────────────────────────────────────────
@@ -95,27 +106,35 @@ echo ""
 # ──────────────────────────────────────────────
 echo "------------------------------------------"
 echo "  PART 2: Blocklist denial"
-echo "  tool: mcp__systemprompt__delete_agent"
+echo "  identity: demo_user (user scope, token-derived from DB role)"
+echo "  tool: delete_records (destructive name, NOT admin-prefixed)"
 echo "  agent: associate_agent (user scope)"
-echo "  rule: blocklist — destructive operations (delete_*) are always blocked"
-echo "  Also triggers: scope_check (user scope + mcp__systemprompt__* tool)"
+echo "  rule: tool_blocklist — destructive names (delete/drop/destroy) denied"
+echo "        for user/non-admin scope (admins are exempt)"
+echo "  Why not mcp__systemprompt__delete_*? scope_check runs first and would"
+echo "  short-circuit it, attributing the deny to scope_check. A non-prefixed"
+echo "  name passes scope_check and is denied by tool_blocklist — so the audit"
+echo "  row genuinely reads policy=tool_blocklist."
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
-  -H "Authorization: Bearer $TOKEN" \
+RESPONSE=$(curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
+  -H "Authorization: Bearer $USER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "hook_event_name": "PreToolUse",
-    "tool_name": "mcp__systemprompt__delete_agent",
-    "tool_input": {"agent_id": "test"},
+    "tool_name": "delete_records",
+    "tool_input": {"table": "users"},
     "agent_id": "associate_agent",
     "session_id": "demo-governance-denied-blocklist",
     "cwd": "/var/www/html/systemprompt-template"
-  }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+  }')
+echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
 
 echo ""
-echo "  ^ Blocked by BOTH scope_check and blocklist rules."
+assert_decision "$RESPONSE" "deny" "tool_blocklist denies destructive tool for user scope"
+echo ""
+echo "  ^ Blocked for user scope by tool_blocklist (policy=tool_blocklist in the audit)."
 echo "  In Claude Code, the agent would see:"
 echo "    [GOVERNANCE] Tool blocked: <reason>"
 echo "    The tool call never executes. The agent must explain the denial."
@@ -148,8 +167,8 @@ echo "  Most recent governance decisions:"
 
 echo ""
 echo "  Expected: two deny records"
-echo "    1. scope_check: user scope cannot access mcp__systemprompt__list_agents"
-echo "    2. blocklist/scope_check: destructive tool mcp__systemprompt__delete_agent blocked"
+echo "    1. scope_check:    user scope cannot access mcp__systemprompt__list_agents"
+echo "    2. tool_blocklist: destructive tool delete_records blocked for user scope"
 
 echo ""
 echo "=========================================="

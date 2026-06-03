@@ -14,7 +14,10 @@ Two layers refuse this skill, either of which is sufficient:
    catalogued but access-denied by policy.
 
 2. **Secret-scan deny (runtime hook).** Even if the action reached a tool call, the PreToolUse `govern` hook
-   (`secret_scan` policy) inspects every tool input for plaintext credentials and denies the call.
+   (`secret_scan` policy) inspects every tool input for plaintext credentials and denies the call. This
+   stage is **scope-independent** — it denies for any caller, admin included (unlike `scope_check` and
+   `tool_blocklist`, which exempt admin scope). The `user`-role refusal here is the authz layer (1); the
+   secret-scan denial (2) would fire regardless of role.
 
 ## The dangerous action
 

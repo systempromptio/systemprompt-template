@@ -16,9 +16,14 @@ Every tool call runs a synchronous four-stage check before it executes (config i
 | Stage | Policy id | What it blocks |
 |-------|-----------|----------------|
 | Scope check | `scope_check` | Non-admin scope calling `mcp__systemprompt__*` tools |
-| Secret scan | `secret_scan` | Plaintext credentials in any tool input (35+ patterns) |
-| Blocklist | `tool_blocklist` | Destructive tool names matching `delete`, `drop`, `destroy` |
+| Secret scan | `secret_scan` | Plaintext credentials in any tool input (35+ patterns), any scope |
+| Blocklist | `tool_blocklist` | Destructive tool names (`delete`, `drop`, `destroy`) for user/non-admin scope |
 | Rate limit | `rate_limit` | More than 300 calls per 60s for one identity |
+
+Scope is derived from the **caller's live DB roles**, not the `agent_id` in the payload. `admin`-role
+callers are exempt from `scope_check` and `tool_blocklist` (they are the policies' admin escape hatch);
+`secret_scan` and `rate_limit` apply to every identity. To prove a real `scope_check` / `tool_blocklist`
+deny you therefore need a **user-scope** token, not the admin `demo/.token` (see the deny recipe below).
 
 Each decision is written to the `governance_decisions` table with the tool, the agent, the policy, and the reason.
 
@@ -50,28 +55,59 @@ systemprompt infra db query "SELECT decision, tool_name, agent_id, agent_scope, 
 
 ```bash
 systemprompt analytics costs breakdown --by agent     # spend attributed per agent
-systemprompt admin config rate-limits show            # live rate-limit window
 ```
+
+#### Two distinct rate limiters (do not conflate them)
+
+There are **two** independent limiters; only the first is the governance stage in the table above:
+
+- **Governance `rate_limit` policy** — per-identity, 300 calls / 60s, configured in
+  `services/governance/config.yaml`. This is the pipeline stage. Its evidence lives in the audit table:
+
+  ```bash
+  systemprompt infra db query "SELECT decision, tool_name, reason, created_at FROM governance_decisions WHERE policy = 'rate_limit' ORDER BY created_at DESC LIMIT 10"
+  ```
+
+- **HTTP profile limiter** — a separate request limiter shown by `systemprompt admin config rate-limits
+  show`. It guards the HTTP surface, is configured in the profile, and is **disabled in the local
+  profile**. It is *not* the governance `rate_limit` policy and does not write `governance_decisions` rows.
+
+  ```bash
+  systemprompt admin config rate-limits show            # HTTP profile limiter (separate; off locally)
+  ```
 
 ### Forcing a specific decision (deterministic demo)
 
-To force an exact stage without an agent in the loop, POST a synthetic `PreToolUse` event straight to the governance
-endpoint. This is what the repo's `demo/governance/*` scripts do; they need the demo token from
-`demo/00-preflight.sh`.
+To force an exact stage without an agent in the loop, POST a synthetic `PreToolUse` event straight to the
+governance endpoint. This is what the repo's `demo/governance/*` scripts do.
+
+For `scope_check` and `tool_blocklist`, use the **user-scope** token (`demo/.token.user`), not the admin
+`demo/.token` — both policies exempt admins, so the admin token would be **allowed**. `00-preflight.sh`
+provisions `demo/.token.user` by minting a plugin token for `demo_user@demo.local` and demoting it to the
+`user` role (the same recipe `manage_permissions` documents); governance reads the role live, so the token
+resolves to User scope.
 
 ```bash
-# scope_check deny: user-scope agent reaching for an admin MCP tool
+# scope_check deny: a user-scope caller reaching for an admin MCP tool
 curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
-  -H "Authorization: Bearer $(cat demo/.token)" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $(cat demo/.token.user)" -H "Content-Type: application/json" \
   -d '{"hook_event_name":"PreToolUse","tool_name":"mcp__systemprompt__list_agents","agent_id":"associate_agent","session_id":"demo-scope","cwd":"/var/www/html/systemprompt-template"}'
+# -> {"permissionDecision":"deny", "reason": ...}   (deny — user scope, admin-only tool)
 
-# blocklist deny: a destructive tool name (delete_*) is blocked regardless of scope
+# tool_blocklist deny: a destructive tool name (delete/drop/destroy) blocked for user scope.
+# Use a NON-admin-prefixed name (delete_records, not mcp__systemprompt__delete_*): scope_check runs
+# first and would short-circuit an admin-prefixed tool, attributing the deny to scope_check. A
+# non-prefixed name passes scope_check and is denied by tool_blocklist — so the audit row genuinely
+# reads policy=tool_blocklist.
 curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
-  -H "Authorization: Bearer $(cat demo/.token)" -H "Content-Type: application/json" \
-  -d '{"hook_event_name":"PreToolUse","tool_name":"mcp__systemprompt__delete_agent","tool_input":{"agent_id":"test"},"agent_id":"associate_agent","session_id":"demo-blocklist","cwd":"/var/www/html/systemprompt-template"}'
+  -H "Authorization: Bearer $(cat demo/.token.user)" -H "Content-Type: application/json" \
+  -d '{"hook_event_name":"PreToolUse","tool_name":"delete_records","tool_input":{"table":"users"},"agent_id":"associate_agent","session_id":"demo-blocklist","cwd":"/var/www/html/systemprompt-template"}'
+# -> {"permissionDecision":"deny", "reason": "...blocked by list delete"}   (policy=tool_blocklist, user scope)
 ```
 
 Each returns `{"permissionDecision":"deny", "reason": ...}` and writes a row you can then see in step 3.
+Sending the same two requests with the admin `demo/.token` returns `allow` — admins are exempt from both
+policies (`secret_scan` still denies for any scope; see `use_dangerous_secret`).
 
 ### Typical workflow
 

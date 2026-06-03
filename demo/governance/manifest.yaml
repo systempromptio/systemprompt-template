@@ -13,16 +13,18 @@ steps:
       the systemprompt MCP server, and a matching row in governance_decisions
       tied to session demo-happy-path.
   - script: 02-refused-path.sh
-    label: Deny a user-scope agent reaching for an admin MCP tool
+    label: Deny a genuinely user-scope caller reaching for an admin MCP tool
     narrative: >
-      Fires the same hook as associate_agent — a user-scope identity — against
-      the admin-only mcp__systemprompt__list_agents tool. The scope_restriction
-      rule fires at the governance layer, which is the backup line of defense
-      behind tool mapping.
+      Fires a hook with the user-scope plugin token (demo/.token.user, minted by
+      preflight for demo_user, whose DB role is `user`) against the admin-only
+      mcp__systemprompt__list_agents tool. Governance derives scope from the
+      caller's live DB role, so this resolves to User scope and scope_check
+      denies — the backup line of defense behind tool mapping. The script asserts
+      the real permissionDecision and fails loudly if it is not deny.
     outcome: >
-      A deny response citing scope_restriction, plus the matching deny row in
+      An asserted deny response citing scope_check, plus the matching deny row in
       governance_decisions — proof that even if tool mapping is bypassed,
-      governance still holds.
+      governance still holds for a real user-scope identity.
   - script: 03-audit-trail.sh
     label: Query the decisions table and break down cost by agent
     narrative: >
@@ -43,13 +45,17 @@ steps:
       The API returns permissionDecision: allow and the audit row lists all
       three rules with PASS reasons.
   - script: 05-governance-denied.sh
-    label: Deny a user-scope agent and a destructive tool in one run
+    label: Deny an admin tool and a destructive tool for a real user-scope token
     narrative: >
-      Fires two hook calls as associate_agent: one reaches for an admin-only
-      MCP tool, the other calls delete_agent. scope_check blocks the first;
-      scope_check and blocklist both trigger on the second.
+      Fires two hook calls with the user-scope plugin token (demo/.token.user,
+      DB role `user`): one reaches for an admin-only MCP tool (scope_check
+      denies), the other calls a destructive non-admin-prefixed tool,
+      delete_records, which passes scope_check and is denied by tool_blocklist
+      (destructive names are blocked for user/non-admin scope; admins are
+      exempt). Each response is asserted to be deny, and the two audit rows read
+      policy=scope_check and policy=tool_blocklist respectively.
     outcome: >
-      Two deny responses with distinct policy IDs, logged to
+      Two asserted deny responses with distinct policy IDs, logged to
       governance_decisions so you can see the reason Claude Code would
       surface to the agent.
   - script: 06-secret-breach.sh

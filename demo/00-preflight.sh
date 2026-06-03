@@ -351,6 +351,67 @@ echo "  All subsequent demos read this file automatically."
 echo "  No need to pass TOKEN as an argument."
 echo ""
 
+# ──────────────────────────────────────────────
+#  STEP 6: Provision a USER-SCOPE token for the deny demos
+# ──────────────────────────────────────────────
+# The admin token above is allowed by scope_check and tool_blocklist (admins are
+# exempt), so it cannot prove a genuine deny. Governance derives scope from the
+# caller's LIVE DB roles, not the agent_id in the payload — so we mint a plugin
+# token for a dedicated `demo_user` while it is admin (issue-plugin-token refuses
+# non-admins), then demote it to `user`. The token stays valid; the next
+# governance decision reads the DB role and resolves it to User scope. This is the
+# same recipe the `manage_permissions` skill documents.
+USER_TOKEN_FILE="$SCRIPT_DIR/.token.user"
+USER_EMAIL="${DEMO_USER_EMAIL:-demo_user@demo.local}"
+
+echo "------------------------------------------"
+echo "  STEP 6: Provision user-scope token → demo/.token.user"
+echo ""
+echo "  Mints a plugin token for $USER_EMAIL (admin → token → user)."
+echo "  Governance reads DB roles live, so this token resolves to User"
+echo "  scope and the deny demos can prove a real scope_check / blocklist"
+echo "  denial instead of narrating one."
+echo "------------------------------------------"
+echo ""
+
+"$CLI" admin users create --name "demo_user" --email "$USER_EMAIL" --if-not-exists --profile "$PROFILE" 2>&1 \
+  | grep -viE '^\[profile|already exists' || true
+# The search output is a rendered card (id on its own line), not JSON, so match
+# the UUID shape directly — works regardless of the human/JSON output layer.
+DEMO_USER_ID=$("$CLI" admin users search "$USER_EMAIL" --profile "$PROFILE" 2>/dev/null \
+  | grep -oiE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1 || true)
+
+if [[ -z "$DEMO_USER_ID" ]]; then
+  echo "  WARNING: could not locate $USER_EMAIL; skipping user-scope token." >&2
+  echo "  The deny demos (02, 05) need demo/.token.user — re-run preflight once" >&2
+  echo "  the user database is reachable." >&2
+  echo ""
+else
+  # Promote so a plugin token can be minted, capture the token, then demote so the
+  # live DB role is `user`. The token's authority follows the DB role, not the
+  # role at mint time.
+  "$CLI" admin users role promote "$DEMO_USER_ID" --profile "$PROFILE" >/dev/null 2>&1 || true
+  USER_TOKEN=$("$CLI" admin keys issue-plugin-token --token-only \
+    --email "$USER_EMAIL" --profile "$PROFILE" 2>/dev/null | _extract_jwt)
+  "$CLI" admin users role demote "$DEMO_USER_ID" --profile "$PROFILE" >/dev/null 2>&1 || true
+
+  if [[ -z "$USER_TOKEN" ]]; then
+    echo "  WARNING: could not mint a plugin token for $USER_EMAIL." >&2
+    echo "  The deny demos will fall back and report a missing user token." >&2
+    echo ""
+  else
+    echo "$USER_TOKEN" > "$USER_TOKEN_FILE"
+    echo "  User-scope token (${#USER_TOKEN} chars) for $USER_EMAIL ($DEMO_USER_ID):"
+    echo ""
+    decode_jwt "$USER_TOKEN"
+    echo ""
+    echo "  DB role is now 'user' — scope_check denies mcp__systemprompt__* and"
+    echo "  tool_blocklist denies destructive tools for this token. Saved to"
+    echo "  demo/.token.user (gitignored like demo/.token)."
+    echo ""
+  fi
+fi
+
 echo "=========================================="
 echo "  PREFLIGHT COMPLETE"
 echo ""

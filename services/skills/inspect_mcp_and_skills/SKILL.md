@@ -19,6 +19,15 @@ systemprompt plugins mcp tools --server systemprompt    # tools from the admin s
 systemprompt plugins mcp logs systemprompt              # server logs for debugging
 ```
 
+> **Run tool enumeration via the direct CLI, not the passthrough.** `plugins mcp tools` and
+> `admin agents tools` enumerate the live MCP server, which needs the admin MCP-server session. Run
+> through the *direct* CLI (an authenticated admin), they return the tool list. Run *through* the
+> `systemprompt` MCP passthrough (i.e. `plugins mcp call systemprompt systemprompt --args
+> '{"command":"plugins mcp tools"}'`), the nested CLI has no admin MCP session and the enumeration comes
+> back empty with `auth_required` — the nested process cannot authenticate to the live server. This is a
+> known limitation of the passthrough (a loopback bridge/admin token for the nested CLI is tracked as core
+> tech debt); enumerate tools with the direct CLI.
+
 ### Calling the systemprompt tool
 
 The `systemprompt` server exposes one tool, also named `systemprompt`, that executes a CLI command. Pass the command **without** the `systemprompt` prefix:

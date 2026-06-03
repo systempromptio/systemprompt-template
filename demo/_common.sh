@@ -36,6 +36,7 @@ fi
 
 # ── Token loading ──────────────────────────────
 TOKEN_FILE="$DEMO_ROOT/.token"
+USER_TOKEN_FILE="$DEMO_ROOT/.token.user"
 PROFILE="${PROFILE:-local}"
 # Derive BASE_URL from the active profile so demos work when setup-local was
 # invoked with non-default ports. Precedence: BASE_URL env > profile.yaml
@@ -63,6 +64,55 @@ load_token() {
     echo ""
     echo "  Run ./demo/00-preflight.sh first, or pass TOKEN as argument."
     echo ""
+    exit 1
+  fi
+}
+
+# Load the USER-SCOPE plugin token (demo/.token.user, minted by 00-preflight.sh
+# for demo_user@demo.local, whose DB role is `user`). Governance derives scope
+# from the caller's live DB roles, so this token resolves to User scope and the
+# scope_check / tool_blocklist policies genuinely DENY admin-only and destructive
+# tools. The admin demo/.token would be allowed by those same policies — which is
+# exactly why the deny demos must use this token to be honest.
+# Precedence: explicit arg > exported $USER_TOKEN env > demo/.token.user file.
+load_user_token() {
+  USER_TOKEN="${1:-${USER_TOKEN:-}}"
+  if [[ -z "$USER_TOKEN" && -f "$USER_TOKEN_FILE" ]]; then
+    USER_TOKEN=$(cat "$USER_TOKEN_FILE")
+  fi
+  if [[ -z "$USER_TOKEN" ]]; then
+    echo ""
+    echo "  No user-scope token. Run ./demo/00-preflight.sh first"
+    echo "  (it provisions demo/.token.user), or pass one as the first argument."
+    echo ""
+    exit 1
+  fi
+}
+
+# Assert that a /hooks/govern JSON response carries the expected permissionDecision.
+# Prints a GREEN PASS line on a match; prints a RED FAIL line and exits non-zero on
+# a mismatch. This is what makes the governance demos self-testing: if the backend
+# stops denying (e.g. a deny demo is accidentally pointed at an admin token), the
+# script fails loudly instead of narrating a fiction.
+#   assert_decision "<response_json>" "<expected>" "<label>"
+assert_decision() {
+  local response="$1" expected="$2" label="$3"
+  local actual
+  actual=$(printf '%s' "$response" | python3 -c \
+    "import sys, json
+try:
+    d = json.load(sys.stdin)
+    # The govern hook nests the decision under hookSpecificOutput; fall back to a
+    # top-level field for any simpler response shape.
+    hso = d.get('hookSpecificOutput') or {}
+    print(hso.get('permissionDecision') or d.get('permissionDecision', ''))
+except Exception:
+    print('')" 2>/dev/null)
+  if [[ "$actual" == "$expected" ]]; then
+    echo -e "  ${GREEN}✓ PASS${R} — $label: permissionDecision=${actual}"
+  else
+    echo -e "  ${RED}✗ FAIL${R} — $label: expected permissionDecision=${expected}, got '${actual:-<none>}'" >&2
+    echo "    Response was: $response" >&2
     exit 1
   fi
 }

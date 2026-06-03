@@ -1,18 +1,28 @@
 #!/bin/bash
 # DEMO 2: REFUSED PATH — GOVERNANCE DENIES ADMIN TOOL
-# This simulates what happens when a user-scope agent tries to call an
-# admin-only tool. The governance API denies it.
+# This shows what happens when a genuinely user-scope caller tries to call an
+# admin-only tool. The governance API denies it, and this script asserts the
+# real decision instead of narrating one.
+#
+# Identity model (the honest part):
+#   Governance derives access scope from the CALLER'S LIVE DB ROLES, not from
+#   the agent_id in the payload. So we send the request with the user-scope
+#   plugin token from demo/.token.user (minted by 00-preflight.sh for
+#   demo_user@demo.local, whose DB role is `user`). That token resolves to User
+#   scope, so scope_check genuinely denies mcp__systemprompt__* tools.
+#   (The admin demo/.token would be ALLOWED here — admins are exempt — which is
+#   why this demo must use the user-scope token.)
 #
 # What this does:
-#   1. Calls POST /api/public/hooks/govern simulating a Claude Code
+#   1. POST /api/public/hooks/govern with the user-scope token, simulating a
 #      PreToolUse hook for associate_agent calling mcp__systemprompt__list_agents
-#   2. Governance evaluates scope_restriction rule:
-#      associate_agent has user scope → admin tool is denied
+#   2. Captures the JSON response and asserts permissionDecision == deny
+#      (fails loudly if the backend does not actually deny)
 #   3. Prints commentary on defense-in-depth (mapping + rules)
 #   4. Queries governance_decisions table for the deny record
 #
 # Flow:
-#   curl → POST /hooks/govern → JWT auth → scope_restriction check → DENY
+#   curl → POST /hooks/govern → JWT auth → DB role=user → scope_check → DENY
 #
 # This is the second layer of defense. In a real Claude Code deployment,
 # user-scope agents would never even see admin tools (mapping level).
@@ -27,38 +37,28 @@ source "$(cd "$(dirname "$0")/.." && pwd)/_common.sh"
 echo ""
 echo "=========================================="
 echo "  DEMO 2: REFUSED PATH"
-echo "  associate_agent tries an admin-only tool"
+echo "  user-scope token tries an admin-only tool"
 echo "=========================================="
 echo ""
 
 # ──────────────────────────────────────────────
-#  Load auth token
+#  Load the user-scope auth token (real User scope, DB-role derived)
 # ──────────────────────────────────────────────
-TOKEN="${1:-}"
-if [[ -z "$TOKEN" && -f "$TOKEN_FILE" ]]; then
-  TOKEN=$(cat "$TOKEN_FILE")
-fi
-
-if [[ -z "$TOKEN" ]]; then
-  echo ""
-  echo "  Run ./demo/00-preflight.sh first, or pass TOKEN as argument:"
-  echo "  ./demo/governance/02-refused-path.sh <TOKEN>"
-  echo ""
-  exit 1
-fi
+load_user_token "${1:-}"
 
 # ──────────────────────────────────────────────
-#  PART 1: Governance denies admin tool for user-scope agent
+#  PART 1: Governance denies admin tool for a user-scope caller
 # ──────────────────────────────────────────────
 echo "------------------------------------------"
 echo "  Simulating PreToolUse hook:"
+echo "  identity=demo_user (user scope, token-derived from DB role)"
 echo "  agent=associate_agent (user scope)"
 echo "  tool=mcp__systemprompt__list_agents"
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
-  -H "Authorization: Bearer $TOKEN" \
+RESPONSE=$(curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
+  -H "Authorization: Bearer $USER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "hook_event_name": "PreToolUse",
@@ -67,7 +67,10 @@ curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" 
     "session_id": "demo-refused-path",
     "cwd": "/var/www/html/systemprompt-template",
     "tool_input": {}
-  }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+  }')
+echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+echo ""
+assert_decision "$RESPONSE" "deny" "scope_check denies admin tool for user scope"
 
 # ──────────────────────────────────────────────
 #  PART 2: Defense-in-depth commentary

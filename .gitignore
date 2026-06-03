@@ -179,6 +179,7 @@ storage/marketplace-versions/
 storage/github-marketplaces/
 .claude/worktrees/
 demo/.token
+demo/.token.user
 
 # Scaled-scenario load-test result artifacts (keep dir via .gitkeep)
 demo/scenarios/scaled/results/*.json
