@@ -1,8 +1,8 @@
 use crate::tools::CliOutput;
 use rmcp::ErrorData as McpError;
 use std::path::PathBuf;
-use std::process::Command;
 use systemprompt::config::ProfileBootstrap;
+use tokio::process::Command;
 
 pub fn get_cli_path() -> Result<PathBuf, McpError> {
     if let Ok(path) = std::env::var("SYSTEMPROMPT_CLI_PATH") {
@@ -31,7 +31,7 @@ fn filter_hallucinated_args(args: Vec<String>) -> Vec<String> {
         .collect()
 }
 
-pub fn execute(command: &str, auth_token: &str) -> Result<CliOutput, McpError> {
+pub async fn execute(command: &str, auth_token: &str) -> Result<CliOutput, McpError> {
     let cli_path = get_cli_path()?;
     let workdir = workdir();
 
@@ -55,6 +55,7 @@ pub fn execute(command: &str, auth_token: &str) -> Result<CliOutput, McpError> {
         .env("SYSTEMPROMPT_AUTH_TOKEN", auth_token)
         .current_dir(workdir)
         .output()
+        .await
         .map_err(|e| {
             McpError::internal_error(format!("Failed to execute CLI command: {e}"), None)
         })?;

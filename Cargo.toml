@@ -31,8 +31,8 @@ license = "MIT"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.14.6", default-features = false, features = ["core", "database", "config"] }
-systemprompt-security = { version = "0.14.6" }
+systemprompt = { version = "0.15.0", default-features = false, features = ["core", "database", "config"] }
+systemprompt-security = { version = "0.15.0" }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -238,12 +238,10 @@ serde_yaml = "0.9"
 workspace = true
 
 
-# Local development patch: route systemprompt-* crates to the local
+# Local development patch: route systemprompt-* crates to a local
 # systemprompt-core checkout so changes there are picked up without a
-# crates.io release.
-#
-# Local development patch: validating against unreleased 0.12.2 core
-# changes. Disable before publishing.
+# crates.io release. Keep this commented for published builds; uncomment
+# only for local cross-repo work against an unreleased core.
 # [patch.crates-io]
 # systemprompt = { path = "../systemprompt-core/systemprompt" }
 # systemprompt-models = { path = "../systemprompt-core/crates/shared/models" }

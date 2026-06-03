@@ -40,7 +40,7 @@ impl McpToolHandler for SystempromptToolHandler {
         _ctx: &SysRequestContext,
         _exec_id: &McpExecutionId,
     ) -> Result<(Self::Output, String), McpError> {
-        let output = cli::execute(&input.command, &self.auth_token)?;
+        let output = cli::execute(&input.command, &self.auth_token).await?;
 
         if !output.success {
             return Err(McpError::internal_error(

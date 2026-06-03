@@ -96,7 +96,7 @@ async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<usize, JobError>
     let route_ids = profile
         .gateway
         .as_ref()
-        .map(systemprompt::models::profile::GatewayState::resolved_route_ids)
+        .map(|gateway| gateway.dispatchable_route_ids(&profile.providers))
         .unwrap_or_default();
     let id_refs: Vec<&str> = route_ids
         .iter()

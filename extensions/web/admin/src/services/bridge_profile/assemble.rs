@@ -152,14 +152,8 @@ pub(super) fn build_bridge_profile_block() -> Option<BridgeProfileBlock> {
 
     let models: Vec<String> = profile
         .providers
-        .providers
-        .iter()
-        .flat_map(|entry| {
-            entry.models.iter().flat_map(|m| {
-                std::iter::once(m.id.as_str().to_owned())
-                    .chain(m.aliases.iter().map(|a| a.as_str().to_owned()))
-            })
-        })
+        .advertised_model_ids(&[])
+        .into_iter()
         .collect::<std::collections::BTreeSet<_>>()
         .into_iter()
         .collect();
