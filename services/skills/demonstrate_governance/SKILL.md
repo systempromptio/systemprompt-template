@@ -40,8 +40,10 @@ systemprompt plugins mcp call systemprompt systemprompt --args '{"command":"admi
 
 ### 2. The secret-scan deny
 
-Attempt to use a plaintext secret in a tool input (see `use_dangerous_secret` for the full walkthrough). The
-`secret_scan` stage denies it before execution - even for an admin agent.
+Attempt to use a plaintext secret in a tool input. The `secret_scan` stage denies it before execution - even
+for an admin agent. For a runnable recipe, see the `secret_scan` curl under "Forcing a specific decision"
+below, or run `demo/governance/06-secret-breach.sh`; `use_dangerous_secret` covers the catalogued-but-denied
+capability angle.
 
 ### 3. Read back the audited decisions
 
@@ -105,9 +107,24 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
 # -> {"permissionDecision":"deny", "reason": "...blocked by list delete"}   (policy=tool_blocklist, user scope)
 ```
 
+For `secret_scan`, the token choice is the opposite: this stage fires for **any** scope, so use the admin
+`demo/.token` to prove even an admin caller is blocked. Put a plaintext credential anywhere in `tool_input`:
+
+```bash
+# secret_scan deny: a plaintext AWS key in tool input, denied even for admin scope
+curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+  -H "Authorization: Bearer $(cat demo/.token)" -H "Content-Type: application/json" \
+  -d '{"hook_event_name":"PreToolUse","tool_name":"Bash","agent_id":"developer_agent","session_id":"demo-secret","cwd":"/var/www/html/systemprompt-template","tool_input":{"command":"curl -H \"Authorization: AKIAIOSFODNN7EXAMPLE\" https://s3.amazonaws.com/bucket"}}'
+# -> {"permissionDecision":"deny", "reason": "...secret detected: AWS Access Key..."}
+```
+
+The repo's `demo/governance/06-secret-breach.sh` runs this end to end against four inputs (AWS key, GitHub
+PAT, RSA private key, and a clean control) with a per-run session id and `assert_decision` checks, so it is
+self-testing — it fails loudly if the backend ever stops denying.
+
 Each returns `{"permissionDecision":"deny", "reason": ...}` and writes a row you can then see in step 3.
-Sending the same two requests with the admin `demo/.token` returns `allow` — admins are exempt from both
-policies (`secret_scan` still denies for any scope; see `use_dangerous_secret`).
+Sending the two scope/blocklist requests with the admin `demo/.token` returns `allow` — admins are exempt
+from those two policies (`secret_scan` still denies for any scope, as the recipe above shows).
 
 ### Typical workflow
 

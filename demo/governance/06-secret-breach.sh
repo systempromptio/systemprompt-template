@@ -44,38 +44,42 @@ echo "  when tool input contains plaintext secrets."
 echo "=========================================="
 echo ""
 
-TOKEN="${1:-}"
-if [[ -z "$TOKEN" && -f "$TOKEN_FILE" ]]; then
-  TOKEN=$(cat "$TOKEN_FILE")
-fi
+# secret_scan fires regardless of scope, so this demo deliberately uses the
+# ADMIN token (demo/.token) to prove an admin-scope caller is blocked too. This
+# is the opposite of the scope_check / tool_blocklist deny demos, which must use
+# the user-scope token because admins are exempt from those two policies.
+load_token "${1:-}"
 
-if [[ -z "$TOKEN" ]]; then
-  echo ""
-  echo "  Run ./demo/00-preflight.sh first, or pass TOKEN as argument:"
-  echo "  ./demo/governance/06-secret-breach.sh <TOKEN>"
-  echo ""
-  exit 1
-fi
+# A per-run session id (PID-based — portable across BSD/GNU, no date dependency)
+# so the audit summary below reflects EXACTLY this run's four calls, not the
+# accumulation of every historical run against a fixed session id.
+SESSION="demo-secret-breach-$$"
+
+echo "  Session: $SESSION (token: admin scope — secret_scan denies it anyway)"
+echo ""
 
 echo "------------------------------------------"
 echo "  TEST 1: AWS Access Key in tool input"
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
+RESPONSE=$(curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "hook_event_name": "PreToolUse",
     "tool_name": "Bash",
     "agent_id": "developer_agent",
-    "session_id": "demo-secret-breach",
+    "session_id": "'"$SESSION"'",
     "cwd": "/var/www/html/systemprompt-template",
     "tool_input": {
       "command": "curl -H \"Authorization: AKIAIOSFODNN7EXAMPLE\" https://s3.amazonaws.com/bucket",
       "description": "Fetch S3 object"
     }
-  }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+  }')
+echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+echo ""
+assert_decision "$RESPONSE" "deny" "secret_scan denies AWS Access Key (admin scope)"
 
 echo ""
 echo "------------------------------------------"
@@ -83,20 +87,23 @@ echo "  TEST 2: GitHub PAT in tool input"
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
+RESPONSE=$(curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "hook_event_name": "PreToolUse",
     "tool_name": "Write",
     "agent_id": "developer_agent",
-    "session_id": "demo-secret-breach",
+    "session_id": "'"$SESSION"'",
     "cwd": "/var/www/html/systemprompt-template",
     "tool_input": {
       "file_path": "/home/user/.env",
       "content": "GITHUB_TOKEN=ghp_ABCDEFghijklmnop1234567890abcdef\nDATABASE_URL=postgres://localhost/db"
     }
-  }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+  }')
+echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+echo ""
+assert_decision "$RESPONSE" "deny" "secret_scan denies GitHub PAT (admin scope)"
 
 echo ""
 echo "------------------------------------------"
@@ -104,20 +111,23 @@ echo "  TEST 3: Private key in tool input"
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
+RESPONSE=$(curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "hook_event_name": "PreToolUse",
     "tool_name": "Write",
     "agent_id": "developer_agent",
-    "session_id": "demo-secret-breach",
+    "session_id": "'"$SESSION"'",
     "cwd": "/var/www/html/systemprompt-template",
     "tool_input": {
       "file_path": "/home/user/.ssh/id_rsa",
       "content": "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA..."
     }
-  }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+  }')
+echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+echo ""
+assert_decision "$RESPONSE" "deny" "secret_scan denies RSA Private Key (admin scope)"
 
 echo ""
 echo "------------------------------------------"
@@ -125,19 +135,22 @@ echo "  TEST 4: Clean input (no secrets) — PASSES"
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
+RESPONSE=$(curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "hook_event_name": "PreToolUse",
     "tool_name": "Read",
     "agent_id": "developer_agent",
-    "session_id": "demo-secret-breach",
+    "session_id": "'"$SESSION"'",
     "cwd": "/var/www/html/systemprompt-template",
     "tool_input": {
       "file_path": "/home/user/project/src/main.rs"
     }
-  }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+  }')
+echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+echo ""
+assert_decision "$RESPONSE" "allow" "clean input passes all stages"
 
 # ──────────────────────────────────────────────
 #  AUDIT: Verify secret breach decisions
@@ -148,24 +161,24 @@ echo "  AUDIT: Governance decisions for this session"
 echo "=========================================="
 echo ""
 
-echo "  Decision counts (session=demo-secret-breach):"
+echo "  Decision counts (session=$SESSION):"
 "$CLI" infra db query \
-  "SELECT decision, COUNT(*) as count FROM governance_decisions WHERE session_id = 'demo-secret-breach' GROUP BY decision ORDER BY decision" \
+  "SELECT decision, COUNT(*) as count FROM governance_decisions WHERE session_id = '$SESSION' GROUP BY decision ORDER BY decision" \
   2>&1 | grep -v "^\[profile"
 
 echo ""
-echo "  Expected: 3 deny + 1 allow = 4 total"
+echo "  Expected: 3 deny (secret_scan) + 1 allow (clean) = 4 total"
 echo ""
 
-echo "  Detailed decisions:"
+echo "  Detailed decisions (most recent first):"
 "$CLI" infra db query \
-  "SELECT decision, tool_name, policy, reason FROM governance_decisions WHERE session_id = 'demo-secret-breach' ORDER BY created_at" \
+  "SELECT decision, tool_name, policy, reason FROM governance_decisions WHERE session_id = '$SESSION' ORDER BY created_at DESC" \
   2>&1 | grep -v "^\[profile"
 
 echo ""
 echo "=========================================="
 echo "  AUDIT COMMANDS (run manually):"
-echo "  $CLI infra db query \"SELECT * FROM governance_decisions WHERE session_id = 'demo-secret-breach' ORDER BY created_at\""
+echo "  $CLI infra db query \"SELECT * FROM governance_decisions WHERE session_id = '$SESSION' ORDER BY created_at\""
 echo ""
 echo "  Tests 1-3: DENIED (secret_scan)"
 echo "  Test 4:    ALLOWED (clean input)"

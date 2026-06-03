@@ -39,7 +39,18 @@ The `sk-ant-` prefix matches the Anthropic API key pattern in the secret scanner
   ```
 
 - At the runtime layer (if the call is ever attempted): the PreToolUse `govern` hook returns
-  `{"permissionDecision":"deny"}` and the tool call is blocked. The denial is audited:
+  `{"permissionDecision":"deny"}` and the tool call is blocked. To see this fire directly, POST a tool input
+  carrying the plaintext key straight to the govern endpoint. `secret_scan` is scope-independent, so use the
+  admin `demo/.token` to prove even an admin caller is denied:
+
+  ```bash
+  curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
+    -H "Authorization: Bearer $(cat demo/.token)" -H "Content-Type: application/json" \
+    -d '{"hook_event_name":"PreToolUse","tool_name":"Write","agent_id":"developer_agent","session_id":"demo-dangerous-secret","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/tmp/key.txt","content":"sk-ant-demo-FAKE12345678901234567890"}}'
+  # -> {"permissionDecision":"deny", "reason": "...secret detected..."}
+  ```
+
+  The denial is audited:
 
   ```bash
   systemprompt infra db query "SELECT decision, tool_name, policy, reason FROM governance_decisions WHERE policy = 'secret_scan' ORDER BY created_at DESC LIMIT 5"
