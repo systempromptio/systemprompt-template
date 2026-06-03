@@ -1,0 +1,12 @@
+id: manage_permissions
+name: Manage Permissions
+description: "Edit a user's roles via the CLI and watch governance flip the same request from denied to allowed - live, with no reload"
+enabled: true
+file: SKILL.md
+tags:
+  - cli
+  - governance
+  - permissions
+  - roles
+  - admin
+category: governance

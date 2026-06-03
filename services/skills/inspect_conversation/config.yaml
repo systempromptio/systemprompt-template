@@ -1,0 +1,12 @@
+id: inspect_conversation
+name: Inspect Conversation
+description: "Reconstruct the structured data behind a live conversation - its messages, AI requests, tool calls, governance decisions, and cost - from the current session"
+enabled: true
+file: SKILL.md
+tags:
+  - cli
+  - conversations
+  - sessions
+  - audit
+  - admin
+category: governance

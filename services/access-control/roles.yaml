@@ -44,6 +44,17 @@ rules:
   # here only to DENY a specific skill — an entity-level deny overrides the
   # inherited marketplace allow (deny-overrides).
 
+  # use_dangerous_secret is intentionally refused at the authz layer. It is
+  # catalogued by the marketplace, but this deny rule overrides the inherited
+  # grant (deny-overrides), so a user-role attempt to use it is refused before it
+  # can run — independent of the runtime secret_scan governance hook. This is the
+  # access-control demonstration: a dangerous capability that exists in the
+  # catalog but is denied by policy.
+  - entity_type: skill
+    entity_id: use_dangerous_secret
+    access: deny
+    roles: [user]
+
   # agents shipped with enterprise-demo
   - entity_type: agent
     entity_id: associate_agent
@@ -72,15 +83,31 @@ rules:
     default_included: true
     roles: [user, admin]
 
-  # Proxy all Anthropic (claude-*) requests to Gemini Flash. The wildcard above
-  # only GRANTS routes that the publish pipeline already materialised from the
-  # live profile; it cannot create the entity row. An explicit entity_id is a
+  # Per-model Anthropic reroutes. Each claude-* model fans out to a different
+  # upstream (gemini, openai, minimax, native anthropic). The wildcard above
+  # only GRANTS routes the publish pipeline already materialised from the live
+  # profile; it cannot create the entity row. An explicit entity_id is a
   # RuleTarget::Id, so the ACL loader self-materialises the row (upsert_entity)
-  # at every boot — independent of profile-route registration or pipeline
-  # timing — so the reroute survives a clean install. The id is the
-  # deterministic synthesize_route_id("claude-*", "gemini").
+  # at every boot, independent of profile-route registration or pipeline
+  # timing, so each reroute survives a clean install. Ids match the route ids
+  # in the profile gateway.routes.
   - entity_type: gateway_route
-    entity_id: claude-star-39ccd3
+    entity_id: claude-opus-4-8-gemini
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: gateway_route
+    entity_id: claude-sonnet-4-6-openai
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: gateway_route
+    entity_id: claude-3-7-sonnet-minimax
+    access: allow
+    default_included: true
+    roles: [user]
+  - entity_type: gateway_route
+    entity_id: claude-haiku-4-5-anthropic
     access: allow
     default_included: true
     roles: [user]

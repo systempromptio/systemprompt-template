@@ -123,7 +123,8 @@ Every inference call (`/v1/messages`) and every MCP tool call lands a row in the
 ```bash
 # Every AI request — user, model, token counts, cost, latency, status
 systemprompt infra logs request list --limit 20
-systemprompt infra logs request list --status failed        # only denials / upstream errors
+systemprompt infra logs request list --since 1h --provider anthropic   # request list filters: --since / --model / --provider (no --status)
+systemprompt infra logs trace list --status failed          # only failed runs — --status lives on trace list, not request list
 
 # Full audit for one request — identity, policy evals, prompt, response, cost
 systemprompt infra logs audit <request-id> --full
@@ -141,6 +142,8 @@ systemprompt analytics tools
 ```
 
 `logs request list` shows one row per `/v1/messages` hit — the gateway path Cowork / any Anthropic-SDK client uses. `logs trace list` shows MCP tool calls. Both are backed by the same 18-column `ai_requests` / trace tables with `user_id`, `tenant_id`, `session_id`, `trace_id` — so `audit <id> --full` reconstructs the chain from identity to cost.
+
+**`infra logs` vs `analytics` — operational vs dashboard.** The `infra logs request {list,stats}` commands are quick operational views (recent rows, by-provider / by-model aggregate). Their `analytics requests {list,stats}` counterparts are dashboard metrics over a time range with model filtering, cache-hit rate, and CSV export. Same `ai_requests` table underneath — reach for `infra logs` when triaging a live issue, `analytics` when reporting. The `--help` on each cross-references the other.
 
 For live tailing while reproducing an issue: `infra logs view --follow --since 30s`.
 

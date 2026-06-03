@@ -1,0 +1,12 @@
+id: inspect_ai_requests
+name: Inspect AI Requests
+description: "Deep-dive a single AI gateway request - list /v1/messages hits, reconstruct one with full audit, and follow the tool-call trace it spawned"
+enabled: true
+file: SKILL.md
+tags:
+  - cli
+  - gateway
+  - tracing
+  - audit
+  - admin
+category: governance

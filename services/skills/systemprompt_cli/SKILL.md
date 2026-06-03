@@ -58,9 +58,19 @@ Prefer this over raw bash when operating remotely or as an agent: the server han
 
 ### Fast paths to the task skills
 
-- Governance logs, audit trails, and cost rollups -> `view_governance_logs`
-- Starting/inspecting services, the database, and jobs -> `manage_services`
-- Listing/calling MCP tools and syncing skills -> `inspect_mcp_and_skills`
+This skill is the index. For an actual task, jump to the skill that owns it:
+
+| You want to... | Skill |
+|----------------|-------|
+| See a dangerous capability refused by policy | `use_dangerous_secret` |
+| Exercise all four governance stages and read the audit | `demonstrate_governance` |
+| Edit a user's roles and watch a request flip allow/deny | `manage_permissions` |
+| Reconstruct the live conversation's structured data | `inspect_conversation` |
+| Deep-dive one AI gateway request and its trace | `inspect_ai_requests` |
+| Fleet rollups: cost, agents, tools, sessions | `analytics_dashboards` |
+| Discover, validate, and message agents | `inspect_agents` |
+| List/call MCP tools and sync skills | `inspect_mcp_and_skills` |
+| Start/inspect services, database, and jobs | `manage_services` |
 
 ### Examples
 
@@ -68,6 +78,6 @@ Prefer this over raw bash when operating remotely or as an agent: the server han
 systemprompt core skills list
 systemprompt infra services status
 systemprompt analytics overview
-systemprompt analytics costs summary --json
+systemprompt analytics costs summary
 systemprompt admin session show
 ```

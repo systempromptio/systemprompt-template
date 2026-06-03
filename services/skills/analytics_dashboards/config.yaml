@@ -1,0 +1,12 @@
+id: analytics_dashboards
+name: Analytics Dashboards
+description: "Fleet-wide rollups - overview, costs, agents, tools, sessions, conversations, and requests - across the whole workspace"
+enabled: true
+file: SKILL.md
+tags:
+  - cli
+  - analytics
+  - costs
+  - reporting
+  - admin
+category: analytics

@@ -44,8 +44,7 @@ agents:
         exclude: []
       skills:
         source: explicit
-        include:
-          - example_web_search
+        include: []
         exclude: []
       provider: gemini
       model: gemini-2.5-flash

@@ -1,0 +1,11 @@
+id: inspect_agents
+name: Inspect Agents
+description: "Discover, validate, and message the workspace's agents over A2A, then read the artifacts and traces they produce"
+enabled: true
+file: SKILL.md
+tags:
+  - cli
+  - agents
+  - a2a
+  - admin
+category: operations
