@@ -198,7 +198,10 @@ else
     SELECT unnest(ARRAY['developer_agent','associate_agent']) AS agent_name
   ),
   ctx AS (
-    SELECT COALESCE((SELECT context_id FROM agent_tasks LIMIT 1), 'demo-agent-activity') AS cid
+    SELECT COALESCE(
+      (SELECT context_id FROM agent_tasks LIMIT 1),
+      (SELECT context_id FROM user_contexts ORDER BY created_at LIMIT 1)
+    ) AS cid
   ),
   who AS (
     SELECT COALESCE(
