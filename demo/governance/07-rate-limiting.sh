@@ -29,9 +29,15 @@ run_cli_indented admin config rate-limits show
 subheader "STEP 2: Governance rate_limit policy"
 echo "  $ cat services/governance/config.yaml  # rate_limit policy"
 echo ""
-awk '/- id: rate_limit/,/^  - id:/' "$PROJECT_DIR/services/governance/config.yaml" \
-  | grep -v '^  - id: [^r]' | sed 's/^/    /'
+# Print the rate_limit block from its `- id:` line until the next `- id:` or EOF.
+# (A naive awk range `/start/,/^  - id:/` closes on the same line, dropping the body.)
+RL_BLOCK=$(awk '/^  - id: rate_limit/{f=1;print;next} f&&/^  - id:/{exit} f{print}' \
+  "$PROJECT_DIR/services/governance/config.yaml")
+printf '%s\n' "$RL_BLOCK" | sed 's/^/    /'
 echo ""
+# The block must carry the two fields the demo is about to rely on.
+printf '%s' "$RL_BLOCK" | grep -q 'requests_per_window:' \
+  || { fail "rate_limit policy block missing requests_per_window — config drift?"; exit 1; }
 
 # Read the configured limit so the demo stays in sync with the YAML.
 RL_LIMIT=$(awk '/- id: rate_limit/{f=1} f && /requests_per_window:/{print $2; exit}' \
@@ -80,5 +86,9 @@ echo "  Sample deny rows:"
 "$CLI" infra db query \
   "SELECT decision, policy, reason FROM governance_decisions WHERE session_id = '$SID' AND decision = 'deny' LIMIT 3" \
   --profile "$PROFILE" 2>&1 | grep -v "^\[profile" | sed 's/^/  /'
+
+echo ""
+assert_min "$(db_count "SELECT COUNT(*) FROM governance_decisions WHERE session_id = '$SID' AND decision = 'deny' AND policy = 'rate_limit'")" \
+  1 "denies attributed to policy=rate_limit"
 
 header "RATE LIMITING DEMO COMPLETE"

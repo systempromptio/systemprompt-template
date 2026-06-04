@@ -70,8 +70,11 @@ _extract_jwt() {
 
 # Ensure the admin user exists (mirrors 00-preflight.sh + 02-load.sh).
 app_cli admin users create --name "airgap-admin" --email "$ADMIN_EMAIL" >/dev/null 2>&1 || true
-USER_ID=$(app_cli admin users search "$ADMIN_EMAIL" 2>/dev/null \
-  | sed -n 's/.*"id":[[:space:]]*"\([^"]*\)".*/\1/p' | head -1 || true)
+# --json + jq: the default table output has no parseable "id": field, so a
+# text-parse silently yields empty and the admin promote is skipped, which
+# makes the session login below fail with "exists but is not an admin".
+USER_ID=$("${COMPOSE[@]}" exec -T app systemprompt --json admin users search "$ADMIN_EMAIL" 2>/dev/null \
+  | jq -r '.items[0].id // empty')
 [[ -n "$USER_ID" ]] && app_cli admin users role promote "$USER_ID" >/dev/null 2>&1 || true
 
 step "Logging in as $ADMIN_EMAIL"
@@ -211,11 +214,16 @@ else
 fi
 echo ""
 
-# 3b — DENIED model: a model not in the gateway policy must be rejected
-# before any upstream call. Expect 403 with the policy message.
-DENIED_PAYLOAD='{"model":"claude-opus-forbidden-99","max_tokens":16,"messages":[{"role":"user","content":"should be denied"}]}'
-step "POST /v1/messages with denied model claude-opus-forbidden-99"
-cmd "curl -X POST $BASE_URL/v1/messages   (model=claude-opus-forbidden-99)"
+# 3b — DENIED model: a model with no matching gateway route must be rejected
+# before any upstream call. The 0.15.0 air-gap profile routes `claude-*` and
+# `gpt-*` onto the mock, so the denied model must fall OUTSIDE every pattern
+# (a "claude-…-forbidden" name would match `claude-*` and forward). An unrouted
+# model is rejected with a 4xx ("No gateway route matches model …") before the
+# engine dials any upstream.
+DENIED_MODEL="forbidden-model-xyz"
+DENIED_PAYLOAD='{"model":"'"$DENIED_MODEL"'","max_tokens":16,"messages":[{"role":"user","content":"should be denied"}]}'
+step "POST /v1/messages with denied (unrouted) model $DENIED_MODEL"
+cmd "curl -X POST $BASE_URL/v1/messages   (model=$DENIED_MODEL)"
 DENIED_BODY=$(curl -s -m 15 -X POST \
   -H "Authorization: Bearer $TOKEN" \
   -H "x-session-id: $SESSION_ID" \
@@ -226,17 +234,17 @@ DENIED_BODY=$(curl -s -m 15 -X POST \
 DENIED_CODE=$(printf '%s' "$DENIED_BODY" | tail -1)
 DENIED_JSON=$(printf '%s' "$DENIED_BODY" | sed '$d')
 
-if [[ "$DENIED_CODE" == "403" ]]; then
-  pass "Denied model -> HTTP 403"
-  if printf '%s' "$DENIED_JSON" | grep -qi 'not permitted by gateway policy'; then
-    pass "Response body carries 'not permitted by gateway policy'"
+if [[ "$DENIED_CODE" =~ ^4[0-9][0-9]$ ]]; then
+  pass "Denied model -> HTTP $DENIED_CODE (rejected before upstream)"
+  if printf '%s' "$DENIED_JSON" | grep -qiE 'no gateway route|not permitted by gateway policy'; then
+    pass "Response body explains the gateway rejection"
   else
-    warn "403 returned but the expected policy message was absent:"
+    warn "4xx returned but the expected gateway-rejection message was absent:"
     printf '%s' "$DENIED_JSON" | sed 's/^/    /'
     FAILURES=$((FAILURES + 1))
   fi
 else
-  fail "Denied model -> HTTP $DENIED_CODE (expected 403)"
+  fail "Denied model -> HTTP $DENIED_CODE (expected 4xx)"
   printf '%s' "$DENIED_JSON" | sed 's/^/    /'
   FAILURES=$((FAILURES + 1))
 fi

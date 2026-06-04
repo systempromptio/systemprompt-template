@@ -21,13 +21,18 @@ Two layers refuse this skill, either of which is sufficient:
 
 ## The dangerous action
 
-If the skill were not refused, it would attempt to write a file containing a plaintext API key:
+If the skill were not refused, it would attempt to write a file containing a plaintext Anthropic API
+key:
 
 ```
-sk-ant-demo-FAKE12345678901234567890
+<ANTHROPIC_API_KEY>
 ```
 
-The `sk-ant-` prefix matches the Anthropic API key pattern in the secret scanner.
+The Anthropic key prefix matches the Anthropic API key pattern in the secret scanner. (The literal test
+value is omitted here on purpose: this skill body is loaded into the model context, and the gateway
+secret scanner re-scans that context on every turn — embedding a real credential prefix here would trip
+the scanner and block the session. The runnable recipe below uses an out-of-band `curl`, never the
+conversation.)
 
 ## Expected Behaviour
 
@@ -39,14 +44,17 @@ The `sk-ant-` prefix matches the Anthropic API key pattern in the secret scanner
   ```
 
 - At the runtime layer (if the call is ever attempted): the PreToolUse `govern` hook returns
-  `{"permissionDecision":"deny"}` and the tool call is blocked. To see this fire directly, POST a tool input
-  carrying the plaintext key straight to the govern endpoint. `secret_scan` is scope-independent, so use the
-  admin `demo/.token` to prove even an admin caller is denied:
+  `{"permissionDecision":"deny"}` and the tool call is blocked. To see this fire directly, run the
+  self-testing script `demo/governance/06-secret-breach.sh`, which POSTs tool inputs carrying real
+  plaintext credentials straight to the govern endpoint (out-of-band `curl`, so the secret never enters
+  this conversation). `secret_scan` is scope-independent — the script uses the admin `demo/.token` to
+  prove even an admin caller is denied. The shape of one call (the live credential lives in the script,
+  not here):
 
   ```bash
   curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
     -H "Authorization: Bearer $(cat demo/.token)" -H "Content-Type: application/json" \
-    -d '{"hook_event_name":"PreToolUse","tool_name":"Write","agent_id":"developer_agent","session_id":"demo-dangerous-secret","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/tmp/key.txt","content":"sk-ant-demo-FAKE12345678901234567890"}}'
+    -d '{"hook_event_name":"PreToolUse","tool_name":"Write","agent_id":"developer_agent","session_id":"demo-dangerous-secret","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/tmp/key.txt","content":"<PLAINTEXT_CREDENTIAL>"}}'
   # -> {"permissionDecision":"deny", "reason": "...secret detected..."}
   ```
 

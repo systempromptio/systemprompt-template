@@ -25,10 +25,16 @@ echo ""
 # (missing AI key, port collision, etc.) would 404 here and abort the sweep.
 REGISTRY=$("$CLI" --json admin agents registry --profile "$PROFILE" 2>/dev/null || echo "{}")
 # Agent must exist in the registry AND be in a started state. NotStarted
-# means the agent binary isn't running — messaging would 404.
+# means the agent binary isn't running — messaging would 404. The 0.15.0
+# registry returns rows under top-level .items (.data is null), so read .items
+# (with a .data.agents fallback for older shapes).
 if ! echo "$REGISTRY" \
-     | python3 -c 'import json,sys; r=json.load(sys.stdin).get("data",{}); \
-       sys.exit(0 if any(a.get("name")==sys.argv[1] and a.get("status") not in ("NotStarted","Stopped","Error") for a in r.get("agents",[])) else 1)' \
+     | python3 -c 'import json,sys
+r = json.load(sys.stdin)
+agents = r.get("items") or (r.get("data") or {}).get("agents", [])
+name = sys.argv[1]
+ok = any(a.get("name") == name and a.get("status") not in ("NotStarted", "Stopped", "Error") for a in agents)
+sys.exit(0 if ok else 1)' \
        "$TARGET_AGENT" 2>/dev/null; then
   info "$TARGET_AGENT is not running (status != started) in the A2A registry."
   info "This demo exercises a real AI call and requires the agent process to be running."

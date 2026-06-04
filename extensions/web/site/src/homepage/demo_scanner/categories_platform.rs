@@ -26,14 +26,6 @@ pub(super) const PLATFORM_CATEGORIES: &[CategoryMeta] = &[
         feature_url: "https://systemprompt.io/features/web-publisher",
     },
     CategoryMeta {
-        id: "cloud",
-        title: "Cloud",
-        tagline: "Local dev and managed cloud are the same binary, one flag away.",
-        story: "Every command you just ran against localhost takes a --profile flag. Point it at a managed tenant and the exact same CLI drives production. This walkthrough shows the read-only cloud surface — identity, deployment status, and profiles — so you can see how a laptop demo promotes to a real environment without a second toolchain.",
-        cost: "",
-        feature_url: "https://systemprompt.io/features/deploy-anywhere",
-    },
-    CategoryMeta {
         id: "performance",
         title: "Performance",
         tagline: "Trace one request end-to-end, then prove it holds under 100 concurrent workers.",

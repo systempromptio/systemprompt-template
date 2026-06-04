@@ -62,7 +62,7 @@ echo "  tool is allowed. Expecting: ALLOW"
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
+RESPONSE=$(curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -72,7 +72,11 @@ curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" 
     "session_id": "demo-happy-path",
     "cwd": "/var/www/html/systemprompt-template",
     "tool_input": {}
-  }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+  }')
+printf '%s\n' "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+
+echo ""
+assert_decision "$RESPONSE" "allow" "developer_agent admin scope — tool allowed"
 
 # ──────────────────────────────────────────────
 #  PART 2: MCP tool execution (what happens after ALLOW)
@@ -109,6 +113,10 @@ echo "  Detailed decisions:"
 "$CLI" infra db query \
   "SELECT decision, tool_name, policy, reason FROM governance_decisions WHERE session_id = 'demo-happy-path' ORDER BY created_at" \
   2>&1 | grep -v "^\[profile"
+
+echo ""
+assert_min "$(db_count "SELECT COUNT(*) FROM governance_decisions WHERE session_id = 'demo-happy-path' AND decision = 'allow'")" \
+  1 "allow decision recorded for demo-happy-path"
 
 echo ""
 echo "=========================================="

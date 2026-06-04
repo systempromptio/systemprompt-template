@@ -132,13 +132,13 @@ curl -s -X POST "$URL/api/public/hooks/govern?plugin_id=enterprise-demo" \
     "agent_id": "developer_agent",
     "session_id": "demo-secret-breach",
     "tool_input": {
-      "command": "curl -H \"Authorization: AKIAIOSFODNN7EXAMPLE\" https://s3.amazonaws.com/bucket",
+      "command": "curl -H \"Authorization: <AWS_ACCESS_KEY>\" https://s3.amazonaws.com/bucket",
       "description": "Fetch S3 object"
     }
   }' | python3 -m json.tool
 ```
 
-**Expected:** `decision: deny` — secret_injection detected (AWS access key pattern `AKIA...`).
+**Expected:** `decision: deny` — secret_injection detected (AWS access-key prefix pattern).
 
 ### Test 2: GitHub Personal Access Token
 
@@ -153,12 +153,12 @@ curl -s -X POST "$URL/api/public/hooks/govern?plugin_id=enterprise-demo" \
     "session_id": "demo-secret-breach",
     "tool_input": {
       "file_path": "/home/user/.env",
-      "content": "GITHUB_TOKEN=ghp_ABCDEFghijklmnop1234567890abcdef\nDATABASE_URL=postgres://localhost/db"
+      "content": "GITHUB_TOKEN=<GITHUB_PAT>\nDATABASE_URL=postgres://localhost/db"
     }
   }' | python3 -m json.tool
 ```
 
-**Expected:** `decision: deny` — secret_injection detected (GitHub PAT pattern `ghp_...`).
+**Expected:** `decision: deny` — secret_injection detected (GitHub PAT prefix pattern).
 
 ### Test 3: RSA Private Key
 
@@ -173,7 +173,7 @@ curl -s -X POST "$URL/api/public/hooks/govern?plugin_id=enterprise-demo" \
     "session_id": "demo-secret-breach",
     "tool_input": {
       "file_path": "/home/user/.ssh/id_rsa",
-      "content": "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA..."
+      "content": "<RSA_PRIVATE_KEY>"
     }
   }' | python3 -m json.tool
 ```
@@ -283,7 +283,7 @@ echo ""
 
 # ── Test 3: AWS key in tool input → DENY (secret_injection) ────
 # The governance layer scans every field in tool_input for secrets.
-# An AWS access key (AKIA...) is detected and the call is blocked
+# An AWS access key (AWS access-key prefix) is detected and the call is blocked
 # before the tool ever executes.
 echo "── Test 3: Bash command contains AWS access key ──"
 curl -s -X POST "$API" \
@@ -295,7 +295,7 @@ curl -s -X POST "$API" \
     "agent_id": "developer_agent",
     "session_id": "demo-governance",
     "tool_input": {
-      "command": "curl -H \"Authorization: AKIAIOSFODNN7EXAMPLE\" https://s3.amazonaws.com/bucket",
+      "command": "curl -H \"Authorization: <AWS_ACCESS_KEY>\" https://s3.amazonaws.com/bucket",
       "description": "Fetch S3 object"
     }
   }' | python3 -m json.tool
@@ -303,7 +303,7 @@ echo ""
 
 # ── Test 4: GitHub PAT in file content → DENY (secret_injection)
 # A Write tool call attempts to create a .env file containing a
-# GitHub personal access token (ghp_...). Blocked immediately.
+# GitHub personal access token (GitHub PAT prefix). Blocked immediately.
 echo "── Test 4: Write .env file containing GitHub PAT ──"
 curl -s -X POST "$API" \
   -H "Authorization: Bearer $TOKEN" \
@@ -315,7 +315,7 @@ curl -s -X POST "$API" \
     "session_id": "demo-governance",
     "tool_input": {
       "file_path": "/home/user/.env",
-      "content": "GITHUB_TOKEN=ghp_ABCDEFghijklmnop1234567890abcdef\nDATABASE_URL=postgres://localhost/db"
+      "content": "GITHUB_TOKEN=<GITHUB_PAT>\nDATABASE_URL=postgres://localhost/db"
     }
   }' | python3 -m json.tool
 echo ""
@@ -334,7 +334,7 @@ curl -s -X POST "$API" \
     "session_id": "demo-governance",
     "tool_input": {
       "file_path": "/home/user/.ssh/id_rsa",
-      "content": "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA..."
+      "content": "<RSA_PRIVATE_KEY>"
     }
   }' | python3 -m json.tool
 echo ""

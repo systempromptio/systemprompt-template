@@ -26,19 +26,8 @@ subheader "STEP 3: Agent Trends"
 run_cli_indented analytics agents trends --since 7d
 
 subheader "STEP 4: Deep Dive"
-info "Showing developer_agent details (requires prior agent activity)..."
-cmd "systemprompt analytics agents show developer_agent"
-_out=$("$CLI" analytics agents show developer_agent --profile "$PROFILE" 2>&1 || true)
-_preamble=$(echo "$_out" | awk '/^\{/{exit} {print}')
-_body=$(echo "$_out" | awk '/^\{/{flag=1} flag{print}')
-[[ -n "$_preamble" ]] && echo "$_preamble" | sed 's/^/  /'
-if [[ -n "$_body" ]]; then
-  _reshaped=$(echo "$_body" \
-    | jq '. as $root
-          | del(.top_errors)
-          | . + {"errors_summary": (if ($root.top_errors // [] | length)==0 then "✓ No agent errors in window" else "\($root.top_errors|length) error categories" end)}' 2>/dev/null) || _reshaped="$_body"
-  echo "$_reshaped" | head -32 | sed 's/^/  /'
-fi
-echo ""
+info "Showing developer_agent details (populated once the agent has AI activity;"
+info "run SEED_AGENT_RUN=1 ./demo/01-seed-data.sh or agents/03 to generate some)..."
+run_cli_head 32 analytics agents show developer_agent
 
 header "AGENT ANALYTICS DEMO COMPLETE"

@@ -169,6 +169,11 @@ echo ""
 echo "  Expected: two deny records"
 echo "    1. scope_check:    user scope cannot access mcp__systemprompt__list_agents"
 echo "    2. tool_blocklist: destructive tool delete_records blocked for user scope"
+echo ""
+assert_min "$(db_count "SELECT COUNT(*) FROM governance_decisions WHERE session_id = 'demo-governance-denied' AND decision = 'deny'")" \
+  1 "scope deny landed in audit (demo-governance-denied)"
+assert_min "$(db_count "SELECT COUNT(*) FROM governance_decisions WHERE session_id = 'demo-governance-denied-blocklist' AND decision = 'deny'")" \
+  1 "blocklist deny landed in audit (demo-governance-denied-blocklist)"
 
 echo ""
 echo "=========================================="

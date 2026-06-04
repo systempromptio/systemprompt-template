@@ -117,6 +117,76 @@ except Exception:
   fi
 }
 
+# ── Structured-data + validation helpers ──────
+# In 0.15.0 every list/query command renders a human box-table by default and
+# only emits machine-readable JSON under `--json` (tables: {columns, items[]};
+# cards: {sections[]}). These helpers force the structured path and assert on
+# it, so a demo fails loudly instead of narrating fiction when data is missing.
+
+# jq powers every structured assertion below. Fail early and clearly rather
+# than letting parses silently yield empty.
+if ! command -v jq >/dev/null 2>&1; then
+  echo "ERROR: 'jq' is required by the demo suite." >&2
+  echo "       macOS: brew install jq   Debian/Ubuntu: sudo apt-get install -y jq" >&2
+  exit 1
+fi
+
+# Run a CLI subcommand in --json mode, emitting raw JSON to stdout.
+#   cli_json infra jobs list
+cli_json() {
+  "$CLI" --json "$@" --profile "$PROFILE" 2>/dev/null
+}
+
+# Extract a scalar via jq from a --json CLI call (empty string if absent).
+#   id=$(json_first '.items[0].id' admin users list)
+json_first() {
+  local path="$1"; shift
+  cli_json "$@" | jq -r "${path} // empty" 2>/dev/null
+}
+
+# COUNT(*) (or first column of first row) from a SQL query, as a bare integer.
+# Returns 0 on any failure. Always uses --json so it survives table-format changes.
+#   n=$(db_count "SELECT COUNT(*) FROM governance_decisions")
+db_count() {
+  local n
+  n=$(cli_json infra db query "$1" | jq -r '(.items[0] | to_entries[0].value) // 0' 2>/dev/null)
+  [[ "$n" =~ ^[0-9]+$ ]] && echo "$n" || echo 0
+}
+
+# Assert a numeric value is >= a minimum; PASS line on success, exit 1 on failure.
+#   assert_min "$n" 1 "governance_decisions rows"
+assert_min() {
+  local actual="$1" min="$2" label="$3"
+  if [[ "${actual:-}" =~ ^[0-9]+$ ]] && (( actual >= min )); then
+    echo -e "  ${GREEN}✓ PASS${R} — $label: ${actual} (>= ${min})"
+  else
+    echo -e "  ${RED}✗ FAIL${R} — $label: expected >= ${min}, got '${actual:-<none>}'" >&2
+    exit 1
+  fi
+}
+
+# Assert two values are equal; PASS line on success, exit 1 on failure.
+assert_eq() {
+  local actual="$1" expected="$2" label="$3"
+  if [[ "$actual" == "$expected" ]]; then
+    echo -e "  ${GREEN}✓ PASS${R} — $label: ${actual}"
+  else
+    echo -e "  ${RED}✗ FAIL${R} — $label: expected ${expected}, got '${actual:-<none>}'" >&2
+    exit 1
+  fi
+}
+
+# Assert a value is non-empty (and not the literal "null"); exit 1 otherwise.
+assert_nonempty() {
+  local value="$1" label="$2"
+  if [[ -n "$value" && "$value" != "null" ]]; then
+    echo -e "  ${GREEN}✓ PASS${R} — $label"
+  else
+    echo -e "  ${RED}✗ FAIL${R} — $label: value was empty" >&2
+    exit 1
+  fi
+}
+
 # ── Colors ─────────────────────────────────────
 GREEN='\033[0;32m'
 RED='\033[0;31m'

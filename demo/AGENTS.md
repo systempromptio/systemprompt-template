@@ -4,7 +4,7 @@
 
 ## Purpose
 
-43 shell scripts across 10 categories that exercise every major surface of the platform (governance, agents, MCP, skills, infra, analytics, users, web, cloud, performance). Use this catalogue to:
+43 shell scripts across 9 categories that exercise every major surface of the platform (governance, agents, MCP, skills, infra, analytics, users, web, performance). Use this catalogue to:
 
 - **Verify a change** — smoke-test after modifying a CLI domain, extension, or governance rule.
 - **Reproduce a bug** — most incidents map to one or two specific scripts.
@@ -38,7 +38,7 @@ Paste this verbatim:
 mkdir -p /tmp/demo-run && : > /tmp/demo-run/results.tsv
 ./demo/00-preflight.sh > /tmp/demo-run/preflight.log 2>&1
 ./demo/01-seed-data.sh > /tmp/demo-run/seed.log 2>&1
-for cat in governance agents mcp skills infrastructure analytics users web cloud performance; do
+for cat in governance agents mcp skills infrastructure analytics users web performance; do
   for script in $(ls demo/$cat/[0-9]*.sh 2>/dev/null | sort); do
     name="$cat/$(basename "$script")"
     log="/tmp/demo-run/${cat}_$(basename "$script" .sh).log"
@@ -81,7 +81,6 @@ Exit `0` = pass. Non-zero = failure. Re-run without the wrapper to see stdout li
 | `analytics` | 8 | Overview → agents → cost → requests → sessions → content → conversations → tools | Free | Requires seed data (step 4 above) |
 | `users` | 4 | CRUD, roles, sessions, IP bans | Free | `04-ip-ban.sh` adds and removes a test IP — fully reversible |
 | `web` | 2 | Content model inventory, sitemap generation + validate | Free | Read-only |
-| `cloud` | 1 | Read-only: `whoami`, `status`, `profile list` | Free | Does not mutate remote state |
 | `performance` | 2 | Request tracing end-to-end, 2000-request load test | Free | Load test takes ~60–90s wall-clock |
 
 Script counts must match: `ls demo/<cat>/[0-9]*.sh | wc -l`. If they don't, someone added or removed a script — re-read `demo/<cat>/README.md` to understand the new sequence.

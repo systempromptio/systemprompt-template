@@ -72,8 +72,12 @@ app_cli() { "${COMPOSE[@]}" exec -T app systemprompt "$@" 2>&1; }
 _extract_jwt() { grep -oE 'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+' | head -1; }
 ADMIN_EMAIL="${SYSTEMPROMPT_ADMIN_EMAIL:-airgap-admin@demo.systemprompt.io}"
 app_cli admin users create --name "airgap-admin" --email "$ADMIN_EMAIL" >/dev/null 2>&1 || true
-USER_ID=$(app_cli admin users search "$ADMIN_EMAIL" 2>/dev/null \
-  | sed -n 's/.*"id":[[:space:]]*"\([^"]*\)".*/\1/p' | head -1 || true)
+# Extract the user id from structured --json output. The default table format
+# has no parseable "id": field, so a text-parse here silently yields empty,
+# the promote is skipped, and `session login` then fails with
+# "exists but is not an admin". Use --json + jq so the promote always runs.
+USER_ID=$("${COMPOSE[@]}" exec -T app systemprompt --json admin users search "$ADMIN_EMAIL" 2>/dev/null \
+  | jq -r '.items[0].id // empty')
 [[ -n "$USER_ID" ]] && app_cli admin users role promote "$USER_ID" >/dev/null 2>&1 || true
 TOKEN=$(app_cli admin session login --email "$ADMIN_EMAIL" --token-only 2>&1 | _extract_jwt || true)
 if [[ -z "$TOKEN" ]]; then
@@ -213,13 +217,18 @@ fi
 info "mock /stats count before: $BEFORE"
 echo ""
 
-# Fire a burst of GOVERNANCE-DENIED requests: a model that is NOT in the
-# gateway policy is rejected before any upstream call -> HTTP 403.
-DENIED_MODEL="claude-opus-forbidden-99"
+# Fire a burst of GOVERNANCE-DENIED requests. The model must NOT match any
+# gateway route pattern — in 0.15.0 the air-gap profile maps `claude-*` and
+# `gpt-*` onto the mock provider, so a "claude-…-forbidden" name would MATCH
+# `claude-*` and forward. A name outside every pattern has no route and the
+# gateway rejects it with a 4xx (404 no-route / 403 not-assigned) before any
+# upstream call. Either way the request never reaches the mock — which the
+# flat counter below proves independently.
+DENIED_MODEL="forbidden-model-xyz"
 DENIED_PAYLOAD='{"model":"'"$DENIED_MODEL"'","max_tokens":16,"messages":[{"role":"user","content":"should never reach the mock"}]}'
 step "Firing 25 governance-denied requests at $BASE_URL/v1/messages"
-cmd "curl -X POST $BASE_URL/v1/messages   (model=$DENIED_MODEL, expect 403)"
-DENIED_403=0
+cmd "curl -X POST $BASE_URL/v1/messages   (model=$DENIED_MODEL, expect 4xx)"
+DENIED_4XX=0
 DENIED_OTHER=0
 for _ in $(seq 1 25); do
   CODE=$(curl -s -o /dev/null -w "%{http_code}" -m 5 -X POST \
@@ -228,15 +237,15 @@ for _ in $(seq 1 25); do
     -H "Content-Type: application/json" \
     -d "$DENIED_PAYLOAD" \
     "$BASE_URL/v1/messages" 2>/dev/null || echo "000")
-  if [[ "$CODE" == "403" ]]; then
-    DENIED_403=$((DENIED_403 + 1))
+  if [[ "$CODE" =~ ^4[0-9][0-9]$ ]]; then
+    DENIED_4XX=$((DENIED_4XX + 1))
   else
     DENIED_OTHER=$((DENIED_OTHER + 1))
   fi
 done
-info "denied burst: $DENIED_403 x HTTP 403, $DENIED_OTHER x other"
-if [[ "$DENIED_403" -eq 0 ]]; then
-  fail "No request was denied — the gateway did not reject the forbidden model"
+info "denied burst: $DENIED_4XX x HTTP 4xx (denied), $DENIED_OTHER x other"
+if [[ "$DENIED_4XX" -eq 0 ]]; then
+  fail "No request was denied — the gateway did not reject the unrouted model"
   FAILURES=$((FAILURES + 1))
 fi
 echo ""

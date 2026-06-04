@@ -10,7 +10,9 @@
 
 # Demo Suite
 
-**44 runnable demo scripts** organised into 10 categories, plus 2 setup scripts, plus 2 orchestrated multi-container scenarios that demonstrate the air-gap and horizontal-scaling claims in the factsheet.
+**43 runnable demo scripts** organised into 9 categories, plus 2 setup scripts, plus 2 orchestrated multi-container scenarios that demonstrate the air-gap and horizontal-scaling claims in the factsheet.
+
+Every demo is **self-testing**: it reads structured `--json` data from the CLI and asserts on it, so a script fails loudly (non-zero exit, red `✗ FAIL` line) the moment expected data is missing — it never narrates a result it didn't verify.
 
 Every section below is a fenced code block — open this file in your editor, click into the block, copy, paste into your terminal.
 
@@ -20,7 +22,7 @@ Every section below is a fenced code block — open this file in your editor, cl
 - [Categories at a glance](#categories-at-a-glance)
 - [Demos by category](#demos-by-category)
   - [Setup](#setup-run-these-first)
-  - [Infrastructure](#infrastructure) · [Cloud](#cloud) · [Governance](#governance) · [MCP](#mcp) · [Analytics](#analytics) · [Agents](#agents) · [Users](#users) · [Skills](#skills) · [Web](#web) · [Performance](#performance)
+  - [Infrastructure](#infrastructure) · [Governance](#governance) · [MCP](#mcp) · [Analytics](#analytics) · [Agents](#agents) · [Users](#users) · [Skills](#skills) · [Web](#web) · [Performance](#performance)
 - [Run them all at once](#run-them-all-at-once)
 - [Scenarios — factsheet proofs](#scenarios--factsheet-proofs)
   - [Air-gap scenario](#air-gap-scenario)
@@ -70,7 +72,6 @@ Organised by the three pillars of [systemprompt.io](https://systemprompt.io): **
 | Pillar | Category | Scripts | What it covers | Cost |
 |--------|----------|---------|----------------|------|
 | Infrastructure | [infrastructure/](infrastructure/) | 5 | Services, database, jobs, logs, configuration | Free |
-| Infrastructure | [cloud/](cloud/) | 1 | Auth status, profiles, deployment info | Free |
 | Capabilities | [governance/](governance/) | 9 | Audit smoke, scope, secrets, blocklist, rate limit, hooks | Free |
 | Capabilities | [mcp/](mcp/) | 3 | MCP server management, access tracking, tool execution | Free |
 | Capabilities | [analytics/](analytics/) | 8 | Overview, agents, costs, requests, sessions, content/traffic, conversations, tools | Free |
@@ -80,7 +81,7 @@ Organised by the three pillars of [systemprompt.io](https://systemprompt.io): **
 | Integrations | [web/](web/) | 2 | Content types, templates, sitemaps, validation | Free |
 | Integrations | [performance/](performance/) | 2 | Request tracing, 2000-request load test | Free |
 
-**Total: 44 category scripts + 2 setup scripts. 43 free, 1 costs ~$0.01.** Plus two multi-container scenarios — see [Scenarios](#scenarios--factsheet-proofs).
+**Total: 43 category scripts + 2 setup scripts. 42 free, 1 costs ~$0.01.** Plus two multi-container scenarios — see [Scenarios](#scenarios--factsheet-proofs).
 
 ---
 
@@ -125,13 +126,6 @@ Every demo below is a single fenced command. Run them in any order once prefligh
 [`infrastructure/05-config.sh`](infrastructure/05-config.sh) — full platform configuration overview.
 ```bash
 ./demo/infrastructure/05-config.sh
-```
-
-### Cloud
-
-[`cloud/01-cloud-overview.sh`](cloud/01-cloud-overview.sh) — auth status, profiles, deployment info.
-```bash
-./demo/cloud/01-cloud-overview.sh
 ```
 
 ### Governance
@@ -348,7 +342,7 @@ Replay the entire free suite in one shot. Skips the paid `agents/03-agent-messag
 
 ```bash
 ./demo/00-preflight.sh && ./demo/01-seed-data.sh && \
-for f in demo/infrastructure/*.sh demo/cloud/*.sh demo/governance/*.sh \
+for f in demo/infrastructure/*.sh demo/governance/*.sh \
          demo/mcp/*.sh demo/analytics/*.sh \
          demo/agents/01-*.sh demo/agents/02-*.sh demo/agents/04-*.sh demo/agents/05-*.sh \
          demo/users/*.sh demo/skills/*.sh demo/web/*.sh demo/performance/*.sh; do
@@ -388,7 +382,7 @@ just airgap-test
 
 That recipe runs the three scripts in order, stopping on first failure. To run them individually:
 
-[`scenarios/airgap/01-egress-assert.sh`](scenarios/airgap/01-egress-assert.sh) — two independent proofs of closure: (1) `ss`/`conntrack` from inside the sealed network shows no remote address outside the internal subnet; (2) a burst of governance-denied `/v1/messages` calls leaves the mock-inference request counter unchanged — denial precedes any upstream call.
+[`scenarios/airgap/01-egress-assert.sh`](scenarios/airgap/01-egress-assert.sh) — two independent proofs of closure: (1) `ss`/`conntrack` from inside the sealed network shows no remote address outside the internal subnet; (2) a burst of `/v1/messages` calls for an **unrouted** model (one matching no gateway route pattern; in 0.15.0 `claude-*`/`gpt-*` are routed to the mock, so the denied model must fall outside them) is rejected with a 4xx before any upstream call, leaving the mock-inference request counter unchanged — denial precedes any upstream call.
 ```bash
 ./demo/scenarios/airgap/01-egress-assert.sh
 ```
@@ -398,7 +392,7 @@ That recipe runs the three scripts in order, stopping on first failure. To run t
 ./demo/scenarios/airgap/02-load.sh
 ```
 
-[`scenarios/airgap/03-governance.sh`](scenarios/airgap/03-governance.sh) — end-to-end governance assertions inside the sealed network: allow-listed model → 200 via the mock; un-listed model → 403 before any upstream call.
+[`scenarios/airgap/03-governance.sh`](scenarios/airgap/03-governance.sh) — end-to-end governance assertions inside the sealed network: allow-listed model → 200 via the mock; unrouted model → 4xx ("no gateway route") before any upstream call.
 ```bash
 ./demo/scenarios/airgap/03-governance.sh
 ```
@@ -421,10 +415,10 @@ just airgap-down
 
 Architecture and per-script walkthrough: [`scenarios/scaled/architecture.md`](scenarios/scaled/architecture.md).
 
-**One-time setup.** Bring up the multi-replica stack (postgres primary + read replica + 3 app replicas + 1 scheduler + nginx LB). Adjust `REPLICAS=` to fan out further.
+**One-time setup.** Bring up the multi-replica stack (postgres primary + read replica + 3 app replicas + 1 scheduler + nginx LB). The replica count is the first positional argument (defaults to 3) — pass a number to fan out further.
 
 ```bash
-just scaled-up REPLICAS=3
+just scaled-up 3
 ```
 
 **Run the assertions.** Runs `01-load.sh`, `03-replica-distribution.sh`, `04-scheduler-isolation.sh` in order — skips the long soak test:
@@ -553,13 +547,12 @@ Empty analytics / governance tables:
 
 ## Verification status
 
-All 44 category demos + 2 setup scripts + both scenario stacks were run end-to-end on **2026-05-21** against template `v0.11.0`. Every script exited `0`.
+All 43 category demos + 2 setup scripts + both scenario stacks were run end-to-end on **2026-06-04** against template `v0.15.0`. Every script exited `0`, and every demo's structured-data assertions (`✓ PASS` lines) held against live seeded data.
 
 | Set | Count | Result |
 |-----|------:|--------|
 | Setup (preflight, seed) | 2 | All pass |
 | infrastructure/ | 5 | All pass |
-| cloud/ | 1 | Pass |
 | governance/ | 9 | All pass |
 | mcp/ | 3 | All pass |
 | analytics/ | 8 | All pass |
@@ -570,7 +563,7 @@ All 44 category demos + 2 setup scripts + both scenario stacks were run end-to-e
 | performance/ | 2 | All pass (incl. 2000-request load test) |
 | scenarios/airgap (just airgap-test) | 3 | All pass |
 | scenarios/scaled (just scaled-test) | 3 | All pass — long soak (`02-soak.sh`) excluded by design |
-| **Total** | **52** | **All pass** |
+| **Total** | **51** | **All pass** |
 
 ---
 

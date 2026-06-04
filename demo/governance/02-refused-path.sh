@@ -113,6 +113,9 @@ echo "  Decision counts (session=demo-refused-path):"
 echo ""
 echo "  Expected: 1 deny (scope_restriction)"
 echo ""
+assert_min "$(db_count "SELECT COUNT(*) FROM governance_decisions WHERE session_id = 'demo-refused-path' AND decision = 'deny'")" \
+  1 "deny decision landed in audit for demo-refused-path"
+echo ""
 
 echo "  Detailed decisions:"
 "$CLI" infra db query \

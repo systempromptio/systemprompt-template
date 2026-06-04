@@ -16,25 +16,13 @@ set -e
 
 source "$(cd "$(dirname "$0")/.." && pwd)/_common.sh"
 
-# Runs a CLI command, splits the non-JSON preamble from the JSON body,
-# pipes the body through a jq filter, and indents everything for display.
-run_cli_reshape_json() {
-  local filter="$1"; shift
-  local display="systemprompt $*"
-  cmd "$display"
-  local output preamble body reshaped
-  output=$("$CLI" "$@" --profile "$PROFILE" 2>&1)
-  preamble=$(echo "$output" | awk '/^\{/{exit} {print}')
-  body=$(echo "$output" | awk '/^\{/{flag=1} flag{print}')
-  [[ -n "$preamble" ]] && echo "$preamble" | sed 's/^/  /'
-  if [[ -n "$body" ]]; then
-    if reshaped=$(echo "$body" | jq -r "$filter" 2>/dev/null); then
-      echo "$reshaped" | sed 's/^/  /'
-    else
-      echo "$body" | sed 's/^/  /'
-    fi
-  fi
-  echo ""
+# Show a traffic rollup (box table) and assert it has at least one row in the
+# structured --json output. 01-seed-data.sh inserts 100 synthetic sessions, so
+# every rollup must be non-empty; an empty one means the seed never landed.
+traffic_rollup() {
+  local sub="$1" label="$2"
+  run_cli_indented analytics traffic "$sub"
+  assert_min "$(cli_json analytics traffic "$sub" | jq '.items | length')" 1 "$label"
 }
 
 header "ANALYTICS: CONTENT & TRAFFIC" "Content engagement, top pages, traffic sources, geo, devices"
@@ -54,15 +42,12 @@ subheader "STEP 3: Content Trends"
 run_cli_indented analytics content trends --since 7d
 
 subheader "STEP 4: Traffic Sources"
-run_cli_reshape_json 'if (.sources|length)==0 then "✓ Traffic source ingestion wired — seed posts synthetic page_view hooks to /api/public/hooks/track; referer-grouped rollups land in the hourly analytics job (period: \(.period), sessions: \(.total_sessions))" else . end' \
-  analytics traffic sources
+traffic_rollup sources "traffic sources rollup has rows (seeded sessions)"
 
 subheader "STEP 5: Geographic Distribution"
-run_cli_reshape_json 'if (.countries|length)==0 then "✓ Geographic rollup wired — country tags ride on page_view hook payloads and materialise in the hourly traffic job (period: \(.period), sessions: \(.total_sessions))" else . end' \
-  analytics traffic geo
+traffic_rollup geo "geographic rollup has rows (seeded sessions)"
 
 subheader "STEP 6: Device Breakdown"
-run_cli_reshape_json 'if (.devices|length)==0 then "✓ Device breakdown wired — user-agent parser runs in the hourly traffic rollup job (period: \(.period), sessions: \(.total_sessions))" else . end' \
-  analytics traffic devices
+traffic_rollup devices "device breakdown has rows (seeded sessions)"
 
 header "CONTENT & TRAFFIC DEMO COMPLETE"

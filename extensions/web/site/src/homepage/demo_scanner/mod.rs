@@ -21,7 +21,7 @@ const CLI_PREFIXES: &[&str] = &[
 
 const DEFAULT_TITLE: &str = "Run the Platform";
 const DEFAULT_SUBTITLE: &str =
-    "Ten guided walkthroughs, each a sequential story you can run against your local instance. \
+    "Nine guided walkthroughs, each a sequential story you can run against your local instance. \
      Every step is a real shell script; every command is copy-paste ready.";
 
 const PILLARS: &[PillarMeta] = &[
@@ -30,7 +30,7 @@ const PILLARS: &[PillarMeta] = &[
         title: "Infrastructure",
         subtitle: "What It Is \u{00b7} How You Run It \u{00b7} Why You Can Trust It",
         feature_url: "https://systemprompt.io/features/self-hosted-ai-platform",
-        category_ids: &["infrastructure", "cloud"],
+        category_ids: &["infrastructure"],
     },
     PillarMeta {
         id: "capabilities",

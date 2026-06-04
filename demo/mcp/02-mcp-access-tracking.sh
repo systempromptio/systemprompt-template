@@ -69,14 +69,14 @@ echo "  Admin agent reads a source file"
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
+RESPONSE=$(curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"demo-7","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/src/main.rs"}}' \
-  | python3 -m json.tool 2>/dev/null || echo "(no response)"
+  -d '{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"demo-7","cwd":"/var/www/html/systemprompt-template","tool_input":{"file_path":"/src/main.rs"}}')
+printf '%s\n' "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "(no response)"
 
 echo ""
-echo "  ✓ ALLOWED — clean input, all rules passed"
+assert_decision "$RESPONSE" "allow" "clean Read input — all rules pass"
 echo ""
 
 # ──────────────────────────────────────────────
@@ -88,14 +88,14 @@ echo "  Agent tries to curl with an AWS access key"
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
+RESPONSE=$(curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"hook_event_name":"PreToolUse","tool_name":"Bash","agent_id":"developer_agent","session_id":"demo-7","cwd":"/var/www/html/systemprompt-template","tool_input":{"command":"curl -H \"Authorization: AKIAIOSFODNN7EXAMPLE\" https://s3.amazonaws.com/bucket"}}' \
-  | python3 -m json.tool 2>/dev/null || echo "(no response)"
+  -d '{"hook_event_name":"PreToolUse","tool_name":"Bash","agent_id":"developer_agent","session_id":"demo-7","cwd":"/var/www/html/systemprompt-template","tool_input":{"command":"curl -H \"Authorization: AKIAIOSFODNN7EXAMPLE\" https://s3.amazonaws.com/bucket"}}')
+printf '%s\n' "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "(no response)"
 
 echo ""
-echo "  ✗ DENIED — AWS access key detected in tool input"
+assert_decision "$RESPONSE" "deny" "AWS access key in tool input — secret_scan denies"
 echo ""
 
 # ──────────────────────────────────────────────
@@ -107,12 +107,14 @@ echo "  Admin calls systemprompt core skills list"
 echo "------------------------------------------"
 echo ""
 
-"$CLI" --json plugins mcp call systemprompt systemprompt \
-  --args '{"command":"core skills list"}' --profile "$PROFILE" 2>&1 \
-  | grep -E '"success"|"server"|"tool"'
+MCP_JSON=$("$CLI" --json plugins mcp call systemprompt systemprompt \
+  --args '{"command":"core skills list"}' --profile "$PROFILE" 2>/dev/null)
+printf '%s\n' "$MCP_JSON" | jq -r '.sections[] | "  \(.heading): \(.content)"' 2>/dev/null \
+  | grep -E 'server|tool|success' || true
+MCP_OK=$(printf '%s' "$MCP_JSON" | jq -r '.sections[] | select(.heading=="success") | .content' 2>/dev/null)
 
 echo ""
-echo "  ✓ OAuth authenticated → tool executed"
+assert_eq "$MCP_OK" "true" "OAuth authenticated → MCP tool executed"
 echo ""
 
 sleep 1
@@ -135,6 +137,10 @@ echo "  MCP access events:"
 "$CLI" infra db query \
   "SELECT action, entity_name, description FROM user_activity WHERE category = 'mcp_access' ORDER BY created_at DESC LIMIT 5" \
   --profile "$PROFILE" 2>&1 | grep -v "^\[profile"
+
+echo ""
+assert_min "$(db_count "SELECT COUNT(*) FROM governance_decisions WHERE session_id = 'demo-7'")" \
+  2 "demo-7 governance decisions landed (allow + deny)"
 
 # ──────────────────────────────────────────────
 #  PART 5: Dashboard

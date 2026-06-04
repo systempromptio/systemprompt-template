@@ -215,9 +215,9 @@ echo ""
 
 echo ""
 
-# Try to get a trace ID for detailed view
-TRACE_ID=$("$CLI" infra logs trace list --limit 1 --profile "$PROFILE" 2>&1 \
-  | sed -n 's/.*"trace_id":[[:space:]]*"\([0-9a-f-]*\)".*/\1/p' | head -1 || true)
+# Get a trace ID for the detailed view from structured output (a text-parse of
+# the box table yields empty and silently skips the PART 3 detail view).
+TRACE_ID=$(json_first '.items[0].trace_id' infra logs trace list --limit 1)
 
 if [[ -n "$TRACE_ID" ]]; then
   echo "  \$ systemprompt infra logs trace show $TRACE_ID --all"

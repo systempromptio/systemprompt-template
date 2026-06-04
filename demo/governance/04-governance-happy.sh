@@ -58,7 +58,7 @@ echo "  POST /api/public/hooks/govern"
 echo "------------------------------------------"
 echo ""
 
-curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
+RESPONSE=$(curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -68,7 +68,11 @@ curl -s -X POST "${BASE_URL}/api/public/hooks/govern?plugin_id=enterprise-demo" 
     "agent_id": "developer_agent",
     "session_id": "demo-governance-happy",
     "cwd": "/var/www/html/systemprompt-template"
-  }' | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+  }')
+printf '%s\n' "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "(Could not pretty-print response)"
+
+echo ""
+assert_decision "$RESPONSE" "allow" "admin scope + clean input — all 3 rules pass"
 
 # ──────────────────────────────────────────────
 #  AUDIT: Verify governance decision

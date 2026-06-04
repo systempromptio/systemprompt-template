@@ -169,6 +169,11 @@ echo "  Decision counts (session=$SESSION):"
 echo ""
 echo "  Expected: 3 deny (secret_scan) + 1 allow (clean) = 4 total"
 echo ""
+assert_eq "$(db_count "SELECT COUNT(*) FROM governance_decisions WHERE session_id = '$SESSION' AND decision = 'deny' AND policy = 'secret_scan'")" \
+  "3" "3 secret_scan denials landed for this session"
+assert_min "$(db_count "SELECT COUNT(*) FROM governance_decisions WHERE session_id = '$SESSION' AND decision = 'allow'")" \
+  1 "clean input allowed for this session"
+echo ""
 
 echo "  Detailed decisions (most recent first):"
 "$CLI" infra db query \

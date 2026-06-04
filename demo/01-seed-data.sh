@@ -183,6 +183,61 @@ SQL
 fi
 echo ""
 
+# ── STEP 4b: Synthetic agent activity ──────────
+# analytics agents / agent-tracing read agent_tasks within a recent window. The
+# stock rows are stale (older than the 24h dashboard window), so the agent
+# analytics demos would render zeros. Insert fresh COMPLETED/FAILED tasks for
+# both demo agents (free, no AI call) so those demos prove real activity.
+# ON CONFLICT refreshes timestamps so re-running the seed keeps them recent.
+subheader "STEP 4b: Generate synthetic agent activity"
+if [[ -z "$DB_URL" ]] || ! command -v psql >/dev/null 2>&1; then
+  warn "Skipping agent-activity seed (psql or database_url unavailable)"
+else
+  psql "$DB_URL" -v ON_ERROR_STOP=1 -q <<'SQL' > /dev/null
+  WITH agents AS (
+    SELECT unnest(ARRAY['developer_agent','associate_agent']) AS agent_name
+  ),
+  ctx AS (
+    SELECT COALESCE((SELECT context_id FROM agent_tasks LIMIT 1), 'demo-agent-activity') AS cid
+  ),
+  who AS (
+    SELECT COALESCE(
+      (SELECT id FROM users WHERE email = 'demo@systemprompt.io' LIMIT 1),
+      (SELECT id FROM users ORDER BY created_at LIMIT 1)
+    ) AS uid
+  )
+  INSERT INTO agent_tasks
+    (task_id, context_id, status, status_timestamp, user_id, session_id, trace_id,
+     agent_name, started_at, completed_at, execution_time_ms, metadata,
+     version, created_at, updated_at)
+  SELECT
+    'demo-agent-' || g || '-' || a.agent_name,
+    ctx.cid,
+    CASE WHEN g % 7 = 0 THEN 'TASK_STATE_FAILED' ELSE 'TASK_STATE_COMPLETED' END,
+    t.ts, who.uid, 'session-agentseed-' || g,
+    md5(random()::text || g || a.agent_name),
+    a.agent_name, t.ts, t.ts + (interval '1 second' * (1 + (random()*8)::int)),
+    (800 + (random()*4000)::int),
+    jsonb_build_object('seeded', true, 'demo', 'agent-activity'),
+    1, t.ts, t.ts
+  FROM generate_series(1,8) AS g
+  CROSS JOIN agents a
+  CROSS JOIN ctx
+  CROSS JOIN who
+  CROSS JOIN LATERAL (SELECT NOW() - (random() * interval '20 hours') AS ts) t
+  ON CONFLICT (task_id) DO UPDATE SET
+    status            = EXCLUDED.status,
+    status_timestamp  = EXCLUDED.status_timestamp,
+    started_at        = EXCLUDED.started_at,
+    completed_at      = EXCLUDED.completed_at,
+    execution_time_ms = EXCLUDED.execution_time_ms,
+    created_at        = EXCLUDED.created_at,
+    updated_at        = EXCLUDED.updated_at;
+SQL
+  pass "16 recent agent_tasks seeded (developer_agent + associate_agent)"
+fi
+echo ""
+
 # ── STEP 5: Content ingestion ──────────────────
 subheader "STEP 5: Ingest content"
 cmd "systemprompt infra jobs run blog_content_ingestion"
@@ -205,22 +260,28 @@ fi
 # ── Verify ─────────────────────────────────────
 subheader "Verify seed data"
 
-count() {
-  "$CLI" infra db query "SELECT COUNT(*) as count FROM $1" --profile "$PROFILE" 2>&1 \
-    | sed -n 's/.*"count":[[:space:]]*\([0-9]*\).*/\1/p' | head -1 || echo "0"
-}
+# Structured count via db_count (--json + jq) so the verify survives the
+# table-output format and reports real numbers instead of a parse artefact.
+DECISIONS=$(db_count "SELECT COUNT(*) FROM governance_decisions")
+EVENTS=$(db_count "SELECT COUNT(*) FROM plugin_usage_events")
+CONTENT=$(db_count "SELECT COUNT(*) FROM markdown_content")
+ACTIVITY=$(db_count "SELECT COUNT(*) FROM user_activity")
+CONTEXTS=$(db_count "SELECT COUNT(*) FROM user_contexts")
+AGENT_TASKS=$(db_count "SELECT COUNT(*) FROM agent_tasks WHERE created_at > NOW() - INTERVAL '24 hours'")
 
-DECISIONS=$(count governance_decisions)
-EVENTS=$(count plugin_usage_events)
-CONTENT=$(count markdown_content)
-ACTIVITY=$(count user_activity)
-CONTEXTS=$(count user_contexts)
+echo "  governance_decisions:     ${DECISIONS} rows"
+echo "  plugin_usage_events:      ${EVENTS} rows"
+echo "  markdown_content:         ${CONTENT} rows"
+echo "  user_activity:            ${ACTIVITY} rows"
+echo "  user_contexts:            ${CONTEXTS} rows"
+echo "  agent_tasks (last 24h):   ${AGENT_TASKS} rows"
+echo ""
 
-echo "  governance_decisions: ${DECISIONS:-0} rows"
-echo "  plugin_usage_events:  ${EVENTS:-0} rows"
-echo "  markdown_content:     ${CONTENT:-0} rows"
-echo "  user_activity:        ${ACTIVITY:-0} rows"
-echo "  user_contexts:        ${CONTEXTS:-0} rows"
+# Fail loudly if the seed did not actually land the core rows every downstream
+# analytics/governance demo depends on.
+assert_min "$DECISIONS"    1 "governance_decisions seeded"
+assert_min "$EVENTS"       1 "plugin_usage_events seeded"
+assert_min "$AGENT_TASKS"  1 "recent agent_tasks seeded (powers agent analytics)"
 echo ""
 
 header "SEED DATA COMPLETE" "All demos now have rich baseline data to display"

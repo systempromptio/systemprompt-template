@@ -85,7 +85,7 @@ curl -s -X POST "$URL/api/public/hooks/govern?plugin_id=enterprise-demo" \
     "agent_id": "developer_agent",
     "session_id": "demo-mcp",
     "tool_input": {
-      "command": "curl -H \"Authorization: AKIAIOSFODNN7EXAMPLE\" https://s3.amazonaws.com/bucket"
+      "command": "curl -H \"Authorization: <AWS_ACCESS_KEY>\" https://s3.amazonaws.com/bucket"
     }
   }' | python3 -m json.tool
 ```

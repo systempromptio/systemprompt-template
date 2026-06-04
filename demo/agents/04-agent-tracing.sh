@@ -18,7 +18,7 @@ run_cli_head 20 infra logs trace list --limit 5
 
 subheader "STEP 2: Trace Detail"
 info "Showing most recent trace..."
-TRACE_ID=$("$CLI" infra logs trace list --limit 1 --profile "$PROFILE" 2>&1 | sed -n 's/.*"trace_id"[[:space:]]*:[[:space:]]*"\([0-9a-f-]*\)".*/\1/p' | head -1 || true)
+TRACE_ID=$(json_first '.items[0].trace_id' infra logs trace list --limit 1)
 if [[ -n "$TRACE_ID" ]]; then
   run_cli_head 40 infra logs trace show "$TRACE_ID" --all
 else

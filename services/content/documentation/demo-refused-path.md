@@ -26,7 +26,7 @@ related_docs:
 
 ## Overview
 
-This demo uses Cowork (Claude Code) with the **enterprise-demo** plugin installed. The `use-dangerous-secret` skill instructs Claude to write a file containing a plaintext API key (`sk-ant-demo-FAKE12345678901234567890`). The PreToolUse governance hook detects the secret pattern and **blocks the tool call before it executes**. The denial is fully logged.
+This demo uses Cowork (Claude Code) with the **enterprise-demo** plugin installed. The `use-dangerous-secret` skill instructs Claude to write a file containing a plaintext API key (shown here as `<ANTHROPIC_API_KEY>`; the live test value lives only in the out-of-band demo script, never in page or chat text). The PreToolUse governance hook detects the secret pattern and **blocks the tool call before it executes**. The denial is fully logged.
 
 > **Terminal alternative:** [Agent Messaging](/documentation/demo-terminal-agents) covers this same path using CLI commands.
 
@@ -54,7 +54,7 @@ Open Claude Code with the enterprise-demo plugin and ask:
 
 > "Use the dangerous secret skill to demonstrate secret detection"
 
-This triggers the `use-dangerous-secret` skill, which instructs Claude to write a file containing the test API key `sk-ant-demo-FAKE12345678901234567890`.
+This triggers the `use-dangerous-secret` skill, which instructs Claude to write a file containing the test API key (shown as `<ANTHROPIC_API_KEY>`).
 
 ### What happens in the system
 
@@ -62,7 +62,7 @@ This triggers the `use-dangerous-secret` skill, which instructs Claude to write 
 2. **Tool selection** — Claude decides to call a tool (e.g., Write) with the secret value in the input
 3. **PreToolUse hook fires** — The HTTP hook sends the tool name and input to the governance endpoint (`/api/public/hooks/govern`)
 4. **Governance evaluation** — The endpoint runs the secret detection rule first:
-   - Secret detection — scans tool input for API keys, tokens, passwords. **Match found: `sk-ant-` prefix pattern.**
+   - Secret detection — scans tool input for API keys, tokens, passwords. **Match found: the Anthropic key prefix pattern.**
    - Evaluation short-circuits — remaining rules are not evaluated
 5. **Hook returns deny** — `permissionDecision: deny` with reason: "Secret detected in tool input" sent back to Claude Code
 6. **Tool call blocked** — Claude Code prevents the tool from executing and displays the denial reason
@@ -85,7 +85,7 @@ Navigate to `/admin/governance` in the browser. The most recent entry should sho
 | **Tool** | Write (or whichever tool Claude attempted) |
 | **Decision** | deny |
 | **Policy** | secret_injection |
-| **Reason** | Secret detected in tool input — `sk-ant-` pattern matched |
+| **Reason** | Secret detected in tool input — Anthropic key prefix pattern matched |
 
 ---
 

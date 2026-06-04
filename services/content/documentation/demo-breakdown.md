@@ -40,7 +40,7 @@ This page walks through exactly what happens in the governance pipeline for both
 | **Tool used** | WebSearch | Write (or similar) |
 | **Governance outcome** | **Allow** — no policy violations | **Deny** — secret detected in tool input |
 | **Policy triggered** | None | `secret_injection` |
-| **Secret pattern** | N/A | `sk-ant-` prefix (Anthropic API key pattern) |
+| **Secret pattern** | N/A | Anthropic API key prefix pattern |
 
 The key difference: both skills go through the same governance pipeline. The outcome depends on the **content** of the tool input, not the identity of the agent or the type of tool.
 
@@ -101,7 +101,7 @@ Navigate to `/admin/governance` and find both entries:
 | **Reason** | Secret detected in tool input |
 | **Evaluated rules** | secret_detection: **fail** (short-circuit) |
 
-The critical difference: the governance endpoint evaluated the tool input content. The `sk-ant-` pattern triggered the secret detection rule, which short-circuited evaluation and returned a deny before the remaining rules were checked.
+The critical difference: the governance endpoint evaluated the tool input content. The Anthropic key prefix pattern triggered the secret detection rule, which short-circuited evaluation and returned a deny before the remaining rules were checked.
 
 ---
 
@@ -149,7 +149,7 @@ Hook:         PreToolUse
 Tool:         Write
 Decision:     deny
 Policy:       secret_injection
-Reason:       Secret detected — sk-ant-*** pattern matched
+Reason:       Secret detected — Anthropic key prefix pattern matched
 Rules:        secret_detection: FAIL (short-circuit)
 
 --- TOOL CALLS ---

@@ -608,6 +608,19 @@ docker-test:
 
 # Bring up the network-isolated air-gap stack (postgres + mock-inference + app + monitor + ingress)
 airgap-up:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Dockerfile.airgap-prebuilt COPYs the host-built binaries from
+    # deploy/scenarios/airgap/.bin/ — `target` is a symlink to a shared cargo
+    # cache that buildkit can't follow, so we dereference-copy them in first
+    # (mirrors scaled-up).
+    if [[ ! -x target/release/systemprompt || ! -x target/release/systemprompt-mcp-agent ]]; then
+        echo "ERROR: release binaries missing. Run: just build --release" >&2
+        exit 1
+    fi
+    mkdir -p deploy/scenarios/airgap/.bin
+    cp -L target/release/systemprompt           deploy/scenarios/airgap/.bin/systemprompt
+    cp -L target/release/systemprompt-mcp-agent deploy/scenarios/airgap/.bin/systemprompt-mcp-agent
     docker compose -f deploy/scenarios/airgap/docker-compose.airgap.yml up -d --build
 
 # Tear down the air-gap stack and remove its volumes

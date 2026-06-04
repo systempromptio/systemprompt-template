@@ -105,8 +105,11 @@ step "Ensuring admin user $ADMIN_EMAIL exists"
 # `users create` is idempotent for our purposes — a duplicate-email error
 # just means the user already exists, which is success.
 app_cli admin users create --name "airgap-admin" --email "$ADMIN_EMAIL" >/dev/null 2>&1 || true
-USER_ID=$(app_cli admin users search "$ADMIN_EMAIL" 2>/dev/null \
-  | sed -n 's/.*"id":[[:space:]]*"\([^"]*\)".*/\1/p' | head -1 || true)
+# Extract the id from structured --json output — the default table format has
+# no parseable "id": field, so a text-parse silently yields empty and the
+# promote below is skipped, breaking the subsequent token mint.
+USER_ID=$("${COMPOSE[@]}" exec -T app systemprompt --json admin users search "$ADMIN_EMAIL" 2>/dev/null \
+  | jq -r '.items[0].id // empty')
 if [[ -z "$USER_ID" ]]; then
   fail "Could not create or locate admin user $ADMIN_EMAIL"
   exit 1

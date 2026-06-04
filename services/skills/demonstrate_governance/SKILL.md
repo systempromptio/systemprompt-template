@@ -108,13 +108,17 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
 ```
 
 For `secret_scan`, the token choice is the opposite: this stage fires for **any** scope, so use the admin
-`demo/.token` to prove even an admin caller is blocked. Put a plaintext credential anywhere in `tool_input`:
+`demo/.token` to prove even an admin caller is blocked. Put a plaintext credential anywhere in
+`tool_input`. The runnable recipe with real test credentials is `demo/governance/06-secret-breach.sh`
+(out-of-band `curl`, so the secret never enters this conversation — do **not** paste a live credential
+prefix into this skill body or any chat turn, or the gateway secret scanner will re-scan it on every
+turn and block the session). The shape of one call (live credential lives in the script):
 
 ```bash
 # secret_scan deny: a plaintext AWS key in tool input, denied even for admin scope
 curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo" \
   -H "Authorization: Bearer $(cat demo/.token)" -H "Content-Type: application/json" \
-  -d '{"hook_event_name":"PreToolUse","tool_name":"Bash","agent_id":"developer_agent","session_id":"demo-secret","cwd":"/var/www/html/systemprompt-template","tool_input":{"command":"curl -H \"Authorization: AKIAIOSFODNN7EXAMPLE\" https://s3.amazonaws.com/bucket"}}'
+  -d '{"hook_event_name":"PreToolUse","tool_name":"Bash","agent_id":"developer_agent","session_id":"demo-secret","cwd":"/var/www/html/systemprompt-template","tool_input":{"command":"curl -H \"Authorization: <AWS_ACCESS_KEY>\" https://s3.amazonaws.com/bucket"}}'
 # -> {"permissionDecision":"deny", "reason": "...secret detected: AWS Access Key..."}
 ```
 
