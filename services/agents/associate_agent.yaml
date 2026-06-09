@@ -46,8 +46,6 @@ agents:
         source: explicit
         include: []
         exclude: []
-      provider: gemini
-      model: gemini-2.5-flash
     oauth:
       required: true
       scopes:

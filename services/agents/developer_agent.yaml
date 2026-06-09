@@ -56,8 +56,6 @@ agents:
           - manage_services
           - systemprompt_cli
         exclude: []
-      provider: gemini
-      model: gemini-2.5-flash
     oauth:
       required: true
       scopes:

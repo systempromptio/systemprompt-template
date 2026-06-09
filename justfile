@@ -459,6 +459,22 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
             "$BIN" admin config governance set --mode webhook \
                 --url "http://localhost:${HTTP_PORT}/api/public/govern/authz"
         fi
+    elif [ "$HAS_KEY" = true ]; then
+        # Profile generation is one-shot, guarded on profile.yaml. `just db-down`
+        # drops the database but leaves the profile, so a re-run with different
+        # keys would silently keep the old provider registry. Say so loudly and
+        # point at the one command that actually re-provisions.
+        echo ""
+        echo "================================================================"
+        echo "  Existing profile reused — supplied keys were NOT applied"
+        echo "================================================================"
+        echo ""
+        echo "  $PROFILE_DIR/profile.yaml already exists, so 'admin setup' was"
+        echo "  skipped and the provider registry/keys are unchanged."
+        echo "  To re-provision from the keys you just passed:"
+        echo ""
+        echo "    rm -rf \"$PROFILE_DIR\" && just setup-local <keys...> $HTTP_PORT $PG_PORT"
+        echo ""
     fi
     mkdir -p "$ROOT/web/dist"
     echo "Building binaries (release, full workspace)..."
