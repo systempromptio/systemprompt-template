@@ -1,0 +1,28 @@
+# Blog/content ingestion config — read by the web jobs extension
+# (extensions/web/jobs ingestion job via BlogConfigValidated::load_from_env_or_none).
+# Without this file the blog_content_ingestion job silently skips and /blog
+# and /documentation serve 404 even though markdown exists under
+# services/content/. Relative paths resolve against this file's directory.
+
+base_url: "https://systemprompt.io"
+enable_link_tracking: true
+
+content_sources:
+  - source_id: blog
+    category_id: blog
+    path: ../content/blog
+    allowed_content_types:
+      - blog
+    enabled: true
+    override_existing: true
+  - source_id: documentation
+    category_id: documentation
+    path: ../content/documentation
+    allowed_content_types:
+      - guide
+      - reference
+      - tutorial
+      - docs
+      - feature
+    enabled: true
+    override_existing: true

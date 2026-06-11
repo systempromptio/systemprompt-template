@@ -61,6 +61,8 @@ pub mod branding {
         pub favicon: String,
         #[serde(default)]
         pub twitter_handle: String,
+        #[serde(default)]
+        pub image: String,
     }
 }
 
