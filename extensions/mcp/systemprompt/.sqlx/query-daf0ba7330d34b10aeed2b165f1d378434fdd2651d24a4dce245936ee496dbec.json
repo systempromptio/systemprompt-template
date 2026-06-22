@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE ai_requests SET system_prompt_override = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "daf0ba7330d34b10aeed2b165f1d378434fdd2651d24a4dce245936ee496dbec"
+}

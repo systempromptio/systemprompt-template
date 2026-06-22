@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    DELETE FROM bridge_user_host_model_prefs\n                    WHERE user_id = $1 AND host_id = $2\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "68a859de37f87d8e2a292d009d4fd9be456eeb19b11468d0e97bf76f2eb55500"
+}

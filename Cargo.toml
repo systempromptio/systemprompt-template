@@ -31,8 +31,8 @@ license = "MIT"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.15.2", default-features = false, features = ["core", "database", "config"] }
-systemprompt-security = { version = "0.15.2" }
+systemprompt = { version = "0.16", default-features = false, features = ["core", "database", "config"] }
+systemprompt-security = { version = "0.16" }
 
 # ============================================
 # LOCAL EXTENSIONS
