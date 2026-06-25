@@ -18,7 +18,8 @@ use std::sync::Arc;
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::{
-    AgentId, HookId, MarketplaceId, McpServerId, PluginId, RouteId, SkillId, UserId,
+    AgentId, HookId, MarketplaceId, McpServerId, PluginId, RouteId, SkillId, SlackChannelId,
+    SlackWorkspaceId, TeamsConversationId, TeamsTenantId, UserId,
 };
 use systemprompt::marketplace::{
     register_marketplace_filter, MarketplaceCandidate, MarketplaceFilter, MarketplaceFilterError,
@@ -37,6 +38,10 @@ fn entity_ref_for(kind: EntityKind, id: &str) -> EntityRef {
         EntityKind::Marketplace => EntityRef::Marketplace(MarketplaceId::new(id)),
         EntityKind::GatewayRoute => EntityRef::GatewayRoute(RouteId::new(id)),
         EntityKind::Hook => EntityRef::Hook(HookId::new(id)),
+        EntityKind::SlackWorkspace => EntityRef::SlackWorkspace(SlackWorkspaceId::new(id)),
+        EntityKind::SlackChannel => EntityRef::SlackChannel(SlackChannelId::new(id)),
+        EntityKind::TeamsTenant => EntityRef::TeamsTenant(TeamsTenantId::new(id)),
+        EntityKind::TeamsConversation => EntityRef::TeamsConversation(TeamsConversationId::new(id)),
     }
 }
 
