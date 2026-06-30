@@ -162,18 +162,3 @@ pub async fn fetch_last_message(pool: &PgPool, session_id: &SessionId, user_id: 
     .flatten()
     .unwrap_or_else(String::new)
 }
-
-pub async fn fetch_today_achievements(pool: &PgPool, user_id: &str) -> Vec<String> {
-    sqlx::query_scalar!(
-        r#"SELECT achievement_id AS "achievement_id!"
-           FROM user_achievements
-           WHERE user_id = $1 AND unlocked_at::date = CURRENT_DATE"#,
-        user_id,
-    )
-    .fetch_all(pool)
-    .await
-    .unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch today's achievements");
-        Vec::new()
-    })
-}

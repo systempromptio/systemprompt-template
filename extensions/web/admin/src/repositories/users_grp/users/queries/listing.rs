@@ -56,22 +56,6 @@ pub async fn list_users(pool: &PgPool) -> Result<Vec<UserSummary>, sqlx::Error> 
     .await
 }
 
-#[derive(sqlx::FromRow, Debug)]
-pub struct UserRank {
-    pub user_id: String,
-    pub rank_name: String,
-    pub total_xp: i64,
-}
-
-pub async fn fetch_user_ranks(pool: &PgPool) -> Result<Vec<UserRank>, sqlx::Error> {
-    sqlx::query_as!(
-        UserRank,
-        r#"SELECT user_id as "user_id!", rank_name as "rank_name!", total_xp::BIGINT AS "total_xp!" FROM user_ranks"#,
-    )
-    .fetch_all(pool)
-    .await
-}
-
 pub async fn fetch_user_roles(pool: &PgPool, user_id: &str) -> Option<Vec<String>> {
     let row = sqlx::query!("SELECT roles FROM users WHERE id = $1", user_id,)
         .fetch_optional(pool)

@@ -1,0 +1,10 @@
+{
+  "name": "clean-room-channels",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Throwaway custom Claude Code channel + relay for the gateway-push viability spike.",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

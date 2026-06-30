@@ -54,7 +54,7 @@ systemprompt cloud secrets set minimax <your-minimax-api-key>
 just build && just start
 
 # 3. Sanity: auth surface is up
-curl -s http://localhost:8080/v1/auth/cowork/capabilities
+curl -s http://localhost:8080/v1/auth/bridge/capabilities
 # expect: {"modes":[...]}
 
 # 4. Full PAT → JWT → gateway roundtrip (automated)
@@ -67,7 +67,7 @@ If step 4 fails, stop — the server build is broken and no Windows flow will wo
 ## 2. Make the host reachable from Windows
 
 - **Windows is the WSL host.** `http://localhost:8080` works from Windows directly via WSL2 localhost forwarding.
-- **Separate machine.** Bind the server to a LAN IP, open port 8080, or run a tunnel (e.g. `cloudflared`, `ngrok`). Test from the Windows box: `curl http://<host>:8080/v1/auth/cowork/capabilities`.
+- **Separate machine.** Bind the server to a LAN IP, open port 8080, or run a tunnel (e.g. `cloudflared`, `ngrok`). Test from the Windows box: `curl http://<host>:8080/v1/auth/bridge/capabilities`.
 
 ## 3. Issue a PAT for the demo user
 
@@ -201,7 +201,7 @@ Revoke the PAT from `/admin/devices` on the gateway.
 
 - Profile config: `.systemprompt/profiles/local/profile.yaml`
 - Secrets: `.systemprompt/profiles/local/secrets.json`
-- Gateway capabilities probe: `GET /v1/auth/cowork/capabilities`
-- PAT exchange: `POST /v1/auth/cowork/pat` with `Authorization: Bearer sp-live-...`
+- Gateway capabilities probe: `GET /v1/auth/bridge/capabilities`
+- PAT exchange: `POST /v1/auth/bridge/pat` with `Authorization: Bearer sp-live-...`
 - Full auth / flow spec: `docs/manual-cowork-test.md`
 - Device cert (mTLS) enrollment: [`device-auth.md`](device-auth.md)

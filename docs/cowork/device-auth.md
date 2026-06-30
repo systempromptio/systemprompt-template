@@ -10,9 +10,9 @@ The `systemprompt-bridge` binary (formerly `sp-cowork-auth` / `systemprompt-cowo
 |---------|----------------------------------------------|---------------------------------------------|---------------------|
 | `pat`   | Bearer PAT (`sp-live-*.*`)                   | A PAT issued from `/admin/devices`          | `/admin/devices`    |
 | `session` | Browser consent → 120 s one-shot code     | User logged into the dashboard              | `/cowork-auth/device-link` |
-| `mtls`  | X.509 cert in OS keystore, fingerprint match | Cert enrolled via `systemprompt admin cowork enroll-cert` | (CLI only for now)  |
+| `mtls`  | X.509 cert in OS keystore, fingerprint match | Cert enrolled via `systemprompt admin bridge enroll-cert` | (CLI only for now)  |
 
-The server advertises what it supports at `GET /v1/auth/cowork/capabilities`.
+The server advertises what it supports at `GET /v1/auth/bridge/capabilities`.
 
 ## Config locations
 
@@ -68,7 +68,7 @@ The legacy `SP_COWORK_*` env vars are no longer read.
 2. Helper binds `127.0.0.1:8767` and opens `https://your.gateway/cowork-auth/device-link?redirect=http://127.0.0.1:8767/callback` in the default browser.
 3. Dashboard renders a consent page (must be logged in) showing the loopback host. User clicks **Allow**.
 4. Dashboard mints a 64-hex exchange code (SHA-256 hashed in `cowork_exchange_codes`, 120 s TTL, single-use) and redirects the browser to `http://127.0.0.1:8767/callback?code=...`.
-5. Helper captures the code, POSTs to `/v1/auth/cowork/session`, and caches the returned JWT + headers.
+5. Helper captures the code, POSTs to `/v1/auth/bridge/session`, and caches the returned JWT + headers.
 
 The `/cowork-auth/device-link` consent page validates the redirect host — only `127.0.0.1` / `localhost` with a port are accepted.
 
@@ -76,7 +76,7 @@ The `/cowork-auth/device-link` consent page validates the redirect host — only
 
 1. User opens `/admin/devices`, clicks **Issue PAT**, names it (e.g. `laptop-m1`).
 2. Dashboard returns the secret once (format: `sp-live-<12hex>.<52hex>`). Either paste it into the GUI Setup wizard, or run `systemprompt-bridge login sp-live-... --gateway https://...`.
-3. The bridge sends `Authorization: Bearer <token>` to `/v1/auth/cowork/pat`.
+3. The bridge sends `Authorization: Bearer <token>` to `/v1/auth/bridge/pat`.
 4. Gateway verifies the secret against `user_api_keys.key_hash`, checks expiry/revocation, and returns the same JWT envelope as the session flow.
 
 PAT revocation is immediate: **Revoke** on `/admin/devices` flips `revoked_at`, and the next verify call returns 401.
@@ -85,9 +85,9 @@ PAT revocation is immediate: **Revoke** on `/admin/devices` flips `revoked_at`, 
 
 1. Generate a device certificate on the workstation.
 2. Compute its DER SHA-256 fingerprint as 64 lowercase hex chars.
-3. Enroll it: `systemprompt admin cowork enroll-cert --user-id <UID> --fingerprint <SHA256> --label "laptop-m1"`.
+3. Enroll it: `systemprompt admin bridge enroll-cert --user-id <UID> --fingerprint <SHA256> --label "laptop-m1"`.
 4. On the workstation, point `[mtls].cert_path` at the PEM (Linux) or set `cert_label` / `cert_sha256` (macOS/Windows) so the bridge can locate the cert in the OS keystore.
-5. The bridge reads the cert, recomputes the fingerprint, and POSTs it to `/v1/auth/cowork/mtls`. Gateway looks it up in `user_device_certs`, confirms it is not revoked, and returns the JWT envelope.
+5. The bridge reads the cert, recomputes the fingerprint, and POSTs it to `/v1/auth/bridge/mtls`. Gateway looks it up in `user_device_certs`, confirms it is not revoked, and returns the JWT envelope.
 
 ## Testing without a real device
 

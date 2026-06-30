@@ -137,9 +137,6 @@ pub async fn delete_user_complete(pool: &PgPool, user_id: &UserId) -> Result<boo
     let mut tx = pool.begin().await?;
     let uid = user_id.as_str();
 
-    sqlx::query!("DELETE FROM skill_secrets WHERE user_id = $1", uid)
-        .execute(&mut *tx)
-        .await?;
     sqlx::query!("DELETE FROM plugin_usage_events WHERE user_id = $1", uid)
         .execute(&mut *tx)
         .await?;

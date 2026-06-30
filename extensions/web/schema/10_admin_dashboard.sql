@@ -1,50 +1,4 @@
--- Consolidated schema: Admin dashboard, hooks catalog, billing, ratings, settings
-
--- hook_catalog from 032
-CREATE TABLE IF NOT EXISTS hook_catalog (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    description TEXT NOT NULL DEFAULT '',
-    version TEXT NOT NULL DEFAULT '1.0.0',
-    event TEXT NOT NULL,
-    matcher TEXT NOT NULL DEFAULT '*',
-    command TEXT NOT NULL DEFAULT '',
-    is_async BOOLEAN NOT NULL DEFAULT false,
-    category TEXT NOT NULL DEFAULT 'custom',
-    enabled BOOLEAN NOT NULL DEFAULT true,
-    tags TEXT[] DEFAULT '{}',
-    visible_to TEXT[] DEFAULT '{}',
-    checksum TEXT NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_hook_catalog_event ON hook_catalog(event);
-CREATE INDEX IF NOT EXISTS idx_hook_catalog_category ON hook_catalog(category);
-
-CREATE TABLE IF NOT EXISTS hook_plugins (
-    hook_id TEXT NOT NULL REFERENCES hook_catalog(id) ON DELETE CASCADE,
-    plugin_id TEXT NOT NULL,
-    sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (hook_id, plugin_id)
-);
-CREATE INDEX IF NOT EXISTS idx_hook_plugins_plugin ON hook_plugins(plugin_id);
-
-CREATE TABLE IF NOT EXISTS hook_files (
-    id TEXT PRIMARY KEY,
-    hook_id TEXT NOT NULL REFERENCES hook_catalog(id) ON DELETE CASCADE,
-    file_path TEXT NOT NULL,
-    content TEXT NOT NULL DEFAULT '',
-    category TEXT NOT NULL DEFAULT 'script',
-    language TEXT NOT NULL DEFAULT '',
-    executable BOOLEAN NOT NULL DEFAULT false,
-    size_bytes BIGINT NOT NULL DEFAULT 0,
-    checksum TEXT NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE(hook_id, file_path)
-);
-CREATE INDEX IF NOT EXISTS idx_hook_files_hook ON hook_files(hook_id);
+-- Consolidated schema: Admin dashboard, billing, ratings, settings
 
 -- tenant_activity - use 046 version (has more columns)
 CREATE TABLE IF NOT EXISTS tenant_activity (
@@ -204,26 +158,6 @@ CREATE TABLE IF NOT EXISTS skill_ratings (
     UNIQUE (user_id, skill_name)
 );
 CREATE INDEX IF NOT EXISTS idx_skr_user ON skill_ratings(user_id);
-
--- user_achievements
-CREATE TABLE IF NOT EXISTS user_achievements (
-    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
-    user_id TEXT NOT NULL,
-    achievement_id TEXT NOT NULL,
-    unlocked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (user_id, achievement_id)
-);
-CREATE INDEX IF NOT EXISTS idx_ua_user ON user_achievements(user_id);
-CREATE INDEX IF NOT EXISTS idx_ua_unlocked ON user_achievements(unlocked_at DESC);
-
--- user_ranks
-CREATE TABLE IF NOT EXISTS user_ranks (
-    user_id TEXT PRIMARY KEY,
-    rank_name TEXT NOT NULL DEFAULT 'Spark',
-    total_xp BIGINT NOT NULL DEFAULT 0,
-    rank_level INT NOT NULL DEFAULT 1,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
 
 -- user_settings
 CREATE TABLE IF NOT EXISTS user_settings (

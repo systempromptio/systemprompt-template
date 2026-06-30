@@ -9,7 +9,6 @@ pub struct TodaySummary {
     pub goals_achieved: i64,
     pub goals_partial: i64,
     pub goals_failed: i64,
-    pub new_achievements: Vec<String>,
     pub top_recommendation: String,
 }
 
@@ -61,19 +60,6 @@ pub async fn fetch_today_summary(pool: &PgPool, user_id: &UserId) -> TodaySummar
         failed: 0,
     });
 
-    let new_achievements = sqlx::query_scalar!(
-        r"SELECT achievement_id FROM user_achievements
-          WHERE user_id = $1 AND unlocked_at::date = CURRENT_DATE
-          ORDER BY unlocked_at DESC",
-        user_id.as_str(),
-    )
-    .fetch_all(pool)
-    .await
-    .unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch today's new achievements");
-        Vec::new()
-    });
-
     let top_rec = sqlx::query_scalar!(
         r"SELECT recommendations FROM session_analyses
           WHERE user_id = $1 AND created_at::date = CURRENT_DATE
@@ -98,7 +84,6 @@ pub async fn fetch_today_summary(pool: &PgPool, user_id: &UserId) -> TodaySummar
         goals_achieved: analysis_row.achieved,
         goals_partial: analysis_row.partial,
         goals_failed: analysis_row.failed,
-        new_achievements,
         top_recommendation: top_rec,
     }
 }

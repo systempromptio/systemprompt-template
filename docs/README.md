@@ -38,12 +38,14 @@ The bridge — a single `systemprompt-bridge` binary with a native GUI on macOS 
 | macOS (binary) | [cowork/install-macos.md](cowork/install-macos.md) |
 | Windows (`.exe`) | [cowork/install-windows.md](cowork/install-windows.md) |
 | Scoop bucket (Windows) | [cowork/scoop.md](cowork/scoop.md) |
+| Linux / headless (Claude Code CLI) | [cowork/claude-code-linux.md](cowork/claude-code-linux.md) |
 
 ## Operating the bridge
 
 - [cowork/desktop-app.md](cowork/desktop-app.md) — Setup wizard, agents tab (per-agent enable/disable, Codex CLI alongside Claude Desktop), marketplace, settings, activity drawer, diagnostics export.
 - [cowork/device-auth.md](cowork/device-auth.md) — Authentication modes for Claude for Work → gateway (PAT, session, mTLS). Updated for `SP_BRIDGE_*` env vars and the new `systemprompt-bridge.toml` config path.
 - [cowork/windows-minimax-demo.md](cowork/windows-minimax-demo.md) — End-to-end Windows + gateway + MiniMax demo runbook.
+- [cowork/claude-code-linux.md](cowork/claude-code-linux.md) — Route the Claude Code CLI through the gateway on Linux/headless via `systemprompt-bridge proxy`. Includes the `docker/claude-code-clean-room/` from-scratch test.
 
 ## Licence
 
