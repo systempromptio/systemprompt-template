@@ -6,22 +6,46 @@
       {
         "ordinal": 0,
         "name": "created_at!",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "tokens_used",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "tokens_used"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "cost_microdollars",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "cost_microdollars"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "latency_ms",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "latency_ms"
+          }
+        }
       }
     ],
     "parameters": {

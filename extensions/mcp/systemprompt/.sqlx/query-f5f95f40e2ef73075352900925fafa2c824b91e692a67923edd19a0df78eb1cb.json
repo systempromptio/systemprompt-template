@@ -6,42 +6,90 @@
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics_events",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "user_id: UserId",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "analytics_events",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "session_id: SessionId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics_events",
+            "name": "session_id"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "event_type",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "analytics_events",
+            "name": "event_type"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "event_category",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics_events",
+            "name": "event_category"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "page_url",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics_events",
+            "name": "endpoint"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "event_data",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "analytics_events",
+            "name": "event_data"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "timestamp",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "analytics_events",
+            "name": "timestamp"
+          }
+        }
       }
     ],
     "parameters": {

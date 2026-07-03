@@ -6,17 +6,35 @@
       {
         "ordinal": 0,
         "name": "started_at!",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "started_at"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "user_id: UserId",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "duration_seconds",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "duration_seconds"
+          }
+        }
       }
     ],
     "parameters": {

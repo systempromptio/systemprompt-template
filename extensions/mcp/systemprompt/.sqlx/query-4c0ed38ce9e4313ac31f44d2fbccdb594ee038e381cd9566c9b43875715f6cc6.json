@@ -6,32 +6,48 @@
       {
         "ordinal": 0,
         "name": "tool_name!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "tool_name"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "server_name!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "server_name"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "execution_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "success_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 4,
         "name": "avg_time!",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 5,
         "name": "last_used!",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": "Expression"
       }
     ],
     "parameters": {

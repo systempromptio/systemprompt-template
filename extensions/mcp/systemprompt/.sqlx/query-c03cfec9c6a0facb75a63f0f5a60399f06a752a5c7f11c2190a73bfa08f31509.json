@@ -6,42 +6,90 @@
       {
         "ordinal": 0,
         "name": "session_id!: SessionId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "session_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "user_id: UserId",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "mcp_server_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "mcp_server_id"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "last_event_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "last_event_id"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "status!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "status"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "created_at!",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "last_activity_at!",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "last_activity_at"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "expires_at!",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "expires_at"
+          }
+        }
       }
     ],
     "parameters": {

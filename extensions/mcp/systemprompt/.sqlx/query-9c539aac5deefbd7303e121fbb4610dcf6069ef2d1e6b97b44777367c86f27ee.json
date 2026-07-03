@@ -6,22 +6,31 @@
       {
         "ordinal": 0,
         "name": "tool_name",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "tool_name"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "execution_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "success_rate!",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "avg_duration_ms!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

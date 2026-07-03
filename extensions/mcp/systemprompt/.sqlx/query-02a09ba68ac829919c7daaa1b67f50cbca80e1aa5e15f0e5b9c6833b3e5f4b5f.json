@@ -6,12 +6,24 @@
       {
         "ordinal": 0,
         "name": "host_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "bridge_user_host_model_prefs",
+            "name": "host_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "model_protocols",
-        "type_info": "TextArray"
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "bridge_user_host_model_prefs",
+            "name": "model_protocols"
+          }
+        }
       }
     ],
     "parameters": {

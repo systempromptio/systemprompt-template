@@ -6,87 +6,184 @@
       {
         "ordinal": 0,
         "name": "id: ContentId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "slug",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "slug"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "locale: LocaleCode",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "locale"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "title",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "title"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "description",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "description"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "body",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "body"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "author",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "author"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "published_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "published_at"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "keywords",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "keywords"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "kind",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "kind"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "image",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "image"
+          }
+        }
       },
       {
         "ordinal": 11,
         "name": "category_id: CategoryId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "category_id"
+          }
+        }
       },
       {
         "ordinal": 12,
         "name": "source_id: SourceId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "source_id"
+          }
+        }
       },
       {
         "ordinal": 13,
         "name": "version_hash",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "version_hash"
+          }
+        }
       },
       {
         "ordinal": 14,
         "name": "public",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "public"
+          }
+        }
       },
       {
         "ordinal": 15,
         "name": "links!",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": "Expression"
       },
       {
         "ordinal": 16,
         "name": "updated_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "updated_at"
+          }
+        }
       }
     ],
     "parameters": {

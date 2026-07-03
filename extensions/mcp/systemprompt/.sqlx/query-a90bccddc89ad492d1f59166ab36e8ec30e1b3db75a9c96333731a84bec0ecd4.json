@@ -6,62 +6,134 @@
       {
         "ordinal": 0,
         "name": "id!",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "artifact_parts",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "artifact_id!: ArtifactId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "artifact_parts",
+            "name": "artifact_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "context_id!: ContextId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "artifact_parts",
+            "name": "context_id"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "part_kind!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "artifact_parts",
+            "name": "part_kind"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "sequence_number!",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "artifact_parts",
+            "name": "sequence_number"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "text_content",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "artifact_parts",
+            "name": "text_content"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "file_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "artifact_parts",
+            "name": "file_name"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "file_mime_type",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "artifact_parts",
+            "name": "file_mime_type"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "file_uri",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "artifact_parts",
+            "name": "file_uri"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "file_bytes",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "artifact_parts",
+            "name": "file_bytes"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "data_content",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "artifact_parts",
+            "name": "data_content"
+          }
+        }
       },
       {
         "ordinal": 11,
         "name": "metadata",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "artifact_parts",
+            "name": "metadata"
+          }
+        }
       }
     ],
     "parameters": {

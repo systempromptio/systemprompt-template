@@ -6,17 +6,35 @@
       {
         "ordinal": 0,
         "name": "role",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_messages",
+            "name": "role"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "content",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_messages",
+            "name": "content"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "sequence_number",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_request_messages",
+            "name": "sequence_number"
+          }
+        }
       }
     ],
     "parameters": {

@@ -6,47 +6,101 @@
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "funnel_progress",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "funnel_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "funnel_progress",
+            "name": "funnel_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "session_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "funnel_progress",
+            "name": "session_id"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "current_step",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "funnel_progress",
+            "name": "current_step"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "completed_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "funnel_progress",
+            "name": "completed_at"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "dropped_at_step",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "funnel_progress",
+            "name": "dropped_at_step"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "step_timestamps",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "funnel_progress",
+            "name": "step_timestamps"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "created_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "funnel_progress",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "updated_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "funnel_progress",
+            "name": "updated_at"
+          }
+        }
       }
     ],
     "parameters": {

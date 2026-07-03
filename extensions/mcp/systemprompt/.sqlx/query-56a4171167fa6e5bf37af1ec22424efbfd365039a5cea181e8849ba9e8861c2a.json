@@ -6,72 +6,156 @@
       {
         "ordinal": 0,
         "name": "artifact_id!: ArtifactId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "artifact_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "task_id!: TaskId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "task_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "context_id!: ContextId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "context_id"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "name"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "description",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "description"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "artifact_type!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "artifact_type"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "source",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "source"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "tool_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "tool_name"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "mcp_execution_id?: McpExecutionId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "mcp_execution_id"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "fingerprint",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "fingerprint"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "skill_id?: SkillId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "skill_id"
+          }
+        }
       },
       {
         "ordinal": 11,
         "name": "skill_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "skill_name"
+          }
+        }
       },
       {
         "ordinal": 12,
         "name": "metadata",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "metadata"
+          }
+        }
       },
       {
         "ordinal": 13,
         "name": "created_at!",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "task_artifacts",
+            "name": "created_at"
+          }
+        }
       }
     ],
     "parameters": {

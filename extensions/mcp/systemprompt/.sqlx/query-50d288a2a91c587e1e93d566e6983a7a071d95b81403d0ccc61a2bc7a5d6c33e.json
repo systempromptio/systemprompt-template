@@ -6,67 +6,145 @@
       {
         "ordinal": 0,
         "name": "mcp_execution_id!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "mcp_execution_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "tool_name!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "tool_name"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "server_name!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "server_name"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "context_id",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "context_id"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "ai_tool_call_id",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "ai_tool_call_id"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "user_id!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "status!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "status"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "input!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "input"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "output",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "output"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "error_message",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "error_message"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "execution_time_ms",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "execution_time_ms"
+          }
+        }
       },
       {
         "ordinal": 11,
         "name": "started_at!",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "started_at"
+          }
+        }
       },
       {
         "ordinal": 12,
         "name": "completed_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "completed_at"
+          }
+        }
       }
     ],
     "parameters": {

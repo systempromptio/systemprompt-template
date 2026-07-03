@@ -6,7 +6,13 @@
       {
         "ordinal": 0,
         "name": "entity_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_entities",
+            "name": "entity_id"
+          }
+        }
       }
     ],
     "parameters": {

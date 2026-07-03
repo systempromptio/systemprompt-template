@@ -6,92 +6,200 @@
       {
         "ordinal": 0,
         "name": "id: LinkClickId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "link_id: LinkId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "link_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "session_id: SessionId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "session_id"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "user_id: UserId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "context_id: ContextId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "context_id"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "task_id: TaskId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "task_id"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "referrer_page",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "referrer_page"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "referrer_url",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "referrer_url"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "clicked_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "clicked_at"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "user_agent",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "user_agent"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "ip_address",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "ip_address"
+          }
+        }
       },
       {
         "ordinal": 11,
         "name": "device_type",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "device_type"
+          }
+        }
       },
       {
         "ordinal": 12,
         "name": "country",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "country"
+          }
+        }
       },
       {
         "ordinal": 13,
         "name": "is_first_click",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "is_first_click"
+          }
+        }
       },
       {
         "ordinal": 14,
         "name": "is_conversion",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "is_conversion"
+          }
+        }
       },
       {
         "ordinal": 15,
         "name": "conversion_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "conversion_at"
+          }
+        }
       },
       {
         "ordinal": 16,
         "name": "time_on_page_seconds",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "time_on_page_seconds"
+          }
+        }
       },
       {
         "ordinal": 17,
         "name": "scroll_depth_percent",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "link_clicks",
+            "name": "scroll_depth_percent"
+          }
+        }
       }
     ],
     "parameters": {

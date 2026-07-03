@@ -6,27 +6,57 @@
       {
         "ordinal": 0,
         "name": "funnel_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "funnel_steps",
+            "name": "funnel_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "step_order",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "funnel_steps",
+            "name": "step_order"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "funnel_steps",
+            "name": "name"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "match_pattern",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "funnel_steps",
+            "name": "match_pattern"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "match_type",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "funnel_steps",
+            "name": "match_type"
+          }
+        }
       }
     ],
     "parameters": {

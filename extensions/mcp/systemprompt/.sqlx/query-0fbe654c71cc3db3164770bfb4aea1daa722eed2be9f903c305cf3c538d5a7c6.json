@@ -6,17 +6,35 @@
       {
         "ordinal": 0,
         "name": "family_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth_refresh_tokens",
+            "name": "family_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "consumed_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth_refresh_tokens",
+            "name": "consumed_at"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "expires_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth_refresh_tokens",
+            "name": "expires_at"
+          }
+        }
       }
     ],
     "parameters": {

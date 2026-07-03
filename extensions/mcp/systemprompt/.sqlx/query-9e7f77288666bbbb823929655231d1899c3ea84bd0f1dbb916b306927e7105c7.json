@@ -6,17 +6,30 @@
       {
         "ordinal": 0,
         "name": "source_content_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "campaign_links",
+            "name": "source_content_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "target_url",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "campaign_links",
+            "name": "target_url"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "click_count!",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": "Expression"
       }
     ],
     "parameters": {

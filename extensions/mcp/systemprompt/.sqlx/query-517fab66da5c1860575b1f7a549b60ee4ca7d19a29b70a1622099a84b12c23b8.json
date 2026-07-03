@@ -6,42 +6,90 @@
       {
         "ordinal": 0,
         "name": "session_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "session_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "user_id: UserId",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "ip_address",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "ip_address"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "user_agent",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "user_agent"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "device_type",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "device_type"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "started_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "started_at"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "last_activity_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "last_activity_at"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "ended_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "ended_at"
+          }
+        }
       }
     ],
     "parameters": {

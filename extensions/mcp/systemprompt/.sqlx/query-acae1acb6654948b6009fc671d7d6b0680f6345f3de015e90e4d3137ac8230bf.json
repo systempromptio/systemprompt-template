@@ -6,17 +6,35 @@
       {
         "ordinal": 0,
         "name": "created_at!",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "status",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "status"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "execution_time_ms",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "execution_time_ms"
+          }
+        }
       }
     ],
     "parameters": {

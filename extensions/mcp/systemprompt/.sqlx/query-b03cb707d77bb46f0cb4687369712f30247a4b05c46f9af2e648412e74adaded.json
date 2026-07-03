@@ -6,17 +6,35 @@
       {
         "ordinal": 0,
         "name": "requests",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "requests"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "input_tokens",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "input_tokens"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "output_tokens",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "output_tokens"
+          }
+        }
       }
     ],
     "parameters": {
