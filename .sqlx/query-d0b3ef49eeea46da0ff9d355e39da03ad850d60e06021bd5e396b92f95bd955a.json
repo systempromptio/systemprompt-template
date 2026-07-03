@@ -6,52 +6,62 @@
       {
         "ordinal": 0,
         "name": "avg_sessions",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": "Expression"
       },
       {
         "ordinal": 1,
         "name": "avg_quality",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "avg_apm",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "avg_peak_apm",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": "Expression"
       },
       {
         "ordinal": 4,
         "name": "avg_error_rate",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 5,
         "name": "avg_tool_diversity",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": "Expression"
       },
       {
         "ordinal": 6,
         "name": "avg_multitasking",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": "Expression"
       },
       {
         "ordinal": 7,
         "name": "avg_goal_rate",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 8,
         "name": "avg_throughput",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 9,
         "name": "total_users",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

@@ -6,37 +6,44 @@
       {
         "ordinal": 0,
         "name": "total!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 1,
         "name": "allow!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "deny!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "distinct_users!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 4,
         "name": "distinct_agents!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 5,
         "name": "bytes_in!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 6,
         "name": "bytes_out!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

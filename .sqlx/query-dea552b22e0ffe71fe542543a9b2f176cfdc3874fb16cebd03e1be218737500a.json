@@ -6,17 +6,35 @@
       {
         "ordinal": 0,
         "name": "event_type",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_usage_events",
+            "name": "event_type"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "tool_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_usage_events",
+            "name": "tool_name"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "cwd",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_usage_events",
+            "name": "cwd"
+          }
+        }
       }
     ],
     "parameters": {

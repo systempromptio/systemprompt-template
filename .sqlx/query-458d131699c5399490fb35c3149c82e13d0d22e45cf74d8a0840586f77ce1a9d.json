@@ -6,32 +6,68 @@
       {
         "ordinal": 0,
         "name": "session_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "session_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "tool_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "tool_name"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "decision",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "decision"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "policy",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "policy"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "reason",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "reason"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "created_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "created_at"
+          }
+        }
       }
     ],
     "parameters": {

@@ -6,62 +6,134 @@
       {
         "ordinal": 0,
         "name": "id!: LogId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "logs",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "timestamp!",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "logs",
+            "name": "timestamp"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "level!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "logs",
+            "name": "level"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "module!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "logs",
+            "name": "module"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "message!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "logs",
+            "name": "message"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "metadata",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "logs",
+            "name": "metadata"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "user_id!: UserId",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "logs",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "session_id!: SessionId",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "logs",
+            "name": "session_id"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "task_id: TaskId",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "logs",
+            "name": "task_id"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "trace_id!: TraceId",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "logs",
+            "name": "trace_id"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "context_id_text",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "logs",
+            "name": "context_id"
+          }
+        }
       },
       {
         "ordinal": 11,
         "name": "client_id: ClientId",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "logs",
+            "name": "client_id"
+          }
+        }
       }
     ],
     "parameters": {

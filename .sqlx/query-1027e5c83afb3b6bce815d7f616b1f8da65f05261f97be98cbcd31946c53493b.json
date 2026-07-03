@@ -6,7 +6,13 @@
       {
         "ordinal": 0,
         "name": "roles",
-        "type_info": "TextArray"
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "roles"
+          }
+        }
       }
     ],
     "parameters": {

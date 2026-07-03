@@ -6,57 +6,123 @@
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "job_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "job_name"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "schedule",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "schedule"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "enabled",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "enabled"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "last_run",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "last_run"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "next_run",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "next_run"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "last_status",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "last_status"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "last_error",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "last_error"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "run_count",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "run_count"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "created_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "updated_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "scheduled_jobs",
+            "name": "updated_at"
+          }
+        }
       }
     ],
     "parameters": {

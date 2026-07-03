@@ -6,92 +6,110 @@
       {
         "ordinal": 0,
         "name": "total_days",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 1,
         "name": "total_sessions",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "avg_quality",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "avg_apm",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 4,
         "name": "avg_peak_apm",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 5,
         "name": "avg_error_rate",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 6,
         "name": "avg_tool_diversity",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 7,
         "name": "avg_multitasking",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 8,
         "name": "avg_goal_rate",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 9,
         "name": "avg_throughput",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 10,
         "name": "total_goals_achieved",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 11,
         "name": "total_goals_partial",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 12,
         "name": "total_goals_failed",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 13,
         "name": "total_prompts",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 14,
         "name": "total_tool_uses",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 15,
         "name": "total_errors",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 16,
         "name": "avg_session_velocity",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 17,
         "name": "avg_concurrency",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

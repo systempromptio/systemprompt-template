@@ -6,27 +6,57 @@
       {
         "ordinal": 0,
         "name": "session_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_ratings",
+            "name": "session_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "rating",
-        "type_info": "Int2"
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "session_ratings",
+            "name": "rating"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "outcome",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_ratings",
+            "name": "outcome"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "notes",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_ratings",
+            "name": "notes"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "updated_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "session_ratings",
+            "name": "updated_at"
+          }
+        }
       }
     ],
     "parameters": {

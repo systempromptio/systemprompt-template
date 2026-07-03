@@ -6,22 +6,46 @@
       {
         "ordinal": 0,
         "name": "skill_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "skill_ratings",
+            "name": "skill_name"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "rating",
-        "type_info": "Int2"
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "skill_ratings",
+            "name": "rating"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "notes",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "skill_ratings",
+            "name": "notes"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "updated_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "skill_ratings",
+            "name": "updated_at"
+          }
+        }
       }
     ],
     "parameters": {

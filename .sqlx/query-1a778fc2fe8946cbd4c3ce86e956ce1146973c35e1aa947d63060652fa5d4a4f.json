@@ -6,27 +6,32 @@
       {
         "ordinal": 0,
         "name": "identity_id!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 1,
         "name": "deny_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "secret_breach_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "scope_violation_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 4,
         "name": "activity_volume!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

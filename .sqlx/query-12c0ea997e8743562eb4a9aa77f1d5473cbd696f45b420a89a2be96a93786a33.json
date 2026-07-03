@@ -6,12 +6,19 @@
       {
         "ordinal": 0,
         "name": "roles",
-        "type_info": "TextArray"
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "roles"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "department!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       }
     ],
     "parameters": {

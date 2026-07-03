@@ -6,62 +6,134 @@
       {
         "ordinal": 0,
         "name": "timestamp",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "provider",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "provider"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "model",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "model"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "input_tokens",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "input_tokens"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "output_tokens",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "output_tokens"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "cost_microdollars",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "cost_microdollars"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "latency_ms",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "latency_ms"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "status",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "status"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "user_id",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "session_id",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "session_id"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "task_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "task_id"
+          }
+        }
       },
       {
         "ordinal": 11,
         "name": "context_id",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "context_id"
+          }
+        }
       }
     ],
     "parameters": {

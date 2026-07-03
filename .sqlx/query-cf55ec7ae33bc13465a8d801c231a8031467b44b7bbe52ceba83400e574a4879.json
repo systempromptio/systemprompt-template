@@ -6,17 +6,20 @@
       {
         "ordinal": 0,
         "name": "total_files",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 1,
         "name": "total_tools",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "session_count",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

@@ -6,42 +6,50 @@
       {
         "ordinal": 0,
         "name": "signups_today!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 1,
         "name": "signups_yesterday!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "signups_30d_avg!",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "logins_today!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 4,
         "name": "logins_yesterday!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 5,
         "name": "logins_30d_avg!",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 6,
         "name": "unique_today!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 7,
         "name": "unique_yesterday!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

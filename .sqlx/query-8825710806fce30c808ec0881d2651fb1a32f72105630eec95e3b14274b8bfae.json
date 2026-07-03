@@ -6,12 +6,14 @@
       {
         "ordinal": 0,
         "name": "conversations!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 1,
         "name": "ai_requests!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

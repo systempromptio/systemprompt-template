@@ -117,6 +117,9 @@ fn apply_keep_sets(candidate: MarketplaceCandidate, keep: &KeepSets) -> Marketpl
         // Carry the owning marketplace context through unchanged; the
         // filter only shrinks entry lists, it must not drop the scope the
         // gateway attached.
+        // Artifacts are not gated by the admin keep-sets; pass them through
+        // with the marketplace scope.
+        artifacts: candidate.artifacts,
         marketplace_id: candidate.marketplace_id,
         access: candidate.access,
     }

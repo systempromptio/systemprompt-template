@@ -6,17 +6,30 @@
       {
         "ordinal": 0,
         "name": "schema_name!",
-        "type_info": "Name"
+        "type_info": "Name",
+        "origin": {
+          "Table": {
+            "table": "information_schema.columns",
+            "name": "table_schema"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "table_name!",
-        "type_info": "Name"
+        "type_info": "Name",
+        "origin": {
+          "Table": {
+            "table": "information_schema.columns",
+            "name": "table_name"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "column_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

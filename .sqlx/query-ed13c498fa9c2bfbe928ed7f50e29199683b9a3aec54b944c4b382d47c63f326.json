@@ -6,32 +6,43 @@
       {
         "ordinal": 0,
         "name": "user_id!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "display_name!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "email",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "deny_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 4,
         "name": "secret_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 5,
         "name": "total!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

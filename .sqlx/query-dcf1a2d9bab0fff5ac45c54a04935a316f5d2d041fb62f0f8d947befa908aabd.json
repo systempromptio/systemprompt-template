@@ -6,47 +6,96 @@
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "user_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "display_name!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "category: ActivityCategory",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "category"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "action: ActivityAction",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "action"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "entity_type",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "entity_type"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "entity_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "entity_name"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "description",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "description"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "created_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "created_at"
+          }
+        }
       }
     ],
     "parameters": {

@@ -6,17 +6,35 @@
       {
         "ordinal": 0,
         "name": "return_to",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth_state_bindings",
+            "name": "return_to"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "client_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth_state_bindings",
+            "name": "client_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "redirect_uri",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth_state_bindings",
+            "name": "redirect_uri"
+          }
+        }
       }
     ],
     "parameters": {

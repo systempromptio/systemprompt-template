@@ -6,52 +6,62 @@
       {
         "ordinal": 0,
         "name": "today!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 1,
         "name": "yesterday!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "avg_7d!",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "avg_14d!",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 4,
         "name": "avg_30d!",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 5,
         "name": "avg_time_today!",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 6,
         "name": "avg_time_yesterday!",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 7,
         "name": "avg_time_7d!",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 8,
         "name": "avg_time_14d!",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 9,
         "name": "avg_time_30d!",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

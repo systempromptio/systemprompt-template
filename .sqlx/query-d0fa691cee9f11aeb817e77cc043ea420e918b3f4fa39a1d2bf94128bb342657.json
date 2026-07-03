@@ -6,17 +6,20 @@
       {
         "ordinal": 0,
         "name": "step_order",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": "Expression"
       },
       {
         "ordinal": 1,
         "name": "entered_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "exited_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

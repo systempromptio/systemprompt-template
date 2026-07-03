@@ -6,27 +6,57 @@
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_device_certs",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "fingerprint",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_device_certs",
+            "name": "fingerprint"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "label",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_device_certs",
+            "name": "label"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "enrolled_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_device_certs",
+            "name": "enrolled_at"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "revoked_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_device_certs",
+            "name": "revoked_at"
+          }
+        }
       }
     ],
     "parameters": {

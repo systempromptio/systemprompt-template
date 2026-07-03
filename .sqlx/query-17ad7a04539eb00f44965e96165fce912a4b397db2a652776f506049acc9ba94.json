@@ -6,57 +6,123 @@
       {
         "ordinal": 0,
         "name": "user_id!: UserId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_settings",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "display_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_settings",
+            "name": "display_name"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "avatar_url",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_settings",
+            "name": "avatar_url"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "notify_daily_summary",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "user_settings",
+            "name": "notify_daily_summary"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "notify_achievements",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "user_settings",
+            "name": "notify_achievements"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "leaderboard_opt_in",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "user_settings",
+            "name": "leaderboard_opt_in"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "timezone",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_settings",
+            "name": "timezone"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "achievement_email_sent_date",
-        "type_info": "Date"
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "user_settings",
+            "name": "achievement_email_sent_date"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "daily_report_email_sent_date",
-        "type_info": "Date"
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "user_settings",
+            "name": "daily_report_email_sent_date"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "created_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_settings",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "updated_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_settings",
+            "name": "updated_at"
+          }
+        }
       }
     ],
     "parameters": {

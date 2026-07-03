@@ -23,7 +23,7 @@ opt-level = "z"
 
 [workspace.package]
 edition = "2021"
-version = "0.18.0"
+version = "0.19.0"
 authors = ["systemprompt.io <ed@systemprompt.io>"]
 license = "MIT"
 
@@ -31,8 +31,8 @@ license = "MIT"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.18.0", default-features = false, features = ["core", "database", "config"] }
-systemprompt-security = { version = "0.18.0" }
+systemprompt = { version = "0.19.0", default-features = false, features = ["core", "database", "config"] }
+systemprompt-security = { version = "0.19.0" }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -54,7 +54,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 async-trait = "0.1"
 
 # Database
-sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "postgres", "migrate", "chrono", "rust_decimal"] }
+sqlx = { version = "0.9", features = ["runtime-tokio", "tls-rustls-ring-webpki", "sqlite", "postgres", "migrate", "chrono", "rust_decimal"] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -106,7 +106,7 @@ zip = { version = "2", default-features = false, features = ["deflate"] }
 async-stream = "0.3"
 
 # MCP Protocol
-rmcp = { version = "1.1", features = ["server", "client", "transport-io", "transport-streamable-http-server", "transport-streamable-http-server-session", "transport-streamable-http-client", "transport-streamable-http-client-reqwest", "macros", "auth"] }
+rmcp = { version = "2.0", features = ["server", "client", "transport-io", "transport-streamable-http-server", "transport-streamable-http-server-session", "transport-streamable-http-client", "transport-streamable-http-client-reqwest", "macros", "auth"] }
 
 [workspace.lints.clippy]
 all = { level = "deny", priority = -1 }
@@ -274,3 +274,5 @@ workspace = true
 # systemprompt-sync = { path = "../systemprompt-core/crates/app/sync" }
 # systemprompt-api = { path = "../systemprompt-core/crates/entry/api" }
 # systemprompt-cli = { path = "../systemprompt-core/crates/entry/cli" }
+# systemprompt-slack = { path = "../systemprompt-core/crates/domain/slack" }
+# systemprompt-teams = { path = "../systemprompt-core/crates/domain/teams" }

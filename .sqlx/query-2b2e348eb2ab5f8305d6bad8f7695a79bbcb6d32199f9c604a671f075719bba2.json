@@ -6,7 +6,13 @@
       {
         "ordinal": 0,
         "name": "context_id!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "context_id"
+          }
+        }
       }
     ],
     "parameters": {

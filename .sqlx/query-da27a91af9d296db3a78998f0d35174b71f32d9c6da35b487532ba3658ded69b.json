@@ -6,32 +6,48 @@
       {
         "ordinal": 0,
         "name": "context_id!: systemprompt_identifiers::ContextId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_contexts",
+            "name": "context_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "agent_name!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "user_name!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "status!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 4,
         "name": "message_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 5,
         "name": "started_at!",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_contexts",
+            "name": "created_at"
+          }
+        }
       }
     ],
     "parameters": {

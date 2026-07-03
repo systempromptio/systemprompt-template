@@ -6,42 +6,70 @@
       {
         "ordinal": 0,
         "name": "content_id!: ContentId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "engagement_events",
+            "name": "content_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "slug?",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "slug"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "title?",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "title"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "source_id?: SourceId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "source_id"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "total_views!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 5,
         "name": "unique_visitors!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 6,
         "name": "avg_time_on_page_seconds",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       },
       {
         "ordinal": 7,
         "name": "trend_direction",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       }
     ],
     "parameters": {

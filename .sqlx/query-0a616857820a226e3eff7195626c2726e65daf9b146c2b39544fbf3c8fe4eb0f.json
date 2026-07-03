@@ -6,7 +6,13 @@
       {
         "ordinal": 0,
         "name": "key_version",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "user_encryption_keys",
+            "name": "key_version"
+          }
+        }
       }
     ],
     "parameters": {

@@ -6,47 +6,101 @@
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "user_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "name",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "name"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "key_prefix",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "key_prefix"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "key_hash",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "key_hash"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "created_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "last_used_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "last_used_at"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "expires_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "expires_at"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "revoked_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "revoked_at"
+          }
+        }
       }
     ],
     "parameters": {

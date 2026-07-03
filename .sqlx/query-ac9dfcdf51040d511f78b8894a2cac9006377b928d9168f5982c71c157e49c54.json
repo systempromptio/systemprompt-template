@@ -6,92 +6,180 @@
       {
         "ordinal": 0,
         "name": "id!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_usage_events",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "created_at!",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "plugin_usage_events",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "event_type!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_usage_events",
+            "name": "event_type"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "tool_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_usage_events",
+            "name": "tool_name"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "plugin_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_usage_events",
+            "name": "plugin_id"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "user_id!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_usage_events",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "session_id!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_usage_events",
+            "name": "session_id"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "agent_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "agent_id"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "agent_scope",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "agent_scope"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "content_input_bytes!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 10,
         "name": "content_output_bytes!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 11,
         "name": "decision",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "decision"
+          }
+        }
       },
       {
         "ordinal": 12,
         "name": "policy",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "policy"
+          }
+        }
       },
       {
         "ordinal": 13,
         "name": "reason",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "reason"
+          }
+        }
       },
       {
         "ordinal": 14,
         "name": "trace_id",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "trace_id"
+          }
+        }
       },
       {
         "ordinal": 15,
         "name": "ar_latency_ms",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "latency_ms"
+          }
+        }
       },
       {
         "ordinal": 16,
         "name": "metadata!",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": "Expression"
       },
       {
         "ordinal": 17,
         "name": "total_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

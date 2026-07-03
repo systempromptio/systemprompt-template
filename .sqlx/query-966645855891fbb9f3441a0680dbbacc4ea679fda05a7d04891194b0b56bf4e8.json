@@ -6,32 +6,58 @@
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_execution_steps",
+            "name": "step_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "step_type",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "title",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "status",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_execution_steps",
+            "name": "status"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "duration_ms",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "task_execution_steps",
+            "name": "duration_ms"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "error_message",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "task_execution_steps",
+            "name": "error_message"
+          }
+        }
       }
     ],
     "parameters": {

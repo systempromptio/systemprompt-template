@@ -6,42 +6,90 @@
       {
         "ordinal": 0,
         "name": "client_id",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "oauth_auth_codes",
+            "name": "client_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "user_id",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "oauth_auth_codes",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "scope",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth_auth_codes",
+            "name": "scope"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "expires_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth_auth_codes",
+            "name": "expires_at"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "redirect_uri",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth_auth_codes",
+            "name": "redirect_uri"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "code_challenge",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth_auth_codes",
+            "name": "code_challenge"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "code_challenge_method",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth_auth_codes",
+            "name": "code_challenge_method"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "resource",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth_auth_codes",
+            "name": "resource"
+          }
+        }
       }
     ],
     "parameters": {

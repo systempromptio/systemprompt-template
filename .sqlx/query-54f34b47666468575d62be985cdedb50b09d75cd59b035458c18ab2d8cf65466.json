@@ -6,212 +6,464 @@
       {
         "ordinal": 0,
         "name": "summary_date",
-        "type_info": "Date"
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "summary_date"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "session_count",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "session_count"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "avg_quality_score",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "avg_quality_score"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "goals_achieved",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "goals_achieved"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "goals_partial",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "goals_partial"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "goals_failed",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "goals_failed"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "total_prompts",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "total_prompts"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "total_tool_uses",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "total_tool_uses"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "total_errors",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "total_errors"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "summary",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "summary"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "patterns",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "patterns"
+          }
+        }
       },
       {
         "ordinal": 11,
         "name": "skill_gaps",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "skill_gaps"
+          }
+        }
       },
       {
         "ordinal": 12,
         "name": "top_recommendation",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "top_recommendation"
+          }
+        }
       },
       {
         "ordinal": 13,
         "name": "daily_xp",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "daily_xp"
+          }
+        }
       },
       {
         "ordinal": 14,
         "name": "tags",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "tags"
+          }
+        }
       },
       {
         "ordinal": 15,
         "name": "avg_apm",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "avg_apm"
+          }
+        }
       },
       {
         "ordinal": 16,
         "name": "peak_apm",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "peak_apm"
+          }
+        }
       },
       {
         "ordinal": 17,
         "name": "avg_eapm",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "avg_eapm"
+          }
+        }
       },
       {
         "ordinal": 18,
         "name": "peak_concurrency",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "peak_concurrency"
+          }
+        }
       },
       {
         "ordinal": 19,
         "name": "avg_concurrency",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "avg_concurrency"
+          }
+        }
       },
       {
         "ordinal": 20,
         "name": "total_input_bytes",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "total_input_bytes"
+          }
+        }
       },
       {
         "ordinal": 21,
         "name": "total_output_bytes",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "total_output_bytes"
+          }
+        }
       },
       {
         "ordinal": 22,
         "name": "peak_throughput_bps",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "peak_throughput_bps"
+          }
+        }
       },
       {
         "ordinal": 23,
         "name": "tool_diversity",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "tool_diversity"
+          }
+        }
       },
       {
         "ordinal": 24,
         "name": "multitasking_score",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "multitasking_score"
+          }
+        }
       },
       {
         "ordinal": 25,
         "name": "session_velocity",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "session_velocity"
+          }
+        }
       },
       {
         "ordinal": 26,
         "name": "achievements_unlocked",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "achievements_unlocked"
+          }
+        }
       },
       {
         "ordinal": 27,
         "name": "highlights",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "highlights"
+          }
+        }
       },
       {
         "ordinal": 28,
         "name": "trends",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "trends"
+          }
+        }
       },
       {
         "ordinal": 29,
         "name": "category_distribution",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "category_distribution"
+          }
+        }
       },
       {
         "ordinal": 30,
         "name": "plugins_count",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "plugins_count"
+          }
+        }
       },
       {
         "ordinal": 31,
         "name": "skills_count",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "skills_count"
+          }
+        }
       },
       {
         "ordinal": 32,
         "name": "agents_count",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "agents_count"
+          }
+        }
       },
       {
         "ordinal": 33,
         "name": "mcp_servers_count",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "mcp_servers_count"
+          }
+        }
       },
       {
         "ordinal": 34,
         "name": "hooks_count",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "hooks_count"
+          }
+        }
       },
       {
         "ordinal": 35,
         "name": "health_score",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "health_score"
+          }
+        }
       },
       {
         "ordinal": 36,
         "name": "skill_effectiveness",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "skill_effectiveness"
+          }
+        }
       },
       {
         "ordinal": 37,
         "name": "avg_session_duration_minutes",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "avg_session_duration_minutes"
+          }
+        }
       },
       {
         "ordinal": 38,
         "name": "avg_turns_per_session",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "avg_turns_per_session"
+          }
+        }
       },
       {
         "ordinal": 39,
         "name": "total_corrections",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "total_corrections"
+          }
+        }
       },
       {
         "ordinal": 40,
         "name": "avg_automation_ratio",
-        "type_info": "Float4"
+        "type_info": "Float4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "avg_automation_ratio"
+          }
+        }
       },
       {
         "ordinal": 41,
         "name": "plan_mode_sessions",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "daily_summaries",
+            "name": "plan_mode_sessions"
+          }
+        }
       }
     ],
     "parameters": {

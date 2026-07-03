@@ -53,10 +53,10 @@ impl<'r> Decode<'r, Postgres> for RuleType {
     }
 }
 
-impl<'q> Encode<'q, Postgres> for RuleType {
+impl Encode<'_, Postgres> for RuleType {
     fn encode_by_ref(
         &self,
-        buf: &mut <Postgres as sqlx::Database>::ArgumentBuffer<'q>,
+        buf: &mut <Postgres as sqlx::Database>::ArgumentBuffer,
     ) -> Result<sqlx::encode::IsNull, Box<dyn std::error::Error + Send + Sync>> {
         <&str as Encode<Postgres>>::encode_by_ref(
             &match self {
@@ -115,10 +115,10 @@ impl<'r> Decode<'r, Postgres> for AccessDecision {
     }
 }
 
-impl<'q> Encode<'q, Postgres> for AccessDecision {
+impl Encode<'_, Postgres> for AccessDecision {
     fn encode_by_ref(
         &self,
-        buf: &mut <Postgres as sqlx::Database>::ArgumentBuffer<'q>,
+        buf: &mut <Postgres as sqlx::Database>::ArgumentBuffer,
     ) -> Result<sqlx::encode::IsNull, Box<dyn std::error::Error + Send + Sync>> {
         <&str as Encode<Postgres>>::encode_by_ref(
             &match self {

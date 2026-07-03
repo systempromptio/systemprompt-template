@@ -6,77 +6,167 @@
       {
         "ordinal": 0,
         "name": "user_id: UserId",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "archetype",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "archetype"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "archetype_description",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "archetype_description"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "archetype_confidence",
-        "type_info": "Int2"
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "archetype_confidence"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "strengths",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "strengths"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "weaknesses",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "weaknesses"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "ai_narrative",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "ai_narrative"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "ai_style_analysis",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "ai_style_analysis"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "ai_comparison",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "ai_comparison"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "ai_patterns",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "ai_patterns"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "ai_improvements",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "ai_improvements"
+          }
+        }
       },
       {
         "ordinal": 11,
         "name": "ai_tips",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "ai_tips"
+          }
+        }
       },
       {
         "ordinal": 12,
         "name": "metrics_snapshot",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "metrics_snapshot"
+          }
+        }
       },
       {
         "ordinal": 13,
         "name": "period_days",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "period_days"
+          }
+        }
       },
       {
         "ordinal": 14,
         "name": "generated_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_profile_reports",
+            "name": "generated_at"
+          }
+        }
       }
     ],
     "parameters": {

@@ -6,72 +6,106 @@
       {
         "ordinal": 0,
         "name": "user_id!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "display_name",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "email: _",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "roles!: Vec<String>",
-        "type_info": "TextArray"
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "roles"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "is_active!",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": "Expression"
       },
       {
         "ordinal": 5,
         "name": "last_active!",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "total_events!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 7,
         "name": "last_tool",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 8,
         "name": "custom_skills_count!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 9,
         "name": "preferred_client",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 10,
         "name": "prompts!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 11,
         "name": "sessions!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 12,
         "name": "bytes!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 13,
         "name": "logins!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

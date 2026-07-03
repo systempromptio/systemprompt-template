@@ -6,7 +6,13 @@
       {
         "ordinal": 0,
         "name": "contact_email",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "oauth_client_contacts",
+            "name": "contact_email"
+          }
+        }
       }
     ],
     "parameters": {

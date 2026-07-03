@@ -6,72 +6,131 @@
       {
         "ordinal": 0,
         "name": "id!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "name!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "name"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "key_prefix!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "key_prefix"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "user_id!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "user_email?",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 5,
         "name": "department?",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 6,
         "name": "platform?",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "device_app_links",
+            "name": "app_platform"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "app_version?",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 8,
         "name": "hostname?",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 9,
         "name": "last_seen_at?",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": "Expression"
       },
       {
         "ordinal": 10,
         "name": "enrolled_at?",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "device_app_links",
+            "name": "enrolled_at"
+          }
+        }
       },
       {
         "ordinal": 11,
         "name": "expires_at?",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "expires_at"
+          }
+        }
       },
       {
         "ordinal": 12,
         "name": "created_at?",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 13,
         "name": "revoked_at?",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "revoked_at"
+          }
+        }
       }
     ],
     "parameters": {

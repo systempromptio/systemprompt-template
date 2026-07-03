@@ -6,37 +6,79 @@
       {
         "ordinal": 0,
         "name": "user_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "plugin_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "plugin_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "ai_title",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "ai_title"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "ai_summary",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "ai_summary"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "model",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "model"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "started_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "started_at"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "ended_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "ended_at"
+          }
+        }
       }
     ],
     "parameters": {

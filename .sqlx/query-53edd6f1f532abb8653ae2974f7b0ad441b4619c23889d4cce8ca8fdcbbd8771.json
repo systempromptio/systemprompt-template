@@ -6,27 +6,57 @@
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "admin_traffic_reports",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "report_date",
-        "type_info": "Date"
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "admin_traffic_reports",
+            "name": "report_date"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "report_period",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "admin_traffic_reports",
+            "name": "report_period"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "report_data",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "admin_traffic_reports",
+            "name": "report_data"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "generated_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "admin_traffic_reports",
+            "name": "generated_at"
+          }
+        }
       }
     ],
     "parameters": {

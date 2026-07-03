@@ -6,22 +6,46 @@
       {
         "ordinal": 0,
         "name": "device_id!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "device_app_links",
+            "name": "device_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "app_platform!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "device_app_links",
+            "name": "app_platform"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "app_version!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "device_app_links",
+            "name": "app_version"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "last_seen_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "device_app_links",
+            "name": "last_seen_at"
+          }
+        }
       }
     ],
     "parameters": {

@@ -6,22 +6,46 @@
       {
         "ordinal": 0,
         "name": "session_id",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_analyses",
+            "name": "session_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "summary",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_analyses",
+            "name": "summary"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "tags",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_analyses",
+            "name": "tags"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "title",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_analyses",
+            "name": "title"
+          }
+        }
       }
     ],
     "parameters": {

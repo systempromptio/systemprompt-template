@@ -6,12 +6,24 @@
       {
         "ordinal": 0,
         "name": "encrypted_dek",
-        "type_info": "Bytea"
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "user_encryption_keys",
+            "name": "encrypted_dek"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "dek_nonce",
-        "type_info": "Bytea"
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "user_encryption_keys",
+            "name": "dek_nonce"
+          }
+        }
       }
     ],
     "parameters": {

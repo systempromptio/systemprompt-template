@@ -6,47 +6,76 @@
       {
         "ordinal": 0,
         "name": "prompts",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "prompts"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "unique_files_touched",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "unique_files_touched"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "errors!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "subagent_spawns!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 4,
         "name": "client_source!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 5,
         "name": "permission_mode!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 6,
         "name": "model!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 7,
         "name": "user_prompts",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "user_prompts"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "automated_actions",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "automated_actions"
+          }
+        }
       }
     ],
     "parameters": {

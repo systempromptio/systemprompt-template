@@ -6,27 +6,32 @@
       {
         "ordinal": 0,
         "name": "tool_name!",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": "Expression"
       },
       {
         "ordinal": 1,
         "name": "total!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 2,
         "name": "successes!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 3,
         "name": "failures!",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": "Expression"
       },
       {
         "ordinal": 4,
         "name": "success_pct!",
-        "type_info": "Float8"
+        "type_info": "Float8",
+        "origin": "Expression"
       }
     ],
     "parameters": {

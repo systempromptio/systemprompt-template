@@ -6,17 +6,35 @@
       {
         "ordinal": 0,
         "name": "tool_uses",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "tool_uses"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "prompts",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "prompts"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "started_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "started_at"
+          }
+        }
       }
     ],
     "parameters": {

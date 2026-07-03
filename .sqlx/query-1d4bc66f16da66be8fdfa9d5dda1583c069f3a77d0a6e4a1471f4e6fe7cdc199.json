@@ -6,12 +6,24 @@
       {
         "ordinal": 0,
         "name": "client_id",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "oauth_client_grant_types",
+            "name": "client_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "grant_type",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "oauth_client_grant_types",
+            "name": "grant_type"
+          }
+        }
       }
     ],
     "parameters": {
