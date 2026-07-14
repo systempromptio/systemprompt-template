@@ -8,15 +8,35 @@ use axum::Json;
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
 use crate::handlers::shared;
 use crate::repositories::{fetch_distinct_roles, list_users};
 
+/// JSON body returned by [`list_distinct_roles_handler`].
+#[derive(Debug, Serialize)]
+pub(crate) struct DistinctRolesResponse {
+    pub roles: Vec<String>,
+}
+
+/// One entry in [`UserSearchResponse::users`].
+#[derive(Debug, Serialize)]
+pub(crate) struct UserSearchEntry {
+    pub id: String,
+    pub display_name: Option<String>,
+    pub email: Option<String>,
+}
+
+/// JSON body returned by [`search_users_handler`].
+#[derive(Debug, Serialize)]
+pub(crate) struct UserSearchResponse {
+    pub users: Vec<UserSearchEntry>,
+}
+
 pub(crate) async fn list_distinct_roles_handler(State(pool): State<Arc<PgPool>>) -> Response {
     match fetch_distinct_roles(&pool).await {
-        Ok(roles) => Json(serde_json::json!({ "roles": roles })).into_response(),
+        Ok(roles) => Json(DistinctRolesResponse { roles }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to fetch distinct roles");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
@@ -45,7 +65,7 @@ pub(crate) async fn search_users_handler(
     };
     let q = query.q.unwrap_or_default().to_lowercase();
     let limit = query.limit.unwrap_or(10).min(50);
-    let filtered: Vec<serde_json::Value> = users
+    let users: Vec<UserSearchEntry> = users
         .into_iter()
         .filter(|u| {
             if q.is_empty() {
@@ -63,13 +83,11 @@ pub(crate) async fn search_users_handler(
             id_match || name_match || email_match
         })
         .take(limit)
-        .map(|u| {
-            serde_json::json!({
-                "id": u.user_id.as_ref(),
-                "display_name": u.display_name,
-                "email": u.email.as_ref().map(systemprompt::identifiers::Email::as_ref),
-            })
+        .map(|u| UserSearchEntry {
+            id: u.user_id.as_ref().to_owned(),
+            display_name: u.display_name,
+            email: u.email.as_ref().map(|e| e.as_ref().to_owned()),
         })
         .collect();
-    Json(serde_json::json!({ "users": filtered })).into_response()
+    Json(UserSearchResponse { users }).into_response()
 }

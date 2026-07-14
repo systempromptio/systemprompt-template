@@ -1,6 +1,21 @@
+use serde::Serialize;
+
 use super::constructors::truncate;
 use super::enums::{ActivityAction, ActivityCategory, ActivityEntity};
 use super::types::{ActivityEntityRef, NewActivity};
+
+#[derive(Debug, Serialize)]
+struct McpAccessMeta<'a> {
+    tool_name: &'a str,
+    server: &'a str,
+}
+
+#[derive(Debug, Serialize)]
+struct McpAccessRejectedMeta<'a> {
+    tool_name: &'a str,
+    server: &'a str,
+    reason: &'a str,
+}
 
 impl NewActivity {
     #[must_use]
@@ -15,7 +30,11 @@ impl NewActivity {
                 name: Some(server_name.to_owned()),
             }),
             description: format!("Authenticated to {server_name} for '{tool_name}'"),
-            metadata: serde_json::json!({ "tool_name": tool_name, "server": server_name }),
+            metadata: serde_json::to_value(McpAccessMeta {
+                tool_name,
+                server: server_name,
+            })
+            .unwrap_or_default(),
         }
     }
 
@@ -32,7 +51,12 @@ impl NewActivity {
                 name: Some(server_name.to_owned()),
             }),
             description: format!("Access rejected on {server_name}: {reason_short}"),
-            metadata: serde_json::json!({ "tool_name": tool_name, "server": server_name, "reason": reason }),
+            metadata: serde_json::to_value(McpAccessRejectedMeta {
+                tool_name,
+                server: server_name,
+                reason,
+            })
+            .unwrap_or_default(),
         }
     }
 
@@ -48,7 +72,11 @@ impl NewActivity {
                 name: Some(tool_name.to_owned()),
             }),
             description: format!("Executed '{tool_name}' on {server_name}"),
-            metadata: serde_json::json!({ "tool_name": tool_name, "server": server_name }),
+            metadata: serde_json::to_value(McpAccessMeta {
+                tool_name,
+                server: server_name,
+            })
+            .unwrap_or_default(),
         }
     }
 }

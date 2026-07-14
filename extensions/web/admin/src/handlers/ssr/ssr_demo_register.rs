@@ -3,9 +3,15 @@ use crate::types::{MarketplaceContext, UserContext};
 use axum::Extension;
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
-use serde_json::json;
+use serde::Serialize;
 
-use super::{ACCESS_DENIED_HTML, render_page};
+use super::{ACCESS_DENIED_HTML, render_typed_page};
+
+#[derive(Debug, Serialize)]
+struct DemoRegisterContext {
+    title: &'static str,
+    page: &'static str,
+}
 
 pub(crate) async fn demo_register_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -16,10 +22,10 @@ pub(crate) async fn demo_register_page(
         return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML.to_owned())).into_response();
     }
 
-    let data = json!({
-        "title": "Demo User Registration",
-        "page": "demo-register",
-    });
+    let ctx = DemoRegisterContext {
+        title: "Demo User Registration",
+        page: "demo-register",
+    };
 
-    render_page(&engine, "demo-register", &data, &user_ctx, &mkt_ctx)
+    render_typed_page(&engine, "demo-register", &ctx, &user_ctx, &mkt_ctx)
 }

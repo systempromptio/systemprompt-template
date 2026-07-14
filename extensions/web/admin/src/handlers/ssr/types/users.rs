@@ -56,6 +56,12 @@ pub(crate) struct EnrichedUserView {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub(crate) struct PageStatView {
+    pub value: i64,
+    pub label: &'static str,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub(crate) struct UsersPageData {
     pub page: &'static str,
     pub title: &'static str,
@@ -63,6 +69,8 @@ pub(crate) struct UsersPageData {
     pub total_users: usize,
     pub active_users: usize,
     pub total_events: i64,
+    #[serde(default)]
+    pub page_stats: Vec<PageStatView>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -83,6 +91,11 @@ pub(crate) struct UserDetailPageData {
     #[serde(default)]
     pub departments: Vec<String>,
     pub runtime: Option<UserRuntimeView>,
+    #[serde(default)]
+    pub effective_permissions:
+        Option<crate::repositories::governance_grp::effective::EffectivePermissions>,
+    #[serde(default)]
+    pub has_effective_permissions: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Default)]

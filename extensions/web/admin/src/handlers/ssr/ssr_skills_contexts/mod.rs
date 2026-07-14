@@ -2,6 +2,9 @@
 //! drill-down. Filters by user, model, free text, and time range; supports a
 //! flat "Contexts" view and a grouped "By user" summary view.
 
+mod context;
+mod data;
+
 use std::sync::Arc;
 
 use crate::repositories;
@@ -12,8 +15,12 @@ use axum::extract::{Extension, Query, State};
 use axum::response::{IntoResponse, Response};
 use chrono::{DateTime, Duration, Utc};
 use serde::Deserialize;
-use serde_json::json;
 use sqlx::PgPool;
+
+use context::{ContextsPageContext, FilterView, PageKpisView, PageStat, UserForFilterView};
+use data::{
+    build_contexts_json, build_user_summaries_json, group_contexts_by_user, microdollars_to_usd,
+};
 
 #[derive(Debug, Deserialize, Default)]
 pub(crate) struct ContextsListQuery {
@@ -35,85 +42,6 @@ fn since_to_datetime(value: &str) -> Option<DateTime<Utc>> {
         _ => return None,
     };
     Some(now - dur)
-}
-
-fn microdollars_to_usd(micro: i64) -> f64 {
-    (micro as f64) / 1_000_000.0
-}
-
-fn group_contexts_by_user(
-    contexts: &[contexts_list::ContextListItem],
-) -> std::collections::HashMap<String, Vec<serde_json::Value>> {
-    let mut out: std::collections::HashMap<String, Vec<serde_json::Value>> =
-        std::collections::HashMap::new();
-    for c in contexts {
-        let key = c.user_id.clone().unwrap_or_else(|| "unknown".to_owned());
-        out.entry(key).or_default().push(json!({
-            "context_id":     c.context_id,
-            "name":           c.name,
-            "model":          c.model,
-            "request_count":  c.request_count,
-            "message_count":  c.message_count,
-            "error_count":    c.error_count,
-            "total_tokens":   c.total_input_tokens + c.total_output_tokens,
-            "cost_usd":       microdollars_to_usd(c.total_cost_microdollars),
-            "last_activity":  c.last_activity_at.map(|t| t.to_rfc3339()),
-        }));
-    }
-    out
-}
-
-fn build_contexts_json(contexts: &[contexts_list::ContextListItem]) -> Vec<serde_json::Value> {
-    contexts
-        .iter()
-        .map(|c| {
-            json!({
-                "context_id":     c.context_id,
-                "name":           c.name,
-                "user_id":        c.user_id,
-                "display_name":   c.display_name,
-                "session_id":     c.session_id,
-                "model":          c.model,
-                "request_count":  c.request_count,
-                "message_count":  c.message_count,
-                "error_count":    c.error_count,
-                "input_tokens":   c.total_input_tokens,
-                "output_tokens":  c.total_output_tokens,
-                "total_tokens":   c.total_input_tokens + c.total_output_tokens,
-                "cost_usd":       microdollars_to_usd(c.total_cost_microdollars),
-                "first_request_at": c.first_request_at.map(|t| t.to_rfc3339()),
-                "last_request_at":  c.last_request_at.map(|t| t.to_rfc3339()),
-                "last_activity":    c.last_activity_at.map(|t| t.to_rfc3339()),
-            })
-        })
-        .collect()
-}
-
-fn build_user_summaries_json(
-    summaries: &[contexts_list::ContextUserSummary],
-    by_user: &std::collections::HashMap<String, Vec<serde_json::Value>>,
-) -> Vec<serde_json::Value> {
-    summaries
-        .iter()
-        .map(|s| {
-            let nested = by_user.get(&s.user_id).cloned().unwrap_or_default();
-            json!({
-                "user_id":        s.user_id,
-                "display_name":   s.display_name,
-                "context_count":  s.context_count,
-                "request_count":  s.request_count,
-                "message_count":  s.message_count,
-                "input_tokens":   s.total_input_tokens,
-                "output_tokens":  s.total_output_tokens,
-                "total_tokens":   s.total_input_tokens + s.total_output_tokens,
-                "cost_usd":       microdollars_to_usd(s.total_cost_microdollars),
-                "error_count":    s.error_count,
-                "last_activity":  s.last_activity_at.map(|t| t.to_rfc3339()),
-                "models":         s.distinct_models,
-                "contexts":       nested,
-            })
-        })
-        .collect()
 }
 
 struct ContextsPageInputs {
@@ -214,54 +142,64 @@ async fn fetch_page_data(
     }
 }
 
-fn build_page_json(inputs: &ContextsPageInputs, data: &ContextsPageData) -> serde_json::Value {
+fn build_page_json(inputs: &ContextsPageInputs, data: &ContextsPageData) -> ContextsPageContext {
     let contexts_by_user = group_contexts_by_user(&data.contexts);
     let contexts_json = build_contexts_json(&data.contexts);
     let user_summaries_json = build_user_summaries_json(&data.user_summaries, &contexts_by_user);
-    let users_for_filter_json: Vec<serde_json::Value> = data
+    let users_for_filter_json: Vec<UserForFilterView> = data
         .users_for_filter
         .iter()
-        .map(|u| {
-            json!({
-                "user_id":      u.user_id.to_string(),
-                "display_name": u.display_name,
-            })
+        .map(|u| UserForFilterView {
+            user_id: u.user_id.to_string(),
+            display_name: u.display_name.clone(),
         })
         .collect();
     let kpis = data.kpis;
     let total_tokens = kpis.total_input_tokens + kpis.total_output_tokens;
     let total_cost_usd = microdollars_to_usd(kpis.total_cost_microdollars);
-    json!({
-        "page": "contexts",
-        "title": "Conversation Contexts",
-        "contexts": contexts_json,
-        "user_summaries": user_summaries_json,
-        "users_for_filter": users_for_filter_json,
-        "models": data.models,
-        "kpis": {
-            "total_contexts":   kpis.total_contexts,
-            "active_users":     kpis.active_users,
-            "total_requests":   kpis.total_requests,
-            "total_messages":   kpis.total_messages,
-            "total_tokens":     total_tokens,
-            "total_cost_usd":   total_cost_usd,
+    ContextsPageContext {
+        page: "contexts",
+        title: "Conversation Contexts",
+        contexts: contexts_json,
+        user_summaries: user_summaries_json,
+        users_for_filter: users_for_filter_json,
+        models: data.models.clone(),
+        kpis: PageKpisView {
+            total_contexts: kpis.total_contexts,
+            active_users: kpis.active_users,
+            total_requests: kpis.total_requests,
+            total_messages: kpis.total_messages,
+            total_tokens,
+            total_cost_usd,
         },
-        "filter": {
-            "user_id": inputs.user_id,
-            "model":   inputs.model,
-            "q":       inputs.q,
-            "since":   inputs.since_label,
-            "view":    inputs.view,
+        filter: FilterView {
+            user_id: inputs.user_id.clone().unwrap_or_default(),
+            model: inputs.model.clone().unwrap_or_default(),
+            q: inputs.q.clone().unwrap_or_default(),
+            since: inputs.since_label.clone().unwrap_or_default(),
+            view: inputs.view.clone(),
         },
-        "view_is_users":    inputs.view == "users",
-        "view_is_contexts": inputs.view == "contexts",
-        "page_stats": [
-            {"value": kpis.total_contexts, "label": "Contexts"},
-            {"value": kpis.active_users, "label": "Users"},
-            {"value": kpis.total_requests, "label": "Requests"},
-            {"value": kpis.total_messages, "label": "Messages"},
+        view_is_users: inputs.view == "users",
+        view_is_contexts: inputs.view == "contexts",
+        page_stats: vec![
+            PageStat {
+                value: kpis.total_contexts,
+                label: "Contexts",
+            },
+            PageStat {
+                value: kpis.active_users,
+                label: "Users",
+            },
+            PageStat {
+                value: kpis.total_requests,
+                label: "Requests",
+            },
+            PageStat {
+                value: kpis.total_messages,
+                label: "Messages",
+            },
         ],
-    })
+    }
 }
 
 pub(crate) async fn skills_contexts_page(
@@ -281,5 +219,5 @@ pub(crate) async fn skills_contexts_page(
     let inputs = parse_inputs(params);
     let data = fetch_page_data(&pool, &inputs.filter).await;
     let payload = build_page_json(&inputs, &data);
-    super::render_page(&engine, "skills-contexts", &payload, &user_ctx, &mkt_ctx)
+    super::render_typed_page(&engine, "skills-contexts", &payload, &user_ctx, &mkt_ctx)
 }

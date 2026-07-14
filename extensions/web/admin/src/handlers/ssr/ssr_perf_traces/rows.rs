@@ -1,54 +1,85 @@
 //! Per-trace row rendering for the Trace Explorer list.
 //!
-//! Maps one [`TraceSummary`] to the serde row the template iterates, including
+//! Maps one [`TraceSummary`] to the typed row the template iterates, including
 //! the human-facing token / cost / duration formatting.
 
-use serde_json::json;
+use serde::Serialize;
 use urlencoding::encode as urlencode;
 
 use crate::repositories::perf_grp::traces::TraceSummary;
 
 use super::BASE_URL;
 
-pub(super) fn trace_to_json(t: &TraceSummary) -> serde_json::Value {
+#[derive(Debug, Serialize)]
+pub(super) struct TraceRow {
+    session_id: String,
+    session_id_short: String,
+    trace_id: Option<String>,
+    started_at: String,
+    started_at_local: String,
+    duration_ms: i64,
+    duration_display: String,
+    user_id: Option<String>,
+    agent_id: Option<String>,
+    agent_scope: Option<String>,
+    model: Option<String>,
+    provider: Option<String>,
+    span_count: i64,
+    request_count: i64,
+    tool_call_count: i64,
+    governance_count: i64,
+    deny_count: i64,
+    total_tokens: i64,
+    tokens_display: String,
+    cost_display: String,
+    total_cost_microdollars: i64,
+    latency_display: String,
+    cache_hit_any: bool,
+    top_tool: Option<String>,
+    has_error: bool,
+    has_deny: bool,
+    detail_url: String,
+}
+
+pub(super) fn trace_to_json(t: &TraceSummary) -> TraceRow {
     let short = if t.session_id.len() > 12 {
         format!("{}…", &t.session_id[..12])
     } else {
         t.session_id.clone()
     };
-    json!({
-        "session_id": t.session_id,
-        "session_id_short": short,
-        "trace_id": t.trace_id,
-        "started_at": t.started_at.to_rfc3339(),
-        "started_at_local": t
+    TraceRow {
+        session_id: t.session_id.clone(),
+        session_id_short: short,
+        trace_id: t.trace_id.clone(),
+        started_at: t.started_at.to_rfc3339(),
+        started_at_local: t
             .started_at
             .with_timezone(&chrono::Local)
             .format("%Y-%m-%d %H:%M:%S")
             .to_string(),
-        "duration_ms": t.duration_ms,
-        "duration_display": format_duration(t.duration_ms),
-        "user_id": t.user_id,
-        "agent_id": t.agent_id,
-        "agent_scope": t.agent_scope,
-        "model": t.model,
-        "provider": t.provider,
-        "span_count": t.span_count,
-        "request_count": t.request_count,
-        "tool_call_count": t.tool_call_count,
-        "governance_count": t.governance_count,
-        "deny_count": t.deny_count,
-        "total_tokens": t.total_tokens,
-        "tokens_display": format_tokens(t.total_tokens, t.input_tokens, t.output_tokens),
-        "cost_display": format_cost(t.total_cost_microdollars),
-        "total_cost_microdollars": t.total_cost_microdollars,
-        "latency_display": format_duration(t.total_latency_ms),
-        "cache_hit_any": t.cache_hit_any,
-        "top_tool": t.top_tool,
-        "has_error": t.has_error,
-        "has_deny": t.has_deny,
-        "detail_url": format!("{BASE_URL}/{}", urlencode(&t.session_id)),
-    })
+        duration_ms: t.duration_ms,
+        duration_display: format_duration(t.duration_ms),
+        user_id: t.user_id.clone(),
+        agent_id: t.agent_id.clone(),
+        agent_scope: t.agent_scope.clone(),
+        model: t.model.clone(),
+        provider: t.provider.clone(),
+        span_count: t.span_count,
+        request_count: t.request_count,
+        tool_call_count: t.tool_call_count,
+        governance_count: t.governance_count,
+        deny_count: t.deny_count,
+        total_tokens: t.total_tokens,
+        tokens_display: format_tokens(t.total_tokens, t.input_tokens, t.output_tokens),
+        cost_display: format_cost(t.total_cost_microdollars),
+        total_cost_microdollars: t.total_cost_microdollars,
+        latency_display: format_duration(t.total_latency_ms),
+        cache_hit_any: t.cache_hit_any,
+        top_tool: t.top_tool.clone(),
+        has_error: t.has_error,
+        has_deny: t.has_deny,
+        detail_url: format!("{BASE_URL}/{}", urlencode(&t.session_id)),
+    }
 }
 
 fn format_tokens(total: i64, input: i64, output: i64) -> String {

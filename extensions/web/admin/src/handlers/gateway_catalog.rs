@@ -225,6 +225,8 @@ pub(crate) async fn detect_after_the_fact(
             let decision_id = uuid::Uuid::new_v4().to_string();
             let reason_str = reason.to_string();
             let session_id = row.session_id.clone().unwrap_or_default();
+            // variable-shape: governance audit `evaluated_rules` JSONB payload, not a
+            // template/response body
             let evaluated = serde_json::json!({
                 "ai_request_id": row.id,
                 "model": row.model,

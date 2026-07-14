@@ -3,10 +3,22 @@ use std::path::PathBuf;
 use axum::Json;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use serde::Serialize;
 use systemprompt::config::ProfileBootstrap;
 
+#[derive(Debug, Serialize)]
+pub(crate) struct ErrorBody {
+    pub error: String,
+}
+
 pub(crate) fn error_response(status: StatusCode, message: &str) -> Response {
-    (status, Json(serde_json::json!({"error": message}))).into_response()
+    (
+        status,
+        Json(ErrorBody {
+            error: message.to_owned(),
+        }),
+    )
+        .into_response()
 }
 
 pub(crate) fn boxed_error_response(status: StatusCode, message: &str) -> Box<Response> {

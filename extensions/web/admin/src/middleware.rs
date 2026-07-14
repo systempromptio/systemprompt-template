@@ -6,12 +6,25 @@ use axum::extract::{Request, State};
 use axum::http::StatusCode;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
+use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::{Email, UserId};
 use tokio::sync::RwLock;
 
 use super::handlers::extract_user_from_cookie;
+use super::handlers::shared::ErrorBody;
 use super::repositories::plugins::MarketplaceCounts;
 use super::types::{MarketplaceContext, UserContext};
+
+#[derive(Debug, Serialize)]
+struct AuthMeResponse {
+    user_id: UserId,
+    username: String,
+    email: Email,
+    roles: Vec<String>,
+    department: String,
+    is_admin: bool,
+}
 
 struct CachedMarketplace {
     counts: MarketplaceCounts,
@@ -203,7 +216,9 @@ pub(crate) async fn require_auth_middleware(request: Request, next: Next) -> Res
         Some(ctx) if !ctx.user_id.as_str().is_empty() => next.run(request).await,
         _ => (
             StatusCode::UNAUTHORIZED,
-            axum::Json(serde_json::json!({"error": "Authentication required"})),
+            axum::Json(ErrorBody {
+                error: "Authentication required".to_owned(),
+            }),
         )
             .into_response(),
     }
@@ -215,7 +230,9 @@ pub(crate) async fn require_admin_middleware(request: Request, next: Next) -> Re
         Some(ctx) if ctx.is_admin => next.run(request).await,
         _ => (
             StatusCode::FORBIDDEN,
-            axum::Json(serde_json::json!({"error": "Admin access required"})),
+            axum::Json(ErrorBody {
+                error: "Admin access required".to_owned(),
+            }),
         )
             .into_response(),
     }
@@ -264,13 +281,13 @@ pub(crate) async fn auth_me_handler(Extension(user_ctx): Extension<UserContext>)
     if user_ctx.user_id.as_str().is_empty() {
         return (StatusCode::UNAUTHORIZED, "Not authenticated").into_response();
     }
-    axum::Json(serde_json::json!({
-        "user_id": user_ctx.user_id,
-        "username": user_ctx.username,
-        "email": user_ctx.email,
-        "roles": user_ctx.roles,
-        "department": user_ctx.department,
-        "is_admin": user_ctx.is_admin,
-    }))
+    axum::Json(AuthMeResponse {
+        user_id: user_ctx.user_id,
+        username: user_ctx.username,
+        email: user_ctx.email,
+        roles: user_ctx.roles,
+        department: user_ctx.department,
+        is_admin: user_ctx.is_admin,
+    })
     .into_response()
 }

@@ -2,10 +2,17 @@ use axum::Json;
 use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use serde::Serialize;
 
 use crate::handlers::shared;
 use crate::repositories;
 use crate::types::{GatewayRouteView, ReorderRoutesRequest, UpdateGatewaySettingsRequest};
+
+/// JSON body returned by [`create_gateway_route_handler`] on success.
+#[derive(Debug, Serialize)]
+pub(crate) struct CreateRouteResponse {
+    pub index: usize,
+}
 
 pub(crate) async fn get_gateway_handler() -> Response {
     let profile_path = match shared::get_profile_path() {
@@ -40,7 +47,7 @@ pub(crate) async fn create_gateway_route_handler(Json(body): Json<GatewayRouteVi
         Err(r) => return *r,
     };
     match repositories::create_gateway_route(&profile_path, &body) {
-        Ok(idx) => (StatusCode::CREATED, Json(serde_json::json!({"index": idx}))).into_response(),
+        Ok(index) => (StatusCode::CREATED, Json(CreateRouteResponse { index })).into_response(),
         Err(e) => map_error(e, "create gateway route"),
     }
 }

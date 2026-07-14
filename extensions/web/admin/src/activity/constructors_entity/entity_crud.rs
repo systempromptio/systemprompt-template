@@ -1,6 +1,19 @@
+use serde::Serialize;
+
 use super::super::constructors::truncate;
 use super::super::enums::{ActivityAction, ActivityCategory, ActivityEntity, entity_label};
 use super::super::types::{ActivityEntityRef, NewActivity};
+
+/// Empty metadata payload `{}`, matching the prior `json!({})`.
+fn empty_meta() -> serde_json::Value {
+    serde_json::Value::Object(serde_json::Map::new())
+}
+
+/// Shared shape for events that only carry the session id.
+#[derive(Debug, Serialize)]
+struct SessionMeta<'a> {
+    session_id: &'a str,
+}
 
 impl NewActivity {
     #[must_use]
@@ -15,7 +28,7 @@ impl NewActivity {
                 name: Some(tool_name.to_owned()),
             }),
             description: format!("Used skill '{tool_name}'"),
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 
@@ -36,7 +49,7 @@ impl NewActivity {
                 name: Some(name.to_owned()),
             }),
             description: format!("Created {} '{name}'", entity_label(entity)),
-            metadata: serde_json::json!({}),
+            metadata: empty_meta(),
         }
     }
 
@@ -57,7 +70,7 @@ impl NewActivity {
                 name: Some(name.to_owned()),
             }),
             description: format!("Updated {} '{name}'", entity_label(entity)),
-            metadata: serde_json::json!({}),
+            metadata: empty_meta(),
         }
     }
 
@@ -78,7 +91,7 @@ impl NewActivity {
                 name: Some(name.to_owned()),
             }),
             description: format!("Deleted a {}", entity_label(entity)),
-            metadata: serde_json::json!({}),
+            metadata: empty_meta(),
         }
     }
 
@@ -99,7 +112,7 @@ impl NewActivity {
                 name: Some(name.to_owned()),
             }),
             description: format!("Forked {} '{name}'", entity_label(entity)),
-            metadata: serde_json::json!({}),
+            metadata: empty_meta(),
         }
     }
 
@@ -121,7 +134,7 @@ impl NewActivity {
                 name: Some(name.to_owned()),
             }),
             description: description.to_owned(),
-            metadata: serde_json::json!({}),
+            metadata: empty_meta(),
         }
     }
 
@@ -137,7 +150,7 @@ impl NewActivity {
                 name: Some(format!("v{version}")),
             }),
             description: format!("Uploaded marketplace v{version}"),
-            metadata: serde_json::json!({}),
+            metadata: empty_meta(),
         }
     }
 
@@ -153,7 +166,7 @@ impl NewActivity {
                 name: Some(format!("v{version}")),
             }),
             description: format!("Restored marketplace to v{version}"),
-            metadata: serde_json::json!({}),
+            metadata: empty_meta(),
         }
     }
 
@@ -174,7 +187,7 @@ impl NewActivity {
                 name: Some(tool_name.to_owned()),
             }),
             description: format!("{tool_name}: {detail}"),
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 
@@ -195,7 +208,7 @@ impl NewActivity {
                 name: Some(tool_name.to_owned()),
             }),
             description: format!("Used {tool_name}: {detail}"),
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 
@@ -217,7 +230,7 @@ impl NewActivity {
                 name: Some(tool_name.to_owned()),
             }),
             description: format!("{tool_name} failed: {msg}"),
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 }

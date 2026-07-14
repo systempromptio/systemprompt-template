@@ -86,6 +86,10 @@ impl SessionAnalysis {
     }
 }
 
+// variable-shape: this builds a JSON Schema document (nested
+// "type"/"properties"/ "enum" descriptors) passed to the AI provider's tool
+// schema, not a response body; its shape is schema metadata, not a typed DTO we
+// control end-to-end.
 pub(crate) fn session_analysis_schema() -> serde_json::Value {
     serde_json::json!({
         "type": "object",

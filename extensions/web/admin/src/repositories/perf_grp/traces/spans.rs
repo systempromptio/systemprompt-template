@@ -1,9 +1,33 @@
 //! Per-session waterfall spans, unioned and normalised across the governance,
 //! gateway-request, and tool-event tables.
 
+use serde::Serialize;
 use sqlx::PgPool;
 
 use super::{Span, SpanKind, SpanStatus};
+
+#[derive(Debug, Serialize)]
+struct GovernanceSpanRaw<'a> {
+    policy: &'a str,
+    decision: &'a str,
+    tool_name: &'a str,
+    agent_id: Option<&'a str>,
+}
+
+#[derive(Debug, Serialize)]
+struct RequestSpanRaw<'a> {
+    request_id: &'a str,
+    provider: &'a str,
+    model: &'a str,
+    status: &'a str,
+    latency_ms: Option<i32>,
+}
+
+#[derive(Debug, Serialize)]
+struct EventSpanRaw<'a> {
+    event_type: &'a str,
+    tool_name: Option<&'a str>,
+}
 
 /// Resolve `id` (a `session_id` or `trace_id`) to an absolute `session_id`.
 pub async fn resolve_trace_session(pool: &PgPool, id: &str) -> Result<Option<String>, sqlx::Error> {
@@ -93,12 +117,13 @@ async fn fetch_governance_spans(pool: &PgPool, session_id: &str) -> Result<Vec<S
                     d.agent_id.as_deref(),
                     d.agent_scope.as_deref(),
                 )),
-                raw: serde_json::json!({
-                    "policy": d.policy,
-                    "decision": d.decision,
-                    "tool_name": d.tool_name,
-                    "agent_id": d.agent_id,
-                }),
+                raw: serde_json::to_value(GovernanceSpanRaw {
+                    policy: &d.policy,
+                    decision: &d.decision,
+                    tool_name: &d.tool_name,
+                    agent_id: d.agent_id.as_deref(),
+                })
+                .unwrap_or_default(),
             }
         })
         .collect())
@@ -147,13 +172,14 @@ async fn fetch_request_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span
                 duration_ms: dur,
                 status,
                 identity_label: Some(format_identity(Some(r.user_id.as_str()), None, None)),
-                raw: serde_json::json!({
-                    "request_id": r.request_id,
-                    "provider": r.provider,
-                    "model": r.model,
-                    "status": r.status,
-                    "latency_ms": r.latency_ms,
-                }),
+                raw: serde_json::to_value(RequestSpanRaw {
+                    request_id: &r.request_id,
+                    provider: &r.provider,
+                    model: &r.model,
+                    status: &r.status,
+                    latency_ms: r.latency_ms,
+                })
+                .unwrap_or_default(),
             }
         })
         .collect())
@@ -199,10 +225,11 @@ async fn fetch_event_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span>,
                 duration_ms: 0,
                 status,
                 identity_label: Some(format_identity(Some(e.user_id.as_str()), None, None)),
-                raw: serde_json::json!({
-                    "event_type": e.event_type,
-                    "tool_name": e.tool_name,
-                }),
+                raw: serde_json::to_value(EventSpanRaw {
+                    event_type: &e.event_type,
+                    tool_name: e.tool_name.as_deref(),
+                })
+                .unwrap_or_default(),
             }
         })
         .collect())

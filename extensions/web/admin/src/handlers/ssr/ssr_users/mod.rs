@@ -12,7 +12,7 @@ use axum::extract::{Extension, Query, State};
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 
-use super::types::{UserDetailPageData, UserRuntimeView, UsersPageData};
+use super::types::{PageStatView, UserDetailPageData, UserRuntimeView, UsersPageData};
 
 mod data;
 mod view;
@@ -42,6 +42,21 @@ pub(crate) async fn users_page(
 
     let groups = data::load_user_groups(&pool, &users).await;
 
+    let page_stats = vec![
+        PageStatView {
+            value: total_users as i64,
+            label: "Users",
+        },
+        PageStatView {
+            value: active_users as i64,
+            label: "Active",
+        },
+        PageStatView {
+            value: total_events,
+            label: "Events",
+        },
+    ];
+
     let data = UsersPageData {
         page: "users",
         title: "Users",
@@ -49,10 +64,10 @@ pub(crate) async fn users_page(
         total_users,
         active_users,
         total_events,
+        page_stats,
     };
 
-    let value = view::users_page_value(&data, total_users, active_users, total_events);
-    super::render_page(&engine, "users", &value, &user_ctx, &mkt_ctx)
+    super::render_typed_page(&engine, "users", &data, &user_ctx, &mkt_ctx)
 }
 
 pub(crate) async fn user_detail_page(
@@ -73,8 +88,22 @@ pub(crate) async fn user_detail_page(
     }
 
     let Some(id) = params.id() else {
-        let value = view::not_found_value();
-        return super::render_page(&engine, "user-detail", &value, &user_ctx, &mkt_ctx);
+        let data = UserDetailPageData {
+            page: "user-detail",
+            title: "User Detail",
+            user: None,
+            gamification: None,
+            not_found: true,
+            user_department: String::new(),
+            user_assignments: super::types::UserAssignmentSummary::default(),
+            user_devices: Vec::new(),
+            user_devices_count: 0,
+            departments: Vec::new(),
+            runtime: None,
+            effective_permissions: None,
+            has_effective_permissions: false,
+        };
+        return super::render_typed_page(&engine, "user-detail", &data, &user_ctx, &mkt_ctx);
     };
     let user_id = UserId::new(id);
 
@@ -108,6 +137,10 @@ pub(crate) async fn user_detail_page(
 
     let departments = data::fetch_departments(&pool).await;
 
+    let has_effective_permissions = effective
+        .as_ref()
+        .is_some_and(|eff| !eff.gateway_routes.is_empty() || !eff.mcp_servers.is_empty());
+
     let data = UserDetailPageData {
         page: "user-detail",
         title: "User Detail",
@@ -120,9 +153,10 @@ pub(crate) async fn user_detail_page(
         user_devices_count,
         departments,
         runtime,
+        effective_permissions: effective,
+        has_effective_permissions,
     };
-    let value = view::detail_page_value(&data, effective);
-    super::render_page(&engine, "user-detail", &value, &user_ctx, &mkt_ctx)
+    super::render_typed_page(&engine, "user-detail", &data, &user_ctx, &mkt_ctx)
 }
 
 async fn load_runtime_view(pool: &PgPool, d: &crate::types::UserDetail) -> Option<UserRuntimeView> {

@@ -13,7 +13,6 @@ use std::sync::Arc;
 use axum::extract::{Extension, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
-use serde_json::json;
 use sqlx::PgPool;
 
 use crate::templates::AdminTemplateEngine;
@@ -21,8 +20,11 @@ use crate::types::{MarketplaceContext, UserContext};
 
 use super::ACCESS_DENIED_HTML;
 
+mod context;
 mod data;
 mod view;
+
+use context::GovernancePageContext;
 
 const WINDOW_24H_SECS: i64 = 86_400;
 const TOP_POLICIES_LIMIT: i64 = 10;
@@ -47,29 +49,29 @@ pub(crate) async fn governance_page(
     let top_tools_json = view::build_top_tools_json(&fetched.top_tools);
     let top_actors_json = view::build_top_actors_json(&fetched.top_actors);
 
-    let data = json!({
-        "page": "governance",
-        "title": "Governance Policies",
-        "lifetime_total": fetched.lifetime.total,
-        "lifetime_allowed": fetched.lifetime.allowed,
-        "lifetime_denied": fetched.lifetime.denied,
-        "window_total": fetched.window.total,
-        "window_allowed": fetched.window.allowed,
-        "window_denied": fetched.window.denied,
-        "window_breaches": fetched.window.secret_breaches,
-        "policies": policies_json,
-        "has_policies": !policies_json.is_empty(),
-        "enforcement": enforcement_json,
-        "has_enforcement_activity": any_enforcement_activity,
-        "top_tools": top_tools_json,
-        "has_top_tools": !top_tools_json.is_empty(),
-        "top_actors": top_actors_json,
-        "has_top_actors": !top_actors_json.is_empty(),
-        "orphans": orphan_json,
-        "has_orphans": !orphan_json.is_empty(),
-        "orphans_count": orphan_json.len(),
-        "config_path": "services/governance/config.yaml",
-    });
+    let ctx = GovernancePageContext {
+        page: "governance",
+        title: "Governance Policies",
+        lifetime_total: fetched.lifetime.total,
+        lifetime_allowed: fetched.lifetime.allowed,
+        lifetime_denied: fetched.lifetime.denied,
+        window_total: fetched.window.total,
+        window_allowed: fetched.window.allowed,
+        window_denied: fetched.window.denied,
+        window_breaches: fetched.window.secret_breaches,
+        has_policies: !policies_json.is_empty(),
+        policies: policies_json,
+        enforcement: enforcement_json,
+        has_enforcement_activity: any_enforcement_activity,
+        has_top_tools: !top_tools_json.is_empty(),
+        top_tools: top_tools_json,
+        has_top_actors: !top_actors_json.is_empty(),
+        top_actors: top_actors_json,
+        has_orphans: !orphan_json.is_empty(),
+        orphans_count: orphan_json.len(),
+        orphans: orphan_json,
+        config_path: "services/governance/config.yaml",
+    };
 
-    super::render_page(&engine, "governance", &data, &user_ctx, &mkt_ctx)
+    super::render_typed_page(&engine, "governance", &ctx, &user_ctx, &mkt_ctx)
 }

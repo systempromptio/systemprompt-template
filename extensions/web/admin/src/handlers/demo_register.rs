@@ -4,7 +4,7 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::{Extension, Json};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 
@@ -19,6 +19,14 @@ pub(crate) struct DemoRegisterRequest {
     pub name: String,
     pub email: String,
     pub role: String,
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct DemoRegisterResponse {
+    pub ok: bool,
+    pub registration_url: String,
+    pub user_id: String,
+    pub display_name: String,
 }
 
 /// Derive a stable, URL-safe `UserId` from an email's local part, falling back
@@ -94,12 +102,12 @@ pub(crate) async fn create_demo_user_handler(
 
     (
         StatusCode::OK,
-        Json(serde_json::json!({
-            "ok": true,
-            "registration_url": registration_url,
-            "user_id": user_id.as_str(),
-            "display_name": name,
-        })),
+        Json(DemoRegisterResponse {
+            ok: true,
+            registration_url,
+            user_id: user_id.as_str().to_owned(),
+            display_name: name,
+        }),
     )
         .into_response()
 }

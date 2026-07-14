@@ -1,6 +1,27 @@
+use serde::Serialize;
+
 use super::constructors::truncate;
 use super::enums::{ActivityAction, ActivityCategory, ActivityEntity};
 use super::types::{ActivityEntityRef, NewActivity};
+
+/// Empty metadata payload `{}`, matching the prior `json!({})`.
+fn empty_meta() -> serde_json::Value {
+    serde_json::Value::Object(serde_json::Map::new())
+}
+
+/// Shared shape for events that only carry the session id.
+#[derive(Debug, Serialize)]
+struct SessionMeta<'a> {
+    session_id: &'a str,
+}
+
+#[derive(Debug, Serialize)]
+struct SessionStartedMeta<'a> {
+    session_id: &'a str,
+    model: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    project_path: Option<&'a str>,
+}
 
 impl NewActivity {
     #[must_use]
@@ -11,7 +32,7 @@ impl NewActivity {
             action: ActivityAction::LoggedIn,
             entity: None,
             description: format!("{display_name} logged in"),
-            metadata: serde_json::json!({}),
+            metadata: empty_meta(),
         }
     }
 
@@ -22,10 +43,12 @@ impl NewActivity {
         model: &str,
         project_path: Option<&str>,
     ) -> Self {
-        let mut meta = serde_json::json!({ "session_id": session_id, "model": model });
-        if let Some(p) = project_path {
-            meta["project_path"] = serde_json::json!(p);
-        }
+        let meta = serde_json::to_value(SessionStartedMeta {
+            session_id,
+            model,
+            project_path,
+        })
+        .unwrap_or_default();
         Self {
             user_id: user_id.to_owned(),
             category: ActivityCategory::Session,
@@ -52,7 +75,7 @@ impl NewActivity {
                 name: None,
             }),
             description: "Ended a session".to_owned(),
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 
@@ -64,7 +87,7 @@ impl NewActivity {
             action: ActivityAction::Submitted,
             entity: None,
             description: "Sent a prompt".to_owned(),
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 
@@ -84,7 +107,7 @@ impl NewActivity {
             action: ActivityAction::Submitted,
             entity: None,
             description,
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 
@@ -106,10 +129,12 @@ impl NewActivity {
         } else {
             format!("Started a session ({model})")
         };
-        let mut meta = serde_json::json!({ "session_id": session_id, "model": model });
-        if let Some(p) = project_path {
-            meta["project_path"] = serde_json::json!(p);
-        }
+        let meta = serde_json::to_value(SessionStartedMeta {
+            session_id,
+            model,
+            project_path,
+        })
+        .unwrap_or_default();
         Self {
             user_id: user_id.to_owned(),
             category: ActivityCategory::Session,
@@ -140,7 +165,7 @@ impl NewActivity {
                 name: None,
             }),
             description,
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 
@@ -156,7 +181,7 @@ impl NewActivity {
             action: ActivityAction::Submitted,
             entity: None,
             description,
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 
@@ -172,7 +197,7 @@ impl NewActivity {
                 name: agent_type.map(str::to_owned),
             }),
             description: format!("Spawned {} agent", agent_type.unwrap_or("unknown")),
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 
@@ -198,7 +223,7 @@ impl NewActivity {
                 name: agent_type.map(str::to_owned),
             }),
             description,
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 
@@ -215,7 +240,7 @@ impl NewActivity {
                 name: name.map(str::to_owned),
             }),
             description: format!("Teammate {who} went idle"),
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 }

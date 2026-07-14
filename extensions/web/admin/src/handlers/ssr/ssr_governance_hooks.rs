@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::extract::{Extension, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
-use serde_json::json;
+use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::repositories;
@@ -11,6 +11,31 @@ use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
 use super::ACCESS_DENIED_HTML;
+
+#[derive(Debug, Serialize)]
+struct GovernanceHooksContext {
+    page: &'static str,
+    title: &'static str,
+    hero_title: &'static str,
+    hero_subtitle: &'static str,
+    configured: usize,
+    pretool_fired: i64,
+    posttool_fired: i64,
+    configured_hooks: Vec<crate::types::ConfiguredHook>,
+    has_configured: bool,
+    recent_events: Vec<RecentEventRow>,
+    has_recent: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct RecentEventRow {
+    kind: String,
+    created_at: String,
+    plugin_id: String,
+    tool_name: String,
+    user_id: String,
+    status: String,
+}
 
 pub(crate) async fn governance_hooks_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -43,35 +68,33 @@ pub(crate) async fn governance_hooks_page(
         .await
         .unwrap_or_default();
 
-    let recent_events_view: Vec<serde_json::Value> = recent_events
+    let recent_events_view: Vec<RecentEventRow> = recent_events
         .into_iter()
-        .map(|e| {
-            json!({
-                "kind": e.kind,
-                "created_at": e.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
-                "plugin_id": e.plugin_id.unwrap_or_default(),
-                "tool_name": e.tool_name.unwrap_or_default(),
-                "user_id": e.user_id,
-                "status": e.status.unwrap_or_default(),
-            })
+        .map(|e| RecentEventRow {
+            kind: e.kind,
+            created_at: e.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+            plugin_id: e.plugin_id.unwrap_or_default(),
+            tool_name: e.tool_name.unwrap_or_default(),
+            user_id: e.user_id,
+            status: e.status.unwrap_or_default(),
         })
         .collect();
 
     let configured_count = configured_hooks.len();
     let has_recent = !recent_events_view.is_empty();
-    let data = json!({
-        "page": "governance-hooks",
-        "title": "Governance Hooks",
-        "hero_title": "Governance Hooks",
-        "hero_subtitle": "Hooks declared in plugin YAMLs and a snapshot of recent ingested events.",
-        "configured": configured_count,
-        "pretool_fired": pretool_fired,
-        "posttool_fired": posttool_fired,
-        "configured_hooks": configured_hooks,
-        "has_configured": configured_count > 0,
-        "recent_events": recent_events_view,
-        "has_recent": has_recent,
-    });
+    let ctx = GovernanceHooksContext {
+        page: "governance-hooks",
+        title: "Governance Hooks",
+        hero_title: "Governance Hooks",
+        hero_subtitle: "Hooks declared in plugin YAMLs and a snapshot of recent ingested events.",
+        configured: configured_count,
+        pretool_fired,
+        posttool_fired,
+        has_configured: configured_count > 0,
+        configured_hooks,
+        recent_events: recent_events_view,
+        has_recent,
+    };
 
-    super::render_page(&engine, "governance-hooks", &data, &user_ctx, &mkt_ctx)
+    super::render_typed_page(&engine, "governance-hooks", &ctx, &user_ctx, &mkt_ctx)
 }

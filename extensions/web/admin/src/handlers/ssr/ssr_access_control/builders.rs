@@ -1,27 +1,48 @@
 use std::path::Path;
 
-use serde_json::json;
+use serde::Serialize;
 
 use crate::repositories;
 
-/// Lightweight list of every entity that can have an ACL rule attached, used
-/// by the unified access-control UI to populate dropdowns and lookup tables.
-pub(super) fn build_entity_catalogue(services_path: &Path) -> serde_json::Value {
-    let gateway_routes = build_gateway_routes(services_path);
-    let mcp_servers = build_mcp_servers(services_path);
-    let plugins = build_plugins(services_path);
-    let agents = build_agents(services_path);
-    let marketplaces = build_marketplaces();
-    json!({
-        "gateway_routes": gateway_routes,
-        "mcp_servers": mcp_servers,
-        "plugins": plugins,
-        "agents": agents,
-        "marketplaces": marketplaces,
-    })
+/// A generic labelled entity reference used by dropdowns/lookup tables in the
+/// unified access-control UI (mcp servers, plugins, agents, marketplaces).
+#[derive(Debug, Serialize)]
+pub(super) struct EntityRef {
+    pub(super) id: String,
+    pub(super) label: String,
+    pub(super) description: String,
 }
 
-fn build_gateway_routes(services_path: &Path) -> Vec<serde_json::Value> {
+/// Gateway routes have a `provider` instead of a `description`.
+#[derive(Debug, Serialize)]
+pub(super) struct RouteRef {
+    pub(super) id: String,
+    pub(super) label: String,
+    pub(super) provider: String,
+}
+
+/// Lightweight list of every entity that can have an ACL rule attached, used
+/// by the unified access-control UI to populate dropdowns and lookup tables.
+#[derive(Debug, Serialize)]
+pub(super) struct EntityCatalogue {
+    pub(super) gateway_routes: Vec<RouteRef>,
+    pub(super) mcp_servers: Vec<EntityRef>,
+    pub(super) plugins: Vec<EntityRef>,
+    pub(super) agents: Vec<EntityRef>,
+    pub(super) marketplaces: Vec<EntityRef>,
+}
+
+pub(super) fn build_entity_catalogue(services_path: &Path) -> EntityCatalogue {
+    EntityCatalogue {
+        gateway_routes: build_gateway_routes(services_path),
+        mcp_servers: build_mcp_servers(services_path),
+        plugins: build_plugins(services_path),
+        agents: build_agents(services_path),
+        marketplaces: build_marketplaces(),
+    }
+}
+
+fn build_gateway_routes(services_path: &Path) -> Vec<RouteRef> {
     let Some(parent) = services_path.parent() else {
         return Vec::new();
     };
@@ -36,12 +57,10 @@ fn build_gateway_routes(services_path: &Path) -> Vec<serde_json::Value> {
             return cfg
                 .routes
                 .into_iter()
-                .map(|r| {
-                    json!({
-                        "id": r.id,
-                        "label": r.model_pattern,
-                        "provider": r.provider,
-                    })
+                .map(|r| RouteRef {
+                    id: r.id,
+                    label: r.model_pattern,
+                    provider: r.provider,
                 })
                 .collect();
         }
@@ -49,58 +68,50 @@ fn build_gateway_routes(services_path: &Path) -> Vec<serde_json::Value> {
     Vec::new()
 }
 
-fn build_mcp_servers(services_path: &Path) -> Vec<serde_json::Value> {
+fn build_mcp_servers(services_path: &Path) -> Vec<EntityRef> {
     repositories::mcp_servers::list_mcp_servers(services_path)
         .unwrap_or_default()
         .into_iter()
-        .map(|s| {
-            json!({
-                "id": s.id.as_str(),
-                "label": s.id.as_str(),
-                "description": s.description,
-            })
+        .map(|s| EntityRef {
+            id: s.id.as_str().to_owned(),
+            label: s.id.as_str().to_owned(),
+            description: s.description,
         })
         .collect()
 }
 
-fn build_plugins(services_path: &Path) -> Vec<serde_json::Value> {
+fn build_plugins(services_path: &Path) -> Vec<EntityRef> {
     let admin_roles = vec!["admin".to_owned()];
     repositories::list_plugins_for_roles(services_path, &admin_roles)
         .unwrap_or_default()
         .into_iter()
-        .map(|p| {
-            json!({
-                "id": p.id,
-                "label": p.name,
-                "description": p.description,
-            })
+        .map(|p| EntityRef {
+            id: p.id,
+            label: p.name,
+            description: p.description,
         })
         .collect()
 }
 
-fn build_marketplaces() -> Vec<serde_json::Value> {
+fn build_marketplaces() -> Vec<EntityRef> {
     crate::services::marketplaces::load_marketplaces()
         .into_iter()
-        .map(|mp| {
-            json!({
-                "id": mp.id.as_str(),
-                "label": mp.name,
-                "description": mp.description,
-            })
+        .map(|mp| EntityRef {
+            id: mp.id.as_str().to_owned(),
+            label: mp.name,
+            description: mp.description,
         })
         .collect()
 }
 
-fn build_agents(services_path: &Path) -> Vec<serde_json::Value> {
+fn build_agents(services_path: &Path) -> Vec<EntityRef> {
     repositories::list_agents(services_path)
         .unwrap_or_default()
         .into_iter()
-        .map(|a| {
-            json!({
-                "id": a.id.as_str(),
-                "label": a.name,
-                "description": a.description,
-            })
+        .map(|a| EntityRef {
+            id: a.id.as_str().to_owned(),
+            label: a.name,
+            description: a.description,
         })
         .collect()
 }

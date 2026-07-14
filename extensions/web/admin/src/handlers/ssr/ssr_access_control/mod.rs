@@ -17,10 +17,45 @@ use crate::types::{MarketplaceContext, UserContext};
 use axum::extract::{Extension, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
-use serde_json::json;
+use builders::EntityCatalogue;
+use serde::Serialize;
 use sqlx::PgPool;
 
 use super::ACCESS_DENIED_HTML;
+
+#[derive(Debug, Serialize)]
+struct SerializedUser {
+    id: String,
+    email: String,
+    display_name: String,
+    roles: Vec<String>,
+    is_active: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct DeptGroup {
+    name: String,
+    user_count: i64,
+    active_count: i64,
+    users: Vec<SerializedUser>,
+}
+
+#[derive(Debug, Serialize)]
+struct Stats {
+    department_count: usize,
+    user_count: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct AccessControlPageContext {
+    page: &'static str,
+    title: &'static str,
+    known_roles: Vec<&'static str>,
+    departments: Vec<DeptGroup>,
+    department_names: Vec<String>,
+    entity_catalogue: EntityCatalogue,
+    stats: Stats,
+}
 
 async fn fetch_users_for_tree(pool: &PgPool) -> Vec<AccessTreeUserRow> {
     list_users_for_access_tree(pool).await.unwrap_or_else(|e| {
@@ -62,48 +97,51 @@ pub(crate) async fn access_control_page(
         };
         buckets.entry(key).or_default().push(u);
     }
-    let dept_groups: Vec<serde_json::Value> = dept_stats
+    let dept_groups: Vec<DeptGroup> = dept_stats
         .iter()
         .map(|d| {
             let users_in: &[&AccessTreeUserRow] =
                 buckets.get(&d.department).map_or(&[][..], Vec::as_slice);
-            json!({
-                "name": d.department,
-                "user_count": d.user_count,
-                "active_count": d.active_count,
-                "users": users_in.iter().map(serialize_user).collect::<Vec<_>>(),
-            })
+            DeptGroup {
+                name: d.department.clone(),
+                user_count: d.user_count,
+                active_count: d.active_count,
+                users: users_in.iter().map(serialize_user).collect(),
+            }
         })
         .collect();
 
-    let department_names: Vec<&str> = dept_stats
+    let department_names: Vec<String> = dept_stats
         .iter()
         .map(|d| d.department.as_str())
         .filter(|n| *n != "Unassigned")
+        .map(str::to_owned)
         .collect();
 
-    let data = json!({
-        "page": "access-control",
-        "title": "Access Control",
-        "known_roles": known_roles,
-        "departments": dept_groups,
-        "department_names": department_names,
-        "entity_catalogue": entity_catalogue,
-        "stats": {
-            "department_count": dept_stats.len(),
-            "user_count": users.len(),
-        },
-    });
+    let stats = Stats {
+        department_count: dept_stats.len(),
+        user_count: users.len(),
+    };
 
-    super::render_page(&engine, "access-control", &data, &user_ctx, &mkt_ctx)
+    let ctx = AccessControlPageContext {
+        page: "access-control",
+        title: "Access Control",
+        known_roles,
+        departments: dept_groups,
+        department_names,
+        entity_catalogue,
+        stats,
+    };
+
+    super::render_typed_page(&engine, "access-control", &ctx, &user_ctx, &mkt_ctx)
 }
 
-fn serialize_user(u: &&AccessTreeUserRow) -> serde_json::Value {
-    json!({
-        "id": u.id,
-        "email": u.email,
-        "display_name": u.display_name.clone().unwrap_or_else(|| u.email.clone()),
-        "roles": u.roles,
-        "is_active": u.is_active,
-    })
+fn serialize_user(u: &&AccessTreeUserRow) -> SerializedUser {
+    SerializedUser {
+        id: u.id.clone(),
+        email: u.email.clone(),
+        display_name: u.display_name.clone().unwrap_or_else(|| u.email.clone()),
+        roles: u.roles.clone(),
+        is_active: u.is_active,
+    }
 }

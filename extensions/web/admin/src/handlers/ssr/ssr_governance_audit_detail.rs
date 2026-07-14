@@ -10,11 +10,11 @@ use std::sync::Arc;
 use axum::extract::{Extension, Path, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
-use serde_json::json;
+use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::repositories::governance_grp::chain::{
-    AiRequestSummary, ChainEnvelope, fetch_decision_chain,
+    AiRequestSummary, ChainEnvelope, DecisionStage, TranscriptEnvelope, fetch_decision_chain,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -23,6 +23,75 @@ use super::ACCESS_DENIED_HTML;
 
 const NOT_FOUND_HTML: &str = "<h1>Request not found</h1>\
 <p>No audit chain found for that id.</p>";
+
+#[derive(Debug, Serialize)]
+struct AuditDetailContext<'a> {
+    page: &'static str,
+    title: String,
+    summary: Summary,
+    primary: Option<PrimaryRequest>,
+    banner: Option<Banner>,
+    decisions: &'a [DecisionStage],
+    requests: &'a [AiRequestSummary],
+    events: &'a [crate::repositories::governance_grp::chain::UsageEvent],
+    transcript: &'a Option<TranscriptEnvelope>,
+    session_summary: &'a Option<crate::repositories::governance_grp::chain::SessionSummary>,
+    back_url: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct Summary {
+    session_id: String,
+    session_id_short: String,
+    trace_id: Option<String>,
+    trace_url: Option<String>,
+    session_url: String,
+    user_id: String,
+    agent_id: Option<String>,
+    agent_scope: Option<String>,
+    decision_count: i64,
+    deny_count: i64,
+    request_count: i64,
+    input_tokens: i64,
+    output_tokens: i64,
+    cost_usd: String,
+    cost_microdollars: i64,
+    latency_ms: i64,
+}
+
+#[derive(Debug, Serialize)]
+struct PrimaryRequest {
+    id: String,
+    request_id: String,
+    model: String,
+    provider: String,
+    status: String,
+    is_failed: bool,
+    error_message: Option<String>,
+    input_tokens: Option<i32>,
+    output_tokens: Option<i32>,
+    latency_ms: Option<i32>,
+    cost_microdollars: i64,
+    created_at_local: String,
+}
+
+#[derive(Debug, Serialize)]
+struct Banner {
+    is_denial: bool,
+    is_failure: bool,
+    status: Option<String>,
+    error_message: Option<String>,
+    denial: Option<Denial>,
+}
+
+#[derive(Debug, Serialize)]
+struct Denial {
+    policy: String,
+    reason: String,
+    tool_name: String,
+    decision_id: String,
+    evaluated_rules: serde_json::Value,
+}
 
 pub(crate) async fn governance_audit_detail_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -54,24 +123,24 @@ pub(crate) async fn governance_audit_detail_page(
     let primary_json = primary.map(build_primary_json);
     let banner = build_banner(primary, &envelope);
 
-    let data = json!({
-        "page": "request-detail",
-        "title": title,
-        "summary": summary,
-        "primary": primary_json,
-        "banner": banner,
-        "decisions": envelope.decisions,
-        "requests": envelope.requests,
-        "events": envelope.events,
-        "transcript": envelope.transcript,
-        "session_summary": envelope.summary,
-        "back_url": "/admin/governance/decisions",
-    });
+    let ctx = AuditDetailContext {
+        page: "request-detail",
+        title,
+        summary,
+        primary: primary_json,
+        banner,
+        decisions: &envelope.decisions,
+        requests: &envelope.requests,
+        events: &envelope.events,
+        transcript: &envelope.transcript,
+        session_summary: &envelope.summary,
+        back_url: "/admin/governance/decisions",
+    };
 
-    super::render_page(
+    super::render_typed_page(
         &engine,
         "governance-audit-detail",
-        &data,
+        &ctx,
         &user_ctx,
         &mkt_ctx,
     )
@@ -86,7 +155,7 @@ fn pick_primary<'a>(env: &'a ChainEnvelope, id: &str) -> Option<&'a AiRequestSum
         .or_else(|| env.requests.first())
 }
 
-fn build_summary(env: &ChainEnvelope) -> serde_json::Value {
+fn build_summary(env: &ChainEnvelope) -> Summary {
     let total_latency = env
         .requests
         .iter()
@@ -94,81 +163,82 @@ fn build_summary(env: &ChainEnvelope) -> serde_json::Value {
         .map(i64::from)
         .sum::<i64>();
     let cost_usd = env.totals.total_cost_microdollars as f64 / 1_000_000.0;
-    json!({
-        "session_id": env.session_id,
-        "session_id_short": short_id(&env.session_id),
-        "trace_id": env.trace_id,
-        "trace_url": env.trace_id.as_ref().map(|tid| {
-            format!("/admin/traces/{}", urlencoding::encode(tid))
-        }),
-        "session_url": format!("/admin/sessions/{}", urlencoding::encode(&env.session_id)),
-        "user_id": env.identity.user_id,
-        "agent_id": env.identity.agent_id,
-        "agent_scope": env.identity.agent_scope,
-        "decision_count": env.totals.decision_count,
-        "deny_count": env.totals.deny_count,
-        "request_count": env.totals.request_count,
-        "input_tokens": env.totals.total_input_tokens,
-        "output_tokens": env.totals.total_output_tokens,
-        "cost_usd": format!("{cost_usd:.4}"),
-        "cost_microdollars": env.totals.total_cost_microdollars,
-        "latency_ms": total_latency,
-    })
+    Summary {
+        session_id: env.session_id.clone(),
+        session_id_short: short_id(&env.session_id),
+        trace_id: env.trace_id.clone(),
+        trace_url: env
+            .trace_id
+            .as_ref()
+            .map(|tid| format!("/admin/traces/{}", urlencoding::encode(tid))),
+        session_url: format!("/admin/sessions/{}", urlencoding::encode(&env.session_id)),
+        user_id: env.identity.user_id.clone(),
+        agent_id: env.identity.agent_id.clone(),
+        agent_scope: env.identity.agent_scope.clone(),
+        decision_count: env.totals.decision_count,
+        deny_count: env.totals.deny_count,
+        request_count: env.totals.request_count,
+        input_tokens: env.totals.total_input_tokens,
+        output_tokens: env.totals.total_output_tokens,
+        cost_usd: format!("{cost_usd:.4}"),
+        cost_microdollars: env.totals.total_cost_microdollars,
+        latency_ms: total_latency,
+    }
 }
 
 fn is_failed_status(status: &str) -> bool {
     matches!(status, "failed" | "error" | "denied")
 }
 
-fn build_primary_json(r: &AiRequestSummary) -> serde_json::Value {
-    json!({
-        "id": r.id,
-        "request_id": r.request_id,
-        "model": r.model,
-        "provider": r.provider,
-        "status": r.status,
-        "is_failed": is_failed_status(&r.status),
-        "error_message": r.error_message,
-        "input_tokens": r.input_tokens,
-        "output_tokens": r.output_tokens,
-        "latency_ms": r.latency_ms,
-        "cost_microdollars": r.cost_microdollars,
-        "created_at_local": r.created_at.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string(),
-    })
+fn build_primary_json(r: &AiRequestSummary) -> PrimaryRequest {
+    PrimaryRequest {
+        id: r.id.clone(),
+        request_id: r.request_id.clone(),
+        model: r.model.clone(),
+        provider: r.provider.clone(),
+        status: r.status.clone(),
+        is_failed: is_failed_status(&r.status),
+        error_message: r.error_message.clone(),
+        input_tokens: r.input_tokens,
+        output_tokens: r.output_tokens,
+        latency_ms: r.latency_ms,
+        cost_microdollars: r.cost_microdollars,
+        created_at_local: r
+            .created_at
+            .with_timezone(&chrono::Local)
+            .format("%Y-%m-%d %H:%M:%S")
+            .to_string(),
+    }
 }
 
 /// Build the prominent failure / denial banner shown above the chain. None if
 /// nothing is amiss — the caller suppresses the banner entirely.
-fn build_banner(
-    primary: Option<&AiRequestSummary>,
-    env: &ChainEnvelope,
-) -> Option<serde_json::Value> {
-    let status = primary.map(|r| r.status.as_str());
-    let error_message = primary.and_then(|r| r.error_message.as_deref());
-    let failed = status.is_some_and(is_failed_status);
+fn build_banner(primary: Option<&AiRequestSummary>, env: &ChainEnvelope) -> Option<Banner> {
+    let status = primary.map(|r| r.status.clone());
+    let error_message = primary.and_then(|r| r.error_message.clone());
+    let failed = status.as_deref().is_some_and(is_failed_status);
     let denial = env
         .decisions
         .iter()
         .find(|d| d.decision == "deny")
-        .map(|d| {
-            json!({
-                "policy": d.policy,
-                "reason": d.reason,
-                "tool_name": d.tool_name,
-                "decision_id": d.id,
-                "evaluated_rules": d.evaluated_rules,
-            })
+        .map(|d| Denial {
+            policy: d.policy.clone(),
+            reason: d.reason.clone(),
+            tool_name: d.tool_name.clone(),
+            decision_id: d.id.clone(),
+            evaluated_rules: d.evaluated_rules.clone(),
         });
     if !failed && denial.is_none() && error_message.is_none() {
         return None;
     }
-    Some(json!({
-        "is_denial": denial.is_some(),
-        "is_failure": failed && denial.is_none(),
-        "status": status,
-        "error_message": error_message,
-        "denial": denial,
-    }))
+    let is_denial = denial.is_some();
+    Some(Banner {
+        is_denial,
+        is_failure: failed && !is_denial,
+        status,
+        error_message,
+        denial,
+    })
 }
 
 fn short_id(id: &str) -> String {

@@ -11,7 +11,6 @@ use axum::extract::{Extension, Query, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use serde::Deserialize;
-use serde_json::json;
 use sqlx::PgPool;
 
 use crate::templates::AdminTemplateEngine;
@@ -19,8 +18,11 @@ use crate::types::{MarketplaceContext, UserContext};
 
 use super::ACCESS_DENIED_HTML;
 
+mod context;
 mod data;
 mod view;
+
+use context::AnalyticsRequestsPageContext;
 
 const BASE_URL: &str = "/admin/entities/requests";
 const PAGE_SIZE: i64 = 50;
@@ -83,25 +85,34 @@ pub(crate) async fn analytics_requests_page(
         || filter.status.is_some()
         || !search_query.is_empty();
 
-    let data = json!({
-        "page": "requests",
-        "title": "Inference Requests",
-        "time_range": view::time_range_context(&query, &range, auto_widened),
-        "stats": view::stats_to_json(&fetched.stats),
-        "histogram": fetched.hist.iter().map(view::latency_bucket_to_json).collect::<Vec<_>>(),
-        "histogram_max": fetched.hist.iter().map(|b| b.count).max().unwrap_or(0),
-        "cost_series": fetched.cost.iter().map(view::cost_bucket_to_json).collect::<Vec<_>>(),
-        "cost_max": fetched.cost.iter().map(|b| b.cost_microdollars).max().unwrap_or(0),
-        "rows": fetched.rows.iter().map(view::request_row_to_json).collect::<Vec<_>>(),
-        "has_rows": !fetched.rows.is_empty(),
-        "total_count": fetched.total_count,
-        "pagination": pagination,
-        "search_query": search_query,
-        "filters": view::filters_to_json(&filter, &fetched.options),
-        "has_active_filters": has_active_filters,
-        "clear_url": view::clear_url(&query),
-        "base_url": BASE_URL,
-    });
+    let ctx = AnalyticsRequestsPageContext {
+        page: "requests",
+        title: "Inference Requests",
+        time_range: view::time_range_context(&query, &range, auto_widened),
+        stats: view::stats_to_json(&fetched.stats),
+        histogram: fetched
+            .hist
+            .iter()
+            .map(view::latency_bucket_to_json)
+            .collect(),
+        histogram_max: fetched.hist.iter().map(|b| b.count).max().unwrap_or(0),
+        cost_series: fetched.cost.iter().map(view::cost_bucket_to_json).collect(),
+        cost_max: fetched
+            .cost
+            .iter()
+            .map(|b| b.cost_microdollars)
+            .max()
+            .unwrap_or(0),
+        rows: fetched.rows.iter().map(view::request_row_to_json).collect(),
+        has_rows: !fetched.rows.is_empty(),
+        total_count: fetched.total_count,
+        pagination,
+        search_query,
+        filters: view::filters_to_json(&filter, &fetched.options),
+        has_active_filters,
+        clear_url: view::clear_url(&query),
+        base_url: BASE_URL,
+    };
 
-    super::render_page(&engine, "analytics-requests", &data, &user_ctx, &mkt_ctx)
+    super::render_typed_page(&engine, "analytics-requests", &ctx, &user_ctx, &mkt_ctx)
 }

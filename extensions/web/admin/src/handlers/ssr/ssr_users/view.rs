@@ -1,17 +1,15 @@
 //! View-model assembly for the user roster and detail pages.
 //!
 //! Pure transforms from repository rows into the serde structs the `users` /
-//! `user-detail` templates render: marketplace resolution, per-user enrichment,
-//! department grouping, and the final serde-value enrichment (page stats and
-//! effective-permission injection) the templates expect as extra top-level
-//! keys.
+//! `user-detail` templates render: marketplace resolution, per-user
+//! enrichment, and department grouping. `UsersPageData` / `UserDetailPageData`
+//! are fully self-contained typed structs; callers in `mod.rs` populate them
+//! directly and hand them to `render_typed_page` with no post-hoc value
+//! mutation.
 
 use crate::repositories;
-use crate::repositories::governance_grp::effective::EffectivePermissions;
 
-use super::super::types::{
-    DepartmentGroup, EnrichedUserView, UserDetailPageData, UserMarketplaceRef, UsersPageData,
-};
+use super::super::types::{DepartmentGroup, EnrichedUserView, UserMarketplaceRef};
 
 fn freshness_for(ts: Option<chrono::DateTime<chrono::Utc>>) -> &'static str {
     ts.map_or("never", |t| {
@@ -166,59 +164,4 @@ pub(super) fn group_by_department(users: Vec<EnrichedUserView>) -> Vec<Departmen
         })
     });
     groups
-}
-
-pub(super) fn users_page_value(
-    data: &UsersPageData,
-    total_users: usize,
-    active_users: usize,
-    total_events: i64,
-) -> serde_json::Value {
-    let mut value = serde_json::to_value(data).unwrap_or(serde_json::Value::Null);
-    if let Some(obj) = value.as_object_mut() {
-        obj.insert(
-            "page_stats".to_owned(),
-            serde_json::json!([
-                {"value": total_users, "label": "Users"},
-                {"value": active_users, "label": "Active"},
-                {"value": total_events, "label": "Events"},
-            ]),
-        );
-    }
-    value
-}
-
-pub(super) fn not_found_value() -> serde_json::Value {
-    let data = UserDetailPageData {
-        page: "user-detail",
-        title: "User Detail",
-        user: None,
-        gamification: None,
-        not_found: true,
-        user_department: String::new(),
-        user_assignments: super::super::types::UserAssignmentSummary::default(),
-        user_devices: Vec::new(),
-        user_devices_count: 0,
-        departments: Vec::new(),
-        runtime: None,
-    };
-    serde_json::to_value(&data).unwrap_or(serde_json::Value::Null)
-}
-
-pub(super) fn detail_page_value(
-    data: &UserDetailPageData,
-    effective: Option<EffectivePermissions>,
-) -> serde_json::Value {
-    let mut value = serde_json::to_value(data).unwrap_or(serde_json::Value::Null);
-    if let (serde_json::Value::Object(map), Some(eff)) = (&mut value, effective) {
-        map.insert(
-            "effective_permissions".to_owned(),
-            serde_json::to_value(&eff).unwrap_or(serde_json::Value::Null),
-        );
-        map.insert(
-            "has_effective_permissions".to_owned(),
-            serde_json::Value::Bool(!eff.gateway_routes.is_empty() || !eff.mcp_servers.is_empty()),
-        );
-    }
-    value
 }

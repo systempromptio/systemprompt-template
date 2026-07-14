@@ -3,6 +3,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use thiserror::Error;
 
+use crate::handlers::shared::ErrorBody;
 use crate::repositories::bridge_grp::BridgeRepoError;
 use crate::repositories::secret_crypto::SecretCryptoError;
 use systemprompt_web_shared::error::MarketplaceError;
@@ -108,7 +109,9 @@ impl IntoResponse for AdminError {
         } else {
             tracing::warn!(error = %self, "Admin handler returned client error");
         }
-        let body = Json(serde_json::json!({ "error": self.public_message() }));
+        let body = Json(ErrorBody {
+            error: self.public_message(),
+        });
         (status, body).into_response()
     }
 }

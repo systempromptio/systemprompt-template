@@ -7,6 +7,7 @@ use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 use systemprompt::models::auth::JwtAudience;
 
+use crate::handlers::shared;
 use crate::types::webhook::{StatusLinePayload, StatusLineQuery};
 
 use super::helpers::{extract_bearer_token, get_jwt_issuer};
@@ -19,22 +20,17 @@ pub(crate) async fn track_statusline_event(
 ) -> Response {
     tokio::task::yield_now().await;
     let Some(token) = extract_bearer_token(&headers) else {
-        return (
-            StatusCode::UNAUTHORIZED,
-            Json(serde_json::json!({"error": "Missing Authorization header"})),
-        )
-            .into_response();
+        return shared::error_response(StatusCode::UNAUTHORIZED, "Missing Authorization header");
     };
 
     let jwt_issuer = match get_jwt_issuer() {
         Ok(v) => v,
         Err(e) => {
             tracing::error!(error = %e, "Failed to load JWT config");
-            return (
+            return shared::error_response(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal configuration error"})),
-            )
-                .into_response();
+                "Internal configuration error",
+            );
         },
     };
 
@@ -48,11 +44,7 @@ pub(crate) async fn track_statusline_event(
         ],
     ) {
         tracing::warn!(error = %e, "StatusLine webhook JWT validation failed");
-        return (
-            StatusCode::UNAUTHORIZED,
-            Json(serde_json::json!({"error": "Invalid or expired token"})),
-        )
-            .into_response();
+        return shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or expired token");
     }
 
     StatusCode::NO_CONTENT.into_response()

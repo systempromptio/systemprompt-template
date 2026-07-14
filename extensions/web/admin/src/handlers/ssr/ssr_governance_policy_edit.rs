@@ -14,8 +14,7 @@ use axum::Form;
 use axum::extract::{Extension, Path, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Redirect, Response};
-use serde::Deserialize;
-use serde_json::json;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
 use crate::error::AdminError;
@@ -28,6 +27,45 @@ use crate::types::{DECISION_DENY, MarketplaceContext, UserContext};
 use super::ACCESS_DENIED_HTML;
 
 const RECENT_LIMIT: i64 = 50;
+
+#[derive(Debug, Serialize)]
+struct PolicyEditContext {
+    page: &'static str,
+    title: String,
+    policy: PolicySummary,
+    params_yaml: String,
+    recent: Vec<RecentDecisionRow>,
+    has_recent: bool,
+    config_path: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct PolicySummary {
+    id: String,
+    name: String,
+    description: String,
+    enabled: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct UnknownPolicyContext {
+    page: &'static str,
+    title: &'static str,
+    policy_id: String,
+}
+
+#[derive(Debug, Serialize)]
+struct RecentDecisionRow {
+    id: String,
+    user_id: String,
+    tool_name: String,
+    agent_id: Option<String>,
+    agent_scope: Option<String>,
+    decision: String,
+    is_denied: bool,
+    reason: String,
+    created_at: String,
+}
 
 pub(crate) async fn governance_policy_edit_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -43,15 +81,15 @@ pub(crate) async fn governance_policy_edit_page(
     let Some((id_str, name, description, params_yaml, enabled, lookup_id)) =
         find_policy_snapshot(&policy_id)
     else {
-        let data = json!({
-            "page": "governance",
-            "title": "Unknown policy",
-            "policy_id": policy_id,
-        });
-        return super::render_page(
+        let ctx = UnknownPolicyContext {
+            page: "governance",
+            title: "Unknown policy",
+            policy_id,
+        };
+        return super::render_typed_page(
             &engine,
             "governance-unknown-policy",
-            &data,
+            &ctx,
             &user_ctx,
             &mkt_ctx,
         );
@@ -70,28 +108,22 @@ pub(crate) async fn governance_policy_edit_page(
 
     let recent_json = recent_decisions_json(&recent);
 
-    let data = json!({
-        "page": "governance",
-        "title": format!("{name} — Policy"),
-        "policy": {
-            "id": id_str,
-            "name": name,
-            "description": description,
-            "enabled": enabled,
+    let ctx = PolicyEditContext {
+        page: "governance",
+        title: format!("{name} — Policy"),
+        policy: PolicySummary {
+            id: id_str,
+            name,
+            description,
+            enabled,
         },
-        "params_yaml": params_yaml,
-        "recent": recent_json,
-        "has_recent": !recent_json.is_empty(),
-        "config_path": "services/governance/config.yaml",
-    });
+        params_yaml,
+        has_recent: !recent_json.is_empty(),
+        recent: recent_json,
+        config_path: "services/governance/config.yaml",
+    };
 
-    super::render_page(
-        &engine,
-        "governance-policy-edit",
-        &data,
-        &user_ctx,
-        &mkt_ctx,
-    )
+    super::render_typed_page(&engine, "governance-policy-edit", &ctx, &user_ctx, &mkt_ctx)
 }
 
 type PolicySnapshot = (String, String, String, String, bool, String);
@@ -115,24 +147,23 @@ fn find_policy_snapshot(policy_id: &str) -> Option<PolicySnapshot> {
         })
 }
 
-fn recent_decisions_json(recent: &[crate::types::GovernanceDecisionRow]) -> Vec<serde_json::Value> {
+fn recent_decisions_json(recent: &[crate::types::GovernanceDecisionRow]) -> Vec<RecentDecisionRow> {
     recent
         .iter()
-        .map(|r| {
-            json!({
-                "id": r.id,
-                "user_id": r.user_id,
-                "tool_name": r.tool_name,
-                "agent_id": r.agent_id,
-                "agent_scope": r.agent_scope,
-                "decision": r.decision,
-                "is_denied": r.decision == DECISION_DENY,
-                "reason": r.reason,
-                "created_at": r.created_at
-                    .with_timezone(&chrono::Local)
-                    .format("%Y-%m-%d %H:%M:%S")
-                    .to_string(),
-            })
+        .map(|r| RecentDecisionRow {
+            id: r.id.clone(),
+            user_id: r.user_id.to_string(),
+            tool_name: r.tool_name.clone(),
+            agent_id: r.agent_id.as_ref().map(ToString::to_string),
+            agent_scope: r.agent_scope.clone(),
+            decision: r.decision.clone(),
+            is_denied: r.decision == DECISION_DENY,
+            reason: r.reason.clone(),
+            created_at: r
+                .created_at
+                .with_timezone(&chrono::Local)
+                .format("%Y-%m-%d %H:%M:%S")
+                .to_string(),
         })
         .collect()
 }

@@ -68,6 +68,7 @@ normalize() {
     -e 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}%3A[0-9]{2}%3A[0-9]{2}[^"&]*/TIMESTAMP/gI' \
     -e 's/[0-9]+[[:space:]]*(second|minute|hour|day|week|month|year)s?[[:space:]]+ago/DURATION ago/gI' \
     -e 's/[0-9]+h[[:space:]]+[0-9]+m([[:space:]]+ago)?/DURATION/gI' \
+    -e 's/[0-9]+[smhd][[:space:]]+ago/DURATION ago/gI' \
     -e 's/in[[:space:]]+[0-9]+[[:space:]]*(second|minute|hour|day)s?/in DURATION/gI' \
     -e 's/^[[:space:]]+//' \
   | sed -E '/^$/d'

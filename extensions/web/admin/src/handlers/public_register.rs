@@ -7,7 +7,7 @@ use axum::response::IntoResponse;
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use rand::Rng;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
@@ -24,6 +24,15 @@ pub(crate) struct PublicRegisterRequest {
     pub name: String,
     pub email: String,
     pub role: String,
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct PublicRegisterResponse {
+    pub ok: bool,
+    pub token: String,
+    pub email: String,
+    pub user_id: String,
+    pub display_name: String,
 }
 
 pub(crate) async fn public_register_handler(
@@ -70,13 +79,13 @@ pub(crate) async fn public_register_handler(
 
     (
         StatusCode::OK,
-        Json(serde_json::json!({
-            "ok": true,
-            "token": raw_token,
-            "email": email_str,
-            "user_id": user.user_id,
-            "display_name": name,
-        })),
+        Json(PublicRegisterResponse {
+            ok: true,
+            token: raw_token,
+            email: email_str,
+            user_id: user.user_id.as_str().to_owned(),
+            display_name: name,
+        }),
     )
         .into_response()
 }

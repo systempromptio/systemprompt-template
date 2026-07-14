@@ -1,6 +1,14 @@
+use serde::Serialize;
+
 use super::super::constructors::truncate;
 use super::super::enums::{ActivityAction, ActivityCategory, ActivityEntity};
 use super::super::types::{ActivityEntityRef, NewActivity};
+
+/// Shared shape for events that only carry the session id.
+#[derive(Debug, Serialize)]
+struct SessionMeta<'a> {
+    session_id: &'a str,
+}
 
 impl NewActivity {
     #[must_use]
@@ -25,7 +33,7 @@ impl NewActivity {
             action: ActivityAction::Submitted,
             entity: None,
             description,
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 
@@ -45,7 +53,7 @@ impl NewActivity {
             action: ActivityAction::Ended,
             entity: None,
             description,
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 
@@ -66,7 +74,7 @@ impl NewActivity {
             action: ActivityAction::Used,
             entity: None,
             description,
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 
@@ -82,7 +90,7 @@ impl NewActivity {
                 name: Some(tool.to_owned()),
             }),
             description: format!("Permission requested for {tool}"),
-            metadata: serde_json::json!({ "session_id": session_id }),
+            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
         }
     }
 }

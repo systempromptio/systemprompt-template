@@ -3,9 +3,17 @@ use crate::types::{MarketplaceContext, UserContext};
 use axum::extract::{Extension, Query};
 use axum::response::Response;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
+struct SetupPageContext {
+    page: &'static str,
+    title: &'static str,
+    phases: Vec<SetupPhase>,
+    all_phases_started: bool,
+    just_verified: bool,
+}
+
+#[derive(Debug, Serialize)]
 struct SetupPhase {
     number: u8,
     title: String,
@@ -77,13 +85,13 @@ pub(crate) async fn setup_page(
         },
     ];
 
-    let data = json!({
-        "page": "setup",
-        "title": "Setup Guide",
-        "phases": phases,
-        "all_phases_started": phase1_complete,
-        "just_verified": just_verified,
-    });
+    let ctx = SetupPageContext {
+        page: "setup",
+        title: "Setup Guide",
+        phases,
+        all_phases_started: phase1_complete,
+        just_verified,
+    };
 
-    super::render_page(&engine, "setup", &data, &user_ctx, &mkt_ctx)
+    super::render_typed_page(&engine, "setup", &ctx, &user_ctx, &mkt_ctx)
 }

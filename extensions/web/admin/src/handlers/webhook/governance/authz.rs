@@ -118,6 +118,9 @@ async fn audit_decision(
     let id = uuid::Uuid::new_v4().to_string();
     let entity_type_str = req.entity.kind().as_str();
     let entity_id_str = req.entity.id_str();
+    // variable-shape: governance audit `evaluated_rules` JSONB payload embedding
+    // caller-supplied roles/attributes/context maps, not a template/response
+    // body
     let evaluated = serde_json::json!({
         "entity_type": entity_type_str,
         "entity_id": entity_id_str,

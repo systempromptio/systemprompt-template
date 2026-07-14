@@ -3,8 +3,7 @@ use std::sync::Arc;
 use axum::extract::{Extension, Form, Query, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Redirect, Response};
-use serde::Deserialize;
-use serde_json::json;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt_web_shared::html_escape;
 
@@ -24,6 +23,21 @@ pub(crate) struct DeviceLinkApproveForm {
     pub redirect: String,
 }
 
+/// Template context for `bridge-device-link.hbs`. `branding` stays untyped
+/// `serde_json::Value` because [`branding_context`] itself returns a
+/// variable-shape `Value` (branding config shape is not fixed at compile
+/// time) — see `ssr_helpers::branding_context` doc. Absent (no branding
+/// configured) is preserved as a missing key, matching the old `json!`
+/// object-mutation behaviour.
+#[derive(Debug, Serialize)]
+struct DeviceLinkContext {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    branding: Option<serde_json::Value>,
+    user_email: String,
+    redirect: String,
+    redirect_host: String,
+}
+
 pub(crate) async fn device_link_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -33,12 +47,23 @@ pub(crate) async fn device_link_page(
         return bad_redirect_response(&query.redirect);
     };
 
-    let mut data = branding_context(&engine);
-    if let Some(obj) = data.as_object_mut() {
-        obj.insert("user_email".to_owned(), json!(user_ctx.email.to_string()));
-        obj.insert("redirect".to_owned(), json!(query.redirect));
-        obj.insert("redirect_host".to_owned(), json!(host));
-    }
+    let branding = branding_context(&engine)
+        .as_object_mut()
+        .and_then(|obj| obj.remove("branding"));
+
+    let data = DeviceLinkContext {
+        branding,
+        user_email: user_ctx.email.to_string(),
+        redirect: query.redirect,
+        redirect_host: host,
+    };
+    let data = match serde_json::to_value(&data) {
+        Ok(v) => v,
+        Err(e) => {
+            tracing::error!(error = %e, "Failed to serialize bridge device-link context");
+            serde_json::Value::Object(serde_json::Map::new())
+        },
+    };
 
     match engine.render("bridge-device-link", &data) {
         Ok(html) => Html(html).into_response(),

@@ -7,6 +7,7 @@
 //! `access_control_rules.entity_type`.
 
 mod support;
+mod types;
 
 use std::sync::Arc;
 
@@ -14,7 +15,6 @@ use axum::Json;
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use serde::Deserialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::RuleId;
 use systemprompt_security::authz::{Access, AccessRule, UpsertRuleParams};
@@ -22,6 +22,11 @@ use systemprompt_security::authz::{Access, AccessRule, UpsertRuleParams};
 use crate::handlers::shared;
 
 use support::{collect_entity_ids, parse_access, parse_rule_type, repo, validate_entity_type};
+use types::{
+    AllAccessQuery, ApplyTemplateBody, ApplyTemplateResponse, DefaultIncludedBody,
+    EntityAccessEntry, EntityAccessResponse, EntityDefaultResponse, ListAllEntityAccessResponse,
+    UpsertRuleBody, UpsertRuleResponse,
+};
 
 pub(crate) async fn list_entity_access_handler(
     State(pool): State<Arc<PgPool>>,
@@ -47,22 +52,13 @@ pub(crate) async fn list_entity_access_handler(
             return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error");
         },
     };
-    Json(serde_json::json!({
-        "entity_type": entity_type,
-        "entity_id": entity_id,
-        "default_included": default_included,
-        "rules": rules,
-    }))
+    Json(EntityAccessResponse {
+        entity_type,
+        entity_id,
+        default_included,
+        rules,
+    })
     .into_response()
-}
-
-#[derive(Debug, Deserialize)]
-pub(crate) struct UpsertRuleBody {
-    pub rule_type: String,
-    pub rule_value: String,
-    pub access: String,
-    #[serde(default)]
-    pub justification: Option<String>,
 }
 
 pub(crate) async fn upsert_entity_rule_handler(
@@ -94,7 +90,7 @@ pub(crate) async fn upsert_entity_rule_handler(
         })
         .await
     {
-        Ok(rule) => Json(serde_json::json!({ "rule": rule })).into_response(),
+        Ok(rule) => Json(UpsertRuleResponse { rule }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, entity_type, entity_id, "upsert_rule failed");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
@@ -119,11 +115,6 @@ pub(crate) async fn delete_entity_rule_handler(
     }
 }
 
-#[derive(Debug, Deserialize)]
-pub(crate) struct DefaultIncludedBody {
-    pub default_included: bool,
-}
-
 pub(crate) async fn set_entity_default_handler(
     State(pool): State<Arc<PgPool>>,
     Path((entity_type, entity_id)): Path<(String, String)>,
@@ -137,22 +128,17 @@ pub(crate) async fn set_entity_default_handler(
         .upsert_entity(kind, &entity_id, body.default_included, "admin:dashboard")
         .await
     {
-        Ok(()) => Json(serde_json::json!({
-            "entity_type": entity_type,
-            "entity_id": entity_id,
-            "default_included": body.default_included,
-        }))
+        Ok(()) => Json(EntityDefaultResponse {
+            entity_type,
+            entity_id,
+            default_included: body.default_included,
+        })
         .into_response(),
         Err(e) => {
             tracing::error!(error = %e, entity_type, entity_id, "upsert_entity failed");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
         },
     }
-}
-
-#[derive(Debug, Deserialize)]
-pub(crate) struct AllAccessQuery {
-    pub entity_type: String,
 }
 
 /// Bulk-list every entity of the given type with its rules + default. Used by
@@ -178,7 +164,7 @@ pub(crate) async fn list_all_entity_access_handler(
             return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error");
         },
     };
-    let mut entries: Vec<serde_json::Value> = Vec::with_capacity(entity_ids.len());
+    let mut entries: Vec<EntityAccessEntry> = Vec::with_capacity(entity_ids.len());
     for eid in &entity_ids {
         let default_included = r
             .get_entity(kind, eid)
@@ -190,26 +176,17 @@ pub(crate) async fn list_all_entity_access_handler(
             .flatten()
             .is_some_and(|e| e.default_included);
         let rules: Vec<AccessRule> = bulk.get(eid).cloned().unwrap_or_default();
-        entries.push(serde_json::json!({
-            "entity_id": eid,
-            "default_included": default_included,
-            "rules": rules,
-        }));
+        entries.push(EntityAccessEntry {
+            entity_id: eid.clone(),
+            default_included,
+            rules,
+        });
     }
-    Json(serde_json::json!({
-        "entity_type": query.entity_type,
-        "entities": entries,
-    }))
+    Json(ListAllEntityAccessResponse {
+        entity_type: query.entity_type,
+        entities: entries,
+    })
     .into_response()
-}
-
-#[derive(Debug, Deserialize)]
-pub(crate) struct ApplyTemplateBody {
-    pub entity_type: String,
-    pub subject_type: String,
-    pub subject_value: String,
-    /// One of: "allow", "deny", "clear".
-    pub action: String,
 }
 
 /// Apply a department/role template across every entity of a given type.
@@ -279,10 +256,10 @@ pub(crate) async fn apply_template_handler(
         }
     }
 
-    Json(serde_json::json!({
-        "applied": applied,
-        "failed": failed,
-        "entity_count": entity_ids.len(),
-    }))
+    Json(ApplyTemplateResponse {
+        applied,
+        failed,
+        entity_count: entity_ids.len(),
+    })
     .into_response()
 }
