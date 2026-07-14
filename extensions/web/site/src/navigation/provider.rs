@@ -1,10 +1,45 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use serde::Serialize;
 use serde_json::Value;
 use systemprompt::extension::prelude::*;
 
-use super::config::{BrandingConfig, NavigationConfig};
+use super::config::{
+    BrandingConfig, DocsSidebarSection, FooterConfig, HeaderNavConfig, NavigationConfig, SocialLink,
+};
+
+/// Template context injected on every page: header/footer navigation, branding,
+/// and the fixed top-level app/blog/docs links consumed by the site partials.
+#[derive(Debug, Serialize)]
+struct NavigationContext<'a> {
+    site: NavigationSite<'a>,
+    nav: NavLinks,
+}
+
+#[derive(Debug, Serialize)]
+struct NavigationSite<'a> {
+    header_nav: &'a HeaderNavConfig,
+    docs_sidebar: &'a [DocsSidebarSection],
+    branding: &'a Option<BrandingConfig>,
+    navigation: FooterNavigation<'a>,
+}
+
+#[derive(Debug, Serialize)]
+struct FooterNavigation<'a> {
+    footer: &'a FooterConfig,
+    social: &'a [SocialLink],
+}
+
+#[derive(Debug, Serialize)]
+struct NavLinks {
+    #[serde(rename = "app_url")]
+    app: &'static str,
+    #[serde(rename = "blog_url")]
+    blog: &'static str,
+    #[serde(rename = "docs_url")]
+    docs: &'static str,
+}
 
 #[derive(Debug)]
 pub struct NavigationPageDataProvider {
@@ -42,22 +77,23 @@ impl PageDataProvider for NavigationPageDataProvider {
         &self,
         _ctx: &PageContext<'_>,
     ) -> Result<Value, systemprompt::traits::ProviderError> {
-        Ok(serde_json::json!({
-            "site": {
-                "header_nav": &self.config.header,
-                "docs_sidebar": &self.config.docs_sidebar,
-                "branding": &self.branding,
-                "navigation": {
-                    "footer": &self.config.footer,
-                    "social": &self.config.social
-                }
+        let context = NavigationContext {
+            site: NavigationSite {
+                header_nav: &self.config.header,
+                docs_sidebar: &self.config.docs_sidebar,
+                branding: &self.branding,
+                navigation: FooterNavigation {
+                    footer: &self.config.footer,
+                    social: &self.config.social,
+                },
             },
-            "nav": {
-                "app_url": "/app",
-                "blog_url": "/blog",
-                "docs_url": "/documentation"
-            }
-        }))
+            nav: NavLinks {
+                app: "/app",
+                blog: "/blog",
+                docs: "/documentation",
+            },
+        };
+        Ok(serde_json::to_value(context)?)
     }
 
     fn priority(&self) -> u32 {

@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use serde_json::{Value, json};
+use serde_json::Value;
 use systemprompt::models::Config;
 use systemprompt::template_provider::{ExtenderContext, TemplateDataExtender};
 
@@ -46,9 +46,9 @@ impl TemplateDataExtender for OrgUrlExtender {
         let org_logo = format!("{org_url}/files/images/logo.svg");
 
         if let Some(obj) = data.as_object_mut() {
-            obj.insert("ORG_URL".to_owned(), json!(org_url));
-            obj.insert("ORG_LOGO".to_owned(), json!(org_logo));
-            obj.insert("DEFAULT_IMAGE".to_owned(), json!(default_image));
+            obj.insert("ORG_URL".to_owned(), Value::String(org_url.clone()));
+            obj.insert("ORG_LOGO".to_owned(), Value::String(org_logo));
+            obj.insert("DEFAULT_IMAGE".to_owned(), Value::String(default_image));
         }
 
         Ok(())

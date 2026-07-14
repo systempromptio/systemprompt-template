@@ -5,6 +5,7 @@ use async_trait::async_trait;
 use systemprompt::extension::prelude::*;
 
 use super::config::HomepageConfig;
+use super::context::HomepageContext;
 
 #[derive(Debug)]
 pub struct HomepagePrerenderer {
@@ -32,13 +33,7 @@ impl PagePrerenderer for HomepagePrerenderer {
         &self,
         _ctx: &PagePrepareContext<'_>,
     ) -> Result<Option<PageRenderSpec>, systemprompt::traits::ProviderError> {
-        let config_value = serde_json::to_value(&*self.config)?;
-
-        let base_data = serde_json::json!({
-            "site": {
-                "homepage": config_value,
-            },
-        });
+        let base_data = serde_json::to_value(HomepageContext::new(&self.config))?;
 
         let output_path = PathBuf::from("index.html");
 

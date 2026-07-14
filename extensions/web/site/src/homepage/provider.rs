@@ -5,6 +5,7 @@ use serde_json::Value;
 use systemprompt::extension::prelude::*;
 
 use super::config::HomepageConfig;
+use super::context::HomepageContext;
 
 #[derive(Debug)]
 pub struct HomepagePageDataProvider {
@@ -32,9 +33,7 @@ impl PageDataProvider for HomepagePageDataProvider {
         &self,
         _ctx: &PageContext<'_>,
     ) -> Result<Value, systemprompt::traits::ProviderError> {
-        let config = (*self.config).clone();
-        let config_value = serde_json::to_value(&config)?;
-        Ok(serde_json::json!({ "site": { "homepage": config_value } }))
+        Ok(serde_json::to_value(HomepageContext::new(&self.config))?)
     }
 
     fn priority(&self) -> u32 {

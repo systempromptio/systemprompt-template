@@ -1,9 +1,20 @@
 use std::path::PathBuf;
 
 use async_trait::async_trait;
+use serde::Serialize;
 use systemprompt::extension::prelude::*;
+use systemprompt::models::WebConfig;
 
 use super::config::FeaturePage;
+
+/// Template context for a prerendered feature page (`feature-page.html`): the
+/// feature definition under `feature.*` and the site-wide web config under
+/// `site.*`.
+#[derive(Debug, Serialize)]
+struct FeaturePageContext<'a> {
+    feature: &'a FeaturePage,
+    site: &'a WebConfig,
+}
 
 #[derive(Debug)]
 pub struct FeaturePagePrerenderer {
@@ -33,12 +44,10 @@ impl PagePrerenderer for FeaturePagePrerenderer {
         &self,
         ctx: &PagePrepareContext<'_>,
     ) -> Result<Option<PageRenderSpec>, systemprompt::traits::ProviderError> {
-        let page_data = serde_json::to_value(&self.page)?;
-
-        let base_data = serde_json::json!({
-            "feature": page_data,
-            "site": ctx.web_config,
-        });
+        let base_data = serde_json::to_value(FeaturePageContext {
+            feature: &self.page,
+            site: ctx.web_config,
+        })?;
 
         let output_path = PathBuf::from(format!("features/{}/index.html", self.page.slug));
 

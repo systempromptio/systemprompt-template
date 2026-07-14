@@ -12,8 +12,8 @@ use url::Url;
 const DEFAULT_CLICK_LIMIT: i64 = 100;
 
 use crate::api::{
-    BlogState, ContentJourneyQuery, GenerateLinkRequest, GenerateLinkResponse, ListLinksQuery,
-    RecordClickRequest,
+    BlogState, ContentJourneyQuery, ErrorResponse, GenerateLinkRequest, GenerateLinkResponse,
+    ListLinksQuery, ListLinksResponse, RecordClickRequest,
 };
 use crate::repository::{LinkAnalyticsRepository, LinkRepository};
 use crate::services::{LinkAnalyticsService, LinkGenerationService, LinkService};
@@ -83,11 +83,7 @@ pub async fn list_links_handler(
     };
 
     match result {
-        Ok(links) => Json(serde_json::json!({
-            "links": links,
-            "total": links.len()
-        }))
-        .into_response(),
+        Ok(links) => Json(ListLinksResponse::new(links)).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to list links");
             error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
@@ -214,5 +210,5 @@ pub async fn redirect_handler(
 }
 
 fn error_response(status: StatusCode, message: &str) -> Response {
-    (status, Json(serde_json::json!({"error": message}))).into_response()
+    (status, Json(ErrorResponse::new(message))).into_response()
 }

@@ -4,7 +4,7 @@ use axum::Json;
 use axum::extract::{Query, State};
 use axum::response::{IntoResponse, Response};
 
-use crate::api::{BlogState, SearchQuery};
+use crate::api::{BlogState, ErrorResponse, SearchQuery};
 use crate::services::SearchService;
 use systemprompt_web_shared::models::SearchRequest;
 
@@ -26,7 +26,7 @@ pub async fn search_handler(
             tracing::error!(error = %e, "Search failed");
             (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": "Internal server error"})),
+                Json(ErrorResponse::new("Internal server error")),
             )
                 .into_response()
         },

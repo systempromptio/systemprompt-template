@@ -1,13 +1,31 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use serde_json::{Value, json};
+use serde::Serialize;
+use serde_json::Value;
 use systemprompt::database::Database;
 use systemprompt::extension::prelude::*;
 
 use super::renderers::render_blog_cards;
 use crate::repositories::blog::list_blog_posts;
 use systemprompt_web_shared::error::BlogError;
+
+/// Template context for the blog list page (`blog-list.html`).
+///
+/// The template consumes a single `{{{POSTS}}}` triple-mustache holding the
+/// pre-rendered blog-card HTML.
+#[derive(Debug, Serialize)]
+struct BlogListContext {
+    #[serde(rename = "POSTS")]
+    posts: String,
+}
+
+impl BlogListContext {
+    fn to_value(&self) -> Result<Value, systemprompt::traits::ProviderError> {
+        serde_json::to_value(self)
+            .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct BlogListPageDataProvider;
@@ -41,12 +59,18 @@ impl PageDataProvider for BlogListPageDataProvider {
     ) -> Result<Value, systemprompt::traits::ProviderError> {
         let Some(db) = ctx.db_pool::<Arc<Database>>() else {
             tracing::warn!("BlogListPageDataProvider: No database in context");
-            return Ok(json!({ "POSTS": "" }));
+            return BlogListContext {
+                posts: String::new(),
+            }
+            .to_value();
         };
 
         let Some(pool) = db.pool() else {
             tracing::warn!("BlogListPageDataProvider: Pool not initialized");
-            return Ok(json!({ "POSTS": "" }));
+            return BlogListContext {
+                posts: String::new(),
+            }
+            .to_value();
         };
 
         let posts = list_blog_posts(&pool)
@@ -58,8 +82,6 @@ impl PageDataProvider for BlogListPageDataProvider {
 
         let cards_html = render_blog_cards(&posts);
 
-        Ok(json!({
-            "POSTS": cards_html
-        }))
+        BlogListContext { posts: cards_html }.to_value()
     }
 }

@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use serde_json::json;
 use systemprompt::database::Database;
 use systemprompt::extension::prelude::{ContentDataContext, ContentDataProvider};
 
@@ -74,8 +73,10 @@ impl ContentDataProvider for DocsContentDataProvider {
         let kind = row.kind.as_str();
         if kind == KIND_DOCS_INDEX || kind == KIND_DOCS_LIST {
             let children = self.get_children(&pool, &row.source_id, &row.slug).await;
+            let children_value = serde_json::to_value(children)
+                .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
             if let Some(obj) = item.as_object_mut() {
-                obj.insert("children".to_owned(), json!(children));
+                obj.insert("children".to_owned(), children_value);
             }
         }
 

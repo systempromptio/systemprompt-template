@@ -5,7 +5,7 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 
-use crate::api::BlogState;
+use crate::api::{BlogState, ErrorResponse};
 use crate::services::{ContentService, SearchService};
 use systemprompt_web_shared::models::SearchRequest;
 
@@ -64,5 +64,5 @@ pub async fn get_content_handler(
 }
 
 fn error_response(status: StatusCode, message: &str) -> Response {
-    (status, Json(serde_json::json!({"error": message}))).into_response()
+    (status, Json(ErrorResponse::new(message))).into_response()
 }
