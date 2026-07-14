@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, LazyLock};
+use std::sync::Arc;
 
 use serde::Deserialize;
 use systemprompt::config::ProfileBootstrap;
@@ -8,11 +8,6 @@ use systemprompt::models::AppPaths;
 use url::Url;
 
 pub use crate::config_errors::{ExtensionConfigError, ExtensionConfigErrors};
-
-static FALLBACK_URL: LazyLock<Url> = LazyLock::new(|| {
-    Url::parse("https://invalid.example.com")
-        .unwrap_or_else(|_| Url::parse("https://localhost").unwrap_or_else(|_| unreachable!()))
-});
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct BlogConfigRaw {
@@ -87,11 +82,16 @@ impl BlogConfigValidated {
             }
         }
 
-        errors.into_result(Self {
-            content_sources,
-            base_url,
-            enable_link_tracking: raw.enable_link_tracking,
-        })
+        // `base_url` is `None` only when the URL failed to parse, which always
+        // records an error above — so `into_result` will surface it as `Err`.
+        match base_url {
+            Some(base_url) => errors.into_result(Self {
+                content_sources,
+                base_url,
+                enable_link_tracking: raw.enable_link_tracking,
+            }),
+            None => Err(errors),
+        }
     }
 
     pub fn load_from_file(path: &Path) -> Result<Self, ExtensionConfigErrors> {
@@ -147,7 +147,7 @@ impl BlogConfigValidated {
     }
 }
 
-fn validate_base_url(raw_url: &str, errors: &mut ExtensionConfigErrors) -> Url {
+fn validate_base_url(raw_url: &str, errors: &mut ExtensionConfigErrors) -> Option<Url> {
     match Url::parse(raw_url) {
         Ok(url) => {
             if url.scheme() != "http" && url.scheme() != "https" {
@@ -158,7 +158,7 @@ fn validate_base_url(raw_url: &str, errors: &mut ExtensionConfigErrors) -> Url {
                     "Use a URL like https://example.com",
                 );
             }
-            url
+            Some(url)
         },
         Err(e) => {
             errors.push_with_suggestion(
@@ -166,7 +166,7 @@ fn validate_base_url(raw_url: &str, errors: &mut ExtensionConfigErrors) -> Url {
                 format!("Invalid URL: {e}"),
                 "Use a valid URL like https://example.com",
             );
-            FALLBACK_URL.clone()
+            None
         },
     }
 }

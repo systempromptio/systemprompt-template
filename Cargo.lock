@@ -5872,7 +5872,6 @@ dependencies = [
 name = "systemprompt-web-jobs"
 version = "0.19.0"
 dependencies = [
- "anyhow",
  "async-trait",
  "chrono",
  "handlebars",
@@ -5915,7 +5914,6 @@ dependencies = [
 name = "systemprompt-web-site"
 version = "0.19.0"
 dependencies = [
- "anyhow",
  "async-trait",
  "axum",
  "chrono",

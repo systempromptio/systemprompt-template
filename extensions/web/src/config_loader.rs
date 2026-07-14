@@ -4,9 +4,10 @@ use systemprompt::config::ProfileBootstrap;
 use systemprompt::models::AppPaths;
 use thiserror::Error;
 
-fn load_app_paths() -> Result<AppPaths, String> {
-    let profile = ProfileBootstrap::get().map_err(|e| e.to_string())?;
-    AppPaths::from_profile(&profile.paths).map_err(|e| e.to_string())
+fn load_app_paths() -> Result<AppPaths, ConfigError> {
+    let profile =
+        ProfileBootstrap::get().map_err(|e| ConfigError::PathsUnavailable(e.to_string()))?;
+    AppPaths::from_profile(&profile.paths).map_err(|e| ConfigError::PathsUnavailable(e.to_string()))
 }
 
 use crate::features::{FeaturePage, FeaturesConfig};
@@ -20,6 +21,9 @@ pub(crate) enum ConfigError {
         config_name: String,
         message: String,
     },
+
+    #[error("Application paths unavailable: {0}")]
+    PathsUnavailable(String),
 }
 
 pub(crate) fn load_navigation_config() -> Result<Option<Arc<NavigationConfig>>, ConfigError> {
@@ -162,22 +166,23 @@ fn read_features_dir(
 }
 
 fn parse_feature_pages(entries: std::fs::ReadDir) -> Result<Vec<FeaturePage>, ConfigError> {
-    let results: Vec<Result<FeaturePage, String>> = entries
+    let mut pages: Vec<FeaturePage> = Vec::new();
+    let mut errors: Vec<String> = Vec::new();
+
+    for entry in entries
         .flatten()
         .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "yaml"))
-        .map(|entry| {
-            let path = entry.path();
-            let content = std::fs::read_to_string(&path)
-                .map_err(|e| format!("{}: failed to read: {e}", path.display()))?;
-            serde_yaml::from_str(&content)
-                .map_err(|e| format!("{}: failed to parse: {e}", path.display()))
-        })
-        .collect();
+    {
+        let path = entry.path();
+        match std::fs::read_to_string(&path) {
+            Ok(content) => match serde_yaml::from_str(&content) {
+                Ok(page) => pages.push(page),
+                Err(e) => errors.push(format!("{}: failed to parse: {e}", path.display())),
+            },
+            Err(e) => errors.push(format!("{}: failed to read: {e}", path.display())),
+        }
+    }
 
-    let errors: Vec<String> = results
-        .iter()
-        .filter_map(|r| r.as_ref().err().cloned())
-        .collect();
     if !errors.is_empty() {
         return Err(ConfigError::Parse {
             config_name: "features".to_owned(),
@@ -185,7 +190,7 @@ fn parse_feature_pages(entries: std::fs::ReadDir) -> Result<Vec<FeaturePage>, Co
         });
     }
 
-    Ok(results.into_iter().filter_map(Result::ok).collect())
+    Ok(pages)
 }
 
 fn load_config_section(filename: &str) -> Result<Option<serde_yaml::Value>, ConfigError> {

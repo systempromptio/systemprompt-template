@@ -19,8 +19,8 @@ pub use dashboard_grp::*;
 pub use departments_grp::{
     UserManagementAggregate, UserMarketplaceOverride, assign_user_to_department, create_department,
     delete_department, get_department, get_department_by_name, list_department_members,
-    list_department_top_tools, list_departments, list_user_management_aggregates,
-    list_user_marketplace_overrides, update_department,
+    list_department_names, list_department_top_tools, list_departments,
+    list_user_management_aggregates, list_user_marketplace_overrides, update_department,
 };
 pub use governance_grp::*;
 pub use mcp_grp::*;

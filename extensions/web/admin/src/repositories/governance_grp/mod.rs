@@ -1,3 +1,4 @@
+pub mod acl_detect;
 pub mod acl_yaml_loader;
 pub mod acl_yaml_snapshot;
 pub mod acl_yaml_types;

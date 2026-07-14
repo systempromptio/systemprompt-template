@@ -15,6 +15,7 @@ use systemprompt_security::authz::{
     AccessControlRepository, AccessRule, Decision, EntityKind, EntityRef, ResolveInput, resolve,
 };
 
+use crate::error::AdminError;
 use crate::handlers::shared;
 use crate::repositories::{self, mcp_servers};
 
@@ -195,15 +196,17 @@ fn allow_reason(
     "allow (resolver)".to_owned()
 }
 
-fn collect_gateway_ids() -> Result<Vec<String>, String> {
+fn collect_gateway_ids() -> Result<Vec<String>, AdminError> {
     let profile_path = shared_path_or_err(shared::get_profile_path())?;
-    let cfg = repositories::get_gateway_config(&profile_path).map_err(|e| e.to_string())?;
+    let cfg = repositories::get_gateway_config(&profile_path)
+        .map_err(|e| AdminError::internal(e.to_string()))?;
     Ok(cfg.routes.into_iter().map(|r| r.id).collect())
 }
 
-fn collect_mcp_ids() -> Result<Vec<String>, String> {
+fn collect_mcp_ids() -> Result<Vec<String>, AdminError> {
     let services_path = shared_path_or_err(shared::get_services_path())?;
-    let servers = mcp_servers::list_mcp_servers(&services_path).map_err(|e| e.to_string())?;
+    let servers = mcp_servers::list_mcp_servers(&services_path)
+        .map_err(|e| AdminError::internal(e.to_string()))?;
     Ok(servers
         .into_iter()
         .map(|s| s.id.as_str().to_owned())
@@ -212,6 +215,6 @@ fn collect_mcp_ids() -> Result<Vec<String>, String> {
 
 fn shared_path_or_err(
     r: Result<std::path::PathBuf, Box<axum::response::Response>>,
-) -> Result<std::path::PathBuf, String> {
-    r.map_err(|resp| format!("path lookup failed: HTTP {}", resp.status()))
+) -> Result<std::path::PathBuf, AdminError> {
+    r.map_err(|resp| AdminError::internal(format!("path lookup failed: HTTP {}", resp.status())))
 }

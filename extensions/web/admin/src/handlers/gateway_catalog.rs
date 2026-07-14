@@ -23,6 +23,7 @@ use systemprompt_security::authz::{EntityRef, ResolveInput};
 
 use crate::handlers::shared;
 use crate::repositories::gateway_acl::{self, Decision};
+use crate::repositories::governance_grp::acl_detect;
 use crate::repositories::{self};
 use crate::types::{GatewayRouteView, UserContext};
 
@@ -194,15 +195,7 @@ pub(crate) async fn detect_after_the_fact(
     routes: &[GatewayRouteView],
     since_minutes: i64,
 ) -> Result<usize, sqlx::Error> {
-    let rows = sqlx::query!(
-        r#"SELECT id AS "id!", user_id, session_id, model
-           FROM ai_requests
-           WHERE created_at >= NOW() - ($1 || ' minutes')::interval
-             AND status NOT IN ('rejected', 'denied')"#,
-        since_minutes.to_string()
-    )
-    .fetch_all(pool)
-    .await?;
+    let rows = acl_detect::list_recent_unrejected_requests(pool, since_minutes).await?;
 
     let mut emitted = 0usize;
     for row in rows {
@@ -231,27 +224,26 @@ pub(crate) async fn detect_after_the_fact(
         }) {
             let decision_id = uuid::Uuid::new_v4().to_string();
             let reason_str = reason.to_string();
+            let session_id = row.session_id.clone().unwrap_or_default();
             let evaluated = serde_json::json!({
                 "ai_request_id": row.id,
                 "model": row.model,
                 "matched_route_id": route.id,
                 "reason": reason,
             });
-            sqlx::query!(
-                "INSERT INTO governance_decisions \
-                 (id, user_id, session_id, tool_name, agent_id, agent_scope, \
-                  decision, policy, reason, evaluated_rules, plugin_id) \
-                 VALUES ($1, $2, $3, $4, NULL, $5, $6, 'gateway_acl', $7, $8, NULL)",
-                decision_id,
-                row.user_id,
-                row.session_id.unwrap_or_default(),
-                row.model,
-                "inference",
-                "deny_after_the_fact",
-                reason_str,
-                evaluated,
+            acl_detect::insert_gateway_acl_decision(
+                pool,
+                acl_detect::GatewayAclDecision {
+                    decision_id: &decision_id,
+                    user_id: &row.user_id,
+                    session_id: &session_id,
+                    model: &row.model,
+                    agent_scope: "inference",
+                    decision: "deny_after_the_fact",
+                    reason: &reason_str,
+                    evaluated_rules: &evaluated,
+                },
             )
-            .execute(pool)
             .await?;
             emitted += 1;
         }

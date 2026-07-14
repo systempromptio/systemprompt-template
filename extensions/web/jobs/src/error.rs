@@ -39,12 +39,6 @@ pub enum JobError {
     Other(String),
 }
 
-impl From<anyhow::Error> for JobError {
-    fn from(err: anyhow::Error) -> Self {
-        Self::Other(err.to_string())
-    }
-}
-
 impl From<JobError> for ProviderError {
     fn from(err: JobError) -> Self {
         Self::Internal(err.to_string())

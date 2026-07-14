@@ -114,14 +114,9 @@ pub(crate) async fn issue_share_token_handler(
             );
         },
     };
-    let row = sqlx::query!(
-        "SELECT share_token_version FROM user_profile_ext WHERE user_id = $1",
-        target_user_id,
-    )
-    .fetch_optional(&*pool)
-    .await;
+    let row = repositories::profile_grp::get_share_token_version(&pool, &target_user_id).await;
     let version = match row {
-        Ok(Some(r)) => r.share_token_version,
+        Ok(Some(v)) => v,
         Ok(None) => return shared::error_response(StatusCode::NOT_FOUND, "User not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to load share_token_version");
@@ -174,14 +169,10 @@ pub(crate) async fn public_manifest_handler(
         return shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or revoked token");
     };
 
-    let current_version = match sqlx::query!(
-        "SELECT share_token_version FROM user_profile_ext WHERE user_id = $1",
-        user_id,
-    )
-    .fetch_optional(&*pool)
-    .await
+    let current_version = match repositories::profile_grp::get_share_token_version(&pool, &user_id)
+        .await
     {
-        Ok(Some(row)) => row.share_token_version,
+        Ok(Some(v)) => v,
         Ok(None) => {
             return shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or revoked token");
         },

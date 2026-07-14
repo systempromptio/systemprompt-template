@@ -8,23 +8,7 @@ use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::PgPool;
 
-#[derive(Debug, sqlx::FromRow)]
-pub(super) struct DeviceRowDb {
-    id: String,
-    name: String,
-    key_prefix: String,
-    user_id: String,
-    user_email: Option<String>,
-    department: Option<String>,
-    platform: Option<String>,
-    app_version: Option<String>,
-    hostname: Option<String>,
-    last_seen_at: Option<DateTime<Utc>>,
-    enrolled_at: Option<DateTime<Utc>>,
-    expires_at: Option<DateTime<Utc>>,
-    created_at: Option<DateTime<Utc>>,
-    revoked_at: Option<DateTime<Utc>>,
-}
+use crate::repositories::users_grp::devices::{self, DeviceRowDb};
 
 #[derive(Debug, Serialize)]
 pub(super) struct DeviceRow {
@@ -53,37 +37,10 @@ pub(super) struct DeviceUserOption {
 }
 
 pub(super) async fn load_devices(pool: &PgPool) -> Vec<DeviceRowDb> {
-    sqlx::query_as!(
-        DeviceRowDb,
-        r#"
-        SELECT
-            ak.id AS "id!",
-            ak.name AS "name!",
-            ak.key_prefix AS "key_prefix!",
-            ak.user_id AS "user_id!",
-            u.email::TEXT AS "user_email?",
-            NULLIF(upe.department, '') AS "department?",
-            dal.app_platform AS "platform?",
-            NULLIF(dal.app_version, '') AS "app_version?",
-            NULLIF(dal.hostname, '') AS "hostname?",
-            COALESCE(dal.last_seen_at, ak.last_used_at) AS "last_seen_at?",
-            dal.enrolled_at AS "enrolled_at?",
-            ak.expires_at AS "expires_at?",
-            ak.created_at AS "created_at?",
-            ak.revoked_at AS "revoked_at?"
-        FROM user_api_keys ak
-        LEFT JOIN users u ON u.id = ak.user_id
-        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
-        LEFT JOIN device_app_links dal ON dal.device_id = ak.id
-        ORDER BY ak.revoked_at IS NOT NULL,
-                 COALESCE(u.email::TEXT, ak.user_id::TEXT),
-                 ak.created_at DESC
-        "#,
-    )
-    .fetch_all(pool)
-    .await
-    .inspect_err(|e| tracing::warn!(error = %e, "ssr_management: load devices failed"))
-    .unwrap_or_default()
+    devices::list_devices(pool)
+        .await
+        .inspect_err(|e| tracing::warn!(error = %e, "ssr_management: load devices failed"))
+        .unwrap_or_default()
 }
 
 pub(super) fn build_device_rows(rows: Vec<DeviceRowDb>) -> (Vec<DeviceRow>, usize) {
@@ -121,35 +78,26 @@ pub(super) fn build_device_rows(rows: Vec<DeviceRowDb>) -> (Vec<DeviceRow>, usiz
 }
 
 pub(super) async fn load_device_user_options(pool: &PgPool) -> Vec<DeviceUserOption> {
-    sqlx::query!(
-        r#"
-        SELECT u.id::TEXT AS "uid!",
-               u.email::TEXT AS "email?",
-               COALESCE(NULLIF(u.display_name, ''), NULLIF(u.full_name, ''), NULLIF(u.name, '')) AS "display?"
-        FROM users u
-        WHERE NOT ('anonymous' = ANY(u.roles))
-          AND u.email NOT LIKE '%@anonymous.local'
-        ORDER BY COALESCE(NULLIF(u.display_name, ''), u.email::TEXT, u.id::TEXT)
-        "#,
-    )
-    .fetch_all(pool)
-    .await
-    .inspect_err(|e| tracing::warn!(error = %e, "ssr_management: load device user options failed"))
-    .unwrap_or_default()
-    .into_iter()
-    .map(|r| {
-        let label = match (r.display.as_deref(), r.email.as_deref()) {
-            (Some(d), Some(e)) => format!("{d} ({e})"),
-            (Some(d), None) => d.to_owned(),
-            (None, Some(e)) => e.to_owned(),
-            (None, None) => r.uid.clone(),
-        };
-        DeviceUserOption {
-            user_id: r.uid,
-            label,
-        }
-    })
-    .collect()
+    devices::list_device_user_options(pool)
+        .await
+        .inspect_err(
+            |e| tracing::warn!(error = %e, "ssr_management: load device user options failed"),
+        )
+        .unwrap_or_default()
+        .into_iter()
+        .map(|r| {
+            let label = match (r.display.as_deref(), r.email.as_deref()) {
+                (Some(d), Some(e)) => format!("{d} ({e})"),
+                (Some(d), None) => d.to_owned(),
+                (None, Some(e)) => e.to_owned(),
+                (None, None) => r.uid.clone(),
+            };
+            DeviceUserOption {
+                user_id: r.uid,
+                label,
+            }
+        })
+        .collect()
 }
 
 fn owner_key(d: &DeviceRow) -> &str {

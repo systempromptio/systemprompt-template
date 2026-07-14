@@ -18,7 +18,6 @@ pulldown-cmark = { workspace = true }
 comrak = { workspace = true }
 axum = { workspace = true }
 walkdir = { workspace = true }
-anyhow = { workspace = true }
 sqlx = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }

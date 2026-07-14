@@ -114,22 +114,13 @@ async fn collect_user_devices(pool: &PgPool, d: &crate::types::UserDetail) -> Ve
     let app_links: std::collections::HashMap<
         String,
         (String, String, Option<chrono::DateTime<chrono::Utc>>),
-    > = sqlx::query!(
-        r#"SELECT device_id AS "device_id!",
-                  app_platform AS "app_platform!",
-                  app_version AS "app_version!",
-                  last_seen_at
-             FROM device_app_links
-             WHERE user_id = $1"#,
-        d.user_id.as_str(),
-    )
-    .fetch_all(pool)
-    .await
-    .inspect_err(|e| tracing::warn!(error = %e, "ssr_users: load device app_links failed"))
-    .unwrap_or_default()
-    .into_iter()
-    .map(|r| (r.device_id, (r.app_platform, r.app_version, r.last_seen_at)))
-    .collect();
+    > = repositories::users_grp::devices::list_device_app_links(pool, d.user_id.as_str())
+        .await
+        .inspect_err(|e| tracing::warn!(error = %e, "ssr_users: load device app_links failed"))
+        .unwrap_or_default()
+        .into_iter()
+        .map(|r| (r.device_id, (r.app_platform, r.app_version, r.last_seen_at)))
+        .collect();
 
     pats.into_iter()
         .map(|row| {
@@ -148,8 +139,7 @@ async fn collect_user_devices(pool: &PgPool, d: &crate::types::UserDetail) -> Ve
 }
 
 pub(super) async fn fetch_departments(pool: &PgPool) -> Vec<String> {
-    sqlx::query_scalar!("SELECT name FROM departments ORDER BY name")
-        .fetch_all(pool)
+    repositories::list_department_names(pool)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "ssr_users: load departments failed"))
         .unwrap_or_default()

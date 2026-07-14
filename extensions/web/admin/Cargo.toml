@@ -35,7 +35,6 @@ uuid = { workspace = true }
 
 # Error handling
 thiserror = { workspace = true }
-anyhow = { workspace = true }
 
 # Logging
 tracing = { workspace = true }
@@ -69,6 +68,7 @@ async-trait = { workspace = true }
 once_cell = { workspace = true }
 
 [dev-dependencies]
+anyhow = { workspace = true }
 tempfile = { workspace = true }
 tower = { workspace = true, features = ["util"] }
 

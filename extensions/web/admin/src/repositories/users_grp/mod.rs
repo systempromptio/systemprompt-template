@@ -1,4 +1,6 @@
 pub mod access_control;
+pub mod access_tree;
+pub mod devices;
 pub mod magic_links;
 pub mod profile_reports;
 pub mod registration;

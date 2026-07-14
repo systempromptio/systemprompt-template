@@ -22,6 +22,25 @@ pub async fn list_all_rules(pool: &PgPool) -> Result<Vec<AccessControlRule>, sql
     .await
 }
 
+/// Count access-control grants per `entity_id` for one `entity_type`.
+///
+/// Backs the catalog pages' per-row "assignment count" badge.
+pub async fn count_assignments_by_entity_type(
+    pool: &PgPool,
+    entity_type: &str,
+) -> Result<std::collections::HashMap<String, i64>, sqlx::Error> {
+    let rows = sqlx::query!(
+        r#"SELECT entity_id, COUNT(*)::BIGINT AS "count!"
+           FROM access_control_rules
+           WHERE entity_type = $1
+           GROUP BY entity_id"#,
+        entity_type,
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows.into_iter().map(|r| (r.entity_id, r.count)).collect())
+}
+
 pub async fn list_rules_for_entity(
     pool: &PgPool,
     entity_type: &str,

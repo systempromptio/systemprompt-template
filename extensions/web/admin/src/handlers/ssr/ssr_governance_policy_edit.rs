@@ -18,6 +18,8 @@ use serde::Deserialize;
 use serde_json::json;
 use sqlx::PgPool;
 
+use crate::error::AdminError;
+
 use crate::handlers::webhook::governance;
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
@@ -172,21 +174,23 @@ pub(crate) async fn governance_policy_toggle(
     Redirect::to(&format!("/admin/governance/{policy_id}")).into_response()
 }
 
-fn update_enabled_in_yaml(policy_id: &str, enabled: bool) -> Result<(), String> {
+fn update_enabled_in_yaml(policy_id: &str, enabled: bool) -> Result<(), AdminError> {
     use systemprompt::config::ProfileBootstrap;
-    let bootstrap = ProfileBootstrap::get().map_err(|e| e.to_string())?;
+    let bootstrap = ProfileBootstrap::get().map_err(|e| AdminError::internal(e.to_string()))?;
     let path = std::path::PathBuf::from(&bootstrap.paths.services).join("governance/config.yaml");
 
-    let text =
-        std::fs::read_to_string(&path).map_err(|e| format!("read {}: {e}", path.display()))?;
-    let mut root: serde_yaml::Value =
-        serde_yaml::from_str(&text).map_err(|e| format!("parse YAML: {e}"))?;
+    let text = std::fs::read_to_string(&path)
+        .map_err(|e| AdminError::internal(format!("read {}: {e}", path.display())))?;
+    let mut root: serde_yaml::Value = serde_yaml::from_str(&text)
+        .map_err(|e| AdminError::internal(format!("parse YAML: {e}")))?;
 
     let policies = root
         .get_mut("governance")
         .and_then(|g| g.get_mut("policies"))
         .and_then(|p| p.as_sequence_mut())
-        .ok_or_else(|| "governance.policies missing or not a sequence".to_owned())?;
+        .ok_or_else(|| {
+            AdminError::internal("governance.policies missing or not a sequence".to_owned())
+        })?;
 
     let mut found = false;
     for entry in policies.iter_mut() {
@@ -217,7 +221,9 @@ fn update_enabled_in_yaml(policy_id: &str, enabled: bool) -> Result<(), String> 
         policies.push(serde_yaml::Value::Mapping(map));
     }
 
-    let updated = serde_yaml::to_string(&root).map_err(|e| format!("serialize: {e}"))?;
-    std::fs::write(&path, updated).map_err(|e| format!("write {}: {e}", path.display()))?;
+    let updated = serde_yaml::to_string(&root)
+        .map_err(|e| AdminError::internal(format!("serialize: {e}")))?;
+    std::fs::write(&path, updated)
+        .map_err(|e| AdminError::internal(format!("write {}: {e}", path.display())))?;
     Ok(())
 }

@@ -8,7 +8,7 @@ use sqlx::PgPool;
 
 use systemprompt::identifiers::UserId;
 
-use crate::error::{AdminError, AdminResult};
+use crate::error::AdminResult;
 use crate::handlers::users::extract_user_from_cookie;
 use crate::services::auth::validate_plugin_jwt;
 use crate::services::secret_service;
@@ -78,7 +78,7 @@ async fn audit_log_inner(
     plugin_id: &str,
     headers: &HeaderMap,
 ) -> AdminResult<Response> {
-    let session = extract_user_from_cookie(headers).map_err(AdminError::Unauthorized)?;
+    let session = extract_user_from_cookie(headers)?;
     let entries = secret_service::list_audit_log(pool, &session.user_id, plugin_id).await?;
     let items: Vec<AuditLogEntry> = entries
         .into_iter()
@@ -110,7 +110,7 @@ async fn rotate_inner(
     plugin_id: &str,
     headers: &HeaderMap,
 ) -> AdminResult<Response> {
-    let session = extract_user_from_cookie(headers).map_err(AdminError::Unauthorized)?;
+    let session = extract_user_from_cookie(headers)?;
     secret_service::rotate_user_keys(pool, &session.user_id, plugin_id).await?;
     Ok(Json(ResultOkResponse { result: "ok" }).into_response())
 }

@@ -12,6 +12,7 @@ use systemprompt::oauth::validate_jwt_token;
 use systemprompt::identifiers::{Email, UserId};
 
 use crate::activity::{self, ActivityEntity, NewActivity};
+use crate::error::AdminError;
 use crate::handlers::shared;
 use crate::repositories;
 use crate::types::{CreateUserRequest, EventsQuery, UpdateUserRequest, UserContext};
@@ -20,19 +21,19 @@ use super::responses::{EventsListResponse, UsersListResponse};
 
 pub(crate) fn extract_user_from_cookie(
     headers: &HeaderMap,
-) -> Result<crate::types::CookieSession, String> {
+) -> Result<crate::types::CookieSession, AdminError> {
     let token = extract_token_from_headers(headers)?;
 
     let jwt_issuer = Config::get()
-        .map_err(|e| format!("Failed to load config: {e}"))?
+        .map_err(|e| AdminError::internal(format!("Failed to load config: {e}")))?
         .jwt_issuer
         .clone();
 
     let claims = validate_jwt_token(&token, &jwt_issuer, &[JwtAudience::Api])
-        .map_err(|e| format!("JWT validation failed: {e}"))?;
+        .map_err(|e| AdminError::Unauthorized(format!("JWT validation failed: {e}")))?;
 
-    let email =
-        Email::try_new(claims.email.clone()).map_err(|e| format!("Invalid email in JWT: {e}"))?;
+    let email = Email::try_new(claims.email.clone())
+        .map_err(|e| AdminError::Unauthorized(format!("Invalid email in JWT: {e}")))?;
 
     Ok(crate::types::CookieSession {
         user_id: UserId::new(claims.sub),
@@ -41,7 +42,7 @@ pub(crate) fn extract_user_from_cookie(
     })
 }
 
-fn extract_token_from_headers(headers: &HeaderMap) -> Result<String, String> {
+fn extract_token_from_headers(headers: &HeaderMap) -> Result<String, AdminError> {
     if let Some(auth) = headers.get("authorization").and_then(|v| v.to_str().ok())
         && let Some(token) = auth
             .strip_prefix("Bearer ")
@@ -55,17 +56,21 @@ fn extract_token_from_headers(headers: &HeaderMap) -> Result<String, String> {
 
     let cookie_header = headers
         .get("cookie")
-        .ok_or("No cookie or Authorization header")?
+        .ok_or_else(|| AdminError::Unauthorized("No cookie or Authorization header".to_owned()))?
         .to_str()
-        .map_err(|e| format!("Invalid cookie header: {e}"))?;
+        .map_err(|e| AdminError::Unauthorized(format!("Invalid cookie header: {e}")))?;
 
     let token = cookie_header
         .split(';')
         .find_map(|c| c.trim().strip_prefix("access_token="))
-        .ok_or("No access_token cookie or Authorization: Bearer")?;
+        .ok_or_else(|| {
+            AdminError::Unauthorized("No access_token cookie or Authorization: Bearer".to_owned())
+        })?;
 
     if token.is_empty() {
-        return Err("Empty access_token cookie".to_owned());
+        return Err(AdminError::Unauthorized(
+            "Empty access_token cookie".to_owned(),
+        ));
     }
     Ok(token.to_owned())
 }

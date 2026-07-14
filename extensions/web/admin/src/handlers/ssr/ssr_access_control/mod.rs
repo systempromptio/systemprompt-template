@@ -11,6 +11,7 @@ mod builders;
 use std::sync::Arc;
 
 use crate::repositories;
+use crate::repositories::users_grp::access_tree::{AccessTreeUserRow, list_users_for_access_tree};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::extract::{Extension, State};
@@ -21,35 +22,8 @@ use sqlx::PgPool;
 
 use super::ACCESS_DENIED_HTML;
 
-#[derive(Debug, sqlx::FromRow)]
-struct UserListRow {
-    id: String,
-    email: String,
-    display_name: Option<String>,
-    roles: Vec<String>,
-    department: String,
-    is_active: bool,
-}
-
-async fn fetch_users_for_tree(pool: &PgPool) -> Vec<UserListRow> {
-    sqlx::query_as!(
-        UserListRow,
-        r#"SELECT
-              u.id AS "id!",
-              u.email AS "email!",
-              COALESCE(u.display_name, u.full_name, u.name) AS "display_name?",
-              u.roles AS "roles!",
-              COALESCE(upe.department, '') AS "department!",
-              (u.status = 'active') AS "is_active!"
-           FROM users u
-           LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
-           WHERE NOT ('anonymous' = ANY(u.roles))
-             AND u.email NOT LIKE '%@anonymous.local'
-           ORDER BY COALESCE(upe.department, ''), COALESCE(u.display_name, u.email)"#,
-    )
-    .fetch_all(pool)
-    .await
-    .unwrap_or_else(|e| {
+async fn fetch_users_for_tree(pool: &PgPool) -> Vec<AccessTreeUserRow> {
+    list_users_for_access_tree(pool).await.unwrap_or_else(|e| {
         tracing::warn!(error = %e, "Failed to fetch users for access-control tree");
         Vec::new()
     })
@@ -78,7 +52,7 @@ pub(crate) async fn access_control_page(
 
     let entity_catalogue = builders::build_entity_catalogue(&services_path);
 
-    let mut buckets: std::collections::BTreeMap<String, Vec<&UserListRow>> =
+    let mut buckets: std::collections::BTreeMap<String, Vec<&AccessTreeUserRow>> =
         std::collections::BTreeMap::new();
     for u in &users {
         let key = if u.department.is_empty() {
@@ -91,7 +65,7 @@ pub(crate) async fn access_control_page(
     let dept_groups: Vec<serde_json::Value> = dept_stats
         .iter()
         .map(|d| {
-            let users_in: &[&UserListRow] =
+            let users_in: &[&AccessTreeUserRow] =
                 buckets.get(&d.department).map_or(&[][..], Vec::as_slice);
             json!({
                 "name": d.department,
@@ -124,7 +98,7 @@ pub(crate) async fn access_control_page(
     super::render_page(&engine, "access-control", &data, &user_ctx, &mkt_ctx)
 }
 
-fn serialize_user(u: &&UserListRow) -> serde_json::Value {
+fn serialize_user(u: &&AccessTreeUserRow) -> serde_json::Value {
     json!({
         "id": u.id,
         "email": u.email,
