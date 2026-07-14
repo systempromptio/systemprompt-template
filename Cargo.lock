@@ -5797,7 +5797,6 @@ dependencies = [
 name = "systemprompt-web-content"
 version = "0.19.0"
 dependencies = [
- "anyhow",
  "async-trait",
  "axum",
  "chrono",
@@ -5823,7 +5822,6 @@ dependencies = [
 name = "systemprompt-web-extension"
 version = "0.19.0"
 dependencies = [
- "anyhow",
  "async-stream",
  "async-trait",
  "axum",

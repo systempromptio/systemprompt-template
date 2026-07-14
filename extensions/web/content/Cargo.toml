@@ -24,7 +24,6 @@ sha2 = { workspace = true }
 url = { workspace = true }
 urlencoding = { workspace = true }
 walkdir = { workspace = true }
-anyhow = { workspace = true }
 serde_yaml = { workspace = true }
 rand = { workspace = true }
 
