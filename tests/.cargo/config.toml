@@ -1,0 +1,9 @@
+# Test-workspace cargo config.
+#
+# The extension crates under test carry compiled `.sqlx` offline caches, so
+# they build fine with SQLX_OFFLINE=true (inherited from the root config). The
+# integration crate's seed/cleanup uses the runtime `sqlx::query` function
+# (not the compile-checked `query!` macro), so it hits the live DATABASE_URL at
+# run time regardless of the offline flag.
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"

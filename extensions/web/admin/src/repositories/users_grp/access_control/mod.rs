@@ -1,6 +1,6 @@
 //! Access-control rule storage and per-user matrix resolution.
 //!
-//! [`rules`] owns the CRUD over `access_control_rules`; [`matrix`] resolves the
+//! `rules` owns the CRUD over `access_control_rules`; `matrix` resolves the
 //! effective grant for every catalog entity against a single user's rule chain.
 
 mod matrix;

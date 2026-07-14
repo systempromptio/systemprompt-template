@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+  SQLX_OFFLINE: "true"
+  # aws-lc-sys refuses to build with GCC <10 (bug #95189) and the release
+  # profile's LTO trips it; ubuntu-latest ships clang, so force it everywhere
+  # this repo compiles C. Mirrors the CC/CXX toggle in the justfile build recipe.
+  CC: clang
+  CXX: clang++
+
+jobs:
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # rust-toolchain.toml pins the nightly channel and its components
+      # (rustfmt, clippy, llvm-tools). `rustup show` installs exactly that
+      # toolchain, so fmt runs on the same version developers use locally with
+      # no channel duplicated in this file.
+      - run: rustup show
+      - run: cargo fmt --all -- --check
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --workspace --locked
+
+  sqlx-check:
+    name: SQLx Offline Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # Every extension crate that invokes a sqlx query macro must ship a
+      # committed .sqlx/ cache so the -D warnings offline build above is
+      # reproducible. Find crates whose sources use a query!-family macro but
+      # lack a sibling .sqlx directory and fail loudly, naming them.
+      - name: Verify offline sqlx cache is current
+        run: bash scripts/check-sqlx-cache.sh
+      - run: cargo check --workspace --locked
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # The test workspace verifies behaviour; linting it is quality.yml's job,
+    # so it does not inherit the -D warnings RUSTFLAGS.
+    env:
+      RUSTFLAGS: ""
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_INCREMENTAL: "0"
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_USER: test
+          POSTGRES_DB: test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for tests workspace
+        id: tests
+        run: |
+          if [ -f tests/Cargo.toml ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::tests/Cargo.toml not present yet; skipping test job."
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.tests.outputs.present == 'true'
+      - uses: Swatinem/rust-cache@v2
+        if: steps.tests.outputs.present == 'true'
+        with:
+          workspaces: |
+            .
+            tests
+
+      # No profile bootstrap or migrate step: the integration crate is a
+      # self-contained throwaway-database harness. It connects to the server's
+      # `postgres` maintenance DB (the superuser the postgres:16 image creates),
+      # CREATE DATABASEs a per-test schema, applies the minimal tables it needs,
+      # and drops them on teardown. All it requires is DATABASE_URL pointing at a
+      # reachable Postgres. Unit crates need no DB at all. SQLX_OFFLINE stays
+      # true because the test crates carry no .sqlx cache and use dynamic
+      # sqlx::query() against their throwaway schema.
+      - name: Run tests
+        if: steps.tests.outputs.present == 'true'
+        env:
+          DATABASE_URL: postgres://test:test@localhost:5432/test
+        run: cargo test --manifest-path tests/Cargo.toml --workspace

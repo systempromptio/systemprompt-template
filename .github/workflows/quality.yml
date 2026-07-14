@@ -1,0 +1,134 @@
+name: Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  SQLX_OFFLINE: "true"
+  # aws-lc-sys needs clang (GCC <10 bug #95189); ubuntu-latest ships it.
+  CC: clang
+  CXX: clang++
+
+jobs:
+  clippy:
+    name: Clippy (-D warnings)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Clippy runs on the pinned nightly (channel + clippy component) declared
+      # in rust-toolchain.toml, which `rustup show` installs — so lint results
+      # match local `just clippy` with no channel duplicated here.
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+
+  docs:
+    name: Rustdoc (warnings as errors)
+    runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: "-D warnings"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo doc --workspace --no-deps
+
+  source-gates:
+    name: Schema / SQL / error-boundary linters
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+      # The five structural gate scripts ported from systemprompt-core, plus the
+      # inlined no-synthesis guard (kept inline so this job does not depend on
+      # `just` being installed).
+      - run: bash scripts/lint-schema.sh
+      - run: bash scripts/lint-extensions.sh
+      - run: bash scripts/check-sqlx.sh
+      - run: bash scripts/check-http-errors.sh
+      - run: bash scripts/check-test-value.sh
+      - name: No synthesized principals (UserId::new with string literal)
+        run: |
+          hits=$(grep -rEn 'UserId::new\("' extensions/ \
+              --include='*.rs' \
+              --exclude-dir=tests \
+              --exclude-dir=bootstrap \
+              || true)
+          if [ -n "$hits" ]; then
+            echo "error: forbidden synthesized principal — UserId::new with string literal"
+            echo "$hits"
+            echo
+            echo "UserId::new must take a validated identifier (cookie, query, JWT"
+            echo "claim, or DB row), never a hard-coded literal. Legitimate bootstrap"
+            echo "code belongs under extensions/**/bootstrap/."
+            exit 1
+          fi
+
+  file-size:
+    name: Source file size guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # No extension source file (excluding tests) may exceed 300 lines. Ported
+      # from core's `just file-size`, retargeted from crates/ to extensions/.
+      - name: Enforce 300-line ceiling on extension sources
+        run: |
+          violations=$(find extensions -name '*.rs' \
+              -not -path '*/target/*' \
+              -not -path '*/tests/*' \
+              -exec wc -l {} + | awk '$1>300 && $2!="total"')
+          if [ -n "$violations" ]; then
+            echo "error: extension source file(s) exceed the 300-line ceiling:"
+            echo "$violations"
+            echo
+            echo "Split the file at a clean seam (extract a sibling module)."
+            exit 1
+          fi
+          echo "All extension sources within the 300-line ceiling."
+
+  msrv:
+    name: MSRV check (Rust 1.94)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.94.0
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check --workspace
+
+  audit:
+    name: cargo-audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rustsec/audit-check@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  machete:
+    name: Unused dependency check
+    runs-on: ubuntu-latest
+    # NON-BLOCKING: the template carries pre-existing unused-dependency debt
+    # (~90 entries across the extension crates, many macro/inventory-driven
+    # false positives mixed with genuinely stale deps). cargo-machete is wired
+    # so the debt is visible on every run, but it does not gate merges until the
+    # dependency manifests are triaged. Flip `continue-on-error` off once
+    # `cargo machete` is clean.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-machete
+      - run: cargo machete

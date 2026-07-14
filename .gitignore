@@ -195,3 +195,4 @@ demo/scenarios/airgap/results/*.json
 deploy/scenarios/scaled/.bin/
 # Airgap scenario: same pattern as scaled — host-built binaries staged into the image
 deploy/scenarios/airgap/.bin/
+tests/target/

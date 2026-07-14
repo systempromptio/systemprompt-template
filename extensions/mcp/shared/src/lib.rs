@@ -19,12 +19,18 @@ const ACTION_USED: &str = "used";
 /// Maximum length (in bytes) of the reason text kept in a rejection
 /// description before it is truncated. Truncated text gains a "..." suffix, so
 /// the reason portion never exceeds `MAX_REASON_LEN + 3` bytes.
-const MAX_REASON_LEN: usize = 117;
+#[doc(hidden)]
+pub const MAX_REASON_LEN: usize = 117;
 
 /// Truncate `s` to at most `max_bytes`, appending "..." when truncation
 /// occurred. The cut is snapped down to a UTF-8 char boundary so it can never
 /// split a multi-byte codepoint (which would panic on a byte slice).
-fn truncate_on_char_boundary(s: &str, max_bytes: usize) -> String {
+///
+/// Exposed (behind `#[doc(hidden)]`) so the external test workspace can assert
+/// the char-boundary and "..." suffix semantics directly; not part of the
+/// public API.
+#[doc(hidden)]
+pub fn truncate_on_char_boundary(s: &str, max_bytes: usize) -> String {
     if s.len() <= max_bytes {
         return s.to_owned();
     }

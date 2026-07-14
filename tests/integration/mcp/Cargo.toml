@@ -1,0 +1,17 @@
+[package]
+name = "mcp-integration-tests"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+systemprompt-mcp-shared = { workspace = true }
+systemprompt = { workspace = true }
+tokio = { workspace = true }
+sqlx = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+url = { workspace = true }

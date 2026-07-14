@@ -2,7 +2,7 @@
 //! surface (info, tool listing, call dispatch, artifact-viewer resources).
 //!
 //! Per-call logic (RBAC, auditing, CLI-to-artifact conversion) lives in
-//! [`tool`].
+//! the `tool` submodule.
 
 mod tool;
 

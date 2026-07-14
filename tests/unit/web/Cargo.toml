@@ -1,0 +1,12 @@
+[package]
+name = "web-unit-tests"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+systemprompt-web-shared = { workspace = true }
+serde_json = { workspace = true }

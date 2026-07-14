@@ -1,0 +1,12 @@
+[package]
+name = "mcp-unit-tests"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+systemprompt-mcp-shared = { workspace = true }
+systemprompt-mcp-agent = { workspace = true }

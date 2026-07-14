@@ -1,0 +1,46 @@
+# Test workspace for the Enterprise Demo template.
+#
+# Kept as a SEPARATE workspace (the root [workspace] lists it under `exclude`)
+# so these test crates never compile when the extension crates are consumed as
+# dependencies, mirroring systemprompt-core's crates/tests layout.
+#
+# Run:  cargo test --manifest-path tests/Cargo.toml
+# Needs a live Postgres for the integration crate — set DATABASE_URL (the
+# root justfile's local profile URL works).
+[workspace]
+members = [
+    "unit/mcp",
+    "unit/web",
+    "integration/mcp",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+version = "0.0.0"
+publish = false
+
+# Test code asserts by panicking and constructs fixtures liberally; relax the
+# strict production lints the root workspace enforces.
+[workspace.lints.clippy]
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+missing_panics_doc = "allow"
+missing_errors_doc = "allow"
+
+[workspace.dependencies]
+# Local extension crates under test (paths relative to tests/).
+systemprompt-mcp-shared = { path = "../extensions/mcp/shared" }
+systemprompt-mcp-agent = { path = "../extensions/mcp/systemprompt" }
+systemprompt-web-shared = { path = "../extensions/web/shared" }
+
+# Core facade — DbPool / Database / identifiers for the integration crate.
+systemprompt = { version = "0.19.0", default-features = false, features = ["core", "database"] }
+
+tokio = { version = "1.49", features = ["rt-multi-thread", "macros"] }
+sqlx = { version = "0.9", features = ["runtime-tokio", "tls-rustls-ring-webpki", "postgres", "uuid", "chrono", "json"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+chrono = { version = "0.4", features = ["serde"] }
+url = "2.5"
+uuid = { version = "1.18", features = ["v4"] }

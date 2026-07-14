@@ -23,7 +23,12 @@ pub(crate) fn workdir() -> PathBuf {
     ProfileBootstrap::get().map_or_else(|_| PathBuf::from("."), |p| PathBuf::from(&p.paths.system))
 }
 
-fn filter_hallucinated_args(args: Vec<String>) -> Vec<String> {
+/// Strip CLI flags that models routinely hallucinate onto `systemprompt`
+/// invocations (output-format toggles the gateway sets itself). Exposed behind
+/// `#[doc(hidden)]` so the external test workspace can assert the filter set;
+/// not part of the public API.
+#[doc(hidden)]
+pub fn filter_hallucinated_args(args: Vec<String>) -> Vec<String> {
     const HALLUCINATED_ARGS: &[&str] = &["--json", "--output-format", "--format"];
 
     args.into_iter()

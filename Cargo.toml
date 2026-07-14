@@ -9,6 +9,10 @@ members = [
     "extensions/mcp/systemprompt",
     "extensions/mcp/shared",
 ]
+# The test workspace under tests/ is a separate workspace so it never compiles
+# when these extension crates are consumed as dependencies. Run it explicitly:
+#   cargo test --manifest-path tests/Cargo.toml
+exclude = ["tests"]
 resolver = "2"
 
 [profile.dev]

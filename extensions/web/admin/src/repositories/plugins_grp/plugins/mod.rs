@@ -1,7 +1,7 @@
 //! Marketplace catalog and overview queries backed by `services/` YAML.
 //!
-//! [`catalog`] walks the filesystem for read-only skill / agent / plugin rows;
-//! [`overview`] filters plugins by the caller's roles and counts them.
+//! `catalog` walks the filesystem for read-only skill / agent / plugin rows;
+//! `overview` filters plugins by the caller's roles and counts them.
 
 mod catalog;
 mod overview;
