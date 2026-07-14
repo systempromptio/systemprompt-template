@@ -1,0 +1,68 @@
+# render-diff route inventory
+#
+# One route per line. Blank lines and lines starting with '#' are ignored.
+# A leading '@' marks an admin route that requires the auth cookie; every
+# other line is fetched anonymously.
+#
+# Parameterized routes are pinned to real ids that exist in the local-profile
+# DB. If a refactor changes the schema or wipes the DB, refresh these ids.
+#
+# Regenerate the capture / compare with:
+#   scripts/render-diff.sh capture <name>
+#   scripts/render-diff.sh compare <base> <new>
+
+## Public site (SSR / prerendered, no auth) ------------------------------------
+/
+/blog
+/blog/example-post
+/documentation
+/documentation/authentication
+/documentation/dashboard
+/documentation/gateway-api
+/documentation/demo-happy-path
+/documentation/demo-breakdown
+/documentation/demo-refused-path
+/documentation/demo-terminal-setup
+/documentation/demo-terminal-agents
+/documentation/demo-terminal-audit
+/documentation/demo-terminal-mcp
+/documentation/demo-terminal-tracing
+/documentation/demo-terminal-governance
+/documentation/demo-terminal-agent-tracing
+
+## Admin SSR (require the admin auth cookie) -----------------------------------
+@/admin/profile
+@/admin/settings
+@/admin/setup
+@/admin/demo-register
+@/admin/login
+@/admin/access/users
+@/admin/access/user?user_id=efda627f-e738-499a-8af1-94f5406d2021
+@/admin/access/matrix
+@/admin/access/devices
+@/admin/access/departments
+@/admin/access/departments/eb7c731d-fab9-4e84-98f1-10aeece98943
+@/admin/catalog/marketplace
+@/admin/catalog/a2a
+@/admin/catalog/external
+# @/admin/governance/policies  -> EXCLUDED: the per-kind summary table is built
+#   from an unordered aggregation, so rows (e.g. `authz` vs `authz_rule_based`,
+#   identical counts) swap order between requests. Server-side nondeterminism,
+#   not normalizable without sorting away real structure. Worth fixing with an
+#   ORDER BY at the source; re-add this route once it renders deterministically.
+@/admin/governance/policies/bebf5072-6fa6-4ed7-a120-c2198f41114b
+@/admin/governance/hooks
+@/admin/entities/requests
+@/admin/entities/requests/9b174a09-42f0-4247-8735-455a518ff4b1
+@/admin/entities/sessions
+@/admin/entities/sessions/sess_ed1ccd1e-6bcb-4d71-877d-c312c2c6970b
+@/admin/entities/traces
+@/admin/entities/traces/29265f3e-9792-4d4c-b139-948830a21c22
+@/admin/entities/contexts
+@/admin/entities/contexts/3c4776e7-98b7-4363-bcac-d7f414b64d02
+
+# Excluded on purpose:
+#   /admin/register       -> 303 redirect (self-registration disabled), no body
+#   /admin/dashboard      -> 404 on this build (linked in nav but no handler)
+#   /features, /pricing   -> 404 on this build (no site handler)
+#   /admin/api/*, /admin/auth/me -> JSON endpoints, not template renders
