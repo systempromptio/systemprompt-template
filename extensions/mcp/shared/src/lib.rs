@@ -10,7 +10,7 @@ use systemprompt::database::DbPool;
 
 mod repositories;
 
-use repositories::{insert_mcp_access, insert_mcp_access_rejection, McpAccessParams};
+use repositories::{McpAccessParams, insert_mcp_access, insert_mcp_access_rejection};
 
 const ACTION_USED: &str = "used";
 

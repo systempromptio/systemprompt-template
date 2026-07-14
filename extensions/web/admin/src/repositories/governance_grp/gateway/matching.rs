@@ -26,17 +26,17 @@ pub fn slugify_pattern(pattern: &str) -> String {
                     out.push('-');
                     last_dash = true;
                 }
-            }
+            },
             Some(s) => {
                 out.push_str(s);
                 last_dash = false;
-            }
+            },
             None => {
                 for lc in ch.to_lowercase() {
                     out.push(lc);
                 }
                 last_dash = false;
-            }
+            },
         }
     }
     while out.ends_with('-') {
@@ -111,10 +111,11 @@ pub fn glob_match(pattern: &str, value: &str) -> bool {
         }
         cursor += found + segment.len();
     }
-    if let Some(last) = parts.last() {
-        if !last.is_empty() && !value.ends_with(last) {
-            return false;
-        }
+    if let Some(last) = parts.last()
+        && !last.is_empty()
+        && !value.ends_with(last)
+    {
+        return false;
     }
     true
 }

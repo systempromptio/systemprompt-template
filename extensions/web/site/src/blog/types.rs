@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 
 #[derive(Debug)]
-pub struct BlogPost {
+pub(crate) struct BlogPost {
     pub slug: String,
     pub title: String,
     pub description: String,
@@ -11,7 +11,7 @@ pub struct BlogPost {
 }
 
 #[derive(Debug)]
-pub struct RelatedPost {
+pub(crate) struct RelatedPost {
     pub slug: String,
     pub title: String,
 }

@@ -30,20 +30,20 @@ fn build_gateway_routes(services_path: &Path) -> Vec<serde_json::Value> {
         services_path.join("../.systemprompt/profiles/local/profile.yaml"),
     ];
     for path in &candidates {
-        if path.exists() {
-            if let Ok(cfg) = repositories::get_gateway_config(path) {
-                return cfg
-                    .routes
-                    .into_iter()
-                    .map(|r| {
-                        json!({
-                            "id": r.id,
-                            "label": r.model_pattern,
-                            "provider": r.provider,
-                        })
+        if path.exists()
+            && let Ok(cfg) = repositories::get_gateway_config(path)
+        {
+            return cfg
+                .routes
+                .into_iter()
+                .map(|r| {
+                    json!({
+                        "id": r.id,
+                        "label": r.model_pattern,
+                        "provider": r.provider,
                     })
-                    .collect();
-            }
+                })
+                .collect();
         }
     }
     Vec::new()
@@ -64,7 +64,7 @@ fn build_mcp_servers(services_path: &Path) -> Vec<serde_json::Value> {
 }
 
 fn build_plugins(services_path: &Path) -> Vec<serde_json::Value> {
-    let admin_roles = vec!["admin".to_string()];
+    let admin_roles = vec!["admin".to_owned()];
     repositories::list_plugins_for_roles(services_path, &admin_roles)
         .unwrap_or_default()
         .into_iter()

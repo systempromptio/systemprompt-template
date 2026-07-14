@@ -184,13 +184,13 @@ fn collect_strings(value: &serde_json::Value, out: &mut Vec<String>) {
             for v in arr {
                 collect_strings(v, out);
             }
-        }
+        },
         serde_json::Value::Object(map) => {
             for v in map.values() {
                 collect_strings(v, out);
             }
-        }
-        _ => {}
+        },
+        _ => {},
     }
 }
 
@@ -198,7 +198,7 @@ fn collect_strings(value: &serde_json::Value, out: &mut Vec<String>) {
 /// redacted excerpt. Shares [`SECRET_PATTERNS`] with the governance webhook so
 /// the gateway safety scanner and the tool-use governor flag the same
 /// credentials.
-pub fn scan_str_for_secret(text: &str) -> Option<String> {
+pub(crate) fn scan_str_for_secret(text: &str) -> Option<String> {
     for pattern in SECRET_PATTERNS {
         if let Some(match_start) = text.find(pattern.prefix) {
             let snippet_end = (match_start + 12).min(text.len());

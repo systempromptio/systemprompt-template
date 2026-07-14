@@ -6,7 +6,7 @@ impl NewActivity {
     #[must_use]
     pub fn login(user_id: &str, display_name: &str) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.to_owned(),
             category: ActivityCategory::Login,
             action: ActivityAction::LoggedIn,
             entity: None,
@@ -27,13 +27,13 @@ impl NewActivity {
             meta["project_path"] = serde_json::json!(p);
         }
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.to_owned(),
             category: ActivityCategory::Session,
             action: ActivityAction::Started,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Session,
-                entity_id: Some(session_id.to_string()),
-                entity_name: None,
+                kind: ActivityEntity::Session,
+                id: Some(session_id.to_owned()),
+                name: None,
             }),
             description: format!("Started a session ({model})"),
             metadata: meta,
@@ -43,15 +43,15 @@ impl NewActivity {
     #[must_use]
     pub fn session_ended(user_id: &str, session_id: &str) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.to_owned(),
             category: ActivityCategory::Session,
             action: ActivityAction::Ended,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Session,
-                entity_id: Some(session_id.to_string()),
-                entity_name: None,
+                kind: ActivityEntity::Session,
+                id: Some(session_id.to_owned()),
+                name: None,
             }),
-            description: "Ended a session".to_string(),
+            description: "Ended a session".to_owned(),
             metadata: serde_json::json!({ "session_id": session_id }),
         }
     }
@@ -59,11 +59,11 @@ impl NewActivity {
     #[must_use]
     pub fn prompt_submitted(user_id: &str, session_id: &str) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.to_owned(),
             category: ActivityCategory::Prompt,
             action: ActivityAction::Submitted,
             entity: None,
-            description: "Sent a prompt".to_string(),
+            description: "Sent a prompt".to_owned(),
             metadata: serde_json::json!({ "session_id": session_id }),
         }
     }
@@ -75,11 +75,11 @@ impl NewActivity {
         prompt_preview: Option<&str>,
     ) -> Self {
         let description = prompt_preview.map_or_else(
-            || "Sent a prompt".to_string(),
+            || "Sent a prompt".to_owned(),
             |text| format!("Asked: \"{}\"", truncate(text, 80)),
         );
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.to_owned(),
             category: ActivityCategory::Prompt,
             action: ActivityAction::Submitted,
             entity: None,
@@ -111,13 +111,13 @@ impl NewActivity {
             meta["project_path"] = serde_json::json!(p);
         }
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.to_owned(),
             category: ActivityCategory::Session,
             action: ActivityAction::Started,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Session,
-                entity_id: Some(session_id.to_string()),
-                entity_name: None,
+                kind: ActivityEntity::Session,
+                id: Some(session_id.to_owned()),
+                name: None,
             }),
             description,
             metadata: meta,
@@ -127,17 +127,17 @@ impl NewActivity {
     #[must_use]
     pub fn session_ended_rich(user_id: &str, session_id: &str, reason: Option<&str>) -> Self {
         let description = reason.map_or_else(
-            || "Ended a session".to_string(),
+            || "Ended a session".to_owned(),
             |r| format!("Ended a session ({r})"),
         );
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.to_owned(),
             category: ActivityCategory::Session,
             action: ActivityAction::Ended,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Session,
-                entity_id: Some(session_id.to_string()),
-                entity_name: None,
+                kind: ActivityEntity::Session,
+                id: Some(session_id.to_owned()),
+                name: None,
             }),
             description,
             metadata: serde_json::json!({ "session_id": session_id }),
@@ -147,11 +147,11 @@ impl NewActivity {
     #[must_use]
     pub fn agent_response(user_id: &str, session_id: &str, message_preview: Option<&str>) -> Self {
         let description = message_preview.map_or_else(
-            || "Claude finished responding".to_string(),
+            || "Claude finished responding".to_owned(),
             |msg| format!("Claude responded: \"{}\"", truncate(msg, 80)),
         );
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.to_owned(),
             category: ActivityCategory::AgentResponse,
             action: ActivityAction::Submitted,
             entity: None,
@@ -163,13 +163,13 @@ impl NewActivity {
     #[must_use]
     pub fn subagent_started(user_id: &str, session_id: &str, agent_type: Option<&str>) -> Self {
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.to_owned(),
             category: ActivityCategory::Session,
             action: ActivityAction::Started,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Agent,
-                entity_id: Some(session_id.to_string()),
-                entity_name: agent_type.map(ToString::to_string),
+                kind: ActivityEntity::Agent,
+                id: Some(session_id.to_owned()),
+                name: agent_type.map(str::to_owned),
             }),
             description: format!("Spawned {} agent", agent_type.unwrap_or("unknown")),
             metadata: serde_json::json!({ "session_id": session_id }),
@@ -189,13 +189,13 @@ impl NewActivity {
             |m| format!("{agent} agent stopped: {}", truncate(m, 60)),
         );
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.to_owned(),
             category: ActivityCategory::Session,
             action: ActivityAction::Ended,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Agent,
-                entity_id: Some(session_id.to_string()),
-                entity_name: agent_type.map(ToString::to_string),
+                kind: ActivityEntity::Agent,
+                id: Some(session_id.to_owned()),
+                name: agent_type.map(str::to_owned),
             }),
             description,
             metadata: serde_json::json!({ "session_id": session_id }),
@@ -206,13 +206,13 @@ impl NewActivity {
     pub fn teammate_idle(user_id: &str, session_id: &str, name: Option<&str>) -> Self {
         let who = name.unwrap_or("unknown");
         Self {
-            user_id: user_id.to_string(),
+            user_id: user_id.to_owned(),
             category: ActivityCategory::Session,
             action: ActivityAction::Ended,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Agent,
-                entity_id: Some(session_id.to_string()),
-                entity_name: name.map(ToString::to_string),
+                kind: ActivityEntity::Agent,
+                id: Some(session_id.to_owned()),
+                name: name.map(str::to_owned),
             }),
             description: format!("Teammate {who} went idle"),
             metadata: serde_json::json!({ "session_id": session_id }),

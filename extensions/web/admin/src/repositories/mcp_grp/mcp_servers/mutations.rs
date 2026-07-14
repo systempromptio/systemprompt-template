@@ -1,9 +1,8 @@
-use std::fmt::Write;
 use std::path::Path;
 
 use super::queries::find_mcp_server;
 use crate::types::{
-    CreateMcpRequest, McpServerDetail, UpdateMcpRequest, SERVER_TYPE_EXTERNAL, SERVER_TYPE_INTERNAL,
+    CreateMcpRequest, McpServerDetail, SERVER_TYPE_EXTERNAL, SERVER_TYPE_INTERNAL, UpdateMcpRequest,
 };
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -22,9 +21,9 @@ pub fn create_mcp_server(
     }
     let server_type = if req.server_type.is_empty() {
         if req.binary.is_empty() {
-            "external".to_string()
+            "external".to_owned()
         } else {
-            "internal".to_string()
+            "internal".to_owned()
         }
     } else {
         req.server_type
@@ -41,7 +40,14 @@ pub fn create_mcp_server(
     };
     let mut yaml_content = format!(
         "mcp_servers:\n  {}:\n    type: {}\n    binary: \"{}\"\n    package: \"{}\"\n    port: {}\n    endpoint: \"{}\"\n    enabled: {}\n    display_in_web: true\n    description: \"{}\"\n",
-        req.id, server_type, req.binary, req.package_name, req.port, endpoint, req.enabled, req.description,
+        req.id,
+        server_type,
+        req.binary,
+        req.package_name,
+        req.port,
+        endpoint,
+        req.enabled,
+        req.description,
     );
     if req.oauth_required {
         let scopes_yaml: String = req
@@ -50,11 +56,10 @@ pub fn create_mcp_server(
             .map(|s| format!("\"{s}\""))
             .collect::<Vec<_>>()
             .join(", ");
-        let _ = write!(
-            yaml_content,
+        yaml_content.push_str(&format!(
             "\n    oauth:\n      required: true\n      scopes: [{scopes_yaml}]\n      audience: \"{}\"\n      client_id: null\n",
             req.oauth_audience
-        );
+        ));
     }
     std::fs::write(&file_path, &yaml_content).map_err(|e| {
         MarketplaceError::Internal(format!("Failed to write: {}: {e}", file_path.display()))
@@ -151,7 +156,7 @@ pub fn delete_mcp_server(services_path: &Path, server_id: &str) -> Result<bool, 
     } else {
         let mut doc: serde_yaml::Value = serde_yaml::from_str(&content)?;
         if let Some(s) = doc.get_mut("mcp_servers").and_then(|m| m.as_mapping_mut()) {
-            s.remove(serde_yaml::Value::String(server_id.to_string()));
+            s.remove(serde_yaml::Value::String(server_id.to_owned()));
         }
         std::fs::write(&file_path, serde_yaml::to_string(&doc)?)?;
     }

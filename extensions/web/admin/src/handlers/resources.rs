@@ -1,9 +1,7 @@
-use axum::{
-    extract::{Extension, Path},
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Extension, Path};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 
 use systemprompt::identifiers::AgentId;
 
@@ -13,11 +11,11 @@ use crate::types::UserContext;
 
 use super::responses::AgentsListResponse;
 
-pub fn get_services_path() -> Result<std::path::PathBuf, Box<Response>> {
+pub(crate) fn get_services_path() -> Result<std::path::PathBuf, Box<Response>> {
     shared::get_services_path()
 }
 
-pub async fn list_agents_handler(Extension(user_ctx): Extension<UserContext>) -> Response {
+pub(crate) async fn list_agents_handler(Extension(user_ctx): Extension<UserContext>) -> Response {
     let services_path = match get_services_path() {
         Ok(p) => p,
         Err(r) => return *r,
@@ -30,7 +28,7 @@ pub async fn list_agents_handler(Extension(user_ctx): Extension<UserContext>) ->
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal server error",
             );
-        }
+        },
     };
     if user_ctx.is_admin {
         return Json(AgentsListResponse { agents }).into_response();
@@ -51,7 +49,7 @@ pub async fn list_agents_handler(Extension(user_ctx): Extension<UserContext>) ->
     Json(AgentsListResponse { agents: filtered }).into_response()
 }
 
-pub async fn get_agent_handler(Path(agent_id): Path<String>) -> Response {
+pub(crate) async fn get_agent_handler(Path(agent_id): Path<String>) -> Response {
     let services_path = match get_services_path() {
         Ok(p) => p,
         Err(r) => return *r,
@@ -62,6 +60,6 @@ pub async fn get_agent_handler(Path(agent_id): Path<String>) -> Response {
         Err(e) => {
             tracing::error!(error = %e, "Failed to get agent");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }

@@ -119,7 +119,7 @@ pub async fn fetch_stats_snapshot(pool: &PgPool) -> Result<ActivityStats, sqlx::
         Err(e) => {
             tracing::warn!(error = %e, "Failed to query mcp_tool_executions for SSE stats");
             (0, 0, 0, 0)
-        }
+        },
     };
 
     Ok(ActivityStats {

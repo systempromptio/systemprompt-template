@@ -11,6 +11,6 @@ pub use catalog::{
     list_skill_catalog, update_plugin_skills,
 };
 pub use overview::{
-    count_marketplace_items, list_plugins_for_roles, list_plugins_for_roles_full,
-    load_plugin_onboarding_configs, MarketplaceCounts,
+    MarketplaceCounts, count_marketplace_items, list_plugins_for_roles,
+    list_plugins_for_roles_full, load_plugin_onboarding_configs,
 };

@@ -1,8 +1,11 @@
 use std::sync::Arc;
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
-use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use axum::Json;
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
 use base64::Engine;
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use rand::Rng;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
@@ -17,18 +20,18 @@ use super::shared;
 const TOKEN_PREFIX: &str = "sp_wst_";
 
 #[derive(Deserialize, Debug)]
-pub struct PublicRegisterRequest {
+pub(crate) struct PublicRegisterRequest {
     pub name: String,
     pub email: String,
     pub role: String,
 }
 
-pub async fn public_register_handler(
+pub(crate) async fn public_register_handler(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<PublicRegisterRequest>,
 ) -> impl IntoResponse {
     let email_str = body.email.trim().to_lowercase();
-    let name = body.name.trim().to_string();
+    let name = body.name.trim().to_owned();
 
     if let Some(resp) = validate_registration_input(&email_str, &name) {
         return resp;
@@ -114,16 +117,16 @@ async fn create_registration_user(
 ) -> Result<crate::types::UserSummary, axum::response::Response> {
     let user_id = UserId::new(uuid::Uuid::new_v4().to_string());
     let roles = match role {
-        "admin" => vec!["user".to_string(), "admin".to_string()],
-        _ => vec!["user".to_string()],
+        "admin" => vec!["user".to_owned(), "admin".to_owned()],
+        _ => vec!["user".to_owned()],
     };
 
     let create_req = CreateUserRequest {
         user_id,
-        display_name: name.to_string(),
+        display_name: name.to_owned(),
         email,
         roles,
-        status: Some("active".to_string()),
+        status: Some("active".to_owned()),
     };
 
     repositories::create_user(pool, &create_req)

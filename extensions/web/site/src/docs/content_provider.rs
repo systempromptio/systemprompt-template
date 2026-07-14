@@ -37,7 +37,7 @@ impl ContentDataProvider for DocsContentDataProvider {
     }
 
     fn applies_to_sources(&self) -> Vec<String> {
-        vec!["documentation".to_string()]
+        vec!["documentation".to_owned()]
     }
 
     async fn enrich_content(
@@ -60,22 +60,22 @@ impl ContentDataProvider for DocsContentDataProvider {
         let row = get_doc_content(&pool, content_id)
             .await
             .map_err(|e| match e {
-                sqlx::Error::RowNotFound => DocsError::ContentNotFound(content_id.to_string()),
+                sqlx::Error::RowNotFound => DocsError::ContentNotFound(content_id.to_owned()),
                 other => DocsError::Database(other),
             })
             .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
 
         if let Some(obj) = item.as_object_mut() {
-            obj.insert("after_reading_this".to_string(), row.after_reading_this);
-            obj.insert("related_playbooks".to_string(), row.related_playbooks);
-            obj.insert("related_code".to_string(), row.related_code);
+            obj.insert("after_reading_this".to_owned(), row.after_reading_this);
+            obj.insert("related_playbooks".to_owned(), row.related_playbooks);
+            obj.insert("related_code".to_owned(), row.related_code);
         }
 
         let kind = row.kind.as_str();
         if kind == KIND_DOCS_INDEX || kind == KIND_DOCS_LIST {
             let children = self.get_children(&pool, &row.source_id, &row.slug).await;
             if let Some(obj) = item.as_object_mut() {
-                obj.insert("children".to_string(), json!(children));
+                obj.insert("children".to_owned(), json!(children));
             }
         }
 
@@ -123,7 +123,7 @@ impl DocsContentDataProvider {
                 Err(e) => {
                     tracing::error!(error = %e, source_id, "Failed to fetch root children docs");
                     Vec::new()
-                }
+                },
             }
         } else {
             let slug_prefix = format!("{current_slug}%");
@@ -143,7 +143,7 @@ impl DocsContentDataProvider {
                 Err(e) => {
                     tracing::error!(error = %e, source_id, current_slug, "Failed to fetch children docs");
                     Vec::new()
-                }
+                },
             }
         }
     }

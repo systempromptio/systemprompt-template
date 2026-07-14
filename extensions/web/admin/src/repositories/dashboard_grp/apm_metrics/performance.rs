@@ -1,10 +1,10 @@
 use sqlx::PgPool;
 
+use super::TodayPerformanceSummary;
 use super::calculations::{
     calculate_daily_apm_stats, calculate_daily_concurrency, calculate_multitasking_score,
     calculate_tool_diversity,
 };
-use super::TodayPerformanceSummary;
 use crate::numeric;
 
 pub async fn fetch_today_performance_summary(

@@ -20,8 +20,7 @@ const CLI_PREFIXES: &[&str] = &[
 ];
 
 const DEFAULT_TITLE: &str = "Run the Platform";
-const DEFAULT_SUBTITLE: &str =
-    "Nine guided walkthroughs, each a sequential story you can run against your local instance. \
+const DEFAULT_SUBTITLE: &str = "Nine guided walkthroughs, each a sequential story you can run against your local instance. \
      Every step is a real shell script; every command is copy-paste ready.";
 
 const PILLARS: &[PillarMeta] = &[
@@ -92,20 +91,20 @@ pub fn scan_demos(demo_root: &Path) -> anyhow::Result<DemosConfig> {
                     "demo_scanner: skipping category — manifest invalid"
                 );
                 continue;
-            }
+            },
         };
         if steps.is_empty() {
             continue;
         }
         category_map.push((
-            meta.id.to_string(),
+            meta.id.to_owned(),
             DemoCategory {
-                id: meta.id.to_string(),
-                title: meta.title.to_string(),
-                tagline: meta.tagline.to_string(),
-                story: meta.story.to_string(),
-                cost: meta.cost.to_string(),
-                feature_url: meta.feature_url.to_string(),
+                id: meta.id.to_owned(),
+                title: meta.title.to_owned(),
+                tagline: meta.tagline.to_owned(),
+                story: meta.story.to_owned(),
+                cost: meta.cost.to_owned(),
+                feature_url: meta.feature_url.to_owned(),
                 steps,
             },
         ));
@@ -127,17 +126,17 @@ pub fn scan_demos(demo_root: &Path) -> anyhow::Result<DemosConfig> {
             continue;
         }
         pillars.push(DemoPillar {
-            id: pillar.id.to_string(),
-            title: pillar.title.to_string(),
-            subtitle: pillar.subtitle.to_string(),
-            feature_url: pillar.feature_url.to_string(),
+            id: pillar.id.to_owned(),
+            title: pillar.title.to_owned(),
+            subtitle: pillar.subtitle.to_owned(),
+            feature_url: pillar.feature_url.to_owned(),
             categories,
         });
     }
 
     Ok(DemosConfig {
-        title: Some(DEFAULT_TITLE.to_string()),
-        subtitle: Some(DEFAULT_SUBTITLE.to_string()),
+        title: Some(DEFAULT_TITLE.to_owned()),
+        subtitle: Some(DEFAULT_SUBTITLE.to_owned()),
         quick_start,
         pillars,
     })
@@ -146,43 +145,40 @@ pub fn scan_demos(demo_root: &Path) -> anyhow::Result<DemosConfig> {
 fn scan_quick_start(demo_root: &Path) -> Vec<QuickStartStep> {
     let mut steps = vec![
         QuickStartStep {
-            label: "Build".to_string(),
-            command: "just build".to_string(),
-            description: Some("Compile the Rust workspace into a single binary.".to_string()),
+            label: "Build".to_owned(),
+            command: "just build".to_owned(),
+            description: Some("Compile the Rust workspace into a single binary.".to_owned()),
         },
         QuickStartStep {
-            label: "Seed local profile + Postgres".to_string(),
-            command: "just setup-local <anthropic_key>".to_string(),
+            label: "Seed local profile + Postgres".to_owned(),
+            command: "just setup-local <anthropic_key>".to_owned(),
             description: Some(
-                "Create an eval profile, start the Docker Postgres container, and run the publish pipeline. Pass whichever provider keys you have — Anthropic, OpenAI, or Gemini."
-                    .to_string(),
+                "Create an eval profile, start the Docker Postgres container, and run the publish pipeline. Pass whichever provider keys you have — Anthropic, OpenAI, or Gemini.".to_owned(),
             ),
         },
         QuickStartStep {
-            label: "Start services".to_string(),
-            command: "just start".to_string(),
+            label: "Start services".to_owned(),
+            command: "just start".to_owned(),
             description: Some(
-                "Launch every service on localhost:8080 — dashboard, admin panel, governance pipeline."
-                    .to_string(),
+                "Launch every service on localhost:8080 — dashboard, admin panel, governance pipeline.".to_owned(),
             ),
         },
     ];
 
     if demo_root.join("governance/01-happy-path.sh").is_file() {
         steps.push(QuickStartStep {
-            label: "First governance trace".to_string(),
-            command: "./demo/governance/01-happy-path.sh".to_string(),
+            label: "First governance trace".to_owned(),
+            command: "./demo/governance/01-happy-path.sh".to_owned(),
             description: Some(
-                "Fire a PreToolUse hook, watch governance return allow, and land a row in governance_decisions."
-                    .to_string(),
+                "Fire a PreToolUse hook, watch governance return allow, and land a row in governance_decisions.".to_owned(),
             ),
         });
     } else if demo_root.join("00-preflight.sh").is_file() {
         steps.push(QuickStartStep {
-            label: "Preflight".to_string(),
-            command: "./demo/00-preflight.sh".to_string(),
+            label: "Preflight".to_owned(),
+            command: "./demo/00-preflight.sh".to_owned(),
             description: Some(
-                "Health-check services, create an admin session, and fetch a token.".to_string(),
+                "Health-check services, create an admin session, and fetch a token.".to_owned(),
             ),
         });
     }
@@ -253,10 +249,10 @@ fn extract_commands(content: &str) -> Vec<String> {
             .or_else(|| {
                 trimmed
                     .starts_with("systemprompt ")
-                    .then(|| trimmed.to_string())
+                    .then(|| trimmed.to_owned())
             });
         if let Some(c) = cmd {
-            let cleaned = c.trim_end_matches(['\\']).trim().to_string();
+            let cleaned = c.trim_end_matches(['\\']).trim().to_owned();
             if !cleaned.is_empty() && !out.contains(&cleaned) {
                 out.push(cleaned);
             }

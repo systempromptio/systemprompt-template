@@ -1,6 +1,6 @@
-pub mod auth;
-pub mod bridge_profile;
-pub mod device_service;
-pub mod jobs_service;
-pub mod marketplaces;
-pub mod secret_service;
+pub(crate) mod auth;
+pub(crate) mod bridge_profile;
+pub(crate) mod device_service;
+pub(crate) mod jobs_service;
+pub(crate) mod marketplaces;
+pub(crate) mod secret_service;

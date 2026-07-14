@@ -15,13 +15,14 @@ pub fn list_agents(services_path: &Path) -> Result<Vec<AgentDetail>, Marketplace
         return Ok(agents);
     }
     // Skill metadata is sourced once from the skill catalog and looked up by id;
-    // agents only declare flat `metadata.skills: [id]` and never duplicate name/description.
+    // agents only declare flat `metadata.skills: [id]` and never duplicate
+    // name/description.
     let skill_catalog: HashMap<String, AgentSkillInfo> = list_skill_catalog(services_path)
         .unwrap_or_default()
         .into_iter()
         .map(|entry| {
             (
-                entry.id.as_str().to_string(),
+                entry.id.as_str().to_owned(),
                 AgentSkillInfo {
                     id: entry.id,
                     name: entry.name,
@@ -67,13 +68,13 @@ fn parse_agent_detail(
             .or_else(|| val.get("card").and_then(|c| c.get("name")))
             .and_then(|n| n.as_str())
             .unwrap_or(agent_id)
-            .to_string(),
+            .to_owned(),
         description: val
             .get("card")
             .and_then(|c| c.get("description"))
             .and_then(|d| d.as_str())
             .unwrap_or("")
-            .to_string(),
+            .to_owned(),
         enabled: val
             .get("enabled")
             .and_then(serde_yaml::Value::as_bool)
@@ -91,7 +92,7 @@ fn parse_agent_detail(
             .and_then(|m| m.get("systemPrompt"))
             .and_then(|s| s.as_str())
             .unwrap_or("")
-            .to_string(),
+            .to_owned(),
         port: val
             .get("port")
             .and_then(serde_yaml::Value::as_u64)
@@ -99,7 +100,7 @@ fn parse_agent_detail(
         endpoint: val
             .get("endpoint")
             .and_then(|e| e.as_str())
-            .map(ToString::to_string),
+            .map(str::to_owned),
         mcp_servers: val
             .get("mcp_servers")
             .and_then(|v| v.as_sequence())
@@ -150,7 +151,14 @@ pub fn create_agent(
     }
     let yaml_content = format!(
         "agents:\n  {}:\n    name: {}\n    port: {}\n    endpoint: http://localhost:8080/api/v1/agents/{}\n    enabled: {}\n    dev_only: false\n    is_primary: false\n    default: false\n    card:\n      protocolVersion: 0.3.0\n      name: {}\n      displayName: {}\n      description: {}\n      version: 1.0.0\n      preferredTransport: JSONRPC\n      capabilities:\n        streaming: true\n        pushNotifications: false\n        stateTransitionHistory: false\n      defaultInputModes:\n      - text/plain\n      defaultOutputModes:\n      - text/plain\n      - application/json\n    metadata:\n      systemPrompt: |\n        {}\n      mcpServers: []\n      skills: []\n",
-        req.id, req.id, DEFAULT_AGENT_PORT, req.id, req.enabled, req.name, req.name, req.description,
+        req.id,
+        req.id,
+        DEFAULT_AGENT_PORT,
+        req.id,
+        req.enabled,
+        req.name,
+        req.name,
+        req.description,
         req.system_prompt.replace('\n', "\n        ")
     );
     std::fs::write(&file_path, &yaml_content).map_err(|e| {
@@ -186,24 +194,24 @@ pub fn update_agent(
     let content = std::fs::read_to_string(&file_path)?;
     let mut doc: serde_yaml::Value = serde_yaml::from_str(&content)?;
     if let Some(agent_val) = doc.get_mut("agents").and_then(|a| a.get_mut(agent_id)) {
-        if let Some(ref name) = req.name {
-            if let Some(card) = agent_val.get_mut("card") {
-                card["name"] = serde_yaml::Value::String(name.clone());
-                card["displayName"] = serde_yaml::Value::String(name.clone());
-            }
+        if let Some(ref name) = req.name
+            && let Some(card) = agent_val.get_mut("card")
+        {
+            card["name"] = serde_yaml::Value::String(name.clone());
+            card["displayName"] = serde_yaml::Value::String(name.clone());
         }
-        if let Some(ref desc) = req.description {
-            if let Some(card) = agent_val.get_mut("card") {
-                card["description"] = serde_yaml::Value::String(desc.clone());
-            }
+        if let Some(ref desc) = req.description
+            && let Some(card) = agent_val.get_mut("card")
+        {
+            card["description"] = serde_yaml::Value::String(desc.clone());
         }
         if let Some(enabled) = req.enabled {
             agent_val["enabled"] = serde_yaml::Value::Bool(enabled);
         }
-        if let Some(ref prompt) = req.system_prompt {
-            if let Some(metadata) = agent_val.get_mut("metadata") {
-                metadata["systemPrompt"] = serde_yaml::Value::String(prompt.clone());
-            }
+        if let Some(ref prompt) = req.system_prompt
+            && let Some(metadata) = agent_val.get_mut("metadata")
+        {
+            metadata["systemPrompt"] = serde_yaml::Value::String(prompt.clone());
         }
     }
     let yaml_str = serde_yaml::to_string(&doc)?;
@@ -229,7 +237,7 @@ pub fn delete_agent(services_path: &Path, agent_id: &str) -> Result<bool, Market
     } else {
         let mut doc: serde_yaml::Value = serde_yaml::from_str(&content)?;
         if let Some(agents) = doc.get_mut("agents").and_then(|a| a.as_mapping_mut()) {
-            agents.remove(serde_yaml::Value::String(agent_id.to_string()));
+            agents.remove(serde_yaml::Value::String(agent_id.to_owned()));
         }
         std::fs::write(&file_path, serde_yaml::to_string(&doc)?)?;
     }

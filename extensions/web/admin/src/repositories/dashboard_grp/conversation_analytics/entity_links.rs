@@ -99,14 +99,26 @@ pub async fn fetch_entity_usage_summary(
     .await
 }
 
+/// Entity fields for [`upsert_session_entity_link`] (was 6 positional args).
+#[derive(Debug)]
+pub struct EntityLinkInput<'a> {
+    pub session_id: &'a str,
+    pub entity_type: &'a str,
+    pub entity_name: &'a str,
+    pub entity_id: Option<&'a str>,
+}
+
 pub async fn upsert_session_entity_link(
     pool: &PgPool,
     user_id: &UserId,
-    session_id: &str,
-    entity_type: &str,
-    entity_name: &str,
-    entity_id: Option<&str>,
+    input: EntityLinkInput<'_>,
 ) -> Result<(), sqlx::Error> {
+    let EntityLinkInput {
+        session_id,
+        entity_type,
+        entity_name,
+        entity_id,
+    } = input;
     sqlx::query!(
         r"INSERT INTO session_entity_links (id, user_id, session_id, entity_type, entity_name, entity_id, usage_count, first_seen_at, last_seen_at)
         VALUES (gen_random_uuid()::TEXT, $1, $2, $3, $4, $5, 1, NOW(), NOW())

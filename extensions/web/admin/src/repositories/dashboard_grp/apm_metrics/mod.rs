@@ -80,7 +80,7 @@ pub struct TodayPerformanceSummary {
 #[must_use]
 pub fn format_bytes_rate(bytes: i64, seconds: f64) -> String {
     if seconds <= 0.0 {
-        return "0 B/s".to_string();
+        return "0 B/s".to_owned();
     }
     let bps = numeric::to_f64(bytes) / seconds;
     if bps < 1_024.0 {

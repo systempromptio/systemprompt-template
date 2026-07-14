@@ -39,7 +39,7 @@ pub async fn calculate_session_apm(pool: &PgPool, session_id: &str) -> (f32, f32
         (Some(s), Some(e)) => {
             let mins = numeric::seconds_to_f64((e - s).num_seconds()) / 60.0;
             mins.max(1.0)
-        }
+        },
         _ => 1.0,
     };
 

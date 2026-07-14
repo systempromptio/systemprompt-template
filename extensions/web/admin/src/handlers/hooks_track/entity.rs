@@ -1,16 +1,16 @@
 use crate::types::webhook::HookEventPayload;
 
-pub fn detect_entity(payload: &HookEventPayload) -> Option<(&'static str, String)> {
+pub(super) fn detect_entity(payload: &HookEventPayload) -> Option<(&'static str, String)> {
     let tool_name = payload.tool_name();
 
     if tool_name == Some("Skill") {
         return detect_skill_entity(payload);
     }
 
-    if let Some(tn) = tool_name {
-        if let Some(server) = detect_mcp_server(tn) {
-            return Some(("mcp_tool", server));
-        }
+    if let Some(tn) = tool_name
+        && let Some(server) = detect_mcp_server(tn)
+    {
+        return Some(("mcp_tool", server));
     }
 
     if tool_name == Some("Agent") {
@@ -23,7 +23,7 @@ pub fn detect_entity(payload: &HookEventPayload) -> Option<(&'static str, String
             .agent_type
             .as_deref()
             .unwrap_or("subagent")
-            .to_string();
+            .to_owned();
         return Some(("agent", agent_type));
     }
 
@@ -33,7 +33,7 @@ pub fn detect_entity(payload: &HookEventPayload) -> Option<(&'static str, String
 fn detect_skill_entity(payload: &HookEventPayload) -> Option<(&'static str, String)> {
     let input = payload.tool_input()?;
     let skill = input.get("skill")?.as_str()?;
-    (!skill.is_empty()).then(|| ("skill", skill.to_string()))
+    (!skill.is_empty()).then(|| ("skill", skill.to_owned()))
 }
 
 fn detect_mcp_server(tool_name: &str) -> Option<String> {
@@ -43,7 +43,7 @@ fn detect_mcp_server(tool_name: &str) -> Option<String> {
     if server.is_empty() {
         None
     } else {
-        Some(server.to_string())
+        Some(server.to_owned())
     }
 }
 
@@ -54,5 +54,5 @@ fn detect_agent_entity(payload: &HookEventPayload) -> Option<(&'static str, Stri
         .and_then(|v| v.as_str())
         .or_else(|| input.get("description").and_then(|v| v.as_str()))
         .unwrap_or("subagent");
-    Some(("agent", name.to_string()))
+    Some(("agent", name.to_owned()))
 }

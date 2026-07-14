@@ -13,7 +13,7 @@ use crate::repositories::perf_grp::traces::{
     TraceFilter, TraceSortColumn, TraceSortDir, TraceStats,
 };
 
-use super::{empty_to_none, TraceListQuery, BASE_URL};
+use super::{BASE_URL, TraceListQuery, empty_to_none};
 
 pub(super) const fn sort_col_to_str(c: TraceSortColumn) -> &'static str {
     match c {
@@ -125,7 +125,7 @@ pub(super) fn build_chips(query: &TraceListQuery) -> Vec<serde_json::Value> {
 fn chip_remove_url(query: &TraceListQuery, drop: &str) -> String {
     let qs = preserved_query_string(query, &[drop]);
     if qs.is_empty() {
-        BASE_URL.to_string()
+        BASE_URL.to_owned()
     } else {
         format!("{BASE_URL}?{qs}")
     }

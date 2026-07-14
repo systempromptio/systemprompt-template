@@ -19,4 +19,4 @@ pub mod resolve;
 pub mod risk_score;
 pub mod time_range;
 
-pub use audit::{insert_governance_decision, GovernanceDecisionRecord};
+pub use audit::{GovernanceDecisionRecord, insert_governance_decision};

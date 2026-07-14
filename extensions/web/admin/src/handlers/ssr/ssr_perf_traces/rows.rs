@@ -53,7 +53,7 @@ pub(super) fn trace_to_json(t: &TraceSummary) -> serde_json::Value {
 
 fn format_tokens(total: i64, input: i64, output: i64) -> String {
     if total <= 0 {
-        return "—".to_string();
+        return "—".to_owned();
     }
     format!(
         "{} ({} in / {} out)",
@@ -76,7 +76,7 @@ fn short_num(n: i64) -> String {
 
 fn format_cost(micros: i64) -> String {
     if micros <= 0 {
-        return "—".to_string();
+        return "—".to_owned();
     }
     let dollars = micros as f64 / 1_000_000.0;
     if dollars >= 1.0 {

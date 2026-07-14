@@ -78,7 +78,7 @@ fn load_weights() -> RiskScoreWeights {
                 "risk_score.yaml malformed; using default weights"
             );
             RiskScoreWeights::default()
-        }
+        },
     }
 }
 

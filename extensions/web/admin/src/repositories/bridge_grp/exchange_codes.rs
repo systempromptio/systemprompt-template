@@ -1,5 +1,3 @@
-use std::fmt::Write as _;
-
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
 use rand::RngCore;
 use sha2::{Digest, Sha256};
@@ -39,7 +37,7 @@ fn generate_code() -> String {
     rand::rng().fill_bytes(&mut raw);
     let mut out = String::with_capacity(EXCHANGE_CODE_BYTES * 2);
     for byte in raw {
-        let _ = write!(out, "{byte:02x}");
+        out.push_str(&format!("{byte:02x}"));
     }
     out
 }
@@ -48,7 +46,7 @@ fn hash_code(code: &str) -> String {
     let digest = Sha256::digest(code.as_bytes());
     let mut out = String::with_capacity(64);
     for byte in digest {
-        let _ = write!(out, "{byte:02x}");
+        out.push_str(&format!("{byte:02x}"));
     }
     out
 }

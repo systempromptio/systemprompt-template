@@ -1,22 +1,20 @@
 use crate::numeric;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
-use axum::{
-    http::StatusCode,
-    response::{Html, IntoResponse, Response},
-};
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
 use serde_json::json;
 use systemprompt_web_shared::html_escape;
 
 use super::ssr_demo_help::demo_help_text;
 
-pub fn branding_context(engine: &AdminTemplateEngine) -> serde_json::Value {
+pub(crate) fn branding_context(engine: &AdminTemplateEngine) -> serde_json::Value {
     engine
         .branding()
         .map_or_else(|| json!({}), |b| json!({"branding": b}))
 }
 
-pub fn render_typed_page<T: serde::Serialize>(
+pub(crate) fn render_typed_page<T: serde::Serialize>(
     engine: &AdminTemplateEngine,
     template: &str,
     data: &T,
@@ -30,7 +28,7 @@ pub fn render_typed_page<T: serde::Serialize>(
     render_page(engine, template, &value, user_ctx, mkt_ctx)
 }
 
-pub fn render_page(
+pub(crate) fn render_page(
     engine: &AdminTemplateEngine,
     template: &str,
     data: &serde_json::Value,
@@ -53,7 +51,7 @@ pub fn render_page(
                 )),
             )
                 .into_response()
-        }
+        },
     }
 }
 
@@ -64,7 +62,7 @@ fn inject_user_and_marketplace(
     mkt_ctx: &MarketplaceContext,
 ) {
     obj.insert(
-        "current_user".to_string(),
+        "current_user".to_owned(),
         json!({
             "user_id": user_ctx.user_id,
             "username": user_ctx.username,
@@ -72,19 +70,19 @@ fn inject_user_and_marketplace(
             "is_admin": user_ctx.is_admin,
         }),
     );
-    obj.insert("marketplace".to_string(), build_marketplace_json(mkt_ctx));
-    obj.entry("page_stats".to_string())
+    obj.insert("marketplace".to_owned(), build_marketplace_json(mkt_ctx));
+    obj.entry("page_stats".to_owned())
         .or_insert_with(|| json!([]));
-    if let Some(branding) = engine.branding() {
-        if let Ok(val) = serde_json::to_value(branding) {
-            obj.insert("branding".to_string(), val);
-        }
+    if let Some(branding) = engine.branding()
+        && let Ok(val) = serde_json::to_value(branding)
+    {
+        obj.insert("branding".to_owned(), val);
     }
     if let Some(page_str) = obj.get("page").and_then(|v| v.as_str()) {
         let (help, doc_slug) = demo_help_text(page_str);
-        obj.insert("demo_help".to_string(), json!(help));
+        obj.insert("demo_help".to_owned(), json!(help));
         obj.insert(
-            "demo_help_url".to_string(),
+            "demo_help_url".to_owned(),
             json!(format!("/documentation/{}", doc_slug)),
         );
     }

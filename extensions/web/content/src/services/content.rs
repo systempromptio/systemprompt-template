@@ -24,7 +24,7 @@ impl ContentService {
     }
 
     pub async fn get_by_id(&self, id: &str) -> Result<Option<Content>, BlogError> {
-        let id = ContentId::new(id.to_string());
+        let id = ContentId::new(id.to_owned());
         self.repo.get_by_id(&id).await.map_err(BlogError::from)
     }
 
@@ -37,7 +37,7 @@ impl ContentService {
         source_id: &str,
         slug: &str,
     ) -> Result<Option<Content>, BlogError> {
-        let source_id = SourceId::new(source_id.to_string());
+        let source_id = SourceId::new(source_id.to_owned());
         self.repo
             .get_by_source_and_slug(&source_id, slug)
             .await
@@ -49,7 +49,7 @@ impl ContentService {
     }
 
     pub async fn list_by_source(&self, source_id: &str) -> Result<Vec<Content>, BlogError> {
-        let source_id = SourceId::new(source_id.to_string());
+        let source_id = SourceId::new(source_id.to_owned());
         self.repo
             .list_by_source(&source_id)
             .await
@@ -61,7 +61,7 @@ impl ContentService {
     }
 
     pub async fn delete(&self, id: &str) -> Result<(), BlogError> {
-        let id = ContentId::new(id.to_string());
+        let id = ContentId::new(id.to_owned());
         self.repo.delete(&id).await.map_err(BlogError::from)
     }
 }

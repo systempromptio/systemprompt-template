@@ -1,6 +1,6 @@
 mod pages;
 
-pub fn demo_help_text(page: &str) -> (&'static str, &'static str) {
+pub(super) fn demo_help_text(page: &str) -> (&'static str, &'static str) {
     demo_help_core_pages(page)
         .or_else(|| demo_help_admin_pages(page))
         .or_else(|| pages::demo_help_governance_pages(page))

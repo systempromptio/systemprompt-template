@@ -1,2 +1,2 @@
-pub mod blog;
-pub mod docs;
+pub(crate) mod blog;
+pub(crate) mod docs;

@@ -9,10 +9,10 @@
 //!
 //! Two files are read (both optional; missing-file = no-op):
 //!
-//! - `services/access-control/roles.yaml` — role-scoped allow/deny rules. Parsed
-//!   into core's [`AccessControlConfig`] and projected by core ingestion, which
-//!   owns `entity_id` self-materialisation, `entity_match` glob expansion, and
-//!   `default_included`.
+//! - `services/access-control/roles.yaml` — role-scoped allow/deny rules.
+//!   Parsed into core's [`AccessControlConfig`] and projected by core
+//!   ingestion, which owns `entity_id` self-materialisation, `entity_match`
+//!   glob expansion, and `default_included`.
 //! - `services/access-control/departments.yaml` — the web-owned `departments`
 //!   table.
 

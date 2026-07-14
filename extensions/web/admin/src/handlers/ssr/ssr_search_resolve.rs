@@ -6,30 +6,28 @@
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, Query, State},
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Extension, Query, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-use crate::repositories::governance_grp::resolve::{resolve_id, ResolvedKind};
+use crate::repositories::governance_grp::resolve::{ResolvedKind, resolve_id};
 use crate::types::UserContext;
 
 #[derive(Debug, Deserialize)]
-pub struct SearchQuery {
+pub(crate) struct SearchQuery {
     pub q: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
-pub struct SearchResponse {
+pub(super) struct SearchResponse {
     pub kind: &'static str,
     pub url: Option<String>,
 }
 
-pub async fn search_resolve(
+pub(crate) async fn search_resolve(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<SearchQuery>,
@@ -62,7 +60,7 @@ pub async fn search_resolve(
                 url: Some(url),
             })
             .into_response()
-        }
+        },
         Ok(None) => Json(SearchResponse {
             kind: "none",
             url: None,
@@ -71,6 +69,6 @@ pub async fn search_resolve(
         Err(e) => {
             tracing::error!(error = %e, q = %trimmed, "search_resolve failed");
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
-        }
+        },
     }
 }

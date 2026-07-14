@@ -17,14 +17,15 @@ pub async fn get_or_create_user_dek(
     .map_err(|e| SecretCryptoError::Database(e.to_string()))?;
 
     if let Some(row) = row {
-        let nonce: [u8; 12] = row
-            .dek_nonce
-            .try_into()
-            .map_err(|_| SecretCryptoError::InvalidKeyMaterial)?;
+        let nonce: [u8; 12] = row.dek_nonce.try_into().map_err(|v: Vec<u8>| {
+            tracing::warn!(len = v.len(), "Stored DEK nonce is not 12 bytes");
+            SecretCryptoError::InvalidKeyMaterial
+        })?;
         let plaintext = secret_crypto::decrypt(master_key, &nonce, &row.encrypted_dek)?;
-        let dek: [u8; 32] = plaintext
-            .try_into()
-            .map_err(|_| SecretCryptoError::InvalidKeyMaterial)?;
+        let dek: [u8; 32] = plaintext.try_into().map_err(|v: Vec<u8>| {
+            tracing::warn!(len = v.len(), "Decrypted DEK is not 32 bytes");
+            SecretCryptoError::InvalidKeyMaterial
+        })?;
         return Ok(dek);
     }
 
@@ -81,7 +82,10 @@ pub async fn rotate_user_dek(
             .as_deref()
             .unwrap_or(&[])
             .try_into()
-            .map_err(|_| SecretCryptoError::InvalidKeyMaterial)?;
+            .map_err(|e: std::array::TryFromSliceError| {
+                tracing::warn!(error = %e, "Stored secret nonce is not 12 bytes");
+                SecretCryptoError::InvalidKeyMaterial
+            })?;
         let encrypted_value = row.encrypted_value.as_deref().unwrap_or(&[]);
         let plaintext = secret_crypto::decrypt(&old_dek, &old_nonce, encrypted_value)?;
 

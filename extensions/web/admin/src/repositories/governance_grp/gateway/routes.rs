@@ -57,12 +57,12 @@ pub fn ensure_route_ids(profile_path: &Path) -> Result<bool, MarketplaceError> {
             .get(Value::from("model_pattern"))
             .and_then(Value::as_str)
             .unwrap_or_default()
-            .to_string();
+            .to_owned();
         let provider = map
             .get(Value::from("provider"))
             .and_then(Value::as_str)
             .unwrap_or_default()
-            .to_string();
+            .to_owned();
         let id = synthesize_route_id(&model_pattern, &provider);
         map.insert(Value::from("id"), Value::from(id));
         changed = true;

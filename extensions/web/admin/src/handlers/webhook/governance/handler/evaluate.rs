@@ -7,7 +7,8 @@
 
 use systemprompt::identifiers::{McpToolName, SessionId, UserId};
 use systemprompt_security::authz::{Decision, MatchedBy};
-use systemprompt_security::policy::{types::AccessScope, AgentScope, McpToolInput, PolicyContext};
+use systemprompt_security::policy::types::AccessScope;
+use systemprompt_security::policy::{AgentScope, McpToolInput, PolicyContext};
 
 use super::super::policy::{self, PolicyConfig};
 use super::super::types::{ChainEntryOutcome, ChainEntryResult};
@@ -60,7 +61,7 @@ pub(super) fn evaluate(input: &EvaluateInput<'_>) -> (Decision, Vec<ChainEntryOu
                     result: ChainEntryResult::Pass,
                     detail: allow_detail(matched_by),
                 });
-            }
+            },
             Decision::Deny { reason } => {
                 chain_trace.push(ChainEntryOutcome {
                     policy_id: policy.id(),
@@ -68,7 +69,7 @@ pub(super) fn evaluate(input: &EvaluateInput<'_>) -> (Decision, Vec<ChainEntryOu
                     detail: reason.to_string(),
                 });
                 denied = Some(decision);
-            }
+            },
         }
     }
     drop(chain);
@@ -83,7 +84,7 @@ fn disabled_entry(cfg: &PolicyConfig) -> ChainEntryOutcome {
     ChainEntryOutcome {
         policy_id: systemprompt::identifiers::PolicyId::new(cfg.id.clone()),
         result: ChainEntryResult::Skip,
-        detail: "Policy disabled in services/governance/config.yaml".to_string(),
+        detail: "Policy disabled in services/governance/config.yaml".to_owned(),
     }
 }
 
@@ -91,15 +92,15 @@ fn skipped_after_deny(cfg: &PolicyConfig) -> ChainEntryOutcome {
     ChainEntryOutcome {
         policy_id: systemprompt::identifiers::PolicyId::new(cfg.id.clone()),
         result: ChainEntryResult::Skip,
-        detail: "Skipped — already denied by an earlier policy".to_string(),
+        detail: "Skipped — already denied by an earlier policy".to_owned(),
     }
 }
 
 fn allow_detail(matched_by: &MatchedBy) -> String {
     match matched_by {
         MatchedBy::PolicyAllow { detail, .. } => detail.to_string(),
-        MatchedBy::UserAllow => "user allow".to_string(),
+        MatchedBy::UserAllow => "user allow".to_owned(),
         MatchedBy::RoleAllow { role } => format!("role allow: {role}"),
-        MatchedBy::DefaultIncluded => "default included".to_string(),
+        MatchedBy::DefaultIncluded => "default included".to_owned(),
     }
 }

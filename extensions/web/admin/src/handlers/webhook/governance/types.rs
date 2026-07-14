@@ -1,4 +1,5 @@
-//! Wire and audit types for the `/api/public/hooks/govern` `PreToolUse` webhook.
+//! Wire and audit types for the `/api/public/hooks/govern` `PreToolUse`
+//! webhook.
 //!
 //! The on-the-wire response shape is dictated by the Anthropic Claude Code
 //! hook contract ([`HookSpecificOutput`]). Internally everything is typed —
@@ -43,13 +44,13 @@ impl From<GovernanceDecision> for DecisionTag {
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct GovernanceResponse {
+pub(super) struct GovernanceResponse {
     #[serde(rename = "hookSpecificOutput")]
     pub hook_specific_output: HookSpecificOutput,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct HookSpecificOutput {
+pub(super) struct HookSpecificOutput {
     #[serde(rename = "hookEventName")]
     pub hook_event_name: &'static str,
     #[serde(rename = "permissionDecision")]
@@ -63,7 +64,7 @@ pub struct HookSpecificOutput {
 
 #[derive(Debug, Serialize, Clone)]
 #[serde(tag = "result", rename_all = "lowercase")]
-pub enum ChainEntryResult {
+pub(super) enum ChainEntryResult {
     Pass,
     Fail,
     /// Policy was disabled in config, or skipped after a prior deny.
@@ -71,7 +72,7 @@ pub enum ChainEntryResult {
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct ChainEntryOutcome {
+pub(super) struct ChainEntryOutcome {
     pub policy_id: PolicyId,
     #[serde(flatten)]
     pub result: ChainEntryResult,
@@ -80,7 +81,7 @@ pub struct ChainEntryOutcome {
 
 /// Snapshot of the authenticated principal at evaluation time.
 #[derive(Debug, Serialize, Clone)]
-pub struct PrincipalSnapshot {
+pub(super) struct PrincipalSnapshot {
     pub user_id: UserId,
     pub session_id: SessionId,
     pub agent_id: Option<String>,
@@ -88,7 +89,7 @@ pub struct PrincipalSnapshot {
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct AuditTarget {
+pub(super) struct AuditTarget {
     pub tool_name: String,
     pub plugin_id: Option<String>,
 }
@@ -99,7 +100,7 @@ pub struct AuditTarget {
 /// `decision`/`reason` columns still get populated from the same data via the
 /// repository layer.
 #[derive(Debug, Serialize, Clone)]
-pub struct DecisionAudit {
+pub(super) struct DecisionAudit {
     pub decision: Decision,
     pub principal: PrincipalSnapshot,
     pub target: AuditTarget,

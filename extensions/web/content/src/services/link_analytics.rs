@@ -23,7 +23,7 @@ impl LinkAnalyticsService {
         &self,
         campaign_id: &str,
     ) -> Result<Option<CampaignPerformance>, BlogError> {
-        let campaign_id = CampaignId::new(campaign_id.to_string());
+        let campaign_id = CampaignId::new(campaign_id.to_owned());
         self.repo
             .get_campaign_performance(&campaign_id)
             .await
@@ -34,7 +34,7 @@ impl LinkAnalyticsService {
         &self,
         content_id: &str,
     ) -> Result<Vec<ContentJourneyNode>, BlogError> {
-        let content_id = ContentId::new(content_id.to_string());
+        let content_id = ContentId::new(content_id.to_owned());
         self.repo
             .get_content_journey(&content_id)
             .await

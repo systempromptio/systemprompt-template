@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use systemprompt::database::Database;
 use systemprompt::extension::prelude::*;
 
@@ -32,7 +32,7 @@ impl PageDataProvider for BlogListPageDataProvider {
     }
 
     fn applies_to_pages(&self) -> Vec<String> {
-        vec!["blog-list".to_string()]
+        vec!["blog-list".to_owned()]
     }
 
     async fn provide_page_data(

@@ -25,7 +25,8 @@ pub struct ResolvedId {
 ///
 /// Lookup order — most specific first:
 ///   1. `ai_requests.id` / `ai_requests.request_id`           → Request
-///   2. `governance_decisions.id`                              → Request (oldest in chain)
+///   2. `governance_decisions.id`                              → Request
+///      (oldest in chain)
 ///   3. `ai_requests.trace_id`                                 → Trace
 ///   4. `ai_requests.context_id` or `user_contexts.context_id` → Context
 ///   5. `ai_requests.session_id` / `governance_decisions.session_id` /

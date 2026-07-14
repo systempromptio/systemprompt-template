@@ -37,7 +37,7 @@ impl ExtensionError for SystempromptToolError {
             Self::CommandFailed(_) => StatusCode::BAD_REQUEST,
             Self::Io(_) | Self::Serialization(_) | Self::Internal(_) => {
                 StatusCode::INTERNAL_SERVER_ERROR
-            }
+            },
         }
     }
 

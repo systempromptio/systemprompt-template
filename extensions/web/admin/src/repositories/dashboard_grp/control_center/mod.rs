@@ -207,7 +207,7 @@ pub fn format_bytes(n: i64) -> String {
     use crate::numeric;
 
     if n == 0 {
-        "0 B".to_string()
+        "0 B".to_owned()
     } else if n < 1_024 {
         format!("{n} B")
     } else if n < 1_048_576 {

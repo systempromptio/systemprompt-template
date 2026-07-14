@@ -10,7 +10,8 @@ use walkdir::WalkDir;
 use crate::repository::ContentRepository;
 use systemprompt_web_shared::error::BlogError;
 use systemprompt_web_shared::models::{
-    ContentKind, ContentMetadata, CreateContentParams, IngestionOptions, IngestionReport,
+    ContentKind, ContentMetadata, ContentSeed, CreateContentParams, IngestionOptions,
+    IngestionReport,
 };
 
 #[derive(Debug, Clone)]
@@ -63,7 +64,7 @@ impl IngestionService {
                 Ok(slug) => {
                     report.files_processed += 1;
                     found_slugs.push(slug);
-                }
+                },
                 Err(e) => report.errors.push(format!(
                     "Failed to ingest {}: {}",
                     entry.path().display(),
@@ -87,12 +88,12 @@ impl IngestionService {
                             "Deleted orphaned content records"
                         );
                     }
-                }
+                },
                 Err(e) => {
                     report.errors.push(format!(
                         "Failed to delete orphaned slugs for source {source_id}: {e}"
                     ));
-                }
+                },
             }
         }
 
@@ -123,15 +124,15 @@ impl IngestionService {
         let related_code = serde_json::to_value(&metadata.related_code)?;
         let related_docs = serde_json::to_value(&metadata.related_docs)?;
 
-        let params = CreateContentParams::new(
-            metadata.slug,
-            metadata.title,
-            metadata.description,
+        let params = CreateContentParams::new(ContentSeed {
+            slug: metadata.slug,
+            title: metadata.title,
+            description: metadata.description,
             body,
-            metadata.author,
+            author: metadata.author,
             published_at,
-            source_id.clone(),
-        )
+            source_id: source_id.clone(),
+        })
         .with_version_hash(version_hash)
         .with_keywords(metadata.keywords)
         .with_kind(kind)
@@ -152,16 +153,16 @@ impl IngestionService {
 
 fn parse_markdown(content: &str) -> Result<(ContentMetadata, String), BlogError> {
     if !content.starts_with("---") {
-        return Err(BlogError::Parse("Missing YAML frontmatter".to_string()));
+        return Err(BlogError::Parse("Missing YAML frontmatter".to_owned()));
     }
 
     let rest = &content[3..];
     let end_idx = rest
         .find("---")
-        .ok_or_else(|| BlogError::Parse("Unclosed YAML frontmatter".to_string()))?;
+        .ok_or_else(|| BlogError::Parse("Unclosed YAML frontmatter".to_owned()))?;
 
     let frontmatter = &rest[..end_idx].trim();
-    let body = rest[end_idx + 3..].trim().to_string();
+    let body = rest[end_idx + 3..].trim().to_owned();
 
     let metadata: ContentMetadata = serde_yaml::from_str(frontmatter)?;
 

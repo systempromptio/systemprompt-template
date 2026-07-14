@@ -7,19 +7,17 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, Path, State},
-    http::StatusCode,
-    response::{Html, IntoResponse, Response},
-};
+use axum::extract::{Extension, Path, State};
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
 use chrono::{DateTime, Utc};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sqlx::PgPool;
 
 use crate::repositories::analytics_grp::context_detail::{
+    ContextHeader, ContextKpis, ContextMessageRow, ContextRequestRow, ContextToolCallRow,
     fetch_context_header, fetch_context_kpis, fetch_context_messages, fetch_context_requests,
-    fetch_context_tool_calls, ContextHeader, ContextKpis, ContextMessageRow, ContextRequestRow,
-    ContextToolCallRow,
+    fetch_context_tool_calls,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -31,7 +29,7 @@ const NOT_FOUND_HTML: &str = "<h1>Context not found</h1>\
 
 const TRANSCRIPT_PREVIEW_CHARS: usize = 4000;
 
-pub async fn context_detail_page(
+pub(crate) async fn context_detail_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -53,7 +51,7 @@ pub async fn context_detail_page(
         Err(e) => {
             tracing::error!(error = %e, context_id, "fetch_context_header failed");
             return (StatusCode::INTERNAL_SERVER_ERROR, Html(NOT_FOUND_HTML)).into_response();
-        }
+        },
     };
 
     let (kpis_res, requests_res, messages_res, tool_calls_res) = tokio::join!(
@@ -119,12 +117,12 @@ fn build_detail_data(
         "back_url": header
             .session_id
             .as_ref()
-            .map_or_else(|| "/admin/overview/pulse".to_string(),
+            .map_or_else(|| "/admin/overview/pulse".to_owned(),
                          |s| format!("/admin/sessions/{}", urlencoding::encode(s))),
         "back_label": header
             .session_id
             .as_ref()
-            .map_or_else(|| "Live ticker".to_string(), |_| "Session".to_string()),
+            .map_or_else(|| "Live ticker".to_owned(), |_| "Session".to_owned()),
     })
 }
 
@@ -171,7 +169,7 @@ fn request_json(r: &ContextRequestRow) -> Value {
         "model": r.model,
         "status": r.status,
         "is_error": r.status == "failed",
-        "latency_display": r.latency_ms.map_or_else(|| "—".to_string(), |ms| format!("{ms}ms")),
+        "latency_display": r.latency_ms.map_or_else(|| "—".to_owned(), |ms| format!("{ms}ms")),
         "cost_display": format_cost(r.cost_microdollars),
         "created_at_local": r.created_at.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string(),
     })
@@ -263,7 +261,7 @@ fn preview(s: &str) -> String {
         let head: String = (&mut iter).take(TRANSCRIPT_PREVIEW_CHARS).collect();
         format!("{head}…")
     } else {
-        s.to_string()
+        s.to_owned()
     }
 }
 
@@ -271,14 +269,14 @@ fn short_id(id: &str) -> String {
     if id.len() > 12 {
         format!("{}…", &id[..12])
     } else {
-        id.to_string()
+        id.to_owned()
     }
 }
 
 fn format_cost(microdollars: i64) -> String {
     let dollars = microdollars as f64 / 1_000_000.0;
     if dollars == 0.0 {
-        "$0".to_string()
+        "$0".to_owned()
     } else if dollars < 0.01 {
         format!("${dollars:.6}")
     } else {

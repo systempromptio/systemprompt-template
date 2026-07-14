@@ -22,7 +22,8 @@ strip = true
 opt-level = "z"
 
 [workspace.package]
-edition = "2021"
+edition = "2024"
+rust-version = "1.94"
 version = "0.19.0"
 authors = ["systemprompt.io <ed@systemprompt.io>"]
 license = "MIT"
@@ -110,9 +111,12 @@ rmcp = { version = "2.0", features = ["server", "client", "transport-io", "trans
 
 [workspace.lints.clippy]
 all = { level = "deny", priority = -1 }
-pedantic = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
 cargo = { level = "warn", priority = -1 }
+perf = { level = "warn", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+
 cargo_common_metadata = "allow"
 multiple_crate_versions = "allow"
 return_self_not_must_use = "allow"
@@ -125,30 +129,22 @@ cast_possible_wrap = "allow"
 format_push_string = "allow"
 uninlined_format_args = "allow"
 result_unit_err = "allow"
-perf = { level = "warn", priority = -1 }
-suspicious = { level = "deny", priority = -1 }
 missing_docs_in_private_items = "allow"
-too_many_arguments = "deny"
 module_name_repetitions = "allow"
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
 derive_partial_eq_without_eq = "allow"
-cognitive_complexity = "deny"
+cognitive_complexity = "allow"
+unwrap_or_default = "allow"
+redundant_pub_crate = "allow"
+
+too_many_arguments = "deny"
 type_complexity = "warn"
 too_many_lines = "warn"
-expect_used = "warn"
-unwrap_used = "deny"
-panic = "deny"
-unimplemented = "deny"
-todo = "deny"
 inefficient_to_string = "warn"
 unnecessary_wraps = "warn"
 unused_async = "warn"
 
-# Project standards: never use unwrap_or_default() - fail explicitly
-unwrap_or_default = "allow"
-
-# Code clarity
 if_not_else = "warn"
 redundant_else = "warn"
 manual_let_else = "warn"
@@ -158,30 +154,49 @@ needless_pass_by_value = "warn"
 items_after_statements = "warn"
 semicolon_if_nothing_returned = "warn"
 
-# Performance
 or_fun_call = "warn"
 redundant_clone = "warn"
 unnecessary_to_owned = "warn"
 implicit_clone = "warn"
 large_futures = "warn"
 
-# Error handling
 match_wild_err_arm = "warn"
 
-# Restriction (stricter quality)
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
 dbg_macro = "deny"
-print_stdout = "warn"
-print_stderr = "warn"
+print_stdout = "deny"
+print_stderr = "deny"
+let_underscore_must_use = "deny"
+let_underscore_future = "deny"
 exit = "deny"
 rc_mutex = "deny"
+mem_forget = "deny"
+await_holding_lock = "deny"
+await_holding_refcell_ref = "deny"
+lossy_float_literal = "deny"
+read_zero_byte_vec = "deny"
+path_buf_push_overwrite = "deny"
+verbose_file_reads = "deny"
 empty_structs_with_brackets = "warn"
 rest_pat_in_fully_bound_structs = "warn"
 clone_on_ref_ptr = "warn"
 separated_literal_suffix = "warn"
 try_err = "warn"
 
+map_err_ignore = "warn"
+str_to_string = "warn"
+undocumented_unsafe_blocks = "warn"
+self_named_module_files = "warn"
+allow_attributes = "warn"
+allow_attributes_without_reason = "warn"
+
 [workspace.lints.rust]
-unsafe_code = "forbid"
+unsafe_code = "deny"
+unsafe_op_in_unsafe_fn = "deny"
 missing_debug_implementations = "warn"
 missing_copy_implementations = "warn"
 trivial_casts = "warn"
@@ -189,6 +204,9 @@ trivial_numeric_casts = "warn"
 unused_import_braces = "warn"
 unused_qualifications = "warn"
 variant_size_differences = "warn"
+unreachable_pub = "warn"
+unused_lifetimes = "warn"
+single_use_lifetimes = "warn"
 
 # ============================================
 # ROOT PACKAGE (Template Application)
@@ -230,9 +248,6 @@ axum = { workspace = true }
 tower-http = { workspace = true }
 serde = { workspace = true }
 serde_yaml = { workspace = true }
-
-[build-dependencies]
-serde_yaml = "0.9"
 
 [lints]
 workspace = true

@@ -7,16 +7,14 @@
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, Path, State},
-    http::StatusCode,
-    response::{Html, IntoResponse, Response},
-};
+use axum::extract::{Extension, Path, State};
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
 use serde_json::json;
 use sqlx::PgPool;
 
 use crate::repositories::governance_grp::chain::{
-    fetch_decision_chain, AiRequestSummary, ChainEnvelope,
+    AiRequestSummary, ChainEnvelope, fetch_decision_chain,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -26,7 +24,7 @@ use super::ACCESS_DENIED_HTML;
 const NOT_FOUND_HTML: &str = "<h1>Request not found</h1>\
 <p>No audit chain found for that id.</p>";
 
-pub async fn governance_audit_detail_page(
+pub(crate) async fn governance_audit_detail_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -43,7 +41,7 @@ pub async fn governance_audit_detail_page(
         Err(e) => {
             tracing::error!(error = %e, id = %id, "fetch_decision_chain failed");
             return (StatusCode::INTERNAL_SERVER_ERROR, Html(NOT_FOUND_HTML)).into_response();
-        }
+        },
     };
 
     let primary = pick_primary(&envelope, &id);
@@ -177,6 +175,6 @@ fn short_id(id: &str) -> String {
     if id.len() > 12 {
         format!("{}…", &id[..12])
     } else {
-        id.to_string()
+        id.to_owned()
     }
 }

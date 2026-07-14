@@ -1,14 +1,12 @@
 use std::sync::Arc;
 
-use axum::{
-    middleware as axum_middleware,
-    routing::{get, post},
-    Extension, Router,
-};
+use axum::routing::{get, post};
+use axum::{Extension, Router, middleware as axum_middleware};
 use sqlx::PgPool;
 use tower_http::normalize_path::NormalizePathLayer;
 
-use super::super::{handlers, middleware, templates::AdminTemplateEngine};
+use super::super::templates::AdminTemplateEngine;
+use super::super::{handlers, middleware};
 
 pub fn bridge_auth_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Router {
     let inner = Router::new()

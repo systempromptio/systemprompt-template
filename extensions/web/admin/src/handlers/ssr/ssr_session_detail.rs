@@ -6,18 +6,16 @@
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, Path, State},
-    http::StatusCode,
-    response::{Html, IntoResponse, Response},
-};
-use serde_json::{json, Value};
+use axum::extract::{Extension, Path, State};
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
+use serde_json::{Value, json};
 use sqlx::PgPool;
 
 use crate::repositories::analytics_grp::session_detail::{
+    SessionContextRow, SessionHeader, SessionKpis, SessionRequestRow, SessionTraceRow,
     fetch_session_contexts, fetch_session_header, fetch_session_kpis, fetch_session_requests,
-    fetch_session_traces, SessionContextRow, SessionHeader, SessionKpis, SessionRequestRow,
-    SessionTraceRow,
+    fetch_session_traces,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -27,7 +25,7 @@ use super::ACCESS_DENIED_HTML;
 const NOT_FOUND_HTML: &str = "<h1>Session not found</h1>\
 <p>No AI requests, contexts, or transcript rows match that session id.</p>";
 
-pub async fn session_detail_page(
+pub(crate) async fn session_detail_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -49,7 +47,7 @@ pub async fn session_detail_page(
         Err(e) => {
             tracing::error!(error = %e, session_id, "fetch_session_header failed");
             return (StatusCode::INTERNAL_SERVER_ERROR, Html(NOT_FOUND_HTML)).into_response();
-        }
+        },
     };
 
     let (kpis_res, contexts_res, traces_res, requests_res) = tokio::join!(
@@ -160,7 +158,7 @@ fn trace_json(t: &SessionTraceRow) -> Value {
         "request_count": t.request_count,
         "error_count": t.error_count,
         "started_at_local": t.started_at.map(|x| x.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string()),
-        "duration_display": duration_ms.map_or_else(|| "—".to_string(), format_duration_ms),
+        "duration_display": duration_ms.map_or_else(|| "—".to_owned(), format_duration_ms),
     })
 }
 
@@ -178,7 +176,7 @@ fn request_json(r: &SessionRequestRow) -> Value {
         "model": r.model,
         "status": r.status,
         "is_error": r.status == "failed",
-        "latency_display": r.latency_ms.map_or_else(|| "—".to_string(), |ms| format!("{ms}ms")),
+        "latency_display": r.latency_ms.map_or_else(|| "—".to_owned(), |ms| format!("{ms}ms")),
         "cost_display": format_cost(r.cost_microdollars),
         "created_at_local": r.created_at.with_timezone(&chrono::Local).format("%Y-%m-%d %H:%M:%S").to_string(),
     })
@@ -188,7 +186,7 @@ fn short_id(id: &str) -> String {
     if id.len() > 12 {
         format!("{}…", &id[..12])
     } else {
-        id.to_string()
+        id.to_owned()
     }
 }
 
@@ -198,7 +196,7 @@ fn duration_display(
 ) -> String {
     match (start, end) {
         (Some(s), Some(e)) => format_duration_ms((e - s).num_milliseconds().max(0)),
-        _ => "—".to_string(),
+        _ => "—".to_owned(),
     }
 }
 
@@ -217,7 +215,7 @@ fn format_duration_ms(ms: i64) -> String {
 fn format_cost(microdollars: i64) -> String {
     let dollars = microdollars as f64 / 1_000_000.0;
     if dollars == 0.0 {
-        "$0".to_string()
+        "$0".to_owned()
     } else if dollars < 0.01 {
         format!("${dollars:.6}")
     } else {

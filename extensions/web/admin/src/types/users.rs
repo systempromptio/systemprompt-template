@@ -156,8 +156,9 @@ pub struct UsersQuery {
 
 /// One row of the `/admin/overview/identity` users table.
 ///
-/// Aggregates `ai_requests` (sessions, contexts, tokens, cost, models, last activity)
-/// and `governance_decisions` (denies, secret breaches, scope violations) per user.
+/// Aggregates `ai_requests` (sessions, contexts, tokens, cost, models, last
+/// activity) and `governance_decisions` (denies, secret breaches, scope
+/// violations) per user.
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct UserIdentityRow {
     pub user_id: String,

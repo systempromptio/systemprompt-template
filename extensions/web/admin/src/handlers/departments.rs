@@ -1,21 +1,21 @@
 use std::sync::Arc;
 
+use axum::Json;
 use axum::extract::{Extension, Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
 use serde::Deserialize;
 use sqlx::PgPool;
 
 use crate::repositories;
-use crate::types::departments::DepartmentInput;
 use crate::types::UserContext;
+use crate::types::departments::DepartmentInput;
 
 fn forbidden() -> Response {
     (StatusCode::FORBIDDEN, "Admin access required").into_response()
 }
 
-pub async fn list_departments_handler(
+pub(crate) async fn list_departments_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
@@ -27,11 +27,11 @@ pub async fn list_departments_handler(
         Err(e) => {
             tracing::warn!(error = %e, "Failed to list departments");
             (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
-        }
+        },
     }
 }
 
-pub async fn create_department_handler(
+pub(crate) async fn create_department_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(input): Json<DepartmentInput>,
@@ -51,22 +51,22 @@ pub async fn create_department_handler(
             .into_response();
     }
     let normalized = DepartmentInput {
-        name: trimmed.to_string(),
+        name: trimmed.to_owned(),
         description: input.description,
     };
     match repositories::create_department(&pool, &normalized).await {
         Ok(dept) => (StatusCode::CREATED, Json(dept)).into_response(),
         Err(sqlx::Error::Database(db)) if db.is_unique_violation() => {
             (StatusCode::CONFLICT, "department name already exists").into_response()
-        }
+        },
         Err(e) => {
             tracing::warn!(error = %e, "Failed to create department");
             (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
-        }
+        },
     }
 }
 
-pub async fn update_department_handler(
+pub(crate) async fn update_department_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
@@ -87,7 +87,7 @@ pub async fn update_department_handler(
             .into_response();
     }
     let normalized = DepartmentInput {
-        name: trimmed.to_string(),
+        name: trimmed.to_owned(),
         description: input.description,
     };
     match repositories::update_department(&pool, &id, &normalized).await {
@@ -95,15 +95,15 @@ pub async fn update_department_handler(
         Err(sqlx::Error::RowNotFound) => StatusCode::NOT_FOUND.into_response(),
         Err(sqlx::Error::Database(db)) if db.is_unique_violation() => {
             (StatusCode::CONFLICT, "department name already exists").into_response()
-        }
+        },
         Err(e) => {
             tracing::warn!(error = %e, "Failed to update department");
             (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
-        }
+        },
     }
 }
 
-pub async fn delete_department_handler(
+pub(crate) async fn delete_department_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
@@ -117,16 +117,16 @@ pub async fn delete_department_handler(
         Err(e) => {
             tracing::warn!(error = %e, "Failed to delete department");
             (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
-        }
+        },
     }
 }
 
 #[derive(Debug, Deserialize)]
-pub struct AssignDepartmentRequest {
+pub(crate) struct AssignDepartmentRequest {
     pub department_name: String,
 }
 
-pub async fn assign_user_to_department_handler(
+pub(crate) async fn assign_user_to_department_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(user_id): Path<String>,
@@ -151,6 +151,6 @@ pub async fn assign_user_to_department_handler(
         Err(e) => {
             tracing::warn!(error = %e, "Failed to assign user to department");
             (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
-        }
+        },
     }
 }

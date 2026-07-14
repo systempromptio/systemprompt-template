@@ -86,7 +86,7 @@ fn log_and_discard_err<T: Clone>(
         Err(e) => {
             tracing::error!(error = %e, "{msg}");
             None
-        }
+        },
     })
     .clone()
 }

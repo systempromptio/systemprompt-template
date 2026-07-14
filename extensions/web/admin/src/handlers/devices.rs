@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
+use axum::Json;
 use axum::extract::{Extension, Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
@@ -14,14 +14,14 @@ use crate::services::device_service;
 use crate::types::UserContext;
 
 #[derive(Debug, Deserialize)]
-pub struct IssueApiKeyRequest {
+pub(crate) struct IssueApiKeyRequest {
     pub name: String,
     #[serde(default)]
     pub expires_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Serialize)]
-pub struct IssueApiKeyResponse {
+pub(crate) struct IssueApiKeyResponse {
     pub id: String,
     pub name: String,
     pub key_prefix: String,
@@ -30,7 +30,7 @@ pub struct IssueApiKeyResponse {
     pub expires_at: Option<DateTime<Utc>>,
 }
 
-pub async fn issue_pat(
+pub(crate) async fn issue_pat(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<IssueApiKeyRequest>,
@@ -49,7 +49,7 @@ pub async fn issue_pat(
     }
 }
 
-pub async fn revoke_pat(
+pub(crate) async fn revoke_pat(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
@@ -61,7 +61,7 @@ pub async fn revoke_pat(
 }
 
 #[derive(Debug, Deserialize)]
-pub struct EnrollDeviceRequest {
+pub(crate) struct EnrollDeviceRequest {
     pub user_id: String,
     pub name: String,
     pub platform: String,
@@ -72,7 +72,7 @@ pub struct EnrollDeviceRequest {
 }
 
 #[derive(Debug, Serialize)]
-pub struct EnrollDeviceResponse {
+pub(crate) struct EnrollDeviceResponse {
     pub id: String,
     pub user_id: String,
     pub name: String,
@@ -85,7 +85,7 @@ pub struct EnrollDeviceResponse {
     pub expires_at: Option<DateTime<Utc>>,
 }
 
-pub async fn enroll_device(
+pub(crate) async fn enroll_device(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<EnrollDeviceRequest>,
@@ -98,10 +98,12 @@ pub async fn enroll_device(
     match device_service::enroll_device(
         &pool,
         &target,
-        &body.name,
-        &body.platform,
-        &hostname,
-        body.expires_at,
+        device_service::EnrollDeviceInput {
+            name: &body.name,
+            platform: &body.platform,
+            hostname: &hostname,
+            expires_at: body.expires_at,
+        },
     )
     .await
     {
@@ -125,7 +127,7 @@ pub async fn enroll_device(
     }
 }
 
-pub async fn revoke_cert(
+pub(crate) async fn revoke_cert(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,

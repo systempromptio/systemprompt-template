@@ -3,7 +3,7 @@
 use handlebars::{Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext};
 
 #[derive(Debug, Clone, Copy)]
-pub struct FormatDateHelper;
+pub(crate) struct FormatDateHelper;
 impl HelperDef for FormatDateHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -26,17 +26,17 @@ impl HelperDef for FormatDateHelper {
                 let local_dt = dt.with_timezone(&chrono::Local);
                 let formatted = local_dt.format("%b %d, %Y %I:%M %p").to_string();
                 out.write(&formatted)?;
-            }
+            },
             Err(_) => {
                 out.write(val)?;
-            }
+            },
         }
         Ok(())
     }
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct RelativeTimeHelper;
+pub(crate) struct RelativeTimeHelper;
 impl HelperDef for RelativeTimeHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -60,7 +60,7 @@ impl HelperDef for RelativeTimeHelper {
                 let diff = now.signed_duration_since(dt);
                 let mins = diff.num_minutes();
                 let result = if mins < 1 {
-                    "just now".to_string()
+                    "just now".to_owned()
                 } else if mins < 60 {
                     format!("{mins}m ago")
                 } else {
@@ -79,10 +79,10 @@ impl HelperDef for RelativeTimeHelper {
                     }
                 };
                 out.write(&result)?;
-            }
+            },
             Err(_) => {
                 out.write(val)?;
-            }
+            },
         }
         Ok(())
     }

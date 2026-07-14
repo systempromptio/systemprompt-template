@@ -1,7 +1,7 @@
 //! Profile YAML read/write and route <-> YAML conversion.
 //!
-//! All mutation paths funnel through [`read_profile`] / [`write_profile`] so the
-//! `gateway` block stays well-formed, and through [`ensure_gateway_mut`] /
+//! All mutation paths funnel through [`read_profile`] / [`write_profile`] so
+//! the `gateway` block stays well-formed, and through [`ensure_gateway_mut`] /
 //! [`routes_seq_mut`] which lazily create the block and `routes` sequence.
 
 use std::path::Path;
@@ -32,18 +32,18 @@ pub(super) fn write_profile(profile_path: &Path, doc: &Value) -> Result<(), Mark
 
 pub(super) fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
     let map = val.as_mapping()?;
-    let model_pattern = map.get(Value::from("model_pattern"))?.as_str()?.to_string();
-    let provider = map.get(Value::from("provider"))?.as_str()?.to_string();
+    let model_pattern = map.get(Value::from("model_pattern"))?.as_str()?.to_owned();
+    let provider = map.get(Value::from("provider"))?.as_str()?.to_owned();
     let upstream_model = map
         .get(Value::from("upstream_model"))
         .and_then(Value::as_str)
-        .map(ToString::to_string);
+        .map(str::to_owned);
     let extra_headers = map
         .get(Value::from("extra_headers"))
         .and_then(Value::as_mapping)
         .map(|m| {
             m.iter()
-                .filter_map(|(k, v)| Some((k.as_str()?.to_string(), v.as_str()?.to_string())))
+                .filter_map(|(k, v)| Some((k.as_str()?.to_owned(), v.as_str()?.to_owned())))
                 .collect()
         })
         .unwrap_or_default();
@@ -52,7 +52,7 @@ pub(super) fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
         .and_then(Value::as_str)
         .map_or_else(
             || synthesize_route_id(&model_pattern, &provider),
-            ToString::to_string,
+            str::to_owned,
         );
     Some(GatewayRouteView {
         id,

@@ -7,8 +7,8 @@ pub async fn create_user(
     pool: &PgPool,
     req: &CreateUserRequest,
 ) -> Result<UserSummary, sqlx::Error> {
-    let user_id_str = req.user_id.as_str().to_string();
-    let status = req.status.clone().unwrap_or_else(|| "active".to_string());
+    let user_id_str = req.user_id.as_str().to_owned();
+    let status = req.status.clone().unwrap_or_else(|| "active".to_owned());
     let username = req.email.as_str();
     let summary = sqlx::query_as!(
         UserSummary,
@@ -58,9 +58,9 @@ pub async fn update_user(
 ) -> Result<Option<UserSummary>, sqlx::Error> {
     let status = req.is_active.map(|active| {
         if active {
-            "active".to_string()
+            "active".to_owned()
         } else {
-            "inactive".to_string()
+            "inactive".to_owned()
         }
     });
     let set_email_verified = req.is_active == Some(true);
@@ -105,20 +105,20 @@ pub async fn update_user(
     .fetch_optional(&mut *tx)
     .await?;
 
-    if summary.is_some() {
-        if let Some(department) = req.department.as_deref() {
-            sqlx::query!(
-                r#"
+    if summary.is_some()
+        && let Some(department) = req.department.as_deref()
+    {
+        sqlx::query!(
+            r#"
                 INSERT INTO user_profile_ext (user_id, department)
                 VALUES ($1, $2)
                 ON CONFLICT (user_id) DO UPDATE SET department = EXCLUDED.department
                 "#,
-                user_id.as_str(),
-                department,
-            )
-            .execute(&mut *tx)
-            .await?;
-        }
+            user_id.as_str(),
+            department,
+        )
+        .execute(&mut *tx)
+        .await?;
     }
 
     tx.commit().await?;
@@ -132,7 +132,6 @@ pub async fn delete_user(pool: &PgPool, user_id: &UserId) -> Result<bool, sqlx::
     Ok(result.rows_affected() > 0)
 }
 
-#[allow(clippy::cognitive_complexity)]
 pub async fn delete_user_complete(pool: &PgPool, user_id: &UserId) -> Result<bool, sqlx::Error> {
     let mut tx = pool.begin().await?;
     let uid = user_id.as_str();

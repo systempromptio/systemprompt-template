@@ -48,7 +48,7 @@ pub async fn list_plugin_env_vars(
         .into_iter()
         .map(|mut r| {
             if r.is_secret && !r.var_value.is_empty() {
-                r.var_value = "••••••••".to_string();
+                "••••••••".clone_into(&mut r.var_value);
             }
             r
         })
@@ -57,14 +57,26 @@ pub async fn list_plugin_env_vars(
     Ok(masked)
 }
 
+/// Fields for [`upsert_plugin_env_var`] (was 6 positional args).
+#[derive(Debug)]
+pub struct PluginEnvVarInput<'a> {
+    pub plugin_id: &'a str,
+    pub var_name: &'a str,
+    pub var_value: &'a str,
+    pub is_secret: bool,
+}
+
 pub async fn upsert_plugin_env_var(
     pool: &PgPool,
     user_id: &UserId,
-    plugin_id: &str,
-    var_name: &str,
-    var_value: &str,
-    is_secret: bool,
+    input: PluginEnvVarInput<'_>,
 ) -> Result<(), MarketplaceError> {
+    let PluginEnvVarInput {
+        plugin_id,
+        var_name,
+        var_value,
+        is_secret,
+    } = input;
     let id = uuid::Uuid::new_v4().to_string();
 
     if is_secret {
@@ -190,7 +202,7 @@ pub async fn list_all_user_env_vars(
         .into_iter()
         .map(|mut r| {
             if r.is_secret && !r.var_value.is_empty() {
-                r.var_value = "••••••••".to_string();
+                "••••••••".clone_into(&mut r.var_value);
             }
             r
         })

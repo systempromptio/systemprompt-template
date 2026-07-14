@@ -15,7 +15,7 @@ pub struct PaperSection {
 }
 
 fn default_image_position() -> String {
-    "right".to_string()
+    "right".to_owned()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

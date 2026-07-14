@@ -65,7 +65,7 @@ pub async fn issue_api_key(
 
     Ok(IssuedApiKey {
         id,
-        name: trimmed.to_string(),
+        name: trimmed.to_owned(),
         key_prefix,
         secret,
         created_at: Some(row.created_at),
@@ -87,14 +87,26 @@ pub struct EnrolledDevice {
     pub expires_at: Option<DateTime<Utc>>,
 }
 
+/// Grouped enrollment inputs for [`enroll_device`] (was 6 positional args).
+#[derive(Debug)]
+pub struct EnrollDeviceParams<'a> {
+    pub name: &'a str,
+    pub platform: &'a str,
+    pub hostname: &'a str,
+    pub expires_at: Option<DateTime<Utc>>,
+}
+
 pub async fn enroll_device(
     pool: &PgPool,
     user_id: &UserId,
-    name: &str,
-    platform: &str,
-    hostname: &str,
-    expires_at: Option<DateTime<Utc>>,
+    params: EnrollDeviceParams<'_>,
 ) -> Result<EnrolledDevice> {
+    let EnrollDeviceParams {
+        name,
+        platform,
+        hostname,
+        expires_at,
+    } = params;
     let trimmed = name.trim();
     if trimmed.is_empty() {
         return Err(BridgeRepoError::Validation(
@@ -107,7 +119,7 @@ pub async fn enroll_device(
             "Platform must be one of macos, windows, linux".into(),
         ));
     }
-    let hostname_norm = hostname.trim().to_string();
+    let hostname_norm = hostname.trim().to_owned();
 
     let id = format!("ak_{}", Uuid::new_v4().simple());
     let (secret, key_prefix, key_hash) = generate_secret();
@@ -148,8 +160,8 @@ pub async fn enroll_device(
 
     Ok(EnrolledDevice {
         id,
-        user_id: user_id.as_str().to_string(),
-        name: trimmed.to_string(),
+        user_id: user_id.as_str().to_owned(),
+        name: trimmed.to_owned(),
         key_prefix,
         secret,
         platform: platform_norm,

@@ -1,4 +1,5 @@
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 fn parse_field<T: DeserializeOwned + Default>(item: &Value, field: &str) -> T {
@@ -10,7 +11,7 @@ fn parse_field<T: DeserializeOwned + Default>(item: &Value, field: &str) -> T {
         Err(e) => {
             tracing::warn!(field, error = %e, "Parse failed");
             T::default()
-        }
+        },
     }
 }
 
@@ -50,27 +51,27 @@ impl DocsLearningContent {
 
         if !self.after_reading_this.is_empty() {
             data.insert(
-                "AFTER_READING_THIS".to_string(),
+                "AFTER_READING_THIS".to_owned(),
                 serde_json::json!(self.after_reading_this),
             );
         }
 
         if !self.related_playbooks.is_empty() {
             data.insert(
-                "RELATED_PLAYBOOKS".to_string(),
+                "RELATED_PLAYBOOKS".to_owned(),
                 serde_json::json!(self.related_playbooks),
             );
         }
 
         if !self.related_code.is_empty() {
             data.insert(
-                "RELATED_CODE".to_string(),
+                "RELATED_CODE".to_owned(),
                 serde_json::json!(self.related_code),
             );
         }
 
         if self.has_content() {
-            data.insert("HAS_LEARNING_CONTENT".to_string(), Value::Bool(true));
+            data.insert("HAS_LEARNING_CONTENT".to_owned(), Value::Bool(true));
         }
 
         Value::Object(data)

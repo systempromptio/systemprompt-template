@@ -1,11 +1,9 @@
 use std::sync::Arc;
 
-use axum::{
-    extract::{Query, State},
-    http::{HeaderMap, StatusCode},
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Query, State};
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 use systemprompt::models::auth::JwtAudience;
 
@@ -13,7 +11,7 @@ use crate::types::webhook::{TranscriptPayload, TranscriptQuery};
 
 use super::helpers::{extract_bearer_token, get_jwt_issuer};
 
-pub async fn track_transcript_event(
+pub(crate) async fn track_transcript_event(
     State(_pool): State<Arc<PgPool>>,
     headers: HeaderMap,
     Query(_query): Query<TranscriptQuery>,
@@ -36,15 +34,15 @@ pub async fn track_transcript_event(
                 Json(serde_json::json!({"error": "Internal configuration error"})),
             )
                 .into_response();
-        }
+        },
     };
 
     if let Err(e) = systemprompt::oauth::validate_jwt_token(
         token,
         &jwt_issuer,
         &[
-            JwtAudience::Resource("hook".to_string()),
-            JwtAudience::Resource("plugin".to_string()),
+            JwtAudience::Resource("hook".to_owned()),
+            JwtAudience::Resource("plugin".to_owned()),
             JwtAudience::Api,
         ],
     ) {

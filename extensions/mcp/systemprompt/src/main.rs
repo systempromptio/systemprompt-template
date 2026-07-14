@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
-use std::{env, sync::Arc};
-use systemprompt::config::{init_config, ProfileBootstrap, SecretsBootstrap};
+use std::env;
+use std::sync::Arc;
+use systemprompt::config::{ProfileBootstrap, SecretsBootstrap, init_config};
 use systemprompt::identifiers::McpServerId;
 use systemprompt::system::AppContext;
 use systemprompt_mcp_agent::SystempromptServer;

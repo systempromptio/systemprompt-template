@@ -62,7 +62,7 @@ pub fn list_external_agents() -> Vec<ExternalAgentRow> {
             Err(e) => {
                 tracing::warn!(path = %path.display(), error = %e, "failed to parse external_agents yaml");
                 continue;
-            }
+            },
         };
         for (_key, e) in parsed.external_agents {
             rows.push(ExternalAgentRow {

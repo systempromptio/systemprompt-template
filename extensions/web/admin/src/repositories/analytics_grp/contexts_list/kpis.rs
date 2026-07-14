@@ -2,7 +2,7 @@
 
 use sqlx::PgPool;
 
-use super::{free_text_pattern, ContextListFilter};
+use super::{ContextListFilter, free_text_pattern};
 
 #[derive(Debug, Clone, Copy)]
 pub struct ContextListKpis {

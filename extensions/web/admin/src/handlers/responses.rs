@@ -1,18 +1,18 @@
 use serde::Serialize;
 
 #[derive(Serialize, Debug)]
-pub struct ResolutionTokenResponse {
+pub(crate) struct ResolutionTokenResponse {
     pub token: String,
     pub expires_in: u32,
 }
 
 #[derive(Serialize, Debug, Clone, Copy)]
-pub struct ResultOkResponse {
+pub(crate) struct ResultOkResponse {
     pub result: &'static str,
 }
 
 #[derive(Serialize, Debug)]
-pub struct AuditLogEntry {
+pub(crate) struct AuditLogEntry {
     pub id: String,
     pub var_name: String,
     pub action: String,
@@ -22,7 +22,7 @@ pub struct AuditLogEntry {
 }
 
 #[derive(Serialize, Debug)]
-pub struct PluginEnvResponse {
+pub(crate) struct PluginEnvResponse {
     pub definitions: Vec<serde_json::Value>,
 
     pub stored: Vec<crate::repositories::plugin_env::PluginEnvVar>,
@@ -33,8 +33,8 @@ pub struct PluginEnvResponse {
 macro_rules! list_response {
     ($name:ident, $field:ident) => {
         #[derive(Serialize)]
-        pub struct $name<T> {
-            pub $field: T,
+        pub(crate) struct $name<T> {
+            pub(crate) $field: T,
         }
     };
 }

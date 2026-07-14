@@ -4,7 +4,9 @@ pub mod link;
 pub mod paper;
 pub mod search;
 
-pub use builders::{CreateContentParams, CreateLinkParams, RecordClickParams, TrackClickParams};
+pub use builders::{
+    ContentSeed, CreateContentParams, CreateLinkParams, RecordClickParams, TrackClickParams,
+};
 pub use content::{
     Content, ContentKind, ContentLinkMetadata, ContentMetadata, IngestionOptions, IngestionReport,
     Tag,

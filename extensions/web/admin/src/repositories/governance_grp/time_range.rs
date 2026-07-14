@@ -57,22 +57,22 @@ impl TimeRangePreset {
 /// Parse `?from=&to=&preset=` into a resolved `TimeRange`.
 ///
 /// Resolution order:
-/// 1. If `preset` is one of the known windows, anchor `to` at `now()` and derive `from`.
+/// 1. If `preset` is one of the known windows, anchor `to` at `now()` and
+///    derive `from`.
 /// 2. Else parse RFC3339 `from`/`to` if both present.
 /// 3. Else default to last 24 hours.
 pub fn parse_time_range(query: &TimeRangeQuery) -> TimeRange {
     let now = Utc::now();
 
-    if let Some(preset_str) = query.preset.as_deref() {
-        if let Some(preset) = TimeRangePreset::parse(preset_str) {
-            if let Some(d) = preset.duration() {
-                return TimeRange {
-                    from: now - d,
-                    to: now,
-                    preset,
-                };
-            }
-        }
+    if let Some(preset_str) = query.preset.as_deref()
+        && let Some(preset) = TimeRangePreset::parse(preset_str)
+        && let Some(d) = preset.duration()
+    {
+        return TimeRange {
+            from: now - d,
+            to: now,
+            preset,
+        };
     }
 
     let parsed_from = query.from.as_deref().and_then(parse_rfc3339);

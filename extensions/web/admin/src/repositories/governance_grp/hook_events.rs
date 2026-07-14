@@ -59,7 +59,7 @@ pub async fn recent_hook_events(
     let mut merged: Vec<RecentHookEvent> = Vec::with_capacity(pre.len() + post.len());
     for r in pre {
         merged.push(RecentHookEvent {
-            kind: "PreToolUse".to_string(),
+            kind: "PreToolUse".to_owned(),
             created_at: r.created_at,
             plugin_id: r.plugin_id,
             tool_name: Some(r.tool_name),

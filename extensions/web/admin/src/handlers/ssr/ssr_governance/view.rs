@@ -79,7 +79,7 @@ fn build_policy_row(
 
 fn format_deny_rate(denied: i64, evaluations: i64) -> String {
     if evaluations <= 0 {
-        return "—".to_string();
+        return "—".to_owned();
     }
     let r = (denied as f64 / evaluations as f64) * 100.0;
     format!("{r:.1}%")
@@ -190,7 +190,7 @@ fn render_params_preview(params: &YamlValue) -> Vec<serde_json::Value> {
             continue;
         }
         let value_str = match v {
-            YamlValue::Null => "null".to_string(),
+            YamlValue::Null => "null".to_owned(),
             YamlValue::Bool(b) => b.to_string(),
             YamlValue::Number(n) => n.to_string(),
             YamlValue::String(s) => s.clone(),
@@ -204,10 +204,10 @@ fn render_params_preview(params: &YamlValue) -> Vec<serde_json::Value> {
 
 fn yaml_inline(v: &YamlValue) -> String {
     match v {
-        YamlValue::Null => "null".to_string(),
+        YamlValue::Null => "null".to_owned(),
         YamlValue::Bool(b) => b.to_string(),
         YamlValue::Number(n) => n.to_string(),
         YamlValue::String(s) => s.clone(),
-        other => serde_json::to_string(other).unwrap_or_else(|_| "<?>".to_string()),
+        other => serde_json::to_string(other).unwrap_or_else(|_| "<?>".to_owned()),
     }
 }

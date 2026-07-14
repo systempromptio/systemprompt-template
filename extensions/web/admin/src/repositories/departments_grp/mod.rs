@@ -6,8 +6,8 @@ mod crud;
 mod summaries;
 
 pub use aggregates::{
-    list_user_management_aggregates, list_user_marketplace_overrides, UserManagementAggregate,
-    UserMarketplaceOverride,
+    UserManagementAggregate, UserMarketplaceOverride, list_user_management_aggregates,
+    list_user_marketplace_overrides,
 };
 pub use crud::{
     assign_user_to_department, create_department, delete_department, get_department,

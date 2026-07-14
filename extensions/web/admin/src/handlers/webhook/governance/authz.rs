@@ -11,21 +11,19 @@
 use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
 
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 use systemprompt::identifiers::{Actor, MarketplaceId};
 use systemprompt_security::authz::{
-    resolve, AccessControlRepository, AccessRule, AuthzDecision, AuthzRequest, Decision,
-    DecisionTag, EntityKind, EntityRef, EntityRow, ResolveInput, ResolveParent,
+    AccessControlRepository, AccessRule, AuthzDecision, AuthzRequest, Decision, DecisionTag,
+    EntityKind, EntityRef, EntityRow, ResolveInput, ResolveParent, resolve,
 };
 use tokio::sync::RwLock;
 
-use crate::repositories::governance_grp::{insert_governance_decision, GovernanceDecisionRecord};
+use crate::repositories::governance_grp::{GovernanceDecisionRecord, insert_governance_decision};
 
 const POLICY_NAME: &str = "authz";
 
@@ -43,10 +41,10 @@ async fn marketplace_parent_entries(
 ) -> Vec<(EntityRef, Vec<AccessRule>, Option<bool>)> {
     {
         let cache = MARKETPLACE_PARENT_CACHE.read().await;
-        if let Some(ref cached) = *cache {
-            if cached.fetched_at.elapsed() < MARKETPLACE_PARENT_TTL {
-                return cached.entries.clone();
-            }
+        if let Some(ref cached) = *cache
+            && cached.fetched_at.elapsed() < MARKETPLACE_PARENT_TTL
+        {
+            return cached.entries.clone();
         }
     }
 
@@ -68,11 +66,11 @@ async fn marketplace_parent_entries(
                 ));
             }
             out
-        }
+        },
         Err(e) => {
             tracing::warn!(error = %e, "marketplace_parent_entries: list_entities failed; resolving without cascade parent");
             Vec::new()
-        }
+        },
     };
 
     {
@@ -154,7 +152,7 @@ async fn audit_decision(
     }
 }
 
-pub async fn govern_authz(
+pub(crate) async fn govern_authz(
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<AuthzRequest>,
 ) -> Response {
@@ -190,7 +188,7 @@ pub async fn govern_authz(
         Decision::Allow { .. } => AuthzDecision::Allow,
         Decision::Deny { reason } => AuthzDecision::Deny {
             reason,
-            policy: POLICY_NAME.to_string(),
+            policy: POLICY_NAME.to_owned(),
         },
     };
     (StatusCode::OK, Json(resp)).into_response()

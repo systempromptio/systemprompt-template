@@ -92,13 +92,20 @@ pub struct DecisionRow {
     pub created_at: DateTime<Utc>,
 }
 
+/// Pagination window for [`fetch_decisions_paged`] (was 3 trailing positional
+/// args: sort, limit, offset).
+#[derive(Debug, Clone, Copy)]
+pub struct DecisionPage {
+    pub sort: SortSpec,
+    pub limit: i64,
+    pub offset: i64,
+}
+
 pub async fn fetch_decisions_paged(
     pool: &PgPool,
     filter: &DecisionFilter,
     range: TimeRange,
-    sort: SortSpec,
-    limit: i64,
-    offset: i64,
+    page: DecisionPage,
 ) -> Result<(Vec<DecisionRow>, i64), sqlx::Error> {
     let search_pattern = filter
         .search
@@ -106,11 +113,35 @@ pub async fn fetch_decisions_paged(
         .filter(|s| !s.is_empty())
         .map(|s| format!("%{s}%"));
 
+    let rows = run_decisions_query(pool, filter, range, page, search_pattern.as_deref()).await?;
+
+    let total = rows.first().map_or(0, |r| r.total_count);
+    let decisions = rows.into_iter().map(DecisionRow::from).collect();
+
+    Ok((decisions, total))
+}
+
+#[expect(
+    clippy::too_many_lines,
+    reason = "body is one irreducible compile-time-checked query_as! SQL literal"
+)]
+async fn run_decisions_query(
+    pool: &PgPool,
+    filter: &DecisionFilter,
+    range: TimeRange,
+    page: DecisionPage,
+    search_pattern: Option<&str>,
+) -> Result<Vec<PagedRow>, sqlx::Error> {
+    let DecisionPage {
+        sort,
+        limit,
+        offset,
+    } = page;
     let sort_col = sort.column.sql_key();
     let sort_dir = sort.dir.sql_key();
     let agent_scope = filter.agent_scope.as_ref().map(|s| s.as_str());
 
-    let rows = sqlx::query_as!(
+    sqlx::query_as!(
         PagedRow,
         r#"WITH joined AS (
             SELECT
@@ -174,19 +205,14 @@ pub async fn fetch_decisions_paged(
         filter.policy.as_deref(),
         filter.decision.as_deref(),
         filter.tool_name.as_deref(),
-        search_pattern.as_deref(),
+        search_pattern,
         limit,
         offset,
         sort_col,
         sort_dir,
     )
     .fetch_all(pool)
-    .await?;
-
-    let total = rows.first().map_or(0, |r| r.total_count);
-    let decisions = rows.into_iter().map(DecisionRow::from).collect();
-
-    Ok((decisions, total))
+    .await
 }
 
 #[derive(sqlx::FromRow)]

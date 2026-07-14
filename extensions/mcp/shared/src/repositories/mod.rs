@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 
 #[derive(Debug)]
-pub struct McpAccessParams<'a> {
+pub(crate) struct McpAccessParams<'a> {
     pub user_id: &'a str,
     pub action: &'a str,
     pub entity_type: &'a str,
@@ -10,7 +10,7 @@ pub struct McpAccessParams<'a> {
     pub metadata: &'a serde_json::Value,
 }
 
-pub async fn insert_mcp_access(
+pub(crate) async fn insert_mcp_access(
     pool: &PgPool,
     params: &McpAccessParams<'_>,
 ) -> Result<(), sqlx::Error> {
@@ -29,7 +29,7 @@ pub async fn insert_mcp_access(
     Ok(())
 }
 
-pub async fn insert_mcp_access_rejection(
+pub(crate) async fn insert_mcp_access_rejection(
     pool: &PgPool,
     server: &str,
     description: &str,

@@ -1,14 +1,12 @@
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, Path, Query, State},
-    http::{HeaderMap, StatusCode},
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Extension, Path, Query, State};
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
-use systemprompt::models::auth::JwtAudience;
 use systemprompt::models::Config;
+use systemprompt::models::auth::JwtAudience;
 use systemprompt::oauth::validate_jwt_token;
 
 use systemprompt::identifiers::{Email, UserId};
@@ -16,14 +14,11 @@ use systemprompt::identifiers::{Email, UserId};
 use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::handlers::shared;
 use crate::repositories;
-use crate::types::CreateUserRequest;
-use crate::types::EventsQuery;
-use crate::types::UpdateUserRequest;
-use crate::types::UserContext;
+use crate::types::{CreateUserRequest, EventsQuery, UpdateUserRequest, UserContext};
 
 use super::responses::{EventsListResponse, UsersListResponse};
 
-pub fn extract_user_from_cookie(
+pub(crate) fn extract_user_from_cookie(
     headers: &HeaderMap,
 ) -> Result<crate::types::CookieSession, String> {
     let token = extract_token_from_headers(headers)?;
@@ -47,15 +42,14 @@ pub fn extract_user_from_cookie(
 }
 
 fn extract_token_from_headers(headers: &HeaderMap) -> Result<String, String> {
-    if let Some(auth) = headers.get("authorization").and_then(|v| v.to_str().ok()) {
-        if let Some(token) = auth
+    if let Some(auth) = headers.get("authorization").and_then(|v| v.to_str().ok())
+        && let Some(token) = auth
             .strip_prefix("Bearer ")
             .or_else(|| auth.strip_prefix("bearer "))
-        {
-            let t = token.trim();
-            if !t.is_empty() {
-                return Ok(t.to_string());
-            }
+    {
+        let t = token.trim();
+        if !t.is_empty() {
+            return Ok(t.to_owned());
         }
     }
 
@@ -71,32 +65,32 @@ fn extract_token_from_headers(headers: &HeaderMap) -> Result<String, String> {
         .ok_or("No access_token cookie or Authorization: Bearer")?;
 
     if token.is_empty() {
-        return Err("Empty access_token cookie".to_string());
+        return Err("Empty access_token cookie".to_owned());
     }
-    Ok(token.to_string())
+    Ok(token.to_owned())
 }
 
-pub async fn dashboard_handler(State(pool): State<Arc<PgPool>>) -> Response {
+pub(crate) async fn dashboard_handler(State(pool): State<Arc<PgPool>>) -> Response {
     match repositories::get_dashboard_data(&pool, "7 days", "4 hours", "today", "7d").await {
         Ok(data) => Json(data).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to load dashboard data");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
-pub async fn list_users_handler(State(pool): State<Arc<PgPool>>) -> Response {
+pub(crate) async fn list_users_handler(State(pool): State<Arc<PgPool>>) -> Response {
     match repositories::list_users(&pool).await {
         Ok(users) => Json(UsersListResponse { users }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to list users");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
-pub async fn user_detail_handler(
+pub(crate) async fn user_detail_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id_raw): Path<String>,
 ) -> Response {
@@ -107,11 +101,11 @@ pub async fn user_detail_handler(
         Err(e) => {
             tracing::error!(error = %e, user_id = %user_id, "Failed to get user detail");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
-pub async fn user_usage_handler(
+pub(crate) async fn user_usage_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id_raw): Path<String>,
 ) -> Response {
@@ -121,11 +115,11 @@ pub async fn user_usage_handler(
         Err(e) => {
             tracing::error!(error = %e, user_id = %user_id, "Failed to get user usage");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
-pub async fn create_user_handler(
+pub(crate) async fn create_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Json(body): Json<CreateUserRequest>,
@@ -141,7 +135,7 @@ pub async fn create_user_handler(
             let name = user
                 .display_name
                 .clone()
-                .unwrap_or_else(|| user.user_id.as_str().to_string());
+                .unwrap_or_else(|| user.user_id.as_str().to_owned());
             tokio::spawn(async move {
                 activity::record(
                     &p,
@@ -155,15 +149,15 @@ pub async fn create_user_handler(
                 .await;
             });
             (StatusCode::CREATED, Json(user)).into_response()
-        }
+        },
         Err(e) => {
             tracing::error!(error = %e, "Failed to create user");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
-pub async fn update_user_handler(
+pub(crate) async fn update_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(user_id_raw): Path<String>,
@@ -181,7 +175,7 @@ pub async fn update_user_handler(
             let name = user
                 .display_name
                 .clone()
-                .unwrap_or_else(|| user.user_id.as_str().to_string());
+                .unwrap_or_else(|| user.user_id.as_str().to_owned());
             tokio::spawn(async move {
                 activity::record(
                     &p,
@@ -195,16 +189,16 @@ pub async fn update_user_handler(
                 .await;
             });
             Json(user).into_response()
-        }
+        },
         Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "User not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to update user");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
-pub async fn delete_user_handler(
+pub(crate) async fn delete_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(user_id_raw): Path<String>,
@@ -231,16 +225,16 @@ pub async fn delete_user_handler(
                 .await;
             });
             StatusCode::NO_CONTENT.into_response()
-        }
+        },
         Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "User not found"),
         Err(e) => {
             tracing::error!(error = %e, "Failed to delete user");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
-pub async fn list_events_handler(
+pub(crate) async fn list_events_handler(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<EventsQuery>,
 ) -> Response {
@@ -249,6 +243,6 @@ pub async fn list_events_handler(
         Err(e) => {
             tracing::error!(error = %e, "Failed to list events");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }

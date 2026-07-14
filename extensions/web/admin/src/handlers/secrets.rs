@@ -1,11 +1,9 @@
 use std::sync::Arc;
 
-use axum::{
-    extract::{Path, Query, State},
-    http::HeaderMap,
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Path, Query, State};
+use axum::http::HeaderMap;
+use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 
 use systemprompt::identifiers::UserId;
@@ -23,11 +21,11 @@ use super::responses::{
 const RESOLUTION_TOKEN_EXPIRY_SECS: u32 = 300;
 
 #[derive(serde::Deserialize, Debug)]
-pub struct ResolveQuery {
+pub(crate) struct ResolveQuery {
     token: String,
 }
 
-pub async fn create_resolution_token_handler(
+pub(crate) async fn create_resolution_token_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
     headers: HeaderMap,
@@ -53,7 +51,7 @@ async fn create_resolution_token_inner(
     .into_response())
 }
 
-pub async fn resolve_secrets_handler(
+pub(crate) async fn resolve_secrets_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
     Query(params): Query<ResolveQuery>,
@@ -64,7 +62,7 @@ pub async fn resolve_secrets_handler(
     }
 }
 
-pub async fn audit_log_handler(
+pub(crate) async fn audit_log_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
     headers: HeaderMap,
@@ -96,7 +94,7 @@ async fn audit_log_inner(
     Ok(Json(AuditLogListResponse { entries: items }).into_response())
 }
 
-pub async fn rotate_handler(
+pub(crate) async fn rotate_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
     headers: HeaderMap,

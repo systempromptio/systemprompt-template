@@ -2,7 +2,8 @@
 name = "systemprompt-web-jobs"
 version.workspace = true
 edition.workspace = true
-license = "MIT"
+authors.workspace = true
+license.workspace = true
 
 [dependencies]
 systemprompt-web-shared = { workspace = true }

@@ -1,18 +1,18 @@
 use super::super::constructors::truncate;
-use super::super::enums::{entity_label, ActivityAction, ActivityCategory, ActivityEntity};
+use super::super::enums::{ActivityAction, ActivityCategory, ActivityEntity, entity_label};
 use super::super::types::{ActivityEntityRef, NewActivity};
 
 impl NewActivity {
     #[must_use]
     pub fn skill_used(user_id: impl AsRef<str>, tool_name: &str, session_id: &str) -> Self {
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::SkillUsage,
             action: ActivityAction::Used,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Skill,
-                entity_id: Some(session_id.to_string()),
-                entity_name: Some(tool_name.to_string()),
+                kind: ActivityEntity::Skill,
+                id: Some(session_id.to_owned()),
+                name: Some(tool_name.to_owned()),
             }),
             description: format!("Used skill '{tool_name}'"),
             metadata: serde_json::json!({ "session_id": session_id }),
@@ -27,13 +27,13 @@ impl NewActivity {
         name: &str,
     ) -> Self {
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Created,
             entity: Some(ActivityEntityRef {
-                entity_type: entity,
-                entity_id: Some(id.to_string()),
-                entity_name: Some(name.to_string()),
+                kind: entity,
+                id: Some(id.to_owned()),
+                name: Some(name.to_owned()),
             }),
             description: format!("Created {} '{name}'", entity_label(entity)),
             metadata: serde_json::json!({}),
@@ -48,13 +48,13 @@ impl NewActivity {
         name: &str,
     ) -> Self {
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Updated,
             entity: Some(ActivityEntityRef {
-                entity_type: entity,
-                entity_id: Some(id.to_string()),
-                entity_name: Some(name.to_string()),
+                kind: entity,
+                id: Some(id.to_owned()),
+                name: Some(name.to_owned()),
             }),
             description: format!("Updated {} '{name}'", entity_label(entity)),
             metadata: serde_json::json!({}),
@@ -69,13 +69,13 @@ impl NewActivity {
         name: &str,
     ) -> Self {
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Deleted,
             entity: Some(ActivityEntityRef {
-                entity_type: entity,
-                entity_id: Some(id.to_string()),
-                entity_name: Some(name.to_string()),
+                kind: entity,
+                id: Some(id.to_owned()),
+                name: Some(name.to_owned()),
             }),
             description: format!("Deleted a {}", entity_label(entity)),
             metadata: serde_json::json!({}),
@@ -90,13 +90,13 @@ impl NewActivity {
         name: &str,
     ) -> Self {
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Created,
             entity: Some(ActivityEntityRef {
-                entity_type: entity,
-                entity_id: Some(id.to_string()),
-                entity_name: Some(name.to_string()),
+                kind: entity,
+                id: Some(id.to_owned()),
+                name: Some(name.to_owned()),
             }),
             description: format!("Forked {} '{name}'", entity_label(entity)),
             metadata: serde_json::json!({}),
@@ -112,15 +112,15 @@ impl NewActivity {
         description: &str,
     ) -> Self {
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Imported,
             entity: Some(ActivityEntityRef {
-                entity_type: entity,
-                entity_id: Some(id.to_string()),
-                entity_name: Some(name.to_string()),
+                kind: entity,
+                id: Some(id.to_owned()),
+                name: Some(name.to_owned()),
             }),
-            description: description.to_string(),
+            description: description.to_owned(),
             metadata: serde_json::json!({}),
         }
     }
@@ -128,13 +128,13 @@ impl NewActivity {
     #[must_use]
     pub fn marketplace_uploaded(user_id: impl AsRef<str>, version: i32) -> Self {
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::MarketplaceConnect,
             action: ActivityAction::Uploaded,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Marketplace,
-                entity_id: None,
-                entity_name: Some(format!("v{version}")),
+                kind: ActivityEntity::Marketplace,
+                id: None,
+                name: Some(format!("v{version}")),
             }),
             description: format!("Uploaded marketplace v{version}"),
             metadata: serde_json::json!({}),
@@ -144,13 +144,13 @@ impl NewActivity {
     #[must_use]
     pub fn marketplace_restored(user_id: impl AsRef<str>, version: i32) -> Self {
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::MarketplaceConnect,
             action: ActivityAction::Restored,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Marketplace,
-                entity_id: None,
-                entity_name: Some(format!("v{version}")),
+                kind: ActivityEntity::Marketplace,
+                id: None,
+                name: Some(format!("v{version}")),
             }),
             description: format!("Restored marketplace to v{version}"),
             metadata: serde_json::json!({}),
@@ -165,13 +165,13 @@ impl NewActivity {
         detail: &str,
     ) -> Self {
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::ToolUsage,
             action: ActivityAction::Used,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Tool,
-                entity_id: Some(session_id.to_string()),
-                entity_name: Some(tool_name.to_string()),
+                kind: ActivityEntity::Tool,
+                id: Some(session_id.to_owned()),
+                name: Some(tool_name.to_owned()),
             }),
             description: format!("{tool_name}: {detail}"),
             metadata: serde_json::json!({ "session_id": session_id }),
@@ -186,13 +186,13 @@ impl NewActivity {
         detail: &str,
     ) -> Self {
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::SkillUsage,
             action: ActivityAction::Used,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Skill,
-                entity_id: Some(session_id.to_string()),
-                entity_name: Some(tool_name.to_string()),
+                kind: ActivityEntity::Skill,
+                id: Some(session_id.to_owned()),
+                name: Some(tool_name.to_owned()),
             }),
             description: format!("Used {tool_name}: {detail}"),
             metadata: serde_json::json!({ "session_id": session_id }),
@@ -208,13 +208,13 @@ impl NewActivity {
     ) -> Self {
         let msg = truncate(error.unwrap_or("unknown error"), 60);
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::Error,
             action: ActivityAction::Used,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Tool,
-                entity_id: Some(session_id.to_string()),
-                entity_name: Some(tool_name.to_string()),
+                kind: ActivityEntity::Tool,
+                id: Some(session_id.to_owned()),
+                name: Some(tool_name.to_owned()),
             }),
             description: format!("{tool_name} failed: {msg}"),
             metadata: serde_json::json!({ "session_id": session_id }),

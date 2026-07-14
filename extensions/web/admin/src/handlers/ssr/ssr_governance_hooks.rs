@@ -1,10 +1,8 @@
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, State},
-    http::StatusCode,
-    response::{Html, IntoResponse, Response},
-};
+use axum::extract::{Extension, State};
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
 use serde_json::json;
 use sqlx::PgPool;
 
@@ -14,7 +12,7 @@ use crate::types::{MarketplaceContext, UserContext};
 
 use super::ACCESS_DENIED_HTML;
 
-pub async fn governance_hooks_page(
+pub(crate) async fn governance_hooks_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

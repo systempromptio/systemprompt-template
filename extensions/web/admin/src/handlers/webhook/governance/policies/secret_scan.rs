@@ -1,7 +1,8 @@
 //! `secret_scan`: refuse tool calls whose `tool_input` contains a plaintext
 //! credential matching one of the built-in patterns. The pattern list ships
 //! with the binary; per-deployment additions go in
-//! `services/governance/config.yaml -> policies[id=secret_scan].extra_patterns`.
+//! `services/governance/config.yaml ->
+//! policies[id=secret_scan].extra_patterns`.
 
 use std::borrow::Cow;
 
@@ -27,7 +28,7 @@ struct ExtraPattern {
 }
 
 #[derive(Debug)]
-pub struct SecretScan {
+pub(super) struct SecretScan {
     extra_patterns: Vec<ExtraPattern>,
 }
 
@@ -57,8 +58,8 @@ impl SecretScan {
                     }
                     out.push(ExtraPattern {
                         id,
-                        name: name.to_string(),
-                        prefix: prefix.to_string(),
+                        name: name.to_owned(),
+                        prefix: prefix.to_owned(),
                     });
                 }
                 out
@@ -123,13 +124,13 @@ fn collect_strings(value: &serde_json::Value, out: &mut Vec<String>) {
             for v in arr {
                 collect_strings(v, out);
             }
-        }
+        },
         serde_json::Value::Object(map) => {
             for v in map.values() {
                 collect_strings(v, out);
             }
-        }
-        _ => {}
+        },
+        _ => {},
     }
 }
 

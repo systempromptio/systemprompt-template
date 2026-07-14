@@ -3,14 +3,26 @@ use systemprompt::identifiers::UserId;
 
 use crate::types::conversation_analytics::{SessionRating, SkillRating};
 
+/// Rating fields for [`upsert_session_rating`] (was 6 positional args).
+#[derive(Debug)]
+pub struct SessionRatingInput<'a> {
+    pub session_id: &'a str,
+    pub rating: i16,
+    pub outcome: &'a str,
+    pub notes: &'a str,
+}
+
 pub async fn upsert_session_rating(
     pool: &PgPool,
     user_id: &UserId,
-    session_id: &str,
-    rating: i16,
-    outcome: &str,
-    notes: &str,
+    input: SessionRatingInput<'_>,
 ) -> Result<(), sqlx::Error> {
+    let SessionRatingInput {
+        session_id,
+        rating,
+        outcome,
+        notes,
+    } = input;
     sqlx::query!(
         r"INSERT INTO session_ratings (id, user_id, session_id, rating, outcome, notes)
         VALUES (gen_random_uuid()::TEXT, $1, $2, $3, $4, $5)

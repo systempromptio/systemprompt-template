@@ -15,10 +15,10 @@ use serde::Serialize;
 mod paged;
 mod stats;
 
-pub use paged::fetch_tool_calls_paged;
+pub use paged::{ToolCallPage, fetch_tool_calls_paged};
 pub use stats::{
-    fetch_tool_deny_reasons, fetch_tool_detail_stats, fetch_tool_top_actors, ToolActorGroup,
-    ToolDenyReason, ToolDetailStats, ToolTopActor,
+    ToolActorGroup, ToolDenyReason, ToolDetailStats, ToolTopActor, fetch_tool_deny_reasons,
+    fetch_tool_detail_stats, fetch_tool_top_actors,
 };
 
 #[derive(Debug, Clone, Default)]

@@ -10,11 +10,9 @@
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, State},
-    http::StatusCode,
-    response::{Html, IntoResponse, Response},
-};
+use axum::extract::{Extension, State};
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
 use serde_json::json;
 use sqlx::PgPool;
 
@@ -30,7 +28,7 @@ const WINDOW_24H_SECS: i64 = 86_400;
 const TOP_POLICIES_LIMIT: i64 = 10;
 const TOP_ACTORS_LIMIT: i64 = 10;
 
-pub async fn governance_page(
+pub(crate) async fn governance_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

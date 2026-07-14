@@ -7,11 +7,9 @@
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, Query, State},
-    http::StatusCode,
-    response::{Html, IntoResponse, Response},
-};
+use axum::extract::{Extension, Query, State};
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
 use serde::Deserialize;
 use serde_json::json;
 use sqlx::PgPool;
@@ -28,7 +26,7 @@ const BASE_URL: &str = "/admin/entities/requests";
 const PAGE_SIZE: i64 = 50;
 
 #[derive(Debug, Deserialize)]
-pub struct RequestsQuery {
+pub(crate) struct RequestsQuery {
     pub from: Option<String>,
     pub to: Option<String>,
     pub preset: Option<String>,
@@ -43,7 +41,7 @@ pub struct RequestsQuery {
     pub page: Option<i64>,
 }
 
-pub async fn analytics_requests_page(
+pub(crate) async fn analytics_requests_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -61,7 +59,17 @@ pub async fn analytics_requests_page(
 
     let (range, auto_widened) = data::resolve_range(&pool, &query).await;
 
-    let fetched = data::fetch_requests_data(&pool, &filter, range, sort, PAGE_SIZE, offset).await;
+    let fetched = data::fetch_requests_data(
+        &pool,
+        data::RequestsPageQuery {
+            filter: &filter,
+            range,
+            sort,
+            page_size: PAGE_SIZE,
+            offset,
+        },
+    )
+    .await;
 
     let total_pages = if fetched.total_count == 0 {
         1

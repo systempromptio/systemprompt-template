@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::types::{AgentInfo, RequiredSecret, SkillInfo};
 
-pub fn resolve_all_plugin_skill_ids(
+pub(crate) fn resolve_all_plugin_skill_ids(
     plugin: &systemprompt::models::PluginConfig,
     skills_path: &Path,
     _agents_path: &Path,
@@ -34,7 +34,7 @@ pub fn resolve_all_plugin_skill_ids(
     }
 }
 
-pub fn resolve_plugin_skills(
+pub(crate) fn resolve_plugin_skills(
     plugin: &systemprompt::models::PluginConfig,
     skills_path: &Path,
     agents_path: &Path,
@@ -51,7 +51,7 @@ pub fn resolve_plugin_skills(
                 name,
                 description,
                 command,
-                source: "system".to_string(),
+                source: "system".to_owned(),
                 enabled: true,
                 required_secrets,
             }
@@ -62,7 +62,7 @@ pub fn resolve_plugin_skills(
 fn read_skill_config(skill_dir: &Path, skill_id: &str) -> (String, String, Vec<RequiredSecret>) {
     let config_path = skill_dir.join("config.yaml");
     if !config_path.exists() {
-        return (skill_id.to_string(), String::new(), Vec::new());
+        return (skill_id.to_owned(), String::new(), Vec::new());
     }
     let cfg_text = std::fs::read_to_string(&config_path).unwrap_or_else(|e| {
         tracing::warn!(
@@ -84,12 +84,12 @@ fn read_skill_config(skill_dir: &Path, skill_id: &str) -> (String, String, Vec<R
         .get("name")
         .and_then(|v| v.as_str())
         .unwrap_or(skill_id)
-        .to_string();
+        .to_owned();
     let desc = cfg
         .get("description")
         .and_then(|v| v.as_str())
         .unwrap_or("")
-        .to_string();
+        .to_owned();
     let required_secrets: Vec<RequiredSecret> = cfg
         .get("required_secrets")
         .and_then(|v| serde_yaml::from_value(v.clone()).ok())
@@ -97,41 +97,39 @@ fn read_skill_config(skill_dir: &Path, skill_id: &str) -> (String, String, Vec<R
     (name, desc, required_secrets)
 }
 
-pub fn resolve_plugin_agents(
+pub(crate) fn resolve_plugin_agents(
     plugin: &systemprompt::models::PluginConfig,
     agents_path: &Path,
 ) -> Vec<AgentInfo> {
-    let agent_ids: Vec<String> = if plugin.agents.source
-        == systemprompt::models::ComponentSource::Explicit
-    {
-        plugin.agents.include.clone()
-    } else {
-        let mut ids = Vec::new();
-        if let Ok(entries) = std::fs::read_dir(agents_path) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-                let ext = path.extension().and_then(|e| e.to_str());
-                if ext != Some("yaml") && ext != Some("yml") {
-                    continue;
-                }
-                if let Ok(content) = std::fs::read_to_string(&path) {
-                    if let Ok(config) = serde_yaml::from_str::<serde_yaml::Value>(&content) {
-                        if let Some(agents) = config.get("agents").and_then(|a| a.as_mapping()) {
-                            for (key, _) in agents {
-                                if let Some(name) = key.as_str() {
-                                    if !plugin.agents.exclude.contains(&name.to_string()) {
-                                        ids.push(name.to_string());
-                                    }
-                                }
+    let agent_ids: Vec<String> =
+        if plugin.agents.source == systemprompt::models::ComponentSource::Explicit {
+            plugin.agents.include.clone()
+        } else {
+            let mut ids = Vec::new();
+            if let Ok(entries) = std::fs::read_dir(agents_path) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    let ext = path.extension().and_then(|e| e.to_str());
+                    if ext != Some("yaml") && ext != Some("yml") {
+                        continue;
+                    }
+                    if let Ok(content) = std::fs::read_to_string(&path)
+                        && let Ok(config) = serde_yaml::from_str::<serde_yaml::Value>(&content)
+                        && let Some(agents) = config.get("agents").and_then(|a| a.as_mapping())
+                    {
+                        for (key, _) in agents {
+                            if let Some(name) = key.as_str()
+                                && !plugin.agents.exclude.contains(&name.to_owned())
+                            {
+                                ids.push(name.to_owned());
                             }
                         }
                     }
                 }
             }
-        }
-        ids.sort();
-        ids
-    };
+            ids.sort();
+            ids
+        };
 
     agent_ids
         .into_iter()
@@ -205,7 +203,7 @@ fn agent_description(agent_id: &str, agents_dir: &Path) -> Option<String> {
             .and_then(|c| c.get("description"))
             .and_then(|d| d.as_str())
         {
-            return Some(desc.to_string());
+            return Some(desc.to_owned());
         }
     }
     None

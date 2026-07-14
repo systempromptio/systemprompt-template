@@ -1,10 +1,10 @@
-pub mod plugin_file;
+pub(crate) mod plugin_file;
 
 use axum::body::Body;
 use axum::http::{HeaderMap, Response, StatusCode};
 use systemprompt::identifiers::UserId;
-use systemprompt::models::auth::JwtAudience;
 use systemprompt::models::Config;
+use systemprompt::models::auth::JwtAudience;
 use systemprompt::oauth::validate_jwt_token;
 
 use crate::handlers::shared;

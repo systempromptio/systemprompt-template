@@ -1,9 +1,9 @@
 //! Gateway-request read models for the analytics requests page.
 //!
 //! [`fetch_requests_paged`] (in `paged`) pages `ai_requests` with optional
-//! filters and per-row governance / tool-call counts; [`list_recent_gateway_requests`]
-//! (in `recent`) is the lightweight recent-activity feed; the dropdown option
-//! lists live in `options`.
+//! filters and per-row governance / tool-call counts;
+//! [`list_recent_gateway_requests`] (in `recent`) is the lightweight
+//! recent-activity feed; the dropdown option lists live in `options`.
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
@@ -12,9 +12,9 @@ mod options;
 mod paged;
 mod recent;
 
-pub use options::{fetch_request_filter_options, RequestFilterOptions};
-pub use paged::fetch_requests_paged;
-pub use recent::{list_recent_gateway_requests, RecentGatewayRequestRow};
+pub use options::{RequestFilterOptions, fetch_request_filter_options};
+pub use paged::{RequestPage, fetch_requests_paged};
+pub use recent::{RecentGatewayRequestRow, list_recent_gateway_requests};
 
 #[derive(Debug, Clone, Default)]
 pub struct RequestFilter {

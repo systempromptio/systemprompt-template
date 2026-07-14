@@ -1,11 +1,9 @@
 use std::sync::Arc;
 
-use axum::{
-    extract::{Path, Query, State},
-    http::StatusCode,
-    response::{IntoResponse, Redirect, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Path, Query, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Redirect, Response};
 use chrono::Utc;
 use sqlx::PgPool;
 use systemprompt::identifiers::{LinkClickId, LinkId, SessionId};
@@ -22,7 +20,10 @@ use crate::services::{LinkAnalyticsService, LinkGenerationService, LinkService};
 use systemprompt_web_shared::models::RecordClickParams;
 
 fn validate_url_protocol(target_url: &str) -> Result<(), &'static str> {
-    let parsed = Url::parse(target_url).map_err(|_| "Invalid URL")?;
+    let parsed = Url::parse(target_url).map_err(|e| {
+        tracing::warn!(error = %e, url = %target_url, "Invalid URL");
+        "Invalid URL"
+    })?;
     match parsed.scheme() {
         "http" | "https" => Ok(()),
         _ => Err("Only http and https URLs are allowed"),
@@ -59,11 +60,11 @@ pub async fn generate_link_handler(
                 target_url: link.target_url,
             };
             Json(response).into_response()
-        }
+        },
         Err(e) => {
             tracing::error!(error = %e, "Failed to generate link");
             error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
@@ -90,7 +91,7 @@ pub async fn list_links_handler(
         Err(e) => {
             tracing::error!(error = %e, "Failed to list links");
             error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
@@ -119,7 +120,7 @@ pub async fn record_click_handler(
         Err(e) => {
             tracing::error!(error = %e, "Failed to record click");
             error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
@@ -136,7 +137,7 @@ pub async fn link_performance_handler(
         Err(e) => {
             tracing::error!(error = %e, "Failed to get link performance");
             error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
@@ -152,7 +153,7 @@ pub async fn link_clicks_handler(
         Err(e) => {
             tracing::error!(error = %e, "Failed to get link clicks");
             error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
@@ -168,7 +169,7 @@ pub async fn campaign_performance_handler(
         Err(e) => {
             tracing::error!(error = %e, "Failed to get campaign performance");
             error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
@@ -183,7 +184,7 @@ pub async fn content_journey_handler(
         Err(e) => {
             tracing::error!(error = %e, "Failed to get content journey");
             error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
@@ -204,11 +205,11 @@ pub async fn redirect_handler(
                 return error_response(StatusCode::BAD_REQUEST, "Invalid redirect target");
             }
             Redirect::temporary(&target_url).into_response()
-        }
+        },
         Err(e) => {
             tracing::warn!(short_code = %short_code, error = %e, "Redirect failed");
             error_response(StatusCode::NOT_FOUND, "Link not found")
-        }
+        },
     }
 }
 

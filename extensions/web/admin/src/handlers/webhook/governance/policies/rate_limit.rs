@@ -25,7 +25,7 @@ const DEFAULT_WINDOW_SECS: u64 = 60;
 const DEFAULT_LIMIT: usize = 300;
 
 #[derive(Debug)]
-pub struct RateLimit {
+pub(super) struct RateLimit {
     window_secs: u64,
     limit: usize,
 }
@@ -56,7 +56,7 @@ impl SlidingWindow {
             .checked_sub(Duration::from_secs(window_secs))
             .unwrap_or(now);
 
-        let timestamps = self.buckets.entry(key.to_string()).or_default();
+        let timestamps = self.buckets.entry(key.to_owned()).or_default();
         timestamps.retain(|t| *t > cutoff);
         let count = timestamps.len();
 
@@ -96,7 +96,7 @@ impl GovernancePolicy for RateLimit {
             .check_and_record(&key, self.window_secs, self.limit);
 
         let window = RateLimitWindow {
-            name: ID.to_string(),
+            name: ID.to_owned(),
             seconds: self.window_secs,
             limit: self.limit as u64,
         };

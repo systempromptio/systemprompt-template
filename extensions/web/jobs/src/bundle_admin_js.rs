@@ -165,7 +165,7 @@ async fn concatenate_files(js_dir: &std::path::Path, files: &[&str]) -> (String,
                 }
                 content.push_str(&file_content);
                 bundled += 1;
-            }
+            },
             Err(e) => {
                 tracing::error!(
                     file = %filename,
@@ -173,7 +173,7 @@ async fn concatenate_files(js_dir: &std::path::Path, files: &[&str]) -> (String,
                     "Failed to read JS file for bundling"
                 );
                 failed += 1;
-            }
+            },
         }
     }
 

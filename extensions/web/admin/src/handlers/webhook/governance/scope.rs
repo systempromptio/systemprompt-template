@@ -7,12 +7,12 @@ use systemprompt::config::ProfileBootstrap;
 use systemprompt::models::auth::Permission;
 use systemprompt_security::policy::types::AccessScope;
 
-pub fn resolve_agent_scope(agent_id: &str) -> AccessScope {
+pub(super) fn resolve_agent_scope(agent_id: &str) -> AccessScope {
     let map = load_all_agent_scopes();
     map.get(agent_id).copied().unwrap_or(AccessScope::Unknown)
 }
 
-pub async fn scope_from_user_roles(pool: &PgPool, user_id: &str) -> AccessScope {
+pub(super) async fn scope_from_user_roles(pool: &PgPool, user_id: &str) -> AccessScope {
     match crate::repositories::get_user_roles_department(pool, user_id).await {
         Ok(Some((roles, _dept))) => {
             if roles.iter().any(|r| r == "admin") {
@@ -22,7 +22,7 @@ pub async fn scope_from_user_roles(pool: &PgPool, user_id: &str) -> AccessScope 
             } else {
                 AccessScope::Unknown
             }
-        }
+        },
         Ok(None) => AccessScope::Unknown,
         Err(e) => {
             tracing::warn!(
@@ -31,11 +31,11 @@ pub async fn scope_from_user_roles(pool: &PgPool, user_id: &str) -> AccessScope 
                 "governance: user role lookup failed; no DB-derived scope"
             );
             AccessScope::Unknown
-        }
+        },
     }
 }
 
-pub fn scope_from_permissions(perms: &[Permission]) -> AccessScope {
+pub(super) fn scope_from_permissions(perms: &[Permission]) -> AccessScope {
     if perms.contains(&Permission::Admin) {
         AccessScope::Admin
     } else if perms.contains(&Permission::User) {
@@ -45,7 +45,7 @@ pub fn scope_from_permissions(perms: &[Permission]) -> AccessScope {
     }
 }
 
-pub const fn higher_privilege(a: AccessScope, b: AccessScope) -> AccessScope {
+pub(super) const fn higher_privilege(a: AccessScope, b: AccessScope) -> AccessScope {
     match (a, b) {
         (AccessScope::Admin, _) | (_, AccessScope::Admin) => AccessScope::Admin,
         (AccessScope::User, _) | (_, AccessScope::User) => AccessScope::User,
@@ -98,7 +98,7 @@ fn extract_scopes_from_config(
         };
 
         if let Some(scope) = extract_scope_for_agent(agent_val) {
-            scopes.insert(agent_id.to_string(), scope);
+            scopes.insert(agent_id.to_owned(), scope);
         }
     }
 }

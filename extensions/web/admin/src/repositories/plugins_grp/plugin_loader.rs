@@ -22,15 +22,15 @@ fn parse_plugin_config_file(path: &std::path::Path) -> Result<PluginConfigFile, 
         .map_err(|e| MarketplaceError::Internal(format!("Failed to parse {}: {e}", path.display())))
 }
 
-pub fn load_all_plugins() -> Result<Vec<(String, PlatformPluginConfig)>, MarketplaceError> {
+pub(crate) fn load_all_plugins() -> Result<Vec<(String, PlatformPluginConfig)>, MarketplaceError> {
     Ok(load_all_plugins_with_paths()?
         .into_iter()
         .map(|(id, cfg, _path)| (id, cfg))
         .collect())
 }
 
-pub fn load_all_plugins_with_paths(
-) -> Result<Vec<(String, PlatformPluginConfig, String)>, MarketplaceError> {
+pub(crate) fn load_all_plugins_with_paths()
+-> Result<Vec<(String, PlatformPluginConfig, String)>, MarketplaceError> {
     let dir = plugins_dir()?;
     if !dir.exists() {
         return Ok(Vec::new());
@@ -49,7 +49,7 @@ pub fn load_all_plugins_with_paths(
             Err(e) => {
                 tracing::warn!(error = %e, "skipped unreadable plugin entry");
                 continue;
-            }
+            },
         };
         let path = entry.path();
         if !path.is_dir() {
@@ -71,17 +71,17 @@ pub fn load_all_plugins_with_paths(
                         |s| format!("services/{s}"),
                     );
                 out.push((id, PlatformPluginConfig::from_base(pf.plugin), source_path));
-            }
+            },
             Err(e) => {
                 tracing::warn!(path = %config_path.display(), error = %e, "skipped invalid plugin config");
-            }
+            },
         }
     }
     out.sort_by(|a, b| a.0.cmp(&b.0));
     Ok(out)
 }
 
-pub fn find_plugin(plugin_id: &str) -> Result<Option<PluginConfig>, MarketplaceError> {
+pub(crate) fn find_plugin(plugin_id: &str) -> Result<Option<PluginConfig>, MarketplaceError> {
     Ok(load_all_plugins()?
         .into_iter()
         .find(|(id, _)| id == plugin_id)

@@ -5,7 +5,7 @@ use systemprompt::identifiers::{CategoryId, ContentId, SourceId};
 use systemprompt_web_shared::models::{Content, CreateContentParams};
 
 #[derive(Debug, Clone)]
-pub struct ContentMutationRepository {
+pub(super) struct ContentMutationRepository {
     pool: Arc<PgPool>,
 }
 
@@ -39,12 +39,14 @@ async fn fetch_content(
 
 impl ContentMutationRepository {
     #[must_use]
-    pub const fn new(pool: Arc<PgPool>) -> Self {
+    pub(super) const fn new(pool: Arc<PgPool>) -> Self {
         Self { pool }
     }
 
-    #[allow(clippy::cognitive_complexity)]
-    pub async fn create(&self, params: &CreateContentParams) -> Result<Content, sqlx::Error> {
+    pub(super) async fn create(
+        &self,
+        params: &CreateContentParams,
+    ) -> Result<Content, sqlx::Error> {
         let id = ContentId::new(uuid::Uuid::new_v4().to_string());
         let now = Utc::now();
         let mut tx = self.pool.begin().await?;
@@ -123,7 +125,10 @@ impl ContentMutationRepository {
         Ok(content)
     }
 
-    pub async fn update(&self, params: &UpdateContentParams) -> Result<Content, sqlx::Error> {
+    pub(super) async fn update(
+        &self,
+        params: &UpdateContentParams,
+    ) -> Result<Content, sqlx::Error> {
         let now = Utc::now();
         let mut tx = self.pool.begin().await?;
 
@@ -153,14 +158,14 @@ impl ContentMutationRepository {
         Ok(content)
     }
 
-    pub async fn delete(&self, id: &ContentId) -> Result<(), sqlx::Error> {
+    pub(super) async fn delete(&self, id: &ContentId) -> Result<(), sqlx::Error> {
         sqlx::query!("DELETE FROM markdown_content WHERE id = $1", id.as_str())
             .execute(&*self.pool)
             .await?;
         Ok(())
     }
 
-    pub async fn delete_orphaned_slugs(
+    pub(super) async fn delete_orphaned_slugs(
         &self,
         source_id: &SourceId,
         found_slugs: &[String],
@@ -188,17 +193,22 @@ pub struct UpdateContentParams {
     pub links: Option<serde_json::Value>,
 }
 
+/// Required fields for [`UpdateContentParams`]; optional fields are layered
+/// on via the `UpdateContentParamsBuilder::with_*` methods.
+#[derive(Debug, Clone)]
+pub struct UpdateContentSeed {
+    pub id: ContentId,
+    pub title: String,
+    pub description: String,
+    pub body: String,
+    pub keywords: String,
+    pub version_hash: String,
+}
+
 impl UpdateContentParams {
     #[must_use]
-    pub fn builder(
-        id: ContentId,
-        title: impl Into<String>,
-        description: impl Into<String>,
-        body: impl Into<String>,
-        keywords: impl Into<String>,
-        version_hash: impl Into<String>,
-    ) -> UpdateContentParamsBuilder {
-        UpdateContentParamsBuilder::new(id, title, description, body, keywords, version_hash)
+    pub fn builder(seed: UpdateContentSeed) -> UpdateContentParamsBuilder {
+        UpdateContentParamsBuilder::new(seed)
     }
 }
 
@@ -216,21 +226,14 @@ pub struct UpdateContentParamsBuilder {
 
 impl UpdateContentParamsBuilder {
     #[must_use]
-    pub fn new(
-        id: ContentId,
-        title: impl Into<String>,
-        description: impl Into<String>,
-        body: impl Into<String>,
-        keywords: impl Into<String>,
-        version_hash: impl Into<String>,
-    ) -> Self {
+    pub fn new(seed: UpdateContentSeed) -> Self {
         Self {
-            id,
-            title: title.into(),
-            description: description.into(),
-            body: body.into(),
-            keywords: keywords.into(),
-            version_hash: version_hash.into(),
+            id: seed.id,
+            title: seed.title,
+            description: seed.description,
+            body: seed.body,
+            keywords: seed.keywords,
+            version_hash: seed.version_hash,
             image: None,
             links: None,
         }

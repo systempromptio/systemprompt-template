@@ -115,7 +115,7 @@ impl ExtensionError for BlogError {
             Self::ContentNotFound(_) | Self::LinkNotFound(_) => StatusCode::NOT_FOUND,
             Self::InvalidRequest(_) | Self::Validation(_) | Self::Parse(_) => {
                 StatusCode::BAD_REQUEST
-            }
+            },
             Self::DatabaseNotPostgres
             | Self::Database(_)
             | Self::Serialization(_)

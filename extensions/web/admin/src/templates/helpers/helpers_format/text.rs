@@ -3,7 +3,7 @@
 use handlebars::{Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext};
 
 #[derive(Debug, Clone, Copy)]
-pub struct InitialsHelper;
+pub(crate) struct InitialsHelper;
 impl HelperDef for InitialsHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -31,7 +31,7 @@ impl HelperDef for InitialsHelper {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct TruncateHelper;
+pub(crate) struct TruncateHelper;
 impl HelperDef for TruncateHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -58,7 +58,7 @@ impl HelperDef for TruncateHelper {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct ConcatHelper;
+pub(crate) struct ConcatHelper;
 impl HelperDef for ConcatHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -74,7 +74,7 @@ impl HelperDef for ConcatHelper {
                 serde_json::Value::String(s) => result.push_str(s),
                 serde_json::Value::Number(n) => result.push_str(&n.to_string()),
                 serde_json::Value::Bool(b) => result.push_str(&b.to_string()),
-                serde_json::Value::Null => {}
+                serde_json::Value::Null => {},
                 other => result.push_str(&other.to_string()),
             }
         }
@@ -84,7 +84,7 @@ impl HelperDef for ConcatHelper {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct ToLowerCaseHelper;
+pub(crate) struct ToLowerCaseHelper;
 impl HelperDef for ToLowerCaseHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -101,7 +101,7 @@ impl HelperDef for ToLowerCaseHelper {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct ToUpperCaseHelper;
+pub(crate) struct ToUpperCaseHelper;
 impl HelperDef for ToUpperCaseHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -118,7 +118,7 @@ impl HelperDef for ToUpperCaseHelper {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct ShortIdHelper;
+pub(crate) struct ShortIdHelper;
 impl HelperDef for ShortIdHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,

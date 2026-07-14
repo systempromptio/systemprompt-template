@@ -2,7 +2,7 @@ use sqlx::PgPool;
 
 use crate::blog::types::{BlogPost, RelatedPost};
 
-pub async fn list_blog_posts(pool: &PgPool) -> Result<Vec<BlogPost>, sqlx::Error> {
+pub(crate) async fn list_blog_posts(pool: &PgPool) -> Result<Vec<BlogPost>, sqlx::Error> {
     sqlx::query_as!(
         BlogPost,
         r#"
@@ -23,7 +23,7 @@ pub async fn list_blog_posts(pool: &PgPool) -> Result<Vec<BlogPost>, sqlx::Error
     .await
 }
 
-pub async fn list_related_posts(
+pub(crate) async fn list_related_posts(
     pool: &PgPool,
     current_slug: &str,
 ) -> Result<Vec<RelatedPost>, sqlx::Error> {

@@ -32,86 +32,107 @@ pub async fn fetch_violations_by_identity(
     group_by: IdentityGroupBy,
 ) -> Result<Vec<IdentityViolations>, sqlx::Error> {
     match group_by {
-        IdentityGroupBy::User => sqlx::query!(
-            r#"SELECT
-                g.user_id AS "identity_id!",
-                g.policy AS "policy!",
-                COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS "deny_count!",
-                COUNT(*)::bigint AS "total_count!"
-              FROM governance_decisions g
-              WHERE g.created_at >= $1 AND g.created_at < $2
-              GROUP BY g.user_id, g.policy
-              HAVING COUNT(*) FILTER (WHERE g.decision = 'deny') > 0
-              ORDER BY 3 DESC, 4 DESC
-              LIMIT 500"#,
-            range.from,
-            range.to,
-        )
-        .fetch_all(pool)
-        .await
-        .map(|rows| {
-            rows.into_iter()
-                .map(|r| IdentityViolations {
-                    identity_id: r.identity_id,
-                    policy: r.policy,
-                    deny_count: r.deny_count,
-                    total_count: r.total_count,
-                })
-                .collect()
-        }),
-        IdentityGroupBy::Agent => sqlx::query!(
-            r#"SELECT
-                COALESCE(g.agent_id, '') AS "identity_id!",
-                g.policy AS "policy!",
-                COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS "deny_count!",
-                COUNT(*)::bigint AS "total_count!"
-              FROM governance_decisions g
-              WHERE g.created_at >= $1 AND g.created_at < $2
-              GROUP BY COALESCE(g.agent_id, ''), g.policy
-              HAVING COUNT(*) FILTER (WHERE g.decision = 'deny') > 0
-              ORDER BY 3 DESC, 4 DESC
-              LIMIT 500"#,
-            range.from,
-            range.to,
-        )
-        .fetch_all(pool)
-        .await
-        .map(|rows| {
-            rows.into_iter()
-                .map(|r| IdentityViolations {
-                    identity_id: r.identity_id,
-                    policy: r.policy,
-                    deny_count: r.deny_count,
-                    total_count: r.total_count,
-                })
-                .collect()
-        }),
-        IdentityGroupBy::AgentScope => sqlx::query!(
-            r#"SELECT
-                COALESCE(g.agent_scope, '') AS "identity_id!",
-                g.policy AS "policy!",
-                COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS "deny_count!",
-                COUNT(*)::bigint AS "total_count!"
-              FROM governance_decisions g
-              WHERE g.created_at >= $1 AND g.created_at < $2
-              GROUP BY COALESCE(g.agent_scope, ''), g.policy
-              HAVING COUNT(*) FILTER (WHERE g.decision = 'deny') > 0
-              ORDER BY 3 DESC, 4 DESC
-              LIMIT 500"#,
-            range.from,
-            range.to,
-        )
-        .fetch_all(pool)
-        .await
-        .map(|rows| {
-            rows.into_iter()
-                .map(|r| IdentityViolations {
-                    identity_id: r.identity_id,
-                    policy: r.policy,
-                    deny_count: r.deny_count,
-                    total_count: r.total_count,
-                })
-                .collect()
-        }),
+        IdentityGroupBy::User => fetch_violations_by_user(pool, range).await,
+        IdentityGroupBy::Agent => fetch_violations_by_agent(pool, range).await,
+        IdentityGroupBy::AgentScope => fetch_violations_by_agent_scope(pool, range).await,
     }
+}
+
+async fn fetch_violations_by_user(
+    pool: &PgPool,
+    range: TimeRange,
+) -> Result<Vec<IdentityViolations>, sqlx::Error> {
+    sqlx::query!(
+        r#"SELECT
+            g.user_id AS "identity_id!",
+            g.policy AS "policy!",
+            COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS "deny_count!",
+            COUNT(*)::bigint AS "total_count!"
+          FROM governance_decisions g
+          WHERE g.created_at >= $1 AND g.created_at < $2
+          GROUP BY g.user_id, g.policy
+          HAVING COUNT(*) FILTER (WHERE g.decision = 'deny') > 0
+          ORDER BY 3 DESC, 4 DESC
+          LIMIT 500"#,
+        range.from,
+        range.to,
+    )
+    .fetch_all(pool)
+    .await
+    .map(|rows| {
+        rows.into_iter()
+            .map(|r| IdentityViolations {
+                identity_id: r.identity_id,
+                policy: r.policy,
+                deny_count: r.deny_count,
+                total_count: r.total_count,
+            })
+            .collect()
+    })
+}
+
+async fn fetch_violations_by_agent(
+    pool: &PgPool,
+    range: TimeRange,
+) -> Result<Vec<IdentityViolations>, sqlx::Error> {
+    sqlx::query!(
+        r#"SELECT
+            COALESCE(g.agent_id, '') AS "identity_id!",
+            g.policy AS "policy!",
+            COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS "deny_count!",
+            COUNT(*)::bigint AS "total_count!"
+          FROM governance_decisions g
+          WHERE g.created_at >= $1 AND g.created_at < $2
+          GROUP BY COALESCE(g.agent_id, ''), g.policy
+          HAVING COUNT(*) FILTER (WHERE g.decision = 'deny') > 0
+          ORDER BY 3 DESC, 4 DESC
+          LIMIT 500"#,
+        range.from,
+        range.to,
+    )
+    .fetch_all(pool)
+    .await
+    .map(|rows| {
+        rows.into_iter()
+            .map(|r| IdentityViolations {
+                identity_id: r.identity_id,
+                policy: r.policy,
+                deny_count: r.deny_count,
+                total_count: r.total_count,
+            })
+            .collect()
+    })
+}
+
+async fn fetch_violations_by_agent_scope(
+    pool: &PgPool,
+    range: TimeRange,
+) -> Result<Vec<IdentityViolations>, sqlx::Error> {
+    sqlx::query!(
+        r#"SELECT
+            COALESCE(g.agent_scope, '') AS "identity_id!",
+            g.policy AS "policy!",
+            COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS "deny_count!",
+            COUNT(*)::bigint AS "total_count!"
+          FROM governance_decisions g
+          WHERE g.created_at >= $1 AND g.created_at < $2
+          GROUP BY COALESCE(g.agent_scope, ''), g.policy
+          HAVING COUNT(*) FILTER (WHERE g.decision = 'deny') > 0
+          ORDER BY 3 DESC, 4 DESC
+          LIMIT 500"#,
+        range.from,
+        range.to,
+    )
+    .fetch_all(pool)
+    .await
+    .map(|rows| {
+        rows.into_iter()
+            .map(|r| IdentityViolations {
+                identity_id: r.identity_id,
+                policy: r.policy,
+                deny_count: r.deny_count,
+                total_count: r.total_count,
+            })
+            .collect()
+    })
 }

@@ -15,16 +15,16 @@ use crate::types::UserContext;
 use super::ssr_helpers::branding_context;
 
 #[derive(Debug, Deserialize)]
-pub struct DeviceLinkQuery {
+pub(crate) struct DeviceLinkQuery {
     pub redirect: String,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct DeviceLinkApproveForm {
+pub(crate) struct DeviceLinkApproveForm {
     pub redirect: String,
 }
 
-pub async fn device_link_page(
+pub(crate) async fn device_link_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     Query(query): Query<DeviceLinkQuery>,
@@ -35,9 +35,9 @@ pub async fn device_link_page(
 
     let mut data = branding_context(&engine);
     if let Some(obj) = data.as_object_mut() {
-        obj.insert("user_email".to_string(), json!(user_ctx.email.to_string()));
-        obj.insert("redirect".to_string(), json!(query.redirect));
-        obj.insert("redirect_host".to_string(), json!(host));
+        obj.insert("user_email".to_owned(), json!(user_ctx.email.to_string()));
+        obj.insert("redirect".to_owned(), json!(query.redirect));
+        obj.insert("redirect_host".to_owned(), json!(host));
     }
 
     match engine.render("bridge-device-link", &data) {
@@ -52,11 +52,11 @@ pub async fn device_link_page(
                 )),
             )
                 .into_response()
-        }
+        },
     }
 }
 
-pub async fn device_link_approve(
+pub(crate) async fn device_link_approve(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Form(form): Form<DeviceLinkApproveForm>,
@@ -74,7 +74,7 @@ pub async fn device_link_approve(
                 Html("<h1>Internal Error</h1><p>Failed to issue exchange code.</p>"),
             )
                 .into_response();
-        }
+        },
     };
 
     let sep = if form.redirect.contains('?') {
@@ -86,7 +86,7 @@ pub async fn device_link_approve(
     Redirect::to(&location).into_response()
 }
 
-pub async fn device_link_deny(Form(form): Form<DeviceLinkApproveForm>) -> Response {
+pub(crate) async fn device_link_deny(Form(form): Form<DeviceLinkApproveForm>) -> Response {
     if validate_loopback_redirect(&form.redirect).is_none() {
         return bad_redirect_response(&form.redirect);
     }

@@ -6,30 +6,26 @@ mod evaluate;
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{Query, State},
-    http::{HeaderMap, StatusCode},
-    response::{IntoResponse, Response},
-    Extension, Json,
-};
+use axum::extract::{Query, State};
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::{IntoResponse, Response};
+use axum::{Extension, Json};
 use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
 use systemprompt::oauth::SessionCreationService;
 use systemprompt_security::authz::Decision;
 use systemprompt_security::policy::types::AccessScope;
 
-use crate::types::webhook::GovernQuery;
-use crate::types::webhook::HookEventPayload;
+use crate::types::webhook::{GovernQuery, HookEventPayload};
 
-use super::audit;
-use super::scope;
 use super::types::{
     AuditTarget, AuthDenialParams, ChainEntryOutcome, ChainEntryResult, DecisionAudit,
     GovernanceDecision, GovernanceResponse, HookSpecificOutput, PrincipalSnapshot,
 };
+use super::{audit, scope};
 
 use authn::{authenticate_request, deny_for_auth_failure};
-use evaluate::{evaluate, EvaluateInput};
+use evaluate::{EvaluateInput, evaluate};
 
 fn build_response(decision: &Decision) -> Response {
     let permission_decision = GovernanceDecision::from_decision(decision);
@@ -47,7 +43,7 @@ fn build_response(decision: &Decision) -> Response {
     (StatusCode::OK, Json(response)).into_response()
 }
 
-pub async fn govern_tool_use(
+pub(crate) async fn govern_tool_use(
     State(pool): State<Arc<PgPool>>,
     Extension(session_service): Extension<Arc<SessionCreationService>>,
     headers: HeaderMap,
@@ -96,12 +92,12 @@ pub async fn govern_tool_use(
         principal: PrincipalSnapshot {
             user_id,
             session_id: session_id.clone(),
-            agent_id: agent_id.map(str::to_string),
+            agent_id: agent_id.map(str::to_owned),
             agent_scope: access_scope,
         },
         target: AuditTarget {
-            tool_name: tool_name.to_string(),
-            plugin_id: plugin_id.map(str::to_string),
+            tool_name: tool_name.to_owned(),
+            plugin_id: plugin_id.map(str::to_owned),
         },
         chain,
     };
@@ -112,11 +108,11 @@ pub async fn govern_tool_use(
 
 fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
     let pool = Arc::<sqlx::Pool<sqlx::Postgres>>::clone(params.pool);
-    let reason = reason.to_string();
+    let reason = reason.to_owned();
     let session_id = params.session_id.clone();
-    let tool_name = params.tool_name.to_string();
-    let agent_id = params.agent_id.map(str::to_string);
-    let plugin_id = params.plugin_id.map(str::to_string);
+    let tool_name = params.tool_name.to_owned();
+    let agent_id = params.agent_id.map(str::to_owned);
+    let plugin_id = params.plugin_id.map(str::to_owned);
     let session_service = Arc::clone(params.session_service);
     let headers = params.headers.clone();
 
@@ -134,7 +130,7 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
                     "could not resolve anonymous principal; auth-denial audit dropped",
                 );
                 return;
-            }
+            },
         };
         let audit = DecisionAudit {
             decision: deny_for_auth_failure(&reason),

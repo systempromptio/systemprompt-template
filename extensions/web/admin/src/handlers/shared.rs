@@ -1,21 +1,19 @@
 use std::path::PathBuf;
 
-use axum::{
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use systemprompt::config::ProfileBootstrap;
 
-pub fn error_response(status: StatusCode, message: &str) -> Response {
+pub(crate) fn error_response(status: StatusCode, message: &str) -> Response {
     (status, Json(serde_json::json!({"error": message}))).into_response()
 }
 
-pub fn boxed_error_response(status: StatusCode, message: &str) -> Box<Response> {
+pub(crate) fn boxed_error_response(status: StatusCode, message: &str) -> Box<Response> {
     Box::new(error_response(status, message))
 }
 
-pub fn get_services_path() -> Result<PathBuf, Box<Response>> {
+pub(crate) fn get_services_path() -> Result<PathBuf, Box<Response>> {
     ProfileBootstrap::get()
         .map(|p| PathBuf::from(&p.paths.services))
         .map_err(|e| {
@@ -24,7 +22,7 @@ pub fn get_services_path() -> Result<PathBuf, Box<Response>> {
         })
 }
 
-pub fn get_profile_path() -> Result<PathBuf, Box<Response>> {
+pub(crate) fn get_profile_path() -> Result<PathBuf, Box<Response>> {
     ProfileBootstrap::get_path()
         .map(PathBuf::from)
         .map_err(|e| {

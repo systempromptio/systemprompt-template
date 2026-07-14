@@ -28,7 +28,18 @@ pub async fn fetch_decision_anomalies(
     range: TimeRange,
 ) -> Result<Vec<Anomaly>, sqlx::Error> {
     let baseline_start = range.from - chrono::Duration::days(BASELINE_DAYS);
+    run_anomaly_query(pool, range, baseline_start).await
+}
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "body is one irreducible compile-time-checked query_as! SQL literal"
+)]
+async fn run_anomaly_query(
+    pool: &PgPool,
+    range: TimeRange,
+    baseline_start: chrono::DateTime<chrono::Utc>,
+) -> Result<Vec<Anomaly>, sqlx::Error> {
     sqlx::query_as!(
         Anomaly,
         r#"WITH window_counts AS (

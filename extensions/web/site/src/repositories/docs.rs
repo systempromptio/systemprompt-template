@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 
 #[derive(Debug)]
-pub struct DocContentRow {
+pub(crate) struct DocContentRow {
     pub slug: String,
     pub kind: String,
     pub source_id: String,
@@ -10,7 +10,7 @@ pub struct DocContentRow {
     pub related_code: serde_json::Value,
 }
 
-pub async fn get_doc_content(
+pub(crate) async fn get_doc_content(
     pool: &PgPool,
     content_id: &str,
 ) -> Result<DocContentRow, sqlx::Error> {
@@ -42,13 +42,13 @@ pub async fn get_doc_content(
 }
 
 #[derive(Debug)]
-pub struct DocChildRow {
+pub(crate) struct DocChildRow {
     pub slug: String,
     pub title: String,
     pub description: String,
 }
 
-pub async fn list_root_doc_children(
+pub(crate) async fn list_root_doc_children(
     pool: &PgPool,
     source_id: &str,
 ) -> Result<Vec<DocChildRow>, sqlx::Error> {
@@ -76,7 +76,7 @@ pub async fn list_root_doc_children(
         .collect())
 }
 
-pub async fn list_nested_doc_children(
+pub(crate) async fn list_nested_doc_children(
     pool: &PgPool,
     source_id: &str,
     slug_prefix: &str,

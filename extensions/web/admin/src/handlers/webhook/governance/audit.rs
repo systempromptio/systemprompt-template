@@ -2,7 +2,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::Actor;
 use systemprompt_security::authz::{Decision, DecisionTag};
 
-use crate::repositories::governance_grp::{insert_governance_decision, GovernanceDecisionRecord};
+use crate::repositories::governance_grp::{GovernanceDecisionRecord, insert_governance_decision};
 
 use super::types::DecisionAudit;
 
@@ -20,19 +20,16 @@ pub(super) async fn record_decision(
         Decision::Allow { .. } => (
             DecisionTag::Allow,
             String::new(),
-            "default_allow".to_string(),
+            "default_allow".to_owned(),
         ),
         Decision::Deny { reason } => {
             let policy_str = audit
                 .chain
                 .iter()
                 .find(|e| matches!(e.result, super::types::ChainEntryResult::Fail))
-                .map_or_else(
-                    || "unknown".to_string(),
-                    |e| e.policy_id.as_str().to_string(),
-                );
+                .map_or_else(|| "unknown".to_owned(), |e| e.policy_id.as_str().to_owned());
             (DecisionTag::Deny, reason.to_string(), policy_str)
-        }
+        },
     };
     let evaluated_rules = serde_json::to_value(audit).unwrap_or(serde_json::Value::Null);
 

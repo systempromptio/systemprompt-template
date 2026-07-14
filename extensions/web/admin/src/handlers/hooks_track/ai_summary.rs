@@ -7,10 +7,9 @@ use systemprompt::models::execution::context::RequestContext;
 
 use crate::repositories::{session_analyses, usage_aggregations};
 
-pub use super::ai_summary_types::*;
+pub(crate) use super::ai_summary_types::*;
 
-use super::ai_context;
-use super::session_summary;
+use super::{ai_context, session_summary};
 
 const SYSTEM_PROMPT: &str = "\
 You are analysing a Claude Code session to understand what the user wanted, whether they got it, how efficiently they worked, and how they can improve.
@@ -118,7 +117,7 @@ RULES:
 - recommendations must be null or genuinely useful. Never say \"add tests\" or \"improve documentation\"
 - improvement_hints must be specific to THIS session, referencing actual prompts or patterns. Never give generic advice. null if quality_score is 5";
 
-pub fn build_request_context(
+pub(crate) fn build_request_context(
     user_id: &UserId,
     session_id: &SessionId,
     jwt_token: &str,
@@ -134,7 +133,7 @@ pub fn build_request_context(
             .as_str()
             .parse()
             .unwrap_or_else(|_| uuid::Uuid::nil()),
-        user_id.as_str().to_string(),
+        user_id.as_str().to_owned(),
         String::new(),
         Vec::new(),
     ))
@@ -142,7 +141,7 @@ pub fn build_request_context(
     .with_user_type(UserType::User)
 }
 
-pub async fn generate_session_analysis(
+pub(crate) async fn generate_session_analysis(
     ai_service: &Arc<AiService>,
     ctx: &RequestContext,
     last_message: &str,
@@ -187,14 +186,27 @@ pub async fn generate_session_analysis(
         .ok()
 }
 
-pub async fn run_analysis_for_session(
-    pool: &sqlx::PgPool,
-    ai_service: &Arc<AiService>,
-    user_id: &UserId,
-    session_id: &SessionId,
-    jwt_token: &str,
-    direct_message: Option<&str>,
+/// Inputs for a single session's AI analysis run; grouped to keep
+/// `run_analysis_for_session` under the arity lint (was 6 positional args).
+pub(crate) struct RunAnalysisParams<'a> {
+    pub pool: &'a sqlx::PgPool,
+    pub ai_service: &'a Arc<AiService>,
+    pub user_id: &'a UserId,
+    pub session_id: &'a SessionId,
+    pub jwt_token: &'a str,
+    pub direct_message: Option<&'a str>,
+}
+
+pub(crate) async fn run_analysis_for_session(
+    params: RunAnalysisParams<'_>,
 ) -> Option<SessionAnalysis> {
+    let pool = params.pool;
+    let ai_service = params.ai_service;
+    let user_id = params.user_id;
+    let session_id = params.session_id;
+    let jwt_token = params.jwt_token;
+    let direct_message = params.direct_message;
+
     let ctx = build_request_context(user_id, session_id, jwt_token);
     let analysis_context = ai_context::gather_analysis_context(pool, user_id, session_id).await;
     let events_ctx = session_summary::generate_session_summary(pool, user_id, session_id).await;

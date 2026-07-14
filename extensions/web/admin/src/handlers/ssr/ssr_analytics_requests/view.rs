@@ -14,7 +14,7 @@ use crate::repositories::analytics_grp::requests::{
 };
 use crate::repositories::governance_grp::time_range::TimeRange;
 
-use super::{RequestsQuery, BASE_URL};
+use super::{BASE_URL, RequestsQuery};
 
 pub(super) fn filter_from_query(query: &RequestsQuery) -> RequestFilter {
     RequestFilter {
@@ -30,7 +30,7 @@ pub(super) fn filter_from_query(query: &RequestsQuery) -> RequestFilter {
 fn empty_to_none(v: Option<&String>) -> Option<String> {
     v.map(String::as_str)
         .filter(|s| !s.is_empty())
-        .map(ToString::to_string)
+        .map(str::to_owned)
 }
 
 pub(super) fn sort_from_query(query: &RequestsQuery) -> RequestSortSpec {
@@ -116,11 +116,11 @@ fn is_error_status(status: &str) -> bool {
 
 fn format_cost(microdollars: Option<i64>) -> String {
     let Some(m) = microdollars else {
-        return "—".to_string();
+        return "—".to_owned();
     };
     let dollars = m as f64 / 1_000_000.0;
     if dollars == 0.0 {
-        "$0".to_string()
+        "$0".to_owned()
     } else if dollars < 0.01 {
         format!("${dollars:.6}")
     } else {
@@ -135,9 +135,9 @@ pub(super) fn time_range_context(
 ) -> serde_json::Value {
     let preset = query.preset.clone().unwrap_or_else(|| {
         if query.from.is_some() && query.to.is_some() {
-            "custom".to_string()
+            "custom".to_owned()
         } else {
-            auto_widened.unwrap_or("24h").to_string()
+            auto_widened.unwrap_or("24h").to_owned()
         }
     });
     let qs = preserved_query_string(query, &["preset", "from", "to"]);
@@ -184,7 +184,7 @@ pub(super) fn clear_url(query: &RequestsQuery) -> String {
         parts.push(format!("to={}", urlencode(t)));
     }
     if parts.is_empty() {
-        BASE_URL.to_string()
+        BASE_URL.to_owned()
     } else {
         format!("{BASE_URL}?{}", parts.join("&"))
     }
@@ -214,10 +214,10 @@ fn preserved_query_string(query: &RequestsQuery, drop: &[&str]) -> String {
         };
         parts.push(format!("{}={}", name, urlencode(v)));
     }
-    if !drop.contains(&"page") {
-        if let Some(p) = query.page.filter(|p| *p > 0) {
-            parts.push(format!("page={p}"));
-        }
+    if !drop.contains(&"page")
+        && let Some(p) = query.page.filter(|p| *p > 0)
+    {
+        parts.push(format!("page={p}"));
     }
     parts.join("&")
 }

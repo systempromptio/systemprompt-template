@@ -7,7 +7,8 @@
 
 use std::sync::Arc;
 
-use axum::{http::StatusCode, response::Response};
+use axum::http::StatusCode;
+use axum::response::Response;
 use sqlx::PgPool;
 use systemprompt_security::authz::{Access, AccessControlRepository, EntityKind, RuleType};
 
@@ -16,7 +17,8 @@ use crate::repositories::{self, mcp_servers};
 
 pub(super) fn validate_entity_type(entity_type: &str) -> Result<EntityKind, Box<Response>> {
     use std::str::FromStr;
-    EntityKind::from_str(entity_type).map_err(|_| {
+    EntityKind::from_str(entity_type).map_err(|e| {
+        tracing::warn!(error = %e, entity_type, "invalid entity_type");
         Box::new(shared::error_response(
             StatusCode::BAD_REQUEST,
             "invalid entity_type",
@@ -56,7 +58,7 @@ pub(super) fn collect_entity_ids(entity_type: &str) -> Result<Vec<String>, Box<R
                 ))
             })?;
             Ok(cfg.routes.into_iter().map(|r| r.id).collect())
-        }
+        },
         "mcp_server" => {
             let services_path = shared::get_services_path()?;
             let servers = mcp_servers::list_mcp_servers(&services_path).map_err(|e| {
@@ -68,9 +70,9 @@ pub(super) fn collect_entity_ids(entity_type: &str) -> Result<Vec<String>, Box<R
             })?;
             Ok(servers
                 .into_iter()
-                .map(|s| s.id.as_str().to_string())
+                .map(|s| s.id.as_str().to_owned())
                 .collect())
-        }
+        },
         _ => Ok(Vec::new()),
     }
 }

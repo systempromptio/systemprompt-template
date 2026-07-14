@@ -86,7 +86,7 @@ async fn concatenate_css_files(css_files: &[PathBuf]) -> (String, u64, u64) {
                 }
                 bundle.push_str(&content);
                 bundled += 1;
-            }
+            },
             Err(e) => {
                 tracing::error!(
                     file = %filename,
@@ -94,7 +94,7 @@ async fn concatenate_css_files(css_files: &[PathBuf]) -> (String, u64, u64) {
                     "Failed to read CSS file for bundling"
                 );
                 failed += 1;
-            }
+            },
         }
     }
 

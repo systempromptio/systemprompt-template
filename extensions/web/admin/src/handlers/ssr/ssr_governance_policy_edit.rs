@@ -10,12 +10,10 @@
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, Path, State},
-    http::StatusCode,
-    response::{Html, IntoResponse, Redirect, Response},
-    Form,
-};
+use axum::Form;
+use axum::extract::{Extension, Path, State};
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Redirect, Response};
 use serde::Deserialize;
 use serde_json::json;
 use sqlx::PgPool;
@@ -23,13 +21,13 @@ use sqlx::PgPool;
 use crate::handlers::webhook::governance;
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext, DECISION_DENY};
+use crate::types::{DECISION_DENY, MarketplaceContext, UserContext};
 
 use super::ACCESS_DENIED_HTML;
 
 const RECENT_LIMIT: i64 = 50;
 
-pub async fn governance_policy_edit_page(
+pub(crate) async fn governance_policy_edit_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -98,21 +96,21 @@ type PolicySnapshot = (String, String, String, String, bool, String);
 
 fn find_policy_snapshot(policy_id: &str) -> Option<PolicySnapshot> {
     let chain = governance::chain();
-    let snapshot = chain
+
+    chain
         .iter()
         .find(|(_, p)| p.id().as_str() == policy_id)
         .map(|(cfg, p)| {
-            let id = p.id().as_str().to_string();
+            let id = p.id().as_str().to_owned();
             (
                 id.clone(),
-                p.name().to_string(),
-                p.description().to_string(),
+                p.name().to_owned(),
+                p.description().to_owned(),
                 serde_yaml::to_string(&cfg.params).unwrap_or_default(),
                 cfg.enabled,
                 id,
             )
-        });
-    snapshot
+        })
 }
 
 fn recent_decisions_json(recent: &[crate::types::GovernanceDecisionRow]) -> Vec<serde_json::Value> {
@@ -138,14 +136,14 @@ fn recent_decisions_json(recent: &[crate::types::GovernanceDecisionRow]) -> Vec<
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ToggleForm {
+pub(crate) struct ToggleForm {
     pub enabled: Option<String>,
 }
 
 /// POST /admin/governance/{id}/toggle — flip `enabled` on the named policy in
 /// `services/governance/config.yaml`, then ask the registry to re-read so
 /// the change takes effect without a process restart.
-pub async fn governance_policy_toggle(
+pub(crate) async fn governance_policy_toggle(
     Extension(user_ctx): Extension<UserContext>,
     Path(policy_id): Path<String>,
     Form(form): Form<ToggleForm>,
@@ -188,7 +186,7 @@ fn update_enabled_in_yaml(policy_id: &str, enabled: bool) -> Result<(), String> 
         .get_mut("governance")
         .and_then(|g| g.get_mut("policies"))
         .and_then(|p| p.as_sequence_mut())
-        .ok_or_else(|| "governance.policies missing or not a sequence".to_string())?;
+        .ok_or_else(|| "governance.policies missing or not a sequence".to_owned())?;
 
     let mut found = false;
     for entry in policies.iter_mut() {
@@ -196,26 +194,24 @@ fn update_enabled_in_yaml(policy_id: &str, enabled: bool) -> Result<(), String> 
             .get("id")
             .and_then(|v| v.as_str())
             .is_some_and(|s| s == policy_id);
-        if matches {
-            if let serde_yaml::Value::Mapping(map) = entry {
-                map.insert(
-                    serde_yaml::Value::String("enabled".to_string()),
-                    serde_yaml::Value::Bool(enabled),
-                );
-                found = true;
-                break;
-            }
+        if matches && let serde_yaml::Value::Mapping(map) = entry {
+            map.insert(
+                serde_yaml::Value::String("enabled".to_owned()),
+                serde_yaml::Value::Bool(enabled),
+            );
+            found = true;
+            break;
         }
     }
 
     if !found {
         let mut map = serde_yaml::Mapping::new();
         map.insert(
-            serde_yaml::Value::String("id".to_string()),
-            serde_yaml::Value::String(policy_id.to_string()),
+            serde_yaml::Value::String("id".to_owned()),
+            serde_yaml::Value::String(policy_id.to_owned()),
         );
         map.insert(
-            serde_yaml::Value::String("enabled".to_string()),
+            serde_yaml::Value::String("enabled".to_owned()),
             serde_yaml::Value::Bool(enabled),
         );
         policies.push(serde_yaml::Value::Mapping(map));

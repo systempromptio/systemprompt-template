@@ -8,10 +8,8 @@ use systemprompt::identifiers::UserId;
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{IdQuery, MarketplaceContext, UserContext};
-use axum::{
-    extract::{Extension, Query, State},
-    response::{IntoResponse, Response},
-};
+use axum::extract::{Extension, Query, State};
+use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 
 use super::types::{UserDetailPageData, UserRuntimeView, UsersPageData};
@@ -19,7 +17,7 @@ use super::types::{UserDetailPageData, UserRuntimeView, UsersPageData};
 mod data;
 mod view;
 
-pub async fn users_page(
+pub(crate) async fn users_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -57,7 +55,7 @@ pub async fn users_page(
     super::render_page(&engine, "users", &value, &user_ctx, &mkt_ctx)
 }
 
-pub async fn user_detail_page(
+pub(crate) async fn user_detail_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

@@ -191,22 +191,23 @@ fn select_scoped_rules<'a>(
                 if scoped.user.is_none() || is_deny {
                     scoped.user = Some(r);
                 }
-            }
+            },
             RuleType::Department => {
-                if let Some(d) = &user.department {
-                    if &r.rule_value == d && (scoped.dept.is_none() || is_deny) {
-                        scoped.dept = Some(r);
-                    }
+                if let Some(d) = &user.department
+                    && &r.rule_value == d
+                    && (scoped.dept.is_none() || is_deny)
+                {
+                    scoped.dept = Some(r);
                 }
-            }
+            },
             RuleType::Role => {
                 if user.roles.iter().any(|x| x == &r.rule_value)
                     && (scoped.role.is_none() || is_deny)
                 {
                     scoped.role = Some(r);
                 }
-            }
-            RuleType::User => {}
+            },
+            RuleType::User => {},
         }
     }
 
@@ -252,7 +253,7 @@ fn resolve_effective(
 
     let effective = if default_included { "allow" } else { "deny" };
     (
-        effective.to_string(),
+        effective.to_owned(),
         MatrixSource {
             layer: "default".into(),
             detail: if default_included {

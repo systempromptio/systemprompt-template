@@ -6,22 +6,20 @@
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, Query, State},
-    http::StatusCode,
-    response::{Html, IntoResponse, Response},
-};
+use axum::extract::{Extension, Query, State};
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
 use serde::Deserialize;
 use serde_json::json;
 use sqlx::PgPool;
 
 use crate::repositories::governance_grp::filter_options::fetch_filter_options;
 use crate::repositories::governance_grp::time_range::{
-    parse_time_range, TimeRange, TimeRangePreset, TimeRangeQuery,
+    TimeRange, TimeRangePreset, TimeRangeQuery, parse_time_range,
 };
 use crate::repositories::perf_grp::traces::{
-    fetch_trace_list, fetch_trace_stats, TraceFilter, TraceSort, TraceSortColumn, TraceSortDir,
-    TraceStats,
+    TraceFilter, TracePage, TraceSort, TraceSortColumn, TraceSortDir, TraceStats, fetch_trace_list,
+    fetch_trace_stats,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -35,7 +33,7 @@ const BASE_URL: &str = "/admin/entities/traces";
 const PAGE_SIZE: i64 = 50;
 
 #[derive(Debug, Deserialize)]
-pub struct TraceListQuery {
+pub(crate) struct TraceListQuery {
     pub from: Option<String>,
     pub to: Option<String>,
     pub preset: Option<String>,
@@ -51,7 +49,7 @@ pub struct TraceListQuery {
     pub page: Option<i64>,
 }
 
-pub async fn perf_traces_page(
+pub(crate) async fn perf_traces_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -91,8 +89,13 @@ async fn load_traces_data(
     };
     let sort = sort_from_query(query);
     let offset = page * PAGE_SIZE;
+    let trace_page = TracePage {
+        sort,
+        limit: PAGE_SIZE,
+        offset,
+    };
     let (list_res, stats_res, options_res) = tokio::join!(
-        fetch_trace_list(pool, filter, range, sort, PAGE_SIZE, offset),
+        fetch_trace_list(pool, filter, range, trace_page),
         fetch_trace_stats(pool, range),
         fetch_filter_options(pool, range),
     );
@@ -146,13 +149,13 @@ fn empty_to_none(v: Option<&str>) -> Option<&str> {
 }
 
 fn preset_str(query: &TraceListQuery, range: TimeRange) -> String {
-    if let Some(p) = query.preset.as_deref() {
-        if !p.is_empty() {
-            return p.to_string();
-        }
+    if let Some(p) = query.preset.as_deref()
+        && !p.is_empty()
+    {
+        return p.to_owned();
     }
     if query.from.is_some() && query.to.is_some() {
-        return "custom".to_string();
+        return "custom".to_owned();
     }
     match range.preset {
         TimeRangePreset::Min15 => "15m",
@@ -162,7 +165,7 @@ fn preset_str(query: &TraceListQuery, range: TimeRange) -> String {
         TimeRangePreset::Days30 => "30d",
         TimeRangePreset::Custom => "custom",
     }
-    .to_string()
+    .to_owned()
 }
 
 fn sort_from_query(query: &TraceListQuery) -> TraceSort {

@@ -8,7 +8,7 @@
 //! `safety.scanners` lists it and blocks the request when `safety
 //! .block_categories` includes `secret`.
 
-use systemprompt::ai::{register_safety_scanner, Finding, SafetyScanner, Severity};
+use systemprompt::ai::{Finding, SafetyScanner, Severity, register_safety_scanner};
 use systemprompt::models::wire::canonical::{
     CanonicalContent, CanonicalRequest, CanonicalResponse,
 };

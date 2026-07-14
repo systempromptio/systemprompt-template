@@ -5,11 +5,9 @@ use systemprompt::identifiers::UserId;
 
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::secret_audit::{self, AuditLogRow};
-use crate::repositories::secret_crypto;
-use crate::repositories::secret_keys;
-use crate::repositories::secret_resolve;
+use crate::repositories::{secret_crypto, secret_keys, secret_resolve};
 
-pub async fn create_resolution_token(
+pub(crate) async fn create_resolution_token(
     pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
@@ -18,7 +16,7 @@ pub async fn create_resolution_token(
     Ok(token)
 }
 
-pub async fn resolve_secrets(
+pub(crate) async fn resolve_secrets(
     pool: &PgPool,
     plugin_id: &str,
     raw_token: &str,
@@ -28,11 +26,11 @@ pub async fn resolve_secrets(
             .await
             .map_err(|e| {
                 tracing::warn!(error = %e, "Token validation failed");
-                AdminError::Unauthorized("Invalid or expired token".to_string())
+                AdminError::Unauthorized("Invalid or expired token".to_owned())
             })?;
 
     if token_plugin_id != plugin_id {
-        return Err(AdminError::Forbidden("Token plugin mismatch".to_string()));
+        return Err(AdminError::Forbidden("Token plugin mismatch".to_owned()));
     }
 
     let master_key = secret_crypto::load_master_key()?;
@@ -42,7 +40,7 @@ pub async fn resolve_secrets(
     Ok(secrets)
 }
 
-pub async fn list_audit_log(
+pub(crate) async fn list_audit_log(
     pool: &PgPool,
     user_id: &UserId,
     plugin_id: &str,
@@ -51,7 +49,11 @@ pub async fn list_audit_log(
     Ok(rows)
 }
 
-pub async fn rotate_user_keys(pool: &PgPool, user_id: &UserId, plugin_id: &str) -> AdminResult<()> {
+pub(crate) async fn rotate_user_keys(
+    pool: &PgPool,
+    user_id: &UserId,
+    plugin_id: &str,
+) -> AdminResult<()> {
     let master_key = secret_crypto::load_master_key()?;
     secret_keys::rotate_user_dek(pool, user_id, &master_key).await?;
 

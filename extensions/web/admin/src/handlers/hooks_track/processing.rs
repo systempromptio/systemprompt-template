@@ -13,7 +13,7 @@ use crate::types::{ENTITY_SKILL, EVENT_SESSION_END, EVENT_SESSION_START, EVENT_S
 use super::{ai_summary, entity, helpers};
 
 #[derive(Debug, Clone, Copy)]
-pub struct ProcessInsertedEventParams<'a> {
+pub(super) struct ProcessInsertedEventParams<'a> {
     pub pool: &'a PgPool,
     pub user_id: &'a UserId,
     pub session_id: &'a SessionId,
@@ -27,7 +27,7 @@ pub struct ProcessInsertedEventParams<'a> {
     pub jwt_token: &'a str,
 }
 
-pub async fn process_inserted_event(params: &ProcessInsertedEventParams<'_>) {
+pub(super) async fn process_inserted_event(params: &ProcessInsertedEventParams<'_>) {
     let pool = params.pool;
     let user_id = params.user_id;
     let session_id = params.session_id;
@@ -84,17 +84,17 @@ async fn update_session_tracking(params: &ProcessInsertedEventParams<'_>) {
     })
     .await;
 
-    if params.event_type == EVENT_SESSION_START {
-        if let HookEvent::SessionStart(ref data) = params.payload.event {
-            usage_aggregations::update_session_metadata(
-                params.pool,
-                params.session_id,
-                &data.source,
-                &data.model,
-                &params.payload.common.permission_mode,
-            )
-            .await;
-        }
+    if params.event_type == EVENT_SESSION_START
+        && let HookEvent::SessionStart(ref data) = params.payload.event
+    {
+        usage_aggregations::update_session_metadata(
+            params.pool,
+            params.session_id,
+            &data.source,
+            &data.model,
+            &params.payload.common.permission_mode,
+        )
+        .await;
     }
 
     if !params.payload.common.permission_mode.is_empty() && params.event_type != EVENT_SESSION_START
@@ -122,7 +122,7 @@ async fn track_session_entity(
             entity_name
                 .rsplit_once(':')
                 .map_or(entity_name.as_str(), |(_, slug)| slug)
-                .to_string(),
+                .to_owned(),
         )
     } else {
         None
@@ -130,10 +130,12 @@ async fn track_session_entity(
     if let Err(e) = conversation_analytics::upsert_session_entity_link(
         pool,
         user_id,
-        session_id.as_str(),
-        entity_type,
-        &entity_name,
-        entity_id.as_deref(),
+        conversation_analytics::EntityLinkInput {
+            session_id: session_id.as_str(),
+            entity_type,
+            entity_name: &entity_name,
+            entity_id: entity_id.as_deref(),
+        },
     )
     .await
     {
@@ -150,12 +152,11 @@ async fn handle_prompt_title(
     if event_type != "UserPromptSubmit" || session_id.as_str().is_empty() {
         return;
     }
-    if let HookEvent::UserPromptSubmit(ref data) = payload.event {
-        if !data.prompt.is_empty() {
-            let initial_title = helpers::derive_title(&data.prompt);
-            usage_aggregations::update_session_title_if_empty(pool, session_id, &initial_title)
-                .await;
-        }
+    if let HookEvent::UserPromptSubmit(ref data) = payload.event
+        && !data.prompt.is_empty()
+    {
+        let initial_title = helpers::derive_title(&data.prompt);
+        usage_aggregations::update_session_title_if_empty(pool, session_id, &initial_title).await;
     }
 }
 
@@ -164,7 +165,9 @@ async fn handle_session_analysis(params: &ProcessInsertedEventParams<'_>) {
 }
 
 async fn handle_session_end(params: &ProcessInsertedEventParams<'_>) {
-    let _ = hooks_track::mark_session_ended(params.pool, params.session_id).await;
+    if let Err(e) = hooks_track::mark_session_ended(params.pool, params.session_id).await {
+        tracing::warn!(error = %e, session_id = %params.session_id.as_str(), "mark_session_ended failed");
+    }
 }
 
 async fn run_ai_analysis(params: &ProcessInsertedEventParams<'_>) {
@@ -176,14 +179,14 @@ async fn run_ai_analysis(params: &ProcessInsertedEventParams<'_>) {
         } else {
             None
         };
-        ai_summary::run_analysis_for_session(
-            params.pool,
-            ai,
-            params.user_id,
-            params.session_id,
-            params.jwt_token,
-            direct_msg,
-        )
+        ai_summary::run_analysis_for_session(ai_summary::RunAnalysisParams {
+            pool: params.pool,
+            ai_service: ai,
+            user_id: params.user_id,
+            session_id: params.session_id,
+            jwt_token: params.jwt_token,
+            direct_message: direct_msg,
+        })
         .await;
     }
 }
@@ -206,7 +209,7 @@ async fn handle_apm_and_concurrent(params: &ProcessInsertedEventParams<'_>) {
                     "Failed to count concurrent sessions for APM"
                 );
                 return;
-            }
+            },
         };
 
     let concurrent = numeric::saturating_i32(concurrent_raw) + 1;

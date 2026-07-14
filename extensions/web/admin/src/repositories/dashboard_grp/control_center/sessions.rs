@@ -1,8 +1,8 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
-use crate::types::control_center::RecentSession;
 use crate::types::STATUS_DELETED;
+use crate::types::control_center::RecentSession;
 
 pub async fn fetch_recent_sessions_filtered(
     pool: &PgPool,

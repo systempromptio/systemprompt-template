@@ -1,13 +1,11 @@
 use crate::handlers::shared;
-use axum::{
-    http::{HeaderMap, StatusCode},
-    response::Response,
-};
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::Response;
 use systemprompt::identifiers::UserId;
 use systemprompt::models::Config;
 use systemprompt_security::HookTokenValidator;
 
-pub fn extract_and_validate_jwt(
+pub(super) fn extract_and_validate_jwt(
     headers: &HeaderMap,
 ) -> Result<(UserId, String, String), Box<Response>> {
     let token = headers
@@ -48,7 +46,7 @@ pub fn extract_and_validate_jwt(
         })?;
     Ok((
         claims.subject,
-        claims.plugin_id.as_str().to_string(),
-        token.to_string(),
+        claims.plugin_id.as_str().to_owned(),
+        token.to_owned(),
     ))
 }

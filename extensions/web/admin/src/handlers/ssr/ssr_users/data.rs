@@ -67,13 +67,14 @@ pub(super) async fn collect_user_detail_extras(
         .unwrap_or_else(|| (Vec::new(), String::new()));
 
     let mut assignments = UserAssignmentSummary::default();
-    let mut devices_count = 0i64;
-    if let Ok(rows) = repositories::list_user_management_aggregates(pool).await {
-        if let Some(row) = rows.into_iter().find(|r| r.user_id == d.user_id.as_str()) {
-            assignments.skills_count = row.assigned_skills_count;
-            devices_count = row.devices_count;
-        }
-    }
+    let devices_count = if let Ok(rows) = repositories::list_user_management_aggregates(pool).await
+        && let Some(row) = rows.into_iter().find(|r| r.user_id == d.user_id.as_str())
+    {
+        assignments.skills_count = row.assigned_skills_count;
+        row.devices_count
+    } else {
+        0i64
+    };
 
     let yaml_marketplaces: Vec<(String, String)> = load_marketplaces()
         .into_iter()

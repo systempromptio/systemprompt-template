@@ -3,7 +3,8 @@
 //! Pure transforms from repository rows into the serde structs the `users` /
 //! `user-detail` templates render: marketplace resolution, per-user enrichment,
 //! department grouping, and the final serde-value enrichment (page stats and
-//! effective-permission injection) the templates expect as extra top-level keys.
+//! effective-permission injection) the templates expect as extra top-level
+//! keys.
 
 use crate::repositories;
 use crate::repositories::governance_grp::effective::EffectivePermissions;
@@ -53,9 +54,9 @@ pub(super) fn resolve_marketplaces(
                     name,
                     source: "override",
                 });
-            }
+            },
             "deny" => entries.retain(|e| e.id != ovr.entity_id),
-            _ => {}
+            _ => {},
         }
     }
     entries
@@ -84,7 +85,7 @@ pub(super) fn enrich_users(
             let agg = agg_map.get(u.user_id.as_str());
             let rt = rt_map.get(u.user_id.as_str());
             let device_freshness =
-                freshness_for(rt.and_then(|r| r.newest_device_seen_at)).to_string();
+                freshness_for(rt.and_then(|r| r.newest_device_seen_at)).to_owned();
             let user_overrides = ovr_map.get(u.user_id.as_str()).cloned().unwrap_or_default();
             let marketplaces = resolve_marketplaces(yaml_marketplaces, &user_overrides);
             EnrichedUserView {
@@ -123,7 +124,7 @@ pub(super) fn group_by_department(users: Vec<EnrichedUserView>) -> Vec<Departmen
         std::collections::BTreeMap::new();
     for u in users {
         let key = if u.department.is_empty() {
-            "Unassigned".to_string()
+            "Unassigned".to_owned()
         } else {
             u.department.clone()
         };
@@ -176,7 +177,7 @@ pub(super) fn users_page_value(
     let mut value = serde_json::to_value(data).unwrap_or(serde_json::Value::Null);
     if let Some(obj) = value.as_object_mut() {
         obj.insert(
-            "page_stats".to_string(),
+            "page_stats".to_owned(),
             serde_json::json!([
                 {"value": total_users, "label": "Users"},
                 {"value": active_users, "label": "Active"},
@@ -209,13 +210,13 @@ pub(super) fn detail_page_value(
     effective: Option<EffectivePermissions>,
 ) -> serde_json::Value {
     let mut value = serde_json::to_value(data).unwrap_or(serde_json::Value::Null);
-    if let (serde_json::Value::Object(ref mut map), Some(eff)) = (&mut value, effective) {
+    if let (serde_json::Value::Object(map), Some(eff)) = (&mut value, effective) {
         map.insert(
-            "effective_permissions".to_string(),
+            "effective_permissions".to_owned(),
             serde_json::to_value(&eff).unwrap_or(serde_json::Value::Null),
         );
         map.insert(
-            "has_effective_permissions".to_string(),
+            "has_effective_permissions".to_owned(),
             serde_json::Value::Bool(!eff.gateway_routes.is_empty() || !eff.mcp_servers.is_empty()),
         );
     }

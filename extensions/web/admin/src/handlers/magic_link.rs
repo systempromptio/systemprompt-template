@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
+use axum::Json;
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
-use axum::Json;
 use serde::Deserialize;
 use sqlx::PgPool;
 
@@ -12,11 +12,11 @@ use systemprompt::identifiers::Email;
 use crate::repositories::magic_links;
 
 #[derive(Deserialize, Debug)]
-pub struct MagicLinkRequest {
+pub(crate) struct MagicLinkRequest {
     pub email: String,
 }
 
-pub async fn request_magic_link(
+pub(crate) async fn request_magic_link(
     State(pool): State<Arc<PgPool>>,
     req_headers: HeaderMap,
     Json(body): Json<MagicLinkRequest>,
@@ -49,8 +49,8 @@ pub async fn request_magic_link(
         .or_else(|| req_headers.get("x-real-ip"))
         .and_then(|v| v.to_str().ok())
         .map_or_else(
-            || "unknown".to_string(),
-            |s| s.split(',').next().unwrap_or(s).trim().to_string(),
+            || "unknown".to_owned(),
+            |s| s.split(',').next().unwrap_or(s).trim().to_owned(),
         );
 
     let ip_count = magic_links::count_recent_tokens_by_ip(&pool, &ip_address)
@@ -71,12 +71,11 @@ pub async fn request_magic_link(
         .await
         .unwrap_or(false);
 
-    if user_exists {
-        if let Ok(_raw_token) =
+    if user_exists
+        && let Ok(_raw_token) =
             magic_links::create_magic_link_token(&pool, &email, Some(&ip_address)).await
-        {
-            tracing::info!(email = %email, "Magic link token created (email sending not configured in this deployment)");
-        }
+    {
+        tracing::info!(email = %email, "Magic link token created (email sending not configured in this deployment)");
     }
 
     (
@@ -89,11 +88,11 @@ pub async fn request_magic_link(
 }
 
 #[derive(Deserialize, Debug)]
-pub struct ValidateTokenRequest {
+pub(crate) struct ValidateTokenRequest {
     pub token: String,
 }
 
-pub async fn validate_magic_link(
+pub(crate) async fn validate_magic_link(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<ValidateTokenRequest>,
 ) -> impl IntoResponse {

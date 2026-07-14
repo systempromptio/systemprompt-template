@@ -42,10 +42,10 @@ pub fn list_mcp_servers(services_path: &Path) -> Result<Vec<McpServerDetail>, Ma
             );
         if let Some(mcp_map) = config.get("mcp_servers").and_then(|m| m.as_mapping()) {
             for (key, val) in mcp_map {
-                if let Some(server_id) = key.as_str() {
-                    if let Ok(id) = McpServerId::try_new(server_id) {
-                        servers.push(parse_server_detail(id, val, rel_source.clone()));
-                    }
+                if let Some(server_id) = key.as_str()
+                    && let Ok(id) = McpServerId::try_new(server_id)
+                {
+                    servers.push(parse_server_detail(id, val, rel_source.clone()));
                 }
             }
         }
@@ -62,7 +62,7 @@ fn parse_server_detail(
     let binary = val
         .get("binary")
         .and_then(|v| v.as_str())
-        .map_or_else(String::new, ToString::to_string);
+        .map_or_else(String::new, str::to_owned);
     let server_type = val
         .get("type")
         .and_then(|v| v.as_str())
@@ -71,11 +71,11 @@ fn parse_server_detail(
         } else {
             "internal"
         })
-        .to_string();
+        .to_owned();
     let package_name = val
         .get("package")
         .and_then(|v| v.as_str())
-        .map_or_else(String::new, ToString::to_string);
+        .map_or_else(String::new, str::to_owned);
     let port = val
         .get("port")
         .and_then(serde_yaml::Value::as_u64)
@@ -84,11 +84,11 @@ fn parse_server_detail(
     let endpoint = val
         .get("endpoint")
         .and_then(|v| v.as_str())
-        .map_or_else(String::new, ToString::to_string);
+        .map_or_else(String::new, str::to_owned);
     let description = val
         .get("description")
         .and_then(|v| v.as_str())
-        .map_or_else(String::new, ToString::to_string);
+        .map_or_else(String::new, str::to_owned);
     let enabled = val
         .get("enabled")
         .and_then(serde_yaml::Value::as_bool)
@@ -103,13 +103,13 @@ fn parse_server_detail(
         .and_then(|v| v.as_sequence())
         .map_or_else(Vec::new, |s| {
             s.iter()
-                .filter_map(|v| v.as_str().map(ToString::to_string))
+                .filter_map(|v| v.as_str().map(str::to_owned))
                 .collect()
         });
     let oauth_audience = oauth
         .and_then(|o| o.get("audience"))
         .and_then(|v| v.as_str())
-        .map_or_else(String::new, ToString::to_string);
+        .map_or_else(String::new, str::to_owned);
 
     McpServerDetail {
         id: server_id,
@@ -149,6 +149,6 @@ pub fn find_mcp_server_raw_yaml(
         .file_name()
         .and_then(|n| n.to_str())
         .unwrap_or("unknown.yaml")
-        .to_string();
+        .to_owned();
     Ok(Some((content, file_name)))
 }

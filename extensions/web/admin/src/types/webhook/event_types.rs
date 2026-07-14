@@ -38,24 +38,24 @@ pub struct UserPromptSubmitData {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PreToolUseData {
-    #[serde(default)]
-    pub tool_name: String,
-    #[serde(default)]
-    pub tool_input: serde_json::Value,
-    #[serde(default)]
-    pub tool_use_id: String,
+    #[serde(default, rename = "tool_name")]
+    pub name: String,
+    #[serde(default, rename = "tool_input")]
+    pub input: serde_json::Value,
+    #[serde(default, rename = "tool_use_id")]
+    pub use_id: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PostToolUseData {
-    #[serde(default)]
-    pub tool_name: String,
-    #[serde(default)]
-    pub tool_input: serde_json::Value,
-    #[serde(default)]
-    pub tool_response: serde_json::Value,
-    #[serde(default)]
-    pub tool_use_id: String,
+    #[serde(default, rename = "tool_name")]
+    pub name: String,
+    #[serde(default, rename = "tool_input")]
+    pub input: serde_json::Value,
+    #[serde(default, rename = "tool_response")]
+    pub response: serde_json::Value,
+    #[serde(default, rename = "tool_use_id")]
+    pub use_id: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

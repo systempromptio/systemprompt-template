@@ -40,11 +40,11 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     };
 
     let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-        "Database not available in job context".to_string(),
+        "Database not available in job context".to_owned(),
     ))?;
 
     let pool = db.pool().ok_or(MarketplaceError::Internal(
-        "PgPool not available from database".to_string(),
+        "PgPool not available from database".to_owned(),
     ))?;
 
     let actor_user = &ctx.actor().user_id;
@@ -93,11 +93,11 @@ async fn migrate_secrets(
             Ok(()) => {
                 success_count += 1;
                 tracing::debug!(id = %row.id, user_id = %row.user_id, var_name = %row.var_name, "Migrated secret");
-            }
+            },
             Err(e) => {
                 error_count += 1;
                 tracing::warn!(id = %row.id, user_id = %row.user_id, error = %e, "Failed to migrate secret");
-            }
+            },
         }
     }
 
@@ -130,9 +130,12 @@ async fn encrypt_and_store_secret(
     .await
     .map_err(|e| MarketplaceError::Internal(format!("Update error: {e}")))?;
 
-    let _ =
+    if let Err(e) =
         secret_migration::insert_migration_audit(pool.as_ref(), &row.user_id, &row.var_name, actor)
-            .await;
+            .await
+    {
+        tracing::warn!(error = %e, user_id = %row.user_id, var_name = %row.var_name, "failed to record secret migration audit");
+    }
 
     Ok(())
 }

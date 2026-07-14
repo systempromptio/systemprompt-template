@@ -12,8 +12,8 @@
 //! - `content` — content ingestion, repositories, search, link analytics.
 //! - `jobs` — `publish_pipeline` and its sub-jobs (asset copy, prerender,
 //!   sitemap, llms.txt, secret migration, content analytics).
-//! - `shared` — config schemas, error types, branding, ID newtypes,
-//!   HTML-escape helpers.
+//! - `shared` — config schemas, error types, branding, ID newtypes, HTML-escape
+//!   helpers.
 //! - `site` — public homepage / blog / docs / features content providers.
 
 mod config_loader;
@@ -25,9 +25,9 @@ pub use systemprompt_web_admin as admin;
 pub use systemprompt_web_content::{api, repository, services};
 pub use systemprompt_web_jobs as jobs;
 pub use systemprompt_web_shared as shared;
-pub use systemprompt_web_shared::html_escape;
-pub use systemprompt_web_shared::BrandingConfig;
-pub use systemprompt_web_shared::{config, config_errors, error, models};
+pub use systemprompt_web_shared::{
+    BrandingConfig, config, config_errors, error, html_escape, models,
+};
 pub use systemprompt_web_site::{
     assets, blog, docs, extenders, features, homepage, navigation, partials,
 };
@@ -69,7 +69,7 @@ pub use extenders::OrgUrlExtender;
 pub use jobs::ContentIngestionJob;
 pub use repository::{
     ContentRepository, LinkAnalyticsRepository, LinkRepository, SearchRepository,
-    UpdateContentParams, UpdateContentParamsBuilder,
+    UpdateContentParams, UpdateContentParamsBuilder, UpdateContentSeed,
 };
 pub use services::{
     ContentService, IngestionService, LinkAnalyticsService, LinkGenerationService, LinkService,

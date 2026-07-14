@@ -4,7 +4,7 @@
 
 use chrono::{DateTime, Utc};
 
-use super::{redact_text, ToolCall, TranscriptTurn, TurnGovernance};
+use super::{ToolCall, TranscriptTurn, TurnGovernance, redact_text};
 
 pub(super) struct ParseInput<'a> {
     pub(super) session_id: &'a str,
@@ -28,7 +28,7 @@ pub(super) fn parse_turns(input: &ParseInput<'_>) -> Vec<TranscriptTurn> {
                 .get("role")
                 .and_then(|v| v.as_str())
                 .unwrap_or("assistant")
-                .to_string();
+                .to_owned();
             let ts = entry
                 .get("ts")
                 .or_else(|| entry.get("timestamp"))
@@ -70,7 +70,7 @@ pub(super) fn parse_turns(input: &ParseInput<'_>) -> Vec<TranscriptTurn> {
 
             TranscriptTurn {
                 id: format!("{}:{ordinal}", input.session_id),
-                session_id: input.session_id.to_string(),
+                session_id: input.session_id.to_owned(),
                 ordinal,
                 role,
                 ts,
@@ -95,7 +95,7 @@ fn parse_tool_call(v: &serde_json::Value) -> ToolCall {
             .or_else(|| v.get("tool_name"))
             .and_then(|x| x.as_str())
             .unwrap_or("unknown")
-            .to_string(),
+            .to_owned(),
         args_json: v
             .get("args")
             .or_else(|| v.get("input"))
@@ -110,7 +110,7 @@ fn parse_tool_call(v: &serde_json::Value) -> ToolCall {
             .get("status")
             .and_then(|x| x.as_str())
             .unwrap_or("ok")
-            .to_string(),
+            .to_owned(),
     }
 }
 
@@ -118,7 +118,7 @@ fn parse_tool_call(v: &serde_json::Value) -> ToolCall {
 /// Accepts plain strings, Anthropic-style content arrays, or `text` fields.
 pub(super) fn extract_content_text(entry: &serde_json::Value) -> String {
     if let Some(s) = entry.get("content").and_then(|v| v.as_str()) {
-        return s.to_string();
+        return s.to_owned();
     }
     if let Some(arr) = entry.get("content").and_then(|v| v.as_array()) {
         let mut out = String::new();
@@ -135,7 +135,7 @@ pub(super) fn extract_content_text(entry: &serde_json::Value) -> String {
         }
     }
     if let Some(s) = entry.get("text").and_then(|v| v.as_str()) {
-        return s.to_string();
+        return s.to_owned();
     }
     String::new()
 }

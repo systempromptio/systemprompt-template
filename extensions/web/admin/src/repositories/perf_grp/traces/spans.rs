@@ -221,6 +221,6 @@ fn format_identity(user: Option<&str>, agent: Option<&str>, scope: Option<&str>)
     match (agent, scope) {
         (Some(a), Some(s)) => format!("{user_part} · {a} ({s})"),
         (Some(a), None) => format!("{user_part} · {a}"),
-        _ => user_part.to_string(),
+        _ => user_part.to_owned(),
     }
 }

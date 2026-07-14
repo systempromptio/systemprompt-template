@@ -65,7 +65,7 @@ pub async fn fetch_tool_detail_stats(
     .await?;
 
     Ok(ToolDetailStats {
-        tool_name: tool_name.to_string(),
+        tool_name: tool_name.to_owned(),
         total_calls: row.total,
         allow_count: row.allow,
         deny_count: row.deny,
@@ -156,7 +156,7 @@ pub async fn fetch_tool_top_actors(
             )
             .fetch_all(pool)
             .await
-        }
+        },
         ToolActorGroup::Agent => {
             sqlx::query_as!(
                 ToolTopActor,
@@ -179,6 +179,6 @@ pub async fn fetch_tool_top_actors(
             )
             .fetch_all(pool)
             .await
-        }
+        },
     }
 }

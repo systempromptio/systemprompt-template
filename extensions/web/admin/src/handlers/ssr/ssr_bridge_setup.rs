@@ -18,7 +18,7 @@ struct SetupPageData {
     download_base_url: &'static str,
 }
 
-pub async fn bridge_setup_page(
+pub(crate) async fn bridge_setup_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

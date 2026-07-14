@@ -2,11 +2,11 @@ mod audit;
 mod authz;
 mod handler;
 mod policies;
-pub mod policy;
+pub(crate) mod policy;
 mod scope;
-pub mod secrets;
+pub(crate) mod secrets;
 mod types;
 
-pub use authz::govern_authz;
-pub use handler::govern_tool_use;
-pub use policy::{chain, reload};
+pub(crate) use authz::govern_authz;
+pub(crate) use handler::govern_tool_use;
+pub(crate) use policy::{chain, reload};

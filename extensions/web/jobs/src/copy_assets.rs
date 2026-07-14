@@ -65,7 +65,7 @@ async fn copy_all_assets(
                     "Optional asset copy failed"
                 );
                 failed += 1;
-            }
+            },
         }
     }
 

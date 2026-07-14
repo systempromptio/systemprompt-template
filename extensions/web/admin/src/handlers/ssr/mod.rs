@@ -1,17 +1,15 @@
 use crate::handlers::extract_user_from_cookie;
 use crate::templates::AdminTemplateEngine;
-use axum::{
-    http::{HeaderMap, StatusCode},
-    response::{Html, IntoResponse, Redirect, Response},
-    Extension,
-};
+use axum::Extension;
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::{Html, IntoResponse, Redirect, Response};
 use systemprompt_web_shared::html_escape;
 
-pub const ACCESS_DENIED_HTML: &str = "<h1>Access Denied</h1><p>Admin access required.</p>";
+pub(crate) const ACCESS_DENIED_HTML: &str = "<h1>Access Denied</h1><p>Admin access required.</p>";
 
 mod ssr_access_control;
 mod ssr_add_passkey;
-pub mod ssr_analytics_requests;
+pub(crate) mod ssr_analytics_requests;
 mod ssr_bridge_device_link;
 mod ssr_bridge_setup;
 mod ssr_chain;
@@ -23,7 +21,7 @@ mod ssr_governance;
 mod ssr_governance_audit_detail;
 mod ssr_governance_hooks;
 mod ssr_governance_policy_edit;
-pub mod ssr_helpers;
+pub(crate) mod ssr_helpers;
 mod ssr_management;
 mod ssr_perf_trace_detail;
 mod ssr_perf_traces;
@@ -35,38 +33,39 @@ mod ssr_setup;
 mod ssr_skills_contexts;
 mod ssr_users;
 mod ssr_users_sessions;
-pub mod types;
+pub(crate) mod types;
 
-pub use ssr_access_control::access_control_page;
-pub use ssr_add_passkey::add_passkey_page;
-pub use ssr_analytics_requests::analytics_requests_page;
-pub use ssr_bridge_device_link::{device_link_approve, device_link_deny, device_link_page};
-pub use ssr_bridge_setup::bridge_setup_page;
-pub use ssr_chain::chain_envelope;
-pub use ssr_context_detail::context_detail_page;
-pub use ssr_conversations_raw::conversations_raw;
-pub use ssr_demo_register::demo_register_page;
-pub use ssr_governance::governance_page;
-pub use ssr_governance_audit_detail::governance_audit_detail_page;
-pub use ssr_governance_hooks::governance_hooks_page;
-pub use ssr_governance_policy_edit::{governance_policy_edit_page, governance_policy_toggle};
-pub use ssr_helpers::branding_context;
-pub use ssr_helpers::render_page;
-pub use ssr_management::{
+pub(crate) use ssr_access_control::access_control_page;
+pub(crate) use ssr_add_passkey::add_passkey_page;
+pub(crate) use ssr_analytics_requests::analytics_requests_page;
+pub(crate) use ssr_bridge_device_link::{device_link_approve, device_link_deny, device_link_page};
+pub(crate) use ssr_bridge_setup::bridge_setup_page;
+pub(crate) use ssr_chain::chain_envelope;
+pub(crate) use ssr_context_detail::context_detail_page;
+pub(crate) use ssr_conversations_raw::conversations_raw;
+pub(crate) use ssr_demo_register::demo_register_page;
+pub(crate) use ssr_governance::governance_page;
+pub(crate) use ssr_governance_audit_detail::governance_audit_detail_page;
+pub(crate) use ssr_governance_hooks::governance_hooks_page;
+pub(crate) use ssr_governance_policy_edit::{
+    governance_policy_edit_page, governance_policy_toggle,
+};
+pub(crate) use ssr_helpers::{branding_context, render_page};
+pub(crate) use ssr_management::{
     management_department_detail_page, management_departments_page, management_devices_page,
 };
-pub use ssr_perf_trace_detail::perf_trace_detail_page;
-pub use ssr_perf_traces::perf_traces_page;
-pub use ssr_profile::profile_page;
-pub use ssr_search_resolve::search_resolve;
-pub use ssr_session_detail::session_detail_page;
-pub use ssr_settings::settings_page;
-pub use ssr_setup::setup_page;
-pub use ssr_skills_contexts::skills_contexts_page;
-pub use ssr_users::{user_detail_page, users_page};
-pub use ssr_users_sessions::users_sessions_page;
+pub(crate) use ssr_perf_trace_detail::perf_trace_detail_page;
+pub(crate) use ssr_perf_traces::perf_traces_page;
+pub(crate) use ssr_profile::profile_page;
+pub(crate) use ssr_search_resolve::search_resolve;
+pub(crate) use ssr_session_detail::session_detail_page;
+pub(crate) use ssr_settings::settings_page;
+pub(crate) use ssr_setup::setup_page;
+pub(crate) use ssr_skills_contexts::skills_contexts_page;
+pub(crate) use ssr_users::{user_detail_page, users_page};
+pub(crate) use ssr_users_sessions::users_sessions_page;
 
-pub async fn login_page(Extension(engine): Extension<AdminTemplateEngine>) -> Response {
+pub(crate) async fn login_page(Extension(engine): Extension<AdminTemplateEngine>) -> Response {
     match engine.render("login", &branding_context(&engine)) {
         Ok(html) => Html(html).into_response(),
         Err(e) => {
@@ -79,11 +78,13 @@ pub async fn login_page(Extension(engine): Extension<AdminTemplateEngine>) -> Re
                 )),
             )
                 .into_response()
-        }
+        },
     }
 }
 
-pub async fn verify_pending_page(Extension(engine): Extension<AdminTemplateEngine>) -> Response {
+pub(crate) async fn verify_pending_page(
+    Extension(engine): Extension<AdminTemplateEngine>,
+) -> Response {
     match engine.render("verify-pending", &branding_context(&engine)) {
         Ok(html) => Html(html).into_response(),
         Err(e) => {
@@ -96,11 +97,11 @@ pub async fn verify_pending_page(Extension(engine): Extension<AdminTemplateEngin
                 )),
             )
                 .into_response()
-        }
+        },
     }
 }
 
-pub async fn register_page(
+pub(crate) async fn register_page(
     headers: HeaderMap,
     Extension(engine): Extension<AdminTemplateEngine>,
 ) -> Response {
@@ -119,10 +120,10 @@ pub async fn register_page(
                 )),
             )
                 .into_response()
-        }
+        },
     }
 }
 
-pub fn get_services_path() -> Result<std::path::PathBuf, Box<Response>> {
+pub(crate) fn get_services_path() -> Result<std::path::PathBuf, Box<Response>> {
     super::shared::get_services_path()
 }

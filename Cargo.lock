@@ -5821,7 +5821,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-web-extension"
-version = "1.0.0"
+version = "0.19.0"
 dependencies = [
  "anyhow",
  "async-stream",

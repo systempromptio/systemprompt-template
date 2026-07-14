@@ -4,12 +4,12 @@ use systemprompt::identifiers::{SessionId, UserId};
 use crate::repositories::hooks_track;
 
 #[derive(Debug)]
-pub struct SessionSummary {
+pub(crate) struct SessionSummary {
     pub summary: String,
     pub tags: String,
 }
 
-pub async fn generate_session_summary(
+pub(crate) async fn generate_session_summary(
     pool: &PgPool,
     user_id: &UserId,
     session_id: &SessionId,
@@ -40,12 +40,11 @@ pub async fn generate_session_summary(
         if row.event_type.contains("Failure") {
             error_count += 1;
         }
-        if project.is_none() {
-            if let Some(ref cwd) = row.cwd {
-                if let Some(name) = cwd.rsplit('/').next().filter(|s| !s.is_empty()) {
-                    project = Some(name.to_string());
-                }
-            }
+        if project.is_none()
+            && let Some(ref cwd) = row.cwd
+            && let Some(name) = cwd.rsplit('/').next().filter(|s| !s.is_empty())
+        {
+            project = Some(name.to_owned());
         }
     }
 

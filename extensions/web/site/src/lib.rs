@@ -8,10 +8,10 @@
 //! - [`homepage`], [`blog`], [`docs`], [`features`] — section providers.
 //! - [`navigation`] — header / footer nav config consumed by every page.
 //! - [`partials`] / [`partials_animations`] — shared template fragments.
-//! - [`extenders`] — URL extenders that splice org-specific routes onto
-//!   the public surface.
-//! - [`assets`] — `web_assets()` enumerates the static asset manifest for
-//!   the extension trait.
+//! - [`extenders`] — URL extenders that splice org-specific routes onto the
+//!   public surface.
+//! - [`assets`] — `web_assets()` enumerates the static asset manifest for the
+//!   extension trait.
 
 pub mod assets;
 pub mod blog;

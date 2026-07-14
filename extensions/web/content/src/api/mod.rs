@@ -4,10 +4,8 @@ mod types;
 
 use std::sync::Arc;
 
-use axum::{
-    routing::{get, post},
-    Router,
-};
+use axum::Router;
+use axum::routing::{get, post};
 use sqlx::PgPool;
 
 use systemprompt_web_shared::config::BlogConfigValidated;

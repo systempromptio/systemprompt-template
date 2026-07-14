@@ -71,7 +71,7 @@ impl ValidationService {
     }
 
     #[must_use]
-    pub fn validate_metadata(&self, metadata: &ContentMetadata) -> ValidationResult {
+    pub fn validate_metadata(metadata: &ContentMetadata) -> ValidationResult {
         let mut result = ValidationResult::valid();
 
         if metadata.title.trim().is_empty() {
@@ -110,7 +110,7 @@ impl ValidationService {
         }
 
         if metadata.description.trim().is_empty() {
-            result = result.with_warning("Description is empty - this may affect SEO".to_string());
+            result = result.with_warning("Description is empty - this may affect SEO".to_owned());
         } else if metadata.description.len() > MAX_DESCRIPTION_LENGTH {
             result = result.with_error(ValidationError::new(
                 "description",
@@ -119,18 +119,18 @@ impl ValidationService {
         }
 
         if metadata.author.trim().is_empty() {
-            result = result.with_warning("Author is not specified".to_string());
+            result = result.with_warning("Author is not specified".to_owned());
         }
 
         if metadata.keywords.trim().is_empty() {
-            result = result.with_warning("Keywords are empty - this may affect SEO".to_string());
+            result = result.with_warning("Keywords are empty - this may affect SEO".to_owned());
         }
 
         result
     }
 
     #[must_use]
-    pub fn validate_body(&self, body: &str) -> ValidationResult {
+    pub fn validate_body(body: &str) -> ValidationResult {
         let mut result = ValidationResult::valid();
 
         if body.trim().is_empty() {
@@ -146,7 +146,7 @@ impl ValidationService {
     }
 
     #[must_use]
-    pub fn validate_url(&self, url: &str, field_name: &str) -> ValidationResult {
+    pub fn validate_url(url: &str, field_name: &str) -> ValidationResult {
         let mut result = ValidationResult::valid();
 
         if url.trim().is_empty() {
@@ -163,13 +163,9 @@ impl ValidationService {
         result
     }
 
-    pub fn validate_content(
-        &self,
-        metadata: &ContentMetadata,
-        body: &str,
-    ) -> Result<(), BlogError> {
-        let metadata_result = self.validate_metadata(metadata);
-        let body_result = self.validate_body(body);
+    pub fn validate_content(metadata: &ContentMetadata, body: &str) -> Result<(), BlogError> {
+        let metadata_result = Self::validate_metadata(metadata);
+        let body_result = Self::validate_body(body);
 
         let mut all_errors = metadata_result.errors;
         all_errors.extend(body_result.errors);

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n                g.user_id AS \"identity_id!\",\n                g.policy AS \"policy!\",\n                COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS \"deny_count!\",\n                COUNT(*)::bigint AS \"total_count!\"\n              FROM governance_decisions g\n              WHERE g.created_at >= $1 AND g.created_at < $2\n              GROUP BY g.user_id, g.policy\n              HAVING COUNT(*) FILTER (WHERE g.decision = 'deny') > 0\n              ORDER BY 3 DESC, 4 DESC\n              LIMIT 500",
+  "query": "SELECT\n            g.user_id AS \"identity_id!\",\n            g.policy AS \"policy!\",\n            COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS \"deny_count!\",\n            COUNT(*)::bigint AS \"total_count!\"\n          FROM governance_decisions g\n          WHERE g.created_at >= $1 AND g.created_at < $2\n          GROUP BY g.user_id, g.policy\n          HAVING COUNT(*) FILTER (WHERE g.decision = 'deny') > 0\n          ORDER BY 3 DESC, 4 DESC\n          LIMIT 500",
   "describe": {
     "columns": [
       {
@@ -51,5 +51,5 @@
       null
     ]
   },
-  "hash": "81ea09138c23c9cb2aad5f9775556c0932ab0fe600d4a7b69482677c182e5711"
+  "hash": "7e0cdab2775c8aeaa54bbb7088650060c2e39493a1949cab0451772bf015914c"
 }

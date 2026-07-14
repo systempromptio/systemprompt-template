@@ -1,5 +1,5 @@
 use systemprompt_web_admin::repositories::governance_grp::risk_score::{
-    compute_risk_score, RiskScoreWeights, ViolationCounts,
+    RiskScoreWeights, ViolationCounts, compute_risk_score,
 };
 
 #[test]

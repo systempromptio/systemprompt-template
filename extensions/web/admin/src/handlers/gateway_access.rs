@@ -4,37 +4,35 @@
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{Query, State},
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Query, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 use sqlx::PgPool;
 
 use crate::handlers::shared;
 use crate::repositories::{fetch_distinct_roles, list_users};
 
-pub async fn list_distinct_roles_handler(State(pool): State<Arc<PgPool>>) -> Response {
+pub(crate) async fn list_distinct_roles_handler(State(pool): State<Arc<PgPool>>) -> Response {
     match fetch_distinct_roles(&pool).await {
         Ok(roles) => Json(serde_json::json!({ "roles": roles })).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to fetch distinct roles");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
-        }
+        },
     }
 }
 
 #[derive(Debug, Deserialize)]
-pub struct UserSearchQuery {
+pub(crate) struct UserSearchQuery {
     #[serde(default)]
     pub q: Option<String>,
     #[serde(default)]
     pub limit: Option<usize>,
 }
 
-pub async fn search_users_handler(
+pub(crate) async fn search_users_handler(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<UserSearchQuery>,
 ) -> Response {
@@ -43,7 +41,7 @@ pub async fn search_users_handler(
         Err(e) => {
             tracing::error!(error = %e, "Failed to list users for search");
             return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error");
-        }
+        },
     };
     let q = query.q.unwrap_or_default().to_lowercase();
     let limit = query.limit.unwrap_or(10).min(50);

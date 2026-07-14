@@ -1,15 +1,16 @@
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
-pub struct UserMarketplaceRef {
+pub(crate) struct UserMarketplaceRef {
     pub id: String,
     pub name: String,
-    /// "default" (granted via YAML baseline) or "override" (granted via `access_control_rules`).
+    /// "default" (granted via YAML baseline) or "override" (granted via
+    /// `access_control_rules`).
     pub source: &'static str,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct DepartmentGroup {
+pub(crate) struct DepartmentGroup {
     pub department: String,
     pub users: Vec<EnrichedUserView>,
     pub user_count: usize,
@@ -18,7 +19,7 @@ pub struct DepartmentGroup {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct EnrichedUserView {
+pub(crate) struct EnrichedUserView {
     pub user_id: String,
     pub display_name: Option<String>,
     pub email: Option<String>,
@@ -55,7 +56,7 @@ pub struct EnrichedUserView {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct UsersPageData {
+pub(crate) struct UsersPageData {
     pub page: &'static str,
     pub title: &'static str,
     pub groups: Vec<DepartmentGroup>,
@@ -65,7 +66,7 @@ pub struct UsersPageData {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct UserDetailPageData {
+pub(crate) struct UserDetailPageData {
     pub page: &'static str,
     pub title: &'static str,
     pub user: Option<crate::types::UserDetail>,
@@ -85,7 +86,7 @@ pub struct UserDetailPageData {
 }
 
 #[derive(Debug, Clone, Serialize, Default)]
-pub struct UserRuntimeView {
+pub(crate) struct UserRuntimeView {
     pub connected_agents: i64,
     pub total_agents: i64,
     pub tokens_in: i64,
@@ -97,7 +98,7 @@ pub struct UserRuntimeView {
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
-pub struct UserAssignmentSummary {
+pub(crate) struct UserAssignmentSummary {
     pub skills_count: i64,
     pub marketplaces_count: i64,
     #[serde(default)]
@@ -105,7 +106,7 @@ pub struct UserAssignmentSummary {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct UserDeviceView {
+pub(crate) struct UserDeviceView {
     pub id: String,
     pub name: String,
     pub key_prefix: String,

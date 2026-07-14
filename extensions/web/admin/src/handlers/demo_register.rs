@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Extension, Json};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::{Extension, Json};
 use serde::Deserialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
@@ -12,7 +15,7 @@ use crate::types::{CreateUserRequest, UserContext};
 use super::shared;
 
 #[derive(Deserialize, Debug)]
-pub struct DemoRegisterRequest {
+pub(crate) struct DemoRegisterRequest {
     pub name: String,
     pub email: String,
     pub role: String,
@@ -25,15 +28,15 @@ fn derive_user_id(email_str: &str) -> UserId {
     let sanitized = local_part
         .replace(|c: char| !c.is_alphanumeric() && c != '-' && c != '_', "-")
         .trim_matches('-')
-        .to_string();
+        .to_owned();
     UserId::new(if sanitized.is_empty() {
-        "user".to_string()
+        "user".to_owned()
     } else {
         sanitized
     })
 }
 
-pub async fn create_demo_user_handler(
+pub(crate) async fn create_demo_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Json(body): Json<DemoRegisterRequest>,
@@ -43,7 +46,7 @@ pub async fn create_demo_user_handler(
     }
 
     let email_str = body.email.trim().to_lowercase();
-    let name = body.name.trim().to_string();
+    let name = body.name.trim().to_owned();
 
     if email_str.is_empty() || !email_str.contains('@') {
         return shared::error_response(StatusCode::BAD_REQUEST, "Invalid email address");
@@ -59,7 +62,7 @@ pub async fn create_demo_user_handler(
     let user_id = derive_user_id(&email_str);
 
     let roles = match body.role.as_str() {
-        "admin" => vec!["admin".to_string()],
+        "admin" => vec!["admin".to_owned()],
         _ => vec![],
     };
 
@@ -68,7 +71,7 @@ pub async fn create_demo_user_handler(
         display_name: name.clone(),
         email,
         roles,
-        status: Some("active".to_string()),
+        status: Some("active".to_owned()),
     };
 
     if let Err(e) = repositories::create_user(&pool, &create_req).await {
@@ -84,7 +87,7 @@ pub async fn create_demo_user_handler(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "User created but failed to generate registration link",
             );
-        }
+        },
     };
 
     let registration_url = format!("/admin/add-passkey?token={raw_token}");

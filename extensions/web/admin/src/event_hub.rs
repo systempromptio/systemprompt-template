@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use systemprompt::identifiers::UserId;
-use tokio::sync::{broadcast, RwLock};
+use tokio::sync::{RwLock, broadcast};
 
 #[derive(Clone, Default, Debug)]
 pub struct EventHub {
@@ -19,14 +19,14 @@ impl EventHub {
 
     pub async fn notify(&self, user_id: &UserId) {
         let channels = self.channels.read().await;
-        if let Some(tx) = channels.get(user_id) {
-            if let Err(e) = tx.send(()) {
-                tracing::debug!(
-                    error = %e,
-                    user_id = %user_id,
-                    "EventHub notify: no active subscribers"
-                );
-            }
+        if let Some(tx) = channels.get(user_id)
+            && let Err(e) = tx.send(())
+        {
+            tracing::debug!(
+                error = %e,
+                user_id = %user_id,
+                "EventHub notify: no active subscribers"
+            );
         }
     }
 

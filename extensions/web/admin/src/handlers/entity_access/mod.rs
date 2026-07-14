@@ -1,8 +1,8 @@
 //! Generic entity-access HTTP handlers backing the unified `/admin/access`
 //! matrix and per-entity inline panels (gateway routes, MCP servers, …).
 //!
-//! Wraps [`systemprompt_security::authz::AccessControlRepository`] with the same
-//! endpoint shape the gateway-specific handlers use, but parameterized on
+//! Wraps [`systemprompt_security::authz::AccessControlRepository`] with the
+//! same endpoint shape the gateway-specific handlers use, but parameterized on
 //! `entity_type`. Allowed values mirror the Postgres CHECK constraint on
 //! `access_control_rules.entity_type`.
 
@@ -10,12 +10,10 @@ mod support;
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{Path, Query, State},
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Path, Query, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::RuleId;
@@ -25,7 +23,7 @@ use crate::handlers::shared;
 
 use support::{collect_entity_ids, parse_access, parse_rule_type, repo, validate_entity_type};
 
-pub async fn list_entity_access_handler(
+pub(crate) async fn list_entity_access_handler(
     State(pool): State<Arc<PgPool>>,
     Path((entity_type, entity_id)): Path<(String, String)>,
 ) -> Response {
@@ -39,7 +37,7 @@ pub async fn list_entity_access_handler(
         Err(e) => {
             tracing::error!(error = %e, entity_type, entity_id, "list_rules_for_entity failed");
             return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error");
-        }
+        },
     };
     let default_included = match r.get_entity(kind, &entity_id).await {
         Ok(Some(entity)) => entity.default_included,
@@ -47,7 +45,7 @@ pub async fn list_entity_access_handler(
         Err(e) => {
             tracing::error!(error = %e, entity_type, entity_id, "get_entity failed");
             return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error");
-        }
+        },
     };
     Json(serde_json::json!({
         "entity_type": entity_type,
@@ -59,7 +57,7 @@ pub async fn list_entity_access_handler(
 }
 
 #[derive(Debug, Deserialize)]
-pub struct UpsertRuleBody {
+pub(crate) struct UpsertRuleBody {
     pub rule_type: String,
     pub rule_value: String,
     pub access: String,
@@ -67,7 +65,7 @@ pub struct UpsertRuleBody {
     pub justification: Option<String>,
 }
 
-pub async fn upsert_entity_rule_handler(
+pub(crate) async fn upsert_entity_rule_handler(
     State(pool): State<Arc<PgPool>>,
     Path((entity_type, entity_id)): Path<(String, String)>,
     Json(body): Json<UpsertRuleBody>,
@@ -100,11 +98,11 @@ pub async fn upsert_entity_rule_handler(
         Err(e) => {
             tracing::error!(error = %e, entity_type, entity_id, "upsert_rule failed");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
-        }
+        },
     }
 }
 
-pub async fn delete_entity_rule_handler(
+pub(crate) async fn delete_entity_rule_handler(
     State(pool): State<Arc<PgPool>>,
     Path((entity_type, _entity_id, rule_id)): Path<(String, String, String)>,
 ) -> Response {
@@ -117,16 +115,16 @@ pub async fn delete_entity_rule_handler(
         Err(e) => {
             tracing::error!(error = %e, rule_id, "delete_rule failed");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
-        }
+        },
     }
 }
 
 #[derive(Debug, Deserialize)]
-pub struct DefaultIncludedBody {
+pub(crate) struct DefaultIncludedBody {
     pub default_included: bool,
 }
 
-pub async fn set_entity_default_handler(
+pub(crate) async fn set_entity_default_handler(
     State(pool): State<Arc<PgPool>>,
     Path((entity_type, entity_id)): Path<(String, String)>,
     Json(body): Json<DefaultIncludedBody>,
@@ -148,19 +146,19 @@ pub async fn set_entity_default_handler(
         Err(e) => {
             tracing::error!(error = %e, entity_type, entity_id, "upsert_entity failed");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
-        }
+        },
     }
 }
 
 #[derive(Debug, Deserialize)]
-pub struct AllAccessQuery {
+pub(crate) struct AllAccessQuery {
     pub entity_type: String,
 }
 
 /// Bulk-list every entity of the given type with its rules + default. Used by
 /// the `/admin/access` matrix view. Routes/IDs come from the on-disk profile
 /// (`gateway_route`) or `services/mcp/*.yaml` (`mcp_server`).
-pub async fn list_all_entity_access_handler(
+pub(crate) async fn list_all_entity_access_handler(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<AllAccessQuery>,
 ) -> Response {
@@ -178,7 +176,7 @@ pub async fn list_all_entity_access_handler(
         Err(e) => {
             tracing::error!(error = %e, entity_type = %query.entity_type, "list_rules_bulk failed");
             return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error");
-        }
+        },
     };
     let mut entries: Vec<serde_json::Value> = Vec::with_capacity(entity_ids.len());
     for eid in &entity_ids {
@@ -206,7 +204,7 @@ pub async fn list_all_entity_access_handler(
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ApplyTemplateBody {
+pub(crate) struct ApplyTemplateBody {
     pub entity_type: String,
     pub subject_type: String,
     pub subject_value: String,
@@ -217,7 +215,7 @@ pub struct ApplyTemplateBody {
 /// Apply a department/role template across every entity of a given type.
 /// Wraps repeated [`upsert_rule`]/[`delete_rule`] calls and triggers the
 /// gateway-ACL export once at the end.
-pub async fn apply_template_handler(
+pub(crate) async fn apply_template_handler(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<ApplyTemplateBody>,
 ) -> Response {
@@ -276,7 +274,7 @@ pub async fn apply_template_handler(
                 Err(e) => {
                     tracing::warn!(error = %e, entity_id = %eid, "apply_template upsert failed");
                     failed += 1;
-                }
+                },
             }
         }
     }

@@ -1,21 +1,19 @@
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
-use axum::{
-    http::StatusCode,
-    response::{Html, IntoResponse, Response},
-    Extension,
-};
+use axum::Extension;
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
 use serde_json::json;
 
-use super::{render_page, ACCESS_DENIED_HTML};
+use super::{ACCESS_DENIED_HTML, render_page};
 
-pub async fn demo_register_page(
+pub(crate) async fn demo_register_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
 ) -> Response {
     if !user_ctx.is_admin {
-        return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML.to_string())).into_response();
+        return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML.to_owned())).into_response();
     }
 
     let data = json!({

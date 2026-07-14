@@ -1,16 +1,16 @@
 use axum::http::HeaderMap;
-use systemprompt::models::auth::JwtAudience;
 use systemprompt::models::Config;
+use systemprompt::models::auth::JwtAudience;
 use systemprompt::oauth::validate_jwt_token;
 
 use crate::error::{AdminError, AdminResult};
 
-pub fn validate_plugin_jwt(headers: &HeaderMap) -> AdminResult<String> {
+pub(crate) fn validate_plugin_jwt(headers: &HeaderMap) -> AdminResult<String> {
     let token = headers
         .get("authorization")
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.strip_prefix("Bearer "))
-        .ok_or_else(|| AdminError::Unauthorized("Missing Authorization header".to_string()))?;
+        .ok_or_else(|| AdminError::Unauthorized("Missing Authorization header".to_owned()))?;
 
     let jwt_issuer = Config::get()
         .map_err(|e| {
@@ -23,11 +23,11 @@ pub fn validate_plugin_jwt(headers: &HeaderMap) -> AdminResult<String> {
     let claims = validate_jwt_token(
         token,
         &jwt_issuer,
-        &[JwtAudience::Resource("plugin".to_string())],
+        &[JwtAudience::Resource("plugin".to_owned())],
     )
     .map_err(|e| {
         tracing::warn!(error = %e, "Plugin JWT validation failed");
-        AdminError::Unauthorized("Invalid or expired token".to_string())
+        AdminError::Unauthorized("Invalid or expired token".to_owned())
     })?;
 
     Ok(claims.sub)

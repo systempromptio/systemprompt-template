@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use systemprompt::database::Database;
 use systemprompt::extension::prelude::*;
 use systemprompt::models::Config;
@@ -34,7 +34,7 @@ impl PageDataProvider for BlogPostPageDataProvider {
     }
 
     fn applies_to_pages(&self) -> Vec<String> {
-        vec!["blog".to_string()]
+        vec!["blog".to_owned()]
     }
 
     async fn provide_page_data(
@@ -44,7 +44,7 @@ impl PageDataProvider for BlogPostPageDataProvider {
         let item = ctx
             .content_item()
             .ok_or_else(|| {
-                BlogError::InvalidRequest("Content item required for blog post".to_string())
+                BlogError::InvalidRequest("Content item required for blog post".to_owned())
             })
             .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
 
@@ -61,16 +61,16 @@ impl PageDataProvider for BlogPostPageDataProvider {
                 .and_then(|v| v.as_str())
                 .unwrap_or_default();
 
-            if let Some(db) = ctx.db_pool::<Arc<Database>>() {
-                if let Some(pool) = db.pool() {
-                    let related = list_related_posts(&pool, slug).await.unwrap_or_else(|e| {
-                        tracing::warn!(error = %e, "Failed to fetch related posts");
-                        Vec::new()
-                    });
+            if let Some(db) = ctx.db_pool::<Arc<Database>>()
+                && let Some(pool) = db.pool()
+            {
+                let related = list_related_posts(&pool, slug).await.unwrap_or_else(|e| {
+                    tracing::warn!(error = %e, "Failed to fetch related posts");
+                    Vec::new()
+                });
 
-                    if let Some(related_html) = render_related_posts(&related) {
-                        obj.insert("SOCIAL_CONTENT".to_string(), Value::String(related_html));
-                    }
+                if let Some(related_html) = render_related_posts(&related) {
+                    obj.insert("SOCIAL_CONTENT".to_owned(), Value::String(related_html));
                 }
             }
         }
@@ -85,49 +85,46 @@ impl PageDataProvider for BlogPostPageDataProvider {
 
 fn insert_basic_metadata(obj: &mut serde_json::Map<String, Value>, item: &Value) {
     if let Some(title) = item.get("title").and_then(|v| v.as_str()) {
-        obj.insert("TITLE".to_string(), Value::String(title.to_string()));
+        obj.insert("TITLE".to_owned(), Value::String(title.to_owned()));
     }
     if let Some(desc) = item.get("description").and_then(|v| v.as_str()) {
-        obj.insert("DESCRIPTION".to_string(), Value::String(desc.to_string()));
+        obj.insert("DESCRIPTION".to_owned(), Value::String(desc.to_owned()));
     }
     if let Some(author) = item.get("author").and_then(|v| v.as_str()) {
-        obj.insert("AUTHOR".to_string(), Value::String(author.to_string()));
+        obj.insert("AUTHOR".to_owned(), Value::String(author.to_owned()));
     }
     if let Some(keywords) = item.get("keywords").and_then(|v| v.as_str()) {
-        obj.insert("KEYWORDS".to_string(), Value::String(keywords.to_string()));
+        obj.insert("KEYWORDS".to_owned(), Value::String(keywords.to_owned()));
     }
     if let Some(image) = item.get("image").and_then(|v| v.as_str()) {
-        obj.insert(
-            "FEATURED_IMAGE".to_string(),
-            Value::String(image.to_string()),
-        );
-        obj.insert("IMAGE".to_string(), Value::String(image.to_string()));
+        obj.insert("FEATURED_IMAGE".to_owned(), Value::String(image.to_owned()));
+        obj.insert("IMAGE".to_owned(), Value::String(image.to_owned()));
     }
 }
 
 fn insert_date_metadata(obj: &mut serde_json::Map<String, Value>, item: &Value) {
     if let Some(published) = item.get("published_at").and_then(|v| v.as_str()) {
-        obj.insert("DATE_ISO".to_string(), Value::String(published.to_string()));
+        obj.insert("DATE_ISO".to_owned(), Value::String(published.to_owned()));
         obj.insert(
-            "DATE_PUBLISHED".to_string(),
-            Value::String(published.to_string()),
+            "DATE_PUBLISHED".to_owned(),
+            Value::String(published.to_owned()),
         );
         if let Ok(dt) = DateTime::parse_from_rfc3339(published) {
             obj.insert(
-                "DATE".to_string(),
+                "DATE".to_owned(),
                 Value::String(dt.format("%B %d, %Y").to_string()),
             );
         } else if let Ok(dt) = published.parse::<DateTime<Utc>>() {
             obj.insert(
-                "DATE".to_string(),
+                "DATE".to_owned(),
                 Value::String(dt.format("%B %d, %Y").to_string()),
             );
         }
     }
     if let Some(updated) = item.get("updated_at").and_then(|v| v.as_str()) {
         obj.insert(
-            "DATE_MODIFIED_ISO".to_string(),
-            Value::String(updated.to_string()),
+            "DATE_MODIFIED_ISO".to_owned(),
+            Value::String(updated.to_owned()),
         );
     }
 }
@@ -136,10 +133,7 @@ fn insert_read_time(obj: &mut serde_json::Map<String, Value>, item: &Value) {
     if let Some(content) = item.get("content").and_then(|v| v.as_str()) {
         let word_count = content.split_whitespace().count();
         let read_time = (word_count / 200).max(1);
-        obj.insert(
-            "READ_TIME".to_string(),
-            Value::String(read_time.to_string()),
-        );
+        obj.insert("READ_TIME".to_owned(), Value::String(read_time.to_string()));
     }
 }
 
@@ -155,11 +149,11 @@ fn insert_social_and_references(obj: &mut serde_json::Map<String, Value>, item: 
 
     let org_url = Config::get().map_or_else(|_| String::new(), |c| c.api_external_url.clone());
     let social_bar = render_social_action_bar(slug, title, &org_url);
-    obj.insert("SOCIAL_ACTION_BAR".to_string(), Value::String(social_bar));
+    obj.insert("SOCIAL_ACTION_BAR".to_owned(), Value::String(social_bar));
 
-    if let Some(links) = item.get("links") {
-        if let Some(refs_html) = render_references(links) {
-            obj.insert("REFERENCES".to_string(), Value::String(refs_html));
-        }
+    if let Some(links) = item.get("links")
+        && let Some(refs_html) = render_references(links)
+    {
+        obj.insert("REFERENCES".to_owned(), Value::String(refs_html));
     }
 }

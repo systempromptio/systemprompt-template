@@ -5,8 +5,7 @@ use sqlx::PgPool;
 
 use systemprompt::identifiers::UserId;
 
-use crate::repositories::secret_crypto;
-use crate::repositories::secret_keys;
+use crate::repositories::{secret_crypto, secret_keys};
 use systemprompt_web_shared::error::MarketplaceError;
 
 pub async fn create_resolution_token(
@@ -52,9 +51,9 @@ pub async fn validate_and_consume_token(
         Some(r) => {
             tracing::debug!(user_id = %r.user_id, plugin_id = %r.plugin_id, "Consumed resolution token");
             Ok((r.user_id, r.plugin_id))
-        }
+        },
         None => Err(MarketplaceError::Internal(
-            "Invalid or expired token".to_string(),
+            "Invalid or expired token".to_owned(),
         )),
     }
 }
@@ -84,9 +83,15 @@ pub async fn resolve_secrets_for_plugin(
     for row in &rows {
         let encrypted_value = row.encrypted_value.as_deref().unwrap_or(&[]);
         let value_nonce = row.value_nonce.as_deref().unwrap_or(&[]);
-        let nonce: [u8; 12] = value_nonce.try_into().map_err(|_| {
-            MarketplaceError::Internal(format!("Invalid nonce length for var {}", row.var_name))
-        })?;
+        let nonce: [u8; 12] =
+            value_nonce
+                .try_into()
+                .map_err(|e: std::array::TryFromSliceError| {
+                    MarketplaceError::Internal(format!(
+                        "Invalid nonce length for var {}: {e}",
+                        row.var_name
+                    ))
+                })?;
         let plaintext = secret_crypto::decrypt(&dek, &nonce, encrypted_value)
             .map_err(|e| MarketplaceError::Crypto(e.to_string()))?;
         let value = String::from_utf8(plaintext).map_err(|e| {

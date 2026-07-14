@@ -68,11 +68,15 @@ pub fn load_master_key() -> Result<[u8; 32], SecretCryptoError> {
         })
         .ok_or(SecretCryptoError::MasterKeyMissing)?;
 
-    let bytes = hex::decode(hex_key.trim()).map_err(|_| SecretCryptoError::InvalidKeyMaterial)?;
+    let bytes = hex::decode(hex_key.trim()).map_err(|e| {
+        tracing::warn!(error = %e, "Master key is not valid hex");
+        SecretCryptoError::InvalidKeyMaterial
+    })?;
 
-    let key: [u8; 32] = bytes
-        .try_into()
-        .map_err(|_| SecretCryptoError::InvalidKeyMaterial)?;
+    let key: [u8; 32] = bytes.try_into().map_err(|v: Vec<u8>| {
+        tracing::warn!(len = v.len(), "Master key hex did not decode to 32 bytes");
+        SecretCryptoError::InvalidKeyMaterial
+    })?;
 
     Ok(key)
 }

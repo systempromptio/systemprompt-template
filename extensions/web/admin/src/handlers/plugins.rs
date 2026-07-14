@@ -1,9 +1,7 @@
-use axum::{
-    extract::{Extension, Query},
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Extension, Query};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 
 use crate::handlers::shared;
 use crate::repositories;
@@ -11,7 +9,7 @@ use crate::types::{UserContext, UserQuery};
 
 use super::responses::PluginsListResponse;
 
-pub async fn list_plugins_handler(
+pub(crate) async fn list_plugins_handler(
     Extension(user_ctx): Extension<UserContext>,
     Query(_query): Query<UserQuery>,
 ) -> Response {
@@ -28,7 +26,7 @@ pub async fn list_plugins_handler(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal server error",
             );
-        }
+        },
     };
 
     Json(PluginsListResponse { plugins }).into_response()

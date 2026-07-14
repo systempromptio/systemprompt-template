@@ -26,7 +26,10 @@ pub async fn upsert_daily_summary(
     execute_upsert_query(pool, user_id, date, input, &cloned).await
 }
 
-#[allow(clippy::cognitive_complexity)]
+#[expect(
+    clippy::cognitive_complexity,
+    reason = "large sqlx upsert macro inflates branch count"
+)]
 async fn execute_upsert_query(
     pool: &PgPool,
     user_id: &str,
@@ -196,7 +199,7 @@ pub async fn fetch_global_averages(pool: &PgPool) -> GlobalAverages {
     .unwrap_or_else(GlobalAverages::default)
 }
 
-#[allow(clippy::cognitive_complexity)]
+#[expect(clippy::cognitive_complexity, reason = "large sqlx macro function")]
 pub async fn generate_user_daily_summary(
     pool: &PgPool,
     user_id: &str,
@@ -204,7 +207,7 @@ pub async fn generate_user_daily_summary(
     ai_service: Option<&Arc<AiService>>,
 ) -> Result<(), MarketplaceError> {
     let _ai = ai_service.ok_or(MarketplaceError::Internal(
-        "AI service not available".to_string(),
+        "AI service not available".to_owned(),
     ))?;
 
     let existing: Option<i64> = sqlx::query_scalar!(

@@ -41,11 +41,11 @@ impl PublishPipelineJob {
                     "Content ingestion completed"
                 );
                 stats.record_success();
-            }
+            },
             Err(e) => {
                 tracing::error!(error = %e, "Content ingestion failed");
                 stats.record_failure();
-            }
+            },
         }
     }
 
@@ -57,11 +57,11 @@ impl PublishPipelineJob {
                     "Admin CSS bundle completed"
                 );
                 stats.record_success();
-            }
+            },
             Err(e) => {
                 tracing::error!(error = %e, "Admin CSS bundle failed");
                 stats.record_failure();
-            }
+            },
         }
     }
 
@@ -73,11 +73,11 @@ impl PublishPipelineJob {
                     "Admin JS bundle completed"
                 );
                 stats.record_success();
-            }
+            },
             Err(e) => {
                 tracing::error!(error = %e, "Admin JS bundle failed");
                 stats.record_failure();
-            }
+            },
         }
     }
 
@@ -90,11 +90,11 @@ impl PublishPipelineJob {
                     "Asset copy completed"
                 );
                 stats.record_success();
-            }
+            },
             Err(e) => {
                 tracing::error!(error = %e, "Asset copy failed");
                 stats.record_failure();
-            }
+            },
         }
     }
 
@@ -103,11 +103,11 @@ impl PublishPipelineJob {
             Ok(_result) => {
                 tracing::debug!("Content prerender completed");
                 stats.record_success();
-            }
+            },
             Err(e) => {
                 tracing::error!(error = %e, "Content prerender failed");
                 stats.record_failure();
-            }
+            },
         }
     }
 
@@ -121,11 +121,11 @@ impl PublishPipelineJob {
             Ok(results) => {
                 tracing::debug!(page_count = results.len(), "Page prerendering completed");
                 stats.record_success();
-            }
+            },
             Err(e) => {
                 tracing::error!(error = %e, "Page prerendering failed");
                 stats.record_failure();
-            }
+            },
         }
     }
 
@@ -134,11 +134,11 @@ impl PublishPipelineJob {
             Ok(_result) => {
                 tracing::debug!("Sitemap generation completed");
                 stats.record_success();
-            }
+            },
             Err(e) => {
                 tracing::error!(error = %e, "Sitemap generation failed");
                 stats.record_failure();
-            }
+            },
         }
     }
 
@@ -147,11 +147,11 @@ impl PublishPipelineJob {
             Ok(_result) => {
                 tracing::debug!("llms.txt generation completed");
                 stats.record_success();
-            }
+            },
             Err(e) => {
                 tracing::error!(error = %e, "llms.txt generation failed");
                 stats.record_failure();
-            }
+            },
         }
     }
 
@@ -160,15 +160,15 @@ impl PublishPipelineJob {
             Ok(()) => {
                 tracing::debug!("RSS feed generation completed");
                 stats.record_success();
-            }
+            },
             Err(e) if e.to_string().contains("No RSS feeds generated") => {
                 tracing::debug!("RSS feed generation skipped: no RssFeedProvider registered");
                 stats.record_success();
-            }
+            },
             Err(e) => {
                 tracing::error!(error = %e, "RSS feed generation failed");
                 stats.record_failure();
-            }
+            },
         }
     }
 
@@ -177,11 +177,11 @@ impl PublishPipelineJob {
             Ok(_result) => {
                 tracing::debug!("robots.txt generation completed");
                 stats.record_success();
-            }
+            },
             Err(e) => {
                 tracing::error!(error = %e, "robots.txt generation failed");
                 stats.record_failure();
-            }
+            },
         }
     }
 
@@ -204,11 +204,11 @@ impl PublishPipelineJob {
             Ok((css_count, js_count)) => {
                 tracing::debug!(css = css_count, js = js_count, "Assets organized");
                 stats.record_success();
-            }
+            },
             Err(e) => {
                 tracing::error!(error = %e, "Asset organization failed");
                 stats.record_failure();
-            }
+            },
         }
     }
 }
@@ -239,12 +239,12 @@ impl PublishPipelineJob {
         let start_time = std::time::Instant::now();
 
         let db_pool = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-            "Database not available in job context".to_string(),
+            "Database not available in job context".to_owned(),
         ))?;
         let paths = ctx
             .app_paths::<Arc<AppPaths>>()
             .ok_or(MarketplaceError::Internal(
-                "AppPaths not available in job context".to_string(),
+                "AppPaths not available in job context".to_owned(),
             ))?
             .as_ref();
 

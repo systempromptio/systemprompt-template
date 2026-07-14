@@ -8,17 +8,15 @@ use crate::repositories;
 use crate::repositories::analytics_grp::contexts_list;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
-use axum::{
-    extract::{Extension, Query, State},
-    response::{IntoResponse, Response},
-};
+use axum::extract::{Extension, Query, State};
+use axum::response::{IntoResponse, Response};
 use chrono::{DateTime, Duration, Utc};
 use serde::Deserialize;
 use serde_json::json;
 use sqlx::PgPool;
 
 #[derive(Debug, Deserialize, Default)]
-pub struct ContextsListQuery {
+pub(crate) struct ContextsListQuery {
     pub user_id: Option<String>,
     pub model: Option<String>,
     pub q: Option<String>,
@@ -49,7 +47,7 @@ fn group_contexts_by_user(
     let mut out: std::collections::HashMap<String, Vec<serde_json::Value>> =
         std::collections::HashMap::new();
     for c in contexts {
-        let key = c.user_id.clone().unwrap_or_else(|| "unknown".to_string());
+        let key = c.user_id.clone().unwrap_or_else(|| "unknown".to_owned());
         out.entry(key).or_default().push(json!({
             "context_id":     c.context_id,
             "name":           c.name,
@@ -129,7 +127,7 @@ struct ContextsPageInputs {
 
 fn parse_inputs(params: ContextsListQuery) -> ContextsPageInputs {
     let trim_opt = |s: Option<String>| -> Option<String> {
-        s.map(|v| v.trim().to_string()).filter(|v| !v.is_empty())
+        s.map(|v| v.trim().to_owned()).filter(|v| !v.is_empty())
     };
     let user_id = trim_opt(params.user_id);
     let model = trim_opt(params.model);
@@ -141,7 +139,7 @@ fn parse_inputs(params: ContextsListQuery) -> ContextsPageInputs {
         .as_deref()
         .map(str::to_lowercase)
         .filter(|v| v == "users" || v == "contexts")
-        .unwrap_or_else(|| "contexts".to_string());
+        .unwrap_or_else(|| "contexts".to_owned());
     let filter = contexts_list::ContextListFilter {
         user_id: user_id.clone(),
         model: model.clone(),
@@ -266,7 +264,7 @@ fn build_page_json(inputs: &ContextsPageInputs, data: &ContextsPageData) -> serd
     })
 }
 
-pub async fn skills_contexts_page(
+pub(crate) async fn skills_contexts_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

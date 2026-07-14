@@ -63,7 +63,7 @@ pub async fn render_yaml_snapshot(pool: &PgPool) -> Result<String, MarketplaceEr
         });
         match row.rule_type {
             RuleType::Role => entry.roles.push(row.rule_value),
-            RuleType::User => {}
+            RuleType::User => {},
         }
     }
 

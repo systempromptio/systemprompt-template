@@ -11,12 +11,10 @@
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, Path, State},
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Extension, Path, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
 
@@ -24,14 +22,12 @@ use systemprompt::identifiers::{RouteId, UserId};
 use systemprompt_security::authz::{EntityRef, ResolveInput};
 
 use crate::handlers::shared;
-use crate::repositories::{
-    self,
-    gateway_acl::{self, Decision},
-};
+use crate::repositories::gateway_acl::{self, Decision};
+use crate::repositories::{self};
 use crate::types::{GatewayRouteView, UserContext};
 
 #[derive(Debug, Serialize)]
-pub struct CatalogEntry {
+pub(crate) struct CatalogEntry {
     pub id: String,
     pub model_pattern: String,
     pub provider: String,
@@ -39,12 +35,12 @@ pub struct CatalogEntry {
 }
 
 #[derive(Debug, Serialize)]
-pub struct CatalogResponse {
+pub(crate) struct CatalogResponse {
     pub user_id: String,
     pub routes: Vec<CatalogEntry>,
 }
 
-pub async fn for_user_handler(
+pub(crate) async fn for_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(user_id): Path<String>,
@@ -64,7 +60,7 @@ pub async fn for_user_handler(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Failed to load gateway",
             );
-        }
+        },
     };
 
     let (user_roles, department) =
@@ -77,7 +73,7 @@ pub async fn for_user_handler(
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "Failed to load user",
                 );
-            }
+            },
         };
 
     match collect_allowed_routes(&pool, &cfg.routes, &user_id, &user_roles, &department).await {
@@ -136,7 +132,7 @@ async fn collect_allowed_routes(
 }
 
 #[derive(Debug, serde::Deserialize)]
-pub struct DetectQuery {
+pub(crate) struct DetectQuery {
     #[serde(default = "default_since_minutes")]
     pub since_minutes: i64,
 }
@@ -146,7 +142,7 @@ const fn default_since_minutes() -> i64 {
 }
 
 #[derive(Debug, Serialize)]
-pub struct DetectResponse {
+pub(crate) struct DetectResponse {
     pub emitted: usize,
     pub since_minutes: i64,
 }
@@ -155,7 +151,7 @@ pub struct DetectResponse {
 /// `ai_requests` and emits `governance_decisions` rows for denied combos.
 /// Until a scheduled job wires this up automatically, admins can poke it
 /// from the CLI or a dashboard button — gap deliberately small.
-pub async fn detect_handler(
+pub(crate) async fn detect_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     axum::extract::Query(query): axum::extract::Query<DetectQuery>,
@@ -175,7 +171,7 @@ pub async fn detect_handler(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Failed to load gateway",
             );
-        }
+        },
     };
     match detect_after_the_fact(&pool, &cfg.routes, query.since_minutes).await {
         Ok(emitted) => Json(DetectResponse {
@@ -186,14 +182,14 @@ pub async fn detect_handler(
         Err(e) => {
             tracing::error!(error = %e, "ACL detector failed");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Detector failed")
-        }
+        },
     }
 }
 
 /// After-the-fact detector: scan recent `ai_requests` and emit a
 /// `governance_decisions` row for any request whose user/model combination
 /// the ACL would have denied. Best-effort; called by [`detect_handler`].
-pub async fn detect_after_the_fact(
+pub(crate) async fn detect_after_the_fact(
     pool: &PgPool,
     routes: &[GatewayRouteView],
     since_minutes: i64,

@@ -35,21 +35,21 @@ pub fn list_skill_catalog(
             Err(e) => {
                 tracing::warn!(path = %cfg.display(), error = %e, "skipped unreadable skill config");
                 continue;
-            }
+            },
         };
         let val: serde_yaml::Value = match serde_yaml::from_str(&raw) {
             Ok(v) => v,
             Err(e) => {
                 tracing::warn!(path = %cfg.display(), error = %e, "skipped invalid skill yaml");
                 continue;
-            }
+            },
         };
         let id_str = val
             .get("id")
             .and_then(|v| v.as_str())
             .or_else(|| dir.file_name().and_then(|n| n.to_str()))
             .unwrap_or("")
-            .to_string();
+            .to_owned();
         if id_str.is_empty() {
             continue;
         }
@@ -58,12 +58,12 @@ pub fn list_skill_catalog(
             .get("name")
             .and_then(|v| v.as_str())
             .unwrap_or(&id_str)
-            .to_string();
+            .to_owned();
         let description = val
             .get("description")
             .and_then(|v| v.as_str())
             .unwrap_or("")
-            .to_string();
+            .to_owned();
         let enabled = val
             .get("enabled")
             .and_then(serde_yaml::Value::as_bool)
@@ -132,14 +132,14 @@ pub fn list_agent_catalog(
                         .and_then(|v| v.as_str())
                 })
                 .unwrap_or(id_str)
-                .to_string();
+                .to_owned();
             let description = av
                 .get("card")
                 .and_then(|c| c.get("description"))
                 .and_then(|v| v.as_str())
                 .or_else(|| av.get("description").and_then(|v| v.as_str()))
                 .unwrap_or("")
-                .to_string();
+                .to_owned();
             let enabled = av
                 .get("enabled")
                 .and_then(serde_yaml::Value::as_bool)
@@ -218,7 +218,7 @@ pub fn list_all_skill_ids(services_path: &Path) -> Result<Vec<String>, Marketpla
             continue;
         }
         if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
-            ids.push(stem.to_string());
+            ids.push(stem.to_owned());
         }
     }
     ids.sort();
@@ -247,6 +247,6 @@ pub fn update_plugin_skills(
     _skill_ids: &[SkillId],
 ) -> Result<(), MarketplaceError> {
     Err(MarketplaceError::Internal(
-        "update_plugin_skills is disabled; edit services/plugins/*.yaml directly".to_string(),
+        "update_plugin_skills is disabled; edit services/plugins/*.yaml directly".to_owned(),
     ))
 }

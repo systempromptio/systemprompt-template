@@ -34,6 +34,15 @@ struct TraceRow {
     total_count: i64,
 }
 
+/// Pagination window for [`fetch_trace_list`] (was 3 trailing positional
+/// args: sort, limit, offset).
+#[derive(Debug, Clone, Copy)]
+pub struct TracePage {
+    pub sort: TraceSort,
+    pub limit: i64,
+    pub offset: i64,
+}
+
 /// Returns trace summaries inside the window plus the unpaginated match count.
 ///
 /// The sort is a closed `TraceSort` (five columns × two directions); each
@@ -48,10 +57,13 @@ pub async fn fetch_trace_list(
     pool: &PgPool,
     filter: TraceFilter<'_>,
     range: TimeRange,
-    sort: TraceSort,
-    limit: i64,
-    offset: i64,
+    page: TracePage,
 ) -> Result<(Vec<TraceSummary>, i64), sqlx::Error> {
+    let TracePage {
+        sort,
+        limit,
+        offset,
+    } = page;
     let sort_col = sort.column.sql_key();
     let sort_dir = sort.dir.sql_key();
 

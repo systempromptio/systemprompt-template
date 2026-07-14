@@ -7,16 +7,14 @@
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, Path, State},
-    http::StatusCode,
-    response::{Html, IntoResponse, Response},
-};
+use axum::extract::{Extension, Path, State};
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
 use serde_json::json;
 use sqlx::PgPool;
 
 use crate::repositories::perf_grp::traces::{
-    fetch_trace_spans, resolve_trace_session, Span, SpanStatus,
+    Span, SpanStatus, fetch_trace_spans, resolve_trace_session,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -26,7 +24,7 @@ use super::ACCESS_DENIED_HTML;
 const NOT_FOUND_HTML: &str = "<h1>Trace not found</h1>\
 <p>No spans found for that session or trace id.</p>";
 
-pub async fn perf_trace_detail_page(
+pub(crate) async fn perf_trace_detail_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -43,7 +41,7 @@ pub async fn perf_trace_detail_page(
         Err(e) => {
             tracing::warn!(error = %e, "resolve_trace_session failed");
             return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response();
-        }
+        },
     };
 
     let spans = fetch_trace_spans(&pool, &session_id)
@@ -59,7 +57,7 @@ pub async fn perf_trace_detail_page(
 
     let summary = build_summary(&session_id, &spans);
     let spans_json = spans.iter().map(span_to_json).collect::<Vec<_>>();
-    let spans_payload = serde_json::to_string(&spans_json).unwrap_or_else(|_| "[]".to_string());
+    let spans_payload = serde_json::to_string(&spans_json).unwrap_or_else(|_| "[]".to_owned());
 
     let data = json!({
         "page": "trace-detail",
@@ -83,7 +81,7 @@ fn build_summary(session_id: &str, spans: &[Span]) -> serde_json::Value {
     let identity = spans
         .iter()
         .find_map(|s| s.identity_label.clone())
-        .unwrap_or_else(|| "unknown".to_string());
+        .unwrap_or_else(|| "unknown".to_owned());
     let span_count = spans.len();
     let deny_count = spans
         .iter()
@@ -127,7 +125,7 @@ fn short_id(id: &str) -> String {
     if id.len() > 12 {
         format!("{}…", &id[..12])
     } else {
-        id.to_string()
+        id.to_owned()
     }
 }
 

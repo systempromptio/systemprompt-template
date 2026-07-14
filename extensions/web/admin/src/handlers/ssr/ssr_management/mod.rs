@@ -15,23 +15,23 @@ use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
-use super::ssr_helpers::render_typed_page;
 use super::ACCESS_DENIED_HTML;
+use super::ssr_helpers::render_typed_page;
 
 mod departments;
 mod devices;
 
-use departments::{sum_member_totals, url_escape, DepartmentDetailPageData, DepartmentsPageData};
+use departments::{DepartmentDetailPageData, DepartmentsPageData, sum_member_totals, url_escape};
 use devices::{
-    build_device_rows, compute_owner_rowspans, load_device_user_options, load_devices,
-    ManagementDevicesPageData,
+    ManagementDevicesPageData, build_device_rows, compute_owner_rowspans, load_device_user_options,
+    load_devices,
 };
 
 fn forbidden() -> Response {
     (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response()
 }
 
-pub async fn management_departments_page(
+pub(crate) async fn management_departments_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -60,7 +60,7 @@ pub async fn management_departments_page(
     )
 }
 
-pub async fn management_devices_page(
+pub(crate) async fn management_devices_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -97,7 +97,7 @@ pub async fn management_devices_page(
     render_typed_page(&engine, "management-devices", &data, &user_ctx, &mkt_ctx)
 }
 
-pub async fn management_department_detail_page(
+pub(crate) async fn management_department_detail_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

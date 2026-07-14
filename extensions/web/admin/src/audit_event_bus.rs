@@ -9,11 +9,10 @@
 //! lifetime of the process. Reconnects are handled by `PgListener::recv`
 //! itself (it transparently re-subscribes on transient errors).
 
-use std::sync::Arc;
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 
-use sqlx::postgres::PgListener;
 use sqlx::PgPool;
+use sqlx::postgres::PgListener;
 use tokio::sync::broadcast;
 
 const CHANNEL_NAME: &str = "audit_events";
@@ -63,28 +62,28 @@ fn spawn_listener(pool: Arc<PgPool>, sender: broadcast::Sender<String>) {
                     loop {
                         match listener.recv().await {
                             Ok(notification) => {
-                                let payload = notification.payload().to_string();
+                                let payload = notification.payload().to_owned();
                                 // Why: `broadcast::Sender::send` returns Err when there are
                                 // zero subscribers. That's a normal idle state for this bus
                                 // — no SSE clients connected — not a failure to log.
-                                let _ = sender.send(payload);
-                            }
+                                drop(sender.send(payload));
+                            },
                             Err(e) => {
                                 tracing::warn!(
                                     error = %e,
                                     "audit_event_bus: recv failed; reconnecting"
                                 );
                                 break;
-                            }
+                            },
                         }
                     }
-                }
+                },
                 Err(e) => {
                     tracing::warn!(
                         error = %e,
                         "audit_event_bus: PgListener::connect failed; retrying"
                     );
-                }
+                },
             }
             tokio::time::sleep(std::time::Duration::from_secs(2)).await;
         }

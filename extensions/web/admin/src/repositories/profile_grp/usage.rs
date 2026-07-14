@@ -1,4 +1,5 @@
-//! Per-user usage aggregations against `ai_requests` for the bridge profile pane.
+//! Per-user usage aggregations against `ai_requests` for the bridge profile
+//! pane.
 //!
 //! Mirrors the shape of `BridgeProfileUsage` so the SSR profile page and the
 //! `/v1/bridge/profile/usage` API endpoint render the same data.
@@ -157,6 +158,23 @@ pub async fn fetch_conversation_summary(
     pool: &PgPool,
     user_id: &str,
 ) -> Result<ConversationSummary, sqlx::Error> {
+    let (total_conversations, total_ai_requests) = fetch_conversation_totals(pool, user_id).await?;
+    let by_model = fetch_conversation_by_model(pool, user_id).await?;
+    let recent = fetch_recent_conversations(pool, user_id).await?;
+
+    Ok(ConversationSummary {
+        total_conversations,
+        total_ai_requests,
+        by_model,
+        by_agent: Vec::new(),
+        recent,
+    })
+}
+
+async fn fetch_conversation_totals(
+    pool: &PgPool,
+    user_id: &str,
+) -> Result<(i64, i64), sqlx::Error> {
     let totals = sqlx::query!(
         r#"SELECT
             COUNT(DISTINCT context_id)::bigint AS "total_conversations!",
@@ -169,8 +187,14 @@ pub async fn fetch_conversation_summary(
     )
     .fetch_one(pool)
     .await?;
+    Ok((totals.total_conversations, totals.total_ai_requests))
+}
 
-    let by_model = sqlx::query!(
+async fn fetch_conversation_by_model(
+    pool: &PgPool,
+    user_id: &str,
+) -> Result<Vec<ConversationGroup>, sqlx::Error> {
+    Ok(sqlx::query!(
         r#"SELECT
             model AS "model!",
             COUNT(DISTINCT context_id)::bigint AS "conversations!",
@@ -192,9 +216,14 @@ pub async fn fetch_conversation_summary(
         conversations: r.conversations,
         ai_requests: r.ai_requests,
     })
-    .collect();
+    .collect())
+}
 
-    let recent = sqlx::query!(
+async fn fetch_recent_conversations(
+    pool: &PgPool,
+    user_id: &str,
+) -> Result<Vec<RecentConversation>, sqlx::Error> {
+    Ok(sqlx::query!(
         r#"WITH ranked AS (
             SELECT
               context_id,
@@ -230,13 +259,5 @@ pub async fn fetch_conversation_summary(
         model: r.model,
         agent_name: None,
     })
-    .collect();
-
-    Ok(ConversationSummary {
-        total_conversations: totals.total_conversations,
-        total_ai_requests: totals.total_ai_requests,
-        by_model,
-        by_agent: Vec::new(),
-        recent,
-    })
+    .collect())
 }

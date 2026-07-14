@@ -2,7 +2,8 @@ use std::fmt;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::{postgres::PgTypeInfo, Decode, Encode, FromRow, Postgres, Type};
+use sqlx::postgres::PgTypeInfo;
+use sqlx::{Decode, Encode, FromRow, Postgres, Type};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

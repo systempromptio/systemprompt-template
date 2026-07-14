@@ -6,10 +6,8 @@
 
 use std::collections::HashMap;
 
-use axum::{
-    http::StatusCode,
-    response::{Html, IntoResponse, Response},
-};
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
 
@@ -91,24 +89,28 @@ pub(super) async fn assignment_counts_by_type(
     rows.into_iter().map(|r| (r.entity_id, r.count)).collect()
 }
 
-pub(super) fn build_row(
-    entity_type: &'static str,
-    id: String,
-    name: String,
-    description: String,
-    enabled: bool,
-    source_path: String,
-    assignment_count: i64,
-) -> CatalogRow {
+/// Fields needed to build a single `CatalogRow`; grouped to keep `build_row`
+/// under the arity lint (was 7 positional args).
+pub(super) struct CatalogRowSeed {
+    pub(super) entity_type: &'static str,
+    pub(super) id: String,
+    pub(super) name: String,
+    pub(super) description: String,
+    pub(super) enabled: bool,
+    pub(super) source_path: String,
+    pub(super) assignment_count: i64,
+}
+
+pub(super) fn build_row(seed: CatalogRowSeed) -> CatalogRow {
     CatalogRow {
-        entity_type,
-        matrix_url: matrix_url(entity_type, &id),
-        id,
-        name,
-        description,
-        enabled,
-        source_path,
-        assignment_count,
+        matrix_url: matrix_url(seed.entity_type, &seed.id),
+        entity_type: seed.entity_type,
+        id: seed.id,
+        name: seed.name,
+        description: seed.description,
+        enabled: seed.enabled,
+        source_path: seed.source_path,
+        assignment_count: seed.assignment_count,
     }
 }
 

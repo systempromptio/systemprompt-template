@@ -56,7 +56,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 
 systemprompt::traits::submit_job!(&LlmsTxtGenerationJob);
 
-pub async fn generate_llms_txt(db_pool: DbPool, paths: &AppPaths) -> Result<(), JobError> {
+pub(crate) async fn generate_llms_txt(db_pool: DbPool, paths: &AppPaths) -> Result<(), JobError> {
     use systemprompt::models::Config;
     use tokio::fs;
 
@@ -167,38 +167,21 @@ async fn write_documentation_section(
     writeln!(content, "Technical documentation and guides.")?;
     writeln!(content)?;
 
-    if let Some(source) = config.content_sources.get("documentation") {
-        if source.enabled {
-            let source_id = SourceId::new(&source.source_id);
-            let locale = LocaleCode::new("en");
-            if let Ok(docs) = repo.list_by_source(&source_id, &locale).await {
-                let prefixes = [
-                    ("services", "Services"),
-                    ("extensions", "Extensions"),
-                    ("config", "Configuration Reference"),
-                ];
-                for (prefix, heading) in &prefixes {
-                    let mut filtered: Vec<_> = docs
-                        .iter()
-                        .filter(|d| d.slug.starts_with(prefix))
-                        .map(|d| {
-                            (
-                                d.title.clone(),
-                                format!("{}/documentation/{}", base_url, d.slug),
-                                d.description.clone(),
-                            )
-                        })
-                        .collect();
-                    sort_entries_in_place(&mut filtered);
-                    write_section(content, heading, &filtered)?;
-                }
-                let mut other: Vec<_> = docs
+    if let Some(source) = config.content_sources.get("documentation")
+        && source.enabled
+    {
+        let source_id = SourceId::new(&source.source_id);
+        let locale = LocaleCode::new("en");
+        if let Ok(docs) = repo.list_by_source(&source_id, &locale).await {
+            let prefixes = [
+                ("services", "Services"),
+                ("extensions", "Extensions"),
+                ("config", "Configuration Reference"),
+            ];
+            for (prefix, heading) in &prefixes {
+                let mut filtered: Vec<_> = docs
                     .iter()
-                    .filter(|d| {
-                        !d.slug.starts_with("services")
-                            && !d.slug.starts_with("extensions")
-                            && !d.slug.starts_with("config")
-                    })
+                    .filter(|d| d.slug.starts_with(prefix))
                     .map(|d| {
                         (
                             d.title.clone(),
@@ -207,9 +190,26 @@ async fn write_documentation_section(
                         )
                     })
                     .collect();
-                sort_entries_in_place(&mut other);
-                write_section(content, "General", &other)?;
+                sort_entries_in_place(&mut filtered);
+                write_section(content, heading, &filtered)?;
             }
+            let mut other: Vec<_> = docs
+                .iter()
+                .filter(|d| {
+                    !d.slug.starts_with("services")
+                        && !d.slug.starts_with("extensions")
+                        && !d.slug.starts_with("config")
+                })
+                .map(|d| {
+                    (
+                        d.title.clone(),
+                        format!("{}/documentation/{}", base_url, d.slug),
+                        d.description.clone(),
+                    )
+                })
+                .collect();
+            sort_entries_in_place(&mut other);
+            write_section(content, "General", &other)?;
         }
     }
     Ok(())
@@ -228,15 +228,15 @@ async fn write_blog_section(
     writeln!(content, "Articles and updates.")?;
     writeln!(content)?;
 
-    if let Some(source) = config.content_sources.get("blog") {
-        if source.enabled {
-            let source_id = SourceId::new(&source.source_id);
-            let locale = LocaleCode::new("en");
-            if let Ok(posts) = repo.list_by_source(&source_id, &locale).await {
-                for post in posts.iter().take(15) {
-                    let url = format!("{}/blog/{}", base_url, post.slug);
-                    writeln!(content, "- [{}]({}): {}", post.title, url, post.description)?;
-                }
+    if let Some(source) = config.content_sources.get("blog")
+        && source.enabled
+    {
+        let source_id = SourceId::new(&source.source_id);
+        let locale = LocaleCode::new("en");
+        if let Ok(posts) = repo.list_by_source(&source_id, &locale).await {
+            for post in posts.iter().take(15) {
+                let url = format!("{}/blog/{}", base_url, post.slug);
+                writeln!(content, "- [{}]({}): {}", post.title, url, post.description)?;
             }
         }
     }

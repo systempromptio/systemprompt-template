@@ -15,7 +15,8 @@ use std::borrow::Cow;
 use serde_yaml::Value as YamlValue;
 use systemprompt::identifiers::{McpToolName, PolicyId};
 use systemprompt_security::authz::{Decision, DenyReason, MatchedBy};
-use systemprompt_security::policy::{types::AccessScope, GovernancePolicy, PolicyContext};
+use systemprompt_security::policy::types::AccessScope;
+use systemprompt_security::policy::{GovernancePolicy, PolicyContext};
 
 use super::super::policy::PolicyRegistration;
 
@@ -23,7 +24,7 @@ const ID: &str = "scope_check";
 const DEFAULT_ADMIN_ONLY_PREFIXES: &[&str] = &["mcp__systemprompt__"];
 
 #[derive(Debug)]
-pub struct ScopeCheck {
+pub(super) struct ScopeCheck {
     admin_only_prefixes: Vec<String>,
 }
 
@@ -34,14 +35,14 @@ impl ScopeCheck {
             .and_then(|s| s.as_sequence())
             .map(|seq| {
                 seq.iter()
-                    .filter_map(|p| p.as_str().map(str::to_string))
+                    .filter_map(|p| p.as_str().map(str::to_owned))
                     .collect::<Vec<_>>()
             })
             .filter(|v: &Vec<String>| !v.is_empty())
             .unwrap_or_else(|| {
                 DEFAULT_ADMIN_ONLY_PREFIXES
                     .iter()
-                    .map(|s| (*s).to_string())
+                    .map(|s| (*s).to_owned())
                     .collect()
             });
         Self {
@@ -89,7 +90,7 @@ impl GovernancePolicy for ScopeCheck {
         let detail = match ctx.access_scope {
             AccessScope::Unknown => {
                 Cow::Borrowed("Agent scope could not be resolved; allowed for non-admin tool")
-            }
+            },
             scope => Cow::Owned(format!("{scope} scope is allowed for tool: {tool_str}")),
         };
         Decision::Allow {

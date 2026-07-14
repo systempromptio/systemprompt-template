@@ -5,7 +5,7 @@ use super::calculations::{
     calculate_tool_diversity,
 };
 use super::throughput::calculate_daily_throughput;
-use super::{format_bytes_rate, format_total_bytes, ApmCorrelation, TodayApmLive};
+use super::{ApmCorrelation, TodayApmLive, format_bytes_rate, format_total_bytes};
 use crate::numeric;
 
 pub async fn fetch_today_apm_live(pool: &PgPool, user_id: &str) -> TodayApmLive {
@@ -157,15 +157,15 @@ pub async fn fetch_apm_success_correlation(pool: &PgPool, user_id: &str) -> ApmC
             "high" => {
                 result.high_apm_success_rate = sr;
                 result.high_apm_avg_quality = aq;
-            }
+            },
             "medium" => {
                 result.medium_apm_success_rate = sr;
-            }
+            },
             "low" => {
                 result.low_apm_success_rate = sr;
                 result.low_apm_avg_quality = aq;
-            }
-            _ => {}
+            },
+            _ => {},
         }
     }
 

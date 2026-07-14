@@ -1,30 +1,28 @@
-pub mod ai_context;
-pub mod ai_summary;
-pub mod ai_summary_types;
+pub(crate) mod ai_context;
+pub(crate) mod ai_summary;
+pub(crate) mod ai_summary_types;
 mod auth;
 mod dedup;
 mod description;
 mod entity;
 mod helpers;
 mod processing;
-pub mod session_summary;
+pub(crate) mod session_summary;
 
 use crate::event_hub::EventHub;
 use crate::repositories::webhook;
 use crate::types::webhook::{HookEvent, HookEventPayload};
 use auth::extract_and_validate_jwt;
-use axum::{
-    extract::{Extension, State},
-    http::{HeaderMap, StatusCode},
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Extension, State};
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::ai::AiService;
 use systemprompt::identifiers::{SessionId, UserId};
 
-pub async fn handle_hook_track(
+pub(crate) async fn handle_hook_track(
     Extension(event_hub): Extension<EventHub>,
     Extension(ai_service): Extension<Option<Arc<AiService>>>,
     State(pool): State<Arc<PgPool>>,
@@ -128,6 +126,6 @@ async fn insert_hook_event(pool: &PgPool, user_id: &UserId, payload: &HookEventP
         Err(e) => {
             tracing::warn!(error = %e, "Failed to insert hook tracking event");
             false
-        }
+        },
     }
 }

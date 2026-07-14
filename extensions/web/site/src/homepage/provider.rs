@@ -25,7 +25,7 @@ impl PageDataProvider for HomepagePageDataProvider {
     }
 
     fn applies_to_pages(&self) -> Vec<String> {
-        vec!["homepage".to_string()]
+        vec!["homepage".to_owned()]
     }
 
     async fn provide_page_data(

@@ -1,11 +1,9 @@
 use std::sync::Arc;
 
-use axum::{
-    extract::{Path, State},
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Path, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 
 use crate::api::BlogState;
 use crate::services::{ContentService, SearchService};
@@ -23,11 +21,11 @@ pub async fn query_handler(
         Ok(response) => {
             tracing::info!(total = response.total, "Search completed");
             Json(response).into_response()
-        }
+        },
         Err(e) => {
             tracing::error!(error = %e, "Search error");
             error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
@@ -42,7 +40,7 @@ pub async fn list_content_handler(
         Err(e) => {
             tracing::error!(error = %e, "Failed to list content");
             error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 
@@ -61,7 +59,7 @@ pub async fn get_content_handler(
         Err(e) => {
             tracing::error!(error = %e, "Failed to get content");
             error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        }
+        },
     }
 }
 

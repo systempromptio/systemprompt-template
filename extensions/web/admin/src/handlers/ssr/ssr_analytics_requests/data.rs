@@ -10,16 +10,16 @@ use std::sync::Arc;
 use sqlx::PgPool;
 
 use crate::repositories::analytics_grp::request_stats::{
-    fetch_cost_over_time, fetch_latency_histogram, fetch_request_stats, CostBucket, LatencyBucket,
-    RequestStats,
+    CostBucket, LatencyBucket, RequestStats, fetch_cost_over_time, fetch_latency_histogram,
+    fetch_request_stats,
 };
 use crate::repositories::analytics_grp::requests::{
-    fetch_request_filter_options, fetch_requests_paged, RequestFilter, RequestFilterOptions,
-    RequestRow, RequestSortSpec,
+    RequestFilter, RequestFilterOptions, RequestPage, RequestRow, RequestSortSpec,
+    fetch_request_filter_options, fetch_requests_paged,
 };
 use crate::repositories::governance_grp::time_range::{
-    count_requests_in_range, parse_time_range, preset_to_range, TimeRange, TimeRangePreset,
-    TimeRangeQuery,
+    TimeRange, TimeRangePreset, TimeRangeQuery, count_requests_in_range, parse_time_range,
+    preset_to_range,
 };
 
 use super::RequestsQuery;
@@ -66,16 +66,34 @@ pub(super) struct RequestsData {
     pub options: RequestFilterOptions,
 }
 
+/// Paging/sort inputs for a single requests-page fetch; grouped to keep
+/// `fetch_requests_data` under the arity lint (was 6 positional args).
+pub(super) struct RequestsPageQuery<'a> {
+    pub filter: &'a RequestFilter,
+    pub range: TimeRange,
+    pub sort: RequestSortSpec,
+    pub page_size: i64,
+    pub offset: i64,
+}
+
 pub(super) async fn fetch_requests_data(
     pool: &Arc<PgPool>,
-    filter: &RequestFilter,
-    range: TimeRange,
-    sort: RequestSortSpec,
-    page_size: i64,
-    offset: i64,
+    query: RequestsPageQuery<'_>,
 ) -> RequestsData {
+    let RequestsPageQuery {
+        filter,
+        range,
+        sort,
+        page_size,
+        offset,
+    } = query;
+    let page = RequestPage {
+        sort,
+        limit: page_size,
+        offset,
+    };
     let (paged, stats_res, hist_res, cost_res, options_res) = tokio::join!(
-        fetch_requests_paged(pool, filter, range, sort, page_size, offset),
+        fetch_requests_paged(pool, filter, range, page),
         fetch_request_stats(pool, range),
         fetch_latency_histogram(pool, range),
         fetch_cost_over_time(pool, range),

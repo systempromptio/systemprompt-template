@@ -3,8 +3,9 @@
 //!
 //! Three steps, in dependency order:
 //! 1. Materialise the profile's gateway-route entities into
-//!    `access_control_entities` (so the FK on `access_control_rules` is satisfied
-//!    and a `gateway_route` `entity_match` glob has routes to expand over).
+//!    `access_control_entities` (so the FK on `access_control_rules` is
+//!    satisfied and a `gateway_route` `entity_match` glob has routes to expand
+//!    over).
 //! 2. Project `services/access-control/*.yaml` into the authz tables via core
 //!    ingestion.
 //! 3. Load the gateway model allow-list into `ai_gateway_policies`.
@@ -55,19 +56,19 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     let start = std::time::Instant::now();
 
     let db_pool = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-        "Database not available in job context".to_string(),
+        "Database not available in job context".to_owned(),
     ))?;
     let paths = ctx
         .app_paths::<Arc<AppPaths>>()
         .ok_or(MarketplaceError::Internal(
-            "AppPaths not available in job context".to_string(),
+            "AppPaths not available in job context".to_owned(),
         ))?;
     let services_path = paths.system().services().to_path_buf();
 
     let registered = bootstrap_gateway_entities(db_pool).await?;
 
     let pool = db_pool.pool().ok_or(MarketplaceError::Internal(
-        "PgPool not available from database".to_string(),
+        "PgPool not available from database".to_owned(),
     ))?;
     acl_yaml_loader::load_from_yaml(&pool, &services_path)
         .await

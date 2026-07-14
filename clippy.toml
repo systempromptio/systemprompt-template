@@ -1,0 +1,55 @@
+# Clippy configuration for systemprompt.io code quality standards
+# This supplements the workspace lints in Cargo.toml
+# See: tests/validator/coding-standards.md
+
+# Avoid false positives for common patterns
+avoid-breaking-exported-api = false
+msrv = "1.94"
+
+# COGNITIVE COMPLEXITY - Keep code simple and maintainable
+cognitive-complexity-threshold = 30
+
+# TYPE COMPLEXITY - Avoid overly complex types
+type-complexity-threshold = 250
+
+# FUNCTION SIZE - Keep functions focused and readable
+too-many-lines-threshold = 75
+
+# FUNCTION PARAMETERS - Use structs when exceeding threshold
+# Target: 5 parameters (consider builder pattern or config struct)
+too-many-arguments-threshold = 5
+
+# PERFORMANCE - Trivial copy optimization
+trivial-copy-size-limit = 256
+
+# NAMING - Allow short names in limited contexts
+# Allows: for i in 0..10, for (k, v) in map
+single-char-binding-names-threshold = 4
+
+# ENUM VARIANTS - Warn on large size differences (Box large variants)
+enum-variant-size-threshold = 200
+
+# BIT OPERATIONS - Clarity threshold
+verbose-bit-mask-threshold = 1
+
+# LITERALS - Readability threshold
+literal-representation-threshold = 10
+
+# STRING LITERALS - Encourage compile-time checks
+# Suggests: const QUERY: &str = "SELECT..."; over inline strings
+max-suggested-slice-pattern-length = 3
+
+# DOCS - Ensure public APIs are documented
+missing-docs-in-crate-items = false  # Only public APIs required
+
+# PERFORMANCE - Vec capacity hints
+vec-box-size-threshold = 4096
+
+# LARGE FUTURES - Prevent stack overflow in async code
+future-size-threshold = 16384
+
+# LARGE STACK FRAMES - Prevent stack overflow
+stack-size-threshold = 512000
+
+# STRUCT BOOLS - Allow reasonable number of bools in CLI args and config structs
+max-struct-bools = 5

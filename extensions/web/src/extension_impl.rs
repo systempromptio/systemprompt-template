@@ -9,12 +9,17 @@ use systemprompt::oauth::SessionCreationService;
 use systemprompt::traits::Job;
 use systemprompt::users::UserService;
 
+use crate::assets::web_assets;
 use crate::blog::{BlogListPageDataProvider, BlogPostPageDataProvider};
-use crate::config_loader;
 use crate::docs::{DocsContentDataProvider, DocsPageDataProvider};
 use crate::extenders::OrgUrlExtender;
 use crate::features::FeaturePagePrerenderer;
 use crate::homepage::{HomepagePageDataProvider, HomepagePrerenderer};
+use crate::jobs::{
+    BundleAdminCssJob, BundleAdminJsJob, ContentAnalyticsAggregationJob, ContentIngestionJob,
+    ContentPrerenderJob, CopyExtensionAssetsJob, GovernanceBootstrapJob, LlmsTxtGenerationJob,
+    PublishPipelineJob, RobotsTxtGenerationJob, SitemapGenerationJob,
+};
 use crate::navigation::NavigationPageDataProvider;
 use crate::partials::{
     AgenticMeshAnimationPartialRenderer, ArchitectureDiagramPartialRenderer,
@@ -22,16 +27,8 @@ use crate::partials::{
     HeaderPartialRenderer, MemoryLoopAnimationPartialRenderer, RustMeshAnimationPartialRenderer,
     ScriptsPartialRenderer,
 };
-use crate::{
-    admin, api,
-    assets::web_assets,
-    jobs::{
-        BundleAdminCssJob, BundleAdminJsJob, ContentAnalyticsAggregationJob, ContentIngestionJob,
-        ContentPrerenderJob, CopyExtensionAssetsJob, GovernanceBootstrapJob, LlmsTxtGenerationJob,
-        PublishPipelineJob, RobotsTxtGenerationJob, SitemapGenerationJob,
-    },
-    schemas::{migrations, schema_definitions},
-};
+use crate::schemas::{migrations, schema_definitions};
+use crate::{admin, api, config_loader};
 
 use crate::extension::WebExtension;
 
@@ -53,7 +50,7 @@ impl Extension for WebExtension {
                 Err(e) => {
                     tracing::error!(error = %e, "Branding config error");
                     None
-                }
+                },
             };
             providers.push(Arc::new(
                 NavigationPageDataProvider::new(nav_config).with_branding(branding),
@@ -175,14 +172,14 @@ impl Extension for WebExtension {
             Err(e) => {
                 tracing::warn!(error = %e, "Failed to load branding config for admin");
                 None
-            }
+            },
         };
         let engine = match admin::templates::AdminTemplateEngine::new(&admin_dir) {
             Ok(engine) => engine.with_branding(branding),
             Err(e) => {
                 tracing::error!(error = %e, "Failed to initialize admin template engine");
                 return Some(ExtensionRouter::public(api_router, "/api/public"));
-            }
+            },
         };
         let bridge_auth_router = admin::bridge_auth_ssr_router(Arc::clone(&pool), engine.clone());
         let ssr_router = admin::admin_ssr_router(pool, engine);

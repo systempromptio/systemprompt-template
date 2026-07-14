@@ -1,10 +1,8 @@
 use std::sync::Arc;
 
-use axum::{
-    extract::{Query, State},
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Query, State};
+use axum::response::{IntoResponse, Response};
 
 use crate::api::{BlogState, SearchQuery};
 use crate::services::SearchService;
@@ -31,6 +29,6 @@ pub async fn search_handler(
                 Json(serde_json::json!({"error": "Internal server error"})),
             )
                 .into_response()
-        }
+        },
     }
 }

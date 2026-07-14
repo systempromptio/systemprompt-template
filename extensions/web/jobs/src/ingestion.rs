@@ -93,11 +93,11 @@ impl Job for ContentIngestionJob {
 
 async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     let db = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
-        "Database not available in job context".to_string(),
+        "Database not available in job context".to_owned(),
     ))?;
 
     let pool = db.write_pool().ok_or(MarketplaceError::Internal(
-        "Write PgPool not available from database".to_string(),
+        "Write PgPool not available from database".to_owned(),
     ))?;
 
     let Some(config) = BlogConfigValidated::load_from_env_or_none()
@@ -154,7 +154,7 @@ async fn ingest_source(
                 report.errors.len() as u64,
                 report.orphans_deleted as u64,
             )
-        }
+        },
         Err(e) => {
             tracing::error!(
                 source_id = %source.source_id(),
@@ -162,7 +162,7 @@ async fn ingest_source(
                 "Source ingestion failed"
             );
             (0, 1, 0)
-        }
+        },
     }
 }
 

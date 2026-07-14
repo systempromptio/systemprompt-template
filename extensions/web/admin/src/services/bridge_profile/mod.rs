@@ -20,7 +20,7 @@ use assemble::{
 };
 
 #[derive(Debug, Clone, Serialize)]
-pub struct ProfileIdentity {
+pub(crate) struct ProfileIdentity {
     pub email: String,
     pub display_name: Option<String>,
     pub user_id: String,
@@ -33,7 +33,7 @@ pub struct ProfileIdentity {
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
-pub struct UsageWindow {
+pub(crate) struct UsageWindow {
     pub requests: i64,
     pub tokens: i64,
     pub cost_microdollars: i64,
@@ -52,7 +52,7 @@ impl From<usage_repo::UsageWindow> for UsageWindow {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct ModelShare {
+pub(crate) struct ModelShare {
     pub model: String,
     pub requests: i64,
     pub tokens: i64,
@@ -73,7 +73,7 @@ impl From<usage_repo::ModelShare> for ModelShare {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct ConversationGroup {
+pub(crate) struct ConversationGroup {
     pub name: String,
     pub conversations: i64,
     pub ai_requests: i64,
@@ -90,7 +90,7 @@ impl From<usage_repo::ConversationGroup> for ConversationGroup {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct RecentConversation {
+pub(crate) struct RecentConversation {
     pub context_id: String,
     pub context_name: Option<String>,
     pub last_activity: chrono::DateTime<chrono::Utc>,
@@ -100,7 +100,7 @@ pub struct RecentConversation {
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
-pub struct ConversationSummary {
+pub(crate) struct ConversationSummary {
     pub total_conversations: i64,
     pub total_ai_requests: i64,
     pub by_model: Vec<ConversationGroup>,
@@ -109,7 +109,7 @@ pub struct ConversationSummary {
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
-pub struct ProfileUsage {
+pub(crate) struct ProfileUsage {
     pub d1: UsageWindow,
     pub d7: UsageWindow,
     pub d30: UsageWindow,
@@ -118,7 +118,7 @@ pub struct ProfileUsage {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct BridgeProfileBlock {
+pub(crate) struct BridgeProfileBlock {
     pub inference_gateway_base_url: String,
     pub auth_scheme: String,
     pub models: Vec<String>,
@@ -127,7 +127,7 @@ pub struct BridgeProfileBlock {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct AgentItem {
+pub(crate) struct AgentItem {
     pub id: String,
     pub display_name: String,
     pub enabled: bool,
@@ -135,14 +135,14 @@ pub struct AgentItem {
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
-pub struct AgentsBlock {
+pub(crate) struct AgentsBlock {
     pub total: i64,
     pub enabled: i64,
     pub items: Vec<AgentItem>,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct BridgeProfilePageData {
+pub(crate) struct BridgeProfilePageData {
     pub page: &'static str,
     pub title: &'static str,
     pub identity: ProfileIdentity,
@@ -154,11 +154,11 @@ pub struct BridgeProfilePageData {
 /// Build the full payload. Falls back gracefully when individual sections fail
 /// — the bridge does the same so missing data renders as empty cards rather
 /// than a page-level error.
-pub async fn build_bridge_profile_data(
+pub(crate) async fn build_bridge_profile_data(
     pool: Arc<PgPool>,
     user_ctx: &UserContext,
 ) -> BridgeProfilePageData {
-    let user_id = user_ctx.user_id.as_str().to_string();
+    let user_id = user_ctx.user_id.as_str().to_owned();
 
     let sections = fetch_usage_sections(&pool, &user_id).await;
     let display_name = sections
@@ -170,9 +170,9 @@ pub async fn build_bridge_profile_data(
     let bridge_profile = build_bridge_profile_block();
 
     let identity = ProfileIdentity {
-        email: user_ctx.email.as_str().to_string(),
+        email: user_ctx.email.as_str().to_owned(),
         display_name,
-        user_id: user_ctx.user_id.as_str().to_string(),
+        user_id: user_ctx.user_id.as_str().to_owned(),
         tenant_id: read_tenant_id(),
         provider: None,
         roles: user_ctx.roles.clone(),

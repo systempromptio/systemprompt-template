@@ -1,9 +1,10 @@
 //! Thin gateway-route convenience wrappers around the unified
 //! `systemprompt_security::authz` core crate.
 //!
-//! Types and the resolver are re-exported directly from `systemprompt_security::authz`
-//! so handler call sites compile unchanged. The repository functions below
-//! preserve the historical `(pool, route_id, ...)` signatures while delegating
+//! Types and the resolver are re-exported directly from
+//! `systemprompt_security::authz` so handler call sites compile unchanged. The
+//! repository functions below preserve the historical `(pool, route_id, ...)`
+//! signatures while delegating
 //! to [`systemprompt_security::authz::AccessControlRepository`] with
 //! `entity_type = "gateway_route"`. Use the core repository directly for any
 //! new entity types (`mcp_server`, etc.).
@@ -19,7 +20,7 @@ use systemprompt_security::authz::{
     AccessControlRepository, AuthzError, EntityKind, EntityRow, UpsertRuleParams,
 };
 
-pub use systemprompt_security::authz::{resolve, Access, AccessRule, Decision, RuleType};
+pub use systemprompt_security::authz::{Access, AccessRule, Decision, RuleType, resolve};
 
 const ENTITY_TYPE: EntityKind = EntityKind::GatewayRoute;
 
@@ -72,7 +73,7 @@ pub async fn upsert_rule(
 }
 
 pub async fn delete_rule(pool: &PgPool, rule_id: &str) -> Result<bool, sqlx::Error> {
-    let id = systemprompt::identifiers::RuleId::new(rule_id.to_string());
+    let id = systemprompt::identifiers::RuleId::new(rule_id.to_owned());
     repo(pool).delete_rule(&id).await.map_err(|e| map_err(&e))
 }
 

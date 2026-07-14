@@ -1,7 +1,7 @@
 mod mutations;
 mod queries;
 
-pub use mutations::{UpdateContentParams, UpdateContentParamsBuilder};
+pub use mutations::{UpdateContentParams, UpdateContentParamsBuilder, UpdateContentSeed};
 
 use mutations::ContentMutationRepository;
 use queries::ContentQueryRepository;

@@ -6,7 +6,6 @@ use systemprompt::ai::AiService;
 
 use systemprompt_web_shared::error::MarketplaceError;
 
-#[allow(clippy::cognitive_complexity)]
 pub async fn generate_user_daily_summary(
     pool: &PgPool,
     user_id: &str,
@@ -14,7 +13,7 @@ pub async fn generate_user_daily_summary(
     ai_service: Option<&Arc<AiService>>,
 ) -> Result<(), MarketplaceError> {
     let _ai = ai_service.ok_or(MarketplaceError::Internal(
-        "AI service not available".to_string(),
+        "AI service not available".to_owned(),
     ))?;
 
     let existing: Option<i64> = sqlx::query_scalar!(

@@ -1,9 +1,7 @@
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, State},
-    response::Response,
-};
+use axum::extract::{Extension, State};
+use axum::response::Response;
 use sqlx::PgPool;
 
 use crate::handlers::ssr::ssr_helpers::render_typed_page;
@@ -11,7 +9,7 @@ use crate::services::bridge_profile;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
-pub async fn profile_page(
+pub(crate) async fn profile_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

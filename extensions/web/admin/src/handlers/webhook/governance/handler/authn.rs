@@ -3,7 +3,8 @@
 //! Validates the inbound JWT against the hook/plugin/api audiences and maps
 //! failures to a denied [`Decision`] plus a recorded auth-denial audit row.
 
-use axum::{http::HeaderMap, response::Response};
+use axum::http::HeaderMap;
+use axum::response::Response;
 use systemprompt::identifiers::UserId;
 use systemprompt::models::auth::JwtAudience;
 use systemprompt::oauth::OauthError;
@@ -46,7 +47,7 @@ pub(super) fn authenticate_request(
             let reason = "Internal configuration error — tool call blocked";
             spawn_auth_denial(denial_params, reason);
             return Err(Box::new(build_response(&deny_for_auth_failure(reason))));
-        }
+        },
     };
 
     let expected_aud = "hook|plugin|api";
@@ -54,8 +55,8 @@ pub(super) fn authenticate_request(
         token,
         &jwt_issuer,
         &[
-            JwtAudience::Resource("hook".to_string()),
-            JwtAudience::Resource("plugin".to_string()),
+            JwtAudience::Resource("hook".to_owned()),
+            JwtAudience::Resource("plugin".to_owned()),
             JwtAudience::Api,
         ],
     )
@@ -84,7 +85,7 @@ fn jwt_failure_detail(err: &OauthError) -> (String, &'static str) {
             "Governance webhook JWT rejected: signing algorithm mismatch",
         ),
         OauthError::TokenMissingKid => (
-            "missing kid header".to_string(),
+            "missing kid header".to_owned(),
             "Governance webhook JWT rejected: missing `kid` header",
         ),
         OauthError::TokenUnknownKid { kid } => (

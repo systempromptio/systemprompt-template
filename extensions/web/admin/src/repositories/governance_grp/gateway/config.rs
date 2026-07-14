@@ -27,12 +27,12 @@ pub fn get_gateway_config(profile_path: &Path) -> Result<GatewayConfigView, Mark
         .and_then(|g| g.get("auth_scheme"))
         .and_then(Value::as_str)
         .unwrap_or(DEFAULT_AUTH_SCHEME)
-        .to_string();
+        .to_owned();
     let inference_path_prefix = gateway
         .and_then(|g| g.get("inference_path_prefix"))
         .and_then(Value::as_str)
         .unwrap_or(DEFAULT_INFERENCE_PATH_PREFIX)
-        .to_string();
+        .to_owned();
     let routes = gateway
         .and_then(|g| g.get("routes"))
         .and_then(Value::as_sequence)

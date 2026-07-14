@@ -13,7 +13,7 @@ mod list;
 mod spans;
 mod stats;
 
-pub use list::fetch_trace_list;
+pub use list::{TracePage, fetch_trace_list};
 pub use spans::{fetch_trace_spans, resolve_trace_session};
 pub use stats::fetch_trace_stats;
 

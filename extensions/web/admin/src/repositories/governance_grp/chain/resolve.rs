@@ -2,7 +2,8 @@
 
 use sqlx::PgPool;
 
-/// Resolve `id` (`decision_id`, `request_id`, `trace_id`, or `session_id`) to a `session_id`.
+/// Resolve `id` (`decision_id`, `request_id`, `trace_id`, or `session_id`) to a
+/// `session_id`.
 pub(super) async fn resolve_session_id(
     pool: &PgPool,
     id: &str,
@@ -25,10 +26,9 @@ pub(super) async fn resolve_session_id(
     )
     .fetch_optional(pool)
     .await?
+        && let Some(sid) = row.session_id
     {
-        if let Some(sid) = row.session_id {
-            return Ok(Some(sid));
-        }
+        return Ok(Some(sid));
     }
 
     if let Some(row) = sqlx::query!(

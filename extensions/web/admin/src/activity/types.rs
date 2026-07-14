@@ -6,9 +6,9 @@ pub use super::enums::{ActivityAction, ActivityCategory, ActivityEntity};
 
 #[derive(Debug)]
 pub struct ActivityEntityRef {
-    pub entity_type: ActivityEntity,
-    pub entity_id: Option<String>,
-    pub entity_name: Option<String>,
+    pub kind: ActivityEntity,
+    pub id: Option<String>,
+    pub name: Option<String>,
 }
 
 #[derive(Debug)]

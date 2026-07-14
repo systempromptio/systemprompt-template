@@ -6,9 +6,9 @@
 
 use crate::cli;
 use crate::tools::CliInput;
+use rmcp::ErrorData as McpError;
 use rmcp::model::{CallToolRequestParams, CallToolResult};
 use rmcp::service::{RequestContext, RoleServer};
-use rmcp::ErrorData as McpError;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::McpExecutionId;
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
@@ -59,7 +59,7 @@ impl McpToolHandler for SystempromptToolHandler {
             Err(e) => {
                 tracing::warn!(error = %e, "CLI stdout is not a CliArtifact, returning as text");
                 CliArtifact::text(TextArtifact::new(&output.stdout).with_title("Command Output"))
-            }
+            },
         };
 
         Ok((artifact, summary))
@@ -68,12 +68,12 @@ impl McpToolHandler for SystempromptToolHandler {
 
 pub(super) async fn authenticate_tool_request(
     db_pool: &DbPool,
-    server_name: &str,
     tool_name: &str,
     service_id: &str,
     ctx: &RequestContext<RoleServer>,
     authz_hook: &SharedAuthzHook,
 ) -> Result<(SysRequestContext, String), McpError> {
+    let server_name = service_id;
     let rbac_result = enforce_rbac_from_registry(ctx, service_id, authz_hook).await;
 
     match rbac_result {
@@ -90,20 +90,20 @@ pub(super) async fn authenticate_tool_request(
                         "authenticated",
                     )
                     .await;
-                    let token = authenticated.token().to_string();
+                    let token = authenticated.token().to_owned();
                     Ok((authenticated.context.clone(), token))
-                }
+                },
                 Err(e) => {
                     record_mcp_access_rejected(db_pool, server_name, tool_name, e.message.as_ref())
                         .await;
                     Err(e)
-                }
+                },
             }
-        }
+        },
         Err(e) => {
             record_mcp_access_rejected(db_pool, server_name, tool_name, &format!("{e}")).await;
             Err(e)
-        }
+        },
     }
 }
 
@@ -117,10 +117,10 @@ pub(super) async fn dispatch_tool(
     match tool_name {
         "systemprompt" => {
             let handler = SystempromptToolHandler {
-                auth_token: auth_token.to_string(),
+                auth_token: auth_token.to_owned(),
             };
             executor.execute(&handler, request, request_context).await
-        }
+        },
         _ => Err(McpError::invalid_params(
             format!(
                 "Unknown tool: '{tool_name}'\n\nMANDATORY FIRST STEP: Run 'core skills show \

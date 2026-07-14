@@ -73,7 +73,7 @@ impl LinkService {
             .get_link_by_short_code(short_code)
             .await
             .map_err(BlogError::from)?
-            .ok_or_else(|| BlogError::LinkNotFound(short_code.to_string()))?;
+            .ok_or_else(|| BlogError::LinkNotFound(short_code.to_owned()))?;
 
         let params = TrackClickParams::new(link.id.clone(), session_id)
             .with_user_agent(user_agent.map(String::from))

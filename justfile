@@ -143,12 +143,12 @@ build *FLAGS:
 
 # Clippy (Windows) - always uses offline mode
 [windows]
-clippy *FLAGS: lint-no-synthesis
+clippy *FLAGS: lint-no-synthesis lint-gates
     $env:SQLX_OFFLINE="true"; cargo clippy --workspace {{FLAGS}} -- -D warnings
 
 # Clippy (Unix) - tries database, falls back to offline
 [unix]
-clippy *FLAGS: lint-no-synthesis
+clippy *FLAGS: lint-no-synthesis lint-gates
     #!/usr/bin/env bash
     set -euo pipefail
     SECRETS_FILE="{{justfile_directory()}}/.systemprompt/profiles/local/secrets.json"
@@ -187,6 +187,16 @@ clippy *FLAGS: lint-no-synthesis
     else
         SQLX_OFFLINE=false cargo clippy --workspace {{FLAGS}} -- -D warnings
     fi
+
+# Source gates ported from systemprompt-core (scripts/*.sh)
+lint-gates:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    bash scripts/lint-schema.sh
+    bash scripts/lint-extensions.sh
+    bash scripts/check-sqlx.sh
+    bash scripts/check-http-errors.sh
+    bash scripts/check-test-value.sh
 
 # Structural guard: no string-literal `UserId::new("...")` in extension code.
 # String literals are how principal synthesis sneaks in — every legitimate

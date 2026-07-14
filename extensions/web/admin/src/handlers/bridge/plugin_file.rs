@@ -1,12 +1,10 @@
 use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
-use axum::{
-    body::Body,
-    extract::{Path as AxumPath, State},
-    http::{header, HeaderMap, HeaderValue, StatusCode},
-    response::Response,
-};
+use axum::body::Body;
+use axum::extract::{Path as AxumPath, State};
+use axum::http::{HeaderMap, HeaderValue, StatusCode, header};
+use axum::response::Response;
 use sqlx::PgPool;
 use systemprompt::config::ProfileBootstrap;
 use systemprompt::identifiers::PluginId;
@@ -14,7 +12,7 @@ use systemprompt::models::AppPaths;
 
 use crate::handlers::shared;
 
-pub async fn handle(
+pub(crate) async fn handle(
     State(pool): State<Arc<PgPool>>,
     AxumPath((plugin_id, relative_path)): AxumPath<(String, String)>,
     headers: HeaderMap,
@@ -45,18 +43,18 @@ pub async fn handle(
                 "rejected plugin file request",
             );
             return shared::error_response(StatusCode::BAD_REQUEST, "Invalid path");
-        }
+        },
     };
 
     let bytes = match std::fs::read(&resolved) {
         Ok(b) => b,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             return shared::error_response(StatusCode::NOT_FOUND, "File not found");
-        }
+        },
         Err(e) => {
             tracing::error!(error = %e, path = %resolved.display(), "plugin file read failed");
             return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "File read failed");
-        }
+        },
     };
 
     build_file_response(&resolved, bytes)
@@ -93,14 +91,20 @@ pub fn resolve_within(base: &Path, relative: &str) -> Result<PathBuf, &'static s
     let candidate = Path::new(relative);
     for comp in candidate.components() {
         match comp {
-            Component::Normal(_) | Component::CurDir => {}
+            Component::Normal(_) | Component::CurDir => {},
             _ => return Err("non-canonical component"),
         }
     }
 
-    let canonical_base = base.canonicalize().map_err(|_| "base unavailable")?;
+    let canonical_base = base.canonicalize().map_err(|e| {
+        tracing::warn!(error = %e, base = %base.display(), "resolve_within: base unavailable");
+        "base unavailable"
+    })?;
     let target = canonical_base.join(candidate);
-    let canonical_target = target.canonicalize().map_err(|_| "target unavailable")?;
+    let canonical_target = target.canonicalize().map_err(|e| {
+        tracing::warn!(error = %e, target = %target.display(), "resolve_within: target unavailable");
+        "target unavailable"
+    })?;
 
     if !canonical_target.starts_with(&canonical_base) {
         return Err("escapes base");

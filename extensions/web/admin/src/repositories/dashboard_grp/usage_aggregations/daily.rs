@@ -115,10 +115,10 @@ pub async fn increment_session_summary(params: &SessionSummaryParams<'_>) {
         tracing::debug!(error = %e, "Failed to increment session summary (likely duplicate key)");
     }
 
-    if let Some(fp) = params.file_path {
-        if !fp.is_empty() {
-            super::session_updates::update_unique_files_touched(params.pool, params.session_id, fp)
-                .await;
-        }
+    if let Some(fp) = params.file_path
+        && !fp.is_empty()
+    {
+        super::session_updates::update_unique_files_touched(params.pool, params.session_id, fp)
+            .await;
     }
 }

@@ -86,7 +86,7 @@ impl SessionAnalysis {
     }
 }
 
-pub fn session_analysis_schema() -> serde_json::Value {
+pub(crate) fn session_analysis_schema() -> serde_json::Value {
     serde_json::json!({
         "type": "object",
         "properties": {
@@ -161,11 +161,11 @@ pub fn session_analysis_schema() -> serde_json::Value {
     })
 }
 
-pub fn validate_analysis(mut analysis: SessionAnalysis) -> SessionAnalysis {
+pub(crate) fn validate_analysis(mut analysis: SessionAnalysis) -> SessionAnalysis {
     analysis.quality_score = analysis.quality_score.clamp(1, 5);
 
     if !["yes", "partial", "no"].contains(&analysis.goal_achieved.as_str()) {
-        analysis.goal_achieved = "unknown".to_string();
+        "unknown".clone_into(&mut analysis.goal_achieved);
     }
 
     let allowed_tags = [
@@ -206,10 +206,10 @@ pub fn validate_analysis(mut analysis: SessionAnalysis) -> SessionAnalysis {
     ];
     if let Some(ref cat) = analysis.category {
         if !allowed_categories.contains(&cat.as_str()) {
-            analysis.category = Some("other".to_string());
+            analysis.category = Some("other".to_owned());
         }
     } else {
-        analysis.category = Some("other".to_string());
+        analysis.category = Some("other".to_owned());
     }
 
     if let Some(ref mut eff) = analysis.efficiency_metrics {
@@ -223,7 +223,7 @@ pub fn validate_analysis(mut analysis: SessionAnalysis) -> SessionAnalysis {
     if let Some(ref mut checklist) = analysis.best_practices_checklist {
         for item in checklist.iter_mut() {
             if !["yes", "partial", "no", "n/a"].contains(&item.score.as_str()) {
-                item.score = "n/a".to_string();
+                "n/a".clone_into(&mut item.score);
             }
         }
     }

@@ -13,9 +13,9 @@ pub async fn record(pool: &PgPool, activity: NewActivity) {
     let (entity_type, entity_id, entity_name) =
         activity.entity.as_ref().map_or((None, None, None), |ent| {
             (
-                Some(ent.entity_type.as_ref().to_string()),
-                ent.entity_id.clone(),
-                ent.entity_name.clone(),
+                Some(ent.kind.as_ref().to_owned()),
+                ent.id.clone(),
+                ent.name.clone(),
             )
         });
 
@@ -46,30 +46,20 @@ async fn should_deduplicate(
 ) -> bool {
     match (category, action) {
         ("login", _) => has_recent_login(pool, &activity.user_id).await,
-        ("tool_usage", _) => match activity
-            .entity
-            .as_ref()
-            .and_then(|e| e.entity_name.as_ref())
-        {
+        ("tool_usage", _) => match activity.entity.as_ref().and_then(|e| e.name.as_ref()) {
             Some(name) => has_recent_tool_usage(pool, &activity.user_id, name).await,
             None => false,
         },
         ("mcp_access", "rejected") => {
-            match activity
-                .entity
-                .as_ref()
-                .and_then(|e| e.entity_name.as_ref())
-            {
+            match activity.entity.as_ref().and_then(|e| e.name.as_ref()) {
                 Some(name) => has_recent_mcp_rejected(pool, name).await,
                 None => false,
             }
-        }
-        ("session", "started") => {
-            match activity.entity.as_ref().and_then(|e| e.entity_id.as_ref()) {
-                Some(eid) => has_session_started(pool, eid).await,
-                None => false,
-            }
-        }
+        },
+        ("session", "started") => match activity.entity.as_ref().and_then(|e| e.id.as_ref()) {
+            Some(eid) => has_session_started(pool, eid).await,
+            None => false,
+        },
         _ => false,
     }
 }

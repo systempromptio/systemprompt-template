@@ -35,7 +35,7 @@ pub fn list_configured_hooks(
             .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or("")
-            .to_string();
+            .to_owned();
 
         let Ok(text) = std::fs::read_to_string(&config_path) else {
             continue;
@@ -45,7 +45,7 @@ pub fn list_configured_hooks(
             Err(e) => {
                 tracing::warn!(path = %config_path.display(), error = %e, "parse hook config");
                 continue;
-            }
+            },
         };
 
         if !config.enabled && !is_admin {
@@ -61,13 +61,13 @@ pub fn list_configured_hooks(
         let id_str = if config.id.as_str().is_empty() {
             dir_name
         } else {
-            config.id.as_str().to_string()
+            config.id.as_str().to_owned()
         };
 
         out.push(ConfiguredHook {
             id: id_str.clone(),
             plugin_id: id_str,
-            event: config.event.as_str().to_string(),
+            event: config.event.as_str().to_owned(),
             matcher: config.matcher.clone(),
             command: config.command.clone(),
             is_async: config.is_async,

@@ -12,7 +12,7 @@ use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{McpServerId, RouteId, UserId};
 use systemprompt_security::authz::{
-    resolve, AccessControlRepository, AccessRule, Decision, EntityKind, EntityRef, ResolveInput,
+    AccessControlRepository, AccessRule, Decision, EntityKind, EntityRef, ResolveInput, resolve,
 };
 
 use crate::handlers::shared;
@@ -139,7 +139,7 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
     });
     let (decision, reason) = match dec {
         Decision::Allow { .. } => (
-            "allow".to_string(),
+            "allow".to_owned(),
             allow_reason(
                 rules,
                 user_id,
@@ -148,10 +148,10 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
                 default_included.unwrap_or(false),
             ),
         ),
-        Decision::Deny { reason } => ("deny".to_string(), reason.to_string()),
+        Decision::Deny { reason } => ("deny".to_owned(), reason.to_string()),
     };
     EntityDecision {
-        entity_id: entity_id.to_string(),
+        entity_id: entity_id.to_owned(),
         decision,
         reason,
         matrix_url: format!(
@@ -190,9 +190,9 @@ fn allow_reason(
     }
     let _ = department;
     if default_included {
-        return "default included".to_string();
+        return "default included".to_owned();
     }
-    "allow (resolver)".to_string()
+    "allow (resolver)".to_owned()
 }
 
 fn collect_gateway_ids() -> Result<Vec<String>, String> {
@@ -206,12 +206,12 @@ fn collect_mcp_ids() -> Result<Vec<String>, String> {
     let servers = mcp_servers::list_mcp_servers(&services_path).map_err(|e| e.to_string())?;
     Ok(servers
         .into_iter()
-        .map(|s| s.id.as_str().to_string())
+        .map(|s| s.id.as_str().to_owned())
         .collect())
 }
 
 fn shared_path_or_err(
     r: Result<std::path::PathBuf, Box<axum::response::Response>>,
 ) -> Result<std::path::PathBuf, String> {
-    r.map_err(|_| "path lookup failed".to_string())
+    r.map_err(|resp| format!("path lookup failed: HTTP {}", resp.status()))
 }

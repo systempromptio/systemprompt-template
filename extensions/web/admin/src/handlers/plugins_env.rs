@@ -1,11 +1,9 @@
 use std::sync::Arc;
 
-use axum::{
-    extract::{Path, Query, State},
-    http::{HeaderMap, StatusCode},
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Path, Query, State};
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 use systemprompt::config::ProfileBootstrap;
 
@@ -17,7 +15,7 @@ use crate::types::UserQuery;
 
 use super::responses::PluginEnvResponse;
 
-pub async fn list_plugin_env_handler(
+pub(crate) async fn list_plugin_env_handler(
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<String>,
     headers: HeaderMap,
@@ -49,7 +47,7 @@ pub async fn list_plugin_env_handler(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal server error",
             );
-        }
+        },
     };
 
     let stored_names: std::collections::HashSet<String> = stored
@@ -66,7 +64,7 @@ pub async fn list_plugin_env_handler(
                 .and_then(serde_json::Value::as_bool)
                 .unwrap_or(true);
             if required && !stored_names.contains(name) {
-                Some(name.to_string())
+                Some(name.to_owned())
             } else {
                 None
             }
@@ -82,7 +80,8 @@ pub async fn list_plugin_env_handler(
     .into_response()
 }
 
-/// Resolve the principal for a plugin-env request from already-validated inputs.
+/// Resolve the principal for a plugin-env request from already-validated
+/// inputs.
 ///
 /// Returns `Some(UserId)` only when an authenticated cookie session or an
 /// explicit `user_id` query parameter is present. Never synthesizes.

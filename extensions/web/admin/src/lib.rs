@@ -6,9 +6,9 @@
 //!
 //! - [`admin_router`] — the SSR dashboard (auth-gated; admin-only and
 //!   authenticated-read routes are layered together).
-//! - [`hooks_webhook_router`] — the four governance webhooks called by
-//!   gateway / MCP / Claude Code (`/hooks/track`, `/hooks/govern`,
-//!   `/govern/authz`, statusline/transcript ingest).
+//! - [`hooks_webhook_router`] — the four governance webhooks called by gateway
+//!   / MCP / Claude Code (`/hooks/track`, `/hooks/govern`, `/govern/authz`,
+//!   statusline/transcript ingest).
 //! - [`secrets_router`], [`share_manifest_router`], [`bridge_router`] —
 //!   per-plugin secret resolution, public manifest sharing, and the bridge
 //!   plugin-file plane.
@@ -35,11 +35,8 @@ pub mod types;
 
 use std::sync::Arc;
 
-use axum::{
-    middleware as axum_middleware,
-    routing::{get, post},
-    Extension, Router,
-};
+use axum::routing::{get, post};
+use axum::{Extension, Router, middleware as axum_middleware};
 use sqlx::PgPool;
 
 pub use routes::{admin_ssr_router, bridge_auth_ssr_router};

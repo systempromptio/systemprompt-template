@@ -1,12 +1,10 @@
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
-use axum::{
-    extract::Extension,
-    response::{IntoResponse, Response},
-};
+use axum::extract::Extension;
+use axum::response::{IntoResponse, Response};
 use serde_json::json;
 
-pub async fn users_sessions_page(
+pub(crate) async fn users_sessions_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

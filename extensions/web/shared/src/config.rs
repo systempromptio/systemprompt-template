@@ -40,7 +40,7 @@ pub struct ContentSourceRaw {
 }
 
 fn default_base_url() -> String {
-    "https://example.com".to_string()
+    "https://example.com".to_owned()
 }
 
 const fn default_true() -> bool {
@@ -111,11 +111,13 @@ impl BlogConfigValidated {
         Self::validate(raw, base_path)
     }
 
-    /// Load `services/config/blog.yaml` resolved via the profile-aware [`AppPaths`].
+    /// Load `services/config/blog.yaml` resolved via the profile-aware
+    /// [`AppPaths`].
     ///
-    /// Returns `Ok(None)` when no blog config file exists — a valid "blog disabled"
-    /// state, not a degraded one. Returns `Ok(Some(_))` when the file parses and
-    /// validates. Returns `Err` only on read/parse/validation failures.
+    /// Returns `Ok(None)` when no blog config file exists — a valid "blog
+    /// disabled" state, not a degraded one. Returns `Ok(Some(_))` when the
+    /// file parses and validates. Returns `Err` only on
+    /// read/parse/validation failures.
     pub fn load_from_env_or_none() -> Result<Option<Arc<Self>>, ExtensionConfigErrors> {
         let config_path = resolve_blog_config_path();
         if config_path.exists() {
@@ -157,7 +159,7 @@ fn validate_base_url(raw_url: &str, errors: &mut ExtensionConfigErrors) -> Url {
                 );
             }
             url
-        }
+        },
         Err(e) => {
             errors.push_with_suggestion(
                 "base_url",
@@ -165,7 +167,7 @@ fn validate_base_url(raw_url: &str, errors: &mut ExtensionConfigErrors) -> Url {
                 "Use a valid URL like https://example.com",
             );
             FALLBACK_URL.clone()
-        }
+        },
     }
 }
 

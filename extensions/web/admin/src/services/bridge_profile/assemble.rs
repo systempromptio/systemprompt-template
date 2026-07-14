@@ -14,7 +14,7 @@ use systemprompt::identifiers::TenantId;
 use systemprompt::models::Config;
 use uuid::Uuid;
 
-use crate::repositories::bridge_grp::{find_bridge_user, BridgeUserRow};
+use crate::repositories::bridge_grp::{BridgeUserRow, find_bridge_user};
 use crate::repositories::profile_grp::usage as usage_repo;
 
 use super::{
@@ -39,12 +39,12 @@ pub(super) async fn fetch_usage_sections(pool: &Arc<PgPool>, user_id: &str) -> U
     let pool_for_conv = Arc::clone(pool);
     let pool_for_user = Arc::clone(pool);
 
-    let user_id_d1 = user_id.to_string();
-    let user_id_d7 = user_id.to_string();
-    let user_id_d30 = user_id.to_string();
-    let user_id_models = user_id.to_string();
-    let user_id_conv = user_id.to_string();
-    let user_id_user = user_id.to_string();
+    let user_id_d1 = user_id.to_owned();
+    let user_id_d7 = user_id.to_owned();
+    let user_id_d30 = user_id.to_owned();
+    let user_id_models = user_id.to_owned();
+    let user_id_conv = user_id.to_owned();
+    let user_id_user = user_id.to_owned();
 
     let (d1, d7, d30, top_models, conversations, bridge_user) = tokio::join!(
         async move {
@@ -125,7 +125,7 @@ pub(super) fn read_config_strings() -> (Option<String>, Option<String>) {
     Config::get().map_or((None, None), |c| {
         (
             Some(c.jwt_issuer.clone()),
-            Some(c.api_external_url.trim_end_matches('/').to_string()),
+            Some(c.api_external_url.trim_end_matches('/').to_owned()),
         )
     })
 }
@@ -135,7 +135,7 @@ pub(super) fn read_tenant_id() -> Option<String> {
     bootstrap
         .cloud
         .as_ref()
-        .and_then(|cloud| cloud.tenant_id.as_ref().map(|id| id.as_str().to_string()))
+        .and_then(|cloud| cloud.tenant_id.as_ref().map(|id| id.as_str().to_owned()))
 }
 
 pub(super) fn build_bridge_profile_block() -> Option<BridgeProfileBlock> {
@@ -193,7 +193,7 @@ pub(super) fn build_agents_block() -> AgentsBlock {
         Err(e) => {
             tracing::warn!(error = %e, "list_agents failed for profile pane");
             return AgentsBlock::default();
-        }
+        },
     };
 
     let visible: Vec<_> = agents.into_iter().filter(|a| a.show_in_ui).collect();
@@ -203,9 +203,9 @@ pub(super) fn build_agents_block() -> AgentsBlock {
     let items = visible
         .into_iter()
         .map(|a| AgentItem {
-            id: a.id.as_str().to_string(),
+            id: a.id.as_str().to_owned(),
             display_name: if a.name.is_empty() {
-                a.id.as_str().to_string()
+                a.id.as_str().to_owned()
             } else {
                 a.name
             },

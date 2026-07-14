@@ -4,7 +4,7 @@
 use handlebars::{Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext};
 
 #[derive(Debug, Clone, Copy)]
-pub struct JsonHelper;
+pub(crate) struct JsonHelper;
 impl HelperDef for JsonHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -19,7 +19,7 @@ impl HelperDef for JsonHelper {
             .map_or(serde_json::Value::Null, |v| v.value().clone());
         let json_str = serde_json::to_string_pretty(&val).unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to serialize value to JSON for template helper");
-            "null".to_string()
+            "null".to_owned()
         });
         let escaped = json_str
             .replace('&', "&amp;")
@@ -31,7 +31,7 @@ impl HelperDef for JsonHelper {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct CssVersionHelper;
+pub(crate) struct CssVersionHelper;
 impl HelperDef for CssVersionHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -57,7 +57,7 @@ impl HelperDef for CssVersionHelper {
                 .ok()
                 .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
                 .and_then(|j| j.get("version")?.as_str().map(String::from))
-                .unwrap_or_else(|| "0".to_string())
+                .unwrap_or_else(|| "0".to_owned())
         });
         out.write(v)?;
         Ok(())
@@ -65,7 +65,7 @@ impl HelperDef for CssVersionHelper {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct GovernanceColorHelper;
+pub(crate) struct GovernanceColorHelper;
 impl HelperDef for GovernanceColorHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -92,7 +92,7 @@ impl HelperDef for GovernanceColorHelper {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct DefaultHelper;
+pub(crate) struct DefaultHelper;
 impl HelperDef for DefaultHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,

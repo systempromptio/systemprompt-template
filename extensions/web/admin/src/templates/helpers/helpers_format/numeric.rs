@@ -3,7 +3,7 @@
 use handlebars::{Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext};
 
 #[derive(Debug, Clone, Copy)]
-pub struct FormatNumberHelper;
+pub(crate) struct FormatNumberHelper;
 impl HelperDef for FormatNumberHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -31,11 +31,7 @@ impl HelperDef for FormatNumberHelper {
                 }
                 grouped.push(*c as char);
             }
-            if neg {
-                format!("-{grouped}")
-            } else {
-                grouped
-            }
+            if neg { format!("-{grouped}") } else { grouped }
         } else {
             n.to_string()
         };
@@ -45,7 +41,7 @@ impl HelperDef for FormatNumberHelper {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct FormatUsdHelper;
+pub(crate) struct FormatUsdHelper;
 impl HelperDef for FormatUsdHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -57,11 +53,11 @@ impl HelperDef for FormatUsdHelper {
     ) -> HelperResult {
         let micro = h.param(0).and_then(|v| v.value().as_i64());
         let formatted = micro.map_or_else(
-            || "—".to_string(),
+            || "—".to_owned(),
             |m| {
                 let usd = m as f64 / 1_000_000.0;
                 if !usd.is_finite() {
-                    "—".to_string()
+                    "—".to_owned()
                 } else if usd >= 100.0 {
                     format!("${usd:.0}")
                 } else if usd >= 1.0 {
@@ -79,7 +75,7 @@ impl HelperDef for FormatUsdHelper {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct PercentHelper;
+pub(crate) struct PercentHelper;
 impl HelperDef for PercentHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -97,7 +93,7 @@ impl HelperDef for PercentHelper {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct DeltaPctHelper;
+pub(crate) struct DeltaPctHelper;
 impl HelperDef for DeltaPctHelper {
     fn call<'reg: 'rc, 'rc>(
         &self,
@@ -119,7 +115,7 @@ impl HelperDef for DeltaPctHelper {
                 } else {
                     format!("{pct:.0}% vs prev")
                 }
-            }
+            },
             _ => String::new(),
         };
         out.write(&formatted)?;

@@ -48,7 +48,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     Ok(JobResult::success().with_duration(duration_ms))
 }
 
-pub async fn generate_robots_txt(paths: &AppPaths) -> Result<(), JobError> {
+pub(crate) async fn generate_robots_txt(paths: &AppPaths) -> Result<(), JobError> {
     use systemprompt::models::Config;
     use tokio::fs;
 

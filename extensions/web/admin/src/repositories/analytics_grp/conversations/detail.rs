@@ -8,7 +8,7 @@
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 
-use super::transcript::{extract_content_text, parse_turns, GovernanceRow, ParseInput};
+use super::transcript::{GovernanceRow, ParseInput, extract_content_text, parse_turns};
 use super::{ConversationDetail, RawTurnBody, TranscriptTurn};
 
 struct DetailFields {
@@ -27,7 +27,7 @@ fn assemble_detail(
     turns: Vec<TranscriptTurn>,
 ) -> ConversationDetail {
     ConversationDetail {
-        session_id: session_id.to_string(),
+        session_id: session_id.to_owned(),
         user_id: fields.user_id,
         plugin_id: fields.plugin_id,
         ai_title: fields.ai_title,

@@ -92,12 +92,11 @@ pub(super) fn build_device_rows(rows: Vec<DeviceRowDb>) -> (Vec<DeviceRow>, usiz
     let mut online = 0usize;
     for r in rows {
         let revoked = r.revoked_at.is_some();
-        if !revoked {
-            if let Some(ts) = r.last_seen_at {
-                if (now - ts).num_minutes() < 5 {
-                    online += 1;
-                }
-            }
+        if !revoked
+            && let Some(ts) = r.last_seen_at
+            && (now - ts).num_minutes() < 5
+        {
+            online += 1;
         }
         devices.push(DeviceRow {
             id: r.id,
@@ -141,8 +140,8 @@ pub(super) async fn load_device_user_options(pool: &PgPool) -> Vec<DeviceUserOpt
     .map(|r| {
         let label = match (r.display.as_deref(), r.email.as_deref()) {
             (Some(d), Some(e)) => format!("{d} ({e})"),
-            (Some(d), None) => d.to_string(),
-            (None, Some(e)) => e.to_string(),
+            (Some(d), None) => d.to_owned(),
+            (None, Some(e)) => e.to_owned(),
             (None, None) => r.uid.clone(),
         };
         DeviceUserOption {

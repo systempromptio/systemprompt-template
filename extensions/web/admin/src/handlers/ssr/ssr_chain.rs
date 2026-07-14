@@ -6,18 +6,16 @@
 
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, Path, State},
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::Json;
+use axum::extract::{Extension, Path, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 
 use crate::repositories::governance_grp::chain::fetch_decision_chain;
 use crate::types::UserContext;
 
-pub async fn chain_envelope(
+pub(crate) async fn chain_envelope(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
@@ -32,6 +30,6 @@ pub async fn chain_envelope(
         Err(e) => {
             tracing::error!(error = %e, id = %id, "fetch_decision_chain failed");
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
-        }
+        },
     }
 }

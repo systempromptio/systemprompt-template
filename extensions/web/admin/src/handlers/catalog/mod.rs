@@ -3,12 +3,12 @@
 //! - `/admin/catalog/marketplace` — install-able units (skills, plugins, MCP
 //!   servers) loaded from `services/*.yaml`. Mirrors Anthropic's plugin
 //!   marketplace mental model.
-//! - `/admin/catalog/a2a` — A2A agents from `services/agents/*.yaml`. These
-//!   run as standalone services and connect to the gateway as peers.
+//! - `/admin/catalog/a2a` — A2A agents from `services/agents/*.yaml`. These run
+//!   as standalone services and connect to the gateway as peers.
 //! - `/admin/catalog/external` — external host apps from
 //!   `services/external_agents/*.yaml` (Claude Desktop, Codex CLI). They
-//!   connect via `systemprompt-bridge` and the `enabled` flag here mirrors
-//!   what surfaces on `/admin/profile` under "Available agents".
+//!   connect via `systemprompt-bridge` and the `enabled` flag here mirrors what
+//!   surfaces on `/admin/profile` under "Available agents".
 //!
 //! All three pages are strictly read-only: there are no POST/PUT/DELETE
 //! companion routes. Operators edit `services/*.yaml` and restart.
@@ -18,27 +18,25 @@ mod view;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use axum::{
-    extract::{Extension, State},
-    response::Response,
-};
+use axum::extract::{Extension, State};
+use axum::response::Response;
 use sqlx::PgPool;
 
 use crate::handlers::shared;
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{
-    MarketplaceContext, McpServerDetail, PluginDetail, SkillCatalogEntry, UserContext,
-    ENTITY_AGENT, ENTITY_MCP_SERVER, ENTITY_PLUGIN, ENTITY_SKILL,
+    ENTITY_AGENT, ENTITY_MCP_SERVER, ENTITY_PLUGIN, ENTITY_SKILL, MarketplaceContext,
+    McpServerDetail, PluginDetail, SkillCatalogEntry, UserContext,
 };
 
 use super::ssr::ssr_helpers::render_typed_page;
 use view::{
-    assignment_counts_by_type, build_row, forbidden, A2aPageData, CatalogRow, ExternalAgentRow,
-    ExternalPageData, MarketplacePageData,
+    A2aPageData, CatalogRow, CatalogRowSeed, ExternalAgentRow, ExternalPageData,
+    MarketplacePageData, assignment_counts_by_type, build_row, forbidden,
 };
 
-pub async fn marketplace_page(
+pub(crate) async fn marketplace_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -100,17 +98,17 @@ pub async fn marketplace_page(
 fn skill_rows(raw: Vec<SkillCatalogEntry>, counts: &HashMap<String, i64>) -> Vec<CatalogRow> {
     raw.into_iter()
         .map(|s| {
-            let id_str = s.id.as_str().to_string();
+            let id_str = s.id.as_str().to_owned();
             let count = counts.get(&id_str).copied().unwrap_or(0);
-            build_row(
-                ENTITY_SKILL,
-                id_str,
-                s.name,
-                s.description,
-                s.enabled,
-                s.source_path,
-                count,
-            )
+            build_row(CatalogRowSeed {
+                entity_type: ENTITY_SKILL,
+                id: id_str,
+                name: s.name,
+                description: s.description,
+                enabled: s.enabled,
+                source_path: s.source_path,
+                assignment_count: count,
+            })
         })
         .collect()
 }
@@ -119,15 +117,15 @@ fn plugin_rows(raw: Vec<PluginDetail>, counts: &HashMap<String, i64>) -> Vec<Cat
     raw.into_iter()
         .map(|p| {
             let count = counts.get(&p.id).copied().unwrap_or(0);
-            build_row(
-                ENTITY_PLUGIN,
-                p.id,
-                p.name,
-                p.description,
-                p.enabled,
-                p.source_path,
-                count,
-            )
+            build_row(CatalogRowSeed {
+                entity_type: ENTITY_PLUGIN,
+                id: p.id,
+                name: p.name,
+                description: p.description,
+                enabled: p.enabled,
+                source_path: p.source_path,
+                assignment_count: count,
+            })
         })
         .collect()
 }
@@ -135,22 +133,22 @@ fn plugin_rows(raw: Vec<PluginDetail>, counts: &HashMap<String, i64>) -> Vec<Cat
 fn mcp_rows(raw: Vec<McpServerDetail>, counts: &HashMap<String, i64>) -> Vec<CatalogRow> {
     raw.into_iter()
         .map(|m| {
-            let id_str = m.id.as_str().to_string();
+            let id_str = m.id.as_str().to_owned();
             let count = counts.get(&id_str).copied().unwrap_or(0);
-            build_row(
-                ENTITY_MCP_SERVER,
-                id_str.clone(),
-                id_str,
-                m.description,
-                m.enabled,
-                m.source_path,
-                count,
-            )
+            build_row(CatalogRowSeed {
+                entity_type: ENTITY_MCP_SERVER,
+                id: id_str.clone(),
+                name: id_str,
+                description: m.description,
+                enabled: m.enabled,
+                source_path: m.source_path,
+                assignment_count: count,
+            })
         })
         .collect()
 }
 
-pub async fn a2a_agents_page(
+pub(crate) async fn a2a_agents_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -174,17 +172,17 @@ pub async fn a2a_agents_page(
     let agents: Vec<CatalogRow> = raw_agents
         .into_iter()
         .map(|a| {
-            let id_str = a.id.as_str().to_string();
+            let id_str = a.id.as_str().to_owned();
             let count = agent_counts.get(&id_str).copied().unwrap_or(0);
-            build_row(
-                ENTITY_AGENT,
-                id_str,
-                a.name,
-                a.description,
-                a.enabled,
-                a.source_path,
-                count,
-            )
+            build_row(CatalogRowSeed {
+                entity_type: ENTITY_AGENT,
+                id: id_str,
+                name: a.name,
+                description: a.description,
+                enabled: a.enabled,
+                source_path: a.source_path,
+                assignment_count: count,
+            })
         })
         .collect();
 
@@ -200,7 +198,7 @@ pub async fn a2a_agents_page(
     render_typed_page(&engine, "catalog-a2a", &data, &user_ctx, &mkt_ctx)
 }
 
-pub async fn external_agents_page(
+pub(crate) async fn external_agents_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,

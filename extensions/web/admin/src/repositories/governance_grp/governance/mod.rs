@@ -1,8 +1,9 @@
 //! Governance-decision read queries backing the governance dashboards.
 //!
 //! Everything here reads `governance_decisions` (sometimes joined to `users`):
-//! raw decision lists, allow/deny rollups, sliding-window aggregates for anomaly
-//! baselines, and the top-actor / top-policy / grouped-incident rankings.
+//! raw decision lists, allow/deny rollups, sliding-window aggregates for
+//! anomaly baselines, and the top-actor / top-policy / grouped-incident
+//! rankings.
 
 mod counts;
 mod decisions;

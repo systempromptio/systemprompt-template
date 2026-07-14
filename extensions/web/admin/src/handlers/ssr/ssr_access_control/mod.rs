@@ -2,7 +2,8 @@
 //!
 //! Three-pane layout:
 //!   - Left: Departments tree (DB) with member chips.
-//!   - Center: department editor or user permission matrix (matrix loads via JS).
+//!   - Center: department editor or user permission matrix (matrix loads via
+//!     JS).
 //!   - Toolbar: source-of-truth status + "Show as YAML" + filters.
 
 mod builders;
@@ -12,11 +13,9 @@ use std::sync::Arc;
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
-use axum::{
-    extract::{Extension, State},
-    http::StatusCode,
-    response::{Html, IntoResponse, Response},
-};
+use axum::extract::{Extension, State};
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
 use serde_json::json;
 use sqlx::PgPool;
 
@@ -56,7 +55,7 @@ async fn fetch_users_for_tree(pool: &PgPool) -> Vec<UserListRow> {
     })
 }
 
-pub async fn access_control_page(
+pub(crate) async fn access_control_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
@@ -83,7 +82,7 @@ pub async fn access_control_page(
         std::collections::BTreeMap::new();
     for u in &users {
         let key = if u.department.is_empty() {
-            "Unassigned".to_string()
+            "Unassigned".to_owned()
         } else {
             u.department.clone()
         };

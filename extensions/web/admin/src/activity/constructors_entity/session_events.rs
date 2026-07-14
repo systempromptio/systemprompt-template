@@ -13,14 +13,14 @@ impl NewActivity {
         let description = match (ntype, message) {
             (Some("permission_prompt"), Some(msg)) => {
                 format!("Permission prompt: {}", truncate(msg, 80))
-            }
+            },
             (Some(t), Some(msg)) => format!("{t}: {}", truncate(msg, 80)),
-            (Some(t), None) => t.to_string(),
+            (Some(t), None) => t.to_owned(),
             (None, Some(msg)) => truncate(msg, 80),
-            (None, None) => "Notification received".to_string(),
+            (None, None) => "Notification received".to_owned(),
         };
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::Notification,
             action: ActivityAction::Submitted,
             entity: None,
@@ -36,11 +36,11 @@ impl NewActivity {
         subject: Option<&str>,
     ) -> Self {
         let description = subject.map_or_else(
-            || "Completed a task".to_string(),
+            || "Completed a task".to_owned(),
             |s| format!("Completed task: '{s}'"),
         );
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::TaskCompletion,
             action: ActivityAction::Ended,
             entity: None,
@@ -56,12 +56,12 @@ impl NewActivity {
         trigger: Option<&str>,
     ) -> Self {
         let description = if trigger == Some("auto") {
-            "Context auto-compacted".to_string()
+            "Context auto-compacted".to_owned()
         } else {
-            "Context manually compacted".to_string()
+            "Context manually compacted".to_owned()
         };
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::Compaction,
             action: ActivityAction::Used,
             entity: None,
@@ -73,13 +73,13 @@ impl NewActivity {
     #[must_use]
     pub fn permission_requested(user_id: impl AsRef<str>, session_id: &str, tool: &str) -> Self {
         Self {
-            user_id: user_id.as_ref().to_string(),
+            user_id: user_id.as_ref().to_owned(),
             category: ActivityCategory::Notification,
             action: ActivityAction::Submitted,
             entity: Some(ActivityEntityRef {
-                entity_type: ActivityEntity::Tool,
-                entity_id: Some(session_id.to_string()),
-                entity_name: Some(tool.to_string()),
+                kind: ActivityEntity::Tool,
+                id: Some(session_id.to_owned()),
+                name: Some(tool.to_owned()),
             }),
             description: format!("Permission requested for {tool}"),
             metadata: serde_json::json!({ "session_id": session_id }),

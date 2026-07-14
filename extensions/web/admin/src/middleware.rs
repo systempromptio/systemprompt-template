@@ -1,13 +1,11 @@
 use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
 
-use axum::{
-    extract::{Request, State},
-    http::StatusCode,
-    middleware::Next,
-    response::{IntoResponse, Response},
-    Extension,
-};
+use axum::Extension;
+use axum::extract::{Request, State};
+use axum::http::StatusCode;
+use axum::middleware::Next;
+use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 use tokio::sync::RwLock;
 
@@ -25,7 +23,7 @@ static MARKETPLACE_CACHE: LazyLock<RwLock<Option<CachedMarketplace>>> =
     LazyLock::new(|| RwLock::new(None));
 const MARKETPLACE_CACHE_TTL: Duration = Duration::from_mins(5);
 
-pub async fn user_context_middleware(
+pub(crate) async fn user_context_middleware(
     State(pool): State<Arc<PgPool>>,
     mut request: Request,
     next: Next,
@@ -36,14 +34,14 @@ pub async fn user_context_middleware(
         Err(reason) => {
             tracing::warn!(reason = %reason, "UserContext middleware: no valid session");
             return next.run(request).await;
-        }
+        },
     };
 
     let (roles, department) = fetch_user_roles_department(&pool, session.user_id.as_str())
         .await
-        .unwrap_or_else(|| (vec!["user".to_string()], String::new()));
+        .unwrap_or_else(|| (vec!["user".to_owned()], String::new()));
 
-    let is_admin = roles.contains(&"admin".to_string());
+    let is_admin = roles.contains(&"admin".to_owned());
     let ctx = UserContext {
         user_id: session.user_id,
         username: session.username,
@@ -71,7 +69,7 @@ async fn fetch_user_roles_department(
         .flatten()
 }
 
-pub async fn marketplace_context_middleware(
+pub(crate) async fn marketplace_context_middleware(
     Extension(user_ctx): Extension<UserContext>,
     mut request: Request,
     next: Next,
@@ -104,18 +102,18 @@ pub async fn marketplace_context_middleware(
 async fn get_cached_marketplace(roles: &[String]) -> (MarketplaceCounts, String) {
     {
         let cache = MARKETPLACE_CACHE.read().await;
-        if let Some(ref cached) = *cache {
-            if cached.fetched_at.elapsed() < MARKETPLACE_CACHE_TTL {
-                return (
-                    MarketplaceCounts {
-                        total_plugins: cached.counts.total_plugins,
-                        total_skills: cached.counts.total_skills,
-                        agents_count: cached.counts.agents_count,
-                        mcp_count: cached.counts.mcp_count,
-                    },
-                    cached.site_url.clone(),
-                );
-            }
+        if let Some(ref cached) = *cache
+            && cached.fetched_at.elapsed() < MARKETPLACE_CACHE_TTL
+        {
+            return (
+                MarketplaceCounts {
+                    total_plugins: cached.counts.total_plugins,
+                    total_skills: cached.counts.total_skills,
+                    agents_count: cached.counts.agents_count,
+                    mcp_count: cached.counts.mcp_count,
+                },
+                cached.site_url.clone(),
+            );
         }
     }
 
@@ -141,7 +139,7 @@ async fn compute_marketplace_counts(roles: Vec<String>) -> (MarketplaceCounts, S
     tokio::task::spawn_blocking(move || {
         let site_url = Config::get().map_or_else(
             |_| String::new(),
-            |c| c.api_external_url.trim_end_matches('/').to_string(),
+            |c| c.api_external_url.trim_end_matches('/').to_owned(),
         );
 
         let counts = ProfileBootstrap::get()
@@ -181,7 +179,7 @@ async fn compute_marketplace_counts(roles: Vec<String>) -> (MarketplaceCounts, S
     })
 }
 
-pub async fn require_user_middleware(request: Request, next: Next) -> Response {
+pub(crate) async fn require_user_middleware(request: Request, next: Next) -> Response {
     let user_ctx = request.extensions().get::<UserContext>().cloned();
     match user_ctx {
         Some(ctx) if !ctx.user_id.as_str().is_empty() => next.run(request).await,
@@ -190,16 +188,16 @@ pub async fn require_user_middleware(request: Request, next: Next) -> Response {
                 .extensions()
                 .get::<axum::extract::OriginalUri>()
                 .map_or_else(
-                    || request.uri().path().to_string(),
-                    |o| o.0.path().to_string(),
+                    || request.uri().path().to_owned(),
+                    |o| o.0.path().to_owned(),
                 );
             let redirect_url = format!("/admin/login?redirect={uri}");
             axum::response::Redirect::temporary(&redirect_url).into_response()
-        }
+        },
     }
 }
 
-pub async fn require_auth_middleware(request: Request, next: Next) -> Response {
+pub(crate) async fn require_auth_middleware(request: Request, next: Next) -> Response {
     let user_ctx = request.extensions().get::<UserContext>().cloned();
     match user_ctx {
         Some(ctx) if !ctx.user_id.as_str().is_empty() => next.run(request).await,
@@ -211,7 +209,7 @@ pub async fn require_auth_middleware(request: Request, next: Next) -> Response {
     }
 }
 
-pub async fn require_admin_middleware(request: Request, next: Next) -> Response {
+pub(crate) async fn require_admin_middleware(request: Request, next: Next) -> Response {
     let user_ctx = request.extensions().get::<UserContext>().cloned();
     match user_ctx {
         Some(ctx) if ctx.is_admin => next.run(request).await,
@@ -228,7 +226,7 @@ pub async fn require_admin_middleware(request: Request, next: Next) -> Response 
 ///
 /// Admins pass through unchanged. Anonymous users are handled by
 /// `require_user_middleware` which runs after this layer.
-pub async fn non_admin_gate_middleware(request: Request, next: Next) -> Response {
+pub(crate) async fn non_admin_gate_middleware(request: Request, next: Next) -> Response {
     let path = request.uri().path();
     let user_ctx = request.extensions().get::<UserContext>().cloned();
 
@@ -262,7 +260,7 @@ fn is_non_admin_allowed_path(path: &str) -> bool {
         || path == "/admin"
 }
 
-pub async fn auth_me_handler(Extension(user_ctx): Extension<UserContext>) -> Response {
+pub(crate) async fn auth_me_handler(Extension(user_ctx): Extension<UserContext>) -> Response {
     if user_ctx.user_id.as_str().is_empty() {
         return (StatusCode::UNAUTHORIZED, "Not authenticated").into_response();
     }

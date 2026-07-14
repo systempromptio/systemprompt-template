@@ -2,7 +2,7 @@ use rmcp::model::{Meta, Tool};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use systemprompt::mcp::{default_tool_visibility, tool_ui_meta, WEBSITE_URL};
+use systemprompt::mcp::{WEBSITE_URL, default_tool_visibility, tool_ui_meta};
 use systemprompt::models::artifacts::{CliArtifact, ToolResponse};
 
 pub const SERVER_NAME: &str = "systemprompt";
@@ -61,9 +61,9 @@ fn create_tool(def: &ToolDef<'_>) -> Tool {
         .unwrap_or_else(serde_json::Map::new);
 
     let mut tool = Tool::default();
-    tool.name = def.name.to_string().into();
-    tool.title = Some(def.title.to_string());
-    tool.description = Some(def.description.to_string().into());
+    tool.name = def.name.to_owned().into();
+    tool.title = Some(def.title.to_owned());
+    tool.description = Some(def.description.to_owned().into());
     tool.input_schema = Arc::new(input_obj);
     tool.output_schema = Some(Arc::new(output_obj));
     tool.meta = Some(Meta(tool_ui_meta(
@@ -75,7 +75,8 @@ fn create_tool(def: &ToolDef<'_>) -> Tool {
 
 #[must_use]
 pub fn list_tools() -> Vec<Tool> {
-    let desc = format!("Execute SystemPrompt CLI commands. Pass the command WITHOUT the 'systemprompt' prefix.\n\n\
+    let desc = format!(
+        "Execute SystemPrompt CLI commands. Pass the command WITHOUT the 'systemprompt' prefix.\n\n\
         Common commands:\n  \
         - core skills list: List installed skills\n  \
         - core skills show <id>: Show a skill's config and instruction body\n  \
@@ -84,7 +85,8 @@ pub fn list_tools() -> Vec<Tool> {
         - plugins run discord send \"message\" --channel <id>: Send to specific channel\n  \
         - admin agents list: List agents\n\n\
         Example: {{\"command\": \"core skills list\"}}\n\n\
-        Full documentation: {WEBSITE_URL}/docs");
+        Full documentation: {WEBSITE_URL}/docs"
+    );
     vec![create_tool(&ToolDef {
         server_name: SERVER_NAME,
         name: "systemprompt",

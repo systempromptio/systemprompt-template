@@ -1,16 +1,12 @@
 use std::sync::Arc;
 
-use axum::{
-    middleware as axum_middleware,
-    routing::{get, patch, post, put},
-    Router,
-};
+use axum::routing::{get, patch, post, put};
+use axum::{Router, middleware as axum_middleware};
 use sqlx::PgPool;
 
-use super::super::handlers;
-use super::super::middleware;
+use super::super::{handlers, middleware};
 
-pub fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<PgPool>) -> Router {
+pub(crate) fn build_admin_only_routes(read_pool: &Arc<PgPool>, write_pool: &Arc<PgPool>) -> Router {
     let reads = build_admin_read_routes_inner(read_pool);
     let writes = build_admin_write_routes(write_pool);
 
@@ -150,7 +146,7 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
         .with_state(Arc::clone(write_pool))
 }
 
-pub fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
+pub(crate) fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {
     Router::new()
         .route("/dashboard", get(handlers::dashboard_handler))
         .route("/plugins", get(handlers::list_plugins_handler))

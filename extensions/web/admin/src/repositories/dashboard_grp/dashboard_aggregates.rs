@@ -28,7 +28,7 @@ pub async fn get_activity_stats(pool: &PgPool) -> Result<ActivityStats, sqlx::Er
         Err(e) => {
             tracing::warn!(error = %e, "Failed to query mcp_tool_executions for dashboard stats");
             (0, 0)
-        }
+        },
     };
 
     Ok(ActivityStats {

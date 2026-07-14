@@ -12,7 +12,7 @@ mod kpis;
 mod list;
 mod users;
 
-pub use kpis::{fetch_context_list_kpis, fetch_distinct_models, ContextListKpis};
+pub use kpis::{ContextListKpis, fetch_context_list_kpis, fetch_distinct_models};
 pub use list::fetch_context_list;
 pub use users::fetch_context_user_summary;
 

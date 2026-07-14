@@ -24,30 +24,35 @@ pub struct CreateContentParams {
     pub related_docs: serde_json::Value, // JSON: variable-shape template data
 }
 
+/// Required fields for a new content row; optional fields are layered on via
+/// the `CreateContentParams::with_*` builders.
+#[derive(Debug, Clone)]
+pub struct ContentSeed {
+    pub slug: String,
+    pub title: String,
+    pub description: String,
+    pub body: String,
+    pub author: String,
+    pub published_at: DateTime<Utc>,
+    pub source_id: SourceId,
+}
+
 impl CreateContentParams {
     #[must_use]
-    pub fn new(
-        slug: String,
-        title: String,
-        description: String,
-        body: String,
-        author: String,
-        published_at: DateTime<Utc>,
-        source_id: SourceId,
-    ) -> Self {
+    pub fn new(seed: ContentSeed) -> Self {
         Self {
-            slug,
-            title,
-            description,
-            body,
-            author,
-            published_at,
+            slug: seed.slug,
+            title: seed.title,
+            description: seed.description,
+            body: seed.body,
+            author: seed.author,
+            published_at: seed.published_at,
             keywords: String::new(),
             kind: ContentKind::default(),
             image: None,
             category_id: None,
             category: None,
-            source_id,
+            source_id: seed.source_id,
             version_hash: String::new(),
             links: serde_json::Value::Array(vec![]),
             after_reading_this: serde_json::Value::Array(vec![]),

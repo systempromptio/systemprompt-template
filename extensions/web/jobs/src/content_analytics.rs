@@ -49,7 +49,7 @@ impl ContentAnalyticsAggregationJob {
                         views = stat.total_views,
                         "Updated content metrics"
                     );
-                }
+                },
                 Err(e) => {
                     error_count += 1;
                     tracing::warn!(
@@ -57,7 +57,7 @@ impl ContentAnalyticsAggregationJob {
                         error = %e,
                         "Failed to update content metrics"
                     );
-                }
+                },
             }
         }
 

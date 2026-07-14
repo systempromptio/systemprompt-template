@@ -155,15 +155,15 @@ pub struct DashboardQuery {
 }
 
 fn default_content_range() -> String {
-    "7d".to_string()
+    "7d".to_owned()
 }
 
 fn default_range() -> String {
-    "7d".to_string()
+    "7d".to_owned()
 }
 
 fn default_traffic_range() -> String {
-    "today".to_string()
+    "today".to_owned()
 }
 
 #[derive(Debug, Deserialize, Clone, Copy)]
