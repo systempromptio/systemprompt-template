@@ -6,42 +6,80 @@
       {
         "ordinal": 0,
         "name": "name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "services",
+            "name": "name"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "module_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "services",
+            "name": "module_name"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "status",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "services",
+            "name": "status"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "pid",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "services",
+            "name": "pid"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "port",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "services",
+            "name": "port"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "binary_mtime",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "services",
+            "name": "binary_mtime"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "created_at!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       },
       {
         "ordinal": 7,
         "name": "updated_at!",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": "Expression"
       }
     ],
     "parameters": {

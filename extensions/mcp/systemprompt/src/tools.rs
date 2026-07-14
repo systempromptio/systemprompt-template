@@ -9,6 +9,8 @@ pub const SERVER_NAME: &str = "systemprompt";
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CliInput {
+    /// The CLI command to execute (without 'systemprompt' prefix). Examples:
+    /// 'plugins run discord send "message"', 'core skills list'
     pub command: String,
 }
 
@@ -22,16 +24,7 @@ pub struct CliOutput {
 
 #[must_use]
 pub fn input_schema() -> serde_json::Value {
-    serde_json::json!({
-        "type": "object",
-        "properties": {
-            "command": {
-                "type": "string",
-                "description": "The CLI command to execute (without 'systemprompt' prefix). Examples: 'plugins run discord send \"message\"', 'core skills list'"
-            }
-        },
-        "required": ["command"]
-    })
+    schemars::schema_for!(CliInput).to_value()
 }
 
 #[must_use]

@@ -10,9 +10,30 @@ use systemprompt::database::DbPool;
 
 mod repositories;
 
-use repositories::{McpAccessParams, insert_mcp_access, insert_mcp_access_rejection};
+use repositories::{
+    McpAccessParams, find_anonymous_user_id, insert_mcp_access, insert_mcp_access_rejection,
+};
 
 const ACTION_USED: &str = "used";
+
+/// Maximum length (in bytes) of the reason text kept in a rejection
+/// description before it is truncated. Truncated text gains a "..." suffix, so
+/// the reason portion never exceeds `MAX_REASON_LEN + 3` bytes.
+const MAX_REASON_LEN: usize = 117;
+
+/// Truncate `s` to at most `max_bytes`, appending "..." when truncation
+/// occurred. The cut is snapped down to a UTF-8 char boundary so it can never
+/// split a multi-byte codepoint (which would panic on a byte slice).
+fn truncate_on_char_boundary(s: &str, max_bytes: usize) -> String {
+    if s.len() <= max_bytes {
+        return s.to_owned();
+    }
+    let mut end = max_bytes;
+    while end > 0 && !s.is_char_boundary(end) {
+        end -= 1;
+    }
+    format!("{}...", &s[..end])
+}
 
 pub async fn record_mcp_access(
     pool: &DbPool,
@@ -57,15 +78,35 @@ pub async fn record_mcp_access_rejected(pool: &DbPool, server: &str, tool: &str,
         tracing::warn!("No PgPool available to record MCP access rejection");
         return;
     };
-    let description = if reason.len() > 120 {
-        format!("Access rejected on {server}: {}...", &reason[..117])
-    } else {
-        format!("Access rejected on {server}: {reason}")
-    };
+    let reason_text = truncate_on_char_boundary(reason, MAX_REASON_LEN);
+    let description = format!("Access rejected on {server}: {reason_text}");
     let metadata = serde_json::json!({ "tool_name": tool, "server": server, "reason": reason });
 
-    if let Err(e) =
-        insert_mcp_access_rejection(pg_pool.as_ref(), server, &description, &metadata).await
+    let anonymous_user_id = match find_anonymous_user_id(pg_pool.as_ref()).await {
+        Ok(Some(id)) => id,
+        Ok(None) => {
+            tracing::error!(
+                server,
+                tool,
+                "Dropping MCP access-rejection audit row: no anonymous principal exists to \
+                 attribute it to (refusing to attribute a rejection to an arbitrary user)"
+            );
+            return;
+        },
+        Err(e) => {
+            tracing::error!(error = %e, server, tool, "Failed to resolve anonymous principal for MCP access-rejection audit; dropping row");
+            return;
+        },
+    };
+
+    if let Err(e) = insert_mcp_access_rejection(
+        pg_pool.as_ref(),
+        &anonymous_user_id,
+        server,
+        &description,
+        &metadata,
+    )
+    .await
     {
         tracing::warn!(error = %e, "Failed to record MCP access rejection (non-fatal)");
     }
