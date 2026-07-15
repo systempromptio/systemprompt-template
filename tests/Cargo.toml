@@ -36,7 +36,7 @@ systemprompt-mcp-agent = { path = "../extensions/mcp/systemprompt" }
 systemprompt-web-shared = { path = "../extensions/web/shared" }
 
 # Core facade — DbPool / Database / identifiers for the integration crate.
-systemprompt = { version = "0.19.0", default-features = false, features = ["core", "database"] }
+systemprompt = { version = "0.20.0", default-features = false, features = ["core", "database"] }
 
 tokio = { version = "1.49", features = ["rt-multi-thread", "macros"] }
 sqlx = { version = "0.9", features = ["runtime-tokio", "tls-rustls-ring-webpki", "postgres", "uuid", "chrono", "json"] }
