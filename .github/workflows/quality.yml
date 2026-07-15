@@ -119,13 +119,6 @@ jobs:
   machete:
     name: Unused dependency check
     runs-on: ubuntu-latest
-    # NON-BLOCKING: the template carries pre-existing unused-dependency debt
-    # (~90 entries across the extension crates, many macro/inventory-driven
-    # false positives mixed with genuinely stale deps). cargo-machete is wired
-    # so the debt is visible on every run, but it does not gate merges until the
-    # dependency manifests are triaged. Flip `continue-on-error` off once
-    # `cargo machete` is clean.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/install-action@v2

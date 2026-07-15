@@ -2248,7 +2248,6 @@ dependencies = [
 name = "mcp-integration-tests"
 version = "0.0.0"
 dependencies = [
- "serde_json",
  "sqlx",
  "systemprompt",
  "systemprompt-mcp-shared",
@@ -5085,10 +5084,8 @@ dependencies = [
  "serde",
  "serde_json",
  "shell-words",
- "sqlx",
  "systemprompt",
  "systemprompt-mcp-shared",
- "systemprompt-security",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
@@ -5449,7 +5446,6 @@ dependencies = [
  "tracing",
  "url",
  "urlencoding",
- "uuid",
 ]
 
 [[package]]

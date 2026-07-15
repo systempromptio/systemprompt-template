@@ -22,15 +22,12 @@ tower-http = { workspace = true }
 
 # Async runtime
 tokio = { workspace = true }
-tokio-stream = { workspace = true }
-async-stream = { workspace = true }
 
 # Serialization
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 chrono = { workspace = true }
-chrono-tz = { workspace = true }
 uuid = { workspace = true }
 
 # Error handling
@@ -48,24 +45,17 @@ rand = { workspace = true }
 
 # Templating
 handlebars = { workspace = true }
-indexmap = { workspace = true }
 
 # Archive
-flate2 = { workspace = true }
-tar = { workspace = true }
-zip = { workspace = true }
 tempfile = { workspace = true }
 
 # HTTP client
-reqwest = { workspace = true }
 
 # Utilities
-walkdir = { workspace = true }
 url = { workspace = true }
 urlencoding = { workspace = true }
 inventory = { workspace = true }
 async-trait = { workspace = true }
-once_cell = { workspace = true }
 
 [dev-dependencies]
 anyhow = { workspace = true }

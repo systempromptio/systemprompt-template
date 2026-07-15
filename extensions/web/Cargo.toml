@@ -7,6 +7,11 @@ description = "Web extension for SystemPrompt - content, navigation, and templat
 license.workspace = true
 repository = "https://github.com/systempromptio/systemprompt-template"
 
+# extension_migrations!() expands to ::systemprompt_extension paths; machete
+# cannot see macro-expansion usage.
+[package.metadata.cargo-machete]
+ignored = ["systemprompt-extension", "inventory"]
+
 [lints]
 workspace = true
 
@@ -28,60 +33,29 @@ systemprompt-web-jobs = { workspace = true }
 # Extension framework — direct dep so the `extension_migrations!()` macro
 # expansion (`::systemprompt_extension::Migration`) resolves.
 systemprompt-extension = "0.19.0"
+inventory = { workspace = true }
 
 # Database access
-sqlx = { workspace = true }
 
 # Web framework
 axum = { workspace = true }
-tower = { workspace = true }
-tower-http = { workspace = true }
 
 # Async
-tokio = { workspace = true }
-async-trait = { workspace = true }
 
 # Serialization
-serde = { workspace = true }
-serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 
 # Markdown processing
-pulldown-cmark = { workspace = true }
-comrak = { workspace = true }
 
 # Utilities
-chrono = { workspace = true }
-uuid = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-sha2 = { workspace = true }
-walkdir = { workspace = true }
-reqwest = { workspace = true }
-rand = { workspace = true }
-chacha20poly1305 = { workspace = true }
-hex = { workspace = true }
-base64 = { workspace = true }
-inventory = { workspace = true }
-indexmap = { workspace = true }
-chrono-tz = { workspace = true }
-url = { workspace = true }
-urlencoding = { workspace = true }
-handlebars = { workspace = true }
 
 # SSE streaming
-async-stream = { workspace = true }
-tokio-stream = { workspace = true }
-futures = { workspace = true }
 
 # Archive extraction
-flate2 = { workspace = true }
-tar = { workspace = true }
-zip = { workspace = true }
-tempfile = { workspace = true }
 
 [build-dependencies]
 systemprompt-extension = "0.19.0"
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["test-util"] }

@@ -15,16 +15,17 @@ sqlx = { workspace = true }
 tokio = { workspace = true }
 async-trait = { workspace = true }
 tracing = { workspace = true }
-serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
-walkdir = { workspace = true }
-handlebars = { workspace = true }
-reqwest = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
-inventory = { workspace = true }
 thiserror = { workspace = true }
+inventory = { workspace = true }
+
+# Job registration macros expand to ::inventory::submit! paths; machete
+# cannot see macro-expansion usage.
+[package.metadata.cargo-machete]
+ignored = ["inventory"]
 
 [lints]
 workspace = true

@@ -12,7 +12,6 @@ path = "src/main.rs"
 [dependencies]
 # Audit: uses database, identifiers, logging, mcp, models, system (api), traits — requires `full`.
 systemprompt = { workspace = true, features = ["full"] }
-systemprompt-security = { workspace = true }
 
 anyhow.workspace = true
 thiserror.workspace = true
@@ -30,7 +29,6 @@ tracing.workspace = true
 
 shell-words.workspace = true
 
-sqlx.workspace = true
 systemprompt-mcp-shared.workspace = true
 
 [lints]
