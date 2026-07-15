@@ -4,7 +4,7 @@ One-click deploy of the `systemprompt-gateway` server on [Render](https://render
 
 ## Deploy
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/systempromptio/systemprompt-template)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/systempromptio/systemprompt-template&path=deploy/render/render.yaml)
 
 Render reads [`deploy/render/render.yaml`](https://github.com/systempromptio/systemprompt-template/blob/main/deploy/render/render.yaml) and provisions:
 - A `systemprompt-gateway` web service from the GHCR image
