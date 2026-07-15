@@ -91,7 +91,7 @@ fn format_deny_rate(denied: i64, evaluations: i64) -> String {
 pub(super) fn build_orphans_json(
     lifetime_by_id: &HashMap<String, repositories::governance::PerPolicyCounts>,
 ) -> Vec<OrphanRow> {
-    lifetime_by_id
+    let mut rows: Vec<OrphanRow> = lifetime_by_id
         .values()
         .map(|s| OrphanRow {
             id: s.policy.clone(),
@@ -99,7 +99,9 @@ pub(super) fn build_orphans_json(
             denied: s.denied,
             last_at: s.last_at.map(format_local).unwrap_or_default(),
         })
-        .collect()
+        .collect();
+    rows.sort_by(|a, b| a.id.cmp(&b.id));
+    rows
 }
 
 /// Per-policy enforcement table (24h). Reshape `policies` sorted by

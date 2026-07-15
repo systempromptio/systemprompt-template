@@ -71,7 +71,13 @@ normalize() {
     -e 's/[0-9]+[smhd][[:space:]]+ago/DURATION ago/gI' \
     -e 's/in[[:space:]]+[0-9]+[[:space:]]*(second|minute|hour|day)s?/in DURATION/gI' \
     -e 's/^[[:space:]]+//' \
-  | sed -E '/^$/d'
+  | sed -E '/^$/d' \
+  | sed -E '/CLI Session - /d'
+  # The last rule drops rows for ephemeral CLI-session contexts: the CLI mints
+  # a "CLI Session - <profile>" user_contexts row on every stale-session
+  # invocation with no GC, so row membership churns between captures. Tracked
+  # as a core fix (kind column / GC) in systemprompt-core
+  # internal/tickets/user-contexts-ephemeral-cli-sessions.md.
 }
 
 fetch_one() {

@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT slug, locale as \"locale: LocaleCode\"\n        FROM markdown_content\n        WHERE source_id = $1 AND public = true\n        ORDER BY slug, locale\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "slug"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "locale: LocaleCode",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "locale"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "df259333ee5dd3fbae99f5e44c19b4c8a4c571e3f783f65f80f75c409debef41"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE fingerprint_reputation\n            SET is_flagged = FALSE,\n                flag_reason = NULL,\n                flagged_at = NULL,\n                updated_at = CURRENT_TIMESTAMP\n            WHERE fingerprint_hash = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cb51bbe49830d6c322bf9624031a7ba3a8dcff7417cc69484610e471c7227b5c"
+}

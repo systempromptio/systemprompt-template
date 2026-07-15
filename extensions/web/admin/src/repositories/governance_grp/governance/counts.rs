@@ -58,7 +58,8 @@ pub async fn fetch_per_policy_counts(pool: &PgPool) -> Result<Vec<PerPolicyCount
             COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS "denied!",
             MAX(created_at) AS last_at
         FROM governance_decisions
-        GROUP BY policy"#,
+        GROUP BY policy
+        ORDER BY policy"#,
     )
     .fetch_all(pool)
     .await?;
@@ -87,7 +88,8 @@ pub async fn fetch_per_policy_counts_windowed(
             MAX(created_at) AS last_at
         FROM governance_decisions
         WHERE created_at > now() - make_interval(secs => $1::double precision)
-        GROUP BY policy"#,
+        GROUP BY policy
+        ORDER BY policy"#,
         window_seconds as f64,
     )
     .fetch_all(pool)

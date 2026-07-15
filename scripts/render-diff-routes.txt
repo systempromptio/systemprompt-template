@@ -45,11 +45,7 @@
 @/admin/catalog/marketplace
 @/admin/catalog/a2a
 @/admin/catalog/external
-# @/admin/governance/policies  -> EXCLUDED: the per-kind summary table is built
-#   from an unordered aggregation, so rows (e.g. `authz` vs `authz_rule_based`,
-#   identical counts) swap order between requests. Server-side nondeterminism,
-#   not normalizable without sorting away real structure. Worth fixing with an
-#   ORDER BY at the source; re-add this route once it renders deterministically.
+@/admin/governance/policies
 @/admin/governance/policies/bebf5072-6fa6-4ed7-a120-c2198f41114b
 @/admin/governance/hooks
 @/admin/entities/requests

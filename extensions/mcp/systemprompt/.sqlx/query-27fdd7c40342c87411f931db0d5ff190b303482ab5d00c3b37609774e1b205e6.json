@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_activity (id, user_id, category, action, entity_type, entity_name, description, metadata)\n          VALUES (gen_random_uuid()::TEXT, $1, 'mcp_access', 'rejected', 'mcp_server', $2, $3, $4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "27fdd7c40342c87411f931db0d5ff190b303482ab5d00c3b37609774e1b205e6"
+}
