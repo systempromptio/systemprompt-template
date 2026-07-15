@@ -197,6 +197,7 @@ lint-gates:
     bash scripts/check-sqlx.sh
     bash scripts/check-http-errors.sh
     bash scripts/check-test-value.sh
+    bash scripts/lint-raw-ids.sh
 
 # Structural guard: no string-literal `UserId::new("...")` in extension code.
 # String literals are how principal synthesis sneaks in — every legitimate

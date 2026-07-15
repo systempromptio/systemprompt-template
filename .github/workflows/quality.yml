@@ -56,6 +56,7 @@ jobs:
       - run: bash scripts/check-sqlx.sh
       - run: bash scripts/check-http-errors.sh
       - run: bash scripts/check-test-value.sh
+      - run: bash scripts/lint-raw-ids.sh
       - name: No synthesized principals (UserId::new with string literal)
         run: |
           hits=$(grep -rEn 'UserId::new\("' extensions/ \
