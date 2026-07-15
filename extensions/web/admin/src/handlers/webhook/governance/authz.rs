@@ -149,6 +149,8 @@ async fn audit_decision(
         evaluated_rules: &evaluated,
         plugin_id: None,
         act_chain: &[],
+        context_id: None,
+        task_id: None,
     };
     if let Err(e) = insert_governance_decision(pool, &record).await {
         tracing::error!(error = %e, "Failed to record authz decision");

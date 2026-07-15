@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n                c.context_id as \"context_id!\",\n                c.user_id as \"user_id!\",\n                c.name as \"name!\",\n                c.created_at as \"created_at!\",\n                c.updated_at as \"updated_at!\",\n                COALESCE(COUNT(DISTINCT t.task_id), 0)::bigint as \"task_count!\",\n                COALESCE(COUNT(DISTINCT m.id), 0)::bigint as \"message_count!\",\n                MAX(m.created_at) as last_message_at\n            FROM user_contexts c\n            LEFT JOIN agent_tasks t ON t.context_id = c.context_id\n            LEFT JOIN task_messages m ON m.task_id = t.task_id\n            WHERE c.user_id = $1\n            GROUP BY c.context_id\n            ORDER BY c.updated_at DESC",
+  "query": "SELECT\n                c.context_id as \"context_id!\",\n                c.user_id as \"user_id!\",\n                c.name as \"name!\",\n                c.kind as \"kind!: ContextKind\",\n                c.created_at as \"created_at!\",\n                c.updated_at as \"updated_at!\",\n                COALESCE(COUNT(DISTINCT t.task_id), 0)::bigint as \"task_count!\",\n                COALESCE(COUNT(DISTINCT m.id), 0)::bigint as \"message_count!\",\n                MAX(m.created_at) as last_message_at\n            FROM user_contexts c\n            LEFT JOIN agent_tasks t ON t.context_id = c.context_id\n            LEFT JOIN task_messages m ON m.task_id = t.task_id\n            WHERE c.user_id = $1\n            GROUP BY c.context_id\n            ORDER BY c.updated_at DESC",
   "describe": {
     "columns": [
       {
@@ -38,6 +38,17 @@
       },
       {
         "ordinal": 3,
+        "name": "kind!: ContextKind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_contexts",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
         "name": "created_at!",
         "type_info": "Timestamptz",
         "origin": {
@@ -48,7 +59,7 @@
         }
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "updated_at!",
         "type_info": "Timestamptz",
         "origin": {
@@ -59,19 +70,19 @@
         }
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "task_count!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "message_count!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "last_message_at",
         "type_info": "Timestamptz",
         "origin": "Expression"
@@ -88,10 +99,11 @@
       false,
       false,
       false,
+      false,
       null,
       null,
       null
     ]
   },
-  "hash": "35dba820e794a6ddc07eb71465e73b0dc80267ca006ee83d256fd6092a7ea00b"
+  "hash": "7d0ad977c7fd39ea1a158ec8c368e95ad9ded5fe58c4f62db167968cafa46711"
 }

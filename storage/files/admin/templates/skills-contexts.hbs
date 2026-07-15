@@ -202,6 +202,7 @@
                         {{default name context_id}}
                     </a>
                     {{#unless name}}<div class="text-tertiary text-xs">{{context_id}}</div>{{/unless}}
+                    {{#if is_cli_session}}<span class="badge badge-gray">CLI session</span>{{/if}}
                 </td>
                 <td>{{#if model}}<span class="badge badge-blue">{{model}}</span>{{else}}<span class="text-tertiary">&mdash;</span>{{/if}}</td>
                 <td class="numeric" style="font-variant-numeric: tabular-nums;">{{formatNumber request_count}}</td>

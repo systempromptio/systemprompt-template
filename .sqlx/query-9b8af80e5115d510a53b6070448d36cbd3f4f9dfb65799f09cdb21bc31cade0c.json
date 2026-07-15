@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                (SELECT COUNT(*) FROM users WHERE status != 'deleted') as \"total_users!\",\n                (SELECT COUNT(DISTINCT user_id) FROM user_sessions WHERE last_activity_at > $1 AND is_bot = false AND is_behavioral_bot = false AND is_scanner = false) as \"active_users_24h!\",\n                (SELECT COUNT(DISTINCT user_id) FROM user_sessions WHERE last_activity_at > $2 AND is_bot = false AND is_behavioral_bot = false AND is_scanner = false) as \"active_users_7d!\",\n                (SELECT COUNT(*) FROM user_sessions WHERE is_bot = false AND is_behavioral_bot = false AND is_scanner = false) as \"total_sessions!\",\n                (SELECT COUNT(*) FROM user_sessions WHERE ended_at IS NULL AND is_bot = false AND is_behavioral_bot = false AND is_scanner = false) as \"active_sessions!\",\n                (SELECT COUNT(*) FROM user_contexts) as \"total_contexts!\",\n                (SELECT COUNT(*) FROM agent_tasks) as \"total_tasks!\",\n                (SELECT COUNT(*) FROM ai_requests) as \"total_ai_requests!\"\n            ",
+  "query": "\n            SELECT\n                (SELECT COUNT(*) FROM users WHERE status != 'deleted') as \"total_users!\",\n                (SELECT COUNT(DISTINCT user_id) FROM user_sessions WHERE last_activity_at > $1 AND is_bot = false AND is_behavioral_bot = false AND is_scanner = false) as \"active_users_24h!\",\n                (SELECT COUNT(DISTINCT user_id) FROM user_sessions WHERE last_activity_at > $2 AND is_bot = false AND is_behavioral_bot = false AND is_scanner = false) as \"active_users_7d!\",\n                (SELECT COUNT(*) FROM user_sessions WHERE is_bot = false AND is_behavioral_bot = false AND is_scanner = false) as \"total_sessions!\",\n                (SELECT COUNT(*) FROM user_sessions WHERE ended_at IS NULL AND is_bot = false AND is_behavioral_bot = false AND is_scanner = false) as \"active_sessions!\",\n                (SELECT COUNT(*) FROM user_contexts WHERE kind = $3) as \"total_contexts!\",\n                (SELECT COUNT(*) FROM agent_tasks) as \"total_tasks!\",\n                (SELECT COUNT(*) FROM ai_requests) as \"total_ai_requests!\"\n            ",
   "describe": {
     "columns": [
       {
@@ -55,7 +55,8 @@
     "parameters": {
       "Left": [
         "Timestamptz",
-        "Timestamptz"
+        "Timestamptz",
+        "Text"
       ]
     },
     "nullable": [
@@ -69,5 +70,5 @@
       null
     ]
   },
-  "hash": "0f65fe5f5f0cb92a270a74d771c8161e5a17617525dcfd1c4376ff9ed46e0641"
+  "hash": "9b8af80e5115d510a53b6070448d36cbd3f4f9dfb65799f09cdb21bc31cade0c"
 }

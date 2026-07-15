@@ -27,6 +27,7 @@ pub(super) struct ContextsPageContext {
 pub(super) struct ContextItemView {
     pub(super) context_id: ContextId,
     pub(super) name: Option<String>,
+    pub(super) is_cli_session: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) user_id: Option<UserId>,
     #[serde(skip_serializing_if = "Option::is_none")]

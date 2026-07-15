@@ -30,6 +30,8 @@ pub struct ContextListFilter {
 pub struct ContextListItem {
     pub context_id: ContextId,
     pub name: Option<String>,
+    /// `user_contexts.kind` — `"user"` or `"cli_session"` (ephemeral CLI rows).
+    pub kind: Option<String>,
     pub user_id: Option<UserId>,
     pub display_name: Option<String>,
     pub session_id: Option<SessionId>,

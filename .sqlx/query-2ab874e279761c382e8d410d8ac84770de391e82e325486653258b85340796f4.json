@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM user_contexts\n            WHERE context_id IN (\n                SELECT uc.context_id\n                FROM user_contexts uc\n                LEFT JOIN task_messages tm ON uc.context_id = tm.context_id\n                WHERE tm.id IS NULL\n                AND uc.created_at < NOW() - ($1 || ' hours')::interval\n                AND (uc.kind != $2 OR uc.session_id IS NULL)\n            )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2ab874e279761c382e8d410d8ac84770de391e82e325486653258b85340796f4"
+}

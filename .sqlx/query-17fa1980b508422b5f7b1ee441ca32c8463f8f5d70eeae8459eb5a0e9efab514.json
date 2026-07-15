@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n                context_id as \"context_id!\",\n                user_id as \"user_id!\",\n                name as \"name!\",\n                created_at as \"created_at!\",\n                updated_at as \"updated_at!\"\n            FROM user_contexts WHERE session_id = $1\n            ORDER BY created_at DESC LIMIT 1",
+  "query": "SELECT\n                context_id as \"context_id!\",\n                user_id as \"user_id!\",\n                name as \"name!\",\n                kind as \"kind!: ContextKind\",\n                created_at as \"created_at!\",\n                updated_at as \"updated_at!\"\n            FROM user_contexts WHERE user_id = $1 ORDER BY updated_at DESC",
   "describe": {
     "columns": [
       {
@@ -38,6 +38,17 @@
       },
       {
         "ordinal": 3,
+        "name": "kind!: ContextKind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_contexts",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
         "name": "created_at!",
         "type_info": "Timestamptz",
         "origin": {
@@ -48,7 +59,7 @@
         }
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "updated_at!",
         "type_info": "Timestamptz",
         "origin": {
@@ -69,8 +80,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "b6422f1fc5aa2b96adb7b1c2755d03090696ea12580ace00d8bb04db68481ec8"
+  "hash": "17fa1980b508422b5f7b1ee441ca32c8463f8f5d70eeae8459eb5a0e9efab514"
 }

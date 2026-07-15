@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT context_id as \"context_id!: ContextId\",\n                  user_id as \"user_id!: UserId\",\n                  session_id as \"session_id: SessionId\",\n                  name, created_at, updated_at\n           FROM user_contexts",
+  "query": "SELECT\n                context_id as \"context_id!\",\n                user_id as \"user_id!\",\n                name as \"name!\",\n                kind as \"kind!: ContextKind\",\n                created_at as \"created_at!\",\n                updated_at as \"updated_at!\"\n            FROM user_contexts WHERE session_id = $1\n            ORDER BY created_at DESC LIMIT 1",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "context_id!: ContextId",
+        "name": "context_id!",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -16,7 +16,7 @@
       },
       {
         "ordinal": 1,
-        "name": "user_id!: UserId",
+        "name": "user_id!",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -27,18 +27,7 @@
       },
       {
         "ordinal": 2,
-        "name": "session_id: SessionId",
-        "type_info": "Text",
-        "origin": {
-          "Table": {
-            "table": "user_contexts",
-            "name": "session_id"
-          }
-        }
-      },
-      {
-        "ordinal": 3,
-        "name": "name",
+        "name": "name!",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -48,8 +37,19 @@
         }
       },
       {
+        "ordinal": 3,
+        "name": "kind!: ContextKind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_contexts",
+            "name": "kind"
+          }
+        }
+      },
+      {
         "ordinal": 4,
-        "name": "created_at",
+        "name": "created_at!",
         "type_info": "Timestamptz",
         "origin": {
           "Table": {
@@ -60,7 +60,7 @@
       },
       {
         "ordinal": 5,
-        "name": "updated_at",
+        "name": "updated_at!",
         "type_info": "Timestamptz",
         "origin": {
           "Table": {
@@ -71,16 +71,18 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Text"
+      ]
     },
     "nullable": [
       false,
       false,
-      true,
+      false,
       false,
       false,
       false
     ]
   },
-  "hash": "1d06d89a5e7b3a8bfc51355122c80e5f64ecd87f9e39e9900b6a7236a8130366"
+  "hash": "0c86da99c20d8770b03ea95fa7f32a6ddfb3b7c42c9700c012e2485902cad8f7"
 }

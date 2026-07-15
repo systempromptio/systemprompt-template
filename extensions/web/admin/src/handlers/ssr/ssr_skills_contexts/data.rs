@@ -23,6 +23,7 @@ pub(super) fn group_contexts_by_user(
         out.entry(key).or_default().push(ContextItemView {
             context_id: c.context_id.clone(),
             name: c.name.clone(),
+            is_cli_session: c.kind.as_deref() == Some("cli_session"),
             user_id: None,
             display_name: None,
             session_id: None,
@@ -50,6 +51,7 @@ pub(super) fn build_contexts_json(
         .map(|c| ContextItemView {
             context_id: c.context_id.clone(),
             name: c.name.clone(),
+            is_cli_session: c.kind.as_deref() == Some("cli_session"),
             user_id: c.user_id.clone(),
             display_name: c.display_name.clone(),
             session_id: c.session_id.clone(),

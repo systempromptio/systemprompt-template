@@ -11,6 +11,7 @@ use super::{ContextListFilter, ContextListItem, free_text_pattern, resolved_limi
 struct ContextListRow {
     context_id: ContextId,
     name: Option<String>,
+    kind: Option<String>,
     user_id: Option<UserId>,
     display_name: Option<String>,
     session_id: Option<SessionId>,
@@ -31,6 +32,7 @@ impl From<ContextListRow> for ContextListItem {
         Self {
             context_id: r.context_id,
             name: r.name,
+            kind: r.kind,
             user_id: r.user_id,
             display_name: r.display_name,
             session_id: r.session_id,
@@ -85,6 +87,7 @@ pub async fn fetch_context_list(
         SELECT
             COALESCE(c.context_id, req.context_id)        AS "context_id!: ContextId",
             c.name                                        AS "name?",
+            c.kind                                        AS "kind?",
             COALESCE(c.user_id, req.user_id)              AS "user_id?: UserId",
             u.display_name                                AS "display_name?",
             COALESCE(c.session_id, req.session_id)        AS "session_id?: SessionId",

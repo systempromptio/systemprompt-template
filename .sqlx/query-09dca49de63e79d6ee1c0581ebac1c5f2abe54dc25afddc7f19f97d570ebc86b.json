@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id: UserId\" FROM users WHERE email LIKE '%@anonymous.local' ORDER BY created_at LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "09dca49de63e79d6ee1c0581ebac1c5f2abe54dc25afddc7f19f97d570ebc86b"
+}

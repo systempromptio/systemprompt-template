@@ -46,6 +46,8 @@ pub(super) async fn record_decision(
         evaluated_rules: &evaluated_rules,
         plugin_id: audit.target.plugin_id.as_deref(),
         act_chain: &[],
+        context_id: None,
+        task_id: None,
     };
 
     insert_governance_decision(pool, &dec_record).await
