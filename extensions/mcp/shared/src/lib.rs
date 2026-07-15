@@ -7,6 +7,7 @@
 //! propagate errors.
 
 use systemprompt::database::DbPool;
+use systemprompt::identifiers::UserId;
 
 mod repositories;
 
@@ -43,7 +44,7 @@ pub fn truncate_on_char_boundary(s: &str, max_bytes: usize) -> String {
 
 pub async fn record_mcp_access(
     pool: &DbPool,
-    user_id: &str,
+    user_id: &UserId,
     server: &str,
     tool: &str,
     action: &str,

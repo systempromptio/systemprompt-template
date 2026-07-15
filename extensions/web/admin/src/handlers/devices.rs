@@ -62,7 +62,7 @@ pub(crate) async fn revoke_pat(
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct EnrollDeviceRequest {
-    pub user_id: String,
+    pub user_id: UserId,
     pub name: String,
     pub platform: String,
     #[serde(default)]
@@ -74,7 +74,7 @@ pub(crate) struct EnrollDeviceRequest {
 #[derive(Debug, Serialize)]
 pub(crate) struct EnrollDeviceResponse {
     pub id: String,
-    pub user_id: String,
+    pub user_id: UserId,
     pub name: String,
     pub key_prefix: String,
     pub secret: String,
@@ -93,7 +93,7 @@ pub(crate) async fn enroll_device(
     if !user_ctx.is_admin {
         return shared::error_response(StatusCode::FORBIDDEN, "Admin access required");
     }
-    let target = UserId::new(body.user_id);
+    let target = body.user_id;
     let hostname = body.hostname.unwrap_or_default();
     match device_service::enroll_device(
         &pool,

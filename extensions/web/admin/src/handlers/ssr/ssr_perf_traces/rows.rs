@@ -4,6 +4,7 @@
 //! the human-facing token / cost / duration formatting.
 
 use serde::Serialize;
+use systemprompt::identifiers::{AgentId, SessionId, UserId};
 use urlencoding::encode as urlencode;
 
 use crate::repositories::perf_grp::traces::TraceSummary;
@@ -12,15 +13,15 @@ use super::BASE_URL;
 
 #[derive(Debug, Serialize)]
 pub(super) struct TraceRow {
-    session_id: String,
+    session_id: SessionId,
     session_id_short: String,
     trace_id: Option<String>,
     started_at: String,
     started_at_local: String,
     duration_ms: i64,
     duration_display: String,
-    user_id: Option<String>,
-    agent_id: Option<String>,
+    user_id: Option<UserId>,
+    agent_id: Option<AgentId>,
     agent_scope: Option<String>,
     model: Option<String>,
     provider: Option<String>,
@@ -42,10 +43,11 @@ pub(super) struct TraceRow {
 }
 
 pub(super) fn trace_to_json(t: &TraceSummary) -> TraceRow {
-    let short = if t.session_id.len() > 12 {
-        format!("{}…", &t.session_id[..12])
+    let sid = t.session_id.as_str();
+    let short = if sid.len() > 12 {
+        format!("{}…", &sid[..12])
     } else {
-        t.session_id.clone()
+        sid.to_owned()
     };
     TraceRow {
         session_id: t.session_id.clone(),
@@ -78,7 +80,7 @@ pub(super) fn trace_to_json(t: &TraceSummary) -> TraceRow {
         top_tool: t.top_tool.clone(),
         has_error: t.has_error,
         has_deny: t.has_deny,
-        detail_url: format!("{BASE_URL}/{}", urlencode(&t.session_id)),
+        detail_url: format!("{BASE_URL}/{}", urlencode(t.session_id.as_str())),
     }
 }
 

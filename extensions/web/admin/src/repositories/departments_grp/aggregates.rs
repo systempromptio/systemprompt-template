@@ -2,10 +2,11 @@
 //! overrides and per-user skill / device counts keyed by department.
 
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct UserManagementAggregate {
-    pub user_id: String,
+    pub user_id: UserId,
     pub department: String,
     pub assigned_skills_count: i64,
     pub devices_count: i64,
@@ -14,7 +15,7 @@ pub struct UserManagementAggregate {
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct UserMarketplaceOverride {
-    pub user_id: String,
+    pub user_id: UserId,
     pub department: String,
     pub entity_id: String,
     pub access: String,
@@ -32,7 +33,7 @@ pub async fn list_user_marketplace_overrides(
         UserMarketplaceOverride,
         r#"
         SELECT
-            u.id AS "user_id!",
+            u.id AS "user_id!: UserId",
             COALESCE(upe.department, '') AS "department!",
             acr.entity_id,
             acr.access
@@ -56,7 +57,7 @@ pub async fn list_user_management_aggregates(
         UserManagementAggregate,
         r#"
         SELECT
-            u.id AS "user_id!",
+            u.id AS "user_id!: UserId",
             COALESCE(upe.department, '') AS "department!",
             COALESCE((
                 SELECT COUNT(DISTINCT acr.entity_id)

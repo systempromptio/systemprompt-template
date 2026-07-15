@@ -3,6 +3,7 @@
 //! and attaches the per-session governance decision.
 
 use chrono::{DateTime, Utc};
+use systemprompt::identifiers::SessionId;
 
 use super::{ToolCall, TranscriptTurn, TurnGovernance, redact_text};
 
@@ -70,7 +71,7 @@ pub(super) fn parse_turns(input: &ParseInput<'_>) -> Vec<TranscriptTurn> {
 
             TranscriptTurn {
                 id: format!("{}:{ordinal}", input.session_id),
-                session_id: input.session_id.to_owned(),
+                session_id: SessionId::new(input.session_id),
                 ordinal,
                 role,
                 ts,

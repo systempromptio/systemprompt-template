@@ -2,28 +2,39 @@
 //! chain DTOs defined in the parent module.
 
 use sqlx::PgPool;
+use systemprompt::identifiers::{AgentId, SessionId, UserId};
 
 use super::{AiRequestSummary, DecisionStage, SessionSummary, TranscriptEnvelope, UsageEvent};
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub(super) struct DecisionUserSlots {
-    pub user_id: String,
-    pub agent_id: Option<String>,
+    pub user_id: UserId,
+    pub agent_id: Option<AgentId>,
     pub agent_scope: Option<String>,
+}
+
+impl Default for DecisionUserSlots {
+    fn default() -> Self {
+        Self {
+            user_id: UserId::new(String::new()),
+            agent_id: None,
+            agent_scope: None,
+        }
+    }
 }
 
 pub(super) async fn fetch_decisions(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<(Vec<DecisionStage>, DecisionUserSlots), sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT id as "id!",
-                  user_id as "user_id!",
+                  user_id as "user_id!: UserId",
                   policy as "policy!",
                   decision as "decision!",
                   reason as "reason!",
                   tool_name as "tool_name!",
-                  agent_id,
+                  agent_id as "agent_id: AgentId",
                   agent_scope,
                   plugin_id,
                   COALESCE(evaluated_rules, '[]'::jsonb) as "evaluated_rules!",
@@ -31,7 +42,7 @@ pub(super) async fn fetch_decisions(
            FROM governance_decisions
            WHERE session_id = $1
            ORDER BY created_at ASC"#,
-        session_id,
+        session_id.as_str(),
     )
     .fetch_all(pool)
     .await?;
@@ -65,7 +76,7 @@ pub(super) async fn fetch_decisions(
 
 pub(super) async fn fetch_requests(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<(Vec<AiRequestSummary>, Option<String>), sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT id as "id!",
@@ -83,7 +94,7 @@ pub(super) async fn fetch_requests(
            FROM ai_requests
            WHERE session_id = $1
            ORDER BY created_at ASC"#,
-        session_id,
+        session_id.as_str(),
     )
     .fetch_all(pool)
     .await?;
@@ -113,7 +124,7 @@ pub(super) async fn fetch_requests(
 
 pub(super) async fn fetch_events(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Vec<UsageEvent>, sqlx::Error> {
     Ok(sqlx::query!(
         r#"SELECT id as "id!",
@@ -127,7 +138,7 @@ pub(super) async fn fetch_events(
            FROM plugin_usage_events
            WHERE session_id = $1
            ORDER BY created_at ASC"#,
-        session_id,
+        session_id.as_str(),
     )
     .fetch_all(pool)
     .await?
@@ -147,7 +158,7 @@ pub(super) async fn fetch_events(
 
 pub(super) async fn fetch_transcript(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Option<TranscriptEnvelope>, sqlx::Error> {
     Ok(sqlx::query!(
         r#"SELECT id as "id!",
@@ -161,7 +172,7 @@ pub(super) async fn fetch_transcript(
            WHERE session_id = $1
            ORDER BY captured_at DESC
            LIMIT 1"#,
-        session_id,
+        session_id.as_str(),
     )
     .fetch_optional(pool)
     .await?
@@ -178,14 +189,14 @@ pub(super) async fn fetch_transcript(
 
 pub(super) async fn fetch_summary(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Option<SessionSummary>, sqlx::Error> {
     Ok(sqlx::query!(
         r"SELECT ai_title, ai_summary, ai_tags, model, status, started_at, ended_at
           FROM plugin_session_summaries
           WHERE session_id = $1
           LIMIT 1",
-        session_id,
+        session_id.as_str(),
     )
     .fetch_optional(pool)
     .await?

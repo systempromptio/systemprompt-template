@@ -1,9 +1,10 @@
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::SessionId;
 
 #[derive(Debug)]
 pub struct TraceSessionRow {
-    pub session_id: String,
+    pub session_id: SessionId,
     pub event_count: i64,
     pub tool_uses: i64,
     pub errors: i64,
@@ -14,7 +15,7 @@ pub struct TraceSessionRow {
 pub async fn list_recent_traces(pool: &PgPool) -> Result<Vec<TraceSessionRow>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT
-            session_id AS "session_id!",
+            session_id AS "session_id!: SessionId",
             COUNT(*)::bigint AS "event_count!",
             COUNT(*) FILTER (WHERE event_type LIKE '%ToolUse%')::bigint AS "tool_uses!",
             COUNT(*) FILTER (WHERE event_type LIKE '%Failure%' OR event_type LIKE '%Error%')::bigint AS "errors!",
@@ -44,7 +45,7 @@ pub async fn list_recent_traces(pool: &PgPool) -> Result<Vec<TraceSessionRow>, s
 
 #[derive(Debug)]
 pub struct BenchRunRow {
-    pub session_id: String,
+    pub session_id: SessionId,
     pub total_decisions: i64,
     pub allowed: i64,
     pub denied: i64,
@@ -55,7 +56,7 @@ pub struct BenchRunRow {
 pub async fn list_bench_runs(pool: &PgPool) -> Result<Vec<BenchRunRow>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT
-            session_id,
+            session_id AS "session_id!: SessionId",
             COUNT(*)::bigint AS "total_decisions!",
             COUNT(*) FILTER (WHERE decision = 'allow')::bigint AS "allowed!",
             COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS "denied!",

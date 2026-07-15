@@ -1,17 +1,18 @@
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::{AgentId, UserId};
 
 #[derive(Debug)]
 pub struct RecentToolExecution {
     pub tool_name: String,
     pub status: String,
-    pub user_id: String,
+    pub user_id: UserId,
     pub created_at: DateTime<Utc>,
 }
 
 #[derive(Debug)]
 pub struct ToolByAgent {
-    pub agent_id: String,
+    pub agent_id: AgentId,
     pub tool_name: String,
     pub usage_count: i64,
 }
@@ -20,7 +21,7 @@ pub async fn list_recent_tool_executions(
     pool: &PgPool,
 ) -> Result<Vec<RecentToolExecution>, sqlx::Error> {
     let rows = sqlx::query!(
-        r#"SELECT tool_name, status, user_id, created_at
+        r#"SELECT tool_name, status, user_id AS "user_id!: UserId", created_at
            FROM mcp_tool_executions
            ORDER BY created_at DESC
            LIMIT 50"#,
@@ -40,7 +41,7 @@ pub async fn list_recent_tool_executions(
 
 pub async fn list_tools_by_agent(pool: &PgPool) -> Result<Vec<ToolByAgent>, sqlx::Error> {
     let rows = sqlx::query!(
-        r#"SELECT COALESCE(agent_id, 'unknown') AS "agent_id!",
+        r#"SELECT COALESCE(agent_id, 'unknown') AS "agent_id!: AgentId",
                   COALESCE(tool_name, 'unknown') AS "tool_name!",
                   COUNT(*)::BIGINT AS "usage_count!"
            FROM governance_decisions

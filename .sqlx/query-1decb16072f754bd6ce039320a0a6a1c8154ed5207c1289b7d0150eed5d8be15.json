@@ -1,0 +1,61 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            r.context_id                         AS \"context_id!: ContextId\",\n            c.name                               AS \"name?\",\n            COUNT(*)::bigint                     AS \"request_count!\",\n            MAX(r.created_at)                    AS \"last_request_at?\",\n            MAX(r.model)                         AS \"model?\"\n        FROM ai_requests r\n        LEFT JOIN user_contexts c ON c.context_id = r.context_id\n        WHERE r.session_id = $1 AND r.context_id IS NOT NULL\n        GROUP BY r.context_id, c.name\n        ORDER BY MAX(r.created_at) DESC\n        LIMIT 200\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id!: ContextId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "context_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_contexts",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "request_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_request_at?",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "model?",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "1decb16072f754bd6ce039320a0a6a1c8154ed5207c1289b7d0150eed5d8be15"
+}

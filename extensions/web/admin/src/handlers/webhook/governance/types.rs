@@ -12,7 +12,7 @@ use serde::Serialize;
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt::identifiers::{PolicyId, SessionId, UserId};
+use systemprompt::identifiers::{AgentId, PolicyId, SessionId, UserId};
 use systemprompt::oauth::SessionCreationService;
 use systemprompt_security::authz::{Decision, DecisionTag};
 use systemprompt_security::policy::types::AccessScope;
@@ -84,7 +84,7 @@ pub(super) struct ChainEntryOutcome {
 pub(super) struct PrincipalSnapshot {
     pub user_id: UserId,
     pub session_id: SessionId,
-    pub agent_id: Option<String>,
+    pub agent_id: Option<AgentId>,
     pub agent_scope: AccessScope,
 }
 
@@ -111,7 +111,7 @@ pub(super) struct AuthDenialParams<'a> {
     pub pool: &'a Arc<PgPool>,
     pub session_id: &'a SessionId,
     pub tool_name: &'a str,
-    pub agent_id: Option<&'a str>,
+    pub agent_id: Option<&'a AgentId>,
     pub plugin_id: Option<&'a str>,
     pub session_service: &'a Arc<SessionCreationService>,
     pub headers: &'a HeaderMap,

@@ -3,16 +3,17 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::{ContextId, SessionId, UserId};
 
 use super::{ContextListFilter, ContextListItem, free_text_pattern, resolved_limit};
 
 #[derive(Debug)]
 struct ContextListRow {
-    context_id: String,
+    context_id: ContextId,
     name: Option<String>,
-    user_id: Option<String>,
+    user_id: Option<UserId>,
     display_name: Option<String>,
-    session_id: Option<String>,
+    session_id: Option<SessionId>,
     model: Option<String>,
     request_count: i64,
     message_count: i64,
@@ -82,11 +83,11 @@ pub async fn fetch_context_list(
             GROUP BY r.context_id
         )
         SELECT
-            COALESCE(c.context_id, req.context_id)        AS "context_id!",
+            COALESCE(c.context_id, req.context_id)        AS "context_id!: ContextId",
             c.name                                        AS "name?",
-            COALESCE(c.user_id, req.user_id)              AS "user_id?",
+            COALESCE(c.user_id, req.user_id)              AS "user_id?: UserId",
             u.display_name                                AS "display_name?",
-            COALESCE(c.session_id, req.session_id)        AS "session_id?",
+            COALESCE(c.session_id, req.session_id)        AS "session_id?: SessionId",
             req.model                                     AS "model?",
             COALESCE(req.request_count, 0)::bigint        AS "request_count!",
             COALESCE(msgs.message_count, 0)::bigint       AS "message_count!",
@@ -113,7 +114,7 @@ pub async fn fetch_context_list(
         ORDER BY COALESCE(req.last_request_at, c.updated_at) DESC NULLS LAST
         LIMIT $5
         "#,
-        filter.user_id,
+        filter.user_id.as_ref().map(UserId::as_str),
         filter.model,
         filter.since,
         pattern,

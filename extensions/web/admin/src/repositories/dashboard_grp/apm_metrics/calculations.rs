@@ -1,9 +1,10 @@
 use chrono::NaiveDate;
 use sqlx::PgPool;
+use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::numeric;
 
-pub async fn calculate_session_apm(pool: &PgPool, session_id: &str) -> (f32, f32) {
+pub async fn calculate_session_apm(pool: &PgPool, session_id: &SessionId) -> (f32, f32) {
     struct Row {
         tool_uses: Option<i64>,
         prompts: Option<i64>,
@@ -17,7 +18,7 @@ pub async fn calculate_session_apm(pool: &PgPool, session_id: &str) -> (f32, f32
         r"SELECT tool_uses, prompts, errors, started_at, ended_at
           FROM plugin_session_summaries
           WHERE session_id = $1",
-        session_id,
+        session_id.as_str(),
     )
     .fetch_optional(pool)
     .await
@@ -52,7 +53,7 @@ pub async fn calculate_session_apm(pool: &PgPool, session_id: &str) -> (f32, f32
 
 pub async fn calculate_daily_concurrency(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     date: NaiveDate,
 ) -> (i32, f32) {
     struct Row {
@@ -67,7 +68,7 @@ pub async fn calculate_daily_concurrency(
           WHERE user_id = $1
             AND started_at::date = $2
             AND COALESCE(status, 'active') != 'deleted'",
-        user_id,
+        user_id.as_str(),
         date,
     )
     .fetch_all(pool)
@@ -133,7 +134,7 @@ fn sweep_line_concurrency(
 
 pub async fn calculate_daily_apm_stats(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     date: NaiveDate,
 ) -> (Option<f32>, Option<f32>, Option<f32>) {
     struct Row {
@@ -153,7 +154,7 @@ pub async fn calculate_daily_apm_stats(
             AND started_at::date = $2
             AND ended_at IS NOT NULL
             AND apm IS NOT NULL",
-        user_id,
+        user_id.as_str(),
         date,
     )
     .fetch_optional(pool)
@@ -173,14 +174,14 @@ pub async fn calculate_daily_apm_stats(
     })
 }
 
-pub async fn calculate_tool_diversity(pool: &PgPool, user_id: &str, date: NaiveDate) -> i32 {
+pub async fn calculate_tool_diversity(pool: &PgPool, user_id: &UserId, date: NaiveDate) -> i32 {
     let count = sqlx::query_scalar!(
         r"SELECT COUNT(DISTINCT tool_name)
           FROM plugin_usage_events
           WHERE user_id = $1
             AND event_type = 'PostToolUse'
             AND created_at::date = $2",
-        user_id,
+        user_id.as_str(),
         date,
     )
     .fetch_one(pool)
@@ -193,7 +194,7 @@ pub async fn calculate_tool_diversity(pool: &PgPool, user_id: &str, date: NaiveD
 
 pub async fn calculate_multitasking_score(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     date: NaiveDate,
     peak_concurrency: i32,
     session_count: i32,
@@ -204,7 +205,7 @@ pub async fn calculate_multitasking_score(
           WHERE user_id = $1
             AND started_at::date = $2
             AND COALESCE(status, 'active') != 'deleted'"#,
-        user_id,
+        user_id.as_str(),
         date,
     )
     .fetch_one(pool)

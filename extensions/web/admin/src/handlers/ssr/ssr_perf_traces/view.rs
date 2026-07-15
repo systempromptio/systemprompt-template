@@ -116,8 +116,14 @@ pub(super) fn build_chips(query: &TraceListQuery) -> Vec<Chip> {
     let mut chips = Vec::new();
     for (param, label) in GROUPS {
         let val = match *param {
-            "user_id" => query.user_id.as_deref(),
-            "agent_id" => query.agent_id.as_deref(),
+            "user_id" => query
+                .user_id
+                .as_ref()
+                .map(systemprompt::identifiers::UserId::as_str),
+            "agent_id" => query
+                .agent_id
+                .as_ref()
+                .map(systemprompt::identifiers::AgentId::as_str),
             "agent_scope" => query.agent_scope.as_deref(),
             "policy" => query.policy.as_deref(),
             "decision" => query.decision.as_deref(),
@@ -150,8 +156,20 @@ fn preserved_query_string(query: &TraceListQuery, drop: &[&str]) -> String {
         ("preset", query.preset.as_deref()),
         ("from", query.from.as_deref()),
         ("to", query.to.as_deref()),
-        ("user_id", query.user_id.as_deref()),
-        ("agent_id", query.agent_id.as_deref()),
+        (
+            "user_id",
+            query
+                .user_id
+                .as_ref()
+                .map(systemprompt::identifiers::UserId::as_str),
+        ),
+        (
+            "agent_id",
+            query
+                .agent_id
+                .as_ref()
+                .map(systemprompt::identifiers::AgentId::as_str),
+        ),
         ("agent_scope", query.agent_scope.as_deref()),
         ("policy", query.policy.as_deref()),
         ("decision", query.decision.as_deref()),

@@ -12,13 +12,14 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::SessionId;
 
 use crate::repositories::analytics_grp::{RawTurnBody, fetch_raw_turns};
 use crate::types::UserContext;
 
 #[derive(Debug, Serialize)]
 pub(super) struct RawTranscriptEnvelope {
-    pub session_id: String,
+    pub session_id: SessionId,
     pub turns: Vec<RawTurnBody>,
 }
 
@@ -27,6 +28,7 @@ pub(crate) async fn conversations_raw(
     State(pool): State<Arc<PgPool>>,
     Path(session_id): Path<String>,
 ) -> Response {
+    let session_id = SessionId::new(session_id);
     let allowed = user_ctx.is_admin
         || user_ctx
             .roles

@@ -10,6 +10,7 @@ pub use queries::{
 pub use today_summary::{TodaySummary, fetch_today_summary};
 
 use sqlx::PgPool;
+use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::handlers::hooks_track::ai_summary::SessionAnalysis;
 
@@ -17,7 +18,7 @@ pub type SessionAnalysisDetail = SessionAnalysisRow;
 
 #[derive(Debug, sqlx::FromRow)]
 pub struct SessionAnalysisRow {
-    pub session_id: String,
+    pub session_id: SessionId,
     pub title: String,
     pub description: String,
     pub summary: String,
@@ -111,22 +112,22 @@ fn prepare_upsert_params(analysis: &SessionAnalysis) -> UpsertParams {
 
 pub async fn insert_session_analysis(
     pool: &PgPool,
-    session_id: &str,
-    user_id: &str,
+    session_id: &SessionId,
+    user_id: &UserId,
     analysis: &SessionAnalysis,
 ) {
     let p = prepare_upsert_params(analysis);
 
     tracing::debug!(
-        session_id,
+        session_id = %session_id,
         quality_score = analysis.quality_score,
         goal_achieved = %analysis.goal_achieved,
         "Inserting session analysis"
     );
 
     let ids = UpsertAnalysisIds {
-        session_id,
-        user_id,
+        session_id: session_id.as_str(),
+        user_id: user_id.as_str(),
     };
     if let Err(e) = run_upsert_query(pool, &ids, &p).await {
         tracing::warn!(error = %e, "Failed to insert session analysis");

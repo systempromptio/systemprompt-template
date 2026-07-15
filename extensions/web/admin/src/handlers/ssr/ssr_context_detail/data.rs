@@ -41,7 +41,7 @@ pub(super) fn build_detail_data(
     let transcript = build_transcript(messages, tool_calls);
     let back_url = header.session_id.as_ref().map_or_else(
         || "/admin/overview/pulse".to_owned(),
-        |s| format!("/admin/sessions/{}", urlencoding::encode(s)),
+        |s| format!("/admin/sessions/{}", urlencoding::encode(s.as_str())),
     );
     let back_label = header
         .session_id
@@ -49,7 +49,7 @@ pub(super) fn build_detail_data(
         .map_or_else(|| "Live ticker".to_owned(), |_| "Session".to_owned());
     ContextDetailPageContext {
         page: "context-detail",
-        title: format!("Context · {}", short_id(&header.context_id)),
+        title: format!("Context · {}", short_id(header.context_id.as_str())),
         header: header_view(header),
         kpis: kpis_view(kpis),
         has_transcript: !messages.is_empty() || !tool_calls.is_empty(),
@@ -64,18 +64,18 @@ pub(super) fn build_detail_data(
 fn header_view(h: &ContextHeader) -> HeaderView {
     HeaderView {
         context_id: h.context_id.clone(),
-        context_id_short: short_id(&h.context_id),
+        context_id_short: short_id(h.context_id.as_str()),
         user_id: h.user_id.clone(),
         user_url: h
             .user_id
             .as_ref()
-            .map(|u| format!("/admin/user?id={}", urlencoding::encode(u))),
+            .map(|u| format!("/admin/user?id={}", urlencoding::encode(u.as_str()))),
         display_name: h.display_name.clone(),
         session_id: h.session_id.clone(),
         session_url: h
             .session_id
             .as_ref()
-            .map(|s| format!("/admin/sessions/{}", urlencoding::encode(s))),
+            .map(|s| format!("/admin/sessions/{}", urlencoding::encode(s.as_str()))),
         name: h.name.clone(),
         created_at: h.created_at.map(|t| t.to_rfc3339()),
         created_at_local: h.created_at.map(|t| {

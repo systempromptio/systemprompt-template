@@ -54,7 +54,7 @@ pub(crate) async fn get_agent_handler(Path(agent_id): Path<String>) -> Response 
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::find_agent(&services_path, &agent_id) {
+    match repositories::find_agent(&services_path, &AgentId::new(agent_id)) {
         Ok(Some(agent)) => Json(agent).into_response(),
         Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "Agent not found"),
         Err(e) => {

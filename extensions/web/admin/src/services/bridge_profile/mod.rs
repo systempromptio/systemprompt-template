@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::{ContextId, TenantId, UserId};
 
 use crate::repositories::profile_grp::usage as usage_repo;
 use crate::types::UserContext;
@@ -23,8 +24,8 @@ use assemble::{
 pub(crate) struct ProfileIdentity {
     pub email: String,
     pub display_name: Option<String>,
-    pub user_id: String,
-    pub tenant_id: Option<String>,
+    pub user_id: UserId,
+    pub tenant_id: Option<TenantId>,
     pub provider: Option<String>,
     pub roles: Vec<String>,
     pub jwt_issuer: Option<String>,
@@ -91,7 +92,7 @@ impl From<usage_repo::ConversationGroup> for ConversationGroup {
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct RecentConversation {
-    pub context_id: String,
+    pub context_id: ContextId,
     pub context_name: Option<String>,
     pub last_activity: chrono::DateTime<chrono::Utc>,
     pub ai_requests: i64,
@@ -158,7 +159,7 @@ pub(crate) async fn build_bridge_profile_data(
     pool: Arc<PgPool>,
     user_ctx: &UserContext,
 ) -> BridgeProfilePageData {
-    let user_id = user_ctx.user_id.as_str().to_owned();
+    let user_id = user_ctx.user_id.clone();
 
     let sections = fetch_usage_sections(&pool, &user_id).await;
     let display_name = sections
@@ -172,7 +173,7 @@ pub(crate) async fn build_bridge_profile_data(
     let identity = ProfileIdentity {
         email: user_ctx.email.as_str().to_owned(),
         display_name,
-        user_id: user_ctx.user_id.as_str().to_owned(),
+        user_id: user_ctx.user_id.clone(),
         tenant_id: read_tenant_id(),
         provider: None,
         roles: user_ctx.roles.clone(),

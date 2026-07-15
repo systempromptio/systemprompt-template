@@ -13,6 +13,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
+use systemprompt::identifiers::{SessionId, UserId};
 
 mod detail;
 mod list;
@@ -25,8 +26,8 @@ pub use redact::redact_text;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ConversationListItem {
-    pub session_id: String,
-    pub user_id: String,
+    pub session_id: SessionId,
+    pub user_id: UserId,
     pub plugin_id: Option<String>,
     pub model: Option<String>,
     pub status: Option<String>,
@@ -40,7 +41,7 @@ pub struct ConversationListItem {
 
 #[derive(Debug, Clone, Default)]
 pub struct ConversationListFilter {
-    pub user_id: Option<String>,
+    pub user_id: Option<UserId>,
     pub plugin_id: Option<String>,
     pub free_text: Option<String>,
     pub since: Option<DateTime<Utc>>,
@@ -51,7 +52,7 @@ pub struct ConversationListFilter {
 #[derive(Debug, Clone, Serialize)]
 pub struct TranscriptTurn {
     pub id: String,
-    pub session_id: String,
+    pub session_id: SessionId,
     pub ordinal: i32,
     pub role: String,
     pub ts: Option<DateTime<Utc>>,
@@ -87,8 +88,8 @@ pub struct TurnGovernance {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ConversationDetail {
-    pub session_id: String,
-    pub user_id: Option<String>,
+    pub session_id: SessionId,
+    pub user_id: Option<UserId>,
     pub plugin_id: Option<String>,
     pub ai_title: Option<String>,
     pub ai_summary: Option<String>,

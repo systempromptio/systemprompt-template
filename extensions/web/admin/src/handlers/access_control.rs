@@ -6,6 +6,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::handlers::shared;
@@ -138,10 +139,11 @@ pub(crate) async fn user_matrix_handler(
 
     let sections = build_matrix_sections(&services_path, &profile_path);
 
+    let user_id = UserId::new(user_id);
     match repositories::access_control::resolve_user_matrix(&pool, &user_id, sections).await {
         Ok(matrix) => Json(matrix).into_response(),
         Err(e) => {
-            tracing::error!(error = %e, user_id, "Failed to resolve user matrix");
+            tracing::error!(error = %e, user_id = %user_id, "Failed to resolve user matrix");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         },
     }

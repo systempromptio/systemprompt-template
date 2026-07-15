@@ -37,7 +37,7 @@ pub(crate) struct CatalogEntry {
 
 #[derive(Debug, Serialize)]
 pub(crate) struct CatalogResponse {
-    pub user_id: String,
+    pub user_id: UserId,
     pub routes: Vec<CatalogEntry>,
 }
 
@@ -46,7 +46,8 @@ pub(crate) async fn for_user_handler(
     Extension(user_ctx): Extension<UserContext>,
     Path(user_id): Path<String>,
 ) -> Response {
-    if !user_ctx.is_admin && user_ctx.user_id.as_str() != user_id {
+    let user_id = UserId::new(user_id);
+    if !user_ctx.is_admin && user_ctx.user_id != user_id {
         return shared::error_response(StatusCode::FORBIDDEN, "Forbidden");
     }
     let profile_path = match shared::get_profile_path() {
@@ -69,7 +70,7 @@ pub(crate) async fn for_user_handler(
             Ok(Some(rd)) => rd,
             Ok(None) => return shared::error_response(StatusCode::NOT_FOUND, "User not found"),
             Err(e) => {
-                tracing::error!(error = %e, user_id, "Failed to load user roles");
+                tracing::error!(error = %e, user_id = %user_id, "Failed to load user roles");
                 return shared::error_response(
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "Failed to load user",
@@ -86,7 +87,7 @@ pub(crate) async fn for_user_handler(
 async fn collect_allowed_routes(
     pool: &PgPool,
     routes: &[GatewayRouteView],
-    user_id: &str,
+    user_id: &UserId,
     user_roles: &[String],
     _department: &str,
 ) -> Result<Vec<CatalogEntry>, Box<Response>> {
@@ -109,12 +110,11 @@ async fn collect_allowed_routes(
             })
             .map(|e| e.default_included);
         let entity = EntityRef::GatewayRoute(RouteId::new(route.id.clone()));
-        let uid = UserId::new(user_id);
         if matches!(
             gateway_acl::resolve(ResolveInput {
                 entity: &entity,
                 rules: &rules,
-                user_id: &uid,
+                user_id,
                 user_roles,
                 default_included,
                 parents: &[],
@@ -224,7 +224,11 @@ pub(crate) async fn detect_after_the_fact(
         }) {
             let decision_id = uuid::Uuid::new_v4().to_string();
             let reason_str = reason.to_string();
-            let session_id = row.session_id.clone().unwrap_or_default();
+            let session_id = row
+                .session_id
+                .as_ref()
+                .map(|s| s.as_str().to_owned())
+                .unwrap_or_default();
             // variable-shape: governance audit `evaluated_rules` JSONB payload, not a
             // template/response body
             let evaluated = serde_json::json!({
@@ -237,7 +241,7 @@ pub(crate) async fn detect_after_the_fact(
                 pool,
                 acl_detect::GatewayAclDecision {
                     decision_id: &decision_id,
-                    user_id: &row.user_id,
+                    user_id: row.user_id.as_str(),
                     session_id: &session_id,
                     model: &row.model,
                     agent_scope: "inference",

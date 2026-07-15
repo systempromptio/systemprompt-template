@@ -1,4 +1,5 @@
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 #[derive(Debug, Clone)]
 pub struct BridgeUserRow {
@@ -11,13 +12,13 @@ pub struct BridgeUserRow {
 
 pub async fn find_bridge_user(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
 ) -> Result<Option<BridgeUserRow>, sqlx::Error> {
     let row = sqlx::query!(
         r#"SELECT id, name, email, display_name,
                   COALESCE(roles, '{}') as "roles!: Vec<String>"
            FROM users WHERE id = $1"#,
-        user_id,
+        user_id.as_str(),
     )
     .fetch_optional(pool)
     .await?;

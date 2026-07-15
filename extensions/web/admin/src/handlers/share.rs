@@ -20,6 +20,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 use sqlx::PgPool;
 use systemprompt::config::SecretsBootstrap;
+use systemprompt::identifiers::UserId;
 
 use crate::handlers::shared;
 use crate::repositories;
@@ -29,7 +30,7 @@ use crate::types::UserContext;
 /// The HMAC follows RFC 2104 over the concatenation `user_id:version`, keyed
 /// off the existing JWT signing secret. Reusing the JWT secret avoids
 /// introducing a second piece of bootstrap config.
-fn sign(secret: &[u8], user_id: &str, version: i32) -> String {
+fn sign(secret: &[u8], user_id: &UserId, version: i32) -> String {
     let payload = format!("{user_id}:{version}");
     let mut padded = [0u8; 64];
     if secret.len() > 64 {
@@ -56,7 +57,7 @@ fn sign(secret: &[u8], user_id: &str, version: i32) -> String {
     let mac = outer.finalize();
 
     let b64 = base64::engine::general_purpose::URL_SAFE_NO_PAD;
-    let uid_b64 = b64.encode(user_id.as_bytes());
+    let uid_b64 = b64.encode(user_id.as_str().as_bytes());
     let ver_b64 = b64.encode(version.to_string().as_bytes());
     let mut mac_hex = String::with_capacity(mac.len() * 2);
     for b in mac {
@@ -66,13 +67,13 @@ fn sign(secret: &[u8], user_id: &str, version: i32) -> String {
     format!("{uid_b64}:{ver_b64}:{mac_hex}")
 }
 
-fn verify(secret: &[u8], token: &str) -> Option<(String, i32)> {
+fn verify(secret: &[u8], token: &str) -> Option<(UserId, i32)> {
     let parts: Vec<&str> = token.split(':').collect();
     if parts.len() != 3 {
         return None;
     }
     let b64 = base64::engine::general_purpose::URL_SAFE_NO_PAD;
-    let user_id = String::from_utf8(b64.decode(parts[0]).ok()?).ok()?;
+    let user_id = UserId::new(String::from_utf8(b64.decode(parts[0]).ok()?).ok()?);
     let ver_s = String::from_utf8(b64.decode(parts[1]).ok()?).ok()?;
     let version: i32 = ver_s.parse().ok()?;
     let expected = sign(secret, &user_id, version);
@@ -104,6 +105,7 @@ pub(crate) async fn issue_share_token_handler(
     if !user_ctx.is_admin {
         return shared::error_response(StatusCode::FORBIDDEN, "Admin access required");
     }
+    let target_user_id = UserId::new(target_user_id);
     let secret = match SecretsBootstrap::manifest_signing_secret_seed() {
         Ok(s) => s,
         Err(e) => {
@@ -147,7 +149,7 @@ struct ManifestItem {
 
 #[derive(Debug, Serialize)]
 struct ManifestResponse {
-    user_id: String,
+    user_id: UserId,
     sections: Vec<ManifestSection>,
 }
 
@@ -235,14 +237,17 @@ fn collect_manifest_sections(
     sections_in
 }
 
-async fn build_user_manifest(pool: &PgPool, user_id: &str) -> Result<ManifestResponse, Response> {
+async fn build_user_manifest(
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Result<ManifestResponse, Response> {
     let services_path = shared::get_services_path().map_err(|r| *r)?;
     let sections_in = collect_manifest_sections(&services_path);
 
     let matrix = repositories::access_control::filter_catalog_for_user(pool, user_id, sections_in)
         .await
         .map_err(|e| {
-            tracing::error!(error = %e, user_id, "Failed to resolve manifest matrix");
+            tracing::error!(error = %e, user_id = %user_id, "Failed to resolve manifest matrix");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
         })?;
 
@@ -266,7 +271,7 @@ async fn build_user_manifest(pool: &PgPool, user_id: &str) -> Result<ManifestRes
         .collect();
 
     Ok(ManifestResponse {
-        user_id: matrix.user.id,
+        user_id: matrix.user.id.into(),
         sections,
     })
 }

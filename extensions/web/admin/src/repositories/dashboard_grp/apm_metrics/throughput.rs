@@ -1,11 +1,12 @@
 use chrono::NaiveDate;
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 use crate::numeric;
 
 pub async fn calculate_daily_throughput(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     date: NaiveDate,
 ) -> (i64, i64, i64) {
     struct Row {
@@ -22,7 +23,7 @@ pub async fn calculate_daily_throughput(
           WHERE user_id = $1
             AND started_at::date = $2
             AND COALESCE(status, 'active') != 'deleted'",
-        user_id,
+        user_id.as_str(),
         date,
     )
     .fetch_optional(pool)
@@ -41,7 +42,7 @@ pub async fn calculate_daily_throughput(
     (total_input, total_output, peak_bps)
 }
 
-async fn calculate_peak_throughput(pool: &PgPool, user_id: &str, date: NaiveDate) -> i64 {
+async fn calculate_peak_throughput(pool: &PgPool, user_id: &UserId, date: NaiveDate) -> i64 {
     struct SessionBytesRow {
         total_bytes: Option<i64>,
         duration_secs: Option<f64>,
@@ -57,7 +58,7 @@ async fn calculate_peak_throughput(pool: &PgPool, user_id: &str, date: NaiveDate
             AND started_at::date = $2
             AND ended_at IS NOT NULL
             AND COALESCE(status, 'active') != 'deleted'",
-        user_id,
+        user_id.as_str(),
         date,
     )
     .fetch_all(pool)
@@ -82,7 +83,7 @@ async fn calculate_peak_throughput(pool: &PgPool, user_id: &str, date: NaiveDate
         .unwrap_or(0)
 }
 
-pub async fn calculate_session_velocity(pool: &PgPool, user_id: &str, date: NaiveDate) -> f32 {
+pub async fn calculate_session_velocity(pool: &PgPool, user_id: &UserId, date: NaiveDate) -> f32 {
     struct SummaryRow {
         total_files: Option<i64>,
         total_tools: Option<i64>,
@@ -99,7 +100,7 @@ pub async fn calculate_session_velocity(pool: &PgPool, user_id: &str, date: Naiv
           WHERE user_id = $1
             AND started_at::date = $2
             AND COALESCE(status, 'active') != 'deleted'",
-        user_id,
+        user_id.as_str(),
         date,
     )
     .fetch_optional(pool)
@@ -120,7 +121,7 @@ pub async fn calculate_session_velocity(pool: &PgPool, user_id: &str, date: Naiv
           WHERE user_id = $1
             AND created_at::date = $2
             AND goal_achieved = 'yes'",
-        user_id,
+        user_id.as_str(),
         date,
     )
     .fetch_one(pool)

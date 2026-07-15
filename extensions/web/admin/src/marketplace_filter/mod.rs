@@ -56,7 +56,7 @@ impl TemplateMarketplaceFilter {
         &self,
         user_id: &UserId,
     ) -> Result<(Vec<String>, String), MarketplaceFilterError> {
-        match get_user_roles_department(self.pool.as_ref(), user_id.as_str()).await {
+        match get_user_roles_department(self.pool.as_ref(), user_id).await {
             Ok(Some(pair)) => Ok(pair),
             Ok(None) => Err(MarketplaceFilterError::UnknownUser(user_id.to_string())),
             Err(e) => Err(MarketplaceFilterError::Backend(e.to_string())),

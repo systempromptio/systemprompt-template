@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use systemprompt::identifiers::UserId;
 
 pub use super::enums::{ActivityAction, ActivityCategory, ActivityEntity};
 
@@ -13,7 +14,7 @@ pub struct ActivityEntityRef {
 
 #[derive(Debug)]
 pub struct NewActivity {
-    pub user_id: String,
+    pub user_id: UserId,
     pub category: ActivityCategory,
     pub action: ActivityAction,
     pub entity: Option<ActivityEntityRef>,
@@ -24,7 +25,7 @@ pub struct NewActivity {
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct ActivityTimelineEvent {
     pub id: String,
-    pub user_id: String,
+    pub user_id: UserId,
     pub display_name: String,
     pub category: ActivityCategory,
     pub action: ActivityAction,

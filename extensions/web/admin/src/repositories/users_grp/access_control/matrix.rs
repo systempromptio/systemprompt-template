@@ -5,6 +5,7 @@ use std::collections::HashMap;
 
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 use super::rules::list_all_rules;
 use crate::types::access_control::{AccessControlRule, AccessDecision, RuleType};
@@ -66,7 +67,7 @@ pub type SectionInput = (String, String, Vec<(String, String, Option<String>)>);
 /// callers project the section rows themselves.
 pub async fn filter_catalog_for_user(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     sections_in: Vec<SectionInput>,
 ) -> Result<UserMatrix, sqlx::Error> {
     resolve_user_matrix(pool, user_id, sections_in).await
@@ -74,7 +75,7 @@ pub async fn filter_catalog_for_user(
 
 pub async fn resolve_user_matrix(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     sections_in: Vec<SectionInput>,
 ) -> Result<UserMatrix, sqlx::Error> {
     let user = fetch_user_for_matrix(pool, user_id).await?;
@@ -133,7 +134,7 @@ async fn load_entity_defaults(
 
 async fn fetch_user_for_matrix(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
 ) -> Result<UserMatrixUser, sqlx::Error> {
     let row = sqlx::query!(
         r#"SELECT u.id,
@@ -144,7 +145,7 @@ async fn fetch_user_for_matrix(
            FROM users u
            LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
            WHERE u.id = $1"#,
-        user_id
+        user_id.as_str()
     )
     .fetch_one(pool)
     .await?;

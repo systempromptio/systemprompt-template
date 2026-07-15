@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use systemprompt::identifiers::{Email, SkillId, UserId};
+use systemprompt::identifiers::{Email, SessionId, SkillId, UserId};
 
 use super::super::activity;
 
@@ -44,7 +44,7 @@ pub struct UserDetail {
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct UserSession {
-    pub session_id: String,
+    pub session_id: SessionId,
     pub started_at: Option<DateTime<Utc>>,
     pub total_events: i64,
     pub tool_uses: i64,
@@ -161,7 +161,7 @@ pub struct UsersQuery {
 /// violations) per user.
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct UserIdentityRow {
-    pub user_id: String,
+    pub user_id: UserId,
     pub display_name: Option<String>,
     pub email: Option<String>,
     pub department: String,

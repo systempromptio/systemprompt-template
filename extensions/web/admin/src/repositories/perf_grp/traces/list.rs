@@ -1,19 +1,20 @@
 //! Trace list query: one aggregated summary row per session in the window.
 
 use sqlx::PgPool;
+use systemprompt::identifiers::{AgentId, SessionId, UserId};
 
 use super::{TraceFilter, TraceSort, TraceSummary};
 use crate::repositories::governance_grp::time_range::TimeRange;
 
 #[derive(Debug)]
 struct TraceRow {
-    session_id: String,
+    session_id: SessionId,
     trace_id: Option<String>,
     started_at: chrono::DateTime<chrono::Utc>,
     ended_at: chrono::DateTime<chrono::Utc>,
     duration_ms: i64,
-    user_id: Option<String>,
-    agent_id: Option<String>,
+    user_id: Option<UserId>,
+    agent_id: Option<AgentId>,
     agent_scope: Option<String>,
     model: Option<String>,
     provider: Option<String>,
@@ -200,13 +201,13 @@ pub async fn fetch_trace_list(
             FROM filtered f
         )
         SELECT
-            session_id              AS "session_id!",
+            session_id              AS "session_id!: SessionId",
             trace_id                AS "trace_id?",
             started_at              AS "started_at!",
             ended_at                AS "ended_at!",
             duration_ms             AS "duration_ms!",
-            user_id                 AS "user_id?",
-            agent_id                AS "agent_id?",
+            user_id                 AS "user_id?: UserId",
+            agent_id                AS "agent_id?: AgentId",
             agent_scope             AS "agent_scope?",
             model                   AS "model?",
             provider                AS "provider?",

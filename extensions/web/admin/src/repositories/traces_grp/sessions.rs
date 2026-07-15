@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::{AgentId, SessionId};
 
 #[derive(Debug)]
 pub struct TraceEvent {
@@ -13,7 +14,7 @@ pub struct TraceEvent {
 #[derive(Debug)]
 pub struct TraceGovernanceRow {
     pub tool_name: String,
-    pub agent_id: Option<String>,
+    pub agent_id: Option<AgentId>,
     pub agent_scope: Option<String>,
     pub decision: String,
     pub policy: String,
@@ -70,7 +71,7 @@ pub struct AiToolCallRow {
 
 pub async fn fetch_trace_events(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Vec<TraceEvent>, sqlx::Error> {
     sqlx::query_as!(
         TraceEvent,
@@ -109,7 +110,7 @@ pub async fn fetch_trace_events(
          ORDER BY created_at ASC
          LIMIT 500
         "#,
-        session_id
+        session_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -117,16 +118,16 @@ pub async fn fetch_trace_events(
 
 pub async fn fetch_trace_governance(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Vec<TraceGovernanceRow>, sqlx::Error> {
     sqlx::query_as!(
         TraceGovernanceRow,
-        r#"SELECT tool_name, agent_id, agent_scope, decision, policy, reason, created_at
+        r#"SELECT tool_name, agent_id AS "agent_id: AgentId", agent_scope, decision, policy, reason, created_at
            FROM governance_decisions
            WHERE session_id = $1
            ORDER BY created_at ASC
            LIMIT 100"#,
-        session_id
+        session_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -134,7 +135,7 @@ pub async fn fetch_trace_governance(
 
 pub async fn fetch_trace_entities(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Vec<TraceEntity>, sqlx::Error> {
     sqlx::query_as!(
         TraceEntity,
@@ -143,7 +144,7 @@ pub async fn fetch_trace_entities(
            WHERE session_id = $1
            ORDER BY usage_count DESC
            LIMIT 50"#,
-        session_id
+        session_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -151,7 +152,7 @@ pub async fn fetch_trace_entities(
 
 pub async fn fetch_session_summary(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<SessionSummaryRow, sqlx::Error> {
     sqlx::query_as!(
         SessionSummaryRow,
@@ -179,7 +180,7 @@ pub async fn fetch_session_summary(
             (plug.errors + ai.errors)::bigint   AS "errors!"
           FROM plug, ai
         "#,
-        session_id
+        session_id.as_str()
     )
     .fetch_one(pool)
     .await
@@ -187,7 +188,7 @@ pub async fn fetch_session_summary(
 
 pub async fn fetch_trace_ai_calls(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Vec<AiCallRow>, sqlx::Error> {
     sqlx::query_as!(
         AiCallRow,
@@ -208,7 +209,7 @@ pub async fn fetch_trace_ai_calls(
          ORDER BY created_at ASC
          LIMIT 200
         "#,
-        session_id
+        session_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -216,7 +217,7 @@ pub async fn fetch_trace_ai_calls(
 
 pub async fn fetch_trace_ai_messages(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Vec<AiMessageRow>, sqlx::Error> {
     sqlx::query_as!(
         AiMessageRow,
@@ -232,7 +233,7 @@ pub async fn fetch_trace_ai_messages(
          ORDER BY r.created_at ASC, m.sequence_number ASC
          LIMIT 1000
         "#,
-        session_id
+        session_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -240,7 +241,7 @@ pub async fn fetch_trace_ai_messages(
 
 pub async fn fetch_trace_ai_tool_calls(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Vec<AiToolCallRow>, sqlx::Error> {
     sqlx::query_as!(
         AiToolCallRow,
@@ -258,7 +259,7 @@ pub async fn fetch_trace_ai_tool_calls(
          ORDER BY r.created_at ASC, t.sequence_number ASC
          LIMIT 500
         "#,
-        session_id
+        session_id.as_str()
     )
     .fetch_all(pool)
     .await

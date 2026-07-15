@@ -1,5 +1,5 @@
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::types::STATUS_DELETED;
 use crate::types::control_center::RecentSession;
@@ -92,13 +92,13 @@ async fn fetch_sessions_all(
 pub async fn update_session_status(
     pool: &PgPool,
     user_id: &UserId,
-    session_id: &str,
+    session_id: &SessionId,
     status: &str,
 ) -> Result<(), sqlx::Error> {
     if status == STATUS_DELETED {
         sqlx::query!(
             "DELETE FROM session_analyses WHERE session_id = $1 AND user_id = $2",
-            session_id,
+            session_id.as_str(),
             user_id.as_str(),
         )
         .execute(pool)
@@ -106,7 +106,7 @@ pub async fn update_session_status(
 
         sqlx::query!(
             "DELETE FROM session_entity_links WHERE session_id = $1 AND user_id = $2",
-            session_id,
+            session_id.as_str(),
             user_id.as_str(),
         )
         .execute(pool)
@@ -114,7 +114,7 @@ pub async fn update_session_status(
 
         sqlx::query!(
             "DELETE FROM session_ratings WHERE session_id = $1 AND user_id = $2",
-            session_id,
+            session_id.as_str(),
             user_id.as_str(),
         )
         .execute(pool)
@@ -122,7 +122,7 @@ pub async fn update_session_status(
 
         sqlx::query!(
             "DELETE FROM plugin_usage_events WHERE session_id = $1 AND user_id = $2",
-            session_id,
+            session_id.as_str(),
             user_id.as_str(),
         )
         .execute(pool)
@@ -130,7 +130,7 @@ pub async fn update_session_status(
 
         sqlx::query!(
             "DELETE FROM plugin_session_summaries WHERE session_id = $1 AND user_id = $2",
-            session_id,
+            session_id.as_str(),
             user_id.as_str(),
         )
         .execute(pool)
@@ -142,7 +142,7 @@ pub async fn update_session_status(
               WHERE user_id = $2 AND session_id = $3",
             status,
             user_id.as_str(),
-            session_id,
+            session_id.as_str(),
         )
         .execute(pool)
         .await?;

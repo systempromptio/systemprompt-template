@@ -1,4 +1,5 @@
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 use crate::activity::NewActivity;
 
@@ -22,7 +23,7 @@ pub async fn record(pool: &PgPool, activity: NewActivity) {
     if let Err(e) = sqlx::query!(
         r"INSERT INTO user_activity (id, user_id, category, action, entity_type, entity_id, entity_name, description, metadata)
           VALUES (gen_random_uuid()::TEXT, $1, $2, $3, $4, $5, $6, $7, $8)",
-        activity.user_id,
+        activity.user_id.as_str(),
         category,
         action,
         entity_type,
@@ -64,10 +65,10 @@ async fn should_deduplicate(
     }
 }
 
-async fn has_recent_login(pool: &PgPool, user_id: &str) -> bool {
+async fn has_recent_login(pool: &PgPool, user_id: &UserId) -> bool {
     sqlx::query_scalar!(
         "SELECT COUNT(*) FROM user_activity WHERE user_id = $1 AND category = 'login' AND created_at > NOW() - INTERVAL '1 hour'",
-        user_id
+        user_id.as_str()
     )
     .fetch_one(pool)
     .await
@@ -78,10 +79,10 @@ async fn has_recent_login(pool: &PgPool, user_id: &str) -> bool {
         > 0
 }
 
-async fn has_recent_tool_usage(pool: &PgPool, user_id: &str, tool_name: &str) -> bool {
+async fn has_recent_tool_usage(pool: &PgPool, user_id: &UserId, tool_name: &str) -> bool {
     sqlx::query_scalar!(
         "SELECT COUNT(*) FROM user_activity WHERE user_id = $1 AND category = 'tool_usage' AND entity_name = $2 AND created_at > NOW() - INTERVAL '30 seconds'",
-        user_id,
+        user_id.as_str(),
         tool_name
     )
     .fetch_one(pool)

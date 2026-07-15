@@ -1,4 +1,5 @@
 use sqlx::PgPool;
+use systemprompt::identifiers::{SessionId, UserId};
 
 use super::calculations::{
     calculate_daily_apm_stats, calculate_daily_concurrency, calculate_multitasking_score,
@@ -8,7 +9,7 @@ use super::throughput::calculate_daily_throughput;
 use super::{ApmCorrelation, TodayApmLive, format_bytes_rate, format_total_bytes};
 use crate::numeric;
 
-pub async fn fetch_today_apm_live(pool: &PgPool, user_id: &str) -> TodayApmLive {
+pub async fn fetch_today_apm_live(pool: &PgPool, user_id: &UserId) -> TodayApmLive {
     let today = chrono::Utc::now().date_naive();
 
     let (current_apm, current_concurrency, total_active_seconds) =
@@ -51,7 +52,7 @@ pub async fn fetch_today_apm_live(pool: &PgPool, user_id: &str) -> TodayApmLive 
     }
 }
 
-async fn compute_active_session_apm(pool: &PgPool, user_id: &str) -> (f32, i32, f64) {
+async fn compute_active_session_apm(pool: &PgPool, user_id: &UserId) -> (f32, i32, f64) {
     struct ActiveRow {
         tool_uses: Option<i64>,
         prompts: Option<i64>,
@@ -66,7 +67,7 @@ async fn compute_active_session_apm(pool: &PgPool, user_id: &str) -> (f32, i32, 
             AND started_at::date = CURRENT_DATE
             AND ended_at IS NULL
             AND COALESCE(status, 'active') != 'deleted'",
-        user_id,
+        user_id.as_str(),
     )
     .fetch_all(pool)
     .await
@@ -103,14 +104,14 @@ async fn compute_active_session_apm(pool: &PgPool, user_id: &str) -> (f32, i32, 
     (current_apm, current_concurrency, total_active_seconds)
 }
 
-async fn fetch_today_session_count(pool: &PgPool, user_id: &str) -> i64 {
+async fn fetch_today_session_count(pool: &PgPool, user_id: &UserId) -> i64 {
     sqlx::query_scalar!(
         r"SELECT COUNT(*)
           FROM plugin_session_summaries
           WHERE user_id = $1
             AND started_at::date = CURRENT_DATE
             AND COALESCE(status, 'active') != 'deleted'",
-        user_id,
+        user_id.as_str(),
     )
     .fetch_one(pool)
     .await
@@ -118,7 +119,7 @@ async fn fetch_today_session_count(pool: &PgPool, user_id: &str) -> i64 {
     .unwrap_or(0)
 }
 
-pub async fn fetch_apm_success_correlation(pool: &PgPool, user_id: &str) -> ApmCorrelation {
+pub async fn fetch_apm_success_correlation(pool: &PgPool, user_id: &UserId) -> ApmCorrelation {
     struct Row {
         apm_tier: Option<String>,
         success_rate: Option<f64>,
@@ -139,7 +140,7 @@ pub async fn fetch_apm_success_correlation(pool: &PgPool, user_id: &str) -> ApmC
           JOIN session_analyses a ON a.session_id = s.session_id
           WHERE s.user_id = $1 AND s.apm IS NOT NULL
           GROUP BY 1",
-        user_id,
+        user_id.as_str(),
     )
     .fetch_all(pool)
     .await
@@ -174,7 +175,7 @@ pub async fn fetch_apm_success_correlation(pool: &PgPool, user_id: &str) -> ApmC
 
 pub async fn update_session_apm(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
     apm: f32,
     eapm: f32,
     peak_concurrent: i32,
@@ -186,12 +187,12 @@ pub async fn update_session_apm(
         apm,
         eapm,
         peak_concurrent,
-        session_id,
+        session_id.as_str(),
     )
     .execute(pool)
     .await;
 
     if let Err(e) = result {
-        tracing::warn!(error = %e, session_id, "Failed to update session APM");
+        tracing::warn!(error = %e, session_id = %session_id, "Failed to update session APM");
     }
 }

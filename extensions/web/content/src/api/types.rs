@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use systemprompt::identifiers::{CampaignId, CategoryId, ContentId, LinkId};
+use systemprompt::identifiers::{CampaignId, CategoryId, ContentId, LinkId, SessionId};
 
 use systemprompt_web_shared::models::UtmParams;
 
@@ -27,7 +27,7 @@ pub struct ContentJourneyQuery {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecordClickRequest {
     pub link_id: LinkId,
-    pub session_id: Option<String>,
+    pub session_id: Option<SessionId>,
     pub referrer_page: Option<String>,
     pub referrer_url: Option<String>,
     pub user_agent: Option<String>,

@@ -29,7 +29,7 @@ pub(crate) async fn list_plugin_env_handler(
         .map(|s| s.user_id);
     let Some(user_id) = resolve_principal(
         cookie_uid.as_ref().map(UserId::as_str),
-        query.user_id.as_deref(),
+        query.user_id.as_ref().map(UserId::as_str),
     ) else {
         return shared::error_response(StatusCode::UNAUTHORIZED, "missing principal");
     };

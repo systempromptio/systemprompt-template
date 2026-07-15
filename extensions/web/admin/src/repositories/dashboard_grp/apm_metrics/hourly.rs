@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 use super::{DailyApmBucket, HourlyApmBucket};
 use crate::numeric;
 
-pub async fn fetch_hourly_breakdown(pool: &PgPool, user_id: &str) -> Vec<HourlyApmBucket> {
+pub async fn fetch_hourly_breakdown(pool: &PgPool, user_id: &UserId) -> Vec<HourlyApmBucket> {
     let event_rows = fetch_hourly_events(pool, user_id).await;
     let session_rows = fetch_hourly_sessions(pool, user_id).await;
     build_hourly_buckets(&event_rows, &session_rows)
@@ -18,7 +19,7 @@ struct EventRow {
     unique_tools: Option<i64>,
 }
 
-async fn fetch_hourly_events(pool: &PgPool, user_id: &str) -> Vec<EventRow> {
+async fn fetch_hourly_events(pool: &PgPool, user_id: &UserId) -> Vec<EventRow> {
     sqlx::query_as!(
         EventRow,
         r"SELECT
@@ -30,7 +31,7 @@ async fn fetch_hourly_events(pool: &PgPool, user_id: &str) -> Vec<EventRow> {
           WHERE user_id = $1
             AND created_at::date = CURRENT_DATE
           GROUP BY 1",
-        user_id,
+        user_id.as_str(),
     )
     .fetch_all(pool)
     .await
@@ -48,7 +49,7 @@ struct SessionHourRow {
     output_bytes: Option<i64>,
 }
 
-async fn fetch_hourly_sessions(pool: &PgPool, user_id: &str) -> Vec<SessionHourRow> {
+async fn fetch_hourly_sessions(pool: &PgPool, user_id: &UserId) -> Vec<SessionHourRow> {
     sqlx::query_as!(
         SessionHourRow,
         r"WITH hours AS (
@@ -68,7 +69,7 @@ async fn fetch_hourly_sessions(pool: &PgPool, user_id: &str) -> Vec<SessionHourR
             AND EXTRACT(HOUR FROM s.started_at) <= h
             AND (s.ended_at IS NULL OR EXTRACT(HOUR FROM s.ended_at) >= h)
           GROUP BY h",
-        user_id,
+        user_id.as_str(),
     )
     .fetch_all(pool)
     .await
@@ -111,7 +112,11 @@ fn build_hourly_buckets(
     buckets
 }
 
-pub async fn fetch_daily_breakdown(pool: &PgPool, user_id: &str, days: i32) -> Vec<DailyApmBucket> {
+pub async fn fetch_daily_breakdown(
+    pool: &PgPool,
+    user_id: &UserId,
+    days: i32,
+) -> Vec<DailyApmBucket> {
     let (event_rows, session_rows) = tokio::join!(
         fetch_daily_events(pool, user_id, days),
         fetch_daily_sessions(pool, user_id, days),
@@ -126,7 +131,7 @@ struct DailyEventRow {
     unique_tools: Option<i64>,
 }
 
-async fn fetch_daily_events(pool: &PgPool, user_id: &str, days: i32) -> Vec<DailyEventRow> {
+async fn fetch_daily_events(pool: &PgPool, user_id: &UserId, days: i32) -> Vec<DailyEventRow> {
     sqlx::query_as!(
         DailyEventRow,
         r"SELECT
@@ -139,7 +144,7 @@ async fn fetch_daily_events(pool: &PgPool, user_id: &str, days: i32) -> Vec<Dail
             AND created_at >= CURRENT_DATE - make_interval(days => $2 - 1)
           GROUP BY 1
           ORDER BY 1",
-        user_id,
+        user_id.as_str(),
         days,
     )
     .fetch_all(pool)
@@ -158,7 +163,7 @@ struct DailySessionRow {
     output_bytes: Option<i64>,
 }
 
-async fn fetch_daily_sessions(pool: &PgPool, user_id: &str, days: i32) -> Vec<DailySessionRow> {
+async fn fetch_daily_sessions(pool: &PgPool, user_id: &UserId, days: i32) -> Vec<DailySessionRow> {
     sqlx::query_as!(
         DailySessionRow,
         r"SELECT
@@ -178,7 +183,7 @@ async fn fetch_daily_sessions(pool: &PgPool, user_id: &str, days: i32) -> Vec<Da
             AND COALESCE(s.status, 'active') != 'deleted'
           GROUP BY d
           ORDER BY d",
-        user_id,
+        user_id.as_str(),
         days,
     )
     .fetch_all(pool)

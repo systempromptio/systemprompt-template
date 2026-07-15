@@ -5,6 +5,7 @@
 
 use chrono::NaiveDate;
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 /// Count existing `daily_summaries` rows for a user on a given date.
 ///
@@ -12,12 +13,12 @@ use sqlx::PgPool;
 /// summary already exists and generation is skipped.
 pub async fn count_existing_summaries(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     date: NaiveDate,
 ) -> Result<i64, sqlx::Error> {
     let count: Option<i64> = sqlx::query_scalar!(
         "SELECT COUNT(*)::BIGINT FROM daily_summaries WHERE user_id = $1 AND summary_date = $2",
-        user_id,
+        user_id.as_str(),
         date,
     )
     .fetch_optional(pool)
@@ -29,12 +30,12 @@ pub async fn count_existing_summaries(
 /// Count plugin sessions recorded for a user on a given date.
 pub async fn count_sessions_for_date(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     date: NaiveDate,
 ) -> Result<i64, sqlx::Error> {
     let count: Option<i64> = sqlx::query_scalar!(
         "SELECT COUNT(*)::BIGINT FROM plugin_session_summaries WHERE user_id = $1 AND started_at::date = $2",
-        user_id,
+        user_id.as_str(),
         date,
     )
     .fetch_one(pool)
@@ -45,7 +46,7 @@ pub async fn count_sessions_for_date(
 /// Insert the computed daily summary row, ignoring an existing one.
 pub async fn insert_daily_summary(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     date: NaiveDate,
     session_count: i32,
 ) -> Result<(), sqlx::Error> {
@@ -53,7 +54,7 @@ pub async fn insert_daily_summary(
         "INSERT INTO daily_summaries (user_id, summary_date, session_count, created_at)
          VALUES ($1, $2, $3, NOW())
          ON CONFLICT (user_id, summary_date) DO NOTHING",
-        user_id,
+        user_id.as_str(),
         date,
         session_count,
     )

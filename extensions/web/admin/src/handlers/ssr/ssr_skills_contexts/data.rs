@@ -16,7 +16,10 @@ pub(super) fn group_contexts_by_user(
 ) -> HashMap<String, Vec<ContextItemView>> {
     let mut out: HashMap<String, Vec<ContextItemView>> = HashMap::new();
     for c in contexts {
-        let key = c.user_id.clone().unwrap_or_else(|| "unknown".to_owned());
+        let key = c
+            .user_id
+            .as_ref()
+            .map_or_else(|| "unknown".to_owned(), |u| u.as_str().to_owned());
         out.entry(key).or_default().push(ContextItemView {
             context_id: c.context_id.clone(),
             name: c.name.clone(),
@@ -72,7 +75,7 @@ pub(super) fn build_user_summaries_json(
     summaries
         .iter()
         .map(|s| {
-            let nested = by_user.get(&s.user_id).cloned().unwrap_or_default();
+            let nested = by_user.get(s.user_id.as_str()).cloned().unwrap_or_default();
             UserSummaryView {
                 user_id: s.user_id.clone(),
                 display_name: s.display_name.clone(),

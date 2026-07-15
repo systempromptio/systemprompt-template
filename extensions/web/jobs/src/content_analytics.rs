@@ -80,7 +80,7 @@ impl ContentAnalyticsAggregationJob {
 
         let params = UpsertMetricsParams {
             id: &id,
-            content_id: &stats.content_id,
+            content_id: stats.content_id.as_str(),
             total_views: i32::try_from(stats.total_views).unwrap_or(i32::MAX),
             unique_visitors: i32::try_from(stats.unique_visitors).unwrap_or(i32::MAX),
             avg_time_seconds: stats.avg_time_seconds,

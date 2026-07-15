@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use systemprompt::identifiers::SkillId;
+use systemprompt::identifiers::{SessionId, SkillId};
 
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct SessionEntityLink {
@@ -12,7 +12,7 @@ pub struct SessionEntityLink {
 
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct SessionRating {
-    pub session_id: String,
+    pub session_id: SessionId,
     pub rating: i16,
     pub outcome: String,
     pub notes: String,
@@ -49,7 +49,7 @@ pub struct EntityUsageSummary {
 
 #[derive(Debug, Deserialize)]
 pub struct RateSessionRequest {
-    pub session_id: String,
+    pub session_id: SessionId,
     pub rating: i16,
     #[serde(default)]
     pub outcome: String,

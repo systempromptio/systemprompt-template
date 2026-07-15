@@ -1,8 +1,9 @@
 use sqlx::PgPool;
+use systemprompt::identifiers::ContentId;
 
 #[derive(Debug)]
 pub struct ContentRollupRow {
-    pub content_id: String,
+    pub content_id: ContentId,
     pub total_views: i64,
     pub unique_visitors: i64,
     pub avg_time_seconds: f64,
@@ -17,7 +18,7 @@ pub async fn aggregate_engagement_stats(
         ContentRollupRow,
         r#"
         SELECT
-            mc.id as "content_id!",
+            mc.id as "content_id!: ContentId",
             COUNT(*) FILTER (WHERE ee.time_on_page_ms > 0)::BIGINT as "total_views!",
             COUNT(DISTINCT ee.session_id)::BIGINT as "unique_visitors!",
             COALESCE(AVG(ee.time_on_page_ms)::DOUBLE PRECISION / 1000.0, 0) as "avg_time_seconds!",

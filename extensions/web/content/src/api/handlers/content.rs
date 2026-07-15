@@ -5,6 +5,8 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 
+use systemprompt::identifiers::SourceId;
+
 use crate::api::{BlogState, ErrorResponse};
 use crate::services::{ContentService, SearchService};
 use systemprompt_web_shared::models::SearchRequest;
@@ -31,7 +33,7 @@ pub async fn query_handler(
 
 pub async fn list_content_handler(
     State(state): State<BlogState>,
-    Path(source_id): Path<String>,
+    Path(source_id): Path<SourceId>,
 ) -> Response {
     let content_service = ContentService::new(Arc::clone(&state.pool));
 
@@ -46,7 +48,7 @@ pub async fn list_content_handler(
 
 pub async fn get_content_handler(
     State(state): State<BlogState>,
-    Path((source_id, slug)): Path<(String, String)>,
+    Path((source_id, slug)): Path<(SourceId, String)>,
 ) -> Response {
     let content_service = ContentService::new(Arc::clone(&state.pool));
 

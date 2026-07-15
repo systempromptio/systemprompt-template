@@ -1,0 +1,157 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            ak.id AS \"id!\",\n            ak.name AS \"name!\",\n            ak.key_prefix AS \"key_prefix!\",\n            ak.user_id AS \"user_id!: UserId\",\n            u.email::TEXT AS \"user_email?\",\n            NULLIF(upe.department, '') AS \"department?\",\n            dal.app_platform AS \"platform?\",\n            NULLIF(dal.app_version, '') AS \"app_version?\",\n            NULLIF(dal.hostname, '') AS \"hostname?\",\n            COALESCE(dal.last_seen_at, ak.last_used_at) AS \"last_seen_at?\",\n            dal.enrolled_at AS \"enrolled_at?\",\n            ak.expires_at AS \"expires_at?\",\n            ak.created_at AS \"created_at?\",\n            ak.revoked_at AS \"revoked_at?\"\n        FROM user_api_keys ak\n        LEFT JOIN users u ON u.id = ak.user_id\n        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id\n        LEFT JOIN device_app_links dal ON dal.device_id = ak.id\n        ORDER BY ak.revoked_at IS NOT NULL,\n                 COALESCE(u.email::TEXT, ak.user_id::TEXT),\n                 ak.created_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "key_prefix!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "key_prefix"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "user_email?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "department?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "platform?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "device_app_links",
+            "name": "app_platform"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "app_version?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "hostname?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "last_seen_at?",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "enrolled_at?",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "device_app_links",
+            "name": "enrolled_at"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "expires_at?",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "expires_at"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "created_at?",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "revoked_at?",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "revoked_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      false,
+      null,
+      null,
+      null,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "243bc39fcf2438fd462b4d7415f47984e5f2ee6f40a67cb883c1b24df2287353"
+}

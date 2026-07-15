@@ -1,5 +1,5 @@
 use sqlx::PgPool;
-use systemprompt::identifiers::Actor;
+use systemprompt::identifiers::{Actor, AgentId};
 use systemprompt_security::authz::{Decision, DecisionTag};
 
 use crate::repositories::governance_grp::{GovernanceDecisionRecord, insert_governance_decision};
@@ -13,7 +13,7 @@ pub(super) async fn record_decision(
     let id = uuid::Uuid::new_v4().to_string();
     let actor = Actor::from_tool_name(
         audit.principal.user_id.clone(),
-        audit.principal.agent_id.as_deref(),
+        audit.principal.agent_id.as_ref().map(AgentId::as_str),
         &audit.target.tool_name,
     );
     let (decision_tag, reason_str, policy_str) = match &audit.decision {
@@ -38,7 +38,7 @@ pub(super) async fn record_decision(
         actor: &actor,
         session_id: audit.principal.session_id.as_str(),
         tool_name: &audit.target.tool_name,
-        agent_id: audit.principal.agent_id.as_deref(),
+        agent_id: audit.principal.agent_id.as_ref().map(AgentId::as_str),
         agent_scope: Some(audit.principal.agent_scope),
         decision: decision_tag,
         policy: &policy_str,

@@ -1,12 +1,12 @@
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::types::conversation_analytics::{EntityUsageSummary, SessionEntityLink};
 
 pub async fn fetch_session_entities(
     pool: &PgPool,
     user_id: &UserId,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Vec<SessionEntityLink>, sqlx::Error> {
     sqlx::query_as!(
         SessionEntityLink,
@@ -15,7 +15,7 @@ pub async fn fetch_session_entities(
         WHERE user_id = $1 AND session_id = $2
         ORDER BY usage_count DESC",
         user_id.as_str(),
-        session_id,
+        session_id.as_str(),
     )
     .fetch_all(pool)
     .await
@@ -23,7 +23,7 @@ pub async fn fetch_session_entities(
 
 pub async fn fetch_session_entity_links(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Vec<SessionEntityLink>, sqlx::Error> {
     sqlx::query_as!(
         SessionEntityLink,
@@ -31,7 +31,7 @@ pub async fn fetch_session_entity_links(
           FROM session_entity_links
           WHERE session_id = $1
           ORDER BY usage_count DESC",
-        session_id,
+        session_id.as_str(),
     )
     .fetch_all(pool)
     .await
@@ -43,7 +43,7 @@ pub async fn fetch_all_session_entity_links(
 ) -> Result<Vec<(String, SessionEntityLink)>, sqlx::Error> {
     #[derive(sqlx::FromRow)]
     struct Row {
-        session_id: String,
+        session_id: SessionId,
         entity_type: String,
         entity_name: String,
         usage_count: i32,
@@ -51,11 +51,11 @@ pub async fn fetch_all_session_entity_links(
 
     let rows = sqlx::query_as!(
         Row,
-        r"SELECT session_id, entity_type, entity_name, usage_count
+        r#"SELECT session_id as "session_id: SessionId", entity_type, entity_name, usage_count
         FROM session_entity_links
         WHERE user_id = $1
         ORDER BY session_id, usage_count DESC
-        LIMIT 200",
+        LIMIT 200"#,
         user_id.as_str(),
     )
     .fetch_all(pool)
@@ -65,7 +65,7 @@ pub async fn fetch_all_session_entity_links(
         .into_iter()
         .map(|r| {
             (
-                r.session_id,
+                r.session_id.as_str().to_owned(),
                 SessionEntityLink {
                     entity_type: r.entity_type,
                     entity_name: r.entity_name,

@@ -50,7 +50,7 @@ pub(crate) async fn user_context_middleware(
         },
     };
 
-    let (roles, department) = fetch_user_roles_department(&pool, session.user_id.as_str())
+    let (roles, department) = fetch_user_roles_department(&pool, &session.user_id)
         .await
         .unwrap_or_else(|| (vec!["user".to_owned()], String::new()));
 
@@ -71,7 +71,7 @@ pub(crate) async fn user_context_middleware(
 
 async fn fetch_user_roles_department(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
 ) -> Option<(Vec<String>, String)> {
     super::repositories::get_user_roles_department(pool, user_id)
         .await

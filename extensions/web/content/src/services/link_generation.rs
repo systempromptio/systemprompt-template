@@ -54,11 +54,10 @@ impl LinkGenerationService {
     pub async fn generate_for_content(
         &self,
         target_url: String,
-        content_id: String,
+        content_id: ContentId,
         campaign_name: Option<String>,
     ) -> Result<CampaignLink, BlogError> {
         let short_code = generate_short_code();
-        let content_id = ContentId::new(content_id);
         let mut params = CreateLinkParams::new(short_code, target_url, DEFAULT_LINK_TYPE)
             .with_source_content_id(Some(content_id));
 

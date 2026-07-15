@@ -3,11 +3,12 @@ use std::fmt;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use systemprompt::identifiers::SessionId;
 
 #[derive(Debug, Serialize, FromRow)]
 pub struct ActivityFeedEvent {
     pub id: String,
-    pub session_id: String,
+    pub session_id: SessionId,
     pub event_type: String,
     pub tool_name: Option<String>,
     pub description: Option<String>,
@@ -18,7 +19,7 @@ pub struct ActivityFeedEvent {
 
 #[derive(Debug, Serialize, FromRow)]
 pub struct RecentSession {
-    pub session_id: String,
+    pub session_id: SessionId,
     pub started_at: Option<DateTime<Utc>>,
     pub ended_at: Option<DateTime<Utc>>,
     pub total_events: i64,
@@ -57,19 +58,19 @@ impl fmt::Display for SessionStatus {
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateSessionStatusRequest {
-    pub session_id: String,
+    pub session_id: SessionId,
     pub status: SessionStatus,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct BatchUpdateSessionStatusRequest {
-    pub session_ids: Vec<String>,
+    pub session_ids: Vec<SessionId>,
     pub status: SessionStatus,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct AnalyseSessionRequest {
-    pub session_id: String,
+    pub session_id: SessionId,
 }
 
 #[derive(Debug, Serialize, Default, Clone, Copy)]

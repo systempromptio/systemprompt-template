@@ -11,6 +11,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
+use systemprompt::identifiers::{AgentId, SessionId, UserId};
 
 mod paged;
 mod stats;
@@ -24,7 +25,7 @@ pub use stats::{
 #[derive(Debug, Clone, Default)]
 pub struct ToolCallFilter {
     pub tool_name: Option<String>,
-    pub user_id: Option<String>,
+    pub user_id: Option<UserId>,
     pub agent_scope: Option<String>,
     pub plugin_id: Option<String>,
     pub decision: Option<String>,
@@ -85,9 +86,9 @@ pub struct ToolCallRow {
     pub event_type: String,
     pub tool_name: Option<String>,
     pub plugin_id: Option<String>,
-    pub user_id: String,
-    pub session_id: String,
-    pub agent_id: Option<String>,
+    pub user_id: UserId,
+    pub session_id: SessionId,
+    pub agent_id: Option<AgentId>,
     pub agent_scope: Option<String>,
     pub content_input_bytes: i64,
     pub content_output_bytes: i64,

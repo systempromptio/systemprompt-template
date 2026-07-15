@@ -3,12 +3,13 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 use super::{ContextListFilter, ContextUserSummary, free_text_pattern, resolved_limit};
 
 #[derive(Debug)]
 struct ContextUserSummaryRow {
-    user_id: String,
+    user_id: UserId,
     display_name: Option<String>,
     context_count: i64,
     request_count: i64,
@@ -89,7 +90,7 @@ pub async fn fetch_context_user_summary(
             GROUP BY r.user_id
         )
         SELECT
-            ctx.user_id                                       AS "user_id!",
+            ctx.user_id                                       AS "user_id!: UserId",
             u.display_name                                    AS "display_name?",
             COUNT(ctx.context_id)::bigint                     AS "context_count!",
             COALESCE(MAX(req_per_user.request_count), 0)::bigint     AS "request_count!",
@@ -118,7 +119,7 @@ pub async fn fetch_context_user_summary(
                  DESC NULLS LAST
         LIMIT $5
         "#,
-        filter.user_id,
+        filter.user_id.as_ref().map(UserId::as_str),
         filter.model,
         filter.since,
         pattern,

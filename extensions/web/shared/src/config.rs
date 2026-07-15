@@ -23,7 +23,7 @@ pub struct BlogConfigRaw {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ContentSourceRaw {
-    pub source_id: String,
+    pub source_id: SourceId,
     pub category_id: String,
     pub path: String,
     #[serde(default)]
@@ -179,7 +179,7 @@ fn validate_content_source(
 ) -> Option<ContentSourceValidated> {
     let field_prefix = format!("content_sources[{index}]");
 
-    if src.source_id.trim().is_empty() {
+    if src.source_id.as_str().trim().is_empty() {
         errors.push(
             format!("{field_prefix}.source_id"),
             "source_id cannot be empty",
@@ -221,7 +221,7 @@ fn validate_content_source(
     let canonical_path = resolved_path.canonicalize().unwrap_or(resolved_path);
 
     Some(ContentSourceValidated {
-        source_id: SourceId::new(src.source_id),
+        source_id: src.source_id,
         category_id: CategoryId::new(src.category_id),
         path: canonical_path,
         allowed_content_types: src.allowed_content_types,

@@ -2,6 +2,7 @@
 //! (`governance.hbs`).
 
 use serde::Serialize;
+use systemprompt::identifiers::UserId;
 
 #[derive(Debug, Serialize)]
 pub(super) struct GovernancePageContext {
@@ -78,7 +79,7 @@ pub(super) struct TopToolRow {
 
 #[derive(Debug, Serialize)]
 pub(super) struct TopActorRow {
-    pub(super) user_id: String,
+    pub(super) user_id: UserId,
     pub(super) display_name: String,
     pub(super) email: Option<String>,
     pub(super) deny_count: i64,

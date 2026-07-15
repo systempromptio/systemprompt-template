@@ -6,6 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
+use systemprompt::identifiers::{AgentId, SessionId, UserId};
 
 mod assemble;
 mod fetch;
@@ -15,8 +16,8 @@ pub use assemble::fetch_decision_chain;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ChainIdentity {
-    pub user_id: String,
-    pub agent_id: Option<String>,
+    pub user_id: UserId,
+    pub agent_id: Option<AgentId>,
     pub agent_scope: Option<String>,
 }
 
@@ -27,7 +28,7 @@ pub struct DecisionStage {
     pub decision: String,
     pub reason: String,
     pub tool_name: String,
-    pub agent_id: Option<String>,
+    pub agent_id: Option<AgentId>,
     pub agent_scope: Option<String>,
     pub plugin_id: Option<String>,
     pub evaluated_rules: serde_json::Value,
@@ -98,7 +99,7 @@ pub struct ChainTotals {
 #[derive(Debug, Clone, Serialize)]
 pub struct ChainEnvelope {
     pub trace_id: Option<String>,
-    pub session_id: String,
+    pub session_id: SessionId,
     pub identity: ChainIdentity,
     pub decisions: Vec<DecisionStage>,
     pub requests: Vec<AiRequestSummary>,

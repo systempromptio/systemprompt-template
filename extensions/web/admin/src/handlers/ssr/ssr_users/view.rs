@@ -87,7 +87,7 @@ pub(super) fn enrich_users(
             let user_overrides = ovr_map.get(u.user_id.as_str()).cloned().unwrap_or_default();
             let marketplaces = resolve_marketplaces(yaml_marketplaces, &user_overrides);
             EnrichedUserView {
-                user_id: u.user_id.to_string(),
+                user_id: u.user_id.clone(),
                 display_name: u.display_name.clone(),
                 email: u.email.as_ref().map(ToString::to_string),
                 roles: u.roles.clone(),
@@ -133,8 +133,8 @@ pub(super) fn group_by_department(users: Vec<EnrichedUserView>) -> Vec<Departmen
         .into_iter()
         .map(|(department, mut users)| {
             users.sort_by(|a, b| {
-                let an = a.display_name.as_deref().unwrap_or(&a.user_id);
-                let bn = b.display_name.as_deref().unwrap_or(&b.user_id);
+                let an = a.display_name.as_deref().unwrap_or(a.user_id.as_str());
+                let bn = b.display_name.as_deref().unwrap_or(b.user_id.as_str());
                 an.to_lowercase().cmp(&bn.to_lowercase())
             });
             let total_tokens = users.iter().map(|u| u.lifetime_tokens).sum();

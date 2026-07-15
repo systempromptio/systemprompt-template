@@ -2,6 +2,7 @@
 //! delete, and the user→department assignment write.
 
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 use uuid::Uuid;
 
 use crate::types::departments::{Department, DepartmentInput};
@@ -149,14 +150,14 @@ pub async fn delete_department(pool: &PgPool, id: &str) -> Result<(), sqlx::Erro
 
 pub async fn assign_user_to_department(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     department_name: &str,
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r"INSERT INTO user_profile_ext (user_id, department)
           VALUES ($1, $2)
           ON CONFLICT (user_id) DO UPDATE SET department = EXCLUDED.department",
-        user_id,
+        user_id.as_str(),
         department_name,
     )
     .execute(pool)

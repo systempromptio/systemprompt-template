@@ -84,7 +84,7 @@ pub(super) async fn authenticate_tool_request(
                 Ok(authenticated) => {
                     record_mcp_access(
                         db_pool,
-                        authenticated.context.user_id().as_ref(),
+                        authenticated.context.user_id(),
                         server_name,
                         tool_name,
                         "authenticated",

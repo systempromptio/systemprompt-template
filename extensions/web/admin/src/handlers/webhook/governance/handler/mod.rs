@@ -54,7 +54,7 @@ pub(crate) async fn govern_tool_use(
 
     let tool_name = payload.tool_name().unwrap_or("unknown");
     let session_id = SessionId::new(payload.session_id());
-    let agent_id = payload.common.agent_id.as_deref();
+    let agent_id = payload.common.agent_id.as_ref();
     let plugin_id = query.plugin_id.as_deref();
 
     let denial_params = AuthDenialParams {
@@ -73,7 +73,7 @@ pub(crate) async fn govern_tool_use(
     };
     let user_id = principal.user_id;
 
-    let db_scope = scope::scope_from_user_roles(&pool, user_id.as_str()).await;
+    let db_scope = scope::scope_from_user_roles(&pool, &user_id).await;
     let principal_scope = scope::higher_privilege(principal.token_scope, db_scope);
     let access_scope = agent_id.map_or(principal_scope, |id| {
         scope::higher_privilege(principal_scope, scope::resolve_agent_scope(id))
@@ -92,7 +92,7 @@ pub(crate) async fn govern_tool_use(
         principal: PrincipalSnapshot {
             user_id,
             session_id: session_id.clone(),
-            agent_id: agent_id.map(str::to_owned),
+            agent_id: agent_id.cloned(),
             agent_scope: access_scope,
         },
         target: AuditTarget {
@@ -111,7 +111,7 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
     let reason = reason.to_owned();
     let session_id = params.session_id.clone();
     let tool_name = params.tool_name.to_owned();
-    let agent_id = params.agent_id.map(str::to_owned);
+    let agent_id = params.agent_id.cloned();
     let plugin_id = params.plugin_id.map(str::to_owned);
     let session_service = Arc::clone(params.session_service);
     let headers = params.headers.clone();

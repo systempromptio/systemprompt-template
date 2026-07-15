@@ -2,14 +2,14 @@ use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
 
 struct AnalysisRow {
-    session_id: String,
+    session_id: SessionId,
     summary: String,
     tags: String,
     title: String,
 }
 
 struct FallbackRow {
-    session_id: String,
+    session_id: SessionId,
     ai_summary: Option<String>,
     ai_tags: Option<String>,
     ai_title: Option<String>,
@@ -25,9 +25,9 @@ pub async fn fetch_session_ai_summaries(
 
     let analysis_rows = sqlx::query_as!(
         AnalysisRow,
-        r"SELECT session_id, summary, tags, title
+        r#"SELECT session_id as "session_id: SessionId", summary, tags, title
           FROM session_analyses
-          WHERE session_id = ANY($1)",
+          WHERE session_id = ANY($1)"#,
         session_ids,
     )
     .fetch_all(pool)
@@ -35,7 +35,7 @@ pub async fn fetch_session_ai_summaries(
 
     let mut result: Vec<(String, String, String, String)> = analysis_rows
         .into_iter()
-        .map(|r| (r.session_id, r.summary, r.tags, r.title))
+        .map(|r| (r.session_id.as_str().to_owned(), r.summary, r.tags, r.title))
         .collect();
     let found_ids: std::collections::HashSet<&str> =
         result.iter().map(|(sid, _, _, _)| sid.as_str()).collect();
@@ -50,9 +50,9 @@ pub async fn fetch_session_ai_summaries(
 
         let fallback_rows = sqlx::query_as!(
             FallbackRow,
-            r"SELECT session_id, ai_summary, ai_tags, ai_title
+            r#"SELECT session_id as "session_id: SessionId", ai_summary, ai_tags, ai_title
               FROM plugin_session_summaries
-              WHERE session_id = ANY($1) AND ai_summary IS NOT NULL",
+              WHERE session_id = ANY($1) AND ai_summary IS NOT NULL"#,
             &missing_vec,
         )
         .fetch_all(pool)
@@ -60,7 +60,7 @@ pub async fn fetch_session_ai_summaries(
 
         for r in fallback_rows {
             result.push((
-                r.session_id,
+                r.session_id.as_str().to_owned(),
                 r.ai_summary.unwrap_or_else(String::new),
                 r.ai_tags.unwrap_or_else(String::new),
                 r.ai_title.unwrap_or_else(String::new),

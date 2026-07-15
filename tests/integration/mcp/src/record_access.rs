@@ -1,6 +1,7 @@
 //! `record_mcp_access` writes an attributed `mcp_access` audit row, shaping
 //! `entity_type`/`entity_name` by action.
 
+use systemprompt::identifiers::UserId;
 use systemprompt_mcp_shared::record_mcp_access;
 
 use crate::common::TempDb;
@@ -10,7 +11,7 @@ async fn used_action_records_tool_scoped_row() {
     let db = TempDb::create().await;
     db.insert_user("user-1", "dev@example.com").await;
 
-    record_mcp_access(&db.pool, "user-1", "systemprompt", "list_skills", "used").await;
+    record_mcp_access(&db.pool, &UserId::new("user-1"), "systemprompt", "list_skills", "used").await;
 
     let rows = db.mcp_rows("list_skills").await;
     assert_eq!(rows.len(), 1, "exactly one activity row expected");
@@ -28,7 +29,7 @@ async fn authenticated_action_records_server_scoped_row() {
     let db = TempDb::create().await;
     db.insert_user("user-2", "dev2@example.com").await;
 
-    record_mcp_access(&db.pool, "user-2", "systemprompt", "list_skills", "authenticated").await;
+    record_mcp_access(&db.pool, &UserId::new("user-2"), "systemprompt", "list_skills", "authenticated").await;
 
     // For non-"used" actions the row is attributed to the server, not the tool.
     let rows = db.mcp_rows("systemprompt").await;

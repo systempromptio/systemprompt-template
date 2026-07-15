@@ -1,9 +1,18 @@
 use serde::{Deserialize, Serialize};
+use systemprompt::identifiers::{AgentId, SessionId, TaskId};
+
+fn default_session_id() -> SessionId {
+    SessionId::new(String::new())
+}
+
+fn default_task_id() -> TaskId {
+    TaskId::new(String::new())
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct HookCommonFields {
-    #[serde(default)]
-    pub session_id: String,
+    #[serde(default = "default_session_id")]
+    pub session_id: SessionId,
     #[serde(default)]
     pub cwd: String,
     #[serde(default)]
@@ -12,7 +21,7 @@ pub struct HookCommonFields {
     pub transcript_path: String,
     #[serde(default)]
     pub hook_event_name: String,
-    pub agent_id: Option<String>,
+    pub agent_id: Option<AgentId>,
     pub agent_type: Option<String>,
 }
 
@@ -101,8 +110,8 @@ pub struct SubagentStopData {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct TaskCompletedData {
-    #[serde(default)]
-    pub task_id: String,
+    #[serde(default = "default_task_id")]
+    pub task_id: TaskId,
     #[serde(default)]
     pub task_subject: String,
     pub task_description: Option<String>,

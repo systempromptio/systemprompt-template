@@ -6,6 +6,7 @@
 //! a subset of the same fields, so the unused ones are simply left `None`/`0`.
 
 use serde::Serialize;
+use systemprompt::identifiers::{ContextId, SessionId, UserId};
 
 #[derive(Debug, Serialize)]
 pub(super) struct ContextsPageContext {
@@ -24,14 +25,14 @@ pub(super) struct ContextsPageContext {
 
 #[derive(Debug, Clone, Serialize)]
 pub(super) struct ContextItemView {
-    pub(super) context_id: String,
+    pub(super) context_id: ContextId,
     pub(super) name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) user_id: Option<String>,
+    pub(super) user_id: Option<UserId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) display_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) session_id: Option<String>,
+    pub(super) session_id: Option<SessionId>,
     pub(super) model: Option<String>,
     pub(super) request_count: i64,
     pub(super) message_count: i64,
@@ -49,7 +50,7 @@ pub(super) struct ContextItemView {
 
 #[derive(Debug, Serialize)]
 pub(super) struct UserSummaryView {
-    pub(super) user_id: String,
+    pub(super) user_id: UserId,
     pub(super) display_name: Option<String>,
     pub(super) context_count: i64,
     pub(super) request_count: i64,
@@ -66,7 +67,7 @@ pub(super) struct UserSummaryView {
 
 #[derive(Debug, Serialize)]
 pub(super) struct UserForFilterView {
-    pub(super) user_id: String,
+    pub(super) user_id: UserId,
     pub(super) display_name: Option<String>,
 }
 
@@ -85,7 +86,7 @@ pub(super) struct PageKpisView {
 // absent key — so these must be present, matching the pre-refactor `json!`.
 #[derive(Debug, Serialize)]
 pub(super) struct FilterView {
-    pub(super) user_id: String,
+    pub(super) user_id: UserId,
     pub(super) model: String,
     pub(super) q: String,
     pub(super) since: String,

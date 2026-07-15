@@ -142,7 +142,7 @@ pub(super) fn parse_task_completed(
     let event =
         parse_event::<TaskCompletedData>(raw, "TaskCompleted", warnings, HookEvent::TaskCompleted);
     if let HookEvent::TaskCompleted(ref data) = event
-        && data.task_id.is_empty()
+        && data.task_id.as_str().is_empty()
     {
         warnings.push("TaskCompleted missing required field: task_id".to_owned());
     }

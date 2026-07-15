@@ -3,10 +3,11 @@ use crate::types::{MarketplaceContext, UserContext};
 use axum::extract::Extension;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
+use systemprompt::identifiers::UserId;
 
 #[derive(Debug, Serialize)]
 struct CurrentSessionView {
-    user_id: String,
+    user_id: UserId,
     username: String,
     email: String,
     is_admin: bool,
@@ -40,7 +41,7 @@ pub(crate) async fn users_sessions_page(
     }
 
     let current_session = CurrentSessionView {
-        user_id: user_ctx.user_id.to_string(),
+        user_id: user_ctx.user_id.clone(),
         username: user_ctx.username.clone(),
         email: user_ctx.email.to_string(),
         is_admin: user_ctx.is_admin,

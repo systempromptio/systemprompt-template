@@ -21,8 +21,8 @@ use super::{BASE_URL, RequestsQuery};
 
 pub(super) fn filter_from_query(query: &RequestsQuery) -> RequestFilter {
     RequestFilter {
-        user_id: empty_to_none(query.user_id.as_ref()),
-        agent_id: empty_to_none(query.agent_id.as_ref()),
+        user_id: query.user_id.clone().filter(|u| !u.as_str().is_empty()),
+        agent_id: query.agent_id.clone().filter(|a| !a.as_str().is_empty()),
         model: empty_to_none(query.model.as_ref()),
         provider: empty_to_none(query.provider.as_ref()),
         status: empty_to_none(query.status.as_ref()),
@@ -88,7 +88,10 @@ pub(super) fn request_row_to_json(r: &RequestRow) -> RequestRowView {
         trace_id: r.trace_id.clone(),
         session_id: r.session_id.clone(),
         user_id: r.user_id.clone(),
-        user_label: r.user_label.clone().unwrap_or_else(|| r.user_id.clone()),
+        user_label: r
+            .user_label
+            .clone()
+            .unwrap_or_else(|| r.user_id.as_str().to_owned()),
         provider: r.provider.clone(),
         model: r.model.clone(),
         status: r.status.clone(),
@@ -199,8 +202,20 @@ fn preserved_query_string(query: &RequestsQuery, drop: &[&str]) -> String {
         ("preset", query.preset.as_deref()),
         ("from", query.from.as_deref()),
         ("to", query.to.as_deref()),
-        ("user_id", query.user_id.as_deref()),
-        ("agent_id", query.agent_id.as_deref()),
+        (
+            "user_id",
+            query
+                .user_id
+                .as_ref()
+                .map(systemprompt::identifiers::UserId::as_str),
+        ),
+        (
+            "agent_id",
+            query
+                .agent_id
+                .as_ref()
+                .map(systemprompt::identifiers::AgentId::as_str),
+        ),
         ("model", query.model.as_deref()),
         ("provider", query.provider.as_deref()),
         ("status", query.status.as_deref()),

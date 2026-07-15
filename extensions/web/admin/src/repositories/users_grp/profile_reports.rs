@@ -62,7 +62,7 @@ pub struct UserAggregateMetrics {
     pub category_distribution: std::collections::HashMap<String, i64>,
 }
 
-pub async fn fetch_profile_report(pool: &PgPool, user_id: &str) -> Option<ProfileReportRow> {
+pub async fn fetch_profile_report(pool: &PgPool, user_id: &UserId) -> Option<ProfileReportRow> {
     sqlx::query_as!(
         ProfileReportRow,
         r#"SELECT
@@ -74,7 +74,7 @@ pub async fn fetch_profile_report(pool: &PgPool, user_id: &str) -> Option<Profil
             metrics_snapshot, period_days, generated_at
           FROM user_profile_reports
           WHERE user_id = $1"#,
-        user_id,
+        user_id.as_str(),
     )
     .fetch_optional(pool)
     .await
@@ -87,7 +87,7 @@ pub async fn fetch_profile_report(pool: &PgPool, user_id: &str) -> Option<Profil
 
 pub async fn upsert_profile_report(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     input: &ProfileReportInput,
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
@@ -114,7 +114,7 @@ pub async fn upsert_profile_report(
             period_days = EXCLUDED.period_days,
             generated_at = NOW(),
             updated_at = NOW()",
-        user_id,
+        user_id.as_str(),
         input.archetype,
         input.archetype_description,
         input.archetype_confidence,
@@ -136,7 +136,7 @@ pub async fn upsert_profile_report(
 
 pub async fn fetch_user_aggregate_metrics(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     days: i32,
 ) -> UserAggregateMetrics {
     let row = fetch_aggregate_row(pool, user_id, days).await;
@@ -202,7 +202,7 @@ struct AggRow {
     avg_concurrency: Option<f64>,
 }
 
-async fn fetch_aggregate_row(pool: &PgPool, user_id: &str, days: i32) -> Option<AggRow> {
+async fn fetch_aggregate_row(pool: &PgPool, user_id: &UserId, days: i32) -> Option<AggRow> {
     sqlx::query_as!(
         AggRow,
         r#"SELECT
@@ -227,7 +227,7 @@ async fn fetch_aggregate_row(pool: &PgPool, user_id: &str, days: i32) -> Option<
           FROM daily_summaries
           WHERE user_id = $1
             AND summary_date >= CURRENT_DATE - MAKE_INTERVAL(days => $2)"#,
-        user_id,
+        user_id.as_str(),
         days,
     )
     .fetch_optional(pool)
@@ -241,7 +241,7 @@ async fn fetch_aggregate_row(pool: &PgPool, user_id: &str, days: i32) -> Option<
 
 async fn fetch_category_distribution(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     days: i32,
 ) -> std::collections::HashMap<String, i64> {
     #[derive(sqlx::FromRow)]
@@ -263,7 +263,7 @@ async fn fetch_category_distribution(
           ) sub
           GROUP BY category
           ORDER BY total DESC"#,
-        user_id,
+        user_id.as_str(),
         days,
     )
     .fetch_all(pool)

@@ -76,7 +76,7 @@ pub async fn issue_api_key(
 #[derive(Debug)]
 pub struct EnrolledDevice {
     pub id: String,
-    pub user_id: String,
+    pub user_id: UserId,
     pub name: String,
     pub key_prefix: String,
     pub secret: String,
@@ -160,7 +160,7 @@ pub async fn enroll_device(
 
     Ok(EnrolledDevice {
         id,
-        user_id: user_id.as_str().to_owned(),
+        user_id: user_id.clone(),
         name: trimmed.to_owned(),
         key_prefix,
         secret,

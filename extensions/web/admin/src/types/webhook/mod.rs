@@ -87,7 +87,7 @@ impl HookEventPayload {
 
     #[must_use]
     pub fn session_id(&self) -> &str {
-        &self.common.session_id
+        self.common.session_id.as_str()
     }
 }
 
@@ -96,7 +96,7 @@ fn parse_common_fields(raw: &serde_json::Value, warnings: &mut Vec<String>) -> H
     let common: HookCommonFields = serde_json::from_value(raw.clone()).unwrap_or_else(|e| {
         warnings.push(format!("Failed to parse common fields: {e}"));
         HookCommonFields {
-            session_id: String::new(),
+            session_id: systemprompt::identifiers::SessionId::new(String::new()),
             cwd: String::new(),
             permission_mode: String::new(),
             transcript_path: String::new(),
@@ -112,7 +112,7 @@ fn parse_common_fields(raw: &serde_json::Value, warnings: &mut Vec<String>) -> H
         "Hook common fields parsed"
     );
 
-    if common.session_id.is_empty() {
+    if common.session_id.as_str().is_empty() {
         warnings.push("Missing required common field: session_id".to_owned());
     }
     if common.cwd.is_empty() {
@@ -218,12 +218,12 @@ pub struct ContextWindowUsage {
 #[derive(Debug, Deserialize)]
 pub struct StatusLineQuery {
     pub plugin_id: Option<String>,
-    pub session_id: Option<String>,
+    pub session_id: Option<systemprompt::identifiers::SessionId>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct TranscriptPayload {
-    pub session_id: Option<String>,
+    pub session_id: Option<systemprompt::identifiers::SessionId>,
     pub transcript: serde_json::Value,
 }
 

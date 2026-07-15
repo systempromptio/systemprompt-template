@@ -7,6 +7,8 @@
 
 use std::sync::Arc;
 
+use systemprompt::identifiers::SessionId;
+
 use axum::extract::{Extension, Path, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
@@ -36,7 +38,7 @@ struct TraceDetailContext {
 
 #[derive(Debug, Serialize)]
 struct Summary {
-    session_id: String,
+    session_id: SessionId,
     session_id_short: String,
     started_at: Option<String>,
     started_at_local: Option<String>,
@@ -85,7 +87,7 @@ pub(crate) async fn perf_trace_detail_page(
 
     let ctx = TraceDetailContext {
         page: "trace-detail",
-        title: format!("Trace · {}", short_id(&session_id)),
+        title: format!("Trace · {}", short_id(session_id.as_str())),
         summary,
         spans,
         spans_payload,
@@ -95,7 +97,7 @@ pub(crate) async fn perf_trace_detail_page(
     super::render_typed_page(&engine, "perf-trace-detail", &ctx, &user_ctx, &mkt_ctx)
 }
 
-fn build_summary(session_id: &str, spans: &[Span]) -> Summary {
+fn build_summary(session_id: &SessionId, spans: &[Span]) -> Summary {
     let started = spans.iter().map(|s| s.started_at).min();
     let ended = spans.iter().map(|s| s.ended_at).max();
     let total_ms = match (started, ended) {
@@ -116,8 +118,8 @@ fn build_summary(session_id: &str, spans: &[Span]) -> Summary {
         .filter(|s| matches!(s.status, SpanStatus::Error))
         .count();
     Summary {
-        session_id: session_id.to_owned(),
-        session_id_short: short_id(session_id),
+        session_id: session_id.clone(),
+        session_id_short: short_id(session_id.as_str()),
         started_at: started.map(|t| t.to_rfc3339()),
         started_at_local: started.map(|t| {
             t.with_timezone(&chrono::Local)

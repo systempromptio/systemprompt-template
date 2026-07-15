@@ -6,6 +6,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 use crate::repositories;
 use crate::types::UserContext;
@@ -146,7 +147,7 @@ pub(crate) async fn assign_user_to_department_handler(
     {
         return (StatusCode::BAD_REQUEST, "unknown department").into_response();
     }
-    match repositories::assign_user_to_department(&pool, &user_id, dept_name).await {
+    match repositories::assign_user_to_department(&pool, &UserId::new(user_id), dept_name).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(e) => {
             tracing::warn!(error = %e, "Failed to assign user to department");

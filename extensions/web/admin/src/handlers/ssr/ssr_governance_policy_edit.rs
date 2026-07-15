@@ -10,6 +10,8 @@
 
 use std::sync::Arc;
 
+use systemprompt::identifiers::{AgentId, UserId};
+
 use axum::Form;
 use axum::extract::{Extension, Path, State};
 use axum::http::StatusCode;
@@ -57,9 +59,9 @@ struct UnknownPolicyContext {
 #[derive(Debug, Serialize)]
 struct RecentDecisionRow {
     id: String,
-    user_id: String,
+    user_id: UserId,
     tool_name: String,
-    agent_id: Option<String>,
+    agent_id: Option<AgentId>,
     agent_scope: Option<String>,
     decision: String,
     is_denied: bool,
@@ -152,9 +154,9 @@ fn recent_decisions_json(recent: &[crate::types::GovernanceDecisionRow]) -> Vec<
         .iter()
         .map(|r| RecentDecisionRow {
             id: r.id.clone(),
-            user_id: r.user_id.to_string(),
+            user_id: r.user_id.clone(),
             tool_name: r.tool_name.clone(),
-            agent_id: r.agent_id.as_ref().map(ToString::to_string),
+            agent_id: r.agent_id.clone(),
             agent_scope: r.agent_scope.clone(),
             decision: r.decision.clone(),
             is_denied: r.decision == DECISION_DENY,

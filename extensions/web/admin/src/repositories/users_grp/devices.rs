@@ -3,6 +3,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 /// Raw device row joined to owner + app-link telemetry, ordered so a user's
 /// devices are contiguous (active before revoked).
@@ -11,7 +12,7 @@ pub struct DeviceRowDb {
     pub id: String,
     pub name: String,
     pub key_prefix: String,
-    pub user_id: String,
+    pub user_id: UserId,
     pub user_email: Option<String>,
     pub department: Option<String>,
     pub platform: Option<String>,
@@ -50,7 +51,7 @@ pub async fn list_devices(pool: &PgPool) -> Result<Vec<DeviceRowDb>, sqlx::Error
             ak.id AS "id!",
             ak.name AS "name!",
             ak.key_prefix AS "key_prefix!",
-            ak.user_id AS "user_id!",
+            ak.user_id AS "user_id!: UserId",
             u.email::TEXT AS "user_email?",
             NULLIF(upe.department, '') AS "department?",
             dal.app_platform AS "platform?",
@@ -95,7 +96,7 @@ pub async fn list_device_user_options(pool: &PgPool) -> Result<Vec<DeviceUserRow
 /// Load app-link telemetry for a single user's enrolled devices.
 pub async fn list_device_app_links(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
 ) -> Result<Vec<DeviceAppLinkRow>, sqlx::Error> {
     sqlx::query_as!(
         DeviceAppLinkRow,
@@ -105,7 +106,7 @@ pub async fn list_device_app_links(
                   last_seen_at
              FROM device_app_links
              WHERE user_id = $1"#,
-        user_id,
+        user_id.as_str(),
     )
     .fetch_all(pool)
     .await

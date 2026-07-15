@@ -7,6 +7,8 @@
 
 use std::sync::Arc;
 
+use systemprompt::identifiers::{AgentId, SessionId, UserId};
+
 use axum::extract::{Extension, Path, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
@@ -41,13 +43,13 @@ struct AuditDetailContext<'a> {
 
 #[derive(Debug, Serialize)]
 struct Summary {
-    session_id: String,
+    session_id: SessionId,
     session_id_short: String,
     trace_id: Option<String>,
     trace_url: Option<String>,
     session_url: String,
-    user_id: String,
-    agent_id: Option<String>,
+    user_id: UserId,
+    agent_id: Option<AgentId>,
     agent_scope: Option<String>,
     decision_count: i64,
     deny_count: i64,
@@ -115,7 +117,7 @@ pub(crate) async fn governance_audit_detail_page(
 
     let primary = pick_primary(&envelope, &id);
     let title = primary.map_or_else(
-        || format!("Request · {}", short_id(&envelope.session_id)),
+        || format!("Request · {}", short_id(envelope.session_id.as_str())),
         |r| format!("Request · {}", short_id(&r.id)),
     );
 
@@ -165,13 +167,16 @@ fn build_summary(env: &ChainEnvelope) -> Summary {
     let cost_usd = env.totals.total_cost_microdollars as f64 / 1_000_000.0;
     Summary {
         session_id: env.session_id.clone(),
-        session_id_short: short_id(&env.session_id),
+        session_id_short: short_id(env.session_id.as_str()),
         trace_id: env.trace_id.clone(),
         trace_url: env
             .trace_id
             .as_ref()
             .map(|tid| format!("/admin/traces/{}", urlencoding::encode(tid))),
-        session_url: format!("/admin/sessions/{}", urlencoding::encode(&env.session_id)),
+        session_url: format!(
+            "/admin/sessions/{}",
+            urlencoding::encode(env.session_id.as_str())
+        ),
         user_id: env.identity.user_id.clone(),
         agent_id: env.identity.agent_id.clone(),
         agent_scope: env.identity.agent_scope.clone(),

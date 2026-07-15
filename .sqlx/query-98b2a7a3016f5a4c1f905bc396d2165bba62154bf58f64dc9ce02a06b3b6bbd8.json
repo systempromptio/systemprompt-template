@@ -1,0 +1,100 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            g.agent_id as \"agent_id: AgentId\",\n            g.user_id::TEXT AS \"user_id!: UserId\",\n            COALESCE(u.display_name, u.full_name, u.name, u.email) AS display_name,\n            g.policy,\n            g.tool_name,\n            COUNT(*)::bigint AS \"attempts!\",\n            MIN(g.created_at) AS \"first_seen!\",\n            MAX(g.created_at) AS \"last_seen!\",\n            COALESCE((ARRAY_AGG(g.reason ORDER BY g.created_at DESC))[1], '') AS \"sample_reason!\"\n        FROM governance_decisions g\n        LEFT JOIN users u ON u.id = g.user_id\n        WHERE g.decision = 'deny'\n          AND g.created_at > now() - make_interval(secs => $1::double precision)\n        GROUP BY g.agent_id, g.user_id, u.display_name, u.full_name, u.name, u.email,\n                 g.policy, g.tool_name\n        ORDER BY 6 DESC, 8 DESC\n        LIMIT $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "agent_id: AgentId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "agent_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "policy",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "policy"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "tool_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "tool_name"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "attempts!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "first_seen!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "last_seen!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "sample_reason!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Float8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      false,
+      null,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "98b2a7a3016f5a4c1f905bc396d2165bba62154bf58f64dc9ce02a06b3b6bbd8"
+}

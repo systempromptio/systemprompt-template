@@ -31,7 +31,7 @@ pub(crate) struct PublicRegisterResponse {
     pub ok: bool,
     pub token: String,
     pub email: String,
-    pub user_id: String,
+    pub user_id: UserId,
     pub display_name: String,
 }
 
@@ -65,7 +65,7 @@ pub(crate) async fn public_register_handler(
     if let Err(e) = repositories::registration::insert_setup_token(
         pool.as_ref(),
         &token_id,
-        user.user_id.as_str(),
+        &user.user_id,
         &token_hash,
     )
     .await
@@ -83,7 +83,7 @@ pub(crate) async fn public_register_handler(
             ok: true,
             token: raw_token,
             email: email_str,
-            user_id: user.user_id.as_str().to_owned(),
+            user_id: user.user_id.clone(),
             display_name: name,
         }),
     )

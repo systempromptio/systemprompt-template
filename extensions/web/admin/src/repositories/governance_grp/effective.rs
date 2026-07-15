@@ -35,7 +35,7 @@ pub struct EffectivePermissions {
 
 pub async fn compute_effective_permissions(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     user_roles: &[String],
     department: &str,
 ) -> EffectivePermissions {
@@ -69,7 +69,7 @@ pub async fn compute_effective_permissions(
             entity_type: "gateway_route",
             entity: EntityRef::GatewayRoute(RouteId::new(id.clone())),
             rules: &rules,
-            user_id,
+            user_id: user_id.as_str(),
             user_roles,
             department,
             default_included,
@@ -93,7 +93,7 @@ pub async fn compute_effective_permissions(
             entity_type: "mcp_server",
             entity: EntityRef::McpServer(McpServerId::new(id.clone())),
             rules: &rules,
-            user_id,
+            user_id: user_id.as_str(),
             user_roles,
             department,
             default_included,
@@ -143,7 +143,7 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
             "allow".to_owned(),
             allow_reason(
                 rules,
-                user_id,
+                &uid,
                 user_roles,
                 department,
                 default_included.unwrap_or(false),
@@ -171,14 +171,16 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
 /// reasons for Deny. Mirrors the resolver's specificity ordering.
 fn allow_reason(
     rules: &[AccessRule],
-    user_id: &str,
+    user_id: &UserId,
     user_roles: &[String],
     department: &str,
     default_included: bool,
 ) -> String {
     use systemprompt_security::authz::{Access, RuleType};
     if rules.iter().any(|r| {
-        r.rule_type == RuleType::User && r.rule_value == user_id && r.access == Access::Allow
+        r.rule_type == RuleType::User
+            && r.rule_value.as_str() == user_id.as_str()
+            && r.access == Access::Allow
     }) {
         return format!("user-level allow: {user_id}");
     }

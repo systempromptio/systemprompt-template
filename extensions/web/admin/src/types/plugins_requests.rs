@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use systemprompt::identifiers::{AgentId, McpServerId, SkillId};
+use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
 
 #[derive(Debug, Deserialize)]
 pub struct CreateAgentRequest {
@@ -136,7 +136,7 @@ pub struct UpdatePluginRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct UserQuery {
-    pub user_id: Option<String>,
+    pub user_id: Option<UserId>,
 }
 
 #[derive(Debug, Deserialize)]

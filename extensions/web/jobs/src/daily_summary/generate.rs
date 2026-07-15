@@ -3,6 +3,7 @@ use std::sync::Arc;
 use chrono::NaiveDate;
 use sqlx::PgPool;
 use systemprompt::ai::AiService;
+use systemprompt::identifiers::UserId;
 
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -10,7 +11,7 @@ use super::repository;
 
 pub async fn generate_user_daily_summary(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     date: NaiveDate,
     ai_service: Option<&Arc<AiService>>,
 ) -> Result<(), MarketplaceError> {
@@ -23,7 +24,7 @@ pub async fn generate_user_daily_summary(
         .map_err(MarketplaceError::Database)?;
 
     if existing > 0 {
-        tracing::info!(user_id, %date, "Daily summary already exists, skipping");
+        tracing::info!(user_id = %user_id, %date, "Daily summary already exists, skipping");
         return Ok(());
     }
 
@@ -32,7 +33,7 @@ pub async fn generate_user_daily_summary(
         .unwrap_or(0);
 
     if session_count == 0 {
-        tracing::debug!(user_id, %date, "No sessions found for daily summary");
+        tracing::debug!(user_id = %user_id, %date, "No sessions found for daily summary");
         return Ok(());
     }
 
@@ -41,6 +42,6 @@ pub async fn generate_user_daily_summary(
         .await
         .map_err(MarketplaceError::Database)?;
 
-    tracing::info!(user_id, %date, sessions = session_count, "Daily summary generated");
+    tracing::info!(user_id = %user_id, %date, sessions = session_count, "Daily summary generated");
     Ok(())
 }

@@ -1,4 +1,5 @@
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 pub async fn count_recent_setup_tokens(pool: &PgPool, email: &str) -> i64 {
     sqlx::query_scalar!(
@@ -18,14 +19,14 @@ pub async fn count_recent_setup_tokens(pool: &PgPool, email: &str) -> i64 {
 pub async fn insert_setup_token(
     pool: &PgPool,
     token_id: &str,
-    user_id: &str,
+    user_id: &UserId,
     token_hash: &str,
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
         "INSERT INTO webauthn_setup_tokens (id, user_id, token_hash, purpose, expires_at)
          VALUES ($1, $2, $3, 'credential_link', NOW() + INTERVAL '15 minutes')",
         token_id,
-        user_id,
+        user_id.as_str(),
         token_hash,
     )
     .execute(pool)

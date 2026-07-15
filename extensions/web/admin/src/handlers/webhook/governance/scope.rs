@@ -4,15 +4,18 @@ use std::str::FromStr;
 
 use sqlx::PgPool;
 use systemprompt::config::ProfileBootstrap;
+use systemprompt::identifiers::{AgentId, UserId};
 use systemprompt::models::auth::Permission;
 use systemprompt_security::policy::types::AccessScope;
 
-pub(super) fn resolve_agent_scope(agent_id: &str) -> AccessScope {
+pub(super) fn resolve_agent_scope(agent_id: &AgentId) -> AccessScope {
     let map = load_all_agent_scopes();
-    map.get(agent_id).copied().unwrap_or(AccessScope::Unknown)
+    map.get(agent_id.as_str())
+        .copied()
+        .unwrap_or(AccessScope::Unknown)
 }
 
-pub(super) async fn scope_from_user_roles(pool: &PgPool, user_id: &str) -> AccessScope {
+pub(super) async fn scope_from_user_roles(pool: &PgPool, user_id: &UserId) -> AccessScope {
     match crate::repositories::get_user_roles_department(pool, user_id).await {
         Ok(Some((roles, _dept))) => {
             if roles.iter().any(|r| r == "admin") {

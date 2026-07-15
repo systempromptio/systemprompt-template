@@ -222,13 +222,7 @@ pub(crate) async fn run_analysis_for_session(
     };
 
     if let Some(analysis) = generate_session_analysis(ai_service, &ctx, msg, &full_context).await {
-        session_analyses::insert_session_analysis(
-            pool,
-            session_id.as_str(),
-            user_id.as_str(),
-            &analysis,
-        )
-        .await;
+        session_analyses::insert_session_analysis(pool, session_id, user_id, &analysis).await;
         usage_aggregations::update_session_ai_summary_structured(pool, session_id, &analysis).await;
         Some(analysis)
     } else {

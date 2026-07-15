@@ -1,4 +1,5 @@
 use serde::Serialize;
+use systemprompt::identifiers::UserId;
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct UserMarketplaceRef {
@@ -20,7 +21,7 @@ pub(crate) struct DepartmentGroup {
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct EnrichedUserView {
-    pub user_id: String,
+    pub user_id: UserId,
     pub display_name: Option<String>,
     pub email: Option<String>,
     pub roles: Vec<String>,

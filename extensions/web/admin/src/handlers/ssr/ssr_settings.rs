@@ -46,7 +46,7 @@ pub(crate) async fn settings_page(
         title: "Account Settings",
         settings: settings_view,
         user_email: user_ctx.email.to_string(),
-        user_id: user_ctx.user_id.to_string(),
+        user_id: user_ctx.user_id.clone(),
         username: user_ctx.username.clone(),
     };
 

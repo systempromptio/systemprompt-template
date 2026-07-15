@@ -16,6 +16,7 @@ use axum::response::{IntoResponse, Response};
 use chrono::{DateTime, Duration, Utc};
 use serde::Deserialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 use context::{ContextsPageContext, FilterView, PageKpisView, PageStat, UserForFilterView};
 use data::{
@@ -24,7 +25,7 @@ use data::{
 
 #[derive(Debug, Deserialize, Default)]
 pub(crate) struct ContextsListQuery {
-    pub user_id: Option<String>,
+    pub user_id: Option<UserId>,
     pub model: Option<String>,
     pub q: Option<String>,
     pub since: Option<String>,
@@ -45,7 +46,7 @@ fn since_to_datetime(value: &str) -> Option<DateTime<Utc>> {
 }
 
 struct ContextsPageInputs {
-    user_id: Option<String>,
+    user_id: Option<UserId>,
     model: Option<String>,
     q: Option<String>,
     since_label: Option<String>,
@@ -57,7 +58,7 @@ fn parse_inputs(params: ContextsListQuery) -> ContextsPageInputs {
     let trim_opt = |s: Option<String>| -> Option<String> {
         s.map(|v| v.trim().to_owned()).filter(|v| !v.is_empty())
     };
-    let user_id = trim_opt(params.user_id);
+    let user_id = params.user_id.filter(|u| !u.as_str().trim().is_empty());
     let model = trim_opt(params.model);
     let q = trim_opt(params.q);
     let since_label = trim_opt(params.since);
@@ -150,7 +151,7 @@ fn build_page_json(inputs: &ContextsPageInputs, data: &ContextsPageData) -> Cont
         .users_for_filter
         .iter()
         .map(|u| UserForFilterView {
-            user_id: u.user_id.to_string(),
+            user_id: u.user_id.clone(),
             display_name: u.display_name.clone(),
         })
         .collect();
@@ -173,7 +174,10 @@ fn build_page_json(inputs: &ContextsPageInputs, data: &ContextsPageData) -> Cont
             total_cost_usd,
         },
         filter: FilterView {
-            user_id: inputs.user_id.clone().unwrap_or_default(),
+            user_id: inputs
+                .user_id
+                .clone()
+                .unwrap_or_else(|| UserId::new(String::new())),
             model: inputs.model.clone().unwrap_or_default(),
             q: inputs.q.clone().unwrap_or_default(),
             since: inputs.since_label.clone().unwrap_or_default(),

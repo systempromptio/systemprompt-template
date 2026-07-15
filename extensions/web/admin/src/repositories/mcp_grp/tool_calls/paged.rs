@@ -6,6 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::{AgentId, SessionId, UserId};
 
 use super::{ToolCallFilter, ToolCallRow, ToolSortSpec};
 use crate::repositories::governance_grp::time_range::TimeRange;
@@ -17,9 +18,9 @@ struct ToolCallRowWithTotal {
     event_type: String,
     tool_name: Option<String>,
     plugin_id: Option<String>,
-    user_id: String,
-    session_id: String,
-    agent_id: Option<String>,
+    user_id: UserId,
+    session_id: SessionId,
+    agent_id: Option<AgentId>,
     agent_scope: Option<String>,
     content_input_bytes: i64,
     content_output_bytes: i64,
@@ -128,9 +129,9 @@ async fn run_tool_calls_query(
             event_type AS "event_type!",
             tool_name,
             plugin_id,
-            user_id AS "user_id!",
-            session_id AS "session_id!",
-            agent_id,
+            user_id AS "user_id!: UserId",
+            session_id AS "session_id!: SessionId",
+            agent_id AS "agent_id: AgentId",
             agent_scope,
             content_input_bytes AS "content_input_bytes!",
             content_output_bytes AS "content_output_bytes!",
@@ -149,7 +150,7 @@ async fn run_tool_calls_query(
         range.from,
         range.to,
         filter.tool_name.as_deref(),
-        filter.user_id.as_deref(),
+        filter.user_id.as_ref().map(UserId::as_str),
         filter.agent_scope.as_deref(),
         filter.plugin_id.as_deref(),
         filter.decision.as_deref(),

@@ -7,13 +7,14 @@
 
 use serde_json::Value;
 use sqlx::PgPool;
+use systemprompt::identifiers::{SessionId, UserId};
 
 /// A recent `ai_requests` row the detector re-evaluates.
 #[derive(Debug, sqlx::FromRow)]
 pub struct RecentAiRequest {
     pub id: String,
-    pub user_id: String,
-    pub session_id: Option<String>,
+    pub user_id: UserId,
+    pub session_id: Option<SessionId>,
     pub model: String,
 }
 
@@ -38,7 +39,7 @@ pub async fn list_recent_unrejected_requests(
 ) -> Result<Vec<RecentAiRequest>, sqlx::Error> {
     sqlx::query_as!(
         RecentAiRequest,
-        r#"SELECT id AS "id!", user_id AS "user_id!", session_id, model AS "model!"
+        r#"SELECT id AS "id!", user_id AS "user_id!: UserId", session_id AS "session_id: SessionId", model AS "model!"
            FROM ai_requests
            WHERE created_at >= NOW() - ($1 || ' minutes')::interval
              AND status NOT IN ('rejected', 'denied')"#,

@@ -6,6 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::{ContextId, UserId};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct UsageWindow {
@@ -33,7 +34,7 @@ pub struct ConversationGroup {
 
 #[derive(Debug, Clone)]
 pub struct RecentConversation {
-    pub context_id: String,
+    pub context_id: ContextId,
     pub context_name: Option<String>,
     pub last_activity: DateTime<Utc>,
     pub ai_requests: i64,
@@ -56,7 +57,7 @@ pub struct ConversationSummary {
 /// window so the caller can compute a delta.
 pub async fn fetch_usage_window(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     window_days: i32,
 ) -> Result<UsageWindow, sqlx::Error> {
     let curr = sqlx::query!(
@@ -67,7 +68,7 @@ pub async fn fetch_usage_window(
           FROM ai_requests
           WHERE user_id = $1
             AND created_at >= NOW() - make_interval(days => $2)"#,
-        user_id,
+        user_id.as_str(),
         window_days,
     )
     .fetch_one(pool)
@@ -79,7 +80,7 @@ pub async fn fetch_usage_window(
            WHERE user_id = $1
              AND created_at >= NOW() - make_interval(days => $2 * 2)
              AND created_at <  NOW() - make_interval(days => $2)"#,
-        user_id,
+        user_id.as_str(),
         window_days,
     )
     .fetch_one(pool)
@@ -99,7 +100,7 @@ pub async fn fetch_usage_window(
 /// user has no activity.
 pub async fn fetch_top_models(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     limit: i64,
 ) -> Result<Vec<ModelShare>, sqlx::Error> {
     let total = sqlx::query!(
@@ -107,7 +108,7 @@ pub async fn fetch_top_models(
            FROM ai_requests
            WHERE user_id = $1
              AND created_at >= NOW() - INTERVAL '30 days'"#,
-        user_id,
+        user_id.as_str(),
     )
     .fetch_one(pool)
     .await?
@@ -125,7 +126,7 @@ pub async fn fetch_top_models(
           GROUP BY model
           ORDER BY SUM(tokens_used) DESC NULLS LAST
           LIMIT $2"#,
-        user_id,
+        user_id.as_str(),
         limit,
     )
     .fetch_all(pool)
@@ -156,7 +157,7 @@ pub async fn fetch_top_models(
 /// reads agent ids from `plugin_usage_events`, which is keyed differently.
 pub async fn fetch_conversation_summary(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
 ) -> Result<ConversationSummary, sqlx::Error> {
     let (total_conversations, total_ai_requests) = fetch_conversation_totals(pool, user_id).await?;
     let by_model = fetch_conversation_by_model(pool, user_id).await?;
@@ -173,7 +174,7 @@ pub async fn fetch_conversation_summary(
 
 async fn fetch_conversation_totals(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
 ) -> Result<(i64, i64), sqlx::Error> {
     let totals = sqlx::query!(
         r#"SELECT
@@ -183,7 +184,7 @@ async fn fetch_conversation_totals(
           WHERE user_id = $1
             AND context_id IS NOT NULL
             AND created_at >= NOW() - INTERVAL '30 days'"#,
-        user_id,
+        user_id.as_str(),
     )
     .fetch_one(pool)
     .await?;
@@ -192,7 +193,7 @@ async fn fetch_conversation_totals(
 
 async fn fetch_conversation_by_model(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
 ) -> Result<Vec<ConversationGroup>, sqlx::Error> {
     Ok(sqlx::query!(
         r#"SELECT
@@ -206,7 +207,7 @@ async fn fetch_conversation_by_model(
           GROUP BY model
           ORDER BY COUNT(*) DESC
           LIMIT 5"#,
-        user_id,
+        user_id.as_str(),
     )
     .fetch_all(pool)
     .await?
@@ -221,7 +222,7 @@ async fn fetch_conversation_by_model(
 
 async fn fetch_recent_conversations(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
 ) -> Result<Vec<RecentConversation>, sqlx::Error> {
     Ok(sqlx::query!(
         r#"WITH ranked AS (
@@ -237,7 +238,7 @@ async fn fetch_recent_conversations(
             GROUP BY context_id
           )
           SELECT
-            ranked.context_id AS "context_id!",
+            ranked.context_id AS "context_id!: ContextId",
             uc.name           AS "context_name?",
             ranked.last_activity AS "last_activity!",
             ranked.ai_requests AS "ai_requests!",
@@ -246,7 +247,7 @@ async fn fetch_recent_conversations(
           LEFT JOIN user_contexts uc ON uc.context_id = ranked.context_id
           ORDER BY ranked.last_activity DESC
           LIMIT 5"#,
-        user_id,
+        user_id.as_str(),
     )
     .fetch_all(pool)
     .await?

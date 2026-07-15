@@ -3,6 +3,7 @@
 
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::SessionId;
 
 use super::{Span, SpanKind, SpanStatus};
 
@@ -30,9 +31,12 @@ struct EventSpanRaw<'a> {
 }
 
 /// Resolve `id` (a `session_id` or `trace_id`) to an absolute `session_id`.
-pub async fn resolve_trace_session(pool: &PgPool, id: &str) -> Result<Option<String>, sqlx::Error> {
+pub async fn resolve_trace_session(
+    pool: &PgPool,
+    id: &str,
+) -> Result<Option<SessionId>, sqlx::Error> {
     if let Some(row) = sqlx::query!(
-        r#"SELECT session_id AS "session_id!"
+        r#"SELECT session_id AS "session_id!: SessionId"
            FROM ai_requests
            WHERE trace_id = $1 AND session_id IS NOT NULL
            LIMIT 1"#,
@@ -45,7 +49,7 @@ pub async fn resolve_trace_session(pool: &PgPool, id: &str) -> Result<Option<Str
     }
 
     if let Some(row) = sqlx::query!(
-        r#"SELECT session_id AS "session_id!"
+        r#"SELECT session_id AS "session_id!: SessionId"
            FROM governance_decisions
            WHERE session_id = $1
            LIMIT 1"#,
@@ -58,7 +62,7 @@ pub async fn resolve_trace_session(pool: &PgPool, id: &str) -> Result<Option<Str
     }
 
     if let Some(row) = sqlx::query!(
-        r#"SELECT session_id AS "session_id!"
+        r#"SELECT session_id AS "session_id!: SessionId"
            FROM ai_requests
            WHERE session_id = $1
            LIMIT 1"#,
@@ -73,7 +77,10 @@ pub async fn resolve_trace_session(pool: &PgPool, id: &str) -> Result<Option<Str
     Ok(None)
 }
 
-async fn fetch_governance_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span>, sqlx::Error> {
+async fn fetch_governance_spans(
+    pool: &PgPool,
+    session_id: &SessionId,
+) -> Result<Vec<Span>, sqlx::Error> {
     let decisions = sqlx::query!(
         r#"SELECT
             id              AS "id!",
@@ -90,7 +97,7 @@ async fn fetch_governance_spans(pool: &PgPool, session_id: &str) -> Result<Vec<S
                SELECT DISTINCT trace_id FROM ai_requests
                WHERE session_id = $1 AND trace_id IS NOT NULL)
         ORDER BY created_at ASC"#,
-        session_id,
+        session_id.as_str(),
     )
     .fetch_all(pool)
     .await?;
@@ -129,7 +136,10 @@ async fn fetch_governance_spans(pool: &PgPool, session_id: &str) -> Result<Vec<S
         .collect())
 }
 
-async fn fetch_request_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span>, sqlx::Error> {
+async fn fetch_request_spans(
+    pool: &PgPool,
+    session_id: &SessionId,
+) -> Result<Vec<Span>, sqlx::Error> {
     let requests = sqlx::query!(
         r#"SELECT
             id              AS "id!",
@@ -144,7 +154,7 @@ async fn fetch_request_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span
         FROM ai_requests
         WHERE session_id = $1
         ORDER BY created_at ASC"#,
-        session_id,
+        session_id.as_str(),
     )
     .fetch_all(pool)
     .await?;
@@ -185,7 +195,10 @@ async fn fetch_request_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span
         .collect())
 }
 
-async fn fetch_event_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span>, sqlx::Error> {
+async fn fetch_event_spans(
+    pool: &PgPool,
+    session_id: &SessionId,
+) -> Result<Vec<Span>, sqlx::Error> {
     let events = sqlx::query!(
         r#"SELECT
             id              AS "id!",
@@ -196,7 +209,7 @@ async fn fetch_event_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span>,
         FROM plugin_usage_events
         WHERE session_id = $1
         ORDER BY created_at ASC"#,
-        session_id,
+        session_id.as_str(),
     )
     .fetch_all(pool)
     .await?;
@@ -235,7 +248,10 @@ async fn fetch_event_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span>,
         .collect())
 }
 
-pub async fn fetch_trace_spans(pool: &PgPool, session_id: &str) -> Result<Vec<Span>, sqlx::Error> {
+pub async fn fetch_trace_spans(
+    pool: &PgPool,
+    session_id: &SessionId,
+) -> Result<Vec<Span>, sqlx::Error> {
     let mut spans = fetch_governance_spans(pool, session_id).await?;
     spans.extend(fetch_request_spans(pool, session_id).await?);
     spans.extend(fetch_event_spans(pool, session_id).await?);

@@ -1,4 +1,5 @@
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 use crate::activity::{
     ActivityAction, ActivityCategory, ActivityCategorySummary, ActivityTimelineEvent,
@@ -89,7 +90,7 @@ pub async fn list_new_events(
 
 pub async fn list_user_recent_activity(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
 ) -> Result<Vec<ActivityTimelineEvent>, sqlx::Error> {
     sqlx::query_as!(
         ActivityTimelineEvent,
@@ -102,7 +103,7 @@ pub async fn list_user_recent_activity(
         JOIN users u ON u.id = a.user_id
         WHERE a.user_id = $1
         ORDER BY a.created_at DESC LIMIT 50"#,
-        user_id
+        user_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -110,7 +111,7 @@ pub async fn list_user_recent_activity(
 
 pub async fn list_user_activity_summary(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
 ) -> Result<Vec<ActivityCategorySummary>, sqlx::Error> {
     sqlx::query_as!(
         ActivityCategorySummary,
@@ -127,7 +128,7 @@ pub async fn list_user_activity_summary(
         WHERE user_id = $1
         GROUP BY category
         ORDER BY COUNT(*) DESC"#,
-        user_id
+        user_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -135,7 +136,7 @@ pub async fn list_user_activity_summary(
 
 pub async fn search_user_entity_activity(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     search: Option<&str>,
     limit: i64,
     offset: i64,
@@ -147,7 +148,7 @@ pub async fn search_user_entity_activity(
               JOIN users u ON u.id = a.user_id
               WHERE a.user_id = $1
                 AND (a.description ILIKE $2 OR a.entity_name ILIKE $2 OR a.category ILIKE $2)",
-            user_id,
+            user_id.as_str(),
             pattern,
         )
         .fetch_one(pool)
@@ -166,7 +167,7 @@ pub async fn search_user_entity_activity(
             WHERE a.user_id = $1
               AND (a.description ILIKE $2 OR a.entity_name ILIKE $2 OR a.category ILIKE $2)
             ORDER BY a.created_at DESC LIMIT $3 OFFSET $4"#,
-            user_id,
+            user_id.as_str(),
             pattern,
             limit,
             offset
@@ -178,7 +179,7 @@ pub async fn search_user_entity_activity(
     } else {
         let total: i64 = sqlx::query_scalar!(
             "SELECT COUNT(*)::BIGINT FROM user_activity WHERE user_id = $1",
-            user_id
+            user_id.as_str()
         )
         .fetch_one(pool)
         .await?
@@ -195,7 +196,7 @@ pub async fn search_user_entity_activity(
             JOIN users u ON u.id = a.user_id
             WHERE a.user_id = $1
             ORDER BY a.created_at DESC LIMIT $2 OFFSET $3"#,
-            user_id,
+            user_id.as_str(),
             limit,
             offset
         )
@@ -208,7 +209,7 @@ pub async fn search_user_entity_activity(
 
 pub async fn list_user_entity_activity(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     limit: i64,
     offset: i64,
 ) -> Result<Vec<ActivityTimelineEvent>, sqlx::Error> {
@@ -223,7 +224,7 @@ pub async fn list_user_entity_activity(
         JOIN users u ON u.id = a.user_id
         WHERE a.user_id = $1
         ORDER BY a.created_at DESC LIMIT $2 OFFSET $3"#,
-        user_id,
+        user_id.as_str(),
         limit,
         offset
     )
@@ -231,10 +232,13 @@ pub async fn list_user_entity_activity(
     .await
 }
 
-pub async fn count_user_entity_activity(pool: &PgPool, user_id: &str) -> Result<i64, sqlx::Error> {
+pub async fn count_user_entity_activity(
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Result<i64, sqlx::Error> {
     Ok(sqlx::query_scalar!(
         "SELECT COUNT(*)::BIGINT FROM user_activity WHERE user_id = $1",
-        user_id
+        user_id.as_str()
     )
     .fetch_one(pool)
     .await?

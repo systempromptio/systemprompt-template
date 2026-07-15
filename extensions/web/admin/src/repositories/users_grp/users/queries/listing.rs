@@ -56,8 +56,8 @@ pub async fn list_users(pool: &PgPool) -> Result<Vec<UserSummary>, sqlx::Error> 
     .await
 }
 
-pub async fn fetch_user_roles(pool: &PgPool, user_id: &str) -> Option<Vec<String>> {
-    let row = sqlx::query!("SELECT roles FROM users WHERE id = $1", user_id,)
+pub async fn fetch_user_roles(pool: &PgPool, user_id: &UserId) -> Option<Vec<String>> {
+    let row = sqlx::query!("SELECT roles FROM users WHERE id = $1", user_id.as_str(),)
         .fetch_optional(pool)
         .await
         .map_err(|e| {

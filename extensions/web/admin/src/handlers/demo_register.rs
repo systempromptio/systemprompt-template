@@ -25,7 +25,7 @@ pub(crate) struct DemoRegisterRequest {
 pub(crate) struct DemoRegisterResponse {
     pub ok: bool,
     pub registration_url: String,
-    pub user_id: String,
+    pub user_id: UserId,
     pub display_name: String,
 }
 
@@ -105,7 +105,7 @@ pub(crate) async fn create_demo_user_handler(
         Json(DemoRegisterResponse {
             ok: true,
             registration_url,
-            user_id: user_id.as_str().to_owned(),
+            user_id: user_id.clone(),
             display_name: name,
         }),
     )

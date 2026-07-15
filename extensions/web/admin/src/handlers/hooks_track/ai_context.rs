@@ -95,13 +95,12 @@ pub(crate) async fn gather_analysis_context(
         parts.push(msg_part);
     }
 
-    let entity_links =
-        conversation_analytics::fetch_session_entity_links(pool, session_id.as_str())
-            .await
-            .unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to fetch session entity links");
-                Vec::new()
-            });
+    let entity_links = conversation_analytics::fetch_session_entity_links(pool, session_id)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to fetch session entity links");
+            Vec::new()
+        });
 
     let skills: Vec<&str> = entity_links
         .iter()

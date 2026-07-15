@@ -3,6 +3,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use systemprompt::database::Database;
 use systemprompt::extension::prelude::{ContentDataContext, ContentDataProvider};
+use systemprompt::identifiers::{ContentId, SourceId};
 
 use super::error::DocsError;
 use crate::repositories::docs::{
@@ -55,8 +56,9 @@ impl ContentDataProvider for DocsContentDataProvider {
             .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
 
         let content_id = ctx.content_id();
+        let content_id_typed = ContentId::new(content_id.to_owned());
 
-        let row = get_doc_content(&pool, content_id)
+        let row = get_doc_content(&pool, &content_id_typed)
             .await
             .map_err(|e| match e {
                 sqlx::Error::RowNotFound => DocsError::ContentNotFound(content_id.to_owned()),
@@ -96,7 +98,7 @@ impl DocsContentDataProvider {
     pub async fn get_children_static(
         &self,
         pool: &sqlx::PgPool,
-        source_id: &str,
+        source_id: &SourceId,
         current_slug: &str,
     ) -> Vec<ChildDoc> {
         self.get_children(pool, source_id, current_slug).await
@@ -105,7 +107,7 @@ impl DocsContentDataProvider {
     async fn get_children(
         &self,
         pool: &sqlx::PgPool,
-        source_id: &str,
+        source_id: &SourceId,
         current_slug: &str,
     ) -> Vec<ChildDoc> {
         let is_root = current_slug.is_empty() || current_slug == SLUG_INDEX;
@@ -122,7 +124,7 @@ impl DocsContentDataProvider {
                     })
                     .collect(),
                 Err(e) => {
-                    tracing::error!(error = %e, source_id, "Failed to fetch root children docs");
+                    tracing::error!(error = %e, source_id = %source_id, "Failed to fetch root children docs");
                     Vec::new()
                 },
             }
@@ -142,7 +144,7 @@ impl DocsContentDataProvider {
                     })
                     .collect(),
                 Err(e) => {
-                    tracing::error!(error = %e, source_id, current_slug, "Failed to fetch children docs");
+                    tracing::error!(error = %e, source_id = %source_id, current_slug, "Failed to fetch children docs");
                     Vec::new()
                 },
             }

@@ -59,7 +59,7 @@ pub struct WindowedCounts {
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct TopActor {
-    pub user_id: String,
+    pub user_id: UserId,
     pub display_name: String,
     pub email: Option<String>,
     pub deny_count: i64,
@@ -77,8 +77,8 @@ pub struct TopPolicy {
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct IncidentGroup {
-    pub agent_id: Option<String>,
-    pub user_id: String,
+    pub agent_id: Option<AgentId>,
+    pub user_id: UserId,
     pub display_name: Option<String>,
     pub policy: String,
     pub tool_name: String,

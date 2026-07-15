@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use systemprompt::identifiers::{AgentId, SkillId};
+
 use crate::types::{AgentInfo, RequiredSecret, SkillInfo};
 
 pub(crate) fn resolve_all_plugin_skill_ids(
@@ -43,7 +45,8 @@ pub(crate) fn resolve_plugin_skills(
         .into_iter()
         .map(|skill_id| {
             let skill_dir = skills_path.join(&skill_id);
-            let (name, description, required_secrets) = read_skill_config(&skill_dir, &skill_id);
+            let (name, description, required_secrets) =
+                read_skill_config(&skill_dir, &SkillId::from(skill_id.as_str()));
             let kebab_name = skill_id.replace('_', "-");
             let command = format!("/{}:{}", plugin.id, kebab_name);
             SkillInfo {
@@ -59,10 +62,13 @@ pub(crate) fn resolve_plugin_skills(
         .collect()
 }
 
-fn read_skill_config(skill_dir: &Path, skill_id: &str) -> (String, String, Vec<RequiredSecret>) {
+fn read_skill_config(
+    skill_dir: &Path,
+    skill_id: &SkillId,
+) -> (String, String, Vec<RequiredSecret>) {
     let config_path = skill_dir.join("config.yaml");
     if !config_path.exists() {
-        return (skill_id.to_owned(), String::new(), Vec::new());
+        return (skill_id.as_str().to_owned(), String::new(), Vec::new());
     }
     let cfg_text = std::fs::read_to_string(&config_path).unwrap_or_else(|e| {
         tracing::warn!(
@@ -83,7 +89,7 @@ fn read_skill_config(skill_dir: &Path, skill_id: &str) -> (String, String, Vec<R
     let name = cfg
         .get("name")
         .and_then(|v| v.as_str())
-        .unwrap_or(skill_id)
+        .unwrap_or(skill_id.as_str())
         .to_owned();
     let desc = cfg
         .get("description")
@@ -134,9 +140,10 @@ pub(crate) fn resolve_plugin_agents(
     agent_ids
         .into_iter()
         .map(|agent_id| {
-            let description = agent_description(&agent_id, agents_path)
+            let agent_id_typed = AgentId::from(agent_id.as_str());
+            let description = agent_description(&agent_id_typed, agents_path)
                 .unwrap_or_else(|| format!("{agent_id} agent"));
-            let enabled = agent_enabled(&agent_id, agents_path);
+            let enabled = agent_enabled(&agent_id_typed, agents_path);
             AgentInfo {
                 id: agent_id.clone().into(),
                 name: agent_id,
@@ -147,7 +154,7 @@ pub(crate) fn resolve_plugin_agents(
         .collect()
 }
 
-fn agent_enabled(agent_id: &str, agents_dir: &Path) -> bool {
+fn agent_enabled(agent_id: &AgentId, agents_dir: &Path) -> bool {
     if !agents_dir.exists() {
         return true;
     }
@@ -166,7 +173,7 @@ fn agent_enabled(agent_id: &str, agents_dir: &Path) -> bool {
         let Ok(config) = serde_yaml::from_str::<serde_yaml::Value>(&content) else {
             continue;
         };
-        if let Some(agent) = config.get("agents").and_then(|a| a.get(agent_id)) {
+        if let Some(agent) = config.get("agents").and_then(|a| a.get(agent_id.as_str())) {
             return agent
                 .get("enabled")
                 .and_then(serde_yaml::Value::as_bool)
@@ -176,7 +183,7 @@ fn agent_enabled(agent_id: &str, agents_dir: &Path) -> bool {
     true
 }
 
-fn agent_description(agent_id: &str, agents_dir: &Path) -> Option<String> {
+fn agent_description(agent_id: &AgentId, agents_dir: &Path) -> Option<String> {
     if !agents_dir.exists() {
         return None;
     }
@@ -198,7 +205,7 @@ fn agent_description(agent_id: &str, agents_dir: &Path) -> Option<String> {
         };
         if let Some(desc) = config
             .get("agents")
-            .and_then(|a| a.get(agent_id))
+            .and_then(|a| a.get(agent_id.as_str()))
             .and_then(|a| a.get("card"))
             .and_then(|c| c.get("description"))
             .and_then(|d| d.as_str())

@@ -12,6 +12,7 @@ use axum::extract::{Extension, Path, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use sqlx::PgPool;
+use systemprompt::identifiers::SessionId;
 
 use crate::repositories::analytics_grp::session_detail::{
     SessionContextRow, SessionHeader, SessionKpis, SessionRequestRow, SessionTraceRow,
@@ -42,25 +43,25 @@ pub(crate) async fn session_detail_page(
         return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
     }
 
-    let session_id = session_id.trim();
-    if session_id.is_empty() {
+    let session_id = SessionId::new(session_id.trim());
+    if session_id.as_str().is_empty() {
         return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response();
     }
 
-    let header = match fetch_session_header(&pool, session_id).await {
+    let header = match fetch_session_header(&pool, &session_id).await {
         Ok(Some(h)) => h,
         Ok(None) => return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response(),
         Err(e) => {
-            tracing::error!(error = %e, session_id, "fetch_session_header failed");
+            tracing::error!(error = %e, session_id = %session_id, "fetch_session_header failed");
             return (StatusCode::INTERNAL_SERVER_ERROR, Html(NOT_FOUND_HTML)).into_response();
         },
     };
 
     let (kpis_res, contexts_res, traces_res, requests_res) = tokio::join!(
-        fetch_session_kpis(&pool, session_id),
-        fetch_session_contexts(&pool, session_id),
-        fetch_session_traces(&pool, session_id),
-        fetch_session_requests(&pool, session_id),
+        fetch_session_kpis(&pool, &session_id),
+        fetch_session_contexts(&pool, &session_id),
+        fetch_session_traces(&pool, &session_id),
+        fetch_session_requests(&pool, &session_id),
     );
 
     let kpis = kpis_res.unwrap_or_else(|e| {
@@ -90,7 +91,7 @@ pub(crate) async fn session_detail_page(
 
     let data = SessionDetailPageContext {
         page: "session-detail",
-        title: format!("Session · {}", short_id(&header.session_id)),
+        title: format!("Session · {}", short_id(header.session_id.as_str())),
         header: header_view(&header),
         kpis: kpis_view(&kpis),
         has_contexts: !contexts.is_empty(),
@@ -108,12 +109,12 @@ pub(crate) async fn session_detail_page(
 fn header_view(h: &SessionHeader) -> SessionHeaderView {
     SessionHeaderView {
         session_id: h.session_id.clone(),
-        session_id_short: short_id(&h.session_id),
+        session_id_short: short_id(h.session_id.as_str()),
         user_id: h.user_id.clone(),
         user_url: h
             .user_id
             .as_ref()
-            .map(|u| format!("/admin/user?id={}", urlencoding::encode(u))),
+            .map(|u| format!("/admin/user?id={}", urlencoding::encode(u.as_str()))),
         display_name: h.display_name.clone(),
         department: h.department.clone(),
         started_at: h.started_at.map(|t| t.to_rfc3339()),
@@ -153,8 +154,11 @@ fn kpis_view(k: &SessionKpis) -> SessionKpisView {
 fn context_view(c: &SessionContextRow) -> SessionContextRowView {
     SessionContextRowView {
         context_id: c.context_id.clone(),
-        context_id_short: short_id(&c.context_id),
-        context_url: format!("/admin/contexts/{}", urlencoding::encode(&c.context_id)),
+        context_id_short: short_id(c.context_id.as_str()),
+        context_url: format!(
+            "/admin/contexts/{}",
+            urlencoding::encode(c.context_id.as_str())
+        ),
         name: c.name.clone().unwrap_or_else(|| "—".into()),
         request_count: c.request_count,
         last_request_at: c.last_request_at.map(|t| t.to_rfc3339()),
@@ -193,11 +197,11 @@ fn request_view(r: &SessionRequestRow) -> SessionRequestRowView {
         id_short: short_id(&r.id),
         request_url: format!("/admin/requests/{}", urlencoding::encode(&r.id)),
         context_id: r.context_id.clone(),
-        context_id_short: r.context_id.as_deref().map(short_id),
+        context_id_short: r.context_id.as_ref().map(|c| short_id(c.as_str())),
         context_url: r
             .context_id
             .as_ref()
-            .map(|c| format!("/admin/contexts/{}", urlencoding::encode(c))),
+            .map(|c| format!("/admin/contexts/{}", urlencoding::encode(c.as_str()))),
         trace_id: r.trace_id.clone(),
         trace_id_short: r.trace_id.as_deref().map(short_id),
         trace_url: r

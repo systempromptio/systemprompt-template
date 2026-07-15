@@ -138,7 +138,7 @@ impl ServerHandler for SystempromptServer {
 
         record_mcp_access(
             &self.db_pool,
-            request_context.user_id().as_ref(),
+            request_context.user_id(),
             &server_name,
             &tool_name,
             "used",

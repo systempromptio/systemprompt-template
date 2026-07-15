@@ -4,7 +4,7 @@ use systemprompt::identifiers::UserId;
 #[derive(Debug)]
 pub struct UnencryptedSecret {
     pub id: String,
-    pub user_id: String,
+    pub user_id: UserId,
     pub var_name: String,
     pub var_value: String,
 }
@@ -23,17 +23,17 @@ pub async fn fetch_unencrypted_secrets(
         .into_iter()
         .map(|r| UnencryptedSecret {
             id: r.id,
-            user_id: r.user_id,
+            user_id: r.user_id.into(),
             var_name: r.var_name,
             var_value: r.var_value,
         })
         .collect())
 }
 
-pub async fn fetch_key_version(pool: &PgPool, user_id: &str) -> i32 {
+pub async fn fetch_key_version(pool: &PgPool, user_id: &UserId) -> i32 {
     sqlx::query_scalar!(
         "SELECT key_version FROM user_encryption_keys WHERE user_id = $1",
-        user_id
+        user_id.as_str()
     )
     .fetch_one(pool)
     .await
@@ -62,7 +62,7 @@ pub async fn update_encrypted_value(
 
 pub async fn insert_migration_audit(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     var_name: &str,
     actor: &UserId,
 ) -> Result<(), sqlx::Error> {
@@ -71,7 +71,7 @@ pub async fn insert_migration_audit(
         "INSERT INTO secret_audit_log (id, user_id, plugin_id, var_name, action, actor_id) \
          VALUES ($1, $2, '', $3, 'updated', $4)",
         audit_id,
-        user_id,
+        user_id.as_str(),
         var_name,
         actor.as_str(),
     )

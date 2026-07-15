@@ -71,13 +71,13 @@ async fn build_user_detail(
     user_id: &UserId,
     summary: UserSummary,
 ) -> Result<Option<crate::types::UserDetail>, sqlx::Error> {
-    let recent_activity = activity::queries::list_user_recent_activity(pool, user_id.as_str())
+    let recent_activity = activity::queries::list_user_recent_activity(pool, user_id)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(user_id = %user_id, error = %e, "Failed to load user activity");
             Vec::new()
         });
-    let activity_summary = activity::queries::list_user_activity_summary(pool, user_id.as_str())
+    let activity_summary = activity::queries::list_user_activity_summary(pool, user_id)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(user_id = %user_id, error = %e, "Failed to load activity summary");

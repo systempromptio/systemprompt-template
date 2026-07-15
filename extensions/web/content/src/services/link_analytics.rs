@@ -32,11 +32,10 @@ impl LinkAnalyticsService {
 
     pub async fn get_content_journey(
         &self,
-        content_id: &str,
+        content_id: &ContentId,
     ) -> Result<Vec<ContentJourneyNode>, BlogError> {
-        let content_id = ContentId::new(content_id.to_owned());
         self.repo
-            .get_content_journey(&content_id)
+            .get_content_journey(content_id)
             .await
             .map_err(BlogError::from)
     }

@@ -2,6 +2,7 @@
 //! joined to `users` for display names where available.
 
 use sqlx::PgPool;
+use systemprompt::identifiers::{AgentId, UserId};
 
 use crate::types::{IncidentGroup, TopActor, TopPolicy};
 
@@ -68,8 +69,8 @@ pub async fn fetch_grouped_incidents(
     sqlx::query_as!(
         IncidentGroup,
         r#"SELECT
-            g.agent_id,
-            g.user_id::TEXT AS "user_id!",
+            g.agent_id as "agent_id: AgentId",
+            g.user_id::TEXT AS "user_id!: UserId",
             COALESCE(u.display_name, u.full_name, u.name, u.email) AS display_name,
             g.policy,
             g.tool_name,

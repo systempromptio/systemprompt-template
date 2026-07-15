@@ -12,12 +12,13 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::AgentId;
 
 use crate::repositories::governance_grp::time_range::TimeRange;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct AgentHealthRow {
-    pub agent_id: String,
+    pub agent_id: AgentId,
     pub allowed: i64,
     pub denied: i64,
     pub last_denied_at: Option<DateTime<Utc>>,
@@ -29,7 +30,7 @@ pub async fn fetch_agent_health(
 ) -> Result<Vec<AgentHealthRow>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT
-            agent_id AS "agent_id!",
+            agent_id AS "agent_id!: AgentId",
             COUNT(*) FILTER (WHERE decision = 'allow')::bigint AS "allowed!",
             COUNT(*) FILTER (WHERE decision = 'deny')::bigint  AS "denied!",
             MAX(created_at) FILTER (WHERE decision = 'deny')   AS "last_denied_at"

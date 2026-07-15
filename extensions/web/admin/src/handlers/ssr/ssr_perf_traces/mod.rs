@@ -11,6 +11,7 @@ use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use serde::Deserialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::{AgentId, UserId};
 
 use crate::repositories::governance_grp::filter_options::fetch_filter_options;
 use crate::repositories::governance_grp::time_range::{
@@ -39,8 +40,8 @@ pub(crate) struct TraceListQuery {
     pub from: Option<String>,
     pub to: Option<String>,
     pub preset: Option<String>,
-    pub user_id: Option<String>,
-    pub agent_id: Option<String>,
+    pub user_id: Option<UserId>,
+    pub agent_id: Option<AgentId>,
     pub agent_scope: Option<String>,
     pub policy: Option<String>,
     pub decision: Option<String>,
@@ -81,8 +82,8 @@ async fn load_traces_data(
 ) -> PerfTracesPageContext {
     let preset = preset_str(query, range);
     let filter = TraceFilter {
-        user_id: empty_to_none(query.user_id.as_deref()),
-        agent_id: empty_to_none(query.agent_id.as_deref()),
+        user_id: empty_to_none(query.user_id.as_ref().map(UserId::as_str)),
+        agent_id: empty_to_none(query.agent_id.as_ref().map(AgentId::as_str)),
         agent_scope: empty_to_none(query.agent_scope.as_deref()),
         policy: empty_to_none(query.policy.as_deref()),
         decision: empty_to_none(query.decision.as_deref()),

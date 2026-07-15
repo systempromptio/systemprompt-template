@@ -1,7 +1,7 @@
 use std::fmt::Write;
 
 use sha2::{Digest, Sha256};
-use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt::identifiers::{AgentId, SessionId, UserId};
 
 use crate::types::webhook::{HookEvent, HookEventPayload};
 
@@ -46,11 +46,11 @@ fn build_raw_key(user_id: &UserId, session_id: &SessionId, payload: &HookEventPa
             _ = write!(key, "{uid}:{session}:TaskCompleted:{}", d.task_id);
         },
         HookEvent::SubagentStop(_) => {
-            let agent_id = payload.common.agent_id.as_deref().unwrap_or("");
+            let agent_id = payload.common.agent_id.as_ref().map_or("", AgentId::as_str);
             _ = write!(key, "{uid}:{session}:SubagentStop:{agent_id}");
         },
         HookEvent::SubagentStart(_) => {
-            let agent_id = payload.common.agent_id.as_deref().unwrap_or("");
+            let agent_id = payload.common.agent_id.as_ref().map_or("", AgentId::as_str);
             _ = write!(key, "{uid}:{session}:SubagentStart:{agent_id}");
         },
         HookEvent::Stop(_) => {

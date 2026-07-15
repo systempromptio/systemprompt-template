@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use sqlx::PgPool;
 use systemprompt::config::ProfileBootstrap;
-use systemprompt::identifiers::TenantId;
+use systemprompt::identifiers::{TenantId, UserId};
 use systemprompt::models::Config;
 use uuid::Uuid;
 
@@ -31,7 +31,7 @@ pub(super) struct UsageSections {
     pub(super) bridge_user: Option<BridgeUserRow>,
 }
 
-pub(super) async fn fetch_usage_sections(pool: &Arc<PgPool>, user_id: &str) -> UsageSections {
+pub(super) async fn fetch_usage_sections(pool: &Arc<PgPool>, user_id: &UserId) -> UsageSections {
     let pool_for_d1 = Arc::clone(pool);
     let pool_for_d7 = Arc::clone(pool);
     let pool_for_d30 = Arc::clone(pool);
@@ -130,12 +130,12 @@ pub(super) fn read_config_strings() -> (Option<String>, Option<String>) {
     })
 }
 
-pub(super) fn read_tenant_id() -> Option<String> {
+pub(super) fn read_tenant_id() -> Option<TenantId> {
     let bootstrap = ProfileBootstrap::get().ok()?;
     bootstrap
         .cloud
         .as_ref()
-        .and_then(|cloud| cloud.tenant_id.as_ref().map(|id| id.as_str().to_owned()))
+        .and_then(|cloud| cloud.tenant_id.clone())
 }
 
 pub(super) fn build_bridge_profile_block() -> Option<BridgeProfileBlock> {
@@ -161,7 +161,7 @@ pub(super) fn build_bridge_profile_block() -> Option<BridgeProfileBlock> {
     let organization_uuid = profile
         .cloud
         .as_ref()
-        .and_then(|cloud| cloud.tenant_id.as_ref().map(TenantId::as_str))
+        .and_then(|cloud| cloud.tenant_id.as_ref())
         .map(canonicalize_org_uuid);
 
     let models_count = models.len();
@@ -174,12 +174,13 @@ pub(super) fn build_bridge_profile_block() -> Option<BridgeProfileBlock> {
     })
 }
 
-fn canonicalize_org_uuid(tenant_id: &str) -> String {
-    let suffix = tenant_id.strip_prefix("local_").unwrap_or(tenant_id);
+fn canonicalize_org_uuid(tenant_id: &TenantId) -> String {
+    let s = tenant_id.as_str();
+    let suffix = s.strip_prefix("local_").unwrap_or(s);
     if let Ok(parsed) = Uuid::parse_str(suffix) {
         return parsed.to_string();
     }
-    Uuid::new_v5(&Uuid::NAMESPACE_OID, tenant_id.as_bytes()).to_string()
+    Uuid::new_v5(&Uuid::NAMESPACE_OID, s.as_bytes()).to_string()
 }
 
 pub(super) fn build_agents_block() -> AgentsBlock {

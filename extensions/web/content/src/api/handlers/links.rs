@@ -99,11 +99,9 @@ pub async fn record_click_handler(
 
     let click_id = LinkClickId::generate();
     let link_id = request.link_id;
-    let session_id = SessionId::new(
-        request
-            .session_id
-            .unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
-    );
+    let session_id = request
+        .session_id
+        .unwrap_or_else(|| SessionId::new(uuid::Uuid::new_v4().to_string()));
 
     let params = RecordClickParams::new(click_id, link_id, session_id, Utc::now())
         .with_referrer_page(request.referrer_page)
@@ -175,7 +173,7 @@ pub async fn content_journey_handler(
 ) -> Response {
     let service = LinkAnalyticsService::new(Arc::clone(&state.pool));
 
-    match service.get_content_journey(query.content_id.as_str()).await {
+    match service.get_content_journey(&query.content_id).await {
         Ok(journey) => Json(journey).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to get content journey");

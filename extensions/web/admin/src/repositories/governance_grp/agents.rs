@@ -45,8 +45,9 @@ pub fn list_agents(services_path: &Path) -> Result<Vec<AgentDetail>, Marketplace
         };
         if let Some(agents_map) = config.get("agents").and_then(|a| a.as_mapping()) {
             for (key, val) in agents_map {
-                if let Some(agent_id) = key.as_str() {
-                    agents.push(parse_agent_detail(agent_id, val, &skill_catalog));
+                if let Some(key_str) = key.as_str() {
+                    let agent_id = AgentId::from(key_str);
+                    agents.push(parse_agent_detail(&agent_id, val, &skill_catalog));
                 }
             }
         }
@@ -56,18 +57,18 @@ pub fn list_agents(services_path: &Path) -> Result<Vec<AgentDetail>, Marketplace
 }
 
 fn parse_agent_detail(
-    agent_id: &str,
+    agent_id: &AgentId,
     val: &serde_yaml::Value,
     skill_catalog: &HashMap<String, AgentSkillInfo>,
 ) -> AgentDetail {
     AgentDetail {
-        id: AgentId::from(agent_id),
+        id: agent_id.clone(),
         name: val
             .get("card")
             .and_then(|c| c.get("displayName"))
             .or_else(|| val.get("card").and_then(|c| c.get("name")))
             .and_then(|n| n.as_str())
-            .unwrap_or(agent_id)
+            .unwrap_or(agent_id.as_str())
             .to_owned(),
         description: val
             .get("card")
@@ -130,10 +131,12 @@ fn parse_agent_detail(
 
 pub fn find_agent(
     services_path: &Path,
-    agent_id: &str,
+    agent_id: &AgentId,
 ) -> Result<Option<AgentDetail>, MarketplaceError> {
     let agents = list_agents(services_path)?;
-    Ok(agents.into_iter().find(|a| a.id.as_str() == agent_id))
+    Ok(agents
+        .into_iter()
+        .find(|a| a.id.as_str() == agent_id.as_str()))
 }
 
 pub fn create_agent(
@@ -184,7 +187,7 @@ pub fn create_agent(
 
 pub fn update_agent(
     services_path: &Path,
-    agent_id: &str,
+    agent_id: &AgentId,
     req: &UpdateAgentRequest,
 ) -> Result<Option<AgentDetail>, MarketplaceError> {
     let agents_dir = services_path.join("agents");
@@ -193,7 +196,10 @@ pub fn update_agent(
     };
     let content = std::fs::read_to_string(&file_path)?;
     let mut doc: serde_yaml::Value = serde_yaml::from_str(&content)?;
-    if let Some(agent_val) = doc.get_mut("agents").and_then(|a| a.get_mut(agent_id)) {
+    if let Some(agent_val) = doc
+        .get_mut("agents")
+        .and_then(|a| a.get_mut(agent_id.as_str()))
+    {
         if let Some(ref name) = req.name
             && let Some(card) = agent_val.get_mut("card")
         {
@@ -221,7 +227,7 @@ pub fn update_agent(
     find_agent(services_path, agent_id)
 }
 
-pub fn delete_agent(services_path: &Path, agent_id: &str) -> Result<bool, MarketplaceError> {
+pub fn delete_agent(services_path: &Path, agent_id: &AgentId) -> Result<bool, MarketplaceError> {
     let agents_dir = services_path.join("agents");
     let Some(file_path) = find_agent_file(&agents_dir, agent_id)? else {
         return Ok(false);
@@ -237,7 +243,7 @@ pub fn delete_agent(services_path: &Path, agent_id: &str) -> Result<bool, Market
     } else {
         let mut doc: serde_yaml::Value = serde_yaml::from_str(&content)?;
         if let Some(agents) = doc.get_mut("agents").and_then(|a| a.as_mapping_mut()) {
-            agents.remove(serde_yaml::Value::String(agent_id.to_owned()));
+            agents.remove(serde_yaml::Value::String(agent_id.as_str().to_owned()));
         }
         std::fs::write(&file_path, serde_yaml::to_string(&doc)?)?;
     }
@@ -246,7 +252,7 @@ pub fn delete_agent(services_path: &Path, agent_id: &str) -> Result<bool, Market
 
 fn find_agent_file(
     agents_dir: &Path,
-    agent_id: &str,
+    agent_id: &AgentId,
 ) -> Result<Option<std::path::PathBuf>, MarketplaceError> {
     if !agents_dir.exists() {
         return Ok(None);
@@ -263,7 +269,11 @@ fn find_agent_file(
             Ok(c) => c,
             Err(_) => continue,
         };
-        if config.get("agents").and_then(|a| a.get(agent_id)).is_some() {
+        if config
+            .get("agents")
+            .and_then(|a| a.get(agent_id.as_str()))
+            .is_some()
+        {
             return Ok(Some(path));
         }
     }

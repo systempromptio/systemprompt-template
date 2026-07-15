@@ -1,4 +1,5 @@
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 use super::TodayPerformanceSummary;
 use super::calculations::{
@@ -9,7 +10,7 @@ use crate::numeric;
 
 pub async fn fetch_today_performance_summary(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
 ) -> TodayPerformanceSummary {
     let today = chrono::Utc::now().date_naive();
 
@@ -70,7 +71,7 @@ struct TodayAggregates {
 
 async fn fetch_today_aggregates(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     today: chrono::NaiveDate,
 ) -> TodayAggregates {
     struct AggRow {
@@ -97,7 +98,7 @@ async fn fetch_today_aggregates(
           WHERE user_id = $1
             AND started_at::date = $2
             AND COALESCE(status, 'active') != 'deleted'",
-        user_id,
+        user_id.as_str(),
         today,
     )
     .fetch_optional(pool)

@@ -6,13 +6,14 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::{ContextId, SessionId, UserId};
 
 #[derive(Debug, Clone)]
 pub struct ContextHeader {
-    pub context_id: String,
-    pub user_id: Option<String>,
+    pub context_id: ContextId,
+    pub user_id: Option<UserId>,
     pub display_name: Option<String>,
-    pub session_id: Option<String>,
+    pub session_id: Option<SessionId>,
     pub name: Option<String>,
     pub created_at: Option<DateTime<Utc>>,
     pub updated_at: Option<DateTime<Utc>>,
@@ -63,16 +64,16 @@ pub struct ContextToolCallRow {
 
 pub async fn fetch_context_header(
     pool: &PgPool,
-    context_id: &str,
+    context_id: &ContextId,
 ) -> Result<Option<ContextHeader>, sqlx::Error> {
     sqlx::query_as!(
         ContextHeader,
         r#"
         SELECT
-            COALESCE(c.context_id, r.context_id)  AS "context_id!",
-            COALESCE(c.user_id, r.user_id)        AS "user_id?",
+            COALESCE(c.context_id, r.context_id)  AS "context_id!: ContextId",
+            COALESCE(c.user_id, r.user_id)        AS "user_id?: UserId",
             u.display_name                        AS "display_name?",
-            COALESCE(c.session_id, r.session_id)  AS "session_id?",
+            COALESCE(c.session_id, r.session_id)  AS "session_id?: SessionId",
             c.name                                AS "name?",
             c.created_at                          AS "created_at?",
             c.updated_at                          AS "updated_at?"
@@ -91,7 +92,7 @@ pub async fn fetch_context_header(
         WHERE COALESCE(c.context_id, r.context_id) = $1
         LIMIT 1
         "#,
-        context_id
+        context_id.as_str()
     )
     .fetch_optional(pool)
     .await
@@ -99,7 +100,7 @@ pub async fn fetch_context_header(
 
 pub async fn fetch_context_kpis(
     pool: &PgPool,
-    context_id: &str,
+    context_id: &ContextId,
 ) -> Result<ContextKpis, sqlx::Error> {
     let row = sqlx::query!(
         r#"
@@ -116,7 +117,7 @@ pub async fn fetch_context_kpis(
         FROM ai_requests
         WHERE context_id = $1
         "#,
-        context_id
+        context_id.as_str()
     )
     .fetch_one(pool)
     .await?;
@@ -135,7 +136,7 @@ pub async fn fetch_context_kpis(
 
 pub async fn fetch_context_requests(
     pool: &PgPool,
-    context_id: &str,
+    context_id: &ContextId,
 ) -> Result<Vec<ContextRequestRow>, sqlx::Error> {
     sqlx::query_as!(
         ContextRequestRow,
@@ -153,7 +154,7 @@ pub async fn fetch_context_requests(
         ORDER BY created_at ASC
         LIMIT 500
         "#,
-        context_id
+        context_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -161,7 +162,7 @@ pub async fn fetch_context_requests(
 
 pub async fn fetch_context_messages(
     pool: &PgPool,
-    context_id: &str,
+    context_id: &ContextId,
 ) -> Result<Vec<ContextMessageRow>, sqlx::Error> {
     sqlx::query_as!(
         ContextMessageRow,
@@ -178,7 +179,7 @@ pub async fn fetch_context_messages(
         ORDER BY r.created_at ASC, m.sequence_number ASC
         LIMIT 2000
         "#,
-        context_id
+        context_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -186,7 +187,7 @@ pub async fn fetch_context_messages(
 
 pub async fn fetch_context_tool_calls(
     pool: &PgPool,
-    context_id: &str,
+    context_id: &ContextId,
 ) -> Result<Vec<ContextToolCallRow>, sqlx::Error> {
     sqlx::query_as!(
         ContextToolCallRow,
@@ -204,7 +205,7 @@ pub async fn fetch_context_tool_calls(
         ORDER BY r.created_at ASC, t.sequence_number ASC
         LIMIT 1000
         "#,
-        context_id
+        context_id.as_str()
     )
     .fetch_all(pool)
     .await

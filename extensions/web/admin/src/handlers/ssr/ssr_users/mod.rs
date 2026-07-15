@@ -160,7 +160,7 @@ pub(crate) async fn user_detail_page(
 }
 
 async fn load_runtime_view(pool: &PgPool, d: &crate::types::UserDetail) -> Option<UserRuntimeView> {
-    repositories::get_user_runtime_detail(pool, d.user_id.as_str())
+    repositories::get_user_runtime_detail(pool, &d.user_id)
         .await
         .ok()
         .map(|r| UserRuntimeView {

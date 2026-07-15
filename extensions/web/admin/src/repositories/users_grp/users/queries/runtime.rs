@@ -1,8 +1,9 @@
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct UserRuntimeAggregate {
-    pub user_id: String,
+    pub user_id: UserId,
     pub connected_agents: i64,
     pub total_agents: i64,
     pub newest_device_seen_at: Option<chrono::DateTime<chrono::Utc>>,
@@ -16,7 +17,7 @@ pub async fn list_user_runtime_aggregates(
         UserRuntimeAggregate,
         r#"
         SELECT
-            u.id AS "user_id!",
+            u.id AS "user_id!: UserId",
             COALESCE(bs.connected_agents, 0)::BIGINT AS "connected_agents!",
             COALESCE(ua.total_agents, 0)::BIGINT  AS "total_agents!",
             GREATEST(dal.newest_seen, ak.newest_used) AS "newest_device_seen_at?",
@@ -61,7 +62,7 @@ pub struct UserRuntimeDetail {
 
 pub async fn get_user_runtime_detail(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
 ) -> Result<UserRuntimeDetail, sqlx::Error> {
     let totals = sqlx::query!(
         r#"
@@ -71,7 +72,7 @@ pub async fn get_user_runtime_detail(
             COALESCE(SUM(tokens_out_total), 0)::BIGINT AS "tokens_out!"
         FROM bridge_sessions WHERE user_id = $1
         "#,
-        user_id
+        user_id.as_str()
     )
     .fetch_one(pool)
     .await?;
@@ -87,7 +88,7 @@ pub async fn get_user_runtime_detail(
         ORDER BY last_heartbeat_at DESC
         LIMIT 1
         "#,
-        user_id
+        user_id.as_str()
     )
     .fetch_optional(pool)
     .await?;

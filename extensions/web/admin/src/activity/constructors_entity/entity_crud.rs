@@ -1,4 +1,5 @@
 use serde::Serialize;
+use systemprompt::identifiers::{SessionId, UserId};
 
 use super::super::constructors::truncate;
 use super::super::enums::{ActivityAction, ActivityCategory, ActivityEntity, entity_label};
@@ -17,30 +18,28 @@ struct SessionMeta<'a> {
 
 impl NewActivity {
     #[must_use]
-    pub fn skill_used(user_id: impl AsRef<str>, tool_name: &str, session_id: &str) -> Self {
+    pub fn skill_used(user_id: &UserId, tool_name: &str, session_id: &SessionId) -> Self {
         Self {
-            user_id: user_id.as_ref().to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::SkillUsage,
             action: ActivityAction::Used,
             entity: Some(ActivityEntityRef {
                 kind: ActivityEntity::Skill,
-                id: Some(session_id.to_owned()),
+                id: Some(session_id.as_str().to_owned()),
                 name: Some(tool_name.to_owned()),
             }),
             description: format!("Used skill '{tool_name}'"),
-            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
+            metadata: serde_json::to_value(SessionMeta {
+                session_id: session_id.as_str(),
+            })
+            .unwrap_or_default(),
         }
     }
 
     #[must_use]
-    pub fn entity_created(
-        user_id: impl AsRef<str>,
-        entity: ActivityEntity,
-        id: &str,
-        name: &str,
-    ) -> Self {
+    pub fn entity_created(user_id: &UserId, entity: ActivityEntity, id: &str, name: &str) -> Self {
         Self {
-            user_id: user_id.as_ref().to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Created,
             entity: Some(ActivityEntityRef {
@@ -54,14 +53,9 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn entity_updated(
-        user_id: impl AsRef<str>,
-        entity: ActivityEntity,
-        id: &str,
-        name: &str,
-    ) -> Self {
+    pub fn entity_updated(user_id: &UserId, entity: ActivityEntity, id: &str, name: &str) -> Self {
         Self {
-            user_id: user_id.as_ref().to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Updated,
             entity: Some(ActivityEntityRef {
@@ -75,14 +69,9 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn entity_deleted(
-        user_id: impl AsRef<str>,
-        entity: ActivityEntity,
-        id: &str,
-        name: &str,
-    ) -> Self {
+    pub fn entity_deleted(user_id: &UserId, entity: ActivityEntity, id: &str, name: &str) -> Self {
         Self {
-            user_id: user_id.as_ref().to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Deleted,
             entity: Some(ActivityEntityRef {
@@ -96,14 +85,9 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn entity_forked(
-        user_id: impl AsRef<str>,
-        entity: ActivityEntity,
-        id: &str,
-        name: &str,
-    ) -> Self {
+    pub fn entity_forked(user_id: &UserId, entity: ActivityEntity, id: &str, name: &str) -> Self {
         Self {
-            user_id: user_id.as_ref().to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Created,
             entity: Some(ActivityEntityRef {
@@ -118,14 +102,14 @@ impl NewActivity {
 
     #[must_use]
     pub fn entity_imported(
-        user_id: impl AsRef<str>,
+        user_id: &UserId,
         entity: ActivityEntity,
         id: &str,
         name: &str,
         description: &str,
     ) -> Self {
         Self {
-            user_id: user_id.as_ref().to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::MarketplaceEdit,
             action: ActivityAction::Imported,
             entity: Some(ActivityEntityRef {
@@ -139,9 +123,9 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn marketplace_uploaded(user_id: impl AsRef<str>, version: i32) -> Self {
+    pub fn marketplace_uploaded(user_id: &UserId, version: i32) -> Self {
         Self {
-            user_id: user_id.as_ref().to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::MarketplaceConnect,
             action: ActivityAction::Uploaded,
             entity: Some(ActivityEntityRef {
@@ -155,9 +139,9 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn marketplace_restored(user_id: impl AsRef<str>, version: i32) -> Self {
+    pub fn marketplace_restored(user_id: &UserId, version: i32) -> Self {
         Self {
-            user_id: user_id.as_ref().to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::MarketplaceConnect,
             action: ActivityAction::Restored,
             entity: Some(ActivityEntityRef {
@@ -172,65 +156,74 @@ impl NewActivity {
 
     #[must_use]
     pub fn tool_used(
-        user_id: impl AsRef<str>,
+        user_id: &UserId,
         tool_name: &str,
-        session_id: &str,
+        session_id: &SessionId,
         detail: &str,
     ) -> Self {
         Self {
-            user_id: user_id.as_ref().to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::ToolUsage,
             action: ActivityAction::Used,
             entity: Some(ActivityEntityRef {
                 kind: ActivityEntity::Tool,
-                id: Some(session_id.to_owned()),
+                id: Some(session_id.as_str().to_owned()),
                 name: Some(tool_name.to_owned()),
             }),
             description: format!("{tool_name}: {detail}"),
-            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
+            metadata: serde_json::to_value(SessionMeta {
+                session_id: session_id.as_str(),
+            })
+            .unwrap_or_default(),
         }
     }
 
     #[must_use]
     pub fn skill_used_rich(
-        user_id: impl AsRef<str>,
+        user_id: &UserId,
         tool_name: &str,
-        session_id: &str,
+        session_id: &SessionId,
         detail: &str,
     ) -> Self {
         Self {
-            user_id: user_id.as_ref().to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::SkillUsage,
             action: ActivityAction::Used,
             entity: Some(ActivityEntityRef {
                 kind: ActivityEntity::Skill,
-                id: Some(session_id.to_owned()),
+                id: Some(session_id.as_str().to_owned()),
                 name: Some(tool_name.to_owned()),
             }),
             description: format!("Used {tool_name}: {detail}"),
-            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
+            metadata: serde_json::to_value(SessionMeta {
+                session_id: session_id.as_str(),
+            })
+            .unwrap_or_default(),
         }
     }
 
     #[must_use]
     pub fn tool_error(
-        user_id: impl AsRef<str>,
+        user_id: &UserId,
         tool_name: &str,
-        session_id: &str,
+        session_id: &SessionId,
         error: Option<&str>,
     ) -> Self {
         let msg = truncate(error.unwrap_or("unknown error"), 60);
         Self {
-            user_id: user_id.as_ref().to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::Error,
             action: ActivityAction::Used,
             entity: Some(ActivityEntityRef {
                 kind: ActivityEntity::Tool,
-                id: Some(session_id.to_owned()),
+                id: Some(session_id.as_str().to_owned()),
                 name: Some(tool_name.to_owned()),
             }),
             description: format!("{tool_name} failed: {msg}"),
-            metadata: serde_json::to_value(SessionMeta { session_id }).unwrap_or_default(),
+            metadata: serde_json::to_value(SessionMeta {
+                session_id: session_id.as_str(),
+            })
+            .unwrap_or_default(),
         }
     }
 }

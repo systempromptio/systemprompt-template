@@ -9,14 +9,15 @@
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::{AgentId, SessionId, UserId};
 use systemprompt_security::policy::types::AccessScope;
 
 use super::time_range::TimeRange;
 
 #[derive(Debug, Clone, Default)]
 pub struct DecisionFilter {
-    pub user_id: Option<String>,
-    pub agent_id: Option<String>,
+    pub user_id: Option<UserId>,
+    pub agent_id: Option<AgentId>,
     pub agent_scope: Option<AccessScope>,
     pub policy: Option<String>,
     pub decision: Option<String>,
@@ -76,10 +77,10 @@ impl SortDir {
 #[derive(Debug, Clone, Serialize)]
 pub struct DecisionRow {
     pub id: String,
-    pub user_id: String,
-    pub session_id: String,
+    pub user_id: UserId,
+    pub session_id: SessionId,
     pub tool_name: String,
-    pub agent_id: Option<String>,
+    pub agent_id: Option<AgentId>,
     pub agent_scope: Option<AccessScope>,
     pub decision: String,
     pub policy: String,
@@ -174,10 +175,10 @@ async fn run_decisions_query(
         )
         SELECT
             id AS "id!",
-            user_id AS "user_id!",
-            session_id AS "session_id!",
+            user_id AS "user_id!: UserId",
+            session_id AS "session_id!: SessionId",
             tool_name AS "tool_name!",
-            agent_id,
+            agent_id AS "agent_id: AgentId",
             agent_scope AS "agent_scope: AccessScope",
             decision AS "decision!",
             policy AS "policy!",
@@ -199,8 +200,8 @@ async fn run_decisions_query(
         LIMIT $10 OFFSET $11"#,
         range.from,
         range.to,
-        filter.user_id.as_deref(),
-        filter.agent_id.as_deref(),
+        filter.user_id.as_ref().map(UserId::as_str),
+        filter.agent_id.as_ref().map(AgentId::as_str),
         agent_scope,
         filter.policy.as_deref(),
         filter.decision.as_deref(),
@@ -218,10 +219,10 @@ async fn run_decisions_query(
 #[derive(sqlx::FromRow)]
 struct PagedRow {
     id: String,
-    user_id: String,
-    session_id: String,
+    user_id: UserId,
+    session_id: SessionId,
     tool_name: String,
-    agent_id: Option<String>,
+    agent_id: Option<AgentId>,
     agent_scope: Option<AccessScope>,
     decision: String,
     policy: String,

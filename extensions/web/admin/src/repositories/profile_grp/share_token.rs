@@ -5,17 +5,18 @@
 //! against the value encoded in the token.
 
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 /// Fetch the current `share_token_version` for a user.
 ///
 /// Returns `Ok(None)` when the user has no `user_profile_ext` row.
 pub async fn get_share_token_version(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
 ) -> Result<Option<i32>, sqlx::Error> {
     let row = sqlx::query!(
         "SELECT share_token_version FROM user_profile_ext WHERE user_id = $1",
-        user_id,
+        user_id.as_str(),
     )
     .fetch_optional(pool)
     .await?;

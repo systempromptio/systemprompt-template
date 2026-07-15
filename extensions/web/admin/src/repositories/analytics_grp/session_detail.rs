@@ -7,11 +7,12 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::{ContextId, SessionId, UserId};
 
 #[derive(Debug, Clone)]
 pub struct SessionHeader {
-    pub session_id: String,
-    pub user_id: Option<String>,
+    pub session_id: SessionId,
+    pub user_id: Option<UserId>,
     pub display_name: Option<String>,
     pub department: Option<String>,
     pub started_at: Option<DateTime<Utc>>,
@@ -35,7 +36,7 @@ pub struct SessionKpis {
 
 #[derive(Debug, Clone)]
 pub struct SessionContextRow {
-    pub context_id: String,
+    pub context_id: ContextId,
     pub name: Option<String>,
     pub request_count: i64,
     pub last_request_at: Option<DateTime<Utc>>,
@@ -54,7 +55,7 @@ pub struct SessionTraceRow {
 #[derive(Debug, Clone)]
 pub struct SessionRequestRow {
     pub id: String,
-    pub context_id: Option<String>,
+    pub context_id: Option<ContextId>,
     pub trace_id: Option<String>,
     pub model: String,
     pub status: String,
@@ -65,14 +66,14 @@ pub struct SessionRequestRow {
 
 pub async fn fetch_session_header(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Option<SessionHeader>, sqlx::Error> {
     sqlx::query_as!(
         SessionHeader,
         r#"
         SELECT
-            COALESCE(s.session_id, r.session_id) AS "session_id!",
-            COALESCE(s.user_id, r.user_id)       AS "user_id?",
+            COALESCE(s.session_id, r.session_id) AS "session_id!: SessionId",
+            COALESCE(s.user_id, r.user_id)       AS "user_id?: UserId",
             u.display_name                       AS "display_name?",
             upe.department                       AS "department?",
             COALESCE(s.started_at, r.first_seen) AS "started_at?",
@@ -99,7 +100,7 @@ pub async fn fetch_session_header(
         WHERE COALESCE(s.session_id, r.session_id) = $1
         LIMIT 1
         "#,
-        session_id
+        session_id.as_str()
     )
     .fetch_optional(pool)
     .await
@@ -107,7 +108,7 @@ pub async fn fetch_session_header(
 
 pub async fn fetch_session_kpis(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<SessionKpis, sqlx::Error> {
     let row = sqlx::query!(
         r#"
@@ -122,7 +123,7 @@ pub async fn fetch_session_kpis(
         FROM ai_requests
         WHERE session_id = $1
         "#,
-        session_id
+        session_id.as_str()
     )
     .fetch_one(pool)
     .await?;
@@ -139,13 +140,13 @@ pub async fn fetch_session_kpis(
 
 pub async fn fetch_session_contexts(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Vec<SessionContextRow>, sqlx::Error> {
     sqlx::query_as!(
         SessionContextRow,
         r#"
         SELECT
-            r.context_id                         AS "context_id!",
+            r.context_id                         AS "context_id!: ContextId",
             c.name                               AS "name?",
             COUNT(*)::bigint                     AS "request_count!",
             MAX(r.created_at)                    AS "last_request_at?",
@@ -157,7 +158,7 @@ pub async fn fetch_session_contexts(
         ORDER BY MAX(r.created_at) DESC
         LIMIT 200
         "#,
-        session_id
+        session_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -165,7 +166,7 @@ pub async fn fetch_session_contexts(
 
 pub async fn fetch_session_traces(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Vec<SessionTraceRow>, sqlx::Error> {
     sqlx::query_as!(
         SessionTraceRow,
@@ -182,7 +183,7 @@ pub async fn fetch_session_traces(
         ORDER BY MIN(created_at) DESC
         LIMIT 200
         "#,
-        session_id
+        session_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -190,14 +191,14 @@ pub async fn fetch_session_traces(
 
 pub async fn fetch_session_requests(
     pool: &PgPool,
-    session_id: &str,
+    session_id: &SessionId,
 ) -> Result<Vec<SessionRequestRow>, sqlx::Error> {
     sqlx::query_as!(
         SessionRequestRow,
         r#"
         SELECT
             id                                  AS "id!",
-            context_id                          AS "context_id?",
+            context_id                          AS "context_id?: ContextId",
             trace_id                            AS "trace_id?",
             model                               AS "model!",
             status                              AS "status!",
@@ -209,7 +210,7 @@ pub async fn fetch_session_requests(
         ORDER BY created_at DESC
         LIMIT 200
         "#,
-        session_id
+        session_id.as_str()
     )
     .fetch_all(pool)
     .await

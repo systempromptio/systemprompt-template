@@ -1,4 +1,5 @@
 use serde::Serialize;
+use systemprompt::identifiers::UserId;
 
 use super::constructors::truncate;
 use super::enums::{ActivityAction, ActivityCategory, ActivityEntity};
@@ -19,9 +20,9 @@ struct McpAccessRejectedMeta<'a> {
 
 impl NewActivity {
     #[must_use]
-    pub fn mcp_access_granted(user_id: &str, server_name: &str, tool_name: &str) -> Self {
+    pub fn mcp_access_granted(user_id: &UserId, server_name: &str, tool_name: &str) -> Self {
         Self {
-            user_id: user_id.to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::McpAccess,
             action: ActivityAction::Authenticated,
             entity: Some(ActivityEntityRef {
@@ -39,10 +40,15 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn mcp_access_rejected(server_name: &str, tool_name: &str, reason: &str) -> Self {
+    pub fn mcp_access_rejected(
+        user_id: &UserId,
+        server_name: &str,
+        tool_name: &str,
+        reason: &str,
+    ) -> Self {
         let reason_short = truncate(reason, 120);
         Self {
-            user_id: "unknown".to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::McpAccess,
             action: ActivityAction::Rejected,
             entity: Some(ActivityEntityRef {
@@ -61,9 +67,9 @@ impl NewActivity {
     }
 
     #[must_use]
-    pub fn mcp_tool_executed(user_id: &str, server_name: &str, tool_name: &str) -> Self {
+    pub fn mcp_tool_executed(user_id: &UserId, server_name: &str, tool_name: &str) -> Self {
         Self {
-            user_id: user_id.to_owned(),
+            user_id: user_id.clone(),
             category: ActivityCategory::McpAccess,
             action: ActivityAction::Used,
             entity: Some(ActivityEntityRef {

@@ -1,20 +1,23 @@
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{SessionId, UserId};
 
 use super::SessionAnalysisRow;
 
-pub async fn fetch_session_analysis(pool: &PgPool, session_id: &str) -> Option<SessionAnalysisRow> {
+pub async fn fetch_session_analysis(
+    pool: &PgPool,
+    session_id: &SessionId,
+) -> Option<SessionAnalysisRow> {
     sqlx::query_as!(
         SessionAnalysisRow,
-        r"SELECT session_id, title, description, summary, tags,
+        r#"SELECT session_id as "session_id: SessionId", title, description, summary, tags,
                  goal_achieved, quality_score, outcome, error_analysis,
                  skill_assessment, recommendations, skill_scores,
                  category, goal_outcome_map, efficiency_metrics,
                  best_practices_checklist, improvement_hints,
                  corrections_count, session_duration_minutes, total_turns
           FROM session_analyses
-          WHERE session_id = $1",
-        session_id,
+          WHERE session_id = $1"#,
+        session_id.as_str(),
     )
     .fetch_optional(pool)
     .await
@@ -54,14 +57,14 @@ pub async fn fetch_session_analyses_batch(
     }
     sqlx::query_as!(
         SessionAnalysisRow,
-        r"SELECT session_id, title, description, summary, tags,
+        r#"SELECT session_id as "session_id: SessionId", title, description, summary, tags,
                  goal_achieved, quality_score, outcome, error_analysis,
                  skill_assessment, recommendations, skill_scores,
                  category, goal_outcome_map, efficiency_metrics,
                  best_practices_checklist, improvement_hints,
                  corrections_count, session_duration_minutes, total_turns
           FROM session_analyses
-          WHERE session_id = ANY($1)",
+          WHERE session_id = ANY($1)"#,
         session_ids,
     )
     .fetch_all(pool)
@@ -79,7 +82,7 @@ pub async fn fetch_recent_analyses(
 ) -> Vec<SessionAnalysisRow> {
     sqlx::query_as!(
         SessionAnalysisRow,
-        r"SELECT session_id, title, description, summary, tags,
+        r#"SELECT session_id as "session_id: SessionId", title, description, summary, tags,
                  goal_achieved, quality_score, outcome, error_analysis,
                  skill_assessment, recommendations, skill_scores,
                  category, goal_outcome_map, efficiency_metrics,
@@ -88,7 +91,7 @@ pub async fn fetch_recent_analyses(
           FROM session_analyses
           WHERE user_id = $1
           ORDER BY created_at DESC
-          LIMIT $2",
+          LIMIT $2"#,
         user_id.as_str(),
         limit,
     )

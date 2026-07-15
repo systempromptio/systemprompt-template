@@ -3,6 +3,8 @@
 
 use sqlx::PgPool;
 
+use systemprompt::identifiers::{SessionId, UserId};
+
 use super::{ConversationListFilter, ConversationListItem};
 
 pub async fn fetch_conversation_list(
@@ -22,8 +24,8 @@ pub async fn fetch_conversation_list(
 
     let rows = sqlx::query!(
         r#"
-        SELECT s.session_id    AS "session_id!",
-               s.user_id       AS "user_id!",
+        SELECT s.session_id    AS "session_id!: SessionId",
+               s.user_id       AS "user_id!: UserId",
                s.plugin_id,
                s.model,
                s.status,
@@ -53,7 +55,7 @@ pub async fn fetch_conversation_list(
         ORDER BY s.started_at DESC NULLS LAST
         LIMIT $6
         "#,
-        filter.user_id,
+        filter.user_id.as_ref().map(UserId::as_str),
         filter.plugin_id,
         filter.since,
         filter.until,

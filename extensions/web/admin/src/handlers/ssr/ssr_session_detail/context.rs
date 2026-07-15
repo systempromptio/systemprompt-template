@@ -2,6 +2,7 @@
 //! (`session-detail.hbs`).
 
 use serde::Serialize;
+use systemprompt::identifiers::{ContextId, SessionId, UserId};
 
 #[derive(Debug, Serialize)]
 pub(super) struct SessionDetailPageContext {
@@ -20,9 +21,9 @@ pub(super) struct SessionDetailPageContext {
 
 #[derive(Debug, Serialize)]
 pub(super) struct SessionHeaderView {
-    pub(super) session_id: String,
+    pub(super) session_id: SessionId,
     pub(super) session_id_short: String,
-    pub(super) user_id: Option<String>,
+    pub(super) user_id: Option<UserId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) user_url: Option<String>,
     pub(super) display_name: Option<String>,
@@ -61,7 +62,7 @@ pub(super) struct SessionKpisView {
 
 #[derive(Debug, Serialize)]
 pub(super) struct SessionContextRowView {
-    pub(super) context_id: String,
+    pub(super) context_id: ContextId,
     pub(super) context_id_short: String,
     pub(super) context_url: String,
     pub(super) name: String,
@@ -91,7 +92,7 @@ pub(super) struct SessionRequestRowView {
     pub(super) id: String,
     pub(super) id_short: String,
     pub(super) request_url: String,
-    pub(super) context_id: Option<String>,
+    pub(super) context_id: Option<ContextId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) context_id_short: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

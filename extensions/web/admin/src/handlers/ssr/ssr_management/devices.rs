@@ -7,6 +7,7 @@
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 use crate::repositories::users_grp::devices::{self, DeviceRowDb};
 
@@ -15,7 +16,7 @@ pub(super) struct DeviceRow {
     id: String,
     name: String,
     key_prefix: String,
-    user_id: String,
+    user_id: UserId,
     user_email: Option<String>,
     department: Option<String>,
     platform: Option<String>,
@@ -32,7 +33,7 @@ pub(super) struct DeviceRow {
 
 #[derive(Debug, Serialize)]
 pub(super) struct DeviceUserOption {
-    user_id: String,
+    user_id: UserId,
     label: String,
 }
 
@@ -93,7 +94,7 @@ pub(super) async fn load_device_user_options(pool: &PgPool) -> Vec<DeviceUserOpt
                 (None, None) => r.uid.clone(),
             };
             DeviceUserOption {
-                user_id: r.uid,
+                user_id: UserId::new(r.uid),
                 label,
             }
         })

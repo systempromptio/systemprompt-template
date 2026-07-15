@@ -1,4 +1,5 @@
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 use crate::types::{ActivityStats, TimeSeriesBucket};
 
@@ -107,7 +108,7 @@ pub async fn fetch_usage_timeseries(
 
 pub async fn fetch_user_usage_timeseries(
     pool: &PgPool,
-    user_id: &str,
+    user_id: &UserId,
     interval: &str,
     bucket_interval: &str,
 ) -> Result<Vec<TimeSeriesBucket>, sqlx::Error> {
@@ -164,7 +165,7 @@ pub async fn fetch_user_usage_timeseries(
         ) d ON d.bucket = b.bucket
         GROUP BY b.bucket
         ORDER BY b.bucket"#,
-        user_id,
+        user_id.as_str(),
         trunc,
         interval,
         bucket_interval,

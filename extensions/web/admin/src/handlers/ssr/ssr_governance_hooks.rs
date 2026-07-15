@@ -5,6 +5,7 @@ use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
@@ -33,7 +34,7 @@ struct RecentEventRow {
     created_at: String,
     plugin_id: String,
     tool_name: String,
-    user_id: String,
+    user_id: UserId,
     status: String,
 }
 
