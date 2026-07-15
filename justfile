@@ -270,6 +270,11 @@ prepare:
     EXTENSION_DIRS="extensions/cli/activity extensions/cli/slack extensions/web extensions/marketplace extensions/mcp/systemprompt"
     for dir in $EXTENSION_DIRS; do
         if [ -f "{{justfile_directory()}}/$dir/Cargo.toml" ]; then
+            # Skip crates with no sqlx dependency — prepare would only
+            # resurrect an orphaned .sqlx cache.
+            if ! grep -qE '^sqlx' "{{justfile_directory()}}/$dir/Cargo.toml"; then
+                continue
+            fi
             echo "  Preparing $dir..."
             (cd "{{justfile_directory()}}/$dir" && cargo sqlx prepare 2>&1 | tail -1) || true
             if ls "{{justfile_directory()}}/$dir/.sqlx/"*.json >/dev/null 2>&1; then
