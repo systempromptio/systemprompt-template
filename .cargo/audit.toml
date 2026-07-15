@@ -1,0 +1,33 @@
+# cargo-audit configuration. Mirrors what `rustsec/audit-check@v2.0.0` reads in CI.
+
+[advisories]
+ignore = [
+    # RUSTSEC-2023-0071 — rsa Marvin Attack timing sidechannel (medium, 5.9). No upstream fix.
+    #
+    # Why this is in the dep tree:
+    # `rsa 0.9.x` is linked via `jsonwebtoken`'s `rust_crypto` backend feature, which we
+    # need explicitly — jsonwebtoken 10.x's default `["use_pem"]` ships without a crypto
+    # backend and panics at the first JWT operation ("Could not automatically determine
+    # the process-level CryptoProvider"). The `aws_lc_rs` alternative requires modern
+    # gcc/clang in every build environment, which we don't want to mandate.
+    #
+    # Exposure under the current architecture:
+    # v0.11.0 signs and verifies JWTs as RS256 against an `RsaSigningKey` (see
+    # `crates/infra/security/src/keys/mod.rs` and `crates/domain/oauth/src/services/generation.rs`).
+    # Token signing exercises the rsa private-key code path on every mint, so the Marvin
+    # Attack timing sidechannel is in scope.
+    #
+    # Mitigations to plan for: (a) switch jsonwebtoken to `aws_lc_rs` and drop the `rsa`
+    # crate from the dep tree, (b) move JWT signing to ES256 or EdDSA (no Marvin Attack
+    # surface), or (c) wait for an upstream rsa fix. Until then the advisory is ignored
+    # to keep CI green; this is a known accepted risk, not a clean bill of health.
+    "RUSTSEC-2023-0071",
+    # RUSTSEC-2026-0173 — proc-macro-error2 is unmaintained.
+    #
+    # It is a build-time-only proc-macro dependency, pulled transitively by
+    # `tabled` (CLI table rendering) and `validator` (config validation). It is
+    # never linked into the runtime binary, so the unmaintained status carries
+    # no runtime security surface. Tracked — drop the ignore once `tabled` and
+    # `validator` move off it.
+    "RUSTSEC-2026-0173",
+]
