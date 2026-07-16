@@ -91,11 +91,11 @@ Full index: [`demo/README.md`](demo/README.md). 41 of 43 scripts are free; two c
 </details>
 
 <details>
-<summary><strong>The governance pipeline: five checks before any tool process spawns</strong></summary>
+<summary><strong>The governance pipeline: synchronous checks before any tool process spawns</strong></summary>
 
 <br>
 
-Every tool call passes five in-process checks, synchronously, in under 5 ms. Every decision lands in an 18-column audit row.
+Every tool call passes a chain of in-process checks, synchronously, in under 5 ms. The chain is extensible; these ship built in. Every decision lands in an 18-column audit row.
 
 ```
   LLM Agent
