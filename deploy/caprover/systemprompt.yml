@@ -22,13 +22,17 @@ services:
       ANTHROPIC_API_KEY: $$cap_anthropic_key
       OPENAI_API_KEY: $$cap_openai_key
       GEMINI_API_KEY: $$cap_gemini_key
-      EXTERNAL_URL: http://$$cap_appname.$$cap_root_domain
+      # https from the start: the gateway's CORS validation rejects plain-http
+      # non-localhost origins, and EXTERNAL_URL is baked into the profile on
+      # first boot — enable HTTPS on the app right after deploying.
+      EXTERNAL_URL: https://$$cap_appname.$$cap_root_domain
       HOST: 0.0.0.0
       PORT: '8080'
     volumes:
       - $$cap_appname-web:/app/web
       - $$cap_appname-storage:/app/storage/data
-      - $$cap_appname-profiles:/app/services/profiles/docker
+      # entrypoint's generated profile + secrets live here (SYSTEMPROMPT_PROFILE_DIR default)
+      - $$cap_appname-profiles:/app/.systemprompt/profiles/docker
     caproverExtra:
       containerHttpPort: '8080'
 
@@ -42,7 +46,7 @@ caproverOneClickApp:
     - id: $$cap_anthropic_key
       label: Anthropic API key
       defaultValue: ''
-      description: At least one AI provider key (Anthropic, OpenAI, or Gemini) is required — the gateway refuses to boot without one. Leave unused providers blank.
+      description: At least one AI provider key (Anthropic, OpenAI, or Gemini) is required; the gateway refuses to boot without one. Leave unused providers blank.
     - id: $$cap_openai_key
       label: OpenAI API key (optional)
       defaultValue: ''
@@ -55,15 +59,15 @@ caproverOneClickApp:
     start: |-
       systemprompt is a self-owned AI control plane: a governance gateway for
       Claude, OpenAI, and Gemini with policy checks, audit, rate limits, and
-      MCP orchestration. This deploys the gateway plus a bundled Postgres.
-      You need at least one AI provider API key.
+      MCP orchestration. This deploys the gateway plus a bundled Postgres
+      database. You need at least one AI provider API key.
     end: |-
-      Deployed. First boot runs database migrations and a publish pipeline —
-      allow several minutes before the app responds on
-      http://$$cap_appname.$$cap_root_domain/api/v1/health.
-      After enabling HTTPS in CapRover, update the app's EXTERNAL_URL env var
-      to the https:// URL and restart the app.
+      Deployed. Now enable HTTPS on the app in the CapRover dashboard; the
+      gateway already advertises https://$$cap_appname.$$cap_root_domain.
+      First boot runs database migrations and a publish pipeline, so allow
+      several minutes before the app responds on
+      https://$$cap_appname.$$cap_root_domain/api/v1/health.
   displayName: systemprompt
   isOfficial: false
-  description: Self-owned AI control plane — governance gateway for Claude, OpenAI, and Gemini with audit, policy, and MCP orchestration (bundled Postgres).
+  description: Self-owned AI control plane. Governance gateway for Claude, OpenAI, and Gemini with audit, policy, and MCP orchestration (bundled Postgres).
   documentation: https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/caprover.md

@@ -68,16 +68,30 @@ GitHub release notes now carry the full deploy-target matrix (templated in
 - **Promote:** PR to `Lissy93/portainer-templates` (community, fast, wide
   reach) and to `portainer/templates` v3 branch (official, slow/selective).
 
-## 6. CapRover — ASSETS READY, not submitted
+## 6. CapRover — TESTED E2E, PR pending sign-off
 
-- **Status:** `deploy/caprover/systemprompt.yml` (captainVersion 4) drafted,
-  YAML-valid, untested live.
-- **Test:** CapRover on a cheap VPS → Apps → One-Click Apps → **Template**
-  (bottom) → paste YAML → fill form → deploy →
-  `http://<app>.<root>/api/v1/health` → enable HTTPS → update `EXTERNAL_URL`.
-- **Promote:** PR to `caprover/one-click-apps` (`public/v4/apps/` + logo in
-  `public/v4/logos/`); run `npm run validate_apps` in the fork first. Merged
+- **Status:** `deploy/caprover/systemprompt.yml` (captainVersion 4) tested
+  end-to-end 2026-07-16 on a real CapRover 1.14.2 (Docker-in-Docker single
+  node, exact one-click API flow): both services deployed, health 200 via
+  CapRover nginx, profile persisted across forced redeploy. Upstream
+  `validate_apps` + prettier green.
+- **Fixes from the live test:** profiles volume must mount
+  `/app/.systemprompt/profiles/docker` (entrypoint's profile dir, NOT
+  `services/profiles/docker`); `EXTERNAL_URL` must be `https://` from first
+  boot (profile validation rejects plain-http non-localhost origins, and the
+  value is baked into the persisted profile, so changing it later is a no-op).
+  **The same wrong profiles-volume path exists in the compose, Dokploy,
+  CasaOS, Elestio, DigitalOcean, and Northflank blueprints — fix per target.**
+- **UI re-test (optional):** CapRover on a VPS → Apps → One-Click Apps →
+  **Template** (bottom) → paste YAML → fill form → deploy → enable HTTPS →
+  `https://<app>.<root>/api/v1/health`.
+- **Promote:** PR to `caprover/one-click-apps` (`public/v4/apps/` + 256px logo
+  in `public/v4/logos/`) — branch prepared locally, awaiting sign-off. Merged
   apps appear in every CapRover install.
+- **Local-test gotcha:** CapRover cannot run on Docker Desktop/WSL2 directly
+  (read-only VM root breaks the `/captain` bind); run it inside `docker:26-dind`
+  (Docker 29 rejects CapRover's pinned API 1.38) and set the root domain to
+  `<dind-gateway-ip>.sslip.io`.
 
 ## 7. CasaOS — TESTED, draft PR open (IceWhaleTech/CasaOS-AppStore#981)
 
