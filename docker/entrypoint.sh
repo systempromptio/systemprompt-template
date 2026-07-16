@@ -4,6 +4,14 @@
 # waits for Postgres, runs migrations, starts the server.
 set -eu
 
+# One-click platforms (Railway et al.) export unfilled template variables as
+# empty strings; admin setup would record "" as a configured provider key.
+# Treat blank as unset.
+[ -n "${ANTHROPIC_API_KEY:-}" ] || unset ANTHROPIC_API_KEY
+[ -n "${OPENAI_API_KEY:-}" ] || unset OPENAI_API_KEY
+[ -n "${GEMINI_API_KEY:-}" ] || unset GEMINI_API_KEY
+[ -n "${GITHUB_TOKEN:-}" ] || unset GITHUB_TOKEN
+
 PROFILE_DIR="${SYSTEMPROMPT_PROFILE_DIR:-/app/.systemprompt/profiles/docker}"
 PROFILE_FILE="$PROFILE_DIR/profile.yaml"
 SECRETS_FILE="$PROFILE_DIR/secrets.json"
