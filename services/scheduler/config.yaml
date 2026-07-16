@@ -55,3 +55,7 @@ scheduler:
     - governance_bootstrap
     - database_cleanup
     - cleanup_inactive_sessions
+    # Publish web assets before the cron loop: web/dist is generated, not
+    # shipped in the image, so without this the site 404s until the first
+    # 15-minute publish_pipeline tick.
+    - publish_pipeline
