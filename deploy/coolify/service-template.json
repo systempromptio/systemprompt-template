@@ -3,9 +3,16 @@
   "description": "AI governance gateway for Claude, OpenAI, and Gemini — policy, audit, rate-limit, MCP orchestration.",
   "slug": "systemprompt-gateway",
   "type": "docker-compose",
-  "tags": ["ai", "governance", "llm", "mcp", "claude", "openai"],
+  "tags": [
+    "ai",
+    "governance",
+    "llm",
+    "mcp",
+    "claude",
+    "openai"
+  ],
   "logo": "https://systemprompt.io/logo.png",
   "documentation": "https://github.com/systempromptio/systemprompt-template/tree/main/docs",
   "minversion": "4.0.0",
-  "compose": "services:\n  postgres:\n    image: postgres:18-alpine\n    environment:\n      POSTGRES_USER: systemprompt\n      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-systemprompt}\n      POSTGRES_DB: systemprompt\n    volumes:\n      - postgres_data:/var/lib/postgresql/data\n    healthcheck:\n      test: [\"CMD-SHELL\", \"pg_isready -U systemprompt -d systemprompt\"]\n      interval: 5s\n      retries: 10\n\n  gateway:\n    image: ghcr.io/systempromptio/systemprompt-template:latest\n    depends_on:\n      postgres:\n        condition: service_healthy\n    environment:\n      DATABASE_URL: postgres://systemprompt:${POSTGRES_PASSWORD:-systemprompt}@postgres:5432/systemprompt\n      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}\n      OPENAI_API_KEY: ${OPENAI_API_KEY}\n      GEMINI_API_KEY: ${GEMINI_API_KEY}\n      HOST: 0.0.0.0\n      PORT: 8080\n    ports:\n      - \"${SERVICE_PORT_GATEWAY:-8080}:8080\"\n    healthcheck:\n      test: [\"CMD\", \"curl\", \"-f\", \"http://localhost:8080/api/v1/health\"]\n      interval: 30s\n      timeout: 10s\n      retries: 3\n\nvolumes:\n  postgres_data:\n"
+  "compose": "services:\n  postgres:\n    image: postgres:18-alpine\n    environment:\n      POSTGRES_USER: systemprompt\n      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-systemprompt}\n      POSTGRES_DB: systemprompt\n    volumes:\n      - postgres_data:/var/lib/postgresql\n    healthcheck:\n      test: [\"CMD-SHELL\", \"pg_isready -U systemprompt -d systemprompt\"]\n      interval: 5s\n      retries: 10\n\n  gateway:\n    image: ghcr.io/systempromptio/systemprompt-template:latest\n    depends_on:\n      postgres:\n        condition: service_healthy\n    environment:\n      DATABASE_URL: postgres://systemprompt:${POSTGRES_PASSWORD:-systemprompt}@postgres:5432/systemprompt\n      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}\n      OPENAI_API_KEY: ${OPENAI_API_KEY}\n      GEMINI_API_KEY: ${GEMINI_API_KEY}\n      HOST: 0.0.0.0\n      PORT: 8080\n    ports:\n      - \"${SERVICE_PORT_GATEWAY:-8080}:8080\"\n    healthcheck:\n      test: [\"CMD\", \"curl\", \"-f\", \"http://localhost:8080/api/v1/health\"]\n      interval: 30s\n      timeout: 10s\n      retries: 3\n\nvolumes:\n  postgres_data:\n"
 }

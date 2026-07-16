@@ -7,7 +7,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-systemprompt}
       POSTGRES_DB: systemprompt
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # postgres:18+ images store data under major-version subdirectories of
+      # /var/lib/postgresql — mounting the old .../data path aborts startup.
+      - postgres_data:/var/lib/postgresql
     ports:
       - "${PG_PORT:-5432}:5432"
     healthcheck:
