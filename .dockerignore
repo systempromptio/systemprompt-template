@@ -10,6 +10,13 @@ storage/data/
 .systemprompt/credentials.json
 .systemprompt/tenants.json
 reports/
+# demo/ ships in the image for the homepage demo catalogue, but only the
+# scanned category dirs with commands that work against a deployed instance.
+# Scenario stacks and recordings are local-only; .token files are live JWTs.
+demo/scenarios/
+demo/recording/
+demo/.token
+demo/.token.user
 docs/
 logs/
 *.log

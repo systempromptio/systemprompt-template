@@ -59,6 +59,9 @@ COPY services /app/services
 COPY storage /app/storage
 COPY migrations /app/migrations
 COPY web /app/web
+# The homepage demo showcase scans <system_root>/demo at runtime; without
+# this the catalogue renders as an empty section.
+COPY demo /app/demo
 # MCP manifests live alongside their extension crates; the runtime validator
 # globs extensions/mcp/*/manifest.yaml to resolve binary -> manifest.
 COPY extensions/mcp /app/extensions/mcp
