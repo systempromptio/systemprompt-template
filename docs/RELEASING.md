@@ -65,7 +65,7 @@ update per release (see docs-internal/testing/digitalocean.md).
 
 ## Retention
 
-`ghcr-prune.yml`: keep the 5 newest release versions; delete `sha-*` tags and
+`ghcr-prune.yml` (needs the `GHCR_PRUNE_TOKEN` secret — classic PAT with read:packages + delete:packages; the Actions token cannot delete org-owned packages): keep the 5 newest release versions; delete `sha-*` tags and
 untagged manifests older than 4 weeks. Alias tags always point at kept
 digests. Dry-run available via workflow dispatch.
 

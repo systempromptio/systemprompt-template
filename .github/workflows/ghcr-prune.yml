@@ -33,11 +33,21 @@ jobs:
     permissions:
       packages: write
     steps:
+      # snok/container-retention-policy cannot delete org-owned package
+      # versions with the Actions GITHUB_TOKEN — it needs a classic PAT
+      # (read:packages + delete:packages) stored as GHCR_PRUNE_TOKEN.
+      - name: Require GHCR_PRUNE_TOKEN
+        run: |
+          if [ -z "${{ secrets.GHCR_PRUNE_TOKEN }}" ]; then
+            echo "::error::secrets.GHCR_PRUNE_TOKEN is not set (classic PAT with read:packages + delete:packages). See docs/RELEASING.md."
+            exit 1
+          fi
+
       - name: Prune old release versions (keep newest 5)
         uses: snok/container-retention-policy@v3.0.0
         with:
           account: systempromptio
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GHCR_PRUNE_TOKEN }}
           image-names: systemprompt-template
           image-tags: "[0-9]*.[0-9]*.[0-9]*"
           tag-selection: tagged
@@ -49,7 +59,7 @@ jobs:
         uses: snok/container-retention-policy@v3.0.0
         with:
           account: systempromptio
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GHCR_PRUNE_TOKEN }}
           image-names: systemprompt-template
           image-tags: "sha-*"
           tag-selection: tagged
@@ -60,7 +70,7 @@ jobs:
         uses: snok/container-retention-policy@v3.0.0
         with:
           account: systempromptio
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GHCR_PRUNE_TOKEN }}
           image-names: systemprompt-template
           tag-selection: untagged
           cut-off: 4w
