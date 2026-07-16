@@ -3,6 +3,7 @@ services:
     name: systemprompt-gateway
     runtime: image
     plan: free
+    autoDeploy: false  # button-deployed instances shouldn't redeploy on every push to this repo
     image:
       url: ghcr.io/systempromptio/systemprompt-template:latest
     healthCheckPath: /api/v1/health
