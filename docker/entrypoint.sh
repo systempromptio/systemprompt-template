@@ -130,15 +130,23 @@ fi
 
 export SYSTEMPROMPT_PROFILE="$PROFILE_FILE"
 
-PG_HOST="${PG_HOST:-postgres}"
-PG_USER="${PG_USER:-systemprompt}"
-PG_DB="${PG_DB:-systemprompt}"
-echo "Waiting for Postgres at ${PG_HOST}..."
+# Probe DATABASE_URL directly when provided (managed Postgres, e.g. Render);
+# fall back to the compose-style host/user/db vars otherwise.
+if [ -n "${DATABASE_URL:-}" ]; then
+    pg_probe() { pg_isready -d "$DATABASE_URL"; }
+    echo "Waiting for Postgres at DATABASE_URL host..."
+else
+    PG_HOST="${PG_HOST:-postgres}"
+    PG_USER="${PG_USER:-systemprompt}"
+    PG_DB="${PG_DB:-systemprompt}"
+    pg_probe() { pg_isready -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB"; }
+    echo "Waiting for Postgres at ${PG_HOST}..."
+fi
 i=0
-until pg_isready -h "$PG_HOST" -U "$PG_USER" -d "$PG_DB" >/dev/null 2>&1; do
+until pg_probe >/dev/null 2>&1; do
     i=$((i + 1))
-    if [ "$i" -ge 60 ]; then
-        echo "ERROR: Postgres did not become ready within 60s." >&2
+    if [ "$i" -ge 300 ]; then
+        echo "ERROR: Postgres did not become ready within 300s." >&2
         exit 1
     fi
     sleep 1
