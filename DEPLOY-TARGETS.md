@@ -120,19 +120,21 @@ GitHub release notes now carry the full deploy-target matrix (templated in
 - **Promote:** publishing IS the listing (instant). Paste the share URL into
   `docs/install/zeabur.md` + README; request "featured" review once verified.
 
-## 9. Northflank — VERIFIED E2E, share link + listing email pending (Ed)
+## 9. Northflank — LIVE (share link published), stacks listing email pending (Ed)
 
-- **Status:** verified e2e 2026-07-16 via their API on Ed's team: template
-  `systemprompt` created, run converged (project + postgresql addon +
-  gateway + secret group + volume all green), health 200 and admin UI served
-  on the generated `code.run` domain. Live-run fixes now in
-  `deploy/northflank/template.json`: `POSTGRES_URI_ADMIN` (the non-admin
-  addon user cannot CREATE SCHEMA), `successThreshold` required on
-  readinessProbe, no `storageClass` (feature-flagged), `nf-compute-20`
-  plans (free-tier allowance), volume >= 6144MB (nvme minimum), no em
+- **Status:** verified e2e 2026-07-16 via their API (clean-slate re-run of the
+  final artifact: full workflow green, health 200 in ~2 min). Template
+  `systemprompt-io` on Ed's team; one-click share link published in README +
+  docs/install/northflank.md:
+  `https://app.northflank.com/s/account/templates/new?data=6a58eb70982d53bd314abce3`.
+  Live-run fixes in `deploy/northflank/template.json`: `POSTGRES_URI_ADMIN`
+  (the non-admin addon user cannot CREATE SCHEMA), `successThreshold`
+  required on readinessProbe, no `storageClass` (feature-flagged),
+  `nf-compute-20` plans (free-tier allowance), volume >= 6144MB (nvme
+  minimum), profiles mount `/app/.systemprompt/profiles/docker`, no em
   dashes in `description` (charset-validated). Findings + listing email
   draft in `docs-internal/testing/northflank.md`.
-- **Test (re-run):** `POST /v1/templates/systemprompt/runs` with
+- **Test (re-run):** `POST /v1/templates/systemprompt-io/runs` with
   `NORTHFLANK_TOKEN` from `.env.secrets`, then health on
   `https://web--gateway--<ns>.code.run/api/v1/health`.
 - **Promote:** the saved template yields a shareable one-click deploy link
