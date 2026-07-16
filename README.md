@@ -6,17 +6,19 @@
   <img src="https://systemprompt.io/files/images/logo-dark.svg" alt="systemprompt.io" width="380">
 </picture>
 
-# Own how your organization uses AI.
+# The self-owned AI control plane.
 
-One self-hosted binary governs inference, auditing, evals, and every tool call across your AI fleet. Native integration with Claude Bridge. Works with any agent, any model, any provider.
+Run and manage every model, agent, and tool call your enterprise makes, on infrastructure you own. One self-hosted binary governs inference, auditing, evals, and every tool call across your AI fleet. Native integration with Claude Bridge. Works with any agent, any model, any provider.
 
-This repository is the evaluation template: clone it, compile it, point Claude for Work, Claude Code, or any Anthropic-SDK client at `http://localhost:8080`, and every request lands on a host you operate — on your network, in your air-gap, under your audit table. Single Rust binary, one PostgreSQL, four commands from `git clone` to serving inference. Built for SOC 2, ISO 27001, HIPAA, and the OWASP Agentic Top 10.
+Most teams rent this layer: a dashboard on someone else's infrastructure sits between your engineers and your models, holding your prompts, your keys, and your audit trail. This repository is the alternative you compile and keep. Clone it, build it, point Claude for Work, Claude Code, or any Anthropic-SDK client at `http://localhost:8080`, and every request lands on a host you operate: on your network, in your air-gap, under your audit table. Single Rust binary, one PostgreSQL, four commands from `git clone` to serving inference. Built for SOC 2, ISO 27001, HIPAA, and the OWASP Agentic Top 10.
 
 [![Built on systemprompt-core](https://img.shields.io/badge/built%20on-systemprompt--core-2b6cb0?style=flat-square)](https://github.com/systempromptio/systemprompt-core)
 [![Template · MIT](https://img.shields.io/badge/template-MIT-16a34a?style=flat-square)](LICENSE)
 [![Core · BSL--1.1](https://img.shields.io/badge/core-BSL--1.1-2b6cb0?style=flat-square)](https://github.com/systempromptio/systemprompt-core/blob/main/LICENSE)
 [![Rust 1.75+](https://img.shields.io/badge/rust-1.75+-f97316?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![PostgreSQL 18+](https://img.shields.io/badge/postgres-18+-336791?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/systempromptio-the-self-owned-ai-control?referralCode=AQ_ePp&utm_medium=integration&utm_source=template&utm_campaign=generic) &nbsp; [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/systempromptio/systemprompt-template) &nbsp; <sub>[all install paths →](docs/README.md)</sub>
 
 [**systemprompt.io**](https://systemprompt.io) · [**Documentation**](https://systemprompt.io/documentation/) · [**Guides**](https://systemprompt.io/guides) · [**Enterprise factsheet (PDF)**](https://systemprompt.io/files/documents/systemprompt-io-enterprise-factsheet.pdf) · [**Discord**](https://discord.gg/wkAbSuPWpr)
 

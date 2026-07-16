@@ -96,3 +96,17 @@ jobs:
           echo "gateway never became healthy"
           docker compose -f compose-test.yml -p smoke logs --tail 50
           exit 1
+
+  railway-template:
+    name: Railway template published
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify the one-click template still resolves as PUBLISHED
+        run: |
+          status=$(curl -sf https://backboard.railway.com/graphql/v2 \
+            -H 'content-type: application/json' \
+            -d '{"query":"query { template(code: \"systempromptio-the-self-owned-ai-control\") { status } }"}' \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['template']['status'])")
+          echo "template status: ${status}"
+          test "${status}" = "PUBLISHED"
