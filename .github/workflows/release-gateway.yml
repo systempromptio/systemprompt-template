@@ -81,6 +81,13 @@ jobs:
             Select-Object -First 1 -ExpandProperty FullName
           if (-not $dir) { throw "OpenSSL install directory not found" }
           Add-Content $env:GITHUB_ENV "OPENSSL_DIR=$dir"
+          # choco's OpenSSL 3 ships MSVC import libs under lib\VC\x64\MD,
+          # which openssl-sys does not probe on its own.
+          $libdir = Join-Path $dir 'lib\VC\x64\MD'
+          if (Test-Path $libdir) {
+            Add-Content $env:GITHUB_ENV "OPENSSL_LIB_DIR=$libdir"
+            Add-Content $env:GITHUB_ENV "OPENSSL_INCLUDE_DIR=$(Join-Path $dir 'include')"
+          }
           Add-Content $env:GITHUB_PATH 'C:\Program Files\NASM'
 
       - name: Build (cross)
