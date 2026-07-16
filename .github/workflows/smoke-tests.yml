@@ -59,6 +59,9 @@ jobs:
     steps:
       - run: |
           brew tap systempromptio/tap
+          # Newer brew refuses formulae from untrusted third-party taps;
+          # older brew has no trust subcommand — hence the fallback.
+          brew trust systempromptio/tap || true
           brew install gateway
           systemprompt --version
 

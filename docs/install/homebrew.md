@@ -8,6 +8,7 @@ Uses the [`systempromptio/tap`](https://github.com/systempromptio/homebrew-tap) 
 
 ```bash
 brew tap systempromptio/tap
+brew trust systempromptio/tap   # newer brew gates third-party taps; skip on older versions
 brew install gateway
 ```
 

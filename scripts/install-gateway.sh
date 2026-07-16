@@ -85,7 +85,12 @@ curl -fsSL "${base}/${tarball}" -o "${tmp}/${tarball}"
 curl -fsSL "${base}/SHA256SUMS.gateway" -o "${tmp}/SHA256SUMS.gateway"
 
 log "verifying SHA256..."
-(cd "$tmp" && grep " ${tarball}$" SHA256SUMS.gateway | sha256sum -c -)
+# macOS ships shasum, not GNU sha256sum (BSD vs GNU portability rule).
+if command -v sha256sum >/dev/null 2>&1; then
+  (cd "$tmp" && grep " ${tarball}$" SHA256SUMS.gateway | sha256sum -c -)
+else
+  (cd "$tmp" && grep " ${tarball}$" SHA256SUMS.gateway | shasum -a 256 -c -)
+fi
 
 if [ "$VERIFY_COSIGN" = "true" ]; then
   need cosign
