@@ -93,4 +93,5 @@ with the `GHCR_PRUNE_TOKEN`.
 - [ ] one catalog deploy pulls the new version (e.g. `deploy/compose/one-click.docker-compose.yml`, which floats on `:0`)
 - [ ] `ghcr-prune` ran clean; expected old versions removed
 - [ ] rebuild + resubmit the DigitalOcean marketplace image (when listed)
+- [ ] release notes deploy matrix matches [docs/README.md](README.md) channel table (templates live in `.github/workflows/release-gateway.yml` and `release.yml`)
 - [ ] update docs-internal/STATE.md release row

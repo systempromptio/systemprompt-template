@@ -81,28 +81,40 @@ jobs:
 
       - name: Generate release notes
         id: notes
+        # Gateway deploy-target matrix lives in docs/README.md (canonical) and in
+        # release-gateway.yml's notes — don't duplicate the full table here.
         run: |
           cat > notes.md <<'EOF'
           # systemprompt-bridge ${{ steps.tags.outputs.template_tag }}
 
-          **Client install bundle for macOS + Windows + Linux.** Installs the
-          `systemprompt-bridge` agent on a developer workstation. The bridge talks
-          to a running **systemprompt-gateway** for device auth + code-worktree
-          operations.
+          **The workstation agent for the self-owned AI control plane.**
+          The bridge connects developer machines and Claude Desktop to a governed
+          **systemprompt-gateway**: device auth, code-worktree operations, and a
+          native GUI on macOS and Windows. Every request it routes is
+          authenticated, authorized, rate-limited, audited, and costed by the
+          gateway it points at, so your team keeps using the tools they already
+          have while you keep the evidence.
 
-          > Looking for the **gateway** server (to deploy into Kubernetes / Docker /
-          > a Linux VM / PaaS)? It's a separate product published under `v*` tags —
-          > see [latest gateway release](https://github.com/systempromptio/systemprompt-template/releases?q=%22systemprompt-gateway%22).
+          > Looking for the **gateway** server? It's a separate product published
+          > under `v*` tags with 15+ one-click deploy targets (Docker, Helm,
+          > Railway, Render, Coolify, and more): see the
+          > [latest gateway release](https://github.com/systempromptio/systemprompt-template/releases?q=%22systemprompt-gateway%22)
+          > and the [full deploy matrix](https://github.com/systempromptio/systemprompt-template/blob/main/docs/README.md).
 
-          ## What's in this release
+          ## Platforms
 
           Bundles bridge binaries from [systempromptio/systemprompt-core](https://github.com/systempromptio/systemprompt-core):
-          - Linux x86_64, Windows x86_64, macOS aarch64 (cosign-signed) — [${{ steps.tags.outputs.bridge_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.bridge_tag }})
+          Linux x86_64, Windows x86_64, macOS aarch64, all cosign-signed —
+          upstream release [${{ steps.tags.outputs.bridge_tag }}](https://github.com/systempromptio/systemprompt-core/releases/tag/${{ steps.tags.outputs.bridge_tag }}).
 
           ## Install
 
-          See [docs/cowork/install-macos.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/cowork/install-macos.md)
-          and [docs/cowork/install-windows.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/cowork/install-windows.md).
+          - Homebrew (macOS): `brew install systempromptio/tap/bridge`
+          - Scoop (Windows): [docs/cowork/scoop.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/cowork/scoop.md)
+          - Manual: [macOS](https://github.com/systempromptio/systemprompt-template/blob/main/docs/cowork/install-macos.md) ·
+            [Windows](https://github.com/systempromptio/systemprompt-template/blob/main/docs/cowork/install-windows.md) ·
+            [Linux / headless Claude Code](https://github.com/systempromptio/systemprompt-template/blob/main/docs/cowork/claude-code-linux.md)
+          - GUI tour and setup wizard: [docs/cowork/desktop-app.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/cowork/desktop-app.md)
 
           ## Verify
 
@@ -119,6 +131,13 @@ jobs:
 
           `SHA256SUMS.bridge` is also signed. See `bin/bridge/CHANGELOG.md` in
           systemprompt-core for the bridge changelog.
+
+          ---
+
+          [systemprompt.io](https://systemprompt.io) ·
+          [Documentation](https://github.com/systempromptio/systemprompt-template/blob/main/docs/README.md) ·
+          [Discord](https://discord.gg/wkAbSuPWpr) ·
+          [Gateway releases](https://github.com/systempromptio/systemprompt-template/releases?q=%22systemprompt-gateway%22)
           EOF
 
       - name: Create or update template release

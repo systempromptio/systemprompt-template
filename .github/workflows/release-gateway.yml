@@ -147,6 +147,9 @@ jobs:
           else
             echo "template_tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
+          tag="${{ inputs.tag }}"
+          tag="${tag:-${GITHUB_REF_NAME}}"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/download-artifact@v4
         with:
@@ -180,30 +183,80 @@ jobs:
             SHA256SUMS.gateway
 
       - name: Generate release notes
+        # Deploy-target matrix below mirrors the canonical channel table in
+        # docs/README.md — keep the two in sync (see docs/RELEASING.md checklist).
         run: |
           cat > notes.md <<'EOF'
           # systemprompt-gateway ${{ steps.tags.outputs.template_tag }}
 
-          **Server-side AI governance gateway.** Deploy via Docker / GHCR / Helm / PaaS,
-          or install natively from the platform archives below.
+          **The self-owned AI control plane.** systemprompt is a single self-hosted
+          binary that puts every AI interaction in your organisation behind
+          governance you can prove: authenticated, authorized, rate-limited,
+          audited, and costed, with the evidence in your own Postgres. Point any
+          Anthropic-SDK client at it and every inference call and MCP tool call
+          lands in the same audit spine, traceable from identity to cost.
+
+          ## What you get
+
+          An AI gateway with a four-stage governance pipeline on every tool call
+          (scope check, secret scan, blocklist, rate limit), an admin UI, MCP
+          server orchestration, and a Postgres-backed audit spine linking
+          identity, agent, tool, result, and cost under one trace id. Ships as
+          one binary plus your database. It is a library you own and extend, not
+          a SaaS you rent.
 
           > Looking for the **bridge** client (macOS / Windows / Linux developer
-          > workstations)? It ships under the separate `bridge-v*` tag series —
-          > see [latest bridge release](https://github.com/systempromptio/systemprompt-template/releases?q=%22systemprompt-bridge%22).
+          > workstations)? It ships under the separate `bridge-v*` tag series:
+          > [latest bridge release](https://github.com/systempromptio/systemprompt-template/releases?q=%22systemprompt-bridge%22).
 
-          ## Install
+          ## Deploy anywhere
+
+          Quickest start:
+
+          ```
+          docker run -d -p 8080:8080 \
+            -e DATABASE_URL=postgres://... \
+            -e ANTHROPIC_API_KEY=sk-ant-... \
+            ghcr.io/systempromptio/systemprompt-template:${{ steps.tags.outputs.version }}
+          ```
+
+          Every channel below is a copy-paste recipe. Canonical matrix:
+          [docs/README.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/README.md).
+
+          | Channel | Recipe | Best for |
+          |---|---|---|
+          | Docker / GHCR | [install/ghcr.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/ghcr.md) | Any Docker host |
+          | docker-compose | [one-click compose](https://github.com/systempromptio/systemprompt-template/blob/main/deploy/compose/one-click.docker-compose.yml) | Single host, bundled Postgres |
+          | Helm chart | [install/helm.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/helm.md) · [Artifact Hub](https://artifacthub.io/packages/helm/systemprompt/gateway) | Kubernetes |
+          | Railway | [install/railway.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/railway.md) · [Deploy on Railway](https://railway.com/deploy/systempromptio-the-self-owned-ai-control?referralCode=AQ_ePp&utm_medium=integration&utm_source=template&utm_campaign=generic) | Railway PaaS |
+          | Render | [install/render.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/render.md) · [Deploy to Render](https://render.com/deploy?repo=https://github.com/systempromptio/systemprompt-template) | Render PaaS |
+          | Coolify | [install/coolify.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/coolify.md) | Coolify self-host |
+          | Dokploy | [install/dokploy.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/dokploy.md) | Dokploy self-host |
+          | Portainer | [install/portainer.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/portainer.md) | Portainer stacks |
+          | CapRover | [install/caprover.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/caprover.md) | CapRover self-host |
+          | CasaOS | [install/casaos.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/casaos.md) | Home lab |
+          | Zeabur | [install/zeabur.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/zeabur.md) | Zeabur PaaS |
+          | Northflank | [install/northflank.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/northflank.md) | Northflank PaaS |
+          | DigitalOcean 1-Click | [install/digitalocean.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/digitalocean.md) (marketplace listing coming soon) | Single-VM droplet |
+          | Binary (`curl \| sh`) | [install/binary.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/binary.md) | Bare metal, VMs |
+          | Homebrew | [install/homebrew.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/homebrew.md) | macOS servers / dev |
+          | Nix flake | [install/nix.md](https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/nix.md) | NixOS / Nix |
+
+          ## Image tags
+
+          - `:${{ steps.tags.outputs.version }}` is immutable; the floating major
+            and minor tags track it.
+          - `:latest` moves only on releases (never on main; `:edge` tracks main).
+          - Multi-arch (linux/amd64 + linux/arm64), cosign-signed.
+
+          ## Install natively
 
           - Homebrew: `brew tap systempromptio/tap && brew install gateway`
-          - Manual: download `systemprompt-gateway-<version>-<target>.tar.gz`,
-            verify against `SHA256SUMS.gateway`, extract.
-
-          ## Gateway archives (this release)
-
-          `linux-amd64`, `linux-arm64`, `darwin-arm64` tarballs. (No native
-          Windows build — run the gateway via Docker on Windows.)
-
-          Contents: `systemprompt`, `systemprompt-mcp-agent`,
-          `services/`, `migrations/`, `web/`.
+          - Manual: download `systemprompt-gateway-<version>-<target>.tar.gz`
+            (`linux-amd64`, `linux-arm64`, `darwin-arm64`; on Windows run the
+            gateway via Docker), verify against `SHA256SUMS.gateway`, extract.
+            Contents: `systemprompt`, `systemprompt-mcp-agent`, `services/`,
+            `migrations/`, `web/`.
 
           ## Verify signature
 
@@ -215,6 +268,13 @@ jobs:
             --certificate SHA256SUMS.gateway.pem \
             SHA256SUMS.gateway
           ```
+
+          ---
+
+          [systemprompt.io](https://systemprompt.io) ·
+          [Documentation](https://github.com/systempromptio/systemprompt-template/blob/main/docs/README.md) ·
+          [Discord](https://discord.gg/wkAbSuPWpr) ·
+          [Bridge releases](https://github.com/systempromptio/systemprompt-template/releases?q=%22systemprompt-bridge%22)
           EOF
 
       - name: Create or update release

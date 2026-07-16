@@ -6,6 +6,10 @@ Snapshot 2026-07-16 (v0.21.0 release day). Detailed runbooks:
 `docs-internal/testing/<platform>.md`; consolidated human actions:
 `docs-internal/HUMAN-ACTIONS.md` (Sections E/F).
 
+GitHub release notes now carry the full deploy-target matrix (templated in
+`.github/workflows/release-gateway.yml`); the canonical channel table stays in
+`docs/README.md`.
+
 > **Gate:** the catalog templates pin `:0` / `:0.21.0`. Those tags exist only
 > once the v0.21.0 multi-arch image build completes — verify with
 > `docker manifest inspect ghcr.io/systempromptio/systemprompt-template:0.21.0`
