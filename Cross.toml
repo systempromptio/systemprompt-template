@@ -1,0 +1,29 @@
+# cross-rs configuration for release builds.
+#
+# Use `:edge` images (Ubuntu 20.04). Default `:main` is Xenial (16.04) which
+# ships OpenSSL 1.0.2, incompatible with openssl-sys 0.9.x. Focal has
+# OpenSSL 1.1.1.
+#
+# aws-lc-sys rejects Focal's gcc 9 as "buggy" (gcc bug 95189 false positive),
+# so we force the C compiler to clang — both installed in pre-build.
+
+[build.env]
+passthrough = [
+    "SQLX_OFFLINE",
+    "HOST_CC",
+    "HOST_CXX",
+    "CC_x86_64_unknown_linux_gnu",
+    "CXX_x86_64_unknown_linux_gnu",
+]
+
+[target.x86_64-unknown-linux-gnu]
+image = "ghcr.io/cross-rs/x86_64-unknown-linux-gnu:edge"
+pre-build = [
+    "apt-get update && apt-get install --assume-yes clang pkg-config libssl-dev libpq-dev",
+]
+
+[target.aarch64-unknown-linux-gnu]
+image = "ghcr.io/cross-rs/aarch64-unknown-linux-gnu:edge"
+pre-build = [
+    "apt-get update && apt-get install --assume-yes clang pkg-config libssl-dev libpq-dev",
+]
