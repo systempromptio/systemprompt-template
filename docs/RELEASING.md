@@ -69,6 +69,14 @@ update per release (see docs-internal/testing/digitalocean.md).
 untagged manifests older than 4 weeks. Alias tags always point at kept
 digests. Dry-run available via workflow dispatch.
 
+Nuance: a version still carrying an alias tag (`X.Y` or `X`) is not matched
+by the three-part filter and therefore never pruned — by design, since
+deleting it would break the alias. Only versions left with a bare `X.Y.Z`
+tag (aliases moved on) enter the keep-5 window. Fully dead lines (e.g. the
+pre-lockstep 0.4/0.5 era) are removed by hand:
+`DELETE /orgs/systempromptio/packages/container/systemprompt-template/versions/<id>`
+with the `GHCR_PRUNE_TOKEN`.
+
 ## Rollback
 
 1. Re-point `latest` to the previous good release:
