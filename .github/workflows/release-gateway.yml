@@ -69,7 +69,12 @@ jobs:
 
       - name: Install build deps (linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get -o Acquire::Retries=5 install -y clang pkg-config libssl-dev libpq-dev
+        run: |
+          # The arm runner image points apt at ports.ubuntu.com, which is
+          # unreachable from Azure-hosted runners — swap to the Azure mirror.
+          sudo sed -i 's|http://ports.ubuntu.com/ubuntu-ports|http://azure.ports.ubuntu.com/ubuntu-ports|g' /etc/apt/sources.list $(ls /etc/apt/sources.list.d/*.list 2>/dev/null) 2>/dev/null || true
+          sudo apt-get update
+          sudo apt-get -o Acquire::Retries=5 install -y clang pkg-config libssl-dev libpq-dev
 
       - name: Build
         shell: bash
