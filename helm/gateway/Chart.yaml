@@ -2,8 +2,8 @@ apiVersion: v2
 name: gateway
 description: The governance layer for AI agents — a single compiled Rust binary that authenticates, authorises, rate-limits, logs, and costs every AI interaction. Self-hosted, air-gap capable, provider-agnostic.
 type: application
-version: 0.2.0
-appVersion: "0.4.0"
+version: 0.2.1
+appVersion: "0.5.0"
 kubeVersion: ">=1.24.0"
 home: https://systemprompt.io
 icon: https://systemprompt.io/files/images/logo.svg
