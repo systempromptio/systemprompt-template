@@ -4,7 +4,7 @@ Deploys the `systemprompt-gateway` server on [Coolify](https://coolify.io), a se
 
 ## Install (docker-compose service)
 
-A community-template listing is submitted upstream ([coollabsio/coolify#10956](https://github.com/coollabsio/coolify/pull/10956)); until it ships in your Coolify version, paste the compose in directly:
+Paste the compose in directly:
 
 1. Open your Coolify dashboard → **Services** → **New Service** → **Docker Compose**.
 2. Paste the compose from [`deploy/coolify/service-template.json`](https://github.com/systempromptio/systemprompt-template/blob/main/deploy/coolify/service-template.json) (the `compose` field), or use [`docker-compose.yml`](https://github.com/systempromptio/systemprompt-template/blob/main/docker-compose.yml) from the repo root with `build: .` swapped for `image: ghcr.io/systempromptio/systemprompt-template:latest`.
