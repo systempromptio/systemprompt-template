@@ -37,22 +37,24 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Linux builds run natively on 22.04 runners (amd64 + GitHub's arm64
+          # runners) instead of cross containers: cross :edge images moved to
+          # Ubuntu 24.04, stamping a glibc 2.39 floor into the binaries that
+          # broke every distro older than 24.04 (including Linuxbrew's image).
+          # Native 22.04 gives a glibc 2.35 floor.
           - target: x86_64-unknown-linux-gnu
             name: linux-amd64
-            os: ubuntu-latest
-            use_cross: true
+            os: ubuntu-22.04
             archive: tar.gz
           - target: aarch64-unknown-linux-gnu
             name: linux-arm64
-            os: ubuntu-latest
-            use_cross: true
+            os: ubuntu-22.04-arm
             archive: tar.gz
           # x86_64-apple-darwin dropped upstream — macos-13 runner queues were
           # unusable. Apple-silicon only until GH Intel-mac capacity improves.
           - target: aarch64-apple-darwin
             name: darwin-arm64
             os: macos-14
-            use_cross: false
             archive: tar.gz
           # x86_64-pc-windows-msvc deferred: core's process/signal/daemon layer
           # is Unix-only (~21 files use nix/std::os::unix) — a native Windows
@@ -65,31 +67,18 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install cross
-        if: matrix.use_cross
-        run: cargo install cross --locked
+      - name: Install build deps (linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang pkg-config libssl-dev libpq-dev
 
-      - name: Build (cross)
-        if: matrix.use_cross
-        env:
-          SQLX_OFFLINE: "true"
-          # aws-lc-sys's gcc-bug-95189 detector trips on Focal's host gcc 9 —
-          # force HOST_CC=clang so build-script checks pass. Only override the
-          # x86_64 target CC (same host arch; same gcc); leave aarch64 target CC
-          # as the default cross-gcc so clang doesn't hunt for aarch64 libc
-          # headers it can't find.
-          HOST_CC: clang
-          HOST_CXX: clang++
-          CC_x86_64_unknown_linux_gnu: clang
-          CXX_x86_64_unknown_linux_gnu: clang++
-          PKG_CONFIG_ALLOW_CROSS: "1"
-        run: cross build --release --workspace --target ${{ matrix.target }}
-
-      - name: Build (native)
-        if: ${{ !matrix.use_cross }}
+      - name: Build
         shell: bash
         env:
           SQLX_OFFLINE: "true"
+          # aws-lc-sys rejects older gcc (bug 95189 false positive) — use clang
+          # everywhere this repo compiles C, mirroring the justfile build recipe.
+          CC: clang
+          CXX: clang++
         run: cargo build --release --workspace --target ${{ matrix.target }}
 
       - name: Stage artefacts
