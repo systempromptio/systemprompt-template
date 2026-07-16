@@ -44,14 +44,18 @@ GitHub release notes now carry the full deploy-target matrix (templated in
   release; then Discord showcase + X post tagging @coolifyio (drafts agreed,
   Ed posts).
 
-## 4. Dokploy — ASSETS READY, not submitted
+## 4. Dokploy — VERIFIED, awaiting submission
 
-- **Status:** `deploy/dokploy/` (compose + template.toml) drafted; untested on
-  a real Dokploy install.
-- **Test:** 2GB VPS → `curl -sSL https://dokploy.com/install.sh | sh` →
-  project → Create Service → Template → Import (base64 of the two files), or
-  a Compose service with manual env + domain on gateway:8080 → real key →
-  ~5 min → `/api/v1/health`.
+- **Status:** verified e2e 2026-07-16 on a fresh Dokploy install (2GB VM):
+  base64 import → HTTPS on domain → deploy → health 200 → `/v1/messages` 200
+  with audit rows. `deploy/dokploy/` now also ships `instructions.md`
+  (HTTPS-required + provider-key notes). `generate-meta.js --check` passes
+  with the blueprint in place. PR payload + description ready for Ed.
+- **Test (re-run):** 2GB VPS → `curl -sSL https://dokploy.com/install.sh | sh`
+  → project → Create Service → Template → Import (base64 of compose +
+  template.toml) → set a real key → **enable HTTPS on the domain** (app
+  refuses http CORS origins; restart-loops otherwise) → ~5 min →
+  `/api/v1/health`. Full runbook: `docs-internal/testing/dokploy.md`.
 - **Promote:** PR to `Dokploy/templates` (`blueprints/systemprompt/` + meta
   registration per their AGENTS.md). Each PR gets an automatic preview deploy.
 
