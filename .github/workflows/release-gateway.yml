@@ -96,6 +96,7 @@ jobs:
           HOST_CXX: clang++
           CC_x86_64_unknown_linux_gnu: clang
           CXX_x86_64_unknown_linux_gnu: clang++
+          PKG_CONFIG_ALLOW_CROSS: "1"
         run: cross build --release --workspace --target ${{ matrix.target }}
 
       - name: Build (native)

@@ -14,6 +14,7 @@ passthrough = [
     "HOST_CXX",
     "CC_x86_64_unknown_linux_gnu",
     "CXX_x86_64_unknown_linux_gnu",
+    "PKG_CONFIG_ALLOW_CROSS",
 ]
 
 [target.x86_64-unknown-linux-gnu]
@@ -22,8 +23,12 @@ pre-build = [
     "apt-get update && apt-get install --assume-yes clang pkg-config libssl-dev libpq-dev",
 ]
 
+# The aarch64 container is an amd64 rootfs with a cross toolchain — plain
+# libssl-dev/libpq-dev would install amd64 libraries openssl-sys can't link.
+# Install the target-arch variants via dpkg foreign-architecture instead.
 [target.aarch64-unknown-linux-gnu]
 image = "ghcr.io/cross-rs/aarch64-unknown-linux-gnu:edge"
 pre-build = [
-    "apt-get update && apt-get install --assume-yes clang pkg-config libssl-dev libpq-dev",
+    "dpkg --add-architecture $CROSS_DEB_ARCH",
+    "apt-get update && apt-get install --assume-yes clang pkg-config libssl-dev:$CROSS_DEB_ARCH libpq-dev:$CROSS_DEB_ARCH",
 ]
