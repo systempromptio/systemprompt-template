@@ -40,8 +40,8 @@ everything is automatic:
 
 | Workflow | Trigger | Produces |
 |---|---|---|
-| `docker.yml` | tag push | multi-arch (amd64+arm64) image, tags `X.Y.Z`/`X.Y`/`X`/`latest`, cosign-signed |
 | `release-gateway.yml` | tag push | binary tarballs + SHA256SUMS + cosign sig on a GH Release; Homebrew formula bump |
+| `docker.yml` | release published (not tag push — a paths-filtered push trigger never matches tags) | multi-arch (amd64+arm64) image, tags `X.Y.Z`/`X.Y`/`X`/`latest`, cosign-signed |
 | `helm.yml` | release published | chart packaged and pushed to charts.systemprompt.io |
 | `smoke-tests.yml` | release published | install-channel smokes + `release-tags` (all tags one digest, both arches, signature verifies) + `helm-release` (chart serves the new appVersion) |
 | `ghcr-prune.yml` | after Docker succeeds on a tag + weekly | retention (below) |
