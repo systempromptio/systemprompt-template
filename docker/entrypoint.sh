@@ -1,10 +1,10 @@
 #!/bin/sh
 # Container entrypoint for systemprompt-template.
-# Generates profile + secrets from env vars on first boot,
+# Authors a profile via `systemprompt admin setup` on first boot,
 # waits for Postgres, runs migrations, starts the server.
 set -eu
 
-PROFILE_DIR="${SYSTEMPROMPT_PROFILE_DIR:-/app/services/profiles/docker}"
+PROFILE_DIR="${SYSTEMPROMPT_PROFILE_DIR:-/app/.systemprompt/profiles/docker}"
 PROFILE_FILE="$PROFILE_DIR/profile.yaml"
 SECRETS_FILE="$PROFILE_DIR/secrets.json"
 
@@ -24,107 +24,38 @@ else
         echo "ERROR: set at least one of ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY in .env" >&2
         exit 1
     fi
-
-    mkdir -p "$PROFILE_DIR"
+    if [ -z "${DATABASE_URL:-}" ]; then
+        echo "ERROR: DATABASE_URL is required." >&2
+        exit 1
+    fi
 
     if [ ! -f "$PROFILE_FILE" ]; then
-        echo "Writing profile.yaml..."
-        cat > "$PROFILE_FILE" <<YAML
-name: docker
-display_name: Docker
-target: local
-site:
-  name: systemprompt.io
-  github_link: null
-database:
-  type: postgres
-  external_db_access: false
-server:
-  host: 0.0.0.0
-  port: 8080
-  api_server_url: http://localhost:${HTTP_PORT:-8080}
-  api_internal_url: http://localhost:8080
-  api_external_url: http://localhost:${HTTP_PORT:-8080}
-  use_https: false
-  cors_allowed_origins:
-  - http://localhost:${HTTP_PORT:-8080}
-paths:
-  system: /app
-  services: /app/services
-  bin: /app/bin
-  web_path: /app/web
-  storage: /app/storage
-  geoip_database: null
-security:
-  jwt_issuer: systemprompt-docker
-  jwt_access_token_expiration: 2592000
-  jwt_refresh_token_expiration: 15552000
-  jwt_audiences: [web, api, a2a, mcp]
-rate_limits:
-  disabled: true
-  oauth_public_per_second: 10
-  oauth_auth_per_second: 10
-  contexts_per_second: 100
-  tasks_per_second: 50
-  artifacts_per_second: 50
-  agent_registry_per_second: 50
-  agents_per_second: 20
-  mcp_registry_per_second: 50
-  mcp_per_second: 200
-  stream_per_second: 100
-  content_per_second: 50
-  burst_multiplier: 3
-  tier_multipliers:
-    admin: 10.0
-    user: 1.0
-    a2a: 5.0
-    mcp: 5.0
-    service: 5.0
-    anon: 0.5
-runtime:
-  environment: development
-  log_level: verbose
-  output_format: text
-  no_color: false
-  non_interactive: true
-cloud:
-  tenant_id: null
-  validation: warn
-secrets:
-  secrets_path: ./secrets.json
-  validation: warn
-  source: file
-extensions:
-  disabled: []
-gateway:
-  enabled: true
-  routes:
-    - model_pattern: "claude-*"
-      provider: anthropic
-    - model_pattern: "gpt-*"
-      provider: openai
-    - model_pattern: "gemini-*"
-      provider: gemini
-YAML
-fi
+        echo "Generating profile via admin setup..."
+        # Default provider = first configured key (setup picks up the
+        # ANTHROPIC/OPENAI/GEMINI_API_KEY env vars itself).
+        if [ -n "${ANTHROPIC_API_KEY:-}" ]; then DEFAULT_PROVIDER=anthropic
+        elif [ -n "${OPENAI_API_KEY:-}" ]; then DEFAULT_PROVIDER=openai
+        else DEFAULT_PROVIDER=gemini
+        fi
+        /app/bin/systemprompt admin setup -e docker \
+            --default-provider "$DEFAULT_PROVIDER" --yes --no-migrate
 
-if [ ! -f "$SECRETS_FILE" ]; then
-    echo "Writing secrets.json..."
-    JWT_SECRET="${JWT_SECRET:-$(head -c 48 /dev/urandom | base64 | tr -d '+/=' | head -c 64)}"
-    jq -n \
-        --arg jwt "$JWT_SECRET" \
-        --arg db "${DATABASE_URL}" \
-        --arg anthropic "${ANTHROPIC_API_KEY:-}" \
-        --arg openai "${OPENAI_API_KEY:-}" \
-        --arg gemini "${GEMINI_API_KEY:-}" \
-        '{
-            jwt_secret: $jwt,
-            database_url: $db,
-            anthropic: (if $anthropic == "" then null else $anthropic end),
-            openai:    (if $openai    == "" then null else $openai    end),
-            gemini:    (if $gemini    == "" then null else $gemini    end)
-        }' > "$SECRETS_FILE"
-    chmod 600 "$SECRETS_FILE"
+        # Setup authors a localhost dev profile; patch the parts the
+        # container environment dictates.
+        # 1. Bind publicly (Render/compose port detection needs 0.0.0.0).
+        sed -i 's/^  host: 127\.0\.0\.1$/  host: 0.0.0.0/' "$PROFILE_FILE"
+        # 1b. Binaries ship in /app/bin, not a cargo target dir.
+        sed -i 's|^  bin: .*|  bin: /app/bin|' "$PROFILE_FILE"
+        # 2. Point at the real database, not setup's generated localhost one.
+        jq --arg db "$DATABASE_URL" '.database_url = $db' "$SECRETS_FILE" \
+            > "$SECRETS_FILE.tmp" && mv "$SECRETS_FILE.tmp" "$SECRETS_FILE"
+        chmod 600 "$SECRETS_FILE"
+        # 3. Advertise the public URL when the platform provides one
+        #    (Render sets RENDER_EXTERNAL_URL).
+        if [ -n "${RENDER_EXTERNAL_URL:-}" ]; then
+            sed -i "s|^  api_external_url: .*|  api_external_url: ${RENDER_EXTERNAL_URL}|" "$PROFILE_FILE"
+            sed -i "/^  cors_allowed_origins:/a\\  - ${RENDER_EXTERNAL_URL}" "$PROFILE_FILE"
+        fi
     fi
 fi
 
@@ -152,6 +83,11 @@ until pg_probe >/dev/null 2>&1; do
     sleep 1
 done
 echo "Postgres is ready."
+
+if [ ! -f /app/signing_key.pem ]; then
+    echo "Generating signing key..."
+    /app/bin/systemprompt admin keys generate --output /app/signing_key.pem
+fi
 
 echo "Running database migrations..."
 /app/bin/systemprompt infra db migrate
