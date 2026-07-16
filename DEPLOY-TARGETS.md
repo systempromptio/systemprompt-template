@@ -137,9 +137,11 @@ GitHub release notes now carry the full deploy-target matrix (templated in
 - **Test (re-run):** `POST /v1/templates/systemprompt-io/runs` with
   `NORTHFLANK_TOKEN` from `.env.secrets`, then health on
   `https://web--gateway--<ns>.code.run/api/v1/health`.
-- **Promote:** the saved template yields a shareable one-click deploy link
-  immediately; northflank.com/stacks listing is curated — email their
-  partnerships/support with the verified link (no cost, no licence gate).
+- **Promote:** only the stacks listing email remains (draft with link in
+  `docs-internal/testing/northflank.md`; send to support@northflank.com /
+  in-app chat for the partnerships team). Test project torn down 2026-07-16;
+  the share link deploys into the clicker's own account, so nothing runs on
+  ours.
 
 ## 10. DigitalOcean Marketplace — BUILD READY, vendor application is the long pole
 
@@ -181,14 +183,37 @@ team review, for modest audience overlap. Revisit on demand.
 
 ---
 
-## Suggested testing order
+## Remaining work (2026-07-16, DO/Elestio/Umbrel/Cloudron parked)
 
-1. Portainer (zero cost, local Docker)
-2. Dokploy + CapRover (one throwaway VPS each)
-3. Zeabur + Northflank (browser only)
-4. CasaOS (VM + capture the screenshot)
-5. DigitalOcean Packer build
+Engineering-testable:
+1. Zeabur — the only target not yet tested/published (template drafted).
+2. Portainer — local e2e via the raw feed URL, then the two community PRs.
 
-File the DO vendor application and send the Elestio email **first** — both
-are wait-driven and run in parallel with everything else. All submissions and
-GitHub/marketplace actions are executed by Ed.
+Ed-only actions (assets verified and ready):
+- Northflank stacks listing email (draft + link in runbook).
+- Dokploy PR to `Dokploy/templates` (payload ready).
+- CapRover PR sign-off (branch prepared).
+- CasaOS: mark draft PR #981 ready.
+- Railway: request template verification (verified tier).
+- Coolify: wait on upstream #10958, then showcase posts.
+
+## Candidate targets not yet covered (big/obvious gaps)
+
+- **Fly.io** — largest obvious gap for our ICP; `fly.toml` + Fly Postgres
+  (or unmanaged pg app), `fly launch` from the repo. No curated catalog, but
+  a standard target developers expect.
+- **Artifact Hub** — the Helm chart is already live on
+  charts.systemprompt.io; listing it on artifacthub.io is free, self-serve
+  (repo metadata file + claim), and is THE discovery surface for the K8s
+  crowd. Cheapest win on this list.
+- **Easypanel** — templates catalog via PR (open-source, same audience as
+  Coolify/Dokploy); compose-shaped, low effort from existing blueprints.
+- **Koyeb** — one-click deploy button + curated marketplace via their
+  templates repo; free tier, similar shape to Railway/Render.
+- **Unraid Community Apps / Runtipi** — self-host store tier alongside
+  CasaOS; same no-key-boot friction as Umbrel applies to Runtipi, Unraid
+  template is just XML around the compose.
+- Parked with DO: AWS/Azure/GCP marketplaces, Vultr/Linode (Akamai)
+  marketplaces — vendor-application-shaped, revisit with DO.
+
+All submissions and GitHub/marketplace actions are executed by Ed.
