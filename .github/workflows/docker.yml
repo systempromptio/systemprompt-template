@@ -35,6 +35,10 @@ on:
       - ".sqlx/**"
       - ".github/workflows/docker.yml"
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Force release tags for this semver (X.Y.Z) — rebuild/backfill a release image from the current ref"
+        required: false
 
 concurrency:
   group: docker-${{ github.ref }}
@@ -122,17 +126,33 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Resolve version override (workflow_dispatch backfill)
+        id: over
+        env:
+          INPUT_VERSION: ${{ inputs.version || '' }}
+        run: |
+          v="$INPUT_VERSION"
+          {
+            echo "set=$([ -n "$v" ] && echo true || echo false)"
+            echo "full=$v"
+            echo "majmin=${v%.*}"
+            echo "maj=${v%%.*}"
+          } >> "$GITHUB_OUTPUT"
+
       - uses: docker/metadata-action@v5
         id: meta
         with:
           images: ${{ env.IMAGE }}
           tags: |
-            type=edge,branch=main
-            type=sha
+            type=edge,branch=main,enable=${{ steps.over.outputs.set == 'false' }}
+            type=sha,enable=${{ steps.over.outputs.set == 'false' }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=${{ steps.over.outputs.full }},enable=${{ steps.over.outputs.set == 'true' }}
+            type=raw,value=${{ steps.over.outputs.majmin }},enable=${{ steps.over.outputs.set == 'true' }}
+            type=raw,value=${{ steps.over.outputs.maj }},enable=${{ steps.over.outputs.set == 'true' }}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') || steps.over.outputs.set == 'true' }}
 
       - name: Create and push manifest list
         working-directory: /tmp/digests
