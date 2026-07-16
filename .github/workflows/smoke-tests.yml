@@ -40,6 +40,58 @@ jobs:
           docker run --rm --entrypoint /app/bin/systemprompt \
             ghcr.io/systempromptio/systemprompt-template:latest --version
 
+  release-tags:
+    name: Release tag set + signature
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: sigstore/cosign-installer@v3
+      - name: All release tags resolve to one signed multi-arch digest
+        env:
+          IMAGE: ghcr.io/systempromptio/systemprompt-template
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          # The Docker workflow builds concurrently with this one on the same
+          # tag — wait for the versioned tag to appear (max ~40 min).
+          for i in $(seq 1 80); do
+            docker buildx imagetools inspect "$IMAGE:$VERSION" >/dev/null 2>&1 && break
+            sleep 30
+          done
+          maj="${VERSION%%.*}"; majmin="${VERSION%.*}"
+          ref=$(docker buildx imagetools inspect "$IMAGE:$VERSION" --format '{{json .Manifest.Digest}}')
+          for tag in "$majmin" "$maj" latest; do
+            d=$(docker buildx imagetools inspect "$IMAGE:$tag" --format '{{json .Manifest.Digest}}')
+            echo "$IMAGE:$tag -> $d"
+            test "$d" = "$ref" || { echo "DIGEST MISMATCH: :$tag != :$VERSION"; exit 1; }
+          done
+          # Multi-arch: both platforms present.
+          docker buildx imagetools inspect "$IMAGE:$VERSION" | grep -q "linux/amd64"
+          docker buildx imagetools inspect "$IMAGE:$VERSION" | grep -q "linux/arm64"
+          # Keyless signature from the Docker workflow identity.
+          cosign verify "$IMAGE@$(echo "$ref" | tr -d '"')" \
+            --certificate-identity-regexp "https://github.com/systempromptio/systemprompt-template/.github/workflows/docker.yml@.*" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+  helm-release:
+    name: Helm chart serves the release
+    needs: [version, release-tags]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chart appVersion matches the release
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          helm repo add systemprompt https://charts.systemprompt.io
+          # helm.yml publishes concurrently — wait for the index to update.
+          for i in $(seq 1 40); do
+            helm repo update >/dev/null
+            app=$(helm show chart systemprompt/gateway | sed -n 's/^appVersion: "\{0,1\}\([0-9.]*\).*/\1/p')
+            [ "$app" = "$VERSION" ] && { echo "chart appVersion: $app"; exit 0; }
+            sleep 30
+          done
+          echo "charts.systemprompt.io never served appVersion $VERSION (last: $app)"
+          exit 1
+
   binary:
     needs: version
     strategy:

@@ -35,6 +35,8 @@ Choose the channel that fits your environment. Each doc is a copy-paste recipe.
 | Northflank stack | [install/northflank.md](install/northflank.md) | Northflank PaaS |
 | DigitalOcean 1-Click | [install/digitalocean.md](install/digitalocean.md) | Single-VM droplet (bundled Postgres) |
 
+Maintainers: the release process (versioning, tag scheme, retention, rollback) is documented in [RELEASING.md](RELEASING.md).
+
 ## Install the bridge (client)
 
 The bridge — a single `systemprompt-bridge` binary with a native GUI on macOS and Windows. Renamed from `cowork → bridge` in v0.7.0; the binaries ship on the `bridge-v*` release tag series and install as the `bridge` Homebrew formula / Scoop package. The Claude Desktop host-integration label is still "Cowork", and the legacy `cowork` package is retained for existing installs.

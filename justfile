@@ -937,3 +937,29 @@ install-sh-test:
 flake-check:
     nix flake check
     nix run .# -- --version
+
+# --- Release ------------------------------------------------------------
+
+# Step A of a release: bump every version pin to the new core release and
+# gate locally (migrate + build + clippy). Review + commit + push, then
+# `just release <version>`. See docs/RELEASING.md.
+core-bump version:
+    @! grep -q '^\[patch\.crates-io\]' Cargo.toml || (echo "ERROR: [patch.crates-io] is active — publish core and re-comment it first" && exit 1)
+    scripts/sync-release-version.sh {{version}}
+    cargo update -w
+    just db-up
+    cargo run --bin systemprompt -- infra db migrate || true
+    just build
+    just clippy
+    @echo "core-bump {{version}} complete — review the diff, run tests, commit to main, push, then: just release {{version}}"
+
+# Step B: push the release tag. Everything downstream (image, chart,
+# tarballs, smoke tests, GHCR pruning) is automatic from the tag.
+release version:
+    @test -z "$(git status --porcelain)" || (echo "ERROR: working tree not clean" && exit 1)
+    git fetch origin main
+    @test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" || (echo "ERROR: HEAD != origin/main — push first" && exit 1)
+    scripts/sync-release-version.sh {{version}} --check
+    git tag "v{{version}}"
+    git push origin "v{{version}}"
+    @echo "v{{version}} pushed — watch Actions: docker (image), release-gateway (tarballs), helm (chart), smoke-tests"
