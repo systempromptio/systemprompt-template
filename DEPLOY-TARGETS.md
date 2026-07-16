@@ -79,7 +79,7 @@ GitHub release notes now carry the full deploy-target matrix (templated in
   `public/v4/logos/`); run `npm run validate_apps` in the fork first. Merged
   apps appear in every CapRover install.
 
-## 7. CasaOS — TESTED, PR payload ready
+## 7. CasaOS — TESTED, draft PR open (IceWhaleTech/CasaOS-AppStore#981)
 
 - **Status:** `deploy/casaos/docker-compose.yml` with x-casaos metadata done
   (image pin auto-synced per release). `deploy/casaos/screenshot-1.png`
@@ -90,9 +90,11 @@ GitHub release notes now carry the full deploy-target matrix (templated in
   volumes recovered in 10s. Optional remaining step: import into a real
   CasaOS UI in an Ubuntu VM (`curl -fsSL https://get.casaos.io | sudo bash`)
   to see the app tile.
-- **Promote:** PR to `IceWhaleTech/CasaOS-AppStore` (`Apps/SystemPrompt/`),
-  assign to their team; review takes weeks. Low ICP fit — backlink/discovery
-  value.
+- **Promote:** draft PR IceWhaleTech/CasaOS-AppStore#981 opened 2026-07-16
+  (`Apps/SystemPrompt/`, v2 store protocol: reverse-domain id, en_US locale
+  keys, version/update_at/release_notes, local icon.svg + screenshot;
+  `./scripts/build_dist.sh` validated in Docker). Ed reviews, then marks
+  ready; their review takes weeks. Low ICP fit — backlink/discovery value.
 
 ## 8. Zeabur — TEMPLATE DRAFTED, self-serve publish
 
@@ -104,16 +106,21 @@ GitHub release notes now carry the full deploy-target matrix (templated in
 - **Promote:** publishing IS the listing (instant). Paste the share URL into
   `docs/install/zeabur.md` + README; request "featured" review once verified.
 
-## 9. Northflank — TEMPLATE SCHEMA-VALIDATED, sandbox run pending (Ed)
+## 9. Northflank — VERIFIED E2E, share link + listing email pending (Ed)
 
-- **Status:** `deploy/northflank/template.json` rewritten to the real v1.2
-  shape (Project node, `postgresql` addon, SecretGroup wiring
-  `POSTGRES_URI → DATABASE_URL` + `EXTERNAL_URL` from `${refs.gateway.ports.0.dns}`,
-  persistent Volume) and validated offline against
-  `https://api.northflank.com/v1/schemas/template`. Full findings + listing
-  email draft in `docs-internal/testing/northflank.md`.
-- **Test:** free sandbox → Templates → Create → paste JSON → Run with a real
-  key → `https://<svc>--<proj>.code.run/api/v1/health`.
+- **Status:** verified e2e 2026-07-16 via their API on Ed's team: template
+  `systemprompt` created, run converged (project + postgresql addon +
+  gateway + secret group + volume all green), health 200 and admin UI served
+  on the generated `code.run` domain. Live-run fixes now in
+  `deploy/northflank/template.json`: `POSTGRES_URI_ADMIN` (the non-admin
+  addon user cannot CREATE SCHEMA), `successThreshold` required on
+  readinessProbe, no `storageClass` (feature-flagged), `nf-compute-20`
+  plans (free-tier allowance), volume >= 6144MB (nvme minimum), no em
+  dashes in `description` (charset-validated). Findings + listing email
+  draft in `docs-internal/testing/northflank.md`.
+- **Test (re-run):** `POST /v1/templates/systemprompt/runs` with
+  `NORTHFLANK_TOKEN` from `.env.secrets`, then health on
+  `https://web--gateway--<ns>.code.run/api/v1/health`.
 - **Promote:** the saved template yields a shareable one-click deploy link
   immediately; northflank.com/stacks listing is curated — email their
   partnerships/support with the verified link (no cost, no licence gate).
