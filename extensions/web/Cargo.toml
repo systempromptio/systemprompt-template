@@ -32,7 +32,7 @@ systemprompt-web-jobs = { workspace = true }
 
 # Extension framework — direct dep so the `extension_migrations!()` macro
 # expansion (`::systemprompt_extension::Migration`) resolves.
-systemprompt-extension = "0.20.0"
+systemprompt-extension = "0.21.0"
 inventory = { workspace = true }
 
 # Database access
@@ -56,6 +56,6 @@ tracing = { workspace = true }
 # Archive extraction
 
 [build-dependencies]
-systemprompt-extension = "0.20.0"
+systemprompt-extension = "0.21.0"
 
 [dev-dependencies]
