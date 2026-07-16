@@ -79,14 +79,17 @@ GitHub release notes now carry the full deploy-target matrix (templated in
   `public/v4/logos/`); run `npm run validate_apps` in the fork first. Merged
   apps appear in every CapRover install.
 
-## 7. CasaOS — ASSETS READY, blocked on a screenshot
+## 7. CasaOS — TESTED, PR payload ready
 
 - **Status:** `deploy/casaos/docker-compose.yml` with x-casaos metadata done
-  (image pin auto-synced per release). Manifest references
-  `deploy/casaos/screenshot-1.png` — capture it before the PR.
-- **Test:** CasaOS in an Ubuntu VM (`curl -fsSL https://get.casaos.io | sudo
-  bash`) → App Store → Install a customized app → Import → key + password →
-  app tile on port 8080.
+  (image pin auto-synced per release). `deploy/casaos/screenshot-1.png`
+  captured from a live run and pushed to main (raw URL verified).
+- **Test (done 2026-07-16):** exact manifest booted end-to-end against the
+  pinned 0.21.0 GHCR image with a real Anthropic key — migrations ran, app
+  healthy in ~20s, `/health` + `/v1/models` 200, restart on persisted
+  volumes recovered in 10s. Optional remaining step: import into a real
+  CasaOS UI in an Ubuntu VM (`curl -fsSL https://get.casaos.io | sudo bash`)
+  to see the app tile.
 - **Promote:** PR to `IceWhaleTech/CasaOS-AppStore` (`Apps/SystemPrompt/`),
   assign to their team; review takes weeks. Low ICP fit — backlink/discovery
   value.
@@ -101,11 +104,14 @@ GitHub release notes now carry the full deploy-target matrix (templated in
 - **Promote:** publishing IS the listing (instant). Paste the share URL into
   `docs/install/zeabur.md` + README; request "featured" review once verified.
 
-## 9. Northflank — TEMPLATE DRAFTED, curated listing
+## 9. Northflank — TEMPLATE SCHEMA-VALIDATED, sandbox run pending (Ed)
 
-- **Status:** `deploy/northflank/template.json` (Workflow: Postgres addon +
-  service) drafted; `${refs...}` expressions are the likely fix-ups — their
-  template editor schema-checks live.
+- **Status:** `deploy/northflank/template.json` rewritten to the real v1.2
+  shape (Project node, `postgresql` addon, SecretGroup wiring
+  `POSTGRES_URI → DATABASE_URL` + `EXTERNAL_URL` from `${refs.gateway.ports.0.dns}`,
+  persistent Volume) and validated offline against
+  `https://api.northflank.com/v1/schemas/template`. Full findings + listing
+  email draft in `docs-internal/testing/northflank.md`.
 - **Test:** free sandbox → Templates → Create → paste JSON → Run with a real
   key → `https://<svc>--<proj>.code.run/api/v1/health`.
 - **Promote:** the saved template yields a shareable one-click deploy link
