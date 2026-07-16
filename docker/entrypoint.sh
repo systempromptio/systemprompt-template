@@ -43,7 +43,9 @@ else
         # Setup authors a localhost dev profile; patch the parts the
         # container environment dictates.
         # 1. Bind publicly (Render/compose port detection needs 0.0.0.0).
-        sed -i 's/^  host: 127\.0\.0\.1$/  host: 0.0.0.0/' "$PROFILE_FILE"
+        #    Overridable via HOST for platforms whose internal networking is
+        #    IPv6-only (Railway healthchecks need HOST=::).
+        sed -i "s/^  host: 127\.0\.0\.1$/  host: ${HOST:-0.0.0.0}/" "$PROFILE_FILE"
         # 1b. Binaries ship in /app/bin, not a cargo target dir.
         sed -i 's|^  bin: .*|  bin: /app/bin|' "$PROFILE_FILE"
         # 2. Point at the real database, not setup's generated localhost one.
