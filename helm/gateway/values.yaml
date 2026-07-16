@@ -1,0 +1,86 @@
+# Default single-replica values for systemprompt gateway.
+# See values-ha.yaml for a 3-replica + external-Postgres example.
+
+image:
+  repository: ghcr.io/systempromptio/systemprompt-template
+  tag: ""         # defaults to Chart.appVersion
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: gateway.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 2
+    memory: 2Gi
+
+# AI provider keys. Create a Secret in advance and reference it here,
+# or let the chart create one from the values below (NOT recommended in prod).
+secrets:
+  existingSecret: ""   # if set, ignores the keys below
+  anthropicApiKey: ""
+  openaiApiKey: ""
+  geminiApiKey: ""
+
+# External Postgres connection. The gateway is stateless; it expects a
+# reachable Postgres ≥13 via DATABASE_URL.
+#
+# For quick demos, install bitnami/postgresql separately:
+#   helm repo add bitnami https://charts.bitnami.com/bitnami
+#   helm install demo-pg bitnami/postgresql --set auth.database=systemprompt \
+#     --set auth.username=systemprompt --set auth.password=demo
+#   export DATABASE_URL="postgres://systemprompt:demo@demo-pg-postgresql:5432/systemprompt"
+externalDatabase:
+  # Full Postgres URL — REQUIRED. e.g. postgres://user:pw@host:5432/dbname
+  # Populate via existingSecret key=DATABASE_URL (recommended for prod) or
+  # plaintext here for dev.
+  url: ""
+  # Optional field-level overrides (ignored if url is set)
+  host: ""
+  port: 5432
+  username: systemprompt
+  database: systemprompt
+  password: ""
+
+env: []     # additional env vars: { name: FOO, value: bar }
+
+podAnnotations: {}
+podSecurityContext:
+  fsGroup: 1000
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: false
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+healthcheck:
+  path: /api/v1/health
+  initialDelaySeconds: 30
+  periodSeconds: 30

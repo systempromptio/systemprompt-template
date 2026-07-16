@@ -1,0 +1,8 @@
+owner: systempromptio
+git-repo: charts
+pages-branch: gh-pages
+package-path: .cr-release-packages
+index-path: index.yaml
+# Chart signing disabled until a GPG key is provisioned (add via Actions
+# secrets CR_PASSPHRASE + CR_KEYRING and flip sign: true when ready).
+sign: false

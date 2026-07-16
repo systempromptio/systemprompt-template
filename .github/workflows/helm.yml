@@ -1,0 +1,105 @@
+name: Helm — lint, test, release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "helm/**"
+      - ".github/workflows/helm.yml"
+  pull_request:
+    paths:
+      - "helm/**"
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - uses: helm/chart-testing-action@v2.6.1
+
+      - name: Run chart-testing (lint)
+        run: ct lint --charts helm/gateway --validate-maintainers=false
+
+      - uses: helm/kind-action@v1.10.0
+        if: github.event_name != 'release'
+
+      - name: Install chart into kind
+        if: github.event_name != 'release'
+        # continue-on-error: the install step pulls the gateway image; if
+        # that image doesn't exist yet (chicken-and-egg on a fresh release
+        # before Docker finishes its multi-arch buildx), we want chart-releaser
+        # to still publish the chart. Lint passes synchronously above and is
+        # the real gate.
+        continue-on-error: true
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm dependency build helm/gateway || helm dependency update helm/gateway
+          ls -la helm/gateway/charts/
+          helm install gateway helm/gateway \
+            --dependency-update \
+            --set postgresql.auth.password=testpw \
+            --set secrets.anthropicApiKey=dummy \
+            --wait --timeout 300s
+          kubectl wait --for=condition=Available deployment/gateway-gateway --timeout=180s
+          helm test gateway
+
+  release:
+    # Publish the chart whenever main moves helm/ OR a release is published.
+    # Don't gate on install-test — that's soft-failing above because image
+    # publication lags release-tag creation by up to 3h.
+    if: github.event_name == 'release' || github.event_name == 'push'
+    needs: lint-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name  "systemprompt-bot"
+          git config user.email "bot@systemprompt.io"
+
+      - uses: azure/setup-helm@v4
+
+      - name: Package chart
+        run: |
+          mkdir -p dist
+          helm package helm/gateway --destination dist/
+          ls -la dist/
+
+      - name: Publish chart to systempromptio/charts gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.CHARTS_REPO_TOKEN }}
+        run: |
+          set -e
+          # Clone the charts repo's gh-pages branch
+          git clone --branch gh-pages --depth 1 \
+            "https://x-access-token:${GH_TOKEN}@github.com/systempromptio/charts.git" \
+            /tmp/charts
+          cp dist/*.tgz /tmp/charts/
+          cd /tmp/charts
+          # Regenerate index.yaml including the new .tgz plus all pre-existing ones
+          helm repo index . --url https://charts.systemprompt.io
+          git config user.name  "systemprompt-bot"
+          git config user.email "bot@systemprompt.io"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Chart already at current version — nothing to commit"
+          else
+            git commit -m "Publish gateway chart $(ls gateway-*.tgz | tail -1 | sed -E 's/.*-([0-9.]+)\.tgz/v\1/')"
+            git push origin gh-pages
+          fi

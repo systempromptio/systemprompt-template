@@ -1,0 +1,72 @@
+apiVersion: v2
+name: gateway
+description: The governance layer for AI agents — a single compiled Rust binary that authenticates, authorises, rate-limits, logs, and costs every AI interaction. Self-hosted, air-gap capable, provider-agnostic.
+type: application
+version: 0.2.0
+appVersion: "0.4.0"
+kubeVersion: ">=1.24.0"
+home: https://systemprompt.io
+icon: https://systemprompt.io/files/images/logo.svg
+sources:
+  - https://github.com/systempromptio/systemprompt-template
+  - https://github.com/systempromptio/systemprompt-core
+  - https://github.com/systempromptio/charts
+maintainers:
+  - name: systemprompt.io
+    email: support@systemprompt.io
+    url: https://systemprompt.io
+keywords:
+  - ai-governance
+  - llm-gateway
+  - mcp
+  - claude
+  - anthropic
+  - openai
+  - gemini
+  - self-hosted
+  - rust
+  - audit
+  - policy
+  - rate-limiting
+  - air-gap
+annotations:
+  artifacthub.io/license: MIT AND BUSL-1.1
+  artifacthub.io/category: ai-machine-learning
+  artifacthub.io/displayName: systemprompt — AI governance gateway
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/operator: "false"
+  # signKey omitted — chart-releaser cr.yaml has sign: false (no GPG/cosign
+  # keypair provisioned yet). Re-add this annotation with a real fingerprint
+  # + pubkey URL once chart signing is enabled.
+  artifacthub.io/links: |
+    - name: Website
+      url: https://systemprompt.io
+    - name: Documentation
+      url: https://systemprompt.io/documentation/
+    - name: Guides
+      url: https://systemprompt.io/guides
+    - name: Main repository
+      url: https://github.com/systempromptio/systemprompt-template
+    - name: Chart source
+      url: https://github.com/systempromptio/systemprompt-template/tree/main/helm/gateway
+    - name: Install docs
+      url: https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/helm.md
+    - name: Discord
+      url: https://discord.gg/wkAbSuPWpr
+  artifacthub.io/images: |
+    - name: gateway
+      image: ghcr.io/systempromptio/systemprompt-template:0.4.0
+      platforms:
+        - linux/amd64
+        - linux/arm64
+  artifacthub.io/screenshots: |
+    - title: Governance you can prove — live audit of every tool call
+      url: https://systemprompt.io/files/images/og-image.jpg
+  artifacthub.io/changes: |
+    - kind: changed
+      description: Drop bundled Postgres subchart — users point the gateway at any Postgres 13+ via DATABASE_URL (managed RDS, self-hosted, separate bitnami/postgresql install, etc.). Keeps the chart lean and avoids subchart licensing drift.
+    - kind: added
+      description: Bumped appVersion to 0.4.0 (core + gateway version alignment).
+  artifacthub.io/recommendations: |
+    - url: https://artifacthub.io/packages/helm/bitnami/postgresql
