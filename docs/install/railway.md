@@ -10,7 +10,7 @@ The published template ([`systempromptio-the-self-owned-ai-control`](https://rai
 
 - A `gateway` service from `ghcr.io/systempromptio/systemprompt-template:latest`
 - A Postgres service, with `DATABASE_URL` wired into the gateway automatically
-- `HOST=::` on the gateway — Railway's private network is IPv6-only, so the server must bind the IPv6 wildcard to reach Postgres and accept proxied traffic
+- `HOST=::` on the gateway: Railway's private network is IPv6-only, so the server must bind the IPv6 wildcard to reach Postgres and accept proxied traffic
 
 Steps:
 
@@ -24,6 +24,6 @@ Railway → service → Settings → Networking → *Generate Domain* or add you
 
 ## Deploying from a fork instead
 
-The one-click template is the supported path. If you deploy your own fork of this repo as a Railway service instead, [`deploy/railway/railway.json`](https://github.com/systempromptio/systemprompt-template/blob/main/deploy/railway/railway.json) holds the build/deploy settings Railway reads from the repo (Dockerfile build, `/api/v1/health` healthcheck, restart policy). You still need to add a Postgres service yourself, reference its `DATABASE_URL`, and set `HOST=::` plus a provider key — Railway's config-as-code file cannot declare sibling services, which is why the template is the canonical route.
+The one-click template is the supported path. If you deploy your own fork of this repo as a Railway service instead, [`deploy/railway/railway.json`](https://github.com/systempromptio/systemprompt-template/blob/main/deploy/railway/railway.json) holds the build/deploy settings Railway reads from the repo (Dockerfile build, `/api/v1/health` healthcheck, restart policy). You still need to add a Postgres service yourself, reference its `DATABASE_URL`, and set `HOST=::` plus a provider key: Railway's config-as-code file cannot declare sibling services, which is why the template is the canonical route.
 
 Docs: https://systemprompt.io/documentation/?utm_source=railway&utm_medium=install_doc

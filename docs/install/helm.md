@@ -23,7 +23,7 @@ helm install gateway systemprompt/gateway \
 
 ```bash
 curl -LO https://raw.githubusercontent.com/systempromptio/systemprompt-template/main/helm/gateway/values-ha.yaml
-# edit values-ha.yaml — set externalDatabase.url and ingress.hosts
+# edit values-ha.yaml: set externalDatabase.url and ingress.hosts
 helm install gateway systemprompt/gateway \
   -f values-ha.yaml \
   --set secrets.anthropicApiKey=sk-ant-...

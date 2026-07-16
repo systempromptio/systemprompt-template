@@ -46,7 +46,7 @@ just start                  # serves governance + agents + MCP + admin on :8080
 ---
 
 <details>
-<summary><strong>For the CISO — one SQL query answers any AI audit</strong></summary>
+<summary><strong>For the CISO: one SQL query answers any AI audit</strong></summary>
 
 <br>
 
@@ -61,7 +61,7 @@ Five properties, each one demonstrable on your laptop before any procurement cal
 </details>
 
 <details>
-<summary><strong>Run the proof — 43 scripted demos, 41 cost nothing</strong></summary>
+<summary><strong>Run the proof: 43 scripted demos, 41 cost nothing</strong></summary>
 
 <br>
 
@@ -71,18 +71,18 @@ Every claim in this README has a script that executes it against the live binary
 ./demo/00-preflight.sh                    # acquire token, verify services, create admin
 ./demo/01-seed-data.sh                    # populate analytics + trace data
 
-# Governance — the audit line
+# Governance: the audit line
 ./demo/governance/01-happy-path.sh        # allowed tool call, full trace chain
 ./demo/governance/05-governance-denied.sh # scope check rejects out-of-role call
 ./demo/governance/06-secret-breach.sh     # secret-detection blocks exfiltration
 ./demo/governance/07-rate-limiting.sh     # 300 req/min per session enforced
 ./demo/governance/08-hooks.sh             # PreToolUse policy-as-code
 
-# Observability — the audit table
+# Observability: the audit table
 ./demo/analytics/01-overview.sh           # conversations, costs, anomalies
 ./demo/infrastructure/04-logs.sh          # structured JSON events, SIEM-ready
 
-# Scale — the overhead budget
+# Scale: the overhead budget
 ./demo/performance/02-load-test.sh        # 3,308 req/s burst, p99 22.7 ms
 ```
 
@@ -91,7 +91,7 @@ Full index: [`demo/README.md`](demo/README.md). 41 of 43 scripts are free; two c
 </details>
 
 <details>
-<summary><strong>The governance pipeline — five checks before any tool process spawns</strong></summary>
+<summary><strong>The governance pipeline: five checks before any tool process spawns</strong></summary>
 
 <br>
 
@@ -125,7 +125,7 @@ Every tool call passes five in-process checks, synchronously, in under 5 ms. Eve
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-governance.svg">
   <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-governance.svg">
-  <img src="demo/recording/svg/output/dark/cap-governance.svg" alt="Governance pipeline — terminal recording" width="820">
+  <img src="demo/recording/svg/output/dark/cap-governance.svg" alt="Governance pipeline: terminal recording" width="820">
 </picture>
 
 <sub>Run it: <code>./demo/governance/05-governance-denied.sh</code> · <a href="https://systemprompt.io/features/governance-pipeline">Feature detail</a></sub>
@@ -133,7 +133,7 @@ Every tool call passes five in-process checks, synchronously, in under 5 ms. Eve
 </details>
 
 <details>
-<summary><strong>Why agents cannot leak your keys — the code, twelve lines</strong></summary>
+<summary><strong>Why agents cannot leak your keys: the code, twelve lines</strong></summary>
 
 <br>
 
@@ -164,7 +164,7 @@ Before spawn, secret detection scans tool arguments for 35+ credential patterns.
 </details>
 
 <details>
-<summary><strong>Performance — 3,308 req/s burst, p99 22.7 ms</strong></summary>
+<summary><strong>Performance: 3,308 req/s burst, p99 22.7 ms</strong></summary>
 
 <br>
 
@@ -183,20 +183,20 @@ Reproduce: `just benchmark`. Numbers measured on the author's laptop.
 </details>
 
 <details>
-<summary><strong>Your first five minutes — admin UI, audit trace, live denial</strong></summary>
+<summary><strong>Your first five minutes: admin UI, audit trace, live denial</strong></summary>
 
 <br>
 
-- **http://localhost:8080** — admin UI, live audit table, session viewer.
-- **`systemprompt analytics overview`** — conversations, tool calls, costs in microdollars, anomalies flagged above 2x/3x of rolling average.
-- **`systemprompt infra logs audit <request-id> --full`** — the full trace for any request: identity, scope, rule evaluations, tool call, model output, cost. One query, one row, one answer.
+- **http://localhost:8080**: admin UI, live audit table, session viewer.
+- **`systemprompt analytics overview`**: conversations, tool calls, costs in microdollars, anomalies flagged above 2x/3x of rolling average.
+- **`systemprompt infra logs audit <request-id> --full`**: the full trace for any request: identity, scope, rule evaluations, tool call, model output, cost. One query, one row, one answer.
 - **Point Claude Code, Claude Desktop, or any MCP client at it.** Permissions follow the user, not the client. Try to exfiltrate a key through a tool argument and watch the secret-detection layer deny it before the tool process spawns.
-- **`./demo/governance/06-secret-breach.sh`** — the scripted version of that denial, recorded above.
+- **`./demo/governance/06-secret-breach.sh`**: the scripted version of that denial, recorded above.
 
 </details>
 
 <details>
-<summary><strong>Configuration & CLI — everything is a YAML diff, every task has a verb</strong></summary>
+<summary><strong>Configuration & CLI: everything is a YAML diff, every task has a verb</strong></summary>
 
 <br>
 
@@ -231,13 +231,13 @@ Eight CLI domains cover every operational surface. No dashboard required for any
 </details>
 
 <details>
-<summary><strong>More recordings — infrastructure, integrations, analytics, agents, compliance</strong></summary>
+<summary><strong>More recordings: infrastructure, integrations, analytics, agents, compliance</strong></summary>
 
 <br>
 
 Each recording is a live capture of the named script running against the binary.
 
-**Infrastructure** — one binary, one process, one database. Same artifact runs laptop to air-gap.
+**Infrastructure**: one binary, one process, one database. Same artifact runs laptop to air-gap.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/infra-self-hosted.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/infra-self-hosted.svg"><img src="demo/recording/svg/output/dark/infra-self-hosted.svg" alt="Self-hosted deployment" width="820"></picture>
 
@@ -277,7 +277,7 @@ Each recording is a live capture of the named script running against the binary.
 
 ---
 
-**Integrations** — any provider, Claude Desktop, web publisher, extensions.
+**Integrations**: any provider, Claude Desktop, web publisher, extensions.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-any-agent.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-any-agent.svg"><img src="demo/recording/svg/output/dark/int-any-agent.svg" alt="Any AI agent" width="820"></picture>
 
@@ -337,7 +337,7 @@ Manual install works end-to-end today; signed installers and MDM packages land i
 </details>
 
 <details>
-<summary><strong>Route any model anywhere — the `/v1/messages` gateway</strong></summary>
+<summary><strong>Route any model anywhere: the `/v1/messages` gateway</strong></summary>
 
 <br>
 

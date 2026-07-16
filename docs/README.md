@@ -47,12 +47,12 @@ just setup-local <anthropic_key> "" "" 8081 5433
 
 ### Gateway configuration
 
-- [gateway-routes.md](gateway-routes.md) — `/v1/messages` provider routing, CLI route configuration, route access control, and the extensible provider registry.
-- [bridge-install.md](bridge-install.md) — install and configure the `systemprompt-bridge` credential helper for Claude for Work.
+- [gateway-routes.md](gateway-routes.md): `/v1/messages` provider routing, CLI route configuration, route access control, and the extensible provider registry.
+- [bridge-install.md](bridge-install.md): install and configure the `systemprompt-bridge` credential helper for Claude for Work.
 
 ## Install the bridge (client)
 
-The bridge — a single `systemprompt-bridge` binary with a native GUI on macOS and Windows. Renamed from `cowork → bridge` in v0.7.0; the binaries ship on the `bridge-v*` release tag series and install as the `bridge` Homebrew formula / Scoop package. The Claude Desktop host-integration label is still "Cowork", and the legacy `cowork` package is retained for existing installs.
+The bridge: a single `systemprompt-bridge` binary with a native GUI on macOS and Windows. Renamed from `cowork → bridge` in v0.7.0; the binaries ship on the `bridge-v*` release tag series and install as the `bridge` Homebrew formula / Scoop package. The Claude Desktop host-integration label is still "Cowork", and the legacy `cowork` package is retained for existing installs.
 
 | Platform | Doc |
 |---|---|
@@ -64,11 +64,11 @@ The bridge — a single `systemprompt-bridge` binary with a native GUI on macOS 
 
 ## Operating the bridge
 
-- [cowork/desktop-app.md](cowork/desktop-app.md) — Setup wizard, agents tab (per-agent enable/disable, Codex CLI alongside Claude Desktop), marketplace, settings, activity drawer, diagnostics export.
-- [cowork/device-auth.md](cowork/device-auth.md) — Authentication modes for Claude for Work → gateway (PAT, session, mTLS). Updated for `SP_BRIDGE_*` env vars and the new `systemprompt-bridge.toml` config path.
-- [cowork/windows-minimax-demo.md](cowork/windows-minimax-demo.md) — End-to-end Windows + gateway + MiniMax demo runbook.
-- [cowork/claude-code-linux.md](cowork/claude-code-linux.md) — Route the Claude Code CLI through the gateway on Linux/headless via `systemprompt-bridge proxy`. Includes the `docker/claude-code-clean-room/` from-scratch test.
+- [cowork/desktop-app.md](cowork/desktop-app.md): Setup wizard, agents tab (per-agent enable/disable, Codex CLI alongside Claude Desktop), marketplace, settings, activity drawer, diagnostics export.
+- [cowork/device-auth.md](cowork/device-auth.md): Authentication modes for Claude for Work → gateway (PAT, session, mTLS). Updated for `SP_BRIDGE_*` env vars and the new `systemprompt-bridge.toml` config path.
+- [cowork/windows-minimax-demo.md](cowork/windows-minimax-demo.md): End-to-end Windows + gateway + MiniMax demo runbook.
+- [cowork/claude-code-linux.md](cowork/claude-code-linux.md): Route the Claude Code CLI through the gateway on Linux/headless via `systemprompt-bridge proxy`. Includes the `docker/claude-code-clean-room/` from-scratch test.
 
 ## Licence
 
-This template repository is **MIT** — see [LICENSE](../LICENSE). The compiled distributable links [`systemprompt-core`](https://github.com/systempromptio/systemprompt-core), which is **BSL-1.1** (source-available, converts to Apache 2.0 after 4 years; production use requires a commercial licence). OCI image labels, Helm chart metadata, and package `License` fields declare `MIT AND BUSL-1.1` to reflect both.
+This template repository is **MIT**: see [LICENSE](../LICENSE). The compiled distributable links [`systemprompt-core`](https://github.com/systempromptio/systemprompt-core), which is **BSL-1.1** (source-available, converts to Apache 2.0 after 4 years; production use requires a commercial licence). OCI image labels, Helm chart metadata, and package `License` fields declare `MIT AND BUSL-1.1` to reflect both.

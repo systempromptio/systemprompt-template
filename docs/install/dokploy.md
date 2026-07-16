@@ -2,7 +2,7 @@
 
 Deploys the `systemprompt-gateway` server on [Dokploy](https://dokploy.com), a self-hostable PaaS. The blueprint provisions the gateway + Postgres from the GHCR image.
 
-Upstream template PR: [Dokploy/templates#1032](https://github.com/Dokploy/templates/pull/1032). Once merged, **systemprompt** appears in every Dokploy install's template picker and on [templates.dokploy.com](https://templates.dokploy.com) — until then use the manual import below.
+Upstream template PR: [Dokploy/templates#1032](https://github.com/Dokploy/templates/pull/1032). Once merged, **systemprompt** appears in every Dokploy install's template picker and on [templates.dokploy.com](https://templates.dokploy.com): until then use the manual import below.
 
 ## Install (base64 import)
 
@@ -19,9 +19,9 @@ Upstream template PR: [Dokploy/templates#1032](https://github.com/Dokploy/templa
    ```
 
 2. Dashboard → your project → **Create Service** → **Compose**, then open the service's **Advanced** section → **Import** → paste the base64 → **Import**. The compose file, environment (with a generated `POSTGRES_PASSWORD`), and a domain bound to port 8080 are populated for you.
-3. In **Environment**, set at least one provider key **before the first deploy** — `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GEMINI_API_KEY`. The container refuses to boot without one; blank values are safely ignored.
-4. In **Domains**, enable **HTTPS** (Let's Encrypt) on the generated domain. This is required, not optional: the gateway validates `EXTERNAL_URL` and rejects plain `http://` origins other than localhost — with HTTPS off the container restart-loops with an "Invalid CORS origin" error.
-5. Deploy. First boot runs migrations and the publish pipeline — allow up to 5 minutes before `/api/v1/health` reports healthy. Then open the domain root for the admin UI.
+3. In **Environment**, set at least one provider key **before the first deploy**: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GEMINI_API_KEY`. The container refuses to boot without one; blank values are safely ignored.
+4. In **Domains**, enable **HTTPS** (Let's Encrypt) on the generated domain. This is required, not optional: the gateway validates `EXTERNAL_URL` and rejects plain `http://` origins other than localhost: with HTTPS off the container restart-loops with an "Invalid CORS origin" error.
+5. Deploy. First boot runs migrations and the publish pipeline: allow up to 5 minutes before `/api/v1/health` reports healthy. Then open the domain root for the admin UI.
 
 ## Domain + TLS
 

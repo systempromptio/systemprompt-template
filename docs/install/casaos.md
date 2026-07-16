@@ -8,9 +8,9 @@ Once merged into the CasaOS App Store, install **systemprompt** from the store. 
 
 1. CasaOS dashboard → **App Store** → **Install a customized app** → **Import** → paste [`deploy/casaos/docker-compose.yml`](https://github.com/systempromptio/systemprompt-template/blob/main/deploy/casaos/docker-compose.yml).
 2. Fill in the environment variables:
-   - `ANTHROPIC_API_KEY` and/or `OPENAI_API_KEY` / `GEMINI_API_KEY` — at least one; the app will not start without a provider key.
-   - `POSTGRES_PASSWORD` — set once, before first start.
-3. Install. First start runs migrations and the publish pipeline — allow several minutes, then open the app (port 8080).
+   - `ANTHROPIC_API_KEY` and/or `OPENAI_API_KEY` / `GEMINI_API_KEY`: at least one; the app will not start without a provider key.
+   - `POSTGRES_PASSWORD`: set once, before first start.
+3. Install. First start runs migrations and the publish pipeline: allow several minutes, then open the app (port 8080).
 
 ## Access beyond the LAN
 

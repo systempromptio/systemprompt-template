@@ -1,13 +1,13 @@
 # Install the gateway via GitHub Container Registry
 
-`systemprompt` is published to GHCR as [`ghcr.io/systempromptio/systemprompt-template`](https://github.com/systempromptio/systemprompt-template/pkgs/container/systemprompt-template). The image is a single compiled Rust binary plus the `services/` config tree — same binary that ships via Helm and Render.
+`systemprompt` is published to GHCR as [`ghcr.io/systempromptio/systemprompt-template`](https://github.com/systempromptio/systemprompt-template/pkgs/container/systemprompt-template). The image is a single compiled Rust binary plus the `services/` config tree: same binary that ships via Helm and Render.
 
 Pick GHCR when:
 - You want a public, rate-limit-free OCI pull source backed by GitHub auth.
 - You prefer pulling from the same host as the source repo.
 - You already authenticate to `ghcr.io` for other private packages.
 
-## Quickstart — Compose
+## Quickstart: Compose
 
 The image expects a reachable Postgres and at least one AI key. The simplest working setup is the bundled compose file:
 
@@ -21,7 +21,7 @@ docker compose up
 
 Then open http://localhost:8080.
 
-## Quickstart — standalone `docker run`
+## Quickstart: standalone `docker run`
 
 You must provide `DATABASE_URL` pointing at a Postgres the container can reach, and at least one AI key:
 
@@ -36,10 +36,10 @@ On first boot the entrypoint writes `/app/services/profiles/docker/{profile.yaml
 
 ## Tags
 
-- `latest` — most recent release.
-- `<major>.<minor>.<patch>` (e.g. `0.5.0`), `<major>.<minor>` (e.g. `0.5`), `<major>` (e.g. `0`) — published when a `v*` tag ships through the release pipeline.
+- `latest`: most recent release.
+- `<major>.<minor>.<patch>` (e.g. `0.5.0`), `<major>.<minor>` (e.g. `0.5`), `<major>` (e.g. `0`): published when a `v*` tag ships through the release pipeline.
 
-If a version tag is missing from GHCR, the release workflow hasn't completed for it yet — pin to `latest` or a tag you can see on the [package page](https://github.com/systempromptio/systemprompt-template/pkgs/container/systemprompt-template).
+If a version tag is missing from GHCR, the release workflow hasn't completed for it yet: pin to `latest` or a tag you can see on the [package page](https://github.com/systempromptio/systemprompt-template/pkgs/container/systemprompt-template).
 
 ## Authenticated pulls
 
@@ -86,10 +86,10 @@ Multi-arch (`linux/amd64`, `linux/arm64`) for versioned releases. The `latest` t
 
 ## What's inside
 
-- `/app/bin/systemprompt` — the CLI + server binary.
-- `/app/services/` — YAML config (agents, skills, MCP servers, plugins).
-- `/app/web/` — prerendered web assets.
-- `/app/migrations/` — embedded SQL migrations (run by entrypoint).
+- `/app/bin/systemprompt`: the CLI + server binary.
+- `/app/services/`: YAML config (agents, skills, MCP servers, plugins).
+- `/app/web/`: prerendered web assets.
+- `/app/migrations/`: embedded SQL migrations (run by entrypoint).
 
 To poke around:
 
