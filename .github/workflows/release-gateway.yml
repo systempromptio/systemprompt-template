@@ -1,0 +1,378 @@
+name: Release (gateway server)
+
+# Publishes the systemprompt-gateway — the server-side AI governance gateway.
+# Ported from systempromptio/systemprompt-deploy (which built from a stale copy
+# of this tree); this workflow builds from the tag being released, so assets
+# always match the source. Triggered by `v*` tags; `bridge-v*` releases (the
+# client) are handled by release.yml and never collide with this series.
+#
+# deb/rpm packaging stays deferred (see systemprompt-deploy history).
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish (e.g. v0.5.0)"
+        required: true
+      dry_run:
+        description: "Build and checksum only — do not create the GH release or bump packagers"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  id-token: write # cosign keyless OIDC
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-gateway:
+    name: Build gateway (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            name: linux-amd64
+            os: ubuntu-latest
+            use_cross: true
+            archive: tar.gz
+          - target: aarch64-unknown-linux-gnu
+            name: linux-arm64
+            os: ubuntu-latest
+            use_cross: true
+            archive: tar.gz
+          # x86_64-apple-darwin dropped upstream — macos-13 runner queues were
+          # unusable. Apple-silicon only until GH Intel-mac capacity improves.
+          - target: aarch64-apple-darwin
+            name: darwin-arm64
+            os: macos-14
+            use_cross: false
+            archive: tar.gz
+          - target: x86_64-pc-windows-msvc
+            name: windows-amd64
+            os: windows-latest
+            use_cross: false
+            archive: zip
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross
+        if: matrix.use_cross
+        run: cargo install cross --locked
+
+      # aws-lc-sys assembles with NASM on MSVC targets.
+      - name: Install NASM (windows)
+        if: runner.os == 'Windows'
+        run: choco install nasm -y --no-progress
+
+      - name: Build (cross)
+        if: matrix.use_cross
+        env:
+          SQLX_OFFLINE: "true"
+          # aws-lc-sys's gcc-bug-95189 detector trips on Focal's host gcc 9 —
+          # force HOST_CC=clang so build-script checks pass. Only override the
+          # x86_64 target CC (same host arch; same gcc); leave aarch64 target CC
+          # as the default cross-gcc so clang doesn't hunt for aarch64 libc
+          # headers it can't find.
+          HOST_CC: clang
+          HOST_CXX: clang++
+          CC_x86_64_unknown_linux_gnu: clang
+          CXX_x86_64_unknown_linux_gnu: clang++
+        run: cross build --release --workspace --target ${{ matrix.target }}
+
+      - name: Build (native)
+        if: ${{ !matrix.use_cross }}
+        shell: bash
+        env:
+          SQLX_OFFLINE: "true"
+        run: cargo build --release --workspace --target ${{ matrix.target }}
+
+      - name: Stage artefacts
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          [ "${{ github.event_name }}" = "workflow_dispatch" ] && version="${{ inputs.tag }}" && version="${version#v}"
+          stage="systemprompt-gateway-${version}-${{ matrix.name }}"
+          mkdir -p "dist/${stage}"
+          ext=""
+          [ "${{ runner.os }}" = "Windows" ] && ext=".exe"
+          for b in systemprompt systemprompt-mcp-agent; do
+            cp "target/${{ matrix.target }}/release/${b}${ext}" "dist/${stage}/"
+          done
+          cp -r services migrations "dist/${stage}/"
+          # MCP extension manifests — services/mcp/*.yaml references
+          # extensions/mcp/<name>/manifest.yaml. Without these, MCP startup
+          # validation fails out of the gate.
+          mkdir -p "dist/${stage}/extensions/mcp"
+          for ext_dir in extensions/mcp/*/; do
+            name=$(basename "${ext_dir}")
+            if [ -f "${ext_dir}/manifest.yaml" ]; then
+              mkdir -p "dist/${stage}/extensions/mcp/${name}"
+              cp "${ext_dir}/manifest.yaml" "dist/${stage}/extensions/mcp/${name}/"
+            fi
+          done
+          # Runtime data dir (empty but required to exist on first boot)
+          mkdir -p "dist/${stage}/storage"
+          # Web assets — copy if pre-built, otherwise leave dir empty so the
+          # binary can write SSR templates at runtime
+          mkdir -p "dist/${stage}/web"
+          [ -d web/dist ] && cp -r web/dist/* "dist/${stage}/web/" || true
+          cp LICENSE README.md "dist/${stage}/"
+          echo "STAGE=${stage}" >> "$GITHUB_ENV"
+
+      - name: Package (tar.gz)
+        if: matrix.archive == 'tar.gz'
+        shell: bash
+        run: |
+          cd dist
+          tar -czf "${STAGE}.tar.gz" "${STAGE}"
+
+      - name: Package (zip)
+        if: matrix.archive == 'zip'
+        shell: pwsh
+        run: |
+          Set-Location dist
+          Compress-Archive -Path "$env:STAGE" -DestinationPath "$env:STAGE.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gateway-${{ matrix.name }}
+          path: dist/${{ env.STAGE }}.${{ matrix.archive }}
+          if-no-files-found: error
+
+  sign-and-release:
+    name: Sign + Release (gateway)
+    runs-on: ubuntu-latest
+    needs: [build-gateway]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve tag
+        id: tags
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            echo "template_tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "template_tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Compute SHA256SUMS.gateway
+        working-directory: dist
+        shell: bash
+        run: |
+          shopt -s nullglob
+          ls -la
+          : > SHA256SUMS.gateway
+          for f in systemprompt-gateway-*.tar.gz systemprompt-gateway-*.zip; do
+            sha256sum "$f" >> SHA256SUMS.gateway
+          done
+          cat SHA256SUMS.gateway
+          [ -s SHA256SUMS.gateway ] || { echo "SHA256SUMS.gateway is empty — no gateway artefacts found"; exit 1; }
+
+      - uses: sigstore/cosign-installer@v3
+
+      - name: Sign SHA256SUMS.gateway (keyless)
+        if: ${{ !inputs.dry_run }}
+        working-directory: dist
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+        run: |
+          cosign sign-blob --yes \
+            --output-signature SHA256SUMS.gateway.sig \
+            --output-certificate SHA256SUMS.gateway.pem \
+            SHA256SUMS.gateway
+
+      - name: Generate release notes
+        run: |
+          cat > notes.md <<'EOF'
+          # systemprompt-gateway ${{ steps.tags.outputs.template_tag }}
+
+          **Server-side AI governance gateway.** Deploy via Docker / GHCR / Helm / PaaS,
+          or install natively from the platform archives below.
+
+          > Looking for the **bridge** client (macOS / Windows / Linux developer
+          > workstations)? It ships under the separate `bridge-v*` tag series —
+          > see [latest bridge release](https://github.com/systempromptio/systemprompt-template/releases?q=%22systemprompt-bridge%22).
+
+          ## Install
+
+          - Homebrew: `brew tap systempromptio/tap && brew install gateway`
+          - Scoop (Windows): `scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket && scoop install gateway`
+          - Manual: download `systemprompt-gateway-<version>-<target>.tar.gz` (or
+            `-windows-amd64.zip`), verify against `SHA256SUMS.gateway`, extract.
+
+          ## Gateway archives (this release)
+
+          `linux-amd64`, `linux-arm64`, `darwin-arm64` tarballs and a `windows-amd64` zip.
+
+          Contents: `systemprompt`, `systemprompt-mcp-agent`,
+          `services/`, `migrations/`, `web/`.
+
+          ## Verify signature
+
+          ```
+          cosign verify-blob \
+            --certificate-identity-regexp='https://github.com/systempromptio/systemprompt-template/' \
+            --certificate-oidc-issuer='https://token.actions.githubusercontent.com' \
+            --signature SHA256SUMS.gateway.sig \
+            --certificate SHA256SUMS.gateway.pem \
+            SHA256SUMS.gateway
+          ```
+          EOF
+
+      - name: Create or update release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ steps.tags.outputs.template_tag }}"
+          title="systemprompt-gateway $tag"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" --title "$title" --notes-file notes.md
+          else
+            gh release create "$tag" --title "$title" --notes-file notes.md
+          fi
+          gh release upload "$tag" --clobber dist/*
+
+  bump-packagers:
+    name: Bump Homebrew tap + Scoop bucket
+    runs-on: ubuntu-latest
+    needs: [sign-and-release]
+    if: ${{ !inputs.dry_run }}
+    steps:
+      - name: Resolve version
+        id: ver
+        run: |
+          tag="${{ inputs.tag || github.ref_name }}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download SHA256SUMS.gateway
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "${{ steps.ver.outputs.tag }}" --repo "$GITHUB_REPOSITORY" --pattern 'SHA256SUMS.gateway'
+
+      - name: Bump Homebrew formula
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "::warning::HOMEBREW_TAP_TOKEN not set — skipping tap bump"
+            exit 0
+          fi
+          version="${{ steps.ver.outputs.version }}"
+          sha() { grep "systemprompt-gateway-${version}-$1" SHA256SUMS.gateway | cut -d' ' -f1; }
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/systempromptio/homebrew-tap.git" tap
+          base="https://github.com/systempromptio/systemprompt-template/releases/download/v${version}"
+          cat > tap/Formula/gateway.rb <<EOF
+          class Gateway < Formula
+            desc "Self-hosted AI governance gateway — JWT, scope, secret-scan, blocklist, rate-limit on every tool call"
+            homepage "https://systemprompt.io"
+            license "MIT"
+            version "${version}"
+
+            on_macos do
+              url "${base}/systemprompt-gateway-${version}-darwin-arm64.tar.gz"
+              sha256 "$(sha darwin-arm64)"
+            end
+
+            on_linux do
+              on_intel do
+                url "${base}/systemprompt-gateway-${version}-linux-amd64.tar.gz"
+                sha256 "$(sha linux-amd64)"
+              end
+              on_arm do
+                url "${base}/systemprompt-gateway-${version}-linux-arm64.tar.gz"
+                sha256 "$(sha linux-arm64)"
+              end
+            end
+
+            def install
+              bin.install "systemprompt"
+              bin.install "systemprompt-mcp-agent"
+              libexec.install "services", "migrations"
+              libexec.install "web" if File.exist?("web")
+              libexec.install "extensions" if File.exist?("extensions")
+            end
+
+            service do
+              run [opt_bin/"systemprompt", "infra", "services", "start", "--foreground"]
+              keep_alive true
+              log_path var/"log/systemprompt.log"
+              error_log_path var/"log/systemprompt.err.log"
+            end
+
+            test do
+              system "#{bin}/systemprompt", "--version"
+            end
+          end
+          EOF
+          cd tap
+          git config user.name "systemprompt-bot"
+          git config user.email "bot@systemprompt.io"
+          git add Formula/gateway.rb
+          git diff --cached --quiet || { git commit -m "gateway: update to ${version}"; git push; }
+
+      - name: Bump Scoop gateway manifest
+        env:
+          BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+        run: |
+          if [ -z "$BUCKET_TOKEN" ]; then
+            echo "::warning::SCOOP_BUCKET_TOKEN not set — skipping bucket bump"
+            exit 0
+          fi
+          version="${{ steps.ver.outputs.version }}"
+          hash=$(grep "systemprompt-gateway-${version}-windows-amd64.zip" SHA256SUMS.gateway | cut -d' ' -f1)
+          [ -n "$hash" ] || { echo "no windows zip in SHA256SUMS.gateway"; exit 1; }
+          git clone "https://x-access-token:${BUCKET_TOKEN}@github.com/systempromptio/scoop-bucket.git" bucket
+          cat > bucket/bucket/gateway.json <<EOF
+          {
+            "version": "${version}",
+            "description": "AI governance gateway for Claude, OpenAI, and Gemini",
+            "homepage": "https://systemprompt.io",
+            "license": "MIT AND BUSL-1.1",
+            "architecture": {
+              "64bit": {
+                "url": "https://github.com/systempromptio/systemprompt-template/releases/download/v${version}/systemprompt-gateway-${version}-windows-amd64.zip",
+                "hash": "${hash}",
+                "extract_dir": "systemprompt-gateway-${version}-windows-amd64"
+              }
+            },
+            "bin": [
+              "systemprompt.exe",
+              "systemprompt-mcp-agent.exe"
+            ],
+            "checkver": {
+              "github": "https://github.com/systempromptio/systemprompt-template",
+              "regex": "v([\\\\d.]+)"
+            },
+            "autoupdate": {
+              "architecture": {
+                "64bit": {
+                  "url": "https://github.com/systempromptio/systemprompt-template/releases/download/v\$version/systemprompt-gateway-\$version-windows-amd64.zip",
+                  "extract_dir": "systemprompt-gateway-\$version-windows-amd64"
+                }
+              }
+            }
+          }
+          EOF
+          cd bucket
+          git config user.name "systemprompt-bot"
+          git config user.email "bot@systemprompt.io"
+          git add bucket/gateway.json
+          git diff --cached --quiet || { git commit -m "gateway: update to ${version}"; git push; }
