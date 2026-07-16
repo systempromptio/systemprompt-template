@@ -8,9 +8,7 @@
 
 # The self-owned AI control plane.
 
-Run and manage every model, agent, and tool call your enterprise makes, on infrastructure you own. One self-hosted binary governs inference, auditing, evals, and every tool call across your AI fleet. Native integration with Claude Bridge. Works with any agent, any model, any provider.
-
-Most teams rent this layer: a dashboard on someone else's infrastructure sits between your engineers and your models, holding your prompts, your keys, and your audit trail. This repository is the alternative you compile and keep. Clone it, build it, point Claude for Work, Claude Code, or any Anthropic-SDK client at `http://localhost:8080`, and every request lands on a host you operate: on your network, in your air-gap, under your audit table. Single Rust binary, one PostgreSQL, four commands from `git clone` to serving inference. Built for SOC 2, ISO 27001, HIPAA, and the OWASP Agentic Top 10.
+**The only AI infrastructure you actually own.** Most teams rent this layer: someone else's dashboard holds their prompts, their keys, and their audit trail. This is the version you compile and keep. One Rust binary, one PostgreSQL, four commands from `git clone` to governed inference. 43 scripted demos prove every claim on your own laptop.
 
 [![Built on systemprompt-core](https://img.shields.io/badge/built%20on-systemprompt--core-2b6cb0?style=flat-square)](https://github.com/systempromptio/systemprompt-core)
 [![Template · MIT](https://img.shields.io/badge/template-MIT-16a34a?style=flat-square)](LICENSE)
@@ -25,10 +23,10 @@ Most teams rent this layer: a dashboard on someone else's infrastructure sits be
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-secrets.svg">
   <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-secrets.svg">
-  <img src="demo/recording/svg/output/dark/cap-secrets.svg" alt="An AI agent attempts to exfiltrate a GitHub PAT through a tool call. The secret-detection layer denies the call before the tool process spawns. One row is written to the audit table. The recording is a live capture of `./demo/governance/06-secret-breach.sh`." width="820">
+  <img src="demo/recording/svg/output/dark/cap-secrets.svg" alt="An AI agent attempts to exfiltrate a GitHub PAT through a tool call. The secret-detection layer denies the call before the tool process spawns. One row is written to the audit table." width="820">
 </picture>
 
-<sub>Live capture of <code>./demo/governance/06-secret-breach.sh</code>. Secret exfiltration attempt denied before spawn. One audit row written. No model touched the key.</sub>
+<sub>Not a diagram. A live capture of <code>./demo/governance/06-secret-breach.sh</code>: an agent tries to exfiltrate a GitHub PAT through a tool argument. Denied in under 5 ms, before the tool process spawns. One audit row. The model never saw the key.</sub>
 
 </div>
 
@@ -43,36 +41,16 @@ just setup-local            # prompts: pick a provider (Gemini/Anthropic/OpenAI)
 just start                  # serves governance + agents + MCP + admin on :8080
 ```
 
-Run with no key and `setup-local` asks which provider you have and prompts for its key; the provider you choose becomes the default (it is set as `ai.default_provider`, the other providers are disabled, and the gateway falls back to it). You can also pass keys non-interactively — the first one given becomes the default:
-
-```bash
-just setup-local <anthropic_key> [openai_key] [gemini_key]   # writes profile, starts Postgres, runs publish pipeline
-```
-
-Running a second clone side-by-side? `just setup-local <keys> "" "" 8081 5433`. Discover the CLI with `systemprompt --help`.
-
-<details>
-<summary><strong>Prerequisites</strong></summary>
-
-<br>
-
-| Requirement | Purpose | Install |
-|---|---|---|
-| **Docker** | PostgreSQL runs in a container; `just setup-local` starts it | [docker.com](https://docs.docker.com/get-docker/) |
-| **Rust 1.75+** | Compiles the workspace binary | [rustup.rs](https://rustup.rs/) |
-| **`just`** | Task runner | [just.systems](https://just.systems/) |
-| **`jq`, `yq`** | JSON and YAML processing in the scripts | `brew install jq yq` / `apt install jq yq` |
-| **AI API keys** | At least one of Anthropic, OpenAI, or Gemini. `setup-local` writes the chosen provider's key into the profile and sets it as `ai.default_provider` in `services/ai/config.yaml`, disabling the providers you didn't supply. Pass several keys to enable several providers. | Provider dashboards |
-| **Ports 8080 + 5432** | HTTP + PostgreSQL | Free on localhost |
-
-</details>
+`setup-local` prompts for a provider key, or takes keys non-interactively (`just setup-local <anthropic_key> [openai_key] [gemini_key]`; the first becomes the default provider). Discover the CLI with `systemprompt --help`. All other install paths, including running a second clone on different ports, are in [docs/README.md](docs/README.md).
 
 ---
 
 <details>
-<summary><strong>What a CISO gets</strong></summary>
+<summary><strong>For the CISO — one SQL query answers any AI audit</strong></summary>
 
 <br>
+
+Five properties, each one demonstrable on your laptop before any procurement call.
 
 - **A single query answers every AI audit.** Every request, scope decision, tool call, model output, and cost lands in one 18-column Postgres table. Six correlation columns (UserId, SessionId, TaskId, TraceId, ContextId, ClientId) bind identity at construction time, so a row without a trace is a programming error.
 - **Credentials physically cannot enter the context window.** The governance process is the parent of every MCP tool subprocess. Keys are decrypted from a ChaCha20-Poly1305 store and injected into the child's environment by `Command::spawn()`. The parent, which owns the LLM context, never writes the value. 35+ regex patterns deny any tool call that tries to pass a secret through arguments.
@@ -80,27 +58,14 @@ Running a second clone side-by-side? `just setup-local <keys> "" "" 8081 5433`. 
 - **Policy-as-code on PreToolUse hooks.** Destructive operations, blocklists, department scoping, six-tier RBAC (Admin, User, Service, A2A, MCP, Anonymous). Rate limiting at 300 req/min per session with role multipliers. Every deny reason is structured and auditable.
 - **Certifications-ready, not certification-marketing.** Tiered log retention from debug (1 day) through error (90 days). 10 identity lifecycle event variants. SIEM-ready JSON events for Splunk, ELK, Datadog, Sumo. Built for **SOC 2 Type II**, **ISO 27001**, **HIPAA**, and the **OWASP Agentic Top 10**.
 
-This repo is the evaluation template. Fork it, clone it, compile it. 43 scripted demos execute every claim above against the live binary on your own laptop.
-
 </details>
 
 <details>
-<summary><strong>What you'll see in the first five minutes</strong></summary>
+<summary><strong>Run the proof — 43 scripted demos, 41 cost nothing</strong></summary>
 
 <br>
 
-- **http://localhost:8080** — admin UI, live audit table, session viewer.
-- **`systemprompt analytics overview`** — conversations, tool calls, costs in microdollars, anomalies flagged above 2x/3x of rolling average.
-- **`systemprompt infra logs audit <request-id> --full`** — the full trace for any request: identity, scope, rule evaluations, tool call, model output, cost. One query, one row, one answer.
-- **Point Claude Code, Claude Desktop, or any MCP client at it.** Permissions follow the user, not the client. Try to exfiltrate a key through a tool argument and watch the secret-detection layer deny it before the tool process spawns.
-- **`./demo/governance/06-secret-breach.sh`** — the scripted version of that denial, recorded above.
-
-</details>
-
-<details>
-<summary><strong>The scripted demos</strong></summary>
-
-<br>
+Every claim in this README has a script that executes it against the live binary.
 
 ```bash
 ./demo/00-preflight.sh                    # acquire token, verify services, create admin
@@ -126,11 +91,11 @@ Full index: [`demo/README.md`](demo/README.md). 41 of 43 scripts are free; two c
 </details>
 
 <details>
-<summary><strong>The governance pipeline</strong></summary>
+<summary><strong>The governance pipeline — five checks before any tool process spawns</strong></summary>
 
 <br>
 
-Every tool call passes five in-process checks, synchronously, before it reaches a tool process. Every decision lands in an 18-column audit row.
+Every tool call passes five in-process checks, synchronously, in under 5 ms. Every decision lands in an 18-column audit row.
 
 ```
   LLM Agent
@@ -168,13 +133,13 @@ Every tool call passes five in-process checks, synchronously, before it reaches 
 </details>
 
 <details>
-<summary><strong>How credential injection works</strong></summary>
+<summary><strong>Why agents cannot leak your keys — the code, twelve lines</strong></summary>
 
 <br>
 
-When a tool call passes the pipeline, `spawn_server()` decrypts credentials from the ChaCha20-Poly1305 store and injects them into the child process environment. The parent process — which owns the LLM context window — never writes the value.
+Not a policy that asks agents nicely. A process boundary: the parent that owns the LLM context never writes the credential value.
 
-Source: [`systemprompt-core/crates/domain/mcp/src/services/process/spawner.rs`](https://github.com/systempromptio/systemprompt-core/blob/main/crates/domain/mcp/src/services/process/spawner.rs).
+When a tool call passes the pipeline, `spawn_server()` decrypts credentials from the ChaCha20-Poly1305 store and injects them into the child process environment. Source: [`systemprompt-core/crates/domain/mcp/src/services/process/spawner.rs`](https://github.com/systempromptio/systemprompt-core/blob/main/crates/domain/mcp/src/services/process/spawner.rs).
 
 ```rust
 let secrets = SecretsBootstrap::get()?;
@@ -194,16 +159,16 @@ let child = child_command.spawn()?;
 std::mem::forget(child);
 ```
 
-Before spawn, a secret-detection pipeline scans tool arguments for 35+ credential patterns. A tool call that tries to pass a secret through the context window is blocked even if the agent has scope to run the tool. The hero recording above is the scripted proof: `./demo/governance/06-secret-breach.sh`.
+Before spawn, secret detection scans tool arguments for 35+ credential patterns. A tool call that tries to pass a secret through the context window is blocked even if the agent has scope to run the tool. The hero recording above is the scripted proof: `./demo/governance/06-secret-breach.sh`.
 
 </details>
 
 <details>
-<summary><strong>Performance</strong></summary>
+<summary><strong>Performance — 3,308 req/s burst, p99 22.7 ms</strong></summary>
 
 <br>
 
-Sub-5 ms governance overhead, benchmarked. Each request performs JWT validation, scope resolution, three rule evaluations, and an async audit write.
+Governance that adds more than 1% latency gets bypassed. This one doesn't. Each request performs JWT validation, scope resolution, three rule evaluations, and an async audit write.
 
 | Metric | Result |
 |---|---|
@@ -218,7 +183,20 @@ Reproduce: `just benchmark`. Numbers measured on the author's laptop.
 </details>
 
 <details>
-<summary><strong>Configuration & CLI</strong></summary>
+<summary><strong>Your first five minutes — admin UI, audit trace, live denial</strong></summary>
+
+<br>
+
+- **http://localhost:8080** — admin UI, live audit table, session viewer.
+- **`systemprompt analytics overview`** — conversations, tool calls, costs in microdollars, anomalies flagged above 2x/3x of rolling average.
+- **`systemprompt infra logs audit <request-id> --full`** — the full trace for any request: identity, scope, rule evaluations, tool call, model output, cost. One query, one row, one answer.
+- **Point Claude Code, Claude Desktop, or any MCP client at it.** Permissions follow the user, not the client. Try to exfiltrate a key through a tool argument and watch the secret-detection layer deny it before the tool process spawns.
+- **`./demo/governance/06-secret-breach.sh`** — the scripted version of that denial, recorded above.
+
+</details>
+
+<details>
+<summary><strong>Configuration & CLI — everything is a YAML diff, every task has a verb</strong></summary>
 
 <br>
 
@@ -253,7 +231,7 @@ Eight CLI domains cover every operational surface. No dashboard required for any
 </details>
 
 <details>
-<summary><strong>More recordings</strong> — infrastructure, integrations, analytics, agents, compliance, MCP governance</summary>
+<summary><strong>More recordings — infrastructure, integrations, analytics, agents, compliance</strong></summary>
 
 <br>
 
@@ -341,14 +319,7 @@ Claude for Work ships with extension points for inference, identity, and audit. 
                                                                  Air-gap capable
 ```
 
-Four governance layers enforce before a byte leaves your network:
-
-- **Scope** — RBAC resolved from the JWT at request construction. Admin · User · Service · A2A · MCP · Anonymous.
-- **Secrets** — 35+ regex patterns scan every tool argument and every prompt. A credential in the context path is denied before the tool process spawns.
-- **Policy** — Blocklists, destructive-operation categories, tenant rules, PreToolUse hooks as code.
-- **Quota** — 300 req/min per session with role multipliers; per-tool and per-budget limits.
-
-In-process evaluation against a cached entitlement table. Governance stays out of the latency budget — p99 **22.7 ms**, <1% of AI response time.
+The same governance pipeline described above enforces scope, secrets, policy, and quota before a byte leaves your network, in-process against a cached entitlement table: p99 **22.7 ms**, <1% of AI response time.
 
 ### How it compares
 
@@ -361,42 +332,18 @@ In-process evaluation against a cached entitlement table. Governance stays out o
 | **MCP allowlist** | Anthropic-curated | Device-local config | One registry, per-principal policy |
 | **Plugin catalogue** | Anthropic-hosted | Files on disk | Signed, scoped, versioned distribution |
 
-Manual install is tested and works end-to-end today; signed installers, MDM packages, and Homebrew / winget distribution land in a later release. Install steps in the **Advanced** fold below.
+Manual install works end-to-end today; signed installers and MDM packages land in a later release. Full walkthrough: [docs/bridge-install.md](docs/bridge-install.md).
 
 </details>
 
 <details>
-<summary><strong>Advanced — gateway routes, bridge install, org-plugins sync</strong></summary>
+<summary><strong>Route any model anywhere — the `/v1/messages` gateway</strong></summary>
 
 <br>
 
-Manual install is tested end-to-end. Automated distribution — signed installers, MDM packages, Homebrew / winget — is in progress; today you download a binary and drop a TOML file, documented below.
-
-### `/v1/messages` inference gateway
-
-`POST /v1/messages` at the Anthropic wire format. Every inference request flows through the same governance pipeline as every tool call — on infrastructure you operate.
-
-- **SDK- and Claude-Desktop-compatible.** Authenticated with a systemprompt JWT in `x-api-key` (falls back to `Authorization: Bearer`). No new credential type — existing user JWTs serve as the gateway credential.
-- **Routes by `model_pattern`.** Built-in tags: `anthropic`, `openai`, `moonshot` (Kimi), `qwen`, `gemini`, `minimax`. Anthropic is a transparent byte proxy (extended thinking, cache-control headers, SSE events preserved verbatim). OpenAI-compatible providers get full Anthropic↔OpenAI request/response/SSE conversion. Upstream API keys resolve from the secrets file by name.
-- **Zero overhead when disabled.** The `/v1` router mounts only if `gateway.enabled: true` in the active profile.
-
-
-Profile YAML:
+`POST /v1/messages` at the Anthropic wire format. Every inference request flows through the same governance pipeline as every tool call. A route maps a requested model pattern to a provider you declared:
 
 ```yaml
-providers:
-  - name: anthropic
-    protocol: anthropic
-    endpoint: https://api.anthropic.com/v1
-    api_key_secret: anthropic
-    models:
-      - id: claude-sonnet-4-20250514
-  - name: minimax
-    protocol: anthropic
-    endpoint: https://api.minimax.io/anthropic/v1
-    api_key_secret: minimax
-    models:
-      - id: MiniMax-M2
 gateway:
   enabled: true
   default_provider: anthropic
@@ -407,151 +354,23 @@ gateway:
       provider: minimax
 ```
 
-Each provider is declared once under `providers:` — its wire `protocol`, `endpoint`, `api_key_secret`, and the `models` it serves (each with optional `aliases` and `upstream_model`). Gateway `routes` carry no connectivity; they only map a requested `model_pattern` to a provider by name, and `default_provider` forwards any model no route matches.
+Routes evaluate in order; first match wins. Anthropic is a transparent byte proxy; OpenAI-compatible providers get full request/response/SSE conversion. Provider declarations, CLI route configuration, route access control, and the extensible provider registry: [docs/gateway-routes.md](docs/gateway-routes.md).
 
-Routes evaluate in order; first `model_pattern` match wins. On a model entry, `upstream_model` aliases a client-requested model to a different upstream name without the client knowing.
+</details>
 
-**Configuring routes from the CLI (worked example: proxy every Anthropic model to Gemini Flash).** Instead of hand-editing the profile, use `admin config`. To make a client that asks for `claude-*` actually serve Google Gemini Flash:
+<details>
+<summary><strong>Prerequisites</strong></summary>
 
-```bash
-# 1. Store the upstream key and register the provider + model in the profile registry
-systemprompt admin config secret set gemini <GEMINI_API_KEY>
-systemprompt admin config catalog provider add --name gemini --protocol gemini \
-  --endpoint https://generativelanguage.googleapis.com/v1beta --api-key-secret gemini
-systemprompt admin config catalog model add --provider gemini --id gemini-2.5-flash
+<br>
 
-# 2. Point the claude-* route at gemini and rewrite the upstream model name
-systemprompt admin config gateway route add --model-pattern 'claude-*' \
-  --provider gemini --upstream-model gemini-2.5-flash
-```
-
-A client `POST /v1/messages` with `model: claude-haiku-4-5` then returns `model: gemini-2.5-flash`.
-
-**Important — routes are access-controlled.** Each route is gated by an `access_control_entities` row keyed on its id, which is content-addressed (`hash(model_pattern, provider)`). Changing a route's provider mints a *new* id, so a freshly-edited route is denied (`unknown to access control`) until the entity is materialised. The `admin config` CLI edits the profile only; it does **not** reconcile the access-control catalog. Materialise it one of two ways:
-
-- **Re-run the publish pipeline** — `systemprompt infra jobs run publish_pipeline` (also runs via `just publish`). It registers every route in the live profile and the `gateway_route: "*"` wildcard in `services/access-control/roles.yaml` grants them. Dynamic, but must be re-run after every route change.
-- **Pin it in `services/access-control/roles.yaml`** (committed, survives a clean install) — add an explicit grant so the ACL loader self-materialises the row at publish time:
-
-  ```yaml
-  - entity_type: gateway_route
-    entity_id: claude-star-39ccd3   # synthesize_route_id("claude-*", "gemini")
-    access: allow
-    default_included: true
-    roles: [user]
-  ```
-
-**Bridge credential helper endpoints.** `systemprompt-bridge` is a standalone ~2.4 MB Rust binary (no `tokio`, no `sqlx`, no `axum`) that trades a lower-privilege credential for a short-lived JWT. Progressive capability ladder — mTLS → dashboard session → PAT — mounted under `/v1/gateway/auth/bridge/`:
-
-- `POST /pat` — `Authorization: Bearer <pat>` → `{token, ttl, headers}` with a fresh JWT and the canonical identity header map (`x-user-id`, `x-session-id`, `x-trace-id`, `x-client-id`, `x-tenant-id`, `x-policy-version`, `x-call-source`).
-- `POST /session` — `501` (dashboard-cookie exchange not yet wired).
-- `POST /mtls` — `501` (device-cert exchange not yet wired).
-- `GET /capabilities` — `{"modes":["pat"]}`; probes advertise which exchange modes this deployment accepts.
-
-The helper writes the signed JWT + expiry to the OS cache dir with mode `0600`. Stdout contract is exactly one JSON object; all diagnostics go to stderr. Released out-of-band as `bridge-v*` tags. Install / configure / wire-up steps below.
-
-**Extensible provider registry.** `GatewayRoute.provider` is a free-form string resolved at dispatch time against a startup-built registry. Extension crates register new upstreams with:
-
-```rust
-inventory::submit! {
-    systemprompt_api::services::gateway::GatewayUpstreamRegistration {
-        tag: "my-provider",
-        factory: || std::sync::Arc::new(MyUpstream),
-    }
-}
-```
-
-The `GatewayUpstream` trait (`async fn proxy(&self, ctx: UpstreamCtx<'_>)`) is the single integration seam. Built-in tags seeded automatically; extension tags may shadow built-ins (logged as a warning). Full detail: [`core/CHANGELOG.md`](https://github.com/systempromptio/systemprompt-core/blob/main/CHANGELOG.md#030---2026-04-22).
-
----
-
-### Install the bridge credential helper
-
-The `systemprompt-bridge` binary is the **Credential helper script** slot in Claude for Work. It turns a PAT into a short-lived JWT that Claude Desktop merges into every inference request routed at this binary. Download the prebuilt macOS, Windows, or Linux binary from [systempromptio/systemprompt-core releases](https://github.com/systempromptio/systemprompt-core/releases/tag/bridge-v0.10.0).
-
-Current release: **[bridge-v0.10.0](https://github.com/systempromptio/systemprompt-core/releases/tag/bridge-v0.10.0)** — Linux x86_64, Windows x86_64 (MSVC ABI), macOS aarch64 (cosign-signed).
-
-#### 1. Download
-
-**Linux x86_64**
-
-```bash
-curl -fsSL -o /usr/local/bin/systemprompt-bridge \
-  https://github.com/systempromptio/systemprompt-core/releases/download/bridge-v0.10.0/systemprompt-bridge-x86_64-unknown-linux-gnu
-chmod +x /usr/local/bin/systemprompt-bridge
-curl -fsSL -O https://github.com/systempromptio/systemprompt-core/releases/download/bridge-v0.10.0/SHA256SUMS
-sha256sum -c SHA256SUMS --ignore-missing
-```
-
-**Windows x86_64** (PowerShell as Administrator):
-
-```powershell
-$dir = "C:\Program Files\systemprompt"
-New-Item -ItemType Directory -Force -Path $dir | Out-Null
-Invoke-WebRequest `
-  -Uri "https://github.com/systempromptio/systemprompt-core/releases/download/bridge-v0.10.0/systemprompt-bridge-x86_64-pc-windows-msvc.exe" `
-  -OutFile "$dir\systemprompt-bridge.exe"
-[Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$dir", "User")
-```
-
-Windows Smart Screen will flag the unsigned binary on first run → "More info" → "Run anyway".
-
-**macOS** (source build):
-
-```bash
-git clone https://github.com/systempromptio/systemprompt-core.git
-cd systemprompt-core
-cargo build --manifest-path bin/bridge/Cargo.toml --release \
-  --target "$(rustc -vV | awk '/host:/ {print $2}')"
-sudo install -m 755 \
-  "bin/bridge/target/$(rustc -vV | awk '/host:/ {print $2}')/release/systemprompt-bridge" \
-  /usr/local/bin/
-```
-
-#### 2. Configure
-
-Linux/macOS: `~/.config/systemprompt/systemprompt-bridge.toml`
-Windows: `%APPDATA%\systemprompt\systemprompt-bridge.toml`
-
-```toml
-[gateway]
-url = "http://localhost:8080"   # for the local-trial template; swap to your production host
-
-[pat]
-token = "sp-live-your-personal-access-token"
-```
-
-Issue a PAT from the running binary with `systemprompt admin users pat issue <user-id> --name bridge-laptop`. Absent config sections are silently skipped. Dev overrides: `SP_BRIDGE_GATEWAY_URL`, `SP_BRIDGE_PAT`.
-
-#### 3. Verify
-
-```bash
-systemprompt-bridge           # prints exactly one JSON {token, ttl, headers}
-systemprompt-bridge --check   # exits 0 if a token can be issued
-```
-
-Diagnostics go to stderr only. The stdout JSON matches Anthropic's `inferenceCredentialHelper` contract byte-for-byte.
-
-#### 4. Point Claude Desktop at it
-
-In Claude Desktop **Enterprise → Settings → Inference**:
-
-- **Credential helper script**: `/usr/local/bin/systemprompt-bridge` (or `C:\Program Files\systemprompt\systemprompt-bridge.exe`).
-- **API base URL**: the `gateway.url` from your TOML.
-
-Every Claude Desktop request now lands a row in `ai_requests` with `user_id`, `tenant_id`, `session_id`, `trace_id`, tokens, cost, and latency — identical governance to every other tool call. Run `systemprompt infra logs audit <request-id> --full` after a prompt to see the trace end-to-end.
-
-#### 5. (Optional) Install the `org-plugins/` sync agent
-
-The same binary manages the bridge's signed plugin / managed-MCP mount:
-
-```bash
-systemprompt-bridge install     # register launchd (macOS) / scheduled task (Windows) / systemd --user (Linux)
-systemprompt-bridge sync        # pull signed plugin manifest + allowlist now
-systemprompt-bridge validate    # verify the ed25519 signature
-systemprompt-bridge uninstall   # remove
-```
-
-Mount targets: `/Library/Application Support/Claude/org-plugins/` (macOS), `C:\ProgramData\Claude\org-plugins\` (Windows), `${XDG_DATA_HOME:-$HOME/.local/share}/Claude/org-plugins/` (Linux).
+| Requirement | Purpose | Install |
+|---|---|---|
+| **Docker** | PostgreSQL runs in a container; `just setup-local` starts it | [docker.com](https://docs.docker.com/get-docker/) |
+| **Rust 1.75+** | Compiles the workspace binary | [rustup.rs](https://rustup.rs/) |
+| **`just`** | Task runner | [just.systems](https://just.systems/) |
+| **`jq`, `yq`** | JSON and YAML processing in the scripts | `brew install jq yq` / `apt install jq yq` |
+| **AI API keys** | At least one of Anthropic, OpenAI, or Gemini; the first key you supply becomes the default provider | Provider dashboards |
+| **Ports 8080 + 5432** | HTTP + PostgreSQL | Free on localhost |
 
 </details>
 
@@ -569,6 +388,6 @@ Mount targets: `/Library/Application Support/Claude/org-plugins/` (macOS), `C:\P
 
 [![systemprompt.io](https://img.shields.io/badge/systemprompt.io-2b6cb0?style=for-the-badge)](https://systemprompt.io) &nbsp; [![Core](https://img.shields.io/badge/systemprompt--core-2b6cb0?style=for-the-badge)](https://github.com/systempromptio/systemprompt-core) &nbsp; [![Documentation](https://img.shields.io/badge/documentation-16a34a?style=for-the-badge)](https://systemprompt.io/documentation/) &nbsp; [![Guides](https://img.shields.io/badge/guides-f97316?style=for-the-badge)](https://systemprompt.io/guides) &nbsp; [![Discord](https://img.shields.io/badge/discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/wkAbSuPWpr)
 
-<sub>Own how your organization uses AI. Every interaction governed and provable.</sub>
+<sub>You can rent your AI control plane, or you can compile it. Clone, build, run the 43 demos. Then decide.</sub>
 
 </div>

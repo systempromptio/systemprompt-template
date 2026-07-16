@@ -37,6 +37,19 @@ Choose the channel that fits your environment. Each doc is a copy-paste recipe.
 
 Maintainers: the release process (versioning, tag scheme, retention, rollback) is documented in [RELEASING.md](RELEASING.md).
 
+### Running a second clone side-by-side
+
+`just setup-local` accepts port overrides after the three key positions. To run a second clone on HTTP 8081 and Postgres 5433:
+
+```bash
+just setup-local <anthropic_key> "" "" 8081 5433
+```
+
+### Gateway configuration
+
+- [gateway-routes.md](gateway-routes.md) — `/v1/messages` provider routing, CLI route configuration, route access control, and the extensible provider registry.
+- [bridge-install.md](bridge-install.md) — install and configure the `systemprompt-bridge` credential helper for Claude for Work.
+
 ## Install the bridge (client)
 
 The bridge — a single `systemprompt-bridge` binary with a native GUI on macOS and Windows. Renamed from `cowork → bridge` in v0.7.0; the binaries ship on the `bridge-v*` release tag series and install as the `bridge` Homebrew formula / Scoop package. The Claude Desktop host-integration label is still "Cowork", and the legacy `cowork` package is retained for existing installs.
