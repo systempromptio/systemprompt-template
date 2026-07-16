@@ -70,10 +70,18 @@ jobs:
         if: matrix.use_cross
         run: cargo install cross --locked
 
-      # aws-lc-sys assembles with NASM on MSVC targets.
-      - name: Install NASM (windows)
+      # aws-lc-sys assembles with NASM on MSVC targets; openssl-sys needs a
+      # real OpenSSL install with OPENSSL_DIR pointing at it.
+      - name: Install NASM + OpenSSL (windows)
         if: runner.os == 'Windows'
-        run: choco install nasm -y --no-progress
+        shell: pwsh
+        run: |
+          choco install nasm openssl -y --no-progress
+          $dir = Get-ChildItem 'C:\Program Files' -Directory -Filter 'OpenSSL*' |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $dir) { throw "OpenSSL install directory not found" }
+          Add-Content $env:GITHUB_ENV "OPENSSL_DIR=$dir"
+          Add-Content $env:GITHUB_PATH 'C:\Program Files\NASM'
 
       - name: Build (cross)
         if: matrix.use_cross
