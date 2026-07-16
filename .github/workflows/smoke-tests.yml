@@ -74,8 +74,6 @@ jobs:
           scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket
           scoop install bridge
           systemprompt-bridge --version
-          scoop install gateway
-          systemprompt --version
 
   compose:
     name: docker-compose / Coolify template

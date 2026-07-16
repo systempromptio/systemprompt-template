@@ -22,7 +22,6 @@ Choose the channel that fits your environment. Each doc is a copy-paste recipe.
 | GitHub Container Registry | [install/ghcr.md](install/ghcr.md) | Primary public image surface |
 | Binary (`curl \| sh`) | [install/binary.md](install/binary.md) | Bare-metal, VM, one-shot installs |
 | Homebrew tap | [install/homebrew.md](install/homebrew.md) | macOS servers / development |
-| Scoop (Windows) | [install/scoop.md](install/scoop.md) | Native Windows gateway |
 | Helm chart | [install/helm.md](install/helm.md) | Kubernetes |
 | Nix flake | [install/nix.md](install/nix.md) | NixOS / Nix users |
 | Railway template | [install/railway.md](install/railway.md) | Railway PaaS |

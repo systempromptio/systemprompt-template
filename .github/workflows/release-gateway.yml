@@ -54,11 +54,10 @@ jobs:
             os: macos-14
             use_cross: false
             archive: tar.gz
-          - target: x86_64-pc-windows-msvc
-            name: windows-amd64
-            os: windows-latest
-            use_cross: false
-            archive: zip
+          # x86_64-pc-windows-msvc deferred: core's process/signal/daemon layer
+          # is Unix-only (~21 files use nix/std::os::unix) — a native Windows
+          # gateway needs a core port first. Windows runs the gateway via
+          # Docker until then.
     steps:
       - uses: actions/checkout@v4
 
@@ -69,26 +68,6 @@ jobs:
       - name: Install cross
         if: matrix.use_cross
         run: cargo install cross --locked
-
-      # aws-lc-sys assembles with NASM on MSVC targets; openssl-sys needs a
-      # real OpenSSL install with OPENSSL_DIR pointing at it.
-      - name: Install NASM + OpenSSL (windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          choco install nasm openssl -y --no-progress
-          $dir = Get-ChildItem 'C:\Program Files' -Directory -Filter 'OpenSSL*' |
-            Select-Object -First 1 -ExpandProperty FullName
-          if (-not $dir) { throw "OpenSSL install directory not found" }
-          Add-Content $env:GITHUB_ENV "OPENSSL_DIR=$dir"
-          # choco's OpenSSL 3 ships MSVC import libs under lib\VC\x64\MD,
-          # which openssl-sys does not probe on its own.
-          $libdir = Join-Path $dir 'lib\VC\x64\MD'
-          if (Test-Path $libdir) {
-            Add-Content $env:GITHUB_ENV "OPENSSL_LIB_DIR=$libdir"
-            Add-Content $env:GITHUB_ENV "OPENSSL_INCLUDE_DIR=$(Join-Path $dir 'include')"
-          }
-          Add-Content $env:GITHUB_PATH 'C:\Program Files\NASM'
 
       - name: Build (cross)
         if: matrix.use_cross
@@ -152,13 +131,6 @@ jobs:
         run: |
           cd dist
           tar -czf "${STAGE}.tar.gz" "${STAGE}"
-
-      - name: Package (zip)
-        if: matrix.archive == 'zip'
-        shell: pwsh
-        run: |
-          Set-Location dist
-          Compress-Archive -Path "$env:STAGE" -DestinationPath "$env:STAGE.zip"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -228,13 +200,13 @@ jobs:
           ## Install
 
           - Homebrew: `brew tap systempromptio/tap && brew install gateway`
-          - Scoop (Windows): `scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket && scoop install gateway`
-          - Manual: download `systemprompt-gateway-<version>-<target>.tar.gz` (or
-            `-windows-amd64.zip`), verify against `SHA256SUMS.gateway`, extract.
+          - Manual: download `systemprompt-gateway-<version>-<target>.tar.gz`,
+            verify against `SHA256SUMS.gateway`, extract.
 
           ## Gateway archives (this release)
 
-          `linux-amd64`, `linux-arm64`, `darwin-arm64` tarballs and a `windows-amd64` zip.
+          `linux-amd64`, `linux-arm64`, `darwin-arm64` tarballs. (No native
+          Windows build — run the gateway via Docker on Windows.)
 
           Contents: `systemprompt`, `systemprompt-mcp-agent`,
           `services/`, `migrations/`, `web/`.
@@ -266,7 +238,7 @@ jobs:
           gh release upload "$tag" --clobber dist/*
 
   bump-packagers:
-    name: Bump Homebrew tap + Scoop bucket
+    name: Bump Homebrew tap
     runs-on: ubuntu-latest
     needs: [sign-and-release]
     if: ${{ !inputs.dry_run }}
@@ -344,51 +316,3 @@ jobs:
           git add Formula/gateway.rb
           git diff --cached --quiet || { git commit -m "gateway: update to ${version}"; git push; }
 
-      - name: Bump Scoop gateway manifest
-        env:
-          BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
-        run: |
-          if [ -z "$BUCKET_TOKEN" ]; then
-            echo "::warning::SCOOP_BUCKET_TOKEN not set — skipping bucket bump"
-            exit 0
-          fi
-          version="${{ steps.ver.outputs.version }}"
-          hash=$(grep "systemprompt-gateway-${version}-windows-amd64.zip" SHA256SUMS.gateway | cut -d' ' -f1)
-          [ -n "$hash" ] || { echo "no windows zip in SHA256SUMS.gateway"; exit 1; }
-          git clone "https://x-access-token:${BUCKET_TOKEN}@github.com/systempromptio/scoop-bucket.git" bucket
-          cat > bucket/bucket/gateway.json <<EOF
-          {
-            "version": "${version}",
-            "description": "AI governance gateway for Claude, OpenAI, and Gemini",
-            "homepage": "https://systemprompt.io",
-            "license": "MIT AND BUSL-1.1",
-            "architecture": {
-              "64bit": {
-                "url": "https://github.com/systempromptio/systemprompt-template/releases/download/v${version}/systemprompt-gateway-${version}-windows-amd64.zip",
-                "hash": "${hash}",
-                "extract_dir": "systemprompt-gateway-${version}-windows-amd64"
-              }
-            },
-            "bin": [
-              "systemprompt.exe",
-              "systemprompt-mcp-agent.exe"
-            ],
-            "checkver": {
-              "github": "https://github.com/systempromptio/systemprompt-template",
-              "regex": "v([\\\\d.]+)"
-            },
-            "autoupdate": {
-              "architecture": {
-                "64bit": {
-                  "url": "https://github.com/systempromptio/systemprompt-template/releases/download/v\$version/systemprompt-gateway-\$version-windows-amd64.zip",
-                  "extract_dir": "systemprompt-gateway-\$version-windows-amd64"
-                }
-              }
-            }
-          }
-          EOF
-          cd bucket
-          git config user.name "systemprompt-bot"
-          git config user.email "bot@systemprompt.io"
-          git add bucket/gateway.json
-          git diff --cached --quiet || { git commit -m "gateway: update to ${version}"; git push; }

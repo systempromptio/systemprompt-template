@@ -2,7 +2,7 @@
 
 This doc installs the bridge on a Windows workstation using [Scoop](https://scoop.sh). The Scoop manifest pulls `systemprompt-bridge.exe` (renamed from `cowork` in v0.7.0) from the latest `bridge-v*` release.
 
-The gateway (server) also ships on Scoop from `v0.5.0` — see [../install/scoop.md](../install/scoop.md) — or deploy it via Docker / GHCR / Helm on a Linux host.
+The gateway (server) does not ship a Windows binary — deploy it via Docker / GHCR / Helm on a Linux host.
 
 Bucket: [`systempromptio/scoop-bucket`](https://github.com/systempromptio/scoop-bucket).
 
