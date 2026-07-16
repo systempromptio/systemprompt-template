@@ -75,6 +75,10 @@ check_or_apply deploy/casaos/docker-compose.yml \
     "s|image: $IMAGE:[0-9.]*|image: $IMAGE:$VERSION|" \
     "image: $IMAGE:$VERSION" \
     "CasaOS image pin"
+check_or_apply deploy/casaos/docker-compose.yml \
+    "s|^  version: \"[0-9.]*\"|  version: \"$VERSION\"|" \
+    "^  version: \"$VERSION\"" \
+    "CasaOS x-casaos version"
 check_or_apply deploy/digitalocean/files/opt/systemprompt/docker-compose.yml \
     "s|image: $IMAGE:[0-9.]*|image: $IMAGE:$VERSION|" \
     "image: $IMAGE:$VERSION" \

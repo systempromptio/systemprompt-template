@@ -1,6 +1,10 @@
-# CasaOS app definition for the systemprompt gateway.
-# Mirror of the upstream CasaOS-AppStore Apps/SystemPrompt payload.
-# CasaOS requires pinned image tags — bump on release.
+# CasaOS / ZimaOS app definition for the systemprompt gateway.
+# Mirror of the upstream CasaOS-AppStore Apps/SystemPrompt payload (v2 store
+# protocol). The only intended delta vs upstream: icon and screenshot URLs
+# point at raw.githubusercontent.com here (so standalone "Install a customized
+# app" imports resolve today) and at the store's jsdelivr CDN upstream.
+# CasaOS requires pinned image tags; image and x-casaos.version are bumped
+# per release by scripts/sync-release-version.sh.
 name: systemprompt
 services:
   app:
@@ -35,23 +39,23 @@ services:
       envs:
         - container: ANTHROPIC_API_KEY
           description:
-            en_us: Anthropic API key. At least one AI provider key is required or the app will not start.
+            en_US: Anthropic API key. At least one AI provider key is required or the app will not start.
         - container: OPENAI_API_KEY
           description:
-            en_us: OpenAI API key (optional).
+            en_US: OpenAI API key (optional).
         - container: GEMINI_API_KEY
           description:
-            en_us: Gemini API key (optional).
+            en_US: Gemini API key (optional).
         - container: POSTGRES_PASSWORD
           description:
-            en_us: Database password. Set once before first start.
+            en_US: Database password. Set once before first start.
         - container: EXTERNAL_URL
           description:
-            en_us: Public URL if you expose the app beyond the LAN (optional).
+            en_US: Public URL if you expose the app beyond the LAN (optional).
       ports:
         - container: "8080"
           description:
-            en_us: Web UI and API port.
+            en_US: Web UI and API port.
 
   postgres:
     image: postgres:18-alpine
@@ -75,7 +79,7 @@ services:
       envs:
         - container: POSTGRES_PASSWORD
           description:
-            en_us: Database password (must match the app's).
+            en_US: Database password (must match the app's).
 
 volumes:
   postgres_data:
@@ -84,25 +88,28 @@ volumes:
   app_profiles:
 
 x-casaos:
+  id: io.systemprompt.gateway
   architectures:
     - amd64
     - arm64
   main: app
   author: systemprompt.io
   developer: systemprompt.io
-  icon: https://raw.githubusercontent.com/systempromptio/systemprompt-template/main/storage/files/images/icon-256.png
+  icon: https://raw.githubusercontent.com/systempromptio/systemprompt-template/main/storage/files/images/icon.svg
   screenshot_link:
     - https://raw.githubusercontent.com/systempromptio/systemprompt-template/main/deploy/casaos/screenshot-1.png
   category: Developer
   port_map: "8080"
   scheme: http
   index: /
+  version: "0.21.0"
+  update_at: "2026-07-16"
   title:
-    en_us: systemprompt
+    en_US: systemprompt
   tagline:
-    en_us: Self-owned AI control plane — governance gateway for Claude, OpenAI, and Gemini.
+    en_US: Self-owned AI control plane and governance gateway for Claude, OpenAI, and Gemini.
   description:
-    en_us: >-
+    en_US: >-
       systemprompt is a governance gateway for AI providers (Claude, OpenAI,
       Gemini) with policy checks, secret scanning, audit trails, rate limits,
       and MCP orchestration. This app bundles the gateway and a Postgres
@@ -110,7 +117,13 @@ x-casaos:
       database migrations and can take several minutes.
   tips:
     before_install:
-      en_us: >-
-        Set at least one AI provider API key (Anthropic, OpenAI, or Gemini) —
-        the app will not start without one. Choose a database password before
+      en_US: >-
+        Set at least one AI provider API key (Anthropic, OpenAI, or Gemini).
+        The app will not start without one. Choose a database password before
         first start; the database is initialised with it.
+  release_notes:
+    en_US: Initial App Store release of the systemprompt governance gateway (v0.21.0).
+  website: https://systemprompt.io
+  repo: https://github.com/systempromptio/systemprompt-template
+  support: https://github.com/systempromptio/systemprompt-template/issues
+  docs: https://github.com/systempromptio/systemprompt-template/blob/main/docs/install/casaos.md
