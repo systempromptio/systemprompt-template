@@ -1,0 +1,97 @@
+name: Smoke tests (post-publish)
+
+# Exercises every published install channel against a real release tag.
+# Runs automatically when a gateway release is published; dispatchable for
+# ad-hoc verification. Ported from systemprompt-deploy (apt/rpm remain
+# deferred alongside their publish workflows; helm/nix live with their
+# own pipelines).
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to smoke-test (e.g. v0.5.0)"
+        required: true
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    # bridge-v* releases are the client bundle — only gateway v* tags have
+    # the channels below.
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'v') }}
+    outputs:
+      tag: ${{ steps.t.outputs.tag }}
+      version: ${{ steps.t.outputs.version }}
+    steps:
+      - id: t
+        run: |
+          tag="${{ inputs.tag || github.event.release.tag_name }}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+  ghcr:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          docker pull ghcr.io/systempromptio/systemprompt-template:latest
+          docker run --rm --entrypoint /app/bin/systemprompt \
+            ghcr.io/systempromptio/systemprompt-template:latest --version
+
+  binary:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          bash scripts/install.sh --version ${{ needs.version.outputs.tag }} --prefix "$HOME/.local"
+          "$HOME/.local/bin/systemprompt" --version
+
+  homebrew:
+    needs: version
+    runs-on: macos-14
+    steps:
+      - run: |
+          brew tap systempromptio/tap
+          brew install gateway
+          systemprompt --version
+
+  scoop:
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - shell: pwsh
+        run: |
+          iwr -useb get.scoop.sh -outfile install-scoop.ps1
+          .\install-scoop.ps1 -RunAsAdmin
+          $env:Path = "$env:USERPROFILE\scoop\shims;$env:Path"
+          scoop bucket add systemprompt https://github.com/systempromptio/scoop-bucket
+          scoop install bridge
+          systemprompt-bridge --version
+          scoop install gateway
+          systemprompt --version
+
+  compose:
+    name: docker-compose / Coolify template
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Boot the Coolify compose and wait for health
+        run: |
+          python3 -c "import json; print(json.load(open('deploy/coolify/service-template.json'))['compose'])" > compose-test.yml
+          export POSTGRES_PASSWORD=smoketest ANTHROPIC_API_KEY=sk-ant-dummy SERVICE_PORT_GATEWAY=18080
+          docker compose -f compose-test.yml -p smoke up -d
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:18080/api/v1/health && exit 0
+            sleep 5
+          done
+          echo "gateway never became healthy"
+          docker compose -f compose-test.yml -p smoke logs --tail 50
+          exit 1
