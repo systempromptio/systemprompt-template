@@ -1,8 +1,8 @@
 {
   "$schema": "https://api.northflank.com/v1/schemas/template",
   "apiVersion": "v1.2",
-  "name": "systemprompt",
-  "description": "Self-owned AI control plane: governance gateway for Claude, OpenAI, and Gemini with audit, policy, and MCP orchestration.",
+  "name": "systemprompt-io",
+  "description": "systemprompt.io self-owned AI control plane: governance gateway for Claude, OpenAI, and Gemini with audit, policy, and MCP. https://systemprompt.io",
   "arguments": {
     "ANTHROPIC_API_KEY": "",
     "OPENAI_API_KEY": "",
@@ -150,7 +150,7 @@
                     },
                     {
                       "volumeMountPath": "profiles",
-                      "containerMountPath": "/app/services/profiles/docker"
+                      "containerMountPath": "/app/.systemprompt/profiles/docker"
                     }
                   ],
                   "attachedObjects": [
