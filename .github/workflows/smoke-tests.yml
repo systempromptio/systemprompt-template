@@ -97,6 +97,43 @@ jobs:
           docker compose -f compose-test.yml -p smoke logs --tail 50
           exit 1
 
+  compose-oneclick:
+    name: canonical one-click compose
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Boot the canonical catalog compose and wait for health
+        run: |
+          export POSTGRES_PASSWORD=smoketest ANTHROPIC_API_KEY=sk-ant-dummy HTTP_PORT=18081
+          docker compose -f deploy/compose/one-click.docker-compose.yml -p oneclick up -d
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:18081/api/v1/health && exit 0
+            sleep 5
+          done
+          echo "gateway never became healthy"
+          docker compose -f deploy/compose/one-click.docker-compose.yml -p oneclick logs --tail 50
+          exit 1
+
+  compose-drift:
+    name: catalog compose matches root topology
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare service/volume topology with root docker-compose.yml
+        run: |
+          topo() {
+            python3 -c "
+          import sys, yaml
+          d = yaml.safe_load(open(sys.argv[1]))
+          for name, svc in sorted(d['services'].items()):
+              print(name, sorted(v.split(':')[0] for v in svc.get('volumes', [])))
+          print('volumes', sorted(d.get('volumes', {})))
+          " "$1"
+          }
+          diff <(topo docker-compose.yml) <(topo deploy/compose/one-click.docker-compose.yml)
+
   railway-template:
     name: Railway template published
     needs: version

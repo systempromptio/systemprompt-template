@@ -1,0 +1,14 @@
+#!/bin/sh
+cat <<'BANNER'
+********************************************************************************
+ systemprompt gateway — self-owned AI control plane
+
+ The gateway is NOT running yet: it needs at least one AI provider API key
+ (Anthropic, OpenAI, or Gemini). Setup starts automatically on first login,
+ or run it any time with:
+
+     sudo /opt/systemprompt/setup.sh
+
+ Docs: https://systemprompt.io/documentation/?utm_source=digitalocean
+********************************************************************************
+BANNER

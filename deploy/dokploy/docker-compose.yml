@@ -1,0 +1,52 @@
+# Dokploy blueprint compose for the systemprompt gateway.
+# Mirror of the upstream Dokploy/templates blueprints/systemprompt/ payload;
+# derived from deploy/compose/one-click.docker-compose.yml (no host ports —
+# Dokploy routes the domain to the service port via Traefik).
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: systemprompt
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: systemprompt
+    volumes:
+      # postgres:18+ stores data under major-version subdirectories of
+      # /var/lib/postgresql — mounting the old .../data path aborts startup.
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U systemprompt -d systemprompt"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  gateway:
+    image: ghcr.io/systempromptio/systemprompt-template:0
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://systemprompt:${POSTGRES_PASSWORD}@postgres:5432/systemprompt
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      EXTERNAL_URL: https://${GATEWAY_DOMAIN}
+      HOST: 0.0.0.0
+      PORT: 8080
+    volumes:
+      - app_web:/app/web
+      - app_storage_data:/app/storage/data
+      - app_profiles:/app/services/profiles/docker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 300s
+      retries: 3
+
+volumes:
+  postgres_data:
+  app_web:
+  app_storage_data:
+  app_profiles:

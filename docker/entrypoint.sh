@@ -11,6 +11,11 @@ set -eu
 [ -n "${OPENAI_API_KEY:-}" ] || unset OPENAI_API_KEY
 [ -n "${GEMINI_API_KEY:-}" ] || unset GEMINI_API_KEY
 [ -n "${GITHUB_TOKEN:-}" ] || unset GITHUB_TOKEN
+[ -n "${EXTERNAL_URL:-}" ] || unset EXTERNAL_URL
+
+# Platform-neutral external URL. Render injects RENDER_EXTERNAL_URL; every
+# other catalog template sets EXTERNAL_URL explicitly.
+EXTERNAL_URL="${EXTERNAL_URL:-${RENDER_EXTERNAL_URL:-}}"
 
 PROFILE_DIR="${SYSTEMPROMPT_PROFILE_DIR:-/app/.systemprompt/profiles/docker}"
 PROFILE_FILE="$PROFILE_DIR/profile.yaml"
@@ -62,10 +67,10 @@ else
             > "$SECRETS_FILE.tmp" && mv "$SECRETS_FILE.tmp" "$SECRETS_FILE"
         chmod 600 "$SECRETS_FILE"
         # 3. Advertise the public URL when the platform provides one
-        #    (Render sets RENDER_EXTERNAL_URL).
-        if [ -n "${RENDER_EXTERNAL_URL:-}" ]; then
-            sed -i "s|^  api_external_url: .*|  api_external_url: ${RENDER_EXTERNAL_URL}|" "$PROFILE_FILE"
-            sed -i "/^  cors_allowed_origins:/a\\  - ${RENDER_EXTERNAL_URL}" "$PROFILE_FILE"
+        #    (EXTERNAL_URL, or RENDER_EXTERNAL_URL via the fallback above).
+        if [ -n "${EXTERNAL_URL:-}" ]; then
+            sed -i "s|^  api_external_url: .*|  api_external_url: ${EXTERNAL_URL}|" "$PROFILE_FILE"
+            sed -i "/^  cors_allowed_origins:/a\\  - ${EXTERNAL_URL}" "$PROFILE_FILE"
         fi
     fi
 fi

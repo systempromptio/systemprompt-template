@@ -1,0 +1,18 @@
+[Unit]
+Description=systemprompt gateway (docker compose stack)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+# Refuse to start until first-login setup has written an AI provider key.
+ConditionPathExists=/opt/systemprompt/.configured
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/systemprompt
+EnvironmentFile=/opt/systemprompt/.env
+ExecStart=/usr/bin/docker compose up -d --remove-orphans
+ExecStop=/usr/bin/docker compose down
+
+[Install]
+WantedBy=multi-user.target

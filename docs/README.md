@@ -27,6 +27,13 @@ Choose the channel that fits your environment. Each doc is a copy-paste recipe.
 | Railway template | [install/railway.md](install/railway.md) | Railway PaaS |
 | Render blueprint | [install/render.md](install/render.md) | Render PaaS |
 | Coolify template | [install/coolify.md](install/coolify.md) | Coolify self-host |
+| Dokploy blueprint | [install/dokploy.md](install/dokploy.md) | Dokploy self-host |
+| Portainer app template | [install/portainer.md](install/portainer.md) | Portainer stacks |
+| CapRover one-click app | [install/caprover.md](install/caprover.md) | CapRover self-host |
+| CasaOS app | [install/casaos.md](install/casaos.md) | Home lab |
+| Zeabur template | [install/zeabur.md](install/zeabur.md) | Zeabur PaaS |
+| Northflank stack | [install/northflank.md](install/northflank.md) | Northflank PaaS |
+| DigitalOcean 1-Click | [install/digitalocean.md](install/digitalocean.md) | Single-VM droplet (bundled Postgres) |
 
 ## Install the bridge (client)
 

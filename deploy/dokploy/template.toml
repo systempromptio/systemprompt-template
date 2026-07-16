@@ -1,0 +1,25 @@
+# Dokploy blueprint config for the systemprompt gateway.
+# Mirror of the upstream Dokploy/templates blueprints/systemprompt/template.toml.
+
+[variables]
+main_domain = "${domain}"
+postgres_password = "${password:32}"
+
+[config]
+env = [
+  "GATEWAY_DOMAIN=${main_domain}",
+  "POSTGRES_PASSWORD=${postgres_password}",
+  "ANTHROPIC_API_KEY=",
+  "OPENAI_API_KEY=",
+  "GEMINI_API_KEY=",
+]
+
+[[config.domains]]
+serviceName = "gateway"
+port = 8080
+host = "${main_domain}"
+
+# NOTE for reviewers/users: at least one of ANTHROPIC_API_KEY / OPENAI_API_KEY /
+# GEMINI_API_KEY must be filled in before the gateway will boot. Blank values
+# are treated as unset by the container entrypoint. First boot runs migrations
+# and a publish pipeline; allow several minutes before the healthcheck passes.

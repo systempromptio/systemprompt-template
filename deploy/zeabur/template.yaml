@@ -1,0 +1,100 @@
+# Zeabur template for the systemprompt gateway.
+# Publish/update with: npx zeabur template create -f deploy/zeabur/template.yaml
+# (see docs-internal/testing/zeabur.md)
+apiVersion: zeabur.com/v1
+kind: Template
+metadata:
+  name: systemprompt
+spec:
+  description: Self-owned AI control plane — governance gateway for Claude, OpenAI, and Gemini with audit, policy, and MCP orchestration.
+  icon: https://raw.githubusercontent.com/systempromptio/systemprompt-template/main/storage/files/images/icon-256.png
+  tags:
+    - AI
+    - Tool
+  readme: |-
+    # systemprompt
+    Governance gateway for AI providers (Claude, OpenAI, Gemini): policy
+    checks, secret scanning, audit trails, rate limits, and MCP orchestration,
+    backed by Postgres.
+
+    At least one AI provider API key is required. First boot runs database
+    migrations and a publish pipeline — allow several minutes before the
+    service reports healthy.
+
+    Docs: https://systemprompt.io/documentation/?utm_source=zeabur&utm_medium=template
+  variables:
+    - key: PUBLIC_DOMAIN
+      type: DOMAIN
+      name: Domain
+      description: Public domain for the gateway.
+    - key: ANTHROPIC_API_KEY
+      type: STRING
+      name: Anthropic API key
+      description: At least one AI provider key (Anthropic, OpenAI, or Gemini) is required. Leave unused providers blank.
+    - key: OPENAI_API_KEY
+      type: STRING
+      name: OpenAI API key (optional)
+      description: Optional.
+    - key: GEMINI_API_KEY
+      type: STRING
+      name: Gemini API key (optional)
+      description: Optional.
+  services:
+    - name: postgres
+      icon: https://raw.githubusercontent.com/zeabur/service-icons/main/marketplace/postgresql.svg
+      template: PREBUILT
+      spec:
+        source:
+          image: postgres:18-alpine
+        ports:
+          - id: database
+            port: 5432
+            type: TCP
+        volumes:
+          # postgres:18+ stores data under major-version subdirectories of
+          # /var/lib/postgresql — mounting the old .../data path aborts startup.
+          - id: data
+            dir: /var/lib/postgresql
+        env:
+          POSTGRES_USER:
+            default: systemprompt
+            expose: true
+          POSTGRES_PASSWORD:
+            default: ${PASSWORD}
+            expose: true
+          POSTGRES_DB:
+            default: systemprompt
+            expose: true
+        instructions:
+          - type: TEXT
+            title: Database
+            content: Internal Postgres for the gateway.
+
+    - name: gateway
+      icon: https://raw.githubusercontent.com/systempromptio/systemprompt-template/main/storage/files/images/icon-256.png
+      template: PREBUILT
+      domainKey: PUBLIC_DOMAIN
+      dependencies:
+        - postgres
+      spec:
+        source:
+          image: ghcr.io/systempromptio/systemprompt-template:0
+        ports:
+          - id: web
+            port: 8080
+            type: HTTP
+        env:
+          DATABASE_URL:
+            default: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres.zeabur.internal:5432/${POSTGRES_DB}
+          ANTHROPIC_API_KEY:
+            default: ${ANTHROPIC_API_KEY}
+          OPENAI_API_KEY:
+            default: ${OPENAI_API_KEY}
+          GEMINI_API_KEY:
+            default: ${GEMINI_API_KEY}
+          EXTERNAL_URL:
+            default: https://${PUBLIC_DOMAIN}.zeabur.app
+          HOST:
+            default: 0.0.0.0
+          PORT:
+            default: "8080"

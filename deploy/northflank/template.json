@@ -1,0 +1,84 @@
+{
+  "apiVersion": "v1.2",
+  "name": "systemprompt",
+  "description": "Self-owned AI control plane — governance gateway for Claude, OpenAI, and Gemini with audit, policy, and MCP orchestration.",
+  "project": {
+    "spec": {
+      "name": "systemprompt",
+      "region": "europe-west",
+      "color": "#0f172a"
+    }
+  },
+  "arguments": {
+    "ANTHROPIC_API_KEY": "",
+    "OPENAI_API_KEY": "",
+    "GEMINI_API_KEY": ""
+  },
+  "spec": {
+    "kind": "Workflow",
+    "spec": {
+      "type": "sequential",
+      "steps": [
+        {
+          "kind": "Addon",
+          "ref": "database",
+          "spec": {
+            "name": "database",
+            "type": "postgres",
+            "version": "latest",
+            "billing": {
+              "deploymentPlan": "nf-compute-50",
+              "storage": 4096,
+              "replicas": 1
+            }
+          }
+        },
+        {
+          "kind": "DeploymentService",
+          "ref": "gateway",
+          "spec": {
+            "name": "gateway",
+            "billing": {
+              "deploymentPlan": "nf-compute-100",
+              "instances": 1
+            },
+            "deployment": {
+              "external": {
+                "imagePath": "ghcr.io/systempromptio/systemprompt-template:0"
+              }
+            },
+            "ports": [
+              {
+                "name": "web",
+                "internalPort": 8080,
+                "public": true,
+                "protocol": "HTTP"
+              }
+            ],
+            "runtimeEnvironment": {
+              "ANTHROPIC_API_KEY": "${args.ANTHROPIC_API_KEY}",
+              "OPENAI_API_KEY": "${args.OPENAI_API_KEY}",
+              "GEMINI_API_KEY": "${args.GEMINI_API_KEY}",
+              "DATABASE_URL": "${refs.database.connectionDetails.POSTGRES_URI}",
+              "EXTERNAL_URL": "https://${refs.gateway.ports.web.dns}",
+              "HOST": "0.0.0.0",
+              "PORT": "8080"
+            },
+            "healthChecks": [
+              {
+                "protocol": "HTTP",
+                "type": "readinessProbe",
+                "path": "/api/v1/health",
+                "port": 8080,
+                "initialDelaySeconds": 60,
+                "periodSeconds": 15,
+                "timeoutSeconds": 5,
+                "failureThreshold": 40
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
