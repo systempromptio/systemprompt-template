@@ -48,7 +48,7 @@ set -e
 source "$(cd "$(dirname "$0")/.." && pwd)/_common.sh"
 
 TOKEN="${1:-}"
-PROFILE="${2:-local}"
+PROFILE="${2:-$PROFILE}"  # positional override; default comes from _common.sh
 SESSION_ID="demo-trace-$(date +%s)"
 DASHBOARD_URL="$BASE_URL/admin/"
 

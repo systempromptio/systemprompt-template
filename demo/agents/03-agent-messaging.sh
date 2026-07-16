@@ -12,7 +12,7 @@ set -e
 
 source "$(cd "$(dirname "$0")/.." && pwd)/_common.sh"
 
-PROFILE="${1:-local}"
+PROFILE="${1:-$PROFILE}"  # positional override; default comes from _common.sh
 
 header "DEMO: AGENT TRACING" "Full Pipeline with Artifacts & MCP"
 

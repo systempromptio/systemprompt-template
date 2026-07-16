@@ -49,14 +49,25 @@ if [[ -x "$PROJECT_DIR/target/release/systemprompt" && "$PROJECT_DIR/target/rele
   CLI="$PROJECT_DIR/target/release/systemprompt"
 fi
 if [[ ! -x "$CLI" ]]; then
-  echo "ERROR: CLI binary not found. Run: just build" >&2
+  # No cargo target dir (container / installed-binary deployments): use PATH.
+  CLI="$(command -v systemprompt || true)"
+fi
+if [[ -z "$CLI" || ! -x "$CLI" ]]; then
+  echo "ERROR: CLI binary not found. Run: just build (or install systemprompt)" >&2
   exit 1
 fi
 
 export RUST_LOG="${RUST_LOG:-warn}"
 
 TOKEN_FILE="$SCRIPT_DIR/.token"
-PROFILE="${PROFILE:-local}"
+# Match demo/_common.sh: prefer local, fall back to the container profile.
+if [[ -z "${PROFILE:-}" ]]; then
+  if [[ ! -d "$PROJECT_DIR/.systemprompt/profiles/local" && -d "$PROJECT_DIR/.systemprompt/profiles/docker" ]]; then
+    PROFILE=docker
+  else
+    PROFILE=local
+  fi
+fi
 # Honour the port configured in the active profile.yaml so preflight works
 # when setup-local was run with non-default ports. Override with BASE_URL env.
 _preflight_base_url() {

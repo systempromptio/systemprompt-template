@@ -18,7 +18,7 @@ set -e
 # install_hey helper. DEMO_ROOT/PROJECT_DIR are set by _common.sh.
 source "$(cd "$(dirname "$0")/.." && pwd)/_common.sh"
 
-PROFILE="${1:-local}"
+PROFILE="${1:-$PROFILE}"  # positional override; default comes from _common.sh
 load_token
 
 echo ""

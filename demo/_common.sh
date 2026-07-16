@@ -30,14 +30,26 @@ if [[ -x "$PROJECT_DIR/target/release/systemprompt" && "$PROJECT_DIR/target/rele
   CLI="$PROJECT_DIR/target/release/systemprompt"
 fi
 if [[ ! -x "$CLI" ]]; then
-  echo "ERROR: CLI binary not found. Run: just build" >&2
+  # No cargo target dir (container / installed-binary deployments): use PATH.
+  CLI="$(command -v systemprompt || true)"
+fi
+if [[ -z "$CLI" || ! -x "$CLI" ]]; then
+  echo "ERROR: CLI binary not found. Run: just build (or install systemprompt)" >&2
   exit 1
 fi
 
 # ── Token loading ──────────────────────────────
 TOKEN_FILE="$DEMO_ROOT/.token"
 USER_TOKEN_FILE="$DEMO_ROOT/.token.user"
-PROFILE="${PROFILE:-local}"
+# Default to the local dev profile; fall back to the container-authored docker
+# profile when local doesn't exist (e.g. running demos inside the image).
+if [[ -z "${PROFILE:-}" ]]; then
+  if [[ ! -d "$PROJECT_DIR/.systemprompt/profiles/local" && -d "$PROJECT_DIR/.systemprompt/profiles/docker" ]]; then
+    PROFILE=docker
+  else
+    PROFILE=local
+  fi
+fi
 # Derive BASE_URL from the active profile so demos work when setup-local was
 # invoked with non-default ports. Precedence: BASE_URL env > profile.yaml
 # api_server_url > localhost:8080.
