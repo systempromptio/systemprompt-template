@@ -19,7 +19,7 @@ services:
       retries: 10
 
   app:
-    image: ghcr.io/systempromptio/systemprompt-template:0.4.0
+    image: ghcr.io/systempromptio/systemprompt-template:0.21.0
     restart: unless-stopped
     depends_on:
       postgres:

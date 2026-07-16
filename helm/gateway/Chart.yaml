@@ -2,8 +2,8 @@ apiVersion: v2
 name: gateway
 description: The governance layer for AI agents — a single compiled Rust binary that authenticates, authorises, rate-limits, logs, and costs every AI interaction. Self-hosted, air-gap capable, provider-agnostic.
 type: application
-version: 0.2.1
-appVersion: "0.5.0"
+version: 0.3.0
+appVersion: "0.21.0"
 kubeVersion: ">=1.24.0"
 home: https://systemprompt.io
 icon: https://systemprompt.io/files/images/logo.svg
@@ -56,7 +56,7 @@ annotations:
       url: https://discord.gg/wkAbSuPWpr
   artifacthub.io/images: |
     - name: gateway
-      image: ghcr.io/systempromptio/systemprompt-template:0.4.0
+      image: ghcr.io/systempromptio/systemprompt-template:0.21.0
       platforms:
         - linux/amd64
         - linux/arm64
@@ -64,6 +64,8 @@ annotations:
     - title: Governance you can prove — live audit of every tool call
       url: https://systemprompt.io/files/images/og-image.jpg
   artifacthub.io/changes: |
+    - kind: changed
+      description: Bumped appVersion to 0.21.0 (core + gateway version alignment).
     - kind: changed
       description: Drop bundled Postgres subchart — users point the gateway at any Postgres 13+ via DATABASE_URL (managed RDS, self-hosted, separate bitnami/postgresql install, etc.). Keeps the chart lean and avoids subchart licensing drift.
     - kind: added
