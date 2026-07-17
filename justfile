@@ -583,18 +583,8 @@ profiles:
 # SYNC
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Sync content to database
-sync-content *ARGS:
-    {{CLI}} cloud sync local content {{ARGS}}
-
-# Sync skills to database
-sync-skills *ARGS:
-    {{CLI}} cloud sync local skills {{ARGS}}
-
-# Sync all local content
-sync-local:
-    {{CLI}} cloud sync local content
-    {{CLI}} cloud sync local skills
+# Content and skills are ingested from services/ at server startup and by
+# `just publish` (publish_pipeline job); there is no separate local sync command.
 
 # Push to cloud
 sync-push *ARGS:
