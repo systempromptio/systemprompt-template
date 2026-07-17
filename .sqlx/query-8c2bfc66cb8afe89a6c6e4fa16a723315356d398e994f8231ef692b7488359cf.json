@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            mc.slug,\n            mc.kind,\n            mc.source_id as \"source_id: SourceId\",\n            COALESCE(mce.after_reading_this, '[]'::jsonb) as \"after_reading_this!\",\n            COALESCE(mce.related_playbooks, '[]'::jsonb) as \"related_playbooks!\",\n            COALESCE(mce.related_code, '[]'::jsonb) as \"related_code!\"\n        FROM markdown_content mc\n        LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id\n        WHERE mc.id = $1\n        ",
+  "query": "\n        SELECT\n            mc.slug,\n            mc.kind,\n            mc.source_id as \"source_id: SourceId\",\n            COALESCE(mce.after_reading_this, '[]'::jsonb) as \"after_reading_this!: Json<Vec<String>>\",\n            COALESCE(mce.related_playbooks, '[]'::jsonb) as \"related_playbooks!: Json<Vec<ContentLinkMetadata>>\",\n            COALESCE(mce.related_code, '[]'::jsonb) as \"related_code!: Json<Vec<ContentLinkMetadata>>\"\n        FROM markdown_content mc\n        LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id\n        WHERE mc.id = $1\n        ",
   "describe": {
     "columns": [
       {
@@ -38,19 +38,19 @@
       },
       {
         "ordinal": 3,
-        "name": "after_reading_this!",
+        "name": "after_reading_this!: Json<Vec<String>>",
         "type_info": "Jsonb",
         "origin": "Expression"
       },
       {
         "ordinal": 4,
-        "name": "related_playbooks!",
+        "name": "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
         "type_info": "Jsonb",
         "origin": "Expression"
       },
       {
         "ordinal": 5,
-        "name": "related_code!",
+        "name": "related_code!: Json<Vec<ContentLinkMetadata>>",
         "type_info": "Jsonb",
         "origin": "Expression"
       }
@@ -69,5 +69,5 @@
       null
     ]
   },
-  "hash": "c622443ea39c31bc26dfc255557c017edb7f9d963add2b8f4a7fac1c4faee636"
+  "hash": "8c2bfc66cb8afe89a6c6e4fa16a723315356d398e994f8231ef692b7488359cf"
 }

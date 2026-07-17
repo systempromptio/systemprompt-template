@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT mc.id as \"id!: ContentId\", mc.slug as \"slug!\", mc.title as \"title!\", mc.description as \"description!\", mc.body as \"body!\", mc.author as \"author!\",\n                   mc.published_at as \"published_at!\", mc.keywords as \"keywords!\", mc.kind as \"kind!\", mc.image,\n                   mc.category_id as \"category_id: CategoryId\",\n                   mc.source_id as \"source_id!: SourceId\",\n                   mc.version_hash as \"version_hash!\",\n                   COALESCE(mc.links, '[]'::jsonb) as \"links!\",\n                   COALESCE(mce.after_reading_this, '[]'::jsonb) as \"after_reading_this!\",\n                   COALESCE(mce.related_playbooks, '[]'::jsonb) as \"related_playbooks!\",\n                   COALESCE(mce.related_code, '[]'::jsonb) as \"related_code!\",\n                   COALESCE(mce.related_docs, '[]'::jsonb) as \"related_docs!\",\n                   mc.updated_at\n            FROM markdown_content mc\n            LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id\n            WHERE mc.source_id = $1 AND mc.slug = $2\n            ",
+  "query": "\n            SELECT mc.id as \"id!: ContentId\", mc.slug as \"slug!\", mc.title as \"title!\", mc.description as \"description!\", mc.body as \"body!\", mc.author as \"author!\",\n                   mc.published_at as \"published_at!\", mc.keywords as \"keywords!\", mc.kind as \"kind!\", mc.image,\n                   mc.category_id as \"category_id: CategoryId\",\n                   mc.source_id as \"source_id!: SourceId\",\n                   mc.version_hash as \"version_hash!\",\n                   COALESCE(mc.links, '[]'::jsonb) as \"links!: Json<Vec<ContentLinkMetadata>>\",\n                   COALESCE(mce.after_reading_this, '[]'::jsonb) as \"after_reading_this!: Json<Vec<String>>\",\n                   COALESCE(mce.related_playbooks, '[]'::jsonb) as \"related_playbooks!: Json<Vec<ContentLinkMetadata>>\",\n                   COALESCE(mce.related_code, '[]'::jsonb) as \"related_code!: Json<Vec<ContentLinkMetadata>>\",\n                   COALESCE(mce.related_docs, '[]'::jsonb) as \"related_docs!: Json<Vec<ContentLinkMetadata>>\",\n                   mc.updated_at\n            FROM markdown_content mc\n            LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id\n            WHERE mc.slug = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -148,31 +148,31 @@
       },
       {
         "ordinal": 13,
-        "name": "links!",
+        "name": "links!: Json<Vec<ContentLinkMetadata>>",
         "type_info": "Jsonb",
         "origin": "Expression"
       },
       {
         "ordinal": 14,
-        "name": "after_reading_this!",
+        "name": "after_reading_this!: Json<Vec<String>>",
         "type_info": "Jsonb",
         "origin": "Expression"
       },
       {
         "ordinal": 15,
-        "name": "related_playbooks!",
+        "name": "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
         "type_info": "Jsonb",
         "origin": "Expression"
       },
       {
         "ordinal": 16,
-        "name": "related_code!",
+        "name": "related_code!: Json<Vec<ContentLinkMetadata>>",
         "type_info": "Jsonb",
         "origin": "Expression"
       },
       {
         "ordinal": 17,
-        "name": "related_docs!",
+        "name": "related_docs!: Json<Vec<ContentLinkMetadata>>",
         "type_info": "Jsonb",
         "origin": "Expression"
       },
@@ -190,7 +190,6 @@
     ],
     "parameters": {
       "Left": [
-        "Text",
         "Text"
       ]
     },
@@ -216,5 +215,5 @@
       true
     ]
   },
-  "hash": "98ea4b57af889c31ea138145733b192bacffa5965cc0f47fb0f20af75979f044"
+  "hash": "bb8b7deb41b08c421614695e677cfa203c6206afd3cba01cf3bde9a1ee115ee0"
 }
