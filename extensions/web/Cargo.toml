@@ -3,9 +3,11 @@ name = "systemprompt-web-extension"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
-description = "Web extension for SystemPrompt - content, navigation, and templates"
+description = "Web extension for the systemprompt.io template: content, navigation, and template rendering for the self-hosted AI governance binary."
 license.workspace = true
-repository = "https://github.com/systempromptio/systemprompt-template"
+repository.workspace = true
+homepage.workspace = true
+publish = false
 
 # extension_migrations!() expands to ::systemprompt_extension paths; machete
 # cannot see macro-expansion usage.

@@ -4,6 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+description = "Shared web primitives for the systemprompt.io template extensions: layout, request context, and rendering helpers."
+repository.workspace = true
+homepage.workspace = true
+publish = false
 
 [dependencies]
 # Audit: uses only identifiers, models, traits — `core` (default) is sufficient.

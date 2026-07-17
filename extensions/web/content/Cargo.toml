@@ -4,6 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+description = "Content pipeline extension for the systemprompt.io template: Markdown ingestion, content sources, and governed publishing."
+repository.workspace = true
+homepage.workspace = true
+publish = false
 
 [dependencies]
 systemprompt-web-shared = { workspace = true }

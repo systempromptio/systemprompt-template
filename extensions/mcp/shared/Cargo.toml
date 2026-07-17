@@ -4,6 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+description = "Shared utilities for the systemprompt.io template's bundled Model Context Protocol (MCP) servers."
+repository.workspace = true
+homepage.workspace = true
+publish = false
 
 [dependencies]
 systemprompt = { workspace = true }

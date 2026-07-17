@@ -4,6 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+description = "Scheduled jobs extension for the systemprompt.io template: content generation and maintenance jobs run under the governed scheduler."
+repository.workspace = true
+homepage.workspace = true
+publish = false
 
 [dependencies]
 systemprompt-web-shared = { workspace = true }

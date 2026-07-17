@@ -32,6 +32,8 @@
 
 ---
 
+This project uses [systemprompt.io](https://systemprompt.io), self-hosted AI governance infrastructure. It is the evaluation template for [systemprompt-core](https://github.com/systempromptio/systemprompt-core), published on crates.io as [`systemprompt`](https://crates.io/crates/systemprompt).
+
 ## Quick start
 
 ```bash

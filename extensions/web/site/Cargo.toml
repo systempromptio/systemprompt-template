@@ -4,6 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+description = "Public site extension for the systemprompt.io template: pages, guides, and static-site routes for the self-hosted AI governance binary."
+repository.workspace = true
+homepage.workspace = true
+publish = false
 
 [dependencies]
 systemprompt-web-shared = { workspace = true }

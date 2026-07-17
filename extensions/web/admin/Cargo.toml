@@ -4,6 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+description = "Admin dashboard extension for the systemprompt.io template: governed operations UI over agents, MCP servers, users, and analytics."
+repository.workspace = true
+homepage.workspace = true
+publish = false
 
 [dependencies]
 # Foundation
