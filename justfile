@@ -198,6 +198,21 @@ lint-gates:
     bash scripts/check-http-errors.sh
     bash scripts/check-test-value.sh
     bash scripts/lint-raw-ids.sh
+    bash scripts/check-file-size.sh
+
+# 300-line ceiling on extension sources (same script CI runs)
+file-size:
+    bash scripts/check-file-size.sh
+
+# Supply-chain gates: cargo-deny (licenses/bans/advisories) and cargo-audit
+deny:
+    cargo deny check
+
+check-bans:
+    cargo deny check bans
+
+audit:
+    cargo audit
 
 # Structural guard: no string-literal `UserId::new("...")` in extension code.
 # String literals are how principal synthesis sneaks in — every legitimate

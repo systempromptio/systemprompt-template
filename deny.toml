@@ -6,6 +6,9 @@ ignore = [
     # rsa crate Marvin Attack - no patch available yet, used transitively by oauth2/webauthn-rs
     # Tracked at: https://rustsec.org/advisories/RUSTSEC-2023-0071
     "RUSTSEC-2023-0071",
+    # proc-macro-error2 unmaintained - transitive via upstream macro crates, no
+    # runtime surface. Tracked at: https://rustsec.org/advisories/RUSTSEC-2026-0173
+    "RUSTSEC-2026-0173",
 ]
 
 [licenses]
@@ -22,6 +25,8 @@ allow = [
     "BUSL-1.1",
     "BSL-1.0",
     "CDLA-Permissive-2.0",
+    # Data-only license on Unicode character tables (finl_unicode, transitive)
+    "Unicode-DFS-2016",
 ]
 confidence-threshold = 0.8
 

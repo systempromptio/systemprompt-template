@@ -79,22 +79,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # No extension source file (excluding tests) may exceed 300 lines. Ported
-      # from core's `just file-size`, retargeted from crates/ to extensions/.
+      # No extension source file (excluding tests) may exceed 300 lines. Same
+      # script as `just file-size`.
       - name: Enforce 300-line ceiling on extension sources
-        run: |
-          violations=$(find extensions -name '*.rs' \
-              -not -path '*/target/*' \
-              -not -path '*/tests/*' \
-              -exec wc -l {} + | awk '$1>300 && $2!="total"')
-          if [ -n "$violations" ]; then
-            echo "error: extension source file(s) exceed the 300-line ceiling:"
-            echo "$violations"
-            echo
-            echo "Split the file at a clean seam (extract a sibling module)."
-            exit 1
-          fi
-          echo "All extension sources within the 300-line ceiling."
+        run: bash scripts/check-file-size.sh
 
   msrv:
     name: MSRV check (Rust 1.94)
@@ -116,6 +104,15 @@ jobs:
       - uses: rustsec/audit-check@v2.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  deny:
+    name: cargo-deny (licenses, bans, advisories, sources)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
 
   machete:
     name: Unused dependency check
