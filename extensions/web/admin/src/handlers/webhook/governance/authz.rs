@@ -140,8 +140,7 @@ async fn audit_decision(
         tool_name: entity_id_str,
         agent_id: None,
         // Why: authz decisions are entity-keyed, not agent-keyed; entity_type
-        // remains in evaluated_rules above for forensic lookup. Writing it to
-        // agent_scope was a historical column overload — removed.
+        // remains in evaluated_rules above for forensic lookup.
         agent_scope: None,
         decision: decision_tag,
         policy: POLICY_NAME,

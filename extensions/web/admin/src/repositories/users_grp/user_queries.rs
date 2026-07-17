@@ -146,13 +146,9 @@ pub async fn fetch_user_identity_rows(
 
     let total = count_user_identity_rows(pool, search_pattern.as_deref()).await?;
 
-    // The sort is the closed `IdentitySort` × `SortDir`; each `(column, dir)`
-    // pair is bound as text ($4/$5) and selected by a per-key `CASE` in the
-    // `ORDER BY`. The trailing `last_active DESC NULLS LAST` tiebreaker is
-    // itself gated on the column key so it applies ONLY to the columns that
-    // had it in the original `order_clause` (sessions/contexts/tokens/denies/
-    // cost) and stays inert for `last_active`/`display_name`, reproducing the
-    // original ordering exactly.
+    // Why: sort column/dir are bound as text ($4/$5) and switched via a
+    // per-key `CASE` in the `ORDER BY` so the statement stays a single
+    // compile-time `query_as!` rather than interpolated (raw) SQL.
     let rows = sqlx::query_as!(
         crate::types::UserIdentityRow,
         r#"

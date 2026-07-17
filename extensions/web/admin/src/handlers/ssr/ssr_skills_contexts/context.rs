@@ -82,9 +82,9 @@ pub(super) struct PageKpisView {
     pub(super) total_cost_usd: f64,
 }
 
-// Every field is always emitted (empty string when unset): the template reads
-// `{{filter.q}}` etc. directly under Handlebars strict mode, which errors on an
-// absent key — so these must be present, matching the pre-refactor `json!`.
+// Why: every field must serialize (empty string when unset) — the template
+// reads `{{filter.q}}` etc. directly under Handlebars strict mode, which
+// errors on an absent key.
 #[derive(Debug, Serialize)]
 pub(super) struct FilterView {
     pub(super) user_id: UserId,
