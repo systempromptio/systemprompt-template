@@ -8,7 +8,10 @@ use crate::common::TempDb;
 
 #[tokio::test]
 async fn used_action_records_tool_scoped_row() {
-    let db = TempDb::create().await;
+    let Some(db) = TempDb::create().await else {
+        eprintln!("skipping: no test database configured");
+        return;
+    };
     db.insert_user("user-1", "dev@example.com").await;
 
     record_mcp_access(&db.pool, &UserId::new("user-1"), "systemprompt", "list_skills", "used").await;
@@ -26,7 +29,10 @@ async fn used_action_records_tool_scoped_row() {
 
 #[tokio::test]
 async fn authenticated_action_records_server_scoped_row() {
-    let db = TempDb::create().await;
+    let Some(db) = TempDb::create().await else {
+        eprintln!("skipping: no test database configured");
+        return;
+    };
     db.insert_user("user-2", "dev2@example.com").await;
 
     record_mcp_access(&db.pool, &UserId::new("user-2"), "systemprompt", "list_skills", "authenticated").await;

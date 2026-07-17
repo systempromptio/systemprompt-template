@@ -188,6 +188,31 @@ clippy *FLAGS: lint-no-synthesis lint-gates
         SQLX_OFFLINE=false cargo clippy --workspace {{FLAGS}} -- -D warnings
     fi
 
+# Unit tests: extensions/web/admin (main workspace) + the tests/ workspace.
+# If sqlx offline errors appear, run `just prepare` first to refresh .sqlx.
+test-unit:
+    cargo test -p systemprompt-web-admin --tests
+    cargo test --manifest-path tests/Cargo.toml -p mcp-unit-tests -p web-unit-tests
+
+# DB-backed integration tests. Creates/drops throwaway mcp_ext_test_*
+# databases on the maintenance DB; the harness guard refuses any database
+# name that is not 'test', 'postgres', or '*_test'. Falls back to the local
+# profile's server with the database swapped to 'postgres'.
+test-integration:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ] && [ -f .systemprompt/profiles/local/secrets.json ]; then
+        SYSTEMPROMPT_TEST_DATABASE_URL=$(python3 -c "
+    import json, urllib.parse as up
+    u = up.urlsplit(json.load(open('.systemprompt/profiles/local/secrets.json'))['database_url'])
+    print(up.urlunsplit((u.scheme, u.netloc, '/postgres', '', '')))")
+        export SYSTEMPROMPT_TEST_DATABASE_URL
+    fi
+    cargo test --manifest-path tests/Cargo.toml -p mcp-integration-tests
+
+# All tests
+test: test-unit test-integration
+
 # Source gates ported from systemprompt-core (scripts/*.sh)
 lint-gates:
     #!/usr/bin/env bash

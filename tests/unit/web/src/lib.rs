@@ -6,3 +6,5 @@
 mod campaign_link_full_url;
 #[cfg(test)]
 mod config_base_url;
+#[cfg(test)]
+mod seed_contract;

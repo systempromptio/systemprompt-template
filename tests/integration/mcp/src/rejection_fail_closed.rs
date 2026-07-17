@@ -12,7 +12,10 @@ const TOOL: &str = "dangerous_tool";
 
 #[tokio::test]
 async fn drops_row_when_no_anonymous_principal_exists() {
-    let db = TempDb::create().await;
+    let Some(db) = TempDb::create().await else {
+        eprintln!("skipping: no test database configured");
+        return;
+    };
     // No users at all — the anonymous lookup returns None.
 
     record_mcp_access_rejected(&db.pool, SERVER, TOOL, "scope denied").await;
@@ -28,7 +31,10 @@ async fn drops_row_when_no_anonymous_principal_exists() {
 
 #[tokio::test]
 async fn does_not_fall_back_to_an_arbitrary_user() {
-    let db = TempDb::create().await;
+    let Some(db) = TempDb::create().await else {
+        eprintln!("skipping: no test database configured");
+        return;
+    };
     // A real user exists, but NOT an anonymous one — the row must still drop.
     db.insert_user("real-user", "person@example.com").await;
 
@@ -45,7 +51,10 @@ async fn does_not_fall_back_to_an_arbitrary_user() {
 
 #[tokio::test]
 async fn attributes_row_to_anonymous_principal_when_present() {
-    let db = TempDb::create().await;
+    let Some(db) = TempDb::create().await else {
+        eprintln!("skipping: no test database configured");
+        return;
+    };
     db.insert_user("anon-1", "fp_abc@anonymous.local").await;
 
     record_mcp_access_rejected(&db.pool, SERVER, TOOL, "scope denied").await;
@@ -63,7 +72,10 @@ async fn attributes_row_to_anonymous_principal_when_present() {
 
 #[tokio::test]
 async fn long_reason_is_truncated_in_the_description() {
-    let db = TempDb::create().await;
+    let Some(db) = TempDb::create().await else {
+        eprintln!("skipping: no test database configured");
+        return;
+    };
     db.insert_user("anon-2", "fp_def@anonymous.local").await;
 
     let reason = "x".repeat(MAX_REASON_LEN + 40);

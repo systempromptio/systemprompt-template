@@ -17,8 +17,26 @@ pub struct TempDb {
     db_name: String,
 }
 
-fn database_url() -> String {
-    std::env::var("DATABASE_URL").expect("DATABASE_URL must be set for the integration tests")
+/// Resolve the maintenance-server URL for tests, or `None` (test self-skips).
+///
+/// Refuses to run against a development database: only database names `test`,
+/// `postgres`, or `*_test` are accepted, so a stray `DATABASE_URL` pointing at
+/// a dev server's live database panics instead of mutating it. Tests only ever
+/// CREATE/DROP throwaway `mcp_ext_test_<uuid>` databases on the server.
+fn database_url() -> Option<String> {
+    let raw = std::env::var("SYSTEMPROMPT_TEST_DATABASE_URL")
+        .or_else(|_| std::env::var("DATABASE_URL"))
+        .ok()?;
+    let parsed = Url::parse(&raw).expect("test database URL must be a valid URL");
+    let db_name = parsed.path().trim_start_matches('/');
+    let allowed = db_name == "test" || db_name == "postgres" || db_name.ends_with("_test");
+    assert!(
+        allowed,
+        "Refusing to run integration tests against database '{db_name}'. Set \
+         SYSTEMPROMPT_TEST_DATABASE_URL to a database reserved for tests: the database name \
+         must be 'test', 'postgres', or end in '_test'."
+    );
+    Some(raw)
 }
 
 /// Rebuild a connection URL against the same server but a different database.
@@ -29,8 +47,8 @@ fn with_database(base: &str, db_name: &str) -> String {
 }
 
 impl TempDb {
-    pub async fn create() -> Self {
-        let base = database_url();
+    pub async fn create() -> Option<Self> {
+        let base = database_url()?;
         // Maintenance connection lives on the `postgres` database; CREATE
         // DATABASE cannot run inside a transaction, so use a plain autocommit
         // execute here.
@@ -84,12 +102,12 @@ impl TempDb {
 
         let pool: DbPool = Arc::new(Database::from_pools(Arc::new(pg.clone()), None));
 
-        Self {
+        Some(Self {
             pool,
             pg,
             admin_url,
             db_name,
-        }
+        })
     }
 
     /// Insert a user row with the given id/email. Used to seed (or omit) the
