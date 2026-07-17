@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id as \"id!\",\n                  request_id as \"request_id!\",\n                  trace_id,\n                  provider as \"provider!\",\n                  model as \"model!\",\n                  status as \"status!\",\n                  input_tokens,\n                  output_tokens,\n                  COALESCE(cost_microdollars, 0)::bigint as \"cost_microdollars!\",\n                  latency_ms,\n                  error_message,\n                  created_at as \"created_at!\"\n           FROM ai_requests\n           WHERE session_id = $1\n           ORDER BY created_at ASC",
+  "query": "SELECT\n            id as \"id!\",\n            created_at as \"created_at!\",\n            provider as \"provider!\",\n            model as \"model!\",\n            status as \"status!\",\n            input_tokens,\n            output_tokens,\n            COALESCE(cost_microdollars, 0)::bigint as \"cost_microdollars!\",\n            latency_ms,\n            trace_id as \"trace_id: TraceId\",\n            error_message\n          FROM ai_requests\n          ORDER BY created_at DESC\n          LIMIT $1",
   "describe": {
     "columns": [
       {
@@ -16,28 +16,17 @@
       },
       {
         "ordinal": 1,
-        "name": "request_id!",
-        "type_info": "Varchar",
+        "name": "created_at!",
+        "type_info": "Timestamptz",
         "origin": {
           "Table": {
             "table": "ai_requests",
-            "name": "request_id"
+            "name": "created_at"
           }
         }
       },
       {
         "ordinal": 2,
-        "name": "trace_id",
-        "type_info": "Varchar",
-        "origin": {
-          "Table": {
-            "table": "ai_requests",
-            "name": "trace_id"
-          }
-        }
-      },
-      {
-        "ordinal": 3,
         "name": "provider!",
         "type_info": "Text",
         "origin": {
@@ -48,7 +37,7 @@
         }
       },
       {
-        "ordinal": 4,
+        "ordinal": 3,
         "name": "model!",
         "type_info": "Text",
         "origin": {
@@ -59,7 +48,7 @@
         }
       },
       {
-        "ordinal": 5,
+        "ordinal": 4,
         "name": "status!",
         "type_info": "Varchar",
         "origin": {
@@ -70,7 +59,7 @@
         }
       },
       {
-        "ordinal": 6,
+        "ordinal": 5,
         "name": "input_tokens",
         "type_info": "Int4",
         "origin": {
@@ -81,7 +70,7 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 6,
         "name": "output_tokens",
         "type_info": "Int4",
         "origin": {
@@ -92,19 +81,30 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 7,
         "name": "cost_microdollars!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 9,
+        "ordinal": 8,
         "name": "latency_ms",
         "type_info": "Int4",
         "origin": {
           "Table": {
             "table": "ai_requests",
             "name": "latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "trace_id: TraceId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "trace_id"
           }
         }
       },
@@ -118,28 +118,16 @@
             "name": "error_message"
           }
         }
-      },
-      {
-        "ordinal": 11,
-        "name": "created_at!",
-        "type_info": "Timestamptz",
-        "origin": {
-          "Table": {
-            "table": "ai_requests",
-            "name": "created_at"
-          }
-        }
       }
     ],
     "parameters": {
       "Left": [
-        "Text"
+        "Int8"
       ]
     },
     "nullable": [
       false,
       false,
-      true,
       false,
       false,
       false,
@@ -148,8 +136,8 @@
       null,
       true,
       true,
-      false
+      true
     ]
   },
-  "hash": "deacc28c6197898a3fed4903de3f4773c8b02e4c635b3adee686e573e683ae7c"
+  "hash": "aa0e397954e924aa6f299f5b9996174bbb122f631b9a5b07e193e66154457c19"
 }

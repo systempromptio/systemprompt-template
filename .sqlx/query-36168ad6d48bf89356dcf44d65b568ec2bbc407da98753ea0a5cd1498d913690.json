@@ -1,0 +1,203 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH trace_to_session AS (\n            SELECT DISTINCT trace_id, session_id\n            FROM ai_requests\n            WHERE created_at >= $1 AND created_at < $2\n              AND trace_id IS NOT NULL AND session_id IS NOT NULL\n        ),\n        all_sessions AS (\n            SELECT\n                COALESCE(t.session_id, g.session_id) AS session_id,\n                g.user_id, g.agent_id, g.agent_scope,\n                g.created_at, g.decision, 'gov'::text AS source\n            FROM governance_decisions g\n            LEFT JOIN trace_to_session t ON t.trace_id = g.session_id\n            WHERE g.created_at >= $1 AND g.created_at < $2\n              AND g.session_id IS NOT NULL\n            UNION ALL\n            SELECT session_id, user_id, NULL::text AS agent_id, NULL::text AS agent_scope,\n                   created_at, NULL::text AS decision, 'ai'::text AS source\n            FROM ai_requests\n            WHERE created_at >= $1 AND created_at < $2\n              AND session_id IS NOT NULL\n            UNION ALL\n            SELECT session_id, user_id, NULL::text AS agent_id, NULL::text AS agent_scope,\n                   created_at, NULL::text AS decision, 'evt'::text AS source\n            FROM plugin_usage_events\n            WHERE created_at >= $1 AND created_at < $2\n              AND session_id IS NOT NULL\n        ),\n        per_session AS (\n            SELECT\n                session_id,\n                MAX(user_id)               AS user_id,\n                MAX(agent_id)              AS agent_id,\n                MAX(agent_scope)           AS agent_scope,\n                MIN(created_at)            AS started_at,\n                MAX(created_at)            AS ended_at,\n                COUNT(*)::bigint           AS span_count,\n                COUNT(*) FILTER (WHERE source = 'gov')::bigint        AS governance_count,\n                COUNT(*) FILTER (WHERE decision = 'deny')::bigint     AS deny_count\n            FROM all_sessions\n            GROUP BY session_id\n        ),\n        ai_meta AS (\n            SELECT\n                session_id,\n                (ARRAY_AGG(trace_id ORDER BY created_at DESC))[1]   AS trace_id,\n                (ARRAY_AGG(model    ORDER BY created_at DESC))[1]   AS model,\n                (ARRAY_AGG(provider ORDER BY created_at DESC))[1]   AS provider,\n                COUNT(*)::bigint                                    AS request_count,\n                COALESCE(SUM(tokens_used), 0)::bigint               AS total_tokens,\n                COALESCE(SUM(input_tokens), 0)::bigint              AS input_tokens,\n                COALESCE(SUM(output_tokens), 0)::bigint             AS output_tokens,\n                COALESCE(SUM(cost_microdollars), 0)::bigint         AS total_cost_microdollars,\n                COALESCE(SUM(latency_ms), 0)::bigint                AS total_latency_ms,\n                BOOL_OR(cache_hit)                                  AS cache_hit_any,\n                BOOL_OR(status NOT IN ('ok', 'success', 'completed', 'pending'))\n                                                                    AS has_error\n            FROM ai_requests\n            WHERE created_at >= $1 AND created_at < $2\n              AND session_id IS NOT NULL\n            GROUP BY session_id\n        ),\n        tool_meta AS (\n            SELECT\n                session_id,\n                COUNT(*)::bigint                                    AS tool_call_count,\n                MODE() WITHIN GROUP (ORDER BY tool_name)            AS top_tool\n            FROM plugin_usage_events\n            WHERE created_at >= $1 AND created_at < $2\n              AND session_id IS NOT NULL\n              AND tool_name IS NOT NULL\n            GROUP BY session_id\n        ),\n        joined AS (\n            SELECT\n                p.session_id,\n                p.user_id,\n                p.agent_id,\n                p.agent_scope,\n                p.started_at,\n                p.ended_at,\n                GREATEST(\n                    (EXTRACT(EPOCH FROM (p.ended_at - p.started_at)) * 1000)::bigint,\n                    COALESCE(a.total_latency_ms, 0)\n                )                                                   AS duration_ms,\n                p.span_count,\n                COALESCE(a.request_count, 0)        AS request_count,\n                COALESCE(t.tool_call_count, 0)      AS tool_call_count,\n                p.governance_count,\n                p.deny_count,\n                (p.deny_count > 0)                  AS has_deny,\n                a.trace_id,\n                a.model,\n                a.provider,\n                COALESCE(a.total_tokens, 0)         AS total_tokens,\n                COALESCE(a.input_tokens, 0)         AS input_tokens,\n                COALESCE(a.output_tokens, 0)        AS output_tokens,\n                COALESCE(a.total_cost_microdollars, 0) AS total_cost_microdollars,\n                COALESCE(a.total_latency_ms, 0)     AS total_latency_ms,\n                COALESCE(a.cache_hit_any, false)    AS cache_hit_any,\n                t.top_tool,\n                COALESCE(a.has_error, false)        AS has_error\n            FROM per_session p\n            LEFT JOIN ai_meta   a ON a.session_id = p.session_id\n            LEFT JOIN tool_meta t ON t.session_id = p.session_id\n        ),\n        filtered AS (\n            SELECT j.* FROM joined j\n            WHERE ($3::text  IS NULL OR j.user_id     = $3)\n              AND ($4::text  IS NULL OR j.agent_id    = $4)\n              AND ($5::text  IS NULL OR j.agent_scope = $5)\n              AND ($6::text  IS NULL OR EXISTS (\n                    SELECT 1 FROM governance_decisions g\n                    WHERE g.session_id = j.session_id\n                      AND g.created_at >= $1 AND g.created_at < $2\n                      AND g.policy = $6))\n              AND ($7::text  IS NULL OR EXISTS (\n                    SELECT 1 FROM governance_decisions g\n                    WHERE g.session_id = j.session_id\n                      AND g.created_at >= $1 AND g.created_at < $2\n                      AND g.decision = $7))\n              AND (NOT $8 OR j.has_error = true)\n              AND (NOT $9 OR j.has_deny  = true)\n        ),\n        counted AS (\n            SELECT\n                f.*,\n                COUNT(*) OVER ()::bigint AS total_count\n            FROM filtered f\n        )\n        SELECT\n            session_id              AS \"session_id!: SessionId\",\n            trace_id                AS \"trace_id?: TraceId\",\n            started_at              AS \"started_at!\",\n            ended_at                AS \"ended_at!\",\n            duration_ms             AS \"duration_ms!\",\n            user_id                 AS \"user_id?: UserId\",\n            agent_id                AS \"agent_id?: AgentId\",\n            agent_scope             AS \"agent_scope?\",\n            model                   AS \"model?\",\n            provider                AS \"provider?\",\n            span_count              AS \"span_count!\",\n            request_count           AS \"request_count!\",\n            tool_call_count         AS \"tool_call_count!\",\n            governance_count        AS \"governance_count!\",\n            deny_count              AS \"deny_count!\",\n            total_tokens            AS \"total_tokens!\",\n            input_tokens            AS \"input_tokens!\",\n            output_tokens           AS \"output_tokens!\",\n            total_cost_microdollars AS \"total_cost_microdollars!\",\n            total_latency_ms        AS \"total_latency_ms!\",\n            cache_hit_any           AS \"cache_hit_any!\",\n            top_tool                AS \"top_tool?\",\n            has_error               AS \"has_error!\",\n            has_deny                AS \"has_deny!\",\n            total_count             AS \"total_count!\"\n        FROM counted\n        ORDER BY\n            (CASE WHEN $12 = 'started_at' AND $13 = 'asc'  THEN started_at END) ASC  NULLS LAST,\n            (CASE WHEN $12 = 'started_at' AND $13 = 'desc' THEN started_at END) DESC NULLS LAST,\n            (CASE WHEN $12 = 'duration'   AND $13 = 'asc'  THEN duration_ms END) ASC  NULLS LAST,\n            (CASE WHEN $12 = 'duration'   AND $13 = 'desc' THEN duration_ms END) DESC NULLS LAST,\n            (CASE WHEN $12 = 'span_count' AND $13 = 'asc'  THEN span_count  END) ASC  NULLS LAST,\n            (CASE WHEN $12 = 'span_count' AND $13 = 'desc' THEN span_count  END) DESC NULLS LAST,\n            (CASE WHEN $12 = 'cost'       AND $13 = 'asc'  THEN total_cost_microdollars END) ASC  NULLS LAST,\n            (CASE WHEN $12 = 'cost'       AND $13 = 'desc' THEN total_cost_microdollars END) DESC NULLS LAST,\n            (CASE WHEN $12 = 'tokens'     AND $13 = 'asc'  THEN total_tokens END) ASC  NULLS LAST,\n            (CASE WHEN $12 = 'tokens'     AND $13 = 'desc' THEN total_tokens END) DESC NULLS LAST\n        LIMIT $10 OFFSET $11",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id!: SessionId",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "trace_id?: TraceId",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "started_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "ended_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "duration_ms!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "user_id?: UserId",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "agent_id?: AgentId",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "agent_scope?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "model?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "provider?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "span_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "request_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "tool_call_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "governance_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 14,
+        "name": "deny_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 15,
+        "name": "total_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 16,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 17,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 18,
+        "name": "total_cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 19,
+        "name": "total_latency_ms!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 20,
+        "name": "cache_hit_any!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 21,
+        "name": "top_tool?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 22,
+        "name": "has_error!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 23,
+        "name": "has_deny!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 24,
+        "name": "total_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool",
+        "Int8",
+        "Int8",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "36168ad6d48bf89356dcf44d65b568ec2bbc407da98753ea0a5cd1498d913690"
+}

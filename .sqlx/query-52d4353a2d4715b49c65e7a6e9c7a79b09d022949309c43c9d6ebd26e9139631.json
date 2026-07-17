@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            COALESCE(s.session_id, r.session_id) AS \"session_id!: SessionId\",\n            COALESCE(s.user_id, r.user_id)       AS \"user_id?: UserId\",\n            u.display_name                       AS \"display_name?\",\n            upe.department                       AS \"department?\",\n            COALESCE(s.started_at, r.first_seen) AS \"started_at?\",\n            COALESCE(s.ended_at, r.last_seen)    AS \"last_activity_at?\",\n            s.status                             AS \"status?\",\n            COALESCE(s.model, r.model)           AS \"model?\",\n            s.plugin_id                          AS \"plugin_id?\",\n            s.ai_title                           AS \"ai_title?\"\n        FROM (\n            SELECT\n                session_id,\n                MAX(user_id) AS user_id,\n                MIN(created_at) AS first_seen,\n                MAX(created_at) AS last_seen,\n                MAX(model) AS model\n            FROM ai_requests\n            WHERE session_id = $1\n            GROUP BY session_id\n        ) r\n        FULL OUTER JOIN plugin_session_summaries s\n          ON s.session_id = r.session_id\n        LEFT JOIN users u ON u.id = COALESCE(s.user_id, r.user_id)\n        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id\n        WHERE COALESCE(s.session_id, r.session_id) = $1\n        LIMIT 1\n        ",
+  "query": "\n        SELECT\n            COALESCE(s.session_id, r.session_id) AS \"session_id!: SessionId\",\n            COALESCE(s.user_id, r.user_id)       AS \"user_id?: UserId\",\n            u.display_name                       AS \"display_name?\",\n            upe.department                       AS \"department?\",\n            COALESCE(s.started_at, r.first_seen) AS \"started_at?\",\n            COALESCE(s.ended_at, r.last_seen)    AS \"last_activity_at?\",\n            s.status                             AS \"status?\",\n            COALESCE(s.model, r.model)           AS \"model?\",\n            s.plugin_id                          AS \"plugin_id?: PluginId\",\n            s.ai_title                           AS \"ai_title?\"\n        FROM (\n            SELECT\n                session_id,\n                MAX(user_id) AS user_id,\n                MIN(created_at) AS first_seen,\n                MAX(created_at) AS last_seen,\n                MAX(model) AS model\n            FROM ai_requests\n            WHERE session_id = $1\n            GROUP BY session_id\n        ) r\n        FULL OUTER JOIN plugin_session_summaries s\n          ON s.session_id = r.session_id\n        LEFT JOIN users u ON u.id = COALESCE(s.user_id, r.user_id)\n        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id\n        WHERE COALESCE(s.session_id, r.session_id) = $1\n        LIMIT 1\n        ",
   "describe": {
     "columns": [
       {
@@ -68,7 +68,7 @@
       },
       {
         "ordinal": 8,
-        "name": "plugin_id?",
+        "name": "plugin_id?: PluginId",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -107,5 +107,5 @@
       true
     ]
   },
-  "hash": "da7f06fd43866b68048383e438475d3787e943bf1e1555ca4f220232effab90d"
+  "hash": "52d4353a2d4715b49c65e7a6e9c7a79b09d022949309c43c9d6ebd26e9139631"
 }

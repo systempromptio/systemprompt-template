@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id as \"id!\",\n                  user_id as \"user_id!: UserId\",\n                  policy as \"policy!\",\n                  decision as \"decision!\",\n                  reason as \"reason!\",\n                  tool_name as \"tool_name!\",\n                  agent_id as \"agent_id: AgentId\",\n                  agent_scope,\n                  plugin_id,\n                  COALESCE(evaluated_rules, '[]'::jsonb) as \"evaluated_rules!\",\n                  created_at as \"created_at!\"\n           FROM governance_decisions\n           WHERE session_id = $1\n           ORDER BY created_at ASC",
+  "query": "SELECT id as \"id!\",\n                  user_id as \"user_id!: UserId\",\n                  policy as \"policy!\",\n                  decision as \"decision!\",\n                  reason as \"reason!\",\n                  tool_name as \"tool_name!\",\n                  agent_id as \"agent_id: AgentId\",\n                  agent_scope,\n                  plugin_id as \"plugin_id: PluginId\",\n                  COALESCE(evaluated_rules, '[]'::jsonb) as \"evaluated_rules!\",\n                  created_at as \"created_at!\"\n           FROM governance_decisions\n           WHERE session_id = $1\n           ORDER BY created_at ASC",
   "describe": {
     "columns": [
       {
@@ -93,7 +93,7 @@
       },
       {
         "ordinal": 8,
-        "name": "plugin_id",
+        "name": "plugin_id: PluginId",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -139,5 +139,5 @@
       false
     ]
   },
-  "hash": "ffcdd7376cce261e07359a0a2a7af47bb4ed79806ec2857ec062a7cf2932da55"
+  "hash": "ff524a93bd069a8b71b42369d1924d4e5b81a02fe8bd4e5e28a39e9efc524363"
 }

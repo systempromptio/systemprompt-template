@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            id              AS \"request_id!\",\n            model           AS \"model!\",\n            provider        AS \"provider!\",\n            status          AS \"status!\",\n            latency_ms,\n            input_tokens,\n            output_tokens,\n            cost_microdollars AS \"cost_microdollars!\",\n            trace_id,\n            created_at      AS \"created_at!\"\n          FROM ai_requests\n         WHERE session_id = $1\n         ORDER BY created_at ASC\n         LIMIT 200\n        ",
+  "query": "\n        SELECT\n            id                                  AS \"id!\",\n            trace_id                            AS \"trace_id?: TraceId\",\n            model                               AS \"model!\",\n            status                              AS \"status!\",\n            latency_ms                          AS \"latency_ms?\",\n            cost_microdollars                   AS \"cost_microdollars!\",\n            created_at                          AS \"created_at!\"\n        FROM ai_requests\n        WHERE context_id = $1\n        ORDER BY created_at ASC\n        LIMIT 500\n        ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "request_id!",
+        "name": "id!",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -16,23 +16,23 @@
       },
       {
         "ordinal": 1,
+        "name": "trace_id?: TraceId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "trace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
         "name": "model!",
         "type_info": "Text",
         "origin": {
           "Table": {
             "table": "ai_requests",
             "name": "model"
-          }
-        }
-      },
-      {
-        "ordinal": 2,
-        "name": "provider!",
-        "type_info": "Text",
-        "origin": {
-          "Table": {
-            "table": "ai_requests",
-            "name": "provider"
           }
         }
       },
@@ -49,7 +49,7 @@
       },
       {
         "ordinal": 4,
-        "name": "latency_ms",
+        "name": "latency_ms?",
         "type_info": "Int4",
         "origin": {
           "Table": {
@@ -60,28 +60,6 @@
       },
       {
         "ordinal": 5,
-        "name": "input_tokens",
-        "type_info": "Int4",
-        "origin": {
-          "Table": {
-            "table": "ai_requests",
-            "name": "input_tokens"
-          }
-        }
-      },
-      {
-        "ordinal": 6,
-        "name": "output_tokens",
-        "type_info": "Int4",
-        "origin": {
-          "Table": {
-            "table": "ai_requests",
-            "name": "output_tokens"
-          }
-        }
-      },
-      {
-        "ordinal": 7,
         "name": "cost_microdollars!",
         "type_info": "Int8",
         "origin": {
@@ -92,18 +70,7 @@
         }
       },
       {
-        "ordinal": 8,
-        "name": "trace_id",
-        "type_info": "Varchar",
-        "origin": {
-          "Table": {
-            "table": "ai_requests",
-            "name": "trace_id"
-          }
-        }
-      },
-      {
-        "ordinal": 9,
+        "ordinal": 6,
         "name": "created_at!",
         "type_info": "Timestamptz",
         "origin": {
@@ -121,16 +88,13 @@
     },
     "nullable": [
       false,
-      false,
-      false,
-      false,
-      true,
-      true,
       true,
       false,
+      false,
       true,
+      false,
       false
     ]
   },
-  "hash": "c909353783f91c3c7251a6ea380a89cc5a2c6664b5c9f875a10966ac3bf96054"
+  "hash": "e0c1daec1ad4c37004a86cc07095a9d8726336b05964d1ab4f97eadd03937f5a"
 }

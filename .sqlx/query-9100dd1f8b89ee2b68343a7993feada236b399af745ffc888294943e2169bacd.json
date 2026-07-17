@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT s.session_id    AS \"session_id!: SessionId\",\n               s.user_id       AS \"user_id!: UserId\",\n               s.plugin_id,\n               s.model,\n               s.status,\n               s.ai_title,\n               s.started_at,\n               COALESCE(s.total_input_tokens, 0)::bigint  AS \"total_input_tokens!\",\n               COALESCE(s.total_output_tokens, 0)::bigint AS \"total_output_tokens!\",\n               COALESCE(g.intervention_count, 0)::bigint  AS \"governance_intervention_count!\",\n               COALESCE(g.deny_count, 0)::bigint          AS \"deny_count!\"\n        FROM plugin_session_summaries s\n        LEFT JOIN (\n            SELECT session_id,\n                   COUNT(*)                                            AS intervention_count,\n                   COUNT(*) FILTER (WHERE decision = 'deny')           AS deny_count\n            FROM governance_decisions\n            GROUP BY session_id\n        ) g ON g.session_id = s.session_id\n        LEFT JOIN session_transcripts t ON t.session_id = s.session_id\n        WHERE ($1::text IS NULL OR s.user_id   = $1)\n          AND ($2::text IS NULL OR s.plugin_id = $2)\n          AND ($3::timestamptz IS NULL OR s.started_at >= $3)\n          AND ($4::timestamptz IS NULL OR s.started_at <  $4)\n          AND ($5::text IS NULL\n               OR s.ai_title ILIKE $5\n               OR s.ai_summary ILIKE $5\n               OR t.transcript::text ILIKE $5)\n        ORDER BY s.started_at DESC NULLS LAST\n        LIMIT $6\n        ",
+  "query": "\n        SELECT s.session_id    AS \"session_id!: SessionId\",\n               s.user_id       AS \"user_id!: UserId\",\n               s.plugin_id     AS \"plugin_id?: PluginId\",\n               s.model,\n               s.status,\n               s.ai_title,\n               s.started_at,\n               COALESCE(s.total_input_tokens, 0)::bigint  AS \"total_input_tokens!\",\n               COALESCE(s.total_output_tokens, 0)::bigint AS \"total_output_tokens!\",\n               COALESCE(g.intervention_count, 0)::bigint  AS \"governance_intervention_count!\",\n               COALESCE(g.deny_count, 0)::bigint          AS \"deny_count!\"\n        FROM plugin_session_summaries s\n        LEFT JOIN (\n            SELECT session_id,\n                   COUNT(*)                                            AS intervention_count,\n                   COUNT(*) FILTER (WHERE decision = 'deny')           AS deny_count\n            FROM governance_decisions\n            GROUP BY session_id\n        ) g ON g.session_id = s.session_id\n        LEFT JOIN session_transcripts t ON t.session_id = s.session_id\n        WHERE ($1::text IS NULL OR s.user_id   = $1)\n          AND ($2::text IS NULL OR s.plugin_id = $2)\n          AND ($3::timestamptz IS NULL OR s.started_at >= $3)\n          AND ($4::timestamptz IS NULL OR s.started_at <  $4)\n          AND ($5::text IS NULL\n               OR s.ai_title ILIKE $5\n               OR s.ai_summary ILIKE $5\n               OR t.transcript::text ILIKE $5)\n        ORDER BY s.started_at DESC NULLS LAST\n        LIMIT $6\n        ",
   "describe": {
     "columns": [
       {
@@ -27,7 +27,7 @@
       },
       {
         "ordinal": 2,
-        "name": "plugin_id",
+        "name": "plugin_id?: PluginId",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -129,5 +129,5 @@
       null
     ]
   },
-  "hash": "386a2f54414ece1a310682b1c7f85cf3cf89030f12477ec6ef7574a50610f4da"
+  "hash": "9100dd1f8b89ee2b68343a7993feada236b399af745ffc888294943e2169bacd"
 }

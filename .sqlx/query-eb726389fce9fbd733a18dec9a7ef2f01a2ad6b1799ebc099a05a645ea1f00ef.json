@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n            p.id AS \"id!\",\n            p.user_id AS \"user_id!: UserId\",\n            COALESCE(u.display_name, u.full_name, u.name, u.email, p.user_id) AS \"display_name!\",\n            u.email AS \"email?: Email\",\n            p.session_id AS \"session_id!: SessionId\",\n            p.event_type AS \"event_type!\",\n            p.tool_name,\n            p.plugin_id,\n            p.metadata AS \"metadata!\",\n            p.created_at AS \"created_at!\"\n        FROM plugin_usage_events p\n        JOIN users u ON u.id = p.user_id\n        WHERE p.user_id = $1\n          AND ($2::text IS NULL\n               OR p.id ILIKE $2\n               OR p.tool_name ILIKE $2\n               OR p.event_type ILIKE $2\n               OR p.session_id ILIKE $2)\n          AND ($3::text IS NULL OR p.event_type = $3)\n        ORDER BY p.created_at DESC\n        LIMIT $4 OFFSET $5",
+  "query": "SELECT\n            p.id AS \"id!\",\n            p.user_id AS \"user_id!: UserId\",\n            COALESCE(u.display_name, u.full_name, u.name, u.email, p.user_id) AS \"display_name!\",\n            u.email AS \"email?: Email\",\n            p.session_id AS \"session_id!: SessionId\",\n            p.event_type AS \"event_type!\",\n            p.tool_name,\n            p.plugin_id AS \"plugin_id?: PluginId\",\n            p.metadata AS \"metadata!\",\n            p.created_at AS \"created_at!\"\n        FROM plugin_usage_events p\n        JOIN users u ON u.id = p.user_id\n        WHERE NOT ('anonymous' = ANY(u.roles)) AND u.email NOT LIKE '%@anonymous.local'\n          AND ($1::text IS NULL\n               OR p.id ILIKE $1\n               OR u.display_name ILIKE $1\n               OR u.email ILIKE $1\n               OR p.tool_name ILIKE $1\n               OR p.event_type ILIKE $1\n               OR p.session_id ILIKE $1)\n          AND ($2::text IS NULL OR p.event_type = $2)\n        ORDER BY p.created_at DESC\n        LIMIT $3 OFFSET $4",
   "describe": {
     "columns": [
       {
@@ -77,7 +77,7 @@
       },
       {
         "ordinal": 7,
-        "name": "plugin_id",
+        "name": "plugin_id?: PluginId",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -113,7 +113,6 @@
       "Left": [
         "Text",
         "Text",
-        "Text",
         "Int8",
         "Int8"
       ]
@@ -131,5 +130,5 @@
       false
     ]
   },
-  "hash": "650d2a5faef2d7a74189ec5e57c5a9a0b14f207812e3671c219eba2c63f9d0ec"
+  "hash": "eb726389fce9fbd733a18dec9a7ef2f01a2ad6b1799ebc099a05a645ea1f00ef"
 }

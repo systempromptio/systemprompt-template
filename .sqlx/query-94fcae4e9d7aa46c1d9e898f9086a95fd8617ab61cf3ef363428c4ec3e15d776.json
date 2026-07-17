@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n            id as \"id!\",\n            created_at as \"created_at!\",\n            provider as \"provider!\",\n            model as \"model!\",\n            status as \"status!\",\n            input_tokens,\n            output_tokens,\n            COALESCE(cost_microdollars, 0)::bigint as \"cost_microdollars!\",\n            latency_ms,\n            trace_id,\n            error_message\n          FROM ai_requests\n          ORDER BY created_at DESC\n          LIMIT $1",
+  "query": "\n        SELECT\n            id              AS \"request_id!: AiRequestId\",\n            model           AS \"model!\",\n            provider        AS \"provider!\",\n            status          AS \"status!\",\n            latency_ms,\n            input_tokens,\n            output_tokens,\n            cost_microdollars AS \"cost_microdollars!\",\n            trace_id        AS \"trace_id: TraceId\",\n            created_at      AS \"created_at!\"\n          FROM ai_requests\n         WHERE session_id = $1\n         ORDER BY created_at ASC\n         LIMIT 200\n        ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "id!",
+        "name": "request_id!: AiRequestId",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -16,12 +16,12 @@
       },
       {
         "ordinal": 1,
-        "name": "created_at!",
-        "type_info": "Timestamptz",
+        "name": "model!",
+        "type_info": "Text",
         "origin": {
           "Table": {
             "table": "ai_requests",
-            "name": "created_at"
+            "name": "model"
           }
         }
       },
@@ -38,23 +38,23 @@
       },
       {
         "ordinal": 3,
-        "name": "model!",
-        "type_info": "Text",
-        "origin": {
-          "Table": {
-            "table": "ai_requests",
-            "name": "model"
-          }
-        }
-      },
-      {
-        "ordinal": 4,
         "name": "status!",
         "type_info": "Varchar",
         "origin": {
           "Table": {
             "table": "ai_requests",
             "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "latency_ms"
           }
         }
       },
@@ -84,22 +84,16 @@
         "ordinal": 7,
         "name": "cost_microdollars!",
         "type_info": "Int8",
-        "origin": "Expression"
-      },
-      {
-        "ordinal": 8,
-        "name": "latency_ms",
-        "type_info": "Int4",
         "origin": {
           "Table": {
             "table": "ai_requests",
-            "name": "latency_ms"
+            "name": "cost_microdollars"
           }
         }
       },
       {
-        "ordinal": 9,
-        "name": "trace_id",
+        "ordinal": 8,
+        "name": "trace_id: TraceId",
         "type_info": "Varchar",
         "origin": {
           "Table": {
@@ -109,20 +103,20 @@
         }
       },
       {
-        "ordinal": 10,
-        "name": "error_message",
-        "type_info": "Text",
+        "ordinal": 9,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
         "origin": {
           "Table": {
             "table": "ai_requests",
-            "name": "error_message"
+            "name": "created_at"
           }
         }
       }
     ],
     "parameters": {
       "Left": [
-        "Int8"
+        "Text"
       ]
     },
     "nullable": [
@@ -130,14 +124,13 @@
       false,
       false,
       false,
+      true,
+      true,
+      true,
       false,
       true,
-      true,
-      null,
-      true,
-      true,
-      true
+      false
     ]
   },
-  "hash": "0189203361120eb6cb1b4f636a21f7b75b50b4b2f406c98d97d018a484de6ee8"
+  "hash": "94fcae4e9d7aa46c1d9e898f9086a95fd8617ab61cf3ef363428c4ec3e15d776"
 }

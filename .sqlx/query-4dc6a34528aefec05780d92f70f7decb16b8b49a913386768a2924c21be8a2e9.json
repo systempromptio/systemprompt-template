@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT created_at, plugin_id, tool_name, user_id AS \"user_id!: UserId\", event_type FROM plugin_usage_events ORDER BY created_at DESC LIMIT $1",
+  "query": "SELECT created_at, plugin_id AS \"plugin_id: PluginId\", tool_name, user_id AS \"user_id!: UserId\", decision FROM governance_decisions ORDER BY created_at DESC LIMIT $1",
   "describe": {
     "columns": [
       {
@@ -9,18 +9,18 @@
         "type_info": "Timestamptz",
         "origin": {
           "Table": {
-            "table": "plugin_usage_events",
+            "table": "governance_decisions",
             "name": "created_at"
           }
         }
       },
       {
         "ordinal": 1,
-        "name": "plugin_id",
+        "name": "plugin_id: PluginId",
         "type_info": "Text",
         "origin": {
           "Table": {
-            "table": "plugin_usage_events",
+            "table": "governance_decisions",
             "name": "plugin_id"
           }
         }
@@ -31,7 +31,7 @@
         "type_info": "Text",
         "origin": {
           "Table": {
-            "table": "plugin_usage_events",
+            "table": "governance_decisions",
             "name": "tool_name"
           }
         }
@@ -42,19 +42,19 @@
         "type_info": "Text",
         "origin": {
           "Table": {
-            "table": "plugin_usage_events",
+            "table": "governance_decisions",
             "name": "user_id"
           }
         }
       },
       {
         "ordinal": 4,
-        "name": "event_type",
+        "name": "decision",
         "type_info": "Text",
         "origin": {
           "Table": {
-            "table": "plugin_usage_events",
-            "name": "event_type"
+            "table": "governance_decisions",
+            "name": "decision"
           }
         }
       }
@@ -67,10 +67,10 @@
     "nullable": [
       false,
       true,
-      true,
+      false,
       false,
       false
     ]
   },
-  "hash": "94ecce10d69479e18e3904f4349e935db1e9fba7e395a6a58695b79db54922bd"
+  "hash": "4dc6a34528aefec05780d92f70f7decb16b8b49a913386768a2924c21be8a2e9"
 }

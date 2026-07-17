@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id as \"id!\",\n                  event_type as \"event_type!\",\n                  tool_name,\n                  plugin_id,\n                  description,\n                  prompt_preview,\n                  COALESCE(metadata, '{}'::jsonb) as \"metadata!\",\n                  created_at as \"created_at!\"\n           FROM plugin_usage_events\n           WHERE session_id = $1\n           ORDER BY created_at ASC",
+  "query": "SELECT id as \"id!\",\n                  event_type as \"event_type!\",\n                  tool_name,\n                  plugin_id as \"plugin_id: PluginId\",\n                  description,\n                  prompt_preview,\n                  COALESCE(metadata, '{}'::jsonb) as \"metadata!\",\n                  created_at as \"created_at!\"\n           FROM plugin_usage_events\n           WHERE session_id = $1\n           ORDER BY created_at ASC",
   "describe": {
     "columns": [
       {
@@ -38,7 +38,7 @@
       },
       {
         "ordinal": 3,
-        "name": "plugin_id",
+        "name": "plugin_id: PluginId",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -103,5 +103,5 @@
       false
     ]
   },
-  "hash": "6edd2f50b0099e06596d35dead5267bcd1081bbada7be55f2ba0007a53b8306d"
+  "hash": "fdcecc5e306c88f024694e353769e84f8c625184950b89d1b8a3e835eb324a18"
 }

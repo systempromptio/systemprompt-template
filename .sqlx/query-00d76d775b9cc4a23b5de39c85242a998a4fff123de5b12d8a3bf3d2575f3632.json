@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            t.request_id          AS \"request_id!\",\n            t.tool_name           AS \"tool_name!\",\n            t.sequence_number     AS \"sequence_number!\",\n            t.tool_input          AS \"tool_input!\",\n            t.tool_result_payload AS \"tool_result_payload?: serde_json::Value\",\n            r.created_at          AS \"created_at!\"\n        FROM ai_request_tool_calls t\n        JOIN ai_requests r ON r.id = t.request_id\n        WHERE r.context_id = $1\n        ORDER BY r.created_at ASC, t.sequence_number ASC\n        LIMIT 1000\n        ",
+  "query": "\n        SELECT\n            t.request_id          AS \"request_id!: AiRequestId\",\n            t.tool_name           AS \"tool_name!\",\n            t.sequence_number     AS \"sequence_number!\",\n            t.tool_input          AS \"tool_input!\",\n            t.tool_result_payload AS \"tool_result_payload?: serde_json::Value\",\n            r.created_at          AS \"created_at!\"\n        FROM ai_request_tool_calls t\n        JOIN ai_requests r ON r.id = t.request_id\n        WHERE r.context_id = $1\n        ORDER BY r.created_at ASC, t.sequence_number ASC\n        LIMIT 1000\n        ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "request_id!",
+        "name": "request_id!: AiRequestId",
         "type_info": "Varchar",
         "origin": {
           "Table": {
@@ -84,5 +84,5 @@
       false
     ]
   },
-  "hash": "babcca8c5ad6c65fd524d3ea0fcc6e05efe0f47adf49bace657da75813520bb6"
+  "hash": "00d76d775b9cc4a23b5de39c85242a998a4fff123de5b12d8a3bf3d2575f3632"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT user_id AS \"user_id: UserId\", plugin_id, ai_title, ai_summary, model, started_at, ended_at\n          FROM plugin_session_summaries\n          WHERE session_id = $1\n          LIMIT 1",
+  "query": "SELECT user_id AS \"user_id: UserId\", plugin_id AS \"plugin_id: PluginId\", ai_title, ai_summary, model, started_at, ended_at\n          FROM plugin_session_summaries\n          WHERE session_id = $1\n          LIMIT 1",
   "describe": {
     "columns": [
       {
@@ -16,7 +16,7 @@
       },
       {
         "ordinal": 1,
-        "name": "plugin_id",
+        "name": "plugin_id: PluginId",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -96,5 +96,5 @@
       true
     ]
   },
-  "hash": "1a2e6ad34e4b3a212bdc00d25f9607a10e541283f7a2a9dadf4172c17e1d05c5"
+  "hash": "ddb2763ca2f8bd602df8399277d57fa8ee7cf246cb35cb497867156298e189b7"
 }
