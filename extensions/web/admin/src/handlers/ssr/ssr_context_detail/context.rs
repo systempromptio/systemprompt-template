@@ -58,6 +58,7 @@ pub(super) struct KpisView {
 
 #[derive(Debug, Serialize)]
 pub(super) struct TranscriptEntryView {
+    // Why: display DTO; request id carried as string from the transcript grouping key
     pub(super) request_id: String,
     pub(super) request_url: String,
     pub(super) ts_local: String,
