@@ -66,10 +66,17 @@ impl ContentDataProvider for DocsContentDataProvider {
             })
             .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
 
+        let after_reading_this = serde_json::to_value(&row.after_reading_this.0)
+            .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
+        let related_playbooks = serde_json::to_value(&row.related_playbooks.0)
+            .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
+        let related_code = serde_json::to_value(&row.related_code.0)
+            .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
+
         if let Some(obj) = item.as_object_mut() {
-            obj.insert("after_reading_this".to_owned(), row.after_reading_this);
-            obj.insert("related_playbooks".to_owned(), row.related_playbooks);
-            obj.insert("related_code".to_owned(), row.related_code);
+            obj.insert("after_reading_this".to_owned(), after_reading_this);
+            obj.insert("related_playbooks".to_owned(), related_playbooks);
+            obj.insert("related_code".to_owned(), related_code);
         }
 
         let kind = row.kind.as_str();

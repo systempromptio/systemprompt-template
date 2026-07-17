@@ -1,12 +1,57 @@
 use chrono::Utc;
+use sqlx::types::Json;
 use sqlx::{PgPool, Postgres};
 use std::sync::Arc;
 use systemprompt::identifiers::{CategoryId, ContentId, SourceId};
-use systemprompt_web_shared::models::{Content, CreateContentParams};
+use systemprompt_web_shared::models::{Content, ContentLinkMetadata, CreateContentParams};
 
 #[derive(Debug, Clone)]
 pub(super) struct ContentMutationRepository {
     pool: Arc<PgPool>,
+}
+
+fn to_jsonb<T: serde::Serialize>(value: &T) -> Result<serde_json::Value, sqlx::Error> {
+    serde_json::to_value(value).map_err(|e| sqlx::Error::Encode(Box::new(e)))
+}
+
+async fn insert_enrichment(
+    tx: &mut sqlx::Transaction<'_, Postgres>,
+    content_id: &str,
+    params: &CreateContentParams,
+    now: chrono::DateTime<Utc>,
+) -> Result<(), sqlx::Error> {
+    let after_reading_this = to_jsonb(&params.after_reading_this.0)?;
+    let related_playbooks = to_jsonb(&params.related_playbooks.0)?;
+    let related_code = to_jsonb(&params.related_code.0)?;
+    let related_docs = to_jsonb(&params.related_docs.0)?;
+
+    sqlx::query!(
+        r#"
+        INSERT INTO markdown_content_enrichment (
+            content_id, category, after_reading_this,
+            related_playbooks, related_code, related_docs, updated_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (content_id) DO UPDATE SET
+            category = EXCLUDED.category,
+            after_reading_this = EXCLUDED.after_reading_this,
+            related_playbooks = EXCLUDED.related_playbooks,
+            related_code = EXCLUDED.related_code,
+            related_docs = EXCLUDED.related_docs,
+            updated_at = EXCLUDED.updated_at
+        "#,
+        content_id,
+        params.category.as_deref(),
+        after_reading_this,
+        related_playbooks,
+        related_code,
+        related_docs,
+        now
+    )
+    .execute(&mut **tx)
+    .await?;
+
+    Ok(())
 }
 
 async fn fetch_content(
@@ -21,11 +66,11 @@ async fn fetch_content(
                mc.category_id as "category_id: CategoryId",
                mc.source_id as "source_id: SourceId",
                mc.version_hash,
-               COALESCE(mc.links, '[]'::jsonb) as "links!",
-               COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
-               COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
-               COALESCE(mce.related_code, '[]'::jsonb) as "related_code!",
-               COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!",
+               COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
+               COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!: Json<Vec<String>>",
+               COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
+               COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
+               COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
                mc.updated_at
         FROM markdown_content mc
         LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
@@ -49,6 +94,7 @@ impl ContentMutationRepository {
     ) -> Result<Content, sqlx::Error> {
         let id = ContentId::new(uuid::Uuid::new_v4().to_string());
         let now = Utc::now();
+        let links = to_jsonb(&params.links.0)?;
         let mut tx = self.pool.begin().await?;
 
         let row = sqlx::query!(
@@ -88,37 +134,13 @@ impl ContentMutationRepository {
             params.category_id.as_ref().map(CategoryId::as_str),
             params.source_id.as_str(),
             params.version_hash,
-            params.links,
+            links,
             now
         )
         .fetch_one(&mut *tx)
         .await?;
 
-        sqlx::query!(
-            r#"
-            INSERT INTO markdown_content_enrichment (
-                content_id, category, after_reading_this,
-                related_playbooks, related_code, related_docs, updated_at
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (content_id) DO UPDATE SET
-                category = EXCLUDED.category,
-                after_reading_this = EXCLUDED.after_reading_this,
-                related_playbooks = EXCLUDED.related_playbooks,
-                related_code = EXCLUDED.related_code,
-                related_docs = EXCLUDED.related_docs,
-                updated_at = EXCLUDED.updated_at
-            "#,
-            row.id,
-            params.category.as_deref(),
-            params.after_reading_this,
-            params.related_playbooks,
-            params.related_code,
-            params.related_docs,
-            now
-        )
-        .execute(&mut *tx)
-        .await?;
+        insert_enrichment(&mut tx, &row.id, params, now).await?;
 
         let content = fetch_content(&mut tx, &row.id).await?;
         tx.commit().await?;
@@ -130,6 +152,11 @@ impl ContentMutationRepository {
         params: &UpdateContentParams,
     ) -> Result<Content, sqlx::Error> {
         let now = Utc::now();
+        let links = params
+            .links
+            .as_ref()
+            .map(|value| to_jsonb(&value.0))
+            .transpose()?;
         let mut tx = self.pool.begin().await?;
 
         sqlx::query!(
@@ -148,7 +175,7 @@ impl ContentMutationRepository {
             params.version_hash,
             now,
             params.id.as_str(),
-            params.links
+            links
         )
         .execute(&mut *tx)
         .await?;
@@ -190,7 +217,7 @@ pub struct UpdateContentParams {
     pub keywords: String,
     pub image: Option<String>,
     pub version_hash: String,
-    pub links: Option<serde_json::Value>,
+    pub links: Option<Json<Vec<ContentLinkMetadata>>>,
 }
 
 /// Required fields for [`UpdateContentParams`]; optional fields are layered
@@ -221,7 +248,7 @@ pub struct UpdateContentParamsBuilder {
     keywords: String,
     version_hash: String,
     image: Option<String>,
-    links: Option<serde_json::Value>,
+    links: Option<Json<Vec<ContentLinkMetadata>>>,
 }
 
 impl UpdateContentParamsBuilder {
@@ -246,8 +273,8 @@ impl UpdateContentParamsBuilder {
     }
 
     #[must_use]
-    pub fn with_links(mut self, links: serde_json::Value) -> Self {
-        self.links = Some(links);
+    pub fn with_links(mut self, links: Vec<ContentLinkMetadata>) -> Self {
+        self.links = Some(Json(links));
         self
     }
 

@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use serde_json::Value as JsonValue;
 use sqlx::FromRow;
+use sqlx::types::Json;
 use systemprompt::identifiers::{CategoryId, ContentId, SourceId, TagId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -82,40 +82,16 @@ pub struct Content {
     pub source_id: SourceId,
     pub version_hash: String,
     #[serde(default)]
-    pub links: JsonValue,
+    pub links: Json<Vec<ContentLinkMetadata>>,
     #[serde(default)]
-    pub after_reading_this: JsonValue,
+    pub after_reading_this: Json<Vec<String>>,
     #[serde(default)]
-    pub related_playbooks: JsonValue,
+    pub related_playbooks: Json<Vec<ContentLinkMetadata>>,
     #[serde(default)]
-    pub related_code: JsonValue,
+    pub related_code: Json<Vec<ContentLinkMetadata>>,
     #[serde(default)]
-    pub related_docs: JsonValue,
+    pub related_docs: Json<Vec<ContentLinkMetadata>>,
     pub updated_at: Option<DateTime<Utc>>,
-}
-
-impl Content {
-    pub fn links_metadata(&self) -> Result<Vec<ContentLinkMetadata>, serde_json::Error> {
-        serde_json::from_value(self.links.clone())
-    }
-
-    pub fn after_reading_this_list(&self) -> Result<Vec<String>, serde_json::Error> {
-        serde_json::from_value(self.after_reading_this.clone())
-    }
-
-    pub fn related_playbooks_metadata(
-        &self,
-    ) -> Result<Vec<ContentLinkMetadata>, serde_json::Error> {
-        serde_json::from_value(self.related_playbooks.clone())
-    }
-
-    pub fn related_code_metadata(&self) -> Result<Vec<ContentLinkMetadata>, serde_json::Error> {
-        serde_json::from_value(self.related_code.clone())
-    }
-
-    pub fn related_docs_metadata(&self) -> Result<Vec<ContentLinkMetadata>, serde_json::Error> {
-        serde_json::from_value(self.related_docs.clone())
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

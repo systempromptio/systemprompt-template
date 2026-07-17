@@ -1,7 +1,8 @@
 use sqlx::PgPool;
+use sqlx::types::Json;
 use std::sync::Arc;
 use systemprompt::identifiers::{CategoryId, ContentId, SourceId};
-use systemprompt_web_shared::models::Content;
+use systemprompt_web_shared::models::{Content, ContentLinkMetadata};
 
 #[derive(Debug, Clone)]
 pub(super) struct ContentQueryRepository {
@@ -23,11 +24,11 @@ impl ContentQueryRepository {
                    mc.category_id as "category_id: CategoryId",
                    mc.source_id as "source_id!: SourceId",
                    mc.version_hash as "version_hash!",
-                   COALESCE(mc.links, '[]'::jsonb) as "links!",
-                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
-                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
-                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!",
-                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!",
+                   COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!: Json<Vec<String>>",
+                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
                    mc.updated_at
             FROM markdown_content mc
             LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
@@ -48,11 +49,11 @@ impl ContentQueryRepository {
                    mc.category_id as "category_id: CategoryId",
                    mc.source_id as "source_id!: SourceId",
                    mc.version_hash as "version_hash!",
-                   COALESCE(mc.links, '[]'::jsonb) as "links!",
-                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
-                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
-                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!",
-                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!",
+                   COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!: Json<Vec<String>>",
+                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
                    mc.updated_at
             FROM markdown_content mc
             LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
@@ -77,11 +78,11 @@ impl ContentQueryRepository {
                    mc.category_id as "category_id: CategoryId",
                    mc.source_id as "source_id!: SourceId",
                    mc.version_hash as "version_hash!",
-                   COALESCE(mc.links, '[]'::jsonb) as "links!",
-                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
-                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
-                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!",
-                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!",
+                   COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!: Json<Vec<String>>",
+                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
                    mc.updated_at
             FROM markdown_content mc
             LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
@@ -103,11 +104,11 @@ impl ContentQueryRepository {
                    mc.category_id as "category_id: CategoryId",
                    mc.source_id as "source_id!: SourceId",
                    mc.version_hash as "version_hash!",
-                   COALESCE(mc.links, '[]'::jsonb) as "links!",
-                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
-                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
-                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!",
-                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!",
+                   COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!: Json<Vec<String>>",
+                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
                    mc.updated_at
             FROM markdown_content mc
             LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
@@ -133,11 +134,11 @@ impl ContentQueryRepository {
                    mc.category_id as "category_id: CategoryId",
                    mc.source_id as "source_id!: SourceId",
                    mc.version_hash as "version_hash!",
-                   COALESCE(mc.links, '[]'::jsonb) as "links!",
-                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
-                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
-                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!",
-                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!",
+                   COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!: Json<Vec<String>>",
+                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
                    mc.updated_at
             FROM markdown_content mc
             LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
@@ -163,11 +164,11 @@ impl ContentQueryRepository {
                    mc.category_id as "category_id: CategoryId",
                    mc.source_id as "source_id!: SourceId",
                    mc.version_hash as "version_hash!",
-                   COALESCE(mc.links, '[]'::jsonb) as "links!",
-                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
-                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
-                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!",
-                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!",
+                   COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!: Json<Vec<String>>",
+                   COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
+                   COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
                    mc.updated_at
             FROM markdown_content mc
             LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id

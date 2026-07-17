@@ -118,12 +118,6 @@ impl IngestionService {
             .parse::<ContentKind>()
             .unwrap_or(ContentKind::Blog);
 
-        let links = serde_json::to_value(&metadata.links)?;
-        let after_reading_this = serde_json::to_value(&metadata.after_reading_this)?;
-        let related_playbooks = serde_json::to_value(&metadata.related_playbooks)?;
-        let related_code = serde_json::to_value(&metadata.related_code)?;
-        let related_docs = serde_json::to_value(&metadata.related_docs)?;
-
         let params = CreateContentParams::new(ContentSeed {
             slug: metadata.slug,
             title: metadata.title,
@@ -139,11 +133,11 @@ impl IngestionService {
         .with_image(metadata.image)
         .with_category_id(Some(category_id.clone()))
         .with_category(metadata.category)
-        .with_links(links)
-        .with_after_reading_this(after_reading_this)
-        .with_related_playbooks(related_playbooks)
-        .with_related_code(related_code)
-        .with_related_docs(related_docs);
+        .with_links(metadata.links)
+        .with_after_reading_this(metadata.after_reading_this)
+        .with_related_playbooks(metadata.related_playbooks)
+        .with_related_code(metadata.related_code)
+        .with_related_docs(metadata.related_docs);
 
         self.repo.create(&params).await?;
 

@@ -1,5 +1,6 @@
-use crate::models::ContentKind;
+use crate::models::{ContentKind, ContentLinkMetadata};
 use chrono::{DateTime, Utc};
+use sqlx::types::Json;
 use systemprompt::identifiers::{CategoryId, SourceId};
 
 #[derive(Debug, Clone)]
@@ -17,11 +18,11 @@ pub struct CreateContentParams {
     pub category: Option<String>,
     pub source_id: SourceId,
     pub version_hash: String,
-    pub links: serde_json::Value, // JSON: variable-shape template data
-    pub after_reading_this: serde_json::Value, // JSON: variable-shape template data
-    pub related_playbooks: serde_json::Value, // JSON: variable-shape template data
-    pub related_code: serde_json::Value, // JSON: variable-shape template data
-    pub related_docs: serde_json::Value, // JSON: variable-shape template data
+    pub links: Json<Vec<ContentLinkMetadata>>,
+    pub after_reading_this: Json<Vec<String>>,
+    pub related_playbooks: Json<Vec<ContentLinkMetadata>>,
+    pub related_code: Json<Vec<ContentLinkMetadata>>,
+    pub related_docs: Json<Vec<ContentLinkMetadata>>,
 }
 
 /// Required fields for a new content row; optional fields are layered on via
@@ -54,11 +55,11 @@ impl CreateContentParams {
             category: None,
             source_id: seed.source_id,
             version_hash: String::new(),
-            links: serde_json::Value::Array(vec![]),
-            after_reading_this: serde_json::Value::Array(vec![]),
-            related_playbooks: serde_json::Value::Array(vec![]),
-            related_code: serde_json::Value::Array(vec![]),
-            related_docs: serde_json::Value::Array(vec![]),
+            links: Json(Vec::new()),
+            after_reading_this: Json(Vec::new()),
+            related_playbooks: Json(Vec::new()),
+            related_code: Json(Vec::new()),
+            related_docs: Json(Vec::new()),
         }
     }
 
@@ -99,32 +100,32 @@ impl CreateContentParams {
     }
 
     #[must_use]
-    pub fn with_links(mut self, links: serde_json::Value) -> Self {
-        self.links = links;
+    pub fn with_links(mut self, links: Vec<ContentLinkMetadata>) -> Self {
+        self.links = Json(links);
         self
     }
 
     #[must_use]
-    pub fn with_after_reading_this(mut self, after_reading_this: serde_json::Value) -> Self {
-        self.after_reading_this = after_reading_this;
+    pub fn with_after_reading_this(mut self, after_reading_this: Vec<String>) -> Self {
+        self.after_reading_this = Json(after_reading_this);
         self
     }
 
     #[must_use]
-    pub fn with_related_playbooks(mut self, related_playbooks: serde_json::Value) -> Self {
-        self.related_playbooks = related_playbooks;
+    pub fn with_related_playbooks(mut self, related_playbooks: Vec<ContentLinkMetadata>) -> Self {
+        self.related_playbooks = Json(related_playbooks);
         self
     }
 
     #[must_use]
-    pub fn with_related_code(mut self, related_code: serde_json::Value) -> Self {
-        self.related_code = related_code;
+    pub fn with_related_code(mut self, related_code: Vec<ContentLinkMetadata>) -> Self {
+        self.related_code = Json(related_code);
         self
     }
 
     #[must_use]
-    pub fn with_related_docs(mut self, related_docs: serde_json::Value) -> Self {
-        self.related_docs = related_docs;
+    pub fn with_related_docs(mut self, related_docs: Vec<ContentLinkMetadata>) -> Self {
+        self.related_docs = Json(related_docs);
         self
     }
 }

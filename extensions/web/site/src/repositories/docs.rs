@@ -1,14 +1,16 @@
 use sqlx::PgPool;
+use sqlx::types::Json;
 use systemprompt::identifiers::{ContentId, SourceId};
+use systemprompt_web_shared::models::ContentLinkMetadata;
 
 #[derive(Debug)]
 pub(crate) struct DocContentRow {
     pub slug: String,
     pub kind: String,
     pub source_id: SourceId,
-    pub after_reading_this: serde_json::Value,
-    pub related_playbooks: serde_json::Value,
-    pub related_code: serde_json::Value,
+    pub after_reading_this: Json<Vec<String>>,
+    pub related_playbooks: Json<Vec<ContentLinkMetadata>>,
+    pub related_code: Json<Vec<ContentLinkMetadata>>,
 }
 
 pub(crate) async fn get_doc_content(
@@ -21,9 +23,9 @@ pub(crate) async fn get_doc_content(
             mc.slug,
             mc.kind,
             mc.source_id as "source_id: SourceId",
-            COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!",
-            COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!",
-            COALESCE(mce.related_code, '[]'::jsonb) as "related_code!"
+            COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!: Json<Vec<String>>",
+            COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
+            COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>"
         FROM markdown_content mc
         LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
         WHERE mc.id = $1
