@@ -9,8 +9,7 @@ use crate::navigation::NavigationConfig;
 
 use systemprompt::extension::prelude::*;
 
-static NAVIGATION_CONFIG: OnceLock<Result<Option<Arc<NavigationConfig>>, String>> =
-    OnceLock::new();
+static NAVIGATION_CONFIG: OnceLock<Result<Option<Arc<NavigationConfig>>, String>> = OnceLock::new();
 static HOMEPAGE_CONFIG: OnceLock<Result<Option<Arc<HomepageConfig>>, String>> = OnceLock::new();
 static FEATURES_CONFIG: OnceLock<Result<Option<Arc<FeaturesConfig>>, String>> = OnceLock::new();
 
