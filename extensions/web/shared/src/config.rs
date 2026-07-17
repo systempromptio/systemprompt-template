@@ -24,7 +24,7 @@ pub struct BlogConfigRaw {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ContentSourceRaw {
     pub source_id: SourceId,
-    pub category_id: String,
+    pub category_id: CategoryId,
     pub path: String,
     #[serde(default)]
     pub allowed_content_types: Vec<String>,
@@ -187,7 +187,7 @@ fn validate_content_source(
         return None;
     }
 
-    if src.category_id.trim().is_empty() {
+    if src.category_id.as_str().trim().is_empty() {
         errors.push(
             format!("{field_prefix}.category_id"),
             "category_id cannot be empty",
@@ -222,7 +222,7 @@ fn validate_content_source(
 
     Some(ContentSourceValidated {
         source_id: src.source_id,
-        category_id: CategoryId::new(src.category_id),
+        category_id: src.category_id,
         path: canonical_path,
         allowed_content_types: src.allowed_content_types,
         enabled: src.enabled,
