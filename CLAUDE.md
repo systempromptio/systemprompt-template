@@ -75,7 +75,7 @@ systemprompt infra --help
 
 # Subcommand help
 systemprompt core skills --help
-systemprompt core skills sync --help
+systemprompt core skills show --help
 ```
 
 ---
