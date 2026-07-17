@@ -21,6 +21,7 @@ use crate::repositories::{self, mcp_servers};
 
 #[derive(Debug, Serialize, Clone)]
 pub struct EntityDecision {
+    // Why: polymorphic entity reference (gateway_route/mcp_server), no single typed-ID equivalent
     pub entity_id: String,
     pub decision: String,
     pub reason: String,

@@ -20,6 +20,7 @@ pub enum IdentityGroupBy {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct IdentityViolations {
+    // Why: polymorphic identity dimension (user/agent/agent_scope), no single typed-ID equivalent
     pub identity_id: String,
     pub policy: String,
     pub deny_count: i64,

@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{PluginId, UserId};
 
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -9,7 +9,7 @@ use systemprompt_web_shared::error::MarketplaceError;
 pub struct RecentHookEvent {
     pub kind: String,
     pub created_at: DateTime<Utc>,
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<PluginId>,
     pub tool_name: Option<String>,
     pub user_id: UserId,
     pub status: Option<String>,
@@ -40,7 +40,7 @@ pub async fn recent_hook_events(
     limit: i64,
 ) -> Result<Vec<RecentHookEvent>, MarketplaceError> {
     let pre = sqlx::query!(
-        "SELECT created_at, plugin_id, tool_name, user_id AS \"user_id!: UserId\", decision \
+        "SELECT created_at, plugin_id AS \"plugin_id: PluginId\", tool_name, user_id AS \"user_id!: UserId\", decision \
          FROM governance_decisions \
          ORDER BY created_at DESC LIMIT $1",
         limit,
@@ -49,7 +49,7 @@ pub async fn recent_hook_events(
     .await?;
 
     let post = sqlx::query!(
-        "SELECT created_at, plugin_id, tool_name, user_id AS \"user_id!: UserId\", event_type \
+        "SELECT created_at, plugin_id AS \"plugin_id: PluginId\", tool_name, user_id AS \"user_id!: UserId\", event_type \
          FROM plugin_usage_events \
          ORDER BY created_at DESC LIMIT $1",
         limit,

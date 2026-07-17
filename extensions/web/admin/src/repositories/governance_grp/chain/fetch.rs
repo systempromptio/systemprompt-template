@@ -2,7 +2,7 @@
 //! chain DTOs defined in the parent module.
 
 use sqlx::PgPool;
-use systemprompt::identifiers::{AgentId, SessionId, UserId};
+use systemprompt::identifiers::{AgentId, AiRequestId, PluginId, SessionId, TraceId, UserId};
 
 use super::{AiRequestSummary, DecisionStage, SessionSummary, TranscriptEnvelope, UsageEvent};
 
@@ -36,7 +36,7 @@ pub(super) async fn fetch_decisions(
                   tool_name as "tool_name!",
                   agent_id as "agent_id: AgentId",
                   agent_scope,
-                  plugin_id,
+                  plugin_id as "plugin_id: PluginId",
                   COALESCE(evaluated_rules, '[]'::jsonb) as "evaluated_rules!",
                   created_at as "created_at!"
            FROM governance_decisions
@@ -77,11 +77,11 @@ pub(super) async fn fetch_decisions(
 pub(super) async fn fetch_requests(
     pool: &PgPool,
     session_id: &SessionId,
-) -> Result<(Vec<AiRequestSummary>, Option<String>), sqlx::Error> {
+) -> Result<(Vec<AiRequestSummary>, Option<TraceId>), sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT id as "id!",
-                  request_id as "request_id!",
-                  trace_id,
+                  request_id as "request_id!: AiRequestId",
+                  trace_id as "trace_id: TraceId",
                   provider as "provider!",
                   model as "model!",
                   status as "status!",
@@ -130,7 +130,7 @@ pub(super) async fn fetch_events(
         r#"SELECT id as "id!",
                   event_type as "event_type!",
                   tool_name,
-                  plugin_id,
+                  plugin_id as "plugin_id: PluginId",
                   description,
                   prompt_preview,
                   COALESCE(metadata, '{}'::jsonb) as "metadata!",

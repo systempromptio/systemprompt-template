@@ -7,7 +7,7 @@
 
 use std::sync::Arc;
 
-use systemprompt::identifiers::{AgentId, SessionId, UserId};
+use systemprompt::identifiers::{AgentId, AiRequestId, SessionId, TraceId, UserId};
 
 use axum::extract::{Extension, Path, State};
 use axum::http::StatusCode;
@@ -45,7 +45,7 @@ struct AuditDetailContext<'a> {
 struct Summary {
     session_id: SessionId,
     session_id_short: String,
-    trace_id: Option<String>,
+    trace_id: Option<TraceId>,
     trace_url: Option<String>,
     session_url: String,
     user_id: UserId,
@@ -64,7 +64,7 @@ struct Summary {
 #[derive(Debug, Serialize)]
 struct PrimaryRequest {
     id: String,
-    request_id: String,
+    request_id: AiRequestId,
     model: String,
     provider: String,
     status: String,
@@ -172,7 +172,7 @@ fn build_summary(env: &ChainEnvelope) -> Summary {
         trace_url: env
             .trace_id
             .as_ref()
-            .map(|tid| format!("/admin/traces/{}", urlencoding::encode(tid))),
+            .map(|tid| format!("/admin/traces/{}", urlencoding::encode(tid.as_str()))),
         session_url: format!(
             "/admin/sessions/{}",
             urlencoding::encode(env.session_id.as_str())

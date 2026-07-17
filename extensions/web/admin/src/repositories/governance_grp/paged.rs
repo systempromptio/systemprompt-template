@@ -9,7 +9,7 @@
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::PgPool;
-use systemprompt::identifiers::{AgentId, SessionId, UserId};
+use systemprompt::identifiers::{AgentId, PluginId, SessionId, TraceId, UserId};
 use systemprompt_security::policy::types::AccessScope;
 
 use super::time_range::TimeRange;
@@ -86,8 +86,8 @@ pub struct DecisionRow {
     pub policy: String,
     pub reason: String,
     pub evaluated_rules: serde_json::Value,
-    pub plugin_id: Option<String>,
-    pub trace_id: Option<String>,
+    pub plugin_id: Option<PluginId>,
+    pub trace_id: Option<TraceId>,
     pub cost_microdollars: Option<i64>,
     pub latency_ms: Option<i32>,
     pub created_at: DateTime<Utc>,
@@ -184,7 +184,7 @@ async fn run_decisions_query(
             policy AS "policy!",
             reason AS "reason!",
             COALESCE(evaluated_rules, '[]'::jsonb) AS "evaluated_rules!",
-            plugin_id, trace_id, cost_microdollars, latency_ms,
+            plugin_id AS "plugin_id: PluginId", trace_id AS "trace_id: TraceId", cost_microdollars, latency_ms,
             created_at AS "created_at!",
             (SELECT COUNT(*) FROM joined)::bigint AS "total_count!"
         FROM joined
@@ -228,8 +228,8 @@ struct PagedRow {
     policy: String,
     reason: String,
     evaluated_rules: serde_json::Value,
-    plugin_id: Option<String>,
-    trace_id: Option<String>,
+    plugin_id: Option<PluginId>,
+    trace_id: Option<TraceId>,
     cost_microdollars: Option<i64>,
     latency_ms: Option<i32>,
     created_at: DateTime<Utc>,

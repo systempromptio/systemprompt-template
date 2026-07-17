@@ -74,7 +74,10 @@ pub(crate) async fn governance_hooks_page(
         .map(|e| RecentEventRow {
             kind: e.kind,
             created_at: e.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
-            plugin_id: e.plugin_id.unwrap_or_default(),
+            plugin_id: e
+                .plugin_id
+                .map(|p| p.as_str().to_owned())
+                .unwrap_or_default(),
             tool_name: e.tool_name.unwrap_or_default(),
             user_id: e.user_id,
             status: e.status.unwrap_or_default(),
