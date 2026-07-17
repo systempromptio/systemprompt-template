@@ -112,11 +112,11 @@ async fn encrypt_and_store_secret(
 ) -> Result<(), MarketplaceError> {
     let dek = secret_keys::get_or_create_user_dek(pool, &UserId::new(&row.user_id), master_key)
         .await
-        .map_err(|e| MarketplaceError::Internal(format!("DEK error: {e}")))?;
+        .map_err(|e| MarketplaceError::Crypto(format!("DEK error: {e}")))?;
 
     let nonce = secret_crypto::generate_nonce();
     let encrypted = secret_crypto::encrypt(&dek, &nonce, row.var_value.as_bytes())
-        .map_err(|e| MarketplaceError::Internal(format!("Encryption error: {e}")))?;
+        .map_err(|e| MarketplaceError::Crypto(format!("Encryption error: {e}")))?;
 
     let key_version = secret_migration::fetch_key_version(pool.as_ref(), &row.user_id).await;
 
@@ -127,8 +127,7 @@ async fn encrypt_and_store_secret(
         nonce.as_slice(),
         key_version,
     )
-    .await
-    .map_err(|e| MarketplaceError::Internal(format!("Update error: {e}")))?;
+    .await?;
 
     if let Err(e) =
         secret_migration::insert_migration_audit(pool.as_ref(), &row.user_id, &row.var_name, actor)
