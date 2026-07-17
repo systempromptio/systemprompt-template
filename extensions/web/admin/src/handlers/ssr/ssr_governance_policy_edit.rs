@@ -209,7 +209,7 @@ pub(crate) async fn governance_policy_toggle(
 
 fn update_enabled_in_yaml(policy_id: &str, enabled: bool) -> Result<(), AdminError> {
     use systemprompt::config::ProfileBootstrap;
-    let bootstrap = ProfileBootstrap::get().map_err(|e| AdminError::internal(e.to_string()))?;
+    let bootstrap = ProfileBootstrap::get().map_err(AdminError::internal)?;
     let path = std::path::PathBuf::from(&bootstrap.paths.services).join("governance/config.yaml");
 
     let text = std::fs::read_to_string(&path)

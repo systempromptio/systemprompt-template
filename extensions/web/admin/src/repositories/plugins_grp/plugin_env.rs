@@ -88,11 +88,11 @@ pub async fn upsert_plugin_env_var(
         let dek =
             crate::repositories::secret_keys::get_or_create_user_dek(pool, user_id, &master_key)
                 .await
-                .map_err(|e| MarketplaceError::Internal(format!("{e}")))?;
+                .map_err(|e| MarketplaceError::Crypto(e.to_string()))?;
         let nonce = crate::repositories::secret_crypto::generate_nonce();
         let encrypted =
             crate::repositories::secret_crypto::encrypt(&dek, &nonce, var_value.as_bytes())
-                .map_err(|e| MarketplaceError::Internal(format!("{e}")))?;
+                .map_err(|e| MarketplaceError::Crypto(e.to_string()))?;
 
         sqlx::query!(
             "INSERT INTO plugin_env_vars \
