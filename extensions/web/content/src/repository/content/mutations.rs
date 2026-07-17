@@ -16,7 +16,7 @@ fn to_jsonb<T: serde::Serialize>(value: &T) -> Result<serde_json::Value, sqlx::E
 
 async fn insert_enrichment(
     tx: &mut sqlx::Transaction<'_, Postgres>,
-    content_id: &str,
+    content_id: &ContentId,
     params: &CreateContentParams,
     now: chrono::DateTime<Utc>,
 ) -> Result<(), sqlx::Error> {
@@ -40,7 +40,7 @@ async fn insert_enrichment(
             related_docs = EXCLUDED.related_docs,
             updated_at = EXCLUDED.updated_at
         "#,
-        content_id,
+        content_id.as_str(),
         params.category.as_deref(),
         after_reading_this,
         related_playbooks,
@@ -119,7 +119,7 @@ impl ContentMutationRepository {
                 version_hash = EXCLUDED.version_hash,
                 links = EXCLUDED.links,
                 updated_at = EXCLUDED.updated_at
-            RETURNING id
+            RETURNING id AS "id!: ContentId"
             "#,
             id.as_str(),
             params.slug,
@@ -142,7 +142,7 @@ impl ContentMutationRepository {
 
         insert_enrichment(&mut tx, &row.id, params, now).await?;
 
-        let content = fetch_content(&mut tx, &row.id).await?;
+        let content = fetch_content(&mut tx, row.id.as_str()).await?;
         tx.commit().await?;
         Ok(content)
     }
