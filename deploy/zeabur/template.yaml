@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://schema.zeabur.app/template.json
 # Zeabur template for the systemprompt gateway.
 # Publish/update with: npx zeabur template create -f deploy/zeabur/template.yaml
 # (see docs-internal/testing/zeabur.md)
@@ -93,8 +94,17 @@ spec:
           GEMINI_API_KEY:
             default: ${GEMINI_API_KEY}
           EXTERNAL_URL:
-            default: https://${PUBLIC_DOMAIN}.zeabur.app
+            # ZEABUR_WEB_URL is the full URL of the domain bound to the `web`
+            # port — stays correct if the user later binds a custom domain.
+            default: ${ZEABUR_WEB_URL}
           HOST:
             default: 0.0.0.0
           PORT:
             default: "8080"
+        instructions:
+          - type: DOMAIN
+            title: Gateway
+            content: ${ZEABUR_WEB_URL}
+          - type: TEXT
+            title: First boot
+            content: Migrations and the publish pipeline run on first start — allow several minutes before /api/v1/health returns 200.
