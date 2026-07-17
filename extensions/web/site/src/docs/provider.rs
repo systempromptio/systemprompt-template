@@ -43,7 +43,7 @@ impl DocsPageDataProvider {
             }
             first = false;
 
-            // `fmt::Write` for `String` never returns `Err`; the result is
+            // Why: `fmt::Write` for `String` never returns `Err`; the result is
             // genuinely discardable.
             write!(
                 result,

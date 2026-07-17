@@ -260,7 +260,6 @@ impl PublishPipelineJob {
         self.run_page_prerender(paths, db_pool, &mut stats).await;
         self.run_derived_files(ctx, paths, db_pool, &mut stats)
             .await;
-        let _ = (paths, db_pool);
         stats.record_success();
         self.run_asset_organization(paths, &mut stats).await;
 
