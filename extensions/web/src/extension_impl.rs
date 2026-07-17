@@ -116,6 +116,13 @@ impl Extension for WebExtension {
         migrations()
     }
 
+    fn seeds(&self) -> Vec<Seed> {
+        vec![Seed::new(
+            "admin_oauth_client",
+            include_str!("../schema/seeds/admin_oauth_client.sql"),
+        )]
+    }
+
     fn dependencies(&self) -> Vec<&'static str> {
         vec!["content", "users", "authz"]
     }
