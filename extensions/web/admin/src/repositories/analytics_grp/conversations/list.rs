@@ -3,7 +3,7 @@
 
 use sqlx::PgPool;
 
-use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt::identifiers::{PluginId, SessionId, UserId};
 
 use super::{ConversationListFilter, ConversationListItem};
 
@@ -26,7 +26,7 @@ pub async fn fetch_conversation_list(
         r#"
         SELECT s.session_id    AS "session_id!: SessionId",
                s.user_id       AS "user_id!: UserId",
-               s.plugin_id,
+               s.plugin_id     AS "plugin_id?: PluginId",
                s.model,
                s.status,
                s.ai_title,
@@ -56,7 +56,7 @@ pub async fn fetch_conversation_list(
         LIMIT $6
         "#,
         filter.user_id.as_ref().map(UserId::as_str),
-        filter.plugin_id,
+        filter.plugin_id.as_ref().map(PluginId::as_str),
         filter.since,
         filter.until,
         free_text_pattern,

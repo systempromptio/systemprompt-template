@@ -6,7 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
-use systemprompt::identifiers::{ContextId, SessionId, UserId};
+use systemprompt::identifiers::{AiRequestId, ContextId, SessionId, TraceId, UserId};
 
 #[derive(Debug, Clone)]
 pub struct ContextHeader {
@@ -35,7 +35,7 @@ pub struct ContextKpis {
 #[derive(Debug, Clone)]
 pub struct ContextRequestRow {
     pub id: String,
-    pub trace_id: Option<String>,
+    pub trace_id: Option<TraceId>,
     pub model: String,
     pub status: String,
     pub latency_ms: Option<i32>,
@@ -45,7 +45,7 @@ pub struct ContextRequestRow {
 
 #[derive(Debug, Clone)]
 pub struct ContextMessageRow {
-    pub request_id: String,
+    pub request_id: AiRequestId,
     pub role: String,
     pub sequence_number: i32,
     pub content: String,
@@ -54,7 +54,7 @@ pub struct ContextMessageRow {
 
 #[derive(Debug, Clone)]
 pub struct ContextToolCallRow {
-    pub request_id: String,
+    pub request_id: AiRequestId,
     pub tool_name: String,
     pub sequence_number: i32,
     pub tool_input: serde_json::Value,
@@ -143,7 +143,7 @@ pub async fn fetch_context_requests(
         r#"
         SELECT
             id                                  AS "id!",
-            trace_id                            AS "trace_id?",
+            trace_id                            AS "trace_id?: TraceId",
             model                               AS "model!",
             status                              AS "status!",
             latency_ms                          AS "latency_ms?",
@@ -168,7 +168,7 @@ pub async fn fetch_context_messages(
         ContextMessageRow,
         r#"
         SELECT
-            m.request_id      AS "request_id!",
+            m.request_id      AS "request_id!: AiRequestId",
             m.role            AS "role!",
             m.sequence_number AS "sequence_number!",
             m.content         AS "content!",
@@ -193,7 +193,7 @@ pub async fn fetch_context_tool_calls(
         ContextToolCallRow,
         r#"
         SELECT
-            t.request_id          AS "request_id!",
+            t.request_id          AS "request_id!: AiRequestId",
             t.tool_name           AS "tool_name!",
             t.sequence_number     AS "sequence_number!",
             t.tool_input          AS "tool_input!",

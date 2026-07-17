@@ -2,13 +2,13 @@
 
 use serde::Serialize;
 use sqlx::PgPool;
-use systemprompt::identifiers::{ContextId, SessionId, UserId};
+use systemprompt::identifiers::{ContextId, SessionId, TraceId, UserId};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct RecentRequest {
     pub id: String,
     pub user_id: UserId,
-    pub trace_id: Option<String>,
+    pub trace_id: Option<TraceId>,
     pub session_id: Option<SessionId>,
     pub context_id: Option<ContextId>,
     pub display_name: Option<String>,
@@ -27,7 +27,7 @@ pub async fn fetch_recent_requests(
 ) -> Result<Vec<RecentRequest>, sqlx::Error> {
     sqlx::query_as!(
         RecentRequest,
-        r#"SELECT r.id, r.user_id AS "user_id: UserId", r.trace_id,
+        r#"SELECT r.id, r.user_id AS "user_id: UserId", r.trace_id AS "trace_id: TraceId",
                   r.session_id AS "session_id: SessionId", r.context_id AS "context_id: ContextId",
                   r.model, r.status,
                   r.error_message, r.cost_microdollars, r.latency_ms, r.created_at,

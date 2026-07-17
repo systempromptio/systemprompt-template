@@ -3,7 +3,7 @@
 //! `storage/files/admin/templates/analytics-requests.hbs`.
 
 use serde::Serialize;
-use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt::identifiers::{AiRequestId, SessionId, TraceId, UserId};
 
 #[derive(Debug, Serialize)]
 pub(super) struct AnalyticsRequestsPageContext {
@@ -57,8 +57,8 @@ pub(super) struct CostBucketView {
 #[derive(Debug, Serialize)]
 pub(super) struct RequestRowView {
     pub id: String,
-    pub request_id: String,
-    pub trace_id: Option<String>,
+    pub request_id: AiRequestId,
+    pub trace_id: Option<TraceId>,
     pub session_id: Option<SessionId>,
     pub user_id: UserId,
     pub user_label: String,

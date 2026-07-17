@@ -178,8 +178,8 @@ fn trace_view(t: &SessionTraceRow) -> SessionTraceRowView {
     };
     SessionTraceRowView {
         trace_id: t.trace_id.clone(),
-        trace_id_short: short_id(&t.trace_id),
-        trace_url: format!("/admin/traces/{}", urlencoding::encode(&t.trace_id)),
+        trace_id_short: short_id(t.trace_id.as_str()),
+        trace_url: format!("/admin/traces/{}", urlencoding::encode(t.trace_id.as_str())),
         request_count: t.request_count,
         error_count: t.error_count,
         started_at_local: t.started_at.map(|x| {
@@ -203,11 +203,11 @@ fn request_view(r: &SessionRequestRow) -> SessionRequestRowView {
             .as_ref()
             .map(|c| format!("/admin/contexts/{}", urlencoding::encode(c.as_str()))),
         trace_id: r.trace_id.clone(),
-        trace_id_short: r.trace_id.as_deref().map(short_id),
+        trace_id_short: r.trace_id.as_ref().map(|t| short_id(t.as_str())),
         trace_url: r
             .trace_id
             .as_ref()
-            .map(|t| format!("/admin/traces/{}", urlencoding::encode(t))),
+            .map(|t| format!("/admin/traces/{}", urlencoding::encode(t.as_str()))),
         model: r.model.clone(),
         status: r.status.clone(),
         is_error: r.status == "failed",

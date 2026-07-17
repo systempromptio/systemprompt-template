@@ -8,7 +8,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
-use systemprompt::identifiers::{AgentId, SessionId, UserId};
+use systemprompt::identifiers::{AgentId, AiRequestId, SessionId, TraceId, UserId};
 
 use super::{RequestFilter, RequestRow, RequestSortSpec};
 use crate::repositories::governance_grp::time_range::TimeRange;
@@ -16,12 +16,12 @@ use crate::repositories::governance_grp::time_range::TimeRange;
 #[derive(Debug)]
 struct RequestRowWithTotal {
     id: String,
-    request_id: String,
+    request_id: AiRequestId,
     created_at: DateTime<Utc>,
     user_id: UserId,
     user_label: Option<String>,
     session_id: Option<SessionId>,
-    trace_id: Option<String>,
+    trace_id: Option<TraceId>,
     provider: String,
     model: String,
     status: String,
@@ -127,12 +127,12 @@ async fn run_paged_query(
         )
         SELECT
             id AS "id!",
-            request_id AS "request_id!",
+            request_id AS "request_id!: AiRequestId",
             created_at AS "created_at!",
             user_id AS "user_id!: UserId",
             user_label,
             session_id AS "session_id: SessionId",
-            trace_id,
+            trace_id AS "trace_id: TraceId",
             provider AS "provider!",
             model AS "model!",
             status AS "status!",

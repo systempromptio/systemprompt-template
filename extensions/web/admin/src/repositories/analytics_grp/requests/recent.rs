@@ -2,6 +2,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::TraceId;
 
 #[derive(Debug, Clone)]
 pub struct RecentGatewayRequestRow {
@@ -14,7 +15,7 @@ pub struct RecentGatewayRequestRow {
     pub output_tokens: Option<i32>,
     pub cost_microdollars: i64,
     pub latency_ms: Option<i32>,
-    pub trace_id: Option<String>,
+    pub trace_id: Option<TraceId>,
     pub error_message: Option<String>,
 }
 
@@ -34,7 +35,7 @@ pub async fn list_recent_gateway_requests(
             output_tokens,
             COALESCE(cost_microdollars, 0)::bigint as "cost_microdollars!",
             latency_ms,
-            trace_id,
+            trace_id as "trace_id: TraceId",
             error_message
           FROM ai_requests
           ORDER BY created_at DESC

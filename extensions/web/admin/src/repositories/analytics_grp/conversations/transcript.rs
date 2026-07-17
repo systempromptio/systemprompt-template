@@ -3,7 +3,7 @@
 //! and attaches the per-session governance decision.
 
 use chrono::{DateTime, Utc};
-use systemprompt::identifiers::SessionId;
+use systemprompt::identifiers::{SessionId, TraceId};
 
 use super::{ToolCall, TranscriptTurn, TurnGovernance, redact_text};
 
@@ -160,7 +160,7 @@ fn match_governance(
 
     Some(TurnGovernance {
         decision: row.decision.clone(),
-        trace_id: fallback_trace_id.map(String::from),
+        trace_id: fallback_trace_id.map(TraceId::new),
         rule_count,
         redactions_applied: 0,
     })

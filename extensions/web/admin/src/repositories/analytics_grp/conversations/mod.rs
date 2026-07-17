@@ -13,7 +13,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt::identifiers::{PluginId, SessionId, TraceId, UserId};
 
 mod detail;
 mod list;
@@ -28,7 +28,7 @@ pub use redact::redact_text;
 pub struct ConversationListItem {
     pub session_id: SessionId,
     pub user_id: UserId,
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<PluginId>,
     pub model: Option<String>,
     pub status: Option<String>,
     pub ai_title: Option<String>,
@@ -42,7 +42,7 @@ pub struct ConversationListItem {
 #[derive(Debug, Clone, Default)]
 pub struct ConversationListFilter {
     pub user_id: Option<UserId>,
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<PluginId>,
     pub free_text: Option<String>,
     pub since: Option<DateTime<Utc>>,
     pub until: Option<DateTime<Utc>>,
@@ -81,7 +81,7 @@ pub struct ToolCall {
 #[derive(Debug, Clone, Serialize)]
 pub struct TurnGovernance {
     pub decision: String,
-    pub trace_id: Option<String>,
+    pub trace_id: Option<TraceId>,
     pub rule_count: i32,
     pub redactions_applied: u32,
 }
@@ -90,7 +90,7 @@ pub struct TurnGovernance {
 pub struct ConversationDetail {
     pub session_id: SessionId,
     pub user_id: Option<UserId>,
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<PluginId>,
     pub ai_title: Option<String>,
     pub ai_summary: Option<String>,
     pub model: Option<String>,

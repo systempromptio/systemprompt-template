@@ -7,7 +7,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
-use systemprompt::identifiers::{ContextId, SessionId, UserId};
+use systemprompt::identifiers::{ContextId, PluginId, SessionId, TraceId, UserId};
 
 #[derive(Debug, Clone)]
 pub struct SessionHeader {
@@ -19,7 +19,7 @@ pub struct SessionHeader {
     pub last_activity_at: Option<DateTime<Utc>>,
     pub status: Option<String>,
     pub model: Option<String>,
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<PluginId>,
     pub ai_title: Option<String>,
 }
 
@@ -45,7 +45,7 @@ pub struct SessionContextRow {
 
 #[derive(Debug, Clone)]
 pub struct SessionTraceRow {
-    pub trace_id: String,
+    pub trace_id: TraceId,
     pub request_count: i64,
     pub started_at: Option<DateTime<Utc>>,
     pub ended_at: Option<DateTime<Utc>>,
@@ -56,7 +56,7 @@ pub struct SessionTraceRow {
 pub struct SessionRequestRow {
     pub id: String,
     pub context_id: Option<ContextId>,
-    pub trace_id: Option<String>,
+    pub trace_id: Option<TraceId>,
     pub model: String,
     pub status: String,
     pub latency_ms: Option<i32>,
@@ -80,7 +80,7 @@ pub async fn fetch_session_header(
             COALESCE(s.ended_at, r.last_seen)    AS "last_activity_at?",
             s.status                             AS "status?",
             COALESCE(s.model, r.model)           AS "model?",
-            s.plugin_id                          AS "plugin_id?",
+            s.plugin_id                          AS "plugin_id?: PluginId",
             s.ai_title                           AS "ai_title?"
         FROM (
             SELECT
@@ -172,7 +172,7 @@ pub async fn fetch_session_traces(
         SessionTraceRow,
         r#"
         SELECT
-            trace_id                                            AS "trace_id!",
+            trace_id                                            AS "trace_id!: TraceId",
             COUNT(*)::bigint                                    AS "request_count!",
             MIN(created_at)                                     AS "started_at?",
             MAX(COALESCE(completed_at, created_at))             AS "ended_at?",
@@ -199,7 +199,7 @@ pub async fn fetch_session_requests(
         SELECT
             id                                  AS "id!",
             context_id                          AS "context_id?: ContextId",
-            trace_id                            AS "trace_id?",
+            trace_id                            AS "trace_id?: TraceId",
             model                               AS "model!",
             status                              AS "status!",
             latency_ms                          AS "latency_ms?",

@@ -2,7 +2,7 @@
 //! (`context-detail.hbs`).
 
 use serde::Serialize;
-use systemprompt::identifiers::{ContextId, SessionId, UserId};
+use systemprompt::identifiers::{ContextId, SessionId, TraceId, UserId};
 
 #[derive(Debug, Serialize)]
 pub(super) struct ContextDetailPageContext {
@@ -82,7 +82,7 @@ pub(super) struct RequestRowView {
     pub(super) id: String,
     pub(super) id_short: String,
     pub(super) request_url: String,
-    pub(super) trace_id: Option<String>,
+    pub(super) trace_id: Option<TraceId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) trace_id_short: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

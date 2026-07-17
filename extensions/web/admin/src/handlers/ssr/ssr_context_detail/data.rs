@@ -121,11 +121,11 @@ fn request_view(r: &ContextRequestRow) -> RequestRowView {
         id_short: short_id(&r.id),
         request_url: format!("/admin/requests/{}", urlencoding::encode(&r.id)),
         trace_id: r.trace_id.clone(),
-        trace_id_short: r.trace_id.as_deref().map(short_id),
+        trace_id_short: r.trace_id.as_ref().map(|t| short_id(t.as_str())),
         trace_url: r
             .trace_id
             .as_ref()
-            .map(|t| format!("/admin/traces/{}", urlencoding::encode(t))),
+            .map(|t| format!("/admin/traces/{}", urlencoding::encode(t.as_str()))),
         model: r.model.clone(),
         status: r.status.clone(),
         is_error: r.status == "failed",
@@ -163,7 +163,7 @@ fn build_transcript(
 
     for m in messages {
         by_request
-            .entry((m.created_at, m.request_id.clone()))
+            .entry((m.created_at, m.request_id.as_str().to_owned()))
             .or_default()
             .push(Entry {
                 seq: m.sequence_number,
@@ -178,7 +178,7 @@ fn build_transcript(
     }
     for t in tool_calls {
         by_request
-            .entry((t.created_at, t.request_id.clone()))
+            .entry((t.created_at, t.request_id.as_str().to_owned()))
             .or_default()
             .push(Entry {
                 seq: t.sequence_number,

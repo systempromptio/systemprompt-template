@@ -7,7 +7,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use systemprompt::identifiers::{AgentId, SessionId, UserId};
+use systemprompt::identifiers::{AgentId, AiRequestId, SessionId, TraceId, UserId};
 
 mod options;
 mod paged;
@@ -79,12 +79,12 @@ impl Default for RequestSortSpec {
 #[derive(Debug, Clone, Serialize)]
 pub struct RequestRow {
     pub id: String,
-    pub request_id: String,
+    pub request_id: AiRequestId,
     pub created_at: DateTime<Utc>,
     pub user_id: UserId,
     pub user_label: Option<String>,
     pub session_id: Option<SessionId>,
-    pub trace_id: Option<String>,
+    pub trace_id: Option<TraceId>,
     pub provider: String,
     pub model: String,
     pub status: String,

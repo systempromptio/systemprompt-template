@@ -2,7 +2,7 @@
 //! (`session-detail.hbs`).
 
 use serde::Serialize;
-use systemprompt::identifiers::{ContextId, SessionId, UserId};
+use systemprompt::identifiers::{ContextId, PluginId, SessionId, TraceId, UserId};
 
 #[derive(Debug, Serialize)]
 pub(super) struct SessionDetailPageContext {
@@ -42,7 +42,7 @@ pub(super) struct SessionHeaderView {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) model: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) plugin_id: Option<String>,
+    pub(super) plugin_id: Option<PluginId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) ai_title: Option<String>,
 }
@@ -77,7 +77,7 @@ pub(super) struct SessionContextRowView {
 
 #[derive(Debug, Serialize)]
 pub(super) struct SessionTraceRowView {
-    pub(super) trace_id: String,
+    pub(super) trace_id: TraceId,
     pub(super) trace_id_short: String,
     pub(super) trace_url: String,
     pub(super) request_count: i64,
@@ -97,7 +97,7 @@ pub(super) struct SessionRequestRowView {
     pub(super) context_id_short: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) context_url: Option<String>,
-    pub(super) trace_id: Option<String>,
+    pub(super) trace_id: Option<TraceId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) trace_id_short: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

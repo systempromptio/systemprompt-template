@@ -7,14 +7,14 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
-use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt::identifiers::{PluginId, SessionId, TraceId, UserId};
 
 use super::transcript::{GovernanceRow, ParseInput, extract_content_text, parse_turns};
 use super::{ConversationDetail, RawTurnBody, TranscriptTurn};
 
 struct DetailFields {
     user_id: Option<UserId>,
-    plugin_id: Option<String>,
+    plugin_id: Option<PluginId>,
     ai_title: Option<String>,
     ai_summary: Option<String>,
     model: Option<String>,
@@ -46,7 +46,7 @@ pub async fn fetch_conversation_detail(
     include_raw: bool,
 ) -> Result<Option<ConversationDetail>, sqlx::Error> {
     let summary = sqlx::query!(
-        r#"SELECT user_id AS "user_id: UserId", plugin_id, ai_title, ai_summary, model, started_at, ended_at
+        r#"SELECT user_id AS "user_id: UserId", plugin_id AS "plugin_id: PluginId", ai_title, ai_summary, model, started_at, ended_at
           FROM plugin_session_summaries
           WHERE session_id = $1
           LIMIT 1"#,
@@ -93,9 +93,9 @@ pub async fn fetch_conversation_detail(
     .await?;
 
     let trace_id = sqlx::query!(
-        r"SELECT trace_id FROM ai_requests
+        r#"SELECT trace_id AS "trace_id: TraceId" FROM ai_requests
           WHERE session_id = $1 AND trace_id IS NOT NULL
-          LIMIT 1",
+          LIMIT 1"#,
         session_id.as_str(),
     )
     .fetch_optional(pool)
@@ -107,7 +107,7 @@ pub async fn fetch_conversation_detail(
         transcript: &transcript_row.transcript,
         fallback_model: transcript_row.model.as_deref(),
         governance_rows: &governance_rows,
-        fallback_trace_id: trace_id.as_deref(),
+        fallback_trace_id: trace_id.as_ref().map(TraceId::as_str),
         include_raw,
     });
 
