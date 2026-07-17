@@ -26,10 +26,14 @@ if ! command -v grep >/dev/null 2>&1; then
     exit 2
 fi
 
+# schema/seeds/ is exempt: seed bodies are idempotent INSERT/UPDATE/MERGE by
+# contract, enforced at boot by the runner's seed classifier (rejects anything
+# else and non-idempotent INSERTs), not by this declarative-schema gate.
 # shellcheck disable=SC2207
 files=($(find "$ROOT" -type f -name '*.sql' \
     -path '*/schema/*' \
     -not -path '*/schema/migrations/*' \
+    -not -path '*/schema/seeds/*' \
     -not -path '*/target/*' \
     | sort))
 
