@@ -6,7 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
-use systemprompt::identifiers::{AgentId, SessionId, UserId};
+use systemprompt::identifiers::{AgentId, PluginId, SessionId, TraceId, UserId};
 
 use super::{ToolCallFilter, ToolCallRow, ToolSortSpec};
 use crate::repositories::governance_grp::time_range::TimeRange;
@@ -17,7 +17,7 @@ struct ToolCallRowWithTotal {
     created_at: DateTime<Utc>,
     event_type: String,
     tool_name: Option<String>,
-    plugin_id: Option<String>,
+    plugin_id: Option<PluginId>,
     user_id: UserId,
     session_id: SessionId,
     agent_id: Option<AgentId>,
@@ -27,7 +27,7 @@ struct ToolCallRowWithTotal {
     decision: Option<String>,
     policy: Option<String>,
     reason: Option<String>,
-    trace_id: Option<String>,
+    trace_id: Option<TraceId>,
     ar_latency_ms: Option<i32>,
     metadata: serde_json::Value,
     total_count: i64,
@@ -128,14 +128,14 @@ async fn run_tool_calls_query(
             created_at AS "created_at!",
             event_type AS "event_type!",
             tool_name,
-            plugin_id,
+            plugin_id AS "plugin_id: PluginId",
             user_id AS "user_id!: UserId",
             session_id AS "session_id!: SessionId",
             agent_id AS "agent_id: AgentId",
             agent_scope,
             content_input_bytes AS "content_input_bytes!",
             content_output_bytes AS "content_output_bytes!",
-            decision, policy, reason, trace_id, ar_latency_ms,
+            decision, policy, reason, trace_id AS "trace_id: TraceId", ar_latency_ms,
             metadata AS "metadata!",
             (SELECT COUNT(*) FROM joined)::bigint AS "total_count!"
         FROM joined
@@ -152,7 +152,7 @@ async fn run_tool_calls_query(
         filter.tool_name.as_deref(),
         filter.user_id.as_ref().map(UserId::as_str),
         filter.agent_scope.as_deref(),
-        filter.plugin_id.as_deref(),
+        filter.plugin_id.as_ref().map(PluginId::as_str),
         filter.decision.as_deref(),
         search_pattern,
         limit,

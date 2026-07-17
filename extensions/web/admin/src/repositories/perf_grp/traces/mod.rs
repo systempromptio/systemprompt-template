@@ -8,7 +8,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use systemprompt::identifiers::{AgentId, SessionId, UserId};
+use systemprompt::identifiers::{AgentId, SessionId, TraceId, UserId};
 
 mod list;
 mod spans;
@@ -21,7 +21,7 @@ pub use stats::fetch_trace_stats;
 #[derive(Debug, Clone, Serialize)]
 pub struct TraceSummary {
     pub session_id: SessionId,
-    pub trace_id: Option<String>,
+    pub trace_id: Option<TraceId>,
     pub started_at: DateTime<Utc>,
     pub ended_at: DateTime<Utc>,
     pub duration_ms: i64,

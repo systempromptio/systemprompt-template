@@ -4,7 +4,7 @@
 //! the human-facing token / cost / duration formatting.
 
 use serde::Serialize;
-use systemprompt::identifiers::{AgentId, SessionId, UserId};
+use systemprompt::identifiers::{AgentId, SessionId, TraceId, UserId};
 use urlencoding::encode as urlencode;
 
 use crate::repositories::perf_grp::traces::TraceSummary;
@@ -15,7 +15,7 @@ use super::BASE_URL;
 pub(super) struct TraceRow {
     session_id: SessionId,
     session_id_short: String,
-    trace_id: Option<String>,
+    trace_id: Option<TraceId>,
     started_at: String,
     started_at_local: String,
     duration_ms: i64,

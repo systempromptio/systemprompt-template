@@ -1,12 +1,12 @@
 use serde::Serialize;
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{PluginId, UserId};
 use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Serialize, sqlx::FromRow)]
 pub struct PluginEnvVar {
     pub id: String,
-    pub plugin_id: String,
+    pub plugin_id: PluginId,
     pub var_name: String,
     pub var_value: String,
     pub is_secret: bool,
@@ -19,7 +19,7 @@ pub async fn list_plugin_env_vars(
 ) -> Result<Vec<PluginEnvVar>, MarketplaceError> {
     let rows = sqlx::query_as!(
         PluginEnvVar,
-        "SELECT id, plugin_id, var_name, var_value, is_secret \
+        "SELECT id, plugin_id AS \"plugin_id: PluginId\", var_name, var_value, is_secret \
          FROM plugin_env_vars WHERE user_id = $1 AND plugin_id = $2 ORDER BY var_name",
         user_id.as_str(),
         plugin_id,
@@ -30,7 +30,7 @@ pub async fn list_plugin_env_vars(
     let rows = if rows.is_empty() && user_id.as_str() != "admin" {
         sqlx::query_as!(
             PluginEnvVar,
-            "SELECT id, plugin_id, var_name, var_value, is_secret \
+            "SELECT id, plugin_id AS \"plugin_id: PluginId\", var_name, var_value, is_secret \
              FROM plugin_env_vars WHERE user_id = 'admin' AND plugin_id = $1 ORDER BY var_name",
             plugin_id,
         )
@@ -191,7 +191,7 @@ pub async fn list_all_user_env_vars(
 ) -> Result<Vec<PluginEnvVar>, MarketplaceError> {
     let rows = sqlx::query_as!(
         PluginEnvVar,
-        "SELECT id, plugin_id, var_name, var_value, is_secret \
+        "SELECT id, plugin_id AS \"plugin_id: PluginId\", var_name, var_value, is_secret \
          FROM plugin_env_vars WHERE user_id = $1 ORDER BY plugin_id, var_name",
         user_id.as_str(),
     )

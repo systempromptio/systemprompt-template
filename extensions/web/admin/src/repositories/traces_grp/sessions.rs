@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
-use systemprompt::identifiers::{AgentId, SessionId};
+use systemprompt::identifiers::{AgentId, AiRequestId, McpExecutionId, SessionId, TraceId};
 
 #[derive(Debug)]
 pub struct TraceEvent {
@@ -39,7 +39,7 @@ pub struct SessionSummaryRow {
 
 #[derive(Debug)]
 pub struct AiCallRow {
-    pub request_id: String,
+    pub request_id: AiRequestId,
     pub model: String,
     pub provider: String,
     pub status: String,
@@ -47,13 +47,13 @@ pub struct AiCallRow {
     pub input_tokens: Option<i32>,
     pub output_tokens: Option<i32>,
     pub cost_microdollars: i64,
-    pub trace_id: Option<String>,
+    pub trace_id: Option<TraceId>,
     pub created_at: DateTime<Utc>,
 }
 
 #[derive(Debug)]
 pub struct AiMessageRow {
-    pub request_id: String,
+    pub request_id: AiRequestId,
     pub role: String,
     pub sequence_number: i32,
     pub content: String,
@@ -61,12 +61,12 @@ pub struct AiMessageRow {
 
 #[derive(Debug)]
 pub struct AiToolCallRow {
-    pub request_id: String,
+    pub request_id: AiRequestId,
     pub tool_name: String,
     pub sequence_number: i32,
     pub tool_input: String,
     pub tool_result_payload: Option<serde_json::Value>,
-    pub mcp_execution_id: Option<String>,
+    pub mcp_execution_id: Option<McpExecutionId>,
 }
 
 pub async fn fetch_trace_events(
@@ -194,7 +194,7 @@ pub async fn fetch_trace_ai_calls(
         AiCallRow,
         r#"
         SELECT
-            id              AS "request_id!",
+            id              AS "request_id!: AiRequestId",
             model           AS "model!",
             provider        AS "provider!",
             status          AS "status!",
@@ -202,7 +202,7 @@ pub async fn fetch_trace_ai_calls(
             input_tokens,
             output_tokens,
             cost_microdollars AS "cost_microdollars!",
-            trace_id,
+            trace_id        AS "trace_id: TraceId",
             created_at      AS "created_at!"
           FROM ai_requests
          WHERE session_id = $1
@@ -223,7 +223,7 @@ pub async fn fetch_trace_ai_messages(
         AiMessageRow,
         r#"
         SELECT
-            m.request_id      AS "request_id!",
+            m.request_id      AS "request_id!: AiRequestId",
             m.role            AS "role!",
             m.sequence_number AS "sequence_number!",
             m.content         AS "content!"
@@ -247,12 +247,12 @@ pub async fn fetch_trace_ai_tool_calls(
         AiToolCallRow,
         r#"
         SELECT
-            t.request_id          AS "request_id!",
+            t.request_id          AS "request_id!: AiRequestId",
             t.tool_name           AS "tool_name!",
             t.sequence_number     AS "sequence_number!",
             t.tool_input          AS "tool_input!",
             t.tool_result_payload AS "tool_result_payload?: serde_json::Value",
-            t.mcp_execution_id
+            t.mcp_execution_id    AS "mcp_execution_id: McpExecutionId"
           FROM ai_request_tool_calls t
           JOIN ai_requests r ON r.id = t.request_id
          WHERE r.session_id = $1

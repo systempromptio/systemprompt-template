@@ -43,6 +43,7 @@ pub struct MatrixSection {
 
 #[derive(Debug, Serialize)]
 pub struct MatrixRow {
+    // Why: polymorphic entity reference (gateway_route/mcp_server), no single typed-ID equivalent
     pub entity_id: String,
     pub entity_name: String,
     pub description: Option<String>,

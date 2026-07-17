@@ -11,7 +11,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use systemprompt::identifiers::{AgentId, SessionId, UserId};
+use systemprompt::identifiers::{AgentId, PluginId, SessionId, TraceId, UserId};
 
 mod paged;
 mod stats;
@@ -27,7 +27,7 @@ pub struct ToolCallFilter {
     pub tool_name: Option<String>,
     pub user_id: Option<UserId>,
     pub agent_scope: Option<String>,
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<PluginId>,
     pub decision: Option<String>,
     pub search: Option<String>,
 }
@@ -85,7 +85,7 @@ pub struct ToolCallRow {
     pub created_at: DateTime<Utc>,
     pub event_type: String,
     pub tool_name: Option<String>,
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<PluginId>,
     pub user_id: UserId,
     pub session_id: SessionId,
     pub agent_id: Option<AgentId>,
@@ -95,7 +95,7 @@ pub struct ToolCallRow {
     pub decision: Option<String>,
     pub policy: Option<String>,
     pub reason: Option<String>,
-    pub trace_id: Option<String>,
+    pub trace_id: Option<TraceId>,
     pub ar_latency_ms: Option<i32>,
     pub metadata: serde_json::Value,
 }

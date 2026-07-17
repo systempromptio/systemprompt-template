@@ -6,6 +6,7 @@ pub struct AuditLogRow {
     pub id: String,
     pub var_name: String,
     pub action: String,
+    // Why: opaque actor identifier (serialized Actor), no typed-ID equivalent
     pub actor_id: String,
     pub ip_address: Option<String>,
     pub created_at: String,

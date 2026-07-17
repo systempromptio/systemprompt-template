@@ -17,6 +17,7 @@ pub struct UserManagementAggregate {
 pub struct UserMarketplaceOverride {
     pub user_id: UserId,
     pub department: String,
+    // Why: polymorphic entity reference (gateway_route/mcp_server), no single typed-ID equivalent
     pub entity_id: String,
     pub access: String,
 }

@@ -113,6 +113,7 @@ pub async fn fetch_tool_deny_reasons(
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ToolTopActor {
+    // Why: polymorphic identity dimension (user/agent/agent_scope), no single typed-ID equivalent
     pub identity_id: String,
     pub label: String,
     pub deny_count: i64,
