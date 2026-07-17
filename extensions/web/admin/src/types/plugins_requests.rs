@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use systemprompt::identifiers::{AgentId, McpServerId, SkillId, UserId};
+use systemprompt::identifiers::{AgentId, McpServerId, PluginId, SkillId, UserId};
 
 #[derive(Debug, Deserialize)]
 pub struct CreateAgentRequest {
@@ -67,7 +67,7 @@ pub struct UpdateMcpRawYamlRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct CreateHookRequest {
-    pub plugin_id: String,
+    pub plugin_id: PluginId,
     pub event: String,
     pub matcher: String,
     pub command: String,
@@ -81,7 +81,7 @@ pub struct CreateHookRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateHookRequest {
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<PluginId>,
     pub event: Option<String>,
     pub matcher: Option<String>,
     pub command: Option<String>,
@@ -92,7 +92,7 @@ pub struct UpdateHookRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct CreatePluginRequest {
-    pub id: String,
+    pub id: PluginId,
     pub name: String,
     #[serde(default)]
     pub description: String,

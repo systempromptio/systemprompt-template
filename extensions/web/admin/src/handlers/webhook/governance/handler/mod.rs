@@ -55,7 +55,7 @@ pub(crate) async fn govern_tool_use(
     let tool_name = payload.tool_name().unwrap_or("unknown");
     let session_id = SessionId::new(payload.session_id());
     let agent_id = payload.common.agent_id.as_ref();
-    let plugin_id = query.plugin_id.as_deref();
+    let plugin_id = query.plugin_id.as_ref();
 
     let denial_params = AuthDenialParams {
         pool: &pool,
@@ -97,7 +97,7 @@ pub(crate) async fn govern_tool_use(
         },
         target: AuditTarget {
             tool_name: tool_name.to_owned(),
-            plugin_id: plugin_id.map(str::to_owned),
+            plugin_id: plugin_id.cloned(),
         },
         chain,
     };
@@ -112,7 +112,7 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
     let session_id = params.session_id.clone();
     let tool_name = params.tool_name.to_owned();
     let agent_id = params.agent_id.cloned();
-    let plugin_id = params.plugin_id.map(str::to_owned);
+    let plugin_id = params.plugin_id.cloned();
     let session_service = Arc::clone(params.session_service);
     let headers = params.headers.clone();
 

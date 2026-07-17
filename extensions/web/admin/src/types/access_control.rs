@@ -135,6 +135,7 @@ impl Encode<'_, Postgres> for AccessDecision {
 pub struct AccessControlRule {
     pub id: String,
     pub entity_type: String,
+    // Why: polymorphic entity reference (role/department/user), no single typed-ID equivalent
     pub entity_id: String,
     #[sqlx(try_from = "String")]
     pub rule_type: RuleType,
@@ -162,6 +163,7 @@ pub struct UpdateEntityRulesRequest {
 #[derive(Debug, Deserialize)]
 pub struct BulkEntityRef {
     pub entity_type: String,
+    // Why: polymorphic entity reference (role/department/user), no single typed-ID equivalent
     pub entity_id: String,
 }
 
@@ -176,5 +178,6 @@ pub struct BulkAssignRequest {
 #[derive(Debug, Deserialize)]
 pub struct AccessControlQuery {
     pub entity_type: Option<String>,
+    // Why: polymorphic entity reference (role/department/user), no single typed-ID equivalent
     pub entity_id: Option<String>,
 }

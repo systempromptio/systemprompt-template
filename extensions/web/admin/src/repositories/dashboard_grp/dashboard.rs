@@ -1,5 +1,5 @@
 use sqlx::PgPool;
-use systemprompt::identifiers::{Email, SessionId, UserId};
+use systemprompt::identifiers::{Email, PluginId, SessionId, UserId};
 
 use crate::repositories::dashboard_aggregates::{
     fetch_active_users_24h, fetch_usage_timeseries, get_activity_stats,
@@ -158,7 +158,7 @@ pub async fn list_events(
             p.session_id AS "session_id!: SessionId",
             p.event_type AS "event_type!",
             p.tool_name,
-            p.plugin_id,
+            p.plugin_id AS "plugin_id?: PluginId",
             p.metadata AS "metadata!",
             p.created_at AS "created_at!"
         FROM plugin_usage_events p

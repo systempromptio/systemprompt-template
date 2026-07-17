@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use systemprompt::identifiers::PluginId;
 use systemprompt::models::{DiskHookConfig, HOOK_CONFIG_FILENAME};
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -66,7 +67,7 @@ pub fn list_configured_hooks(
 
         out.push(ConfiguredHook {
             id: id_str.clone(),
-            plugin_id: id_str,
+            plugin_id: PluginId::new(id_str),
             event: config.event.as_str().to_owned(),
             matcher: config.matcher.clone(),
             command: config.command.clone(),

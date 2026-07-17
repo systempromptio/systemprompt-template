@@ -1,7 +1,7 @@
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use systemprompt::identifiers::{Email, SessionId, UserId};
+use systemprompt::identifiers::{Email, PluginId, SessionId, UserId};
 
 use super::super::activity;
 
@@ -193,7 +193,7 @@ pub struct EventRow {
     pub session_id: SessionId,
     pub event_type: String,
     pub tool_name: Option<String>,
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<PluginId>,
     pub metadata: serde_json::Value,
     pub created_at: DateTime<Utc>,
 }

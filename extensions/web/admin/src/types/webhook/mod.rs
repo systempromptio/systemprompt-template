@@ -164,7 +164,7 @@ fn dispatch_event(
 
 #[derive(Debug, Deserialize)]
 pub struct TrackQuery {
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<systemprompt::identifiers::PluginId>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -175,7 +175,7 @@ pub struct SkillTrackQuery {
 
 #[derive(Debug, Deserialize)]
 pub struct GovernQuery {
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<systemprompt::identifiers::PluginId>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -217,7 +217,7 @@ pub struct ContextWindowUsage {
 
 #[derive(Debug, Deserialize)]
 pub struct StatusLineQuery {
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<systemprompt::identifiers::PluginId>,
     pub session_id: Option<systemprompt::identifiers::SessionId>,
 }
 
@@ -229,5 +229,5 @@ pub struct TranscriptPayload {
 
 #[derive(Debug, Deserialize)]
 pub struct TranscriptQuery {
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<systemprompt::identifiers::PluginId>,
 }

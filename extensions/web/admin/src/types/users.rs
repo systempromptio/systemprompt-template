@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use systemprompt::identifiers::{Email, SessionId, SkillId, UserId};
+use systemprompt::identifiers::{Email, PluginId, SessionId, SkillId, UserId};
 
 use super::super::activity;
 
@@ -105,7 +105,7 @@ pub struct DetectedEntity {
 #[derive(Debug, Clone)]
 pub struct JwtIdentity {
     pub user_id: UserId,
-    pub plugin_id: String,
+    pub plugin_id: PluginId,
 }
 
 #[derive(Debug, Clone)]

@@ -1,5 +1,5 @@
 use sqlx::PgPool;
-use systemprompt::identifiers::{Actor, AgentId};
+use systemprompt::identifiers::{Actor, AgentId, PluginId};
 use systemprompt_security::authz::{Decision, DecisionTag};
 
 use crate::repositories::governance_grp::{GovernanceDecisionRecord, insert_governance_decision};
@@ -44,7 +44,7 @@ pub(super) async fn record_decision(
         policy: &policy_str,
         reason: &reason_str,
         evaluated_rules: &evaluated_rules,
-        plugin_id: audit.target.plugin_id.as_deref(),
+        plugin_id: audit.target.plugin_id.as_ref().map(PluginId::as_str),
         act_chain: &[],
         context_id: None,
         task_id: None,

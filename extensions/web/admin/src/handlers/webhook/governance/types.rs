@@ -12,7 +12,7 @@ use serde::Serialize;
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt::identifiers::{AgentId, PolicyId, SessionId, UserId};
+use systemprompt::identifiers::{AgentId, PluginId, PolicyId, SessionId, UserId};
 use systemprompt::oauth::SessionCreationService;
 use systemprompt_security::authz::{Decision, DecisionTag};
 use systemprompt_security::policy::types::AccessScope;
@@ -91,7 +91,7 @@ pub(super) struct PrincipalSnapshot {
 #[derive(Debug, Serialize, Clone)]
 pub(super) struct AuditTarget {
     pub tool_name: String,
-    pub plugin_id: Option<String>,
+    pub plugin_id: Option<PluginId>,
 }
 
 /// Typed audit blob serialized into `governance_decisions.evaluated_rules`.
@@ -112,7 +112,7 @@ pub(super) struct AuthDenialParams<'a> {
     pub session_id: &'a SessionId,
     pub tool_name: &'a str,
     pub agent_id: Option<&'a AgentId>,
-    pub plugin_id: Option<&'a str>,
+    pub plugin_id: Option<&'a PluginId>,
     pub session_service: &'a Arc<SessionCreationService>,
     pub headers: &'a HeaderMap,
 }

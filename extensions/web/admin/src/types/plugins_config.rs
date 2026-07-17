@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use systemprompt::identifiers::{AgentId, HookId, McpServerId, SkillId};
+use systemprompt::identifiers::{AgentId, HookId, McpServerId, PluginId, SkillId};
 use systemprompt::models::{PluginConfig, PluginVariableDef};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -70,7 +70,7 @@ pub struct PluginOverview {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConfiguredHook {
     pub id: String,
-    pub plugin_id: String,
+    pub plugin_id: PluginId,
     pub event: String,
     pub matcher: String,
     pub command: String,
@@ -221,7 +221,7 @@ pub struct HookCatalogEntry {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HookDetail {
     pub id: HookId,
-    pub plugin_id: String,
+    pub plugin_id: PluginId,
     #[serde(default)]
     pub name: String,
     #[serde(default)]
