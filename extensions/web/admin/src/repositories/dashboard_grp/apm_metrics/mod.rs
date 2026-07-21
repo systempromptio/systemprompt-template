@@ -1,12 +1,8 @@
 mod calculations;
-mod hourly;
-mod performance;
 mod queries;
 mod throughput;
 
 pub use calculations::*;
-pub use hourly::*;
-pub use performance::*;
 pub use queries::*;
 pub use throughput::*;
 

@@ -56,19 +56,6 @@ pub async fn list_users(pool: &PgPool) -> Result<Vec<UserSummary>, sqlx::Error> 
     .await
 }
 
-pub async fn fetch_user_roles(pool: &PgPool, user_id: &UserId) -> Option<Vec<String>> {
-    let row = sqlx::query!("SELECT roles FROM users WHERE id = $1", user_id.as_str(),)
-        .fetch_optional(pool)
-        .await
-        .map_err(|e| {
-            tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch user roles");
-        })
-        .ok()
-        .flatten()?;
-
-    Some(row.roles)
-}
-
 pub async fn fetch_distinct_roles(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT DISTINCT unnest(roles) AS "role!" FROM users

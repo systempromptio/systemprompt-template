@@ -1,14 +1,3 @@
-mod health;
-mod queries;
-mod today_summary;
-
-pub use health::{HealthMetrics, fetch_health_metrics};
-pub use queries::{
-    fetch_analysed_session_ids, fetch_recent_analyses, fetch_session_analyses_batch,
-    fetch_session_analysis,
-};
-pub use today_summary::{TodaySummary, fetch_today_summary};
-
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 

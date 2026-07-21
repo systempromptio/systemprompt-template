@@ -12,13 +12,9 @@
 //! score      = clamp(normalised * scale, 0.0, 100.0)
 //! ```
 
-use std::path::PathBuf;
-use std::sync::OnceLock;
 
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
 
-use super::time_range::TimeRange;
 
 /// Weights loaded from `services/governance/risk_score.yaml`.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -40,51 +36,6 @@ impl Default for RiskScoreWeights {
             scale: 50.0,
         }
     }
-}
-
-#[derive(Debug, Deserialize)]
-struct RiskScoreFile {
-    risk_score: RiskScoreWeights,
-}
-
-static WEIGHTS: OnceLock<RiskScoreWeights> = OnceLock::new();
-
-/// Cached weights from `services/governance/risk_score.yaml`.
-///
-/// Falls back to [`RiskScoreWeights::default`] if the file is missing or
-/// malformed (logged at WARN once).
-pub fn weights() -> RiskScoreWeights {
-    *WEIGHTS.get_or_init(load_weights)
-}
-
-fn load_weights() -> RiskScoreWeights {
-    let Some(path) = config_path() else {
-        tracing::warn!("ProfileBootstrap unavailable; using default risk_score weights");
-        return RiskScoreWeights::default();
-    };
-    let Ok(text) = std::fs::read_to_string(&path) else {
-        tracing::info!(
-            path = %path.display(),
-            "risk_score.yaml not found; using default weights"
-        );
-        return RiskScoreWeights::default();
-    };
-    match serde_yaml::from_str::<RiskScoreFile>(&text) {
-        Ok(parsed) => parsed.risk_score,
-        Err(e) => {
-            tracing::warn!(
-                path = %path.display(),
-                error = %e,
-                "risk_score.yaml malformed; using default weights"
-            );
-            RiskScoreWeights::default()
-        },
-    }
-}
-
-fn config_path() -> Option<PathBuf> {
-    let bootstrap = systemprompt::config::ProfileBootstrap::get().ok()?;
-    Some(PathBuf::from(&bootstrap.paths.services).join("governance/risk_score.yaml"))
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -144,69 +95,4 @@ impl IdentityGroupBy {
             Self::AgentScope => "agent_scope",
         }
     }
-}
-
-/// Per-identity violation counts over a window, broken out by the policy
-/// categories the risk-score formula cares about (deny / secret / scope).
-pub async fn fetch_violation_counts(
-    pool: &PgPool,
-    range: TimeRange,
-    group_by: IdentityGroupBy,
-) -> Result<Vec<(String, ViolationCounts)>, sqlx::Error> {
-    let group_key = group_by.as_str();
-
-    let rows = sqlx::query_as!(
-        ViolationCountsRow,
-        r#"SELECT
-            (CASE $3
-                WHEN 'user' THEN g.user_id
-                WHEN 'agent' THEN COALESCE(g.agent_id, '')
-                ELSE COALESCE(g.agent_scope, '')
-            END) AS "identity_id!",
-            COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS "deny_count!",
-            COUNT(*) FILTER (
-                WHERE g.decision = 'deny'
-                  AND (g.policy = 'secret_scan' OR g.reason ILIKE '%secret%')
-            )::bigint AS "secret_breach_count!",
-            COUNT(*) FILTER (
-                WHERE g.decision = 'deny'
-                  AND (g.policy = 'scope_check' OR g.policy = 'scope')
-            )::bigint AS "scope_violation_count!",
-            COUNT(*)::bigint AS "activity_volume!"
-          FROM governance_decisions g
-          WHERE g.created_at >= $1 AND g.created_at < $2
-          GROUP BY 1
-          HAVING COUNT(*) FILTER (WHERE g.decision = 'deny') > 0
-          ORDER BY COUNT(*) FILTER (WHERE g.decision = 'deny') DESC, COUNT(*) DESC
-          LIMIT 200"#,
-        range.from,
-        range.to,
-        group_key,
-    )
-    .fetch_all(pool)
-    .await?;
-
-    Ok(rows
-        .into_iter()
-        .map(|r| {
-            (
-                r.identity_id,
-                ViolationCounts {
-                    deny_count: r.deny_count,
-                    secret_breach_count: r.secret_breach_count,
-                    scope_violation_count: r.scope_violation_count,
-                    activity_volume: r.activity_volume,
-                },
-            )
-        })
-        .collect())
-}
-
-#[derive(sqlx::FromRow)]
-struct ViolationCountsRow {
-    identity_id: String,
-    deny_count: i64,
-    secret_breach_count: i64,
-    scope_violation_count: i64,
-    activity_volume: i64,
 }

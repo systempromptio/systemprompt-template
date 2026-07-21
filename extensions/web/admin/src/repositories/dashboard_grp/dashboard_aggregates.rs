@@ -1,5 +1,4 @@
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
 
 use crate::types::{ActivityStats, TimeSeriesBucket};
 
@@ -98,74 +97,6 @@ pub async fn fetch_usage_timeseries(
         ) d ON d.bucket = b.bucket
         GROUP BY b.bucket
         ORDER BY b.bucket"#,
-        trunc,
-        interval,
-        bucket_interval,
-    )
-    .fetch_all(pool)
-    .await
-}
-
-pub async fn fetch_user_usage_timeseries(
-    pool: &PgPool,
-    user_id: &UserId,
-    interval: &str,
-    bucket_interval: &str,
-) -> Result<Vec<TimeSeriesBucket>, sqlx::Error> {
-    let trunc = if bucket_interval.contains("hour") {
-        "hour"
-    } else {
-        "day"
-    };
-    sqlx::query_as!(
-        TimeSeriesBucket,
-        r#"WITH buckets AS (
-            SELECT generate_series(
-                date_trunc($2, NOW() - $3::text::interval),
-                NOW(),
-                $4::text::interval
-            ) AS bucket
-        ),
-        activity AS (
-            SELECT
-                date_trunc($2, a.created_at) AS bucket,
-                0::BIGINT AS mcp_calls,
-                COUNT(*) FILTER (WHERE a.category = 'marketplace_edit')::BIGINT AS edits,
-                1::BIGINT AS active_users,
-                COUNT(*) FILTER (WHERE a.category = 'login')::BIGINT AS logins,
-                0::BIGINT AS mcp_errors
-            FROM user_activity a
-            WHERE a.created_at >= NOW() - $3::text::interval
-              AND a.user_id = $1
-            GROUP BY 1
-        ),
-        mcp AS (
-            SELECT
-                date_trunc($2, m.created_at) AS bucket,
-                COUNT(*)::BIGINT AS mcp_calls,
-                0::BIGINT AS edits,
-                0::BIGINT AS active_users,
-                0::BIGINT AS logins,
-                COUNT(*) FILTER (WHERE m.status = 'failed')::BIGINT AS mcp_errors
-            FROM mcp_tool_executions m
-            WHERE m.created_at >= NOW() - $3::text::interval
-              AND m.user_id = $1
-            GROUP BY 1
-        )
-        SELECT
-            b.bucket AS "bucket!",
-            COALESCE(SUM(d.mcp_calls), 0)::BIGINT AS "tool_uses!",
-            COALESCE(SUM(d.edits), 0)::BIGINT AS "prompts!",
-            COALESCE(SUM(d.active_users), 0)::BIGINT AS "active_users!",
-            COALESCE(SUM(d.logins), 0)::BIGINT AS "sessions!",
-            COALESCE(SUM(d.mcp_errors), 0)::BIGINT AS "errors!"
-        FROM buckets b
-        LEFT JOIN (
-            SELECT * FROM activity UNION ALL SELECT * FROM mcp
-        ) d ON d.bucket = b.bucket
-        GROUP BY b.bucket
-        ORDER BY b.bucket"#,
-        user_id.as_str(),
         trunc,
         interval,
         bucket_interval,

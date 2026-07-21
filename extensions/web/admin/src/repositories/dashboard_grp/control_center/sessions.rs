@@ -1,7 +1,6 @@
 use sqlx::PgPool;
-use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt::identifiers::UserId;
 
-use crate::types::STATUS_DELETED;
 use crate::types::control_center::RecentSession;
 
 pub async fn fetch_recent_sessions_filtered(
@@ -87,66 +86,4 @@ async fn fetch_sessions_all(
     )
     .fetch_all(pool)
     .await
-}
-
-pub async fn update_session_status(
-    pool: &PgPool,
-    user_id: &UserId,
-    session_id: &SessionId,
-    status: &str,
-) -> Result<(), sqlx::Error> {
-    if status == STATUS_DELETED {
-        sqlx::query!(
-            "DELETE FROM session_analyses WHERE session_id = $1 AND user_id = $2",
-            session_id.as_str(),
-            user_id.as_str(),
-        )
-        .execute(pool)
-        .await?;
-
-        sqlx::query!(
-            "DELETE FROM session_entity_links WHERE session_id = $1 AND user_id = $2",
-            session_id.as_str(),
-            user_id.as_str(),
-        )
-        .execute(pool)
-        .await?;
-
-        sqlx::query!(
-            "DELETE FROM session_ratings WHERE session_id = $1 AND user_id = $2",
-            session_id.as_str(),
-            user_id.as_str(),
-        )
-        .execute(pool)
-        .await?;
-
-        sqlx::query!(
-            "DELETE FROM plugin_usage_events WHERE session_id = $1 AND user_id = $2",
-            session_id.as_str(),
-            user_id.as_str(),
-        )
-        .execute(pool)
-        .await?;
-
-        sqlx::query!(
-            "DELETE FROM plugin_session_summaries WHERE session_id = $1 AND user_id = $2",
-            session_id.as_str(),
-            user_id.as_str(),
-        )
-        .execute(pool)
-        .await?;
-    } else {
-        sqlx::query!(
-            r"UPDATE plugin_session_summaries
-              SET status = $1, updated_at = NOW()
-              WHERE user_id = $2 AND session_id = $3",
-            status,
-            user_id.as_str(),
-            session_id.as_str(),
-        )
-        .execute(pool)
-        .await?;
-    }
-
-    Ok(())
 }

@@ -13,25 +13,6 @@ pub struct DeviceCertRow {
     pub revoked_at: Option<DateTime<Utc>>,
 }
 
-pub async fn list_device_certs_for_user(
-    pool: &PgPool,
-    user_id: &UserId,
-) -> Result<Vec<DeviceCertRow>> {
-    let rows = sqlx::query_as!(
-        DeviceCertRow,
-        r#"
-        SELECT id, fingerprint, label, enrolled_at, revoked_at
-        FROM user_device_certs
-        WHERE user_id = $1
-        ORDER BY enrolled_at DESC
-        "#,
-        user_id.as_str(),
-    )
-    .fetch_all(pool)
-    .await?;
-    Ok(rows)
-}
-
 pub async fn revoke_device_cert(pool: &PgPool, user_id: &UserId, id: &str) -> Result<bool> {
     let result = sqlx::query!(
         r#"

@@ -3,8 +3,7 @@ mod daily;
 pub(crate) mod session_updates;
 
 pub use ai_summaries::{
-    fetch_session_ai_summaries, update_session_ai_summary, update_session_ai_summary_structured,
-    update_session_ai_summary_with_title,
+    update_session_ai_summary_structured, update_session_ai_summary_with_title,
 };
 pub use daily::{
     DailyAggregationParams, SessionSummaryParams, increment_session_summary,

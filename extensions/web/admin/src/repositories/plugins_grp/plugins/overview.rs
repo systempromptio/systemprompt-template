@@ -1,7 +1,6 @@
 //! Role-scoped marketplace views: counts and overviews filtered by the
 //! caller's roles, plus the (currently empty) onboarding config map.
 
-use std::collections::HashMap;
 
 use systemprompt::identifiers::McpServerId;
 
@@ -9,7 +8,7 @@ use crate::repositories::plugin_resolvers::{
     resolve_all_plugin_skill_ids, resolve_plugin_agents, resolve_plugin_skills,
 };
 use crate::repositories::plugins_grp::plugin_loader;
-use crate::types::{PluginOnboardingConfig, PluginOverview, ROLE_ADMIN};
+use crate::types::{PluginOverview, ROLE_ADMIN};
 use std::path::Path;
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -97,9 +96,4 @@ pub fn list_plugins_for_roles_full(
         });
     }
     Ok(overviews)
-}
-
-#[must_use]
-pub fn load_plugin_onboarding_configs() -> HashMap<String, PluginOnboardingConfig> {
-    HashMap::new()
 }

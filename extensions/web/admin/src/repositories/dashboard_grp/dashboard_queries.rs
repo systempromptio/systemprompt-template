@@ -2,10 +2,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 
 use crate::activity;
-use crate::types::{
-    ActivityStats, HourlyActivity, McpAccessEvent, SkillCount, TokenUsageRow, ToolSuccessRate,
-    TopUser,
-};
+use crate::types::{HourlyActivity, SkillCount, ToolSuccessRate, TopUser};
 
 pub async fn fetch_timeline(
     pool: &PgPool,
@@ -91,47 +88,6 @@ pub async fn fetch_hourly_activity(pool: &PgPool) -> Result<Vec<HourlyActivity>,
     .await
 }
 
-pub async fn fetch_stats_snapshot(pool: &PgPool) -> Result<ActivityStats, sqlx::Error> {
-    let row = sqlx::query!(
-        r#"SELECT
-            COALESCE(COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE), 0)::BIGINT AS "events_today!",
-            COALESCE(COUNT(*) FILTER (WHERE created_at >= DATE_TRUNC('week', CURRENT_DATE)), 0)::BIGINT AS "events_this_week!",
-            COALESCE(COUNT(*) FILTER (WHERE category = 'marketplace_edit'), 0)::BIGINT AS "total_edits!",
-            COALESCE(COUNT(*) FILTER (WHERE category = 'login'), 0)::BIGINT AS "total_logins!"
-        FROM user_activity"#,
-    )
-    .fetch_one(pool)
-    .await?;
-
-    let mcp_row = sqlx::query!(
-        r#"SELECT
-            COUNT(*)::BIGINT AS "total!",
-            COALESCE(COUNT(*) FILTER (WHERE status = 'failed'), 0)::BIGINT AS "errors!",
-            COALESCE(COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE), 0)::BIGINT AS "today!",
-            COALESCE(COUNT(*) FILTER (WHERE created_at >= DATE_TRUNC('week', CURRENT_DATE)), 0)::BIGINT AS "this_week!"
-        FROM mcp_tool_executions"#,
-    )
-    .fetch_one(pool)
-    .await;
-
-    let (mcp_total, mcp_errors, mcp_today, mcp_this_week) = match mcp_row {
-        Ok(r) => (r.total, r.errors, r.today, r.this_week),
-        Err(e) => {
-            tracing::warn!(error = %e, "Failed to query mcp_tool_executions for SSE stats");
-            (0, 0, 0, 0)
-        },
-    };
-
-    Ok(ActivityStats {
-        events_today: row.events_today + mcp_today,
-        events_this_week: row.events_this_week + mcp_this_week,
-        total_edits: row.total_edits,
-        mcp_tool_calls: mcp_total,
-        mcp_errors,
-        total_logins: row.total_logins,
-    })
-}
-
 pub async fn fetch_recent_mcp_errors(
     pool: &PgPool,
 ) -> Result<Vec<crate::types::RecentMcpError>, sqlx::Error> {
@@ -162,43 +118,6 @@ pub async fn fetch_recent_mcp_errors(
 struct McpErrorRow {
     tool_name: String,
     created_at: chrono::DateTime<chrono::Utc>,
-}
-
-pub async fn fetch_mcp_access_events(pool: &PgPool) -> Result<Vec<McpAccessEvent>, sqlx::Error> {
-    sqlx::query_as!(
-        McpAccessEvent,
-        r#"SELECT
-            COALESCE(entity_name, 'unknown') AS "server_name!",
-            COALESCE(action, 'unknown') AS "action!",
-            COALESCE(description, '') AS "description!",
-            created_at AS "created_at!"
-        FROM user_activity
-        WHERE category = 'mcp_access'
-        ORDER BY created_at DESC
-        LIMIT 20"#,
-    )
-    .fetch_all(pool)
-    .await
-}
-
-pub async fn fetch_token_usage_by_user(pool: &PgPool) -> Result<Vec<TokenUsageRow>, sqlx::Error> {
-    sqlx::query_as!(
-        TokenUsageRow,
-        r#"SELECT
-            COALESCE(u.display_name, u.full_name, u.name, u.email, p.user_id) AS "label!",
-            COALESCE(SUM(p.content_input_bytes), 0)::BIGINT AS "input_tokens!",
-            COALESCE(SUM(p.content_output_bytes), 0)::BIGINT AS "output_tokens!",
-            COALESCE(SUM(p.event_count), 0)::BIGINT AS "event_count!"
-        FROM plugin_usage_daily p
-        LEFT JOIN users u ON u.id = p.user_id
-        WHERE p.date >= CURRENT_DATE - INTERVAL '30 days'
-        GROUP BY p.user_id, u.display_name, u.full_name, u.name, u.email
-        HAVING SUM(p.content_input_bytes) + SUM(p.content_output_bytes) > 0
-        ORDER BY SUM(p.content_input_bytes) + SUM(p.content_output_bytes) DESC
-        LIMIT 10"#,
-    )
-    .fetch_all(pool)
-    .await
 }
 
 pub async fn fetch_tool_success_rates(pool: &PgPool) -> Result<Vec<ToolSuccessRate>, sqlx::Error> {

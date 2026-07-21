@@ -10,9 +10,8 @@ use std::sync::Arc;
 
 use serde::Serialize;
 use sqlx::PgPool;
-use systemprompt::identifiers::{ContextId, TenantId, UserId};
+use systemprompt::identifiers::{TenantId, UserId};
 
-use crate::repositories::profile_grp::usage as usage_repo;
 use crate::types::UserContext;
 
 use assemble::{
@@ -33,81 +32,9 @@ pub(crate) struct ProfileIdentity {
     pub is_admin: bool,
 }
 
-#[derive(Debug, Clone, Default, Serialize)]
-pub(crate) struct UsageWindow {
-    pub requests: i64,
-    pub tokens: i64,
-    pub cost_microdollars: i64,
-    pub previous_cost_microdollars: Option<i64>,
-}
-
-impl From<usage_repo::UsageWindow> for UsageWindow {
-    fn from(w: usage_repo::UsageWindow) -> Self {
-        Self {
-            requests: w.requests,
-            tokens: w.tokens,
-            cost_microdollars: w.cost_microdollars,
-            previous_cost_microdollars: w.previous_cost_microdollars,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub(crate) struct ModelShare {
-    pub model: String,
-    pub requests: i64,
-    pub tokens: i64,
-    pub cost_microdollars: i64,
-    pub token_share: f64,
-}
-
-impl From<usage_repo::ModelShare> for ModelShare {
-    fn from(m: usage_repo::ModelShare) -> Self {
-        Self {
-            model: m.model,
-            requests: m.requests,
-            tokens: m.tokens,
-            cost_microdollars: m.cost_microdollars,
-            token_share: m.token_share,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub(crate) struct ConversationGroup {
-    pub name: String,
-    pub conversations: i64,
-    pub ai_requests: i64,
-}
-
-impl From<usage_repo::ConversationGroup> for ConversationGroup {
-    fn from(g: usage_repo::ConversationGroup) -> Self {
-        Self {
-            name: g.name,
-            conversations: g.conversations,
-            ai_requests: g.ai_requests,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub(crate) struct RecentConversation {
-    pub context_id: ContextId,
-    pub context_name: Option<String>,
-    pub last_activity: chrono::DateTime<chrono::Utc>,
-    pub ai_requests: i64,
-    pub model: Option<String>,
-    pub agent_name: Option<String>,
-}
-
-#[derive(Debug, Clone, Default, Serialize)]
-pub(crate) struct ConversationSummary {
-    pub total_conversations: i64,
-    pub total_ai_requests: i64,
-    pub by_model: Vec<ConversationGroup>,
-    pub by_agent: Vec<ConversationGroup>,
-    pub recent: Vec<RecentConversation>,
-}
+pub(crate) use crate::repositories::profile_grp::usage::{
+    ConversationSummary, ModelShare, UsageWindow,
+};
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub(crate) struct ProfileUsage {

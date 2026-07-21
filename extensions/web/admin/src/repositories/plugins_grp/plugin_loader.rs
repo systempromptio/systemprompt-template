@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use systemprompt::config::ProfileBootstrap;
-use systemprompt::models::{PluginConfig, PluginConfigFile};
+use systemprompt::models::PluginConfigFile;
 
 use crate::types::PlatformPluginConfig;
 use systemprompt_web_shared::error::MarketplaceError;
@@ -79,11 +79,4 @@ pub(crate) fn load_all_plugins_with_paths()
     }
     out.sort_by(|a, b| a.0.cmp(&b.0));
     Ok(out)
-}
-
-pub(crate) fn find_plugin(plugin_id: &str) -> Result<Option<PluginConfig>, MarketplaceError> {
-    Ok(load_all_plugins()?
-        .into_iter()
-        .find(|(id, _)| id == plugin_id)
-        .map(|(_, cfg)| cfg.base))
 }
