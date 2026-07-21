@@ -136,7 +136,7 @@
                 body: JSON.stringify({ department_name: deptName }),
             });
             if (res.ok) { location.reload(); return; }
-            errEl.textContent = await res.text();
+            errEl.textContent = await AdminApp.errorMessage(res);
             errEl.style.display = 'block';
         });
         document.querySelectorAll('[data-unassign-user]').forEach(btn => {
@@ -149,7 +149,7 @@
                     body: JSON.stringify({ department_name: 'Default' }),
                 });
                 if (res.ok) location.reload();
-                else alert('Failed: ' + await res.text());
+                else alert('Failed: ' + await AdminApp.errorMessage(res));
             });
         });
 
@@ -168,13 +168,13 @@
             const msg = document.getElementById('dept-settings-msg');
             msg.style.display = 'block';
             if (res.ok) { msg.textContent = 'Saved.'; setTimeout(() => location.reload(), 600); }
-            else { msg.textContent = 'Save failed: ' + await res.text(); }
+            else { msg.textContent = 'Save failed: ' + await AdminApp.errorMessage(res); }
         });
         document.getElementById('dept-delete-btn')?.addEventListener('click', async () => {
             if (!confirm('Delete "' + deptName + '"? Members will be reassigned to "Default" and department-level access rules removed.')) return;
             const res = await fetch('/admin/management/departments/' + deptId, { method: 'DELETE' });
             if (res.ok) location = '/admin/access/departments';
-            else alert('Delete failed: ' + await res.text());
+            else alert('Delete failed: ' + await AdminApp.errorMessage(res));
         });
 
         document.getElementById('member-search')?.addEventListener('input', (ev) => {

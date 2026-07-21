@@ -83,7 +83,7 @@
                 body: JSON.stringify(body),
             });
             if (res.ok) { location.reload(); return; }
-            errEl.textContent = await res.text();
+            errEl.textContent = await AdminApp.errorMessage(res);
             errEl.style.display = 'block';
         });
         document.querySelectorAll('[data-delete-dept]').forEach(btn => {
@@ -94,7 +94,7 @@
                 if (!confirm('Delete department "' + name + '"? Members will be reassigned to "Default" and department-level access rules removed.')) return;
                 const res = await fetch('/admin/management/departments/' + id, { method: 'DELETE' });
                 if (res.ok) location.reload();
-                else alert('Delete failed: ' + await res.text());
+                else alert('Delete failed: ' + await AdminApp.errorMessage(res));
             });
         });
         document.getElementById('dept-search')?.addEventListener('input', (ev) => {

@@ -102,7 +102,7 @@
             });
             if (!resp.ok) {
                 issuedBox.hidden = false;
-                issuedBox.textContent = 'Error: ' + await resp.text();
+                issuedBox.textContent = 'Error: ' + await AdminApp.errorMessage(resp);
                 return;
             }
             const json = await resp.json();
