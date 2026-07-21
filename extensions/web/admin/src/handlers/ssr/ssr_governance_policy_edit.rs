@@ -19,7 +19,7 @@ use axum::response::{Html, IntoResponse, Redirect, Response};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-use crate::error::AdminError;
+use crate::error::{AdminError, AdminHtmlResult};
 
 use crate::handlers::webhook::governance;
 use crate::repositories;
@@ -75,9 +75,9 @@ pub(crate) async fn governance_policy_edit_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Path(policy_id): Path<String>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
+        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
     }
 
     let Some((id_str, name, description, params_yaml, enabled, lookup_id)) =
@@ -88,13 +88,13 @@ pub(crate) async fn governance_policy_edit_page(
             title: "Unknown policy",
             policy_id,
         };
-        return super::render_typed_page(
+        return Ok(super::render_typed_page(
             &engine,
             "governance-unknown-policy",
             &ctx,
             &user_ctx,
             &mkt_ctx,
-        );
+        ));
     };
 
     let recent = repositories::governance::list_decisions_for_policy(
@@ -125,7 +125,13 @@ pub(crate) async fn governance_policy_edit_page(
         config_path: "services/governance/config.yaml",
     };
 
-    super::render_typed_page(&engine, "governance-policy-edit", &ctx, &user_ctx, &mkt_ctx)
+    Ok(super::render_typed_page(
+        &engine,
+        "governance-policy-edit",
+        &ctx,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }
 
 type PolicySnapshot = (String, String, String, String, bool, String);
@@ -182,9 +188,9 @@ pub(crate) async fn governance_policy_toggle(
     Extension(user_ctx): Extension<UserContext>,
     Path(policy_id): Path<String>,
     Form(form): Form<ToggleForm>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
+        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
     }
 
     let want_enabled = form
@@ -192,19 +198,10 @@ pub(crate) async fn governance_policy_toggle(
         .as_deref()
         .is_some_and(|v| matches!(v, "true" | "on" | "1"));
 
-    if let Err(e) = update_enabled_in_yaml(&policy_id, want_enabled) {
-        tracing::error!(error = %e, policy = %policy_id, "failed to update governance config");
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Html(format!(
-                "<p>Could not update services/governance/config.yaml: {e}</p>"
-            )),
-        )
-            .into_response();
-    }
+    update_enabled_in_yaml(&policy_id, want_enabled)?;
 
     governance::reload();
-    Redirect::to(&format!("/admin/governance/{policy_id}")).into_response()
+    Ok(Redirect::to(&format!("/admin/governance/{policy_id}")).into_response())
 }
 
 fn update_enabled_in_yaml(policy_id: &str, enabled: bool) -> Result<(), AdminError> {

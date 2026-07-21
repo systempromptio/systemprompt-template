@@ -15,6 +15,7 @@ use axum::response::{Html, IntoResponse, Response};
 use sqlx::PgPool;
 use systemprompt::identifiers::ContextId;
 
+use crate::error::AdminHtmlResult;
 use crate::repositories::analytics::context_detail::{
     find_context_header, get_context_kpis, list_context_messages, list_context_requests,
     list_context_tool_calls,
@@ -35,23 +36,18 @@ pub(crate) async fn context_detail_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Path(context_id): Path<String>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
+        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
     }
 
     let context_id = ContextId::new(context_id.trim());
     if context_id.as_str().is_empty() {
-        return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response();
+        return Ok((StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response());
     }
 
-    let header = match find_context_header(&pool, &context_id).await {
-        Ok(Some(h)) => h,
-        Ok(None) => return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, context_id = %context_id, "find_context_header failed");
-            return (StatusCode::INTERNAL_SERVER_ERROR, Html(NOT_FOUND_HTML)).into_response();
-        },
+    let Some(header) = find_context_header(&pool, &context_id).await? else {
+        return Ok((StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response());
     };
 
     let (kpis_res, requests_res, messages_res, tool_calls_res) = tokio::join!(
@@ -80,5 +76,11 @@ pub(crate) async fn context_detail_page(
 
     let data = build_detail_data(&header, &kpis, &requests, &messages, &tool_calls);
 
-    super::render_typed_page(&engine, "context-detail", &data, &user_ctx, &mkt_ctx)
+    Ok(super::render_typed_page(
+        &engine,
+        "context-detail",
+        &data,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }

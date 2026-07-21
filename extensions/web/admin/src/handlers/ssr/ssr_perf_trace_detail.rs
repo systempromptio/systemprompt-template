@@ -15,6 +15,7 @@ use axum::response::{Html, IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
 
+use crate::error::AdminHtmlResult;
 use crate::repositories::traces::{Span, SpanStatus, list_trace_spans, resolve_trace_session};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -55,18 +56,13 @@ pub(crate) async fn perf_trace_detail_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
+        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
     }
 
-    let session_id = match resolve_trace_session(&pool, &id).await {
-        Ok(Some(s)) => s,
-        Ok(None) => return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response(),
-        Err(e) => {
-            tracing::warn!(error = %e, "resolve_trace_session failed");
-            return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response();
-        },
+    let Some(session_id) = resolve_trace_session(&pool, &id).await? else {
+        return Ok((StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response());
     };
 
     let spans = list_trace_spans(&pool, &session_id)
@@ -77,7 +73,7 @@ pub(crate) async fn perf_trace_detail_page(
         });
 
     if spans.is_empty() {
-        return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response();
+        return Ok((StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response());
     }
 
     let summary = build_summary(&session_id, &spans);
@@ -92,7 +88,13 @@ pub(crate) async fn perf_trace_detail_page(
         back_url: "/admin/entities/traces",
     };
 
-    super::render_typed_page(&engine, "perf-trace-detail", &ctx, &user_ctx, &mkt_ctx)
+    Ok(super::render_typed_page(
+        &engine,
+        "perf-trace-detail",
+        &ctx,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }
 
 fn build_summary(session_id: &SessionId, spans: &[Span]) -> Summary {
