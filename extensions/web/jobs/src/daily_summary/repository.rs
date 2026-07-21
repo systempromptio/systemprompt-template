@@ -7,6 +7,10 @@ use chrono::NaiveDate;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
+/// Count existing `daily_summaries` rows for a user on a given date.
+///
+/// Used to make summary generation idempotent — a non-zero count means the
+/// summary already exists and generation is skipped.
 pub async fn count_existing_summaries(
     pool: &PgPool,
     user_id: &UserId,
@@ -23,6 +27,7 @@ pub async fn count_existing_summaries(
     Ok(count.unwrap_or(0))
 }
 
+/// Count plugin sessions recorded for a user on a given date.
 pub async fn count_sessions_for_date(
     pool: &PgPool,
     user_id: &UserId,
@@ -38,6 +43,7 @@ pub async fn count_sessions_for_date(
     Ok(count.unwrap_or(0))
 }
 
+/// Insert the computed daily summary row, ignoring an existing one.
 pub async fn insert_daily_summary(
     pool: &PgPool,
     user_id: &UserId,

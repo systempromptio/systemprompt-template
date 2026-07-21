@@ -53,12 +53,13 @@ fn spawn_listener(pool: Arc<PgPool>, sender: broadcast::Sender<String>) {
                     if let Err(e) = listener.listen(CHANNEL_NAME).await {
                         tracing::warn!(
                             error = %e,
-                            "audit_event_bus: LISTEN {CHANNEL_NAME} failed; retrying"
+                            channel = CHANNEL_NAME,
+                            "audit_event_bus: LISTEN failed; retrying"
                         );
                         tokio::time::sleep(std::time::Duration::from_secs(2)).await;
                         continue;
                     }
-                    tracing::info!("audit_event_bus: listening on {CHANNEL_NAME}");
+                    tracing::info!(channel = CHANNEL_NAME, "audit_event_bus: listening");
                     loop {
                         match listener.recv().await {
                             Ok(notification) => {

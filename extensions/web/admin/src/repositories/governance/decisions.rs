@@ -4,6 +4,10 @@ use sqlx::PgPool;
 
 use crate::types::GovernanceDecisionRow;
 
+// Live upstream in systemprompt-template via the ssr_governance
+// handlers, which this fork does not ship. Kept so the shared
+// repository files stay identical across both trees.
+// lint-ok: unused-pub
 pub async fn list_decisions_for_policy(
     pool: &PgPool,
     policy_id: &str,

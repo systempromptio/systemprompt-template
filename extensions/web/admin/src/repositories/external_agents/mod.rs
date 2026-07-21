@@ -41,6 +41,10 @@ struct DiskFile {
     external_agents: std::collections::BTreeMap<String, DiskEntry>,
 }
 
+// Live upstream in systemprompt-template via the ssr_governance
+// handlers, which this fork does not ship. Kept so the shared
+// repository files stay identical across both trees.
+// lint-ok: unused-pub
 pub fn list_external_agents() -> Vec<ExternalAgentRow> {
     let dir = resolve_dir();
     let Ok(entries) = std::fs::read_dir(&dir) else {

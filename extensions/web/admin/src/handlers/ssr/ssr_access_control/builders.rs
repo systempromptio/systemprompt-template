@@ -9,6 +9,8 @@ use serde::Serialize;
 
 use crate::repositories;
 
+/// A generic labelled entity reference used by dropdowns/lookup tables in the
+/// unified access-control UI (mcp servers, plugins, agents, marketplaces).
 #[derive(Debug, Serialize)]
 pub(super) struct EntityRef {
     pub(super) id: String,
@@ -24,6 +26,8 @@ pub(super) struct RouteRef {
     pub(super) provider: String,
 }
 
+/// Lightweight list of every entity that can have an ACL rule attached, used
+/// by the unified access-control UI to populate dropdowns and lookup tables.
 #[derive(Debug, Serialize)]
 pub(super) struct EntityCatalogue {
     pub(super) gateway_routes: Vec<RouteRef>,

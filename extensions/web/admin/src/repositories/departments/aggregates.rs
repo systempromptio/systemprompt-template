@@ -33,8 +33,8 @@ pub async fn list_user_marketplace_overrides(
         SELECT
             u.id AS "user_id!: UserId",
             COALESCE(upe.department, '') AS "department!",
-            acr.entity_id,
-            acr.access
+            acr.entity_id AS "entity_id!",
+            acr.access AS "access!"
         FROM users u
         LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
         JOIN access_control_rules acr
@@ -69,7 +69,7 @@ pub async fn list_user_management_aggregates(
                 SELECT COUNT(*) FROM user_api_keys
                 WHERE user_id = u.id AND revoked_at IS NULL
             ), 0)::BIGINT AS "devices_count!",
-            u.created_at
+            u.created_at AS "created_at!"
         FROM users u
         LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
         WHERE NOT ('anonymous' = ANY(u.roles))

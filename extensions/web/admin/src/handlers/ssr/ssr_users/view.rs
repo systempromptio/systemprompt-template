@@ -121,6 +121,8 @@ pub(super) fn enrich_users(
         .collect()
 }
 
+/// Group enriched users by department. "Default" first, then alphabetical;
+/// users with no department go last as "Unassigned".
 pub(super) fn group_by_department(users: Vec<EnrichedUserView>) -> Vec<DepartmentGroup> {
     let mut buckets: std::collections::BTreeMap<String, Vec<EnrichedUserView>> =
         std::collections::BTreeMap::new();

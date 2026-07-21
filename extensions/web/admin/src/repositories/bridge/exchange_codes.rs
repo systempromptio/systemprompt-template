@@ -40,18 +40,9 @@ pub async fn issue_exchange_code(pool: &PgPool, user_id: &UserId) -> Result<Issu
 fn generate_code() -> String {
     let mut raw = [0u8; EXCHANGE_CODE_BYTES];
     rand::rng().fill_bytes(&mut raw);
-    let mut out = String::with_capacity(EXCHANGE_CODE_BYTES * 2);
-    for byte in raw {
-        out.push_str(&format!("{byte:02x}"));
-    }
-    out
+    hex::encode(raw)
 }
 
 fn hash_code(code: &str) -> String {
-    let digest = Sha256::digest(code.as_bytes());
-    let mut out = String::with_capacity(64);
-    for byte in digest {
-        out.push_str(&format!("{byte:02x}"));
-    }
-    out
+    hex::encode(Sha256::digest(code.as_bytes()))
 }

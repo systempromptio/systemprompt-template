@@ -116,6 +116,8 @@ pub struct HeroConfig {
     #[serde(default)]
     pub title_highlight: Option<String>,
     pub subtitle: String,
+    #[serde(default)]
+    pub eyebrow: Option<String>,
     pub cta: String,
     #[serde(default)]
     pub cta_url: Option<String>,

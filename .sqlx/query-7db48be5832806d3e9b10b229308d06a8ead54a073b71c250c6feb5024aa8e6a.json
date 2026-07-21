@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            u.id AS \"user_id!: UserId\",\n            COALESCE(upe.department, '') AS \"department!\",\n            acr.entity_id,\n            acr.access\n        FROM users u\n        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id\n        JOIN access_control_rules acr\n          ON acr.entity_type = 'marketplace'\n         AND ((acr.rule_type = 'user' AND acr.rule_value = u.id)\n              OR (acr.rule_type = 'department' AND acr.rule_value = COALESCE(upe.department, '')))\n        WHERE NOT ('anonymous' = ANY(u.roles))\n        ",
+  "query": "\n        SELECT\n            u.id AS \"user_id!: UserId\",\n            COALESCE(upe.department, '') AS \"department!\",\n            acr.entity_id AS \"entity_id!\",\n            acr.access AS \"access!\"\n        FROM users u\n        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id\n        JOIN access_control_rules acr\n          ON acr.entity_type = 'marketplace'\n         AND ((acr.rule_type = 'user' AND acr.rule_value = u.id)\n              OR (acr.rule_type = 'department' AND acr.rule_value = COALESCE(upe.department, '')))\n        WHERE NOT ('anonymous' = ANY(u.roles))\n        ",
   "describe": {
     "columns": [
       {
@@ -22,7 +22,7 @@
       },
       {
         "ordinal": 2,
-        "name": "entity_id",
+        "name": "entity_id!",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -33,7 +33,7 @@
       },
       {
         "ordinal": 3,
-        "name": "access",
+        "name": "access!",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -53,5 +53,5 @@
       false
     ]
   },
-  "hash": "5a49c644c9e550fc6c9c92b17fe68435a9322da9db92c6e9154a00586fb65735"
+  "hash": "7db48be5832806d3e9b10b229308d06a8ead54a073b71c250c6feb5024aa8e6a"
 }

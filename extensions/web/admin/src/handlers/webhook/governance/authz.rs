@@ -9,7 +9,7 @@
 //! `infra logs audit` can correlate gateway and MCP decisions in one stream.
 //!
 //! The resolver runs over core's `user` / `role` dimensions plus every subject
-//! dimension this template declares in [`crate::authz`] — today that means a
+//! dimension this extension declares in [`crate::authz`] — today that means a
 //! `department` rule binds here, not just in the access matrix.
 
 use std::sync::{Arc, LazyLock};
@@ -153,8 +153,14 @@ async fn audit_decision(
         evaluated_rules: &evaluated,
         plugin_id: None,
         act_chain: &[],
-        context_id: None,
-        task_id: None,
+        context_id: req
+            .context_id
+            .as_ref()
+            .map(systemprompt::identifiers::ContextId::as_str),
+        task_id: req
+            .task_id
+            .as_ref()
+            .map(systemprompt::identifiers::TaskId::as_str),
     };
     if let Err(e) = insert_governance_decision(pool, &record).await {
         tracing::error!(error = %e, "Failed to record authz decision");

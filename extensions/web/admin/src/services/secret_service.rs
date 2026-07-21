@@ -37,6 +37,7 @@ pub(crate) async fn resolve_secrets(
 
     let master_key = secret_crypto::load_master_key()?;
     let user_id = UserId::new(&user_id_str);
+
     let secrets =
         secret_resolve::resolve_secrets_for_plugin(pool, &user_id, plugin_id, &master_key).await?;
     Ok(secrets)

@@ -73,9 +73,6 @@ pub(super) fn apply_keep_sets(
     keep: &KeepSets,
 ) -> MarketplaceCandidate {
     MarketplaceCandidate {
-        // Ownership is a property of the artifacts themselves, not of who may
-        // see them, so it survives the access filter untouched.
-        artifact_owners: candidate.artifact_owners,
         plugins: candidate
             .plugins
             .into_iter()
@@ -101,12 +98,27 @@ pub(super) fn apply_keep_sets(
             .into_iter()
             .filter(|m| keep.mcp.contains(m.name.as_str()))
             .collect(),
+        // Artifacts carry no access rule of their own, so they inherit their
+        // owning plugins' decision: an artifact is staged only while at least
+        // one plugin that ships it survived the plugin keep-set. Without this
+        // an admin-only dashboard would be staged to every user's Artifacts
+        // library even though its plugin was filtered out.
+        artifacts: candidate
+            .artifacts
+            .into_iter()
+            .filter(|a| {
+                candidate
+                    .artifact_owners
+                    .get(&a.id)
+                    .is_some_and(|owners| {
+                        owners.iter().any(|p| keep.plugins.contains(p.as_str()))
+                    })
+            })
+            .collect(),
+        artifact_owners: candidate.artifact_owners,
         // Carry the owning marketplace context through unchanged; the
         // filter only shrinks entry lists, it must not drop the scope the
         // gateway attached.
-        // Artifacts are not gated by the admin keep-sets; pass them through
-        // with the marketplace scope.
-        artifacts: candidate.artifacts,
         marketplace_id: candidate.marketplace_id,
         access: candidate.access,
     }

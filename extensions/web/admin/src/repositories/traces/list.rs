@@ -42,11 +42,11 @@ pub struct TracePage {
     pub offset: i64,
 }
 
-/// The `ORDER BY` is bound, never interpolated.
+/// The sort is a closed `TraceSort` (five columns × two directions).
 ///
-/// The sort is a closed `TraceSort` (five columns × two directions); each
-/// `(column, dir)` pair is bound as text and selected by a per-key `CASE`, so
-/// the whole statement stays a single compile-time `query_as!`.
+/// Each `(column, dir)` pair is bound as text and selected by a per-key `CASE`
+/// in the `ORDER BY`, so the whole statement stays a single compile-time
+/// `query_as!` rather than an interpolated string.
 #[expect(
     clippy::too_many_lines,
     reason = "body is one irreducible compile-time-checked query_as! SQL literal; see comment above"

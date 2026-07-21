@@ -43,14 +43,44 @@ if [ -f "$ALLOWLIST" ]; then
     done < "$ALLOWLIST"
 fi
 
+# A file unique to one repo is scope, not drift, and is skipped below. The same
+# fact shows up one level higher: the `mod.rs` that declares it exists in both
+# trees and differs by exactly that declaration. Recording those in the
+# allowlist would be recording the same decision twice, in a list that is
+# supposed to shrink — so derive them instead.
+#
+# The test is deliberately narrow. Only `mod` declarations qualify, and only
+# when the module really is absent from the other tree; a differing `use` or a
+# re-export is a genuine difference and still needs an entry.
+is_scope_only() {
+    local rel="$1" dir line side name other
+    dir="$(dirname "$rel")"
+    while IFS= read -r line; do
+        [[ "$line" =~ ^([<>])[[:space:]]*(pub(\([a-z]+\))?[[:space:]]+)?mod[[:space:]]+([a-z0-9_]+)\;[[:space:]]*$ ]] || return 1
+        side="${BASH_REMATCH[1]}"
+        name="${BASH_REMATCH[4]}"
+        # `<` is a line only this tree has, so the module must be missing from
+        # the sibling; `>` is the mirror image.
+        if [ "$side" = "<" ]; then other="$SIBLING_REPO/$dir"; else other="$dir"; fi
+        [ -f "$other/$name.rs" ] && return 1
+        [ -f "$other/$name/mod.rs" ] && return 1
+    done < <(diff "$rel" "$SIBLING_REPO/$rel" | grep '^[<>]')
+    return 0
+}
+
 undocumented=()
 divergent=()
+scope=()
 
 while IFS= read -r rel; do
     # Only files present in BOTH trees are shared; a file unique to one repo
     # is not drift, it is scope.
     [ -f "$SIBLING_REPO/$rel" ] || continue
     cmp -s "$rel" "$SIBLING_REPO/$rel" && continue
+    if is_scope_only "$rel"; then
+        scope+=("$rel")
+        continue
+    fi
     divergent+=("$rel")
     [ -n "${ALLOWED[$rel]:-}" ] || undocumented+=("$rel")
 done < <(find extensions src -name '*.rs' -not -path '*/target/*' 2>/dev/null | sed 's|^\./||' | sort)
@@ -61,7 +91,8 @@ stale=()
 for path in "${!ALLOWED[@]}"; do
     [ -f "$path" ] || { stale+=("$path (no longer exists here)"); continue; }
     [ -f "$SIBLING_REPO/$path" ] || { stale+=("$path (no longer exists in sibling)"); continue; }
-    cmp -s "$path" "$SIBLING_REPO/$path" && stale+=("$path (now identical)")
+    cmp -s "$path" "$SIBLING_REPO/$path" && { stale+=("$path (now identical)"); continue; }
+    is_scope_only "$path" && stale+=("$path (derived as scope, no entry needed)")
 done
 
 fail=0
@@ -85,4 +116,5 @@ fi
 
 [ "$fail" -ne 0 ] && exit 1
 
-echo "check-fork-drift: OK - ${#divergent[@]} divergent file(s), all recorded in $ALLOWLIST"
+echo "check-fork-drift: OK - ${#divergent[@]} divergent file(s), all recorded in $ALLOWLIST" \
+     "(plus ${#scope[@]} derived as scope)"

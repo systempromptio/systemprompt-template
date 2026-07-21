@@ -18,11 +18,13 @@ use crate::types::access_control::{
     AccessControlQuery, AccessControlRule, BulkAssignRequest, UpdateEntityRulesRequest,
 };
 
+/// JSON body returned by the rule-listing endpoints (`{ "rules": [...] }`).
 #[derive(Debug, Serialize)]
 pub(crate) struct RulesResponse {
     pub rules: Vec<AccessControlRule>,
 }
 
+/// JSON body returned by `bulk_assign_handler`.
 #[derive(Debug, Serialize)]
 pub(crate) struct BulkAssignResponse {
     pub updated_count: usize,

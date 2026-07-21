@@ -14,11 +14,13 @@ use sqlx::PgPool;
 use crate::handlers::shared;
 use crate::repositories::users::queries::{fetch_distinct_roles, list_users};
 
+/// JSON body returned by [`list_distinct_roles_handler`].
 #[derive(Debug, Serialize)]
 pub(crate) struct DistinctRolesResponse {
     pub roles: Vec<String>,
 }
 
+/// One entry in [`UserSearchResponse::users`].
 #[derive(Debug, Serialize)]
 pub(crate) struct UserSearchEntry {
     pub id: String,
@@ -26,6 +28,7 @@ pub(crate) struct UserSearchEntry {
     pub email: Option<String>,
 }
 
+/// JSON body returned by [`search_users_handler`].
 #[derive(Debug, Serialize)]
 pub(crate) struct UserSearchResponse {
     pub users: Vec<UserSearchEntry>,

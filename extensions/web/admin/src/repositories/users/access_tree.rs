@@ -2,6 +2,7 @@
 
 use sqlx::PgPool;
 
+/// One user row for the access-control department tree.
 #[derive(Debug, sqlx::FromRow)]
 pub struct AccessTreeUserRow {
     pub id: String,
@@ -12,6 +13,8 @@ pub struct AccessTreeUserRow {
     pub is_active: bool,
 }
 
+/// Ordered by department, then display name.
+///
 /// Anonymous accounts are excluded — they are never assignable principals.
 pub async fn list_users_for_access_tree(
     pool: &PgPool,

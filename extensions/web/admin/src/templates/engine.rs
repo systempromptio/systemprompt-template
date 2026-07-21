@@ -13,6 +13,7 @@ use thiserror::Error;
 use super::helpers;
 use systemprompt_web_shared::BrandingConfig;
 
+/// Errors raised while building or rendering the admin Handlebars engine.
 #[derive(Debug, Error)]
 pub enum AdminTemplateError {
     #[error("failed to read {context}: {source}")]

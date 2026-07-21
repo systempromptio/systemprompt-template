@@ -6,7 +6,7 @@
 //! with the rule that decided. The view layer renders these as collapsible
 //! sections under an "Effective Permissions" tab.
 //!
-//! Every subject dimension the template declares participates, not just user
+//! Every subject dimension this extension declares participates, not just user
 //! and role: the department a user belongs to is looked up once per page via
 //! [`crate::authz::subject_attributes_for`] and handed to the resolver with
 //! the rest, so a grant a department rule alone confers shows up here exactly

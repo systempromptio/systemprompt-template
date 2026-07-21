@@ -5,6 +5,7 @@ use sqlx::PgPool;
 
 use crate::types::departments::{DepartmentMember, DepartmentSummary, DepartmentTopTool};
 
+/// List department names alphabetically — backs the department filter dropdown.
 pub async fn list_department_names(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
     sqlx::query_scalar!("SELECT name FROM departments ORDER BY name")
         .fetch_all(pool)

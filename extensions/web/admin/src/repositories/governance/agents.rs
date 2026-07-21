@@ -18,6 +18,9 @@ pub fn list_agents(services_path: &Path) -> Result<Vec<AgentDetail>, Marketplace
     if !agents_dir.exists() {
         return Ok(agents);
     }
+    // Skill metadata is sourced once from the skill catalog and looked up by id;
+    // agents only declare flat `metadata.skills: [id]` and never duplicate
+    // name/description.
     let skill_catalog: HashMap<String, AgentSkillInfo> = list_skill_catalog(services_path)
         .unwrap_or_default()
         .into_iter()

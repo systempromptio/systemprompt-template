@@ -1,4 +1,4 @@
-//! Subject dimensions this template adds to core's authorization resolver.
+//! Subject dimensions this extension adds to core's authorization resolver.
 //!
 //! Core resolves `user` and `role` and deliberately knows nothing else. Every
 //! other dimension an operator wants to write rules against is a tenant

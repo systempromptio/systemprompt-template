@@ -141,6 +141,8 @@ pub(crate) async fn set_entity_default_handler(
     }
 }
 
+/// Bulk-list every entity of the given type with its rules and default.
+///
 /// Entity ids come from the on-disk profile (`gateway_route`) or
 /// `services/mcp/*.yaml` (`mcp_server`), not from the database.
 pub(crate) async fn list_all_entity_access_handler(

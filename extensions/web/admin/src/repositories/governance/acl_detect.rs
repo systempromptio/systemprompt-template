@@ -9,6 +9,7 @@ use serde_json::Value;
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 
+/// A recent `ai_requests` row the detector re-evaluates.
 #[derive(Debug, sqlx::FromRow)]
 pub struct RecentAiRequest {
     pub id: String,
@@ -17,6 +18,7 @@ pub struct RecentAiRequest {
     pub model: String,
 }
 
+/// Fields for one after-the-fact `governance_decisions` insert.
 #[derive(Debug)]
 pub struct GatewayAclDecision<'a> {
     pub decision_id: &'a str,
@@ -29,6 +31,8 @@ pub struct GatewayAclDecision<'a> {
     pub evaluated_rules: &'a Value,
 }
 
+/// List recent requests that were not already rejected/denied, for the
+/// detector to re-evaluate.
 pub async fn list_recent_unrejected_requests(
     pool: &PgPool,
     since_minutes: i64,
@@ -45,6 +49,8 @@ pub async fn list_recent_unrejected_requests(
     .await
 }
 
+/// Insert a redundancy-check `governance_decisions` row for a request the ACL
+/// would have denied.
 pub async fn insert_gateway_acl_decision(
     pool: &PgPool,
     decision: GatewayAclDecision<'_>,

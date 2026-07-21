@@ -9,7 +9,6 @@
 
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::fmt::Write as _;
 use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
@@ -72,9 +71,7 @@ static COUNTERS: LazyLock<Mutex<SlidingWindow>> =
     LazyLock::new(|| Mutex::new(SlidingWindow::default()));
 
 fn key_for(session_id: &SessionId, user_id: &UserId) -> String {
-    let mut k = String::with_capacity(64);
-    write!(k, "{}:{}", session_id.as_str(), user_id.as_str()).ok();
-    k
+    format!("{}:{}", session_id.as_str(), user_id.as_str())
 }
 
 impl GovernancePolicy for RateLimit {
