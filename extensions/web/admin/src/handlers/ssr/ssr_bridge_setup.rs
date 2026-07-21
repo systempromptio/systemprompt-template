@@ -5,6 +5,7 @@ use axum::http::HeaderMap;
 use axum::response::Response;
 use serde::Serialize;
 
+use crate::error::AdminHtmlResult;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
@@ -25,13 +26,19 @@ pub(crate) async fn bridge_setup_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     headers: HeaderMap,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     let data = SetupPageData {
         gateway_url: derive_gateway_url(&headers),
         user_email: user_ctx.email.to_string(),
         download_base_url: DOWNLOAD_BASE_URL,
     };
-    render_typed_page(&engine, "bridge-setup", &data, &user_ctx, &mkt_ctx)
+    Ok(render_typed_page(
+        &engine,
+        "bridge-setup",
+        &data,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }
 
 fn derive_gateway_url(headers: &HeaderMap) -> String {

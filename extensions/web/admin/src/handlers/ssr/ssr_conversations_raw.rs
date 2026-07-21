@@ -8,12 +8,12 @@ use std::sync::Arc;
 
 use axum::Json;
 use axum::extract::{Extension, Path, State};
-use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
 
+use crate::error::{AdminError, AdminResult};
 use crate::repositories::analytics::{RawTurnBody, find_raw_turns};
 use crate::types::UserContext;
 
@@ -27,7 +27,7 @@ pub(crate) async fn conversations_raw(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(session_id): Path<String>,
-) -> Response {
+) -> AdminResult<Response> {
     let session_id = SessionId::new(session_id);
     let allowed = user_ctx.is_admin
         || user_ctx
@@ -35,15 +35,13 @@ pub(crate) async fn conversations_raw(
             .iter()
             .any(|r| r.eq_ignore_ascii_case("auditor"));
     if !allowed {
-        return StatusCode::FORBIDDEN.into_response();
+        return Err(AdminError::Forbidden(
+            "Admin or auditor role required".to_owned(),
+        ));
     }
 
-    match find_raw_turns(&pool, &session_id).await {
-        Ok(Some(turns)) => Json(RawTranscriptEnvelope { session_id, turns }).into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, session_id = %session_id, "find_raw_turns failed");
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
-        },
-    }
+    let turns = find_raw_turns(&pool, &session_id)
+        .await?
+        .ok_or_else(|| AdminError::NotFound(format!("No transcript for session {session_id}")))?;
+    Ok(Json(RawTranscriptEnvelope { session_id, turns }).into_response())
 }

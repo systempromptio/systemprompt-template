@@ -1,5 +1,6 @@
 //! SSR page driving first-run instance setup.
 
+use crate::error::AdminHtmlResult;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::extract::{Extension, Query};
@@ -38,7 +39,7 @@ pub(crate) async fn setup_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     Query(query): Query<SetupQuery>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     let phase1_complete = mkt_ctx.total_plugins > 0;
     let phase2_complete = phase1_complete && mkt_ctx.total_plugins > 0;
     let phase3_complete = phase2_complete && mkt_ctx.total_skills > 0;
@@ -95,5 +96,11 @@ pub(crate) async fn setup_page(
         just_verified,
     };
 
-    super::render_typed_page(&engine, "setup", &ctx, &user_ctx, &mkt_ctx)
+    Ok(super::render_typed_page(
+        &engine,
+        "setup",
+        &ctx,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }
