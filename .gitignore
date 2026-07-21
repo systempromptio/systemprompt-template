@@ -201,3 +201,4 @@ tests/target/
 # last-audited SHA. Observational local state, not a source artifact.
 ISSUE.md
 .audit-state
+rustc-ice-*.txt
