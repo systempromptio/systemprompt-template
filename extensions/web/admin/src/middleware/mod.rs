@@ -1,9 +1,19 @@
-//! Admin plane request middleware: authentication, authorisation, and page
-//! context.
+//! Admin plane request middleware: session resolution and page context.
+//!
+//! `user_context_middleware` runs first and puts a [`UserContext`] on the
+//! request; [`gates`] then decides whether the request may proceed, and
+//! `marketplace_context_middleware` supplies what a page needs to render.
 //!
 //! The marketplace counts injected into every render are cached because they
 //! are derived from a remote catalog and are identical for every user holding
 //! the same role set.
+
+mod gates;
+
+pub(crate) use gates::{
+    non_admin_gate_middleware, require_admin_middleware, require_auth_middleware,
+    require_user_middleware,
+};
 
 use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
@@ -19,7 +29,6 @@ use systemprompt::identifiers::{Email, UserId};
 use tokio::sync::RwLock;
 
 use super::handlers::extract_user_from_cookie;
-use super::handlers::shared::ErrorBody;
 use super::repositories::marketplace::plugins::MarketplaceCounts;
 use super::types::{MarketplaceContext, UserContext};
 
@@ -197,91 +206,6 @@ async fn compute_marketplace_counts(roles: Vec<String>) -> (MarketplaceCounts, S
             String::new(),
         )
     })
-}
-
-pub(crate) async fn require_user_middleware(request: Request, next: Next) -> Response {
-    let user_ctx = request.extensions().get::<UserContext>().cloned();
-    match user_ctx {
-        Some(ctx) if !ctx.user_id.as_str().is_empty() => next.run(request).await,
-        _ => {
-            let uri = request
-                .extensions()
-                .get::<axum::extract::OriginalUri>()
-                .map_or_else(
-                    || request.uri().path().to_owned(),
-                    |o| o.0.path().to_owned(),
-                );
-            let redirect_url = format!("/admin/login?redirect={uri}");
-            axum::response::Redirect::temporary(&redirect_url).into_response()
-        },
-    }
-}
-
-pub(crate) async fn require_auth_middleware(request: Request, next: Next) -> Response {
-    let user_ctx = request.extensions().get::<UserContext>().cloned();
-    match user_ctx {
-        Some(ctx) if !ctx.user_id.as_str().is_empty() => next.run(request).await,
-        _ => (
-            StatusCode::UNAUTHORIZED,
-            axum::Json(ErrorBody {
-                error: "Authentication required".to_owned(),
-            }),
-        )
-            .into_response(),
-    }
-}
-
-pub(crate) async fn require_admin_middleware(request: Request, next: Next) -> Response {
-    let user_ctx = request.extensions().get::<UserContext>().cloned();
-    match user_ctx {
-        Some(ctx) if ctx.is_admin => next.run(request).await,
-        _ => (
-            StatusCode::FORBIDDEN,
-            axum::Json(ErrorBody {
-                error: "Admin access required".to_owned(),
-            }),
-        )
-            .into_response(),
-    }
-}
-
-/// Restrict non-admin users to the profile page, settings page, and a few
-/// account-management endpoints. Other admin routes redirect to /admin/profile.
-///
-/// Admins pass through unchanged. Anonymous users are handled by
-/// `require_user_middleware` which runs after this layer.
-pub(crate) async fn non_admin_gate_middleware(request: Request, next: Next) -> Response {
-    let path = request.uri().path();
-    let user_ctx = request.extensions().get::<UserContext>().cloned();
-
-    let Some(ctx) = user_ctx else {
-        return next.run(request).await;
-    };
-    if ctx.is_admin || ctx.user_id.as_str().is_empty() {
-        return next.run(request).await;
-    }
-
-    if is_non_admin_allowed_path(path) {
-        next.run(request).await
-    } else {
-        axum::response::Redirect::to("/admin/profile").into_response()
-    }
-}
-
-fn is_non_admin_allowed_path(path: &str) -> bool {
-    path.starts_with("/admin/profile")
-        || path.starts_with("/admin/settings")
-        || path.starts_with("/admin/auth/")
-        || path.starts_with("/admin/api/")
-        || path == "/admin/logout"
-        || path == "/admin/login"
-        || path == "/admin/register"
-        || path == "/admin/add-passkey"
-        || path == "/admin/verify-pending"
-        || path == "/admin/setup"
-        || path == "/admin/demo-register"
-        || path == "/admin/"
-        || path == "/admin"
 }
 
 pub(crate) async fn auth_me_handler(Extension(user_ctx): Extension<UserContext>) -> Response {
