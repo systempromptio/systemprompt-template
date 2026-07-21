@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use axum::Json;
 use axum::extract::{Path, Query, State};
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
@@ -12,7 +12,7 @@ use systemprompt::config::ProfileBootstrap;
 
 use systemprompt::identifiers::UserId;
 
-use crate::handlers::shared;
+use crate::error::{AdminError, AdminResult};
 use crate::repositories;
 use crate::types::UserQuery;
 
@@ -23,7 +23,7 @@ pub(crate) async fn list_plugin_env_handler(
     Path(plugin_id): Path<String>,
     headers: HeaderMap,
     Query(query): Query<UserQuery>,
-) -> Response {
+) -> AdminResult<Response> {
     // Why: cookie absence is the "logged-out" branch, not an error — the
     // handler falls through to `resolve_principal` to honour the explicit
     // `user_id` query parameter.
@@ -34,7 +34,7 @@ pub(crate) async fn list_plugin_env_handler(
         cookie_uid.as_ref().map(UserId::as_str),
         query.user_id.as_ref().map(UserId::as_str),
     ) else {
-        return shared::error_response(StatusCode::UNAUTHORIZED, "missing principal");
+        return Err(AdminError::Unauthorized("missing principal".to_owned()));
     };
 
     let definitions = load_plugin_variable_defs(&plugin_id).unwrap_or_else(|e| {
@@ -42,20 +42,9 @@ pub(crate) async fn list_plugin_env_handler(
         vec![]
     });
 
-    let stored = match repositories::marketplace::plugin_env::list_plugin_env_vars(
-        &pool, &user_id, &plugin_id,
-    )
-    .await
-    {
-        Ok(vars) => vars,
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to list plugin env vars");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Internal server error",
-            );
-        },
-    };
+    let stored =
+        repositories::marketplace::plugin_env::list_plugin_env_vars(&pool, &user_id, &plugin_id)
+            .await?;
 
     let stored_names: std::collections::HashSet<String> = stored
         .iter()
@@ -68,13 +57,13 @@ pub(crate) async fn list_plugin_env_handler(
         .map(|def| def.name.clone())
         .collect();
 
-    Json(PluginEnvResponse {
+    Ok(Json(PluginEnvResponse {
         definitions,
         stored,
         valid: missing_required.is_empty(),
         missing_required,
     })
-    .into_response()
+    .into_response())
 }
 
 /// Resolve the principal for a plugin-env request from already-validated

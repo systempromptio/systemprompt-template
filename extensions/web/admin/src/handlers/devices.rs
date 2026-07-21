@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
-use crate::handlers::shared;
+use crate::error::{AdminError, AdminResult};
 use crate::services::device_service;
 use crate::types::UserContext;
 
@@ -36,30 +36,27 @@ pub(crate) async fn issue_pat(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<IssueApiKeyRequest>,
-) -> Response {
-    match device_service::issue_pat(&pool, &user_ctx.user_id, &body.name, body.expires_at).await {
-        Ok(issued) => Json(IssueApiKeyResponse {
-            id: issued.id,
-            name: issued.name,
-            key_prefix: issued.key_prefix,
-            secret: issued.secret,
-            created_at: issued.created_at,
-            expires_at: issued.expires_at,
-        })
-        .into_response(),
-        Err(e) => e.into_response(),
-    }
+) -> AdminResult<Response> {
+    let issued =
+        device_service::issue_pat(&pool, &user_ctx.user_id, &body.name, body.expires_at).await?;
+    Ok(Json(IssueApiKeyResponse {
+        id: issued.id,
+        name: issued.name,
+        key_prefix: issued.key_prefix,
+        secret: issued.secret,
+        created_at: issued.created_at,
+        expires_at: issued.expires_at,
+    })
+    .into_response())
 }
 
 pub(crate) async fn revoke_pat(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
-) -> Response {
-    match device_service::revoke_pat(&pool, &user_ctx.user_id, &id).await {
-        Ok(()) => StatusCode::NO_CONTENT.into_response(),
-        Err(e) => e.into_response(),
-    }
+) -> AdminResult<Response> {
+    device_service::revoke_pat(&pool, &user_ctx.user_id, &id).await?;
+    Ok(StatusCode::NO_CONTENT.into_response())
 }
 
 #[derive(Debug, Deserialize)]
@@ -91,13 +88,13 @@ pub(crate) async fn enroll_device(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<EnrollDeviceRequest>,
-) -> Response {
+) -> AdminResult<Response> {
     if !user_ctx.is_admin {
-        return shared::error_response(StatusCode::FORBIDDEN, "Admin access required");
+        return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
     let target = body.user_id;
     let hostname = body.hostname.unwrap_or_default();
-    match device_service::enroll_device(
+    let enrolled = device_service::enroll_device(
         &pool,
         &target,
         device_service::EnrollDeviceInput {
@@ -107,35 +104,30 @@ pub(crate) async fn enroll_device(
             expires_at: body.expires_at,
         },
     )
-    .await
-    {
-        Ok(enrolled) => (
-            StatusCode::CREATED,
-            Json(EnrollDeviceResponse {
-                id: enrolled.id,
-                user_id: enrolled.user_id,
-                name: enrolled.name,
-                key_prefix: enrolled.key_prefix,
-                secret: enrolled.secret,
-                platform: enrolled.platform,
-                hostname: enrolled.hostname,
-                created_at: enrolled.created_at,
-                enrolled_at: enrolled.enrolled_at,
-                expires_at: enrolled.expires_at,
-            }),
-        )
-            .into_response(),
-        Err(e) => e.into_response(),
-    }
+    .await?;
+    Ok((
+        StatusCode::CREATED,
+        Json(EnrollDeviceResponse {
+            id: enrolled.id,
+            user_id: enrolled.user_id,
+            name: enrolled.name,
+            key_prefix: enrolled.key_prefix,
+            secret: enrolled.secret,
+            platform: enrolled.platform,
+            hostname: enrolled.hostname,
+            created_at: enrolled.created_at,
+            enrolled_at: enrolled.enrolled_at,
+            expires_at: enrolled.expires_at,
+        }),
+    )
+        .into_response())
 }
 
 pub(crate) async fn revoke_cert(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
-) -> Response {
-    match device_service::revoke_device_cert(&pool, &user_ctx.user_id, &id).await {
-        Ok(()) => StatusCode::NO_CONTENT.into_response(),
-        Err(e) => e.into_response(),
-    }
+) -> AdminResult<Response> {
+    device_service::revoke_device_cert(&pool, &user_ctx.user_id, &id).await?;
+    Ok(StatusCode::NO_CONTENT.into_response())
 }

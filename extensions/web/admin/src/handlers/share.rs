@@ -12,7 +12,6 @@
 use std::sync::Arc;
 
 use axum::extract::{Path, State};
-use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use base64::Engine;
@@ -22,6 +21,7 @@ use sqlx::PgPool;
 use systemprompt::config::SecretsBootstrap;
 use systemprompt::identifiers::UserId;
 
+use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared;
 use crate::repositories;
 use crate::types::UserContext;
@@ -101,36 +101,18 @@ pub(crate) async fn issue_share_token_handler(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Path(target_user_id): Path<String>,
-) -> Response {
+) -> AdminResult<Response> {
     if !user_ctx.is_admin {
-        return shared::error_response(StatusCode::FORBIDDEN, "Admin access required");
+        return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
     let target_user_id = UserId::new(target_user_id);
-    let secret = match SecretsBootstrap::manifest_signing_secret_seed() {
-        Ok(s) => s,
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to load manifest signing seed for share token");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Failed to load secret",
-            );
-        },
-    };
-    let row = repositories::users::find_share_token_version(&pool, &target_user_id).await;
-    let version = match row {
-        Ok(Some(v)) => v,
-        Ok(None) => return shared::error_response(StatusCode::NOT_FOUND, "User not found"),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to load share_token_version");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Internal server error",
-            );
-        },
-    };
+    let secret = SecretsBootstrap::manifest_signing_secret_seed().map_err(AdminError::internal)?;
+    let version = repositories::users::find_share_token_version(&pool, &target_user_id)
+        .await?
+        .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
     let token = sign(&secret, &target_user_id, version);
     let url = format!("/share/manifest/{token}");
-    Json(ShareTokenResponse { token, url }).into_response()
+    Ok(Json(ShareTokenResponse { token, url }).into_response())
 }
 
 #[derive(Debug, Serialize)]
@@ -156,40 +138,39 @@ struct ManifestResponse {
 pub(crate) async fn public_manifest_handler(
     State(pool): State<Arc<PgPool>>,
     Path(token): Path<String>,
-) -> Response {
-    let secret = match SecretsBootstrap::manifest_signing_secret_seed() {
-        Ok(s) => s,
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to load manifest signing seed");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Failed to load secret",
-            );
-        },
-    };
+) -> AdminResult<Response> {
+    let secret = SecretsBootstrap::manifest_signing_secret_seed().map_err(AdminError::internal)?;
     let Some((user_id, version)) = verify(&secret, &token) else {
-        return shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or revoked token");
+        return Err(AdminError::Unauthorized(
+            "Invalid or revoked token".to_owned(),
+        ));
     };
 
+    // Why: this endpoint is unauthenticated, so a lookup failure of any kind —
+    // missing row or database fault — answers the same way. Distinguishing them
+    // would tell an anonymous caller which user ids exist.
     let current_version = match repositories::users::find_share_token_version(&pool, &user_id).await
     {
         Ok(Some(v)) => v,
         Ok(None) => {
-            return shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or revoked token");
+            return Err(AdminError::Unauthorized(
+                "Invalid or revoked token".to_owned(),
+            ));
         },
         Err(e) => {
             tracing::warn!(error = %e, "Failed to load share_token_version for verification");
-            return shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or revoked token");
+            return Err(AdminError::Unauthorized(
+                "Invalid or revoked token".to_owned(),
+            ));
         },
     };
     if current_version != version {
-        return shared::error_response(StatusCode::UNAUTHORIZED, "Token has been revoked");
+        return Err(AdminError::Unauthorized(
+            "Token has been revoked".to_owned(),
+        ));
     }
 
-    match build_user_manifest(&pool, &user_id).await {
-        Ok(m) => Json(m).into_response(),
-        Err(r) => r,
-    }
+    Ok(Json(build_user_manifest(&pool, &user_id).await?).into_response())
 }
 
 fn opt_desc(desc: String) -> Option<String> {
@@ -236,30 +217,14 @@ fn collect_manifest_sections(
     sections_in
 }
 
-async fn build_user_manifest(
-    pool: &PgPool,
-    user_id: &UserId,
-) -> Result<ManifestResponse, Response> {
-    let services_path = shared::get_services_path().map_err(IntoResponse::into_response)?;
+async fn build_user_manifest(pool: &PgPool, user_id: &UserId) -> AdminResult<ManifestResponse> {
+    let services_path = shared::get_services_path()?;
     let sections_in = collect_manifest_sections(&services_path);
 
-    let matrix = repositories::users::access_control::filter_catalog_for_user(
-        pool,
-        user_id,
-        sections_in,
-    )
-    .await
-    .map_err(|e| {
-        tracing::error!(error = %e, user_id = %user_id, "Failed to resolve manifest matrix");
-        shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-    })?;
-
-    let Some(matrix) = matrix else {
-        return Err(shared::error_response(
-            StatusCode::NOT_FOUND,
-            "User not found",
-        ));
-    };
+    let matrix =
+        repositories::users::access_control::filter_catalog_for_user(pool, user_id, sections_in)
+            .await?
+            .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
 
     let sections = matrix
         .sections
