@@ -22,7 +22,6 @@ use systemprompt::identifiers::{RouteId, UserId};
 use systemprompt_security::authz::{EntityRef, ResolveInput};
 
 use crate::authz::{dimensions, subject_attributes_for};
-
 use crate::handlers::shared;
 use crate::repositories;
 use crate::repositories::config::acl_detect;
@@ -190,6 +189,9 @@ pub(crate) async fn detect_handler(
     }
 }
 
+/// After-the-fact detector: scan recent `ai_requests` and emit a
+/// `governance_decisions` row for any request whose user/model combination
+/// the ACL would have denied. Best-effort; called by [`detect_handler`].
 pub(crate) async fn detect_after_the_fact(
     pool: &PgPool,
     routes: &[GatewayRouteView],

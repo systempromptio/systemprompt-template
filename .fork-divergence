@@ -56,19 +56,12 @@ extensions/web/admin/src/handlers/webhook/governance/policies/rate_limit.rs	# so
 extensions/web/admin/src/handlers/webhook/governance/policies/scope_check.rs	# source_path feeds the template-only policy editor
 extensions/web/admin/src/handlers/webhook/governance/policies/secret_scan.rs	# source_path feeds the template-only policy editor
 extensions/web/admin/src/handlers/webhook/governance/policies/tool_blocklist.rs	# source_path feeds the template-only policy editor
+extensions/web/src/extension.rs	# astound loads a Salesforce SSO config and a skills-page config; template loads a feature-pages config
+extensions/web/src/extension_impl.rs	# astound mounts the Salesforce router and skills-page prerenderer; template mounts blog providers, feature prerenderers, the bridge router and an oauth-client seed
+extensions/web/admin/src/routes/ssr.rs	# astound mounts the Salesforce auth routes and redirects admins to /admin/access/users; template mounts the governance routes and always redirects to /admin/profile
+extensions/web/admin/src/activity/constructors_session.rs	# astound records session_started/session_ended/teammate_idle from Claude Code hook events; template has no such feed
 
 # ---------------------------------------------------------------------
 # DEBT - one side is simply ahead. Port it, then delete the line.
 # ---------------------------------------------------------------------
-extensions/web/src/extension.rs	# port: template surfaces config-load errors (OnceLock<Result<..>>) where astound swallows them to None
-extensions/web/src/extension_impl.rs	# port: paired with the config-load error handling above
-extensions/web/admin/src/handlers/gateway_catalog.rs	# port: template calls repositories::users::queries::* directly; astound still goes through the module facade
-extensions/web/admin/src/marketplace_filter/mod.rs	# port: the two module docs describe marketplace-parent inheritance differently — one is wrong about what a member-level rule does
-
-# Not yet triaged per file. Each needs a decision: port, or move above with a
-# reason that names the difference.
-extensions/web/admin/src/activity/constructors.rs	# triage: pre-existing drift
-extensions/web/admin/src/activity/constructors_entity/entity_crud.rs	# triage: pre-existing drift
-extensions/web/admin/src/activity/constructors_entity/session_events.rs	# triage: pre-existing drift
-extensions/web/admin/src/activity/constructors_session.rs	# triage: pre-existing drift
-extensions/web/admin/src/routes/ssr.rs	# triage: pre-existing drift
+# (empty)

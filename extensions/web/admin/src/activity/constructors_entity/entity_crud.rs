@@ -5,6 +5,7 @@ use systemprompt::identifiers::UserId;
 use super::super::enums::{ActivityAction, ActivityCategory, ActivityEntity, entity_label};
 use super::super::types::{ActivityEntityRef, NewActivity};
 
+/// Metadata payload for events that carry no fields of their own.
 fn empty_meta() -> serde_json::Value {
     serde_json::Value::Object(serde_json::Map::new())
 }

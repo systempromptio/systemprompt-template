@@ -5,13 +5,12 @@
 //! entity's own [`EntityKind`] (`Plugin`, `Skill`, `Agent`, `McpServer`) to
 //! decide which marketplace items the gateway should sign for that user.
 //!
-//! Default policy is **explicit allow**, but the owning marketplace is passed
-//! to the resolver as a parent: a member is kept if it has its own allow rule
-//! (or `default_included = true`) **or it inherits the marketplace's grant**.
-//! An explicit member-level deny still overrides the inherited allow. This lets
-//! a single marketplace grant cover every member skill/agent/mcp without a
-//! per-entity rule (see `services/access-control/roles.yaml`). If neither the
-//! member nor the marketplace grants access, the item is dropped.
+//! Default policy is **explicit allow**. The owning marketplace is passed to
+//! the resolver as a parent, so one marketplace rule covers every member
+//! skill/agent/mcp that declares no rules of its own, without per-entity
+//! boilerplate (see `services/access-control/roles.yaml`). A member that
+//! declares any rule owns its decision outright. If neither path grants
+//! access, the item is dropped.
 
 mod keepsets;
 
@@ -33,7 +32,7 @@ use systemprompt_security::authz::{
 use keepsets::{CandidateEntityIds, KeepIdsQuery, KeepSets, apply_keep_sets};
 
 use crate::authz::{dimensions, subject_attributes_for};
-use crate::repositories::users::get_user_roles_department;
+use crate::repositories::users::queries::get_user_roles_department;
 
 #[derive(Debug)]
 pub struct TemplateMarketplaceFilter {

@@ -3,5 +3,5 @@
 pub mod config;
 pub mod prerenderer;
 
-pub use config::{FeatureCta, FeaturePage, FeatureSection, FeatureSectionItem, FeaturePagesConfig};
+pub use config::{FeatureCta, FeaturePage, FeaturePagesConfig, FeatureSection, FeatureSectionItem};
 pub use prerenderer::FeaturePagePrerenderer;

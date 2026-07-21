@@ -49,8 +49,8 @@ pub use docs::{ChildDoc, DocsContentDataProvider, DocsPageDataProvider};
 pub use error::BlogError;
 pub use extension::{BlogExtension, WebExtension};
 pub use features::{
-    FeatureCta, FeaturePage, FeaturePagePrerenderer, FeatureSection, FeatureSectionItem,
-    FeaturePagesConfig,
+    FeatureCta, FeaturePage, FeaturePagePrerenderer, FeaturePagesConfig, FeatureSection,
+    FeatureSectionItem,
 };
 pub use homepage::{
     ComparisonConfig, ComparisonItem, ComparisonSide, DifferentiatorConfig, DifferentiatorItem,

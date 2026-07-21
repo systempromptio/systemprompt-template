@@ -7,6 +7,7 @@ use super::super::constructors::truncate;
 use super::super::enums::{ActivityAction, ActivityCategory};
 use super::super::types::NewActivity;
 
+/// Shared shape for events that only carry the session id.
 #[derive(Debug, Serialize)]
 struct SessionMeta<'a> {
     session_id: &'a str,
