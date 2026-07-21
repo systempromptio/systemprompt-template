@@ -51,13 +51,7 @@ impl Extension for WebExtension {
         let mut providers: Vec<Arc<dyn PageDataProvider>> = vec![];
 
         if let Some(nav_config) = Self::navigation_config() {
-            let branding = match config_loader::load_branding_config() {
-                Ok(val) => val,
-                Err(e) => {
-                    tracing::error!(error = %e, "Branding config error");
-                    None
-                },
-            };
+            let branding = config_loader::branding_config();
             providers.push(Arc::new(
                 NavigationPageDataProvider::new(nav_config).with_branding(branding),
             ));
@@ -180,13 +174,7 @@ impl Extension for WebExtension {
             .join("storage")
             .join("files")
             .join("admin");
-        let branding = match config_loader::load_branding_config() {
-            Ok(val) => val,
-            Err(e) => {
-                tracing::warn!(error = %e, "Failed to load branding config for admin");
-                None
-            },
-        };
+        let branding = config_loader::branding_config();
         let engine = match admin::templates::AdminTemplateEngine::new(&admin_dir) {
             Ok(engine) => engine.with_branding(branding),
             Err(e) => {

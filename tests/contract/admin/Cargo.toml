@@ -1,0 +1,23 @@
+[package]
+name = "admin-contract-tests"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+systemprompt = { workspace = true, features = ["full"] }
+systemprompt-web-admin = { workspace = true }
+systemprompt-web-extension = { workspace = true }
+systemprompt-security = { workspace = true }
+
+axum = { workspace = true }
+tower = { workspace = true }
+http-body-util = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+url = { workspace = true }

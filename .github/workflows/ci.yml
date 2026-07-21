@@ -107,10 +107,11 @@ jobs:
       # `postgres` maintenance DB (the superuser the postgres:16 image creates),
       # CREATE DATABASEs a per-test schema, applies the minimal tables it needs,
       # and drops them on teardown. All it requires is DATABASE_URL pointing at a
-      # reachable Postgres. Unit crates need no DB at all. SQLX_OFFLINE stays
-      # true because the test crates carry no .sqlx cache and use dynamic
-      # sqlx::query() against their throwaway schema.
-      - name: Run tests
+      # reachable Postgres. Unit crates need no DB at all. The contract crate
+      # follows the same convention but links systemprompt-web-admin, whose
+      # sqlx::query! macros need the offline cache — tests/.sqlx symlinks the
+      # root one, since `[patch]` and cache lookup are both workspace-scoped.
+      - name: Run tests (unit, integration, and the admin HTTP contract)
         if: steps.tests.outputs.present == 'true'
         env:
           SYSTEMPROMPT_TEST_DATABASE_URL: postgres://test:test@localhost:5432/test

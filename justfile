@@ -210,8 +210,25 @@ test-integration:
     fi
     cargo test --manifest-path tests/Cargo.toml -p mcp-integration-tests
 
+# HTTP contract suite: drives every admin route under three principals and
+# diffs the result against tests/contract/admin/baseline.txt. Same throwaway-
+# database convention as test-integration. A status change fails the run; if
+# it is deliberate, re-record with UPDATE_CONTRACT_BASELINE=1 and list it in
+# the PR.
+test-contract:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ] && [ -f .systemprompt/profiles/local/secrets.json ]; then
+        SYSTEMPROMPT_TEST_DATABASE_URL=$(python3 -c "
+    import json, urllib.parse as up
+    u = up.urlsplit(json.load(open('.systemprompt/profiles/local/secrets.json'))['database_url'])
+    print(up.urlunsplit((u.scheme, u.netloc, '/postgres', '', '')))")
+        export SYSTEMPROMPT_TEST_DATABASE_URL
+    fi
+    cargo test --manifest-path tests/Cargo.toml -p admin-contract-tests
+
 # All tests
-test: test-unit test-integration
+test: test-unit test-integration test-contract
 
 # Source gates ported from systemprompt-core (scripts/*.sh)
 lint-gates:

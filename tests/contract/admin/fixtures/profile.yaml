@@ -1,0 +1,107 @@
+name: local
+display_name: Local Development
+target: local
+site:
+  name: systemprompt.io
+  github_link: null
+database:
+  type: postgres
+  external_db_access: false
+server:
+  host: 127.0.0.1
+  port: 8099
+  api_server_url: http://localhost:8099
+  api_internal_url: http://localhost:8099
+  api_external_url: http://localhost:8099
+  use_https: false
+  cors_allowed_origins:
+  - http://localhost:8080
+  - http://localhost:5173
+  - http://127.0.0.1:8080
+  content_negotiation:
+    enabled: false
+    markdown_suffix: .md
+  security_headers:
+    enabled: true
+    hsts: max-age=63072000; includeSubDomains; preload
+    frame_options: DENY
+    content_type_options: nosniff
+    referrer_policy: strict-origin-when-cross-origin
+    permissions_policy: camera=(), microphone=(), geolocation=()
+    content_security_policy: null
+  instance_id: null
+  max_concurrent_streams: 256
+  trusted_proxies: []
+paths:
+  system: __REPO__
+  services: __REPO__/services
+  bin: __REPO__/target/debug
+  web_path: null
+  storage: __REPO__/storage
+  geoip_database: null
+security:
+  jwt_issuer: http://localhost:8099
+  jwt_access_token_expiration: 2592000
+  jwt_refresh_token_expiration: 15552000
+  jwt_audiences:
+  - web
+  - api
+  - a2a
+  - mcp
+  allowed_resource_audiences:
+  - hook
+  allow_registration: true
+  signing_key_path: signing_key.pem
+  id_jag_ttl_secs: 300
+rate_limits:
+  disabled: true
+  oauth_public_per_second: 10
+  oauth_auth_per_second: 10
+  contexts_per_second: 100
+  tasks_per_second: 50
+  artifacts_per_second: 50
+  agent_registry_per_second: 50
+  agents_per_second: 20
+  mcp_registry_per_second: 50
+  mcp_per_second: 200
+  stream_per_second: 100
+  content_per_second: 50
+  burst_multiplier: 3
+  tier_multipliers:
+    admin: 10.0
+    user: 1.0
+    a2a: 5.0
+    mcp: 5.0
+    service: 5.0
+    anon: 0.5
+system_admin:
+  username: admin
+runtime:
+  environment: development
+  log_level: verbose
+  output_format: text
+  no_color: false
+  non_interactive: false
+cloud:
+  validation: skip
+secrets:
+  secrets_path: secrets.json
+  validation: warn
+  source: file
+extensions:
+  disabled: []
+providers: []
+gateway:
+  enabled: false
+  routes: []
+  default_provider: null
+  allow_unlisted_models: false
+  auth_scheme: bearer
+  inference_path_prefix: /v1
+governance:
+  authz:
+    hook:
+      mode: webhook
+      url: http://localhost:8099/api/public/govern/authz
+      timeout_ms: 500
+      acknowledgement: null

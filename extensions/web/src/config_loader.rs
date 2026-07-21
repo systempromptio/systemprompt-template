@@ -119,6 +119,20 @@ pub(crate) fn load_branding_config() -> Result<Option<BrandingConfig>, ConfigErr
     Ok(Some(branding_config))
 }
 
+/// Branding as the server resolves it, with a failure to load treated as
+/// "no branding" rather than fatal.
+///
+/// Both router builds and the HTTP contract suite need the engine configured
+/// the same way; the templates read `branding.*` under strict mode, so an
+/// engine built without it fails to render every page that has one.
+#[must_use]
+pub fn branding_config() -> Option<BrandingConfig> {
+    load_branding_config().unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to load branding config");
+        None
+    })
+}
+
 pub(crate) fn load_features_config() -> Result<Option<Arc<FeaturesConfig>>, ConfigError> {
     let paths = match load_app_paths() {
         Ok(p) => p,

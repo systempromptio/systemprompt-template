@@ -17,6 +17,11 @@
 //! - `site` — public homepage / blog / docs / features content providers.
 
 mod config_loader;
+
+/// The admin template engine needs the same branding the server builds it
+/// with; the HTTP contract suite would otherwise render every page against a
+/// different context than production.
+pub use config_loader::branding_config;
 pub mod extension;
 mod extension_impl;
 mod schemas;
