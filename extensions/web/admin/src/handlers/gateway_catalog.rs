@@ -22,6 +22,7 @@ use systemprompt::identifiers::{RouteId, UserId};
 use systemprompt_security::authz::{EntityRef, ResolveInput};
 
 use crate::authz::{dimensions, subject_attributes_for};
+use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared;
 use crate::repositories;
 use crate::repositories::config::acl_detect;
@@ -47,43 +48,22 @@ pub(crate) async fn for_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(user_id): Path<String>,
-) -> Response {
+) -> AdminResult<Response> {
     let user_id = UserId::new(user_id);
     if !user_ctx.is_admin && user_ctx.user_id != user_id {
-        return shared::error_response(StatusCode::FORBIDDEN, "Forbidden");
+        return Err(AdminError::Forbidden("Forbidden".to_owned()));
     }
-    let profile_path = match shared::get_profile_path() {
-        Ok(p) => p,
-        Err(r) => return *r,
-    };
-    let cfg = match repositories::config::gateway::get_gateway_config(&profile_path) {
-        Ok(c) => c,
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to load gateway config");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Failed to load gateway",
-            );
-        },
-    };
+    let profile_path = shared::get_profile_path()?;
+    let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
+        .map_err(AdminError::internal)?;
 
     let (user_roles, _department) =
-        match repositories::users::queries::find_user_roles_department(&pool, &user_id).await {
-            Ok(Some(rd)) => rd,
-            Ok(None) => return shared::error_response(StatusCode::NOT_FOUND, "User not found"),
-            Err(e) => {
-                tracing::error!(error = %e, user_id = %user_id, "Failed to load user roles");
-                return shared::error_response(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Failed to load user",
-                );
-            },
-        };
+        repositories::users::queries::find_user_roles_department(&pool, &user_id)
+            .await?
+            .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
 
-    match collect_allowed_routes(&pool, &cfg.routes, &user_id, &user_roles).await {
-        Ok(routes) => Json(CatalogResponse { user_id, routes }).into_response(),
-        Err(resp) => *resp,
-    }
+    let routes = collect_allowed_routes(&pool, &cfg.routes, &user_id, &user_roles).await?;
+    Ok(Json(CatalogResponse { user_id, routes }).into_response())
 }
 
 async fn collect_allowed_routes(
@@ -91,19 +71,11 @@ async fn collect_allowed_routes(
     routes: &[GatewayRouteView],
     user_id: &UserId,
     user_roles: &[String],
-) -> Result<Vec<CatalogEntry>, Box<Response>> {
+) -> AdminResult<Vec<CatalogEntry>> {
     let attributes = subject_attributes_for(pool, user_id).await;
     let mut allowed = Vec::with_capacity(routes.len());
     for route in routes {
-        let rules = gateway_acl::list_rules_for_route(pool, &route.id)
-            .await
-            .map_err(|e| {
-                tracing::error!(error = %e, route_id = %route.id, "Failed to list ACL rules");
-                Box::new(shared::error_response(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Failed to load ACL rules",
-                ))
-            })?;
+        let rules = gateway_acl::list_rules_for_route(pool, &route.id).await?;
         let default_included = gateway_acl::find_entity(pool, &route.id)
             .await
             .unwrap_or_else(|e| {
@@ -164,7 +136,7 @@ pub(crate) async fn detect_handler(
     }
     let profile_path = match shared::get_profile_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     let cfg = match repositories::config::gateway::get_gateway_config(&profile_path) {
         Ok(c) => c,

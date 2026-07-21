@@ -1,13 +1,13 @@
 //! Context fragments injected into every admin page render.
 
+use crate::error::AdminHtmlError;
 use crate::numeric;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
-use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use serde::Serialize;
 use serde_json::json;
-use systemprompt_web_shared::{RankTier, UserId, html_escape};
+use systemprompt_web_shared::{RankTier, UserId};
 
 use super::ssr_demo_help::demo_help_text;
 
@@ -73,14 +73,7 @@ pub(crate) fn render_page(
     match engine.render(template, &merged) {
         Ok(html) => Html(html).into_response(),
         Err(e) => {
-            tracing::error!(template, error = ?e, "SSR render failed");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Html(format!(
-                    "<h1>Template Error</h1><p>{}</p>",
-                    html_escape(&e.to_string())
-                )),
-            )
+            AdminHtmlError::internal(format!("SSR render failed for {template}: {e:?}"))
                 .into_response()
         },
     }

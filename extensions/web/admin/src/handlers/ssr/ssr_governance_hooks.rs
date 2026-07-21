@@ -52,7 +52,7 @@ pub(crate) async fn governance_hooks_page(
 
     let services_path = match super::get_services_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
 
     let configured_hooks =

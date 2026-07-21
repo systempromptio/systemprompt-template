@@ -17,7 +17,7 @@ pub(crate) async fn list_plugins_handler(
 ) -> Response {
     let services_path = match shared::get_services_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
 
     let plugins = match repositories::marketplace::plugins::list_plugins_for_roles(

@@ -19,7 +19,7 @@ pub(crate) struct CreateRouteResponse {
 pub(crate) async fn get_gateway_handler() -> Response {
     let profile_path = match shared::get_profile_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     match repositories::config::gateway::get_gateway_config(&profile_path) {
         Ok(c) => Json(c).into_response(),
@@ -35,7 +35,7 @@ pub(crate) async fn update_gateway_settings_handler(
 ) -> Response {
     let profile_path = match shared::get_profile_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     match repositories::config::gateway::update_gateway_settings(&profile_path, &body) {
         Ok(c) => Json(c).into_response(),
@@ -46,7 +46,7 @@ pub(crate) async fn update_gateway_settings_handler(
 pub(crate) async fn create_gateway_route_handler(Json(body): Json<GatewayRouteView>) -> Response {
     let profile_path = match shared::get_profile_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     match repositories::config::gateway::create_route(&profile_path, &body) {
         Ok(index) => (StatusCode::CREATED, Json(CreateRouteResponse { index })).into_response(),
@@ -60,7 +60,7 @@ pub(crate) async fn update_gateway_route_handler(
 ) -> Response {
     let profile_path = match shared::get_profile_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     match repositories::config::gateway::update_route(&profile_path, idx, &body) {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
@@ -72,7 +72,7 @@ pub(crate) async fn update_gateway_route_handler(
 pub(crate) async fn delete_gateway_route_handler(Path(idx): Path<usize>) -> Response {
     let profile_path = match shared::get_profile_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     match repositories::config::gateway::delete_route(&profile_path, idx) {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
@@ -86,7 +86,7 @@ pub(crate) async fn reorder_gateway_routes_handler(
 ) -> Response {
     let profile_path = match shared::get_profile_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     match repositories::config::gateway::reorder_routes(&profile_path, &body.order) {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),

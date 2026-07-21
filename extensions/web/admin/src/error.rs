@@ -6,8 +6,9 @@
 
 use axum::Json;
 use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
+use axum::response::{Html, IntoResponse, Response};
 use thiserror::Error;
+use systemprompt_web_shared::html_escape;
 
 use crate::handlers::shared::ErrorBody;
 use crate::repositories::bridge::BridgeRepoError;
@@ -142,14 +143,23 @@ impl From<systemprompt::config::ProfileBootstrapError> for AdminError {
     }
 }
 
-impl IntoResponse for AdminError {
-    fn into_response(self) -> Response {
-        let status = self.status();
+impl AdminError {
+    /// Record the failure once, at the boundary, at the severity its class
+    /// deserves. Both response faces call this, so a page failure and an API
+    /// failure leave the same trail.
+    fn log(&self, status: StatusCode) {
         if status.is_server_error() {
             tracing::error!(error = %self, "Admin handler returned server error");
         } else {
             tracing::warn!(error = %self, "Admin handler returned client error");
         }
+    }
+}
+
+impl IntoResponse for AdminError {
+    fn into_response(self) -> Response {
+        let status = self.status();
+        self.log(status);
         let body = Json(ErrorBody {
             error: self.public_message(),
         });
@@ -157,4 +167,50 @@ impl IntoResponse for AdminError {
     }
 }
 
+/// The HTML face of [`AdminError`], for the server-rendered admin pages.
+///
+/// A browser navigating to a page needs a page, not a JSON body — but the
+/// status and the client-visible text come from the same classification either
+/// way, so an SSR handler cannot accidentally disagree with an API handler
+/// about what a given failure means. Unlike the hand-rolled error pages this
+/// replaces, it renders [`AdminError::public_message`], so an internal cause
+/// is logged rather than interpolated into the page.
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub struct AdminHtmlError(pub AdminError);
+
+impl IntoResponse for AdminHtmlError {
+    fn into_response(self) -> Response {
+        let status = self.0.status();
+        self.0.log(status);
+        let body = Html(format!(
+            "<h1>Error</h1><p>{}</p>",
+            html_escape(&self.0.public_message())
+        ));
+        (status, body).into_response()
+    }
+}
+
+impl AdminHtmlError {
+    /// Wrap an arbitrary failure with no better classification than 500.
+    #[must_use]
+    pub fn internal<E>(err: E) -> Self
+    where
+        E: Into<Box<dyn std::error::Error + Send + Sync>>,
+    {
+        Self(AdminError::Internal(err.into()))
+    }
+}
+
+/// `?` in an SSR handler goes through whatever `AdminError` already knows how
+/// to absorb, so the two faces stay in step by construction.
+impl<E: Into<AdminError>> From<E> for AdminHtmlError {
+    fn from(value: E) -> Self {
+        Self(value.into())
+    }
+}
+
 pub type AdminResult<T> = Result<T, AdminError>;
+
+/// The SSR counterpart to [`AdminResult`].
+pub type AdminHtmlResult<T> = Result<T, AdminHtmlError>;

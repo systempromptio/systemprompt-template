@@ -37,7 +37,7 @@ pub(crate) async fn handle_hook_track(
 ) -> Response {
     let (user_id, plugin_id, jwt_token) = match extract_and_validate_jwt(&headers) {
         Ok(ids) => ids,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     tracing::trace!(payload = %helpers::sanitize_metadata(&raw), "Hook track received payload");
     let (payload, warnings) = HookEventPayload::from_value(raw);

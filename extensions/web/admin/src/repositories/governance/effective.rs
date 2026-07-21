@@ -191,24 +191,18 @@ fn allow_reason(user_id: &UserId, matched_by: &MatchedBy) -> String {
 }
 
 fn collect_gateway_ids() -> Result<Vec<String>, AdminError> {
-    let profile_path = shared_path_or_err(shared::get_profile_path())?;
+    let profile_path = shared::get_profile_path()?;
     let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
         .map_err(|e| AdminError::internal(e.to_string()))?;
     Ok(cfg.routes.into_iter().map(|r| r.id).collect())
 }
 
 fn collect_mcp_ids() -> Result<Vec<String>, AdminError> {
-    let services_path = shared_path_or_err(shared::get_services_path())?;
+    let services_path = shared::get_services_path()?;
     let servers = mcp_servers::list_mcp_servers(&services_path)
         .map_err(|e| AdminError::internal(e.to_string()))?;
     Ok(servers
         .into_iter()
         .map(|s| s.id.as_str().to_owned())
         .collect())
-}
-
-fn shared_path_or_err(
-    r: Result<std::path::PathBuf, Box<axum::response::Response>>,
-) -> Result<std::path::PathBuf, AdminError> {
-    r.map_err(|resp| AdminError::internal(format!("path lookup failed: HTTP {}", resp.status())))
 }

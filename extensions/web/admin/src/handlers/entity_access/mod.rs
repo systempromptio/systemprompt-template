@@ -34,7 +34,7 @@ pub(crate) async fn list_entity_access_handler(
 ) -> Response {
     let kind = match validate_entity_type(&entity_type) {
         Ok(k) => k,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     let r = repo(&pool);
     let rules = match r.list_rules_for_entity(kind, &entity_id).await {
@@ -68,7 +68,7 @@ pub(crate) async fn upsert_entity_rule_handler(
 ) -> Response {
     let kind = match validate_entity_type(&entity_type) {
         Ok(k) => k,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     let Some(rule_type) = parse_rule_type(&body.rule_type) else {
         return shared::error_response(StatusCode::BAD_REQUEST, "invalid rule_type");
@@ -103,7 +103,7 @@ pub(crate) async fn delete_entity_rule_handler(
     Path((entity_type, _entity_id, rule_id)): Path<(String, String, String)>,
 ) -> Response {
     if let Err(r) = validate_entity_type(&entity_type) {
-        return *r;
+        return r.into_response();
     }
     match repo(&pool).delete_rule(&RuleId::new(rule_id.clone())).await {
         Ok(true) => (StatusCode::NO_CONTENT, ()).into_response(),
@@ -122,7 +122,7 @@ pub(crate) async fn set_entity_default_handler(
 ) -> Response {
     let kind = match validate_entity_type(&entity_type) {
         Ok(k) => k,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     match repo(&pool)
         .upsert_entity(kind, &entity_id, body.default_included, "admin:dashboard")
@@ -151,11 +151,11 @@ pub(crate) async fn list_all_entity_access_handler(
 ) -> Response {
     let kind = match validate_entity_type(&query.entity_type) {
         Ok(k) => k,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     let entity_ids = match collect_entity_ids(&query.entity_type) {
         Ok(ids) => ids,
-        Err(resp) => return *resp,
+        Err(e) => return e.into_response(),
     };
     let r = repo(&pool);
     let bulk = match r.list_rules_bulk(kind, &entity_ids).await {
@@ -200,7 +200,7 @@ pub(crate) async fn apply_template_handler(
 ) -> Response {
     let kind = match validate_entity_type(&body.entity_type) {
         Ok(k) => k,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     let Some(rule_type) = parse_rule_type(&body.subject_type) else {
         return shared::error_response(StatusCode::BAD_REQUEST, "invalid subject_type");
@@ -214,7 +214,7 @@ pub(crate) async fn apply_template_handler(
 
     let entity_ids = match collect_entity_ids(&body.entity_type) {
         Ok(ids) => ids,
-        Err(resp) => return *resp,
+        Err(e) => return e.into_response(),
     };
     let r = repo(&pool);
     let mut applied = 0usize;

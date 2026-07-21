@@ -19,7 +19,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use axum::extract::{Extension, State};
-use axum::response::Response;
+use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 
 use crate::handlers::shared;
@@ -48,7 +48,7 @@ pub(crate) async fn marketplace_page(
 
     let services_path = match shared::get_services_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
 
     let raw_skills = repositories::marketplace::plugins::list_skill_catalog(&services_path)
@@ -163,7 +163,7 @@ pub(crate) async fn a2a_agents_page(
 
     let services_path = match shared::get_services_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
 
     let raw_agents = repositories::marketplace::plugins::list_agent_catalog(&services_path)

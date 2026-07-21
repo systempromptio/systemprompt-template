@@ -7,24 +7,18 @@
 
 use std::sync::Arc;
 
-use axum::http::StatusCode;
-use axum::response::Response;
 use sqlx::PgPool;
 use systemprompt_security::authz::{Access, AccessControlRepository, EntityKind, RuleType};
 
+use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared;
 use crate::repositories;
 use crate::repositories::mcp::mcp_servers;
 
-pub(super) fn validate_entity_type(entity_type: &str) -> Result<EntityKind, Box<Response>> {
+pub(super) fn validate_entity_type(entity_type: &str) -> AdminResult<EntityKind> {
     use std::str::FromStr;
-    EntityKind::from_str(entity_type).map_err(|e| {
-        tracing::warn!(error = %e, entity_type, "invalid entity_type");
-        Box::new(shared::error_response(
-            StatusCode::BAD_REQUEST,
-            "invalid entity_type",
-        ))
-    })
+    EntityKind::from_str(entity_type)
+        .map_err(|e| AdminError::BadRequest(format!("invalid entity_type: {e}")))
 }
 
 pub(super) fn repo(pool: &PgPool) -> AccessControlRepository {
@@ -53,29 +47,18 @@ pub(super) fn parse_access(s: &str) -> Option<Access> {
     }
 }
 
-pub(super) fn collect_entity_ids(entity_type: &str) -> Result<Vec<String>, Box<Response>> {
+pub(super) fn collect_entity_ids(entity_type: &str) -> AdminResult<Vec<String>> {
     match entity_type {
         "gateway_route" => {
             let profile_path = shared::get_profile_path()?;
-            let cfg =
-                repositories::config::gateway::get_gateway_config(&profile_path).map_err(|e| {
-                    tracing::error!(error = %e, "Failed to load gateway config");
-                    Box::new(shared::error_response(
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        "Failed to load gateway",
-                    ))
-                })?;
+            let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
+                .map_err(AdminError::internal)?;
             Ok(cfg.routes.into_iter().map(|r| r.id).collect())
         },
         "mcp_server" => {
             let services_path = shared::get_services_path()?;
-            let servers = mcp_servers::list_mcp_servers(&services_path).map_err(|e| {
-                tracing::error!(error = %e, "Failed to load MCP servers");
-                Box::new(shared::error_response(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Failed to load MCP servers",
-                ))
-            })?;
+            let servers =
+                mcp_servers::list_mcp_servers(&services_path).map_err(AdminError::internal)?;
             Ok(servers
                 .into_iter()
                 .map(|s| s.id.as_str().to_owned())

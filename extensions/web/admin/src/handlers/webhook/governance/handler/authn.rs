@@ -30,6 +30,12 @@ pub(super) fn deny_for_auth_failure(reason: &str) -> Decision {
     }
 }
 
+/// Why: the `Err` arm is deliberately **not** an [`crate::error::AdminError`].
+/// A `PreToolUse` hook blocks a tool call by answering `200 OK` with a deny
+/// decision; a `401` is a transport failure, which the client is free to treat
+/// as the hook being unavailable and carry on. Converting this channel to the
+/// admin error type would silently turn every rejected token into an allowed
+/// tool call, so it stays a pre-built [`Response`].
 pub(super) fn authenticate_request(
     headers: &HeaderMap,
     denial_params: &AuthDenialParams<'_>,

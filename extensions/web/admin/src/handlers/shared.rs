@@ -8,6 +8,8 @@ use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use systemprompt::config::ProfileBootstrap;
 
+use crate::error::AdminResult;
+
 #[derive(Debug, Serialize)]
 pub(crate) struct ErrorBody {
     pub error: String,
@@ -23,27 +25,10 @@ pub(crate) fn error_response(status: StatusCode, message: &str) -> Response {
         .into_response()
 }
 
-pub(crate) fn boxed_error_response(status: StatusCode, message: &str) -> Box<Response> {
-    Box::new(error_response(status, message))
+pub(crate) fn get_services_path() -> AdminResult<PathBuf> {
+    Ok(PathBuf::from(&ProfileBootstrap::get()?.paths.services))
 }
 
-pub(crate) fn get_services_path() -> Result<PathBuf, Box<Response>> {
-    ProfileBootstrap::get()
-        .map(|p| PathBuf::from(&p.paths.services))
-        .map_err(|e| {
-            tracing::error!(error = %e, "Failed to get profile bootstrap");
-            boxed_error_response(StatusCode::INTERNAL_SERVER_ERROR, "Failed to load profile")
-        })
-}
-
-pub(crate) fn get_profile_path() -> Result<PathBuf, Box<Response>> {
-    ProfileBootstrap::get_path()
-        .map(PathBuf::from)
-        .map_err(|e| {
-            tracing::error!(error = %e, "Failed to get profile path");
-            boxed_error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Failed to load profile path",
-            )
-        })
+pub(crate) fn get_profile_path() -> AdminResult<PathBuf> {
+    Ok(PathBuf::from(ProfileBootstrap::get_path()?))
 }

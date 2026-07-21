@@ -132,11 +132,11 @@ pub(crate) async fn user_matrix_handler(
 ) -> Response {
     let services_path = match shared::get_services_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
     let profile_path = match shared::get_profile_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
 
     let sections = build_matrix_sections(&services_path, &profile_path);

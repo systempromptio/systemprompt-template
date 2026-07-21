@@ -79,7 +79,7 @@ pub(crate) async fn govern_tool_use(
 
     let principal = match authenticate_request(&headers, &denial_params) {
         Ok(p) => p,
-        Err(resp) => return *resp,
+        Err(e) => return e.into_response(),
     };
     let user_id = principal.user_id;
 

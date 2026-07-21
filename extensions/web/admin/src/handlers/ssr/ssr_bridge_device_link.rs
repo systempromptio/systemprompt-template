@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt_web_shared::html_escape;
 
+use crate::error::{AdminHtmlError, AdminHtmlResult};
 use crate::repositories::bridge;
 use crate::templates::AdminTemplateEngine;
 use crate::types::UserContext;
@@ -45,9 +46,9 @@ pub(crate) async fn device_link_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     Query(query): Query<DeviceLinkQuery>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     let Some(host) = validate_loopback_redirect(&query.redirect) else {
-        return bad_redirect_response(&query.redirect);
+        return Ok(bad_redirect_response(&query.redirect));
     };
 
     let branding = branding_context(&engine)
@@ -60,50 +61,28 @@ pub(crate) async fn device_link_page(
         redirect: query.redirect,
         redirect_host: host,
     };
-    let data = match serde_json::to_value(&data) {
-        Ok(v) => v,
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to serialize bridge device-link context");
-            serde_json::Value::Object(serde_json::Map::new())
-        },
-    };
+    let data = serde_json::to_value(&data).map_err(|e| {
+        AdminHtmlError::internal(format!(
+            "Failed to serialize bridge device-link context: {e}"
+        ))
+    })?;
 
-    match engine.render("bridge-device-link", &data) {
-        Ok(html) => Html(html).into_response(),
-        Err(e) => {
-            tracing::error!(error = ?e, "Bridge device-link page render failed");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Html(format!(
-                    "<h1>Error</h1><p>{}</p>",
-                    html_escape(&e.to_string())
-                )),
-            )
-                .into_response()
-        },
-    }
+    let html = engine.render("bridge-device-link", &data).map_err(|e| {
+        AdminHtmlError::internal(format!("Bridge device-link page render failed: {e:?}"))
+    })?;
+    Ok(Html(html).into_response())
 }
 
 pub(crate) async fn device_link_approve(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
     Form(form): Form<DeviceLinkApproveForm>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if validate_loopback_redirect(&form.redirect).is_none() {
-        return bad_redirect_response(&form.redirect);
+        return Ok(bad_redirect_response(&form.redirect));
     }
 
-    let issued = match bridge::issue_exchange_code(&pool, &user_ctx.user_id).await {
-        Ok(c) => c,
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to issue bridge exchange code");
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Html("<h1>Internal Error</h1><p>Failed to issue exchange code.</p>"),
-            )
-                .into_response();
-        },
-    };
+    let issued = bridge::issue_exchange_code(&pool, &user_ctx.user_id).await?;
 
     let sep = if form.redirect.contains('?') {
         '&'
@@ -111,7 +90,7 @@ pub(crate) async fn device_link_approve(
         '?'
     };
     let location = format!("{}{}code={}", form.redirect, sep, issued.code);
-    Redirect::to(&location).into_response()
+    Ok(Redirect::to(&location).into_response())
 }
 
 pub(crate) async fn device_link_deny(Form(form): Form<DeviceLinkApproveForm>) -> Response {

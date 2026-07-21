@@ -76,7 +76,7 @@ pub(crate) async fn access_control_page(
 
     let services_path = match super::get_services_path() {
         Ok(p) => p,
-        Err(r) => return *r,
+        Err(e) => return e.into_response(),
     };
 
     let dept_stats = repositories::users::user_queries::list_department_stats(&pool)

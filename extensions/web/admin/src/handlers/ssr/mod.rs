@@ -3,12 +3,12 @@
 //! Each module owns one page: it builds a typed template context and renders a
 //! `.hbs` template from `storage/files/admin/templates/` at request time.
 
+use crate::error::{AdminHtmlError, AdminHtmlResult, AdminResult};
 use crate::handlers::extract_user_from_cookie;
 use crate::templates::AdminTemplateEngine;
 use axum::Extension;
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::HeaderMap;
 use axum::response::{Html, IntoResponse, Redirect, Response};
-use systemprompt_web_shared::html_escape;
 
 pub(crate) const ACCESS_DENIED_HTML: &str = "<h1>Access Denied</h1><p>Admin access required.</p>";
 
@@ -70,65 +70,40 @@ pub(crate) use ssr_skills_contexts::skills_contexts_page;
 pub(crate) use ssr_users::{user_detail_page, users_page};
 pub(crate) use ssr_users_sessions::users_sessions_page;
 
-pub(crate) async fn login_page(Extension(engine): Extension<AdminTemplateEngine>) -> Response {
-    match engine.render("login", &branding_context(&engine)) {
-        Ok(html) => Html(html).into_response(),
-        Err(e) => {
-            tracing::error!(error = ?e, "Login page render failed");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Html(format!(
-                    "<h1>Error</h1><p>{}</p>",
-                    html_escape(&e.to_string())
-                )),
-            )
-                .into_response()
-        },
-    }
+pub(crate) async fn login_page(
+    Extension(engine): Extension<AdminTemplateEngine>,
+) -> AdminHtmlResult<Response> {
+    render_unauthenticated(&engine, "login")
 }
 
 pub(crate) async fn verify_pending_page(
     Extension(engine): Extension<AdminTemplateEngine>,
-) -> Response {
-    match engine.render("verify-pending", &branding_context(&engine)) {
-        Ok(html) => Html(html).into_response(),
-        Err(e) => {
-            tracing::error!(error = ?e, "Verify-pending page render failed");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Html(format!(
-                    "<h1>Error</h1><p>{}</p>",
-                    html_escape(&e.to_string())
-                )),
-            )
-                .into_response()
-        },
-    }
+) -> AdminHtmlResult<Response> {
+    render_unauthenticated(&engine, "verify-pending")
 }
 
 pub(crate) async fn register_page(
     headers: HeaderMap,
     Extension(engine): Extension<AdminTemplateEngine>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if extract_user_from_cookie(&headers).is_ok() {
-        return Redirect::to("/admin/access/users").into_response();
+        return Ok(Redirect::to("/admin/access/users").into_response());
     }
-    match engine.render("register", &branding_context(&engine)) {
-        Ok(html) => Html(html).into_response(),
-        Err(e) => {
-            tracing::error!(error = ?e, "Register page render failed");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Html(format!(
-                    "<h1>Error</h1><p>{}</p>",
-                    html_escape(&e.to_string())
-                )),
-            )
-                .into_response()
-        },
-    }
+    render_unauthenticated(&engine, "register")
 }
 
-pub(crate) fn get_services_path() -> Result<std::path::PathBuf, Box<Response>> {
+/// The pages reachable before sign-in, which therefore have no user or
+/// marketplace context to inject and cannot go through `render_page`.
+fn render_unauthenticated(
+    engine: &AdminTemplateEngine,
+    template: &str,
+) -> AdminHtmlResult<Response> {
+    let html = engine
+        .render(template, &branding_context(engine))
+        .map_err(|e| AdminHtmlError::internal(format!("{template} page render failed: {e:?}")))?;
+    Ok(Html(html).into_response())
+}
+
+pub(crate) fn get_services_path() -> AdminResult<std::path::PathBuf> {
     super::shared::get_services_path()
 }
