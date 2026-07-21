@@ -14,12 +14,12 @@ use crate::principal::Principal;
 use crate::route_source::{MountedRoute, mounted_routes};
 use crate::{baseline, globals, principal, tempdb::TempDb};
 
-/// Routes known to answer 5xx today, each with the defect that causes it.
-///
-/// This list exists so the no-5xx invariant can be enforced for everything
-/// else while the error model is still being adopted. It is checked in both
-/// directions — an entry whose route stops failing must be deleted — so it can
-/// only ever shrink.
+// Routes known to answer 5xx today, each with the defect that causes it.
+//
+// This list exists so the no-5xx invariant can be enforced for everything
+// else while the error model is still being adopted. It is checked in both
+// directions — an entry whose route stops failing must be deleted — so it can
+// only ever shrink.
 const KNOWN_5XX: [(&str, &str); 1] = [(
     "GET /api/public/admin/access-control/users/{user_id}/matrix",
     "fetch_user_for_matrix uses fetch_one, so an unknown user id surfaces as \
@@ -31,8 +31,8 @@ fn known_5xx(key: &str) -> bool {
     KNOWN_5XX.iter().any(|(route, _)| *route == key)
 }
 
-/// Routes served before authentication, by design. Everything else must
-/// refuse an anonymous caller.
+// Routes served before authentication, by design. Everything else must
+// refuse an anonymous caller.
 fn is_public(template: &str) -> bool {
     const PUBLIC: [&str; 7] = [
         "/admin/login",
@@ -110,7 +110,7 @@ async fn admin_routes_honour_their_http_contract() {
     baseline::assert_matches(&baseline::render(&observed));
 }
 
-/// The invariants that hold for every route, whatever its baseline status.
+// The invariants that hold for every route, whatever its baseline status.
 fn check(
     route: &MountedRoute,
     principal: Principal,

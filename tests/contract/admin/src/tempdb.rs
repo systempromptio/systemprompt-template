@@ -25,15 +25,15 @@ pub struct TempDb {
     db_name: String,
 }
 
-/// Maintenance-server URL, or `None` so the suite self-skips in environments
-/// with no Postgres (the same contract the MCP integration harness offers).
-///
-/// Under `CI` a missing database is a failure rather than a skip. A gate that
-/// quietly passes when it never ran is worse than no gate: this suite skipped
-/// silently once during its own development, and reported success.
-///
-/// Only throwaway `admin_contract_<uuid>` databases are ever created or
-/// dropped; the database named in the URL is used solely to reach the server.
+// Maintenance-server URL, or `None` so the suite self-skips in environments
+// with no Postgres (the same contract the MCP integration harness offers).
+//
+// Under `CI` a missing database is a failure rather than a skip. A gate that
+// quietly passes when it never ran is worse than no gate: this suite skipped
+// silently once during its own development, and reported success.
+//
+// Only throwaway `admin_contract_<uuid>` databases are ever created or
+// dropped; the database named in the URL is used solely to reach the server.
 fn server_url() -> Option<String> {
     let url = std::env::var("SYSTEMPROMPT_TEST_DATABASE_URL")
         .or_else(|_| std::env::var("DATABASE_URL"))

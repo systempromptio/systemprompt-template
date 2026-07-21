@@ -19,12 +19,12 @@ use std::sync::{Once, OnceLock};
 static INIT: Once = Once::new();
 static READY: OnceLock<bool> = OnceLock::new();
 
-/// Any absolute URL works: it only has to be a well-formed issuer that both
-/// the minter and the validator agree on.
+// Any absolute URL works: it only has to be a well-formed issuer that both
+// the minter and the validator agree on.
 const ISSUER: &str = "http://localhost:8099";
 
-/// Absolute path to the repository root, derived from this crate's manifest
-/// directory (`tests/contract/admin`).
+// Absolute path to the repository root, derived from this crate's manifest
+// directory (`tests/contract/admin`).
 pub fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
@@ -33,10 +33,10 @@ pub fn repo_root() -> PathBuf {
         .to_path_buf()
 }
 
-/// Install the profile, secrets, config, and an ephemeral signing key.
-///
-/// Returns `false` only if the fixture cannot be materialised; the suite then
-/// self-skips the same way it does without a database.
+// Install the profile, secrets, config, and an ephemeral signing key.
+//
+// Returns `false` only if the fixture cannot be materialised; the suite then
+// self-skips the same way it does without a database.
 pub fn init() -> bool {
     INIT.call_once(|| {
         let ready = try_init();
@@ -63,19 +63,19 @@ fn try_init() -> bool {
     true
 }
 
-/// The checked-in profile, with `__REPO__` resolved to this checkout.
-///
-/// Deliberately a fixture rather than the developer's `.systemprompt` profile,
-/// which is git-ignored: relying on it would make the suite pass locally and
-/// silently skip in CI, which is the one place the gate has to bite.
+// The checked-in profile, with `__REPO__` resolved to this checkout.
+//
+// Deliberately a fixture rather than the developer's `.systemprompt` profile,
+// which is git-ignored: relying on it would make the suite pass locally and
+// silently skip in CI, which is the one place the gate has to bite.
 const FIXTURE_PROFILE: &str = include_str!("../fixtures/profile.yaml");
 
-/// Minimal secrets bundle. Nothing here is a real credential — the suite talks
-/// to no provider, and the signing key is generated in-process.
-///
-/// `database_url` is required by the schema but unused: the harness opens its
-/// own throwaway database in [`crate::tempdb`] and hands that pool to the
-/// router, so it is echoed back rather than pointed anywhere live.
+// Minimal secrets bundle. Nothing here is a real credential — the suite talks
+// to no provider, and the signing key is generated in-process.
+//
+// `database_url` is required by the schema but unused: the harness opens its
+// own throwaway database in `crate::tempdb` and hands that pool to the
+// router, so it is echoed back rather than pointed anywhere live.
 fn fixture_secrets() -> String {
     let database_url = std::env::var("SYSTEMPROMPT_TEST_DATABASE_URL")
         .or_else(|_| std::env::var("DATABASE_URL"))
@@ -89,9 +89,9 @@ fn fixture_secrets() -> String {
     )
 }
 
-/// Materialise the fixture profile under `tests/target/`, which is already
-/// ignored. Secrets live beside the profile because `secrets_path` is relative
-/// to it.
+// Materialise the fixture profile under `tests/target/`, which is already
+// ignored. Secrets live beside the profile because `secrets_path` is relative
+// to it.
 fn write_fixture_profile() -> Option<PathBuf> {
     let root = repo_root();
     let dir = root.join("tests/target/contract-profile");
@@ -106,7 +106,7 @@ fn write_fixture_profile() -> Option<PathBuf> {
     Some(dir.join("profile.yaml"))
 }
 
-/// The issuer the admin cookie validator will check tokens against.
+// The issuer the admin cookie validator will check tokens against.
 pub fn jwt_issuer() -> String {
     systemprompt::models::Config::get()
         .expect("config installed by init()")

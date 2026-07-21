@@ -19,8 +19,8 @@ use tower::ServiceExt;
 use crate::globals;
 use crate::principal::{Credentials, Principal};
 
-/// Mount prefixes, kept next to the router build so the contract table and the
-/// exhaustiveness check agree on where each route module lands.
+// Mount prefixes, kept next to the router build so the contract table and the
+// exhaustiveness check agree on where each route module lands.
 pub const ADMIN_API_PREFIX: &str = "/api/public/admin";
 pub const SSR_PREFIX: &str = "/admin";
 pub const BRIDGE_PREFIX: &str = "/bridge-auth";
@@ -56,12 +56,12 @@ impl App {
         }
     }
 
-    /// Issue one request, returning its status and — only when the status is a
-    /// server error — a snippet of the body.
-    ///
-    /// A contract failure that reports `500` and nothing else is barely
-    /// actionable, and the whole point of the suite is that a 5xx is a defect
-    /// someone has to go and fix.
+    // Issue one request, returning its status and — only when the status is a
+    // server error — a snippet of the body.
+    //
+    // A contract failure that reports `500` and nothing else is barely
+    // actionable, and the whole point of the suite is that a 5xx is a defect
+    // someone has to go and fix.
     pub async fn send(
         &self,
         method: &str,

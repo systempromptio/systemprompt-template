@@ -14,11 +14,11 @@ use crate::globals;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Principal {
-    /// No cookie and no `Authorization` header.
+    // No cookie and no `Authorization` header.
     Anonymous,
-    /// A valid session for a user holding only the `user` role.
+    // A valid session for a user holding only the `user` role.
     NonAdmin,
-    /// A valid session for a user holding `admin`.
+    // A valid session for a user holding `admin`.
     Admin,
 }
 
@@ -34,8 +34,8 @@ impl Principal {
     }
 }
 
-/// Bearer tokens for the two authenticated principals, minted once and reused
-/// across the whole table.
+// Bearer tokens for the two authenticated principals, minted once and reused
+// across the whole table.
 pub struct Credentials {
     pub non_admin: String,
     pub admin: String,
@@ -51,7 +51,7 @@ impl Credentials {
     }
 }
 
-/// Seed one admin and one plain user, and mint a token for each.
+// Seed one admin and one plain user, and mint a token for each.
 pub async fn provision(pool: &PgPool) -> Credentials {
     let non_admin = provision_one(pool, "contract-user", &["user"]).await;
     let admin = provision_one(pool, "contract-admin", &["admin", "user"]).await;
