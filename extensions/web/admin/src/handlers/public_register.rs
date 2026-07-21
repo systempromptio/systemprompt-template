@@ -62,7 +62,7 @@ pub(crate) async fn public_register_handler(
     let (raw_token, token_hash) = generate_setup_token();
     let token_id = uuid::Uuid::new_v4().to_string();
 
-    if let Err(e) = repositories::registration::insert_setup_token(
+    if let Err(e) = repositories::users::registration::insert_setup_token(
         pool.as_ref(),
         &token_id,
         &user.user_id,
@@ -107,7 +107,8 @@ fn validate_registration_input(email_str: &str, name: &str) -> Option<axum::resp
 }
 
 async fn check_rate_limit(pool: &PgPool, email_str: &str) -> Option<axum::response::Response> {
-    let rate_count = repositories::registration::count_recent_setup_tokens(pool, email_str).await;
+    let rate_count =
+        repositories::users::registration::count_recent_setup_tokens(pool, email_str).await;
 
     if rate_count >= 5 {
         return Some(shared::error_response(
@@ -138,7 +139,7 @@ async fn create_registration_user(
         status: Some("active".to_owned()),
     };
 
-    repositories::create_user(pool, &create_req)
+    repositories::users::mutations::create_user(pool, &create_req)
         .await
         .map_err(|e| {
             tracing::error!(error = %e, "Failed to create user during public registration");

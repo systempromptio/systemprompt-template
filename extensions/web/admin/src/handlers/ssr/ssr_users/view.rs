@@ -29,7 +29,7 @@ fn freshness_for(ts: Option<chrono::DateTime<chrono::Utc>>) -> &'static str {
 /// or department) are applied as allow/deny overrides.
 pub(super) fn resolve_marketplaces(
     yaml_defaults: &[(String, String)],
-    overrides: &[&repositories::UserMarketplaceOverride],
+    overrides: &[&repositories::departments::UserMarketplaceOverride],
 ) -> Vec<UserMarketplaceRef> {
     let mut entries: Vec<UserMarketplaceRef> = yaml_defaults
         .iter()
@@ -62,17 +62,23 @@ pub(super) fn resolve_marketplaces(
 
 pub(super) fn enrich_users(
     users: &[crate::types::UserSummary],
-    aggregates: &[repositories::UserManagementAggregate],
-    runtime: &[repositories::UserRuntimeAggregate],
-    overrides: &[repositories::UserMarketplaceOverride],
+    aggregates: &[repositories::departments::UserManagementAggregate],
+    runtime: &[repositories::users::queries::UserRuntimeAggregate],
+    overrides: &[repositories::departments::UserMarketplaceOverride],
     yaml_marketplaces: &[(String, String)],
 ) -> Vec<EnrichedUserView> {
-    let agg_map: std::collections::HashMap<&str, &repositories::UserManagementAggregate> =
-        aggregates.iter().map(|a| (a.user_id.as_str(), a)).collect();
-    let rt_map: std::collections::HashMap<&str, &repositories::UserRuntimeAggregate> =
-        runtime.iter().map(|r| (r.user_id.as_str(), r)).collect();
-    let mut ovr_map: std::collections::HashMap<&str, Vec<&repositories::UserMarketplaceOverride>> =
-        std::collections::HashMap::new();
+    let agg_map: std::collections::HashMap<
+        &str,
+        &repositories::departments::UserManagementAggregate,
+    > = aggregates.iter().map(|a| (a.user_id.as_str(), a)).collect();
+    let rt_map: std::collections::HashMap<
+        &str,
+        &repositories::users::queries::UserRuntimeAggregate,
+    > = runtime.iter().map(|r| (r.user_id.as_str(), r)).collect();
+    let mut ovr_map: std::collections::HashMap<
+        &str,
+        Vec<&repositories::departments::UserMarketplaceOverride>,
+    > = std::collections::HashMap::new();
     for o in overrides {
         ovr_map.entry(o.user_id.as_str()).or_default().push(o);
     }

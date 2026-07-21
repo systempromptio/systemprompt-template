@@ -73,15 +73,12 @@ pub(super) async fn assignment_counts_by_type(
     pool: &PgPool,
     entity_type: &str,
 ) -> HashMap<String, i64> {
-    crate::repositories::users_grp::access_control::count_assignments_by_entity_type(
-        pool,
-        entity_type,
-    )
-    .await
-    .unwrap_or_else(|e| {
-        tracing::warn!(error = %e, entity_type, "Failed to load assignment counts");
-        HashMap::new()
-    })
+    crate::repositories::users::access_control::count_assignments_by_entity_type(pool, entity_type)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, entity_type, "Failed to load assignment counts");
+            HashMap::new()
+        })
 }
 
 /// Fields needed to build a single `CatalogRow`; grouped to keep `build_row`

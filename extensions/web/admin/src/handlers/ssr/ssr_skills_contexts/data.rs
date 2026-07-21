@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use crate::repositories::analytics_grp::contexts_list;
+use crate::repositories::analytics::contexts_list;
 
 use super::context::{ContextItemView, UserSummaryView};
 

@@ -32,9 +32,7 @@ pub(crate) struct ProfileIdentity {
     pub is_admin: bool,
 }
 
-pub(crate) use crate::repositories::profile_grp::usage::{
-    ConversationSummary, ModelShare, UsageWindow,
-};
+pub(crate) use crate::repositories::users::usage::{ConversationSummary, ModelShare, UsageWindow};
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub(crate) struct ProfileUsage {

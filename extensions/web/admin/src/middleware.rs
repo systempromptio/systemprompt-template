@@ -13,7 +13,7 @@ use tokio::sync::RwLock;
 
 use super::handlers::extract_user_from_cookie;
 use super::handlers::shared::ErrorBody;
-use super::repositories::plugins::MarketplaceCounts;
+use super::repositories::marketplace::plugins::MarketplaceCounts;
 use super::types::{MarketplaceContext, UserContext};
 
 #[derive(Debug, Serialize)]
@@ -73,7 +73,7 @@ async fn fetch_user_roles_department(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Option<(Vec<String>, String)> {
-    super::repositories::get_user_roles_department(pool, user_id)
+    super::repositories::users::queries::get_user_roles_department(pool, user_id)
         .await
         .map_err(|e| {
             tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch user roles");
@@ -162,7 +162,7 @@ async fn compute_marketplace_counts(roles: Vec<String>) -> (MarketplaceCounts, S
             })
             .ok()
             .and_then(|p| {
-                repositories::count_marketplace_items(&p, &roles)
+                repositories::marketplace::plugins::count_marketplace_items(&p, &roles)
                     .map_err(|e| {
                         tracing::warn!(error = %e, "Failed to count marketplace items");
                     })

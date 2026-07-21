@@ -15,7 +15,7 @@ use axum::response::{Html, IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::repositories::governance_grp::chain::{
+use crate::repositories::governance::chain::{
     AiRequestSummary, ChainEnvelope, DecisionStage, TranscriptEnvelope, fetch_decision_chain,
 };
 use crate::templates::AdminTemplateEngine;
@@ -35,9 +35,9 @@ struct AuditDetailContext<'a> {
     banner: Option<Banner>,
     decisions: &'a [DecisionStage],
     requests: &'a [AiRequestSummary],
-    events: &'a [crate::repositories::governance_grp::chain::UsageEvent],
+    events: &'a [crate::repositories::governance::chain::UsageEvent],
     transcript: &'a Option<TranscriptEnvelope>,
-    session_summary: &'a Option<crate::repositories::governance_grp::chain::SessionSummary>,
+    session_summary: &'a Option<crate::repositories::governance::chain::SessionSummary>,
     back_url: &'static str,
 }
 

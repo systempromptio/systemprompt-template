@@ -22,9 +22,10 @@ use systemprompt::identifiers::{RouteId, UserId};
 use systemprompt_security::authz::{EntityRef, ResolveInput};
 
 use crate::handlers::shared;
-use crate::repositories::gateway_acl::{self, Decision};
-use crate::repositories::governance_grp::acl_detect;
-use crate::repositories::{self};
+use crate::repositories;
+use crate::repositories::governance::acl_detect;
+use crate::repositories::governance::gateway_acl::{self, Decision};
+
 use crate::types::{GatewayRouteView, UserContext};
 
 #[derive(Debug, Serialize)]
@@ -54,7 +55,7 @@ pub(crate) async fn for_user_handler(
         Ok(p) => p,
         Err(r) => return *r,
     };
-    let cfg = match repositories::get_gateway_config(&profile_path) {
+    let cfg = match repositories::governance::gateway::get_gateway_config(&profile_path) {
         Ok(c) => c,
         Err(e) => {
             tracing::error!(error = %e, "Failed to load gateway config");
@@ -66,7 +67,7 @@ pub(crate) async fn for_user_handler(
     };
 
     let (user_roles, department) =
-        match repositories::get_user_roles_department(&pool, &user_id).await {
+        match repositories::users::queries::get_user_roles_department(&pool, &user_id).await {
             Ok(Some(rd)) => rd,
             Ok(None) => return shared::error_response(StatusCode::NOT_FOUND, "User not found"),
             Err(e) => {
@@ -164,7 +165,7 @@ pub(crate) async fn detect_handler(
         Ok(p) => p,
         Err(r) => return *r,
     };
-    let cfg = match repositories::get_gateway_config(&profile_path) {
+    let cfg = match repositories::governance::gateway::get_gateway_config(&profile_path) {
         Ok(c) => c,
         Err(e) => {
             tracing::error!(error = %e, "Failed to load gateway config");
@@ -199,11 +200,13 @@ pub(crate) async fn detect_after_the_fact(
 
     let mut emitted = 0usize;
     for row in rows {
-        let Some(route) = repositories::find_matching_route(routes, &row.model) else {
+        let Some(route) =
+            repositories::governance::gateway::find_matching_route(routes, &row.model)
+        else {
             continue;
         };
         let Some((user_roles, department)) =
-            repositories::get_user_roles_department(pool, &row.user_id).await?
+            repositories::users::queries::get_user_roles_department(pool, &row.user_id).await?
         else {
             continue;
         };

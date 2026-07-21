@@ -4,8 +4,8 @@ use axum::response::{IntoResponse, Response};
 use thiserror::Error;
 
 use crate::handlers::shared::ErrorBody;
-use crate::repositories::bridge_grp::BridgeRepoError;
-use crate::repositories::secret_crypto::SecretCryptoError;
+use crate::repositories::bridge::BridgeRepoError;
+use crate::repositories::secrets::secret_crypto::SecretCryptoError;
 use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Error)]

@@ -52,7 +52,7 @@ fn build_gateway_routes(services_path: &Path) -> Vec<RouteRef> {
     ];
     for path in &candidates {
         if path.exists()
-            && let Ok(cfg) = repositories::get_gateway_config(path)
+            && let Ok(cfg) = repositories::governance::gateway::get_gateway_config(path)
         {
             return cfg
                 .routes
@@ -69,7 +69,7 @@ fn build_gateway_routes(services_path: &Path) -> Vec<RouteRef> {
 }
 
 fn build_mcp_servers(services_path: &Path) -> Vec<EntityRef> {
-    repositories::mcp_servers::list_mcp_servers(services_path)
+    repositories::mcp::mcp_servers::list_mcp_servers(services_path)
         .unwrap_or_default()
         .into_iter()
         .map(|s| EntityRef {
@@ -82,7 +82,7 @@ fn build_mcp_servers(services_path: &Path) -> Vec<EntityRef> {
 
 fn build_plugins(services_path: &Path) -> Vec<EntityRef> {
     let admin_roles = vec!["admin".to_owned()];
-    repositories::list_plugins_for_roles(services_path, &admin_roles)
+    repositories::marketplace::plugins::list_plugins_for_roles(services_path, &admin_roles)
         .unwrap_or_default()
         .into_iter()
         .map(|p| EntityRef {
@@ -105,7 +105,7 @@ fn build_marketplaces() -> Vec<EntityRef> {
 }
 
 fn build_agents(services_path: &Path) -> Vec<EntityRef> {
-    repositories::list_agents(services_path)
+    repositories::governance::agents::list_agents(services_path)
         .unwrap_or_default()
         .into_iter()
         .map(|a| EntityRef {

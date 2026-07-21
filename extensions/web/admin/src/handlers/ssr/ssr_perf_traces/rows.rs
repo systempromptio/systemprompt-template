@@ -7,7 +7,7 @@ use serde::Serialize;
 use systemprompt::identifiers::{AgentId, SessionId, TraceId, UserId};
 use urlencoding::encode as urlencode;
 
-use crate::repositories::perf_grp::traces::TraceSummary;
+use crate::repositories::traces::TraceSummary;
 
 use super::BASE_URL;
 

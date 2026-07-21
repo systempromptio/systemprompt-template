@@ -4,8 +4,8 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
 use crate::error::{AdminError, AdminResult};
-use crate::repositories::secret_audit::{self, AuditLogRow};
-use crate::repositories::{secret_crypto, secret_keys, secret_resolve};
+use crate::repositories::secrets::secret_audit::{self, AuditLogRow};
+use crate::repositories::secrets::{secret_crypto, secret_keys, secret_resolve};
 
 pub(crate) async fn create_resolution_token(
     pool: &PgPool,

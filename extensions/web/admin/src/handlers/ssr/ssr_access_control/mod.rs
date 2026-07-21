@@ -11,7 +11,7 @@ mod builders;
 use std::sync::Arc;
 
 use crate::repositories;
-use crate::repositories::users_grp::access_tree::{AccessTreeUserRow, list_users_for_access_tree};
+use crate::repositories::users::access_tree::{AccessTreeUserRow, list_users_for_access_tree};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::extract::{Extension, State};
@@ -79,7 +79,7 @@ pub(crate) async fn access_control_page(
         Err(r) => return *r,
     };
 
-    let dept_stats = repositories::fetch_department_stats(&pool)
+    let dept_stats = repositories::users::user_queries::fetch_department_stats(&pool)
         .await
         .unwrap_or_default();
     let users = fetch_users_for_tree(&pool).await;

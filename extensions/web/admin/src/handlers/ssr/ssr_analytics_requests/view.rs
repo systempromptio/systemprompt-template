@@ -7,11 +7,11 @@
 
 use urlencoding::encode as urlencode;
 
-use crate::repositories::analytics_grp::request_stats::{CostBucket, LatencyBucket, RequestStats};
-use crate::repositories::analytics_grp::requests::{
+use crate::repositories::analytics::request_stats::{CostBucket, LatencyBucket, RequestStats};
+use crate::repositories::analytics::requests::{
     RequestFilter, RequestFilterOptions, RequestRow, RequestSortColumn, RequestSortSpec, SortDir,
 };
-use crate::repositories::governance_grp::time_range::TimeRange;
+use crate::repositories::governance::time_range::TimeRange;
 
 use super::context::{
     CostBucketView, FilterOptionsView, FiltersView, LatencyBucketView, PaginationView,

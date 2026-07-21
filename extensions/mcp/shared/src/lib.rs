@@ -11,9 +11,13 @@ use systemprompt::identifiers::UserId;
 
 mod repositories;
 
-use repositories::{
-    McpAccessParams, find_anonymous_user_id, insert_mcp_access, insert_mcp_access_rejection,
-};
+use repositories::McpAccessParams;
+
+use repositories::find_anonymous_user_id;
+
+use repositories::insert_mcp_access;
+
+use repositories::insert_mcp_access_rejection;
 
 const ACTION_USED: &str = "used";
 

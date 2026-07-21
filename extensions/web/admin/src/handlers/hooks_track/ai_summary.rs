@@ -5,7 +5,9 @@ use systemprompt::identifiers::{AgentName, ContextId, SessionId, TraceId, UserId
 use systemprompt::models::auth::{AuthenticatedUser, UserType};
 use systemprompt::models::execution::context::RequestContext;
 
-use crate::repositories::{session_analyses, usage_aggregations};
+use crate::repositories::dashboard::session_analyses;
+
+use crate::repositories::dashboard::usage_aggregations;
 
 pub(crate) use super::ai_summary_types::*;
 

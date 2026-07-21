@@ -13,7 +13,8 @@ use sqlx::PgPool;
 use systemprompt_security::authz::{Access, AccessControlRepository, EntityKind, RuleType};
 
 use crate::handlers::shared;
-use crate::repositories::{self, mcp_servers};
+use crate::repositories;
+use crate::repositories::mcp::mcp_servers;
 
 pub(super) fn validate_entity_type(entity_type: &str) -> Result<EntityKind, Box<Response>> {
     use std::str::FromStr;
@@ -50,13 +51,14 @@ pub(super) fn collect_entity_ids(entity_type: &str) -> Result<Vec<String>, Box<R
     match entity_type {
         "gateway_route" => {
             let profile_path = shared::get_profile_path()?;
-            let cfg = repositories::get_gateway_config(&profile_path).map_err(|e| {
-                tracing::error!(error = %e, "Failed to load gateway config");
-                Box::new(shared::error_response(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Failed to load gateway",
-                ))
-            })?;
+            let cfg = repositories::governance::gateway::get_gateway_config(&profile_path)
+                .map_err(|e| {
+                    tracing::error!(error = %e, "Failed to load gateway config");
+                    Box::new(shared::error_response(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "Failed to load gateway",
+                    ))
+                })?;
             Ok(cfg.routes.into_iter().map(|r| r.id).collect())
         },
         "mcp_server" => {

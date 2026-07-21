@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt_web_shared::html_escape;
 
-use crate::repositories::bridge_grp;
+use crate::repositories::bridge;
 use crate::templates::AdminTemplateEngine;
 use crate::types::UserContext;
 
@@ -90,7 +90,7 @@ pub(crate) async fn device_link_approve(
         return bad_redirect_response(&form.redirect);
     }
 
-    let issued = match bridge_grp::issue_exchange_code(&pool, &user_ctx.user_id).await {
+    let issued = match bridge::issue_exchange_code(&pool, &user_ctx.user_id).await {
         Ok(c) => c,
         Err(e) => {
             tracing::error!(error = %e, "Failed to issue bridge exchange code");

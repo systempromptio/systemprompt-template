@@ -2,7 +2,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{Actor, AgentId, PluginId};
 use systemprompt_security::authz::{Decision, DecisionTag};
 
-use crate::repositories::governance_grp::{GovernanceDecisionRecord, insert_governance_decision};
+use crate::repositories::governance::{GovernanceDecisionRecord, insert_governance_decision};
 
 use super::types::DecisionAudit;
 

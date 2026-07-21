@@ -19,7 +19,7 @@ pub(crate) async fn get_gateway_handler() -> Response {
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::get_gateway_config(&profile_path) {
+    match repositories::governance::gateway::get_gateway_config(&profile_path) {
         Ok(c) => Json(c).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to get gateway config");
@@ -35,7 +35,7 @@ pub(crate) async fn update_gateway_settings_handler(
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::update_gateway_settings(&profile_path, &body) {
+    match repositories::governance::gateway::update_gateway_settings(&profile_path, &body) {
         Ok(c) => Json(c).into_response(),
         Err(e) => map_error(e, "update gateway settings"),
     }
@@ -46,7 +46,7 @@ pub(crate) async fn create_gateway_route_handler(Json(body): Json<GatewayRouteVi
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::create_gateway_route(&profile_path, &body) {
+    match repositories::governance::gateway::create_route(&profile_path, &body) {
         Ok(index) => (StatusCode::CREATED, Json(CreateRouteResponse { index })).into_response(),
         Err(e) => map_error(e, "create gateway route"),
     }
@@ -60,7 +60,7 @@ pub(crate) async fn update_gateway_route_handler(
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::update_gateway_route(&profile_path, idx, &body) {
+    match repositories::governance::gateway::update_route(&profile_path, idx, &body) {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "Route not found"),
         Err(e) => map_error(e, "update gateway route"),
@@ -72,7 +72,7 @@ pub(crate) async fn delete_gateway_route_handler(Path(idx): Path<usize>) -> Resp
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::delete_gateway_route(&profile_path, idx) {
+    match repositories::governance::gateway::delete_route(&profile_path, idx) {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "Route not found"),
         Err(e) => map_error(e, "delete gateway route"),
@@ -86,7 +86,7 @@ pub(crate) async fn reorder_gateway_routes_handler(
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::reorder_gateway_routes(&profile_path, &body.order) {
+    match repositories::governance::gateway::reorder_routes(&profile_path, &body.order) {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(e) => map_error(e, "reorder gateway routes"),
     }

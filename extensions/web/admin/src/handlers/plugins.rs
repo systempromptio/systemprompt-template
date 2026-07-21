@@ -18,7 +18,10 @@ pub(crate) async fn list_plugins_handler(
         Err(r) => return *r,
     };
 
-    let plugins = match repositories::list_plugins_for_roles(&services_path, &user_ctx.roles) {
+    let plugins = match repositories::marketplace::plugins::list_plugins_for_roles(
+        &services_path,
+        &user_ctx.roles,
+    ) {
         Ok(p) => p,
         Err(e) => {
             tracing::error!(error = %e, "Failed to list plugins");

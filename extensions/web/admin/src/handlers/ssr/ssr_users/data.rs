@@ -17,28 +17,28 @@ type UserDetailExtras = (
     UserAssignmentSummary,
     Vec<UserDeviceView>,
     i64,
-    Option<repositories::governance_grp::effective::EffectivePermissions>,
+    Option<repositories::governance::effective::EffectivePermissions>,
 );
 
 pub(super) async fn load_user_groups(
     pool: &PgPool,
     users: &[crate::types::UserSummary],
 ) -> Vec<DepartmentGroup> {
-    let aggregates = repositories::list_user_management_aggregates(pool)
+    let aggregates = repositories::departments::list_user_management_aggregates(pool)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to fetch user management aggregates");
             Vec::new()
         });
 
-    let runtime = repositories::list_user_runtime_aggregates(pool)
+    let runtime = repositories::users::queries::list_user_runtime_aggregates(pool)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to fetch user runtime aggregates");
             Vec::new()
         });
 
-    let overrides = repositories::list_user_marketplace_overrides(pool)
+    let overrides = repositories::departments::list_user_marketplace_overrides(pool)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to fetch marketplace overrides");
@@ -59,7 +59,7 @@ pub(super) async fn collect_user_detail_extras(
     pool: &PgPool,
     d: &crate::types::UserDetail,
 ) -> UserDetailExtras {
-    let (roles, department) = repositories::get_user_roles_department(pool, &d.user_id)
+    let (roles, department) = repositories::users::queries::get_user_roles_department(pool, &d.user_id)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, user_id = %d.user_id, "ssr_users: get_user_roles_department failed"))
         .ok()
@@ -67,7 +67,8 @@ pub(super) async fn collect_user_detail_extras(
         .unwrap_or_else(|| (Vec::new(), String::new()));
 
     let mut assignments = UserAssignmentSummary::default();
-    let devices_count = if let Ok(rows) = repositories::list_user_management_aggregates(pool).await
+    let devices_count = if let Ok(rows) =
+        repositories::departments::list_user_management_aggregates(pool).await
         && let Some(row) = rows.into_iter().find(|r| r.user_id == d.user_id.as_str())
     {
         assignments.skills_count = row.assigned_skills_count;
@@ -80,14 +81,14 @@ pub(super) async fn collect_user_detail_extras(
         .into_iter()
         .map(|m| (m.id.to_string(), m.name))
         .collect();
-    let user_overrides: Vec<repositories::UserMarketplaceOverride> =
-        repositories::list_user_marketplace_overrides(pool)
+    let user_overrides: Vec<repositories::departments::UserMarketplaceOverride> =
+        repositories::departments::list_user_marketplace_overrides(pool)
             .await
             .unwrap_or_default()
             .into_iter()
             .filter(|o| o.user_id == d.user_id.as_str())
             .collect();
-    let override_refs: Vec<&repositories::UserMarketplaceOverride> =
+    let override_refs: Vec<&repositories::departments::UserMarketplaceOverride> =
         user_overrides.iter().collect();
     assignments.marketplaces = view::resolve_marketplaces(&yaml_marketplaces, &override_refs);
     assignments.marketplaces_count = assignments.marketplaces.len() as i64;
@@ -95,7 +96,7 @@ pub(super) async fn collect_user_detail_extras(
     let devices = collect_user_devices(pool, d).await;
 
     let effective = Some(
-        repositories::governance_grp::effective::compute_effective_permissions(
+        repositories::governance::effective::compute_effective_permissions(
             pool,
             &d.user_id,
             &roles,
@@ -108,13 +109,13 @@ pub(super) async fn collect_user_detail_extras(
 }
 
 async fn collect_user_devices(pool: &PgPool, d: &crate::types::UserDetail) -> Vec<UserDeviceView> {
-    let Ok(pats) = repositories::bridge_grp::list_api_keys_for_user(pool, &d.user_id).await else {
+    let Ok(pats) = repositories::bridge::list_api_keys_for_user(pool, &d.user_id).await else {
         return Vec::new();
     };
     let app_links: std::collections::HashMap<
         String,
         (String, String, Option<chrono::DateTime<chrono::Utc>>),
-    > = repositories::users_grp::devices::list_device_app_links(pool, &d.user_id)
+    > = repositories::users::devices::list_device_app_links(pool, &d.user_id)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "ssr_users: load device app_links failed"))
         .unwrap_or_default()
@@ -139,7 +140,7 @@ async fn collect_user_devices(pool: &PgPool, d: &crate::types::UserDetail) -> Ve
 }
 
 pub(super) async fn fetch_departments(pool: &PgPool) -> Vec<String> {
-    repositories::list_department_names(pool)
+    repositories::departments::list_department_names(pool)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "ssr_users: load departments failed"))
         .unwrap_or_default()

@@ -12,7 +12,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 
-use crate::repositories::governance_grp::chain::fetch_decision_chain;
+use crate::repositories::governance::chain::fetch_decision_chain;
 use crate::types::UserContext;
 
 pub(crate) async fn chain_envelope(

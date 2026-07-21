@@ -41,7 +41,7 @@ pub(crate) async fn management_departments_page(
         return forbidden();
     }
 
-    let departments = repositories::list_departments(&pool)
+    let departments = repositories::departments::list_departments(&pool)
         .await
         .unwrap_or_default();
 
@@ -78,7 +78,7 @@ pub(crate) async fn management_devices_page(
 
     let user_options = load_device_user_options(&pool).await;
 
-    let department_options: Vec<String> = repositories::list_departments(&pool)
+    let department_options: Vec<String> = repositories::departments::list_departments(&pool)
         .await
         .unwrap_or_default()
         .into_iter()
@@ -108,18 +108,19 @@ pub(crate) async fn management_department_detail_page(
         return forbidden();
     }
 
-    let Ok(Some(department)) = repositories::get_department(&pool, &id).await else {
+    let Ok(Some(department)) = repositories::departments::get_department(&pool, &id).await else {
         return (StatusCode::NOT_FOUND, Html("<h1>Department not found</h1>")).into_response();
     };
 
-    let members = repositories::list_department_members(&pool, &department.name)
+    let members = repositories::departments::list_department_members(&pool, &department.name)
         .await
         .unwrap_or_default();
     let member_count = members.len() as i64;
 
-    let top_tools = repositories::list_department_top_tools(&pool, &department.name, 10)
-        .await
-        .unwrap_or_default();
+    let top_tools =
+        repositories::departments::list_department_top_tools(&pool, &department.name, 10)
+            .await
+            .unwrap_or_default();
 
     let totals = sum_member_totals(&members);
 

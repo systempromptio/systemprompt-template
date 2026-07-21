@@ -3,7 +3,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
 use crate::error::{AdminError, AdminResult};
-use crate::repositories::bridge_grp::{self, EnrollDeviceParams, EnrolledDevice, IssuedApiKey};
+use crate::repositories::bridge::{self, EnrollDeviceParams, EnrolledDevice, IssuedApiKey};
 
 /// Inputs for enrolling a new device; grouped to keep `enroll_device` under
 /// the arity lint (was 6 positional args).
@@ -19,7 +19,7 @@ pub(crate) async fn enroll_device(
     user_id: &UserId,
     req: EnrollDeviceInput<'_>,
 ) -> AdminResult<EnrolledDevice> {
-    let enrolled = bridge_grp::enroll_device(
+    let enrolled = bridge::enroll_device(
         pool,
         user_id,
         EnrollDeviceParams {
@@ -39,12 +39,12 @@ pub(crate) async fn issue_pat(
     name: &str,
     expires_at: Option<DateTime<Utc>>,
 ) -> AdminResult<IssuedApiKey> {
-    let issued = bridge_grp::issue_api_key(pool, user_id, name, expires_at).await?;
+    let issued = bridge::issue_api_key(pool, user_id, name, expires_at).await?;
     Ok(issued)
 }
 
 pub(crate) async fn revoke_pat(pool: &PgPool, user_id: &UserId, id: &str) -> AdminResult<()> {
-    let revoked = bridge_grp::revoke_api_key(pool, user_id, id).await?;
+    let revoked = bridge::revoke_api_key(pool, user_id, id).await?;
     if !revoked {
         return Err(AdminError::NotFound("PAT not found".to_owned()));
     }
@@ -56,7 +56,7 @@ pub(crate) async fn revoke_device_cert(
     user_id: &UserId,
     id: &str,
 ) -> AdminResult<()> {
-    let revoked = bridge_grp::revoke_device_cert(pool, user_id, id).await?;
+    let revoked = bridge::revoke_device_cert(pool, user_id, id).await?;
     if !revoked {
         return Err(AdminError::NotFound("cert not found".to_owned()));
     }

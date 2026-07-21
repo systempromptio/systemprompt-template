@@ -1,4 +1,4 @@
-use systemprompt_web_admin::repositories::governance_grp::risk_score::{
+use systemprompt_web_admin::repositories::governance::risk_score::{
     RiskScoreWeights, ViolationCounts, compute_risk_score,
 };
 

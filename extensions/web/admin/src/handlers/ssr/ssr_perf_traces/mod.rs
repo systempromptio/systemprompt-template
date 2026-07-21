@@ -13,11 +13,11 @@ use serde::Deserialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, UserId};
 
-use crate::repositories::governance_grp::filter_options::fetch_filter_options;
-use crate::repositories::governance_grp::time_range::{
+use crate::repositories::governance::filter_options::fetch_filter_options;
+use crate::repositories::governance::time_range::{
     TimeRange, TimeRangePreset, TimeRangeQuery, parse_time_range,
 };
-use crate::repositories::perf_grp::traces::{
+use crate::repositories::traces::{
     TraceFilter, TracePage, TraceSort, TraceSortColumn, TraceSortDir, TraceStats, fetch_trace_list,
     fetch_trace_stats,
 };

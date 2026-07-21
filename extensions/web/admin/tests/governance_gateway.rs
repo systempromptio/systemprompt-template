@@ -1,4 +1,4 @@
-use systemprompt_web_admin::repositories::governance_grp::gateway::{
+use systemprompt_web_admin::repositories::governance::gateway::{
     create_route, ensure_route_ids, find_matching_route, find_matching_route_index,
     find_route_index_by_id, get_gateway_config, glob_match, reorder_routes, slugify_pattern,
     synthesize_route_id, validate_route,

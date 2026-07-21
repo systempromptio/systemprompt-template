@@ -9,7 +9,7 @@ use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
-use crate::repositories::users_grp::devices::{self, DeviceRowDb};
+use crate::repositories::users::devices::{self, DeviceRowDb};
 
 #[derive(Debug, Serialize)]
 pub(super) struct DeviceRow {

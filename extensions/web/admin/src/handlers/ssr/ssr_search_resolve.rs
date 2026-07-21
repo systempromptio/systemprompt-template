@@ -13,7 +13,7 @@ use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-use crate::repositories::governance_grp::resolve::{ResolvedKind, resolve_id};
+use crate::repositories::governance::resolve::{ResolvedKind, resolve_id};
 use crate::types::UserContext;
 
 #[derive(Debug, Deserialize)]
