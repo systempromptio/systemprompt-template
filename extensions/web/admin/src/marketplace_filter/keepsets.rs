@@ -10,7 +10,7 @@ use systemprompt::identifiers::{
 use systemprompt::marketplace::MarketplaceCandidate;
 use systemprompt_security::authz::{EntityKind, EntityRef, ResolveParent};
 
-pub(super) fn entity_ref_for(kind: EntityKind, id: &str) -> EntityRef {
+pub(crate) fn entity_ref_for(kind: EntityKind, id: &str) -> EntityRef {
     match kind {
         EntityKind::Plugin => EntityRef::Plugin(PluginId::new(id)),
         EntityKind::Skill => EntityRef::Skill(SkillId::new(id)),
@@ -73,6 +73,9 @@ pub(super) fn apply_keep_sets(
     keep: &KeepSets,
 ) -> MarketplaceCandidate {
     MarketplaceCandidate {
+        // Ownership is a property of the artifacts themselves, not of who may
+        // see them, so it survives the access filter untouched.
+        artifact_owners: candidate.artifact_owners,
         plugins: candidate
             .plugins
             .into_iter()

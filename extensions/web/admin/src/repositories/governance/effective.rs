@@ -6,13 +6,11 @@
 //! with the rule that decided. The view layer renders these as collapsible
 //! sections under an "Effective Permissions" tab.
 //!
-//! Department rules are not represented here. `access_control_rules` stores
-//! `rule_type = 'department'` and the access matrix and department rollups
-//! both honour it, but the resolver's vocabulary
-//! ([`systemprompt_security::authz::RuleType`]) is `User` and `Role` only, so
-//! a grant that a department rule alone would confer is not reflected on this
-//! tab. Closing that gap means widening the rule type in core, not
-//! reimplementing precedence here.
+//! Every subject dimension the template declares participates, not just user
+//! and role: the department a user belongs to is looked up once per page via
+//! [`crate::authz::subject_attributes_for`] and handed to the resolver with
+//! the rest, so a grant a department rule alone confers shows up here exactly
+//! as it does at the enforcement point.
 
 use std::sync::Arc;
 
@@ -20,9 +18,11 @@ use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{McpServerId, RouteId, UserId};
 use systemprompt_security::authz::{
-    AccessControlRepository, AccessRule, Decision, EntityKind, EntityRef, ResolveInput, resolve,
+    AccessControlRepository, AccessRule, Decision, EntityKind, EntityRef, MatchedBy, ResolveInput,
+    SubjectAttributes, SubjectDimension, resolve,
 };
 
+use crate::authz::{dimensions, subject_attributes_for};
 use crate::error::AdminError;
 use crate::handlers::shared;
 use crate::repositories;
@@ -51,6 +51,8 @@ pub async fn compute_effective_permissions(
     let gateway_ids = collect_gateway_ids().unwrap_or_default();
     let mcp_ids = collect_mcp_ids().unwrap_or_default();
     let repo = AccessControlRepository::from_pool(Arc::new(pool.clone()));
+    let attributes = subject_attributes_for(pool, user_id).await;
+    let dimensions = dimensions(pool);
 
     let gateway_rules = repo
         .list_rules_bulk(EntityKind::GatewayRoute, &gateway_ids)
@@ -81,6 +83,8 @@ pub async fn compute_effective_permissions(
             user_id: user_id.as_str(),
             user_roles,
             default_included,
+            attributes: &attributes,
+            dimensions,
         }));
     }
 
@@ -104,6 +108,8 @@ pub async fn compute_effective_permissions(
             user_id: user_id.as_str(),
             user_roles,
             default_included,
+            attributes: &attributes,
+            dimensions,
         }));
     }
 
@@ -121,6 +127,8 @@ struct DecideArgs<'a> {
     user_id: &'a str,
     user_roles: &'a [String],
     default_included: Option<bool>,
+    attributes: &'a SubjectAttributes,
+    dimensions: &'a [SubjectDimension],
 }
 
 fn decide(args: DecideArgs<'_>) -> EntityDecision {
@@ -132,6 +140,8 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
         user_id,
         user_roles,
         default_included,
+        attributes,
+        dimensions,
     } = args;
     let uid = UserId::new(user_id);
     let dec = resolve(ResolveInput {
@@ -141,12 +151,11 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
         user_roles,
         default_included,
         parents: &[],
+        attributes,
+        dimensions,
     });
     let (decision, reason) = match dec {
-        Decision::Allow { .. } => (
-            "allow".to_owned(),
-            allow_reason(rules, &uid, user_roles, default_included.unwrap_or(false)),
-        ),
+        Decision::Allow { matched_by } => ("allow".to_owned(), allow_reason(&uid, &matched_by)),
         Decision::Deny { reason } => ("deny".to_owned(), reason.to_string()),
     };
     EntityDecision {
@@ -165,33 +174,20 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
     }
 }
 
-/// Best-effort label for *why* a decision was Allow — the resolver only emits
-/// reasons for Deny. Mirrors the resolver's specificity ordering.
-fn allow_reason(
-    rules: &[AccessRule],
-    user_id: &UserId,
-    user_roles: &[String],
-    default_included: bool,
-) -> String {
-    use systemprompt_security::authz::{Access, RuleType};
-    if rules.iter().any(|r| {
-        r.rule_type == RuleType::User
-            && r.rule_value.as_str() == user_id.as_str()
-            && r.access == Access::Allow
-    }) {
-        return format!("user-level allow: {user_id}");
+/// Label for *why* a decision was Allow.
+///
+/// The resolver only spells out its reasoning for Deny, but it does say which
+/// band matched, so this reads the answer off `MatchedBy` rather than
+/// re-deriving it. The previous version re-walked the rules in its own
+/// precedence order, which is the kind of second implementation that drifts.
+fn allow_reason(user_id: &UserId, matched_by: &MatchedBy) -> String {
+    match matched_by {
+        MatchedBy::UserAllow => format!("user-level allow: {user_id}"),
+        MatchedBy::RoleAllow { role } => format!("role allow: {role}"),
+        MatchedBy::AttributeAllow { rule_type, value } => format!("{rule_type} allow: {value}"),
+        MatchedBy::DefaultIncluded => "default included".to_owned(),
+        MatchedBy::PolicyAllow { policy_id, detail } => format!("policy {policy_id}: {detail}"),
     }
-    if let Some(rule) = rules.iter().find(|r| {
-        r.rule_type == RuleType::Role
-            && r.access == Access::Allow
-            && user_roles.iter().any(|x| x == &r.rule_value)
-    }) {
-        return format!("role allow: {}", rule.rule_value);
-    }
-    if default_included {
-        return "default included".to_owned();
-    }
-    "allow (resolver)".to_owned()
 }
 
 fn collect_gateway_ids() -> Result<Vec<String>, AdminError> {

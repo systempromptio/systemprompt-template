@@ -7,12 +7,13 @@ mod evaluate;
 use std::sync::Arc;
 
 use axum::extract::{Query, State};
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::{HeaderMap, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
 use systemprompt::oauth::SessionCreationService;
+use systemprompt::traits::SessionAnalytics;
 use systemprompt_security::authz::Decision;
 use systemprompt_security::policy::types::AccessScope;
 
@@ -26,6 +27,15 @@ use super::{audit, scope};
 
 use authn::{authenticate_request, deny_for_auth_failure};
 use evaluate::{EvaluateInput, evaluate};
+
+/// Reads one header as an owned `String`, dropping values that are not valid
+/// UTF-8 rather than failing the audit write over a malformed header.
+fn header_str(headers: &HeaderMap, name: header::HeaderName) -> Option<String> {
+    headers
+        .get(name)
+        .and_then(|v| v.to_str().ok())
+        .map(ToOwned::to_owned)
+}
 
 fn build_response(decision: &Decision) -> Response {
     let permission_decision = GovernanceDecision::from_decision(decision);
@@ -120,7 +130,16 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
         // Authentication failed before any real user was resolved. Every UserId
         // must be a real `users` row, so provision the anonymous principal for
         // this fingerprint (idempotent upsert) to carry the audit's foreign key.
-        let user_id = match session_service.ensure_anonymous_user(&headers, None).await {
+        // Core now takes the extracted analytics rather than raw headers. The
+        // audit only needs a stable principal, and `compute_fingerprint` falls
+        // back to user agent + locale, so those two signals reproduce the
+        // fingerprint the header-based call used to derive.
+        let analytics = SessionAnalytics {
+            user_agent: header_str(&headers, header::USER_AGENT),
+            preferred_locale: header_str(&headers, header::ACCEPT_LANGUAGE),
+            ..SessionAnalytics::default()
+        };
+        let user_id = match session_service.ensure_anonymous_user(&analytics).await {
             Ok((uid, _fingerprint)) => uid,
             Err(e) => {
                 tracing::error!(

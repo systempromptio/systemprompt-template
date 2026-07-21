@@ -1,14 +1,30 @@
-//! Per-user access matrix: resolves the effective grant for every catalog
-//! entity by walking user / department / role rules and the entity default.
+//! Per-user access matrix: the effective grant for every catalog entity.
+//!
+//! This calls the same [`systemprompt_security::authz::resolve`] that
+//! `POST /govern/authz` calls, over the same rules and the same subject
+//! dimensions, so a cell here and a decision at the enforcement point cannot
+//! disagree. It used to carry its own forked `user > department > role`
+//! implementation; that fork is gone, and department is now a subject
+//! dimension the resolver understands (see [`crate::authz::department`]).
+//!
+//! `MatrixSource::layer` names which band decided, mapped back from the
+//! resolver's `MatchedBy` / `DenyReason`.
 
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use serde::Serialize;
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{RuleId, UserId};
+use systemprompt_security::authz::{
+    Access, AccessRule, Decision, DenyReason, EntityKind, MatchedBy, ResolveInput,
+    SubjectAttributes, SubjectDimension, resolve,
+};
 
 use super::rules::list_all_rules;
-use crate::types::access_control::{AccessControlRule, AccessDecision, RuleType};
+use crate::authz::{dimensions, subject_attributes_for};
+use crate::marketplace_filter::entity_ref_for;
+use crate::types::access_control::{AccessControlRule, AccessDecision};
 
 #[derive(Debug, Serialize)]
 pub struct UserMatrix {
@@ -69,6 +85,10 @@ pub async fn resolve_user_matrix(
     let user = fetch_user_for_matrix(pool, user_id).await?;
     let all_rules = list_all_rules(pool).await?;
     let defaults = load_entity_defaults(pool).await?;
+    // The same lookup the enforcement webhook performs, so the matrix and the
+    // decision see identical subject values.
+    let attributes = subject_attributes_for(pool, user_id).await;
+    let dimensions = dimensions(pool);
 
     let mut sections: Vec<MatrixSection> = Vec::with_capacity(sections_in.len());
     for (entity_type, label, rows_in) in sections_in {
@@ -78,13 +98,15 @@ pub async fn resolve_user_matrix(
                 .get(&(entity_type.clone(), entity_id.clone()))
                 .copied()
                 .unwrap_or(false);
-            let (effective, source) = resolve_effective(
-                &all_rules,
-                &entity_type,
-                &entity_id,
-                &user,
+            let (effective, source) = resolve_effective(&MatrixCell {
+                all_rules: &all_rules,
+                entity_type: &entity_type,
+                entity_id: &entity_id,
+                user: &user,
+                attributes: &attributes,
+                dimensions,
                 default_included,
-            );
+            });
             out_rows.push(MatrixRow {
                 entity_id,
                 entity_name: name,
@@ -151,105 +173,124 @@ async fn fetch_user_for_matrix(
     })
 }
 
-/// Highest-priority matching rule at each scope (user / department / role).
-struct ScopedRules<'a> {
-    user: Option<&'a AccessControlRule>,
-    dept: Option<&'a AccessControlRule>,
-    role: Option<&'a AccessControlRule>,
-}
-
-fn select_scoped_rules<'a>(
-    all_rules: &'a [AccessControlRule],
-    entity_type: &str,
-    entity_id: &str,
-    user: &UserMatrixUser,
-) -> ScopedRules<'a> {
-    let mut scoped = ScopedRules {
-        user: None,
-        dept: None,
-        role: None,
-    };
-
-    for r in all_rules {
-        if r.entity_type != entity_type || r.entity_id != entity_id {
-            continue;
-        }
-        let is_deny = r.access == AccessDecision::Deny;
-        match r.rule_type {
-            RuleType::User if r.rule_value == user.id => {
-                if scoped.user.is_none() || is_deny {
-                    scoped.user = Some(r);
-                }
-            },
-            RuleType::Department => {
-                if let Some(d) = &user.department
-                    && &r.rule_value == d
-                    && (scoped.dept.is_none() || is_deny)
-                {
-                    scoped.dept = Some(r);
-                }
-            },
-            RuleType::Role => {
-                if user.roles.iter().any(|x| x == &r.rule_value)
-                    && (scoped.role.is_none() || is_deny)
-                {
-                    scoped.role = Some(r);
-                }
-            },
-            RuleType::User => {},
-        }
-    }
-
-    scoped
-}
-
-fn resolve_effective(
-    all_rules: &[AccessControlRule],
-    entity_type: &str,
-    entity_id: &str,
-    user: &UserMatrixUser,
-    default_included: bool,
-) -> (String, MatrixSource) {
-    let scoped = select_scoped_rules(all_rules, entity_type, entity_id, user);
-
-    if let Some(r) = scoped.user {
-        return (
-            r.access.to_string(),
-            MatrixSource {
-                layer: "user".into(),
-                detail: format!("user:{} {}", user.id, r.access),
-            },
-        );
-    }
-    if let Some(r) = scoped.dept {
-        return (
-            r.access.to_string(),
-            MatrixSource {
-                layer: "department".into(),
-                detail: format!("department:{} {}", r.rule_value, r.access),
-            },
-        );
-    }
-    if let Some(r) = scoped.role {
-        return (
-            r.access.to_string(),
-            MatrixSource {
-                layer: "role".into(),
-                detail: format!("role:{} {}", r.rule_value, r.access),
-            },
-        );
-    }
-
-    let effective = if default_included { "allow" } else { "deny" };
-    (
-        effective.to_owned(),
-        MatrixSource {
-            layer: "default".into(),
-            detail: if default_included {
-                "default-included".into()
-            } else {
-                "no rule matched".into()
-            },
+/// Adapts an admin-CRUD row to the resolver's rule type.
+///
+/// The two differ only in what the matrix screen needs on top of a decision
+/// (timestamps, entity coordinates). `justification` is not selected by the
+/// matrix query, so the resolver sees `None` and the matrix renders its own
+/// detail string.
+fn as_access_rule(row: &AccessControlRule) -> AccessRule {
+    AccessRule {
+        id: RuleId::new(row.id.clone()),
+        rule_type: row.rule_type.clone(),
+        rule_value: row.rule_value.clone(),
+        access: match row.access {
+            AccessDecision::Allow => Access::Allow,
+            AccessDecision::Deny => Access::Deny,
         },
-    )
+        justification: None,
+    }
+}
+
+struct MatrixCell<'a> {
+    all_rules: &'a [AccessControlRule],
+    entity_type: &'a str,
+    entity_id: &'a str,
+    user: &'a UserMatrixUser,
+    attributes: &'a SubjectAttributes,
+    dimensions: &'a [SubjectDimension],
+    default_included: bool,
+}
+
+/// Runs the shared resolver for one cell and translates its verdict into the
+/// screen's `(effective, source)` pair.
+///
+/// An `entity_type` the core catalog does not recognise cannot be resolved at
+/// all, so the cell reports the entity default and says so rather than
+/// implying a rule decided it.
+fn resolve_effective(cell: &MatrixCell<'_>) -> (String, MatrixSource) {
+    let Ok(kind) = EntityKind::from_str(cell.entity_type) else {
+        return (
+            if cell.default_included { "allow" } else { "deny" }.to_owned(),
+            MatrixSource {
+                layer: "default".into(),
+                detail: format!("unknown entity type: {}", cell.entity_type),
+            },
+        );
+    };
+    let entity = entity_ref_for(kind, cell.entity_id);
+    let rules: Vec<AccessRule> = cell
+        .all_rules
+        .iter()
+        .filter(|r| r.entity_type == cell.entity_type && r.entity_id == cell.entity_id)
+        .map(as_access_rule)
+        .collect();
+
+    let uid = UserId::new(&cell.user.id);
+    let decision = resolve(ResolveInput {
+        entity: &entity,
+        rules: &rules,
+        user_id: &uid,
+        user_roles: &cell.user.roles,
+        default_included: Some(cell.default_included),
+        parents: &[],
+        attributes: cell.attributes,
+        dimensions: cell.dimensions,
+    });
+
+    match decision {
+        Decision::Allow { matched_by } => ("allow".to_owned(), allow_source(&uid, &matched_by)),
+        Decision::Deny { reason } => ("deny".to_owned(), deny_source(&uid, &reason)),
+    }
+}
+
+fn allow_source(user_id: &UserId, matched_by: &MatchedBy) -> MatrixSource {
+    match matched_by {
+        MatchedBy::UserAllow => MatrixSource {
+            layer: "user".into(),
+            detail: format!("user:{user_id} allow"),
+        },
+        MatchedBy::RoleAllow { role } => MatrixSource {
+            layer: "role".into(),
+            detail: format!("role:{role} allow"),
+        },
+        MatchedBy::AttributeAllow { rule_type, value } => MatrixSource {
+            layer: rule_type.to_string(),
+            detail: format!("{rule_type}:{value} allow"),
+        },
+        MatchedBy::DefaultIncluded => MatrixSource {
+            layer: "default".into(),
+            detail: "default-included".into(),
+        },
+        MatchedBy::PolicyAllow { policy_id, detail } => MatrixSource {
+            layer: "policy".into(),
+            detail: format!("{policy_id}: {detail}"),
+        },
+    }
+}
+
+fn deny_source(user_id: &UserId, reason: &DenyReason) -> MatrixSource {
+    match reason {
+        DenyReason::UserDeny { .. } => MatrixSource {
+            layer: "user".into(),
+            detail: format!("user:{user_id} deny"),
+        },
+        DenyReason::RoleDeny { role, .. } => MatrixSource {
+            layer: "role".into(),
+            detail: format!("role:{role} deny"),
+        },
+        DenyReason::AttributeDeny {
+            rule_type, value, ..
+        } => MatrixSource {
+            layer: rule_type.to_string(),
+            detail: format!("{rule_type}:{value} deny"),
+        },
+        // Everything else is the resolver closing the default rather than a
+        // rule firing, so the cell reports the default layer and lets the
+        // reason speak for itself.
+        other => MatrixSource {
+            layer: "default".into(),
+            detail: other.to_string(),
+        },
+    }
 }

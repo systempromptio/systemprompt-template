@@ -61,9 +61,12 @@ pub async fn render_yaml_snapshot(pool: &PgPool) -> Result<String, MarketplaceEr
             default_included: row.default_included,
             roles: Vec::new(),
         });
-        match row.rule_type {
-            RuleType::Role => entry.roles.push(row.rule_value),
-            RuleType::User => {},
+        // The query filters to role rules, so anything else is a row that
+        // arrived after this snapshot format was fixed; roles.yaml has no
+        // shape for it and dropping it is better than emitting a file the
+        // loader would reject.
+        if row.rule_type == RuleType::ROLE {
+            entry.roles.push(row.rule_value);
         }
     }
 

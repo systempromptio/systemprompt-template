@@ -21,6 +21,8 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{RouteId, UserId};
 use systemprompt_security::authz::{EntityRef, ResolveInput};
 
+use crate::authz::{dimensions, subject_attributes_for};
+
 use crate::handlers::shared;
 use crate::repositories;
 use crate::repositories::governance::acl_detect;
@@ -66,7 +68,7 @@ pub(crate) async fn for_user_handler(
         },
     };
 
-    let (user_roles, department) =
+    let (user_roles, _department) =
         match repositories::users::queries::get_user_roles_department(&pool, &user_id).await {
             Ok(Some(rd)) => rd,
             Ok(None) => return shared::error_response(StatusCode::NOT_FOUND, "User not found"),
@@ -79,7 +81,7 @@ pub(crate) async fn for_user_handler(
             },
         };
 
-    match collect_allowed_routes(&pool, &cfg.routes, &user_id, &user_roles, &department).await {
+    match collect_allowed_routes(&pool, &cfg.routes, &user_id, &user_roles).await {
         Ok(routes) => Json(CatalogResponse { user_id, routes }).into_response(),
         Err(resp) => *resp,
     }
@@ -90,8 +92,8 @@ async fn collect_allowed_routes(
     routes: &[GatewayRouteView],
     user_id: &UserId,
     user_roles: &[String],
-    _department: &str,
 ) -> Result<Vec<CatalogEntry>, Box<Response>> {
+    let attributes = subject_attributes_for(pool, user_id).await;
     let mut allowed = Vec::with_capacity(routes.len());
     for route in routes {
         let rules = gateway_acl::list_rules_for_route(pool, &route.id)
@@ -119,6 +121,8 @@ async fn collect_allowed_routes(
                 user_roles,
                 default_included,
                 parents: &[],
+                attributes: &attributes,
+                dimensions: dimensions(pool),
             }),
             Decision::Allow { .. }
         ) {
@@ -205,6 +209,7 @@ pub(crate) async fn detect_after_the_fact(
         else {
             continue;
         };
+        let attributes = subject_attributes_for(pool, &UserId::new(&row.user_id)).await;
         let rules = gateway_acl::list_rules_for_route(pool, &route.id).await?;
         let default_included = gateway_acl::get_entity(pool, &route.id)
             .await?
@@ -218,6 +223,8 @@ pub(crate) async fn detect_after_the_fact(
             user_roles: &user_roles,
             default_included,
             parents: &[],
+            attributes: &attributes,
+            dimensions: dimensions(pool),
         }) {
             let decision_id = uuid::Uuid::new_v4().to_string();
             let reason_str = reason.to_string();

@@ -19,6 +19,7 @@
 
 pub mod activity;
 pub mod audit_event_bus;
+pub mod authz;
 pub mod error;
 pub mod event_hub;
 pub mod gateway_safety;

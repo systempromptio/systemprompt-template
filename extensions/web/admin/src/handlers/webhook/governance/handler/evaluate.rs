@@ -101,6 +101,7 @@ fn allow_detail(matched_by: &MatchedBy) -> String {
         MatchedBy::PolicyAllow { detail, .. } => detail.to_string(),
         MatchedBy::UserAllow => "user allow".to_owned(),
         MatchedBy::RoleAllow { role } => format!("role allow: {role}"),
+        MatchedBy::AttributeAllow { rule_type, value } => format!("{rule_type} allow: {value}"),
         MatchedBy::DefaultIncluded => "default included".to_owned(),
     }
 }

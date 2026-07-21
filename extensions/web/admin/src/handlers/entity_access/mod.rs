@@ -239,7 +239,7 @@ pub(crate) async fn apply_template_handler(
                 .upsert_rule(UpsertRuleParams {
                     entity_type: kind,
                     entity_id: eid,
-                    rule_type,
+                    rule_type: rule_type.clone(),
                     rule_value: &body.subject_value,
                     access,
                     justification: None,

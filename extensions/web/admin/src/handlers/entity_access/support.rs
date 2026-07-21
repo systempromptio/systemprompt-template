@@ -31,10 +31,16 @@ pub(super) fn repo(pool: &PgPool) -> AccessControlRepository {
     AccessControlRepository::from_pool(Arc::new(pool.clone()))
 }
 
+/// Rule types this screen can write.
+///
+/// Deliberately narrower than core's open vocabulary: the entity-access form
+/// edits user and role grants, while department rules are owned by the
+/// department screens. An unrecognised value is rejected rather than minted,
+/// so a typo cannot create a dimension nothing resolves.
 pub(super) fn parse_rule_type(s: &str) -> Option<RuleType> {
     match s {
-        "user" => Some(RuleType::User),
-        "role" => Some(RuleType::Role),
+        "user" => Some(RuleType::USER),
+        "role" => Some(RuleType::ROLE),
         _ => None,
     }
 }
