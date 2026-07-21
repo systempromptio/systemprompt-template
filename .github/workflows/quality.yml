@@ -62,6 +62,8 @@ jobs:
       # only reported when it is dead here AND in the fork.
       - name: No dead repository code
         run: bash scripts/check-dead-repository-code.sh
+      - name: Every production source has a `//!` module head
+        run: bash scripts/check-file-headers.sh
       - name: No synthesized principals (UserId::new with string literal)
         run: |
           hits=$(grep -rEn 'UserId::new\("' extensions/ \

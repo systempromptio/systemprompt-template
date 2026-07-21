@@ -225,7 +225,16 @@ lint-gates:
     bash scripts/lint-raw-ids.sh
     bash scripts/check-glob-reexports.sh
     bash scripts/check-dead-repository-code.sh
+    bash scripts/check-file-headers.sh
     bash scripts/check-file-size.sh
+
+# Verify every production extension source has a `//!` module head
+check-headers:
+    bash scripts/check-file-headers.sh
+
+# Observational Rust-standards audit — appends to ISSUE.md, never blocks
+audit-standards:
+    bash scripts/audit-rust-standards.sh
 
 # 300-line ceiling on extension sources (same script CI runs)
 file-size:

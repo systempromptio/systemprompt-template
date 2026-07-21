@@ -43,9 +43,23 @@ while IFS=' ' read -r orig alias; do
 done < <(grep -rhoE '\b[A-Za-z0-9_]+ as [A-Za-z0-9_]+' "$REPO_DIR" --include='*.rs' 2>/dev/null \
          | sed -E 's/ as / /' | sort -u)
 
+# Functions annotated `// lint-ok: unused-pub` on the preceding line are
+# deliberate entry points and are never reported.
+declare -A EXEMPT
+while IFS= read -r fn; do
+    [ -n "$fn" ] && EXEMPT["$fn"]=1
+done < <(find "$REPO_DIR" -name '*.rs' -exec awk '
+    /lint-ok: unused-pub/ { skip = 1; next }
+    skip && match($0, /^[[:space:]]*pub (async )?fn [a-z_0-9]+/) {
+        sub(/.*fn /, ""); sub(/[^a-z_0-9].*/, ""); print; skip = 0; next
+    }
+    { skip = 0 }
+' {} + 2>/dev/null | sort -u)
+
 DEAD=()
 while IFS= read -r fn; do
     [ -z "$fn" ] && continue
+    [ -n "${EXEMPT[$fn]:-}" ] && continue
     names="$fn${ALIAS[$fn]:-}"
     hits=0
     for base in . $SIBLING_REPO; do
