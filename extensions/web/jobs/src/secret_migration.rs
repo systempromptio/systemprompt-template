@@ -49,7 +49,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 
     let actor_user = &ctx.actor().user_id;
 
-    let rows = secret_migration::fetch_unencrypted_secrets(pool.as_ref())
+    let rows = secret_migration::list_unencrypted_secrets(pool.as_ref())
         .await
         .map_err(MarketplaceError::Database)?;
 
@@ -118,7 +118,7 @@ async fn encrypt_and_store_secret(
     let encrypted = secret_crypto::encrypt(&dek, &nonce, row.var_value.as_bytes())
         .map_err(|e| MarketplaceError::Crypto(format!("Encryption error: {e}")))?;
 
-    let key_version = secret_migration::fetch_key_version(pool.as_ref(), &row.user_id).await;
+    let key_version = secret_migration::get_key_version(pool.as_ref(), &row.user_id).await;
 
     secret_migration::update_encrypted_value(
         pool.as_ref(),

@@ -12,7 +12,7 @@ mod assemble;
 mod fetch;
 mod resolve;
 
-pub use assemble::fetch_decision_chain;
+pub use assemble::find_decision_chain;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ChainIdentity {

@@ -108,7 +108,7 @@ pub(crate) async fn management_department_detail_page(
         return forbidden();
     }
 
-    let Ok(Some(department)) = repositories::departments::get_department(&pool, &id).await else {
+    let Ok(Some(department)) = repositories::departments::find_department(&pool, &id).await else {
         return (StatusCode::NOT_FOUND, Html("<h1>Department not found</h1>")).into_response();
     };
 

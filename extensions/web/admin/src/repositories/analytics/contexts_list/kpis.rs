@@ -16,7 +16,7 @@ pub struct ContextListKpis {
     pub total_cost_microdollars: i64,
 }
 
-pub async fn fetch_context_list_kpis(
+pub async fn get_context_list_kpis(
     pool: &PgPool,
     filter: &ContextListFilter,
 ) -> Result<ContextListKpis, sqlx::Error> {
@@ -97,7 +97,7 @@ pub async fn fetch_context_list_kpis(
     })
 }
 
-pub async fn fetch_distinct_models(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
+pub async fn list_distinct_models(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"
         SELECT DISTINCT model AS "model!"

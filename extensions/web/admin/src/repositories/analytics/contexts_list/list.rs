@@ -50,7 +50,7 @@ impl From<ContextListRow> for ContextListItem {
     }
 }
 
-pub async fn fetch_context_list(
+pub async fn list_context_list(
     pool: &PgPool,
     filter: &ContextListFilter,
 ) -> Result<Vec<ContextListItem>, sqlx::Error> {

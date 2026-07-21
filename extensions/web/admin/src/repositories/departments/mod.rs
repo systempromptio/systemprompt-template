@@ -10,8 +10,8 @@ pub use aggregates::{
     list_user_marketplace_overrides,
 };
 pub use crud::{
-    assign_user_to_department, create_department, delete_department, get_department,
-    get_department_by_name, update_department,
+    assign_user_to_department, create_department, delete_department, find_department,
+    find_department_by_name, update_department,
 };
 pub use summaries::{
     list_department_members, list_department_names, list_department_top_tools, list_departments,

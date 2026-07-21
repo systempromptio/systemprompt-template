@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::types::departments::{Department, DepartmentInput};
 
-pub async fn get_department(pool: &PgPool, id: &str) -> Result<Option<Department>, sqlx::Error> {
+pub async fn find_department(pool: &PgPool, id: &str) -> Result<Option<Department>, sqlx::Error> {
     sqlx::query_as!(
         Department,
         r#"SELECT id, name, description as "description!", created_at, updated_at
@@ -18,7 +18,7 @@ pub async fn get_department(pool: &PgPool, id: &str) -> Result<Option<Department
     .await
 }
 
-pub async fn get_department_by_name(
+pub async fn find_department_by_name(
     pool: &PgPool,
     name: &str,
 ) -> Result<Option<Department>, sqlx::Error> {

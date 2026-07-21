@@ -5,7 +5,7 @@ use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::types::conversation_analytics::SessionEntityLink;
 
-pub async fn fetch_session_entity_links(
+pub async fn list_session_entity_links(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Vec<SessionEntityLink>, sqlx::Error> {

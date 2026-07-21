@@ -15,7 +15,7 @@ use axum::response::{Html, IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::repositories::traces::{Span, SpanStatus, fetch_trace_spans, resolve_trace_session};
+use crate::repositories::traces::{Span, SpanStatus, list_trace_spans, resolve_trace_session};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
@@ -69,10 +69,10 @@ pub(crate) async fn perf_trace_detail_page(
         },
     };
 
-    let spans = fetch_trace_spans(&pool, &session_id)
+    let spans = list_trace_spans(&pool, &session_id)
         .await
         .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "fetch_trace_spans failed");
+            tracing::warn!(error = %e, "list_trace_spans failed");
             Vec::new()
         });
 

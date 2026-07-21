@@ -12,7 +12,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 
-use crate::repositories::governance::chain::fetch_decision_chain;
+use crate::repositories::governance::chain::find_decision_chain;
 use crate::types::UserContext;
 
 pub(crate) async fn chain_envelope(
@@ -24,11 +24,11 @@ pub(crate) async fn chain_envelope(
         return StatusCode::FORBIDDEN.into_response();
     }
 
-    match fetch_decision_chain(&pool, &id).await {
+    match find_decision_chain(&pool, &id).await {
         Ok(Some(envelope)) => Json(envelope).into_response(),
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(e) => {
-            tracing::error!(error = %e, id = %id, "fetch_decision_chain failed");
+            tracing::error!(error = %e, id = %id, "find_decision_chain failed");
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         },
     }

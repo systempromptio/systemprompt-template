@@ -3,7 +3,7 @@
 //! `fetch_conversation_detail` joins the latest transcript with the session
 //! summary, the per-session governance decisions, and a representative
 //! `trace_id`, then normalises the transcript JSONB into `TranscriptTurn`s.
-//! `fetch_raw_turns` backs the capability-gated PII endpoint.
+//! `find_raw_turns` backs the capability-gated PII endpoint.
 
 use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
@@ -11,7 +11,7 @@ use systemprompt::identifiers::SessionId;
 use super::RawTurnBody;
 use super::transcript::extract_content_text;
 
-pub async fn fetch_raw_turns(
+pub async fn find_raw_turns(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Option<Vec<RawTurnBody>>, sqlx::Error> {

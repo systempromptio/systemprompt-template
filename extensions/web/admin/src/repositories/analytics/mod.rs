@@ -14,6 +14,6 @@ pub mod tools;
 pub use agents::{AgentRow, list_agents};
 pub use conversations::{
     ConversationDetail, ConversationListFilter, ConversationListItem, RawTurnBody, TranscriptTurn,
-    fetch_raw_turns,
+    find_raw_turns,
 };
 pub use tools::{ToolRow, list_tools};

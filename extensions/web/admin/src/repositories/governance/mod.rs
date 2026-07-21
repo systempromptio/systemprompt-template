@@ -20,11 +20,11 @@ pub mod resolve;
 pub use audit::{GovernanceDecisionRecord, insert_governance_decision};
 
 pub use counts::{
-    fetch_governance_counts, fetch_governance_counts_windowed, fetch_per_policy_counts,
-    fetch_per_policy_counts_windowed,
+    get_governance_counts, get_governance_counts_windowed, list_per_policy_counts,
+    list_per_policy_counts_windowed,
 };
 pub use decisions::list_decisions_for_policy;
-pub use rankings::{fetch_top_actors, fetch_top_policies};
+pub use rankings::{list_top_actors, list_top_policies};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct GovernanceCounts {

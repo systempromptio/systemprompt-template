@@ -51,7 +51,7 @@ pub struct TracePage {
     clippy::too_many_lines,
     reason = "body is one irreducible compile-time-checked query_as! SQL literal; see comment above"
 )]
-pub async fn fetch_trace_list(
+pub async fn list_traces(
     pool: &PgPool,
     filter: TraceFilter<'_>,
     range: TimeRange,

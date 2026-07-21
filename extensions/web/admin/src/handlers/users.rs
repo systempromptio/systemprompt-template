@@ -119,7 +119,7 @@ pub(crate) async fn user_usage_handler(
     Path(user_id_raw): Path<String>,
 ) -> Response {
     let user_id = UserId::new(user_id_raw);
-    match repositories::users::queries::get_user_usage(&pool, &user_id).await {
+    match repositories::users::queries::list_user_usage(&pool, &user_id).await {
         Ok(events) => Json(EventsListResponse { events }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, user_id = %user_id, "Failed to get user usage");

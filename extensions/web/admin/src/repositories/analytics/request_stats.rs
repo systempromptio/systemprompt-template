@@ -1,10 +1,10 @@
 //! Aggregated `ai_requests` statistics for the Inference Requests page.
 //!
 //! Three helpers:
-//! - [`fetch_request_stats`] — overall KPI strip (rate / latency percentiles /
+//! - [`get_request_stats`] — overall KPI strip (rate / latency percentiles /
 //!   cost / error rate / pre-flight deny rate over a [`TimeRange`]).
-//! - [`fetch_latency_histogram`] — bucketed at fixed bin edges.
-//! - [`fetch_cost_over_time`] — 24-bucket cost time series.
+//! - [`list_latency_histogram`] — bucketed at fixed bin edges.
+//! - [`list_cost_over_time`] — 24-bucket cost time series.
 
 use serde::Serialize;
 use sqlx::PgPool;
@@ -29,7 +29,7 @@ pub struct RequestStats {
     pub denied_session_rate: f64,
 }
 
-pub async fn fetch_request_stats(
+pub async fn get_request_stats(
     pool: &PgPool,
     range: TimeRange,
 ) -> Result<RequestStats, sqlx::Error> {
@@ -107,7 +107,7 @@ pub struct LatencyBucket {
     pub count: i64,
 }
 
-pub async fn fetch_latency_histogram(
+pub async fn list_latency_histogram(
     pool: &PgPool,
     range: TimeRange,
 ) -> Result<Vec<LatencyBucket>, sqlx::Error> {
@@ -172,7 +172,7 @@ pub struct CostBucket {
 
 const COST_BUCKETS: i32 = 24;
 
-pub async fn fetch_cost_over_time(
+pub async fn list_cost_over_time(
     pool: &PgPool,
     range: TimeRange,
 ) -> Result<Vec<CostBucket>, sqlx::Error> {

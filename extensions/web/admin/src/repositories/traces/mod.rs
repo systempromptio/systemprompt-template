@@ -2,8 +2,8 @@
 //!
 //! A "trace" here is keyed on `session_id` (which all four governance / gateway
 //! / events tables share) and surfaces the `trace_id` from `ai_requests` when
-//! one exists. [`fetch_trace_list`] returns one summary row per session in the
-//! window; [`fetch_trace_spans`] returns the union of per-table rows for a
+//! one exists. [`list_traces`] returns one summary row per session in the
+//! window; [`list_trace_spans`] returns the union of per-table rows for a
 //! single session, normalised into a [`Span`] shape and ordered by start time.
 
 use chrono::{DateTime, Utc};
@@ -14,9 +14,9 @@ mod list;
 mod spans;
 mod stats;
 
-pub use list::{TracePage, fetch_trace_list};
-pub use spans::{fetch_trace_spans, resolve_trace_session};
-pub use stats::fetch_trace_stats;
+pub use list::{TracePage, list_traces};
+pub use spans::{list_trace_spans, resolve_trace_session};
+pub use stats::get_trace_stats;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct TraceSummary {

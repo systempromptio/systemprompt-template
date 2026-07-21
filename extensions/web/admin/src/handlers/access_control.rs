@@ -252,7 +252,7 @@ pub(crate) async fn yaml_snapshot_handler(State(pool): State<Arc<PgPool>>) -> Re
 pub(crate) async fn access_control_departments_handler(
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
-    match repositories::users::user_queries::fetch_department_stats(&pool).await {
+    match repositories::users::user_queries::list_department_stats(&pool).await {
         Ok(stats) => Json(stats).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to fetch department stats");

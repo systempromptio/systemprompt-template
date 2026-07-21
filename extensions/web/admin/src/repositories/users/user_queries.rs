@@ -2,7 +2,7 @@
 
 use sqlx::PgPool;
 
-pub async fn fetch_department_stats(
+pub async fn list_department_stats(
     pool: &PgPool,
 ) -> Result<Vec<crate::types::DepartmentStats>, sqlx::Error> {
     sqlx::query_as!(

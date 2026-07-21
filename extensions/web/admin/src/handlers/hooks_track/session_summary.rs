@@ -16,7 +16,7 @@ pub(crate) async fn generate_session_summary(
     user_id: &UserId,
     session_id: &SessionId,
 ) -> Option<GeneratedSessionSummary> {
-    let rows = hooks_track::fetch_session_events(pool, session_id, user_id)
+    let rows = hooks_track::list_session_events(pool, session_id, user_id)
         .await
         .ok()?;
 

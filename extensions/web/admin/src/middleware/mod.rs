@@ -89,7 +89,7 @@ async fn fetch_user_roles_department(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Option<(Vec<String>, String)> {
-    super::repositories::users::queries::get_user_roles_department(pool, user_id)
+    super::repositories::users::queries::find_user_roles_department(pool, user_id)
         .await
         .map_err(|e| {
             tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch user roles");

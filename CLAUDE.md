@@ -184,6 +184,32 @@ Unknown YAML keys cause loud errors at load time (`#[serde(deny_unknown_fields)]
 
 ---
 
+## Repository Naming Convention
+
+Every function under `extensions/web/admin/src/repositories/` is named for what
+it returns, so a call site reads the same as its signature:
+
+| Returns | Prefix | Example |
+|---------|--------|---------|
+| `Vec<T>` — zero or more rows | `list_` | `list_top_users` |
+| `Option<T>` — a row that may be absent | `find_` | `find_session_header` |
+| `T` — exactly one value, or an error | `get_` | `get_request_stats` |
+| a page plus its total, `(Vec<T>, i64)` | `list_` | `list_requests_paged` |
+
+Mutations keep the verb that describes them: `insert_`, `update_`, `delete_`,
+`set_`, `count_`.
+
+`scripts/check-repository-naming.sh` enforces this: it rejects `fetch_`
+outright, and checks every other prefix against the function's actual return
+type, so the table above cannot quietly stop being true.
+
+`fetch_` is banned because it is not a synonym for the three above —
+it was doing all three jobs at once, which is how the convention drifted: a
+reader could not tell from `fetch_summary` whether an absent row was `None` or
+an error, and had to open the file to find out.
+
+---
+
 ## CSS Files (IMPORTANT)
 
 **All CSS files go in `storage/files/css/`** and must be registered in `extensions/web/src/extension.rs`.

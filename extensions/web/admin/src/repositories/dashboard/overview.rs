@@ -4,11 +4,11 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{Email, PluginId, SessionId, UserId};
 
 use crate::repositories::dashboard::aggregates::{
-    fetch_active_users_24h, fetch_usage_timeseries, get_activity_stats,
+    get_active_users_24h, get_activity_stats, list_usage_timeseries,
 };
 use crate::repositories::dashboard::queries::{
-    fetch_hourly_activity, fetch_popular_skills, fetch_recent_mcp_errors, fetch_timeline,
-    fetch_tool_success_rates, fetch_top_users,
+    list_hourly_activity, list_popular_skills, list_recent_mcp_errors, list_timeline,
+    list_tool_success_rates, list_top_users,
 };
 use crate::repositories::dashboard::traffic;
 use crate::types::{
@@ -33,18 +33,18 @@ pub async fn get_dashboard_data(
         active_users_24h,
         tool_success_rates,
     ) = tokio::try_join!(
-        fetch_timeline(pool),
-        fetch_top_users(pool),
-        fetch_popular_skills(pool),
-        fetch_hourly_activity(pool),
+        list_timeline(pool),
+        list_top_users(pool),
+        list_popular_skills(pool),
+        list_hourly_activity(pool),
         get_activity_stats(pool),
-        fetch_usage_timeseries(pool, chart_interval, chart_bucket),
-        fetch_active_users_24h(pool),
-        fetch_tool_success_rates(pool),
+        list_usage_timeseries(pool, chart_interval, chart_bucket),
+        get_active_users_24h(pool),
+        list_tool_success_rates(pool),
     )?;
 
     let (traffic, recent_mcp_errors, top_pages_today, realtime_pulse, content_performance) =
-        fetch_traffic_section(pool, traffic_range, content_range).await;
+        get_traffic_section(pool, traffic_range, content_range).await;
 
     Ok(DashboardData {
         timeline,
@@ -71,14 +71,14 @@ type TrafficSectionResult = (
     Vec<ContentPerformanceRow>,
 );
 
-async fn fetch_traffic_section(
+async fn get_traffic_section(
     pool: &PgPool,
     traffic_range: &str,
     content_range: &str,
 ) -> TrafficSectionResult {
     tokio::join!(
         async {
-            traffic::fetch_traffic_data(pool, traffic_range)
+            traffic::get_traffic_data(pool, traffic_range)
                 .await
                 .map_err(|e| {
                     tracing::error!(error = %e, "Failed to fetch traffic data for dashboard");
@@ -87,13 +87,13 @@ async fn fetch_traffic_section(
                 .ok()
         },
         async {
-            fetch_recent_mcp_errors(pool).await.unwrap_or_else(|e| {
+            list_recent_mcp_errors(pool).await.unwrap_or_else(|e| {
                 tracing::error!(error = %e, "Failed to fetch recent MCP errors");
                 vec![]
             })
         },
         async {
-            traffic::fetch_top_pages_today(pool)
+            traffic::list_top_pages_today(pool)
                 .await
                 .unwrap_or_else(|e| {
                     tracing::error!(error = %e, "Failed to fetch top pages today");
@@ -101,7 +101,7 @@ async fn fetch_traffic_section(
                 })
         },
         async {
-            traffic::fetch_realtime_pulse(pool)
+            traffic::get_realtime_pulse(pool)
                 .await
                 .map_err(|e| {
                     tracing::error!(error = %e, "Failed to fetch realtime pulse");
@@ -110,7 +110,7 @@ async fn fetch_traffic_section(
                 .ok()
         },
         async {
-            traffic::fetch_content_performance(pool, content_range)
+            traffic::list_content_performance(pool, content_range)
                 .await
                 .unwrap_or_else(|e| {
                     tracing::error!(error = %e, "Failed to fetch content performance");
@@ -120,6 +120,7 @@ async fn fetch_traffic_section(
     )
 }
 
+// lint-ok: repository-naming: EventsResponse is a page of rows plus its total.
 pub async fn list_events(
     pool: &PgPool,
     query: &EventsQuery,

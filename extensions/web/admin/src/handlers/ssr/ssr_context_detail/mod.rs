@@ -16,8 +16,8 @@ use sqlx::PgPool;
 use systemprompt::identifiers::ContextId;
 
 use crate::repositories::analytics::context_detail::{
-    fetch_context_header, fetch_context_kpis, fetch_context_messages, fetch_context_requests,
-    fetch_context_tool_calls,
+    find_context_header, get_context_kpis, list_context_messages, list_context_requests,
+    list_context_tool_calls,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -45,36 +45,36 @@ pub(crate) async fn context_detail_page(
         return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response();
     }
 
-    let header = match fetch_context_header(&pool, &context_id).await {
+    let header = match find_context_header(&pool, &context_id).await {
         Ok(Some(h)) => h,
         Ok(None) => return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response(),
         Err(e) => {
-            tracing::error!(error = %e, context_id = %context_id, "fetch_context_header failed");
+            tracing::error!(error = %e, context_id = %context_id, "find_context_header failed");
             return (StatusCode::INTERNAL_SERVER_ERROR, Html(NOT_FOUND_HTML)).into_response();
         },
     };
 
     let (kpis_res, requests_res, messages_res, tool_calls_res) = tokio::join!(
-        fetch_context_kpis(&pool, &context_id),
-        fetch_context_requests(&pool, &context_id),
-        fetch_context_messages(&pool, &context_id),
-        fetch_context_tool_calls(&pool, &context_id),
+        get_context_kpis(&pool, &context_id),
+        list_context_requests(&pool, &context_id),
+        list_context_messages(&pool, &context_id),
+        list_context_tool_calls(&pool, &context_id),
     );
 
     let kpis = kpis_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_context_kpis failed");
+        tracing::warn!(error = %e, "get_context_kpis failed");
         default_kpis()
     });
     let requests = requests_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_context_requests failed");
+        tracing::warn!(error = %e, "list_context_requests failed");
         Vec::new()
     });
     let messages = messages_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_context_messages failed");
+        tracing::warn!(error = %e, "list_context_messages failed");
         Vec::new()
     });
     let tool_calls = tool_calls_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_context_tool_calls failed");
+        tracing::warn!(error = %e, "list_context_tool_calls failed");
         Vec::new()
     });
 

@@ -85,20 +85,22 @@ async fn build_user_detail(
             tracing::warn!(user_id = %user_id, error = %e, "Failed to load activity summary");
             Vec::new()
         });
-    let sessions = get_user_sessions(pool, user_id).await.unwrap_or_else(|e| {
+    let sessions = list_user_sessions(pool, user_id).await.unwrap_or_else(|e| {
         tracing::warn!(user_id = %user_id, error = %e, "Failed to load user sessions");
         Vec::new()
     });
-    let event_type_breakdown = get_user_event_type_breakdown(pool, user_id)
+    let event_type_breakdown = list_user_event_type_breakdown(pool, user_id)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(user_id = %user_id, error = %e, "Failed to load event type breakdown");
             Vec::new()
         });
-    let top_tools = get_user_top_tools(pool, user_id).await.unwrap_or_else(|e| {
-        tracing::warn!(user_id = %user_id, error = %e, "Failed to load top tools");
-        Vec::new()
-    });
+    let top_tools = list_user_top_tools(pool, user_id)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(user_id = %user_id, error = %e, "Failed to load top tools");
+            Vec::new()
+        });
 
     let created_at: chrono::DateTime<chrono::Utc> = sqlx::query_scalar!(
         "SELECT created_at FROM users WHERE id = $1",
@@ -127,7 +129,7 @@ async fn build_user_detail(
     }))
 }
 
-pub async fn get_user_sessions(
+pub async fn list_user_sessions(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<UserSession>, sqlx::Error> {
@@ -153,7 +155,7 @@ pub async fn get_user_sessions(
     .await
 }
 
-pub async fn get_user_event_type_breakdown(
+pub async fn list_user_event_type_breakdown(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<EventTypeCount>, sqlx::Error> {
@@ -172,7 +174,7 @@ pub async fn get_user_event_type_breakdown(
     .await
 }
 
-pub async fn get_user_top_tools(
+pub async fn list_user_top_tools(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<ToolUsageCount>, sqlx::Error> {

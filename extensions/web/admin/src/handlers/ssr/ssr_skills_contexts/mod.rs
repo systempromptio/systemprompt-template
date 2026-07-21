@@ -98,22 +98,22 @@ async fn fetch_page_data(
     pool: &PgPool,
     filter: &contexts_list::ContextListFilter,
 ) -> ContextsPageData {
-    let contexts = contexts_list::fetch_context_list(pool, filter)
+    let contexts = contexts_list::list_context_list(pool, filter)
         .await
         .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "fetch_context_list failed");
+            tracing::warn!(error = %e, "list_context_list failed");
             Vec::new()
         });
-    let user_summaries = contexts_list::fetch_context_user_summary(pool, filter)
+    let user_summaries = contexts_list::list_context_user_summary(pool, filter)
         .await
         .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "fetch_context_user_summary failed");
+            tracing::warn!(error = %e, "list_context_user_summary failed");
             Vec::new()
         });
-    let kpis = contexts_list::fetch_context_list_kpis(pool, filter)
+    let kpis = contexts_list::get_context_list_kpis(pool, filter)
         .await
         .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "fetch_context_list_kpis failed");
+            tracing::warn!(error = %e, "get_context_list_kpis failed");
             contexts_list::ContextListKpis {
                 total_contexts: 0,
                 active_users: 0,
@@ -124,10 +124,10 @@ async fn fetch_page_data(
                 total_cost_microdollars: 0,
             }
         });
-    let models = contexts_list::fetch_distinct_models(pool)
+    let models = contexts_list::list_distinct_models(pool)
         .await
         .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "fetch_distinct_models failed");
+            tracing::warn!(error = %e, "list_distinct_models failed");
             Vec::new()
         });
     let users_for_filter = repositories::users::queries::list_users(pool)

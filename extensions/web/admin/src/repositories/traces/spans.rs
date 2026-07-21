@@ -77,7 +77,7 @@ pub async fn resolve_trace_session(
     Ok(None)
 }
 
-async fn fetch_governance_spans(
+async fn list_governance_spans(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Vec<Span>, sqlx::Error> {
@@ -136,7 +136,7 @@ async fn fetch_governance_spans(
         .collect())
 }
 
-async fn fetch_request_spans(
+async fn list_request_spans(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Vec<Span>, sqlx::Error> {
@@ -195,10 +195,7 @@ async fn fetch_request_spans(
         .collect())
 }
 
-async fn fetch_event_spans(
-    pool: &PgPool,
-    session_id: &SessionId,
-) -> Result<Vec<Span>, sqlx::Error> {
+async fn list_event_spans(pool: &PgPool, session_id: &SessionId) -> Result<Vec<Span>, sqlx::Error> {
     let events = sqlx::query!(
         r#"SELECT
             id              AS "id!",
@@ -248,13 +245,13 @@ async fn fetch_event_spans(
         .collect())
 }
 
-pub async fn fetch_trace_spans(
+pub async fn list_trace_spans(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Vec<Span>, sqlx::Error> {
-    let mut spans = fetch_governance_spans(pool, session_id).await?;
-    spans.extend(fetch_request_spans(pool, session_id).await?);
-    spans.extend(fetch_event_spans(pool, session_id).await?);
+    let mut spans = list_governance_spans(pool, session_id).await?;
+    spans.extend(list_request_spans(pool, session_id).await?);
+    spans.extend(list_event_spans(pool, session_id).await?);
     spans.sort_by_key(|s| s.started_at);
     Ok(spans)
 }

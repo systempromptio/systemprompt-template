@@ -243,6 +243,7 @@ lint-gates:
     bash scripts/check-glob-reexports.sh
     bash scripts/check-comments.sh
     bash scripts/check-duplicate-types.sh
+    bash scripts/check-repository-naming.sh
     bash scripts/check-fork-drift.sh
     bash scripts/check-dead-repository-code.sh
     bash scripts/check-file-headers.sh

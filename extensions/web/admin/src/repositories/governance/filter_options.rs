@@ -28,15 +28,15 @@ pub struct FilterOptions {
 
 const PER_FACET_LIMIT: i64 = 100;
 
-pub async fn fetch_filter_options(
+pub async fn get_filter_options(
     pool: &PgPool,
     range: TimeRange,
 ) -> Result<FilterOptions, sqlx::Error> {
-    let users = fetch_users(pool, range).await?;
-    let agents = fetch_agents(pool, range).await?;
-    let agent_scopes = fetch_agent_scopes(pool, range).await?;
-    let policies = fetch_policies(pool, range).await?;
-    let decisions = fetch_decisions(pool, range).await?;
+    let users = list_users(pool, range).await?;
+    let agents = list_agents(pool, range).await?;
+    let agent_scopes = list_agent_scopes(pool, range).await?;
+    let policies = list_policies(pool, range).await?;
+    let decisions = list_decisions(pool, range).await?;
 
     Ok(FilterOptions {
         users,
@@ -47,7 +47,7 @@ pub async fn fetch_filter_options(
     })
 }
 
-async fn fetch_users(pool: &PgPool, range: TimeRange) -> Result<Vec<FilterOption>, sqlx::Error> {
+async fn list_users(pool: &PgPool, range: TimeRange) -> Result<Vec<FilterOption>, sqlx::Error> {
     Ok(sqlx::query!(
         r#"SELECT g.user_id as "id!",
                   COALESCE(u.display_name, u.full_name, u.name, u.email, g.user_id) as "label!",
@@ -73,7 +73,7 @@ async fn fetch_users(pool: &PgPool, range: TimeRange) -> Result<Vec<FilterOption
     .collect())
 }
 
-async fn fetch_agents(pool: &PgPool, range: TimeRange) -> Result<Vec<FilterOption>, sqlx::Error> {
+async fn list_agents(pool: &PgPool, range: TimeRange) -> Result<Vec<FilterOption>, sqlx::Error> {
     Ok(sqlx::query!(
         r#"SELECT agent_id as "id!",
                   agent_id as "label!",
@@ -99,7 +99,7 @@ async fn fetch_agents(pool: &PgPool, range: TimeRange) -> Result<Vec<FilterOptio
     .collect())
 }
 
-async fn fetch_agent_scopes(
+async fn list_agent_scopes(
     pool: &PgPool,
     range: TimeRange,
 ) -> Result<Vec<FilterOption>, sqlx::Error> {
@@ -128,7 +128,7 @@ async fn fetch_agent_scopes(
     .collect())
 }
 
-async fn fetch_policies(pool: &PgPool, range: TimeRange) -> Result<Vec<FilterOption>, sqlx::Error> {
+async fn list_policies(pool: &PgPool, range: TimeRange) -> Result<Vec<FilterOption>, sqlx::Error> {
     Ok(sqlx::query!(
         r#"SELECT policy as "id!",
                   policy as "label!",
@@ -153,10 +153,7 @@ async fn fetch_policies(pool: &PgPool, range: TimeRange) -> Result<Vec<FilterOpt
     .collect())
 }
 
-async fn fetch_decisions(
-    pool: &PgPool,
-    range: TimeRange,
-) -> Result<Vec<FilterOption>, sqlx::Error> {
+async fn list_decisions(pool: &PgPool, range: TimeRange) -> Result<Vec<FilterOption>, sqlx::Error> {
     Ok(sqlx::query!(
         r#"SELECT decision as "id!",
                   decision as "label!",

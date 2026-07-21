@@ -14,4 +14,4 @@ pub mod user_queries;
 pub mod user_settings;
 
 pub use mutations::{create_user, delete_user, update_user};
-pub use share_token::get_share_token_version;
+pub use share_token::find_share_token_version;

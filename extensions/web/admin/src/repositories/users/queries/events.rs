@@ -5,7 +5,7 @@ use systemprompt::identifiers::UserId;
 
 use crate::types::UserUsageEvent;
 
-pub async fn get_user_usage(
+pub async fn list_user_usage(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<UserUsageEvent>, sqlx::Error> {

@@ -23,12 +23,12 @@ pub(super) struct GovernanceData {
 
 pub(super) async fn fetch_governance_data(pool: &PgPool) -> GovernanceData {
     let (lifetime, window, per_policy_lifetime, per_policy_window, top_tools, top_actors) = tokio::join!(
-        repositories::governance::fetch_governance_counts(pool),
-        repositories::governance::fetch_governance_counts_windowed(pool, WINDOW_24H_SECS),
-        repositories::governance::fetch_per_policy_counts(pool),
-        repositories::governance::fetch_per_policy_counts_windowed(pool, WINDOW_24H_SECS),
-        repositories::governance::fetch_top_policies(pool, WINDOW_24H_SECS, TOP_POLICIES_LIMIT),
-        repositories::governance::fetch_top_actors(pool, WINDOW_24H_SECS, TOP_ACTORS_LIMIT),
+        repositories::governance::get_governance_counts(pool),
+        repositories::governance::get_governance_counts_windowed(pool, WINDOW_24H_SECS),
+        repositories::governance::list_per_policy_counts(pool),
+        repositories::governance::list_per_policy_counts_windowed(pool, WINDOW_24H_SECS),
+        repositories::governance::list_top_policies(pool, WINDOW_24H_SECS, TOP_POLICIES_LIMIT),
+        repositories::governance::list_top_actors(pool, WINDOW_24H_SECS, TOP_ACTORS_LIMIT),
     );
 
     let lifetime = lifetime.unwrap_or_else(|e| {

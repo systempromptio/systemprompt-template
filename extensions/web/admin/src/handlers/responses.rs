@@ -26,7 +26,7 @@ pub(crate) struct AuditLogEntry {
 
 #[derive(Serialize, Debug)]
 pub(crate) struct PluginEnvResponse {
-    pub definitions: Vec<serde_json::Value>,
+    pub definitions: Vec<crate::handlers::plugins_env::PluginVariableDef>,
 
     pub stored: Vec<crate::repositories::marketplace::plugin_env::PluginEnvVar>,
     pub valid: bool,

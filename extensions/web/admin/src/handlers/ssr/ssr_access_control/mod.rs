@@ -79,7 +79,7 @@ pub(crate) async fn access_control_page(
         Err(r) => return *r,
     };
 
-    let dept_stats = repositories::users::user_queries::fetch_department_stats(&pool)
+    let dept_stats = repositories::users::user_queries::list_department_stats(&pool)
         .await
         .unwrap_or_default();
     let users = fetch_users_for_tree(&pool).await;

@@ -3,9 +3,7 @@
 
 use sqlx::PgPool;
 
-use super::fetch::{
-    fetch_decisions, fetch_events, fetch_requests, fetch_summary, fetch_transcript,
-};
+use super::fetch::{find_summary, find_transcript, list_decisions, list_events, list_requests};
 use super::resolve::resolve_session_id;
 use super::{
     AiRequestSummary, ChainEnvelope, ChainIdentity, ChainTotals, ChainUsageEvent, DecisionStage,
@@ -36,7 +34,7 @@ fn compute_totals(
 /// `id` may be a `decision_id`, `request_id`, `trace_id`, or `session_id`. An
 /// id that resolves to no session yields `Ok(None)`; only a query failure is
 /// an `Err`.
-pub async fn fetch_decision_chain(
+pub async fn find_decision_chain(
     pool: &PgPool,
     id: &str,
 ) -> Result<Option<ChainEnvelope>, sqlx::Error> {
@@ -44,11 +42,11 @@ pub async fn fetch_decision_chain(
         return Ok(None);
     };
 
-    let (decisions, slots) = fetch_decisions(pool, &session_id).await?;
-    let (requests, trace_id) = fetch_requests(pool, &session_id).await?;
-    let events = fetch_events(pool, &session_id).await?;
-    let transcript = fetch_transcript(pool, &session_id).await?;
-    let summary = fetch_summary(pool, &session_id).await?;
+    let (decisions, slots) = list_decisions(pool, &session_id).await?;
+    let (requests, trace_id) = list_requests(pool, &session_id).await?;
+    let events = list_events(pool, &session_id).await?;
+    let transcript = find_transcript(pool, &session_id).await?;
+    let summary = find_summary(pool, &session_id).await?;
 
     let identity = ChainIdentity {
         user_id: slots.user_id,

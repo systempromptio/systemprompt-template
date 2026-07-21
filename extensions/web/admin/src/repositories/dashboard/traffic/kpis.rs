@@ -4,7 +4,7 @@ use sqlx::PgPool;
 
 use crate::types::TrafficKpis;
 
-pub(super) async fn fetch_traffic_kpis(
+pub(super) async fn get_traffic_kpis(
     pool: &PgPool,
     interval: &str,
     prev_interval: &str,

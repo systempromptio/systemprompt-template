@@ -6,6 +6,7 @@ use axum::Json;
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt::config::ProfileBootstrap;
 
@@ -63,18 +64,8 @@ pub(crate) async fn list_plugin_env_handler(
         .collect();
     let missing_required: Vec<String> = definitions
         .iter()
-        .filter_map(|def| {
-            let name = def.get("name")?.as_str()?;
-            let required = def
-                .get("required")
-                .and_then(serde_json::Value::as_bool)
-                .unwrap_or(true);
-            if required && !stored_names.contains(name) {
-                Some(name.to_owned())
-            } else {
-                None
-            }
-        })
+        .filter(|def| def.required && !stored_names.contains(&def.name))
+        .map(|def| def.name.clone())
         .collect();
 
     Json(PluginEnvResponse {
@@ -101,7 +92,7 @@ pub fn resolve_principal(
 
 fn load_plugin_variable_defs(
     plugin_id: &str,
-) -> Result<Vec<serde_json::Value>, systemprompt_web_shared::error::MarketplaceError> {
+) -> Result<Vec<PluginVariableDef>, systemprompt_web_shared::error::MarketplaceError> {
     let services_path = ProfileBootstrap::get()
         .map(|p| std::path::PathBuf::from(&p.paths.services))
         .map_err(|e| {
@@ -117,23 +108,43 @@ fn load_plugin_variable_defs(
         return Ok(vec![]);
     }
     let content = std::fs::read_to_string(&config_path)?;
-    let val: serde_yaml::Value = serde_yaml::from_str(&content)?;
-    let variables = val
-        .get("plugin")
-        .and_then(|p| p.get("variables"))
-        .and_then(|v| v.as_sequence())
-        .cloned()
-        .unwrap_or_else(Vec::new);
+    let config: PluginConfigFile = serde_yaml::from_str(&content)?;
+    Ok(config.plugin.map(|p| p.variables).unwrap_or_default())
+}
 
-    let defs: Vec<serde_json::Value> = variables
-        .into_iter()
-        .filter_map(|v| {
-            serde_json::to_value(v)
-                .map_err(|e| {
-                    tracing::warn!(error = %e, "Failed to convert variable definition to JSON");
-                })
-                .ok()
-        })
-        .collect();
-    Ok(defs)
+/// The `plugin.variables` block of `services/plugins/<id>/config.yaml`.
+///
+/// Only the one block is modelled; every other key in the file is a concern of
+/// whatever loads it, so the outer shapes stay deliberately permissive.
+#[derive(Debug, Deserialize)]
+struct PluginConfigFile {
+    plugin: Option<PluginSection>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PluginSection {
+    #[serde(default)]
+    variables: Vec<PluginVariableDef>,
+}
+
+/// One environment variable a plugin declares it needs.
+///
+/// Serialized straight to the plugin-env screen, which reads exactly these
+/// fields — so the type is the contract with that screen, not just a parse.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub(crate) struct PluginVariableDef {
+    pub name: String,
+    #[serde(default)]
+    pub description: String,
+    /// A declared variable is required unless it says otherwise.
+    #[serde(default = "required_by_default")]
+    pub required: bool,
+    #[serde(default)]
+    pub secret: bool,
+    #[serde(default)]
+    pub example: String,
+}
+
+const fn required_by_default() -> bool {
+    true
 }

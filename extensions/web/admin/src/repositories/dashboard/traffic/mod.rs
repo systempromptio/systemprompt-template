@@ -4,8 +4,8 @@ mod kpis;
 mod queries;
 
 pub use queries::{
-    fetch_content_performance, fetch_realtime_pulse, fetch_top_pages_today,
-    fetch_traffic_country_timeseries,
+    get_realtime_pulse, list_content_performance, list_top_pages_today,
+    list_traffic_country_timeseries,
 };
 
 use sqlx::PgPool;
@@ -23,19 +23,19 @@ fn range_params(range: &str) -> (&str, &str, &str) {
     }
 }
 
-pub async fn fetch_traffic_data(pool: &PgPool, range: &str) -> Result<TrafficData, sqlx::Error> {
+pub async fn get_traffic_data(pool: &PgPool, range: &str) -> Result<TrafficData, sqlx::Error> {
     let (interval, prev_interval, bucket) = range_params(range);
 
     let (kpis, timeseries, sources, geo, devices, top_pages, country_timeseries, top_pages_daily) =
         tokio::try_join!(
-            kpis::fetch_traffic_kpis(pool, interval, prev_interval),
-            fetch_traffic_timeseries(pool, interval, bucket),
-            fetch_traffic_sources(pool, interval),
-            fetch_traffic_geo(pool, interval),
-            fetch_traffic_devices(pool, interval),
-            fetch_traffic_top_pages(pool, interval),
-            fetch_traffic_country_timeseries(pool, interval, bucket),
-            fetch_top_pages_daily(pool),
+            kpis::get_traffic_kpis(pool, interval, prev_interval),
+            list_traffic_timeseries(pool, interval, bucket),
+            list_traffic_sources(pool, interval),
+            list_traffic_geo(pool, interval),
+            list_traffic_devices(pool, interval),
+            list_traffic_top_pages(pool, interval),
+            list_traffic_country_timeseries(pool, interval, bucket),
+            list_top_pages_daily(pool),
         )?;
 
     Ok(TrafficData {
@@ -50,7 +50,7 @@ pub async fn fetch_traffic_data(pool: &PgPool, range: &str) -> Result<TrafficDat
     })
 }
 
-async fn fetch_traffic_timeseries(
+async fn list_traffic_timeseries(
     pool: &PgPool,
     interval: &str,
     bucket_size: &str,
@@ -92,7 +92,7 @@ async fn fetch_traffic_timeseries(
     .await
 }
 
-async fn fetch_traffic_sources(
+async fn list_traffic_sources(
     pool: &PgPool,
     interval: &str,
 ) -> Result<Vec<TrafficSource>, sqlx::Error> {
@@ -119,7 +119,7 @@ async fn fetch_traffic_sources(
     .await
 }
 
-async fn fetch_traffic_geo(pool: &PgPool, interval: &str) -> Result<Vec<TrafficGeo>, sqlx::Error> {
+async fn list_traffic_geo(pool: &PgPool, interval: &str) -> Result<Vec<TrafficGeo>, sqlx::Error> {
     sqlx::query_as!(
         TrafficGeo,
         r#"SELECT
@@ -139,7 +139,7 @@ async fn fetch_traffic_geo(pool: &PgPool, interval: &str) -> Result<Vec<TrafficG
     .await
 }
 
-async fn fetch_traffic_devices(
+async fn list_traffic_devices(
     pool: &PgPool,
     interval: &str,
 ) -> Result<Vec<TrafficDevice>, sqlx::Error> {
@@ -162,7 +162,7 @@ async fn fetch_traffic_devices(
     .await
 }
 
-async fn fetch_traffic_top_pages(
+async fn list_traffic_top_pages(
     pool: &PgPool,
     interval: &str,
 ) -> Result<Vec<TrafficTopPage>, sqlx::Error> {
@@ -185,7 +185,7 @@ async fn fetch_traffic_top_pages(
     .await
 }
 
-async fn fetch_top_pages_daily(pool: &PgPool) -> Result<Vec<TopPageDailyBucket>, sqlx::Error> {
+async fn list_top_pages_daily(pool: &PgPool) -> Result<Vec<TopPageDailyBucket>, sqlx::Error> {
     sqlx::query_as!(
         TopPageDailyBucket,
         r#"WITH top_pages AS (

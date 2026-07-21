@@ -116,7 +116,7 @@ pub(crate) async fn issue_share_token_handler(
             );
         },
     };
-    let row = repositories::users::get_share_token_version(&pool, &target_user_id).await;
+    let row = repositories::users::find_share_token_version(&pool, &target_user_id).await;
     let version = match row {
         Ok(Some(v)) => v,
         Ok(None) => return shared::error_response(StatusCode::NOT_FOUND, "User not found"),
@@ -171,7 +171,7 @@ pub(crate) async fn public_manifest_handler(
         return shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or revoked token");
     };
 
-    let current_version = match repositories::users::get_share_token_version(&pool, &user_id).await
+    let current_version = match repositories::users::find_share_token_version(&pool, &user_id).await
     {
         Ok(Some(v)) => v,
         Ok(None) => {

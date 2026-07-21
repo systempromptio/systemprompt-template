@@ -44,7 +44,7 @@ impl From<ContextUserSummaryRow> for ContextUserSummary {
     clippy::too_many_lines,
     reason = "body is one irreducible compile-time-checked query_as! SQL literal"
 )]
-pub async fn fetch_context_user_summary(
+pub async fn list_context_user_summary(
     pool: &PgPool,
     filter: &ContextListFilter,
 ) -> Result<Vec<ContextUserSummary>, sqlx::Error> {

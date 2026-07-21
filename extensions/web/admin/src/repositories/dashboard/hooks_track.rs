@@ -35,7 +35,7 @@ pub struct SessionEventRow {
     pub cwd: Option<String>,
 }
 
-pub async fn fetch_session_events(
+pub async fn list_session_events(
     pool: &PgPool,
     session_id: &SessionId,
     user_id: &UserId,
@@ -53,7 +53,7 @@ pub async fn fetch_session_events(
     .await
 }
 
-pub async fn fetch_user_messages(
+pub async fn list_user_messages(
     pool: &PgPool,
     session_id: &SessionId,
     user_id: &UserId,
@@ -89,7 +89,7 @@ pub struct SessionMetricsRow {
     pub automated_actions: Option<i32>,
 }
 
-pub async fn fetch_session_metrics(
+pub async fn find_session_metrics(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Option<SessionMetricsRow> {
@@ -122,7 +122,7 @@ pub struct SessionTimingRow {
     pub ended: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-pub async fn fetch_session_timing(
+pub async fn find_session_timing(
     pool: &PgPool,
     session_id: &SessionId,
     user_id: &UserId,
@@ -144,7 +144,7 @@ pub async fn fetch_session_timing(
     .flatten()
 }
 
-pub async fn fetch_last_message(pool: &PgPool, session_id: &SessionId, user_id: &UserId) -> String {
+pub async fn get_last_message(pool: &PgPool, session_id: &SessionId, user_id: &UserId) -> String {
     sqlx::query_scalar!(
         r#"SELECT COALESCE(prompt_preview, description, '') as "msg!"
           FROM plugin_usage_events

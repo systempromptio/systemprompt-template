@@ -95,13 +95,13 @@ pub(crate) async fn gather_analysis_context(
 ) -> String {
     let mut parts = Vec::new();
 
-    let user_messages = hooks_track::fetch_user_messages(pool, session_id, user_id).await;
+    let user_messages = hooks_track::list_user_messages(pool, session_id, user_id).await;
 
     if let Some(msg_part) = format_user_messages(&user_messages) {
         parts.push(msg_part);
     }
 
-    let entity_links = conversation_analytics::fetch_session_entity_links(pool, session_id)
+    let entity_links = conversation_analytics::list_session_entity_links(pool, session_id)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to fetch session entity links");
@@ -118,13 +118,13 @@ pub(crate) async fn gather_analysis_context(
         parts.push(skills_part);
     }
 
-    let metrics = hooks_track::fetch_session_metrics(pool, session_id).await;
+    let metrics = hooks_track::find_session_metrics(pool, session_id).await;
 
     if let Some(m) = metrics {
         parts.extend(format_session_metrics(&m));
     }
 
-    let timing = hooks_track::fetch_session_timing(pool, session_id, user_id).await;
+    let timing = hooks_track::find_session_timing(pool, session_id, user_id).await;
 
     if let Some(t) = timing
         && let Some(timing_part) = format_session_timing(&t)
@@ -166,5 +166,5 @@ pub(crate) async fn resolve_last_message(
         return msg.to_owned();
     }
 
-    hooks_track::fetch_last_message(pool, session_id, user_id).await
+    hooks_track::get_last_message(pool, session_id, user_id).await
 }

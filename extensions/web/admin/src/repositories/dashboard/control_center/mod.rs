@@ -7,7 +7,7 @@ use crate::types::control_center::ActivityFeedEvent;
 pub use crate::types::control_center::TodayStats;
 
 
-pub async fn fetch_session_events(
+pub async fn list_session_events(
     pool: &PgPool,
     user_id: &UserId,
     session_ids: &[String],

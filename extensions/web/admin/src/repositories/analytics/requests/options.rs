@@ -15,7 +15,7 @@ pub struct RequestFilterOptions {
     pub statuses: Vec<String>,
 }
 
-pub async fn fetch_request_filter_options(
+pub async fn get_request_filter_options(
     pool: &PgPool,
     range: TimeRange,
 ) -> Result<RequestFilterOptions, sqlx::Error> {

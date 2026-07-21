@@ -1,6 +1,6 @@
 //! Gateway-request read models for the analytics requests page.
 //!
-//! [`fetch_requests_paged`] (in `paged`) pages `ai_requests` with optional
+//! [`list_requests_paged`] (in `paged`) pages `ai_requests` with optional
 //! filters and per-row governance / tool-call counts; the dropdown option
 //! lists live in `options`.
 
@@ -11,8 +11,8 @@ use systemprompt::identifiers::{AgentId, AiRequestId, SessionId, TraceId, UserId
 mod options;
 mod paged;
 
-pub use options::{RequestFilterOptions, fetch_request_filter_options};
-pub use paged::{RequestPage, fetch_requests_paged};
+pub use options::{RequestFilterOptions, get_request_filter_options};
+pub use paged::{RequestPage, list_requests_paged};
 
 #[derive(Debug, Clone, Default)]
 pub struct RequestFilter {

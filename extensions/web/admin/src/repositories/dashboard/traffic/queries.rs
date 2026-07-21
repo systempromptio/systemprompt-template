@@ -10,7 +10,7 @@ use crate::types::{
     TrafficCountryBucket, TrafficTopPage,
 };
 
-pub async fn fetch_realtime_pulse(pool: &PgPool) -> Result<RealtimePulse, sqlx::Error> {
+pub async fn get_realtime_pulse(pool: &PgPool) -> Result<RealtimePulse, sqlx::Error> {
     let sessions_this_hour: i64 = sqlx::query_scalar!(
         r#"SELECT COUNT(*)::BIGINT AS "count!"
         FROM user_sessions
@@ -46,7 +46,7 @@ pub async fn fetch_realtime_pulse(pool: &PgPool) -> Result<RealtimePulse, sqlx::
     })
 }
 
-pub async fn fetch_top_pages_today(pool: &PgPool) -> Result<Vec<TrafficTopPage>, sqlx::Error> {
+pub async fn list_top_pages_today(pool: &PgPool) -> Result<Vec<TrafficTopPage>, sqlx::Error> {
     sqlx::query_as!(
         TrafficTopPage,
         r#"SELECT
@@ -65,7 +65,7 @@ pub async fn fetch_top_pages_today(pool: &PgPool) -> Result<Vec<TrafficTopPage>,
     .await
 }
 
-pub async fn fetch_traffic_country_timeseries(
+pub async fn list_traffic_country_timeseries(
     pool: &PgPool,
     interval: &str,
     bucket_size: &str,
@@ -102,17 +102,17 @@ pub async fn fetch_traffic_country_timeseries(
     .await
 }
 
-pub async fn fetch_content_performance(
+pub async fn list_content_performance(
     pool: &PgPool,
     content_range: &str,
 ) -> Result<Vec<ContentPerformanceRow>, sqlx::Error> {
     match content_range {
-        "7d" | "30d" => fetch_content_performance_precomputed(pool, content_range).await,
-        _ => fetch_content_performance_live(pool, content_range).await,
+        "7d" | "30d" => list_content_performance_precomputed(pool, content_range).await,
+        _ => list_content_performance_live(pool, content_range).await,
     }
 }
 
-async fn fetch_content_performance_precomputed(
+async fn list_content_performance_precomputed(
     pool: &PgPool,
     content_range: &str,
 ) -> Result<Vec<ContentPerformanceRow>, sqlx::Error> {
@@ -145,7 +145,7 @@ async fn fetch_content_performance_precomputed(
         .collect())
 }
 
-async fn fetch_content_performance_live(
+async fn list_content_performance_live(
     pool: &PgPool,
     content_range: &str,
 ) -> Result<Vec<ContentPerformanceRow>, sqlx::Error> {

@@ -16,8 +16,8 @@ use systemprompt::identifiers::SessionId;
 
 use crate::repositories::analytics::session_detail::{
     SessionContextRow, SessionHeader, SessionKpis, SessionRequestRow, SessionTraceRow,
-    fetch_session_contexts, fetch_session_header, fetch_session_kpis, fetch_session_requests,
-    fetch_session_traces,
+    find_session_header, get_session_kpis, list_session_contexts, list_session_requests,
+    list_session_traces,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -48,24 +48,24 @@ pub(crate) async fn session_detail_page(
         return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response();
     }
 
-    let header = match fetch_session_header(&pool, &session_id).await {
+    let header = match find_session_header(&pool, &session_id).await {
         Ok(Some(h)) => h,
         Ok(None) => return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response(),
         Err(e) => {
-            tracing::error!(error = %e, session_id = %session_id, "fetch_session_header failed");
+            tracing::error!(error = %e, session_id = %session_id, "find_session_header failed");
             return (StatusCode::INTERNAL_SERVER_ERROR, Html(NOT_FOUND_HTML)).into_response();
         },
     };
 
     let (kpis_res, contexts_res, traces_res, requests_res) = tokio::join!(
-        fetch_session_kpis(&pool, &session_id),
-        fetch_session_contexts(&pool, &session_id),
-        fetch_session_traces(&pool, &session_id),
-        fetch_session_requests(&pool, &session_id),
+        get_session_kpis(&pool, &session_id),
+        list_session_contexts(&pool, &session_id),
+        list_session_traces(&pool, &session_id),
+        list_session_requests(&pool, &session_id),
     );
 
     let kpis = kpis_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_session_kpis failed");
+        tracing::warn!(error = %e, "get_session_kpis failed");
         SessionKpis {
             request_count: 0,
             context_count: 0,
@@ -77,15 +77,15 @@ pub(crate) async fn session_detail_page(
         }
     });
     let contexts = contexts_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_session_contexts failed");
+        tracing::warn!(error = %e, "list_session_contexts failed");
         Vec::new()
     });
     let traces = traces_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_session_traces failed");
+        tracing::warn!(error = %e, "list_session_traces failed");
         Vec::new()
     });
     let requests = requests_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_session_requests failed");
+        tracing::warn!(error = %e, "list_session_requests failed");
         Vec::new()
     });
 

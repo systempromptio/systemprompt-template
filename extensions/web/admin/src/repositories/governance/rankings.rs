@@ -9,7 +9,7 @@ use crate::types::{TopActor, TopPolicy};
 // handlers, which this fork does not ship. Kept so the shared
 // repository files stay identical across both trees.
 // lint-ok: unused-pub
-pub async fn fetch_top_actors(
+pub async fn list_top_actors(
     pool: &PgPool,
     window_seconds: i64,
     limit: i64,
@@ -43,7 +43,7 @@ pub async fn fetch_top_actors(
 // handlers, which this fork does not ship. Kept so the shared
 // repository files stay identical across both trees.
 // lint-ok: unused-pub
-pub async fn fetch_top_policies(
+pub async fn list_top_policies(
     pool: &PgPool,
     window_seconds: i64,
     limit: i64,

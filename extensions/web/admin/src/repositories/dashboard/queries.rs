@@ -6,13 +6,13 @@ use systemprompt::identifiers::{Email, UserId};
 use crate::activity;
 use crate::types::{HourlyActivity, SkillCount, ToolSuccessRate, TopUser};
 
-pub async fn fetch_timeline(
+pub async fn list_timeline(
     pool: &PgPool,
 ) -> Result<Vec<activity::ActivityTimelineEvent>, sqlx::Error> {
     activity::queries::list_timeline(pool, None).await
 }
 
-pub async fn fetch_top_users(pool: &PgPool) -> Result<Vec<TopUser>, sqlx::Error> {
+pub async fn list_top_users(pool: &PgPool) -> Result<Vec<TopUser>, sqlx::Error> {
     sqlx::query_as!(
         TopUser,
         r#"SELECT
@@ -58,7 +58,7 @@ pub async fn fetch_top_users(pool: &PgPool) -> Result<Vec<TopUser>, sqlx::Error>
     .await
 }
 
-pub async fn fetch_popular_skills(pool: &PgPool) -> Result<Vec<SkillCount>, sqlx::Error> {
+pub async fn list_popular_skills(pool: &PgPool) -> Result<Vec<SkillCount>, sqlx::Error> {
     sqlx::query_as!(
         SkillCount,
         r#"SELECT COALESCE(m.tool_name, 'unknown') AS "tool_name!", COUNT(*)::BIGINT AS "count!"
@@ -70,7 +70,7 @@ pub async fn fetch_popular_skills(pool: &PgPool) -> Result<Vec<SkillCount>, sqlx
     .await
 }
 
-pub async fn fetch_hourly_activity(pool: &PgPool) -> Result<Vec<HourlyActivity>, sqlx::Error> {
+pub async fn list_hourly_activity(pool: &PgPool) -> Result<Vec<HourlyActivity>, sqlx::Error> {
     sqlx::query_as!(
         HourlyActivity,
         r#"SELECT hour as "hour!", SUM(cnt)::BIGINT AS "count!" FROM (
@@ -90,7 +90,7 @@ pub async fn fetch_hourly_activity(pool: &PgPool) -> Result<Vec<HourlyActivity>,
     .await
 }
 
-pub async fn fetch_recent_mcp_errors(
+pub async fn list_recent_mcp_errors(
     pool: &PgPool,
 ) -> Result<Vec<crate::types::RecentMcpError>, sqlx::Error> {
     let rows = sqlx::query_as!(
@@ -122,7 +122,7 @@ struct McpErrorRow {
     created_at: chrono::DateTime<chrono::Utc>,
 }
 
-pub async fn fetch_tool_success_rates(pool: &PgPool) -> Result<Vec<ToolSuccessRate>, sqlx::Error> {
+pub async fn list_tool_success_rates(pool: &PgPool) -> Result<Vec<ToolSuccessRate>, sqlx::Error> {
     sqlx::query_as!(
         ToolSuccessRate,
         r#"SELECT

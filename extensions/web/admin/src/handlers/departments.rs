@@ -140,9 +140,11 @@ pub(crate) async fn assign_user_to_department_handler(
     }
     let dept_name = body.department_name.trim();
     if !dept_name.is_empty()
-        && repositories::departments::get_department_by_name(&pool, dept_name)
+        && repositories::departments::find_department_by_name(&pool, dept_name)
             .await
-            .inspect_err(|e| tracing::warn!(error = %e, dept_name, "get_department_by_name failed"))
+            .inspect_err(
+                |e| tracing::warn!(error = %e, dept_name, "find_department_by_name failed"),
+            )
             .ok()
             .flatten()
             .is_none()

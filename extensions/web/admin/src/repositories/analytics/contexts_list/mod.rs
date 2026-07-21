@@ -4,7 +4,7 @@
 //! against `user_contexts` so we surface contexts that exist only in one side
 //! (a `user_contexts` row with no traffic, or traffic that bypassed
 //! `core contexts create`). Mirrors the JOIN shape used by
-//! `context_detail::fetch_context_header`.
+//! `context_detail::find_context_header`.
 
 use chrono::{DateTime, Utc};
 use systemprompt::identifiers::{ContextId, SessionId, UserId};
@@ -13,9 +13,9 @@ mod kpis;
 mod list;
 mod users;
 
-pub use kpis::{ContextListKpis, fetch_context_list_kpis, fetch_distinct_models};
-pub use list::fetch_context_list;
-pub use users::fetch_context_user_summary;
+pub use kpis::{ContextListKpis, get_context_list_kpis, list_distinct_models};
+pub use list::list_context_list;
+pub use users::list_context_user_summary;
 
 #[derive(Debug, Clone, Default)]
 pub struct ContextListFilter {

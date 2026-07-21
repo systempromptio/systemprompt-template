@@ -54,7 +54,7 @@ pub struct ConversationSummary {
 
 /// `window_days` is the trailing window; `previous` covers the equivalent prior
 /// window so the caller can compute a delta.
-pub async fn fetch_usage_window(
+pub async fn get_usage_window(
     pool: &PgPool,
     user_id: &UserId,
     window_days: i32,
@@ -95,7 +95,7 @@ pub async fn fetch_usage_window(
 
 /// `token_share` is computed against the 30-day total and may be 0.0 when the
 /// user has no activity.
-pub async fn fetch_top_models(
+pub async fn list_top_models(
     pool: &PgPool,
     user_id: &UserId,
     limit: i64,
@@ -150,13 +150,13 @@ pub async fn fetch_top_models(
 ///
 /// `ai_requests` has no agent column today; the existing analytics surface
 /// reads agent ids from `plugin_usage_events`, which is keyed differently.
-pub async fn fetch_conversation_summary(
+pub async fn get_conversation_summary(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<ConversationSummary, sqlx::Error> {
-    let (total_conversations, total_ai_requests) = fetch_conversation_totals(pool, user_id).await?;
-    let by_model = fetch_conversation_by_model(pool, user_id).await?;
-    let recent = fetch_recent_conversations(pool, user_id).await?;
+    let (total_conversations, total_ai_requests) = get_conversation_totals(pool, user_id).await?;
+    let by_model = list_conversation_by_model(pool, user_id).await?;
+    let recent = list_recent_conversations(pool, user_id).await?;
 
     Ok(ConversationSummary {
         total_conversations,
@@ -167,7 +167,7 @@ pub async fn fetch_conversation_summary(
     })
 }
 
-async fn fetch_conversation_totals(
+async fn get_conversation_totals(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<(i64, i64), sqlx::Error> {
@@ -186,7 +186,7 @@ async fn fetch_conversation_totals(
     Ok((totals.total_conversations, totals.total_ai_requests))
 }
 
-async fn fetch_conversation_by_model(
+async fn list_conversation_by_model(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<ConversationGroup>, sqlx::Error> {
@@ -215,7 +215,7 @@ async fn fetch_conversation_by_model(
     .collect())
 }
 
-async fn fetch_recent_conversations(
+async fn list_recent_conversations(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<RecentConversation>, sqlx::Error> {

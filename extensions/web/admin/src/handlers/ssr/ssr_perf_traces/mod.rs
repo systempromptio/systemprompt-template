@@ -13,10 +13,10 @@ use serde::Deserialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, UserId};
 
-use crate::repositories::governance::filter_options::fetch_filter_options;
+use crate::repositories::governance::filter_options::get_filter_options;
 use crate::repositories::traces::{
-    TraceFilter, TracePage, TraceSort, TraceSortColumn, TraceSortDir, TraceStats, fetch_trace_list,
-    fetch_trace_stats,
+    TraceFilter, TracePage, TraceSort, TraceSortColumn, TraceSortDir, TraceStats, get_trace_stats,
+    list_traces,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -96,17 +96,17 @@ async fn load_traces_data(
         offset,
     };
     let (list_res, stats_res, options_res) = tokio::join!(
-        fetch_trace_list(pool, filter, range, trace_page),
-        fetch_trace_stats(pool, range),
-        fetch_filter_options(pool, range),
+        list_traces(pool, filter, range, trace_page),
+        get_trace_stats(pool, range),
+        get_filter_options(pool, range),
     );
 
     let (rows, total) = list_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_trace_list failed");
+        tracing::warn!(error = %e, "list_traces failed");
         (Vec::new(), 0)
     });
     let stats = stats_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_trace_stats failed");
+        tracing::warn!(error = %e, "get_trace_stats failed");
         TraceStats::default()
     });
     let options = options_res.unwrap_or_default();

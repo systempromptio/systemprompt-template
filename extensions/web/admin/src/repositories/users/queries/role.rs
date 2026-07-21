@@ -3,7 +3,7 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
-pub async fn get_user_roles_department(
+pub async fn find_user_roles_department(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Option<(Vec<String>, String)>, sqlx::Error> {

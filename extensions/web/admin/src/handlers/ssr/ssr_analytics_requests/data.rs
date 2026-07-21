@@ -10,12 +10,12 @@ use std::sync::Arc;
 use sqlx::PgPool;
 
 use crate::repositories::analytics::request_stats::{
-    CostBucket, LatencyBucket, RequestStats, fetch_cost_over_time, fetch_latency_histogram,
-    fetch_request_stats,
+    CostBucket, LatencyBucket, RequestStats, get_request_stats, list_cost_over_time,
+    list_latency_histogram,
 };
 use crate::repositories::analytics::requests::{
     RequestFilter, RequestFilterOptions, RequestPage, RequestRow, RequestSortSpec,
-    fetch_request_filter_options, fetch_requests_paged,
+    get_request_filter_options, list_requests_paged,
 };
 use crate::util::time_range::{
     TimeRange, TimeRangePreset, TimeRangeQuery, count_requests_in_range, parse_time_range,
@@ -91,31 +91,31 @@ pub(super) async fn fetch_requests_data(
         offset,
     };
     let (paged, stats_res, hist_res, cost_res, options_res) = tokio::join!(
-        fetch_requests_paged(pool, filter, range, page),
-        fetch_request_stats(pool, range),
-        fetch_latency_histogram(pool, range),
-        fetch_cost_over_time(pool, range),
-        fetch_request_filter_options(pool, range),
+        list_requests_paged(pool, filter, range, page),
+        get_request_stats(pool, range),
+        list_latency_histogram(pool, range),
+        list_cost_over_time(pool, range),
+        get_request_filter_options(pool, range),
     );
 
     let (rows, total_count) = paged.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_requests_paged failed");
+        tracing::warn!(error = %e, "list_requests_paged failed");
         (Vec::new(), 0)
     });
     let stats = stats_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_request_stats failed");
+        tracing::warn!(error = %e, "get_request_stats failed");
         RequestStats::default()
     });
     let hist = hist_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_latency_histogram failed");
+        tracing::warn!(error = %e, "list_latency_histogram failed");
         Vec::new()
     });
     let cost = cost_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_cost_over_time failed");
+        tracing::warn!(error = %e, "list_cost_over_time failed");
         Vec::new()
     });
     let options = options_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "fetch_request_filter_options failed");
+        tracing::warn!(error = %e, "get_request_filter_options failed");
         RequestFilterOptions::default()
     });
 

@@ -23,7 +23,7 @@ impl Default for DecisionUserSlots {
     }
 }
 
-pub(super) async fn fetch_decisions(
+pub(super) async fn list_decisions(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<(Vec<DecisionStage>, DecisionUserSlots), sqlx::Error> {
@@ -74,7 +74,7 @@ pub(super) async fn fetch_decisions(
     Ok((stages, slots))
 }
 
-pub(super) async fn fetch_requests(
+pub(super) async fn list_requests(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<(Vec<AiRequestSummary>, Option<TraceId>), sqlx::Error> {
@@ -122,7 +122,7 @@ pub(super) async fn fetch_requests(
     Ok((requests, trace_id))
 }
 
-pub(super) async fn fetch_events(
+pub(super) async fn list_events(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Vec<ChainUsageEvent>, sqlx::Error> {
@@ -156,7 +156,7 @@ pub(super) async fn fetch_events(
     .collect())
 }
 
-pub(super) async fn fetch_transcript(
+pub(super) async fn find_transcript(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Option<TranscriptEnvelope>, sqlx::Error> {
@@ -187,7 +187,7 @@ pub(super) async fn fetch_transcript(
     }))
 }
 
-pub(super) async fn fetch_summary(
+pub(super) async fn find_summary(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Option<SessionSummary>, sqlx::Error> {

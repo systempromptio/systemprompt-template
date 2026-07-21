@@ -5,7 +5,7 @@ use sqlx::PgPool;
 use super::TraceStats;
 use crate::util::time_range::TimeRange;
 
-pub async fn fetch_trace_stats(pool: &PgPool, range: TimeRange) -> Result<TraceStats, sqlx::Error> {
+pub async fn get_trace_stats(pool: &PgPool, range: TimeRange) -> Result<TraceStats, sqlx::Error> {
     let row = sqlx::query!(
         r#"WITH trace_to_session AS (
             SELECT DISTINCT trace_id, session_id

@@ -3,7 +3,7 @@
 //! `id` may be an `ai_requests.id`, `request_id`, or `governance_decisions.id`.
 //! Renders the full chain (identity, policy evaluations, prompt/response
 //! preview, cost, latency, linked trace) using the existing
-//! `fetch_decision_chain` envelope.
+//! `find_decision_chain` envelope.
 
 use std::sync::Arc;
 
@@ -16,7 +16,7 @@ use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::repositories::governance::chain::{
-    AiRequestSummary, ChainEnvelope, DecisionStage, TranscriptEnvelope, fetch_decision_chain,
+    AiRequestSummary, ChainEnvelope, DecisionStage, TranscriptEnvelope, find_decision_chain,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -106,11 +106,11 @@ pub(crate) async fn governance_audit_detail_page(
         return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
     }
 
-    let envelope = match fetch_decision_chain(&pool, &id).await {
+    let envelope = match find_decision_chain(&pool, &id).await {
         Ok(Some(env)) => env,
         Ok(None) => return (StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response(),
         Err(e) => {
-            tracing::error!(error = %e, id = %id, "fetch_decision_chain failed");
+            tracing::error!(error = %e, id = %id, "find_decision_chain failed");
             return (StatusCode::INTERNAL_SERVER_ERROR, Html(NOT_FOUND_HTML)).into_response();
         },
     };

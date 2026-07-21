@@ -36,7 +36,7 @@ struct RequestRowWithTotal {
     total_count: i64,
 }
 
-/// Pagination window for [`fetch_requests_paged`]: LIMIT/OFFSET plus the
+/// Pagination window for [`list_requests_paged`]: LIMIT/OFFSET plus the
 /// closed sort spec, grouped since callers always pass all three together.
 #[derive(Debug, Clone, Copy)]
 pub struct RequestPage {
@@ -45,7 +45,7 @@ pub struct RequestPage {
     pub offset: i64,
 }
 
-pub async fn fetch_requests_paged(
+pub async fn list_requests_paged(
     pool: &PgPool,
     filter: &RequestFilter,
     range: TimeRange,

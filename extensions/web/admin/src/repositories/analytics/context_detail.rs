@@ -62,7 +62,7 @@ pub struct ContextToolCallRow {
     pub created_at: DateTime<Utc>,
 }
 
-pub async fn fetch_context_header(
+pub async fn find_context_header(
     pool: &PgPool,
     context_id: &ContextId,
 ) -> Result<Option<ContextHeader>, sqlx::Error> {
@@ -98,7 +98,7 @@ pub async fn fetch_context_header(
     .await
 }
 
-pub async fn fetch_context_kpis(
+pub async fn get_context_kpis(
     pool: &PgPool,
     context_id: &ContextId,
 ) -> Result<ContextKpis, sqlx::Error> {
@@ -134,7 +134,7 @@ pub async fn fetch_context_kpis(
     })
 }
 
-pub async fn fetch_context_requests(
+pub async fn list_context_requests(
     pool: &PgPool,
     context_id: &ContextId,
 ) -> Result<Vec<ContextRequestRow>, sqlx::Error> {
@@ -160,7 +160,7 @@ pub async fn fetch_context_requests(
     .await
 }
 
-pub async fn fetch_context_messages(
+pub async fn list_context_messages(
     pool: &PgPool,
     context_id: &ContextId,
 ) -> Result<Vec<ContextMessageRow>, sqlx::Error> {
@@ -185,7 +185,7 @@ pub async fn fetch_context_messages(
     .await
 }
 
-pub async fn fetch_context_tool_calls(
+pub async fn list_context_tool_calls(
     pool: &PgPool,
     context_id: &ContextId,
 ) -> Result<Vec<ContextToolCallRow>, sqlx::Error> {

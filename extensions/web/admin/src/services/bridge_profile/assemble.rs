@@ -45,27 +45,27 @@ pub(super) async fn fetch_usage_sections(pool: &Arc<PgPool>, user_id: &UserId) -
 
     let (d1, d7, d30, top_models, conversations, bridge_user) = tokio::join!(
         async move {
-            usage_repo::fetch_usage_window(&pool_for_d1, &user_id_d1, 1)
+            usage_repo::get_usage_window(&pool_for_d1, &user_id_d1, 1)
                 .await
                 .unwrap_or_default()
         },
         async move {
-            usage_repo::fetch_usage_window(&pool_for_d7, &user_id_d7, 7)
+            usage_repo::get_usage_window(&pool_for_d7, &user_id_d7, 7)
                 .await
                 .unwrap_or_default()
         },
         async move {
-            usage_repo::fetch_usage_window(&pool_for_d30, &user_id_d30, 30)
+            usage_repo::get_usage_window(&pool_for_d30, &user_id_d30, 30)
                 .await
                 .unwrap_or_default()
         },
         async move {
-            usage_repo::fetch_top_models(&pool_for_models, &user_id_models, 5)
+            usage_repo::list_top_models(&pool_for_models, &user_id_models, 5)
                 .await
                 .unwrap_or_default()
         },
         async move {
-            usage_repo::fetch_conversation_summary(&pool_for_conv, &user_id_conv)
+            usage_repo::get_conversation_summary(&pool_for_conv, &user_id_conv)
                 .await
                 .unwrap_or_default()
         },

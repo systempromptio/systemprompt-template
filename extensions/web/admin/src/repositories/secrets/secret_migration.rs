@@ -11,7 +11,7 @@ pub struct UnencryptedSecret {
     pub var_value: String,
 }
 
-pub async fn fetch_unencrypted_secrets(
+pub async fn list_unencrypted_secrets(
     pool: &PgPool,
 ) -> Result<Vec<UnencryptedSecret>, sqlx::Error> {
     let rows = sqlx::query!(
@@ -32,7 +32,7 @@ pub async fn fetch_unencrypted_secrets(
         .collect())
 }
 
-pub async fn fetch_key_version(pool: &PgPool, user_id: &UserId) -> i32 {
+pub async fn get_key_version(pool: &PgPool, user_id: &UserId) -> i32 {
     sqlx::query_scalar!(
         "SELECT key_version FROM user_encryption_keys WHERE user_id = $1",
         user_id.as_str()

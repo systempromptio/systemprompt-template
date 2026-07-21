@@ -22,7 +22,7 @@ use crate::{baseline, globals, principal, tempdb::TempDb};
 // only ever shrink.
 const KNOWN_5XX: [(&str, &str); 1] = [(
     "GET /api/public/admin/access-control/users/{user_id}/matrix",
-    "fetch_user_for_matrix uses fetch_one, so an unknown user id surfaces as \
+    "get_user_for_matrix uses fetch_one, so an unknown user id surfaces as \
      sqlx::Error::RowNotFound, and user_matrix_handler maps every error to 500. Should be a \
      404; fixed when the handler moves to AdminResult in the error-model pass.",
 )];

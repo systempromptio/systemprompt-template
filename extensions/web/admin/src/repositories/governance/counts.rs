@@ -8,7 +8,7 @@ use super::{GovernanceCounts, PerPolicyCounts};
 // handlers, which this fork does not ship. Kept so the shared
 // repository files stay identical across both trees.
 // lint-ok: unused-pub
-pub async fn fetch_governance_counts(pool: &PgPool) -> Result<GovernanceCounts, sqlx::Error> {
+pub async fn get_governance_counts(pool: &PgPool) -> Result<GovernanceCounts, sqlx::Error> {
     let row = sqlx::query!(
         r#"SELECT
             COUNT(*)::bigint AS "total!",
@@ -31,7 +31,7 @@ pub async fn fetch_governance_counts(pool: &PgPool) -> Result<GovernanceCounts, 
 // handlers, which this fork does not ship. Kept so the shared
 // repository files stay identical across both trees.
 // lint-ok: unused-pub
-pub async fn fetch_governance_counts_windowed(
+pub async fn get_governance_counts_windowed(
     pool: &PgPool,
     window_seconds: i64,
 ) -> Result<GovernanceCounts, sqlx::Error> {
@@ -59,7 +59,7 @@ pub async fn fetch_governance_counts_windowed(
 // handlers, which this fork does not ship. Kept so the shared
 // repository files stay identical across both trees.
 // lint-ok: unused-pub
-pub async fn fetch_per_policy_counts(pool: &PgPool) -> Result<Vec<PerPolicyCounts>, sqlx::Error> {
+pub async fn list_per_policy_counts(pool: &PgPool) -> Result<Vec<PerPolicyCounts>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT
             policy,
@@ -87,7 +87,7 @@ pub async fn fetch_per_policy_counts(pool: &PgPool) -> Result<Vec<PerPolicyCount
 // handlers, which this fork does not ship. Kept so the shared
 // repository files stay identical across both trees.
 // lint-ok: unused-pub
-pub async fn fetch_per_policy_counts_windowed(
+pub async fn list_per_policy_counts_windowed(
     pool: &PgPool,
     window_seconds: i64,
 ) -> Result<Vec<PerPolicyCounts>, sqlx::Error> {

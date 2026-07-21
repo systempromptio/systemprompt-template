@@ -64,7 +64,7 @@ pub struct SessionRequestRow {
     pub created_at: DateTime<Utc>,
 }
 
-pub async fn fetch_session_header(
+pub async fn find_session_header(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Option<SessionHeader>, sqlx::Error> {
@@ -106,7 +106,7 @@ pub async fn fetch_session_header(
     .await
 }
 
-pub async fn fetch_session_kpis(
+pub async fn get_session_kpis(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<SessionKpis, sqlx::Error> {
@@ -138,7 +138,7 @@ pub async fn fetch_session_kpis(
     })
 }
 
-pub async fn fetch_session_contexts(
+pub async fn list_session_contexts(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Vec<SessionContextRow>, sqlx::Error> {
@@ -164,7 +164,7 @@ pub async fn fetch_session_contexts(
     .await
 }
 
-pub async fn fetch_session_traces(
+pub async fn list_session_traces(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Vec<SessionTraceRow>, sqlx::Error> {
@@ -189,7 +189,7 @@ pub async fn fetch_session_traces(
     .await
 }
 
-pub async fn fetch_session_requests(
+pub async fn list_session_requests(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Vec<SessionRequestRow>, sqlx::Error> {

@@ -68,7 +68,7 @@ pub(crate) async fn for_user_handler(
     };
 
     let (user_roles, _department) =
-        match repositories::users::queries::get_user_roles_department(&pool, &user_id).await {
+        match repositories::users::queries::find_user_roles_department(&pool, &user_id).await {
             Ok(Some(rd)) => rd,
             Ok(None) => return shared::error_response(StatusCode::NOT_FOUND, "User not found"),
             Err(e) => {
@@ -104,7 +104,7 @@ async fn collect_allowed_routes(
                     "Failed to load ACL rules",
                 ))
             })?;
-        let default_included = gateway_acl::get_entity(pool, &route.id)
+        let default_included = gateway_acl::find_entity(pool, &route.id)
             .await
             .unwrap_or_else(|e| {
                 tracing::error!(error = %e, route_id = %route.id, "Failed to load catalog entity");
@@ -206,13 +206,13 @@ pub(crate) async fn detect_after_the_fact(
             continue;
         };
         let Some((user_roles, _department)) =
-            repositories::users::queries::get_user_roles_department(pool, &row.user_id).await?
+            repositories::users::queries::find_user_roles_department(pool, &row.user_id).await?
         else {
             continue;
         };
         let attributes = subject_attributes_for(pool, &UserId::new(&row.user_id)).await;
         let rules = gateway_acl::list_rules_for_route(pool, &route.id).await?;
-        let default_included = gateway_acl::get_entity(pool, &route.id)
+        let default_included = gateway_acl::find_entity(pool, &route.id)
             .await?
             .map(|e| e.default_included);
         let entity = EntityRef::GatewayRoute(RouteId::new(route.id.clone()));

@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
 use crate::handlers::shared;
-use crate::repositories::users::queries::{fetch_distinct_roles, list_users};
+use crate::repositories::users::queries::{list_distinct_roles, list_users};
 
 /// JSON body returned by [`list_distinct_roles_handler`].
 #[derive(Debug, Serialize)]
@@ -35,7 +35,7 @@ pub(crate) struct UserSearchResponse {
 }
 
 pub(crate) async fn list_distinct_roles_handler(State(pool): State<Arc<PgPool>>) -> Response {
-    match fetch_distinct_roles(&pool).await {
+    match list_distinct_roles(&pool).await {
         Ok(roles) => Json(DistinctRolesResponse { roles }).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to fetch distinct roles");

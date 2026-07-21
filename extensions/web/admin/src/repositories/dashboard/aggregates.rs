@@ -43,7 +43,7 @@ pub async fn get_activity_stats(pool: &PgPool) -> Result<ActivityStats, sqlx::Er
     })
 }
 
-pub async fn fetch_usage_timeseries(
+pub async fn list_usage_timeseries(
     pool: &PgPool,
     interval: &str,
     bucket_interval: &str,
@@ -107,7 +107,7 @@ pub async fn fetch_usage_timeseries(
     .await
 }
 
-pub async fn fetch_active_users_24h(pool: &PgPool) -> Result<i64, sqlx::Error> {
+pub async fn get_active_users_24h(pool: &PgPool) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar!(
         r#"SELECT COALESCE(COUNT(DISTINCT combined.user_id), 0)::BIGINT as "count!"
         FROM (

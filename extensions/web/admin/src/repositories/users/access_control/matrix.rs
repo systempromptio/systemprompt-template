@@ -82,7 +82,7 @@ pub async fn resolve_user_matrix(
     user_id: &UserId,
     sections_in: Vec<SectionInput>,
 ) -> Result<UserMatrix, sqlx::Error> {
-    let user = fetch_user_for_matrix(pool, user_id).await?;
+    let user = get_user_for_matrix(pool, user_id).await?;
     let all_rules = list_all_rules(pool).await?;
     let defaults = load_entity_defaults(pool).await?;
     // The same lookup the enforcement webhook performs, so the matrix and the
@@ -142,7 +142,7 @@ async fn load_entity_defaults(
     Ok(out)
 }
 
-async fn fetch_user_for_matrix(
+async fn get_user_for_matrix(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<UserMatrixUser, sqlx::Error> {

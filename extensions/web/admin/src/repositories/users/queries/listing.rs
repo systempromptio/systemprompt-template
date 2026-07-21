@@ -58,7 +58,7 @@ pub async fn list_users(pool: &PgPool) -> Result<Vec<UserSummary>, sqlx::Error> 
     .await
 }
 
-pub async fn fetch_distinct_roles(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
+pub async fn list_distinct_roles(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT DISTINCT unnest(roles) AS "role!" FROM users
           WHERE NOT ('anonymous' = ANY(roles))
