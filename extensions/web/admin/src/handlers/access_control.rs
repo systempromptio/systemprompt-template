@@ -160,7 +160,7 @@ fn build_matrix_sections(
     // matrix renders whatever resolved instead of failing the whole view.
     let mut sections: Vec<repositories::users::access_control::SectionInput> = Vec::new();
 
-    if let Ok(cfg) = repositories::governance::gateway::get_gateway_config(profile_path) {
+    if let Ok(cfg) = repositories::config::gateway::get_gateway_config(profile_path) {
         let rows = cfg
             .routes
             .into_iter()
@@ -200,7 +200,7 @@ fn build_matrix_sections(
             .collect();
         sections.push(("plugin".to_owned(), "Plugins".to_owned(), rows));
     }
-    if let Ok(agents) = repositories::governance::agents::list_agents(services_path) {
+    if let Ok(agents) = repositories::config::agents::list_agents(services_path) {
         let rows: Vec<(String, String, Option<String>)> = agents
             .into_iter()
             .map(|a| {
@@ -234,7 +234,7 @@ fn build_matrix_sections(
 /// Renders current DB state as YAML for copying into the committed baseline.
 /// Writes nothing to disk — instances never write back to `services/`.
 pub(crate) async fn yaml_snapshot_handler(State(pool): State<Arc<PgPool>>) -> Response {
-    use crate::repositories::governance::acl_yaml_snapshot;
+    use crate::repositories::config::acl_yaml_snapshot;
     match acl_yaml_snapshot::render_yaml_snapshot(&pool).await {
         Ok(yaml) => (
             StatusCode::OK,

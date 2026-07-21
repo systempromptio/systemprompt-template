@@ -17,7 +17,7 @@ use crate::repositories::analytics::requests::{
     RequestFilter, RequestFilterOptions, RequestPage, RequestRow, RequestSortSpec,
     fetch_request_filter_options, fetch_requests_paged,
 };
-use crate::repositories::governance::time_range::{
+use crate::util::time_range::{
     TimeRange, TimeRangePreset, TimeRangeQuery, count_requests_in_range, parse_time_range,
     preset_to_range,
 };

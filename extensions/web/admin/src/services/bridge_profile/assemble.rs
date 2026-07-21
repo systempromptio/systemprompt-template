@@ -168,7 +168,7 @@ pub(super) fn build_agents_block() -> AgentsBlock {
         Err(_) => return AgentsBlock::default(),
     };
 
-    let agents = match crate::repositories::governance::agents::list_agents(&services_path) {
+    let agents = match crate::repositories::config::agents::list_agents(&services_path) {
         Ok(a) => a,
         Err(e) => {
             tracing::warn!(error = %e, "list_agents failed for profile pane");

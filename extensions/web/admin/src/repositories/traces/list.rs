@@ -4,7 +4,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, SessionId, TraceId, UserId};
 
 use super::{TraceFilter, TraceSort, TraceSummary};
-use crate::repositories::governance::time_range::TimeRange;
+use crate::util::time_range::TimeRange;
 
 #[derive(Debug)]
 struct TraceRow {

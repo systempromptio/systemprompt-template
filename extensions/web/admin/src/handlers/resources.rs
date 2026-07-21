@@ -22,7 +22,7 @@ pub(crate) async fn list_agents_handler(Extension(user_ctx): Extension<UserConte
         Ok(p) => p,
         Err(r) => return *r,
     };
-    let agents = match repositories::governance::agents::list_agents(&services_path) {
+    let agents = match repositories::config::agents::list_agents(&services_path) {
         Ok(a) => a,
         Err(e) => {
             tracing::error!(error = %e, "Failed to list agents");
@@ -57,7 +57,7 @@ pub(crate) async fn get_agent_handler(Path(agent_id): Path<String>) -> Response 
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::governance::agents::find_agent(&services_path, &AgentId::new(agent_id)) {
+    match repositories::config::agents::find_agent(&services_path, &AgentId::new(agent_id)) {
         Ok(Some(agent)) => Json(agent).into_response(),
         Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "Agent not found"),
         Err(e) => {

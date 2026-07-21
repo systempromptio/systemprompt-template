@@ -6,7 +6,7 @@
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::repositories::governance::time_range::TimeRange;
+use crate::util::time_range::TimeRange;
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct RequestFilterOptions {

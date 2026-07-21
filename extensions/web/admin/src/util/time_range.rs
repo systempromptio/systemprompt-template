@@ -1,4 +1,7 @@
-//! The time window every governance audit query is scoped by.
+//! The time window audit, analytics, and trace queries are scoped by.
+//!
+//! A date parser rather than a repository — it reaches the database only to
+//! count rows in a candidate window — so it lives outside `repositories`.
 //!
 //! Parsed from `?from=&to=&preset=` on audit pages. `count_requests_in_range`
 //! exists so a page can cheaply test a candidate window before committing to it

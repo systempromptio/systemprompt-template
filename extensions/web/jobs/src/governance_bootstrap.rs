@@ -23,7 +23,7 @@ use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::error::JobError;
-use systemprompt_web_admin::repositories::governance::acl_yaml_loader;
+use systemprompt_web_admin::repositories::config::acl_yaml_loader;
 use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]

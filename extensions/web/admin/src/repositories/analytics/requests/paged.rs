@@ -11,7 +11,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, AiRequestId, SessionId, TraceId, UserId};
 
 use super::{RequestFilter, RequestRow, RequestSortSpec};
-use crate::repositories::governance::time_range::TimeRange;
+use crate::util::time_range::TimeRange;
 
 #[derive(Debug)]
 struct RequestRowWithTotal {

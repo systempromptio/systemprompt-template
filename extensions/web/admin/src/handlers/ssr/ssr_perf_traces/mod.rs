@@ -14,7 +14,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, UserId};
 
 use crate::repositories::governance::filter_options::fetch_filter_options;
-use crate::repositories::governance::time_range::{
+use crate::util::time_range::{
     TimeRange, TimeRangePreset, TimeRangeQuery, parse_time_range,
 };
 use crate::repositories::traces::{

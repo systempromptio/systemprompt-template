@@ -25,8 +25,8 @@ use crate::authz::{dimensions, subject_attributes_for};
 
 use crate::handlers::shared;
 use crate::repositories;
-use crate::repositories::governance::acl_detect;
-use crate::repositories::governance::gateway_acl::{self, Decision};
+use crate::repositories::config::acl_detect;
+use crate::repositories::config::gateway_acl::{self, Decision};
 
 use crate::types::{GatewayRouteView, UserContext};
 
@@ -57,7 +57,7 @@ pub(crate) async fn for_user_handler(
         Ok(p) => p,
         Err(r) => return *r,
     };
-    let cfg = match repositories::governance::gateway::get_gateway_config(&profile_path) {
+    let cfg = match repositories::config::gateway::get_gateway_config(&profile_path) {
         Ok(c) => c,
         Err(e) => {
             tracing::error!(error = %e, "Failed to load gateway config");
@@ -167,7 +167,7 @@ pub(crate) async fn detect_handler(
         Ok(p) => p,
         Err(r) => return *r,
     };
-    let cfg = match repositories::governance::gateway::get_gateway_config(&profile_path) {
+    let cfg = match repositories::config::gateway::get_gateway_config(&profile_path) {
         Ok(c) => c,
         Err(e) => {
             tracing::error!(error = %e, "Failed to load gateway config");
@@ -200,7 +200,7 @@ pub(crate) async fn detect_after_the_fact(
     let mut emitted = 0usize;
     for row in rows {
         let Some(route) =
-            repositories::governance::gateway::find_matching_route(routes, &row.model)
+            repositories::config::gateway::find_matching_route(routes, &row.model)
         else {
             continue;
         };

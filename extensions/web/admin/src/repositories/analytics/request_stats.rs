@@ -9,7 +9,7 @@
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::repositories::governance::time_range::TimeRange;
+use crate::util::time_range::TimeRange;
 
 /// Fixed latency-histogram bin edges (ms). The final bin is open-ended.
 pub const LATENCY_BIN_EDGES_MS: [f64; 8] =

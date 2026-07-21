@@ -7,7 +7,7 @@
 use urlencoding::encode as urlencode;
 
 use crate::repositories::governance::filter_options::{FilterOption, FilterOptions};
-use crate::repositories::governance::time_range::TimeRange;
+use crate::util::time_range::TimeRange;
 use crate::repositories::traces::{TraceFilter, TraceSortColumn, TraceSortDir, TraceStats};
 
 use super::context::{

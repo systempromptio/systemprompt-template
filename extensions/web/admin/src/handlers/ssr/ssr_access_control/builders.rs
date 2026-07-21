@@ -57,7 +57,7 @@ fn build_gateway_routes(services_path: &Path) -> Vec<RouteRef> {
     ];
     for path in &candidates {
         if path.exists()
-            && let Ok(cfg) = repositories::governance::gateway::get_gateway_config(path)
+            && let Ok(cfg) = repositories::config::gateway::get_gateway_config(path)
         {
             return cfg
                 .routes
@@ -110,7 +110,7 @@ fn build_marketplaces() -> Vec<EntityRef> {
 }
 
 fn build_agents(services_path: &Path) -> Vec<EntityRef> {
-    repositories::governance::agents::list_agents(services_path)
+    repositories::config::agents::list_agents(services_path)
         .unwrap_or_default()
         .into_iter()
         .map(|a| EntityRef {

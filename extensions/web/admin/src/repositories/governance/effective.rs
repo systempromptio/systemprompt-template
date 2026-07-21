@@ -192,7 +192,7 @@ fn allow_reason(user_id: &UserId, matched_by: &MatchedBy) -> String {
 
 fn collect_gateway_ids() -> Result<Vec<String>, AdminError> {
     let profile_path = shared_path_or_err(shared::get_profile_path())?;
-    let cfg = repositories::governance::gateway::get_gateway_config(&profile_path)
+    let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
         .map_err(|e| AdminError::internal(e.to_string()))?;
     Ok(cfg.routes.into_iter().map(|r| r.id).collect())
 }

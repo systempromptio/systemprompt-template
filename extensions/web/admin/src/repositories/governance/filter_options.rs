@@ -8,7 +8,7 @@
 use serde::Serialize;
 use sqlx::PgPool;
 
-use super::time_range::TimeRange;
+use crate::util::time_range::TimeRange;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct FilterOption {

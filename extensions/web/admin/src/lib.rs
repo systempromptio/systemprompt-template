@@ -32,6 +32,7 @@ mod routes;
 pub(crate) mod services;
 pub mod templates;
 pub mod types;
+pub mod util;
 
 use std::sync::Arc;
 

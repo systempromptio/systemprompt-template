@@ -11,7 +11,7 @@ use crate::repositories::analytics::request_stats::{CostBucket, LatencyBucket, R
 use crate::repositories::analytics::requests::{
     RequestFilter, RequestFilterOptions, RequestRow, RequestSortColumn, RequestSortSpec, SortDir,
 };
-use crate::repositories::governance::time_range::TimeRange;
+use crate::util::time_range::TimeRange;
 
 use super::context::{
     CostBucketView, FilterOptionsView, FiltersView, LatencyBucketView, PaginationView,

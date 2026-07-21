@@ -1,7 +1,7 @@
 //! Gateway route configuration backed by the profile YAML.
 //!
-//! Unlike the rest of `governance`, the gateway config is not a Postgres
-//! table: it lives in the profile YAML's `gateway` block. These functions read,
+//! The gateway config is not a Postgres table: it lives in the profile YAML's
+//! `gateway` block, which is why it sits here. These functions read,
 //! mutate, and re-serialize that block while keeping every route's stable `id`
 //! synchronized.
 
