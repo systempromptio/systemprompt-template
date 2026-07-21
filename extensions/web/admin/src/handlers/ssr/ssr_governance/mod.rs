@@ -15,6 +15,7 @@ use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use sqlx::PgPool;
 
+use crate::error::AdminHtmlResult;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
@@ -35,9 +36,9 @@ pub(crate) async fn governance_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
+        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
     }
 
     let mut fetched = data::fetch_governance_data(&pool).await;
@@ -73,5 +74,11 @@ pub(crate) async fn governance_page(
         config_path: "services/governance/config.yaml",
     };
 
-    super::render_typed_page(&engine, "governance", &ctx, &user_ctx, &mkt_ctx)
+    Ok(super::render_typed_page(
+        &engine,
+        "governance",
+        &ctx,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }

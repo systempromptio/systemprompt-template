@@ -9,6 +9,7 @@ use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
+use crate::error::AdminHtmlResult;
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -45,15 +46,12 @@ pub(crate) async fn governance_hooks_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
+        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
     }
 
-    let services_path = match super::get_services_path() {
-        Ok(p) => p,
-        Err(e) => return e.into_response(),
-    };
+    let services_path = super::get_services_path()?;
 
     let configured_hooks =
         repositories::marketplace::hooks::list_configured_hooks(&services_path, &user_ctx.roles)
@@ -103,5 +101,11 @@ pub(crate) async fn governance_hooks_page(
         has_recent,
     };
 
-    super::render_typed_page(&engine, "governance-hooks", &ctx, &user_ctx, &mkt_ctx)
+    Ok(super::render_typed_page(
+        &engine,
+        "governance-hooks",
+        &ctx,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }

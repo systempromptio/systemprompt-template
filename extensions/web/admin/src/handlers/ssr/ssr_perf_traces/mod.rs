@@ -13,6 +13,7 @@ use serde::Deserialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, UserId};
 
+use crate::error::AdminHtmlResult;
 use crate::repositories::governance::filter_options::get_filter_options;
 use crate::repositories::traces::{
     TraceFilter, TracePage, TraceSort, TraceSortColumn, TraceSortDir, TraceStats, get_trace_stats,
@@ -56,9 +57,9 @@ pub(crate) async fn perf_traces_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<TraceListQuery>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
+        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
     }
 
     let range = parse_time_range(&TimeRangeQuery {
@@ -69,7 +70,13 @@ pub(crate) async fn perf_traces_page(
     let page = query.page.unwrap_or(0).max(0);
 
     let ctx = load_traces_data(&pool, &query, range, page).await;
-    super::render_typed_page(&engine, "perf-traces", &ctx, &user_ctx, &mkt_ctx)
+    Ok(super::render_typed_page(
+        &engine,
+        "perf-traces",
+        &ctx,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }
 
 async fn load_traces_data(
