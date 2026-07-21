@@ -5,7 +5,6 @@
 //! the audit trail and the client cannot retry a 400.
 
 mod event_types;
-mod parsers;
 
 pub use event_types::{
     ConfigChangeData, HookCommonFields, HookEvent, InstructionsLoadedData, NotificationData,
@@ -141,36 +140,74 @@ const fn resolve_event_name(common: &HookCommonFields) -> &str {
     }
 }
 
+/// Deserialize one hook payload into its variant.
+///
+/// Ingest is deliberately lenient: a payload that does not fit its declared
+/// shape is recorded as [`HookEvent::Unknown`] with a warning rather than
+/// rejected, so a Claude Code release that adds or changes a field cannot stop
+/// governance events being recorded.
+fn parse_event<T: serde::de::DeserializeOwned>(
+    raw: &serde_json::Value,
+    event_name: &str,
+    warnings: &mut Vec<String>,
+    wrap: fn(T) -> HookEvent,
+) -> HookEvent {
+    match serde_json::from_value::<T>(raw.clone()) {
+        Ok(data) => wrap(data),
+        Err(e) => {
+            warnings.push(format!("{event_name} parse error: {e}"));
+            HookEvent::Unknown(event_name.to_owned())
+        },
+    }
+}
+
 fn dispatch_event(
     event_name: &str,
     raw: &serde_json::Value,
     common: &HookCommonFields,
     warnings: &mut Vec<String>,
 ) -> HookEvent {
-    match event_name {
-        "SessionStart" => parsers::parse_session_start(raw, warnings),
-        "SessionEnd" => parsers::parse_session_end(raw, warnings),
-        "UserPromptSubmit" => parsers::parse_user_prompt_submit(raw, warnings),
-        "PreToolUse" => parsers::parse_pre_tool_use(raw, warnings),
-        "PostToolUse" => parsers::parse_post_tool_use(raw, warnings),
-        "PostToolUseFailure" => parsers::parse_post_tool_use_failure(raw, warnings),
-        "PermissionRequest" => parsers::parse_permission_request(raw, warnings),
-        "Stop" => parsers::parse_stop(raw, warnings),
-        "SubagentStart" => parsers::parse_subagent_start(raw, common, warnings),
-        "SubagentStop" => parsers::parse_subagent_stop(raw, common, warnings),
-        "TaskCompleted" => parsers::parse_task_completed(raw, warnings),
-        "TeammateIdle" => parsers::parse_teammate_idle(raw, warnings),
-        "Notification" => parsers::parse_notification(raw, warnings),
-        "ConfigChange" => parsers::parse_config_change(raw, warnings),
-        "WorktreeCreate" => parsers::parse_worktree_create(raw, warnings),
-        "WorktreeRemove" => parsers::parse_worktree_remove(raw, warnings),
-        "PreCompact" => parsers::parse_pre_compact(raw, warnings),
-        "InstructionsLoaded" => parsers::parse_instructions_loaded(raw, warnings),
+    macro_rules! parse {
+        ($data:ty, $variant:path) => {
+            parse_event::<$data>(raw, event_name, warnings, $variant)
+        };
+    }
+    let event = match event_name {
+        "SessionStart" => parse!(SessionStartData, HookEvent::SessionStart),
+        "SessionEnd" => parse!(SessionEndData, HookEvent::SessionEnd),
+        "UserPromptSubmit" => parse!(UserPromptSubmitData, HookEvent::UserPromptSubmit),
+        "PreToolUse" => parse!(PreToolUseData, HookEvent::PreToolUse),
+        "PostToolUse" => parse!(PostToolUseData, HookEvent::PostToolUse),
+        "PostToolUseFailure" => parse!(PostToolUseFailureData, HookEvent::PostToolUseFailure),
+        "PermissionRequest" => parse!(PermissionRequestData, HookEvent::PermissionRequest),
+        "Stop" => parse!(StopData, HookEvent::Stop),
+        "SubagentStart" => parse!(SubagentStartData, HookEvent::SubagentStart),
+        "SubagentStop" => parse!(SubagentStopData, HookEvent::SubagentStop),
+        "TaskCompleted" => parse!(TaskCompletedData, HookEvent::TaskCompleted),
+        "TeammateIdle" => parse!(TeammateIdleData, HookEvent::TeammateIdle),
+        "Notification" => parse!(NotificationData, HookEvent::Notification),
+        "ConfigChange" => parse!(ConfigChangeData, HookEvent::ConfigChange),
+        "WorktreeCreate" => parse!(WorktreeCreateData, HookEvent::WorktreeCreate),
+        "WorktreeRemove" => parse!(WorktreeRemoveData, HookEvent::WorktreeRemove),
+        "PreCompact" => parse!(PreCompactData, HookEvent::PreCompact),
+        "InstructionsLoaded" => parse!(InstructionsLoadedData, HookEvent::InstructionsLoaded),
         other => {
             warnings.push(format!("Unknown hook event type: {other}"));
             HookEvent::Unknown(other.to_owned())
         },
+    };
+    // `agent_id` is a common field rather than part of either variant, so the
+    // subagent events can only be checked for it out here.
+    if matches!(
+        event,
+        HookEvent::SubagentStart(_) | HookEvent::SubagentStop(_)
+    ) && common.agent_id.is_none()
+    {
+        warnings.push(format!(
+            "{event_name} missing expected common field: agent_id"
+        ));
     }
+    event
 }
 
 #[derive(Debug, Deserialize)]

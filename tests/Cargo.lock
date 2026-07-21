@@ -6467,6 +6467,7 @@ name = "web-unit-tests"
 version = "0.0.0"
 dependencies = [
  "serde_json",
+ "systemprompt-web-admin",
  "systemprompt-web-shared",
 ]
 
