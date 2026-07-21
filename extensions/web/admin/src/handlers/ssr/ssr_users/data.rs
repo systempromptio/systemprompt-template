@@ -97,10 +97,7 @@ pub(super) async fn collect_user_detail_extras(
 
     let effective = Some(
         repositories::governance::effective::compute_effective_permissions(
-            pool,
-            &d.user_id,
-            &roles,
-            &department,
+            pool, &d.user_id, &roles,
         )
         .await,
     );

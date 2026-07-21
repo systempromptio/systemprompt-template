@@ -1,10 +1,18 @@
 //! Effective-permissions computation for the user-detail page.
 //!
-//! For a given user (roles + department), runs the pure
+//! For a given user's roles, runs the pure
 //! [`systemprompt_security::authz::resolve`] resolver against every gateway
 //! route and every MCP server, returning per-entity Allow/Deny decisions
 //! with the rule that decided. The view layer renders these as collapsible
 //! sections under an "Effective Permissions" tab.
+//!
+//! Department rules are not represented here. `access_control_rules` stores
+//! `rule_type = 'department'` and the access matrix and department rollups
+//! both honour it, but the resolver's vocabulary
+//! ([`systemprompt_security::authz::RuleType`]) is `User` and `Role` only, so
+//! a grant that a department rule alone would confer is not reflected on this
+//! tab. Closing that gap means widening the rule type in core, not
+//! reimplementing precedence here.
 
 use std::sync::Arc;
 
@@ -39,7 +47,6 @@ pub async fn compute_effective_permissions(
     pool: &PgPool,
     user_id: &UserId,
     user_roles: &[String],
-    department: &str,
 ) -> EffectivePermissions {
     let gateway_ids = collect_gateway_ids().unwrap_or_default();
     let mcp_ids = collect_mcp_ids().unwrap_or_default();
@@ -73,7 +80,6 @@ pub async fn compute_effective_permissions(
             rules: &rules,
             user_id: user_id.as_str(),
             user_roles,
-            department,
             default_included,
         }));
     }
@@ -97,7 +103,6 @@ pub async fn compute_effective_permissions(
             rules: &rules,
             user_id: user_id.as_str(),
             user_roles,
-            department,
             default_included,
         }));
     }
@@ -115,7 +120,6 @@ struct DecideArgs<'a> {
     rules: &'a [AccessRule],
     user_id: &'a str,
     user_roles: &'a [String],
-    department: &'a str,
     default_included: Option<bool>,
 }
 
@@ -127,11 +131,9 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
         rules,
         user_id,
         user_roles,
-        department,
         default_included,
     } = args;
     let uid = UserId::new(user_id);
-    let _ = department;
     let dec = resolve(ResolveInput {
         entity: &entity,
         rules,
@@ -143,13 +145,7 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
     let (decision, reason) = match dec {
         Decision::Allow { .. } => (
             "allow".to_owned(),
-            allow_reason(
-                rules,
-                &uid,
-                user_roles,
-                department,
-                default_included.unwrap_or(false),
-            ),
+            allow_reason(rules, &uid, user_roles, default_included.unwrap_or(false)),
         ),
         Decision::Deny { reason } => ("deny".to_owned(), reason.to_string()),
     };
@@ -175,7 +171,6 @@ fn allow_reason(
     rules: &[AccessRule],
     user_id: &UserId,
     user_roles: &[String],
-    department: &str,
     default_included: bool,
 ) -> String {
     use systemprompt_security::authz::{Access, RuleType};
@@ -193,7 +188,6 @@ fn allow_reason(
     }) {
         return format!("role allow: {}", rule.rule_value);
     }
-    let _ = department;
     if default_included {
         return "default included".to_owned();
     }

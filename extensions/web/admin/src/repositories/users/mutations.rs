@@ -48,8 +48,6 @@ pub async fn create_user(
     .fetch_one(pool)
     .await?;
 
-    let _ = user_id_str;
-
     Ok(summary)
 }
 

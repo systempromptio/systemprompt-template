@@ -18,7 +18,7 @@ use systemprompt::models::AppPaths;
 use crate::handlers::shared;
 
 pub(crate) async fn handle(
-    State(pool): State<Arc<PgPool>>,
+    State(_pool): State<Arc<PgPool>>,
     AxumPath((plugin_id, relative_path)): AxumPath<(String, String)>,
     headers: HeaderMap,
 ) -> Response {
@@ -28,9 +28,6 @@ pub(crate) async fn handle(
     };
 
     let plugin_id = PluginId::new(plugin_id);
-
-    let _ = pool;
-    let _ = user_id;
 
     let plugin_dir = match resolve_plugin_dir(&plugin_id) {
         Ok(p) => p,

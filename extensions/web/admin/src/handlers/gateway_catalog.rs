@@ -200,7 +200,7 @@ pub(crate) async fn detect_after_the_fact(
         else {
             continue;
         };
-        let Some((user_roles, department)) =
+        let Some((user_roles, _department)) =
             repositories::users::queries::get_user_roles_department(pool, &row.user_id).await?
         else {
             continue;
@@ -211,7 +211,6 @@ pub(crate) async fn detect_after_the_fact(
             .map(|e| e.default_included);
         let entity = EntityRef::GatewayRoute(RouteId::new(route.id.clone()));
         let uid = UserId::new(&row.user_id);
-        let _ = &department;
         if let Decision::Deny { reason } = gateway_acl::resolve(ResolveInput {
             entity: &entity,
             rules: &rules,
