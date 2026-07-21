@@ -13,7 +13,6 @@ use std::sync::Arc;
 
 use axum::Json;
 use axum::extract::{Extension, Path, State};
-use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
@@ -130,35 +129,19 @@ pub(crate) async fn detect_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     axum::extract::Query(query): axum::extract::Query<DetectQuery>,
-) -> Response {
+) -> AdminResult<Response> {
     if !user_ctx.is_admin {
-        return shared::error_response(StatusCode::FORBIDDEN, "Admin only");
+        return Err(AdminError::Forbidden("Admin only".to_owned()));
     }
-    let profile_path = match shared::get_profile_path() {
-        Ok(p) => p,
-        Err(e) => return e.into_response(),
-    };
-    let cfg = match repositories::config::gateway::get_gateway_config(&profile_path) {
-        Ok(c) => c,
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to load gateway config");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Failed to load gateway",
-            );
-        },
-    };
-    match detect_after_the_fact(&pool, &cfg.routes, query.since_minutes).await {
-        Ok(emitted) => Json(DetectResponse {
-            emitted,
-            since_minutes: query.since_minutes,
-        })
-        .into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "ACL detector failed");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Detector failed")
-        },
-    }
+    let profile_path = shared::get_profile_path()?;
+    let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
+        .map_err(AdminError::internal)?;
+    let emitted = detect_after_the_fact(&pool, &cfg.routes, query.since_minutes).await?;
+    Ok(Json(DetectResponse {
+        emitted,
+        since_minutes: query.since_minutes,
+    })
+    .into_response())
 }
 
 /// After-the-fact detector: scan recent `ai_requests` and emit a

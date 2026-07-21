@@ -6,12 +6,11 @@ use std::sync::Arc;
 
 use axum::Json;
 use axum::extract::{Query, State};
-use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-use crate::handlers::shared;
+use crate::error::AdminResult;
 use crate::repositories::users::queries::{list_distinct_roles, list_users};
 
 /// JSON body returned by [`list_distinct_roles_handler`].
@@ -34,14 +33,11 @@ pub(crate) struct UserSearchResponse {
     pub users: Vec<UserSearchEntry>,
 }
 
-pub(crate) async fn list_distinct_roles_handler(State(pool): State<Arc<PgPool>>) -> Response {
-    match list_distinct_roles(&pool).await {
-        Ok(roles) => Json(DistinctRolesResponse { roles }).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to fetch distinct roles");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
-        },
-    }
+pub(crate) async fn list_distinct_roles_handler(
+    State(pool): State<Arc<PgPool>>,
+) -> AdminResult<Response> {
+    let roles = list_distinct_roles(&pool).await?;
+    Ok(Json(DistinctRolesResponse { roles }).into_response())
 }
 
 #[derive(Debug, Deserialize)]
@@ -55,14 +51,8 @@ pub(crate) struct UserSearchQuery {
 pub(crate) async fn search_users_handler(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<UserSearchQuery>,
-) -> Response {
-    let users = match list_users(&pool).await {
-        Ok(u) => u,
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to list users for search");
-            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error");
-        },
-    };
+) -> AdminResult<Response> {
+    let users = list_users(&pool).await?;
     let q = query.q.unwrap_or_default().to_lowercase();
     let limit = query.limit.unwrap_or(10).min(50);
     let users: Vec<UserSearchEntry> = users
@@ -89,5 +79,5 @@ pub(crate) async fn search_users_handler(
             email: u.email.as_ref().map(|e| e.as_ref().to_owned()),
         })
         .collect();
-    Json(UserSearchResponse { users }).into_response()
+    Ok(Json(UserSearchResponse { users }).into_response())
 }
