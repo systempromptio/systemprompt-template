@@ -7,8 +7,8 @@
 use axum::Json;
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
-use thiserror::Error;
 use systemprompt_web_shared::html_escape;
+use thiserror::Error;
 
 use crate::handlers::shared::ErrorBody;
 use crate::repositories::bridge::BridgeRepoError;
@@ -36,6 +36,9 @@ pub enum AdminError {
 
     #[error("Conflict: {0}")]
     Conflict(String),
+
+    #[error("Too many requests: {0}")]
+    RateLimited(String),
 
     #[error("Database error: {0}")]
     Database(#[from] sqlx::Error),
@@ -74,6 +77,7 @@ impl AdminError {
             Self::Unauthorized(_) | Self::Unauthenticated(_) => StatusCode::UNAUTHORIZED,
             Self::Forbidden(_) => StatusCode::FORBIDDEN,
             Self::Conflict(_) => StatusCode::CONFLICT,
+            Self::RateLimited(_) => StatusCode::TOO_MANY_REQUESTS,
             Self::Database(_)
             | Self::BridgeRepo(_)
             | Self::Marketplace(_)
@@ -89,6 +93,7 @@ impl AdminError {
             | Self::Unauthorized(msg)
             | Self::Forbidden(msg)
             | Self::Conflict(msg)
+            | Self::RateLimited(msg)
             | Self::BridgeRepo(BridgeRepoError::Validation(msg))
             | Self::Marketplace(
                 MarketplaceError::BadRequest(msg) | MarketplaceError::NotFound(msg),
@@ -183,8 +188,13 @@ impl IntoResponse for AdminHtmlError {
     fn into_response(self) -> Response {
         let status = self.0.status();
         self.0.log(status);
+        // The heading names the class of failure and the paragraph names this
+        // instance of it, which is what the hand-rolled pages did one at a
+        // time — "Access Denied" over "Admin access required", "Not Found"
+        // over which thing was not found.
         let body = Html(format!(
-            "<h1>Error</h1><p>{}</p>",
+            "<h1>{}</h1><p>{}</p>",
+            status.canonical_reason().unwrap_or("Error"),
             html_escape(&self.0.public_message())
         ));
         (status, body).into_response()

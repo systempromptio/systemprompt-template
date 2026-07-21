@@ -4,11 +4,11 @@
 //! shared time-range + identity-filter-ribbon URL contract. Each row links to
 //! the per-trace waterfall at `/admin/entities/traces/{session_id}`.
 
+use crate::error::AdminError;
 use std::sync::Arc;
 
 use axum::extract::{Extension, Query, State};
-use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::Response;
 use serde::Deserialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, UserId};
@@ -23,7 +23,6 @@ use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use crate::util::time_range::{TimeRange, TimeRangePreset, TimeRangeQuery, parse_time_range};
 
-use super::ACCESS_DENIED_HTML;
 
 mod context;
 mod rows;
@@ -59,7 +58,7 @@ pub(crate) async fn perf_traces_page(
     Query(query): Query<TraceListQuery>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
     let range = parse_time_range(&TimeRangeQuery {

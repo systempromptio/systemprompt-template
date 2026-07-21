@@ -5,13 +5,13 @@
 //! preview, cost, latency, linked trace) using the existing
 //! `find_decision_chain` envelope.
 
+use crate::error::AdminError;
 use std::sync::Arc;
 
 use systemprompt::identifiers::{AgentId, AiRequestId, SessionId, TraceId, UserId};
 
 use axum::extract::{Extension, Path, State};
-use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::Response;
 use serde::Serialize;
 use sqlx::PgPool;
 
@@ -22,10 +22,6 @@ use crate::repositories::governance::chain::{
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
-use super::ACCESS_DENIED_HTML;
-
-const NOT_FOUND_HTML: &str = "<h1>Request not found</h1>\
-<p>No audit chain found for that id.</p>";
 
 #[derive(Debug, Serialize)]
 struct AuditDetailContext<'a> {
@@ -104,11 +100,11 @@ pub(crate) async fn governance_audit_detail_page(
     Path(id): Path<String>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
     let Some(envelope) = find_decision_chain(&pool, &id).await? else {
-        return Ok((StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response());
+        return Err(AdminError::NotFound("No audit chain found for that id.".to_owned()).into());
     };
 
     let primary = pick_primary(&envelope, &id);

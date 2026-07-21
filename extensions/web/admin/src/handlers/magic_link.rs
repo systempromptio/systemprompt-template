@@ -41,6 +41,8 @@ pub(crate) async fn request_magic_link(
     req_headers: HeaderMap,
     Json(body): Json<MagicLinkRequest>,
 ) -> impl IntoResponse {
+    // lint-ok: http-error — answers identically whether or not the account exists,
+    // so a typed error would leak it
     let email = body.email.trim().to_lowercase();
 
     if Email::try_new(email.clone()).is_err() {
@@ -137,6 +139,8 @@ pub(crate) async fn validate_magic_link(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<ValidateTokenRequest>,
 ) -> impl IntoResponse {
+    // lint-ok: http-error — answers identically whether or not the account exists,
+    // so a typed error would leak it
     magic_links::consume_magic_link_token(&pool, &body.token)
         .await
         .map_or_else(

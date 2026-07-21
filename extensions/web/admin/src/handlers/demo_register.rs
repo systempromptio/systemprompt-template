@@ -4,17 +4,17 @@ use std::sync::Arc;
 
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 
+use crate::error::{AdminError, AdminResult};
 use crate::repositories;
 use crate::repositories::users::magic_links;
 use crate::types::{CreateUserRequest, UserContext};
 
-use super::shared;
 
 #[derive(Deserialize, Debug)]
 pub(crate) struct DemoRegisterRequest {
@@ -50,24 +50,23 @@ pub(crate) async fn create_demo_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Json(body): Json<DemoRegisterRequest>,
-) -> impl IntoResponse {
+) -> AdminResult<Response> {
     if !user_ctx.is_admin {
-        return shared::error_response(StatusCode::FORBIDDEN, "Admin access required");
+        return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
 
     let email_str = body.email.trim().to_lowercase();
     let name = body.name.trim().to_owned();
 
     if email_str.is_empty() || !email_str.contains('@') {
-        return shared::error_response(StatusCode::BAD_REQUEST, "Invalid email address");
+        return Err(AdminError::BadRequest("Invalid email address".to_owned()));
     }
     if name.is_empty() {
-        return shared::error_response(StatusCode::BAD_REQUEST, "Name is required");
+        return Err(AdminError::BadRequest("Name is required".to_owned()));
     }
 
-    let Ok(email) = Email::try_new(email_str.clone()) else {
-        return shared::error_response(StatusCode::BAD_REQUEST, "Invalid email address");
-    };
+    let email = Email::try_new(email_str.clone())
+        .map_err(|e| AdminError::BadRequest(format!("Invalid email address: {e}")))?;
 
     let user_id = derive_user_id(&email_str);
 
@@ -84,25 +83,15 @@ pub(crate) async fn create_demo_user_handler(
         status: Some("active".to_owned()),
     };
 
-    if let Err(e) = repositories::users::mutations::create_user(&pool, &create_req).await {
-        tracing::error!(error = %e, "Failed to create demo user");
-        return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Registration failed");
-    }
+    repositories::users::mutations::create_user(&pool, &create_req).await?;
 
-    let raw_token = match magic_links::create_magic_link_token(&pool, &email_str, None).await {
-        Ok(token) => token,
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to create registration token");
-            return shared::error_response(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "User created but failed to generate registration link",
-            );
-        },
-    };
+    let raw_token = magic_links::create_magic_link_token(&pool, &email_str, None)
+        .await
+        .map_err(AdminError::internal)?;
 
     let registration_url = format!("/admin/add-passkey?token={raw_token}");
 
-    (
+    Ok((
         StatusCode::OK,
         Json(DemoRegisterResponse {
             ok: true,
@@ -111,5 +100,5 @@ pub(crate) async fn create_demo_user_handler(
             display_name: name,
         }),
     )
-        .into_response()
+        .into_response())
 }

@@ -5,11 +5,11 @@
 //! filterable / sortable paged table. Every row carries `data-chain-id`
 //! pointing at the request id so the chain-drawer can resolve it.
 
+use crate::error::AdminError;
 use std::sync::Arc;
 
 use axum::extract::{Extension, Query, State};
-use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::Response;
 use serde::Deserialize;
 use sqlx::PgPool;
 
@@ -17,7 +17,6 @@ use crate::error::AdminHtmlResult;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
-use super::ACCESS_DENIED_HTML;
 
 mod context;
 mod data;
@@ -52,7 +51,7 @@ pub(crate) async fn analytics_requests_page(
     Query(query): Query<RequestsQuery>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
     let filter = view::filter_from_query(&query);

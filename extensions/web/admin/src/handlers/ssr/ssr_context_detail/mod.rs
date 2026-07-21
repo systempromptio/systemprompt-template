@@ -7,11 +7,11 @@
 mod context;
 mod data;
 
+use crate::error::AdminError;
 use std::sync::Arc;
 
 use axum::extract::{Extension, Path, State};
-use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::Response;
 use sqlx::PgPool;
 use systemprompt::identifiers::ContextId;
 
@@ -25,10 +25,6 @@ use crate::types::{MarketplaceContext, UserContext};
 
 use data::{build_detail_data, default_kpis};
 
-use super::ACCESS_DENIED_HTML;
-
-const NOT_FOUND_HTML: &str = "<h1>Context not found</h1>\
-<p>No context, AI request, or message rows match that context id.</p>";
 
 pub(crate) async fn context_detail_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -38,16 +34,22 @@ pub(crate) async fn context_detail_page(
     Path(context_id): Path<String>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
     let context_id = ContextId::new(context_id.trim());
     if context_id.as_str().is_empty() {
-        return Ok((StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response());
+        return Err(AdminError::NotFound(
+            "No context, AI request, or message rows match that context id.".to_owned(),
+        )
+        .into());
     }
 
     let Some(header) = find_context_header(&pool, &context_id).await? else {
-        return Ok((StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response());
+        return Err(AdminError::NotFound(
+            "No context, AI request, or message rows match that context id.".to_owned(),
+        )
+        .into());
     };
 
     let (kpis_res, requests_res, messages_res, tool_calls_res) = tokio::join!(

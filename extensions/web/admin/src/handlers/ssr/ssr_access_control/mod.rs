@@ -8,6 +8,7 @@
 
 mod builders;
 
+use crate::error::AdminError;
 use std::sync::Arc;
 
 use crate::error::AdminHtmlResult;
@@ -16,13 +17,11 @@ use crate::repositories::users::access_tree::{AccessTreeUserRow, list_users_for_
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::extract::{Extension, State};
-use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::Response;
 use builders::EntityCatalogue;
 use serde::Serialize;
 use sqlx::PgPool;
 
-use super::ACCESS_DENIED_HTML;
 
 #[derive(Debug, Serialize)]
 struct SerializedUser {
@@ -72,7 +71,7 @@ pub(crate) async fn access_control_page(
     State(pool): State<Arc<PgPool>>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
     let services_path = super::get_services_path()?;

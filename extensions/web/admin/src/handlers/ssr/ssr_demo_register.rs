@@ -1,14 +1,13 @@
 //! SSR page for demo account registration.
 
-use crate::error::AdminHtmlResult;
+use crate::error::{AdminError, AdminHtmlResult};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::Extension;
-use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::Response;
 use serde::Serialize;
 
-use super::{ACCESS_DENIED_HTML, render_typed_page};
+use super::render_typed_page;
 
 #[derive(Debug, Serialize)]
 struct DemoRegisterContext {
@@ -22,7 +21,7 @@ pub(crate) async fn demo_register_page(
     Extension(engine): Extension<AdminTemplateEngine>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML.to_owned())).into_response());
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
     let ctx = DemoRegisterContext {

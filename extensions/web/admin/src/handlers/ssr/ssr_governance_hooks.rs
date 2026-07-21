@@ -1,10 +1,10 @@
 //! SSR page showing recent hook events and their governance outcome.
 
+use crate::error::AdminError;
 use std::sync::Arc;
 
 use axum::extract::{Extension, State};
-use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::Response;
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -14,7 +14,6 @@ use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
-use super::ACCESS_DENIED_HTML;
 
 #[derive(Debug, Serialize)]
 struct GovernanceHooksContext {
@@ -48,7 +47,7 @@ pub(crate) async fn governance_hooks_page(
     State(pool): State<Arc<PgPool>>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
     let services_path = super::get_services_path()?;

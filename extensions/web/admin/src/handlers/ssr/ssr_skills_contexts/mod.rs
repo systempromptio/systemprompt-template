@@ -5,6 +5,7 @@
 mod context;
 mod data;
 
+use crate::error::AdminError;
 use std::sync::Arc;
 
 use crate::error::AdminHtmlResult;
@@ -13,7 +14,7 @@ use crate::repositories::analytics::contexts_list;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::extract::{Extension, Query, State};
-use axum::response::{IntoResponse, Response};
+use axum::response::Response;
 use chrono::{DateTime, Duration, Utc};
 use serde::Deserialize;
 use sqlx::PgPool;
@@ -217,11 +218,7 @@ pub(crate) async fn skills_contexts_page(
     Query(params): Query<ContextsListQuery>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return Ok((
-            axum::http::StatusCode::FORBIDDEN,
-            axum::response::Html(super::ACCESS_DENIED_HTML),
-        )
-            .into_response());
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
     let inputs = parse_inputs(params);
     let data = fetch_page_data(&pool, &inputs.filter).await;

@@ -79,9 +79,7 @@ pub(crate) async fn user_detail_page(
     Query(params): Query<IdQuery>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin && Some(user_ctx.user_id.as_str()) != params.id() {
-        return Err(
-            AdminError::Forbidden("You can only view your own profile.".to_owned()).into(),
-        );
+        return Err(AdminError::Forbidden("You can only view your own profile.".to_owned()).into());
     }
 
     let Some(id) = params.id() else {

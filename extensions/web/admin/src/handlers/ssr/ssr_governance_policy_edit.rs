@@ -14,8 +14,7 @@ use systemprompt::identifiers::{AgentId, UserId};
 
 use axum::Form;
 use axum::extract::{Extension, Path, State};
-use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse, Redirect, Response};
+use axum::response::{IntoResponse, Redirect, Response};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
@@ -26,7 +25,6 @@ use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{DECISION_DENY, MarketplaceContext, UserContext};
 
-use super::ACCESS_DENIED_HTML;
 
 const RECENT_LIMIT: i64 = 50;
 
@@ -77,7 +75,7 @@ pub(crate) async fn governance_policy_edit_page(
     Path(policy_id): Path<String>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
     let Some((id_str, name, description, params_yaml, enabled, lookup_id)) =
@@ -190,7 +188,7 @@ pub(crate) async fn governance_policy_toggle(
     Form(form): Form<ToggleForm>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
     let want_enabled = form

@@ -10,7 +10,6 @@ use axum::Extension;
 use axum::http::HeaderMap;
 use axum::response::{Html, IntoResponse, Redirect, Response};
 
-pub(crate) const ACCESS_DENIED_HTML: &str = "<h1>Access Denied</h1><p>Admin access required.</p>";
 
 mod ssr_access_control;
 mod ssr_add_passkey;

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use rand::Rng;
@@ -14,10 +14,9 @@ use sha2::{Digest, Sha256};
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 
+use crate::error::{AdminError, AdminResult};
 use crate::repositories;
 use crate::types::CreateUserRequest;
-
-use super::shared;
 
 const TOKEN_PREFIX: &str = "sp_wst_";
 
@@ -40,46 +39,31 @@ pub(crate) struct PublicRegisterResponse {
 pub(crate) async fn public_register_handler(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<PublicRegisterRequest>,
-) -> impl IntoResponse {
+) -> AdminResult<Response> {
     let email_str = body.email.trim().to_lowercase();
     let name = body.name.trim().to_owned();
 
-    if let Some(resp) = validate_registration_input(&email_str, &name) {
-        return resp;
-    }
+    validate_registration_input(&email_str, &name)?;
 
-    let Ok(email) = Email::try_new(email_str.clone()) else {
-        return shared::error_response(StatusCode::BAD_REQUEST, "Invalid email address");
-    };
+    let email = Email::try_new(email_str.clone())
+        .map_err(|e| AdminError::BadRequest(format!("Invalid email address: {e}")))?;
 
-    if let Some(resp) = check_rate_limit(&pool, &email_str).await {
-        return resp;
-    }
+    check_rate_limit(&pool, &email_str).await?;
 
-    let user = match create_registration_user(&pool, &name, email, &body.role).await {
-        Ok(u) => u,
-        Err(resp) => return resp,
-    };
+    let user = create_registration_user(&pool, &name, email, &body.role).await?;
 
     let (raw_token, token_hash) = generate_setup_token();
     let token_id = uuid::Uuid::new_v4().to_string();
 
-    if let Err(e) = repositories::users::registration::insert_setup_token(
+    repositories::users::registration::insert_setup_token(
         pool.as_ref(),
         &token_id,
         &user.user_id,
         &token_hash,
     )
-    .await
-    {
-        tracing::error!(error = %e, "Failed to create setup token");
-        return shared::error_response(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "User created but failed to generate setup token",
-        );
-    }
+    .await?;
 
-    (
+    Ok((
         StatusCode::OK,
         Json(PublicRegisterResponse {
             ok: true,
@@ -89,36 +73,29 @@ pub(crate) async fn public_register_handler(
             display_name: name,
         }),
     )
-        .into_response()
+        .into_response())
 }
 
-fn validate_registration_input(email_str: &str, name: &str) -> Option<axum::response::Response> {
+fn validate_registration_input(email_str: &str, name: &str) -> AdminResult<()> {
     if email_str.is_empty() || !email_str.contains('@') {
-        return Some(shared::error_response(
-            StatusCode::BAD_REQUEST,
-            "Invalid email address",
-        ));
+        return Err(AdminError::BadRequest("Invalid email address".to_owned()));
     }
     if name.is_empty() {
-        return Some(shared::error_response(
-            StatusCode::BAD_REQUEST,
-            "Name is required",
-        ));
+        return Err(AdminError::BadRequest("Name is required".to_owned()));
     }
-    None
+    Ok(())
 }
 
-async fn check_rate_limit(pool: &PgPool, email_str: &str) -> Option<axum::response::Response> {
+async fn check_rate_limit(pool: &PgPool, email_str: &str) -> AdminResult<()> {
     let rate_count =
         repositories::users::registration::count_recent_setup_tokens(pool, email_str).await;
 
     if rate_count >= 5 {
-        return Some(shared::error_response(
-            StatusCode::TOO_MANY_REQUESTS,
-            "Too many registration attempts. Please try again later.",
+        return Err(AdminError::RateLimited(
+            "Too many registration attempts. Please try again later.".to_owned(),
         ));
     }
-    None
+    Ok(())
 }
 
 async fn create_registration_user(
@@ -126,7 +103,7 @@ async fn create_registration_user(
     name: &str,
     email: Email,
     role: &str,
-) -> Result<crate::types::UserSummary, axum::response::Response> {
+) -> AdminResult<crate::types::UserSummary> {
     let user_id = UserId::new(uuid::Uuid::new_v4().to_string());
     let roles = match role {
         "admin" => vec!["user".to_owned(), "admin".to_owned()],
@@ -141,12 +118,7 @@ async fn create_registration_user(
         status: Some("active".to_owned()),
     };
 
-    repositories::users::mutations::create_user(pool, &create_req)
-        .await
-        .map_err(|e| {
-            tracing::error!(error = %e, "Failed to create user during public registration");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Registration failed")
-        })
+    Ok(repositories::users::mutations::create_user(pool, &create_req).await?)
 }
 
 fn generate_setup_token() -> (String, String) {

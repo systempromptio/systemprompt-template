@@ -99,10 +99,14 @@ async fn load_rules(
         .await
         .map_err(|e| {
             tracing::error!(error = %e, entity_type = %kind, entity_id = %id, "list_rules_for_entity failed");
+            // lint-ok: http-error — the authz hook's own wire contract: core
+            // reads a non-decision status as "hook unavailable", so this must
+            // stay distinguishable from a deny body rather than become one.
             (StatusCode::INTERNAL_SERVER_ERROR, "list_rules failed").into_response()
         })?;
     let entity = repo.get_entity(kind, id).await.map_err(|e| {
         tracing::error!(error = %e, entity_type = %kind, entity_id = %id, "get_entity failed");
+        // lint-ok: http-error — same wire contract as above.
         (StatusCode::INTERNAL_SERVER_ERROR, "get_entity failed").into_response()
     })?;
     Ok((rules, entity))
@@ -171,6 +175,8 @@ pub(crate) async fn govern_authz(
     State(pool): State<Arc<PgPool>>,
     Json(req): Json<AuthzRequest>,
 ) -> Response {
+    // lint-ok: http-error — a hook answers 200 with a decision; an error status
+    // reads as "hook unavailable" and lets the call through
     let repo = AccessControlRepository::from_pool(Arc::clone(&pool));
 
     let (rules, entity) = match load_rules(&repo, &req).await {

@@ -6,11 +6,11 @@
 
 mod context;
 
+use crate::error::AdminError;
 use std::sync::Arc;
 
 use axum::extract::{Extension, Path, State};
-use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::Response;
 use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
 
@@ -28,10 +28,6 @@ use context::{
     SessionRequestRowView, SessionTraceRowView,
 };
 
-use super::ACCESS_DENIED_HTML;
-
-const NOT_FOUND_HTML: &str = "<h1>Session not found</h1>\
-<p>No AI requests, contexts, or transcript rows match that session id.</p>";
 
 pub(crate) async fn session_detail_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -41,16 +37,22 @@ pub(crate) async fn session_detail_page(
     Path(session_id): Path<String>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
     let session_id = SessionId::new(session_id.trim());
     if session_id.as_str().is_empty() {
-        return Ok((StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response());
+        return Err(AdminError::NotFound(
+            "No AI requests, contexts, or transcript rows match that session id.".to_owned(),
+        )
+        .into());
     }
 
     let Some(header) = find_session_header(&pool, &session_id).await? else {
-        return Ok((StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response());
+        return Err(AdminError::NotFound(
+            "No AI requests, contexts, or transcript rows match that session id.".to_owned(),
+        )
+        .into());
     };
 
     let (kpis_res, contexts_res, traces_res, requests_res) = tokio::join!(

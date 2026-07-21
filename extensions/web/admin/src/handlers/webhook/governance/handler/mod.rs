@@ -38,6 +38,7 @@ fn header_str(headers: &HeaderMap, name: header::HeaderName) -> Option<String> {
 }
 
 fn build_response(decision: &Decision) -> Response {
+    // lint-ok: http-error — builds the decision body itself
     let permission_decision = GovernanceDecision::from_decision(decision);
     let permission_decision_reason = match decision {
         Decision::Allow { .. } => None,
@@ -60,6 +61,8 @@ pub(crate) async fn govern_tool_use(
     Query(query): Query<GovernQuery>,
     Json(raw): Json<serde_json::Value>,
 ) -> Response {
+    // lint-ok: http-error — a hook answers 200 with a decision; an error status
+    // reads as "hook unavailable" and lets the call through
     let (payload, _warnings) = HookEventPayload::from_value(raw);
 
     let tool_name = payload.tool_name().unwrap_or("unknown");

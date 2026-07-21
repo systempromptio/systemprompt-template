@@ -97,10 +97,6 @@ pub(crate) async fn setup_page(
     };
 
     Ok(super::render_typed_page(
-        &engine,
-        "setup",
-        &ctx,
-        &user_ctx,
-        &mkt_ctx,
+        &engine, "setup", &ctx, &user_ctx, &mkt_ctx,
     ))
 }

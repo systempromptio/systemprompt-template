@@ -5,13 +5,13 @@
 //! color-coded by `kind`. Each bar carries `data-chain-id` so clicks open
 //! the chain-drawer focused on that span.
 
+use crate::error::AdminError;
 use std::sync::Arc;
 
 use systemprompt::identifiers::SessionId;
 
 use axum::extract::{Extension, Path, State};
-use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::Response;
 use serde::Serialize;
 use sqlx::PgPool;
 
@@ -20,10 +20,6 @@ use crate::repositories::traces::{Span, SpanStatus, list_trace_spans, resolve_tr
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
-use super::ACCESS_DENIED_HTML;
-
-const NOT_FOUND_HTML: &str = "<h1>Trace not found</h1>\
-<p>No spans found for that session or trace id.</p>";
 
 #[derive(Debug, Serialize)]
 struct TraceDetailContext {
@@ -58,11 +54,14 @@ pub(crate) async fn perf_trace_detail_page(
     Path(id): Path<String>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
     let Some(session_id) = resolve_trace_session(&pool, &id).await? else {
-        return Ok((StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response());
+        return Err(AdminError::NotFound(
+            "No spans found for that session or trace id.".to_owned(),
+        )
+        .into());
     };
 
     let spans = list_trace_spans(&pool, &session_id)
@@ -73,7 +72,10 @@ pub(crate) async fn perf_trace_detail_page(
         });
 
     if spans.is_empty() {
-        return Ok((StatusCode::NOT_FOUND, Html(NOT_FOUND_HTML)).into_response());
+        return Err(AdminError::NotFound(
+            "No spans found for that session or trace id.".to_owned(),
+        )
+        .into());
     }
 
     let summary = build_summary(&session_id, &spans);
