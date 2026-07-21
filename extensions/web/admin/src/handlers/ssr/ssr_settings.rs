@@ -18,12 +18,15 @@ pub(crate) async fn settings_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
 ) -> AdminHtmlResult<Response> {
-    let settings = repositories::users::user_settings::find_user_settings(&pool, &user_ctx.user_id)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to get user settings");
-            None
-        });
+    // Why this one propagates rather than degrading: the form below is bound to
+    // these values and `collectFormData()` reads every field back out and PUTs
+    // the whole object. Rendering the struct defaults would tell the user their
+    // settings had been reset, and the natural response — setting them again —
+    // writes those defaults over the real row. It is also the only query on the
+    // page, so there is nothing else on screen to look wrong and cue doubt, and
+    // nothing is lost by failing.
+    let settings =
+        repositories::users::user_settings::find_user_settings(&pool, &user_ctx.user_id).await?;
 
     let settings_view = settings.as_ref().map_or_else(
         || SettingsView {

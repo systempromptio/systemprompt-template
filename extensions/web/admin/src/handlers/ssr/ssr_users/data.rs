@@ -38,17 +38,29 @@ pub(super) async fn load_user_groups(
             Vec::new()
         });
 
-    let overrides = repositories::departments::list_user_marketplace_overrides(pool)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to fetch marketplace overrides");
-            Vec::new()
-        });
+    // Why an empty list is not a safe default here: `resolve_marketplaces`
+    // seeds from every YAML marketplace and *subtracts* the deny rows, so
+    // losing the overrides does not lose grants — it loses the denials, and
+    // every explicitly denied marketplace renders as granted. That is the one
+    // failure direction on this page that over-reports access, so it degrades
+    // to showing nothing rather than to showing everything.
+    let (overrides, overrides_failed) =
+        match repositories::departments::list_user_marketplace_overrides(pool).await {
+            Ok(rows) => (rows, false),
+            Err(e) => {
+                tracing::warn!(error = %e, "Failed to fetch marketplace overrides");
+                (Vec::new(), true)
+            },
+        };
 
-    let yaml_marketplaces: Vec<(String, String)> = load_marketplaces()
-        .into_iter()
-        .map(|m| (m.id.to_string(), m.name))
-        .collect();
+    let yaml_marketplaces: Vec<(String, String)> = if overrides_failed {
+        Vec::new()
+    } else {
+        load_marketplaces()
+            .into_iter()
+            .map(|m| (m.id.to_string(), m.name))
+            .collect()
+    };
 
     let enriched_users =
         view::enrich_users(users, &aggregates, &runtime, &overrides, &yaml_marketplaces);
@@ -58,13 +70,18 @@ pub(super) async fn load_user_groups(
 pub(super) async fn collect_user_detail_extras(
     pool: &PgPool,
     d: &crate::types::UserDetail,
-) -> UserDetailExtras {
-    let (roles, department) = repositories::users::queries::find_user_roles_department(pool, &d.user_id)
-        .await
-        .inspect_err(|e| tracing::warn!(error = %e, user_id = %d.user_id, "ssr_users: find_user_roles_department failed"))
-        .ok()
-        .flatten()
-        .unwrap_or_else(|| (Vec::new(), String::new()));
+) -> crate::error::AdminHtmlResult<UserDetailExtras> {
+    // Neither half of this tolerates a default. `department` is bound to a
+    // <select> that the save handler reads straight back, so an empty value
+    // does not merely display wrongly — it reassigns the user to Unassigned on
+    // the next save, dropping every access rule their real department carried.
+    // `roles` is fed to `compute_effective_permissions`, so an empty value
+    // renders ALLOW/DENY rows under a caption promising they were computed
+    // against this user's actual roles.
+    let (roles, department) =
+        repositories::users::queries::find_user_roles_department(pool, &d.user_id)
+            .await?
+            .unwrap_or_else(|| (Vec::new(), String::new()));
 
     let mut assignments = UserAssignmentSummary::default();
     let devices_count = if let Ok(rows) =
@@ -77,17 +94,32 @@ pub(super) async fn collect_user_detail_extras(
         0i64
     };
 
-    let yaml_marketplaces: Vec<(String, String)> = load_marketplaces()
-        .into_iter()
-        .map(|m| (m.id.to_string(), m.name))
-        .collect();
-    let user_overrides: Vec<repositories::departments::UserMarketplaceOverride> =
-        repositories::departments::list_user_marketplace_overrides(pool)
-            .await
-            .unwrap_or_default()
+    // Same fail-closed reasoning as the roster: losing the overrides loses the
+    // *denials*, so an explicitly denied marketplace would render as granted.
+    // Show none rather than all.
+    let (user_overrides, overrides_failed): (
+        Vec<repositories::departments::UserMarketplaceOverride>,
+        bool,
+    ) = match repositories::departments::list_user_marketplace_overrides(pool).await {
+        Ok(rows) => (
+            rows.into_iter()
+                .filter(|o| o.user_id == d.user_id.as_str())
+                .collect(),
+            false,
+        ),
+        Err(e) => {
+            tracing::warn!(error = %e, user_id = %d.user_id, "Failed to fetch marketplace overrides");
+            (Vec::new(), true)
+        },
+    };
+    let yaml_marketplaces: Vec<(String, String)> = if overrides_failed {
+        Vec::new()
+    } else {
+        load_marketplaces()
             .into_iter()
-            .filter(|o| o.user_id == d.user_id.as_str())
-            .collect();
+            .map(|m| (m.id.to_string(), m.name))
+            .collect()
+    };
     let override_refs: Vec<&repositories::departments::UserMarketplaceOverride> =
         user_overrides.iter().collect();
     assignments.marketplaces = view::resolve_marketplaces(&yaml_marketplaces, &override_refs);
@@ -102,7 +134,7 @@ pub(super) async fn collect_user_detail_extras(
         .await,
     );
 
-    (department, assignments, devices, devices_count, effective)
+    Ok((department, assignments, devices, devices_count, effective))
 }
 
 async fn collect_user_devices(pool: &PgPool, d: &crate::types::UserDetail) -> Vec<UserDeviceView> {
@@ -136,9 +168,20 @@ async fn collect_user_devices(pool: &PgPool, d: &crate::types::UserDetail) -> Ve
         .collect()
 }
 
-pub(super) async fn fetch_departments(pool: &PgPool) -> Vec<String> {
-    repositories::departments::list_department_names(pool)
+/// The user's own department is always present in the returned list.
+///
+/// The list populates a bound `<select>`: an option that is missing cannot be
+/// selected, so the browser silently falls back to the first one (Unassigned)
+/// and the next save moves the user out of a department they were never
+/// deliberately removed from. Degrading to a short list is survivable;
+/// degrading to one that cannot represent the current value is not.
+pub(super) async fn fetch_departments(pool: &PgPool, current: &str) -> Vec<String> {
+    let mut names = repositories::departments::list_department_names(pool)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "ssr_users: load departments failed"))
-        .unwrap_or_default()
+        .unwrap_or_default();
+    if !current.is_empty() && !names.iter().any(|n| n == current) {
+        names.push(current.to_owned());
+    }
+    names
 }

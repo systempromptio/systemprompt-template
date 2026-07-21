@@ -55,9 +55,13 @@ fn build_gateway_routes(services_path: &Path) -> Vec<RouteRef> {
         parent.join("profile.yaml"),
         services_path.join("../.systemprompt/profiles/local/profile.yaml"),
     ];
+    // An unparseable profile.yaml would otherwise leave no trace at all: the
+    // catalogue renders "No entities of this type configured", which is
+    // indistinguishable from a gateway that genuinely has no routes.
     for path in &candidates {
         if path.exists()
             && let Ok(cfg) = repositories::config::gateway::get_gateway_config(path)
+                .inspect_err(|e| tracing::warn!(error = %e, path = %path.display(), "gateway config unreadable; routes omitted from the access-control catalogue"))
         {
             return cfg
                 .routes
@@ -75,6 +79,7 @@ fn build_gateway_routes(services_path: &Path) -> Vec<RouteRef> {
 
 fn build_mcp_servers(services_path: &Path) -> Vec<EntityOption> {
     repositories::mcp::mcp_servers::list_mcp_servers(services_path)
+        .inspect_err(|e| tracing::warn!(error = %e, "MCP servers unreadable; omitted from the access-control catalogue"))
         .unwrap_or_default()
         .into_iter()
         .map(|s| EntityOption {

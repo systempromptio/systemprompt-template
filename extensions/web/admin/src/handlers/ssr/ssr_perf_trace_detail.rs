@@ -64,12 +64,12 @@ pub(crate) async fn perf_trace_detail_page(
         .into());
     };
 
-    let spans = list_trace_spans(&pool, &session_id)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "list_trace_spans failed");
-            Vec::new()
-        });
+    // `resolve_trace_session` just succeeded, which proves rows exist for this
+    // id. Degrading a failed span fetch to an empty vec would fall into the
+    // not-found arm below and answer "No spans found for that session or trace
+    // id" — asserting as fact something this handler disproved one statement
+    // earlier, and sending an investigator away believing the trace was purged.
+    let spans = list_trace_spans(&pool, &session_id).await?;
 
     if spans.is_empty() {
         return Err(AdminError::NotFound(

@@ -94,20 +94,18 @@ pub(crate) async fn user_detail_page(
     };
     let user_id = UserId::new(id);
 
-    let detail = repositories::users::queries::find_user_detail(&pool, &user_id)
-        .await
-        .inspect_err(
-            |e| tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch user detail"),
-        )
-        .ok()
-        .flatten();
+    // `Err` and `Ok(None)` must not collapse together here: this value alone
+    // decides whether the page renders "User not found.", so a failed query
+    // would tell an admin the account had been deleted. Only a genuine absence
+    // is a not-found.
+    let detail = repositories::users::queries::find_user_detail(&pool, &user_id).await?;
     let gamification: Option<crate::types::UserGamificationProfile> = None;
 
     let not_found = detail.is_none();
 
     let (user_department, user_assignments, user_devices, user_devices_count, effective) =
         match detail.as_ref() {
-            Some(d) => data::collect_user_detail_extras(&pool, d).await,
+            Some(d) => data::collect_user_detail_extras(&pool, d).await?,
             None => (
                 String::new(),
                 super::types::UserAssignmentSummary::default(),
@@ -122,7 +120,7 @@ pub(crate) async fn user_detail_page(
         None => None,
     };
 
-    let departments = data::fetch_departments(&pool).await;
+    let departments = data::fetch_departments(&pool, &user_department).await;
 
     let has_effective_permissions = effective
         .as_ref()

@@ -59,14 +59,22 @@ pub(crate) async fn governance_hooks_page(
                 Vec::new()
             });
 
+    // These degrade to zero on purpose: the configured-hooks list beside them
+    // is read from YAML, not the database, so a failure here shows real hooks
+    // above empty counts and the contradiction is visible. They are logged
+    // because otherwise the failure would leave no trace in the page *or* the
+    // log, and this page is where an operator comes to diagnose exactly that.
     let pretool_fired = repositories::governance::hook_events::count_pretool_fired_24h(&pool)
         .await
+        .inspect_err(|e| tracing::warn!(error = %e, "count_pretool_fired_24h failed"))
         .unwrap_or(0);
     let posttool_fired = repositories::governance::hook_events::count_posttool_fired_24h(&pool)
         .await
+        .inspect_err(|e| tracing::warn!(error = %e, "count_posttool_fired_24h failed"))
         .unwrap_or(0);
     let recent_events = repositories::governance::hook_events::recent_hook_events(&pool, 50)
         .await
+        .inspect_err(|e| tracing::warn!(error = %e, "recent_hook_events failed"))
         .unwrap_or_default();
 
     let recent_events_view: Vec<RecentEventRow> = recent_events

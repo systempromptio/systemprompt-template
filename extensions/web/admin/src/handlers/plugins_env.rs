@@ -37,10 +37,14 @@ pub(crate) async fn list_plugin_env_handler(
         return Err(AdminError::Unauthorized("missing principal".to_owned()));
     };
 
-    let definitions = load_plugin_variable_defs(&plugin_id).unwrap_or_else(|e| {
-        tracing::debug!(error = %e, plugin_id = %plugin_id, "Failed to load plugin variable definitions");
-        vec![]
-    });
+    // Why this must not degrade to an empty list: `definitions` decides
+    // `missing_required`, which decides `valid`, which is the flag the UI uses
+    // to enable "Generate/Export". A `config.yaml` that fails to parse would
+    // otherwise read as "this plugin needs no configuration" and unlock the
+    // export of a bundle whose required secrets were never collected — a gate
+    // failing open. A genuinely absent config is a different thing and still
+    // answers `Ok(vec![])` below, so the no-configuration case is untouched.
+    let definitions = load_plugin_variable_defs(&plugin_id)?;
 
     let stored =
         repositories::marketplace::plugin_env::list_plugin_env_vars(&pool, &user_id, &plugin_id)
