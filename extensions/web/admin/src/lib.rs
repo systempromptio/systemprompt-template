@@ -9,9 +9,8 @@
 //! - [`hooks_webhook_router`] — the four governance webhooks called by gateway
 //!   / MCP / Claude Code (`/hooks/track`, `/hooks/govern`, `/govern/authz`,
 //!   statusline/transcript ingest).
-//! - [`secrets_router`], [`share_manifest_router`], [`bridge_router`] —
-//!   per-plugin secret resolution, public manifest sharing, and the bridge
-//!   plugin-file plane.
+//! - [`secrets_router`], [`share_manifest_router`] — per-plugin secret
+//!   resolution and public manifest sharing.
 //!
 //! [`repositories`] owns every `sqlx` call; handlers/services never touch
 //! the DB directly. Errors normalise on `error::MarketplaceError` via the
@@ -44,7 +43,6 @@ pub use routes::{admin_ssr_router, bridge_auth_ssr_router};
 pub use types::{CreateUserRequest, MarketplaceContext, UserContext, UserSummary, UserUsageEvent};
 
 pub mod test_support {
-    pub use crate::handlers::bridge::plugin_file::resolve_within;
     pub use crate::handlers::resolve_principal;
 }
 
@@ -93,15 +91,6 @@ pub fn secrets_router(pool: Arc<PgPool>) -> Router {
         .route(
             "/admin/api/secrets/{plugin_id}/rotate",
             post(handlers::secrets::rotate_handler),
-        )
-        .with_state(pool)
-}
-
-pub fn bridge_router(pool: Arc<PgPool>) -> Router {
-    Router::new()
-        .route(
-            "/v1/bridge/plugins/{plugin_id}/{*path}",
-            get(handlers::bridge::plugin_file::handle),
         )
         .with_state(pool)
 }
