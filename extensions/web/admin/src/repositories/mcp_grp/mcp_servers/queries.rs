@@ -135,20 +135,3 @@ pub fn find_mcp_server(
     let servers = list_mcp_servers(services_path)?;
     Ok(servers.into_iter().find(|s| s.id.as_str() == server_id))
 }
-
-pub fn find_mcp_server_raw_yaml(
-    services_path: &Path,
-    server_id: &str,
-) -> Result<Option<(String, String)>, MarketplaceError> {
-    let mcp_dir = services_path.join("mcp");
-    let Some(file_path) = super::find_mcp_file(&mcp_dir, server_id)? else {
-        return Ok(None);
-    };
-    let content = std::fs::read_to_string(&file_path)?;
-    let file_name = file_path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("unknown.yaml")
-        .to_owned();
-    Ok(Some((content, file_name)))
-}

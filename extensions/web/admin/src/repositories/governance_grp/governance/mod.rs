@@ -13,10 +13,8 @@ pub use counts::{
     fetch_governance_counts, fetch_governance_counts_windowed, fetch_per_policy_counts,
     fetch_per_policy_counts_windowed,
 };
-pub use decisions::{
-    fetch_governance_events, list_decisions_for_policy, list_governance_decisions,
-};
-pub use rankings::{fetch_grouped_incidents, fetch_top_actors, fetch_top_policies};
+pub use decisions::list_decisions_for_policy;
+pub use rankings::{fetch_top_actors, fetch_top_policies};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct GovernanceCounts {

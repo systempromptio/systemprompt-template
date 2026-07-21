@@ -13,7 +13,6 @@ pub mod governance;
 pub mod hook_events;
 pub mod identity;
 pub mod jobs;
-pub mod paged;
 pub mod resolve;
 pub mod risk_score;
 pub mod time_range;

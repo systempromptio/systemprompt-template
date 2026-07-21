@@ -2,9 +2,8 @@
 //! joined to `users` for display names where available.
 
 use sqlx::PgPool;
-use systemprompt::identifiers::{AgentId, UserId};
 
-use crate::types::{IncidentGroup, TopActor, TopPolicy};
+use crate::types::{TopActor, TopPolicy};
 
 pub async fn fetch_top_actors(
     pool: &PgPool,
@@ -53,38 +52,6 @@ pub async fn fetch_top_policies(
           AND created_at > now() - make_interval(secs => $1::double precision)
         GROUP BY policy, tool_name
         ORDER BY 3 DESC
-        LIMIT $2"#,
-        window_seconds as f64,
-        limit,
-    )
-    .fetch_all(pool)
-    .await
-}
-
-pub async fn fetch_grouped_incidents(
-    pool: &PgPool,
-    window_seconds: i64,
-    limit: i64,
-) -> Result<Vec<IncidentGroup>, sqlx::Error> {
-    sqlx::query_as!(
-        IncidentGroup,
-        r#"SELECT
-            g.agent_id as "agent_id: AgentId",
-            g.user_id::TEXT AS "user_id!: UserId",
-            COALESCE(u.display_name, u.full_name, u.name, u.email) AS display_name,
-            g.policy,
-            g.tool_name,
-            COUNT(*)::bigint AS "attempts!",
-            MIN(g.created_at) AS "first_seen!",
-            MAX(g.created_at) AS "last_seen!",
-            COALESCE((ARRAY_AGG(g.reason ORDER BY g.created_at DESC))[1], '') AS "sample_reason!"
-        FROM governance_decisions g
-        LEFT JOIN users u ON u.id = g.user_id
-        WHERE g.decision = 'deny'
-          AND g.created_at > now() - make_interval(secs => $1::double precision)
-        GROUP BY g.agent_id, g.user_id, u.display_name, u.full_name, u.name, u.email,
-                 g.policy, g.tool_name
-        ORDER BY 6 DESC, 8 DESC
         LIMIT $2"#,
         window_seconds as f64,
         limit,

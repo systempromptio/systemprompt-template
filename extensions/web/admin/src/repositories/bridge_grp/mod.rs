@@ -9,6 +9,6 @@ pub use api_keys::{
     list_api_keys_for_user, revoke_api_key,
 };
 pub use bridge_users::{BridgeUserRow, find_bridge_user};
-pub use device_certs::{DeviceCertRow, list_device_certs_for_user, revoke_device_cert};
+pub use device_certs::{DeviceCertRow, revoke_device_cert};
 pub use error::{BridgeRepoError, Result};
 pub use exchange_codes::{IssuedExchangeCode, issue_exchange_code};

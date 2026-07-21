@@ -54,32 +54,3 @@ pub async fn find_user_settings(
     .fetch_optional(pool)
     .await
 }
-
-pub async fn upsert_user_settings(
-    pool: &PgPool,
-    input: &UpsertUserSettings<'_>,
-) -> Result<UserSettingsRow, sqlx::Error> {
-    sqlx::query_as!(
-        UserSettingsRow,
-        r#"INSERT INTO user_settings (user_id, display_name, avatar_url, notify_daily_summary, notify_achievements, leaderboard_opt_in, timezone, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-         ON CONFLICT (user_id) DO UPDATE SET
-             display_name = $2,
-             avatar_url = $3,
-             notify_daily_summary = $4,
-             notify_achievements = $5,
-             leaderboard_opt_in = $6,
-             timezone = $7,
-             updated_at = NOW()
-         RETURNING user_id AS "user_id!: UserId", display_name, avatar_url, notify_daily_summary, notify_achievements, leaderboard_opt_in, timezone, achievement_email_sent_date, daily_report_email_sent_date, created_at, updated_at"#,
-        input.user_id.as_str(),
-        input.display_name,
-        input.avatar_url,
-        input.notify_daily_summary,
-        input.notify_achievements,
-        input.leaderboard_opt_in,
-        input.timezone,
-    )
-    .fetch_one(pool)
-    .await
-}
