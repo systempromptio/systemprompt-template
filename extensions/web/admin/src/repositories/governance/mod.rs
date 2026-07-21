@@ -1,3 +1,8 @@
+//! Persistence for the governance plane.
+//!
+//! Every tool-call decision, the policies that produced it, and the rollups the
+//! audit pages read are served from here.
+
 pub mod acl_detect;
 pub mod acl_yaml_loader;
 pub mod acl_yaml_snapshot;
@@ -26,7 +31,6 @@ pub use counts::{
 pub use decisions::list_decisions_for_policy;
 pub use rankings::{fetch_top_actors, fetch_top_policies};
 
-/// Allow/deny rollup over `governance_decisions`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct GovernanceCounts {
     pub total: i64,
