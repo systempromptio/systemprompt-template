@@ -4,6 +4,20 @@ window.AdminApp = window.AdminApp || {};
 
     app.BASE = window.ADMIN_BASE || '/admin';
     app.API_BASE = window.ADMIN_API_BASE || '/api/public/admin';
+    // The admin API answers a failure with `{"error": "..."}`. Reading the raw
+    // body would put that JSON in front of the user verbatim, so unwrap it —
+    // falling back to the raw text for any endpoint that answers otherwise.
+    app.errorMessage = async (resp) => {
+        const text = await resp.text();
+        if (!text) return resp.statusText;
+        try {
+            const body = JSON.parse(text);
+            if (body && typeof body.error === 'string') return body.error;
+        } catch (e) {
+            // Not JSON — the raw text is the best message available.
+        }
+        return text;
+    };
     app.api = async (path, options) => {
         const url = app.API_BASE + path;
         const resp = await fetch(url, {
@@ -11,8 +25,7 @@ window.AdminApp = window.AdminApp || {};
             ...options
         });
         if (!resp.ok) {
-            const text = await resp.text();
-            const err = new Error(text || resp.statusText);
+            const err = new Error(await app.errorMessage(resp));
             if (app.Toast) {
                 app.Toast.show(err.message, 'error');
             }
