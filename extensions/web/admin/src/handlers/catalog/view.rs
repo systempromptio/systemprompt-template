@@ -6,8 +6,6 @@
 
 use std::collections::HashMap;
 
-use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
 
@@ -91,12 +89,4 @@ pub(super) fn build_row(seed: CatalogRowSeed) -> CatalogRow {
         source_path: seed.source_path,
         assignment_count: seed.assignment_count,
     }
-}
-
-pub(super) fn forbidden() -> Response {
-    (
-        StatusCode::FORBIDDEN,
-        Html("<h1>Access Denied</h1><p>Admin access required.</p>"),
-    )
-        .into_response()
 }

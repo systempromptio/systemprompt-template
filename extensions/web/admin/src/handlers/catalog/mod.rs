@@ -19,9 +19,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use axum::extract::{Extension, State};
-use axum::response::{IntoResponse, Response};
+use axum::response::Response;
 use sqlx::PgPool;
 
+use crate::error::{AdminError, AdminHtmlError, AdminHtmlResult};
 use crate::handlers::shared;
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
@@ -33,23 +34,29 @@ use crate::types::{
 use super::ssr::ssr_helpers::render_typed_page;
 use view::{
     A2aPageData, CatalogRow, CatalogRowSeed, ExternalPageData, MarketplacePageData,
-    assignment_counts_by_type, build_row, forbidden,
+    assignment_counts_by_type, build_row,
 };
+
+/// Every catalog page is admin-only, and refusal renders as a page because the
+/// caller is a browser mid-navigation.
+fn admin_only(user_ctx: &UserContext) -> AdminHtmlResult<()> {
+    if user_ctx.is_admin {
+        Ok(())
+    } else {
+        Err(AdminHtmlError(AdminError::Forbidden(
+            "Admin access required".to_owned(),
+        )))
+    }
+}
 
 pub(crate) async fn marketplace_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-) -> Response {
-    if !user_ctx.is_admin {
-        return forbidden();
-    }
-
-    let services_path = match shared::get_services_path() {
-        Ok(p) => p,
-        Err(e) => return e.into_response(),
-    };
+) -> AdminHtmlResult<Response> {
+    admin_only(&user_ctx)?;
+    let services_path = shared::get_services_path()?;
 
     let raw_skills = repositories::marketplace::plugins::list_skill_catalog(&services_path)
         .unwrap_or_else(|e| {
@@ -95,7 +102,13 @@ pub(crate) async fn marketplace_page(
         total,
     };
 
-    render_typed_page(&engine, "catalog-marketplace", &data, &user_ctx, &mkt_ctx)
+    Ok(render_typed_page(
+        &engine,
+        "catalog-marketplace",
+        &data,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }
 
 fn skill_rows(raw: Vec<SkillCatalogEntry>, counts: &HashMap<String, i64>) -> Vec<CatalogRow> {
@@ -156,15 +169,9 @@ pub(crate) async fn a2a_agents_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-) -> Response {
-    if !user_ctx.is_admin {
-        return forbidden();
-    }
-
-    let services_path = match shared::get_services_path() {
-        Ok(p) => p,
-        Err(e) => return e.into_response(),
-    };
+) -> AdminHtmlResult<Response> {
+    admin_only(&user_ctx)?;
+    let services_path = shared::get_services_path()?;
 
     let raw_agents = repositories::marketplace::plugins::list_agent_catalog(&services_path)
         .unwrap_or_else(|e| {
@@ -199,7 +206,13 @@ pub(crate) async fn a2a_agents_page(
         agents_count,
     };
 
-    render_typed_page(&engine, "catalog-a2a", &data, &user_ctx, &mkt_ctx)
+    Ok(render_typed_page(
+        &engine,
+        "catalog-a2a",
+        &data,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }
 
 pub(crate) async fn external_agents_page(
@@ -207,13 +220,10 @@ pub(crate) async fn external_agents_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(_pool): State<Arc<PgPool>>,
-) -> Response {
-    if !user_ctx.is_admin {
-        return forbidden();
-    }
+) -> AdminHtmlResult<Response> {
+    admin_only(&user_ctx)?;
 
     let agents = repositories::external_agents::list_external_agents();
-
 
     let agents_count = agents.len();
     let enabled_count = agents.iter().filter(|a| a.enabled).count();
@@ -226,5 +236,11 @@ pub(crate) async fn external_agents_page(
         enabled_count,
     };
 
-    render_typed_page(&engine, "catalog-external", &data, &user_ctx, &mkt_ctx)
+    Ok(render_typed_page(
+        &engine,
+        "catalog-external",
+        &data,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }
