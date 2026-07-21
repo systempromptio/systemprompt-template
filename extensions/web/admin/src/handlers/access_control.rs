@@ -34,9 +34,9 @@ pub(crate) async fn list_access_rules_handler(
     Query(query): Query<AccessControlQuery>,
 ) -> Response {
     let result = if let (Some(et), Some(eid)) = (&query.entity_type, &query.entity_id) {
-        repositories::access_control::list_rules_for_entity(&pool, et, eid).await
+        repositories::users::access_control::list_rules_for_entity(&pool, et, eid).await
     } else {
-        repositories::access_control::list_all_rules(&pool).await
+        repositories::users::access_control::list_all_rules(&pool).await
     };
 
     match result {
@@ -69,7 +69,7 @@ pub(crate) async fn update_entity_rules_handler(
         );
     }
 
-    let result = repositories::access_control::set_entity_rules(
+    let result = repositories::users::access_control::set_entity_rules(
         &pool,
         &entity_type,
         &entity_id,
@@ -111,7 +111,7 @@ pub(crate) async fn bulk_assign_handler(
         .collect();
 
     let rules_per_entity = body.rules.len();
-    match repositories::access_control::bulk_set_rules(&pool, &entities, &body.rules).await {
+    match repositories::users::access_control::bulk_set_rules(&pool, &entities, &body.rules).await {
         Ok(updated_count) => Json(BulkAssignResponse {
             updated_count,
             rules_per_entity,
@@ -140,7 +140,8 @@ pub(crate) async fn user_matrix_handler(
     let sections = build_matrix_sections(&services_path, &profile_path);
 
     let user_id = UserId::new(user_id);
-    match repositories::access_control::resolve_user_matrix(&pool, &user_id, sections).await {
+    match repositories::users::access_control::resolve_user_matrix(&pool, &user_id, sections).await
+    {
         Ok(matrix) => Json(matrix).into_response(),
         Err(e) => {
             tracing::error!(error = %e, user_id = %user_id, "Failed to resolve user matrix");
@@ -152,12 +153,12 @@ pub(crate) async fn user_matrix_handler(
 fn build_matrix_sections(
     services_path: &std::path::Path,
     profile_path: &std::path::Path,
-) -> Vec<repositories::access_control::SectionInput> {
+) -> Vec<repositories::users::access_control::SectionInput> {
     // Each source is best-effort: a config that fails to load is skipped so the
     // matrix renders whatever resolved instead of failing the whole view.
-    let mut sections: Vec<repositories::access_control::SectionInput> = Vec::new();
+    let mut sections: Vec<repositories::users::access_control::SectionInput> = Vec::new();
 
-    if let Ok(cfg) = repositories::get_gateway_config(profile_path) {
+    if let Ok(cfg) = repositories::governance::gateway::get_gateway_config(profile_path) {
         let rows = cfg
             .routes
             .into_iter()
@@ -172,7 +173,7 @@ fn build_matrix_sections(
             rows,
         ));
     }
-    if let Ok(servers) = repositories::mcp_servers::list_mcp_servers(services_path) {
+    if let Ok(servers) = repositories::mcp::mcp_servers::list_mcp_servers(services_path) {
         let rows: Vec<(String, String, Option<String>)> = servers
             .into_iter()
             .map(|s| {
@@ -188,14 +189,16 @@ fn build_matrix_sections(
         sections.push(("mcp_server".to_owned(), "MCP servers".to_owned(), rows));
     }
     let admin_roles = vec!["admin".to_owned()];
-    if let Ok(plugins) = repositories::list_plugins_for_roles(services_path, &admin_roles) {
+    if let Ok(plugins) =
+        repositories::marketplace::plugins::list_plugins_for_roles(services_path, &admin_roles)
+    {
         let rows: Vec<(String, String, Option<String>)> = plugins
             .into_iter()
             .map(|p| (p.id, p.name, Some(p.description)))
             .collect();
         sections.push(("plugin".to_owned(), "Plugins".to_owned(), rows));
     }
-    if let Ok(agents) = repositories::list_agents(services_path) {
+    if let Ok(agents) = repositories::governance::agents::list_agents(services_path) {
         let rows: Vec<(String, String, Option<String>)> = agents
             .into_iter()
             .map(|a| {
@@ -208,7 +211,7 @@ fn build_matrix_sections(
             .collect();
         sections.push(("agent".to_owned(), "Agents".to_owned(), rows));
     }
-    if let Ok(skills) = repositories::list_skill_catalog(services_path) {
+    if let Ok(skills) = repositories::marketplace::plugins::list_skill_catalog(services_path) {
         let rows: Vec<(String, String, Option<String>)> = skills
             .into_iter()
             .map(|s| {
@@ -230,7 +233,7 @@ fn build_matrix_sections(
 /// Used by the dashboard's "Show as YAML" button so admins can copy-paste
 /// instance-local edits into the committed baseline. Writes nothing to disk.
 pub(crate) async fn yaml_snapshot_handler(State(pool): State<Arc<PgPool>>) -> Response {
-    use crate::repositories::governance_grp::acl_yaml_snapshot;
+    use crate::repositories::governance::acl_yaml_snapshot;
     match acl_yaml_snapshot::render_yaml_snapshot(&pool).await {
         Ok(yaml) => (
             StatusCode::OK,
@@ -248,7 +251,7 @@ pub(crate) async fn yaml_snapshot_handler(State(pool): State<Arc<PgPool>>) -> Re
 pub(crate) async fn access_control_departments_handler(
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
-    match repositories::fetch_department_stats(&pool).await {
+    match repositories::users::user_queries::fetch_department_stats(&pool).await {
         Ok(stats) => Json(stats).into_response(),
         Err(e) => {
             tracing::error!(error = %e, "Failed to fetch department stats");

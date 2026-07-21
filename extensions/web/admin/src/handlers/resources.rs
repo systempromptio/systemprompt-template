@@ -20,7 +20,7 @@ pub(crate) async fn list_agents_handler(Extension(user_ctx): Extension<UserConte
         Ok(p) => p,
         Err(r) => return *r,
     };
-    let agents = match repositories::list_agents(&services_path) {
+    let agents = match repositories::governance::agents::list_agents(&services_path) {
         Ok(a) => a,
         Err(e) => {
             tracing::error!(error = %e, "Failed to list agents");
@@ -33,11 +33,12 @@ pub(crate) async fn list_agents_handler(Extension(user_ctx): Extension<UserConte
     if user_ctx.is_admin {
         return Json(AgentsListResponse { agents }).into_response();
     }
-    let plugins = repositories::list_plugins_for_roles(&services_path, &user_ctx.roles)
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "Failed to list plugins for role filtering");
-            Vec::new()
-        });
+    let plugins =
+        repositories::marketplace::plugins::list_plugins_for_roles(&services_path, &user_ctx.roles)
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to list plugins for role filtering");
+                Vec::new()
+            });
     let visible_ids: std::collections::HashSet<AgentId> = plugins
         .iter()
         .flat_map(|p| p.agents.iter().map(|a| a.id.clone()))
@@ -54,7 +55,7 @@ pub(crate) async fn get_agent_handler(Path(agent_id): Path<String>) -> Response 
         Ok(p) => p,
         Err(r) => return *r,
     };
-    match repositories::find_agent(&services_path, &AgentId::new(agent_id)) {
+    match repositories::governance::agents::find_agent(&services_path, &AgentId::new(agent_id)) {
         Ok(Some(agent)) => Json(agent).into_response(),
         Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "Agent not found"),
         Err(e) => {

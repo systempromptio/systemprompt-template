@@ -3,9 +3,7 @@ use systemprompt::identifiers::UserId;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::error::JobError;
-use systemprompt_web_admin::repositories::secrets_grp::{
-    secret_crypto, secret_keys, secret_migration,
-};
+use systemprompt_web_admin::repositories::secrets::{secret_crypto, secret_keys, secret_migration};
 use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]

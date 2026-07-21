@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 
-use crate::repositories::hooks_track;
+use crate::repositories::dashboard::hooks_track;
 
 #[derive(Debug)]
 pub(crate) struct SessionSummary {

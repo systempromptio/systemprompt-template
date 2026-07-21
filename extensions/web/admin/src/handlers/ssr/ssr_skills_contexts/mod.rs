@@ -8,7 +8,7 @@ mod data;
 use std::sync::Arc;
 
 use crate::repositories;
-use crate::repositories::analytics_grp::contexts_list;
+use crate::repositories::analytics::contexts_list;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::extract::{Extension, Query, State};
@@ -130,10 +130,12 @@ async fn fetch_page_data(
             tracing::warn!(error = %e, "fetch_distinct_models failed");
             Vec::new()
         });
-    let users_for_filter = repositories::list_users(pool).await.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "list_users failed in contexts page");
-        Vec::new()
-    });
+    let users_for_filter = repositories::users::queries::list_users(pool)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "list_users failed in contexts page");
+            Vec::new()
+        });
     ContextsPageData {
         contexts,
         user_summaries,

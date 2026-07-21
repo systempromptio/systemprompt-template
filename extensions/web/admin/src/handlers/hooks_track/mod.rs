@@ -10,7 +10,7 @@ mod processing;
 pub(crate) mod session_summary;
 
 use crate::event_hub::EventHub;
-use crate::repositories::webhook;
+use crate::repositories::marketplace::webhook;
 use crate::types::webhook::{HookEvent, HookEventPayload};
 use auth::extract_and_validate_jwt;
 use axum::Json;

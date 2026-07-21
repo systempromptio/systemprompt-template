@@ -1,7 +1,10 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 
-use crate::repositories::{conversation_analytics, hooks_track};
+use crate::repositories::dashboard::conversation_analytics;
+
+use crate::repositories::dashboard::hooks_track;
+
 use crate::types::ENTITY_SKILL;
 
 use super::session_summary;

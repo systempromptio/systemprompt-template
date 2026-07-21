@@ -7,7 +7,7 @@
 //! Verification: GET `/share/manifest/:token` is **public** (no auth
 //! middleware). The token is validated, the version is rechecked against the
 //! database, and the user's permissioned catalog is returned as JSON. The
-//! filtering reuses `repositories::access_control::resolve_user_matrix`.
+//! filtering reuses `repositories::users::access_control::resolve_user_matrix`.
 
 use std::sync::Arc;
 
@@ -116,7 +116,7 @@ pub(crate) async fn issue_share_token_handler(
             );
         },
     };
-    let row = repositories::profile_grp::get_share_token_version(&pool, &target_user_id).await;
+    let row = repositories::users::get_share_token_version(&pool, &target_user_id).await;
     let version = match row {
         Ok(Some(v)) => v,
         Ok(None) => return shared::error_response(StatusCode::NOT_FOUND, "User not found"),
@@ -171,8 +171,7 @@ pub(crate) async fn public_manifest_handler(
         return shared::error_response(StatusCode::UNAUTHORIZED, "Invalid or revoked token");
     };
 
-    let current_version = match repositories::profile_grp::get_share_token_version(&pool, &user_id)
-        .await
+    let current_version = match repositories::users::get_share_token_version(&pool, &user_id).await
     {
         Ok(Some(v)) => v,
         Ok(None) => {
@@ -199,10 +198,10 @@ fn opt_desc(desc: String) -> Option<String> {
 
 fn collect_manifest_sections(
     services_path: &std::path::Path,
-) -> Vec<repositories::access_control::SectionInput> {
-    let mut sections_in: Vec<repositories::access_control::SectionInput> = Vec::new();
+) -> Vec<repositories::users::access_control::SectionInput> {
+    let mut sections_in: Vec<repositories::users::access_control::SectionInput> = Vec::new();
 
-    if let Ok(servers) = repositories::mcp_servers::list_mcp_servers(services_path) {
+    if let Ok(servers) = repositories::mcp::mcp_servers::list_mcp_servers(services_path) {
         let rows = servers
             .into_iter()
             .map(|s| {
@@ -212,21 +211,21 @@ fn collect_manifest_sections(
             .collect();
         sections_in.push(("mcp_server".into(), "MCP servers".into(), rows));
     }
-    if let Ok(plugins) = repositories::list_plugin_catalog(services_path) {
+    if let Ok(plugins) = repositories::marketplace::plugins::list_plugin_catalog(services_path) {
         let rows = plugins
             .into_iter()
             .map(|p| (p.id, p.name, opt_desc(p.description)))
             .collect();
         sections_in.push(("plugin".into(), "Plugins".into(), rows));
     }
-    if let Ok(agents) = repositories::list_agent_catalog(services_path) {
+    if let Ok(agents) = repositories::marketplace::plugins::list_agent_catalog(services_path) {
         let rows = agents
             .into_iter()
             .map(|a| (a.id.as_str().to_owned(), a.name, opt_desc(a.description)))
             .collect();
         sections_in.push(("agent".into(), "Agents".into(), rows));
     }
-    if let Ok(skills) = repositories::list_skill_catalog(services_path) {
+    if let Ok(skills) = repositories::marketplace::plugins::list_skill_catalog(services_path) {
         let rows = skills
             .into_iter()
             .map(|s| (s.id.as_str().to_owned(), s.name, opt_desc(s.description)))
@@ -244,12 +243,16 @@ async fn build_user_manifest(
     let services_path = shared::get_services_path().map_err(|r| *r)?;
     let sections_in = collect_manifest_sections(&services_path);
 
-    let matrix = repositories::access_control::filter_catalog_for_user(pool, user_id, sections_in)
-        .await
-        .map_err(|e| {
-            tracing::error!(error = %e, user_id = %user_id, "Failed to resolve manifest matrix");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        })?;
+    let matrix = repositories::users::access_control::filter_catalog_for_user(
+        pool,
+        user_id,
+        sections_in,
+    )
+    .await
+    .map_err(|e| {
+        tracing::error!(error = %e, user_id = %user_id, "Failed to resolve manifest matrix");
+        shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
+    })?;
 
     let sections = matrix
         .sections

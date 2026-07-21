@@ -23,7 +23,7 @@ use systemprompt_security::authz::{
 };
 use tokio::sync::RwLock;
 
-use crate::repositories::governance_grp::{GovernanceDecisionRecord, insert_governance_decision};
+use crate::repositories::governance::{GovernanceDecisionRecord, insert_governance_decision};
 
 const POLICY_NAME: &str = "authz";
 

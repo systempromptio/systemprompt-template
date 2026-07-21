@@ -15,9 +15,7 @@ use axum::response::{Html, IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::repositories::perf_grp::traces::{
-    Span, SpanStatus, fetch_trace_spans, resolve_trace_session,
-};
+use crate::repositories::traces::{Span, SpanStatus, fetch_trace_spans, resolve_trace_session};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 

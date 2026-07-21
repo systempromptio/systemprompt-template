@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
 use crate::handlers::shared;
-use crate::repositories::{fetch_distinct_roles, list_users};
+use crate::repositories::users::queries::{fetch_distinct_roles, list_users};
 
 /// JSON body returned by [`list_distinct_roles_handler`].
 #[derive(Debug, Serialize)]

@@ -14,7 +14,7 @@ use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
 
-use crate::repositories::analytics_grp::{RawTurnBody, fetch_raw_turns};
+use crate::repositories::analytics::{RawTurnBody, fetch_raw_turns};
 use crate::types::UserContext;
 
 #[derive(Debug, Serialize)]

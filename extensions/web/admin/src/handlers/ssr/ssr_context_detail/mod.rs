@@ -15,7 +15,7 @@ use axum::response::{Html, IntoResponse, Response};
 use sqlx::PgPool;
 use systemprompt::identifiers::ContextId;
 
-use crate::repositories::analytics_grp::context_detail::{
+use crate::repositories::analytics::context_detail::{
     fetch_context_header, fetch_context_kpis, fetch_context_messages, fetch_context_requests,
     fetch_context_tool_calls,
 };

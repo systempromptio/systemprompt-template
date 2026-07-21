@@ -1,8 +1,13 @@
 mod event_types;
 mod parsers;
 
-pub use event_types::*;
-
+pub use event_types::{
+    ConfigChangeData, HookCommonFields, HookEvent, InstructionsLoadedData, NotificationData,
+    PermissionRequestData, PostToolUseData, PostToolUseFailureData, PreCompactData, PreToolUseData,
+    SessionEndData, SessionStartData, StopData, SubagentStartData, SubagentStopData,
+    TaskCompletedData, TeammateIdleData, UserPromptSubmitData, WorktreeCreateData,
+    WorktreeRemoveData,
+};
 use serde::Deserialize;
 
 #[derive(Debug, Clone)]

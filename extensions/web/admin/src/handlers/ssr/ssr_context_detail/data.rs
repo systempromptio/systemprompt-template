@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use chrono::{DateTime, Utc};
 use serde_json::Value;
 
-use crate::repositories::analytics_grp::context_detail::{
+use crate::repositories::analytics::context_detail::{
     ContextHeader, ContextKpis, ContextMessageRow, ContextRequestRow, ContextToolCallRow,
 };
 

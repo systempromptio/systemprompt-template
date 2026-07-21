@@ -51,18 +51,21 @@ pub(crate) async fn marketplace_page(
         Err(r) => return *r,
     };
 
-    let raw_skills = repositories::list_skill_catalog(&services_path).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to load skill catalog");
-        Vec::new()
-    });
-    let raw_plugins = repositories::list_plugin_catalog(&services_path).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to load plugin catalog");
-        Vec::new()
-    });
-    let raw_mcp = repositories::mcp_servers::list_mcp_servers(&services_path).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to load MCP catalog");
-        Vec::new()
-    });
+    let raw_skills = repositories::marketplace::plugins::list_skill_catalog(&services_path)
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to load skill catalog");
+            Vec::new()
+        });
+    let raw_plugins = repositories::marketplace::plugins::list_plugin_catalog(&services_path)
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to load plugin catalog");
+            Vec::new()
+        });
+    let raw_mcp =
+        repositories::mcp::mcp_servers::list_mcp_servers(&services_path).unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to load MCP catalog");
+            Vec::new()
+        });
 
     let (skill_counts, plugin_counts, mcp_counts) = tokio::join!(
         assignment_counts_by_type(&pool, ENTITY_SKILL),
@@ -163,10 +166,11 @@ pub(crate) async fn a2a_agents_page(
         Err(r) => return *r,
     };
 
-    let raw_agents = repositories::list_agent_catalog(&services_path).unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to load agent catalog");
-        Vec::new()
-    });
+    let raw_agents = repositories::marketplace::plugins::list_agent_catalog(&services_path)
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to load agent catalog");
+            Vec::new()
+        });
     let agent_counts = assignment_counts_by_type(&pool, ENTITY_AGENT).await;
 
     let agents: Vec<CatalogRow> = raw_agents
@@ -208,7 +212,7 @@ pub(crate) async fn external_agents_page(
         return forbidden();
     }
 
-    let raw = repositories::external_agents_grp::list_external_agents();
+    let raw = repositories::external_agents::list_external_agents();
 
     let agents: Vec<ExternalAgentRow> = raw
         .into_iter()

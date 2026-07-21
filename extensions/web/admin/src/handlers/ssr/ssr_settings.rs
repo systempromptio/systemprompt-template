@@ -15,7 +15,7 @@ pub(crate) async fn settings_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
 ) -> Response {
-    let settings = repositories::user_settings::find_user_settings(&pool, &user_ctx.user_id)
+    let settings = repositories::users::user_settings::find_user_settings(&pool, &user_ctx.user_id)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to get user settings");

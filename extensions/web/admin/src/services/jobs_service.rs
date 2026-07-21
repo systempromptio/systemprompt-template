@@ -5,6 +5,6 @@ use crate::repositories;
 use crate::types::JobSummary;
 
 pub(crate) async fn list_jobs(pool: &PgPool) -> AdminResult<Vec<JobSummary>> {
-    let jobs = repositories::list_jobs(pool).await?;
+    let jobs = repositories::governance::jobs::list_jobs(pool).await?;
     Ok(jobs)
 }

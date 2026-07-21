@@ -4,7 +4,6 @@ pub mod control_center;
 pub mod conversation_analytics;
 mod dashboard;
 mod dashboard_enterprise;
-mod dashboard_traffic;
 pub mod departments;
 pub mod gateway;
 pub mod hooks_export;
@@ -12,6 +11,7 @@ mod jobs;
 mod plugins;
 mod plugins_config;
 mod plugins_requests;
+mod traffic;
 mod user_context;
 pub use departments::{Department, DepartmentInput, DepartmentMember, DepartmentSummary};
 mod users;
@@ -79,7 +79,17 @@ pub struct MarketplaceContext {
     pub next_rank_name: String,
     pub xp_to_next_rank: i64,
 }
-pub use constants::*;
+pub use constants::{
+    ACTION_GRANTED, CATEGORY_AI_SESSIONS, CATEGORY_EDITS, DECISION_DENY, DIR_PYCACHE, ENTITY_AGENT,
+    ENTITY_MARKETPLACE, ENTITY_MCP_SERVER, ENTITY_MCP_TOOL, ENTITY_PLUGIN, ENTITY_SKILL,
+    EVENT_POST_TOOL_USE, EVENT_POST_TOOL_USE_FAILURE, EVENT_SESSION_END, EVENT_SESSION_START,
+    EVENT_STOP, GIT_HEAD, GIT_INFO_REFS, GIT_UPLOAD_PACK, HOOK_TYPE_HTTP, IMPORT_TARGET_USER,
+    LOG_CONTEXT_GITHUB, MCP_CONFIG_PATH, PERMISSION_MODE_PLAN, PLUGIN_ID_SYSTEMPROMPT,
+    PLUGIN_MANIFEST_PATH, RANGE_7D, RANGE_14D, RANGE_24H, ROLE_ADMIN, SCRIPT_SOURCE_TRACKING,
+    SERVER_TYPE_EXTERNAL, SERVER_TYPE_INTERNAL, SKILL_FILENAME, SOURCE_CUSTOM, SOURCE_USER,
+    STATUS_ACTIVE, STATUS_DELETED, TAB_GOVERNANCE, TAB_MCP, TAB_REPORT, TRAFFIC_RANGE_30D,
+    TRAFFIC_RANGE_TODAY, TRAFFIC_RANGE_YESTERDAY,
+};
 pub use conversation_analytics::{
     EntityEffectiveness, EntityUsageSummary, RateSessionRequest, RateSkillRequest,
     SessionEntityLink, SessionRating, SkillEffectiveness, SkillRating,

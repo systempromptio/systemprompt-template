@@ -9,7 +9,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 
 use crate::repositories;
-use crate::repositories::magic_links;
+use crate::repositories::users::magic_links;
 use crate::types::{CreateUserRequest, UserContext};
 
 use super::shared;
@@ -82,7 +82,7 @@ pub(crate) async fn create_demo_user_handler(
         status: Some("active".to_owned()),
     };
 
-    if let Err(e) = repositories::create_user(&pool, &create_req).await {
+    if let Err(e) = repositories::users::mutations::create_user(&pool, &create_req).await {
         tracing::error!(error = %e, "Failed to create demo user");
         return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Registration failed");
     }

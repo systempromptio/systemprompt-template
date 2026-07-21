@@ -39,7 +39,11 @@ pub(crate) async fn list_plugin_env_handler(
         vec![]
     });
 
-    let stored = match repositories::list_plugin_env_vars(&pool, &user_id, &plugin_id).await {
+    let stored = match repositories::marketplace::plugin_env::list_plugin_env_vars(
+        &pool, &user_id, &plugin_id,
+    )
+    .await
+    {
         Ok(vars) => vars,
         Err(e) => {
             tracing::error!(error = %e, "Failed to list plugin env vars");

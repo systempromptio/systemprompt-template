@@ -23,7 +23,7 @@ pub(crate) async fn list_departments_handler(
     if !user_ctx.is_admin {
         return forbidden();
     }
-    match repositories::list_departments(&pool).await {
+    match repositories::departments::list_departments(&pool).await {
         Ok(departments) => Json(departments).into_response(),
         Err(e) => {
             tracing::warn!(error = %e, "Failed to list departments");
@@ -55,7 +55,7 @@ pub(crate) async fn create_department_handler(
         name: trimmed.to_owned(),
         description: input.description,
     };
-    match repositories::create_department(&pool, &normalized).await {
+    match repositories::departments::create_department(&pool, &normalized).await {
         Ok(dept) => (StatusCode::CREATED, Json(dept)).into_response(),
         Err(sqlx::Error::Database(db)) if db.is_unique_violation() => {
             (StatusCode::CONFLICT, "department name already exists").into_response()
@@ -91,7 +91,7 @@ pub(crate) async fn update_department_handler(
         name: trimmed.to_owned(),
         description: input.description,
     };
-    match repositories::update_department(&pool, &id, &normalized).await {
+    match repositories::departments::update_department(&pool, &id, &normalized).await {
         Ok(dept) => Json(dept).into_response(),
         Err(sqlx::Error::RowNotFound) => StatusCode::NOT_FOUND.into_response(),
         Err(sqlx::Error::Database(db)) if db.is_unique_violation() => {
@@ -112,7 +112,7 @@ pub(crate) async fn delete_department_handler(
     if !user_ctx.is_admin {
         return forbidden();
     }
-    match repositories::delete_department(&pool, &id).await {
+    match repositories::departments::delete_department(&pool, &id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(sqlx::Error::RowNotFound) => StatusCode::NOT_FOUND.into_response(),
         Err(e) => {
@@ -138,7 +138,7 @@ pub(crate) async fn assign_user_to_department_handler(
     }
     let dept_name = body.department_name.trim();
     if !dept_name.is_empty()
-        && repositories::get_department_by_name(&pool, dept_name)
+        && repositories::departments::get_department_by_name(&pool, dept_name)
             .await
             .inspect_err(|e| tracing::warn!(error = %e, dept_name, "get_department_by_name failed"))
             .ok()
@@ -147,7 +147,13 @@ pub(crate) async fn assign_user_to_department_handler(
     {
         return (StatusCode::BAD_REQUEST, "unknown department").into_response();
     }
-    match repositories::assign_user_to_department(&pool, &UserId::new(user_id), dept_name).await {
+    match repositories::departments::assign_user_to_department(
+        &pool,
+        &UserId::new(user_id),
+        dept_name,
+    )
+    .await
+    {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(e) => {
             tracing::warn!(error = %e, "Failed to assign user to department");

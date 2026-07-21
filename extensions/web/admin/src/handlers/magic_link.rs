@@ -9,7 +9,7 @@ use sqlx::PgPool;
 
 use systemprompt::identifiers::Email;
 
-use crate::repositories::magic_links;
+use crate::repositories::users::magic_links;
 
 use super::shared::ErrorBody;
 

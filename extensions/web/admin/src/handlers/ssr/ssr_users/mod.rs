@@ -31,10 +31,12 @@ pub(crate) async fn users_page(
             .into_response();
     }
 
-    let users = repositories::list_users(&pool).await.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to list users");
-        vec![]
-    });
+    let users = repositories::users::queries::list_users(&pool)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "Failed to list users");
+            vec![]
+        });
 
     let total_users = users.len();
     let active_users = users.iter().filter(|u| u.is_active).count();
@@ -107,7 +109,7 @@ pub(crate) async fn user_detail_page(
     };
     let user_id = UserId::new(id);
 
-    let detail = repositories::find_user_detail(&pool, &user_id)
+    let detail = repositories::users::queries::find_user_detail(&pool, &user_id)
         .await
         .map_err(|e| {
             tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch user detail");
@@ -160,7 +162,7 @@ pub(crate) async fn user_detail_page(
 }
 
 async fn load_runtime_view(pool: &PgPool, d: &crate::types::UserDetail) -> Option<UserRuntimeView> {
-    repositories::get_user_runtime_detail(pool, &d.user_id)
+    repositories::users::queries::get_user_runtime_detail(pool, &d.user_id)
         .await
         .ok()
         .map(|r| UserRuntimeView {

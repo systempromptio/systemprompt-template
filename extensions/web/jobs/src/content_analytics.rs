@@ -3,7 +3,7 @@ use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::error::JobError;
-use systemprompt_web_admin::repositories::analytics_grp::content_rollup::{
+use systemprompt_web_admin::repositories::analytics::content_rollup::{
     self, ContentRollupRow, UpsertMetricsParams,
 };
 

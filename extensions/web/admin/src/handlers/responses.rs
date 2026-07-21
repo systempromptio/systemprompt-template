@@ -26,7 +26,7 @@ pub(crate) struct AuditLogEntry {
 pub(crate) struct PluginEnvResponse {
     pub definitions: Vec<serde_json::Value>,
 
-    pub stored: Vec<crate::repositories::plugin_env::PluginEnvVar>,
+    pub stored: Vec<crate::repositories::marketplace::plugin_env::PluginEnvVar>,
     pub valid: bool,
     pub missing_required: Vec<String>,
 }

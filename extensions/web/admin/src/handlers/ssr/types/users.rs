@@ -94,7 +94,7 @@ pub(crate) struct UserDetailPageData {
     pub runtime: Option<UserRuntimeView>,
     #[serde(default)]
     pub effective_permissions:
-        Option<crate::repositories::governance_grp::effective::EffectivePermissions>,
+        Option<crate::repositories::governance::effective::EffectivePermissions>,
     #[serde(default)]
     pub has_effective_permissions: bool,
 }

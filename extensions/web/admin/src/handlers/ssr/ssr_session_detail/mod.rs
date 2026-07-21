@@ -14,7 +14,7 @@ use axum::response::{Html, IntoResponse, Response};
 use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
 
-use crate::repositories::analytics_grp::session_detail::{
+use crate::repositories::analytics::session_detail::{
     SessionContextRow, SessionHeader, SessionKpis, SessionRequestRow, SessionTraceRow,
     fetch_session_contexts, fetch_session_header, fetch_session_kpis, fetch_session_requests,
     fetch_session_traces,

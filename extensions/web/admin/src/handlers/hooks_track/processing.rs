@@ -6,7 +6,8 @@ use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::event_hub::EventHub;
 use crate::numeric;
-use crate::repositories::{conversation_analytics, hooks_track, usage_aggregations};
+use crate::repositories::dashboard::{conversation_analytics, hooks_track, usage_aggregations};
+
 use crate::types::webhook::{HookEvent, HookEventPayload};
 use crate::types::{ENTITY_SKILL, EVENT_SESSION_END, EVENT_SESSION_START, EVENT_STOP};
 
@@ -197,7 +198,7 @@ async fn handle_apm_and_concurrent(params: &ProcessInsertedEventParams<'_>) {
     let session_id = params.session_id;
 
     let (apm, eapm) =
-        crate::repositories::apm_metrics::calculate_session_apm(pool, session_id).await;
+        crate::repositories::dashboard::apm_metrics::calculate_session_apm(pool, session_id).await;
 
     let concurrent_raw =
         match hooks_track::count_concurrent_sessions(pool, user_id, session_id).await {
@@ -214,6 +215,8 @@ async fn handle_apm_and_concurrent(params: &ProcessInsertedEventParams<'_>) {
 
     let concurrent = numeric::saturating_i32(concurrent_raw) + 1;
 
-    crate::repositories::apm_metrics::update_session_apm(pool, session_id, apm, eapm, concurrent)
-        .await;
+    crate::repositories::dashboard::apm_metrics::update_session_apm(
+        pool, session_id, apm, eapm, concurrent,
+    )
+    .await;
 }

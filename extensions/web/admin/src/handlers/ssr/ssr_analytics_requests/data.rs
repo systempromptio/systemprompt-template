@@ -9,15 +9,15 @@ use std::sync::Arc;
 
 use sqlx::PgPool;
 
-use crate::repositories::analytics_grp::request_stats::{
+use crate::repositories::analytics::request_stats::{
     CostBucket, LatencyBucket, RequestStats, fetch_cost_over_time, fetch_latency_histogram,
     fetch_request_stats,
 };
-use crate::repositories::analytics_grp::requests::{
+use crate::repositories::analytics::requests::{
     RequestFilter, RequestFilterOptions, RequestPage, RequestRow, RequestSortSpec,
     fetch_request_filter_options, fetch_requests_paged,
 };
-use crate::repositories::governance_grp::time_range::{
+use crate::repositories::governance::time_range::{
     TimeRange, TimeRangePreset, TimeRangeQuery, count_requests_in_range, parse_time_range,
     preset_to_range,
 };

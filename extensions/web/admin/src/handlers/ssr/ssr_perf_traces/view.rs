@@ -6,11 +6,9 @@
 
 use urlencoding::encode as urlencode;
 
-use crate::repositories::governance_grp::filter_options::{FilterOption, FilterOptions};
-use crate::repositories::governance_grp::time_range::TimeRange;
-use crate::repositories::perf_grp::traces::{
-    TraceFilter, TraceSortColumn, TraceSortDir, TraceStats,
-};
+use crate::repositories::governance::filter_options::{FilterOption, FilterOptions};
+use crate::repositories::governance::time_range::TimeRange;
+use crate::repositories::traces::{TraceFilter, TraceSortColumn, TraceSortDir, TraceStats};
 
 use super::context::{
     AnnotatedOption, Chip, EntityViewTab, FilterOptionsView, Pagination, Preserved, StatsView,
