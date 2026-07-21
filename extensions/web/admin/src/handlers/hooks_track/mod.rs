@@ -15,6 +15,7 @@ mod helpers;
 mod processing;
 pub(crate) mod session_summary;
 
+use crate::error::AdminResult;
 use crate::event_hub::EventHub;
 use crate::repositories::marketplace::webhook;
 use crate::types::webhook::{HookEvent, HookEventPayload};
@@ -34,15 +35,12 @@ pub(crate) async fn handle_hook_track(
     State(pool): State<Arc<PgPool>>,
     headers: HeaderMap,
     Json(raw): Json<serde_json::Value>,
-) -> Response {
-    let (user_id, plugin_id, jwt_token) = match extract_and_validate_jwt(&headers) {
-        Ok(ids) => ids,
-        Err(e) => return e.into_response(),
-    };
+) -> AdminResult<Response> {
+    let (user_id, plugin_id, jwt_token) = extract_and_validate_jwt(&headers)?;
     tracing::trace!(payload = %helpers::sanitize_metadata(&raw), "Hook track received payload");
     let (payload, warnings) = HookEventPayload::from_value(raw);
     if matches!(&payload.event, HookEvent::PreToolUse(_)) {
-        return StatusCode::OK.into_response();
+        return Ok(StatusCode::OK.into_response());
     }
     log_payload_warnings(&payload, &warnings);
 
@@ -53,7 +51,7 @@ pub(crate) async fn handle_hook_track(
             event_type = payload.event_name(),
             "Hook event deduplicated"
         );
-        return StatusCode::OK.into_response();
+        return Ok(StatusCode::OK.into_response());
     }
 
     dispatch_inserted_event(&DispatchContext {
@@ -65,7 +63,7 @@ pub(crate) async fn handle_hook_track(
         jwt_token: &jwt_token,
     })
     .await;
-    StatusCode::OK.into_response()
+    Ok(StatusCode::OK.into_response())
 }
 
 fn log_payload_warnings(payload: &HookEventPayload, warnings: &[String]) {
