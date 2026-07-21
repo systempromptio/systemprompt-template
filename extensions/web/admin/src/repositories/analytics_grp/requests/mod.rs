@@ -11,11 +11,9 @@ use systemprompt::identifiers::{AgentId, AiRequestId, SessionId, TraceId, UserId
 
 mod options;
 mod paged;
-mod recent;
 
 pub use options::{RequestFilterOptions, fetch_request_filter_options};
 pub use paged::{RequestPage, fetch_requests_paged};
-pub use recent::{RecentGatewayRequestRow, list_recent_gateway_requests};
 
 #[derive(Debug, Clone, Default)]
 pub struct RequestFilter {

@@ -1,7 +1,5 @@
-mod mutations;
 mod queries;
 
-pub use mutations::*;
 pub use queries::*;
 
 use std::path::Path;

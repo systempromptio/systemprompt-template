@@ -16,12 +16,10 @@ use serde::Serialize;
 use systemprompt::identifiers::{PluginId, SessionId, TraceId, UserId};
 
 mod detail;
-mod list;
 mod redact;
 mod transcript;
 
 pub use detail::{fetch_conversation_detail, fetch_raw_turns};
-pub use list::fetch_conversation_list;
 pub use redact::redact_text;
 
 #[derive(Debug, Clone, Serialize)]
