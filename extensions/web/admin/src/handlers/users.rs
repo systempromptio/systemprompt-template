@@ -14,8 +14,7 @@ use systemprompt::oauth::validate_jwt_token;
 use systemprompt::identifiers::{Email, UserId};
 
 use crate::activity::{self, ActivityEntity, NewActivity};
-use crate::error::AdminError;
-use crate::handlers::shared;
+use crate::error::{AdminError, AdminResult};
 use crate::repositories;
 use crate::types::{CreateUserRequest, EventsQuery, UpdateUserRequest, UserContext};
 
@@ -72,93 +71,62 @@ fn extract_token_from_headers(headers: &HeaderMap) -> Result<String, AdminError>
     Ok(token.to_owned())
 }
 
-pub(crate) async fn dashboard_handler(State(pool): State<Arc<PgPool>>) -> Response {
-    match repositories::dashboard::get_dashboard_data(&pool, "7 days", "4 hours", "today", "7d")
-        .await
-    {
-        Ok(data) => Json(data).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to load dashboard data");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
-    }
+pub(crate) async fn dashboard_handler(State(pool): State<Arc<PgPool>>) -> AdminResult<Response> {
+    let data =
+        repositories::dashboard::get_dashboard_data(&pool, "7 days", "4 hours", "today", "7d")
+            .await?;
+    Ok(Json(data).into_response())
 }
 
-pub(crate) async fn list_users_handler(State(pool): State<Arc<PgPool>>) -> Response {
-    match repositories::users::queries::list_users(&pool).await {
-        Ok(users) => Json(UsersListResponse { users }).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to list users");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
-    }
+pub(crate) async fn list_users_handler(State(pool): State<Arc<PgPool>>) -> AdminResult<Response> {
+    let users = repositories::users::queries::list_users(&pool).await?;
+    Ok(Json(UsersListResponse { users }).into_response())
 }
 
 pub(crate) async fn user_detail_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id_raw): Path<String>,
-) -> Response {
+) -> AdminResult<Response> {
     let user_id = UserId::new(user_id_raw);
-    match repositories::users::queries::find_user_detail(&pool, &user_id).await {
-        Ok(Some(detail)) => Json(detail).into_response(),
-        Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "User not found"),
-        Err(e) => {
-            tracing::error!(error = %e, user_id = %user_id, "Failed to get user detail");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
-    }
+    let detail = repositories::users::queries::find_user_detail(&pool, &user_id)
+        .await?
+        .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
+    Ok(Json(detail).into_response())
 }
 
 pub(crate) async fn user_usage_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id_raw): Path<String>,
-) -> Response {
+) -> AdminResult<Response> {
     let user_id = UserId::new(user_id_raw);
-    match repositories::users::queries::list_user_usage(&pool, &user_id).await {
-        Ok(events) => Json(EventsListResponse { events }).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, user_id = %user_id, "Failed to get user usage");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
-    }
+    let events = repositories::users::queries::list_user_usage(&pool, &user_id).await?;
+    Ok(Json(EventsListResponse { events }).into_response())
 }
 
 pub(crate) async fn create_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Json(body): Json<CreateUserRequest>,
-) -> Response {
+) -> AdminResult<Response> {
     if !user_ctx.is_admin {
-        return shared::error_response(StatusCode::FORBIDDEN, "Admin access required");
+        return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
-    match repositories::users::mutations::create_user(&pool, &body).await {
-        Ok(user) => {
-            let p = Arc::clone(&pool);
-            let uid = user_ctx.user_id.clone();
-            let new_user_id = user.user_id.clone();
-            let name = user
-                .display_name
-                .clone()
-                .unwrap_or_else(|| user.user_id.as_str().to_owned());
-            tokio::spawn(async move {
-                activity::record(
-                    &p,
-                    NewActivity::entity_created(
-                        &uid,
-                        ActivityEntity::User,
-                        new_user_id.as_str(),
-                        &name,
-                    ),
-                )
-                .await;
-            });
-            (StatusCode::CREATED, Json(user)).into_response()
-        },
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to create user");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
-    }
+    let user = repositories::users::mutations::create_user(&pool, &body).await?;
+    let p = Arc::clone(&pool);
+    let uid = user_ctx.user_id.clone();
+    let new_user_id = user.user_id.clone();
+    let name = user
+        .display_name
+        .clone()
+        .unwrap_or_else(|| user.user_id.as_str().to_owned());
+    tokio::spawn(async move {
+        activity::record(
+            &p,
+            NewActivity::entity_created(&uid, ActivityEntity::User, new_user_id.as_str(), &name),
+        )
+        .await;
+    });
+    Ok((StatusCode::CREATED, Json(user)).into_response())
 }
 
 pub(crate) async fn update_user_handler(
@@ -166,87 +134,65 @@ pub(crate) async fn update_user_handler(
     Extension(user_ctx): Extension<UserContext>,
     Path(user_id_raw): Path<String>,
     Json(body): Json<UpdateUserRequest>,
-) -> Response {
+) -> AdminResult<Response> {
     let user_id = UserId::new(user_id_raw);
     if !user_ctx.is_admin {
-        return shared::error_response(StatusCode::FORBIDDEN, "Admin access required");
+        return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
-    match repositories::users::mutations::update_user(&pool, &user_id, &body).await {
-        Ok(Some(user)) => {
-            let p = Arc::clone(&pool);
-            let uid = user_ctx.user_id.clone();
-            let target_user_id = user.user_id.clone();
-            let name = user
-                .display_name
-                .clone()
-                .unwrap_or_else(|| user.user_id.as_str().to_owned());
-            tokio::spawn(async move {
-                activity::record(
-                    &p,
-                    NewActivity::entity_updated(
-                        &uid,
-                        ActivityEntity::User,
-                        target_user_id.as_str(),
-                        &name,
-                    ),
-                )
-                .await;
-            });
-            Json(user).into_response()
-        },
-        Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "User not found"),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to update user");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
-    }
+    let user = repositories::users::mutations::update_user(&pool, &user_id, &body)
+        .await?
+        .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
+    let p = Arc::clone(&pool);
+    let uid = user_ctx.user_id.clone();
+    let target_user_id = user.user_id.clone();
+    let name = user
+        .display_name
+        .clone()
+        .unwrap_or_else(|| user.user_id.as_str().to_owned());
+    tokio::spawn(async move {
+        activity::record(
+            &p,
+            NewActivity::entity_updated(&uid, ActivityEntity::User, target_user_id.as_str(), &name),
+        )
+        .await;
+    });
+    Ok(Json(user).into_response())
 }
 
 pub(crate) async fn delete_user_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
     Path(user_id_raw): Path<String>,
-) -> Response {
+) -> AdminResult<Response> {
     let user_id = UserId::new(user_id_raw);
     if !user_ctx.is_admin {
-        return shared::error_response(StatusCode::FORBIDDEN, "Admin access required");
+        return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
-    match repositories::users::mutations::delete_user(&pool, &user_id).await {
-        Ok(true) => {
-            let p = Arc::clone(&pool);
-            let uid = user_ctx.user_id.clone();
-            let target = user_id.clone();
-            tokio::spawn(async move {
-                activity::record(
-                    &p,
-                    NewActivity::entity_deleted(
-                        &uid,
-                        ActivityEntity::User,
-                        target.as_str(),
-                        target.as_str(),
-                    ),
-                )
-                .await;
-            });
-            StatusCode::NO_CONTENT.into_response()
-        },
-        Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "User not found"),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to delete user");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
+    if !repositories::users::mutations::delete_user(&pool, &user_id).await? {
+        return Err(AdminError::NotFound("User not found".to_owned()));
     }
+    let p = Arc::clone(&pool);
+    let uid = user_ctx.user_id.clone();
+    let target = user_id.clone();
+    tokio::spawn(async move {
+        activity::record(
+            &p,
+            NewActivity::entity_deleted(
+                &uid,
+                ActivityEntity::User,
+                target.as_str(),
+                target.as_str(),
+            ),
+        )
+        .await;
+    });
+    Ok(StatusCode::NO_CONTENT.into_response())
 }
 
 pub(crate) async fn list_events_handler(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<EventsQuery>,
-) -> Response {
-    match repositories::dashboard::list_events(&pool, &query).await {
-        Ok(response) => Json(response).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to list events");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
-    }
+) -> AdminResult<Response> {
+    let response = repositories::dashboard::list_events(&pool, &query).await?;
+    Ok(Json(response).into_response())
 }

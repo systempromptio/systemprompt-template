@@ -11,6 +11,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
 use crate::activity::{self, ActivityEntity, NewActivity};
+use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared;
 use crate::repositories;
 use crate::types::UserContext;
@@ -34,20 +35,14 @@ pub(crate) struct BulkAssignResponse {
 pub(crate) async fn list_access_rules_handler(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<AccessControlQuery>,
-) -> Response {
-    let result = if let (Some(et), Some(eid)) = (&query.entity_type, &query.entity_id) {
-        repositories::users::access_control::list_rules_for_entity(&pool, et, eid).await
+) -> AdminResult<Response> {
+    let rules = if let (Some(et), Some(eid)) = (&query.entity_type, &query.entity_id) {
+        repositories::users::access_control::list_rules_for_entity(&pool, et, eid).await?
     } else {
-        repositories::users::access_control::list_all_rules(&pool).await
+        repositories::users::access_control::list_all_rules(&pool).await?
     };
 
-    match result {
-        Ok(rules) => Json(RulesResponse { rules }).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to list access control rules");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
-    }
+    Ok(Json(RulesResponse { rules }).into_response())
 }
 
 pub(crate) async fn update_entity_rules_handler(
@@ -55,7 +50,7 @@ pub(crate) async fn update_entity_rules_handler(
     Extension(user_ctx): Extension<UserContext>,
     Path((entity_type, entity_id)): Path<(String, String)>,
     Json(body): Json<UpdateEntityRulesRequest>,
-) -> Response {
+) -> AdminResult<Response> {
     if ![
         "plugin",
         "agent",
@@ -65,47 +60,39 @@ pub(crate) async fn update_entity_rules_handler(
     ]
     .contains(&entity_type.as_str())
     {
-        return shared::error_response(
-            StatusCode::BAD_REQUEST,
-            "Invalid entity_type. Must be plugin, agent, mcp_server, marketplace, or gateway_route.",
-        );
+        return Err(AdminError::BadRequest(
+            "Invalid entity_type. Must be plugin, agent, mcp_server, marketplace, or gateway_route."
+                .to_owned(),
+        ));
     }
 
-    let result = repositories::users::access_control::set_entity_rules(
+    let rules = repositories::users::access_control::set_entity_rules(
         &pool,
         &entity_type,
         &entity_id,
         &body.rules,
     )
-    .await;
+    .await?;
 
-    match result {
-        Ok(rules) => {
-            if entity_type == "gateway_route" {
-                let uid = user_ctx.user_id.clone();
-                let eid = entity_id.clone();
-                let pool_arc = Arc::clone(&pool);
-                tokio::spawn(async move {
-                    activity::record(
-                        &pool_arc,
-                        NewActivity::entity_updated(&uid, ActivityEntity::GatewayRoute, &eid, &eid),
-                    )
-                    .await;
-                });
-            }
-            Json(RulesResponse { rules }).into_response()
-        },
-        Err(e) => {
-            tracing::error!(error = %e, entity_type, entity_id, "Failed to update access control rules");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
+    if entity_type == "gateway_route" {
+        let uid = user_ctx.user_id.clone();
+        let eid = entity_id.clone();
+        let pool_arc = Arc::clone(&pool);
+        tokio::spawn(async move {
+            activity::record(
+                &pool_arc,
+                NewActivity::entity_updated(&uid, ActivityEntity::GatewayRoute, &eid, &eid),
+            )
+            .await;
+        });
     }
+    Ok(Json(RulesResponse { rules }).into_response())
 }
 
 pub(crate) async fn bulk_assign_handler(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<BulkAssignRequest>,
-) -> Response {
+) -> AdminResult<Response> {
     let entities: Vec<(String, String)> = body
         .entities
         .iter()
@@ -113,44 +100,30 @@ pub(crate) async fn bulk_assign_handler(
         .collect();
 
     let rules_per_entity = body.rules.len();
-    match repositories::users::access_control::bulk_set_rules(&pool, &entities, &body.rules).await {
-        Ok(updated_count) => Json(BulkAssignResponse {
-            updated_count,
-            rules_per_entity,
-        })
-        .into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to bulk assign access control rules");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
-    }
+    let updated_count =
+        repositories::users::access_control::bulk_set_rules(&pool, &entities, &body.rules).await?;
+    Ok(Json(BulkAssignResponse {
+        updated_count,
+        rules_per_entity,
+    })
+    .into_response())
 }
 
 pub(crate) async fn user_matrix_handler(
     State(pool): State<Arc<PgPool>>,
     Path(user_id): Path<String>,
-) -> Response {
-    let services_path = match shared::get_services_path() {
-        Ok(p) => p,
-        Err(e) => return e.into_response(),
-    };
-    let profile_path = match shared::get_profile_path() {
-        Ok(p) => p,
-        Err(e) => return e.into_response(),
-    };
+) -> AdminResult<Response> {
+    let services_path = shared::get_services_path()?;
+    let profile_path = shared::get_profile_path()?;
 
     let sections = build_matrix_sections(&services_path, &profile_path);
 
     let user_id = UserId::new(user_id);
-    match repositories::users::access_control::resolve_user_matrix(&pool, &user_id, sections).await
-    {
-        Ok(Some(matrix)) => Json(matrix).into_response(),
-        Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "User not found"),
-        Err(e) => {
-            tracing::error!(error = %e, user_id = %user_id, "Failed to resolve user matrix");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
-    }
+    let matrix =
+        repositories::users::access_control::resolve_user_matrix(&pool, &user_id, sections)
+            .await?
+            .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
+    Ok(Json(matrix).into_response())
 }
 
 fn build_matrix_sections(
@@ -234,30 +207,22 @@ fn build_matrix_sections(
 
 /// Renders current DB state as YAML for copying into the committed baseline.
 /// Writes nothing to disk — instances never write back to `services/`.
-pub(crate) async fn yaml_snapshot_handler(State(pool): State<Arc<PgPool>>) -> Response {
+pub(crate) async fn yaml_snapshot_handler(
+    State(pool): State<Arc<PgPool>>,
+) -> AdminResult<Response> {
     use crate::repositories::config::acl_yaml_snapshot;
-    match acl_yaml_snapshot::render_yaml_snapshot(&pool).await {
-        Ok(yaml) => (
-            StatusCode::OK,
-            [(axum::http::header::CONTENT_TYPE, "application/yaml")],
-            yaml,
-        )
-            .into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to render yaml snapshot");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
-    }
+    let yaml = acl_yaml_snapshot::render_yaml_snapshot(&pool).await?;
+    Ok((
+        StatusCode::OK,
+        [(axum::http::header::CONTENT_TYPE, "application/yaml")],
+        yaml,
+    )
+        .into_response())
 }
 
 pub(crate) async fn access_control_departments_handler(
     State(pool): State<Arc<PgPool>>,
-) -> Response {
-    match repositories::users::user_queries::list_department_stats(&pool).await {
-        Ok(stats) => Json(stats).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, "Failed to fetch department stats");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
-        },
-    }
+) -> AdminResult<Response> {
+    let stats = repositories::users::user_queries::list_department_stats(&pool).await?;
+    Ok(Json(stats).into_response())
 }
