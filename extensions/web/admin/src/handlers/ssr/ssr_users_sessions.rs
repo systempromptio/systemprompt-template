@@ -1,9 +1,10 @@
 //! SSR page listing a user's active sessions.
 
+use crate::error::{AdminError, AdminHtmlResult};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::extract::Extension;
-use axum::response::{IntoResponse, Response};
+use axum::response::Response;
 use serde::Serialize;
 use systemprompt::identifiers::UserId;
 
@@ -33,13 +34,9 @@ pub(crate) async fn users_sessions_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return (
-            axum::http::StatusCode::FORBIDDEN,
-            axum::response::Html(super::ACCESS_DENIED_HTML),
-        )
-            .into_response();
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
     let current_session = CurrentSessionView {
@@ -58,5 +55,11 @@ pub(crate) async fn users_sessions_page(
         current_session,
         profiles: Vec::new(),
     };
-    super::render_typed_page(&engine, "users-sessions", &ctx, &user_ctx, &mkt_ctx)
+    Ok(super::render_typed_page(
+        &engine,
+        "users-sessions",
+        &ctx,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }
