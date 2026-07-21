@@ -17,10 +17,7 @@ use uuid::Uuid;
 use crate::repositories::bridge_grp::{BridgeUserRow, find_bridge_user};
 use crate::repositories::profile_grp::usage as usage_repo;
 
-use super::{
-    AgentItem, AgentsBlock, BridgeProfileBlock, ConversationSummary, ProfileUsage,
-    RecentConversation,
-};
+use super::{AgentItem, AgentsBlock, BridgeProfileBlock, ProfileUsage};
 
 pub(super) struct UsageSections {
     pub(super) d1: usage_repo::UsageWindow,
@@ -94,30 +91,12 @@ pub(super) async fn fetch_usage_sections(pool: &Arc<PgPool>, user_id: &UserId) -
 }
 
 pub(super) fn build_usage(sections: UsageSections) -> ProfileUsage {
-    let conversations = sections.conversations;
     ProfileUsage {
-        d1: sections.d1.into(),
-        d7: sections.d7.into(),
-        d30: sections.d30.into(),
-        top_models: sections.top_models.into_iter().map(Into::into).collect(),
-        conversations: ConversationSummary {
-            total_conversations: conversations.total_conversations,
-            total_ai_requests: conversations.total_ai_requests,
-            by_model: conversations.by_model.into_iter().map(Into::into).collect(),
-            by_agent: conversations.by_agent.into_iter().map(Into::into).collect(),
-            recent: conversations
-                .recent
-                .into_iter()
-                .map(|r| RecentConversation {
-                    context_id: r.context_id,
-                    context_name: r.context_name,
-                    last_activity: r.last_activity,
-                    ai_requests: r.ai_requests,
-                    model: r.model,
-                    agent_name: r.agent_name,
-                })
-                .collect(),
-        },
+        d1: sections.d1,
+        d7: sections.d7,
+        d30: sections.d30,
+        top_models: sections.top_models,
+        conversations: sections.conversations,
     }
 }
 

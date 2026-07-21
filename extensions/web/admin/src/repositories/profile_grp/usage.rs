@@ -5,10 +5,11 @@
 //! `/v1/bridge/profile/usage` API endpoint render the same data.
 
 use chrono::{DateTime, Utc};
+use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{ContextId, UserId};
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, Serialize)]
 pub struct UsageWindow {
     pub requests: i64,
     pub tokens: i64,
@@ -16,7 +17,7 @@ pub struct UsageWindow {
     pub previous_cost_microdollars: Option<i64>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ModelShare {
     pub model: String,
     pub requests: i64,
@@ -25,14 +26,14 @@ pub struct ModelShare {
     pub token_share: f64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ConversationGroup {
     pub name: String,
     pub conversations: i64,
     pub ai_requests: i64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct RecentConversation {
     pub context_id: ContextId,
     pub context_name: Option<String>,
@@ -42,7 +43,7 @@ pub struct RecentConversation {
     pub agent_name: Option<String>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct ConversationSummary {
     pub total_conversations: i64,
     pub total_ai_requests: i64,
