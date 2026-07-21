@@ -1,5 +1,6 @@
 //! SSR page for demo account registration.
 
+use crate::error::AdminHtmlResult;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::Extension;
@@ -19,9 +20,9 @@ pub(crate) async fn demo_register_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML.to_owned())).into_response();
+        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML.to_owned())).into_response());
     }
 
     let ctx = DemoRegisterContext {
@@ -29,5 +30,11 @@ pub(crate) async fn demo_register_page(
         page: "demo-register",
     };
 
-    render_typed_page(&engine, "demo-register", &ctx, &user_ctx, &mkt_ctx)
+    Ok(render_typed_page(
+        &engine,
+        "demo-register",
+        &ctx,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }

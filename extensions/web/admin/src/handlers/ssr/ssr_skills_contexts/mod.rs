@@ -7,6 +7,7 @@ mod data;
 
 use std::sync::Arc;
 
+use crate::error::AdminHtmlResult;
 use crate::repositories;
 use crate::repositories::analytics::contexts_list;
 use crate::templates::AdminTemplateEngine;
@@ -214,16 +215,22 @@ pub(crate) async fn skills_contexts_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Query(params): Query<ContextsListQuery>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return (
+        return Ok((
             axum::http::StatusCode::FORBIDDEN,
             axum::response::Html(super::ACCESS_DENIED_HTML),
         )
-            .into_response();
+            .into_response());
     }
     let inputs = parse_inputs(params);
     let data = fetch_page_data(&pool, &inputs.filter).await;
     let payload = build_page_json(&inputs, &data);
-    super::render_typed_page(&engine, "skills-contexts", &payload, &user_ctx, &mkt_ctx)
+    Ok(super::render_typed_page(
+        &engine,
+        "skills-contexts",
+        &payload,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }

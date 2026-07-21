@@ -10,6 +10,7 @@ mod builders;
 
 use std::sync::Arc;
 
+use crate::error::AdminHtmlResult;
 use crate::repositories;
 use crate::repositories::users::access_tree::{AccessTreeUserRow, list_users_for_access_tree};
 use crate::templates::AdminTemplateEngine;
@@ -69,15 +70,12 @@ pub(crate) async fn access_control_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response();
+        return Ok((StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response());
     }
 
-    let services_path = match super::get_services_path() {
-        Ok(p) => p,
-        Err(e) => return e.into_response(),
-    };
+    let services_path = super::get_services_path()?;
 
     let dept_stats = repositories::users::user_queries::list_department_stats(&pool)
         .await
@@ -133,7 +131,13 @@ pub(crate) async fn access_control_page(
         stats,
     };
 
-    super::render_typed_page(&engine, "access-control", &ctx, &user_ctx, &mkt_ctx)
+    Ok(super::render_typed_page(
+        &engine,
+        "access-control",
+        &ctx,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }
 
 fn serialize_user(u: &&AccessTreeUserRow) -> SerializedUser {
