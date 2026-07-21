@@ -3,7 +3,6 @@ pub mod content_rollup;
 pub mod context_detail;
 pub mod contexts_list;
 pub mod conversations;
-pub mod cost_stats;
 pub mod dashboard_report;
 pub mod mcp_tools;
 pub mod overview;

@@ -5,13 +5,11 @@ pub mod dashboard_grp;
 pub mod departments_grp;
 pub mod external_agents_grp;
 pub mod governance_grp;
-pub mod infra_grp;
 pub mod mcp_grp;
 pub mod perf_grp;
 pub mod plugins_grp;
 pub mod profile_grp;
 pub mod secrets_grp;
-pub mod traces_grp;
 pub mod users_grp;
 
 pub use bridge_grp::*;
