@@ -85,9 +85,9 @@ fn format_deny_rate(denied: i64, evaluations: i64) -> String {
     format!("{r:.1}%")
 }
 
-/// Anything left in `lifetime_by_id` is a policy that produced decisions in
-/// the past but is no longer registered (renamed / removed). Surface it so
-/// operators don't lose sight of it.
+/// Anything left in `lifetime_by_id` is a policy that has decisions on record
+/// under an id the registry does not carry — typically a rename or a removal.
+/// Surface it so operators don't lose sight of it.
 pub(super) fn build_orphans_json(
     lifetime_by_id: &HashMap<String, repositories::governance::PerPolicyCounts>,
 ) -> Vec<OrphanRow> {

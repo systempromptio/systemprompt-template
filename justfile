@@ -241,6 +241,7 @@ lint-gates:
     bash scripts/check-test-value.sh
     bash scripts/lint-raw-ids.sh
     bash scripts/check-glob-reexports.sh
+    bash scripts/check-comments.sh
     bash scripts/check-dead-repository-code.sh
     bash scripts/check-file-headers.sh
     bash scripts/check-file-size.sh

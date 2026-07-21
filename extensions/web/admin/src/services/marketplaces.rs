@@ -6,8 +6,9 @@ use systemprompt::models::services::MarketplaceConfig;
 /// Load the YAML-defined marketplaces from
 /// `services/marketplaces/*/config.yaml`.
 ///
-/// Returns an empty list if config loading fails — admin pages must still
-/// render. Sorted by marketplace id for stable ordering across requests.
+/// A config that fails to load yields an empty list rather than an error:
+/// admin pages must still render. Ordering is by marketplace id so it stays
+/// stable across requests.
 pub(crate) fn load_marketplaces() -> Vec<MarketplaceConfig> {
     let Ok(services) = ConfigLoader::load() else {
         return Vec::new();

@@ -4,7 +4,9 @@
 ///
 /// Catches the common high-entropy / well-prefixed credential shapes; not a
 /// substitute for the structural `secret_scan` policy run at webhook time.
-/// Returns `(redacted_text, count_of_redactions)`.
+///
+/// The count accompanying the redacted text is how many replacements were
+/// made, so a caller can surface that redaction occurred at all.
 pub fn redact_text(input: &str) -> (String, u32) {
     const PREFIX_PATTERNS: &[(&str, &str)] = &[
         ("AKIA", "aws_access_key"),

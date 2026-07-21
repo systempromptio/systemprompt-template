@@ -40,7 +40,7 @@ struct Registry {
 
 static REGISTRY: OnceLock<Registry> = OnceLock::new();
 
-/// Builds every registered provider once, against the first pool to ask.
+/// Every registered provider is built once, against the first pool to ask.
 ///
 /// The providers are stateless apart from their pool handle and their caches,
 /// so binding them once per process — rather than per request — is what makes
