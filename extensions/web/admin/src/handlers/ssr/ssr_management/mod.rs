@@ -7,15 +7,14 @@
 use std::sync::Arc;
 
 use axum::extract::{Extension, Path, State};
-use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse, Response};
+use axum::response::Response;
 use sqlx::PgPool;
 
+use crate::error::{AdminError, AdminHtmlError, AdminHtmlResult};
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
-use super::ACCESS_DENIED_HTML;
 use super::ssr_helpers::render_typed_page;
 
 mod departments;
@@ -27,8 +26,8 @@ use devices::{
     load_devices,
 };
 
-fn forbidden() -> Response {
-    (StatusCode::FORBIDDEN, Html(ACCESS_DENIED_HTML)).into_response()
+fn forbidden() -> AdminHtmlError {
+    AdminError::Forbidden("Admin access required.".to_owned()).into()
 }
 
 pub(crate) async fn management_departments_page(
@@ -36,9 +35,9 @@ pub(crate) async fn management_departments_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return forbidden();
+        return Err(forbidden());
     }
 
     let departments = repositories::departments::list_departments(&pool)
@@ -51,13 +50,13 @@ pub(crate) async fn management_departments_page(
         departments,
     };
 
-    render_typed_page(
+    Ok(render_typed_page(
         &engine,
         "management-departments",
         &data,
         &user_ctx,
         &mkt_ctx,
-    )
+    ))
 }
 
 pub(crate) async fn management_devices_page(
@@ -65,9 +64,9 @@ pub(crate) async fn management_devices_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return forbidden();
+        return Err(forbidden());
     }
 
     let rows = load_devices(&pool).await;
@@ -94,7 +93,13 @@ pub(crate) async fn management_devices_page(
         user_options,
         department_options,
     };
-    render_typed_page(&engine, "management-devices", &data, &user_ctx, &mkt_ctx)
+    Ok(render_typed_page(
+        &engine,
+        "management-devices",
+        &data,
+        &user_ctx,
+        &mkt_ctx,
+    ))
 }
 
 pub(crate) async fn management_department_detail_page(
@@ -103,13 +108,13 @@ pub(crate) async fn management_department_detail_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return forbidden();
+        return Err(forbidden());
     }
 
-    let Ok(Some(department)) = repositories::departments::find_department(&pool, &id).await else {
-        return (StatusCode::NOT_FOUND, Html("<h1>Department not found</h1>")).into_response();
+    let Some(department) = repositories::departments::find_department(&pool, &id).await? else {
+        return Err(AdminError::NotFound("Department not found".to_owned()).into());
     };
 
     let members = repositories::departments::list_department_members(&pool, &department.name)
@@ -144,11 +149,11 @@ pub(crate) async fn management_department_detail_page(
         total_cost_microdollars: totals.cost_microdollars,
     };
 
-    render_typed_page(
+    Ok(render_typed_page(
         &engine,
         "management-department-detail",
         &data,
         &user_ctx,
         &mkt_ctx,
-    )
+    ))
 }

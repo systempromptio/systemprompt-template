@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use crate::error::AdminHtmlResult;
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -16,7 +17,7 @@ pub(crate) async fn settings_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     let settings = repositories::users::user_settings::find_user_settings(&pool, &user_ctx.user_id)
         .await
         .unwrap_or_else(|e| {
@@ -56,5 +57,7 @@ pub(crate) async fn settings_page(
         tracing::warn!(error = %e, "Failed to serialize settings page data");
         serde_json::Value::Null
     });
-    super::render_page(&engine, "settings", &value, &user_ctx, &mkt_ctx)
+    Ok(super::render_page(
+        &engine, "settings", &value, &user_ctx, &mkt_ctx,
+    ))
 }

@@ -5,11 +5,12 @@ use std::sync::Arc;
 
 use systemprompt::identifiers::UserId;
 
+use crate::error::{AdminError, AdminHtmlResult};
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{IdQuery, MarketplaceContext, UserContext};
 use axum::extract::{Extension, Query, State};
-use axum::response::{IntoResponse, Response};
+use axum::response::Response;
 use sqlx::PgPool;
 
 use super::types::{PageStatView, UserDetailPageData, UserRuntimeView, UsersPageData};
@@ -22,13 +23,9 @@ pub(crate) async fn users_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
-        return (
-            axum::http::StatusCode::FORBIDDEN,
-            axum::response::Html(super::ACCESS_DENIED_HTML),
-        )
-            .into_response();
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
     let users = repositories::users::queries::list_users(&pool)
@@ -69,7 +66,9 @@ pub(crate) async fn users_page(
         page_stats,
     };
 
-    super::render_typed_page(&engine, "users", &data, &user_ctx, &mkt_ctx)
+    Ok(super::render_typed_page(
+        &engine, "users", &data, &user_ctx, &mkt_ctx,
+    ))
 }
 
 pub(crate) async fn user_detail_page(
@@ -78,34 +77,22 @@ pub(crate) async fn user_detail_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Query(params): Query<IdQuery>,
-) -> Response {
+) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin && Some(user_ctx.user_id.as_str()) != params.id() {
-        return (
-            axum::http::StatusCode::FORBIDDEN,
-            axum::response::Html(
-                "<h1>Access Denied</h1><p>You can only view your own profile.</p>",
-            ),
-        )
-            .into_response();
+        return Err(
+            AdminError::Forbidden("You can only view your own profile.".to_owned()).into(),
+        );
     }
 
     let Some(id) = params.id() else {
-        let data = UserDetailPageData {
-            page: "user-detail",
-            title: "User Detail",
-            user: None,
-            gamification: None,
-            not_found: true,
-            user_department: String::new(),
-            user_assignments: super::types::UserAssignmentSummary::default(),
-            user_devices: Vec::new(),
-            user_devices_count: 0,
-            departments: Vec::new(),
-            runtime: None,
-            effective_permissions: None,
-            has_effective_permissions: false,
-        };
-        return super::render_typed_page(&engine, "user-detail", &data, &user_ctx, &mkt_ctx);
+        let data = blank_user_detail();
+        return Ok(super::render_typed_page(
+            &engine,
+            "user-detail",
+            &data,
+            &user_ctx,
+            &mkt_ctx,
+        ));
     };
     let user_id = UserId::new(id);
 
@@ -158,7 +145,33 @@ pub(crate) async fn user_detail_page(
         effective_permissions: effective,
         has_effective_permissions,
     };
-    super::render_typed_page(&engine, "user-detail", &data, &user_ctx, &mkt_ctx)
+    Ok(super::render_typed_page(
+        &engine,
+        "user-detail",
+        &data,
+        &user_ctx,
+        &mkt_ctx,
+    ))
+}
+
+/// The detail page with no user resolved. A request carrying no `id` renders
+/// the same "not found" page as an `id` that matches nobody.
+fn blank_user_detail() -> UserDetailPageData {
+    UserDetailPageData {
+        page: "user-detail",
+        title: "User Detail",
+        user: None,
+        gamification: None,
+        not_found: true,
+        user_department: String::new(),
+        user_assignments: super::types::UserAssignmentSummary::default(),
+        user_devices: Vec::new(),
+        user_devices_count: 0,
+        departments: Vec::new(),
+        runtime: None,
+        effective_permissions: None,
+        has_effective_permissions: false,
+    }
 }
 
 async fn load_runtime_view(pool: &PgPool, d: &crate::types::UserDetail) -> Option<UserRuntimeView> {
