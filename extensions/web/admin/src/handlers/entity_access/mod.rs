@@ -19,7 +19,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::RuleId;
 use systemprompt_security::authz::{Access, AccessRule, UpsertRuleParams};
 
-use crate::handlers::shared;
+use crate::error::{AdminError, AdminResult};
 
 use support::{collect_entity_ids, parse_access, parse_rule_type, repo, validate_entity_type};
 use types::{
@@ -31,55 +31,41 @@ use types::{
 pub(crate) async fn list_entity_access_handler(
     State(pool): State<Arc<PgPool>>,
     Path((entity_type, entity_id)): Path<(String, String)>,
-) -> Response {
-    let kind = match validate_entity_type(&entity_type) {
-        Ok(k) => k,
-        Err(e) => return e.into_response(),
-    };
+) -> AdminResult<Response> {
+    let kind = validate_entity_type(&entity_type)?;
     let r = repo(&pool);
-    let rules = match r.list_rules_for_entity(kind, &entity_id).await {
-        Ok(rs) => rs,
-        Err(e) => {
-            tracing::error!(error = %e, entity_type, entity_id, "list_rules_for_entity failed");
-            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error");
-        },
-    };
-    let default_included = match r.get_entity(kind, &entity_id).await {
-        Ok(Some(entity)) => entity.default_included,
-        Ok(None) => false,
-        Err(e) => {
-            tracing::error!(error = %e, entity_type, entity_id, "get_entity failed");
-            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error");
-        },
-    };
-    Json(EntityAccessResponse {
+    let rules = r
+        .list_rules_for_entity(kind, &entity_id)
+        .await
+        .map_err(AdminError::internal)?;
+    let default_included = r
+        .get_entity(kind, &entity_id)
+        .await
+        .map_err(AdminError::internal)?
+        .is_some_and(|entity| entity.default_included);
+    Ok(Json(EntityAccessResponse {
         entity_type,
         entity_id,
         default_included,
         rules,
     })
-    .into_response()
+    .into_response())
 }
 
 pub(crate) async fn upsert_entity_rule_handler(
     State(pool): State<Arc<PgPool>>,
     Path((entity_type, entity_id)): Path<(String, String)>,
     Json(body): Json<UpsertRuleBody>,
-) -> Response {
-    let kind = match validate_entity_type(&entity_type) {
-        Ok(k) => k,
-        Err(e) => return e.into_response(),
-    };
-    let Some(rule_type) = parse_rule_type(&body.rule_type) else {
-        return shared::error_response(StatusCode::BAD_REQUEST, "invalid rule_type");
-    };
-    let Some(access) = parse_access(&body.access) else {
-        return shared::error_response(StatusCode::BAD_REQUEST, "invalid access");
-    };
+) -> AdminResult<Response> {
+    let kind = validate_entity_type(&entity_type)?;
+    let rule_type = parse_rule_type(&body.rule_type)
+        .ok_or_else(|| AdminError::BadRequest("invalid rule_type".to_owned()))?;
+    let access = parse_access(&body.access)
+        .ok_or_else(|| AdminError::BadRequest("invalid access".to_owned()))?;
     if body.rule_value.trim().is_empty() {
-        return shared::error_response(StatusCode::BAD_REQUEST, "rule_value required");
+        return Err(AdminError::BadRequest("rule_value required".to_owned()));
     }
-    match repo(&pool)
+    let rule = repo(&pool)
         .upsert_rule(UpsertRuleParams {
             entity_type: kind,
             entity_id: &entity_id,
@@ -89,56 +75,41 @@ pub(crate) async fn upsert_entity_rule_handler(
             justification: body.justification.as_deref(),
         })
         .await
-    {
-        Ok(rule) => Json(UpsertRuleResponse { rule }).into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, entity_type, entity_id, "upsert_rule failed");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
-        },
-    }
+        .map_err(AdminError::internal)?;
+    Ok(Json(UpsertRuleResponse { rule }).into_response())
 }
 
 pub(crate) async fn delete_entity_rule_handler(
     State(pool): State<Arc<PgPool>>,
     Path((entity_type, _entity_id, rule_id)): Path<(String, String, String)>,
-) -> Response {
-    if let Err(r) = validate_entity_type(&entity_type) {
-        return r.into_response();
+) -> AdminResult<Response> {
+    validate_entity_type(&entity_type)?;
+    if !repo(&pool)
+        .delete_rule(&RuleId::new(rule_id))
+        .await
+        .map_err(AdminError::internal)?
+    {
+        return Err(AdminError::NotFound("rule not found".to_owned()));
     }
-    match repo(&pool).delete_rule(&RuleId::new(rule_id.clone())).await {
-        Ok(true) => (StatusCode::NO_CONTENT, ()).into_response(),
-        Ok(false) => shared::error_response(StatusCode::NOT_FOUND, "rule not found"),
-        Err(e) => {
-            tracing::error!(error = %e, rule_id, "delete_rule failed");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
-        },
-    }
+    Ok((StatusCode::NO_CONTENT, ()).into_response())
 }
 
 pub(crate) async fn set_entity_default_handler(
     State(pool): State<Arc<PgPool>>,
     Path((entity_type, entity_id)): Path<(String, String)>,
     Json(body): Json<DefaultIncludedBody>,
-) -> Response {
-    let kind = match validate_entity_type(&entity_type) {
-        Ok(k) => k,
-        Err(e) => return e.into_response(),
-    };
-    match repo(&pool)
+) -> AdminResult<Response> {
+    let kind = validate_entity_type(&entity_type)?;
+    repo(&pool)
         .upsert_entity(kind, &entity_id, body.default_included, "admin:dashboard")
         .await
-    {
-        Ok(()) => Json(EntityDefaultResponse {
-            entity_type,
-            entity_id,
-            default_included: body.default_included,
-        })
-        .into_response(),
-        Err(e) => {
-            tracing::error!(error = %e, entity_type, entity_id, "upsert_entity failed");
-            shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error")
-        },
-    }
+        .map_err(AdminError::internal)?;
+    Ok(Json(EntityDefaultResponse {
+        entity_type,
+        entity_id,
+        default_included: body.default_included,
+    })
+    .into_response())
 }
 
 /// Bulk-list every entity of the given type with its rules and default.
@@ -148,23 +119,14 @@ pub(crate) async fn set_entity_default_handler(
 pub(crate) async fn list_all_entity_access_handler(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<AllAccessQuery>,
-) -> Response {
-    let kind = match validate_entity_type(&query.entity_type) {
-        Ok(k) => k,
-        Err(e) => return e.into_response(),
-    };
-    let entity_ids = match collect_entity_ids(&query.entity_type) {
-        Ok(ids) => ids,
-        Err(e) => return e.into_response(),
-    };
+) -> AdminResult<Response> {
+    let kind = validate_entity_type(&query.entity_type)?;
+    let entity_ids = collect_entity_ids(&query.entity_type)?;
     let r = repo(&pool);
-    let bulk = match r.list_rules_bulk(kind, &entity_ids).await {
-        Ok(m) => m,
-        Err(e) => {
-            tracing::error!(error = %e, entity_type = %query.entity_type, "list_rules_bulk failed");
-            return shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal error");
-        },
-    };
+    let bulk = r
+        .list_rules_bulk(kind, &entity_ids)
+        .await
+        .map_err(AdminError::internal)?;
     let mut entries: Vec<EntityAccessEntry> = Vec::with_capacity(entity_ids.len());
     for eid in &entity_ids {
         let default_included = r
@@ -183,11 +145,11 @@ pub(crate) async fn list_all_entity_access_handler(
             rules,
         });
     }
-    Json(ListAllEntityAccessResponse {
+    Ok(Json(ListAllEntityAccessResponse {
         entity_type: query.entity_type,
         entities: entries,
     })
-    .into_response()
+    .into_response())
 }
 
 /// Apply a department/role template across every entity of a given type.
@@ -197,25 +159,20 @@ pub(crate) async fn list_all_entity_access_handler(
 pub(crate) async fn apply_template_handler(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<ApplyTemplateBody>,
-) -> Response {
-    let kind = match validate_entity_type(&body.entity_type) {
-        Ok(k) => k,
-        Err(e) => return e.into_response(),
-    };
-    let Some(rule_type) = parse_rule_type(&body.subject_type) else {
-        return shared::error_response(StatusCode::BAD_REQUEST, "invalid subject_type");
-    };
+) -> AdminResult<Response> {
+    let kind = validate_entity_type(&body.entity_type)?;
+    let rule_type = parse_rule_type(&body.subject_type)
+        .ok_or_else(|| AdminError::BadRequest("invalid subject_type".to_owned()))?;
     if body.subject_value.trim().is_empty() {
-        return shared::error_response(StatusCode::BAD_REQUEST, "subject_value required");
+        return Err(AdminError::BadRequest("subject_value required".to_owned()));
     }
     if !["allow", "deny", "clear"].contains(&body.action.as_str()) {
-        return shared::error_response(StatusCode::BAD_REQUEST, "action must be allow|deny|clear");
+        return Err(AdminError::BadRequest(
+            "action must be allow|deny|clear".to_owned(),
+        ));
     }
 
-    let entity_ids = match collect_entity_ids(&body.entity_type) {
-        Ok(ids) => ids,
-        Err(e) => return e.into_response(),
-    };
+    let entity_ids = collect_entity_ids(&body.entity_type)?;
     let r = repo(&pool);
     let mut applied = 0usize;
     let mut failed = 0usize;
@@ -258,10 +215,10 @@ pub(crate) async fn apply_template_handler(
         }
     }
 
-    Json(ApplyTemplateResponse {
+    Ok(Json(ApplyTemplateResponse {
         applied,
         failed,
         entity_count: entity_ids.len(),
     })
-    .into_response()
+    .into_response())
 }
