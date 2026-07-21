@@ -29,11 +29,11 @@ pub(crate) async fn handle_hook_track(
     headers: HeaderMap,
     Json(raw): Json<serde_json::Value>,
 ) -> Response {
-    tracing::info!(payload = %raw, "Hook track received raw payload");
     let (user_id, plugin_id, jwt_token) = match extract_and_validate_jwt(&headers) {
         Ok(ids) => ids,
         Err(r) => return *r,
     };
+    tracing::trace!(payload = %helpers::sanitize_metadata(&raw), "Hook track received payload");
     let (payload, warnings) = HookEventPayload::from_value(raw);
     if matches!(&payload.event, HookEvent::PreToolUse(_)) {
         return StatusCode::OK.into_response();
