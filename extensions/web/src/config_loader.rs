@@ -15,7 +15,7 @@ fn load_app_paths() -> Result<AppPaths, ConfigError> {
     AppPaths::from_profile(&profile.paths).map_err(|e| ConfigError::PathsUnavailable(e.to_string()))
 }
 
-use crate::features::{FeaturePage, FeaturesConfig};
+use crate::features::{FeaturePage, FeaturePagesConfig};
 use crate::homepage::HomepageConfig;
 use crate::navigation::{BrandingConfig, NavigationConfig};
 
@@ -133,7 +133,7 @@ pub fn branding_config() -> Option<BrandingConfig> {
     })
 }
 
-pub(crate) fn load_features_config() -> Result<Option<Arc<FeaturesConfig>>, ConfigError> {
+pub(crate) fn load_features_config() -> Result<Option<Arc<FeaturePagesConfig>>, ConfigError> {
     let paths = match load_app_paths() {
         Ok(p) => p,
         Err(e) => {
@@ -162,7 +162,7 @@ pub(crate) fn load_features_config() -> Result<Option<Arc<FeaturesConfig>>, Conf
         "Loaded features config from config/features/"
     );
 
-    Ok(Some(Arc::new(FeaturesConfig { pages })))
+    Ok(Some(Arc::new(FeaturePagesConfig { pages })))
 }
 
 fn read_features_dir(

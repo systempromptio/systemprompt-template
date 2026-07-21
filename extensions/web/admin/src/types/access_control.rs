@@ -1,6 +1,6 @@
 //! Access rule value types and their Postgres enum encodings.
 //!
-//! `rule_type` is core's [`RuleType`][systemprompt_security::authz::RuleType],
+//! `rule_type` is core's [`RuleType`],
 //! re-exported here so the admin CRUD surface and the resolver cannot drift
 //! apart: this crate used to keep a parallel `Role | Department | User` enum,
 //! and a `department` row that the matrix rendered was invisible to the

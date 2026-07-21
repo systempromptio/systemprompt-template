@@ -10,7 +10,7 @@ pub mod provider;
 pub use config::{
     ComparisonConfig, ComparisonItem, ComparisonSide, DemoCategory, DemoPillar, DemoStep,
     DemosConfig, DifferentiatorConfig, DifferentiatorItem, ExtensionTrait, ExtensionsConfig,
-    FaqConfig, FaqItem, Feature, FeatureCategory, FeaturesConfig as HomepageFeaturesConfig,
+    FaqConfig, FaqItem, Feature, FeatureCategory, HomepageFeaturesSection as HomepageFeaturesConfig,
     FinalCtaConfig, HeroConfig, HomepageConfig, HowItWorksConfig, HowItWorksStep, IntegrationBrand,
     IntegrationsConfig, PricingConfig, PricingTier, QuickStartStep, TechnicalConfig,
     TechnicalStandard, UseCase, UseCasesConfig, ValueProp,

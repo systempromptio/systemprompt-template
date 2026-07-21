@@ -70,7 +70,7 @@ pub struct ToolUsageCount {
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
-pub struct UsageEvent {
+pub struct UserUsageEvent {
     pub id: String,
     pub event_type: String,
     pub tool_name: Option<String>,

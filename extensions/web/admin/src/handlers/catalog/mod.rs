@@ -32,8 +32,8 @@ use crate::types::{
 
 use super::ssr::ssr_helpers::render_typed_page;
 use view::{
-    A2aPageData, CatalogRow, CatalogRowSeed, ExternalAgentRow, ExternalPageData,
-    MarketplacePageData, assignment_counts_by_type, build_row, forbidden,
+    A2aPageData, CatalogRow, CatalogRowSeed, ExternalPageData, MarketplacePageData,
+    assignment_counts_by_type, build_row, forbidden,
 };
 
 pub(crate) async fn marketplace_page(
@@ -212,20 +212,8 @@ pub(crate) async fn external_agents_page(
         return forbidden();
     }
 
-    let raw = repositories::external_agents::list_external_agents();
+    let agents = repositories::external_agents::list_external_agents();
 
-    let agents: Vec<ExternalAgentRow> = raw
-        .into_iter()
-        .map(|e| ExternalAgentRow {
-            id: e.id,
-            display_name: e.display_name,
-            kind: e.kind,
-            enabled: e.enabled,
-            description: e.description,
-            platforms: e.platforms,
-            docs_url: e.docs_url,
-        })
-        .collect();
 
     let agents_count = agents.len();
     let enabled_count = agents.iter().filter(|a| a.enabled).count();

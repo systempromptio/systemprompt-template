@@ -4,7 +4,7 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, AiRequestId, PluginId, SessionId, TraceId, UserId};
 
-use super::{AiRequestSummary, DecisionStage, SessionSummary, TranscriptEnvelope, UsageEvent};
+use super::{AiRequestSummary, ChainUsageEvent, DecisionStage, SessionSummary, TranscriptEnvelope};
 
 #[derive(Debug)]
 pub(super) struct DecisionUserSlots {
@@ -125,7 +125,7 @@ pub(super) async fn fetch_requests(
 pub(super) async fn fetch_events(
     pool: &PgPool,
     session_id: &SessionId,
-) -> Result<Vec<UsageEvent>, sqlx::Error> {
+) -> Result<Vec<ChainUsageEvent>, sqlx::Error> {
     Ok(sqlx::query!(
         r#"SELECT id as "id!",
                   event_type as "event_type!",
@@ -143,7 +143,7 @@ pub(super) async fn fetch_events(
     .fetch_all(pool)
     .await?
     .into_iter()
-    .map(|r| UsageEvent {
+    .map(|r| ChainUsageEvent {
         id: r.id,
         event_type: r.event_type,
         tool_name: r.tool_name,

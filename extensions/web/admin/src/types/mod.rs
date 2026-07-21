@@ -21,7 +21,7 @@ pub mod webhook;
 
 pub use dashboard::{
     AchievementInfo, ActivityStats, ContentPerformanceRow, DashboardData, DashboardQuery,
-    DepartmentActivity, DepartmentQuery, DepartmentScore, EventBreakdown, EventRow,
+    DepartmentActivity, DepartmentQuery, DepartmentScore, EventBreakdown, EventFeedRow,
     EventTypeBreakdown, EventsQuery, EventsResponse, GovernanceDecisionRow, GovernanceEvent,
     HourlyActivity, IncidentGroup, LeaderboardEntry, McpAccessEvent, McpAccessSummary, ModelUsage,
     PaginationQuery, ProjectActivity, RealtimePulse, RecentMcpError, SkillCount, TimeSeriesBucket,
@@ -99,8 +99,8 @@ pub use conversation_analytics::{
 pub use users::{
     ContentBytes, CookieSession, CreateUserRequest, DepartmentStats, DetectedEntity,
     EventTypeCount, JwtIdentity, SkillSecret, ToolUsageCount, UpdateUserRequest,
-    UpsertSkillSecretRequest, UsageEvent, UserBasicInfo, UserDetail, UserIdentityRow, UserSession,
-    UserSummary, UserTier, UsersQuery,
+    UpsertSkillSecretRequest, UserBasicInfo, UserDetail, UserIdentityRow, UserSession, UserSummary,
+    UserTier, UserUsageEvent, UsersQuery,
 };
 pub use webhook::{
     GovernQuery, HookEventPayload, StatusLinePayload, StatusLineQuery, TrackQuery,

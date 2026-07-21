@@ -7,7 +7,7 @@ use std::sync::{Arc, OnceLock};
 
 use crate::config::BlogConfigValidated;
 use crate::config_loader::{self, ConfigError};
-use crate::features::FeaturesConfig;
+use crate::features::FeaturePagesConfig;
 use crate::homepage::HomepageConfig;
 use crate::jobs::ContentIngestionJob;
 use crate::navigation::NavigationConfig;
@@ -16,7 +16,7 @@ use systemprompt::extension::prelude::*;
 
 static NAVIGATION_CONFIG: OnceLock<Result<Option<Arc<NavigationConfig>>, String>> = OnceLock::new();
 static HOMEPAGE_CONFIG: OnceLock<Result<Option<Arc<HomepageConfig>>, String>> = OnceLock::new();
-static FEATURES_CONFIG: OnceLock<Result<Option<Arc<FeaturesConfig>>, String>> = OnceLock::new();
+static FEATURES_CONFIG: OnceLock<Result<Option<Arc<FeaturePagesConfig>>, String>> = OnceLock::new();
 
 #[derive(Debug, Default, Clone)]
 pub struct WebExtension {
@@ -72,7 +72,7 @@ impl WebExtension {
     }
 
     #[must_use]
-    pub fn features_config() -> Option<Arc<FeaturesConfig>> {
+    pub fn features_config() -> Option<Arc<FeaturePagesConfig>> {
         log_and_discard_err(
             &FEATURES_CONFIG,
             config_loader::load_features_config,

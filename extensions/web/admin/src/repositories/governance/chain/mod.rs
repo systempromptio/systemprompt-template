@@ -52,7 +52,7 @@ pub struct AiRequestSummary {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct UsageEvent {
+pub struct ChainUsageEvent {
     pub id: String,
     pub event_type: String,
     pub tool_name: Option<String>,
@@ -103,7 +103,7 @@ pub struct ChainEnvelope {
     pub identity: ChainIdentity,
     pub decisions: Vec<DecisionStage>,
     pub requests: Vec<AiRequestSummary>,
-    pub events: Vec<UsageEvent>,
+    pub events: Vec<ChainUsageEvent>,
     pub transcript: Option<TranscriptEnvelope>,
     pub summary: Option<SessionSummary>,
     pub totals: ChainTotals,

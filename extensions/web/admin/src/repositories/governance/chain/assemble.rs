@@ -8,13 +8,13 @@ use super::fetch::{
 };
 use super::resolve::resolve_session_id;
 use super::{
-    AiRequestSummary, ChainEnvelope, ChainIdentity, ChainTotals, DecisionStage, UsageEvent,
+    AiRequestSummary, ChainEnvelope, ChainIdentity, ChainTotals, ChainUsageEvent, DecisionStage,
 };
 
 fn compute_totals(
     decisions: &[DecisionStage],
     requests: &[AiRequestSummary],
-    events: &[UsageEvent],
+    events: &[ChainUsageEvent],
 ) -> ChainTotals {
     let mut totals = ChainTotals {
         decision_count: decisions.len() as i64,

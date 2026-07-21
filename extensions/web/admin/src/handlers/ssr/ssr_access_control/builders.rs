@@ -12,7 +12,7 @@ use crate::repositories;
 /// A generic labelled entity reference used by dropdowns/lookup tables in the
 /// unified access-control UI (mcp servers, plugins, agents, marketplaces).
 #[derive(Debug, Serialize)]
-pub(super) struct EntityRef {
+pub(super) struct EntityOption {
     pub(super) id: String,
     pub(super) label: String,
     pub(super) description: String,
@@ -31,10 +31,10 @@ pub(super) struct RouteRef {
 #[derive(Debug, Serialize)]
 pub(super) struct EntityCatalogue {
     pub(super) gateway_routes: Vec<RouteRef>,
-    pub(super) mcp_servers: Vec<EntityRef>,
-    pub(super) plugins: Vec<EntityRef>,
-    pub(super) agents: Vec<EntityRef>,
-    pub(super) marketplaces: Vec<EntityRef>,
+    pub(super) mcp_servers: Vec<EntityOption>,
+    pub(super) plugins: Vec<EntityOption>,
+    pub(super) agents: Vec<EntityOption>,
+    pub(super) marketplaces: Vec<EntityOption>,
 }
 
 pub(super) fn build_entity_catalogue(services_path: &Path) -> EntityCatalogue {
@@ -73,11 +73,11 @@ fn build_gateway_routes(services_path: &Path) -> Vec<RouteRef> {
     Vec::new()
 }
 
-fn build_mcp_servers(services_path: &Path) -> Vec<EntityRef> {
+fn build_mcp_servers(services_path: &Path) -> Vec<EntityOption> {
     repositories::mcp::mcp_servers::list_mcp_servers(services_path)
         .unwrap_or_default()
         .into_iter()
-        .map(|s| EntityRef {
+        .map(|s| EntityOption {
             id: s.id.as_str().to_owned(),
             label: s.id.as_str().to_owned(),
             description: s.description,
@@ -85,12 +85,12 @@ fn build_mcp_servers(services_path: &Path) -> Vec<EntityRef> {
         .collect()
 }
 
-fn build_plugins(services_path: &Path) -> Vec<EntityRef> {
+fn build_plugins(services_path: &Path) -> Vec<EntityOption> {
     let admin_roles = vec!["admin".to_owned()];
     repositories::marketplace::plugins::list_plugins_for_roles(services_path, &admin_roles)
         .unwrap_or_default()
         .into_iter()
-        .map(|p| EntityRef {
+        .map(|p| EntityOption {
             id: p.id,
             label: p.name,
             description: p.description,
@@ -98,10 +98,10 @@ fn build_plugins(services_path: &Path) -> Vec<EntityRef> {
         .collect()
 }
 
-fn build_marketplaces() -> Vec<EntityRef> {
+fn build_marketplaces() -> Vec<EntityOption> {
     crate::services::marketplaces::load_marketplaces()
         .into_iter()
-        .map(|mp| EntityRef {
+        .map(|mp| EntityOption {
             id: mp.id.as_str().to_owned(),
             label: mp.name,
             description: mp.description,
@@ -109,11 +109,11 @@ fn build_marketplaces() -> Vec<EntityRef> {
         .collect()
 }
 
-fn build_agents(services_path: &Path) -> Vec<EntityRef> {
+fn build_agents(services_path: &Path) -> Vec<EntityOption> {
     repositories::config::agents::list_agents(services_path)
         .unwrap_or_default()
         .into_iter()
-        .map(|a| EntityRef {
+        .map(|a| EntityOption {
             id: a.id.as_str().to_owned(),
             label: a.name,
             description: a.description,

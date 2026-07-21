@@ -137,7 +137,7 @@ pub(crate) async fn gather_analysis_context(
 
 pub(crate) fn build_full_context(
     analysis_context: &str,
-    events_ctx: Option<&session_summary::SessionSummary>,
+    events_ctx: Option<&session_summary::GeneratedSessionSummary>,
 ) -> String {
     events_ctx.map_or_else(
         || analysis_context.to_owned(),

@@ -199,8 +199,7 @@ pub(crate) async fn detect_after_the_fact(
 
     let mut emitted = 0usize;
     for row in rows {
-        let Some(route) =
-            repositories::config::gateway::find_matching_route(routes, &row.model)
+        let Some(route) = repositories::config::gateway::find_matching_route(routes, &row.model)
         else {
             continue;
         };

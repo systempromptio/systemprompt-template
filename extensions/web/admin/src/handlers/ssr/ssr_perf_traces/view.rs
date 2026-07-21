@@ -7,12 +7,12 @@
 use urlencoding::encode as urlencode;
 
 use crate::repositories::governance::filter_options::{FilterOption, FilterOptions};
-use crate::util::time_range::TimeRange;
 use crate::repositories::traces::{TraceFilter, TraceSortColumn, TraceSortDir, TraceStats};
+use crate::util::time_range::TimeRange;
 
 use super::context::{
-    AnnotatedOption, Chip, EntityViewTab, FilterOptionsView, Pagination, Preserved, StatsView,
-    TimeRangeContext,
+    AnnotatedOption, Chip, EntityViewTab, Pagination, Preserved, StatsView, TimeRangeContext,
+    TraceFilterOptionsView,
 };
 use super::{BASE_URL, TraceListQuery, empty_to_none};
 
@@ -190,8 +190,8 @@ fn preserved_query_string(query: &TraceListQuery, drop: &[&str]) -> String {
 pub(super) fn annotate_options(
     options: &FilterOptions,
     filter: &TraceFilter<'_>,
-) -> FilterOptionsView {
-    FilterOptionsView {
+) -> TraceFilterOptionsView {
+    TraceFilterOptionsView {
         users: annotate_group(&options.users, filter.user_id),
         agents: annotate_group(&options.agents, filter.agent_id),
         agent_scopes: annotate_group(&options.agent_scopes, filter.agent_scope),

@@ -6,7 +6,7 @@ use systemprompt::identifiers::{SessionId, UserId};
 use crate::repositories::dashboard::hooks_track;
 
 #[derive(Debug)]
-pub(crate) struct SessionSummary {
+pub(crate) struct GeneratedSessionSummary {
     pub summary: String,
     pub tags: String,
 }
@@ -15,7 +15,7 @@ pub(crate) async fn generate_session_summary(
     pool: &PgPool,
     user_id: &UserId,
     session_id: &SessionId,
-) -> Option<SessionSummary> {
+) -> Option<GeneratedSessionSummary> {
     let rows = hooks_track::fetch_session_events(pool, session_id, user_id)
         .await
         .ok()?;
@@ -59,7 +59,7 @@ pub(crate) async fn generate_session_summary(
     );
     let tags_str = compute_tags(error_count, &tools_seen);
 
-    Some(SessionSummary {
+    Some(GeneratedSessionSummary {
         summary,
         tags: tags_str,
     })

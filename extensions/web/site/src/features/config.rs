@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FeaturesConfig {
+pub struct FeaturePagesConfig {
     pub pages: Vec<FeaturePage>,
 }
 

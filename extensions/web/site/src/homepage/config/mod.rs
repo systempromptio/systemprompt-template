@@ -24,7 +24,7 @@ pub struct HomepageConfig {
     #[serde(default)]
     pub integrations: Option<IntegrationsConfig>,
     #[serde(default)]
-    pub features: Option<FeaturesConfig>,
+    pub features: Option<HomepageFeaturesSection>,
     #[serde(default)]
     pub how_it_works: Option<HowItWorksConfig>,
     #[serde(default)]
@@ -141,7 +141,7 @@ pub struct IntegrationBrand {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FeaturesConfig {
+pub struct HomepageFeaturesSection {
     #[serde(default)]
     pub title: Option<String>,
     #[serde(default)]

@@ -12,7 +12,7 @@ pub(super) struct ContextDetailPageContext {
     pub(super) kpis: KpisView,
     pub(super) transcript: Vec<TranscriptEntryView>,
     pub(super) has_transcript: bool,
-    pub(super) requests: Vec<RequestRowView>,
+    pub(super) requests: Vec<ContextRequestRowView>,
     pub(super) has_requests: bool,
     pub(super) back_url: String,
     pub(super) back_label: String,
@@ -79,7 +79,7 @@ pub(super) struct TranscriptEntryView {
 }
 
 #[derive(Debug, Serialize)]
-pub(super) struct RequestRowView {
+pub(super) struct ContextRequestRowView {
     pub(super) id: String,
     pub(super) id_short: String,
     pub(super) request_url: String,

@@ -3,14 +3,14 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
-use crate::types::UsageEvent;
+use crate::types::UserUsageEvent;
 
 pub async fn get_user_usage(
     pool: &PgPool,
     user_id: &UserId,
-) -> Result<Vec<UsageEvent>, sqlx::Error> {
+) -> Result<Vec<UserUsageEvent>, sqlx::Error> {
     sqlx::query_as!(
-        UsageEvent,
+        UserUsageEvent,
         r#"
         SELECT id, event_type, tool_name, created_at, metadata
         FROM plugin_usage_events

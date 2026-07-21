@@ -50,7 +50,7 @@ pub use error::BlogError;
 pub use extension::{BlogExtension, WebExtension};
 pub use features::{
     FeatureCta, FeaturePage, FeaturePagePrerenderer, FeatureSection, FeatureSectionItem,
-    FeaturesConfig,
+    FeaturePagesConfig,
 };
 pub use homepage::{
     ComparisonConfig, ComparisonItem, ComparisonSide, DifferentiatorConfig, DifferentiatorItem,

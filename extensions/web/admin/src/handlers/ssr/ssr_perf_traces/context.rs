@@ -46,7 +46,7 @@ pub(super) struct TimeRangeContext {
 pub(super) struct FilterRibbon {
     pub(super) base_url: &'static str,
     pub(super) preserved: Vec<Preserved>,
-    pub(super) options: FilterOptionsView,
+    pub(super) options: TraceFilterOptionsView,
     pub(super) chips: Vec<Chip>,
 }
 
@@ -57,7 +57,7 @@ pub(super) struct Preserved {
 }
 
 #[derive(Debug, Default, Serialize)]
-pub(super) struct FilterOptionsView {
+pub(super) struct TraceFilterOptionsView {
     pub(super) users: Vec<AnnotatedOption>,
     pub(super) agents: Vec<AnnotatedOption>,
     pub(super) agent_scopes: Vec<AnnotatedOption>,

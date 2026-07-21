@@ -187,7 +187,7 @@ pub struct EventsQuery {
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
-pub struct EventRow {
+pub struct EventFeedRow {
     pub id: String,
     pub user_id: UserId,
     pub display_name: String,
@@ -208,7 +208,7 @@ pub struct EventBreakdown {
 
 #[derive(Debug, Serialize)]
 pub struct EventsResponse {
-    pub events: Vec<EventRow>,
+    pub events: Vec<EventFeedRow>,
     pub total: i64,
     pub limit: i64,
     pub offset: i64,

@@ -10,7 +10,7 @@ use serde::Deserialize;
 
 const EXTERNAL_AGENTS_DIR: &str = "services/external_agents";
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct ExternalAgentRow {
     pub id: String,
     pub display_name: String,

@@ -46,21 +46,10 @@ pub(super) struct A2aPageData {
 }
 
 #[derive(Debug, Serialize)]
-pub(super) struct ExternalAgentRow {
-    pub(super) id: String,
-    pub(super) display_name: String,
-    pub(super) kind: String,
-    pub(super) enabled: bool,
-    pub(super) description: String,
-    pub(super) platforms: Vec<String>,
-    pub(super) docs_url: Option<String>,
-}
-
-#[derive(Debug, Serialize)]
 pub(super) struct ExternalPageData {
     pub(super) page: &'static str,
     pub(super) title: &'static str,
-    pub(super) agents: Vec<ExternalAgentRow>,
+    pub(super) agents: Vec<crate::repositories::external_agents::ExternalAgentRow>,
     pub(super) agents_count: usize,
     pub(super) enabled_count: usize,
 }

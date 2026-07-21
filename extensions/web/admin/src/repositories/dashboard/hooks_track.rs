@@ -29,7 +29,7 @@ pub async fn count_concurrent_sessions(
 }
 
 #[derive(sqlx::FromRow, Debug)]
-pub struct EventRow {
+pub struct SessionEventRow {
     pub event_type: String,
     pub tool_name: Option<String>,
     pub cwd: Option<String>,
@@ -39,9 +39,9 @@ pub async fn fetch_session_events(
     pool: &PgPool,
     session_id: &SessionId,
     user_id: &UserId,
-) -> Result<Vec<EventRow>, sqlx::Error> {
+) -> Result<Vec<SessionEventRow>, sqlx::Error> {
     sqlx::query_as!(
-        EventRow,
+        SessionEventRow,
         r"SELECT event_type, tool_name, cwd
           FROM plugin_usage_events
           WHERE session_id = $1 AND user_id = $2

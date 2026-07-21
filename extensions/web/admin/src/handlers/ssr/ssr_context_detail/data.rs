@@ -12,7 +12,7 @@ use crate::repositories::analytics::context_detail::{
 };
 
 use super::context::{
-    ContextDetailPageContext, HeaderView, KpisView, RequestRowView, TranscriptEntryView,
+    ContextDetailPageContext, ContextRequestRowView, HeaderView, KpisView, TranscriptEntryView,
 };
 
 const TRANSCRIPT_PREVIEW_CHARS: usize = 4000;
@@ -115,8 +115,8 @@ fn kpis_view(k: &ContextKpis) -> KpisView {
     }
 }
 
-fn request_view(r: &ContextRequestRow) -> RequestRowView {
-    RequestRowView {
+fn request_view(r: &ContextRequestRow) -> ContextRequestRowView {
+    ContextRequestRowView {
         id: r.id.clone(),
         id_short: short_id(&r.id),
         request_url: format!("/admin/requests/{}", urlencoding::encode(&r.id)),

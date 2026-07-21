@@ -57,8 +57,8 @@ pub(super) fn collect_entity_ids(entity_type: &str) -> Result<Vec<String>, Box<R
     match entity_type {
         "gateway_route" => {
             let profile_path = shared::get_profile_path()?;
-            let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
-                .map_err(|e| {
+            let cfg =
+                repositories::config::gateway::get_gateway_config(&profile_path).map_err(|e| {
                     tracing::error!(error = %e, "Failed to load gateway config");
                     Box::new(shared::error_response(
                         StatusCode::INTERNAL_SERVER_ERROR,

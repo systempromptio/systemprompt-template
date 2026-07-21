@@ -41,7 +41,7 @@ use axum::{Extension, Router, middleware as axum_middleware};
 use sqlx::PgPool;
 
 pub use routes::{admin_ssr_router, bridge_auth_ssr_router};
-pub use types::{CreateUserRequest, MarketplaceContext, UsageEvent, UserContext, UserSummary};
+pub use types::{CreateUserRequest, MarketplaceContext, UserContext, UserSummary, UserUsageEvent};
 
 pub mod test_support {
     pub use crate::handlers::bridge::plugin_file::resolve_within;

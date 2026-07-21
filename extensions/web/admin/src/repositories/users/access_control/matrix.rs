@@ -211,7 +211,12 @@ struct MatrixCell<'a> {
 fn resolve_effective(cell: &MatrixCell<'_>) -> (String, MatrixSource) {
     let Ok(kind) = EntityKind::from_str(cell.entity_type) else {
         return (
-            if cell.default_included { "allow" } else { "deny" }.to_owned(),
+            if cell.default_included {
+                "allow"
+            } else {
+                "deny"
+            }
+            .to_owned(),
             MatrixSource {
                 layer: "default".into(),
                 detail: format!("unknown entity type: {}", cell.entity_type),

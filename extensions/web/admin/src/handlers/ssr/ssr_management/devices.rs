@@ -12,7 +12,7 @@ use systemprompt::identifiers::UserId;
 use crate::repositories::users::devices::{self, DeviceRowDb};
 
 #[derive(Debug, Serialize)]
-pub(super) struct DeviceRow {
+pub(super) struct EnrolledDeviceRow {
     id: String,
     name: String,
     key_prefix: String,
@@ -44,7 +44,7 @@ pub(super) async fn load_devices(pool: &PgPool) -> Vec<DeviceRowDb> {
         .unwrap_or_default()
 }
 
-pub(super) fn build_device_rows(rows: Vec<DeviceRowDb>) -> (Vec<DeviceRow>, usize) {
+pub(super) fn build_device_rows(rows: Vec<DeviceRowDb>) -> (Vec<EnrolledDeviceRow>, usize) {
     let now = Utc::now();
     let mut devices = Vec::with_capacity(rows.len());
     let mut online = 0usize;
@@ -56,7 +56,7 @@ pub(super) fn build_device_rows(rows: Vec<DeviceRowDb>) -> (Vec<DeviceRow>, usiz
         {
             online += 1;
         }
-        devices.push(DeviceRow {
+        devices.push(EnrolledDeviceRow {
             id: r.id,
             name: r.name,
             key_prefix: r.key_prefix,
@@ -101,11 +101,11 @@ pub(super) async fn load_device_user_options(pool: &PgPool) -> Vec<DeviceUserOpt
         .collect()
 }
 
-fn owner_key(d: &DeviceRow) -> &str {
+fn owner_key(d: &EnrolledDeviceRow) -> &str {
     d.user_email.as_deref().unwrap_or(d.user_id.as_str())
 }
 
-pub(super) fn compute_owner_rowspans(devices: &mut [DeviceRow]) {
+pub(super) fn compute_owner_rowspans(devices: &mut [EnrolledDeviceRow]) {
     let mut i = 0;
     while i < devices.len() {
         let key = owner_key(&devices[i]).to_owned();
@@ -124,7 +124,7 @@ pub(super) fn compute_owner_rowspans(devices: &mut [DeviceRow]) {
 pub(super) struct ManagementDevicesPageData {
     pub page: &'static str,
     pub title: &'static str,
-    pub devices: Vec<DeviceRow>,
+    pub devices: Vec<EnrolledDeviceRow>,
     pub total: usize,
     pub online: usize,
     pub user_options: Vec<DeviceUserOption>,

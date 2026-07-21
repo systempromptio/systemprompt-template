@@ -15,7 +15,7 @@ pub(super) struct AnalyticsRequestsPageContext {
     pub histogram_max: i64,
     pub cost_series: Vec<CostBucketView>,
     pub cost_max: i64,
-    pub rows: Vec<RequestRowView>,
+    pub rows: Vec<RequestListRowView>,
     pub has_rows: bool,
     pub total_count: i64,
     pub pagination: PaginationView,
@@ -55,7 +55,7 @@ pub(super) struct CostBucketView {
 }
 
 #[derive(Debug, Serialize)]
-pub(super) struct RequestRowView {
+pub(super) struct RequestListRowView {
     pub id: String,
     pub request_id: AiRequestId,
     pub trace_id: Option<TraceId>,
@@ -100,11 +100,11 @@ pub(super) struct FiltersView {
     pub model: Option<String>,
     pub provider: Option<String>,
     pub status: Option<String>,
-    pub options: FilterOptionsView,
+    pub options: RequestFilterOptionsView,
 }
 
 #[derive(Debug, Serialize)]
-pub(super) struct FilterOptionsView {
+pub(super) struct RequestFilterOptionsView {
     pub models: Vec<String>,
     pub providers: Vec<String>,
     pub statuses: Vec<String>,

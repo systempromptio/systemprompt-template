@@ -3,7 +3,8 @@
 //! Core's resolver ships two subject dimensions, `user` and `role`. Department
 //! is ours: `access_control_rules` rows with `rule_type = 'department'` are
 //! written by the access matrix and the department screens, and this provider
-//! is what makes them bind at enforcement time rather than render as decoration.
+//! is what makes them bind at enforcement time rather than render as
+//! decoration.
 //!
 //! The value is resolved by lookup against `user_profile_ext`, not read from a
 //! JWT claim, so moving a user between departments or revoking their profile

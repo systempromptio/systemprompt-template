@@ -12,7 +12,7 @@ use crate::repositories::dashboard::queries::{
 };
 use crate::repositories::dashboard::traffic;
 use crate::types::{
-    ContentPerformanceRow, DashboardData, EventRow, EventsQuery, EventsResponse, RealtimePulse,
+    ContentPerformanceRow, DashboardData, EventFeedRow, EventsQuery, EventsResponse, RealtimePulse,
     RecentMcpError, TrafficData, TrafficTopPage,
 };
 
@@ -151,7 +151,7 @@ pub async fn list_events(
     .await?;
 
     let events = sqlx::query_as!(
-        EventRow,
+        EventFeedRow,
         r#"SELECT
             p.id AS "id!",
             p.user_id AS "user_id!: UserId",

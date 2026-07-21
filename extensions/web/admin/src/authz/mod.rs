@@ -62,7 +62,8 @@ fn registry(pool: &PgPool) -> &'static Registry {
     })
 }
 
-/// The dimension ladder to hand [`resolve`][systemprompt_security::authz::resolve].
+/// The dimension ladder to hand
+/// [`resolve`][systemprompt_security::authz::resolve].
 pub fn dimensions(pool: &PgPool) -> &'static [SubjectDimension] {
     &registry(pool).dimensions
 }

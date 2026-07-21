@@ -28,7 +28,7 @@ pub struct GeoRow {
 }
 
 #[derive(Debug, Clone)]
-pub struct DeviceRow {
+pub struct DeviceSessionsRow {
     pub device: String,
     pub sessions: i64,
 }
@@ -70,6 +70,6 @@ pub type ContentBreakdownResult = (
     Vec<TopContentRow>,
     SeoRow,
     Vec<GeoRow>,
-    Vec<DeviceRow>,
+    Vec<DeviceSessionsRow>,
     Vec<SourceRow>,
 );

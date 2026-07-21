@@ -14,8 +14,8 @@ use crate::repositories::analytics::requests::{
 use crate::util::time_range::TimeRange;
 
 use super::context::{
-    CostBucketView, FilterOptionsView, FiltersView, LatencyBucketView, PaginationView,
-    RequestRowView, RequestStatsView, TimeRangeView,
+    CostBucketView, FiltersView, LatencyBucketView, PaginationView, RequestFilterOptionsView,
+    RequestListRowView, RequestStatsView, TimeRangeView,
 };
 use super::{BASE_URL, RequestsQuery};
 
@@ -81,8 +81,8 @@ pub(super) fn cost_bucket_to_json(b: &CostBucket) -> CostBucketView {
     }
 }
 
-pub(super) fn request_row_to_json(r: &RequestRow) -> RequestRowView {
-    RequestRowView {
+pub(super) fn request_row_to_json(r: &RequestRow) -> RequestListRowView {
+    RequestListRowView {
         id: r.id.clone(),
         request_id: r.request_id.clone(),
         trace_id: r.trace_id.clone(),
@@ -170,7 +170,7 @@ pub(super) fn filters_to_json(
         model: filter.model.clone(),
         provider: filter.provider.clone(),
         status: filter.status.clone(),
-        options: FilterOptionsView {
+        options: RequestFilterOptionsView {
             models: options.models.clone(),
             providers: options.providers.clone(),
             statuses: options.statuses.clone(),

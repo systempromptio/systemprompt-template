@@ -35,7 +35,7 @@ struct AuditDetailContext<'a> {
     banner: Option<Banner>,
     decisions: &'a [DecisionStage],
     requests: &'a [AiRequestSummary],
-    events: &'a [crate::repositories::governance::chain::UsageEvent],
+    events: &'a [crate::repositories::governance::chain::ChainUsageEvent],
     transcript: &'a Option<TranscriptEnvelope>,
     session_summary: &'a Option<crate::repositories::governance::chain::SessionSummary>,
     back_url: &'static str,
