@@ -26,16 +26,11 @@ pub(crate) fn extract_user_from_cookie(
 ) -> Result<crate::types::CookieSession, AdminError> {
     let token = extract_token_from_headers(headers)?;
 
-    let jwt_issuer = Config::get()
-        .map_err(|e| AdminError::internal(format!("Failed to load config: {e}")))?
-        .jwt_issuer
-        .clone();
+    let jwt_issuer = Config::get()?.jwt_issuer.clone();
 
-    let claims = validate_jwt_token(&token, &jwt_issuer, &[JwtAudience::Api])
-        .map_err(|e| AdminError::Unauthorized(format!("JWT validation failed: {e}")))?;
+    let claims = validate_jwt_token(&token, &jwt_issuer, &[JwtAudience::Api])?;
 
-    let email = Email::try_new(claims.email.clone())
-        .map_err(|e| AdminError::Unauthorized(format!("Invalid email in JWT: {e}")))?;
+    let email = Email::try_new(claims.email.clone()).map_err(AdminError::unauthenticated)?;
 
     Ok(crate::types::CookieSession {
         user_id: UserId::new(claims.sub),

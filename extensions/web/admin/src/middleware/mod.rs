@@ -91,9 +91,9 @@ async fn fetch_user_roles_department(
 ) -> Option<(Vec<String>, String)> {
     super::repositories::users::queries::find_user_roles_department(pool, user_id)
         .await
-        .map_err(|e| {
-            tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch user roles");
-        })
+        .inspect_err(
+            |e| tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch user roles"),
+        )
         .ok()
         .flatten()
 }
@@ -173,15 +173,11 @@ async fn compute_marketplace_counts(roles: Vec<String>) -> (MarketplaceCounts, S
 
         let counts = ProfileBootstrap::get()
             .map(|p| std::path::PathBuf::from(&p.paths.services))
-            .map_err(|e| {
-                tracing::warn!(error = %e, "Failed to get profile bootstrap for marketplace counts");
-            })
+            .inspect_err(|e| tracing::warn!(error = %e, "Failed to get profile bootstrap for marketplace counts"))
             .ok()
             .and_then(|p| {
                 repositories::marketplace::plugins::count_marketplace_items(&p, &roles)
-                    .map_err(|e| {
-                        tracing::warn!(error = %e, "Failed to count marketplace items");
-                    })
+                    .inspect_err(|e| tracing::warn!(error = %e, "Failed to count marketplace items"))
                     .ok()
             })
             .unwrap_or(MarketplaceCounts {

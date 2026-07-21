@@ -177,16 +177,12 @@ pub(crate) async fn generate_session_analysis(
     let response = ai_service
         .generate(&request)
         .await
-        .map_err(|e| {
-            tracing::warn!(error = %e, "Failed to generate AI session analysis");
-        })
+        .inspect_err(|e| tracing::warn!(error = %e, "Failed to generate AI session analysis"))
         .ok()?;
 
     serde_json::from_str::<SessionAnalysis>(&response.content)
         .map(validate_analysis)
-        .map_err(|e| {
-            tracing::warn!(error = %e, "Failed to parse AI session analysis response");
-        })
+        .inspect_err(|e| tracing::warn!(error = %e, "Failed to parse AI session analysis response"))
         .ok()
 }
 

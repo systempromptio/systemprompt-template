@@ -25,6 +25,11 @@ pub enum AdminError {
     #[error("Unauthorized: {0}")]
     Unauthorized(String),
 
+    /// Credentials were rejected. The cause is logged in full; the client is
+    /// told only that it failed, so token internals never reach the wire.
+    #[error("Authentication failed: {0}")]
+    Unauthenticated(#[source] Box<dyn std::error::Error + Send + Sync>),
+
     #[error("Forbidden: {0}")]
     Forbidden(String),
 
@@ -65,7 +70,7 @@ impl AdminError {
             Self::BadRequest(_)
             | Self::BridgeRepo(BridgeRepoError::Validation(_))
             | Self::Marketplace(MarketplaceError::BadRequest(_)) => StatusCode::BAD_REQUEST,
-            Self::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+            Self::Unauthorized(_) | Self::Unauthenticated(_) => StatusCode::UNAUTHORIZED,
             Self::Forbidden(_) => StatusCode::FORBIDDEN,
             Self::Conflict(_) => StatusCode::CONFLICT,
             Self::Database(_)
@@ -87,6 +92,7 @@ impl AdminError {
             | Self::Marketplace(
                 MarketplaceError::BadRequest(msg) | MarketplaceError::NotFound(msg),
             ) => msg.clone(),
+            Self::Unauthenticated(_) => "Unauthorized".to_owned(),
             Self::Crypto(_) => "Internal configuration error".to_owned(),
             Self::Database(_) | Self::BridgeRepo(_) | Self::Marketplace(_) | Self::Internal(_) => {
                 "Internal server error".to_owned()
@@ -104,6 +110,35 @@ impl From<BridgeRepoError> for AdminError {
 impl From<MarketplaceError> for AdminError {
     fn from(value: MarketplaceError) -> Self {
         Self::Marketplace(value)
+    }
+}
+
+impl AdminError {
+    /// Reject a request whose credentials did not check out.
+    #[must_use]
+    pub fn unauthenticated<E>(err: E) -> Self
+    where
+        E: Into<Box<dyn std::error::Error + Send + Sync>>,
+    {
+        Self::Unauthenticated(err.into())
+    }
+}
+
+impl From<systemprompt::oauth::OauthError> for AdminError {
+    fn from(value: systemprompt::oauth::OauthError) -> Self {
+        Self::Unauthenticated(Box::new(value))
+    }
+}
+
+impl From<systemprompt::models::errors::ConfigError> for AdminError {
+    fn from(value: systemprompt::models::errors::ConfigError) -> Self {
+        Self::Internal(Box::new(value))
+    }
+}
+
+impl From<systemprompt::config::ProfileBootstrapError> for AdminError {
+    fn from(value: systemprompt::config::ProfileBootstrapError) -> Self {
+        Self::Internal(Box::new(value))
     }
 }
 

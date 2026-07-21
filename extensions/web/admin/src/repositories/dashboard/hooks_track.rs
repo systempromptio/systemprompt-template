@@ -109,9 +109,7 @@ pub async fn find_session_metrics(
     )
     .fetch_optional(pool)
     .await
-    .map_err(|e| {
-        tracing::warn!(error = %e, session_id = %session_id.as_str(), "Failed to fetch session metrics");
-    })
+    .inspect_err(|e| tracing::warn!(error = %e, session_id = %session_id.as_str(), "Failed to fetch session metrics"))
     .ok()
     .flatten()
 }
@@ -137,9 +135,7 @@ pub async fn find_session_timing(
     )
     .fetch_optional(pool)
     .await
-    .map_err(|e| {
-        tracing::warn!(error = %e, session_id = %session_id.as_str(), "Failed to fetch session timing");
-    })
+    .inspect_err(|e| tracing::warn!(error = %e, session_id = %session_id.as_str(), "Failed to fetch session timing"))
     .ok()
     .flatten()
 }
@@ -157,9 +153,7 @@ pub async fn get_last_message(pool: &PgPool, session_id: &SessionId, user_id: &U
     )
     .fetch_optional(pool)
     .await
-    .map_err(|e| {
-        tracing::warn!(error = %e, session_id = %session_id.as_str(), "Failed to resolve last message");
-    })
+    .inspect_err(|e| tracing::warn!(error = %e, session_id = %session_id.as_str(), "Failed to resolve last message"))
     .ok()
     .flatten()
     .unwrap_or_else(String::new)

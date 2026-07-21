@@ -20,12 +20,7 @@ use crate::{baseline, globals, principal, tempdb::TempDb};
 // else while the error model is still being adopted. It is checked in both
 // directions — an entry whose route stops failing must be deleted — so it can
 // only ever shrink.
-const KNOWN_5XX: [(&str, &str); 1] = [(
-    "GET /api/public/admin/access-control/users/{user_id}/matrix",
-    "get_user_for_matrix uses fetch_one, so an unknown user id surfaces as \
-     sqlx::Error::RowNotFound, and user_matrix_handler maps every error to 500. Should be a \
-     404; fixed when the handler moves to AdminResult in the error-model pass.",
-)];
+const KNOWN_5XX: [(&str, &str); 0] = [];
 
 fn known_5xx(key: &str) -> bool {
     KNOWN_5XX.iter().any(|(route, _)| *route == key)

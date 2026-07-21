@@ -73,7 +73,7 @@ pub async fn filter_catalog_for_user(
     pool: &PgPool,
     user_id: &UserId,
     sections_in: Vec<SectionInput>,
-) -> Result<UserMatrix, sqlx::Error> {
+) -> Result<Option<UserMatrix>, sqlx::Error> {
     resolve_user_matrix(pool, user_id, sections_in).await
 }
 
@@ -81,8 +81,10 @@ pub async fn resolve_user_matrix(
     pool: &PgPool,
     user_id: &UserId,
     sections_in: Vec<SectionInput>,
-) -> Result<UserMatrix, sqlx::Error> {
-    let user = get_user_for_matrix(pool, user_id).await?;
+) -> Result<Option<UserMatrix>, sqlx::Error> {
+    let Some(user) = find_user_for_matrix(pool, user_id).await? else {
+        return Ok(None);
+    };
     let all_rules = list_all_rules(pool).await?;
     let defaults = load_entity_defaults(pool).await?;
     // The same lookup the enforcement webhook performs, so the matrix and the
@@ -123,7 +125,7 @@ pub async fn resolve_user_matrix(
         });
     }
 
-    Ok(UserMatrix { user, sections })
+    Ok(Some(UserMatrix { user, sections }))
 }
 
 async fn load_entity_defaults(
@@ -142,10 +144,10 @@ async fn load_entity_defaults(
     Ok(out)
 }
 
-async fn get_user_for_matrix(
+async fn find_user_for_matrix(
     pool: &PgPool,
     user_id: &UserId,
-) -> Result<UserMatrixUser, sqlx::Error> {
+) -> Result<Option<UserMatrixUser>, sqlx::Error> {
     let row = sqlx::query!(
         r#"SELECT u.id,
                   u.email,
@@ -157,20 +159,22 @@ async fn get_user_for_matrix(
            WHERE u.id = $1"#,
         user_id.as_str()
     )
-    .fetch_one(pool)
+    .fetch_optional(pool)
     .await?;
-    let dept = if row.department.trim().is_empty() {
-        None
-    } else {
-        Some(row.department)
-    };
-    Ok(UserMatrixUser {
-        id: row.id,
-        email: Some(row.email),
-        display_name: row.display_name,
-        roles: row.roles,
-        department: dept,
-    })
+    Ok(row.map(|row| {
+        let dept = if row.department.trim().is_empty() {
+            None
+        } else {
+            Some(row.department)
+        };
+        UserMatrixUser {
+            id: row.id,
+            email: Some(row.email),
+            display_name: row.display_name,
+            roles: row.roles,
+            department: dept,
+        }
+    }))
 }
 
 /// Adapts an admin-CRUD row to the resolver's rule type.

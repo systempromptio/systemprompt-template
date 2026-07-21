@@ -254,6 +254,13 @@ async fn build_user_manifest(
         shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
     })?;
 
+    let Some(matrix) = matrix else {
+        return Err(shared::error_response(
+            StatusCode::NOT_FOUND,
+            "User not found",
+        ));
+    };
+
     let sections = matrix
         .sections
         .into_iter()

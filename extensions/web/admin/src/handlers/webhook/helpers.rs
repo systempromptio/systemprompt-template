@@ -14,9 +14,7 @@ pub(super) fn extract_bearer_token(headers: &HeaderMap) -> Option<&str> {
         .get("authorization")
         .and_then(|v| {
             v.to_str()
-                .map_err(|e| {
-                    tracing::warn!(error = %e, "Non-ASCII authorization header");
-                })
+                .inspect_err(|e| tracing::warn!(error = %e, "Non-ASCII authorization header"))
                 .ok()
         })
         .and_then(|v| v.strip_prefix("Bearer "))

@@ -111,9 +111,9 @@ pub(crate) async fn user_detail_page(
 
     let detail = repositories::users::queries::find_user_detail(&pool, &user_id)
         .await
-        .map_err(|e| {
-            tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch user detail");
-        })
+        .inspect_err(
+            |e| tracing::warn!(error = %e, user_id = %user_id, "Failed to fetch user detail"),
+        )
         .ok()
         .flatten();
     let gamification: Option<crate::types::UserGamificationProfile> = None;

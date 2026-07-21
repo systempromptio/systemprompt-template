@@ -23,9 +23,7 @@ pub async fn calculate_session_apm(pool: &PgPool, session_id: &SessionId) -> (f3
     )
     .fetch_optional(pool)
     .await
-    .map_err(|e| {
-        tracing::warn!(error = %e, session_id = %session_id, "Failed to fetch session APM data");
-    })
+    .inspect_err(|e| tracing::warn!(error = %e, session_id = %session_id, "Failed to fetch session APM data"))
     .ok()
     .flatten();
 

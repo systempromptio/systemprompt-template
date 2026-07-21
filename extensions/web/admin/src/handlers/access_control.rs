@@ -144,7 +144,8 @@ pub(crate) async fn user_matrix_handler(
     let user_id = UserId::new(user_id);
     match repositories::users::access_control::resolve_user_matrix(&pool, &user_id, sections).await
     {
-        Ok(matrix) => Json(matrix).into_response(),
+        Ok(Some(matrix)) => Json(matrix).into_response(),
+        Ok(None) => shared::error_response(StatusCode::NOT_FOUND, "User not found"),
         Err(e) => {
             tracing::error!(error = %e, user_id = %user_id, "Failed to resolve user matrix");
             shared::error_response(StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")
