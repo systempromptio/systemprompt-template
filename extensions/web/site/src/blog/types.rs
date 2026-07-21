@@ -1,3 +1,5 @@
+//! Row and template types shared by the blog providers.
+
 use chrono::{DateTime, Utc};
 
 #[derive(Debug)]

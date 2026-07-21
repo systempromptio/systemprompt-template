@@ -1,3 +1,6 @@
+//! Supplies header, footer, and branding navigation context to every public
+//! page.
+
 use std::sync::Arc;
 
 use async_trait::async_trait;

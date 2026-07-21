@@ -1,3 +1,8 @@
+//! `bundle_admin_css` job: concatenates admin stylesheets into a single bundle.
+//!
+//! Must run before `copy_extension_assets`, which copies the built bundle into
+//! `web/dist/`.
+
 use std::path::PathBuf;
 
 use systemprompt::traits::{Job, JobContext, JobResult};

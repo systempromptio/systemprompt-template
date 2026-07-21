@@ -1,3 +1,5 @@
+//! Device certificate records issued to bridge installations.
+
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;

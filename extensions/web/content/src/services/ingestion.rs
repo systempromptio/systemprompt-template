@@ -1,3 +1,7 @@
+//! Parses the markdown content tree into the database.
+//!
+//! A content hash is stored per file so a re-run only rewrites what changed.
+
 use std::path::Path;
 use std::sync::Arc;
 

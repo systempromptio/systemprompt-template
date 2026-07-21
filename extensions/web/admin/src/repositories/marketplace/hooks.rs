@@ -1,3 +1,5 @@
+//! Hook bindings declared by installed plugins.
+
 use std::path::Path;
 
 use systemprompt::identifiers::PluginId;

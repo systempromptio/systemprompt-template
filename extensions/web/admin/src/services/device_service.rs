@@ -1,3 +1,5 @@
+//! Device enrolment and personal access token lifecycle.
+
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -5,8 +7,6 @@ use systemprompt::identifiers::UserId;
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::bridge::{self, EnrollDeviceParams, EnrolledDevice, IssuedApiKey};
 
-/// Inputs for enrolling a new device; grouped to keep `enroll_device` under
-/// the arity lint (was 6 positional args).
 pub(crate) struct EnrollDeviceInput<'a> {
     pub name: &'a str,
     pub platform: &'a str,

@@ -1,3 +1,5 @@
+//! Renders each hook event variant into a one-line activity description.
+
 use std::borrow::Cow;
 
 use crate::types::webhook::{HookEvent, HookEventPayload};

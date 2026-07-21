@@ -1,3 +1,8 @@
+//! Hook token validation for `/hooks/track`.
+//!
+//! Hook JWTs carry `aud=hook` and scope `hook:track`, distinct from the API and
+//! plugin audiences.
+
 use crate::handlers::shared;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;

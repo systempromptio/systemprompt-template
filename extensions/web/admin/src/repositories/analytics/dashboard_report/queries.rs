@@ -1,3 +1,5 @@
+//! Row shapes and queries backing each section of the analytics report.
+
 #[derive(Debug, Clone)]
 pub struct TopContentRow {
     pub title: String,

@@ -1,3 +1,5 @@
+//! HTTP handlers for registered device management.
+
 use std::sync::Arc;
 
 use axum::Json;

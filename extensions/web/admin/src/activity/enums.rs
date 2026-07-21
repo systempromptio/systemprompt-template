@@ -1,3 +1,5 @@
+//! The closed vocabularies an activity row is categorised by.
+
 use std::fmt;
 use std::str::FromStr;
 

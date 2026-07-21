@@ -1,3 +1,8 @@
+//! Loads and renders the admin `.hbs` templates.
+//!
+//! Templates are read from `storage/files/admin/templates/` at startup and
+//! rendered per request, so a template edit needs a restart but not a rebuild.
+
 use std::path::Path;
 use std::sync::Arc;
 
@@ -8,7 +13,6 @@ use thiserror::Error;
 use super::helpers;
 use systemprompt_web_shared::BrandingConfig;
 
-/// Errors raised while building or rendering the admin Handlebars engine.
 #[derive(Debug, Error)]
 pub enum AdminTemplateError {
     #[error("failed to read {context}: {source}")]

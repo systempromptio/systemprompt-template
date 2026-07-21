@@ -1,3 +1,5 @@
+//! SSR page for demo account registration.
+
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::Extension;

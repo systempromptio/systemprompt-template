@@ -1,3 +1,5 @@
+//! Per-tool usage rollups.
+
 use sqlx::PgPool;
 
 #[derive(Debug, Clone)]

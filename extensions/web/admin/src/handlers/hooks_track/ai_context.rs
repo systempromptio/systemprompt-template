@@ -1,3 +1,6 @@
+//! Formats a session's recorded activity into the context block sent to the
+//! model.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 

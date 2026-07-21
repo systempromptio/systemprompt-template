@@ -23,7 +23,6 @@ pub async fn fetch_governance_counts(pool: &PgPool) -> Result<GovernanceCounts, 
     })
 }
 
-/// Lifetime totals scoped to a sliding window ending at `now()`.
 pub async fn fetch_governance_counts_windowed(
     pool: &PgPool,
     window_seconds: i64,
@@ -48,8 +47,6 @@ pub async fn fetch_governance_counts_windowed(
     })
 }
 
-/// One row per `policy` value seen in `governance_decisions`. Used by the
-/// Policies dashboard to show recent activity next to each registered policy.
 pub async fn fetch_per_policy_counts(pool: &PgPool) -> Result<Vec<PerPolicyCounts>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT
@@ -74,8 +71,6 @@ pub async fn fetch_per_policy_counts(pool: &PgPool) -> Result<Vec<PerPolicyCount
         .collect())
 }
 
-/// Per-policy counts within a sliding window ending at `now()`. Used by the
-/// Policies dashboard's "Enforcement (last 24h)" panel.
 pub async fn fetch_per_policy_counts_windowed(
     pool: &PgPool,
     window_seconds: i64,

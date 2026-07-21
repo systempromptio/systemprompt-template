@@ -1,3 +1,8 @@
+//! The `hooks.json` file shape Claude Code consumes.
+//!
+//! This mirrors an external format; field names and nesting are fixed by the
+//! consumer, not by us.
+
 use std::collections::HashMap;
 use std::fmt;
 

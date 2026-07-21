@@ -10,8 +10,6 @@ use crate::repositories::marketplace::plugin_resolvers::resolve_all_plugin_skill
 use crate::types::{AgentCatalogEntry, SkillCatalogEntry};
 use systemprompt_web_shared::error::MarketplaceError;
 
-/// Walk `services/skills/<id>/config.yaml` and return one catalog row per
-/// skill. Used by the unified `/admin/catalog` page; never writes to disk.
 pub fn list_skill_catalog(
     services_path: &Path,
 ) -> Result<Vec<SkillCatalogEntry>, MarketplaceError> {
@@ -87,7 +85,6 @@ pub fn list_skill_catalog(
     Ok(out)
 }
 
-/// Walk `services/agents/<id>.yaml` and return one catalog row per agent.
 pub fn list_agent_catalog(
     services_path: &Path,
 ) -> Result<Vec<AgentCatalogEntry>, MarketplaceError> {
@@ -157,7 +154,6 @@ pub fn list_agent_catalog(
     Ok(out)
 }
 
-/// Catalog rows for plugins, including the YAML path each was loaded from.
 pub fn list_plugin_catalog(
     services_path: &Path,
 ) -> Result<Vec<crate::types::PluginDetail>, MarketplaceError> {

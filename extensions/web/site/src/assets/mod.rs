@@ -1,3 +1,8 @@
+//! Static asset manifest for the public site.
+//!
+//! Every CSS and JS file the extension trait advertises is enumerated here;
+//! sources live under `storage/files/`, never alongside the Rust code.
+
 mod css;
 mod js_pages;
 mod js_services;

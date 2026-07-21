@@ -1,3 +1,5 @@
+//! Template context types for the user pages.
+
 use serde::Serialize;
 use systemprompt::identifiers::UserId;
 

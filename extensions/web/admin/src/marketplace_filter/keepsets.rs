@@ -52,9 +52,6 @@ impl CandidateEntityIds {
 
 pub(super) type KeepSet = std::collections::HashSet<String>;
 
-/// Inputs for a single entity-kind's keep-set resolution; grouped to keep
-/// `keep_ids` under the arity lint (was 7 positional args, `department` was
-/// unused and dropped).
 pub(super) struct KeepIdsQuery<'a> {
     pub user_id: &'a str,
     pub roles: &'a [String],

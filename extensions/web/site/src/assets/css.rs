@@ -1,3 +1,5 @@
+//! Stylesheet definitions, grouped by the page family that consumes them.
+
 use std::path::Path;
 use systemprompt::extension::AssetDefinition;
 

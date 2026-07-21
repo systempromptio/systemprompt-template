@@ -1,3 +1,6 @@
+//! HTTP handlers for secret storage, rotation, and short-lived resolution
+//! tokens.
+
 use std::sync::Arc;
 
 use axum::Json;

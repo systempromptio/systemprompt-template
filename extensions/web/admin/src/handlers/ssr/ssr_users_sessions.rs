@@ -1,3 +1,5 @@
+//! SSR page listing a user's active sessions.
+
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::extract::Extension;

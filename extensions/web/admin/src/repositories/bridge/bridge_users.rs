@@ -1,3 +1,5 @@
+//! Lookup of the user behind a bridge credential.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 

@@ -1,3 +1,5 @@
+//! Request bodies for the plugin, agent, MCP, and hook editing endpoints.
+
 use serde::Deserialize;
 use systemprompt::identifiers::{AgentId, McpServerId, PluginId, SkillId, UserId};
 

@@ -1,3 +1,5 @@
+//! HTTP handlers for inspecting and triggering scheduled jobs.
+
 use std::sync::Arc;
 
 use axum::Json;

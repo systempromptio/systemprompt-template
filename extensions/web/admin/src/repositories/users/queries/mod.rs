@@ -1,3 +1,5 @@
+//! Read paths for user data, split by the page that consumes them.
+
 mod detail;
 mod events;
 mod listing;

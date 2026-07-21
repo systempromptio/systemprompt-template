@@ -1,3 +1,5 @@
+//! Scheduled job listing for the admin handlers.
+
 use sqlx::PgPool;
 
 use crate::error::AdminResult;

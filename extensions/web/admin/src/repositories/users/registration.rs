@@ -1,3 +1,5 @@
+//! Self-registration setup tokens and their rate-limit counters.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 

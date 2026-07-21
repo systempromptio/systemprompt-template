@@ -1,3 +1,5 @@
+//! Self-service demo account registration.
+
 use std::sync::Arc;
 
 use axum::extract::State;

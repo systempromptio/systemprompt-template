@@ -1,3 +1,9 @@
+//! Saturating and lossy numeric conversions used by the analytics rollups.
+//!
+//! Centralised so the truncation and saturation behaviour of every
+//! count-to-float and float-to-count conversion is decided in one place rather
+//! than at each call site.
+
 #[must_use]
 #[inline]
 #[expect(

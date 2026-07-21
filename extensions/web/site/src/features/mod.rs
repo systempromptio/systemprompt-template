@@ -1,3 +1,5 @@
+//! Feature pages section: config model and prerenderer.
+
 pub mod config;
 pub mod prerenderer;
 

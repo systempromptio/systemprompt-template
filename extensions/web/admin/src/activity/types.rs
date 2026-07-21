@@ -1,3 +1,5 @@
+//! Value types for recorded and rendered activity.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;

@@ -1,3 +1,5 @@
+//! Long-form paper content value types.
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

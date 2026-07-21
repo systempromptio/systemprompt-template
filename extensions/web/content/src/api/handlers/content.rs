@@ -1,3 +1,5 @@
+//! HTTP handlers for content listing and retrieval.
+
 use std::sync::Arc;
 
 use axum::Json;

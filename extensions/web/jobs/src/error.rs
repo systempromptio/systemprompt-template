@@ -1,3 +1,5 @@
+//! Error type shared by every job in this crate.
+
 use systemprompt::generator::PublishError;
 use systemprompt::traits::ProviderError;
 use systemprompt_web_shared::error::MarketplaceError;

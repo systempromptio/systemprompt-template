@@ -1,3 +1,5 @@
+//! Access rule value types and their Postgres enum encodings.
+
 use std::fmt;
 
 use chrono::{DateTime, Utc};

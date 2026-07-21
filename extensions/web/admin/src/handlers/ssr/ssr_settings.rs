@@ -1,3 +1,5 @@
+//! SSR page for instance settings.
+
 use std::sync::Arc;
 
 use crate::repositories;

@@ -1,3 +1,5 @@
+//! Shared entry point for the activity constructors.
+
 pub(super) fn truncate(s: &str, max: usize) -> String {
     if s.len() <= max {
         return s.to_owned();

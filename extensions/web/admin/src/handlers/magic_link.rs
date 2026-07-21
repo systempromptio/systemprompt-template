@@ -1,3 +1,5 @@
+//! Passwordless email sign-in.
+
 use std::sync::Arc;
 
 use axum::Json;

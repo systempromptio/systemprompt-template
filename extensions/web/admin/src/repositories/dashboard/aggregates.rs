@@ -1,3 +1,5 @@
+//! Headline activity counters for the dashboard.
+
 use sqlx::PgPool;
 
 use crate::types::{ActivityStats, TimeSeriesBucket};

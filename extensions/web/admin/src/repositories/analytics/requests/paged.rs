@@ -36,8 +36,6 @@ struct RequestRowWithTotal {
     total_count: i64,
 }
 
-/// Pagination window for [`fetch_requests_paged`]: LIMIT/OFFSET plus the
-/// closed sort spec, grouped since callers always pass all three together.
 #[derive(Debug, Clone, Copy)]
 pub struct RequestPage {
     pub sort: RequestSortSpec,

@@ -1,3 +1,8 @@
+//! The `WebExtension` value and its lazily-loaded configuration handles.
+//!
+//! Config is parsed once at construction and handed out as `Arc` clones; the
+//! trait implementation itself lives in `extension_impl`.
+
 use std::sync::{Arc, OnceLock};
 
 use crate::config::BlogConfigValidated;

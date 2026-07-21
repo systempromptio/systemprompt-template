@@ -1,3 +1,5 @@
+//! Error types shared across the web extension crates.
+
 use axum::http::StatusCode;
 use systemprompt::traits::ExtensionError;
 use thiserror::Error;

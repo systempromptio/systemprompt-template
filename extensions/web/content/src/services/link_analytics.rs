@@ -1,3 +1,5 @@
+//! Campaign and content journey analytics over recorded clicks.
+
 use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::{CampaignId, ContentId};

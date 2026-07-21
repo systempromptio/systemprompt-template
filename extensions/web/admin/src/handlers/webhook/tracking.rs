@@ -1,3 +1,5 @@
+//! Session and activity tracking driven by webhook events.
+
 use std::sync::Arc;
 
 use axum::Json;

@@ -1,3 +1,6 @@
+//! Site navigation: config model and the provider that supplies it to every
+//! page.
+
 mod config;
 mod provider;
 

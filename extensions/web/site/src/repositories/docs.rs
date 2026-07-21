@@ -1,3 +1,5 @@
+//! Documentation page queries against the ingested `markdown_content` tables.
+
 use sqlx::PgPool;
 use sqlx::types::Json;
 use systemprompt::identifiers::{ContentId, SourceId};

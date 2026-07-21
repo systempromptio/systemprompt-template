@@ -1,3 +1,5 @@
+//! Short code generation for new campaign links.
+
 use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::{CampaignId, ContentId};

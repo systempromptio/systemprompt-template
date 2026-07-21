@@ -1,3 +1,5 @@
+//! Builds the human-readable summary text and tags for a finished session.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 

@@ -1,4 +1,4 @@
-mod sessions;
+//! Live session feed for the control centre page.
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;

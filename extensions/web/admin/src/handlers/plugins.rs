@@ -1,3 +1,5 @@
+//! HTTP handlers for plugin listing and installation.
+
 use axum::Json;
 use axum::extract::{Extension, Query};
 use axum::http::StatusCode;

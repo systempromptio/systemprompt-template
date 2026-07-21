@@ -1,3 +1,5 @@
+//! Bridge API key issue, hashing, and verification.
+
 use chrono::{DateTime, Utc};
 use rand::RngCore;
 use sha2::{Digest, Sha256};
@@ -87,7 +89,6 @@ pub struct EnrolledDevice {
     pub expires_at: Option<DateTime<Utc>>,
 }
 
-/// Grouped enrollment inputs for [`enroll_device`] (was 6 positional args).
 #[derive(Debug)]
 pub struct EnrollDeviceParams<'a> {
     pub name: &'a str,

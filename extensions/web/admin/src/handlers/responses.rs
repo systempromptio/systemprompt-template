@@ -1,3 +1,5 @@
+//! Shared response shapes for the admin JSON API.
+
 use serde::Serialize;
 
 #[derive(Serialize, Debug)]

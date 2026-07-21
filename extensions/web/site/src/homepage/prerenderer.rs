@@ -1,3 +1,5 @@
+//! Prerenders the homepage into a static artifact during `publish_pipeline`.
+
 use std::path::PathBuf;
 use std::sync::Arc;
 

@@ -1,3 +1,8 @@
+//! Resolves a plugin's declared skill and agent ids to their definitions.
+//!
+//! Plugin YAML holds references only, so every id here must resolve against a
+//! real top-level resource in `services/`.
+
 use std::path::Path;
 
 use systemprompt::identifiers::{AgentId, SkillId};

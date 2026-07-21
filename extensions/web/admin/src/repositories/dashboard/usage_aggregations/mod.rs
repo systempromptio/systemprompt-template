@@ -1,3 +1,5 @@
+//! Rollups derived from hook events as sessions progress.
+
 mod ai_summaries;
 mod daily;
 pub(crate) mod session_updates;

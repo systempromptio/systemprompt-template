@@ -1,3 +1,5 @@
+//! SSR page showing recent hook events and their governance outcome.
+
 use std::sync::Arc;
 
 use axum::extract::{Extension, State};

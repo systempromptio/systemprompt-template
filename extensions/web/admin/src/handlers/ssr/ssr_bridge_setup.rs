@@ -1,3 +1,5 @@
+//! SSR page walking a user through bridge installation.
+
 use axum::extract::Extension;
 use axum::http::HeaderMap;
 use axum::response::Response;

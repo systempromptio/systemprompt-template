@@ -69,8 +69,6 @@ pub fn find_matching_route_index(routes: &[GatewayRouteView], model: &str) -> Op
         .position(|r| glob_match(&r.model_pattern, model))
 }
 
-/// Sibling to [`find_matching_route_index`] that returns the route reference
-/// directly. Useful for ACL lookups where the caller wants the stable `id`.
 #[must_use]
 pub fn find_matching_route<'a>(
     routes: &'a [GatewayRouteView],

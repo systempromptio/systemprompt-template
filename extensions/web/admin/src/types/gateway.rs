@@ -1,3 +1,5 @@
+//! Gateway route and settings value types.
+
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};

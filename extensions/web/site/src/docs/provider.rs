@@ -1,3 +1,5 @@
+//! Runtime page data provider for documentation routes.
+
 use std::fmt::Write;
 
 use async_trait::async_trait;

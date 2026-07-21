@@ -1,3 +1,5 @@
+//! HTTP handlers for the access-control matrix and rule editing.
+
 use std::sync::Arc;
 
 use axum::Json;
@@ -16,13 +18,11 @@ use crate::types::access_control::{
     AccessControlQuery, AccessControlRule, BulkAssignRequest, UpdateEntityRulesRequest,
 };
 
-/// JSON body returned by the rule-listing endpoints (`{ "rules": [...] }`).
 #[derive(Debug, Serialize)]
 pub(crate) struct RulesResponse {
     pub rules: Vec<AccessControlRule>,
 }
 
-/// JSON body returned by `bulk_assign_handler`.
 #[derive(Debug, Serialize)]
 pub(crate) struct BulkAssignResponse {
     pub updated_count: usize,
@@ -229,9 +229,8 @@ fn build_matrix_sections(
     sections
 }
 
-/// Read-only YAML rendering of the current DB state of role/department rules.
-/// Used by the dashboard's "Show as YAML" button so admins can copy-paste
-/// instance-local edits into the committed baseline. Writes nothing to disk.
+/// Renders current DB state as YAML for copying into the committed baseline.
+/// Writes nothing to disk — instances never write back to `services/`.
 pub(crate) async fn yaml_snapshot_handler(State(pool): State<Arc<PgPool>>) -> Response {
     use crate::repositories::governance::acl_yaml_snapshot;
     match acl_yaml_snapshot::render_yaml_snapshot(&pool).await {

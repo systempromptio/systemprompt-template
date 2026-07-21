@@ -1,3 +1,7 @@
+//! `copy_extension_assets` job: copies every registered asset into `web/dist/`.
+//!
+//! Runs after the CSS and JS bundle jobs, whose output it picks up.
+
 use std::path::Path;
 use std::sync::Arc;
 

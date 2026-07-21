@@ -1,3 +1,5 @@
+//! Static copy for the platform-oriented demo categories.
+
 use super::meta::CategoryMeta;
 
 pub(super) const PLATFORM_CATEGORIES: &[CategoryMeta] = &[

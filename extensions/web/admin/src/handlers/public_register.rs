@@ -1,3 +1,5 @@
+//! Public self-registration and the one-shot setup token it issues.
+
 use std::sync::Arc;
 
 use axum::Json;

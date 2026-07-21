@@ -1,3 +1,9 @@
+//! The hook event payload posted by Claude Code.
+//!
+//! Parsing is lenient by design: an unrecognised or malformed field yields a
+//! warning rather than rejecting the event, because a dropped hook is a hole in
+//! the audit trail and the client cannot retry a 400.
+
 mod event_types;
 mod parsers;
 

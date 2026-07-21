@@ -1,3 +1,5 @@
+//! Records plugin usage events emitted over the webhook path.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 

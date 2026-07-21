@@ -1,3 +1,8 @@
+//! Admin JSON API routes.
+//!
+//! Read and write routes are built against separate pools so read traffic can
+//! be directed at a replica.
+
 use std::sync::Arc;
 
 use axum::routing::{get, patch, post, put};

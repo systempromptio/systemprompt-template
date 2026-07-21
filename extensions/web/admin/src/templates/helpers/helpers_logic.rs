@@ -1,3 +1,5 @@
+//! Comparison and conditional Handlebars helpers.
+
 use handlebars::{
     Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext, RenderError,
 };

@@ -1,3 +1,5 @@
+//! Template context types for the settings page.
+
 use serde::Serialize;
 use systemprompt::identifiers::UserId;
 

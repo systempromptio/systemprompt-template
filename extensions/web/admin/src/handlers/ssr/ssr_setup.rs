@@ -1,3 +1,5 @@
+//! SSR page driving first-run instance setup.
+
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::extract::{Extension, Query};

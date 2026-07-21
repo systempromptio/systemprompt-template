@@ -1,3 +1,5 @@
+//! Scheduled job value types.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;

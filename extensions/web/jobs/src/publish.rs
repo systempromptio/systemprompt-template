@@ -1,3 +1,10 @@
+//! `publish_pipeline` job: the ordered composite every other job runs under.
+//!
+//! Order is load-bearing — bundles must exist before assets are copied, and
+//! content must be ingested before it can be prerendered. A failing sub-job is
+//! recorded and the pipeline continues, so one broken stage does not block the
+//! rest.
+
 use std::sync::Arc;
 
 use systemprompt::database::DbPool;

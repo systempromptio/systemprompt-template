@@ -1,3 +1,5 @@
+//! Traffic analytics value types.
+
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;

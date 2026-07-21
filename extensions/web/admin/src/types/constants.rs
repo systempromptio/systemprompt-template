@@ -1,3 +1,5 @@
+//! String constants shared by the admin plane's persisted enums.
+
 pub const ENTITY_SKILL: &str = "skill";
 pub const ENTITY_AGENT: &str = "agent";
 pub const ENTITY_MCP_TOOL: &str = "mcp_tool";

@@ -1,3 +1,5 @@
+//! Computes a session's actions-per-minute from its event timestamps.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
 

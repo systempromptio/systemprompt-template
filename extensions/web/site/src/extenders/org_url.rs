@@ -1,3 +1,5 @@
+//! Injects the deployment's canonical organisation URL into template context.
+
 use async_trait::async_trait;
 use serde_json::Value;
 use systemprompt::models::Config;

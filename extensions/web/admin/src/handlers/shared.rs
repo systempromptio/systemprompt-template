@@ -1,3 +1,5 @@
+//! Helpers shared across admin handlers.
+
 use std::path::PathBuf;
 
 use axum::Json;

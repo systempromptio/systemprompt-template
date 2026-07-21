@@ -1,3 +1,5 @@
+//! Hook event counts and recent-event listings for the governance pages.
+
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::PgPool;

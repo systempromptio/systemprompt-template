@@ -1,3 +1,5 @@
+//! Runtime page data provider for the homepage route.
+
 use std::sync::Arc;
 
 use async_trait::async_trait;

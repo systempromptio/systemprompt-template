@@ -1,3 +1,5 @@
+//! Persists governance decisions to the audit spine.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::{Actor, AgentId, PluginId};
 use systemprompt_security::authz::{Decision, DecisionTag};

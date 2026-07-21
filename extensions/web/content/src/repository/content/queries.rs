@@ -1,3 +1,5 @@
+//! Content reads.
+
 use sqlx::PgPool;
 use sqlx::types::Json;
 use std::sync::Arc;

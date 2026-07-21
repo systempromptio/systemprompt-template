@@ -1,3 +1,10 @@
+//! Admin plane request middleware: authentication, authorisation, and page
+//! context.
+//!
+//! The marketplace counts injected into every render are cached because they
+//! are derived from a remote catalog and are identical for every user holding
+//! the same role set.
+
 use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
 

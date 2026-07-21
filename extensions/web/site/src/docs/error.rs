@@ -1,3 +1,5 @@
+//! Error type for the documentation providers.
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]

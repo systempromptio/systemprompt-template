@@ -1,3 +1,5 @@
+//! SSR page for enrolling a `WebAuthn` passkey.
+
 use crate::templates::AdminTemplateEngine;
 use axum::Extension;
 use axum::http::StatusCode;

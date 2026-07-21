@@ -1,3 +1,5 @@
+//! Database access for content search.
+
 use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::CategoryId;

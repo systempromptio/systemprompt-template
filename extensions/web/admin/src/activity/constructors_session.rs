@@ -1,3 +1,5 @@
+//! Activity constructors for sign-in and agent-response events.
+
 use serde::Serialize;
 use systemprompt::identifiers::{SessionId, UserId};
 
@@ -5,12 +7,10 @@ use super::constructors::truncate;
 use super::enums::{ActivityAction, ActivityCategory};
 use super::types::NewActivity;
 
-/// Empty metadata payload `{}`, matching the prior `json!({})`.
 fn empty_meta() -> serde_json::Value {
     serde_json::Value::Object(serde_json::Map::new())
 }
 
-/// Shared shape for events that only carry the session id.
 #[derive(Debug, Serialize)]
 struct SessionMeta<'a> {
     session_id: &'a str,

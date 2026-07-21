@@ -1,3 +1,5 @@
+//! HTTP handlers for user administration.
+
 use std::sync::Arc;
 
 use axum::Json;

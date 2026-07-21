@@ -1,3 +1,5 @@
+//! In-place updates to a session row as its events arrive.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
 

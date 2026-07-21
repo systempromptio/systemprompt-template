@@ -1,3 +1,5 @@
+//! Markdown-to-HTML rendering for blog bodies.
+
 use serde_json::Value;
 
 use systemprompt_web_shared::html_escape;

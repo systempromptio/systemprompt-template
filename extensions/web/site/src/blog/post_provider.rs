@@ -1,3 +1,5 @@
+//! Page data provider for a single blog post route.
+
 use std::sync::Arc;
 
 use async_trait::async_trait;

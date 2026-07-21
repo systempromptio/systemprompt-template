@@ -1,3 +1,5 @@
+//! Deserialisation model for `services/web/navigation.yaml`.
+
 use serde::{Deserialize, Serialize};
 
 pub use systemprompt_web_shared::BrandingConfig;

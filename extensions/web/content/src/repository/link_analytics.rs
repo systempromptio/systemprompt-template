@@ -1,3 +1,5 @@
+//! Database access for click tracking and link analytics.
+
 use chrono::Utc;
 use sqlx::PgPool;
 use std::sync::Arc;

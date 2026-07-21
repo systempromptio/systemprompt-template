@@ -1,3 +1,5 @@
+//! Database access for the content crate.
+
 pub mod content;
 pub mod link;
 pub mod link_analytics;

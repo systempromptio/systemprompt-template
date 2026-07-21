@@ -1,3 +1,5 @@
+//! Session and engagement KPI shapes for the traffic page.
+
 use sqlx::PgPool;
 
 use crate::types::TrafficKpis;

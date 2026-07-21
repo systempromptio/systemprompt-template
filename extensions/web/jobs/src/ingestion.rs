@@ -1,3 +1,6 @@
+//! `content_ingestion` job: parses the `services/content/` markdown tree into
+//! the database.
+
 use std::sync::Arc;
 
 use sqlx::PgPool;

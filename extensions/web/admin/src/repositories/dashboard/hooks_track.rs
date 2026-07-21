@@ -1,3 +1,5 @@
+//! Session-scoped reads over recorded hook events.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 

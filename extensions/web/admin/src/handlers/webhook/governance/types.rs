@@ -96,8 +96,7 @@ pub(super) struct AuditTarget {
 
 /// Typed audit blob serialized into `governance_decisions.evaluated_rules`.
 ///
-/// Replaces the historical `serde_json::json!` payload. The Anthropic-style
-/// `decision`/`reason` columns still get populated from the same data via the
+/// The `decision` and `reason` columns are populated from the same data by the
 /// repository layer.
 #[derive(Debug, Serialize, Clone)]
 pub(super) struct DecisionAudit {

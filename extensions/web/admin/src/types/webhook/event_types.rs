@@ -1,3 +1,5 @@
+//! Per-variant payload shapes for each hook event type.
+
 use serde::{Deserialize, Serialize};
 use systemprompt::identifiers::{AgentId, SessionId, TaskId};
 

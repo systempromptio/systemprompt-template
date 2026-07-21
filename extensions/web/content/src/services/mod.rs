@@ -1,3 +1,5 @@
+//! Service layer for content ingestion, search, and link tracking.
+
 pub mod content;
 pub mod ingestion;
 pub mod link;

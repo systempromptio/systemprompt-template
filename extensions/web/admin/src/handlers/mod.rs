@@ -1,3 +1,8 @@
+//! HTTP handlers for the admin plane.
+//!
+//! SSR page handlers live in [`ssr`]; everything else here is JSON API or
+//! webhook intake. Handlers own status mapping and call repositories for data.
+
 pub(crate) mod access_control;
 pub(crate) mod bridge;
 pub(crate) mod catalog;

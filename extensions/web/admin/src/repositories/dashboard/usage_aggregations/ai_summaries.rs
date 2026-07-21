@@ -1,3 +1,5 @@
+//! Persists the structured AI analysis of a finished session.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
 

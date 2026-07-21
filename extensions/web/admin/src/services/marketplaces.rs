@@ -1,3 +1,5 @@
+//! Loads the configured marketplace catalog.
+
 use systemprompt::loader::ConfigLoader;
 use systemprompt::models::services::MarketplaceConfig;
 

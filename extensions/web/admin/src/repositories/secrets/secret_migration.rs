@@ -1,3 +1,5 @@
+//! Re-encryption of legacy plaintext secrets, driven by the migration job.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 

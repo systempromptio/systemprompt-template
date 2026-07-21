@@ -1,3 +1,8 @@
+//! Server-rendered admin pages.
+//!
+//! Each module owns one page: it builds a typed template context and renders a
+//! `.hbs` template from `storage/files/admin/templates/` at request time.
+
 use crate::handlers::extract_user_from_cookie;
 use crate::templates::AdminTemplateEngine;
 use axum::Extension;

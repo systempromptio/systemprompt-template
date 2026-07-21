@@ -1,3 +1,5 @@
+//! Handlebars helpers registered on the admin template engine.
+
 mod helpers_format;
 mod helpers_logic;
 

@@ -1,3 +1,5 @@
+//! Database access for campaign links.
+
 use chrono::Utc;
 use sqlx::PgPool;
 use std::sync::Arc;

@@ -1,3 +1,6 @@
+//! Persistence for the bridge control plane: API keys, device certificates, and
+//! exchange codes.
+
 pub mod api_keys;
 pub mod bridge_users;
 pub mod device_certs;

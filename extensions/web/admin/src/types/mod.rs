@@ -1,3 +1,5 @@
+//! Value types for the admin plane, grouped by the surface that owns them.
+
 pub mod access_control;
 pub mod constants;
 pub mod control_center;

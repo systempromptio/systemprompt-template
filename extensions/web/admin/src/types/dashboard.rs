@@ -1,3 +1,5 @@
+//! Value types for the main dashboard panels.
+
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;

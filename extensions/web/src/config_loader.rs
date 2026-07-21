@@ -1,3 +1,8 @@
+//! Bootstrap-time loading of the `services/web/` YAML tree.
+//!
+//! Runs once at extension construction, before any request is served, so the
+//! file-system reads here are not on a hot path.
+
 use std::sync::Arc;
 
 use systemprompt::config::ProfileBootstrap;

@@ -149,10 +149,8 @@ pub(crate) struct DetectResponse {
     pub since_minutes: i64,
 }
 
-/// Admin-triggered after-the-fact detector. POST endpoint that scans recent
-/// `ai_requests` and emits `governance_decisions` rows for denied combos.
-/// Until a scheduled job wires this up automatically, admins can poke it
-/// from the CLI or a dashboard button — gap deliberately small.
+/// Detection is admin-triggered rather than scheduled, so decisions for
+/// denied combinations only appear once someone runs it.
 pub(crate) async fn detect_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
@@ -188,9 +186,6 @@ pub(crate) async fn detect_handler(
     }
 }
 
-/// After-the-fact detector: scan recent `ai_requests` and emit a
-/// `governance_decisions` row for any request whose user/model combination
-/// the ACL would have denied. Best-effort; called by [`detect_handler`].
 pub(crate) async fn detect_after_the_fact(
     pool: &PgPool,
     routes: &[GatewayRouteView],

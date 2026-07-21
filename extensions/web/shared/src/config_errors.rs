@@ -1,3 +1,8 @@
+//! Accumulating error type for extension config validation.
+//!
+//! Errors collect rather than short-circuit so a misconfigured deployment
+//! reports every problem in one startup failure instead of one per restart.
+
 use std::path::PathBuf;
 
 #[derive(Debug, Default)]

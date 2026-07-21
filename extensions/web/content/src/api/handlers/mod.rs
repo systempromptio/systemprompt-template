@@ -1,3 +1,5 @@
+//! HTTP handlers for the public content API.
+
 mod content;
 mod links;
 mod search;

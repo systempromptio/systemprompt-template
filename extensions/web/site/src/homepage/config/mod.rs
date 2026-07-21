@@ -1,3 +1,8 @@
+//! Deserialisation model for `services/web/homepage.yaml`.
+//!
+//! Unknown keys are rejected at load time, so a typo in the YAML surfaces as a
+//! startup error rather than a silently missing section.
+
 mod demos;
 mod sections;
 

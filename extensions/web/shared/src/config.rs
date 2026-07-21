@@ -1,3 +1,9 @@
+//! The `services/content/` configuration model.
+//!
+//! Raw deserialisation and validation are separate types: a
+//! `BlogConfigValidated` can only be produced by `validate`, so downstream code
+//! never handles a partially checked config.
+
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 

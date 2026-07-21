@@ -1,3 +1,5 @@
+//! Config model for the homepage's per-section content blocks.
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,3 +1,5 @@
+//! Per-user settings records.
+
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;

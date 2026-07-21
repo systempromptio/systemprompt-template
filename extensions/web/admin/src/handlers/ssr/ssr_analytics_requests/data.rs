@@ -66,8 +66,6 @@ pub(super) struct RequestsData {
     pub options: RequestFilterOptions,
 }
 
-/// Paging/sort inputs for a single requests-page fetch; grouped to keep
-/// `fetch_requests_data` under the arity lint (was 6 positional args).
 pub(super) struct RequestsPageQuery<'a> {
     pub filter: &'a RequestFilter,
     pub range: TimeRange,

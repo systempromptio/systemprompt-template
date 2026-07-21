@@ -1,3 +1,5 @@
+//! Typed identifier newtypes local to the web extension.
+
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::ops::Deref;

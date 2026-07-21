@@ -1,3 +1,6 @@
+//! `content_prerender` job: renders ingested content into static page
+//! artifacts.
+
 use std::sync::Arc;
 use systemprompt::database::DbPool;
 use systemprompt::generator::prerender_content;

@@ -1,3 +1,5 @@
+//! Per-content engagement rollups written by the analytics job.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::ContentId;
 

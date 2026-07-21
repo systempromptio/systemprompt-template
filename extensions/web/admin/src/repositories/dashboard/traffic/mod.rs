@@ -1,3 +1,5 @@
+//! Public-site traffic analytics.
+
 mod kpis;
 mod queries;
 

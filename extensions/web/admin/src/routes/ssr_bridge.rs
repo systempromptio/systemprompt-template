@@ -1,3 +1,5 @@
+//! Server-rendered routes for the bridge authentication flow.
+
 use std::sync::Arc;
 
 use axum::routing::{get, post};

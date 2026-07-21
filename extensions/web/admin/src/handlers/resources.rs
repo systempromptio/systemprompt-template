@@ -1,3 +1,5 @@
+//! HTTP handlers for managed resource listings.
+
 use axum::Json;
 use axum::extract::{Extension, Path};
 use axum::http::StatusCode;

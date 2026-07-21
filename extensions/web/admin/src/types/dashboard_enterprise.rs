@@ -1,3 +1,5 @@
+//! Value types for the governance and enterprise dashboard panels.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;

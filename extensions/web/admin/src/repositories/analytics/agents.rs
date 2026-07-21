@@ -1,3 +1,5 @@
+//! Per-agent usage rollups.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::AgentId;
 

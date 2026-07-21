@@ -1,3 +1,5 @@
+//! Short-lived resolution tokens that let a plugin fetch its secrets once.
+
 use std::collections::HashMap;
 
 use sha2::{Digest, Sha256};

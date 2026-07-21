@@ -1,3 +1,5 @@
+//! Append-only audit trail for secret access.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 

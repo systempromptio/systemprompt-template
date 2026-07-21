@@ -1,3 +1,5 @@
+//! Prerenders one static page per configured feature during `publish_pipeline`.
+
 use std::path::PathBuf;
 
 use async_trait::async_trait;

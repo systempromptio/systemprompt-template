@@ -1,3 +1,5 @@
+//! Persistence for the admin dashboard and control centre.
+
 pub mod aggregates;
 pub mod apm_metrics;
 pub mod control_center;

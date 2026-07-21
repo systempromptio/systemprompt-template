@@ -1,3 +1,5 @@
+//! Database access shared by the MCP server extensions.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 

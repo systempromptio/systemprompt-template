@@ -1,3 +1,5 @@
+//! Payload trimming shared by the hook ingestion path.
+
 use crate::types::webhook::{HookEvent, HookEventPayload};
 
 pub(super) fn truncate(s: &str, max: usize) -> String {

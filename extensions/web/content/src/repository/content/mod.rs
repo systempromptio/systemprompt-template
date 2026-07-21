@@ -1,3 +1,5 @@
+//! Database access for ingested content.
+
 mod mutations;
 mod queries;
 

@@ -1,3 +1,5 @@
+//! Scheduled job records surfaced on the governance pages.
+
 use sqlx::PgPool;
 
 use crate::types::JobSummary;

@@ -1,3 +1,8 @@
+//! Template context types for `docs-page.html`.
+//!
+//! Falsey flags are omitted from the rendered map so the template's `{{#if}}`
+//! guards behave, rather than seeing a present-but-false key.
+
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

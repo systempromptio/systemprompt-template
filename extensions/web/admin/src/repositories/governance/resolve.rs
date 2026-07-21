@@ -21,16 +21,8 @@ pub struct ResolvedId {
     pub id: String,
 }
 
-/// Resolve `id` against the AI request, governance, and context tables.
-///
-/// Lookup order — most specific first:
-///   1. `ai_requests.id` / `ai_requests.request_id`           → Request
-///   2. `governance_decisions.id`                              → Request
-///      (oldest in chain)
-///   3. `ai_requests.trace_id`                                 → Trace
-///   4. `ai_requests.context_id` or `user_contexts.context_id` → Context
-///   5. `ai_requests.session_id` / `governance_decisions.session_id` /
-///      `user_contexts.session_id`                             → Session
+/// `id` may be a request, decision, trace, context, or session identifier; the
+/// most specific match wins.
 pub async fn resolve_id(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, sqlx::Error> {
     if let Some(r) = lookup_request_by_id(pool, id).await? {
         return Ok(Some(r));

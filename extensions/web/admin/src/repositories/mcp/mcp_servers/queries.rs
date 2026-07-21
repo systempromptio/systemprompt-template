@@ -1,3 +1,5 @@
+//! Reads MCP server definitions from the `services/mcp/` YAML tree.
+
 use std::path::Path;
 
 use crate::types::McpServerDetail;

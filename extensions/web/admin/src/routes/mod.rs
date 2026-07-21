@@ -1,3 +1,5 @@
+//! Router construction for the admin plane.
+
 mod admin;
 mod ssr;
 mod ssr_bridge;

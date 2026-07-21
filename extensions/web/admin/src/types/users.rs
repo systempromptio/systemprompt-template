@@ -1,3 +1,5 @@
+//! User value types shared across the admin pages.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;

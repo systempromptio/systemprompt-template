@@ -1,3 +1,5 @@
+//! Stored AI analyses of completed sessions.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 

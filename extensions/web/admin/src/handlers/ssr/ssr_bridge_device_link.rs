@@ -1,3 +1,9 @@
+//! SSR page completing the bridge device-link flow.
+//!
+//! The redirect target is restricted to loopback: the bridge runs on the user's
+//! own machine, and any non-loopback redirect would hand the link code to a
+//! third party.
+
 use std::sync::Arc;
 
 use axum::extract::{Extension, Form, Query, State};
@@ -23,12 +29,9 @@ pub(crate) struct DeviceLinkApproveForm {
     pub redirect: String,
 }
 
-/// Template context for `bridge-device-link.hbs`. `branding` stays untyped
-/// `serde_json::Value` because [`branding_context`] itself returns a
-/// variable-shape `Value` (branding config shape is not fixed at compile
-/// time) — see `ssr_helpers::branding_context` doc. Absent (no branding
-/// configured) is preserved as a missing key, matching the old `json!`
-/// object-mutation behaviour.
+/// `branding` stays an untyped `Value` because the branding config shape is
+/// not fixed at compile time. Unconfigured branding must stay a *missing* key,
+/// not a null, so the template's `{{#if}}` guard behaves.
 #[derive(Debug, Serialize)]
 struct DeviceLinkContext {
     #[serde(skip_serializing_if = "Option::is_none")]

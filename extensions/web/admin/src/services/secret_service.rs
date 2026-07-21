@@ -1,3 +1,5 @@
+//! Secret resolution, auditing, and key rotation for the admin handlers.
+
 use std::collections::HashMap;
 
 use sqlx::PgPool;

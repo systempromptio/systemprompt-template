@@ -1,3 +1,5 @@
+//! Reads and parses the `services/plugins/` YAML descriptors.
+
 use std::path::PathBuf;
 
 use systemprompt::config::ProfileBootstrap;

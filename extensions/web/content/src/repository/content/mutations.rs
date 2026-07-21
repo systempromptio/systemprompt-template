@@ -1,3 +1,5 @@
+//! Content writes and the update parameter builder.
+
 use chrono::Utc;
 use sqlx::types::Json;
 use sqlx::{PgPool, Postgres};

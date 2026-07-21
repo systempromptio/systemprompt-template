@@ -1,3 +1,5 @@
+//! Daily and per-session usage counters.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};
 

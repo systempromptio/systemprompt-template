@@ -1,3 +1,5 @@
+//! Value types shared across the web extension crates.
+
 pub mod builders;
 pub mod content;
 pub mod link;

@@ -1,3 +1,5 @@
+//! `sitemap_generation` job: writes `sitemap.xml` from published content.
+
 use std::sync::Arc;
 
 use systemprompt::database::DbPool;

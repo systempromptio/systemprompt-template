@@ -1,3 +1,5 @@
+//! Everything the single-user detail page renders.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 

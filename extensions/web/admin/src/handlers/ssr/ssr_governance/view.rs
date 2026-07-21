@@ -104,8 +104,6 @@ pub(super) fn build_orphans_json(
     rows
 }
 
-/// Per-policy enforcement table (24h). Reshape `policies` sorted by
-/// denied DESC so operators see the busiest deniers first.
 pub(super) fn build_enforcement_json(policies: &[PolicyRow]) -> (Vec<PolicyRow>, bool) {
     let mut rows: Vec<PolicyRow> = policies.to_vec();
     rows.sort_by(|a, b| {
@@ -157,10 +155,6 @@ fn format_local(t: chrono::DateTime<chrono::Utc>) -> String {
         .to_string()
 }
 
-/// Renders the config block for a single policy as a compact list of
-/// `key: value` strings. Skips the policy's own `id` and `enabled` fields
-/// (already shown in the card chrome). Scalars render verbatim; sequences as
-/// comma-joined; nested maps as JSON one-liners.
 fn render_params_preview(params: &YamlValue) -> Vec<ParamPreview> {
     let YamlValue::Mapping(map) = params else {
         return Vec::new();

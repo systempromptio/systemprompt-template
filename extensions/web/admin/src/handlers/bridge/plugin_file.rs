@@ -1,3 +1,8 @@
+//! Serves files out of an installed plugin's directory.
+//!
+//! `resolve_within` is the traversal guard: a caller-supplied relative path is
+//! rejected unless it stays inside the plugin root after canonicalisation.
+
 use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 

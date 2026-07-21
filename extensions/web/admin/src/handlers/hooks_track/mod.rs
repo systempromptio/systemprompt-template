@@ -1,3 +1,9 @@
+//! `/hooks/track` ingestion: the endpoint Claude Code hooks post events to.
+//!
+//! Insertion is deliberately fire-and-forget past the initial row write —
+//! downstream tracking, entity detection and AI analysis are dispatched after
+//! the event is persisted so a slow analysis never stalls the caller's hook.
+
 pub(crate) mod ai_context;
 pub(crate) mod ai_summary;
 pub(crate) mod ai_summary_types;

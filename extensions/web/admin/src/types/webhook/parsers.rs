@@ -1,3 +1,5 @@
+//! Lenient deserialisation of hook event payloads into their typed variants.
+
 use super::event_types::{
     ConfigChangeData, HookCommonFields, HookEvent, InstructionsLoadedData, NotificationData,
     PermissionRequestData, PostToolUseData, PostToolUseFailureData, PreCompactData, PreToolUseData,

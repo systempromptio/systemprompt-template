@@ -1,3 +1,5 @@
+//! Content search execution.
+
 use sqlx::PgPool;
 use std::sync::Arc;
 

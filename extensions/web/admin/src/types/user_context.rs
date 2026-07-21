@@ -1,3 +1,5 @@
+//! The resolved caller identity carried through admin request handling.
+
 use serde::Serialize;
 use systemprompt::identifiers::{Email, UserId};
 

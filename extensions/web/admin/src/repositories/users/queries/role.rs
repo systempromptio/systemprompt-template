@@ -1,3 +1,5 @@
+//! Role and department lookup for a single user.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 

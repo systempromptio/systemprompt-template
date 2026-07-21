@@ -1,3 +1,5 @@
+//! The public content API surface and its router.
+
 pub mod auth;
 pub mod handlers;
 mod types;

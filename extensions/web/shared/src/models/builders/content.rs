@@ -1,3 +1,5 @@
+//! Builder for content creation parameters.
+
 use crate::models::{ContentKind, ContentLinkMetadata};
 use chrono::{DateTime, Utc};
 use sqlx::types::Json;

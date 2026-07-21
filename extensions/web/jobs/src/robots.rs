@@ -1,3 +1,6 @@
+//! `robots_txt_generation` job: writes `robots.txt` for the deployment base
+//! URL.
+
 use std::fmt::Write as FmtWrite;
 use std::sync::Arc;
 

@@ -1,3 +1,6 @@
+//! Documentation section: content enrichment, page provider, and template
+//! types.
+
 mod content_provider;
 mod error;
 mod provider;

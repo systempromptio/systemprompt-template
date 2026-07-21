@@ -1,3 +1,9 @@
+//! Decorative animation partials shared across public-site templates.
+//!
+//! Templates are `include_str!`-compiled into the binary, so editing them
+//! requires a rebuild and restart before `just publish` will serve the new
+//! markup.
+
 use async_trait::async_trait;
 use systemprompt::template_provider::{
     ComponentContext, ComponentRenderer, PartialTemplate, RenderedComponent,

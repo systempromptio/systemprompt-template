@@ -1,3 +1,5 @@
+//! Entry point for the `systemprompt` MCP server binary.
+
 use anyhow::{Context, Result};
 use std::env;
 use std::sync::Arc;

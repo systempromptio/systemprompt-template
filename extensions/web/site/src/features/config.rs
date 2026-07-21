@@ -1,3 +1,6 @@
+//! Deserialisation model for the per-feature YAML under
+//! `services/web/features/`.
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

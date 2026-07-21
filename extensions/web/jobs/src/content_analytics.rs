@@ -1,3 +1,6 @@
+//! `content_analytics_aggregation` job: rolls page events up into per-content
+//! metrics.
+
 use sqlx::PgPool;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};

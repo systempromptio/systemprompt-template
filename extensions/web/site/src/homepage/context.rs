@@ -1,3 +1,5 @@
+//! Template context assembled for `homepage.html`.
+
 use serde::Serialize;
 
 use super::config::HomepageConfig;

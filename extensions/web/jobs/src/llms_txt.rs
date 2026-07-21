@@ -1,3 +1,5 @@
+//! `llms_txt_generation` job: writes the `llms.txt` agent-discovery manifest.
+
 use std::fmt::Write as FmtWrite;
 use std::sync::Arc;
 

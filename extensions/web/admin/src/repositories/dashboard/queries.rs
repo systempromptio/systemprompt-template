@@ -1,3 +1,5 @@
+//! Assorted dashboard panels: timelines, leaderboards, and error listings.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 

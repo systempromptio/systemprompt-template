@@ -1,3 +1,5 @@
+//! HTTP handlers for plugin environment variables.
+
 use std::sync::Arc;
 
 use axum::Json;

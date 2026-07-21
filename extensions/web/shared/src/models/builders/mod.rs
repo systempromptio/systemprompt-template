@@ -1,3 +1,5 @@
+//! Builders for the multi-field creation parameter types.
+
 pub mod content;
 pub mod link;
 pub mod link_click;

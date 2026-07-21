@@ -1,3 +1,5 @@
+//! Tool definitions exposed by the `systemprompt` MCP server.
+
 use rmcp::model::{Meta, Tool};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

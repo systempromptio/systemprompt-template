@@ -1,3 +1,9 @@
+//! Writes activity events, suppressing near-duplicates.
+//!
+//! Hook events arrive far more often than a human-readable timeline can absorb,
+//! so repeat logins, repeat tool uses, and repeat rejections inside a short
+//! window collapse to a single entry.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 

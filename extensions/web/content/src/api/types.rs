@@ -1,3 +1,5 @@
+//! Request and response bodies for the content API.
+
 use serde::{Deserialize, Serialize};
 use systemprompt::identifiers::{CampaignId, CategoryId, ContentId, LinkId, SessionId};
 
@@ -49,7 +51,6 @@ pub struct SearchQuery {
     pub limit: Option<i64>,
 }
 
-/// JSON body returned for any handler error (`{ "error": "..." }`).
 #[derive(Debug, Clone, Serialize)]
 pub struct ErrorResponse {
     pub error: String,
@@ -63,14 +64,11 @@ impl ErrorResponse {
     }
 }
 
-/// JSON body returned by the session cookie endpoints (`{ "ok": true }`).
 #[derive(Debug, Clone, Copy, Serialize)]
 pub struct OkResponse {
     pub ok: bool,
 }
 
-/// JSON body returned by `list_links_handler` (`{ "links": [...], "total": N
-/// }`).
 #[derive(Debug, Clone, Serialize)]
 pub struct ListLinksResponse<T> {
     pub links: Vec<T>,

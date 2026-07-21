@@ -1,3 +1,5 @@
+//! Static help copy keyed by page id.
+
 pub(super) fn demo_help_governance_pages(page: &str) -> Option<(&'static str, &'static str)> {
     match page {
         "governance-audit" => Some((

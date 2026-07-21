@@ -1,3 +1,5 @@
+//! Deserialisation model for an installed plugin's configuration.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use systemprompt::identifiers::{AgentId, HookId, McpServerId, PluginId, SkillId};

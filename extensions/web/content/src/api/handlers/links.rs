@@ -1,3 +1,5 @@
+//! HTTP handlers for campaign links, click recording, and redirects.
+
 use std::sync::Arc;
 
 use axum::Json;

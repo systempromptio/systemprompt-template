@@ -1,3 +1,5 @@
+//! The user activity timeline: recording events and querying them back.
+
 pub mod queries;
 pub mod record;
 

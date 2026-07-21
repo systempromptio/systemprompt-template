@@ -1,3 +1,5 @@
+//! Timeline and summary reads over recorded activity.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 

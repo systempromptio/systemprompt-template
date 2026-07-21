@@ -1,3 +1,5 @@
+//! Error type for the `systemprompt` MCP server.
+
 use axum::http::StatusCode;
 use systemprompt::traits::ExtensionError;
 use thiserror::Error;

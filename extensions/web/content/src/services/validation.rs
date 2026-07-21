@@ -1,3 +1,5 @@
+//! Editorial validation applied to content before it is published.
+
 use systemprompt_web_shared::error::BlogError;
 use systemprompt_web_shared::models::{ContentKind, ContentMetadata};
 

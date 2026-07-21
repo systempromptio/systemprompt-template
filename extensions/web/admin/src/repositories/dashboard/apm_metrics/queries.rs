@@ -1,3 +1,5 @@
+//! Persists computed actions-per-minute back onto the session row.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
 

@@ -1,3 +1,5 @@
+//! Blog section: list and post page providers, plus markdown renderers.
+
 mod list_provider;
 mod post_provider;
 mod renderers;

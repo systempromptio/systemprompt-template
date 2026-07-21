@@ -1,3 +1,5 @@
+//! Campaign link lifecycle and redirect processing.
+
 use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::{LinkId, SessionId};

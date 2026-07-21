@@ -1,3 +1,5 @@
+//! Helpers shared by the webhook handlers.
+
 use axum::http::HeaderMap;
 use systemprompt::models::Config;
 

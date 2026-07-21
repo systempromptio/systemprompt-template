@@ -1,3 +1,5 @@
+//! Blog post queries against the ingested `markdown_content` tables.
+
 use sqlx::PgPool;
 
 use crate::blog::types::{BlogPost, RelatedPost};

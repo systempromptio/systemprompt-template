@@ -1,3 +1,8 @@
+//! One-shot exchange codes for the bridge device-link flow.
+//!
+//! Only the hash is stored, and codes expire in two minutes: the code travels
+//! through a browser redirect, so a leaked log line must not stay usable.
+
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
 use rand::RngCore;
 use sha2::{Digest, Sha256};

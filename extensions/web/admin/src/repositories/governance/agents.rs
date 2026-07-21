@@ -1,3 +1,9 @@
+//! Agent definitions read from the `services/agents/` YAML tree.
+//!
+//! Skill metadata is joined in from the skill catalog by id; agents declare
+//! only flat `metadata.skills` id lists and never carry their own copy of a
+//! skill's name or description.
+
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -12,9 +18,6 @@ pub fn list_agents(services_path: &Path) -> Result<Vec<AgentDetail>, Marketplace
     if !agents_dir.exists() {
         return Ok(agents);
     }
-    // Skill metadata is sourced once from the skill catalog and looked up by id;
-    // agents only declare flat `metadata.skills: [id]` and never duplicate
-    // name/description.
     let skill_catalog: HashMap<String, AgentSkillInfo> = list_skill_catalog(services_path)
         .unwrap_or_default()
         .into_iter()

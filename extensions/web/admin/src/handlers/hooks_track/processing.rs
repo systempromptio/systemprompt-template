@@ -1,3 +1,5 @@
+//! Post-insert processing dispatched once a hook event is persisted.
+
 use std::sync::Arc;
 
 use sqlx::PgPool;

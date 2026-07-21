@@ -1,3 +1,5 @@
+//! Template context types for the SSR pages.
+
 mod settings;
 mod users;
 

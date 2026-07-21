@@ -1,3 +1,5 @@
+//! SSR page for a user's own profile.
+
 use std::sync::Arc;
 
 use axum::extract::{Extension, State};

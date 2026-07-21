@@ -1,3 +1,5 @@
+//! Content search request and response value types.
+
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use systemprompt::identifiers::{CategoryId, ContentId, SourceId};

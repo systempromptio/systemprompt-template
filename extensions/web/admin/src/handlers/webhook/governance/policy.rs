@@ -47,7 +47,6 @@ pub(crate) fn source_path_for(id: &str) -> &'static str {
         .map_or("", |r| r.source_path)
 }
 
-/// Per-policy config block from `services/governance/config.yaml`.
 #[derive(Debug, Clone)]
 pub(crate) struct PolicyConfig {
     pub id: String,
@@ -81,7 +80,6 @@ pub(crate) fn chain() -> std::sync::RwLockReadGuard<'static, PolicyChain> {
         .unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
-/// Re-read `services/governance/config.yaml` and rebuild the chain.
 pub(crate) fn reload() {
     let new_chain = load_chain();
     if let Ok(mut guard) = CHAIN.write() {

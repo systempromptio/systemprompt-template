@@ -1,3 +1,5 @@
+//! Per-plugin environment variable records.
+
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{PluginId, UserId};

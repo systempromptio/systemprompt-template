@@ -1,3 +1,5 @@
+//! Per-user usage event rollups.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 

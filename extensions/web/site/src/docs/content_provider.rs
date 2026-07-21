@@ -1,3 +1,5 @@
+//! Enriches ingested documentation content with index and listing metadata.
+
 use std::sync::Arc;
 
 use async_trait::async_trait;

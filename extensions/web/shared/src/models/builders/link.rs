@@ -1,3 +1,5 @@
+//! Builder for campaign link creation parameters.
+
 use chrono::{DateTime, Utc};
 use systemprompt::identifiers::{CampaignId, ContentId};
 

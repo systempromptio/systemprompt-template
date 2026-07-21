@@ -1,3 +1,5 @@
+//! Server-rendered admin page routes, grouped by dashboard section.
+
 use std::sync::Arc;
 
 use axum::routing::{get, post};
@@ -134,10 +136,6 @@ fn governance_routes() -> Router<Arc<PgPool>> {
         )
 }
 
-/// Read-only inspection of first-class entities. Detail pages are reused
-/// as-is from the prior IA; list handlers are slim placeholders that delegate
-/// to existing analytics handlers until the dedicated entity-list handlers
-/// land in step 7.
 fn entity_routes() -> Router<Arc<PgPool>> {
     Router::new()
         .route(

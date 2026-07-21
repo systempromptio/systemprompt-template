@@ -52,8 +52,6 @@ pub struct ConversationSummary {
     pub recent: Vec<RecentConversation>,
 }
 
-/// Sum requests, tokens, and cost over a recent window for one user.
-///
 /// `window_days` is the trailing window; `previous` covers the equivalent prior
 /// window so the caller can compute a delta.
 pub async fn fetch_usage_window(
@@ -95,8 +93,6 @@ pub async fn fetch_usage_window(
     })
 }
 
-/// Top-N models by tokens for one user over the last 30 days.
-///
 /// `token_share` is computed against the 30-day total and may be 0.0 when the
 /// user has no activity.
 pub async fn fetch_top_models(
@@ -150,12 +146,10 @@ pub async fn fetch_top_models(
         .collect())
 }
 
-/// Conversation summary for the last 30 days: totals, by-model breakdown,
-/// recent conversations.
+/// `by_agent` is always empty.
 ///
-/// `by_agent` is left empty when no agent label is recorded against requests —
-/// `ai_requests` has no agent column today and the existing analytics surface
-/// reads agent ids from `plugin_usage_events`, which is keyed differently.
+/// `ai_requests` has no agent column, and the analytics surface reads agent
+/// ids from `plugin_usage_events`, which is keyed differently.
 pub async fn fetch_conversation_summary(
     pool: &PgPool,
     user_id: &UserId,

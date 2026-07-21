@@ -7,8 +7,6 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
-/// Fetch the current `share_token_version` for a user.
-///
 /// Returns `Ok(None)` when the user has no `user_profile_ext` row.
 pub async fn get_share_token_version(
     pool: &PgPool,

@@ -1,3 +1,5 @@
+//! Live runtime aggregates per user, for the control centre.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 

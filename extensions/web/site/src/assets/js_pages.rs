@@ -1,3 +1,5 @@
+//! Per-page JavaScript bundle definitions.
+
 use std::path::Path;
 use systemprompt::extension::AssetDefinition;
 

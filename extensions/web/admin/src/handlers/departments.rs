@@ -1,3 +1,5 @@
+//! HTTP handlers for department CRUD and membership.
+
 use std::sync::Arc;
 
 use axum::Json;

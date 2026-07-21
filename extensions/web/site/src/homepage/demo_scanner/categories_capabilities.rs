@@ -1,3 +1,5 @@
+//! Static copy for the capability-oriented demo categories.
+
 use super::meta::CategoryMeta;
 
 pub(super) const CAPABILITY_CATEGORIES: &[CategoryMeta] = &[

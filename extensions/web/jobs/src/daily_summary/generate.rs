@@ -1,3 +1,5 @@
+//! Composes one user's daily summary from their recorded activity.
+
 use std::sync::Arc;
 
 use chrono::NaiveDate;

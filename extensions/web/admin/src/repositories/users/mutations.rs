@@ -1,3 +1,5 @@
+//! User create, update, and delete.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 

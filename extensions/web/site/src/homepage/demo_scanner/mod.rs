@@ -1,3 +1,8 @@
+//! Derives the homepage demo showcase from the on-disk `demo/` tree.
+//!
+//! The scanner is the single source of truth for what the homepage advertises:
+//! adding a demo directory is enough, no YAML edit is required.
+
 mod categories_capabilities;
 mod categories_platform;
 mod meta;
@@ -48,7 +53,6 @@ const PILLARS: &[PillarMeta] = &[
     },
 ];
 
-/// Errors raised while scanning the `demo/` tree for the homepage showcase.
 #[derive(Debug, Error)]
 pub enum DemoScanError {
     #[error("demo root not found: {0}")]

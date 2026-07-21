@@ -1,3 +1,5 @@
+//! Campaign link and click-tracking value types.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;

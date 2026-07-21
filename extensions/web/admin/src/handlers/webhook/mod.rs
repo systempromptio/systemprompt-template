@@ -1,3 +1,5 @@
+//! Webhook intake from Claude Code and the governance plane.
+
 pub(crate) mod governance;
 mod helpers;
 mod tracking;

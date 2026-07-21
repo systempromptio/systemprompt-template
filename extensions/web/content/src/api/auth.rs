@@ -1,3 +1,5 @@
+//! Session cookie issue and clear for the public content surface.
+
 use axum::Json;
 use axum::http::HeaderMap;
 use axum::http::header::SET_COOKIE;

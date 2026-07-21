@@ -1,3 +1,5 @@
+//! HTTP handlers for the bridge control plane.
+
 pub(crate) mod plugin_file;
 
 use axum::body::Body;

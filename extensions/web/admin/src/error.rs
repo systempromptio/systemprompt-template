@@ -1,3 +1,9 @@
+//! The admin plane's HTTP error type.
+//!
+//! Domain errors convert in via `From`, and the variant alone decides the
+//! status code, so handlers propagate with a bare `?` rather than mapping at
+//! each call site. Logging happens once, in `into_response`.
+
 use axum::Json;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};

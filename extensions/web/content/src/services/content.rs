@@ -1,3 +1,5 @@
+//! Content create, read, update, and delete.
+
 use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::identifiers::{ContentId, SourceId};

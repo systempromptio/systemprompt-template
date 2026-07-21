@@ -1,3 +1,5 @@
+//! Plugin listing value types.
+
 pub(super) const fn default_true() -> bool {
     true
 }

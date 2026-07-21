@@ -1,3 +1,9 @@
+//! `Extension` trait implementation for `WebExtension`.
+//!
+//! The wiring seam: every provider, prerenderer, renderer, schema, migration
+//! and job the five web sibling crates expose is advertised to the host runtime
+//! here.
+
 use std::sync::Arc;
 
 use axum::Router;

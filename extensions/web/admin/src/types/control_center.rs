@@ -1,3 +1,5 @@
+//! Control centre value types.
+
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::FromRow;

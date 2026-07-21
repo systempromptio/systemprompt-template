@@ -1,3 +1,8 @@
+//! Traffic reads.
+//!
+//! Content performance is served from the precomputed rollup for the ranges the
+//! aggregation job materialises, and computed live for any other range.
+
 use sqlx::PgPool;
 
 use crate::types::{

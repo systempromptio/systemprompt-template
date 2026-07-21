@@ -1,3 +1,5 @@
+//! AES-GCM primitives and master key loading for secret storage.
+
 use chacha20poly1305::aead::rand_core::RngCore;
 use chacha20poly1305::aead::{Aead, KeyInit, OsRng};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};

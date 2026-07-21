@@ -81,8 +81,6 @@ pub(super) async fn assignment_counts_by_type(
         })
 }
 
-/// Fields needed to build a single `CatalogRow`; grouped to keep `build_row`
-/// under the arity lint (was 7 positional args).
 pub(super) struct CatalogRowSeed {
     pub(super) entity_type: &'static str,
     pub(super) id: String,

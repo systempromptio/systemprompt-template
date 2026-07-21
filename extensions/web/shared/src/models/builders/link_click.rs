@@ -1,3 +1,5 @@
+//! Builder for click-recording parameters.
+
 use chrono::{DateTime, Utc};
 use systemprompt::identifiers::{ContextId, LinkClickId, LinkId, SessionId, TaskId, UserId};
 

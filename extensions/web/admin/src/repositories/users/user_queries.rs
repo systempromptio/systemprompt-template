@@ -1,3 +1,5 @@
+//! Department-level user rollups.
+
 use sqlx::PgPool;
 
 pub async fn fetch_department_stats(

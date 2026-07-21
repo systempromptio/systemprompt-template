@@ -1,3 +1,5 @@
+//! Shared JavaScript service module definitions.
+
 use std::path::Path;
 use systemprompt::extension::AssetDefinition;
 

@@ -1,3 +1,5 @@
+//! Conversation transcript capture from webhook payloads.
+
 use std::sync::Arc;
 
 use axum::Json;

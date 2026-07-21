@@ -1,3 +1,6 @@
+//! Shape of the static category and pillar copy the scanner joins on-disk demos
+//! against.
+
 pub(super) struct CategoryMeta {
     pub(super) id: &'static str,
     pub(super) title: &'static str,

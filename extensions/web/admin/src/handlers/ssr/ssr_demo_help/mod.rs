@@ -1,3 +1,5 @@
+//! Contextual help panel served alongside the demo pages.
+
 mod pages;
 
 pub(super) fn demo_help_text(page: &str) -> (&'static str, &'static str) {

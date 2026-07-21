@@ -1,3 +1,5 @@
+//! `secret_migration` job: re-encrypts plaintext secrets under the master key.
+
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::UserId;
 use systemprompt::traits::{Job, JobContext, JobResult};

@@ -1,3 +1,8 @@
+//! Runs the `systemprompt` CLI on behalf of an MCP tool call.
+//!
+//! Models routinely append flags the CLI does not accept; those are stripped
+//! before exec rather than surfaced as a usage error the model cannot act on.
+
 use crate::tools::CliOutput;
 use rmcp::ErrorData as McpError;
 use std::path::PathBuf;

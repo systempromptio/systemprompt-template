@@ -1,3 +1,8 @@
+//! Idempotency keys for hook events.
+//!
+//! Claude Code retries hooks, so the same event can arrive more than once; the
+//! key is derived from the payload rather than a client-supplied id.
+
 use std::fmt::Write;
 
 use sha2::{Digest, Sha256};

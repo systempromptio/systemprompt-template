@@ -1,3 +1,7 @@
+//! Config model for the homepage demo showcase.
+//!
+//! Populated by the demo scanner rather than read from YAML.
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

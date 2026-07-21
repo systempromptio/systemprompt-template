@@ -1,3 +1,5 @@
+//! Per-user notification fan-out backing the admin SSE streams.
+
 use std::collections::HashMap;
 use std::sync::Arc;
 

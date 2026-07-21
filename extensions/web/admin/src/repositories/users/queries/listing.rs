@@ -1,3 +1,5 @@
+//! The user index listing and its filter options.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 

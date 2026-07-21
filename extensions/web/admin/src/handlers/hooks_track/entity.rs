@@ -1,3 +1,5 @@
+//! Infers which skill, agent, or MCP server a hook event belongs to.
+
 use crate::types::webhook::HookEventPayload;
 
 pub(super) fn detect_entity(payload: &HookEventPayload) -> Option<(&'static str, String)> {

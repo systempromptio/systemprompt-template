@@ -1,3 +1,5 @@
+//! Assembles the dashboard landing page in a single pass.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, PluginId, SessionId, UserId};
 

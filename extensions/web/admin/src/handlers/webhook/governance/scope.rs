@@ -1,3 +1,5 @@
+//! Resolves an agent's declared access scope from the services config.
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;

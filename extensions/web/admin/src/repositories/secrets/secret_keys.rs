@@ -1,3 +1,5 @@
+//! Per-user data encryption key issue and rotation.
+
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 

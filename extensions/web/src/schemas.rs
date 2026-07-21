@@ -1,3 +1,9 @@
+//! Schema and migration inventory for the web extension.
+//!
+//! DDL lives in `schema/*.sql` and is embedded with `include_str!`; migrations
+//! are discovered from `schema/migrations/` by `build.rs`. Nothing here is SQL
+//! text.
+
 use systemprompt::extension::prelude::{Migration, SchemaDefinition, extension_migrations};
 
 pub(crate) const SCHEMA_PLUGIN_USAGE: &str = include_str!("../schema/05_plugin_usage.sql");

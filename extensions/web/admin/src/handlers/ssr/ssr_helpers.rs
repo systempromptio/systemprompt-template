@@ -1,3 +1,5 @@
+//! Context fragments injected into every admin page render.
+
 use crate::numeric;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};

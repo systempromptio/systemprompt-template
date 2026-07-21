@@ -1,3 +1,10 @@
+//! Shared header, footer, and asset partials for every public-site page.
+//!
+//! The template bodies are `include_str!`-compiled from
+//! `services/web/templates/partials/`, so editing them requires `just build`
+//! and a server restart — running `just publish` alone keeps serving the markup
+//! baked into the old binary.
+
 use async_trait::async_trait;
 use systemprompt::template_provider::{
     ComponentContext, ComponentRenderer, PartialTemplate, RenderedComponent,

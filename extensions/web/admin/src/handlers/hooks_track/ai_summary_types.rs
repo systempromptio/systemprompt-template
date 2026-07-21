@@ -1,3 +1,5 @@
+//! Typed schema for the AI session-analysis tool call.
+
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};

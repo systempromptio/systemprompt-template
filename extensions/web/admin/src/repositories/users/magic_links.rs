@@ -1,3 +1,8 @@
+//! Passwordless sign-in tokens and their rate-limit counters.
+//!
+//! Counters are kept per email and per IP so neither axis alone can be used to
+//! enumerate accounts.
+
 use rand::Rng;
 use sha2::{Digest, Sha256};
 use sqlx::PgPool;

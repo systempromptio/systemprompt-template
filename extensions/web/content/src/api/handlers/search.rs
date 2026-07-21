@@ -1,3 +1,5 @@
+//! HTTP handler for content search.
+
 use std::sync::Arc;
 
 use axum::Json;

@@ -1,3 +1,5 @@
+//! Error type shared by the bridge repositories.
+
 use thiserror::Error;
 
 #[derive(Debug, Error)]

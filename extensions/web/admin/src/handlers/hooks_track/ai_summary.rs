@@ -1,3 +1,5 @@
+//! Prompt and request construction for AI session analysis.
+
 use std::sync::Arc;
 
 use systemprompt::ai::{AiMessage, AiRequest, AiService, StructuredOutputOptions};
@@ -188,8 +190,6 @@ pub(crate) async fn generate_session_analysis(
         .ok()
 }
 
-/// Inputs for a single session's AI analysis run; grouped to keep
-/// `run_analysis_for_session` under the arity lint (was 6 positional args).
 pub(crate) struct RunAnalysisParams<'a> {
     pub pool: &'a sqlx::PgPool,
     pub ai_service: &'a Arc<AiService>,
