@@ -1,0 +1,136 @@
+# Shared `.rs` files allowed to differ from the sibling fork.
+#
+# Enforced by scripts/check-fork-drift.sh. A shared file that differs
+# without an entry here fails the check; an entry whose file no longer
+# differs also fails. The list can therefore only shrink.
+#
+# Two kinds of entry live here, and they are not the same thing:
+#   - PERMANENT: the file encodes fork identity and will always differ.
+#   - DEBT: the file drifted and should be re-converged. Port the change
+#     to whichever repo lacks it, then delete the line.
+
+# ---------------------------------------------------------------------
+# PERMANENT - brand and crate identity.
+# These carry the binary name, crate path, or product name. Converging
+# them would mean the two products claiming to be each other.
+# ---------------------------------------------------------------------
+extensions/mcp/systemprompt/src/server/mod.rs	# brand / crate identity
+extensions/web/admin/src/activity/constructors.rs	# brand / crate identity
+extensions/web/admin/src/activity/constructors_entity/entity_crud.rs	# brand / crate identity
+extensions/web/admin/src/activity/constructors_entity/session_events.rs	# brand / crate identity
+extensions/web/admin/src/activity/constructors_session.rs	# brand / crate identity
+extensions/web/admin/src/handlers/catalog/mod.rs	# brand / crate identity
+extensions/web/admin/src/handlers/catalog/view.rs	# brand / crate identity
+extensions/web/admin/src/handlers/gateway_catalog.rs	# brand / crate identity
+extensions/web/admin/src/handlers/public_register.rs	# brand / crate identity
+extensions/web/admin/src/handlers/users.rs	# brand / crate identity
+extensions/web/admin/src/handlers/webhook/governance/policy.rs	# brand / crate identity
+extensions/web/admin/src/marketplace_filter/mod.rs	# brand / crate identity
+extensions/web/admin/src/numeric.rs	# brand / crate identity
+extensions/web/admin/src/repositories/analytics/agents.rs	# brand / crate identity
+extensions/web/admin/src/repositories/dashboard/apm_metrics/mod.rs	# brand / crate identity
+extensions/web/admin/src/repositories/dashboard/control_center/mod.rs	# brand / crate identity
+extensions/web/admin/src/repositories/dashboard/mod.rs	# brand / crate identity
+extensions/web/admin/src/repositories/external_agents/mod.rs	# brand / crate identity
+extensions/web/admin/src/repositories/governance/counts.rs	# brand / crate identity
+extensions/web/admin/src/repositories/governance/decisions.rs	# brand / crate identity
+extensions/web/admin/src/repositories/governance/hook_events.rs	# brand / crate identity
+extensions/web/admin/src/repositories/governance/rankings.rs	# brand / crate identity
+extensions/web/admin/src/repositories/marketplace/plugin_env.rs	# brand / crate identity
+extensions/web/admin/src/repositories/users/access_control/matrix.rs	# brand / crate identity
+extensions/web/admin/src/repositories/users/user_settings.rs	# brand / crate identity
+extensions/web/admin/src/routes/ssr.rs	# brand / crate identity
+extensions/web/admin/src/services/secret_service.rs	# brand / crate identity
+extensions/web/admin/src/types/access_control.rs	# brand / crate identity
+extensions/web/admin/src/types/control_center.rs	# brand / crate identity
+extensions/web/admin/src/types/conversation_analytics.rs	# brand / crate identity
+extensions/web/admin/src/types/hooks_export.rs	# brand / crate identity
+extensions/web/admin/src/types/webhook/mod.rs	# brand / crate identity
+extensions/web/jobs/src/llms_txt.rs	# brand / crate identity
+extensions/web/site/src/assets/css.rs	# brand / crate identity
+extensions/web/src/extension.rs	# brand / crate identity
+extensions/web/src/extension_impl.rs	# brand / crate identity
+extensions/web/src/lib.rs	# brand / crate identity
+src/lib.rs	# brand / crate identity
+src/main.rs	# brand / crate identity
+
+# ---------------------------------------------------------------------
+# DEBT - introduced by the current pass, not yet ported downstream.
+# The department subject dimension, the shared branding resolver, and the
+# doc rewrites the comment gate required. All should land in the sibling.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/authz/department.rs	# port: landed here this pass
+extensions/web/admin/src/authz/mod.rs	# port: landed here this pass
+extensions/web/admin/src/handlers/entity_access/mod.rs	# port: landed here this pass
+extensions/web/admin/src/handlers/entity_access/support.rs	# port: landed here this pass
+extensions/web/admin/src/handlers/plugins_env.rs	# port: landed here this pass
+extensions/web/admin/src/handlers/webhook/governance/authz.rs	# port: landed here this pass
+extensions/web/admin/src/lib.rs	# port: landed here this pass
+extensions/web/admin/src/marketplace_filter/keepsets.rs	# port: landed here this pass
+extensions/web/admin/src/repositories/analytics/conversations/redact.rs	# port: landed here this pass
+extensions/web/admin/src/repositories/governance/chain/assemble.rs	# port: landed here this pass
+extensions/web/admin/src/repositories/governance/effective.rs	# port: landed here this pass
+extensions/web/admin/src/repositories/users/share_token.rs	# port: landed here this pass
+extensions/web/admin/src/services/marketplaces.rs	# port: landed here this pass
+extensions/web/shared/src/config.rs	# port: landed here this pass
+
+# ---------------------------------------------------------------------
+# DEBT - pre-existing drift, cause not yet triaged per file.
+# Mostly doc comments present on one side only, plus a handful of real
+# behavioural differences. Each needs a decision: port, or promote to
+# PERMANENT with a reason.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/activity/mod.rs	# triage: pre-existing drift
+extensions/web/admin/src/audit_event_bus.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/access_control.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/entity_access/types.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/gateway.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/gateway_access.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/mod.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/share.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/ssr/mod.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/ssr/ssr_access_control/builders.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/ssr/ssr_bridge_device_link.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/ssr/ssr_context_detail/data.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/ssr/ssr_skills_contexts/mod.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/ssr/ssr_users/data.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/ssr/ssr_users/mod.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/ssr/ssr_users/view.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/webhook/governance/mod.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/webhook/governance/policies/rate_limit.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/webhook/governance/policies/scope_check.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/webhook/governance/policies/secret_scan.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/webhook/governance/policies/tool_blocklist.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/webhook/governance/scope.rs	# triage: pre-existing drift
+extensions/web/admin/src/handlers/webhook/governance/types.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/analytics/conversations/transcript.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/analytics/request_stats.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/analytics/requests/mod.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/analytics/requests/paged.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/bridge/exchange_codes.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/departments/aggregates.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/departments/summaries.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/governance/acl_detect.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/governance/agents.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/governance/gateway/matching.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/governance/time_range.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/marketplace/mod.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/secrets/secret_crypto.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/traces/list.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/traces/mod.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/users/access_control/rules.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/users/access_tree.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/users/mod.rs	# triage: pre-existing drift
+extensions/web/admin/src/repositories/users/usage.rs	# triage: pre-existing drift
+extensions/web/admin/src/services/mod.rs	# triage: pre-existing drift
+extensions/web/admin/src/templates/engine.rs	# triage: pre-existing drift
+extensions/web/content/src/api/types.rs	# triage: pre-existing drift
+extensions/web/jobs/src/daily_summary/repository.rs	# triage: pre-existing drift
+extensions/web/site/src/assets/js_pages.rs	# triage: pre-existing drift
+extensions/web/site/src/assets/mod.rs	# triage: pre-existing drift
+extensions/web/site/src/homepage/config/mod.rs	# triage: pre-existing drift
+extensions/web/site/src/homepage/demo_scanner/mod.rs	# triage: pre-existing drift
+extensions/web/site/src/lib.rs	# triage: pre-existing drift
+extensions/web/site/src/navigation/provider.rs	# triage: pre-existing drift
+extensions/web/site/src/repositories/mod.rs	# triage: pre-existing drift
+extensions/web/src/schemas.rs	# triage: pre-existing drift
