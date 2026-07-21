@@ -40,6 +40,17 @@ pub enum AdminError {
     #[error("Too many requests: {0}")]
     RateLimited(String),
 
+    /// A dependency this endpoint needs is not configured or not reachable.
+    /// Distinct from `Internal`: the request was well-formed and the server is
+    /// healthy, so a caller may sensibly retry or fall back.
+    #[error("Unavailable: {0}")]
+    Unavailable(String),
+
+    /// An upstream this endpoint proxies to answered badly. Kept apart from
+    /// `Internal` so a caller can tell which side actually failed.
+    #[error("Upstream error: {0}")]
+    Upstream(String),
+
     #[error("Database error: {0}")]
     Database(#[from] sqlx::Error),
 
@@ -78,6 +89,8 @@ impl AdminError {
             Self::Forbidden(_) => StatusCode::FORBIDDEN,
             Self::Conflict(_) => StatusCode::CONFLICT,
             Self::RateLimited(_) => StatusCode::TOO_MANY_REQUESTS,
+            Self::Unavailable(_) => StatusCode::SERVICE_UNAVAILABLE,
+            Self::Upstream(_) => StatusCode::BAD_GATEWAY,
             Self::Database(_)
             | Self::BridgeRepo(_)
             | Self::Marketplace(_)
@@ -94,10 +107,12 @@ impl AdminError {
             | Self::Forbidden(msg)
             | Self::Conflict(msg)
             | Self::RateLimited(msg)
+            | Self::Unavailable(msg)
             | Self::BridgeRepo(BridgeRepoError::Validation(msg))
             | Self::Marketplace(
                 MarketplaceError::BadRequest(msg) | MarketplaceError::NotFound(msg),
             ) => msg.clone(),
+            Self::Upstream(_) => "Upstream service error".to_owned(),
             Self::Unauthenticated(_) => "Unauthorized".to_owned(),
             Self::Crypto(_) => "Internal configuration error".to_owned(),
             Self::Database(_) | Self::BridgeRepo(_) | Self::Marketplace(_) | Self::Internal(_) => {
