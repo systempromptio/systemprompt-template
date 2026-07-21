@@ -98,28 +98,12 @@ pub const fn i64_to_usize(v: i64) -> usize {
 
 #[must_use]
 #[inline]
-pub fn saturating_i16(v: i64) -> i16 {
-    i16::try_from(v).unwrap_or(if v > 0 { i16::MAX } else { i16::MIN })
-}
-
-#[must_use]
-#[inline]
 #[expect(
     clippy::cast_possible_truncation,
     reason = "f64→i16 narrowing for clamped score values (1-5 range)"
 )]
 pub const fn f64_rounded_to_i16(v: f64) -> i16 {
     v.round() as i16
-}
-
-#[must_use]
-#[inline]
-#[expect(
-    clippy::cast_possible_truncation,
-    reason = "f64→i64 for percentage values (0-100 range)"
-)]
-pub fn pct_i64(numerator: i64, denominator: i64) -> i64 {
-    (to_f64(numerator) / to_f64(denominator) * 100.0) as i64
 }
 
 #[must_use]

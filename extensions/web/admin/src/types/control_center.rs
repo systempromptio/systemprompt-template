@@ -1,7 +1,5 @@
-use std::fmt;
-
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use sqlx::FromRow;
 use systemprompt::identifiers::SessionId;
 
@@ -38,41 +36,6 @@ pub struct RecentSession {
     pub model: String,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
-pub enum SessionStatus {
-    Active,
-    Completed,
-    Deleted,
-}
-
-impl fmt::Display for SessionStatus {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Active => f.write_str("active"),
-            Self::Completed => f.write_str("completed"),
-            Self::Deleted => f.write_str("deleted"),
-        }
-    }
-}
-
-#[derive(Debug, Deserialize)]
-pub struct UpdateSessionStatusRequest {
-    pub session_id: SessionId,
-    pub status: SessionStatus,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct BatchUpdateSessionStatusRequest {
-    pub session_ids: Vec<SessionId>,
-    pub status: SessionStatus,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct AnalyseSessionRequest {
-    pub session_id: SessionId,
-}
-
 #[derive(Debug, Serialize, Default, Clone, Copy)]
 pub struct TodayStats {
     pub sessions_started: i64,
@@ -81,11 +44,4 @@ pub struct TodayStats {
     pub total_errors: i64,
     pub content_input_bytes: i64,
     pub content_output_bytes: i64,
-}
-
-#[derive(Debug, Serialize, FromRow)]
-pub struct RecentTask {
-    pub task_subject: Option<String>,
-    pub task_description: Option<String>,
-    pub created_at: DateTime<Utc>,
 }

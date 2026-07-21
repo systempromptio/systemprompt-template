@@ -1,30 +1,6 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::SessionId;
 
-pub async fn update_session_ai_summary_with_title(
-    pool: &PgPool,
-    session_id: &SessionId,
-    title: Option<&str>,
-    summary: &str,
-    tags: &str,
-) {
-    let result = sqlx::query!(
-        r"UPDATE plugin_session_summaries
-          SET ai_summary = $2, ai_tags = $3, ai_title = COALESCE($4, ai_title), updated_at = NOW()
-          WHERE session_id = $1",
-        session_id.as_str(),
-        summary,
-        tags,
-        title,
-    )
-    .execute(pool)
-    .await;
-
-    if let Err(e) = result {
-        tracing::warn!(error = %e, "Failed to update session AI summary");
-    }
-}
-
 pub async fn update_session_ai_summary_structured(
     pool: &PgPool,
     session_id: &SessionId,

@@ -12,11 +12,9 @@ pub mod filter_options;
 pub mod gateway;
 pub mod gateway_acl;
 pub mod hook_events;
-pub mod identity;
 pub mod jobs;
 pub mod rankings;
 pub mod resolve;
-pub mod risk_score;
 pub mod time_range;
 
 pub use audit::{GovernanceDecisionRecord, insert_governance_decision};

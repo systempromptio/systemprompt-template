@@ -1,26 +1,5 @@
-use chrono::{DateTime, Utc};
 use sqlx::PgPool;
-use systemprompt::identifiers::{AgentId, SessionId};
-
-#[derive(Debug)]
-pub struct AgentMessageRow {
-    pub id: String,
-    pub session_id: SessionId,
-    pub event_type: String,
-    pub tool_name: Option<String>,
-    pub metadata: serde_json::Value,
-    pub created_at: DateTime<Utc>,
-}
-
-#[derive(Debug)]
-pub struct AgentTraceRow {
-    pub session_id: SessionId,
-    pub tool_name: String,
-    pub decision: String,
-    pub policy: String,
-    pub reason: String,
-    pub created_at: DateTime<Utc>,
-}
+use systemprompt::identifiers::AgentId;
 
 #[derive(Debug, Clone)]
 pub struct AgentRow {

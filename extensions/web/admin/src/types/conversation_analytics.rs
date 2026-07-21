@@ -75,31 +75,3 @@ pub struct EntityEffectiveness {
     pub scored_sessions: i64,
     pub goal_achievement_pct: f64,
 }
-
-#[derive(Debug, Clone, Serialize, FromRow)]
-pub struct EntityLastUsed {
-    pub entity_type: String,
-    pub entity_name: String,
-    pub last_used: DateTime<Utc>,
-}
-
-#[derive(Debug, Clone, Serialize, FromRow)]
-pub struct EntityQualityTrend {
-    pub entity_name: String,
-    pub recent_avg: f64,
-    pub previous_avg: f64,
-}
-
-#[derive(Debug, Clone, Serialize, FromRow)]
-pub struct EntityHint {
-    pub entity_name: String,
-    pub hint: String,
-}
-
-#[derive(Debug, Clone, Serialize, FromRow)]
-pub struct HookSessionQuality {
-    pub event_type: String,
-    pub session_count: i64,
-    pub avg_quality: f64,
-    pub goal_achievement_pct: f64,
-}

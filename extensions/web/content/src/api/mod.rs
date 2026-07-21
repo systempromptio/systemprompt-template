@@ -10,8 +10,10 @@ use sqlx::PgPool;
 
 use systemprompt_web_shared::config::BlogConfigValidated;
 
-pub use types::*;
-
+pub use types::{
+    ContentJourneyQuery, ErrorResponse, GenerateLinkRequest, GenerateLinkResponse, ListLinksQuery,
+    ListLinksResponse, OkResponse, RecordClickRequest, SearchQuery,
+};
 pub fn router(pool: Arc<PgPool>, config: Option<Arc<BlogConfigValidated>>) -> Router {
     let state = BlogState { pool, config };
 

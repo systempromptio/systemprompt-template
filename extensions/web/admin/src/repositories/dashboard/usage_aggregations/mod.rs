@@ -2,9 +2,7 @@ mod ai_summaries;
 mod daily;
 pub(crate) mod session_updates;
 
-pub use ai_summaries::{
-    update_session_ai_summary_structured, update_session_ai_summary_with_title,
-};
+pub use ai_summaries::update_session_ai_summary_structured;
 pub use daily::{
     DailyAggregationParams, SessionSummaryParams, increment_session_summary,
     upsert_daily_aggregation,

@@ -18,17 +18,6 @@ pub struct UserSettingsRow {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct UpsertUserSettings<'a> {
-    pub user_id: &'a UserId,
-    pub display_name: Option<&'a str>,
-    pub avatar_url: Option<&'a str>,
-    pub notify_daily_summary: bool,
-    pub notify_achievements: bool,
-    pub leaderboard_opt_in: bool,
-    pub timezone: &'a str,
-}
-
 pub async fn find_user_settings(
     pool: &PgPool,
     user_id: &UserId,

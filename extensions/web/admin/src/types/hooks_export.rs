@@ -59,31 +59,6 @@ impl fmt::Display for HookEventType {
 
 impl HookEventType {
     #[must_use]
-    pub fn from_str_opt(s: &str) -> Option<Self> {
-        match s {
-            "SessionStart" => Some(Self::SessionStart),
-            "SessionEnd" => Some(Self::SessionEnd),
-            "UserPromptSubmit" => Some(Self::UserPromptSubmit),
-            "PreToolUse" => Some(Self::PreToolUse),
-            "PostToolUse" => Some(Self::PostToolUse),
-            "PostToolUseFailure" => Some(Self::PostToolUseFailure),
-            "PermissionRequest" => Some(Self::PermissionRequest),
-            "Stop" => Some(Self::Stop),
-            "SubagentStart" => Some(Self::SubagentStart),
-            "SubagentStop" => Some(Self::SubagentStop),
-            "TaskCompleted" => Some(Self::TaskCompleted),
-            "TeammateIdle" => Some(Self::TeammateIdle),
-            "Notification" => Some(Self::Notification),
-            "ConfigChange" => Some(Self::ConfigChange),
-            "WorktreeCreate" => Some(Self::WorktreeCreate),
-            "WorktreeRemove" => Some(Self::WorktreeRemove),
-            "PreCompact" => Some(Self::PreCompact),
-            "InstructionsLoaded" => Some(Self::InstructionsLoaded),
-            _ => None,
-        }
-    }
-
-    #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::SessionStart => "SessionStart",

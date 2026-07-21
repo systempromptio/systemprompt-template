@@ -57,6 +57,11 @@ jobs:
       - run: bash scripts/check-http-errors.sh
       - run: bash scripts/check-test-value.sh
       - run: bash scripts/lint-raw-ids.sh
+      - run: bash scripts/check-glob-reexports.sh
+      # Downstream forks share these files but not their callers; a symbol is
+      # only reported when it is dead here AND in the fork.
+      - name: No dead repository code
+        run: bash scripts/check-dead-repository-code.sh
       - name: No synthesized principals (UserId::new with string literal)
         run: |
           hits=$(grep -rEn 'UserId::new\("' extensions/ \

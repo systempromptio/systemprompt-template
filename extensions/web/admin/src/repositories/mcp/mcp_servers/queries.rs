@@ -127,11 +127,3 @@ fn parse_server_detail(
         source_path,
     }
 }
-
-pub fn find_mcp_server(
-    services_path: &Path,
-    server_id: &str,
-) -> Result<Option<McpServerDetail>, MarketplaceError> {
-    let servers = list_mcp_servers(services_path)?;
-    Ok(servers.into_iter().find(|s| s.id.as_str() == server_id))
-}

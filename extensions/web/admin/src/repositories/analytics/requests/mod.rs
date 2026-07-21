@@ -1,9 +1,8 @@
 //! Gateway-request read models for the analytics requests page.
 //!
 //! [`fetch_requests_paged`] (in `paged`) pages `ai_requests` with optional
-//! filters and per-row governance / tool-call counts;
-//! [`list_recent_gateway_requests`] (in `recent`) is the lightweight
-//! recent-activity feed; the dropdown option lists live in `options`.
+//! filters and per-row governance / tool-call counts; the dropdown option
+//! lists live in `options`.
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;

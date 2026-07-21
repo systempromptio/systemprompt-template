@@ -6,7 +6,6 @@ use systemprompt::identifiers::UserId;
 use crate::types::control_center::ActivityFeedEvent;
 pub use crate::types::control_center::TodayStats;
 
-pub use sessions::fetch_recent_sessions_filtered;
 
 pub async fn fetch_session_events(
     pool: &PgPool,
@@ -27,11 +26,4 @@ pub async fn fetch_session_events(
     )
     .fetch_all(pool)
     .await
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct TodayOutcomeStats {
-    pub completed_today: i64,
-    pub positive_count: i64,
-    pub rated_count: i64,
 }

@@ -223,6 +223,8 @@ lint-gates:
     bash scripts/check-http-errors.sh
     bash scripts/check-test-value.sh
     bash scripts/lint-raw-ids.sh
+    bash scripts/check-glob-reexports.sh
+    bash scripts/check-dead-repository-code.sh
     bash scripts/check-file-size.sh
 
 # 300-line ceiling on extension sources (same script CI runs)
