@@ -28,7 +28,7 @@ opt-level = "z"
 [workspace.package]
 edition = "2024"
 rust-version = "1.94"
-version = "0.21.1"
+version = "0.22.0"
 authors = ["systemprompt.io <ed@systemprompt.io>"]
 license = "MIT"
 repository = "https://github.com/systempromptio/systemprompt-template"
@@ -39,8 +39,8 @@ documentation = "https://systemprompt.io/documentation"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.21.1", default-features = false, features = ["core", "database", "config"] }
-systemprompt-security = { version = "0.21.1" }
+systemprompt = { version = "0.22.0", default-features = false, features = ["core", "database", "config"] }
+systemprompt-security = { version = "0.22.0" }
 
 # ============================================
 # LOCAL EXTENSIONS
