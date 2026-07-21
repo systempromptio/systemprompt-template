@@ -6,8 +6,8 @@
 use serde_json::json;
 use systemprompt_web_shared::models::CampaignLink;
 
-/// Build a `CampaignLink` from the minimal set of columns `full_url` reads.
-/// The remaining `Option` columns deserialize to `None`.
+// Build a `CampaignLink` from the minimal set of columns `full_url` reads.
+// The remaining `Option` columns deserialize to `None`.
 fn link(target_url: &str, utm_params: Option<serde_json::Value>) -> CampaignLink {
     let mut obj = json!({
         "id": "lnk_1",

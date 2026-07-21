@@ -17,12 +17,12 @@ pub struct TempDb {
     db_name: String,
 }
 
-/// Resolve the maintenance-server URL for tests, or `None` (test self-skips).
-///
-/// Refuses to run against a development database: only database names `test`,
-/// `postgres`, or `*_test` are accepted, so a stray `DATABASE_URL` pointing at
-/// a dev server's live database panics instead of mutating it. Tests only ever
-/// CREATE/DROP throwaway `mcp_ext_test_<uuid>` databases on the server.
+// Resolve the maintenance-server URL for tests, or `None` (test self-skips).
+//
+// Refuses to run against a development database: only database names `test`,
+// `postgres`, or `*_test` are accepted, so a stray `DATABASE_URL` pointing at
+// a dev server's live database panics instead of mutating it. Tests only ever
+// CREATE/DROP throwaway `mcp_ext_test_<uuid>` databases on the server.
 fn database_url() -> Option<String> {
     let raw = std::env::var("SYSTEMPROMPT_TEST_DATABASE_URL")
         .or_else(|_| std::env::var("DATABASE_URL"))
@@ -39,7 +39,7 @@ fn database_url() -> Option<String> {
     Some(raw)
 }
 
-/// Rebuild a connection URL against the same server but a different database.
+// Rebuild a connection URL against the same server but a different database.
 fn with_database(base: &str, db_name: &str) -> String {
     let mut url = Url::parse(base).expect("DATABASE_URL is a valid URL");
     url.set_path(&format!("/{db_name}"));
@@ -110,8 +110,8 @@ impl TempDb {
         })
     }
 
-    /// Insert a user row with the given id/email. Used to seed (or omit) the
-    /// reserved anonymous principal.
+    // Insert a user row with the given id/email. Used to seed (or omit) the
+    // reserved anonymous principal.
     pub async fn insert_user(&self, id: &str, email: &str) {
         sqlx::query("INSERT INTO users (id, email) VALUES ($1, $2)")
             .bind(id)
@@ -121,8 +121,8 @@ impl TempDb {
             .expect("seed user");
     }
 
-    /// All `mcp_access` rows recorded for a given `entity_name` (server or
-    /// tool), returned as (user_id, action, entity_type, description).
+    // All `mcp_access` rows recorded for a given `entity_name` (server or
+    // tool), returned as (user_id, action, entity_type, description).
     pub async fn mcp_rows(
         &self,
         entity_name: &str,
