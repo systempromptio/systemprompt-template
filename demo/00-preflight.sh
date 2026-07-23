@@ -264,6 +264,26 @@ if [[ -z "$ADMIN_TOKEN" ]]; then
   fi
 fi
 
+# Session login succeeds even for a non-admin user, but step 3's
+# issue-plugin-token refuses non-admins — and governance derives scope from the
+# live DB role, so a demoted admin silently breaks every token-based demo.
+# Catch that state here, loudly, with the exact fix.
+USER_ROW=$("$CLI" admin users search "$CLOUD_EMAIL" --profile "$PROFILE" --json 2>/dev/null \
+  | jq -r '.items[0] // empty | "\(.id) \(.roles | join(","))"' || true)
+USER_ROLES=${USER_ROW#* }
+if [[ -n "$USER_ROW" && ",$USER_ROLES," != *",admin,"* ]]; then
+  USER_ID=${USER_ROW%% *}
+  echo "  ERROR: $CLOUD_EMAIL exists but is NOT an admin (roles: $USER_ROLES)." >&2
+  echo "" >&2
+  echo "  This usually means a role-flip demo or manual test demoted the user." >&2
+  echo "  Every token-based demo will fail with 'Invalid or expired token'" >&2
+  echo "  until the role is restored and tokens are re-minted. Fix:" >&2
+  echo "" >&2
+  echo "    $CLI admin users role promote ${USER_ID:-<user-id>} --profile $PROFILE" >&2
+  echo "    ./demo/00-preflight.sh" >&2
+  exit 1
+fi
+
 echo "  Admin session token (${#ADMIN_TOKEN} chars):"
 echo ""
 decode_jwt "$ADMIN_TOKEN"
