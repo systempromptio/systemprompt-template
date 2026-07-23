@@ -193,7 +193,7 @@ impl IntoResponse for AdminError {
 /// status and the client-visible text come from the same classification either
 /// way, so an SSR handler cannot accidentally disagree with an API handler
 /// about what a given failure means. Unlike the hand-rolled error pages this
-/// replaces, it renders [`AdminError::public_message`], so an internal cause
+/// replaces, it renders the error's public message, so an internal cause
 /// is logged rather than interpolated into the page.
 #[derive(Debug, Error)]
 #[error(transparent)]
