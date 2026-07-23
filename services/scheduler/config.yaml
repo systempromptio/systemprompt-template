@@ -44,6 +44,111 @@ scheduler:
       schedule: "0 */15 * * * *"
       enabled: true
 
+    # Standalone core jobs, running on each job's built-in default schedule
+    # (no `schedule:` override). Security jobs run in observe-and-log mode
+    # because `enforce:` defaults to false.
+    - name: no_js_cleanup
+      extension: core
+      owner: admin
+      enabled: true
+
+    - name: ghost_session_cleanup
+      extension: core
+      owner: admin
+      enabled: true
+
+    - name: mcp_session_cleanup
+      extension: core
+      owner: admin
+      enabled: true
+
+    - name: file_ingestion
+      extension: core
+      owner: admin
+      enabled: true
+
+    - name: behavioral_analysis
+      extension: core
+      owner: admin
+      enabled: true
+
+    - name: malicious_ip_blacklist
+      extension: core
+      owner: admin
+      enabled: true
+
+    # Standalone web extension jobs
+    - name: content_analytics_aggregation
+      extension: web
+      owner: admin
+      enabled: true
+
+    - name: secret_migration
+      extension: web
+      owner: admin
+      enabled: true
+
+    # Manual-only sync jobs: their built-in schedule is empty, so with no
+    # `schedule:` override they register as manual-only and never cron-run.
+    - name: access_control_sync
+      extension: core
+      owner: admin
+      enabled: true
+
+    - name: content_sync
+      extension: core
+      owner: admin
+      enabled: true
+
+    # publish_pipeline sub-steps. The composite above runs each of these every
+    # 15 minutes in dependency order; scheduling them independently would
+    # double-run them, so they are disabled here (an explicit entry also
+    # records the decision and silences the boot warning).
+    - name: blog_content_ingestion
+      extension: web
+      owner: admin
+      enabled: false
+
+    - name: bundle_admin_css
+      extension: web
+      owner: admin
+      enabled: false
+
+    - name: bundle_admin_js
+      extension: web
+      owner: admin
+      enabled: false
+
+    - name: copy_extension_assets
+      extension: web
+      owner: admin
+      enabled: false
+
+    - name: content_prerender
+      extension: core
+      owner: admin
+      enabled: false
+
+    - name: page_prerender
+      extension: core
+      owner: admin
+      enabled: false
+
+    - name: sitemap_generation
+      extension: web
+      owner: admin
+      enabled: false
+
+    - name: llms_txt_generation
+      extension: web
+      owner: admin
+      enabled: false
+
+    - name: robots_txt_generation
+      extension: web
+      owner: admin
+      enabled: false
+
   # Run once, serially, at startup before the cron loop begins.
   #
   # governance_bootstrap is boot-only: it has no `jobs` entry (so it is never
