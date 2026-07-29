@@ -7,7 +7,6 @@
 //! The configured side of that pairing — gateway routes, agent definitions,
 //! the access-control YAML — lives in [`super::config`].
 
-pub mod audit;
 pub mod chain;
 pub mod counts;
 pub mod decisions;
@@ -17,8 +16,6 @@ pub mod filter_options;
 pub mod hook_events;
 pub mod rankings;
 pub mod resolve;
-
-pub use audit::{GovernanceDecisionRecord, insert_governance_decision};
 
 pub use counts::{
     get_governance_counts, get_governance_counts_windowed, list_per_policy_counts,

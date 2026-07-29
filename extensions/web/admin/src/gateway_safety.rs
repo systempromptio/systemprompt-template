@@ -13,7 +13,7 @@ use systemprompt::models::wire::canonical::{
     CanonicalContent, CanonicalRequest, CanonicalResponse,
 };
 
-use crate::handlers::webhook::governance::secrets::scan_str_for_secret;
+use systemprompt_security::policy::secrets::scan_str_for_secret;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct SecretsScanner;

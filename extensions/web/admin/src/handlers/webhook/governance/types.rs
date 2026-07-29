@@ -1,21 +1,18 @@
-//! Wire and audit types for the `/api/public/hooks/govern` `PreToolUse`
-//! webhook.
+//! Wire types for the `/api/public/hooks/govern` `PreToolUse` webhook.
 //!
 //! The on-the-wire response shape is dictated by the Anthropic Claude Code
-//! hook contract ([`HookSpecificOutput`]). Internally everything is typed —
-//! audit blobs serialize through [`DecisionAudit`] and per-policy trace
-//! through [`ChainEntryOutcome`]; the previous `serde_json::json!` blobs are
-//! gone.
+//! hook contract ([`HookSpecificOutput`]). The audit blob types
+//! (`DecisionAudit` and friends) live in [`systemprompt_security::policy`];
+//! this module keeps only what is specific to this extension's HTTP surface.
 
 use axum::http::HeaderMap;
 use serde::Serialize;
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt::identifiers::{AgentId, PluginId, PolicyId, SessionId, UserId};
+use systemprompt::identifiers::{AgentId, PluginId, SessionId};
 use systemprompt::oauth::SessionCreationService;
 use systemprompt_security::authz::{Decision, DecisionTag};
-use systemprompt_security::policy::types::AccessScope;
 
 /// Anthropic-mandated wire enum for `permissionDecision`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -60,49 +57,6 @@ pub(super) struct HookSpecificOutput {
         skip_serializing_if = "Option::is_none"
     )]
     pub permission_decision_reason: Option<String>,
-}
-
-#[derive(Debug, Serialize, Clone)]
-#[serde(tag = "result", rename_all = "lowercase")]
-pub(super) enum ChainEntryResult {
-    Pass,
-    Fail,
-    /// Policy was disabled in config, or skipped after a prior deny.
-    Skip,
-}
-
-#[derive(Debug, Serialize, Clone)]
-pub(super) struct ChainEntryOutcome {
-    pub policy_id: PolicyId,
-    #[serde(flatten)]
-    pub result: ChainEntryResult,
-    pub detail: String,
-}
-
-#[derive(Debug, Serialize, Clone)]
-pub(super) struct PrincipalSnapshot {
-    pub user_id: UserId,
-    pub session_id: SessionId,
-    pub agent_id: Option<AgentId>,
-    pub agent_scope: AccessScope,
-}
-
-#[derive(Debug, Serialize, Clone)]
-pub(super) struct AuditTarget {
-    pub tool_name: String,
-    pub plugin_id: Option<PluginId>,
-}
-
-// Why: typed audit blob serialized into `governance_decisions.evaluated_rules`.
-//
-// The `decision` and `reason` columns are populated from the same data by the
-// repository layer.
-#[derive(Debug, Serialize, Clone)]
-pub(super) struct DecisionAudit {
-    pub decision: Decision,
-    pub principal: PrincipalSnapshot,
-    pub target: AuditTarget,
-    pub chain: Vec<ChainEntryOutcome>,
 }
 
 pub(super) struct AuthDenialParams<'a> {

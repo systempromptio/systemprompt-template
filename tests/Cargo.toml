@@ -42,8 +42,8 @@ systemprompt-web-extension = { path = "../extensions/web" }
 # The contract crate additionally enables `full`, which links the core
 # extension crates whose `register_extension!` registrations carry the
 # migrations the admin schema needs.
-systemprompt = { version = "0.26.0", default-features = false, features = ["core", "database"] }
-systemprompt-security = { version = "0.26.0" }
+systemprompt = { version = "0.27.0", default-features = false, features = ["core", "database"] }
+systemprompt-security = { version = "0.27.0" }
 
 # HTTP contract harness — drives the real admin router in-process.
 axum = "0.8"
@@ -92,7 +92,6 @@ uuid = { version = "1.18", features = ["v4"] }
 # systemprompt-runtime = { path = "../../systemprompt-core/crates/app/runtime" }
 # systemprompt-scheduler = { path = "../../systemprompt-core/crates/app/scheduler" }
 # systemprompt-generator = { path = "../../systemprompt-core/crates/app/generator" }
-# systemprompt-sync = { path = "../../systemprompt-core/crates/app/sync" }
 # systemprompt-api = { path = "../../systemprompt-core/crates/entry/api" }
 # systemprompt-cli = { path = "../../systemprompt-core/crates/entry/cli" }
 # systemprompt-slack = { path = "../../systemprompt-core/crates/domain/slack" }

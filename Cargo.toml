@@ -28,7 +28,7 @@ opt-level = "z"
 [workspace.package]
 edition = "2024"
 rust-version = "1.94"
-version = "0.26.0"
+version = "0.27.0"
 authors = ["systemprompt.io <ed@systemprompt.io>"]
 license = "MIT"
 repository = "https://github.com/systempromptio/systemprompt-template"
@@ -39,8 +39,8 @@ documentation = "https://systemprompt.io/documentation"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.26.0", default-features = false, features = ["core", "database", "config"] }
-systemprompt-security = { version = "0.26.0" }
+systemprompt = { version = "0.27.0", default-features = false, features = ["core", "database", "config"] }
+systemprompt-security = { version = "0.27.0" }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -66,7 +66,7 @@ sqlx = { version = "0.9", features = ["runtime-tokio", "tls-rustls-ring-webpki",
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.9"
+serde_yaml = { package = "serde_yaml_ng", version = "0.10" }
 serde_json = { version = "1.0", features = ["preserve_order"] }
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.18", features = ["v4", "serde"] }
@@ -114,7 +114,7 @@ zip = { version = "2", default-features = false, features = ["deflate"] }
 async-stream = "0.3"
 
 # MCP Protocol
-rmcp = { version = "=3.0.0-beta.1", features = ["server", "client", "transport-io", "transport-streamable-http-server", "transport-streamable-http-server-session", "transport-streamable-http-client", "transport-streamable-http-client-reqwest", "macros", "auth"] }
+rmcp = { version = "=3.0.0", features = ["server", "client", "transport-io", "transport-streamable-http-server", "transport-streamable-http-server-session", "transport-streamable-http-client", "transport-streamable-http-client-reqwest", "macros", "auth"] }
 
 [workspace.lints.clippy]
 all = { level = "deny", priority = -1 }

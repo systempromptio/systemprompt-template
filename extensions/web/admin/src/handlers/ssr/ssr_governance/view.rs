@@ -19,16 +19,16 @@ pub(super) fn build_policies_json(
     lifetime_by_id: &mut HashMap<String, repositories::governance::PerPolicyCounts>,
     window_by_id: &mut HashMap<String, repositories::governance::PerPolicyCounts>,
 ) -> Vec<PolicyRow> {
-    let chain = governance::chain();
-    chain
-        .iter()
+    let engine = governance::engine();
+    engine
+        .policies()
         .map(|(cfg, p)| build_policy_row(cfg, p, lifetime_by_id, window_by_id))
         .collect()
 }
 
 fn build_policy_row(
-    cfg: &governance::policy::PolicyConfig,
-    p: &dyn governance::policy::GovernancePolicy,
+    cfg: &systemprompt_security::policy::PolicyConfig,
+    p: &dyn systemprompt_security::policy::GovernancePolicy,
     lifetime_by_id: &mut HashMap<String, repositories::governance::PerPolicyCounts>,
     window_by_id: &mut HashMap<String, repositories::governance::PerPolicyCounts>,
 ) -> PolicyRow {
@@ -59,7 +59,7 @@ fn build_policy_row(
         name: p.name().to_owned(),
         description: p.description().to_owned(),
         enabled: cfg.enabled,
-        source_path: governance::policy::source_path_for(id_str).to_owned(),
+        source_path: governance::engine::source_path_for(id_str),
         params_preview,
         has_params,
         lifetime_allowed,

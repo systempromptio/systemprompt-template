@@ -27,7 +27,7 @@ fn admin_template_dir() -> Option<PathBuf> {
     let profile = ProfileBootstrap::get()
         .map_err(|e| tracing::error!(error = %e, "Profile unavailable for admin template dir"))
         .ok()?;
-    let paths = AppPaths::from_profile(&profile.paths)
+    let paths = AppPaths::from_profile(&profile.paths, profile.path_resolution())
         .map_err(|e| tracing::error!(error = %e, "App paths unavailable for admin template dir"))
         .ok()?;
     Some(paths.storage().files().join("admin"))

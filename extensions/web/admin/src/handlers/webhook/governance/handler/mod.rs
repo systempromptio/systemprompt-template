@@ -2,7 +2,7 @@
 //! record an audit row before returning the `PreToolUse` decision.
 
 mod authn;
-mod evaluate;
+mod governed;
 
 use std::sync::Arc;
 
@@ -11,22 +11,24 @@ use axum::http::{HeaderMap, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use sqlx::PgPool;
-use systemprompt::identifiers::SessionId;
+use systemprompt::identifiers::{CallId, SessionId};
 use systemprompt::oauth::SessionCreationService;
 use systemprompt::traits::SessionAnalytics;
 use systemprompt_security::authz::Decision;
 use systemprompt_security::policy::types::AccessScope;
+use systemprompt_security::policy::{
+    AgentScope, AuditOrigin, AuditTarget, ChainEntryOutcome, ChainEntryResult, DecisionAudit,
+    PolicyContext, PrincipalSnapshot, record_decision,
+};
 
 use crate::types::webhook::{GovernQuery, HookEventPayload};
 
-use super::types::{
-    AuditTarget, AuthDenialParams, ChainEntryOutcome, ChainEntryResult, DecisionAudit,
-    GovernanceDecision, GovernanceResponse, HookSpecificOutput, PrincipalSnapshot,
-};
-use super::{audit, scope};
+use super::engine::engine;
+use super::scope;
+use super::types::{AuthDenialParams, GovernanceDecision, GovernanceResponse, HookSpecificOutput};
 
 use authn::{authenticate_request, deny_for_auth_failure};
-use evaluate::{EvaluateInput, evaluate};
+use governed::{governed_input, governed_target};
 
 /// Reads one header as an owned `String`, dropping values that are not valid
 /// UTF-8 rather than failing the audit write over a malformed header.
@@ -35,32 +37,6 @@ fn header_str(headers: &HeaderMap, name: header::HeaderName) -> Option<String> {
         .get(name)
         .and_then(|v| v.to_str().ok())
         .map(ToOwned::to_owned)
-}
-
-/// Tool name recorded for a governed `UserPromptSubmit`. The chain wants a
-/// tool referent for every decision; a prompt has none, so it gets an explicit
-/// one rather than falling through to `"unknown"` and making the audit row
-/// unreadable.
-const PROMPT_TOOL_NAME: &str = "user_prompt";
-
-#[derive(serde::Serialize)]
-struct GovernedPrompt<'a> {
-    prompt: &'a str,
-}
-
-/// The evaluated payload for one hook event.
-///
-/// `PreToolUse` carries a `tool_input` object; `UserPromptSubmit` carries a
-/// bare string, which is wrapped so the same value-walking policies
-/// (`secret_scan`) apply to both without a second code path.
-// JSON: protocol boundary — arbitrary third-party tool payload handed to the
-// policy chain, which walks it for credentials at any depth
-fn governed_input(payload: &HookEventPayload) -> Option<serde_json::Value> {
-    payload.tool_input().cloned().or_else(|| {
-        payload
-            .prompt()
-            .and_then(|prompt| serde_json::to_value(GovernedPrompt { prompt }).ok())
-    })
 }
 
 fn build_response(decision: &Decision, hook_event_name: &'static str) -> Response {
@@ -93,15 +69,11 @@ pub(crate) async fn govern_tool_use(
     // status reads as "hook unavailable" and lets the call through
     let (payload, _warnings) = HookEventPayload::from_value(raw);
 
-    let is_prompt = payload.prompt().is_some();
-    let tool_name = payload.tool_name().unwrap_or(if is_prompt {
-        PROMPT_TOOL_NAME
-    } else {
-        "unknown"
-    });
+    let target = governed_target(&payload);
+    let input = governed_input(&payload);
     // Why: echo the caller's event back so a `UserPromptSubmit` gate is not handed
     // a `PreToolUse` envelope it would have to ignore.
-    let response_event = if is_prompt {
+    let response_event = if payload.prompt().is_some() {
         "UserPromptSubmit"
     } else {
         "PreToolUse"
@@ -113,7 +85,7 @@ pub(crate) async fn govern_tool_use(
     let denial_params = AuthDenialParams {
         pool: &pool,
         session_id: &session_id,
-        tool_name,
+        tool_name: target.as_str(),
         hook_event_name: response_event,
         agent_id,
         plugin_id,
@@ -133,28 +105,41 @@ pub(crate) async fn govern_tool_use(
         scope::higher_privilege(principal_scope, scope::resolve_agent_scope(id))
     });
 
-    let evaluated_input = governed_input(&payload);
-    let (decision, chain) = evaluate(&EvaluateInput {
-        tool_name,
+    // Why: one POST is one call, and this hook is the only point that sees it —
+    // an out-of-process agent has no second enforcement point to inherit from.
+    let call_id = CallId::generate();
+    let evaluation = engine().evaluate(&PolicyContext {
+        target: target.clone(),
+        agent_scope: AgentScope::User {
+            user_id: user_id.clone(),
+        },
+        access_scope,
         session_id: &session_id,
         user_id: &user_id,
-        access_scope,
-        tool_input: evaluated_input.as_ref(),
+        input: &input,
+        call_id: &call_id,
     });
+    let (decision, chain) = (evaluation.decision, evaluation.chain);
 
     let audit = DecisionAudit {
+        id: uuid::Uuid::new_v4().to_string(),
+        call_id: call_id.as_str().to_owned(),
+        origin: AuditOrigin::Governed,
         decision: decision.clone(),
         principal: PrincipalSnapshot {
             user_id,
             session_id: session_id.clone(),
+            agent_session: None,
             agent_id: agent_id.cloned(),
             agent_scope: access_scope,
         },
         target: AuditTarget {
-            tool_name: tool_name.to_owned(),
+            tool_name: target.as_str().to_owned(),
             plugin_id: plugin_id.cloned(),
         },
         chain,
+        approver: None,
+        act_chain: Vec::new(),
     };
     spawn_audit_recording(&pool, audit);
 
@@ -175,10 +160,8 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
         // Why: authentication failed before any real user was resolved. Every UserId
         // must be a real `users` row, so provision the anonymous principal for
         // this fingerprint (idempotent upsert) to carry the audit's foreign key.
-        // Core now takes the extracted analytics rather than raw headers. The
-        // audit only needs a stable principal, and `compute_fingerprint` falls
-        // back to user agent + locale, so those two signals reproduce the
-        // fingerprint the header-based call used to derive.
+        // Only user agent + locale are set because `compute_fingerprint` falls
+        // back to exactly those two signals.
         let analytics = SessionAnalytics {
             user_agent: header_str(&headers, header::USER_AGENT),
             preferred_locale: header_str(&headers, header::ACCEPT_LANGUAGE),
@@ -197,10 +180,16 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
             },
         };
         let audit = DecisionAudit {
+            id: uuid::Uuid::new_v4().to_string(),
+            // Why: refused before the chain ran, so no call identity was ever
+            // minted for it — this denial is the whole of the call's history.
+            call_id: CallId::generate().as_str().to_owned(),
+            origin: AuditOrigin::Governed,
             decision: deny_for_auth_failure(&reason),
             principal: PrincipalSnapshot {
                 user_id,
                 session_id: session_id.clone(),
+                agent_session: None,
                 agent_id,
                 agent_scope: AccessScope::Unknown,
             },
@@ -212,9 +201,12 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
                 policy_id: systemprompt::identifiers::PolicyId::new("authentication"),
                 result: ChainEntryResult::Fail,
                 detail: reason,
+                duration_ms: 0.0,
             }],
+            approver: None,
+            act_chain: Vec::new(),
         };
-        if let Err(e) = audit::record_decision(&pool, &audit).await {
+        if let Err(e) = record_decision(&pool, &audit).await {
             tracing::error!(
                 target: "governance.audit.write_failed",
                 error = %e,
@@ -229,7 +221,7 @@ fn spawn_audit_recording(pool: &Arc<PgPool>, audit: DecisionAudit) {
     let p = Arc::<sqlx::Pool<sqlx::Postgres>>::clone(pool);
     tokio::spawn(async move {
         let session_id = audit.principal.session_id.clone();
-        if let Err(e) = audit::record_decision(&p, &audit).await {
+        if let Err(e) = record_decision(&p, &audit).await {
             tracing::error!(
                 target: "governance.audit.write_failed",
                 error = %e,

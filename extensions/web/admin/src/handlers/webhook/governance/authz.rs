@@ -28,7 +28,7 @@ use systemprompt_security::authz::{
 use tokio::sync::RwLock;
 
 use crate::authz::{dimensions, subject_attributes_for};
-use crate::repositories::governance::{GovernanceDecisionRecord, insert_governance_decision};
+use systemprompt_security::authz::{GovernanceDecisionRecord, insert_governance_decision};
 
 const POLICY_NAME: &str = "authz";
 

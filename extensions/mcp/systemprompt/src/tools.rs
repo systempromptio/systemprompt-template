@@ -1,6 +1,6 @@
 //! Tool definitions exposed by the `systemprompt` MCP server.
 
-use rmcp::model::{Meta, Tool};
+use rmcp::model::{MetaObject, Tool};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -65,7 +65,7 @@ fn create_tool(def: &ToolDef<'_>) -> Tool {
     tool.description = Some(def.description.to_owned().into());
     tool.input_schema = Arc::new(input_obj);
     tool.output_schema = Some(Arc::new(output_obj));
-    tool.meta = Some(Meta(tool_ui_meta(
+    tool.meta = Some(MetaObject(tool_ui_meta(
         def.server_name,
         &default_tool_visibility(),
     )));

@@ -56,16 +56,26 @@ impl HelperDef for FormatUsdHelper {
             || "—".to_owned(),
             |m| {
                 let usd = m as f64 / 1_000_000.0;
+                // Why: precision is chosen from the magnitude, not the value —
+                // a negative margin is money at the same scale as a positive
+                // one, and reading it at five decimal places while the rows
+                // above it read whole dollars makes a column incomparable.
+                let magnitude = usd.abs();
+                let sign = if usd.is_sign_negative() { "-" } else { "" };
                 if !usd.is_finite() {
                     "—".to_owned()
-                } else if usd >= 100.0 {
-                    format!("${usd:.0}")
-                } else if usd >= 1.0 {
-                    format!("${usd:.2}")
-                } else if usd >= 0.01 {
-                    format!("${usd:.3}")
+                } else if m == 0 {
+                    // Why: exactly nothing, not a very small number —
+                    // "$0.00000" beside whole dollars reads as an artefact.
+                    "$0".to_owned()
+                } else if magnitude >= 100.0 {
+                    format!("{sign}${magnitude:.0}")
+                } else if magnitude >= 1.0 {
+                    format!("{sign}${magnitude:.2}")
+                } else if magnitude >= 0.01 {
+                    format!("{sign}${magnitude:.3}")
                 } else {
-                    format!("${usd:.5}")
+                    format!("{sign}${magnitude:.5}")
                 }
             },
         );

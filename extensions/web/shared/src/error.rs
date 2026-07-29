@@ -63,6 +63,13 @@ pub enum MarketplaceError {
     #[error("Not found: {0}")]
     NotFound(String),
 
+    /// The request was well-formed but conflicts with the current state — a
+    /// seat limit already reached, a slug already taken. Distinct from
+    /// [`Self::BadRequest`] because the caller has nothing to fix in the
+    /// request itself, and a UI should say "your plan is full", not "invalid".
+    #[error("Conflict: {0}")]
+    Conflict(String),
+
     #[error("Crypto error: {0}")]
     Crypto(String),
 
@@ -78,6 +85,7 @@ impl ExtensionError for MarketplaceError {
             Self::Internal(_) => "INTERNAL_ERROR",
             Self::BadRequest(_) => "BAD_REQUEST",
             Self::NotFound(_) => "NOT_FOUND",
+            Self::Conflict(_) => "CONFLICT",
             Self::Crypto(_) => "CRYPTO_ERROR",
             Self::Infra(e) => e.code(),
         }
@@ -87,6 +95,7 @@ impl ExtensionError for MarketplaceError {
         match self {
             Self::BadRequest(_) => StatusCode::BAD_REQUEST,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
+            Self::Conflict(_) => StatusCode::CONFLICT,
             Self::Internal(_) | Self::Crypto(_) | Self::Infra(_) => {
                 StatusCode::INTERNAL_SERVER_ERROR
             },

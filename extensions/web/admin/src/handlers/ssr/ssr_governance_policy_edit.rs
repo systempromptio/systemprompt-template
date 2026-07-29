@@ -135,10 +135,10 @@ pub(crate) async fn governance_policy_edit_page(
 type PolicySnapshot = (String, String, String, String, bool, String);
 
 fn find_policy_snapshot(policy_id: &str) -> Option<PolicySnapshot> {
-    let chain = governance::chain();
+    let engine = governance::engine();
 
-    chain
-        .iter()
+    engine
+        .policies()
         .find(|(_, p)| p.id().as_str() == policy_id)
         .map(|(cfg, p)| {
             let id = p.id().as_str().to_owned();
