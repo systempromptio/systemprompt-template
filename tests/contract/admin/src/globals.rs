@@ -97,6 +97,11 @@ fn write_fixture_profile() -> Option<PathBuf> {
     let dir = root.join("tests/target/contract-profile");
     std::fs::create_dir_all(&dir).expect("create fixture profile directory");
 
+    // Why: config validation rejects a profile naming a path that does not
+    // exist, and `paths.bin` points at the workspace debug directory — absent
+    // on a runner that has only ever built this test's own target dir.
+    std::fs::create_dir_all(root.join("target/debug")).expect("create fixture bin directory");
+
     let yaml = FIXTURE_PROFILE
         .replace("__REPO__", &root.to_string_lossy())
         .replace("jwt_issuer: http://localhost:8099", &format!("jwt_issuer: {ISSUER}"));

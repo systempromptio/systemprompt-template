@@ -1,6 +1,6 @@
 //! `/admin/governance` — Policies dashboard.
 //!
-//! Lists every policy registered via `inventory::submit!` together with its
+//! Lists every policy the core `GovernanceEngine` carries together with its
 //! enabled state, per-policy params from `services/governance/config.yaml`,
 //! the source file the impl lives in, and 24h enforcement counts pulled from
 //! `governance_decisions`. The page is the front door to the modular policy

@@ -9,6 +9,11 @@ repository.workspace = true
 homepage.workspace = true
 publish = false
 
+[package.metadata.cargo-machete]
+# `inventory` is reached only through the register_* macros, which expand to
+# `inventory::submit!` — machete cannot see through the expansion.
+ignored = ["inventory"]
+
 [dependencies]
 # Foundation
 systemprompt-web-shared = { workspace = true }

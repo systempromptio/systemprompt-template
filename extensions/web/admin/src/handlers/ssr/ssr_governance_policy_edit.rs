@@ -1,7 +1,7 @@
 //! `/admin/governance/{policy_id}` — per-policy detail / editor.
 //!
-//! Reads the live `Policy` instance for `policy_id` from the inventory
-//! registry and pairs it with the recent decisions that policy has produced.
+//! Reads the live policy for `policy_id` from the `GovernanceEngine`
+//! and pairs it with the recent decisions that policy has produced.
 //! The editor surface is intentionally informational + a single
 //! enable/disable toggle (`POST`ed to the same path); deeper parameter edits
 //! still happen in `services/governance/config.yaml` because YAML is the

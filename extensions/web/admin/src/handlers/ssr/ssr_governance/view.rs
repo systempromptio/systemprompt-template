@@ -1,6 +1,6 @@
 //! View-model assembly for the Governance Policies page.
 //!
-//! Joins the registered policy chain (from `inventory`) against the lifetime /
+//! Joins the engine's policy set against the lifetime /
 //! windowed decision counts to build per-policy cards, the deny-sorted
 //! enforcement table, top-deniers / top-actors leaderboards, and the orphan
 //! list (policies that produced decisions but are no longer registered). Also
