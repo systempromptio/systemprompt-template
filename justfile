@@ -1,5 +1,8 @@
 # systemprompt-template
 set dotenv-load
+# Without this, `just cli ... --full-name "Test User"` word-splits the quoted
+# value into two arguments before the CLI ever parses it.
+set positional-arguments
 
 CLI_RELEASE := "target/release/systemprompt"
 
@@ -18,7 +21,7 @@ CLI := if path_exists("target/release/systemprompt") == "true" { \
 
 # Default: run CLI with any arguments
 default *ARGS:
-    {{CLI}} {{ARGS}}
+    {{CLI}} "$@"
 
 # Run CLI with full session context (profile + auth token)
 cli *ARGS:
@@ -33,7 +36,7 @@ cli *ARGS:
     if [ -z "${SYSTEMPROMPT_PROFILE:-}" ]; then
         export SYSTEMPROMPT_PROFILE="{{justfile_directory()}}/.systemprompt/profiles/local/profile.yaml"
     fi
-    exec {{CLI}} {{ARGS}}
+    exec {{CLI}} "$@"
 
 # Get DATABASE_URL from profile secrets (for sqlx compile-time checks)
 _db-url:
@@ -704,11 +707,11 @@ profiles:
 
 # Push to cloud
 sync-push *ARGS:
-    {{CLI}} cloud sync push {{ARGS}}
+    {{CLI}} cloud sync push "$@"
 
 # Pull from cloud
 sync-pull *ARGS:
-    {{CLI}} cloud sync pull {{ARGS}}
+    {{CLI}} cloud sync pull "$@"
 
 # ══════════════════════════════════════════════════════════════════════════════
 # DEPLOY

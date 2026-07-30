@@ -140,7 +140,7 @@ systemprompt infra logs view --level error --since 1h
 
 # Debug AI request failures
 systemprompt infra logs request list --limit 10
-systemprompt infra logs audit <request-id> --full
+systemprompt infra logs audit <request-id>
 
 # Debug MCP tool failures
 systemprompt plugins mcp logs <server-name>
@@ -152,7 +152,7 @@ systemprompt infra logs trace list --agent <agent-name> --status failed
 **Key debugging workflow:**
 1. `infra logs view --level error` — Find the error
 2. `infra logs request list` — Find failed AI requests
-3. `infra logs audit <id> --full` — Get full conversation context
+3. `infra logs audit <id>` — Get full conversation context
 4. `plugins mcp logs <server>` or `logs/mcp-*.log` — Get MCP tool errors
 
 ---
@@ -168,7 +168,7 @@ systemprompt infra logs request list --since 1h --provider anthropic   # request
 systemprompt infra logs trace list --status failed          # only failed runs — --status lives on trace list, not request list
 
 # Full audit for one request — identity, policy evals, prompt, response, cost
-systemprompt infra logs audit <request-id> --full
+systemprompt infra logs audit <request-id>
 
 # Tool-call traces (PreToolUse → decision → spawn → result)
 systemprompt infra logs trace list --limit 20
@@ -176,13 +176,13 @@ systemprompt infra logs trace list --agent <name> --status failed
 systemprompt infra logs trace show <trace-id>
 
 # Cost + usage rollups (hits the same audit table)
-systemprompt analytics costs
-systemprompt analytics requests
+systemprompt analytics costs summary
+systemprompt analytics requests stats
 systemprompt analytics agents
 systemprompt analytics tools
 ```
 
-`logs request list` shows one row per `/v1/messages` hit — the gateway path Pi / any Anthropic-SDK client uses. `logs trace list` shows MCP tool calls. Both are backed by the same 18-column `ai_requests` / trace tables with `user_id`, `tenant_id`, `session_id`, `trace_id` — so `audit <id> --full` reconstructs the chain from identity to cost.
+`logs request list` shows one row per `/v1/messages` hit — the gateway path Pi / any Anthropic-SDK client uses. `logs trace list` shows MCP tool calls. Both are backed by the same 18-column `ai_requests` / trace tables with `user_id`, `tenant_id`, `session_id`, `trace_id` — so `audit <id>` reconstructs the chain from identity to cost.
 
 **`infra logs` vs `analytics` — operational vs dashboard.** The `infra logs request {list,stats}` commands are quick operational views (recent rows, by-provider / by-model aggregate). Their `analytics requests {list,stats}` counterparts are dashboard metrics over a time range with model filtering, cache-hit rate, and CSV export. Same `ai_requests` table underneath — reach for `infra logs` when triaging a live issue, `analytics` when reporting. The `--help` on each cross-references the other.
 
