@@ -1,7 +1,10 @@
 //! Governance bootstrap: project the committed access-control baseline into the
 //! authz tables.
 //!
-//! Three steps, in dependency order:
+//! Four steps, in dependency order:
+//! 0. Validate `services/governance/config.yaml`, failing the boot rather than
+//!    letting an unparseable file degrade to the built-in defaults unnoticed,
+//!    and warn when the resulting chain enforces nothing.
 //! 1. Materialise the profile's gateway-route entities into
 //!    `access_control_entities` (so the FK on `access_control_rules` is
 //!    satisfied and a `gateway_route` `entity_match` glob has routes to expand
@@ -69,6 +72,8 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         ))?;
     let services_path = paths.system().services().to_path_buf();
 
+    let governance = check_governance_config(&services_path)?;
+
     let registered = bootstrap_gateway_entities(db_pool).await?;
 
     let pool = db_pool.pool().ok_or(MarketplaceError::Internal(
@@ -86,10 +91,46 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     tracing::info!(
         gateway_entities = registered,
         gateway_policies = policy.inserted + policy.updated,
+        governance_policies_active = governance.active,
         duration_ms,
         "governance bootstrap completed"
     );
     Ok(JobResult::success().with_duration(duration_ms))
+}
+
+struct GovernanceStatus {
+    active: usize,
+}
+
+// Why: `GovernanceConfig::load` cannot fail, so without this the request path
+// silently restores the built-in defaults when the file is unparseable — an
+// operator who edited it to relax a policy gets stricter enforcement than
+// before and no signal. Boot is the last point that can still refuse.
+fn check_governance_config(services_path: &std::path::Path) -> Result<GovernanceStatus, JobError> {
+    use systemprompt::security::policy::GovernanceConfig;
+
+    let path = services_path.join("governance/config.yaml");
+    GovernanceConfig::validate(&path).map_err(|e| {
+        MarketplaceError::Internal(format!(
+            "governance config at {} is invalid: {e}",
+            path.display()
+        ))
+    })?;
+
+    let config = GovernanceConfig::load(&path);
+    let active = if config.enabled {
+        config.policies.iter().filter(|p| p.enabled).count()
+    } else {
+        0
+    };
+    if active == 0 {
+        tracing::warn!(
+            path = %path.display(),
+            master_switch = config.enabled,
+            "governance is not enforcing: no policy will run on any request"
+        );
+    }
+    Ok(GovernanceStatus { active })
 }
 
 async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<usize, JobError> {

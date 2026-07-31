@@ -8,7 +8,7 @@
 
 # The self-owned AI control plane.
 
-**The only AI infrastructure you actually own.** Most teams rent this layer: someone else's dashboard holds their prompts, their keys, and their audit trail. This is the version you compile and keep. One Rust binary, one PostgreSQL, four commands from `git clone` to governed inference. 43 scripted demos prove every claim on your own laptop.
+**The only AI infrastructure you actually own.** Most teams rent this layer: someone else's dashboard holds their prompts, their keys, and their audit trail. This is the version you compile and keep. One Rust binary, one PostgreSQL, four commands from `git clone` to governed inference. 44 scripted demos prove every claim on your own laptop.
 
 [![Built on systemprompt-core](https://img.shields.io/badge/built%20on-systemprompt--core-2b6cb0?style=flat-square)](https://github.com/systempromptio/systemprompt-core)
 [![Template · MIT](https://img.shields.io/badge/template-MIT-16a34a?style=flat-square)](LICENSE)
@@ -98,7 +98,7 @@ Five properties, each one demonstrable on your laptop before any procurement cal
 </details>
 
 <details>
-<summary><strong>Run the proof: 43 scripted demos, 41 cost nothing</strong></summary>
+<summary><strong>Run the proof: 44 scripted demos, 43 cost nothing</strong></summary>
 
 <br>
 
@@ -123,7 +123,7 @@ Every claim in this README has a script that executes it against the live binary
 ./demo/performance/02-load-test.sh        # 3,308 req/s burst, p99 22.7 ms
 ```
 
-Full index: [`demo/README.md`](demo/README.md). 41 of 43 scripts are free; two cost ~$0.01 each (real model calls).
+Full index: [`demo/README.md`](demo/README.md). 43 of 44 scripts are free; one costs ~$0.01 (a real model call).
 
 </details>
 
@@ -421,6 +421,6 @@ Routes evaluate in order; first match wins. Anthropic is a transparent byte prox
 
 [![systemprompt.io](https://img.shields.io/badge/systemprompt.io-2b6cb0?style=for-the-badge)](https://systemprompt.io) &nbsp; [![Core](https://img.shields.io/badge/systemprompt--core-2b6cb0?style=for-the-badge)](https://github.com/systempromptio/systemprompt-core) &nbsp; [![Documentation](https://img.shields.io/badge/documentation-16a34a?style=for-the-badge)](https://systemprompt.io/documentation/) &nbsp; [![Guides](https://img.shields.io/badge/guides-f97316?style=for-the-badge)](https://systemprompt.io/guides) &nbsp; [![Discord](https://img.shields.io/badge/discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/wkAbSuPWpr)
 
-<sub>You can rent your AI control plane, or you can compile it. Clone, build, run the 43 demos. Then decide.</sub>
+<sub>You can rent your AI control plane, or you can compile it. Clone, build, run the 44 demos. Then decide.</sub>
 
 </div>

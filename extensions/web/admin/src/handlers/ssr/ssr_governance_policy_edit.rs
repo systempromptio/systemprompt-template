@@ -195,7 +195,11 @@ pub(crate) async fn governance_policy_toggle(
 
     update_enabled_in_yaml(&policy_id, want_enabled)?;
 
-    governance::reload();
+    tracing::info!(
+        policy = %policy_id,
+        enabled = want_enabled,
+        "governance policy toggled on disk; the running engine keeps its current chain until restart"
+    );
     Ok(Redirect::to(&format!("/admin/governance/{policy_id}")).into_response())
 }
 

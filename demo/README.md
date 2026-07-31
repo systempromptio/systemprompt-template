@@ -10,7 +10,7 @@
 
 # Demo Suite
 
-**43 runnable demo scripts** organised into 9 categories, plus 2 setup scripts, plus 2 orchestrated multi-container scenarios that demonstrate the air-gap and horizontal-scaling claims in the factsheet.
+**44 runnable demo scripts** organised into 9 categories, plus 2 setup scripts, plus 2 orchestrated multi-container scenarios that demonstrate the air-gap and horizontal-scaling claims in the factsheet.
 
 Every demo is **self-testing**: it reads structured `--json` data from the CLI and asserts on it, so a script fails loudly (non-zero exit, red `✗ FAIL` line) the moment expected data is missing — it never narrates a result it didn't verify.
 
@@ -81,7 +81,7 @@ Organised by the three pillars of [systemprompt.io](https://systemprompt.io): **
 | Integrations | [web/](web/) | 2 | Content types, templates, sitemaps, validation | Free |
 | Integrations | [performance/](performance/) | 2 | Request tracing, 2000-request load test | Free |
 
-**Total: 43 category scripts + 2 setup scripts. 42 free, 1 costs ~$0.01.** Plus two multi-container scenarios — see [Scenarios](#scenarios--factsheet-proofs).
+**Total: 44 category scripts + 2 setup scripts. 43 free, 1 costs ~$0.01.** Plus two multi-container scenarios — see [Scenarios](#scenarios--factsheet-proofs).
 
 ---
 

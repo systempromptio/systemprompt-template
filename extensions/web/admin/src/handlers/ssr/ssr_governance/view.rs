@@ -15,6 +15,18 @@ use crate::repositories;
 
 use super::context::{OrphanRow, ParamPreview, PolicyRow, TopActorRow, TopToolRow};
 
+// Why: the dashboard's "as code" link. The registry carries no source
+// location, and the four builtins live in core — so the map is declared here,
+// where the display concern is.
+fn source_path_for(id: &str) -> String {
+    match id {
+        "secret_scan" | "scope_check" | "tool_blocklist" | "rate_limit" => {
+            format!("systemprompt-security/src/policy/builtin/{id}.rs")
+        },
+        _ => String::new(),
+    }
+}
+
 pub(super) fn build_policies_json(
     lifetime_by_id: &mut HashMap<String, repositories::governance::PerPolicyCounts>,
     window_by_id: &mut HashMap<String, repositories::governance::PerPolicyCounts>,
@@ -59,7 +71,7 @@ fn build_policy_row(
         name: p.name().to_owned(),
         description: p.description().to_owned(),
         enabled: cfg.enabled,
-        source_path: governance::engine::source_path_for(id_str),
+        source_path: source_path_for(id_str),
         params_preview,
         has_params,
         lifetime_allowed,
