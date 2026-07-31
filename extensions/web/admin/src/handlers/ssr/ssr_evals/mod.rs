@@ -189,9 +189,6 @@ fn notice_from_query(query: &EvalsQuery) -> Option<NoticeView> {
     })
 }
 
-/// Judge selection defaults to the least-used model in the window: the one
-/// least likely to be grading its own output, which is the bias the default
-/// most needs to avoid.
 fn default_judge_label(
     models: &[crate::repositories::evals::distribution::ModelDistributionRow],
 ) -> String {

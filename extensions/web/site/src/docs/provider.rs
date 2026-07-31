@@ -13,9 +13,6 @@ use super::error::DocsError;
 use super::types::{DocsLearningContent, DocsLearningTemplateData};
 use systemprompt_web_shared::html_escape;
 
-/// Template context for `docs-page.html`. Absent metadata is omitted so the
-/// template's `{{#if}}` guards behave as when the keys were inserted
-/// conditionally into a map.
 #[derive(Debug, Default, Serialize)]
 struct DocsPageContext {
     #[serde(rename = "TITLE", skip_serializing_if = "Option::is_none")]

@@ -96,7 +96,6 @@ pub(super) fn trace_to_json(t: &TraceSummary) -> TraceRow {
     }
 }
 
-/// Cut a string to `max` characters on a char boundary, appending an ellipsis.
 fn ellipsize(s: &str, max: usize) -> String {
     if s.chars().count() <= max {
         return s.to_owned();
@@ -105,9 +104,6 @@ fn ellipsize(s: &str, max: usize) -> String {
     format!("{head}…")
 }
 
-/// `anthropic/claude-sonnet-4-6-20260101` → `claude-sonnet-4-6`. The full value
-/// stays on the cell's `title`, so nothing is lost — only the vendor prefix and
-/// date suffix that make every model name wrap.
 fn short_model(model: &str) -> String {
     let tail = model.rsplit('/').next().unwrap_or(model);
     let trimmed = tail
@@ -125,8 +121,6 @@ fn format_requests(requests: i64) -> String {
     }
 }
 
-/// The governance subline: checks and tool calls are what makes a trace worth
-/// auditing, and both were queried but never rendered before.
 fn format_governance(governance: i64, tools: i64) -> String {
     let mut parts = Vec::new();
     if governance > 0 {

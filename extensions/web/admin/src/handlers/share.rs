@@ -26,10 +26,6 @@ use crate::handlers::shared;
 use crate::repositories;
 use crate::types::UserContext;
 
-/// Build a signed token of the form `b64(user_id):b64(version):hex(hmac)`.
-/// The HMAC follows RFC 2104 over the concatenation `user_id:version`, keyed
-/// off the existing JWT signing secret. Reusing the JWT secret avoids
-/// introducing a second piece of bootstrap config.
 fn sign(secret: &[u8], user_id: &UserId, version: i32) -> String {
     let payload = format!("{user_id}:{version}");
     let mut padded = [0u8; 64];

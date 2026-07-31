@@ -15,11 +15,6 @@ use super::types::ReferenceLink;
 use crate::repositories::blog::list_related_posts;
 use systemprompt_web_shared::error::BlogError;
 
-/// Template context for a rendered blog post (`blog-post.html`).
-///
-/// Every field is optional and omitted when absent so the template's `{{KEY}}`
-/// and `{{#if}}` guards behave exactly as when the keys were inserted
-/// conditionally into a map.
 #[derive(Debug, Default, Serialize)]
 struct BlogPostContext {
     #[serde(rename = "TITLE", skip_serializing_if = "Option::is_none")]

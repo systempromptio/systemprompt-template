@@ -117,9 +117,6 @@ fn to_stage_views(rules: Option<&serde_json::Value>) -> Vec<StageView> {
         .collect()
 }
 
-/// The sentence that explains the decision: the stage that failed, or the last
-/// stage that passed. `reason` is empty on every allow, which is what left the
-/// detail column showing a dash for most of the timeline.
 fn decisive_detail(reason: &str, stages: &[StageView]) -> String {
     if !reason.is_empty() {
         return reason.to_owned();

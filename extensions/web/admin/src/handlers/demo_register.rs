@@ -31,8 +31,6 @@ pub(crate) struct DemoRegisterResponse {
     pub display_name: String,
 }
 
-/// Derive a stable, URL-safe `UserId` from an email's local part, falling back
-/// to `"user"` when sanitisation leaves nothing usable.
 fn derive_user_id(email_str: &str) -> UserId {
     let local_part = email_str.split('@').next().unwrap_or("user");
     let sanitized = local_part

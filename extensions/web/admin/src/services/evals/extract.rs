@@ -51,9 +51,6 @@ pub(crate) fn stop_reason(response_body: Option<&Value>) -> Option<String> {
         .map(str::to_owned)
 }
 
-/// Collapse Anthropic content — a string, or a list of typed blocks — into
-/// plain text. Tool calls become a readable one-liner so the judge can see the
-/// assistant acted rather than seeing a blank answer.
 fn flatten_content(content: &Value) -> String {
     match content {
         Value::String(s) => s.clone(),

@@ -11,7 +11,6 @@ use systemprompt::identifiers::UserId;
 
 use crate::repositories::users::access_tokens::{self, AccessTokenRowDb};
 
-/// How far ahead an expiry has to be to stop counting as "expiring soon".
 const EXPIRING_SOON_DAYS: i64 = 30;
 
 #[derive(Debug, Serialize)]

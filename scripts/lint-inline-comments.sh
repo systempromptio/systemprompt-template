@@ -6,23 +6,32 @@ set -uo pipefail
 # The only permitted full-line inline comments are the two whitelisted
 # justification prefixes mandated by the rust-coding-standards skill:
 #
-#   // Why:  — a non-obvious invariant, hidden constraint, or exemption
-#              justification (e.g. a permitted `let _ =`)
-#   // JSON: — a sanctioned `serde_json::Value` protocol-boundary usage
+#   // Why:    — a non-obvious invariant, hidden constraint, or exemption
+#                justification (e.g. a permitted `let _ =`)
+#   // JSON:   — a sanctioned `serde_json::Value` protocol-boundary usage
+#   // SAFETY: — the discharge of an `unsafe` block's obligations. Not a
+#                discretionary comment: clippy's `undocumented_unsafe_blocks`
+#                is warn-level and the workspace builds with `-D warnings`, so
+#                every `unsafe` block must carry one and it must start with
+#                `SAFETY:` for clippy to recognise it. Banning the prefix here
+#                would leave the two gates mutually unsatisfiable.
 #
 # Continuation lines of a whitelisted comment block are allowed. `//!` module
 # heads are governed separately (rustdoc placement rules), as are `///` docs
 # on public API items. `tests/**` and `build.rs` files are out of scope.
 #
 # A second check flags `///` rustdoc on items that are NOT public API —
-# `pub(crate)`, `pub(super)`, and private `async fn` items (rustdoc is never
+# `pub(crate)`, `pub(super)`, and private top-level items (rustdoc is never
 # rendered for them). A genuine invariant on such an item belongs in a
 # `// Why:` comment; anything else is deleted.
+#
+# Scope: production sources in `extensions/**`, `src/**` and `bridge/src/**`, tracked or
+# not (`git ls-files -co`) — an untracked new file must not pass vacuously.
 
 MATCHES=""
 while IFS= read -r file; do
     case "$file" in
-        tests/*) continue ;;
+        tests/*|*/tests/*) continue ;;
         */build.rs) continue ;;
     esac
     FOUND=$(awk '
@@ -30,7 +39,7 @@ while IFS= read -r file; do
         /^[[:space:]]*\/\/!/ { prev_allowed = 0; next }
         /^[[:space:]]*\/\// {
             in_doc = 0
-            if ($0 ~ /^[[:space:]]*\/\/ (Why|JSON):/) { prev_allowed = 1; next }
+            if ($0 ~ /^[[:space:]]*\/\/ (Why|JSON|SAFETY):/) { prev_allowed = 1; next }
             if (prev_allowed) { next }
             print FILENAME ":" FNR ":" $0
             next
@@ -42,6 +51,8 @@ while IFS= read -r file; do
                 sub(/^[[:space:]]+/, "", stripped)
                 if (stripped ~ /^(pub\(crate\)|pub\(super\))/) {
                     print FILENAME ":" doc_line ": rustdoc on non-public item (" stripped ") — use // Why: or delete"
+                } else if ($0 ~ /^(async fn|fn|const|static|struct|enum|trait|type|mod|unsafe fn) /) {
+                    print FILENAME ":" doc_line ": rustdoc on private item (" stripped ") — use // Why: or delete"
                 }
             }
             in_doc = 0
@@ -49,7 +60,7 @@ while IFS= read -r file; do
         }
     ' "$file")
     [ -n "$FOUND" ] && MATCHES+="${FOUND}"$'\n'
-done < <(git ls-files 'extensions/*.rs' 'extensions/**/*.rs' 'src/*.rs' 'src/**/*.rs' | sort -u)
+done < <(git ls-files -co --exclude-standard 'extensions/*.rs' 'extensions/**/*.rs' 'src/*.rs' 'src/**/*.rs' 'bridge/src/*.rs' 'bridge/src/**/*.rs' | sort -u)
 
 if [ -z "$MATCHES" ]; then
     echo "lint-inline-comments: OK (no unlisted inline comments)"
@@ -57,7 +68,7 @@ if [ -z "$MATCHES" ]; then
 fi
 
 echo "lint-inline-comments: inline // comments are banned in production crates."
-echo "Delete the comment, or justify it with a '// Why:' or '// JSON:' prefix:"
+echo "Delete the comment, or justify it with a '// Why:', '// JSON:' or '// SAFETY:' prefix:"
 echo ""
 printf '%s' "$MATCHES"
 exit 1

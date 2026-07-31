@@ -97,10 +97,6 @@ pub(crate) async fn eval_run_action(
     Ok(Redirect::to(&run_redirect(&range, tab, kind, outcome)))
 }
 
-/// Rebuild the operator's gateway credential from the request that launched
-/// the run. The `x-session-id` the gateway demands must equal the JWT's own
-/// `session_id` claim, so both come from the same token rather than from
-/// anything the form could set.
 fn credential_from_request(headers: &HeaderMap) -> Result<GatewayCredential, String> {
     let token = crate::handlers::extract_token_from_headers(headers)
         .map_err(|e| format!("Could not read your session token: {e}"))?;

@@ -156,12 +156,6 @@ const fn resolve_event_name(common: &HookCommonFields) -> &str {
     }
 }
 
-/// Deserialize one hook payload into its variant.
-///
-/// Ingest is deliberately lenient: a payload that does not fit its declared
-/// shape is recorded as [`HookEvent::Unknown`] with a warning rather than
-/// rejected, so a Claude Code release that adds or changes a field cannot stop
-/// governance events being recorded.
 fn parse_event<T: serde::de::DeserializeOwned>(
     raw: &serde_json::Value,
     event_name: &str,

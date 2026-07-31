@@ -12,10 +12,6 @@ use super::renderers::render_blog_cards;
 use crate::repositories::blog::list_blog_posts;
 use systemprompt_web_shared::error::BlogError;
 
-/// Template context for the blog list page (`blog-list.html`).
-///
-/// The template consumes a single `{{{POSTS}}}` triple-mustache holding the
-/// pre-rendered blog-card HTML.
 #[derive(Debug, Serialize)]
 struct BlogListContext {
     #[serde(rename = "POSTS")]

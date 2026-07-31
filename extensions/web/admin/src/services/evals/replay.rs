@@ -17,8 +17,6 @@ use super::{
     EXCERPT_CHARS, MAX_JUDGE_CHARS, ModelRef, RunTally, extract, gateway_client, judge, new_id,
 };
 
-/// Output-token budget for a replayed answer. Generous enough for a real
-/// coding answer, bounded enough that a runaway case cannot dominate the bill.
 const REPLAY_MAX_TOKENS: u32 = 4096;
 
 pub(crate) struct ReplayParams<'a> {
@@ -37,8 +35,6 @@ pub(crate) async fn execute_replay(params: ReplayParams<'_>) -> Result<RunTally,
     Ok(tally)
 }
 
-/// One case: re-answer it, score the answer, then regress it against the
-/// baseline the case was frozen with.
 async fn replay_one(
     params: &ReplayParams<'_>,
     case: &EvalCaseRow,
@@ -97,9 +93,6 @@ async fn replay_one(
     regress_against_baseline(params, case, &prompt, &answer, tally).await
 }
 
-/// Compare the fresh answer to the one the case was frozen with. Skipped when
-/// the case has no baseline: there is nothing to regress against, and a
-/// missing baseline is not a failure.
 async fn regress_against_baseline(
     params: &ReplayParams<'_>,
     case: &EvalCaseRow,
@@ -171,8 +164,6 @@ pub(super) async fn answer_for(
     .filter(|c| !c.trim().is_empty())
 }
 
-/// The judge sees the case's stated expectation when it has one, so a replay
-/// grades against the author's intent rather than against the prompt alone.
 fn expectation_prompt(case: &EvalCaseRow, prompt: &str) -> String {
     case.expectation.as_deref().map_or_else(
         || prompt.to_owned(),

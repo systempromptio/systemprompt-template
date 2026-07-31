@@ -177,12 +177,6 @@ async fn find_user_for_matrix(
     }))
 }
 
-/// Adapts an admin-CRUD row to the resolver's rule type.
-///
-/// The two differ only in what the matrix screen needs on top of a decision
-/// (timestamps, entity coordinates). `justification` is not selected by the
-/// matrix query, so the resolver sees `None` and the matrix renders its own
-/// detail string.
 fn as_access_rule(row: &AccessControlRule) -> AccessRule {
     AccessRule {
         id: RuleId::new(row.id.clone()),
@@ -206,12 +200,6 @@ struct MatrixCell<'a> {
     default_included: bool,
 }
 
-/// Runs the shared resolver for one cell and translates its verdict into the
-/// screen's `(effective, source)` pair.
-///
-/// An `entity_type` the core catalog does not recognise cannot be resolved at
-/// all, so the cell reports the entity default and says so rather than
-/// implying a rule decided it.
 fn resolve_effective(cell: &MatrixCell<'_>) -> (String, MatrixSource) {
     let Ok(kind) = EntityKind::from_str(cell.entity_type) else {
         return (

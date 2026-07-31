@@ -40,15 +40,6 @@ struct Registry {
 
 static REGISTRY: OnceLock<Registry> = OnceLock::new();
 
-/// Every registered provider is built once, against the first pool to ask.
-///
-/// The providers are stateless apart from their pool handle and their caches,
-/// so binding them once per process — rather than per request — is what makes
-/// the enforcement path cheap enough to run on every tool call.
-///
-/// The audit sink in the context is a [`NullAuditSink`]: providers look
-/// attributes up, they do not decide, so they have nothing to audit. The
-/// decision that uses their output is audited by its own call site.
 fn registry(pool: &PgPool) -> &'static Registry {
     REGISTRY.get_or_init(|| {
         let providers = discover_subject_providers(&AuthzHookContext {

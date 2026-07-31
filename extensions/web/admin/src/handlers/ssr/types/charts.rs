@@ -166,8 +166,6 @@ fn midpoint(range: &TimeRange) -> chrono::DateTime<chrono::Utc> {
     range.from + (range.to - range.from) / 2
 }
 
-/// Axis and tooltip timestamps render in the operator's local zone, matching
-/// the timestamp column in the log tables.
 fn format_bucket_time(ts: &chrono::DateTime<chrono::Utc>) -> String {
     ts.with_timezone(&chrono::Local)
         .format("%b %d %H:%M")

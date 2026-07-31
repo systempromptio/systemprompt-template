@@ -24,8 +24,6 @@ use crate::types::{MarketplaceContext, UserContext};
 
 use view::{SessionView, TurnView, to_session_views, to_turn_views};
 
-/// The agent id the Pi governance extension sends on every hook event
-/// (`examples/pi/extensions/governance.ts`).
 const PI_AGENT_ID: &str = "pi_agent";
 const SESSION_LIMIT: i64 = 25;
 const TRACE_LIMIT: i64 = 300;

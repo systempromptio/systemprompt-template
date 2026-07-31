@@ -31,10 +31,6 @@ struct TraceDetailContext {
     back_url: &'static str,
 }
 
-/// One rendered waterfall row: the raw span plus its position on the shared
-/// timeline (`offset_pct`/`width_pct`, both percentages of the trace duration)
-/// and timestamps pre-formatted in the viewer's local zone so the page never
-/// mixes UTC and local time.
 #[derive(Debug, Serialize)]
 struct SpanView {
     id: String,

@@ -79,8 +79,6 @@ pub(super) fn result_row(r: &EvalResultRow) -> ResultRowView {
     }
 }
 
-/// Fixed dimension order so the bars read the same on every row. A dimension
-/// the judge omitted is dropped rather than shown as zero.
 fn dimension_views(scores: &DimensionScores) -> Vec<DimensionView> {
     scores
         .labelled()

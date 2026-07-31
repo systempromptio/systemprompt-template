@@ -22,21 +22,13 @@ use systemprompt::identifiers::UserId;
 use systemprompt_security::authz::{RuleType, SubjectAttributeProvider, SubjectDimension};
 use tokio::sync::RwLock;
 
-/// Slug bound to `access_control_rules.rule_type`.
 const DEPARTMENT_SLUG: &str = "department";
 
-/// Between core's `USER` (0) and `ROLE` (200): a department rule outranks a
-/// role rule and yields to a rule naming the user directly. That is the
-/// precedence the access matrix has always displayed.
+// Why: between core's `USER` (0) and `ROLE` (200).
 const DEPARTMENT_PRECEDENCE: u16 = 100;
 
-/// Same shape as the marketplace-parent cache in the authz webhook: a short
-/// TTL that bounds staleness after a department change without turning every
-/// decision into a query.
 const DEPARTMENT_TTL: Duration = Duration::from_secs(60);
 
-/// User id to (values, fetched-at). Values is a `Vec` because the provider
-/// contract is multi-valued, even though a user has at most one department.
 type DepartmentCache = HashMap<String, (Vec<String>, Instant)>;
 
 static DEPARTMENT_CACHE: LazyLock<RwLock<DepartmentCache>> =

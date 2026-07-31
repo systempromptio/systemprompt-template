@@ -28,8 +28,6 @@ pub(super) fn serde_stats(query: &TraceListQuery, s: &TraceStats) -> TraceStatsV
     }
 }
 
-/// The deny / error stat cards double as filters: clicking one narrows the list
-/// to exactly the traces it counts, clicking it again clears the flag.
 fn toggle_flag_url(query: &TraceListQuery, flag: &str) -> String {
     let already_on = match flag {
         "deny_only" => query.deny_only.as_deref() == Some("true"),

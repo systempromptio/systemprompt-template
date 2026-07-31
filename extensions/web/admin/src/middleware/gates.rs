@@ -13,12 +13,9 @@ use axum::response::{IntoResponse, Response};
 use crate::handlers::shared::ErrorBody;
 use crate::types::UserContext;
 
-/// The request path as the client sent it.
-///
-/// `nest_service` strips its prefix from `request.uri()`, so a layer inside
-/// the admin SSR router sees `/profile` where the caller asked for
-/// `/admin/profile`. Anything matching against user-facing paths has to read
-/// through `OriginalUri` instead.
+// Why: `nest_service` strips its prefix from `request.uri()`, so a layer
+// inside the admin SSR router sees `/profile` for a request to
+// `/admin/profile`; matching user-facing paths requires `OriginalUri`.
 fn original_path(request: &Request) -> String {
     request
         .extensions()

@@ -12,8 +12,6 @@ use super::config::{
     BrandingConfig, DocsSidebarSection, FooterConfig, HeaderNavConfig, NavigationConfig, SocialLink,
 };
 
-/// Template context injected on every page: header/footer navigation, branding,
-/// and the fixed top-level app/blog/docs links consumed by the site partials.
 #[derive(Debug, Serialize)]
 struct NavigationContext<'a> {
     site: NavigationSite<'a>,

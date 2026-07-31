@@ -30,8 +30,6 @@ use super::types::{AuthDenialParams, GovernanceDecision, GovernanceResponse, Hoo
 use authn::{authenticate_request, deny_for_auth_failure};
 use governed::{governed_input, governed_target};
 
-/// Reads one header as an owned `String`, dropping values that are not valid
-/// UTF-8 rather than failing the audit write over a malformed header.
 fn header_str(headers: &HeaderMap, name: header::HeaderName) -> Option<String> {
     headers
         .get(name)

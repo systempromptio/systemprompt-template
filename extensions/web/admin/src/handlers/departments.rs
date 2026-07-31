@@ -23,8 +23,6 @@ fn require_admin(user_ctx: &UserContext) -> AdminResult<()> {
     }
 }
 
-/// Departments are keyed by name, so a unique violation is a caller conflict
-/// rather than a server fault.
 fn name_write_error(err: sqlx::Error) -> AdminError {
     match err {
         sqlx::Error::Database(db) if db.is_unique_violation() => {

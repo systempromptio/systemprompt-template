@@ -9,9 +9,6 @@ use systemprompt::models::WebConfig;
 
 use super::config::FeaturePage;
 
-/// Template context for a prerendered feature page (`feature-page.html`): the
-/// feature definition under `feature.*` and the site-wide web config under
-/// `site.*`.
 #[derive(Debug, Serialize)]
 struct FeaturePageContext<'a> {
     feature: &'a FeaturePage,

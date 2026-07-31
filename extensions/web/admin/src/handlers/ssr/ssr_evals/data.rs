@@ -41,7 +41,6 @@ use crate::util::time_range::{
 use super::EvalsQuery;
 use super::context::EvalsTab;
 
-/// How many rows each panel shows before it stops being a summary.
 const USER_LIMIT: i64 = 15;
 const TOPIC_LIMIT: i64 = 15;
 const RUN_LIMIT: i64 = 15;

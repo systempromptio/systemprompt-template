@@ -78,8 +78,6 @@ struct ScoreParams<'a> {
     tally: &'a mut RunTally,
 }
 
-/// Run the pre-pass, then the judge unless the pre-pass already decided it,
-/// and record exactly one row either way.
 async fn score_one(params: ScoreParams<'_>) -> Result<(), sqlx::Error> {
     let candidate = params.candidate;
     let pre = deterministic::run_pre_pass(candidate);
@@ -144,9 +142,6 @@ async fn score_one(params: ScoreParams<'_>) -> Result<(), sqlx::Error> {
     Ok(())
 }
 
-/// Deterministic flags and judge flags describe the same answer, so they share
-/// one list. Deterministic ones come first because they are observations
-/// rather than opinions.
 fn merge_flags(pre: &[String], judged: &[String]) -> Vec<String> {
     let mut flags = pre.to_vec();
     for f in judged {

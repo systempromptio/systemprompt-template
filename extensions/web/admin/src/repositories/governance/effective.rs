@@ -174,12 +174,6 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
     }
 }
 
-/// Label for *why* a decision was Allow.
-///
-/// The resolver only spells out its reasoning for Deny, but it does say which
-/// band matched, so this reads the answer off `MatchedBy` rather than
-/// re-deriving it. The previous version re-walked the rules in its own
-/// precedence order, which is the kind of second implementation that drifts.
 fn allow_reason(user_id: &UserId, matched_by: &MatchedBy) -> String {
     match matched_by {
         MatchedBy::UserAllow => format!("user-level allow: {user_id}"),

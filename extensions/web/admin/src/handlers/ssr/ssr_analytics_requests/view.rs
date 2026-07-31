@@ -130,7 +130,6 @@ fn pct_of(part: i64, whole: i64) -> f64 {
     part as f64 / whole as f64 * 100.0
 }
 
-/// Thousands as `12.3k` so a token column stays one line at any magnitude.
 fn compact_int(v: i64) -> String {
     if v >= 1_000_000 {
         format!("{:.1}M", v as f64 / 1_000_000.0)

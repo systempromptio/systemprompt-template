@@ -254,10 +254,6 @@ pub(crate) async fn promote_case(
     Ok(case_id)
 }
 
-/// The answer a case is frozen with. A streamed source stores no
-/// `response_body` at all, so the SSE excerpt is reassembled into the same
-/// shape rather than leaving the case with nothing to regress against —
-/// which, since most gateway traffic streams, would otherwise be most cases.
 fn baseline_body(candidate: &sampling::EvalCandidate) -> Option<serde_json::Value> {
     if let Some(body) = candidate.response_body.clone() {
         return Some(body);

@@ -42,9 +42,6 @@ pub(super) fn tab_links(
         .collect()
 }
 
-/// The current window as a query-string suffix. A named preset round-trips as
-/// the preset so the picker stays highlighted; a custom window round-trips as
-/// its resolved bounds.
 fn range_query(range: &TimeRange, query: &EvalsQuery) -> String {
     match query.preset.as_deref() {
         Some(preset) if preset != "custom" => format!("&preset={}", urlencode(preset)),

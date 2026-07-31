@@ -15,8 +15,6 @@ use super::rubric::{
     pairwise_user_prompt,
 };
 
-/// Output-token budget for a judge call. The verdict is a small JSON object; a
-/// larger budget only pays for rambling rationales.
 const JUDGE_MAX_TOKENS: u32 = 2048;
 
 // Why: pairs the grading model with the credential its calls travel under.
@@ -133,8 +131,6 @@ pub(super) async fn record_call(
     }
 }
 
-/// The gateway is a passthrough, so a reply can arrive fenced or prefaced; the
-/// object is carved out before parsing rather than trusting the shape.
 fn parse_reply<T: serde::de::DeserializeOwned>(text: &str, what: &str, run_id: &str) -> Option<T> {
     let json = gateway_client::extract_json_object(text).unwrap_or(text);
     serde_json::from_str::<T>(json)
@@ -150,9 +146,6 @@ fn parse_reply<T: serde::de::DeserializeOwned>(text: &str, what: &str, run_id: &
         .ok()
 }
 
-/// The judge's own request row carries the authoritative cost, found by the
-/// conversation id the call was tagged with. No row means the gateway has not
-/// written it yet; report zero rather than guessing.
 async fn lookup_cost(pool: &PgPool, conversation_id: &GatewayConversationId) -> i64 {
     crate::repositories::evals::sampling::find_conversation_cost(pool, conversation_id.as_str())
         .await

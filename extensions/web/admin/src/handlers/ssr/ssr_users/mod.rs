@@ -158,8 +158,6 @@ pub(crate) async fn user_detail_page(
     ))
 }
 
-/// The detail page with no user resolved. A request carrying no `id` renders
-/// the same "not found" page as an `id` that matches nobody.
 fn blank_user_detail() -> UserDetailPageData {
     UserDetailPageData {
         page: "user-detail",

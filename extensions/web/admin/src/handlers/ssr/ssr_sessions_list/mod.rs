@@ -167,8 +167,6 @@ fn stats_view(kpis: &SessionListKpis) -> StatsView {
     }
 }
 
-/// The errors-only card is a toggle: clicking it narrows to the sessions it
-/// counts, clicking it again clears the flag.
 fn error_toggle_url(pairs: &list_view::QueryPairs<'_>, active: bool) -> String {
     let qs = list_view::query_string(pairs, &["error_only", "page"]);
     let base = if qs.is_empty() {

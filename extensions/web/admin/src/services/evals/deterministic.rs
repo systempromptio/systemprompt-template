@@ -11,9 +11,6 @@ use crate::repositories::evals::sampling::EvalCandidate;
 
 use super::extract;
 
-/// Phrases that mark a bare refusal. Deliberately narrow: a caveat inside a
-/// real answer is not a refusal, and the judge grades that better than a
-/// substring match can.
 const REFUSAL_MARKERS: [&str; 6] = [
     "i can't help with",
     "i cannot help with",
@@ -23,8 +20,6 @@ const REFUSAL_MARKERS: [&str; 6] = [
     "i cannot assist with",
 ];
 
-/// Answers longer than this are flagged verbose; the judge decides whether it
-/// mattered.
 const VERBOSE_CHARS: usize = 12_000;
 
 #[derive(Debug, Clone)]

@@ -137,10 +137,6 @@ fn request_view(r: &ContextRequestRow) -> ContextRequestRowView {
     }
 }
 
-/// Build a chronological transcript by interleaving messages and tool calls
-/// within each request, then ordering requests by `created_at`. Each turn
-/// carries the telemetry of the request that served it, so the thread answers
-/// "which model, how long, how much" without a trip to the rollup table.
 fn build_transcript(
     messages: &[ContextMessageRow],
     tool_calls: &[ContextToolCallRow],
@@ -244,8 +240,6 @@ fn format_latency(latency_ms: Option<i32>) -> String {
     latency_ms.map_or_else(|| "—".to_owned(), |ms| format!("{ms}ms"))
 }
 
-/// `None` when neither count was recorded — an empty rail segment says less
-/// than no segment at all.
 fn format_tokens(input: Option<i32>, output: Option<i32>) -> Option<String> {
     match (input, output) {
         (None, None) => None,
