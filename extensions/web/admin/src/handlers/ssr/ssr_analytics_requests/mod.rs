@@ -68,7 +68,7 @@ pub(crate) async fn analytics_requests_page(
 
     let (range, auto_widened) = data::resolve_range(&pool, &query).await;
 
-    let fetched = data::fetch_requests_data(
+    let fetched = data::load_requests_data(
         &pool,
         data::RequestsPageQuery {
             tab,

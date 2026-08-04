@@ -172,7 +172,7 @@ fn build_matrix_sections(
             .collect();
         sections.push(("plugin".to_owned(), "Plugins".to_owned(), rows));
     }
-    if let Ok(agents) = repositories::config::agents::list_agents(services_path) {
+    if let Ok(agents) = repositories::config::agents::list_configured_agents(services_path) {
         let rows: Vec<(String, String, Option<String>)> = agents
             .into_iter()
             .map(|a| {

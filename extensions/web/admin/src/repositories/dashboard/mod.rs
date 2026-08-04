@@ -2,7 +2,6 @@
 
 pub mod aggregates;
 pub mod apm_metrics;
-pub mod control_center;
 pub mod conversation_analytics;
 pub mod hooks_track;
 pub mod overview;

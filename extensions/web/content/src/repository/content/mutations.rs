@@ -47,7 +47,7 @@ async fn insert_enrichment(
     Ok(())
 }
 
-async fn fetch_content(
+async fn get_content(
     tx: &mut sqlx::Transaction<'_, Postgres>,
     id: &str,
 ) -> Result<Content, sqlx::Error> {
@@ -134,7 +134,7 @@ impl ContentMutationRepository {
 
         insert_enrichment(&mut tx, &row.id, params, now).await?;
 
-        let content = fetch_content(&mut tx, row.id.as_str()).await?;
+        let content = get_content(&mut tx, row.id.as_str()).await?;
         tx.commit().await?;
         Ok(content)
     }
@@ -168,7 +168,7 @@ impl ContentMutationRepository {
         .execute(&mut *tx)
         .await?;
 
-        let content = fetch_content(&mut tx, params.id.as_str()).await?;
+        let content = get_content(&mut tx, params.id.as_str()).await?;
         tx.commit().await?;
         Ok(content)
     }

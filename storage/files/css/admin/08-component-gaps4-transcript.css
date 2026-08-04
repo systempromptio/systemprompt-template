@@ -1,9 +1,0 @@
-@layer responsive {
-
-@media (max-width: 480px) {
-    .plugin-card {
-        box-shadow: var(--sp-shadow-sm);
-    }
-}
-
-}

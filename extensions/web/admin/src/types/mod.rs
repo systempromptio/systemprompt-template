@@ -2,7 +2,6 @@
 
 pub mod access_control;
 pub mod constants;
-pub mod control_center;
 pub mod conversation_analytics;
 mod dashboard;
 mod dashboard_enterprise;

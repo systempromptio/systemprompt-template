@@ -3,12 +3,13 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, PluginId, SessionId, UserId};
 
+use crate::activity::queries::list_timeline;
 use crate::repositories::dashboard::aggregates::{
     get_active_users_24h, get_activity_stats, list_usage_timeseries,
 };
 use crate::repositories::dashboard::queries::{
-    list_hourly_activity, list_popular_skills, list_recent_mcp_errors, list_timeline,
-    list_tool_success_rates, list_top_users,
+    list_hourly_activity, list_popular_skills, list_recent_mcp_errors, list_tool_success_rates,
+    list_top_users,
 };
 use crate::repositories::dashboard::traffic;
 use crate::types::{
@@ -33,7 +34,7 @@ pub async fn get_dashboard_data(
         active_users_24h,
         tool_success_rates,
     ) = tokio::try_join!(
-        list_timeline(pool),
+        list_timeline(pool, None),
         list_top_users(pool),
         list_popular_skills(pool),
         list_hourly_activity(pool),

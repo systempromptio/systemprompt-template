@@ -96,7 +96,7 @@ struct ContextsPageData {
     users_for_filter: Vec<crate::types::UserSummary>,
 }
 
-async fn fetch_page_data(
+async fn load_page_data(
     pool: &PgPool,
     filter: &contexts_list::ContextListFilter,
 ) -> ContextsPageData {
@@ -221,7 +221,7 @@ pub(crate) async fn skills_contexts_page(
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
     let inputs = parse_inputs(params);
-    let data = fetch_page_data(&pool, &inputs.filter).await;
+    let data = load_page_data(&pool, &inputs.filter).await;
     let payload = build_page_json(&inputs, &data);
     Ok(super::render_typed_page(
         &engine,

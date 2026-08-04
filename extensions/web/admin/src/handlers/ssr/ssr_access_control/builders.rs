@@ -110,7 +110,7 @@ fn build_marketplaces() -> Vec<EntityOption> {
 }
 
 fn build_agents(services_path: &Path) -> Vec<EntityOption> {
-    repositories::config::agents::list_agents(services_path)
+    repositories::config::agents::list_configured_agents(services_path)
         .unwrap_or_default()
         .into_iter()
         .map(|a| EntityOption {

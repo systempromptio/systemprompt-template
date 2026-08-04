@@ -3,14 +3,7 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 
-use crate::activity;
 use crate::types::{HourlyActivity, SkillCount, ToolSuccessRate, TopUser};
-
-pub async fn list_timeline(
-    pool: &PgPool,
-) -> Result<Vec<activity::ActivityTimelineEvent>, sqlx::Error> {
-    activity::queries::list_timeline(pool, None).await
-}
 
 pub async fn list_top_users(pool: &PgPool) -> Result<Vec<TopUser>, sqlx::Error> {
     sqlx::query_as!(

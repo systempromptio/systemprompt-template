@@ -1,10 +1,9 @@
 //! Conversations & Transcripts page data layer.
 //!
-//! `fetch_conversation_list` powers the left pane (sessions filtered by
-//! time-range / identity / free-text). `fetch_conversation_detail` parses the
-//! JSONB `session_transcripts.transcript` into a flat `Vec<TranscriptTurn>`,
-//! enriches each turn with any matching `governance_decisions` row, and
-//! exposes both a redacted (default) and an optional raw text body.
+//! Parses the JSONB `session_transcripts.transcript` into a flat
+//! `Vec<TranscriptTurn>`, enriches each turn with any matching
+//! `governance_decisions` row, and exposes both a redacted (default) and an
+//! optional raw text body.
 //!
 //! Free-text search relies on the `idx_session_transcripts_jsonb` GIN index
 //! (`jsonb_path_ops`). Pure substring searches use `ILIKE` against the JSONB

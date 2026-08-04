@@ -18,7 +18,7 @@ pub(crate) async fn list_agents_handler(
 ) -> AdminResult<Response> {
     let services_path = shared::get_services_path()?;
     let agents =
-        repositories::config::agents::list_agents(&services_path).map_err(AdminError::internal)?;
+        repositories::config::agents::list_configured_agents(&services_path).map_err(AdminError::internal)?;
     if user_ctx.is_admin {
         return Ok(Json(AgentsListResponse { agents }).into_response());
     }

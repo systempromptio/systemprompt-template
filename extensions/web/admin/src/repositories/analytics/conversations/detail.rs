@@ -1,8 +1,5 @@
 //! Single-conversation detail + raw-turn queries.
 //!
-//! `fetch_conversation_detail` joins the latest transcript with the session
-//! summary, the per-session governance decisions, and a representative
-//! `trace_id`, then normalises the transcript JSONB into `TranscriptTurn`s.
 //! `find_raw_turns` backs the capability-gated PII endpoint.
 
 use sqlx::PgPool;
