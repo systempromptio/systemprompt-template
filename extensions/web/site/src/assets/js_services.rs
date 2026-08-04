@@ -43,7 +43,6 @@ pub(super) fn public_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
 pub(super) fn service_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
     let p = storage_js.join("services");
     let mut v = service_core_js(&p);
-    v.extend(service_plugin_js(&p));
     v.extend(service_webauthn_js(&p));
     v.extend(service_utils_js(storage_js));
     v
@@ -64,11 +63,6 @@ fn service_core_js(p: &Path) -> Vec<AssetDefinition> {
         svc_js!(p, "sidebar.js"),
         svc_js!(p, "theme.js"),
         svc_js!(p, "toast.js"),
-    ]
-}
-
-fn service_plugin_js(p: &Path) -> Vec<AssetDefinition> {
-    vec![
     ]
 }
 

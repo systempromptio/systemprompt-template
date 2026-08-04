@@ -30,4 +30,12 @@ ignore = [
     # no runtime security surface. Tracked — drop the ignore once `tabled` and
     # `validator` move off it.
     "RUSTSEC-2026-0173",
+    # RUSTSEC-2026-0235 — rkyv 0.7 out-of-bounds read validating untrusted archives.
+    #
+    # rkyv appears in the lockfile only through rust_decimal's optional `rkyv`
+    # feature, which no crate in this workspace enables: `cargo tree -i rkyv`
+    # prints nothing, so the code is never compiled or linked. rust_decimal's
+    # 1.x line pins rkyv 0.7 (the patched 0.8.17 is a breaking bump upstream).
+    # Drop the ignore when rust_decimal moves to rkyv 0.8.
+    "RUSTSEC-2026-0235",
 ]
