@@ -61,9 +61,7 @@ fn service_core_js(p: &Path) -> Vec<AssetDefinition> {
         svc_js!(p, "filter-ribbon.js"),
         svc_js!(p, "header-actions.js"),
         svc_js!(p, "header-search.js"),
-        svc_js!(p, "list-page.js"),
         svc_js!(p, "sidebar.js"),
-        svc_js!(p, "table-sort.js"),
         svc_js!(p, "theme.js"),
         svc_js!(p, "toast.js"),
     ]
@@ -71,11 +69,6 @@ fn service_core_js(p: &Path) -> Vec<AssetDefinition> {
 
 fn service_plugin_js(p: &Path) -> Vec<AssetDefinition> {
     vec![
-        svc_js!(p, "plugin-details-ui.js"),
-        svc_js!(p, "plugin-env-ui.js"),
-        svc_js!(p, "plugin-env.js"),
-        svc_js!(p, "plugin-resources-helpers.js"),
-        svc_js!(p, "plugin-resources.js"),
     ]
 }
 
@@ -93,9 +86,6 @@ fn service_webauthn_js(p: &Path) -> Vec<AssetDefinition> {
 
 fn service_utils_js(storage_js: &Path) -> Vec<AssetDefinition> {
     vec![
-        AssetDefinition::js(storage_js.join("utils/dom.js"), "js/utils/dom.js"),
-        AssetDefinition::js(storage_js.join("utils/format.js"), "js/utils/format.js"),
-        AssetDefinition::js(storage_js.join("utils/form.js"), "js/utils/form.js"),
         AssetDefinition::js(
             storage_js.join("utils/storage-safe.js"),
             "js/utils/storage-safe.js",

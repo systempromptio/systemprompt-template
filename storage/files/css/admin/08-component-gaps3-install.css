@@ -1,98 +1,10 @@
 @layer components {
 
-.install-code {
-    flex: 1;
-    min-width: 0;
-    overflow-x: auto;
-    padding: var(--sp-space-2) var(--sp-space-3);
-    background: var(--sp-bg-surface-raised);
-    border: 1px solid var(--sp-border-subtle);
-    border-radius: var(--sp-radius-sm);
-    font-family: var(--sp-font-mono);
-    font-size: var(--sp-text-xs);
-    color: var(--sp-text-primary);
-    white-space: nowrap;
-}
-
 .stats-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: var(--sp-space-3);
     margin-bottom: var(--sp-space-5);
-}
-
-.sparkline-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-space-1);
-    padding: var(--sp-space-4);
-    background: var(--sp-bg-surface);
-    border: 1px solid var(--sp-border-subtle);
-    border-radius: 0 0.375rem 1.125rem 0;
-    text-decoration: none;
-    color: inherit;
-}
-
-a.sparkline-card:hover { border-color: var(--sp-border-strong); }
-
-.sparkline-card--danger {
-    border-color: color-mix(in oklch, var(--sp-danger) 45%, var(--sp-border-subtle));
-    background: color-mix(in oklch, var(--sp-danger) 4%, var(--sp-bg-surface));
-}
-
-.sparkline-card--success {
-    border-color: color-mix(in oklch, var(--sp-success) 45%, var(--sp-border-subtle));
-    background: color-mix(in oklch, var(--sp-success) 4%, var(--sp-bg-surface));
-}
-
-.sparkline-card__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sp-space-2);
-}
-
-.sparkline-card__label {
-    font-size: var(--sp-text-xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--sp-text-tertiary);
-}
-
-.sparkline-card__delta {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    font-size: var(--sp-text-xs);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    color: var(--sp-text-tertiary);
-}
-
-.sparkline-card__delta--good { color: var(--sp-success); }
-
-.sparkline-card__delta--bad { color: var(--sp-danger); }
-
-.sparkline-card__delta--neutral { color: var(--sp-text-tertiary); }
-
-.sparkline-card__delta-arrow { line-height: 1; }
-
-.sparkline-card__value {
-    font-size: var(--sp-text-2xl);
-    font-weight: 700;
-    color: var(--sp-text-primary);
-    font-variant-numeric: tabular-nums;
-}
-
-.sparkline-card__subtitle {
-    font-size: var(--sp-text-xs);
-    color: var(--sp-text-tertiary);
-}
-
-.sparkline-card__chart {
-    margin-top: var(--sp-space-2);
-    height: 40px;
 }
 
 .global-limit-warnings {
@@ -103,60 +15,5 @@ a.sparkline-card:hover { border-color: var(--sp-border-strong); }
 }
 
 .global-limit-warnings:empty { display: none; }
-
-.transcript-turn {
-    display: block;
-    padding: var(--sp-space-3) 0;
-    border-bottom: 1px dashed var(--sp-border-subtle);
-}
-
-.transcript-turn:last-child { border-bottom: none; }
-
-.transcript-turn__meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--sp-space-2);
-    font-size: var(--sp-text-xs);
-    color: var(--sp-text-tertiary);
-    font-variant-numeric: tabular-nums;
-}
-
-.transcript-turn__role-pill {
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 600;
-    color: var(--sp-text-secondary);
-}
-
-.transcript-turn__role-pill--user { color: var(--sp-accent); }
-
-.transcript-turn__role-pill--assistant { color: var(--sp-section-users); }
-
-.transcript-turn__role-pill--tool { color: var(--sp-warning); }
-
-.transcript-turn__ordinal { color: var(--sp-text-tertiary); }
-
-.transcript-turn__model { color: var(--sp-text-secondary); }
-
-.transcript-turn__ts { color: var(--sp-text-tertiary); }
-
-.transcript-turn__latency { color: var(--sp-text-tertiary); }
-
-.transcript-turn__anomaly { color: var(--sp-warning); }
-
-.transcript-turn__spacer { flex: 1; }
-
-.transcript-turn__chain-link {
-    color: var(--sp-accent);
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.transcript-turn__chain-link:hover { text-decoration: underline; }
-
-.transcript-turn__bubble {
-    margin-top: var(--sp-space-2);
-}
 
 }

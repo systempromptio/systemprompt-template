@@ -82,17 +82,6 @@
 .rank-ring-tier-9, .rank-ring-tier-obsidian { stroke: var(--sp-rank-tier-9-color); }
 .rank-ring-tier-10, .rank-ring-tier-legendary { stroke: var(--sp-rank-tier-10-color); }
 
-.rank-ring-1  { stroke: var(--sp-rank-1-color); }
-.rank-ring-2  { stroke: var(--sp-rank-2-color); }
-.rank-ring-3  { stroke: var(--sp-rank-3-color); }
-.rank-ring-4  { stroke: var(--sp-rank-4-color); }
-.rank-ring-5  { stroke: var(--sp-rank-5-color); }
-.rank-ring-6  { stroke: var(--sp-rank-6-color); }
-.rank-ring-7  { stroke: var(--sp-rank-7-color); }
-.rank-ring-8  { stroke: var(--sp-rank-8-color); }
-.rank-ring-9  { stroke: var(--sp-rank-9-color); }
-.rank-ring-10 { stroke: var(--sp-rank-10-color); }
-
 .user-widget__level {
     position: absolute;
     bottom: -1px;

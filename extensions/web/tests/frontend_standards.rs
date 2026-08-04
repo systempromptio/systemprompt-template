@@ -252,10 +252,7 @@ fn check_css_line(v: &mut Violations, rel: &str, line_no: usize, raw: &str) {
         "transition-duration",
         "scroll-behavior",
     ];
-    if raw.contains("!important")
-        && !IMPORTANT_OK.iter().any(|ok| raw.contains(ok))
-        && !rel.contains("blog-print.css")
-    {
+    if raw.contains("!important") && !IMPORTANT_OK.iter().any(|ok| raw.contains(ok)) {
         v.report(rel, line_no, "important", raw);
     }
     if raw.contains("@import") {
