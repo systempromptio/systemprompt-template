@@ -1,9 +1,1 @@
 # Assets exempt from scripts/check-asset-reachability.py, one repo-relative path per line.
-
-# Served over raw.githubusercontent.com to the one-click deploy catalogues
-# (deploy/zeabur/template.yaml, deploy/portainer/templates.json,
-# deploy/casaos/docker-compose.yml). The gate only scans templates, JS and
-# Rust, so it cannot see a reference that lives in a deploy manifest as an
-# absolute GitHub URL. Deleting these 404s the published catalogue icons.
-storage/files/images/icon-256.png
-storage/files/images/icon.svg

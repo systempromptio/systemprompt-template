@@ -31,7 +31,7 @@ SIBLING_REPO="${SIBLING_REPO:-}"
 
 roots_for() {
     local base="$1"
-    for d in extensions src tests; do
+    for d in extensions src tests bridge/src; do
         [ -d "$base/$d" ] && printf '%s\n' "$base/$d"
     done
 }
@@ -56,6 +56,20 @@ done < <(find "$REPO_DIR" -name '*.rs' -exec awk '
     skip && /^[[:space:]]*(\/\/|#!?\[)/ { next }
     { skip = 0 }
 ' {} + 2>/dev/null | sort -u)
+
+# Call sites are matched by bare name, so two repository functions sharing a
+# name also share liveness — one live one hides a dead one. Distinct names are
+# therefore a precondition of the dead-code check, not a style preference.
+# Methods (`self` receiver) are excluded: same-named methods on different
+# types are idiomatic and resolve through their receiver.
+DUPES=$(grep -rhoE '^\s*pub (async )?fn [a-z_0-9]+\([^)]*' "$REPO_DIR" --include='*.rs' 2>/dev/null \
+        | grep -vE '\(\s*&?\s*(mut\s+)?self\b' | sed -E 's/.*fn ([a-z_0-9]+)\(.*/\1/' | sort | uniq -d)
+if [ -n "$DUPES" ]; then
+    echo "check-dead-repository-code: duplicate public function name(s) in $REPO_DIR."
+    echo "Same-named functions mask each other's liveness; rename for distinctness:"
+    printf '    %s\n' $DUPES
+    exit 1
+fi
 
 DEAD=()
 while IFS= read -r fn; do

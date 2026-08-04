@@ -148,9 +148,16 @@ def dead_images(corpus: str) -> list:
     if not IMG_DIR.exists():
         return []
     extra = []
-    for base, pattern in [("services", "*.yaml"), ("services", "*.md"), ("storage/files/css", "*.css")]:
+    for base, pattern in [
+        ("services", "*.yaml"),
+        ("services", "*.md"),
+        ("storage/files/css", "*.css"),
+        ("deploy", "*"),
+        (".", "*.md"),
+    ]:
         for f in (ROOT / base).rglob(pattern):
-            extra.append(read(f))
+            if f.is_file():
+                extra.append(read(f))
     full = corpus + "\n".join(extra)
     return [f for f in sorted(IMG_DIR.rglob("*")) if f.is_file() and f.name not in full]
 
