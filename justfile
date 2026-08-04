@@ -291,6 +291,8 @@ _lint-gates-uncoordinated:
         check-dead-repository-code.sh
         check-file-headers.sh
         check-file-size.sh
+        check-asset-reachability.sh
+        check-workspace-deps.sh
         validate-services.sh
     )
     logdir=$(mktemp -d)
