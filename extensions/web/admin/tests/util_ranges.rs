@@ -1,5 +1,13 @@
 //! Time-range window resolution for the audit and analytics pages.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::needless_pass_by_value,
+    clippy::redundant_clone,
+    reason = "test code: panics are the assertion mechanism and clones keep fixtures readable"
+)]
+
 use chrono::{Duration, TimeZone, Utc};
 use systemprompt_web_admin::util::time_range::{
     TimeRangePreset, TimeRangeQuery, parse_time_range, preset_to_range,

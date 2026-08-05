@@ -50,8 +50,8 @@ systemprompt-web-site = { path = "../extensions/web/site" }
 # The contract crate additionally enables `full`, which links the core
 # extension crates whose `register_extension!` registrations carry the
 # migrations the admin schema needs.
-systemprompt = { version = "0.28.0", default-features = false, features = ["core", "database"] }
-systemprompt-security = { version = "0.28.0" }
+systemprompt = { version = "0.29.0", default-features = false, features = ["core", "database"] }
+systemprompt-security = { version = "0.29.0" }
 
 # HTTP contract harness — drives the real admin router in-process.
 axum = "0.8"
@@ -117,3 +117,4 @@ jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 # systemprompt-cli = { path = "../../systemprompt-core/crates/entry/cli" }
 # systemprompt-slack = { path = "../../systemprompt-core/crates/domain/slack" }
 # systemprompt-teams = { path = "../../systemprompt-core/crates/domain/teams" }
+# systemprompt-evaluation = { path = "../../systemprompt-core/crates/domain/evaluation" }

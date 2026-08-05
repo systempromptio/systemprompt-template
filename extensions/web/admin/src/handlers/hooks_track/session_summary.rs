@@ -6,7 +6,7 @@ use systemprompt::identifiers::{SessionId, UserId};
 use crate::repositories::dashboard::hooks_track;
 
 #[derive(Debug)]
-pub(crate) struct GeneratedSessionSummary {
+pub struct GeneratedSessionSummary {
     pub summary: String,
     pub tags: String,
 }

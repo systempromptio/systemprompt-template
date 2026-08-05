@@ -43,7 +43,12 @@ pub use routes::admin_ssr_router;
 pub use types::{CreateUserRequest, MarketplaceContext, UserContext, UserSummary, UserUsageEvent};
 
 pub mod test_support {
-    pub use crate::handlers::hooks_track::ai_summary_types::SessionAnalysis;
+    pub use crate::handlers::hooks_track::ai_context::build_full_context;
+    pub use crate::handlers::hooks_track::ai_summary::build_request_context;
+    pub use crate::handlers::hooks_track::ai_summary_types::{
+        SessionAnalysis, session_analysis_schema, validate_analysis,
+    };
+    pub use crate::handlers::hooks_track::session_summary::GeneratedSessionSummary;
     pub use crate::handlers::resolve_principal;
 }
 

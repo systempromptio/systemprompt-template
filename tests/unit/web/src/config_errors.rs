@@ -10,7 +10,7 @@ use systemprompt_web_shared::config_errors::ExtensionConfigErrors;
 fn a_fresh_collection_is_empty_and_passes_its_value_through() {
     let errors = ExtensionConfigErrors::new("blog");
     assert!(errors.is_empty());
-    assert_eq!(errors.into_result(42_u32).unwrap(), 42);
+    assert_eq!(errors.into_result(42u32).unwrap(), 42);
 }
 
 #[test]

@@ -58,7 +58,7 @@ async fn main() -> Result<()> {
     .context("Failed to initialize SystempromptServer")?;
     let router = systemprompt::mcp::create_router(
         server,
-        ctx.db_pool(),
+        Arc::clone(ctx.mcp_session_repository()),
         systemprompt::mcp::McpHttpConfig::default(),
     );
     let addr = format!("0.0.0.0:{port}");

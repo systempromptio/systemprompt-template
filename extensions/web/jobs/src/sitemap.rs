@@ -50,7 +50,10 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         .ok_or(JobError::MissingContext("AppPaths"))?
         .as_ref();
 
-    generate_sitemap(DbPool::clone(db_pool), paths).await?;
+    let content_repo = systemprompt::content::ContentRepository::new(db_pool)
+        .map_err(|e| JobError::other(format!("ContentRepository error: {e}")))?;
+
+    generate_sitemap(content_repo, paths).await?;
 
     let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 

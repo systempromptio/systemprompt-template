@@ -135,7 +135,7 @@ pub(crate) async fn gather_analysis_context(
     parts.join("\n\n")
 }
 
-pub(crate) fn build_full_context(
+pub fn build_full_context(
     analysis_context: &str,
     events_ctx: Option<&session_summary::GeneratedSessionSummary>,
 ) -> String {

@@ -1,3 +1,11 @@
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::needless_pass_by_value,
+    clippy::redundant_clone,
+    reason = "test code: panics are the assertion mechanism and clones keep fixtures readable"
+)]
+
 use systemprompt_web_admin::repositories::secrets::secret_crypto::{
     SecretCryptoError, decrypt, encrypt, generate_dek, generate_nonce,
 };

@@ -3,6 +3,9 @@
 
 #![allow(
     clippy::expect_used,
+    clippy::panic,
+    clippy::needless_pass_by_value,
+    clippy::redundant_clone,
     reason = "test fixtures assert by panicking, exactly as the tests/ workspace allows"
 )]
 
@@ -81,10 +84,7 @@ fn owned_by(artifact: &str, plugin: &str) -> (LibraryArtifactId, BTreeSet<Plugin
 
 fn candidate() -> MarketplaceCandidate {
     MarketplaceCandidate::new(
-        vec![
-            plugin_entry("demo-admin"),
-            plugin_entry("demo-commons"),
-        ],
+        vec![plugin_entry("demo-admin"), plugin_entry("demo-commons")],
         vec![skill_entry("skill-a"), skill_entry("skill-b")],
         vec![agent_entry("agent-a")],
         vec![hook_entry("hook-a")],

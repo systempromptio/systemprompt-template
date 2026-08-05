@@ -1,6 +1,14 @@
 //! The activity-feed constructors: the description text and metadata each
 //! event lands in `user_activity` with.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::needless_pass_by_value,
+    clippy::redundant_clone,
+    reason = "test code: panics are the assertion mechanism and clones keep fixtures readable"
+)]
+
 use systemprompt::identifiers::{SessionId, UserId};
 use systemprompt_web_admin::activity::enums::entity_label;
 use systemprompt_web_admin::activity::{

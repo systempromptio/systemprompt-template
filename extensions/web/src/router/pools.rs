@@ -36,12 +36,14 @@ impl DbHandles {
 
 pub(crate) fn build_session_service(db: &DbHandles) -> Option<Arc<SessionCreationService>> {
     let dbpool = db.database();
-    let user = UserService::new(&dbpool)
-        .map_err(|e| tracing::error!(error = %e, "Failed to build user service"))
+    let user_repo = systemprompt::users::UserRepository::new(&dbpool)
+        .map_err(|e| tracing::error!(error = %e, "Failed to build user repository"))
         .ok()?;
-    let analytics = AnalyticsService::new(&dbpool, None, None)
-        .map_err(|e| tracing::error!(error = %e, "Failed to build analytics service"))
+    let user = UserService::new(Arc::new(user_repo));
+    let analytics_repos = systemprompt::analytics::repository::AnalyticsRepositories::new(&dbpool)
+        .map_err(|e| tracing::error!(error = %e, "Failed to build analytics repositories"))
         .ok()?;
+    let analytics = AnalyticsService::new(None, None, &analytics_repos);
     Some(Arc::new(SessionCreationService::new(
         Arc::new(analytics),
         Arc::new(user),

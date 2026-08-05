@@ -62,6 +62,10 @@ mod departments_repository;
 #[cfg(test)]
 mod departments_rollups;
 #[cfg(test)]
+mod evals_repositories;
+#[cfg(test)]
+mod evals_schema_ownership;
+#[cfg(test)]
 mod fixtures;
 #[cfg(test)]
 mod governance_counts;

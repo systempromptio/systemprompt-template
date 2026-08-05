@@ -255,7 +255,7 @@ async fn insert_session_analysis_stores_the_json_columns() {
     let user = analysis_user(&db.pool, "json").await;
     let session = unique("session");
     let mut analysis = minimal();
-    analysis.skill_scores = Some(HashMap::from([("sql".to_owned(), 7_i16)]));
+    analysis.skill_scores = Some(HashMap::from([("sql".to_owned(), 7i16)]));
     analysis.goal_outcome_map = Some(vec![GoalOutcomeMapping {
         goal: "Ship".to_owned(),
         outcome: "Shipped".to_owned(),

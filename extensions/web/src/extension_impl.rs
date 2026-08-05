@@ -93,7 +93,16 @@ impl Extension for WebExtension {
     }
 
     fn cross_extension_tables(&self) -> Vec<&'static str> {
-        vec!["markdown_content", "users"]
+        vec![
+            "markdown_content",
+            "users",
+            "eval_runs",
+            "eval_cases",
+            "eval_results",
+            "eval_pairs",
+            "eval_judge_calls",
+            "eval_rubrics",
+        ]
     }
 
     fn router(&self, ctx: &dyn ExtensionContext) -> Option<ExtensionRouter> {

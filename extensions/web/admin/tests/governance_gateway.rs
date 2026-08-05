@@ -1,3 +1,11 @@
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::needless_pass_by_value,
+    clippy::redundant_clone,
+    reason = "test code: panics are the assertion mechanism and clones keep fixtures readable"
+)]
+
 use systemprompt_web_admin::repositories::config::gateway::{
     create_route, ensure_route_ids, find_matching_route, find_matching_route_index,
     find_route_index_by_id, get_gateway_config, glob_match, reorder_routes, slugify_pattern,

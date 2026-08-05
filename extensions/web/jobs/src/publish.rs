@@ -109,7 +109,15 @@ impl PublishPipelineJob {
         db_pool: &DbPool,
         stats: &mut PipelineStats,
     ) {
-        match prerender_pages(Arc::clone(db_pool), paths).await {
+        let content_repo = match systemprompt::content::ContentRepository::new(db_pool) {
+            Ok(repo) => repo,
+            Err(e) => {
+                tracing::error!(error = %e, "Content repository init failed");
+                stats.record_failure();
+                return;
+            },
+        };
+        match prerender_pages(Arc::clone(db_pool), content_repo, paths).await {
             Ok(results) => {
                 tracing::debug!(page_count = results.len(), "Page prerendering completed");
                 stats.record_success();
@@ -148,7 +156,15 @@ impl PublishPipelineJob {
     }
 
     async fn run_feed(&self, paths: &AppPaths, db_pool: &DbPool, stats: &mut PipelineStats) {
-        match generate_feed(Arc::clone(db_pool), paths).await {
+        let content_repo = match systemprompt::content::ContentRepository::new(db_pool) {
+            Ok(repo) => repo,
+            Err(e) => {
+                tracing::error!(error = %e, "Content repository init failed");
+                stats.record_failure();
+                return;
+            },
+        };
+        match generate_feed(content_repo, paths).await {
             Ok(()) => {
                 tracing::debug!("RSS feed generation completed");
                 stats.record_success();

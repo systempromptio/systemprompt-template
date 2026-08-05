@@ -60,7 +60,7 @@ impl SessionAnalysis {
 // "type"/"properties"/ "enum" descriptors) passed to the AI provider's tool
 // schema, not a response body; its shape is schema metadata, not a typed DTO we
 // control end-to-end.
-pub(crate) fn session_analysis_schema() -> serde_json::Value {
+pub fn session_analysis_schema() -> serde_json::Value {
     serde_json::json!({
         "type": "object",
         "properties": {
@@ -135,7 +135,7 @@ pub(crate) fn session_analysis_schema() -> serde_json::Value {
     })
 }
 
-pub(crate) fn validate_analysis(mut analysis: SessionAnalysis) -> SessionAnalysis {
+pub fn validate_analysis(mut analysis: SessionAnalysis) -> SessionAnalysis {
     analysis.quality_score = analysis.quality_score.clamp(1, 5);
 
     if !["yes", "partial", "no"].contains(&analysis.goal_achieved.as_str()) {

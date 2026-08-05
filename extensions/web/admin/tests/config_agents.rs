@@ -2,6 +2,9 @@
 
 #![allow(
     clippy::expect_used,
+    clippy::panic,
+    clippy::needless_pass_by_value,
+    clippy::redundant_clone,
     reason = "test fixtures assert by panicking, exactly as the tests/ workspace allows"
 )]
 

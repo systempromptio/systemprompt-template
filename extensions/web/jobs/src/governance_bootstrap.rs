@@ -83,7 +83,9 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         .await
         .map_err(JobError::from)?;
 
-    let policy = systemprompt::ai::load_gateway_policies_from_yaml(db_pool, &services_path)
+    let policy_repo = systemprompt::ai::repository::AiGatewayPolicyRepository::new(db_pool)
+        .map_err(|e| JobError::from(MarketplaceError::Internal(e.to_string())))?;
+    let policy = systemprompt::ai::load_gateway_policies_from_yaml(&policy_repo, &services_path)
         .await
         .map_err(|e| JobError::from(MarketplaceError::Internal(e.to_string())))?;
 

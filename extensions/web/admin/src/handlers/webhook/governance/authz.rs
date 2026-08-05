@@ -150,6 +150,14 @@ async fn audit_decision(
         "rules": rules,
     });
     let actor = Actor::user(req.user_id.clone());
+    // Why: enforcement sites without an explicit context still need one the
+    // session's other rows join to; deriving keeps them in a single context.
+    let context_id = req.context_id.clone().unwrap_or_else(|| {
+        req.session_id.as_ref().map_or_else(
+            systemprompt::identifiers::ContextId::legacy,
+            systemprompt::identifiers::ContextId::derived_from_session,
+        )
+    });
     let record = GovernanceDecisionRecord {
         id: &id,
         actor: &actor,
@@ -172,10 +180,7 @@ async fn audit_decision(
         evaluated_rules: &evaluated,
         plugin_id: None,
         act_chain: &req.act_chain,
-        context_id: req
-            .context_id
-            .as_ref()
-            .map(systemprompt::identifiers::ContextId::as_str),
+        context_id: context_id.as_str(),
         task_id: req
             .task_id
             .as_ref()

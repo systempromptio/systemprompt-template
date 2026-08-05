@@ -121,7 +121,7 @@ RULES:
 - recommendations must be null or genuinely useful. Never say \"add tests\" or \"improve documentation\"
 - improvement_hints must be specific to THIS session, referencing actual prompts or patterns. Never give generic advice. null if quality_score is 5";
 
-pub(crate) fn build_request_context(
+pub fn build_request_context(
     user_id: &UserId,
     session_id: &SessionId,
     jwt_token: &str,
@@ -129,7 +129,7 @@ pub(crate) fn build_request_context(
     RequestContext::new(
         SessionId::new(session_id.as_str()),
         TraceId::new(uuid::Uuid::new_v4().to_string()),
-        ContextId::new(""),
+        ContextId::derived_from_session(session_id),
         AgentName::new("hook-summary"),
     )
     .with_user(AuthenticatedUser::new(

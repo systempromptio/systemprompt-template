@@ -3,6 +3,14 @@
 //! Every one of these formats a number, a date, or a decision that an operator
 //! reads off a governance page, so the exact output string is the contract.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::needless_pass_by_value,
+    clippy::redundant_clone,
+    reason = "test code: panics are the assertion mechanism and clones keep fixtures readable"
+)]
+
 use handlebars::Handlebars;
 use systemprompt_web_admin::templates::helpers::register_helpers;
 
@@ -32,7 +40,7 @@ fn format_number_abbreviates_by_magnitude() {
         (serde_json::json!(12_345), "12,345"),
         (serde_json::json!(999_999), "999,999"),
         (serde_json::json!(1_500_000), "1.5M"),
-        (serde_json::json!(2_000_000_000_i64), "2.0B"),
+        (serde_json::json!(2_000_000_000i64), "2.0B"),
         (serde_json::json!(-12_345), "-12,345"),
         (serde_json::json!(-1_500_000), "-1.5M"),
     ];
@@ -63,10 +71,10 @@ fn format_usd_picks_precision_from_magnitude() {
         (serde_json::json!(0), "$0"),
         (serde_json::json!(1_500), "$0.00150"),
         (serde_json::json!(50_000), "$0.050"),
-        (serde_json::json!(2_500_000_i64), "$2.50"),
-        (serde_json::json!(250_000_000_i64), "$250"),
-        (serde_json::json!(-2_500_000_i64), "-$2.50"),
-        (serde_json::json!(-250_000_000_i64), "-$250"),
+        (serde_json::json!(2_500_000i64), "$2.50"),
+        (serde_json::json!(250_000_000i64), "$250"),
+        (serde_json::json!(-2_500_000i64), "-$2.50"),
+        (serde_json::json!(-250_000_000i64), "-$250"),
     ];
     for (input, expected) in cases {
         assert_eq!(
