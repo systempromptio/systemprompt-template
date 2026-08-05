@@ -39,8 +39,14 @@ fn session_service(pool: &Arc<PgPool>) -> Arc<SessionCreationService> {
         Arc::clone(pool),
         Some(Arc::clone(pool)),
     ));
-    let user = UserService::new(&db).expect("build the user service");
-    let analytics = AnalyticsService::new(&db, None, None).expect("build the analytics service");
+    let user_repository =
+        systemprompt::users::UserRepository::new(&db).expect("build the user repository");
+    let user = UserService::new(Arc::new(user_repository));
+    let analytics_repositories = systemprompt::analytics::repository::AnalyticsRepositories::new(
+        &db,
+    )
+    .expect("build the analytics repositories");
+    let analytics = AnalyticsService::new(None, None, &analytics_repositories);
     Arc::new(SessionCreationService::new(
         Arc::new(analytics),
         Arc::new(user),
