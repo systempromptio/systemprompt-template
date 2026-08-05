@@ -240,6 +240,15 @@ async fn the_detector_records_a_request_that_should_have_been_denied() {
     let user = seed::insert_user(&db.pool, &id, &format!("{id}@contract.test")).await;
     let session = seed::unique("detect-session");
     seed::insert_session(&db.pool, &session, &user).await;
+    let context = uuid::Uuid::new_v4().to_string();
+    seed::insert_context(
+        &db.pool,
+        &context,
+        &user,
+        Some(&session),
+        "Contract conversation",
+    )
+    .await;
 
     // Grant the route first, so the recorded request was legitimate. Without
     // this half the case cannot tell "the detector works" from "the detector
@@ -254,7 +263,7 @@ async fn the_detector_records_a_request_that_should_have_been_denied() {
             user_id: &user,
             session_id: Some(&session),
             trace_id: None,
-            context_id: None,
+            context_id: &context,
             status: "completed",
         },
     )
@@ -325,6 +334,15 @@ async fn the_detector_skips_requests_outside_the_window_and_off_the_catalog() {
     let user = seed::insert_user(&db.pool, &id, &format!("{id}@contract.test")).await;
     let session = seed::unique("detect-window-session");
     seed::insert_session(&db.pool, &session, &user).await;
+    let context = uuid::Uuid::new_v4().to_string();
+    seed::insert_context(
+        &db.pool,
+        &context,
+        &user,
+        Some(&session),
+        "Contract conversation",
+    )
+    .await;
     seed::insert_request(
         &db.pool,
         &seed::RequestSpec {
@@ -332,7 +350,7 @@ async fn the_detector_skips_requests_outside_the_window_and_off_the_catalog() {
             user_id: &user,
             session_id: Some(&session),
             trace_id: None,
-            context_id: None,
+            context_id: &context,
             status: "completed",
         },
     )
@@ -395,6 +413,15 @@ async fn already_rejected_requests_are_not_swept_again() {
     let user = seed::insert_user(&db.pool, &id, &format!("{id}@contract.test")).await;
     let session = seed::unique("detect-rejected-session");
     seed::insert_session(&db.pool, &session, &user).await;
+    let context = uuid::Uuid::new_v4().to_string();
+    seed::insert_context(
+        &db.pool,
+        &context,
+        &user,
+        Some(&session),
+        "Contract conversation",
+    )
+    .await;
 
     // A request live enforcement already refused. Re-flagging it would double
     // count the same incident: the point of the detector is to catch what
@@ -406,7 +433,7 @@ async fn already_rejected_requests_are_not_swept_again() {
             user_id: &user,
             session_id: Some(&session),
             trace_id: None,
-            context_id: None,
+            context_id: &context,
             status: "rejected",
         },
     )

@@ -66,7 +66,7 @@ async fn seed_trail(pool: &PgPool) -> Trail {
             user_id: &user_id,
             session_id: Some(&session_id),
             trace_id: Some(&trace_id),
-            context_id: Some(&context_id),
+            context_id: &context_id,
             status: "completed",
         },
     )
@@ -80,7 +80,7 @@ async fn seed_trail(pool: &PgPool) -> Trail {
             user_id: &user_id,
             session_id: Some(&session_id),
             trace_id: Some(&trace_id),
-            context_id: Some(&context_id),
+            context_id: &context_id,
             status: "error",
         },
     )
@@ -92,6 +92,7 @@ async fn seed_trail(pool: &PgPool) -> Trail {
             id: seed::unique("trail-allow"),
             user_id: &user_id,
             session_id: &session_id,
+            context_id: &context_id,
             decision: "allow",
             policy: "scope_check",
             tool_name: "Read",
@@ -104,6 +105,7 @@ async fn seed_trail(pool: &PgPool) -> Trail {
             id: seed::unique("trail-deny"),
             user_id: &user_id,
             session_id: &session_id,
+            context_id: &context_id,
             decision: "deny",
             policy: "blocklist",
             tool_name: "Bash",

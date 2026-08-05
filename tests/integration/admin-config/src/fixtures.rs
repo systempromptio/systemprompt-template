@@ -74,10 +74,10 @@ impl<'a> RequestSeed<'a> {
 pub async fn insert_request(pool: &PgPool, seed: &RequestSeed<'_>) {
     sqlx::query(
         "INSERT INTO ai_requests
-            (id, request_id, user_id, provider, model, input_tokens, output_tokens,
+            (id, request_id, user_id, context_id, provider, model, input_tokens, output_tokens,
              tokens_used, cache_read_tokens, cost_microdollars, status,
              actor_kind, actor_id, created_at, updated_at)
-         VALUES ($1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'user', $2, $11, $11)",
+         VALUES ($1, $1, $2, md5($2)::uuid, $3, $4, $5, $6, $7, $8, $9, $10, 'user', $2, $11, $11)",
     )
     .bind(seed.id)
     .bind(seed.user_id)

@@ -57,7 +57,6 @@ dependencies = [
  "systemprompt",
  "systemprompt-web-admin",
  "systemprompt-web-extension",
- "systemprompt-web-shared",
  "tokio",
  "url",
  "uuid",
@@ -6506,7 +6505,6 @@ name = "web-unit-tests"
 version = "0.0.0"
 dependencies = [
  "chrono",
- "clap",
  "serde_json",
  "serde_yaml_ng",
  "systemprompt",

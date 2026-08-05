@@ -81,8 +81,8 @@
       ]
     },
     "nullable": [
-      false,
-      false,
+      true,
+      true,
       null,
       null,
       null,

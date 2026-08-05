@@ -1,7 +1,7 @@
 //! KPI strip + distinct-model lookup for the contexts list page.
 
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{ContextId, UserId};
 
 use super::{ContextListFilter, free_text_pattern};
 
@@ -98,13 +98,15 @@ pub async fn get_context_list_kpis(
 }
 
 pub async fn list_distinct_models(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
+    let legacy = ContextId::legacy();
     let rows = sqlx::query!(
         r#"
         SELECT DISTINCT model AS "model!"
         FROM ai_requests
-        WHERE context_id IS NOT NULL
+        WHERE context_id <> $1
         ORDER BY model
-        "#
+        "#,
+        legacy.as_str()
     )
     .fetch_all(pool)
     .await?;

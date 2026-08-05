@@ -194,6 +194,8 @@ pub async fn insert_session(pool: &PgPool, session_id: &str, user_id: &UserId) {
         .expect("insert user session");
 }
 
+pub const LEGACY_CONTEXT_ID: &str = "00000000-0000-0000-0000-4c4547414359";
+
 pub struct RequestSpec<'a> {
     // Owned so a caller may pass `&unique("req")` directly: a borrowed id would
     // dangle the moment the `let` binding holding the spec ended.
@@ -219,7 +221,9 @@ impl<'a> RequestSpec<'a> {
             user_id,
             session_id: None,
             trace_id: None,
-            context_id: None,
+            // ai_requests.context_id is NOT NULL; this is core's own sentinel
+            // for a row that belongs to no known context.
+            context_id: Some(LEGACY_CONTEXT_ID),
             provider: "anthropic",
             model: "claude-test-model",
             status: "completed",
@@ -294,9 +298,9 @@ impl<'a> DecisionSpec<'a> {
 pub async fn insert_decision(pool: &PgPool, spec: &DecisionSpec<'_>) {
     sqlx::query(
         "INSERT INTO governance_decisions (
-             id, user_id, session_id, tool_name, agent_id, agent_scope,
+             id, user_id, session_id, context_id, tool_name, agent_id, agent_scope,
              decision, policy, reason, actor_kind, actor_id, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'user', $2, $10)",
+         VALUES ($1, $2, $3, $11, $4, $5, $6, $7, $8, $9, 'user', $2, $10)",
     )
     .bind(&spec.id)
     .bind(spec.user_id.as_str())
@@ -308,6 +312,7 @@ pub async fn insert_decision(pool: &PgPool, spec: &DecisionSpec<'_>) {
     .bind(spec.policy)
     .bind(spec.reason)
     .bind(spec.created_at)
+    .bind(LEGACY_CONTEXT_ID)
     .execute(pool)
     .await
     .expect("insert governance decision");

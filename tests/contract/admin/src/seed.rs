@@ -171,7 +171,7 @@ pub struct RequestSpec<'a> {
     pub user_id: &'a UserId,
     pub session_id: Option<&'a str>,
     pub trace_id: Option<&'a str>,
-    pub context_id: Option<&'a str>,
+    pub context_id: &'a str,
     pub status: &'a str,
 }
 
@@ -202,6 +202,7 @@ pub struct DecisionSpec<'a> {
     pub id: String,
     pub user_id: &'a UserId,
     pub session_id: &'a str,
+    pub context_id: &'a str,
     pub decision: &'a str,
     pub policy: &'a str,
     pub tool_name: &'a str,
@@ -211,8 +212,8 @@ pub async fn insert_decision(pool: &PgPool, spec: &DecisionSpec<'_>) {
     sqlx::query(
         "INSERT INTO governance_decisions (
              id, user_id, session_id, tool_name, decision, policy, reason,
-             actor_kind, actor_id, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, 'contract fixture', 'user', $2, NOW())",
+             actor_kind, actor_id, context_id, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, 'contract fixture', 'user', $2, $7, NOW())",
     )
     .bind(&spec.id)
     .bind(spec.user_id.as_str())
@@ -220,6 +221,7 @@ pub async fn insert_decision(pool: &PgPool, spec: &DecisionSpec<'_>) {
     .bind(spec.tool_name)
     .bind(spec.decision)
     .bind(spec.policy)
+    .bind(spec.context_id)
     .execute(pool)
     .await
     .expect("insert governance decision");
