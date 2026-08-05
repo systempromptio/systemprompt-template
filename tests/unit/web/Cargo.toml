@@ -18,4 +18,3 @@ serde_json = { workspace = true }
 chrono = { workspace = true }
 tempfile = { workspace = true }
 serde_yaml = { workspace = true }
-clap = { workspace = true }
