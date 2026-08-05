@@ -3,8 +3,10 @@
 //! Every CSS and JS file the extension trait advertises is enumerated here;
 //! sources live under `storage/files/`, never alongside the Rust code.
 
-mod css;
-mod js_services;
+#[doc(hidden)]
+pub mod css;
+#[doc(hidden)]
+pub mod js_services;
 
 use systemprompt::extension::AssetDefinition;
 

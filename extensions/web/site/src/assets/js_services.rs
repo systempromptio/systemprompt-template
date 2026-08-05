@@ -15,7 +15,7 @@ macro_rules! site_js {
     };
 }
 
-pub(super) fn public_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
+pub fn public_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
     let site = storage_js.join("site");
     vec![
         AssetDefinition::js(storage_js.join("analytics.js"), "js/analytics.js"),
@@ -40,7 +40,7 @@ pub(super) fn public_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
     ]
 }
 
-pub(super) fn service_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
+pub fn service_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
     let p = storage_js.join("services");
     let mut v = service_core_js(&p);
     v.extend(service_webauthn_js(&p));

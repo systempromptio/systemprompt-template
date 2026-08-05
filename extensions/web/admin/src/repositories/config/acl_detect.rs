@@ -57,10 +57,14 @@ pub async fn insert_gateway_acl_decision(
     decision: GatewayAclDecision<'_>,
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
+        // Why: the accountable party is the request's user; the actor is this
+        // after-the-fact scan, which is a system surface rather than a person.
         "INSERT INTO governance_decisions \
          (id, user_id, session_id, tool_name, agent_id, agent_scope, \
-          decision, policy, reason, evaluated_rules, plugin_id) \
-         VALUES ($1, $2, $3, $4, NULL, $5, $6, 'gateway_acl', $7, $8, NULL)",
+          decision, policy, reason, evaluated_rules, plugin_id, \
+          actor_kind, actor_id) \
+         VALUES ($1, $2, $3, $4, NULL, $5, $6, 'gateway_acl', $7, $8, NULL, \
+                 'system', 'gateway_acl_detector')",
         decision.decision_id,
         decision.user_id,
         decision.session_id,

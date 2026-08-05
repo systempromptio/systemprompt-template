@@ -75,7 +75,8 @@ pub(crate) async fn generate_robots_txt(paths: &AppPaths) -> Result<(), JobError
     Ok(())
 }
 
-fn build_robots_txt_content(base_url: &str) -> Result<String, JobError> {
+#[doc(hidden)]
+pub fn build_robots_txt_content(base_url: &str) -> Result<String, JobError> {
     let mut content = String::new();
 
     writeln!(content, "User-agent: *")?;

@@ -1,4 +1,4 @@
-//! Pure plumbing for [`super::TemplateMarketplaceFilter`]: entity-ref mapping,
+//! Pure plumbing for `TemplateMarketplaceFilter`: entity-ref mapping,
 //! candidate id extraction, and keep-set application. None of this touches the
 //! database — it is the deterministic shape-shuffling around the access-control
 //! resolver, split out to keep the filter module focused on the query flow.
@@ -10,7 +10,7 @@ use systemprompt::identifiers::{
 use systemprompt::marketplace::MarketplaceCandidate;
 use systemprompt_security::authz::{EntityKind, EntityRef, ResolveParent};
 
-pub(crate) fn entity_ref_for(kind: EntityKind, id: &str) -> EntityRef {
+pub fn entity_ref_for(kind: EntityKind, id: &str) -> EntityRef {
     match kind {
         EntityKind::Plugin => EntityRef::Plugin(PluginId::new(id)),
         EntityKind::Skill => EntityRef::Skill(SkillId::new(id)),
@@ -26,7 +26,8 @@ pub(crate) fn entity_ref_for(kind: EntityKind, id: &str) -> EntityRef {
     }
 }
 
-pub(super) struct CandidateEntityIds {
+#[derive(Debug)]
+pub struct CandidateEntityIds {
     pub plugins: Vec<String>,
     pub skills: Vec<String>,
     pub agents: Vec<String>,
@@ -35,7 +36,7 @@ pub(super) struct CandidateEntityIds {
 }
 
 impl CandidateEntityIds {
-    pub(super) fn from_candidate(candidate: &MarketplaceCandidate) -> Self {
+    pub fn from_candidate(candidate: &MarketplaceCandidate) -> Self {
         Self {
             plugins: candidate.plugins.iter().map(|p| p.id.to_string()).collect(),
             skills: candidate.skills.iter().map(|s| s.id.to_string()).collect(),
@@ -50,9 +51,10 @@ impl CandidateEntityIds {
     }
 }
 
-pub(super) type KeepSet = std::collections::HashSet<String>;
+pub type KeepSet = std::collections::HashSet<String>;
 
-pub(super) struct KeepIdsQuery<'a> {
+#[derive(Debug)]
+pub struct KeepIdsQuery<'a> {
     pub user_id: &'a str,
     pub roles: &'a [String],
     pub kind: EntityKind,
@@ -60,7 +62,8 @@ pub(super) struct KeepIdsQuery<'a> {
     pub parents: &'a [ResolveParent<'a>],
 }
 
-pub(super) struct KeepSets {
+#[derive(Debug)]
+pub struct KeepSets {
     pub plugins: KeepSet,
     pub skills: KeepSet,
     pub agents: KeepSet,
@@ -68,10 +71,7 @@ pub(super) struct KeepSets {
     pub mcp: KeepSet,
 }
 
-pub(super) fn apply_keep_sets(
-    candidate: MarketplaceCandidate,
-    keep: &KeepSets,
-) -> MarketplaceCandidate {
+pub fn apply_keep_sets(candidate: MarketplaceCandidate, keep: &KeepSets) -> MarketplaceCandidate {
     MarketplaceCandidate {
         plugins: candidate
             .plugins

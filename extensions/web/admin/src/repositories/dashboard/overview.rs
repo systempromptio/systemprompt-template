@@ -133,6 +133,10 @@ pub async fn list_events(
         .filter(|s| !s.is_empty())
         .map(|s| format!("%{s}%"));
     let event_type = query.event_type.as_deref();
+    // Why: limit/offset arrive as raw i64 query params; Postgres rejects a
+    // negative LIMIT outright, turning ?limit=-1 into a 500.
+    let limit = query.limit.clamp(1, 500);
+    let offset = query.offset.max(0);
 
     let total = sqlx::query_scalar!(
         r#"SELECT COALESCE(COUNT(*), 0)::BIGINT AS "count!"
@@ -181,8 +185,8 @@ pub async fn list_events(
         LIMIT $3 OFFSET $4"#,
         search_pattern.as_deref(),
         event_type,
-        query.limit,
-        query.offset,
+        limit,
+        offset,
     )
     .fetch_all(pool)
     .await?;
@@ -190,7 +194,7 @@ pub async fn list_events(
     Ok(EventsResponse {
         events,
         total,
-        limit: query.limit,
-        offset: query.offset,
+        limit,
+        offset,
     })
 }

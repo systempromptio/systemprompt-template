@@ -23,7 +23,8 @@ pub use systemprompt_web_site::config_loader::branding_config;
 pub mod extension;
 mod extension_impl;
 mod router;
-mod schemas;
+#[doc(hidden)]
+pub mod schemas;
 
 pub use systemprompt_web_admin as admin;
 pub use systemprompt_web_content::{api, repository, services};

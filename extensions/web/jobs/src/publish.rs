@@ -19,18 +19,19 @@ use super::{
 use crate::error::JobError;
 use systemprompt_web_shared::error::MarketplaceError;
 
-#[derive(Default)]
-struct PipelineStats {
-    succeeded: u64,
-    failed: u64,
+#[doc(hidden)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct PipelineStats {
+    pub succeeded: u64,
+    pub failed: u64,
 }
 
 impl PipelineStats {
-    const fn record_success(&mut self) {
+    pub const fn record_success(&mut self) {
         self.succeeded += 1;
     }
 
-    const fn record_failure(&mut self) {
+    pub const fn record_failure(&mut self) {
         self.failed += 1;
     }
 }
@@ -56,8 +57,8 @@ impl PublishPipelineJob {
         }
     }
 
-    async fn run_bundle_admin_css(&self, stats: &mut PipelineStats) {
-        match BundleAdminCssJob::execute_bundle().await {
+    async fn run_bundle_admin_css(&self, paths: &AppPaths, stats: &mut PipelineStats) {
+        match BundleAdminCssJob::execute_bundle(paths).await {
             Ok(result) => {
                 tracing::debug!(
                     bundled = result.items_processed.unwrap_or(0),
@@ -248,7 +249,7 @@ impl PublishPipelineJob {
         let mut stats = PipelineStats::default();
 
         self.run_ingestion(ctx, &mut stats).await;
-        self.run_bundle_admin_css(&mut stats).await;
+        self.run_bundle_admin_css(paths, &mut stats).await;
         self.run_asset_copy(paths, &mut stats).await;
         self.run_prerender(ctx, &mut stats).await;
         self.run_page_prerender(paths, db_pool, &mut stats).await;

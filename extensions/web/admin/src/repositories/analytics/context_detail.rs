@@ -202,7 +202,12 @@ pub async fn list_context_tool_calls(
             t.request_id          AS "request_id!: AiRequestId",
             t.tool_name           AS "tool_name!",
             t.sequence_number     AS "sequence_number!",
-            t.tool_input          AS "tool_input!",
+            -- `tool_input` is a TEXT column holding a JSON document. Selecting
+            -- it raw decoded to JSON null in every row, because sqlx handed
+            -- the text bytes to `serde_json::Value`'s Postgres decoder, which
+            -- expects the JSON wire format. The cast makes the column what the
+            -- Rust type already claimed it was.
+            t.tool_input::jsonb   AS "tool_input!: serde_json::Value",
             t.tool_result_payload AS "tool_result_payload?: serde_json::Value",
             r.created_at          AS "created_at!"
         FROM ai_request_tool_calls t

@@ -9,7 +9,7 @@ macro_rules! css {
     };
 }
 
-pub(super) fn css_assets(storage_css: &Path) -> Vec<AssetDefinition> {
+pub fn css_assets(storage_css: &Path) -> Vec<AssetDefinition> {
     let mut v = core_css(storage_css);
     v.extend(homepage_css(storage_css));
     v.extend(blog_css(storage_css));

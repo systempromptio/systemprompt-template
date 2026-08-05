@@ -41,11 +41,13 @@ struct DocsPageContext {
     learning: DocsLearningTemplateData,
 }
 
-fn str_field(item: &Value, field: &str) -> Option<String> {
+#[doc(hidden)]
+pub fn str_field(item: &Value, field: &str) -> Option<String> {
     item.get(field).and_then(|v| v.as_str()).map(str::to_owned)
 }
 
-fn parse_children(item: &Value) -> Vec<ChildDoc> {
+#[doc(hidden)]
+pub fn parse_children(item: &Value) -> Vec<ChildDoc> {
     let Some(raw) = item.get("children") else {
         return Vec::new();
     };

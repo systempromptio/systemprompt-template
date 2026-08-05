@@ -124,8 +124,21 @@ pub struct StopData {
     pub last_assistant_message: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Copy)]
+/// `SubagentStart` carries no fields of its own beyond the common ones.
+#[derive(Debug, Clone, Serialize, Copy)]
 pub struct SubagentStartData;
+
+impl<'de> Deserialize<'de> for SubagentStartData {
+    /// Accepts the whole envelope and discards it.
+    ///
+    /// Why: the derived unit-struct impl only accepts `null`, so every real
+    /// `SubagentStart` post — a JSON object — failed to parse and landed as
+    /// [`HookEvent::Unknown`], a hole in the audit trail.
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        serde::de::IgnoredAny::deserialize(deserializer)?;
+        Ok(Self)
+    }
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SubagentStopData {

@@ -177,7 +177,8 @@ pub fn features_config() -> Option<Arc<FeaturePagesConfig>> {
     )
 }
 
-fn log_and_discard_err<T: Clone>(
+#[doc(hidden)]
+pub fn log_and_discard_err<T: Clone>(
     lock: &OnceLock<Result<Option<T>, String>>,
     init: fn() -> Result<Option<T>, ConfigError>,
     msg: &str,

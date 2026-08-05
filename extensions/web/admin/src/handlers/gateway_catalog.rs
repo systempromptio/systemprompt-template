@@ -211,7 +211,11 @@ pub(crate) async fn detect_after_the_fact(
                     session_id: &session_id,
                     model: &row.model,
                     agent_scope: "inference",
-                    decision: "deny_after_the_fact",
+                    // Why: `governance_decisions.decision` is constrained to
+                    // `allow`/`deny`. What makes this row a redundancy check
+                    // rather than live enforcement is `policy = gateway_acl`
+                    // and `actor_id = gateway_acl_detector`, both set below.
+                    decision: "deny",
                     reason: &reason_str,
                     evaluated_rules: &evaluated,
                 },

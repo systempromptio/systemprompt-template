@@ -48,7 +48,8 @@ impl CopyExtensionAssetsJob {
     }
 }
 
-async fn copy_all_assets(
+#[doc(hidden)]
+pub async fn copy_all_assets(
     dist_dir: &Path,
     assets: Vec<(&str, AssetDefinition)>,
 ) -> Result<(u64, u64), JobError> {
@@ -76,7 +77,8 @@ async fn copy_all_assets(
     Ok((copied, failed))
 }
 
-async fn copy_asset(
+#[doc(hidden)]
+pub async fn copy_asset(
     dist_dir: &Path,
     ext_id: &str,
     asset: &AssetDefinition,

@@ -16,7 +16,7 @@ pub(crate) const SCHEMA_AUDIT_EVENT_NOTIFY: &str =
     include_str!("../schema/14_audit_event_notify.sql");
 pub(crate) const SCHEMA_EVALS: &str = include_str!("../schema/15_evals.sql");
 
-pub(crate) fn schema_definitions() -> Vec<SchemaDefinition> {
+pub fn schema_definitions() -> Vec<SchemaDefinition> {
     vec![
         SchemaDefinition::new("", SCHEMA_PLUGIN_USAGE),
         SchemaDefinition::new("", SCHEMA_ANALYTICS),
@@ -29,6 +29,6 @@ pub(crate) fn schema_definitions() -> Vec<SchemaDefinition> {
     ]
 }
 
-pub(crate) fn migrations() -> Vec<Migration> {
+pub fn migrations() -> Vec<Migration> {
     extension_migrations!()
 }

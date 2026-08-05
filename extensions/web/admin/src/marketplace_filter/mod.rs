@@ -12,7 +12,10 @@
 //! declares any rule owns its decision outright. If neither path grants
 //! access, the item is dropped.
 
-mod keepsets;
+/// Pure shape-shuffling around the access-control resolver, public so it can
+/// be exercised without a database.
+#[doc(hidden)]
+pub mod keepsets;
 
 pub(crate) use keepsets::entity_ref_for;
 

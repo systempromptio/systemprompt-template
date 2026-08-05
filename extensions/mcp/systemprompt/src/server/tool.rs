@@ -107,7 +107,13 @@ pub(super) async fn authenticate_tool_request(
     }
 }
 
-pub(super) async fn dispatch_tool(
+/// Route one authenticated tool call to its handler.
+///
+/// Exposed (behind `#[doc(hidden)]`) so the external test workspace can assert
+/// the unknown-tool arm without an rmcp `Peer`, which only exists once a
+/// transport is serving. Not part of the public API.
+#[doc(hidden)]
+pub async fn dispatch_tool(
     executor: &McpToolExecutor,
     tool_name: &str,
     request: &CallToolRequestParams,

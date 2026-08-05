@@ -4,7 +4,8 @@
 //! Per-call logic (RBAC, auditing, CLI-to-artifact conversion) lives in
 //! the `tool` submodule.
 
-mod tool;
+#[doc(hidden)]
+pub mod tool;
 
 use crate::error::SystempromptToolError;
 use crate::tools::{self, SERVER_NAME};

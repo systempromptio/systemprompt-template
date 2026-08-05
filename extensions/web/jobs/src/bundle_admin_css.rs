@@ -4,7 +4,9 @@
 //! `web/dist/`.
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
+use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::error::JobError;
@@ -13,25 +15,13 @@ use crate::error::JobError;
 pub struct BundleAdminCssJob;
 
 impl BundleAdminCssJob {
-    pub async fn execute_bundle() -> Result<JobResult, JobError> {
+    pub async fn execute_bundle(paths: &AppPaths) -> Result<JobResult, JobError> {
         let start_time = std::time::Instant::now();
 
         tracing::info!("Bundle admin CSS job started");
 
-        let css_dir = std::env::current_dir()
-            .unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to get current directory, using fallback");
-                PathBuf::from(".")
-            })
-            .join("storage")
-            .join("files")
-            .join("css")
-            .join("admin");
-
-        let bundle_path = css_dir
-            .parent()
-            .unwrap_or(&css_dir)
-            .join("admin-bundle.css");
+        let css_dir = paths.storage().css().join("admin");
+        let bundle_path = paths.storage().css().join("admin-bundle.css");
 
         let css_files = collect_css_files(&css_dir).await?;
         let (bundle, bundled, failed) = concatenate_css_files(&css_files).await;
@@ -59,7 +49,8 @@ impl BundleAdminCssJob {
     }
 }
 
-async fn collect_css_files(css_dir: &std::path::Path) -> Result<Vec<PathBuf>, JobError> {
+#[doc(hidden)]
+pub async fn collect_css_files(css_dir: &std::path::Path) -> Result<Vec<PathBuf>, JobError> {
     let mut css_files: Vec<PathBuf> = Vec::new();
     let mut read_dir = tokio::fs::read_dir(css_dir).await?;
 
@@ -74,7 +65,8 @@ async fn collect_css_files(css_dir: &std::path::Path) -> Result<Vec<PathBuf>, Jo
     Ok(css_files)
 }
 
-async fn concatenate_css_files(css_files: &[PathBuf]) -> (String, u64, u64) {
+#[doc(hidden)]
+pub async fn concatenate_css_files(css_files: &[PathBuf]) -> (String, u64, u64) {
     let mut bundle = String::new();
     let mut bundled = 0u64;
     let mut failed = 0u64;
@@ -125,9 +117,13 @@ impl Job for BundleAdminCssJob {
     }
     async fn execute(
         &self,
-        _ctx: &JobContext,
+        ctx: &JobContext,
     ) -> Result<JobResult, systemprompt::traits::ProviderError> {
-        Ok(Self::execute_bundle().await?)
+        let paths = ctx
+            .app_paths::<Arc<AppPaths>>()
+            .ok_or(JobError::MissingContext("AppPaths"))?
+            .as_ref();
+        Ok(Self::execute_bundle(paths).await?)
     }
 }
 

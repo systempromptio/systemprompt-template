@@ -87,7 +87,8 @@ pub(crate) async fn generate_llms_txt(db_pool: DbPool, paths: &AppPaths) -> Resu
     Ok(())
 }
 
-fn write_section<T: AsRef<str>>(
+#[doc(hidden)]
+pub fn write_section<T: AsRef<str>>(
     content: &mut String,
     heading: &str,
     items: &[(T, T, T)],
@@ -109,7 +110,8 @@ fn write_section<T: AsRef<str>>(
     writeln!(content)
 }
 
-fn sort_entries_in_place(items: &mut [(String, String, String)]) {
+#[doc(hidden)]
+pub fn sort_entries_in_place(items: &mut [(String, String, String)]) {
     items.sort_by(|a, b| a.0.cmp(&b.0));
 }
 
@@ -144,7 +146,8 @@ async fn build_llms_txt_content(
     Ok(content)
 }
 
-fn write_header(content: &mut String, base_url: &str) -> std::fmt::Result {
+#[doc(hidden)]
+pub fn write_header(content: &mut String, base_url: &str) -> std::fmt::Result {
     writeln!(content, "# Your Project Name")?;
     writeln!(content)?;
     writeln!(

@@ -3,7 +3,8 @@
 
 mod content_provider;
 mod error;
-mod provider;
+#[doc(hidden)]
+pub mod provider;
 mod types;
 
 pub use content_provider::{ChildDoc, DocsContentDataProvider};

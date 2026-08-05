@@ -45,3 +45,17 @@ pub use publish::PublishPipelineJob;
 pub use robots::RobotsTxtGenerationJob;
 pub use secret_migration::SecretMigrationJob;
 pub use sitemap::SitemapGenerationJob;
+
+/// The pure helpers behind the jobs above, re-exported for the external test
+/// workspace so their file-format and accounting behaviour can be asserted
+/// without a scheduler, a database, or an `AppPaths`. Not part of the public
+/// API — the job structs are.
+#[doc(hidden)]
+pub mod internals {
+    pub use crate::bundle_admin_css::{collect_css_files, concatenate_css_files};
+    pub use crate::copy_assets::{copy_all_assets, copy_asset};
+    pub use crate::governance_bootstrap::{GovernanceStatus, check_governance_config};
+    pub use crate::llms_txt::{sort_entries_in_place, write_header, write_section};
+    pub use crate::publish::PipelineStats;
+    pub use crate::robots::build_robots_txt_content;
+}
