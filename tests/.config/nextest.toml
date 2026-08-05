@@ -1,0 +1,29 @@
+# Nextest configuration for the tests/ workspace.
+#
+# The DB-backed suites (mcp-integration-tests, admin-contract-tests) create
+# and drop throwaway databases on the shared maintenance server; running them
+# interleaved risks connection-pool exhaustion and cross-suite interference,
+# so each is serialised into its own single-threaded group. Pure-logic unit
+# crates keep full parallelism.
+
+[test-groups.db-integration]
+max-threads = 1
+
+[test-groups.db-contract]
+max-threads = 1
+
+[[profile.default.overrides]]
+filter = "package(mcp-integration-tests)"
+test-group = "db-integration"
+
+[[profile.default.overrides]]
+filter = "package(web-integration-tests)"
+test-group = "db-integration"
+
+[[profile.default.overrides]]
+filter = "package(admin-contract-tests)"
+test-group = "db-contract"
+
+[profile.default]
+slow-timeout = { period = "60s", terminate-after = 2 }
+failure-output = "immediate-final"

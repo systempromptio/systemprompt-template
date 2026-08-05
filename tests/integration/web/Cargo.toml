@@ -1,0 +1,39 @@
+[package]
+name = "web-integration-tests"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+# `full` links the core extension crates whose `register_extension!` supplies
+# the content-domain migrations (markdown_content, campaign_links,
+# link_clicks) these repositories query.
+systemprompt = { workspace = true, features = ["full"] }
+systemprompt-web-content = { workspace = true }
+systemprompt-web-shared = { workspace = true }
+systemprompt-web-extension = { workspace = true }
+# `content_rollup` (admin) is the repository the analytics job writes through;
+# the job itself lives in `jobs`.
+systemprompt-web-admin = { workspace = true }
+systemprompt-web-jobs = { workspace = true }
+systemprompt-web-site = { workspace = true }
+systemprompt-mcp-agent = { workspace = true }
+
+chrono = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+url = { workspace = true }
+tempfile = { workspace = true }
+# `ServerHandler::get_info` is a trait method — asserting either MCP server's
+# advertised surface needs the trait in scope.
+rmcp = { workspace = true }
+# The extension router is only reachable through `Extension::router`; driving
+# the `axum::Router` it returns is how each mounted plane is pinned.
+axum = { workspace = true }
+tower = { workspace = true }
+http-body-util = { workspace = true }

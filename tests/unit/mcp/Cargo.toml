@@ -10,3 +10,6 @@ workspace = true
 [dependencies]
 systemprompt-mcp-shared = { workspace = true }
 systemprompt-mcp-agent = { workspace = true }
+systemprompt = { workspace = true, features = ["full"] }
+axum = { workspace = true }
+serde_json = { workspace = true }

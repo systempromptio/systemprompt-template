@@ -84,10 +84,16 @@ fn fixture_secrets() -> String {
         r#"{{
   "database_url": "{database_url}",
   "oauth_at_rest_pepper": "contract-suite-pepper-not-a-real-secret",
-  "manifest_signing_secret_seed": "Y29udHJhY3Qtc3VpdGUtc2VlZC1ub3QtcmVhbC0wMDA="
+  "manifest_signing_secret_seed": "Y29udHJhY3Qtc3VpdGUtc2VlZC1ub3QtcmVhbC0wMDA=",
+  "encryption_master_key": "{MASTER_KEY_HEX}"
 }}"#
     )
 }
+
+// A fixed 32-byte key, hex-encoded. `secret_crypto::load_master_key` refuses
+// anything that is not exactly that, and without it every secrets route
+// answers 500 before reaching the code the cases are about.
+const MASTER_KEY_HEX: &str = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
 
 // Materialise the fixture profile under `tests/target/`, which is already
 // ignored. Secrets live beside the profile because `secrets_path` is relative

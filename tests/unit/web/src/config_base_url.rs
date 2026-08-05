@@ -1,6 +1,7 @@
-//! `BlogConfigValidated::validate` runs the private `validate_base_url` over the
-//! raw `base_url`: an `http`/`https` URL is accepted, any other scheme or an
-//! unparseable string is rejected via the aggregated `ExtensionConfigErrors`.
+//! `BlogConfigValidated::validate` runs the private `validate_base_url` over
+//! the raw `base_url`: an `http`/`https` URL is accepted, any other scheme or
+//! an unparseable string is rejected via the aggregated
+//! `ExtensionConfigErrors`.
 
 use std::path::Path;
 use systemprompt_web_shared::config::{BlogConfigRaw, BlogConfigValidated};
@@ -34,11 +35,9 @@ fn accepts_http() {
 
 #[test]
 fn rejects_non_http_scheme() {
-    let err = BlogConfigValidated::validate(
-        raw_with_base_url("ftp://files.example.com"),
-        Path::new("."),
-    )
-    .expect_err("ftp scheme is rejected");
+    let err =
+        BlogConfigValidated::validate(raw_with_base_url("ftp://files.example.com"), Path::new("."))
+            .expect_err("ftp scheme is rejected");
     // The scheme error is recorded against the base_url field.
     assert!(
         format!("{err:?}").contains("base_url"),
@@ -48,9 +47,8 @@ fn rejects_non_http_scheme() {
 
 #[test]
 fn rejects_unparseable_url() {
-    let err =
-        BlogConfigValidated::validate(raw_with_base_url("not a url"), Path::new("."))
-            .expect_err("garbage base_url is rejected");
+    let err = BlogConfigValidated::validate(raw_with_base_url("not a url"), Path::new("."))
+        .expect_err("garbage base_url is rejected");
     assert!(
         format!("{err:?}").contains("base_url"),
         "expected a base_url error, got: {err:?}"

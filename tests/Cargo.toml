@@ -11,7 +11,10 @@
 members = [
     "unit/mcp",
     "unit/web",
+    "integration/admin-config",
     "integration/mcp",
+    "integration/web",
+    "integration/admin-core",
     "contract/admin",
 ]
 resolver = "2"
@@ -22,7 +25,9 @@ version = "0.0.0"
 publish = false
 
 # Test code asserts by panicking and constructs fixtures liberally; relax the
-# strict production lints the root workspace enforces.
+# strict production lints the root workspace enforces. This is an intentional
+# partial mirror of the root Cargo.toml [workspace.lints.clippy] block: only
+# the relaxations below differ.
 [workspace.lints.clippy]
 unwrap_used = "allow"
 expect_used = "allow"
@@ -36,7 +41,10 @@ systemprompt-mcp-shared = { path = "../extensions/mcp/shared" }
 systemprompt-mcp-agent = { path = "../extensions/mcp/systemprompt" }
 systemprompt-web-shared = { path = "../extensions/web/shared" }
 systemprompt-web-admin = { path = "../extensions/web/admin" }
+systemprompt-web-content = { path = "../extensions/web/content" }
+systemprompt-web-jobs = { path = "../extensions/web/jobs" }
 systemprompt-web-extension = { path = "../extensions/web" }
+systemprompt-web-site = { path = "../extensions/web/site" }
 
 # Core facade — DbPool / Database / identifiers for the integration crate.
 # The contract crate additionally enables `full`, which links the core
@@ -55,7 +63,20 @@ sqlx = { version = "0.9", features = ["runtime-tokio", "tls-rustls-ring-webpki",
 serde_json = { version = "1.0", features = ["preserve_order"] }
 chrono = { version = "0.4", features = ["serde"] }
 url = "2.5"
+# Alias serde_yaml_ng exactly as the root workspace does: core's APIs expose
+# serde_yaml_ng::Value, and a plain serde_yaml dep would be a distinct type
+# that never unifies with it.
+serde_yaml = { package = "serde_yaml_ng", version = "0.10" }
+clap = { version = "4", features = ["derive"] }
+tempfile = "3"
+# Pinned to the exact version the root workspace pins, so the `ServerHandler`
+# trait the tests bring into scope is the one the MCP crates implement.
+rmcp = { version = "=3.0.0", features = ["server"] }
 uuid = { version = "1.18", features = ["v4"] }
+base64 = "0.22"
+# Pinned to the version core signs with, so the tokens this suite mints for the
+# hook audiences validate against core's own decoder.
+jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 
 # Mirrors the root workspace's local-core patch. `[patch]` only applies from
 # the manifest of the workspace being built, and tests/ is a separate

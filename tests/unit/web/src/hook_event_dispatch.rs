@@ -69,7 +69,9 @@ fn an_unrecognised_event_name_is_recorded_under_that_name() {
         parsed.event
     );
     assert!(
-        warnings.iter().any(|w| w.contains("Unknown hook event type")),
+        warnings
+            .iter()
+            .any(|w| w.contains("Unknown hook event type")),
         "the unknown event should warn, got {warnings:?}"
     );
 }
@@ -90,7 +92,9 @@ fn a_malformed_known_event_degrades_instead_of_failing() {
         parsed.event
     );
     assert!(
-        warnings.iter().any(|w| w.contains("PreToolUse parse error")),
+        warnings
+            .iter()
+            .any(|w| w.contains("PreToolUse parse error")),
         "the parse failure should be reported as a warning, got {warnings:?}"
     );
 }

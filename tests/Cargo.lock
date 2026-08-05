@@ -13,15 +13,52 @@ name = "admin-contract-tests"
 version = "0.0.0"
 dependencies = [
  "axum",
+ "base64 0.22.1",
  "chrono",
  "http-body-util",
+ "jsonwebtoken",
+ "serde_json",
  "sqlx",
  "systemprompt",
  "systemprompt-security",
  "systemprompt-web-admin",
  "systemprompt-web-extension",
+ "systemprompt-web-shared",
  "tokio",
  "tower",
+ "url",
+ "uuid",
+]
+
+[[package]]
+name = "admin-db-config-tests"
+version = "0.0.0"
+dependencies = [
+ "chrono",
+ "serde_json",
+ "sqlx",
+ "systemprompt",
+ "systemprompt-security",
+ "systemprompt-web-admin",
+ "systemprompt-web-extension",
+ "tempfile",
+ "tokio",
+ "url",
+ "uuid",
+]
+
+[[package]]
+name = "admin-db-core-tests"
+version = "0.0.0"
+dependencies = [
+ "chrono",
+ "serde_json",
+ "sqlx",
+ "systemprompt",
+ "systemprompt-web-admin",
+ "systemprompt-web-extension",
+ "systemprompt-web-shared",
+ "tokio",
  "url",
  "uuid",
 ]
@@ -2369,6 +2406,9 @@ dependencies = [
 name = "mcp-unit-tests"
 version = "0.0.0"
 dependencies = [
+ "axum",
+ "serde_json",
+ "systemprompt",
  "systemprompt-mcp-agent",
  "systemprompt-mcp-shared",
 ]
@@ -6388,6 +6428,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "web-integration-tests"
+version = "0.0.0"
+dependencies = [
+ "axum",
+ "chrono",
+ "http-body-util",
+ "rmcp",
+ "serde_json",
+ "sqlx",
+ "systemprompt",
+ "systemprompt-mcp-agent",
+ "systemprompt-web-admin",
+ "systemprompt-web-content",
+ "systemprompt-web-extension",
+ "systemprompt-web-jobs",
+ "systemprompt-web-shared",
+ "systemprompt-web-site",
+ "tempfile",
+ "tokio",
+ "tower",
+ "url",
+ "uuid",
+]
+
+[[package]]
 name = "web-sys"
 version = "0.3.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6411,10 +6476,17 @@ dependencies = [
 name = "web-unit-tests"
 version = "0.0.0"
 dependencies = [
+ "chrono",
+ "clap",
  "serde_json",
+ "serde_yaml_ng",
+ "systemprompt",
  "systemprompt-web-admin",
  "systemprompt-web-extension",
  "systemprompt-web-shared",
+ "systemprompt-web-site",
+ "tempfile",
+ "tokio",
 ]
 
 [[package]]

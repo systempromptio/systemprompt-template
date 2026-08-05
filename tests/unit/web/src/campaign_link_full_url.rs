@@ -75,7 +75,10 @@ fn url_encodes_parameter_values() {
         Some(json!({ "source": "a b&c", "medium": null,
                      "campaign": null, "term": null, "content": null })),
     );
-    assert_eq!(l.full_url(), "https://example.com/page?utm_source=a%20b%26c");
+    assert_eq!(
+        l.full_url(),
+        "https://example.com/page?utm_source=a%20b%26c"
+    );
 }
 
 #[test]

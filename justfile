@@ -217,8 +217,9 @@ test-unit:
     @scripts/build-coordinator.sh run test-unit "" -- {{just_executable()}} _test-unit-uncoordinated
 
 _test-unit-uncoordinated:
-    cargo test -p systemprompt-web-admin --tests
-    cargo test --manifest-path tests/Cargo.toml -p mcp-unit-tests -p web-unit-tests
+    cargo nextest run -p systemprompt-web-admin --tests
+    cargo nextest run -p systemprompt-web-extension --tests
+    cargo nextest run --manifest-path tests/Cargo.toml -p mcp-unit-tests -p web-unit-tests
 
 # DB-backed integration tests. Creates/drops throwaway mcp_ext_test_*
 # databases on the maintenance DB; the harness guard refuses any database
@@ -237,7 +238,7 @@ _test-integration-uncoordinated:
     print(up.urlunsplit((u.scheme, u.netloc, '/postgres', '', '')))")
         export SYSTEMPROMPT_TEST_DATABASE_URL
     fi
-    cargo test --manifest-path tests/Cargo.toml -p mcp-integration-tests
+    cargo nextest run --manifest-path tests/Cargo.toml -p mcp-integration-tests -p web-integration-tests -p admin-db-core-tests -p admin-db-config-tests
 
 # HTTP contract suite: drives every admin route under three principals and
 # diffs the result against tests/contract/admin/baseline.txt. Same throwaway-
@@ -257,7 +258,7 @@ _test-contract-uncoordinated:
     print(up.urlunsplit((u.scheme, u.netloc, '/postgres', '', '')))")
         export SYSTEMPROMPT_TEST_DATABASE_URL
     fi
-    cargo test --manifest-path tests/Cargo.toml -p admin-contract-tests
+    cargo nextest run --manifest-path tests/Cargo.toml -p admin-contract-tests
 
 # All tests
 test: test-unit test-integration test-contract

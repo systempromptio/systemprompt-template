@@ -1,0 +1,25 @@
+[package]
+name = "admin-db-config-tests"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+# `full` links the core extension crates whose `register_extension!` supplies
+# the migrations these repositories query (users, ai_requests, access control,
+# scheduled jobs); the admin crate itself carries the web-owned schema.
+systemprompt = { workspace = true, features = ["full"] }
+systemprompt-web-admin = { workspace = true }
+systemprompt-web-extension = { workspace = true }
+systemprompt-security = { workspace = true }
+
+chrono = { workspace = true }
+serde_json = { workspace = true }
+sqlx = { workspace = true }
+tempfile = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }
+uuid = { workspace = true }

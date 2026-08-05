@@ -36,7 +36,12 @@ fn strips_each_known_hallucinated_flag() {
 #[test]
 fn strips_multiple_and_preserves_order_of_survivors() {
     let out = filter_hallucinated_args(v(&[
-        "--json", "core", "--format", "skills", "list", "--output-format",
+        "--json",
+        "core",
+        "--format",
+        "skills",
+        "list",
+        "--output-format",
     ]));
     assert_eq!(out, v(&["core", "skills", "list"]));
 }
