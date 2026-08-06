@@ -79,9 +79,26 @@ if update:
     sys.exit(0)
 
 if not os.path.exists(baseline_path):
-    print(f"error: {baseline_path} missing — record it with 'just coverage-baseline'",
-          file=sys.stderr)
-    sys.exit(1)
+    # The baseline is tracked, so "missing" almost always means it was deleted
+    # from the working tree rather than never recorded — a stray `rm -rf
+    # coverage*` catches it alongside the gitignored coverage-report/, and the
+    # gate then fails for a reason that has nothing to do with the code under
+    # test. Restore it from HEAD and say so loudly; only give up if git cannot
+    # produce it either, which is the genuinely-never-recorded case.
+    import subprocess
+    rel = os.path.relpath(baseline_path, root)
+    restored = subprocess.run(
+        ["git", "-C", root, "checkout", "--", rel],
+        capture_output=True, text=True).returncode == 0
+    if restored and os.path.exists(baseline_path):
+        print(f"warning: {rel} was missing from the working tree and has been "
+              f"restored from HEAD. Something deleted it — check for a cleanup "
+              f"that globs 'coverage*' rather than the gitignored "
+              f"'coverage-report/'.", file=sys.stderr)
+    else:
+        print(f"error: {baseline_path} missing and not recoverable from git — "
+              f"record it with 'just coverage-baseline'", file=sys.stderr)
+        sys.exit(1)
 
 with open(baseline_path) as f:
     baseline = json.load(f)

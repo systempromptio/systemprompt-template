@@ -432,8 +432,24 @@ coverage-html:
         --output-dir="$ROOT/coverage-report/html"
     echo "Coverage report: coverage-report/html/index.html"
 
-# Remove all coverage artifacts (instrumented target dirs included)
+# Remove all coverage artifacts (instrumented target dirs included).
+# Refuses while a coordinated run holds the lock: coverage-report/ carries the
+# instrumented test binaries, so deleting it mid-run makes every remaining test
+# fail to exec ("No such file or directory", nextest exit 70) and the report
+# come out at 0.00% — a failure that looks like a code regression and is not.
 coverage-clean:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    LOCK="${COORD_STATE_DIR:-{{ justfile_directory() }}/.build}/lock"
+    if [ -d "$LOCK" ]; then
+        PID="$(cat "$LOCK/pid" 2>/dev/null || echo)"
+        if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
+            echo "refusing: '$(cat "$LOCK/recipe" 2>/dev/null || echo run)' is running (pid $PID)." >&2
+            echo "  Deleting coverage-report/ now would pull the instrumented binaries" >&2
+            echo "  out from under it. Wait for it, or override with COVERAGE_CLEAN_FORCE=1." >&2
+            [ "${COVERAGE_CLEAN_FORCE:-0}" = "1" ] || exit 1
+        fi
+    fi
     rm -rf coverage-report/
 
 # Point git at the tracked hooks (pre-commit patch-marker guard + fast gates,
@@ -697,6 +713,18 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
         BIN="$ROOT/target/debug/systemprompt"
     fi
     mkdir -p "$PROFILE_DIR" "$DOCKER_DIR"
+    # Rewrite the compose file when it exists but pins a different host port.
+    # Guarding only on existence meant a re-run with a new PG_PORT kept the old
+    # mapping, brought Postgres up on the old port, and then waited 60s for the
+    # new one before dying on "Postgres did not become ready" — which names the
+    # symptom and hides the cause.
+    if [ -f "$DOCKER_DIR/local.yaml" ] \
+        && ! grep -q "\"${PG_PORT}:5432\"" "$DOCKER_DIR/local.yaml"; then
+        echo "Docker compose pins a different host port; rewriting for $PG_PORT."
+        echo "Recreating the container so the new mapping takes effect..."
+        docker compose -p "$(just _project_name local)" -f "$DOCKER_DIR/local.yaml" down 2>/dev/null || true
+        rm -f "$DOCKER_DIR/local.yaml"
+    fi
     if [ ! -f "$DOCKER_DIR/local.yaml" ]; then
         echo "Writing Docker compose for local Postgres (host port $PG_PORT)..."
         cat > "$DOCKER_DIR/local.yaml" <<YAML
