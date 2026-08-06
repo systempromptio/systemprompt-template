@@ -57,7 +57,19 @@ fn it_declares_the_extensions_whose_tables_it_reads() {
 
     let mut shared = extension.cross_extension_tables();
     shared.sort_unstable();
-    assert_eq!(shared, vec!["markdown_content", "users"]);
+    assert_eq!(
+        shared,
+        vec![
+            "eval_cases",
+            "eval_judge_calls",
+            "eval_pairs",
+            "eval_results",
+            "eval_rubrics",
+            "eval_runs",
+            "markdown_content",
+            "users",
+        ]
+    );
 }
 
 #[test]
