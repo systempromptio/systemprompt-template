@@ -34,12 +34,16 @@ fi
 # deleted and suspended accounts out of the menu — `--role` matches on role
 # alone, so without it a deleted admin is offered as a valid pick.
 #
-# Non-UUID ids are dropped. The demo-organizations migration seeds fixture
-# users with string ids (`demo-nw-1`, `demo-co-1`, …) and marks two of them
-# admin, so on a fresh database they sort into the admin block and get picked
-# first — and then `admin keys issue-plugin-token` refuses the id outright
-# ("is not a valid UUID"), taking the whole demo suite down at preflight. They
-# are display fixtures for the reports, never identities to act as.
+# Non-UUID ids are dropped, because core parses the id as a UUID on every path
+# that authenticates (oauth providers, the JWT authn/authz middleware, the
+# OAuth callback). An id that is not one cannot sign in and cannot have a token
+# minted for it, so offering it as someone to act as only ever ends in
+# "is not a valid UUID" further down.
+#
+# 027 gave the demo-organizations fixtures real UUIDs, which was the case that
+# used to take the whole suite down at preflight. This stays as the general
+# guard: the `system` account still carries a non-UUID id and the admin role,
+# and nobody should be acting as that either.
 _sel_list_role() { # $1=role
   "$CLI" --json admin users list --role "$1" --status active --limit 200 --profile "$PROFILE" 2>/dev/null \
     | jq -r '.items[]?
