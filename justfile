@@ -410,7 +410,7 @@ prepare:
     # (first-time bootstrap before any build).
     if [ -x "{{CLI}}" ]; then
         echo "Applying pending migrations..."
-        {{CLI}} infra db migrate
+        {{CLI}} infra db migrate --profile local
     else
         echo "Warning: no systemprompt binary yet; skipping migrate step."
         echo "  If sqlx prepare fails with 'relation does not exist',"
