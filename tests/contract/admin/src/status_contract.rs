@@ -12,7 +12,8 @@ use axum::http::StatusCode;
 use crate::app::App;
 use crate::principal::Principal;
 use crate::route_source::{MountedRoute, mounted_routes};
-use crate::{baseline, globals, principal, tempdb::TempDb};
+use crate::tempdb::TempDb;
+use crate::{baseline, globals, principal};
 
 // Routes known to answer 5xx today, each with the defect that causes it.
 //
@@ -131,10 +132,7 @@ fn check(
     }
 
     // An anonymous caller must be refused or redirected — never served.
-    if principal == Principal::Anonymous
-        && !is_public(&route.template)
-        && status.is_success()
-    {
+    if principal == Principal::Anonymous && !is_public(&route.template) && status.is_success() {
         fail("anonymous callers must not be served a success response");
     }
 

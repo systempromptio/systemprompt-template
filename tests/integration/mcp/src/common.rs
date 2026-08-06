@@ -5,8 +5,7 @@
 
 use std::sync::Arc;
 
-use sqlx::PgPool;
-use sqlx::AssertSqlSafe;
+use sqlx::{AssertSqlSafe, PgPool};
 use systemprompt::database::{Database, DbPool};
 use url::Url;
 

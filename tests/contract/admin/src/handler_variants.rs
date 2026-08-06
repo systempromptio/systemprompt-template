@@ -79,10 +79,7 @@ const REQUESTS: [Variant; 22] = [
     ),
     // A negative page is clamped to the first, not turned into a negative
     // OFFSET the database would reject.
-    v(
-        "/admin/entities/requests?tab=log&page=-5",
-        REQUESTS_EMPTY,
-    ),
+    v("/admin/entities/requests?tab=log&page=-5", REQUESTS_EMPTY),
     v(
         "/admin/entities/requests?tab=log&model=claude-opus-5",
         r#"filter-ribbon__chip-value">claude-opus-5</span>"#,
@@ -205,7 +202,10 @@ const PAGES: [Variant; 10] = [
     ),
     v("/admin/access/tokens", "No access tokens issued yet"),
     v("/admin/access/matrix", "Nothing selected yet"),
-    v("/admin/governance/policies", "Policies are Rust code. Order is config."),
+    v(
+        "/admin/governance/policies",
+        "Policies are Rust code. Order is config.",
+    ),
 ];
 
 // The evals screen: five tabs, each rendering a different partial, plus the
@@ -317,7 +317,9 @@ async fn the_redirect_aliases_land_on_the_pages_they_name() {
                 want_status.as_u16()
             ));
         } else if target != want_target {
-            failures.push(format!("  {path} redirected to {target:?}, not {want_target:?}"));
+            failures.push(format!(
+                "  {path} redirected to {target:?}, not {want_target:?}"
+            ));
         }
     }
 

@@ -32,6 +32,8 @@ jobs:
       # no channel duplicated in this file.
       - run: rustup show
       - run: cargo fmt --all -- --check
+      # tests/ is excluded from the root workspace, so --all does not reach it.
+      - run: cargo fmt --manifest-path tests/Cargo.toml --all -- --check
 
   build:
     name: Build

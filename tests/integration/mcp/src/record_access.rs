@@ -14,7 +14,14 @@ async fn used_action_records_tool_scoped_row() {
     };
     db.insert_user("user-1", "dev@example.com").await;
 
-    record_mcp_access(&db.pool, &UserId::new("user-1"), "systemprompt", "list_skills", "used").await;
+    record_mcp_access(
+        &db.pool,
+        &UserId::new("user-1"),
+        "systemprompt",
+        "list_skills",
+        "used",
+    )
+    .await;
 
     let rows = db.mcp_rows("list_skills").await;
     assert_eq!(rows.len(), 1, "exactly one activity row expected");
@@ -35,7 +42,14 @@ async fn authenticated_action_records_server_scoped_row() {
     };
     db.insert_user("user-2", "dev2@example.com").await;
 
-    record_mcp_access(&db.pool, &UserId::new("user-2"), "systemprompt", "list_skills", "authenticated").await;
+    record_mcp_access(
+        &db.pool,
+        &UserId::new("user-2"),
+        "systemprompt",
+        "list_skills",
+        "authenticated",
+    )
+    .await;
 
     // For non-"used" actions the row is attributed to the server, not the tool.
     let rows = db.mcp_rows("systemprompt").await;
@@ -44,7 +58,10 @@ async fn authenticated_action_records_server_scoped_row() {
     assert_eq!(user_id, "user-2");
     assert_eq!(action, "authenticated");
     assert_eq!(entity_type.as_deref(), Some("mcp_server"));
-    assert_eq!(description, "Authenticated to systemprompt for 'list_skills'");
+    assert_eq!(
+        description,
+        "Authenticated to systemprompt for 'list_skills'"
+    );
 
     db.cleanup().await;
 }

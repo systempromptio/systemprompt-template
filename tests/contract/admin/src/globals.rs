@@ -110,7 +110,10 @@ fn write_fixture_profile() -> Option<PathBuf> {
 
     let yaml = FIXTURE_PROFILE
         .replace("__REPO__", &root.to_string_lossy())
-        .replace("jwt_issuer: http://localhost:8099", &format!("jwt_issuer: {ISSUER}"));
+        .replace(
+            "jwt_issuer: http://localhost:8099",
+            &format!("jwt_issuer: {ISSUER}"),
+        );
     std::fs::write(dir.join("profile.yaml"), yaml).expect("write fixture profile");
     std::fs::write(dir.join("secrets.json"), fixture_secrets()).expect("write fixture secrets");
 

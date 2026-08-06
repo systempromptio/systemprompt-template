@@ -267,10 +267,7 @@ async fn secret_audit_and_rotate_require_an_admin_session() {
     let credentials = principal::provision(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
-    for (method, path) in [
-        ("get", audit_path(PLUGIN)),
-        ("post", rotate_path(PLUGIN)),
-    ] {
+    for (method, path) in [("get", audit_path(PLUGIN)), ("post", rotate_path(PLUGIN))] {
         let (status, body) = app
             .call(Call::json(method, &path, Principal::Anonymous, "{}"))
             .await;
@@ -325,7 +322,10 @@ async fn rotating_keys_records_the_rotation_in_the_audit_log() {
         .await;
     assert_eq!(status, StatusCode::OK, "first rotate: {body}");
     assert_eq!(parse(&body)["result"], "ok");
-    assert_eq!(audit_actions(&app, &plugin).await, vec!["rotated".to_owned()]);
+    assert_eq!(
+        audit_actions(&app, &plugin).await,
+        vec!["rotated".to_owned()]
+    );
 
     // Second rotation: the key now exists, so the decrypt-and-re-wrap branch
     // runs instead. Both must land an entry.

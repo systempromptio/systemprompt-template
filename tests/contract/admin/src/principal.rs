@@ -1,10 +1,11 @@
 //! The three principals every route is driven under, and the credentials that
 //! distinguish them.
 //!
-//! Role membership is deliberately *not* carried in the JWT: `user_context_middleware`
-//! reads `users.roles` from the database, so the admin / non-admin split is
-//! seeded as table rows and the middleware resolves it the same way it does in
-//! production. The token only has to validate and carry a subject.
+//! Role membership is deliberately *not* carried in the JWT:
+//! `user_context_middleware` reads `users.roles` from the database, so the
+//! admin / non-admin split is seeded as table rows and the middleware resolves
+//! it the same way it does in production. The token only has to validate and
+//! carry a subject.
 
 use sqlx::PgPool;
 use systemprompt::identifiers::{SessionId, UserId};

@@ -106,7 +106,10 @@ async fn issuing_for_a_user_with_no_profile_row_is_a_404() {
     let (status, body) = app
         .call(Call::json(
             "post",
-            &format!("/api/public/admin/users/{}/share-token", seed::unique("ghost")),
+            &format!(
+                "/api/public/admin/users/{}/share-token",
+                seed::unique("ghost")
+            ),
             Principal::Admin,
             "{}",
         ))
@@ -158,7 +161,9 @@ async fn an_issued_token_unlocks_that_user_s_manifest() {
         .expect("sections is an array");
     for section in sections {
         assert!(
-            section["entity_type"].as_str().is_some_and(|t| !t.is_empty()),
+            section["entity_type"]
+                .as_str()
+                .is_some_and(|t| !t.is_empty()),
             "each section names its entity type: {section}"
         );
         for item in section["items"].as_array().expect("items is an array") {
@@ -241,10 +246,9 @@ async fn a_tampered_token_is_refused() {
     // Flip one hex digit of the MAC, keeping the length identical so the
     // constant-time compare — not the length precheck — is what rejects it.
     let mac = parts[2];
-    let flipped = mac.strip_prefix('0').map_or_else(
-        || format!("0{}", &mac[1..]),
-        |rest| format!("1{rest}"),
-    );
+    let flipped = mac
+        .strip_prefix('0')
+        .map_or_else(|| format!("0{}", &mac[1..]), |rest| format!("1{rest}"));
     let forged = format!("{}:{}:{flipped}", parts[0], parts[1]);
     let (status, body) = app
         .call(Call::get(&manifest_path(&forged), Principal::Anonymous))
@@ -265,7 +269,10 @@ async fn a_tampered_token_is_refused() {
     let bumped = b64.encode(b"99");
     let reversioned = format!("{}:{bumped}:{}", parts[0], parts[2]);
     let (status, _) = app
-        .call(Call::get(&manifest_path(&reversioned), Principal::Anonymous))
+        .call(Call::get(
+            &manifest_path(&reversioned),
+            Principal::Anonymous,
+        ))
         .await;
     assert_eq!(status, StatusCode::UNAUTHORIZED, "swapped version");
 

@@ -101,7 +101,10 @@ async fn client_error_messages_survive_the_html_face_too() {
     // different things about the same failure.
     for (error, expected_status, expected_message) in client_errors() {
         let (status, body) = html_face(error).await;
-        assert_eq!(status, expected_status, "html status for {expected_message}");
+        assert_eq!(
+            status, expected_status,
+            "html status for {expected_message}"
+        );
         assert!(
             body.contains(expected_message),
             "the page shows the public message: {body}"

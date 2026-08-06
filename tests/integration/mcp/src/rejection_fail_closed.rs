@@ -88,7 +88,10 @@ async fn long_reason_is_truncated_in_the_description() {
     let reason_part = description
         .strip_prefix(prefix)
         .expect("description carries the fixed prefix");
-    assert!(reason_part.ends_with("..."), "long reason should be suffixed");
+    assert!(
+        reason_part.ends_with("..."),
+        "long reason should be suffixed"
+    );
     // Reason body capped at MAX_REASON_LEN, plus the "..." suffix.
     assert_eq!(reason_part.len(), MAX_REASON_LEN + 3);
 

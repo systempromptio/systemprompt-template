@@ -108,10 +108,17 @@ fn summary_of(result: &rmcp::model::CallToolResult) -> String {
 #[test]
 fn the_output_format_flags_models_invent_are_stripped_before_exec() {
     let filtered = filter_hallucinated_args(
-        ["core", "skills", "list", "--json", "--output-format", "--format"]
-            .iter()
-            .map(|s| (*s).to_owned())
-            .collect(),
+        [
+            "core",
+            "skills",
+            "list",
+            "--json",
+            "--output-format",
+            "--format",
+        ]
+        .iter()
+        .map(|s| (*s).to_owned())
+        .collect(),
     );
 
     assert_eq!(

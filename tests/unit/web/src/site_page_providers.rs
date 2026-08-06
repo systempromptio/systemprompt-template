@@ -17,9 +17,7 @@ use systemprompt::models::services::WebConfig;
 use systemprompt_web_site::homepage::{
     HomepageConfig, HomepagePageDataProvider, HomepagePrerenderer,
 };
-use systemprompt_web_site::navigation::{
-    NavigationConfig, NavigationPageDataProvider,
-};
+use systemprompt_web_site::navigation::{NavigationConfig, NavigationPageDataProvider};
 
 const WEB_CONFIG_PATH: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),

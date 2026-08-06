@@ -54,10 +54,7 @@ const UNKNOWN_ID: &str = "00000000-0000-4000-8000-000000000000";
 
 pub fn mounted_routes() -> Vec<MountedRoute> {
     let mut routes = Vec::new();
-    for (src, prefix) in [
-        (ADMIN_API_SRC, ADMIN_API_PREFIX),
-        (SSR_SRC, SSR_PREFIX),
-    ] {
+    for (src, prefix) in [(ADMIN_API_SRC, ADMIN_API_PREFIX), (SSR_SRC, SSR_PREFIX)] {
         parse(src, prefix, &mut routes);
     }
     routes.sort();
