@@ -33,9 +33,18 @@ fi
 # Rows for one role as TSV: id, email, name, roles. `--status active` keeps
 # deleted and suspended accounts out of the menu — `--role` matches on role
 # alone, so without it a deleted admin is offered as a valid pick.
+# Non-UUID ids are dropped, because core parses the id as a UUID on every path
+# that authenticates (oauth providers, the JWT authn/authz middleware, the
+# OAuth callback). An id that is not one cannot sign in and cannot have a token
+# minted for it, so offering it as someone to act as only ever ends in
+# "is not a valid UUID" further down — which is how it surfaces: the demo
+# preflight picks such a user and dies on `admin keys issue-plugin-token`.
+# The `system` account is the one that reaches this in a stock install.
 _sel_list_role() { # $1=role
   "$CLI" --json admin users list --role "$1" --status active --limit 200 --profile "$PROFILE" 2>/dev/null \
-    | jq -r '.items[]? | [.id, .email, (.name // .display_name // ""), ((.roles // []) | join(","))] | @tsv' \
+    | jq -r '.items[]?
+        | select(.id | test("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"))
+        | [.id, .email, (.name // .display_name // ""), ((.roles // []) | join(","))] | @tsv' \
     || true
 }
 
