@@ -104,6 +104,14 @@ jobs:
             .
             tests
 
+      # Several integration tests drive process-global state (SYSTEMPROMPT_CLI_PATH,
+      # BLOG_CONFIG, CONTENT_INGESTION_DELETE_ORPHANS) and are only correct when each
+      # test owns its process. `cargo test` threads them into one process, where they
+      # race and fail; nextest is what `just test-*` runs, so CI must match it.
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+
       # No profile bootstrap or migrate step: the integration crate is a
       # self-contained throwaway-database harness. It connects to the server's
       # `postgres` maintenance DB (the superuser the postgres:16 image creates),
@@ -117,15 +125,15 @@ jobs:
         if: steps.tests.outputs.present == 'true'
         env:
           SYSTEMPROMPT_TEST_DATABASE_URL: postgres://test:test@localhost:5432/test
-        run: cargo test --manifest-path tests/Cargo.toml --workspace
+        run: cargo nextest run --manifest-path tests/Cargo.toml --workspace
 
       - name: Run admin unit tests
         if: steps.tests.outputs.present == 'true'
         env:
           SQLX_OFFLINE: "true"
-        run: cargo test -p systemprompt-web-admin --tests
+        run: cargo nextest run -p systemprompt-web-admin --tests
 
       - name: Front-end asset manifest and standards gate
         env:
           SQLX_OFFLINE: "true"
-        run: cargo test -p systemprompt-web-extension --tests
+        run: cargo nextest run -p systemprompt-web-extension --tests
