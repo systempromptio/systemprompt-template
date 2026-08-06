@@ -54,10 +54,13 @@ server_pids() {
 
 # The build fingerprint recorded for this exact binary content, or "" if this
 # binary was never produced by a coordinated `just build`.
+# An absent entry is normal: the running server may be another checkout's
+# binary, or predate this ledger. Without the guard `grep`'s exit 1 propagates
+# through pipefail into the caller's assignment and set -e kills the report.
 key_for_binary() {
     local bsha="$1"
     [ -f "$BINARIES" ] || return 0
-    grep -F "\"binary_sha\":\"$bsha\"" "$BINARIES" 2>/dev/null | tail -1 |
+    { grep -F "\"binary_sha\":\"$bsha\"" "$BINARIES" 2>/dev/null || true; } | tail -1 |
         sed -n 's/.*"tree":"\([^"]*\)".*/\1/p'
 }
 
