@@ -138,7 +138,7 @@ except Exception:
   fi
   echo "  NOTE: Cloud credentials expired${EXP_NOTE:+ ($EXP_NOTE)}."
   echo "        Local-profile demos will continue normally."
-  echo "        Run 'systemprompt cloud auth login' if you need cloud sync."
+  echo "        Run 'systemprompt cloud auth login' if you need cloud access."
   echo ""
 fi
 export CLOUD_OFFLINE

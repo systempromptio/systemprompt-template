@@ -576,6 +576,18 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
         BIN="$ROOT/target/debug/systemprompt"
     fi
     mkdir -p "$PROFILE_DIR" "$DOCKER_DIR"
+    # Rewrite the compose file when it exists but pins a different host port.
+    # Guarding only on existence meant a re-run with a new PG_PORT kept the old
+    # mapping, brought Postgres up on the old port, and then waited 60s for the
+    # new one before dying on "Postgres did not become ready" — which names the
+    # symptom and hides the cause.
+    if [ -f "$DOCKER_DIR/local.yaml" ] \
+        && ! grep -q "\"${PG_PORT}:5432\"" "$DOCKER_DIR/local.yaml"; then
+        echo "Docker compose pins a different host port; rewriting for $PG_PORT."
+        echo "Recreating the container so the new mapping takes effect..."
+        docker compose -p "$(just _project_name local)" -f "$DOCKER_DIR/local.yaml" down 2>/dev/null || true
+        rm -f "$DOCKER_DIR/local.yaml"
+    fi
     if [ ! -f "$DOCKER_DIR/local.yaml" ]; then
         echo "Writing Docker compose for local Postgres (host port $PG_PORT)..."
         cat > "$DOCKER_DIR/local.yaml" <<YAML
@@ -641,6 +653,12 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
             # points at whatever else owns 8080, so every MCP tool call fails
             # with "kid does not match any known signing key".
             "$BIN" admin config security set --jwt-issuer "http://localhost:${HTTP_PORT}"
+            # CORS is seeded on the default port too, so the admin UI served
+            # from the chosen port is refused by its own API.
+            "$BIN" admin config server cors add "http://localhost:${HTTP_PORT}" || true
+            "$BIN" admin config server cors add "http://127.0.0.1:${HTTP_PORT}" || true
+            "$BIN" admin config server cors remove "http://localhost:8080" || true
+            "$BIN" admin config server cors remove "http://127.0.0.1:8080" || true
         fi
     elif [ "$HAS_KEY" = true ]; then
         # Profile generation is one-shot, guarded on profile.yaml. `just db-down`
@@ -713,13 +731,14 @@ profiles:
 # Content and skills are ingested from services/ at server startup and by
 # `just publish` (publish_pipeline job); there is no separate local sync command.
 
-# Push to cloud
-sync-push *ARGS:
-    {{CLI}} cloud sync push "$@"
+# Core 0.29.0 removed `cloud sync`. Pushing is `just deploy` (cloud deploy),
+# and pulling is `cloud backup`, which downloads the tenant's runtime services/
+# tree. The old sync-push / sync-pull recipes called a command that no longer
+# exists, so they are gone rather than aliased to something they never were.
 
-# Pull from cloud
-sync-pull *ARGS:
-    {{CLI}} cloud sync pull "$@"
+# Download the tenant's runtime services/ tree (--list to inspect first)
+backup *ARGS:
+    {{CLI}} cloud backup "$@"
 
 # ══════════════════════════════════════════════════════════════════════════════
 # DEPLOY
