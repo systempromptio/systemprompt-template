@@ -26,7 +26,14 @@ files: CasaOS compose, DigitalOcean compose + Packer default), runs
 `just clippy`.
 
 Then: run the test suite, exercise anything the core changelog touches,
-review the diff, commit to main, push. This is the human gate.
+**write the `CHANGELOG.md` entry for this version**, review the diff, commit
+to main, push. This is the human gate.
+
+`sync-release-version.sh` deliberately does not touch `CHANGELOG.md`: only a
+human knows which of the release's changes are breaking for a consumer. Head
+the entry `## [X.Y.Z] - YYYY-MM-DD` and group bullets under `Breaking`,
+`Added`, `Changed`, `Fixed`, `Removed`. Every breaking bullet leads with
+`**Breaking:**`, names the affected symbol, and ends with `Migrate by …`.
 
 ## Step B — release
 

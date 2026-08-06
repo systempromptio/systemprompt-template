@@ -1,5 +1,65 @@
 # Changelog
 
+## [0.29.0] - 2026-08-05
+
+### Breaking
+
+- **Breaking:** tracks systemprompt-core 0.29.0. `create_router` in the MCP extension takes an `McpSessionRepository`, and the content and gateway-policy jobs take their repositories, in place of a `PgPool`. Migrate by constructing the repository from the pool at the call site and passing it through.
+- **Breaking:** `UserService` and `AnalyticsService` are constructed from injected repositories. Migrate by building each repository from the pool and passing them to the constructor.
+- **Breaking:** the eval tables are owned by core's `systemprompt-evaluation` extension; the web extension declares them via `cross_extension_tables`. Migrate by deleting any local `SchemaDefinition` for `eval_runs`, `eval_cases`, `eval_results`, `eval_pairs`, `eval_judge_calls`, or `eval_rubrics`; a duplicate owner fails installation with `DuplicateTableOwner`.
+- **Breaking:** `ai_requests.context_id` is `NOT NULL`. Rows belonging to no known context carry the sentinel `00000000-0000-0000-0000-4c4547414359`, which analytics reports as no context rather than as a context id.
+
+### Added
+
+- `check-asset-reachability.sh` gate: every shipped front-end asset must be reachable from a template or the asset manifest.
+- `check-workspace-deps.sh` gate: every declared workspace dependency must be inherited by at least one member.
+
+### Changed
+
+- Repository functions in `extensions/web/admin` follow the `list_` / `find_` / `get_` return-type convention, enforced by `check-repository-naming.sh`.
+- Helm chart 0.10.0 with appVersion 0.29.0; the CasaOS, DigitalOcean, and Packer manifests pin the 0.29.0 image.
+
+### Fixed
+
+- Gateway demo routes whose provider the active profile does not declare are skipped instead of failing.
+
+### Removed
+
+- The unreferenced content-card partial and the emptied `service_plugin_js` asset.
+
+## [0.28.0] - 2026-07-31
+
+### Breaking
+
+- **Breaking:** the governance policy toggle applies on restart rather than reloading in place, because core's `GovernanceEngine::global()` is a `LazyLock`. Migrate by restarting the server after changing `services/governance/config.yaml`.
+- **Breaking:** an unparseable `services/governance/config.yaml` fails boot instead of falling back to the built-in defaults. Migrate by validating the file before deploying.
+
+### Changed
+
+- Tracks systemprompt-core 0.28.0. The webhook engine delegates to core's process-wide governance engine, so rate-limit buckets are counted once per request.
+- The secrets safety scanner covers egress only; the `secret_scan` governance policy covers the request side.
+- Helm chart 0.9.0 with appVersion 0.28.0; the deployment manifests pin the 0.28.0 image.
+
+### Fixed
+
+- The `cli` justfile recipe no longer word-splits quoted arguments.
+
+## [0.27.0] - 2026-07-29
+
+### Breaking
+
+- **Breaking:** the governance policy engine lives in `systemprompt-security`. The four builtin policies, the audit repository and handler, the evaluate handler, and the secrets scanner no longer exist in this repo. Migrate by importing them from `systemprompt_security` and registering third-party policies against core's `GovernancePolicy` trait.
+- **Breaking:** `AppPaths::from_profile` takes a `PathResolution`. Migrate by passing the resolution alongside the profile.
+
+### Changed
+
+- `render.yaml` pins `:edge` so boot-time fixes reach the Render service without waiting for a release.
+- Helm appVersion 0.27.0; the deployment manifests pin the 0.27.0 image.
+
+### Fixed
+
+- Migration checksum drift is repaired on container boot, so a redeploy no longer needs a manual `just repair-migrations`.
+
 ## 0.26.0 — 2026-07-28
 
 ### Changed
