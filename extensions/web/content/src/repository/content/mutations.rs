@@ -55,8 +55,8 @@ async fn get_content(
         Content,
         r#"
         SELECT mc.id as "id: ContentId", mc.slug, mc.title, mc.description, mc.body, mc.author,
-               mc.published_at, mc.keywords, mc.kind, mc.image,
-               mc.category_id as "category_id: CategoryId",
+               mc.published_at, mc.keywords, mc.kind, mc.image as "image?",
+               mc.category_id as "category_id?: CategoryId",
                mc.source_id as "source_id: SourceId",
                mc.version_hash,
                COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
@@ -64,7 +64,7 @@ async fn get_content(
                COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
                COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
                COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
-               mc.updated_at
+               mc.updated_at as "updated_at!"
         FROM markdown_content mc
         LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
         WHERE mc.id = $1

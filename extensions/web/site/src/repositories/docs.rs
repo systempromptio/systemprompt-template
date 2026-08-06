@@ -22,9 +22,9 @@ pub(crate) async fn get_doc_content(
     let row = sqlx::query!(
         r#"
         SELECT
-            mc.slug,
-            mc.kind,
-            mc.source_id as "source_id: SourceId",
+            mc.slug as "slug!",
+            mc.kind as "kind!",
+            mc.source_id as "source_id!: SourceId",
             COALESCE(mce.after_reading_this, '[]'::jsonb) as "after_reading_this!: Json<Vec<String>>",
             COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
             COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>"

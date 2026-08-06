@@ -22,8 +22,8 @@ impl ContentQueryRepository {
             Content,
             r#"
             SELECT mc.id as "id!: ContentId", mc.slug as "slug!", mc.title as "title!", mc.description as "description!", mc.body as "body!", mc.author as "author!",
-                   mc.published_at as "published_at!", mc.keywords as "keywords!", mc.kind as "kind!", mc.image,
-                   mc.category_id as "category_id: CategoryId",
+                   mc.published_at as "published_at!", mc.keywords as "keywords!", mc.kind as "kind!", mc.image as "image?",
+                   mc.category_id as "category_id?: CategoryId",
                    mc.source_id as "source_id!: SourceId",
                    mc.version_hash as "version_hash!",
                    COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
@@ -31,7 +31,7 @@ impl ContentQueryRepository {
                    COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
                    COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
                    COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
-                   mc.updated_at
+                   mc.updated_at as "updated_at!"
             FROM markdown_content mc
             LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
             WHERE mc.id = $1
@@ -47,8 +47,8 @@ impl ContentQueryRepository {
             Content,
             r#"
             SELECT mc.id as "id!: ContentId", mc.slug as "slug!", mc.title as "title!", mc.description as "description!", mc.body as "body!", mc.author as "author!",
-                   mc.published_at as "published_at!", mc.keywords as "keywords!", mc.kind as "kind!", mc.image,
-                   mc.category_id as "category_id: CategoryId",
+                   mc.published_at as "published_at!", mc.keywords as "keywords!", mc.kind as "kind!", mc.image as "image?",
+                   mc.category_id as "category_id?: CategoryId",
                    mc.source_id as "source_id!: SourceId",
                    mc.version_hash as "version_hash!",
                    COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
@@ -56,7 +56,7 @@ impl ContentQueryRepository {
                    COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
                    COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
                    COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
-                   mc.updated_at
+                   mc.updated_at as "updated_at!"
             FROM markdown_content mc
             LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
             WHERE mc.slug = $1
@@ -76,8 +76,8 @@ impl ContentQueryRepository {
             Content,
             r#"
             SELECT mc.id as "id!: ContentId", mc.slug as "slug!", mc.title as "title!", mc.description as "description!", mc.body as "body!", mc.author as "author!",
-                   mc.published_at as "published_at!", mc.keywords as "keywords!", mc.kind as "kind!", mc.image,
-                   mc.category_id as "category_id: CategoryId",
+                   mc.published_at as "published_at!", mc.keywords as "keywords!", mc.kind as "kind!", mc.image as "image?",
+                   mc.category_id as "category_id?: CategoryId",
                    mc.source_id as "source_id!: SourceId",
                    mc.version_hash as "version_hash!",
                    COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
@@ -85,7 +85,7 @@ impl ContentQueryRepository {
                    COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
                    COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
                    COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
-                   mc.updated_at
+                   mc.updated_at as "updated_at!"
             FROM markdown_content mc
             LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
             WHERE mc.source_id = $1 AND mc.slug = $2
@@ -102,8 +102,8 @@ impl ContentQueryRepository {
             Content,
             r#"
             SELECT mc.id as "id!: ContentId", mc.slug as "slug!", mc.title as "title!", mc.description as "description!", mc.body as "body!", mc.author as "author!",
-                   mc.published_at as "published_at!", mc.keywords as "keywords!", mc.kind as "kind!", mc.image,
-                   mc.category_id as "category_id: CategoryId",
+                   mc.published_at as "published_at!", mc.keywords as "keywords!", mc.kind as "kind!", mc.image as "image?",
+                   mc.category_id as "category_id?: CategoryId",
                    mc.source_id as "source_id!: SourceId",
                    mc.version_hash as "version_hash!",
                    COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
@@ -111,7 +111,7 @@ impl ContentQueryRepository {
                    COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
                    COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
                    COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
-                   mc.updated_at
+                   mc.updated_at as "updated_at!"
             FROM markdown_content mc
             LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
             ORDER BY mc.published_at DESC
@@ -132,8 +132,8 @@ impl ContentQueryRepository {
             Content,
             r#"
             SELECT mc.id as "id!: ContentId", mc.slug as "slug!", mc.title as "title!", mc.description as "description!", mc.body as "body!", mc.author as "author!",
-                   mc.published_at as "published_at!", mc.keywords as "keywords!", mc.kind as "kind!", mc.image,
-                   mc.category_id as "category_id: CategoryId",
+                   mc.published_at as "published_at!", mc.keywords as "keywords!", mc.kind as "kind!", mc.image as "image?",
+                   mc.category_id as "category_id?: CategoryId",
                    mc.source_id as "source_id!: SourceId",
                    mc.version_hash as "version_hash!",
                    COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
@@ -141,7 +141,7 @@ impl ContentQueryRepository {
                    COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
                    COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
                    COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
-                   mc.updated_at
+                   mc.updated_at as "updated_at!"
             FROM markdown_content mc
             LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
             WHERE mc.source_id = $1
@@ -162,8 +162,8 @@ impl ContentQueryRepository {
             Content,
             r#"
             SELECT mc.id as "id!: ContentId", mc.slug as "slug!", mc.title as "title!", mc.description as "description!", mc.body as "body!", mc.author as "author!",
-                   mc.published_at as "published_at!", mc.keywords as "keywords!", mc.kind as "kind!", mc.image,
-                   mc.category_id as "category_id: CategoryId",
+                   mc.published_at as "published_at!", mc.keywords as "keywords!", mc.kind as "kind!", mc.image as "image?",
+                   mc.category_id as "category_id?: CategoryId",
                    mc.source_id as "source_id!: SourceId",
                    mc.version_hash as "version_hash!",
                    COALESCE(mc.links, '[]'::jsonb) as "links!: Json<Vec<ContentLinkMetadata>>",
@@ -171,7 +171,7 @@ impl ContentQueryRepository {
                    COALESCE(mce.related_playbooks, '[]'::jsonb) as "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
                    COALESCE(mce.related_code, '[]'::jsonb) as "related_code!: Json<Vec<ContentLinkMetadata>>",
                    COALESCE(mce.related_docs, '[]'::jsonb) as "related_docs!: Json<Vec<ContentLinkMetadata>>",
-                   mc.updated_at
+                   mc.updated_at as "updated_at!"
             FROM markdown_content mc
             LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
             ORDER BY mc.published_at DESC
