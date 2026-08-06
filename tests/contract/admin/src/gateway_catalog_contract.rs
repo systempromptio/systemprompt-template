@@ -180,7 +180,10 @@ async fn the_catalog_and_the_detector_are_both_behind_the_admin_gate() {
     // stopped before either handler runs. Note this means the catalog
     // handler's own "or the subject themselves" carve-out is unreachable over
     // HTTP: a user cannot read their own catalog through this endpoint.
-    for path in [catalog_path(&seed::unique("someone-else")), DETECT.to_owned()] {
+    for path in [
+        catalog_path(&seed::unique("someone-else")),
+        DETECT.to_owned(),
+    ] {
         let (status, body) = app.call(Call::get(&path, Principal::NonAdmin)).await;
         assert_eq!(status, StatusCode::FORBIDDEN, "non-admin {path}: {body}");
         assert_eq!(parse(&body)["error"], "Admin access required");
@@ -217,7 +220,10 @@ async fn the_detector_echoes_the_window_it_swept() {
     assert_eq!(parse(&body)["since_minutes"], 60);
 
     let (status, body) = app
-        .call(Call::get(&format!("{DETECT}?since_minutes=5"), Principal::Admin))
+        .call(Call::get(
+            &format!("{DETECT}?since_minutes=5"),
+            Principal::Admin,
+        ))
         .await;
     assert_eq!(status, StatusCode::OK, "explicit window: {body}");
     assert_eq!(parse(&body)["since_minutes"], 5);
@@ -263,7 +269,7 @@ async fn the_detector_records_a_request_that_should_have_been_denied() {
             user_id: &user,
             session_id: Some(&session),
             trace_id: None,
-            context_id: &context,
+            context_id: Some(context.as_str()),
             status: "completed",
         },
     )
@@ -350,7 +356,7 @@ async fn the_detector_skips_requests_outside_the_window_and_off_the_catalog() {
             user_id: &user,
             session_id: Some(&session),
             trace_id: None,
-            context_id: &context,
+            context_id: Some(context.as_str()),
             status: "completed",
         },
     )
@@ -359,11 +365,13 @@ async fn the_detector_skips_requests_outside_the_window_and_off_the_catalog() {
     // Age it out. A sweep that ignored `since_minutes` would re-flag every
     // historical request on every run, and the audit table would grow without
     // bound from a button an operator pressed twice.
-    sqlx::query("UPDATE ai_requests SET created_at = NOW() - INTERVAL '3 hours' WHERE user_id = $1")
-        .bind(user.as_str())
-        .execute(db.pool.as_ref())
-        .await
-        .expect("age the request");
+    sqlx::query(
+        "UPDATE ai_requests SET created_at = NOW() - INTERVAL '3 hours' WHERE user_id = $1",
+    )
+    .bind(user.as_str())
+    .execute(db.pool.as_ref())
+    .await
+    .expect("age the request");
 
     let (status, body) = app
         .call(Call::get(
@@ -433,7 +441,7 @@ async fn already_rejected_requests_are_not_swept_again() {
             user_id: &user,
             session_id: Some(&session),
             trace_id: None,
-            context_id: &context,
+            context_id: Some(context.as_str()),
             status: "rejected",
         },
     )
@@ -458,4 +466,3 @@ async fn detector_rows(pool: &PgPool, user_id: &UserId) -> i64 {
     .await
     .expect("count detector decisions")
 }
-

@@ -66,7 +66,7 @@ async fn seed_trail(pool: &PgPool) -> Trail {
             user_id: &user_id,
             session_id: Some(&session_id),
             trace_id: Some(&trace_id),
-            context_id: &context_id,
+            context_id: Some(context_id.as_str()),
             status: "completed",
         },
     )
@@ -80,7 +80,7 @@ async fn seed_trail(pool: &PgPool) -> Trail {
             user_id: &user_id,
             session_id: Some(&session_id),
             trace_id: Some(&trace_id),
-            context_id: &context_id,
+            context_id: Some(context_id.as_str()),
             status: "error",
         },
     )

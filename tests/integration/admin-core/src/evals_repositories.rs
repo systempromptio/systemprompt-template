@@ -20,7 +20,7 @@ use systemprompt_web_admin::repositories::evals::sampling::{
 };
 use systemprompt_web_admin::repositories::evals::{EvalRunKind, EvalRunStatus, EvalVerdict};
 
-use crate::fixtures::{narrow_window, unclaimed_email, unique, insert_user};
+use crate::fixtures::{insert_user, narrow_window, unclaimed_email, unique};
 use crate::tempdb::TempDb;
 
 fn filter_snapshot() -> Json<EvalRunFilterSnapshot> {
@@ -38,15 +38,16 @@ fn filter_snapshot() -> Json<EvalRunFilterSnapshot> {
 async fn insert_gateway_request(pool: &PgPool, id: &str, user: &UserId, actor_kind: &str) {
     sqlx::query(
         "INSERT INTO ai_requests (
-             id, request_id, user_id, provider, model, input_tokens, output_tokens,
+             id, request_id, user_id, context_id, provider, model, input_tokens, output_tokens,
              tokens_used, cost_microdollars, latency_ms, status, actor_kind, actor_id,
              created_at, updated_at)
-         VALUES ($1, $1, $2, 'anthropic', 'claude-eval-model', 10, 5, 15, 100, 50,
-                 'completed', $3, $2, NOW(), NOW())",
+         VALUES ($1, $1, $2, $4, 'anthropic', 'claude-eval-model', 10, 5, 15,
+                 100, 50, 'completed', $3, $2, NOW(), NOW())",
     )
     .bind(id)
     .bind(user.as_str())
     .bind(actor_kind)
+    .bind(crate::fixtures::LEGACY_CONTEXT_ID)
     .execute(pool)
     .await
     .expect("insert ai_request");

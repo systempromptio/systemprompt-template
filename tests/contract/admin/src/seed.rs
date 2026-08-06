@@ -207,6 +207,7 @@ pub struct DecisionSpec<'a> {
     pub id: String,
     pub user_id: &'a UserId,
     pub session_id: &'a str,
+    pub context_id: &'a str,
     pub decision: &'a str,
     pub policy: &'a str,
     pub tool_name: &'a str,
@@ -225,7 +226,7 @@ pub async fn insert_decision(pool: &PgPool, spec: &DecisionSpec<'_>) {
     .bind(spec.tool_name)
     .bind(spec.decision)
     .bind(spec.policy)
-    .bind(LEGACY_CONTEXT_ID)
+    .bind(spec.context_id)
     .execute(pool)
     .await
     .expect("insert governance decision");
@@ -263,22 +264,23 @@ pub async fn insert_event(pool: &PgPool, user_id: &UserId, session_id: &str, too
     .expect("insert plugin usage event");
 }
 
+pub struct AclRule<'a> {
+    pub entity_type: &'a str,
+    pub entity_id: &'a str,
+    pub rule_type: &'a str,
+    pub rule_value: &'a str,
+    pub access: &'a str,
+}
+
 /// Insert an access-control grant, creating the catalog row the FK requires.
-pub async fn insert_acl_rule(
-    pool: &PgPool,
-    entity_type: &str,
-    entity_id: &str,
-    rule_type: &str,
-    rule_value: &str,
-    access: &str,
-) {
+pub async fn insert_acl_rule(pool: &PgPool, rule: &AclRule<'_>) {
     sqlx::query(
         "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
          VALUES ($1, $2, false, 'contract-fixture')
          ON CONFLICT (entity_type, entity_id) DO NOTHING",
     )
-    .bind(entity_type)
-    .bind(entity_id)
+    .bind(rule.entity_type)
+    .bind(rule.entity_id)
     .execute(pool)
     .await
     .expect("insert access control entity");
@@ -289,11 +291,11 @@ pub async fn insert_acl_rule(
          VALUES ($1, $2, $3, $4, $5, $6)",
     )
     .bind(unique("rule"))
-    .bind(entity_type)
-    .bind(entity_id)
-    .bind(rule_type)
-    .bind(rule_value)
-    .bind(access)
+    .bind(rule.entity_type)
+    .bind(rule.entity_id)
+    .bind(rule.rule_type)
+    .bind(rule.rule_value)
+    .bind(rule.access)
     .execute(pool)
     .await
     .expect("insert access control rule");
