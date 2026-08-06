@@ -166,12 +166,16 @@ pub async fn insert_context(
     .expect("insert user context");
 }
 
+/// `ai_requests.context_id` is NOT NULL; core's sentinel stands in for a row
+/// that belongs to no known context.
+pub const LEGACY_CONTEXT_ID: &str = "00000000-0000-0000-0000-4c4547414359";
+
 pub struct RequestSpec<'a> {
     pub id: String,
     pub user_id: &'a UserId,
     pub session_id: Option<&'a str>,
     pub trace_id: Option<&'a str>,
-    pub context_id: &'a str,
+    pub context_id: Option<&'a str>,
     pub status: &'a str,
 }
 
@@ -182,7 +186,7 @@ pub async fn insert_request(pool: &PgPool, spec: &RequestSpec<'_>) {
              provider, model, input_tokens, output_tokens, tokens_used,
              cost_microdollars, latency_ms, status, actor_kind, actor_id,
              created_at, updated_at)
-         VALUES ($1, $1, $2, $3, $4, $5, 'anthropic', 'claude-contract-model',
+         VALUES ($1, $1, $2, $3, $4, COALESCE($5, $7), 'anthropic', 'claude-contract-model',
                  100, 20, 120, 5000, 250, $6, 'user', $2, NOW(), NOW())",
     )
     .bind(&spec.id)
@@ -191,6 +195,7 @@ pub async fn insert_request(pool: &PgPool, spec: &RequestSpec<'_>) {
     .bind(spec.trace_id)
     .bind(spec.context_id)
     .bind(spec.status)
+    .bind(LEGACY_CONTEXT_ID)
     .execute(pool)
     .await
     .expect("insert ai_request");
@@ -202,7 +207,6 @@ pub struct DecisionSpec<'a> {
     pub id: String,
     pub user_id: &'a UserId,
     pub session_id: &'a str,
-    pub context_id: &'a str,
     pub decision: &'a str,
     pub policy: &'a str,
     pub tool_name: &'a str,
@@ -211,9 +215,9 @@ pub struct DecisionSpec<'a> {
 pub async fn insert_decision(pool: &PgPool, spec: &DecisionSpec<'_>) {
     sqlx::query(
         "INSERT INTO governance_decisions (
-             id, user_id, session_id, tool_name, decision, policy, reason,
-             actor_kind, actor_id, context_id, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, 'contract fixture', 'user', $2, $7, NOW())",
+             id, user_id, session_id, context_id, tool_name, decision, policy, reason,
+             actor_kind, actor_id, created_at)
+         VALUES ($1, $2, $3, $7, $4, $5, $6, 'contract fixture', 'user', $2, NOW())",
     )
     .bind(&spec.id)
     .bind(spec.user_id.as_str())
@@ -221,7 +225,7 @@ pub async fn insert_decision(pool: &PgPool, spec: &DecisionSpec<'_>) {
     .bind(spec.tool_name)
     .bind(spec.decision)
     .bind(spec.policy)
-    .bind(spec.context_id)
+    .bind(LEGACY_CONTEXT_ID)
     .execute(pool)
     .await
     .expect("insert governance decision");
@@ -259,24 +263,15 @@ pub async fn insert_event(pool: &PgPool, user_id: &UserId, session_id: &str, too
     .expect("insert plugin usage event");
 }
 
-/// One access-control grant: which entity, which subject band, which verdict.
-pub struct AclRule<'a> {
-    pub entity_type: &'a str,
-    pub entity_id: &'a str,
-    pub rule_type: &'a str,
-    pub rule_value: &'a str,
-    pub access: &'a str,
-}
-
 /// Insert an access-control grant, creating the catalog row the FK requires.
-pub async fn insert_acl_rule(pool: &PgPool, rule: &AclRule<'_>) {
-    let AclRule {
-        entity_type,
-        entity_id,
-        rule_type,
-        rule_value,
-        access,
-    } = *rule;
+pub async fn insert_acl_rule(
+    pool: &PgPool,
+    entity_type: &str,
+    entity_id: &str,
+    rule_type: &str,
+    rule_value: &str,
+    access: &str,
+) {
     sqlx::query(
         "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
          VALUES ($1, $2, false, 'contract-fixture')

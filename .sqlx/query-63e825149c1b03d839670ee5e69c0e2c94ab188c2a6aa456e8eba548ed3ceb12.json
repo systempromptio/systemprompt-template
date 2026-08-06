@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM mcp_artifacts WHERE artifact_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "63e825149c1b03d839670ee5e69c0e2c94ab188c2a6aa456e8eba548ed3ceb12"
+}

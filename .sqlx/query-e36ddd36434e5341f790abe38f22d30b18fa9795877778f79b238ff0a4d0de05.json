@@ -1,0 +1,72 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ai_quota_buckets (\n                id, subject_kind, subject_id, window_seconds, window_start,\n                requests, input_tokens, output_tokens, cost_microdollars, updated_at\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)\n            ON CONFLICT (subject_kind, subject_id, window_seconds, window_start) DO UPDATE\n            SET requests = ai_quota_buckets.requests + EXCLUDED.requests,\n                input_tokens = ai_quota_buckets.input_tokens + EXCLUDED.input_tokens,\n                output_tokens = ai_quota_buckets.output_tokens + EXCLUDED.output_tokens,\n                cost_microdollars = ai_quota_buckets.cost_microdollars + EXCLUDED.cost_microdollars,\n                updated_at = CURRENT_TIMESTAMP\n            RETURNING requests, input_tokens, output_tokens, cost_microdollars\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "requests",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "requests"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "input_tokens",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "input_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "output_tokens",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "output_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "cost_microdollars",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_quota_buckets",
+            "name": "cost_microdollars"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Varchar",
+        "Int4",
+        "Timestamptz",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e36ddd36434e5341f790abe38f22d30b18fa9795877778f79b238ff0a4d0de05"
+}

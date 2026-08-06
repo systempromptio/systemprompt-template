@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    COALESCE(referrer_source, 'direct') as \"source\",\n                    COUNT(*)::bigint as \"count!\"\n                FROM v_engaged_traffic\n                WHERE started_at >= $1 AND started_at < $2\n                GROUP BY referrer_source\n                ORDER BY COUNT(*) DESC\n                LIMIT $3\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "source",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "419e1b9ff0709803e71493d273579704caea4233c2778fcf0b8b3c940dd96bef"
+}

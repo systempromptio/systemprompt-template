@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                provider as \"provider!\",\n                model as \"model!\",\n                COUNT(*)::bigint as \"request_count!\",\n                SUM(tokens_used)::bigint as \"total_tokens\",\n                SUM(cost_microdollars)::bigint as \"total_cost\",\n                AVG(latency_ms)::float8 as \"avg_latency\"\n            FROM ai_requests\n            WHERE created_at >= $1 AND created_at < $2\n              AND provider IS NOT NULL AND model IS NOT NULL\n            GROUP BY provider, model\n            ORDER BY COUNT(*) DESC\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "provider!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "provider"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "model!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "request_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_tokens",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "total_cost",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "avg_latency",
+        "type_info": "Float8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "27c7025d0ebaef55682b8fdb6c41ba0f7abf70f8ecd9ed1da66a0ed0fc785b1d"
+}

@@ -20,9 +20,9 @@ pub async fn get_context_list_kpis(
     pool: &PgPool,
     filter: &ContextListFilter,
 ) -> Result<ContextListKpis, sqlx::Error> {
-    let pattern = free_text_pattern(filter);
-
-    let row = sqlx::query!(
+    let (pattern, legacy) = (free_text_pattern(filter), ContextId::legacy());
+    sqlx::query_as!(
+        ContextListKpis,
         r#"
         WITH req AS (
             SELECT
@@ -35,14 +35,14 @@ pub async fn get_context_list_kpis(
                 COALESCE(SUM(cost_microdollars), 0)::bigint AS total_cost_microdollars,
                 MAX(created_at)                             AS last_request_at
             FROM ai_requests
-            WHERE context_id IS NOT NULL
+            WHERE context_id <> $5
             GROUP BY context_id
         ),
         msgs AS (
             SELECT r.context_id, COUNT(*)::bigint AS message_count
             FROM ai_request_messages m
             JOIN ai_requests r ON r.id = m.request_id
-            WHERE r.context_id IS NOT NULL
+            WHERE r.context_id <> $5
             GROUP BY r.context_id
         ),
         joined AS (
@@ -82,19 +82,10 @@ pub async fn get_context_list_kpis(
         filter.model,
         filter.since,
         pattern,
+        legacy.as_str(),
     )
     .fetch_one(pool)
-    .await?;
-
-    Ok(ContextListKpis {
-        total_contexts: row.total_contexts,
-        active_users: row.active_users,
-        total_requests: row.total_requests,
-        total_messages: row.total_messages,
-        total_input_tokens: row.total_input_tokens,
-        total_output_tokens: row.total_output_tokens,
-        total_cost_microdollars: row.total_cost_microdollars,
-    })
+    .await
 }
 
 pub async fn list_distinct_models(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {

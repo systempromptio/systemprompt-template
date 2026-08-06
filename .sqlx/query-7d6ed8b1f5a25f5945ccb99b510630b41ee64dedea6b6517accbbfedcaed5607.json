@@ -1,0 +1,176 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            id as \"id!: AiRequestId\",\n            created_at as \"created_at!\",\n            trace_id,\n            user_id as \"user_id!: UserId\",\n            actor_kind as \"actor_kind!\",\n            actor_id as \"actor_id!\",\n            provider,\n            model,\n            input_tokens,\n            output_tokens,\n            cost_microdollars as \"cost_microdollars!\",\n            latency_ms,\n            status as \"status!\"\n        FROM ai_requests\n        WHERE ($1::timestamptz IS NULL OR created_at >= $1)\n          AND ($2::text IS NULL OR model ILIKE $2)\n          AND ($3::text IS NULL OR provider ILIKE $3)\n          AND ($4::text IS NULL OR user_id = $4)\n        ORDER BY created_at DESC\n        LIMIT $5\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: AiRequestId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "trace_id",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "trace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "user_id!: UserId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "actor_kind!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "actor_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "actor_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "provider",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "provider"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "input_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "input_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "output_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "output_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "status!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "status"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "7d6ed8b1f5a25f5945ccb99b510630b41ee64dedea6b6517accbbfedcaed5607"
+}

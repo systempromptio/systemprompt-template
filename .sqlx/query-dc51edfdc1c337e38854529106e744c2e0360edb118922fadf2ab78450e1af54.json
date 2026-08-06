@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ai_request_payloads (\n                ai_request_id, request_body, request_excerpt,\n                request_truncated, request_bytes, request_body_sha256,\n                created_at, updated_at\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)\n            ON CONFLICT (ai_request_id) DO UPDATE\n            SET request_body = EXCLUDED.request_body,\n                request_excerpt = EXCLUDED.request_excerpt,\n                request_truncated = EXCLUDED.request_truncated,\n                request_bytes = EXCLUDED.request_bytes,\n                request_body_sha256 = EXCLUDED.request_body_sha256,\n                updated_at = CURRENT_TIMESTAMP\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Jsonb",
+        "Text",
+        "Bool",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dc51edfdc1c337e38854529106e744c2e0360edb118922fadf2ab78450e1af54"
+}

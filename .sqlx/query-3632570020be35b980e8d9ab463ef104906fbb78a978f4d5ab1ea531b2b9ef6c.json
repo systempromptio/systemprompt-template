@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                (SELECT COUNT(*) FROM users WHERE status != 'deleted') as \"total_users!\",\n                (SELECT COUNT(DISTINCT user_id) FROM v_clean_traffic WHERE last_activity_at > $1) as \"active_users_24h!\",\n                (SELECT COUNT(DISTINCT user_id) FROM v_clean_traffic WHERE last_activity_at > $2) as \"active_users_7d!\",\n                (SELECT COUNT(*) FROM v_clean_traffic) as \"total_sessions!\",\n                (SELECT COUNT(*) FROM v_clean_traffic WHERE ended_at IS NULL) as \"active_sessions!\",\n                (SELECT COUNT(*) FROM user_contexts WHERE kind = $3) as \"total_contexts!\",\n                (SELECT COUNT(*) FROM agent_tasks) as \"total_tasks!\",\n                (SELECT COUNT(*) FROM ai_requests) as \"total_ai_requests!\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "active_users_24h!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "active_users_7d!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_sessions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "active_sessions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "total_contexts!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "total_tasks!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "total_ai_requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "3632570020be35b980e8d9ab463ef104906fbb78a978f4d5ab1ea531b2b9ef6c"
+}

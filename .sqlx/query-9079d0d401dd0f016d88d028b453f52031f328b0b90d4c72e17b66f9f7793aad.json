@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ai_request_payloads (\n                ai_request_id, offered_tools, created_at, updated_at\n            )\n            VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)\n            ON CONFLICT (ai_request_id) DO UPDATE\n            SET offered_tools = EXCLUDED.offered_tools,\n                updated_at = CURRENT_TIMESTAMP\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9079d0d401dd0f016d88d028b453f52031f328b0b90d4c72e17b66f9f7793aad"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO id_jag_replay (jti, expires_at)\n             VALUES ($1, $2)\n             ON CONFLICT (jti) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c8a7ab7f751dfae8ed7bf73b060de5b0df5600a3de7b863f7ed8063ed9ba89a9"
+}

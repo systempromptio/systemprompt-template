@@ -1,0 +1,256 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, run_id, ai_request_id, case_id, provider, model,\n                   overall_score, dimension_scores, verdict, rationale, repair_hint,\n                   prompt_excerpt, response_excerpt, latency_ms,\n                   cost_microdollars, judge_cost_microdollars, created_at,\n                   repaired, replay_of_result_id, judge_ai_request_id\n            FROM eval_results\n            WHERE run_id = $1\n            ORDER BY created_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "run_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "run_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "ai_request_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "ai_request_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "case_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "case_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "provider",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "provider"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "overall_score",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "overall_score"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "dimension_scores",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "dimension_scores"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "verdict",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "verdict"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "rationale",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "rationale"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "repair_hint",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "repair_hint"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "prompt_excerpt",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "prompt_excerpt"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "response_excerpt",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "response_excerpt"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "cost_microdollars",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "judge_cost_microdollars",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "judge_cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "repaired",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "repaired"
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "replay_of_result_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "replay_of_result_id"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "judge_ai_request_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_results",
+            "name": "judge_ai_request_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "ad93513575cff85f5840cced16e202a9db3290e7bd887d1b635662bdd5b526bf"
+}

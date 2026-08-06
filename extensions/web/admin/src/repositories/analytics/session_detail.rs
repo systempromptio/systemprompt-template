@@ -150,6 +150,7 @@ pub async fn list_session_contexts(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Vec<SessionContextRow>, sqlx::Error> {
+    let legacy = ContextId::legacy();
     sqlx::query_as!(
         SessionContextRow,
         r#"
@@ -165,12 +166,13 @@ pub async fn list_session_contexts(
             COUNT(*) FILTER (WHERE r.status = 'failed')::bigint AS "error_count!"
         FROM ai_requests r
         LEFT JOIN user_contexts c ON c.context_id = r.context_id
-        WHERE r.session_id = $1 AND r.context_id IS NOT NULL
+        WHERE r.session_id = $1 AND r.context_id <> $2
         GROUP BY r.context_id, c.name
         ORDER BY MAX(r.created_at) DESC
         LIMIT 200
         "#,
-        session_id.as_str()
+        session_id.as_str(),
+        legacy.as_str()
     )
     .fetch_all(pool)
     .await
@@ -205,12 +207,13 @@ pub async fn list_session_requests(
     pool: &PgPool,
     session_id: &SessionId,
 ) -> Result<Vec<SessionRequestRow>, sqlx::Error> {
+    let legacy = ContextId::legacy();
     sqlx::query_as!(
         SessionRequestRow,
         r#"
         SELECT
             id                                  AS "id!: AiRequestId",
-            context_id                          AS "context_id?: ContextId",
+            NULLIF(context_id, $2)              AS "context_id?: ContextId",
             trace_id                            AS "trace_id?: TraceId",
             model                               AS "model!",
             status                              AS "status!",
@@ -222,7 +225,8 @@ pub async fn list_session_requests(
         ORDER BY created_at DESC
         LIMIT 200
         "#,
-        session_id.as_str()
+        session_id.as_str(),
+        legacy.as_str()
     )
     .fetch_all(pool)
     .await

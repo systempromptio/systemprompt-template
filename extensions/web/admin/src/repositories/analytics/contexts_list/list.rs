@@ -63,6 +63,7 @@ pub async fn list_context_list(
     let limit = resolved_limit(filter.limit);
     let pattern = free_text_pattern(filter);
 
+    let legacy = ContextId::legacy();
     let rows = sqlx::query_as!(
         ContextListRow,
         r#"
@@ -80,7 +81,7 @@ pub async fn list_context_list(
                 MAX(created_at)                             AS last_request_at,
                 (ARRAY_AGG(model ORDER BY created_at DESC))[1] AS model
             FROM ai_requests
-            WHERE context_id IS NOT NULL
+            WHERE context_id <> $6
             GROUP BY context_id
         ),
         -- Opening user turn per context, for the list's Conversation column.
@@ -101,14 +102,14 @@ pub async fn list_context_list(
                     160) AS summary
             FROM ai_request_messages m
             JOIN ai_requests r ON r.id = m.request_id
-            WHERE r.context_id IS NOT NULL AND m.role = 'user'
+            WHERE r.context_id <> $6 AND m.role = 'user'
             ORDER BY r.context_id, r.created_at ASC, m.sequence_number ASC
         ),
         msgs AS (
             SELECT r.context_id, COUNT(*)::bigint AS message_count
             FROM ai_request_messages m
             JOIN ai_requests r ON r.id = m.request_id
-            WHERE r.context_id IS NOT NULL
+            WHERE r.context_id <> $6
             GROUP BY r.context_id
         )
         SELECT
@@ -152,6 +153,7 @@ pub async fn list_context_list(
         filter.since,
         pattern,
         limit,
+        legacy.as_str(),
     )
     .fetch_all(pool)
     .await?;

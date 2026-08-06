@@ -1,0 +1,45 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    endpoint as \"from_path\",\n                    event_data->>'target_url' as \"to_path\",\n                    COUNT(*)::bigint as \"count!\"\n                FROM analytics_events\n                WHERE event_type = 'link_click'\n                  AND timestamp >= $1 AND timestamp < $2\n                  AND ($3::text IS NULL OR event_data->>'target_url' LIKE $3 || '%')\n                GROUP BY endpoint, event_data->>'target_url'\n                ORDER BY COUNT(*) DESC\n                LIMIT $4\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "from_path",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics_events",
+            "name": "endpoint"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "to_path",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "49db0a9c8f3c8ca66bd4b1b401da8bfc09da4f95690d103ed4ddd8dd1fe2a2fd"
+}

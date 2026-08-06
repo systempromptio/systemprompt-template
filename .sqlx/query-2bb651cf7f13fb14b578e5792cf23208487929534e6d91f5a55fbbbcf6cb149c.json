@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    UPDATE funnel_progress\n                    SET current_step = $3, step_timestamps = $4, updated_at = $5\n                    WHERE funnel_id = $1 AND session_id = $2\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int4",
+        "Jsonb",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2bb651cf7f13fb14b578e5792cf23208487929534e6d91f5a55fbbbcf6cb149c"
+}

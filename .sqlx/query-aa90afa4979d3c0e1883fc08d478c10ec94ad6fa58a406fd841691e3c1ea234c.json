@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE mcp_sessions SET initialize_params = NULL WHERE session_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "aa90afa4979d3c0e1883fc08d478c10ec94ad6fa58a406fd841691e3c1ea234c"
+}

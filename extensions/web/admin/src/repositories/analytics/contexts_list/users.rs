@@ -3,7 +3,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{ContextId, UserId};
 
 use super::{ContextListFilter, ContextUserSummary, free_text_pattern, resolved_limit};
 
@@ -51,6 +51,7 @@ pub async fn list_context_user_summary(
     let limit = resolved_limit(filter.limit);
     let pattern = free_text_pattern(filter);
 
+    let legacy = ContextId::legacy();
     let rows = sqlx::query_as!(
         ContextUserSummaryRow,
         r#"
@@ -63,7 +64,7 @@ pub async fn list_context_user_summary(
             FULL OUTER JOIN (
                 SELECT DISTINCT context_id, MAX(user_id) AS user_id
                 FROM ai_requests
-                WHERE context_id IS NOT NULL
+                WHERE context_id <> $6
                 GROUP BY context_id
             ) r ON r.context_id = c.context_id
             GROUP BY COALESCE(c.user_id, r.user_id), COALESCE(c.context_id, r.context_id)
@@ -79,14 +80,14 @@ pub async fn list_context_user_summary(
                 MAX(created_at)                             AS last_request_at,
                 ARRAY_AGG(DISTINCT model)                   AS models
             FROM ai_requests
-            WHERE context_id IS NOT NULL
+            WHERE context_id <> $6
             GROUP BY user_id
         ),
         msgs_per_user AS (
             SELECT r.user_id, COUNT(*)::bigint AS message_count
             FROM ai_request_messages m
             JOIN ai_requests r ON r.id = m.request_id
-            WHERE r.context_id IS NOT NULL
+            WHERE r.context_id <> $6
             GROUP BY r.user_id
         )
         SELECT
@@ -124,6 +125,7 @@ pub async fn list_context_user_summary(
         filter.since,
         pattern,
         limit,
+        legacy.as_str(),
     )
     .fetch_all(pool)
     .await?;

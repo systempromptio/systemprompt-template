@@ -194,25 +194,25 @@
       ]
     },
     "nullable": [
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
       true,
       true,
-      false,
-      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
       null,
       null,
       null,
       null,
       null,
-      false
+      true
     ]
   },
   "hash": "bb8b7deb41b08c421614695e677cfa203c6206afd3cba01cf3bde9a1ee115ee0"

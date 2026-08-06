@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE user_sessions\n        SET is_behavioral_bot = true,\n            behavioral_bot_reason = 'request_count_exceeded'\n        WHERE session_id = $1\n          AND request_count > $2\n          AND is_bot = false\n          AND is_ai_crawler = false\n          AND is_scanner = false\n          AND is_behavioral_bot = false\n        RETURNING session_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "session_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d702dcb46b20b96e2c8242502c0b4af275b1191af0e4cfd8133870f25c15d915"
+}

@@ -167,15 +167,17 @@ async fn get_conversation_totals(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<(i64, i64), sqlx::Error> {
+    let legacy = ContextId::legacy();
     let totals = sqlx::query!(
         r#"SELECT
             COUNT(DISTINCT context_id)::bigint AS "total_conversations!",
             COUNT(*)::bigint AS "total_ai_requests!"
           FROM ai_requests
           WHERE user_id = $1
-            AND context_id IS NOT NULL
+            AND context_id <> $2
             AND created_at >= NOW() - INTERVAL '30 days'"#,
         user_id.as_str(),
+        legacy.as_str(),
     )
     .fetch_one(pool)
     .await?;
@@ -186,6 +188,7 @@ async fn list_conversation_by_model(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<ConversationGroup>, sqlx::Error> {
+    let legacy = ContextId::legacy();
     Ok(sqlx::query!(
         r#"SELECT
             model AS "model!",
@@ -193,12 +196,13 @@ async fn list_conversation_by_model(
             COUNT(*)::bigint AS "ai_requests!"
           FROM ai_requests
           WHERE user_id = $1
-            AND context_id IS NOT NULL
+            AND context_id <> $2
             AND created_at >= NOW() - INTERVAL '30 days'
           GROUP BY model
           ORDER BY COUNT(*) DESC
           LIMIT 5"#,
         user_id.as_str(),
+        legacy.as_str(),
     )
     .fetch_all(pool)
     .await?
@@ -215,6 +219,7 @@ async fn list_recent_conversations(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Vec<RecentConversation>, sqlx::Error> {
+    let legacy = ContextId::legacy();
     Ok(sqlx::query!(
         r#"WITH ranked AS (
             SELECT
@@ -224,7 +229,7 @@ async fn list_recent_conversations(
               MAX(model) AS model
             FROM ai_requests
             WHERE user_id = $1
-              AND context_id IS NOT NULL
+              AND context_id <> $2
               AND created_at >= NOW() - INTERVAL '30 days'
             GROUP BY context_id
           )
@@ -239,6 +244,7 @@ async fn list_recent_conversations(
           ORDER BY ranked.last_activity DESC
           LIMIT 5"#,
         user_id.as_str(),
+        legacy.as_str(),
     )
     .fetch_all(pool)
     .await?
