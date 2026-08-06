@@ -10,7 +10,7 @@
 
 # Demo Suite
 
-**43 runnable demo scripts** organised into 9 categories, plus 2 setup scripts, plus 2 orchestrated multi-container scenarios that demonstrate the air-gap and horizontal-scaling claims in the factsheet.
+**49 runnable demo scripts** organised into 10 categories, plus 2 setup scripts, plus 2 orchestrated multi-container scenarios that demonstrate the air-gap and horizontal-scaling claims in the factsheet.
 
 Every demo is **self-testing**: it reads structured `--json` data from the CLI and asserts on it, so a script fails loudly (non-zero exit, red `✗ FAIL` line) the moment expected data is missing — it never narrates a result it didn't verify.
 
@@ -22,7 +22,7 @@ Every section below is a fenced code block — open this file in your editor, cl
 - [Categories at a glance](#categories-at-a-glance)
 - [Demos by category](#demos-by-category)
   - [Setup](#setup-run-these-first)
-  - [Infrastructure](#infrastructure) · [Governance](#governance) · [MCP](#mcp) · [Analytics](#analytics) · [Agents](#agents) · [Users](#users) · [Skills](#skills) · [Web](#web) · [Performance](#performance)
+  - [Infrastructure](#infrastructure) · [Governance](#governance) · [MCP](#mcp) · [Analytics](#analytics) · [Agents](#agents) · [Users](#users) · [Skills](#skills) · [Web](#web) · [Performance](#performance) · [Reports](reports/)
 - [Run them all at once](#run-them-all-at-once)
 - [Scenarios — factsheet proofs](#scenarios--factsheet-proofs)
   - [Air-gap scenario](#air-gap-scenario)
@@ -72,16 +72,21 @@ Organised by the three pillars of [systemprompt.io](https://systemprompt.io): **
 | Pillar | Category | Scripts | What it covers | Cost |
 |--------|----------|---------|----------------|------|
 | Infrastructure | [infrastructure/](infrastructure/) | 5 | Services, database, jobs, logs, configuration | Free |
-| Capabilities | [governance/](governance/) | 9 | Audit smoke, scope, secrets, blocklist, rate limit, hooks | Free |
+| Capabilities | [governance/](governance/) | 11 | Audit smoke, scope, secrets, blocklist, rate limit, hooks | Free |
 | Capabilities | [mcp/](mcp/) | 3 | MCP server management, access tracking, tool execution | Free |
 | Capabilities | [analytics/](analytics/) | 8 | Overview, agents, costs, requests, sessions, content/traffic, conversations, tools | Free |
 | Capabilities | [agents/](agents/) | 5 | Agent discovery, config, messaging, tracing, A2A registry | 1 × ~$0.01 |
 | Capabilities | [users/](users/) | 4 | User CRUD, roles, sessions, IP bans | Free |
-| Integrations | [skills/](skills/) | 5 | Skills, content, files, plugins, contexts | Free |
+| Integrations | [skills/](skills/) | 6 | Skills, content, files, plugins, contexts | Free |
 | Integrations | [web/](web/) | 2 | Content types, templates, sitemaps, validation | Free |
 | Integrations | [performance/](performance/) | 2 | Request tracing, 2000-request load test | Free |
+| Integrations | [reports/](reports/) | 3 | Month-end reports: seed, prove, restore (own smoke test) | Free |
 
-**Total: 46 category scripts + 2 setup scripts. 45 free, 1 costs ~$0.01.** Plus two multi-container scenarios — see [Scenarios](#scenarios--factsheet-proofs).
+**Total: 49 category scripts + 2 setup scripts. 48 free, 1 costs ~$0.01.** The
+46 in the table above run in any order; the three in [reports/](reports/) are a
+seed → prove → restore trio driven by its own `03-smoke.sh`, kept out of the
+main sweep because it writes and then removes a large fixture set. Plus two
+multi-container scenarios — see [Scenarios](#scenarios--factsheet-proofs).
 
 ---
 
@@ -140,7 +145,7 @@ Every demo below is a single fenced command. Run them in any order once prefligh
 ./demo/governance/01-happy-path.sh
 ```
 
-[`governance/02-refused-path.sh`](governance/02-refused-path.sh) — governance DENIES user-scope agent.
+[`governance/02-refused-path.sh`](governance/02-refused-path.sh) — a user-scope agent calls an admin-only tool; the chain is disabled, so it is allowed and audited.
 ```bash
 ./demo/governance/02-refused-path.sh
 ```
@@ -155,17 +160,17 @@ Every demo below is a single fenced command. Run them in any order once prefligh
 ./demo/governance/04-governance-happy.sh
 ```
 
-[`governance/05-governance-denied.sh`](governance/05-governance-denied.sh) — scope + blocklist deny for user agent.
+[`governance/05-governance-denied.sh`](governance/05-governance-denied.sh) — the scope and blocklist cases, allowed and audited while the chain is disabled.
 ```bash
 ./demo/governance/05-governance-denied.sh
 ```
 
-[`governance/06-secret-breach.sh`](governance/06-secret-breach.sh) — secret detection blocks credentials in a tool payload.
+[`governance/06-secret-breach.sh`](governance/06-secret-breach.sh) — credentials in a tool payload; secret_scan is disabled, so they are allowed and audited.
 ```bash
 ./demo/governance/06-secret-breach.sh
 ```
 
-[`governance/07-rate-limiting.sh`](governance/07-rate-limiting.sh) — rate limit, security, and server configuration.
+[`governance/07-rate-limiting.sh`](governance/07-rate-limiting.sh) — rate-limit config, then a burst past the window; the stage is disabled, so nothing is throttled.
 ```bash
 ./demo/governance/07-rate-limiting.sh
 ```
@@ -173,6 +178,16 @@ Every demo below is a single fenced command. Run them in any order once prefligh
 [`governance/08-hooks.sh`](governance/08-hooks.sh) — hook listing and validation.
 ```bash
 ./demo/governance/08-hooks.sh
+```
+
+[`governance/09-ema-id-jag-loop.sh`](governance/09-ema-id-jag-loop.sh) — EMA / ID-JAG token-exchange loop.
+```bash
+./demo/governance/09-ema-id-jag-loop.sh
+```
+
+[`governance/09-pi-agent.sh`](governance/09-pi-agent.sh) — the prompt and tool gates an agent hits, end to end.
+```bash
+./demo/governance/09-pi-agent.sh
 ```
 
 ### MCP
@@ -308,6 +323,11 @@ Every demo below is a single fenced command. Run them in any order once prefligh
 [`skills/05-contexts.sh`](skills/05-contexts.sh) — context CRUD (create, show, edit, delete).
 ```bash
 ./demo/skills/05-contexts.sh
+```
+
+[`skills/06-dev-skill-propagation.sh`](skills/06-dev-skill-propagation.sh) — edit a skill on disk, republish, prove the change propagates.
+```bash
+./demo/skills/06-dev-skill-propagation.sh
 ```
 
 ### Web
@@ -550,6 +570,7 @@ enforced: an invalid or expired token is denied with `policy=authentication`.
 | web/ | 2 | All pass |
 | performance/ | 2 | All pass (incl. 2000-request load test) |
 | **Total (free suite + setup)** | **47** | **All pass** |
+| reports/ (`03-smoke.sh`, self-restoring) | 3 | All pass |
 | scenarios/airgap (just airgap-test) | 3 | Not re-run since 2026-06-04 |
 | scenarios/scaled (just scaled-test) | 3 | Not re-run since 2026-06-04 |
 
