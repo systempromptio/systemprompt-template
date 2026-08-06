@@ -177,7 +177,7 @@ priced AS (
   JOIN catalog cat ON cat.idx = c.model_idx
 )
 INSERT INTO ai_requests
-  (id, request_id, user_id, provider, model, requested_model,
+  (id, request_id, user_id, context_id, provider, model, requested_model,
    tokens_used, input_tokens, output_tokens, cost_microdollars,
    cache_read_tokens, cache_hit, latency_ms, is_streaming, status,
    actor_kind, actor_id, created_at, updated_at, completed_at)
@@ -185,6 +185,11 @@ SELECT
   'rptseed-req-' || seq,
   'rptseed-req-' || seq,
   user_id,
+  -- context_id became NOT NULL in core 0.29.0. These rows are metering
+  -- history with no conversation behind them, so they carry the same
+  -- "LEGACY" sentinel the demo-organizations migrations use, which the
+  -- analytics layer already reads as "no context".
+  '00000000-0000-0000-0000-4c4547414359',
   provider,
   model,
   model,
