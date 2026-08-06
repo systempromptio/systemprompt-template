@@ -6,6 +6,8 @@
 #
 # Covered pins:
 #   Cargo.toml            workspace version + systemprompt/-security core pins
+#   extensions/web/Cargo.toml  systemprompt-extension pin
+#   tests/Cargo.toml      systemprompt/-security pins (separate workspace)
 #   helm/gateway/Chart.yaml  appVersion + artifacthub images annotation
 #                            (chart `version:` is bumped separately on apply)
 #   deploy/casaos/docker-compose.yml                exact image tag
@@ -59,6 +61,22 @@ check_or_apply Cargo.toml \
     "s|^systemprompt-security = { version = \"[0-9.]*\"|systemprompt-security = { version = \"$VERSION\"|" \
     "^systemprompt-security = \\{ version = \"$VERSION\"" \
     "systemprompt-security core pin"
+
+# extensions/web declares its own core pin rather than inheriting one.
+check_or_apply extensions/web/Cargo.toml \
+    "s|^systemprompt-extension = \"[0-9.]*\"|systemprompt-extension = \"$VERSION\"|" \
+    "^systemprompt-extension = \"$VERSION\"" \
+    "systemprompt-extension pin"
+
+# tests/ is a separate workspace and does not inherit the root pins.
+check_or_apply tests/Cargo.toml \
+    "s|^systemprompt = { version = \"[0-9.]*\"|systemprompt = { version = \"$VERSION\"|" \
+    "^systemprompt = \\{ version = \"$VERSION\"" \
+    "test workspace systemprompt pin"
+check_or_apply tests/Cargo.toml \
+    "s|^systemprompt-security = { version = \"[0-9.]*\"|systemprompt-security = { version = \"$VERSION\"|" \
+    "^systemprompt-security = \\{ version = \"$VERSION\"" \
+    "test workspace systemprompt-security pin"
 
 # Helm chart — appVersion + images annotation.
 check_or_apply helm/gateway/Chart.yaml \
