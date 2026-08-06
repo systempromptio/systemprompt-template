@@ -9,12 +9,12 @@ pub(crate) async fn list_blog_posts(pool: &PgPool) -> Result<Vec<BlogPost>, sqlx
         BlogPost,
         r#"
         SELECT
-            mc.slug,
-            mc.title,
-            mc.description,
-            mc.image,
-            mce.category,
-            mc.published_at
+            mc.slug as "slug!",
+            mc.title as "title!",
+            mc.description as "description!",
+            mc.image as "image?",
+            mce.category as "category?",
+            mc.published_at as "published_at!"
         FROM markdown_content mc
         LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id
         WHERE mc.source_id = 'blog'

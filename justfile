@@ -418,10 +418,31 @@ prepare:
     fi
     echo "Preparing SQLx offline cache..."
     export DATABASE_URL="$DB_URL"
-    # Drop any stale incremental sqlx artifacts so the query macros re-run
-    # against the freshly-migrated schema. Without this, target/ may cache
-    # check results from before the migrations were applied.
-    cargo clean -p systemprompt-database 2>/dev/null || true
+    # Drop the incremental artifacts of every crate that uses sqlx, so each
+    # query macro re-expands against the freshly-migrated schema.
+    #
+    # This has to be all of them, not just the crate whose schema changed.
+    # `cargo sqlx prepare` collects query data emitted by macro expansion, so
+    # a crate cargo considers fresh contributes nothing to the run and its
+    # queries are pruned from .sqlx as though they no longer existed. That is
+    # what made prepare non-deterministic: a cold cache re-expanded everything
+    # and kept the full set, while a warm one silently dropped whatever it did
+    # not rebuild (the event_outbox queries from systemprompt-events being the
+    # usual casualty). The emitted set must not depend on target/ state.
+    #
+    # Dependencies count too, not just workspace members — their queries land
+    # in the workspace cache the same way.
+    SQLX_PKGS=$(cargo metadata --format-version 1 2>/dev/null \
+        | jq -r '.packages[] | select(.dependencies[]?.name == "sqlx") | .name' \
+        | sort -u)
+    if [ -z "$SQLX_PKGS" ]; then
+        echo "Error: could not resolve the sqlx-dependent package list."
+        echo "Without it, prepare would prune queries it simply did not rebuild."
+        exit 1
+    fi
+    for pkg in $SQLX_PKGS; do
+        cargo clean -p "$pkg" 2>/dev/null || true
+    done
     # Workspace-level prepare (catches lib crates)
     cargo sqlx prepare --workspace
     # Per-crate prepare for binary/extension crates that cargo sqlx skips

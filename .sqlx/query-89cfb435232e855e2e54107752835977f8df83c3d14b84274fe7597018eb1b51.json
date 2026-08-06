@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            mc.slug,\n            mc.kind,\n            mc.source_id as \"source_id: SourceId\",\n            COALESCE(mce.after_reading_this, '[]'::jsonb) as \"after_reading_this!: Json<Vec<String>>\",\n            COALESCE(mce.related_playbooks, '[]'::jsonb) as \"related_playbooks!: Json<Vec<ContentLinkMetadata>>\",\n            COALESCE(mce.related_code, '[]'::jsonb) as \"related_code!: Json<Vec<ContentLinkMetadata>>\"\n        FROM markdown_content mc\n        LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id\n        WHERE mc.id = $1\n        ",
+  "query": "\n        SELECT\n            mc.slug as \"slug!\",\n            mc.kind as \"kind!\",\n            mc.source_id as \"source_id!: SourceId\",\n            COALESCE(mce.after_reading_this, '[]'::jsonb) as \"after_reading_this!: Json<Vec<String>>\",\n            COALESCE(mce.related_playbooks, '[]'::jsonb) as \"related_playbooks!: Json<Vec<ContentLinkMetadata>>\",\n            COALESCE(mce.related_code, '[]'::jsonb) as \"related_code!: Json<Vec<ContentLinkMetadata>>\"\n        FROM markdown_content mc\n        LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id\n        WHERE mc.id = $1\n        ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "slug",
+        "name": "slug!",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -16,7 +16,7 @@
       },
       {
         "ordinal": 1,
-        "name": "kind",
+        "name": "kind!",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -27,7 +27,7 @@
       },
       {
         "ordinal": 2,
-        "name": "source_id: SourceId",
+        "name": "source_id!: SourceId",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -69,5 +69,5 @@
       null
     ]
   },
-  "hash": "8c2bfc66cb8afe89a6c6e4fa16a723315356d398e994f8231ef692b7488359cf"
+  "hash": "89cfb435232e855e2e54107752835977f8df83c3d14b84274fe7597018eb1b51"
 }
