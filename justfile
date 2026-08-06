@@ -636,6 +636,11 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
             # chosen port so the gateway's govern callback reaches this server.
             "$BIN" admin config governance set --mode webhook \
                 --url "http://localhost:${HTTP_PORT}/api/public/govern/authz"
+            # Tokens carry the issuer, and a validator resolves (issuer, kid)
+            # by fetching that issuer's JWKS. Left on the default port it
+            # points at whatever else owns 8080, so every MCP tool call fails
+            # with "kid does not match any known signing key".
+            "$BIN" admin config security set --jwt-issuer "http://localhost:${HTTP_PORT}"
         fi
     elif [ "$HAS_KEY" = true ]; then
         # Profile generation is one-shot, guarded on profile.yaml. `just db-down`
