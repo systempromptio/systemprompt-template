@@ -244,8 +244,13 @@ cmd_run() {
     while :; do
         if mkdir "$LOCK" 2>/dev/null; then break; fi
         if ! lock_alive "$LOCK"; then
-            echo "[coord] clearing stale lock from a dead process" >&2
-            rm -rf "$LOCK"
+            # mv is atomic, so concurrent waiters cannot both clear the stale
+            # lock and then delete a successor's freshly-created lock dir; the
+            # loser's mv fails and it simply retries the mkdir.
+            if mv "$LOCK" "$LOCK.stale.$$" 2>/dev/null; then
+                echo "[coord] clearing stale lock from a dead process" >&2
+                rm -rf "$LOCK.stale.$$"
+            fi
             continue
         fi
         local owner_key owner_recipe

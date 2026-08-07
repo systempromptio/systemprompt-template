@@ -56,11 +56,16 @@ async fn an_unknown_systemprompt_tool_points_the_caller_at_the_cli_skill() {
     };
     let executor = executor(&db.pool, "systemprompt");
 
+    let request = call("not_a_tool", serde_json::json!({}));
+    let profile = client();
     let error = systemprompt_mcp_agent::server::tool::dispatch_tool(
-        &executor,
+        &systemprompt_mcp_agent::server::tool::Dispatch {
+            executor: &executor,
+            request: &request,
+            request_context: &request_context(),
+            client: &profile,
+        },
         "not_a_tool",
-        &call("not_a_tool", serde_json::json!({})),
-        &request_context(),
         "unused-token",
     )
     .await
@@ -79,3 +84,10 @@ async fn an_unknown_systemprompt_tool_points_the_caller_at_the_cli_skill() {
 // out to the real `systemprompt` binary with the caller's bearer token, so a
 // test that reached it would be running the CLI against whatever profile the
 // machine has configured. Only the dispatch arm around it is asserted.
+
+fn client() -> systemprompt::mcp::ClientProfile {
+    systemprompt::mcp::ClientProfile {
+        protocol_version: Some(rmcp::model::ProtocolVersion::V_2025_06_18),
+        ..systemprompt::mcp::ClientProfile::default()
+    }
+}

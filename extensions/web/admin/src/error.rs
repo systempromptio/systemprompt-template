@@ -13,6 +13,7 @@ use thiserror::Error;
 use crate::handlers::shared::ErrorBody;
 use crate::repositories::access_tokens::AccessTokenRepoError;
 use crate::repositories::secrets::secret_crypto::SecretCryptoError;
+use crate::templates::AdminTemplateError;
 use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Error)]
@@ -65,6 +66,12 @@ pub enum AdminError {
 
     #[error("Internal error: {0}")]
     Internal(#[source] Box<dyn std::error::Error + Send + Sync>),
+}
+
+impl From<AdminTemplateError> for AdminError {
+    fn from(value: AdminTemplateError) -> Self {
+        Self::Internal(Box::new(value))
+    }
 }
 
 impl AdminError {

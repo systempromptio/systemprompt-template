@@ -780,7 +780,12 @@ status:
 # ══════════════════════════════════════════════════════════════════════════════
 
 # Build all MCP servers (reads from manifest.yaml files)
+# Single-flight and fingerprint-skipped: a tree whose MCP servers already
+# built returns immediately instead of re-paying the per-package rebuild.
 build-mcp:
+    @scripts/build-coordinator.sh run build-mcp "" -- {{just_executable()}} _build-mcp-uncoordinated
+
+_build-mcp-uncoordinated:
     DATABASE_URL="$(just _db-url)" {{CLI}} build mcp --release
 
 # Build everything for deployment (Rust binary + MCP servers + web assets)

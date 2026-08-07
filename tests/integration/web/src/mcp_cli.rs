@@ -76,21 +76,35 @@ fn call(command: &str) -> CallToolRequestParams {
 }
 
 async fn run(db: &TempDb, command: &str) -> Result<rmcp::model::CallToolResult, rmcp::ErrorData> {
+    let executor = executor(&db.pool);
+    let request = call(command);
+    let profile = client();
     systemprompt_mcp_agent::server::tool::dispatch_tool(
-        &executor(&db.pool),
+        &systemprompt_mcp_agent::server::tool::Dispatch {
+            executor: &executor,
+            request: &request,
+            request_context: &request_context(),
+            client: &profile,
+        },
         "systemprompt",
-        &call(command),
-        &request_context(),
         "test-bearer-token",
     )
     .await
 }
 
+fn client() -> systemprompt::mcp::ClientProfile {
+    systemprompt::mcp::ClientProfile {
+        protocol_version: Some(rmcp::model::ProtocolVersion::V_2025_06_18),
+        ..systemprompt::mcp::ClientProfile::default()
+    }
+}
+
+
 fn body_of(result: &rmcp::model::CallToolResult) -> String {
     result
         .structured_content
         .as_ref()
-        .and_then(|v| v.pointer("/artifact/content"))
+        .and_then(|v| v.pointer("/content"))
         .and_then(|v| v.as_str())
         .expect("the executor returns the handler's artifact as structured content")
         .to_owned()
@@ -183,8 +197,8 @@ async fn stdout_that_is_not_an_artifact_falls_back_to_a_text_artifact() {
     );
     assert_eq!(
         summary_of(&result),
-        "plain human output",
-        "the summary the model reads is the raw stdout either way"
+        "Ran `core skills list`\n\nplain human output",
+        "the text block names the command and carries the raw stdout exactly once"
     );
 
     db.cleanup().await;

@@ -54,7 +54,7 @@ and asks which one to act as:
 ```
   Select the user to act as:
 
-     1) ed@tyingshoelaces.com [admin]  ed@tyingshoelaces.com  (user,admin)
+     1) ed@systemprompt.io [admin]  ed@systemprompt.io  (user,admin)
      2) admin@localhost.dev [admin]  admin  (admin,user)
      3) pi-demo@demo.local  Pi Demo  (user)
      n) create a new demo user
@@ -66,7 +66,7 @@ Pick a number to act as an existing user, or `n` to create a fresh demo
 account. Skip the menu entirely by naming an email:
 
 ```bash
-examples/pi/new-user.sh ed@tyingshoelaces.com
+examples/pi/new-user.sh ed@systemprompt.io
 ```
 
 The script then issues that user a personal access token, mints their
