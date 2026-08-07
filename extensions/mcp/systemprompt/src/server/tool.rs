@@ -60,7 +60,9 @@ impl McpToolHandler for SystempromptToolHandler {
             Err(e) => {
                 tracing::warn!(error = %e, "CLI stdout is not a CliArtifact, returning as text");
                 (
-                    CliArtifact::text(TextArtifact::new(&output.stdout).with_title("Command Output")),
+                    CliArtifact::text(
+                        TextArtifact::new(&output.stdout).with_title("Command Output"),
+                    ),
                     format!("Ran `{}`", input.command),
                 )
             },
