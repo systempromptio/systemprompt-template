@@ -39,7 +39,7 @@ Ports `8080` (HTTP) and `5432` (Postgres) must be free.
 ### 2. Clone
 
 ```bash
-git clone https://github.com/systempromptio/systemprompt-astound
+git clone https://github.com/Astound-Digital/systemprompt-astound
 cd systemprompt-astound
 ```
 
