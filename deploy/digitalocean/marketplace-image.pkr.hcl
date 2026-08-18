@@ -17,7 +17,7 @@ variable "do_token" {
 
 variable "image_version" {
   type    = string
-  default = "0.30.1"
+  default = "0.31.0"
 }
 
 source "digitalocean" "systemprompt" {
