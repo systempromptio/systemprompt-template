@@ -26,6 +26,7 @@ use systemprompt::mcp::{McpArtifactRepository, McpToolExecutor};
 use systemprompt::security::authz::SharedAuthzHook;
 use systemprompt_mcp_shared::record_mcp_access;
 
+use systemprompt::mcp::client_profile_from_peer;
 use tool::{authenticate_tool_request, dispatch_tool};
 
 #[derive(Clone, Debug)]
@@ -72,7 +73,7 @@ impl KnowledgeBankServer {
 impl ServerHandler for KnowledgeBankServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
-            .with_protocol_version(ProtocolVersion::V_2024_11_05)
+            .with_protocol_version(ProtocolVersion::V_2025_06_18)
             .with_server_info(
                 Implementation::new(
                     format!("Knowledge Bank ({})", self.service_id),
@@ -132,12 +133,16 @@ impl ServerHandler for KnowledgeBankServer {
         )
         .await;
 
+        let client = client_profile_from_peer(&ctx);
         dispatch_tool(
-            &self.executor,
+            &tool::Dispatch {
+                executor: &self.executor,
+                request: &request,
+                request_context: &request_context,
+                client: &client,
+            },
             &self.store,
             &tool_name,
-            &request,
-            &request_context,
         )
         .await
         .map(Into::into)

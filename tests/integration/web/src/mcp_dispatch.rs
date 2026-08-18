@@ -68,7 +68,7 @@ fn body_of(result: &rmcp::model::CallToolResult) -> String {
     result
         .structured_content
         .as_ref()
-        .and_then(|v| v.pointer("/artifact/content"))
+        .and_then(|v| v.pointer("/content"))
         .and_then(|v| v.as_str())
         .expect("the executor returns the handler's artifact as structured content")
         .to_owned()
@@ -91,15 +91,28 @@ async fn dispatch_kb(
     arguments: serde_json::Value,
 ) -> Result<rmcp::model::CallToolResult, rmcp::ErrorData> {
     let executor = executor(&db.pool, "knowledge-bank");
+    let request = call(tool, arguments);
+    let profile = client();
     systemprompt_mcp_knowledge_bank::server::tool::dispatch_tool(
-        &executor,
+        &systemprompt_mcp_knowledge_bank::server::tool::Dispatch {
+            executor: &executor,
+            request: &request,
+            request_context: ctx,
+            client: &profile,
+        },
         store,
         tool,
-        &call(tool, arguments),
-        ctx,
     )
     .await
 }
+
+fn client() -> systemprompt::mcp::ClientProfile {
+    systemprompt::mcp::ClientProfile {
+        protocol_version: Some(rmcp::model::ProtocolVersion::V_2025_06_18),
+        ..systemprompt::mcp::ClientProfile::default()
+    }
+}
+
 
 fn seeded_store() -> Arc<KnowledgeStore> {
     Arc::new(KnowledgeStore::seeded().expect("the bundled fixtures parse"))
@@ -344,11 +357,16 @@ async fn an_unknown_systemprompt_tool_points_the_caller_at_the_cli_skill() {
     };
     let executor = executor(&db.pool, "systemprompt");
 
+    let request = call("not_a_tool", serde_json::json!({}));
+    let profile = client();
     let error = systemprompt_mcp_agent::server::tool::dispatch_tool(
-        &executor,
+        &systemprompt_mcp_agent::server::tool::Dispatch {
+            executor: &executor,
+            request: &request,
+            request_context: &request_context(),
+            client: &profile,
+        },
         "not_a_tool",
-        &call("not_a_tool", serde_json::json!({})),
-        &request_context(),
         "unused-token",
     )
     .await

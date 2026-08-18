@@ -17,7 +17,7 @@ use systemprompt::mcp::{McpArtifactRepository, McpToolExecutor};
 use systemprompt::models::auth::{AuthenticatedUser, Permission};
 use systemprompt::models::execution::context::RequestContext as SysRequestContext;
 use systemprompt_mcp_knowledge_bank::server::tool::{
-    dispatch_tool, document_summary, require_admin,
+    Dispatch, dispatch_tool, document_summary, require_admin,
 };
 use systemprompt_mcp_knowledge_bank::store::KnowledgeStore;
 use systemprompt_mcp_knowledge_bank::tools::{TOOL_LIST, TOOL_SEARCH, TOOL_UPLOAD};
@@ -70,7 +70,7 @@ fn body_of(result: &rmcp::model::CallToolResult) -> String {
     result
         .structured_content
         .as_ref()
-        .and_then(|v| v.pointer("/artifact/content"))
+        .and_then(|v| v.pointer("/content"))
         .and_then(|v| v.as_str())
         .expect("the executor returns the handler's artifact as structured content")
         .to_owned()
@@ -92,15 +92,29 @@ async fn dispatch(
     tool: &'static str,
     arguments: serde_json::Value,
 ) -> Result<rmcp::model::CallToolResult, rmcp::ErrorData> {
+    let executor = executor(&db.pool);
+    let request = call(tool, arguments);
+    let profile = client();
     dispatch_tool(
-        &executor(&db.pool),
+        &Dispatch {
+            executor: &executor,
+            request: &request,
+            request_context: ctx,
+            client: &profile,
+        },
         store,
         tool,
-        &call(tool, arguments),
-        ctx,
     )
     .await
 }
+
+fn client() -> systemprompt::mcp::ClientProfile {
+    systemprompt::mcp::ClientProfile {
+        protocol_version: Some(rmcp::model::ProtocolVersion::V_2025_06_18),
+        ..systemprompt::mcp::ClientProfile::default()
+    }
+}
+
 
 #[tokio::test]
 async fn a_search_limit_caps_the_documents_returned() {

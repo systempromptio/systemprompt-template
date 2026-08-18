@@ -4,8 +4,8 @@ use rmcp::model::{MetaObject, Tool};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use systemprompt::mcp::{WEBSITE_URL, default_tool_visibility, tool_ui_meta};
-use systemprompt::models::artifacts::{CliArtifact, ToolResponse};
+use systemprompt::mcp::{McpOutputSchema, WEBSITE_URL, default_tool_visibility, tool_ui_meta};
+use systemprompt::models::artifacts::CliArtifact;
 
 pub const SERVER_NAME: &str = "systemprompt";
 
@@ -33,7 +33,7 @@ pub fn input_schema() -> serde_json::Value {
 #[must_use]
 // JSON: protocol boundary
 pub fn output_schema() -> serde_json::Value {
-    ToolResponse::<CliArtifact>::schema()
+    <CliArtifact as McpOutputSchema>::validated_schema()
 }
 
 struct ToolDef<'a> {

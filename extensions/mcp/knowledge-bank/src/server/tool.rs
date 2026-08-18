@@ -16,7 +16,7 @@ use std::sync::Arc;
 use systemprompt::database::DbPool;
 use systemprompt::identifiers::McpExecutionId;
 use systemprompt::mcp::middleware::enforce_rbac_from_registry;
-use systemprompt::mcp::{McpToolExecutor, McpToolHandler};
+use systemprompt::mcp::{ClientProfile, McpToolExecutor, McpToolHandler};
 use systemprompt::models::artifacts::{CliArtifact, TextArtifact};
 use systemprompt::models::auth::AuthenticatedUser;
 use systemprompt::models::execution::context::RequestContext as SysRequestContext;
@@ -248,32 +248,47 @@ pub fn require_admin(request_context: &SysRequestContext) -> Result<(), McpError
 /// itself is therefore unreachable from a test process; this is the seam that
 /// makes its body testable. Not part of the public API.
 #[doc(hidden)]
+#[derive(Debug)]
+pub struct Dispatch<'a> {
+    pub executor: &'a McpToolExecutor,
+    pub request: &'a CallToolRequestParams,
+    pub request_context: &'a SysRequestContext,
+    pub client: &'a ClientProfile,
+}
+
+impl Dispatch<'_> {
+    async fn run<H: McpToolHandler>(&self, handler: &H) -> Result<CallToolResult, McpError> {
+        self.executor
+            .execute(handler, self.request, self.request_context, self.client)
+            .await
+    }
+}
+
+#[doc(hidden)]
 pub async fn dispatch_tool(
-    executor: &McpToolExecutor,
+    ctx: &Dispatch<'_>,
     store: &Arc<KnowledgeStore>,
     tool_name: &str,
-    request: &CallToolRequestParams,
-    request_context: &SysRequestContext,
 ) -> Result<CallToolResult, McpError> {
     match tool_name {
         TOOL_SEARCH => {
             let handler = SearchHandler {
                 store: Arc::clone(store),
             };
-            executor.execute(&handler, request, request_context).await
+            ctx.run(&handler).await
         },
         TOOL_LIST => {
             let handler = ListHandler {
                 store: Arc::clone(store),
             };
-            executor.execute(&handler, request, request_context).await
+            ctx.run(&handler).await
         },
         TOOL_UPLOAD => {
-            require_admin(request_context)?;
+            require_admin(ctx.request_context)?;
             let handler = UploadHandler {
                 store: Arc::clone(store),
             };
-            executor.execute(&handler, request, request_context).await
+            ctx.run(&handler).await
         },
         _ => Err(McpError::invalid_params(
             format!(

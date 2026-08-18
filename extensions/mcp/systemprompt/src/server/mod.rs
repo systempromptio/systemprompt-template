@@ -30,6 +30,7 @@ use systemprompt::mcp::{
 use systemprompt::security::authz::SharedAuthzHook;
 use systemprompt_mcp_shared::record_mcp_access;
 
+use systemprompt::mcp::client_profile_from_peer;
 use tool::{authenticate_tool_request, dispatch_tool};
 
 #[derive(Clone, Debug)]
@@ -74,7 +75,7 @@ impl ServerHandler for SystempromptServer {
                 .enable_extensions_with(build_extension_capabilities())
                 .build(),
         )
-        .with_protocol_version(ProtocolVersion::V_2024_11_05)
+        .with_protocol_version(ProtocolVersion::V_2025_06_18)
         .with_server_info(
             Implementation::new(
                 format!("SystemPrompt ({})", self.service_id),
@@ -142,11 +143,15 @@ impl ServerHandler for SystempromptServer {
         )
         .await;
 
+        let client = client_profile_from_peer(&ctx);
         dispatch_tool(
-            &self.executor,
+            &tool::Dispatch {
+                executor: &self.executor,
+                request: &request,
+                request_context: &request_context,
+                client: &client,
+            },
             &tool_name,
-            &request,
-            &request_context,
             &auth_token,
         )
         .await

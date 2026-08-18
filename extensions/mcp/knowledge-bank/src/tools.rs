@@ -8,8 +8,8 @@ use rmcp::model::{MetaObject, Tool};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use systemprompt::mcp::{default_tool_visibility, tool_ui_meta};
-use systemprompt::models::artifacts::{CliArtifact, ToolResponse};
+use systemprompt::mcp::{McpOutputSchema, default_tool_visibility, tool_ui_meta};
+use systemprompt::models::artifacts::CliArtifact;
 
 pub const SERVER_NAME: &str = "knowledge-bank";
 pub const TOOL_SEARCH: &str = "search_project_context";
@@ -61,7 +61,7 @@ fn create_tool(def: &ToolDef<'_>) -> Tool {
         .as_object()
         .cloned()
         .unwrap_or_else(serde_json::Map::new);
-    let output_obj = ToolResponse::<CliArtifact>::schema()
+    let output_obj = <CliArtifact as McpOutputSchema>::validated_schema()
         .as_object()
         .cloned()
         .unwrap_or_else(serde_json::Map::new);
