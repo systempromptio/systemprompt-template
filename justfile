@@ -469,7 +469,12 @@ prepare:
 
 # Start server (always uses local profile)
 start:
-    {{CLI}} infra services start --profile local
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -f .systemprompt/docker/local.yaml ]; then
+        just db-up local
+    fi
+    exec {{CLI}} infra services start --profile local
 
 # Optional: running server + binary provenance + recent build/lint/test results
 [unix]
@@ -478,7 +483,12 @@ server-status:
 
 # Start server with release binary
 start-release:
-    {{CLI_RELEASE}} infra services start --profile local
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -f .systemprompt/docker/local.yaml ]; then
+        just db-up local
+    fi
+    exec {{CLI_RELEASE}} infra services start --profile local
 
 # Run migrations
 migrate:
@@ -633,6 +643,25 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
       postgres_data: {}
     YAML
     fi
+    echo "Starting local Postgres via Docker..."
+    just db-up local
+    echo "Waiting for Postgres to accept connections on localhost:${PG_PORT}..."
+    for i in $(seq 1 60); do
+        if (exec 3<>/dev/tcp/127.0.0.1/${PG_PORT}) 2>/dev/null; then
+            exec 3<&- 3>&-
+            # Also confirm the server actually answers pg_isready, not just a half-open socket.
+            CONTAINER=$(docker compose -p "$(just _project_name local)" -f .systemprompt/docker/local.yaml ps -q postgres)
+            if [ -n "$CONTAINER" ] && docker exec "$CONTAINER" pg_isready -U systemprompt -d systemprompt >/dev/null 2>&1; then
+                echo "Postgres is ready."
+                break
+            fi
+        fi
+        if [ "$i" = "60" ]; then
+            echo "ERROR: Postgres did not become ready within 60s." >&2
+            exit 1
+        fi
+        sleep 1
+    done
     if [ ! -f "$PROFILE_DIR/profile.yaml" ]; then
         echo "Generating profile + provider registry + secrets via 'admin setup'..."
         if [ "$HAS_KEY" = true ]; then
@@ -701,25 +730,6 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     mkdir -p "$ROOT/web/dist"
     echo "Building binaries (release, full workspace)..."
     just build --release
-    echo "Starting local Postgres via Docker..."
-    just db-up local
-    echo "Waiting for Postgres to accept connections on localhost:${PG_PORT}..."
-    for i in $(seq 1 60); do
-        if (exec 3<>/dev/tcp/127.0.0.1/${PG_PORT}) 2>/dev/null; then
-            exec 3<&- 3>&-
-            # Also confirm the server actually answers pg_isready, not just a half-open socket.
-            CONTAINER=$(docker compose -p "$(just _project_name local)" -f .systemprompt/docker/local.yaml ps -q postgres)
-            if [ -n "$CONTAINER" ] && docker exec "$CONTAINER" pg_isready -U systemprompt -d systemprompt >/dev/null 2>&1; then
-                echo "Postgres is ready."
-                break
-            fi
-        fi
-        if [ "$i" = "60" ]; then
-            echo "ERROR: Postgres did not become ready within 60s." >&2
-            exit 1
-        fi
-        sleep 1
-    done
     echo "Running database migrations..."
     just migrate
     echo "Ensuring bootstrap admin user..."
