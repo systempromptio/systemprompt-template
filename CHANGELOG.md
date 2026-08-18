@@ -47,6 +47,22 @@ Conventions (strict — hold every entry to them):
 
 ### Changed
 
+- **Adopted systemprompt-core 0.30.1 (published).** All `systemprompt`/`systemprompt-security`/
+  `systemprompt-extension` pins move from 0.29.0 to 0.30.1 via
+  `scripts/sync-release-version.sh 0.30.1` (workspace version, `tests/` pins, Helm chart 0.8.0
+  with appVersion 0.30.1, and the CasaOS/DigitalOcean image tags), with both `[patch.crates-io]`
+  blocks left commented so the build resolves the published crates, not the 0.31-in-progress
+  sibling. Adoption fallout handled per `docs/RELEASING.md` Step A0: the `settings:` block in
+  `services/config/config.yaml` moves to core's snake_case keys (`agent_port_range`,
+  `mcp_port_range`, `auto_start_enabled`, `schema_validation_mode` — the camelCase forms now
+  fail boot validation), migrations ran with the new binary, and the `.sqlx` offline caches were
+  regenerated (932 queries).
+- Three shared files re-synced with the template sibling to satisfy the fork-drift gate: the
+  `systemprompt` MCP server's text fallback pairs the artifact with a `Ran `<command>``
+  summary so structured clients don't see stdout twice, SSR render failures convert through the
+  new `From<AdminTemplateError> for AdminError` instead of a formatted internal error, and a
+  duplicated comment token in the governance authn handler is gone. Integration tests updated to
+  core 0.30.1's wire shape, where a tool result's text block carries `summary\n\nbody`.
 - `admin_user_report` is now strictly read-only: its role-mutation commands moved to
   `manage_roles`/`manage_users`, and its `session list` invocation was corrected to the CLI's
   positional form (`admin users session list <user-id>`).
@@ -65,7 +81,10 @@ Conventions (strict — hold every entry to them):
 
 ### Removed
 
-- `coverage/baseline.json`: the tracked coverage ratchet baseline is retired.
+- ~~`coverage/baseline.json`: the tracked coverage ratchet baseline is retired.~~ Reverted in
+  the same release: `coverage-check` (part of `just preflight`) hard-fails without a baseline,
+  so retiring the file silently disabled the ratchet. The baseline is re-recorded at the current
+  coverage instead — total 82.51% (up from 81.17), global floor restored at 80.0.
 - Stale `Unreleased` bullets describing the systemprompt-core 0.22→0.23 pin bump — that upgrade
   shipped long ago and is superseded by the released `0.26.0` entry below.
 

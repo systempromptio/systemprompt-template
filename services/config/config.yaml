@@ -28,7 +28,7 @@ includes:
   - ../external_agents/codex_cli.yaml
 
 settings:
-  agentPortRange: [9000, 9999]
-  mcpPortRange: [5000, 5999]
-  autoStartEnabled: true
-  schemaValidationMode: "strict"
+  agent_port_range: [9000, 9999]
+  mcp_port_range: [5000, 5999]
+  auto_start_enabled: true
+  schema_validation_mode: "strict"
