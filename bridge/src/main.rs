@@ -21,6 +21,7 @@ mod registry;
 static ASTOUND_BRAND: Brand = Brand {
     app_name: "Astound Bridge",
     binary_name: "astound-bridge",
+    version: env!("CARGO_PKG_VERSION"),
     vendor: "Astound Digital",
     config_dir: "astound",
     config_file: "astound-bridge.toml",

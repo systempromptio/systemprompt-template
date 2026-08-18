@@ -12,7 +12,7 @@
 # run time by `just clean-client` instead of being baked in, so you always test
 # the binary you just built.
 
-FROM node:22-bookworm-slim
+FROM node:22-trixie-slim
 
 # ripgrep and less are used by Claude Code itself (search + pager); git because
 # most of what you will do in the session is in a repo; jq for poking at the
