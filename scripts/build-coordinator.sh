@@ -49,7 +49,7 @@ MAX_RUNS=200
 # public-site partials are include_str!-compiled into the binary.
 FINGERPRINT_PATHS=(
     Cargo.toml Cargo.lock rust-toolchain.toml clippy.toml
-    src extensions migrations tests services scripts .sqlx
+    src extensions migrations tests services scripts .sqlx bridge
 )
 
 sha() {
