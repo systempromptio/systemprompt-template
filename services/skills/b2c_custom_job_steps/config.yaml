@@ -1,0 +1,12 @@
+id: b2c_custom_job_steps
+name: "B2C Custom Job Steps"
+description: "Create custom job steps for B2C Commerce batch processing. Use when writing scheduled tasks, data sync jobs, import/export scripts, or any server-side batch processing code. Covers steptypes.json, chunk-oriented processing, and task-oriented execution. Also use for reviewing PRs, fixing bugs, or troubleshooting jobs and job steps. For running existing jobs, use b2c-job instead."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - build
+  - b2c
+  - commerce-cloud
+category: development
+display_category: "Development — B2C Build"

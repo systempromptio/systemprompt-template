@@ -34,11 +34,19 @@ Use conventional commits:
 - User-visible changes (`feat`, `fix`, behaviour-affecting `perf`) get a changelog entry in the project's changelog file in the same PR, written for the client's release notes: outcome first, no internal jargon.
 - Internal-only changes (`refactor`, `chore`, `test`) do not.
 
+## Where to go deeper
+
+| Topic | Skill |
+|---|---|
+| Branching, commit format, PR flow (source of truth) | `git_commit` |
+| Deploy cartridge code to an instance | `b2c_code` |
+| Run and monitor instance jobs | `b2c_job` |
+| Managed Runtime deploys | `b2c_mrt` |
+| Site import/export bundles | `b2c_site_import_export` |
+
 ## Astound rules
 
-<!-- DROP-IN SECTION: Astound's release-category Cursor rules (exact commit
-     format, PR templates, branch naming) land here verbatim once approved for
-     sharing (owner: Roman). Keep the heading; replace this comment with the
-     imported rules. -->
-
-*Astound's organisation-specific release rules will appear here once imported.*
+The full rule text lives in `dev_rules`. Most relevant at the release stage: **Git workflow**
+(follow `git_commit` before any branch, commit, push, or PR), **Pull request conventions**
+(the pre-PR audit and description structure), **No unsolicited actions** (never commit, push, or
+open a PR without explicit authorization), and **English-only artifacts**.

@@ -1,0 +1,11 @@
+id: atlassian
+name: "Atlassian"
+description: "Manage Jira issues and Confluence pages via Node.js scripts (fetch + API token). Use when the user asks to create, search, update, transition Jira issues, mentions Jira tickets, asks to view or analyze screenshots, images, or attachments of a ticket, or asks to create, copy, edit, update, search, or delete Confluence pages."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - operate
+  - b2c
+category: development
+display_category: "Development — Operate"

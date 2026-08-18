@@ -1,0 +1,12 @@
+id: b2c_docs
+name: "B2C Docs"
+description: "Search and read B2C Commerce (SFCC/Demandware) Script API documentation and XSD schemas with the b2c cli. Always reference when using the CLI to search or read Script API documentation, look up dw.* classes, or browse XSD schemas. Also use when writing B2C scripts, answering \"how do I\" questions about URLs/products/orders, or verifying class methods and properties."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - build
+  - b2c
+  - commerce-cloud
+category: development
+display_category: "Development — B2C Build"

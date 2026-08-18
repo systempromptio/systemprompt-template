@@ -1,11 +1,73 @@
 # Changelog
 
+All notable changes to this repository are recorded here, newest first.
+
+Conventions (strict — hold every entry to them):
+
+- Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/): an `## Unreleased`
+  section at the top, then one `## <version> — <YYYY-MM-DD>` section per release, each with
+  only the categories it needs, in this order: `### Breaking`, `### Added`, `### Changed`,
+  `### Fixed`, `### Removed`.
+- Entries are written for the reader who did not make the change: full sentences, what changed
+  and **why**, named files/commands/flags where the reader will need them. No bare "updated X".
+- Every user-visible or operator-visible change lands in `Unreleased` **in the same commit** as
+  the change itself; internal-only refactors are recorded when they alter an API another crate,
+  config, or dashboard consumes.
+- A release moves the `Unreleased` content under its version heading; `Unreleased` is never
+  deleted, only emptied.
+- Version numbers track the root workspace `version` in `Cargo.toml`; bridge-only releases are
+  prefixed `bridge-` (e.g. `bridge-0.17.1`).
+
 ## Unreleased
+
+### Added
+
+- **The `astound-dev` plugin (v2.0.0) now ships the full Astound development suite** — 68 skills,
+  mirroring the team's [sfcc-next-cursor](https://github.com/Astound-Digital/sfcc-next-cursor)
+  Cursor tooling repo. 62 skills are ported 1:1 into `services/skills/` (snake_case ids:
+  `b2c-hooks` → `b2c_hooks`), spanning B2C build (`b2c_*`, incl. the 435-file offline `dw.*`
+  corpus in `sfcc_api_classes`), Storefront Next (`sfnext_*`), operations (`atlassian`,
+  `b2c_config`, `b2c_logs`, …), release (`git_commit`, `b2c_code`, `b2c_mrt`, …), and test
+  (`playwright_cli`, `code_review`, `a11y_audit`, `systematic_debugging`). Because this instance
+  ships skills rather than agents, the Cursor repo's 22 non-OpenSpec rules are folded into the
+  new `dev_rules` skill and its 12 relevant agents/commands are folded into the skills they
+  orchestrated (code-review + security-auditor → `code_review`, git-manager → `git_commit`,
+  diagnosis/fix/fix-verification → `systematic_debugging`, perf-optimizer →
+  `sfnext_performance`, scapi-cartridge-dev → `b2c_scapi_custom`, planning/feature-conductor/
+  implement → the `dev_plan`/`dev_build` entry skills). The OpenSpec/opsx, project-context, and
+  eval machinery was deliberately not ported. The four existing `dev_*` skills remain as
+  entry-point routers with their `## Astound rules` drop-in sections now filled.
+- **Four admin user-management skills in the `astound-admin` plugin**, all driving the
+  admin-only `systemprompt` MCP CLI passthrough: `manage_users` (create/update/delete/merge/
+  bulk/export), `block_users` (account suspension + IP bans — note `admin users ban` is keyed to
+  an IP address, not a user), `manage_roles` (promote/demote/assign, with the
+  sign-out-and-back-in token-reissue caveat), and `manage_sessions` (list/force-end/cleanup).
+  Destructive commands document the confirm-then-`--yes` guardrail the CLI enforces. Each skill
+  carries an admin-only entity rule in `services/access-control/roles.yaml`.
 
 ### Changed
 
-- Upgraded to systemprompt-core 0.23.0. All `systemprompt`/`systemprompt-security`/`systemprompt-extension` pins move from 0.22.0 to 0.23.0 across the root workspace, `extensions/web`, and the `tests/` workspace. Core dropped the `systemprompt-sync` crate, so it is gone from both `[patch.crates-io]` blocks. The `.sqlx` offline caches are regenerated against the 0.23 schema (7 new core migrations, mostly analytics-view drops).
-- Core 0.23.0 is not published to crates.io yet, so both `[patch.crates-io]` blocks are uncommented and the build requires a sibling `../systemprompt-core` checkout at 0.23.0. Re-comment them in lockstep once the release lands.
+- `admin_user_report` is now strictly read-only: its role-mutation commands moved to
+  `manage_roles`/`manage_users`, and its `session list` invocation was corrected to the CLI's
+  positional form (`admin users session list <user-id>`).
+- The `enterprise-demo` marketplace catalogue includes all 67 new skills; the marketplace
+  version is unchanged, so the checked-in marketplace JSON needed no regeneration (the
+  validation gate pins plugin list + marketplace version only).
+- Both MCP server extensions (`systemprompt`, `knowledge-bank`) track core's current MCP API:
+  output schemas come from `McpOutputSchema::validated_schema()` instead of
+  `ToolResponse::schema()`, and tool dispatch threads the new `ClientProfile` through a
+  `Dispatch` context struct. Integration tests updated to match.
+- Contact email migrated from `ed@tyingshoelaces.com` to `ed@systemprompt.io` everywhere it was
+  published: workspace `authors` (root + bridge), plugin author blocks, the web theme
+  `support_email`, `AGENTS.md`, docs, examples, and the recorded demo SVGs.
+- `scripts/build-coordinator.sh` fingerprints the `bridge/` tree, so bridge edits correctly
+  invalidate coordinated build results.
+
+### Removed
+
+- `coverage/baseline.json`: the tracked coverage ratchet baseline is retired.
+- Stale `Unreleased` bullets describing the systemprompt-core 0.22→0.23 pin bump — that upgrade
+  shipped long ago and is superseded by the released `0.26.0` entry below.
 
 ## bridge-0.17.1 — 2026-07-23
 

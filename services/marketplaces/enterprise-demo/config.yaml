@@ -6,7 +6,7 @@ marketplace:
   visibility: public
   author:
     name: Astound Digital
-    email: ed@tyingshoelaces.com
+    email: ed@systemprompt.io
   keywords:
     - salesforce
     - sales
@@ -51,6 +51,73 @@ marketplace:
       - dev_build
       - dev_release
       - dev_test
+      - dev_rules
+      # Development suite (astound-dev plugin) — B2C build skills.
+      - b2c_business_manager_extensions
+      - b2c_content
+      - b2c_custom_api_development
+      - b2c_custom_caches
+      - b2c_custom_job_steps
+      - b2c_custom_objects
+      - b2c_docs
+      - b2c_hooks
+      - b2c_localization
+      - b2c_logging
+      - b2c_metadata
+      - b2c_ordering
+      - b2c_page_designer
+      - b2c_querying_data
+      - b2c_scapi_admin
+      - b2c_scapi_custom
+      - b2c_scapi_schemas
+      - b2c_scapi_shopper
+      - b2c_slas
+      - b2c_slas_auth_patterns
+      - b2c_webservices
+      - sfcc_api_classes
+      - sfcc_general_development
+      # Development suite — Storefront Next build skills.
+      - sfnext_authentication
+      - sfnext_components
+      - sfnext_configuration
+      - sfnext_data_fetching
+      - sfnext_deployment
+      - sfnext_extensions
+      - sfnext_hybrid_storefronts
+      - sfnext_i18n
+      - sfnext_mrt_data_store
+      - sfnext_page_designer
+      - sfnext_performance
+      - sfnext_project_setup
+      - sfnext_routing
+      - sfnext_state_management
+      - sfnext_tailwind
+      - sfnext_test_ids
+      # Development suite — operate skills.
+      - atlassian
+      - atlassian_doc_templating
+      - b2c_am
+      - b2c_cap
+      - b2c_cip
+      - b2c_config
+      - b2c_ecdn
+      - b2c_logs
+      - b2c_onboarding
+      - b2c_sandbox
+      - b2c_sites
+      - b2c_users_roles
+      - b2c_webdav
+      # Development suite — plan / release / test skills.
+      - drawio_diagrams
+      - b2c_code
+      - b2c_job
+      - b2c_mrt
+      - b2c_site_import_export
+      - git_commit
+      - a11y_audit
+      - code_review
+      - playwright_cli
+      - systematic_debugging
       # Admin control plane. Listed here so marketplace scoping keeps them in
       # the catalogue; per-entity rules in services/access-control/roles.yaml
       # restrict them to the admin role.
@@ -66,6 +133,10 @@ marketplace:
       - manage_services
       - inspect_mcp_and_skills
       - systemprompt_cli
+      - manage_users
+      - block_users
+      - manage_roles
+      - manage_sessions
   plugins:
     include:
       - astound-commons

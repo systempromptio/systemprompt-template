@@ -1,0 +1,10 @@
+id: b2c_site_import_export
+name: "B2C Site Import Export"
+description: "Import and export site archives on B2C Commerce instances using the b2c CLI. Use this skill for the deployment workflow — importing site data, exporting global/site data, the site archive directory structure, and monitoring job status. Also use when the user says \"push metadata\" or \"deploy a field to products\". For the metadata XML schema itself (attribute types, flags, enum values, custom object definitions), use the b2c-metadata skill."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - release
+category: development
+display_category: "Development — Release"

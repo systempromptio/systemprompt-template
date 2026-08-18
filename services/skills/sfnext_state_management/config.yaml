@@ -1,0 +1,11 @@
+id: sfnext_state_management
+name: "Storefront Next State Management"
+description: "Manage client-side state in Storefront Next using React Router 7 primitives — server loaders/actions for data, React context providers for app-wide and feature-local UI state, and post-mutation sync. Use when handling basket/auth UI state, feature UI state (for example store locator), or syncing client-visible state after server mutations. NOT for server-side data loading — see sfnext-data-fetching for loader patterns."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - build
+  - storefront-next
+category: development
+display_category: "Development — Storefront Next"

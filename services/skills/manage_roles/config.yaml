@@ -1,0 +1,13 @@
+id: manage_roles
+name: "Manage Roles"
+description: "Promote, demote, and assign user roles through the admin systemprompt MCP server. Use when someone needs admin access granted or revoked, or a specific role set changed. Role changes take effect on the next token issue — the user must sign out and back in."
+enabled: true
+file: SKILL.md
+tags:
+  - cli
+  - users
+  - admin
+  - roles
+  - operations
+category: operations
+display_category: "Governance & Analytics"

@@ -1,0 +1,11 @@
+id: sfnext_i18n
+name: "Storefront Next i18n"
+description: "Implement internationalization in Storefront Next using i18next with useTranslation for components and getTranslation for server-side code. Use when adding translations, configuring locales, handling pluralization, using the Zod schema factory pattern, or managing extension translations. Covers namespaces, interpolation, and language switching."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - build
+  - storefront-next
+category: development
+display_category: "Development — Storefront Next"

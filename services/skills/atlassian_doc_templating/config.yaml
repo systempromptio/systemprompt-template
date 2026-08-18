@@ -1,0 +1,11 @@
+id: atlassian_doc_templating
+name: "Atlassian Doc Templating"
+description: ">- Architecture and canonical format of the FSD/ISD Confluence document templating system (markdown-native source → Nunjucks → classic <ac:> storage, with a reverse round-trip back to markdown). Use when editing the doc model, renderer, Nunjucks templates/components, document profiles, or the publish pipeline under skills/operate/atlassian/scripts, or when authoring/adapting a canonical FSD/ISD markdown document or its OpenSpec golden."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - operate
+  - b2c
+category: development
+display_category: "Development — Operate"

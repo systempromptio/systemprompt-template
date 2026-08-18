@@ -1,0 +1,11 @@
+id: b2c_ecdn
+name: "B2C eCDN"
+description: "Manage B2C Commerce eCDN (embedded CDN) settings with the b2c cli. Always reference when using the CLI to purge CDN cache, configure WAF rules, manage SSL certificates, set rate limits, manage firewall rules, or create CDN zones."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - operate
+  - b2c
+category: development
+display_category: "Development — Operate"

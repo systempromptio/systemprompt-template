@@ -1,0 +1,11 @@
+id: dev_rules
+name: "Astound Development Rules"
+description: "The house rules for Astound storefront and B2C Commerce development — autonomy and verification standards, git and PR conventions, coding and comment standards, accessibility guidelines, and SFCC platform rules. Load alongside any dev_plan/dev_build/dev_release/dev_test workflow."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - rules
+  - conventions
+category: development
+display_category: "Development"

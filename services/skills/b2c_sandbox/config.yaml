@@ -1,0 +1,11 @@
+id: b2c_sandbox
+name: "B2C Sandbox"
+description: "Create and manage (B2C/SFCC/Demandware) on-demand sandboxes (ODS) with the b2c cli. Always reference when using the CLI to create, start, stop, restart, delete, or list on-demand sandboxes (ODS) and development instances."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - operate
+  - b2c
+category: development
+display_category: "Development — Operate"

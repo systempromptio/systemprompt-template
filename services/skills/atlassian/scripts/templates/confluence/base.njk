@@ -1,0 +1,82 @@
+{#
+  base.njk — shared FSD/ISD chrome in Confluence storage format.
+
+  Universal header (same for FSD and ISD): a two-equal layout with the TOC on the
+  left and, on the right, ONE combined table holding the header card (General
+  FSD/ISD Information) and the
+  approval groups, followed by the status-badge legend. Below the layout,
+  full-width: Reference Materials (a typed H2 + table), then the body, then a
+  universal static footer (also identical for FSD and ISD): a "Document Change
+  Log" H2 whose body is an `expand` macro wrapping the native `change-history`
+  macro (a.changeLog). The footer is script-owned — never authored in markdown —
+  and gets the same H2 layout as the body (a <p/> + <hr/> before its heading).
+
+    ┌ layout: two-equal ─────────────────────────────────────────────┐
+    │  [ TOC ]              │  Header card + Approval groups            │
+    │                       │  + status legend                         │
+    └────────────────────────────────────────────────────────────────┘
+    Reference Materials (h2 + table)
+    {% block body %} … {% endblock %}
+
+  The combined table is built generically from `model.header.sections`.
+  sections[0] is the header card (General FSD/ISD Information); every later
+  section is an H3 subsection (approval groups, or anything else authored as an
+  H3 under the card H2).
+  Each section renders as:
+    • a merged section-header row  (<th colspan=width> with the section label)
+    • one row per data row; a row with fewer cells than the table width has its
+      last cell span the remainder (so 2-col card rows fill the 3-col grid).
+  A cell whose value is a status word becomes a status lozenge; any other value
+  goes through @mention resolution (plain text when no account id is known).
+
+  The table is wrapped in the native Content Properties (`details`) macro keyed by
+  the doc type's `propertiesId`, which makes column 1 the property key and column 2
+  its value — so the Content Properties Report the publisher refreshes on the parent
+  page can aggregate every document's statuses (lib/doc/matrix.mjs). The wrapper is invisible on
+  the page, so the rendered header looks exactly as it did before it existed; the
+  merged section rows come along as extra empty keys, which the report filters out
+  via its "Columns to show". Because column 1 is the key, an approval row is
+  authored `role | status | name` — a key must be stable across documents and must
+  never hold a macro (a mention), which is why the person moved to column 3.
+
+  Body layout is deterministic and owned HERE, not by the markdown: render-doc
+  strips every authored blank line and `---` from the body and splits it into
+  H2/H3 `bodyParts` ({level, storage}). The body block then hardcodes the rules:
+    • a fixed <hr/> on the chrome→body boundary;
+    • before every H2 except the first: an empty <p/> + <hr/>;
+    • before every H3 except the first in its section (i.e. when the previous
+      part is also an H3): an empty <p/>.
+  To add a divider/gap elsewhere, edit this template — never the markdown.
+
+  Context (render-doc.mjs): model{title,header{sections},references,...},
+  bodyParts[{level,storage}], includeToc, tocMin, tocMax, headerBg, cardWidths[3],
+  propertiesId. Globals:
+  statusColor, isStatus, md. Autoescape is OFF — escape with | x and | xa.
+
+  Authored cells (card values, Material, Notes) carry inline markdown and go
+  through md(), which renders it and escapes the text itself — never combine it
+  with the x filter. Structural values (group labels) stay on x.
+#}
+{%- import "components/atlas.njk" as a -%}
+{%- set cw = cardWidths -%}
+{%- set width = cw | length -%}
+<ac:layout><ac:layout-section ac:type="two_equal"><ac:layout-cell>{% if includeToc %}{{ a.toc(tocMin, tocMax) }}{% endif %}</ac:layout-cell><ac:layout-cell>{{ a.propertiesOpen(propertiesId) }}<table>{{ a.colgroup(cw) }}<tbody>
+{% for s in model.header.sections %}<tr><th colspan="{{ width }}" style="background-color: {{ headerBg }}"><p><strong>{{ s.label | x }}</strong></p></th></tr>
+{% for row in s.rows %}<tr>{% for cell in row %}{% set span = (width - (row | length) + 1) if loop.last else 1 %}<td{% if span > 1 %} colspan="{{ span }}"{% endif %}><p>{% if cell and isStatus(cell) %}{{ a.status(cell) }}{% elif cell %}{{ md(cell) }}{% endif %}</p></td>{% endfor %}</tr>
+{% endfor %}{% endfor %}</tbody></table>{{ a.propertiesClose() }}
+<p><em>Status badge values: </em>{{ a.status('not started') }}<em> | </em>{{ a.status('in progress') }}<em> | </em>{{ a.status('astound review') }} / {{ a.status(clientName + ' review') }} / {{ a.status('pending answers') }} / {{ a.status('approved') }}</p></ac:layout-cell></ac:layout-section></ac:layout>
+<p></p>
+{% if model.references.length %}<h2>Reference Materials</h2>
+<table><tbody>
+<tr><th style="background-color: {{ headerBg }}"><p><strong>Material</strong></p></th><th style="background-color: {{ headerBg }}"><p><strong>Link / reference</strong></p></th><th style="background-color: {{ headerBg }}"><p><strong>Notes</strong></p></th></tr>
+{% for r in model.references %}<tr><td><p>{{ md(r.material) }}</p></td><td><p>{{ a.link(r.href, r.text, r.card) }}</p></td><td><p>{{ md(r.notes) }}</p></td></tr>
+{% endfor %}</tbody></table>
+{% endif %}{% block body %}<hr/>
+{% for p in bodyParts %}{% if not loop.first %}{% if p.level == 2 %}<p /><hr/>
+{% elif p.level == 3 and bodyParts[loop.index0 - 1].level == 3 %}<p />
+{% endif %}{% endif %}{{ p.storage }}
+{% endfor %}{% endblock %}{% if jiraLinksJql %}<p /><hr/>
+<h2>Linked Jira Tickets</h2>
+{{ a.jiraIssues(jiraLinksJql, jiraCloudId) }}
+{% endif %}<p /><hr/>
+{{ a.changeLog() }}

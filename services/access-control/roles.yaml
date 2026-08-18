@@ -143,6 +143,26 @@ rules:
     access: allow
     default_included: false
     roles: [admin]
+  - entity_type: skill
+    entity_id: manage_users
+    access: allow
+    default_included: false
+    roles: [admin]
+  - entity_type: skill
+    entity_id: block_users
+    access: allow
+    default_included: false
+    roles: [admin]
+  - entity_type: skill
+    entity_id: manage_roles
+    access: allow
+    default_included: false
+    roles: [admin]
+  - entity_type: skill
+    entity_id: manage_sessions
+    access: allow
+    default_included: false
+    roles: [admin]
 
   # Slack inbound surface. Wildcard grant over every Slack channel for the
   # `user` role — the role federated Slack users are minted with (see

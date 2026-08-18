@@ -1,0 +1,65 @@
+{#
+  atlas.njk — reusable Confluence storage-format components (classic markup).
+
+  Not everything here is a Confluence macro: some components wrap actual
+  <ac:structured-macro>s (status, toc), others are plain storage markup (mention
+  links, colgroups). Grouping them as "components" keeps the distinction from
+  leaking into template call sites.
+
+  The Nunjucks environment runs with autoescape OFF (render-doc.mjs), so every
+  dynamic value MUST be escaped explicitly with the `x` filter (text) or `xa`
+  filter (attribute). Component output is raw storage XHTML by design.
+
+  Colour for status(...) is resolved by the `statusColor` global (render-doc.mjs)
+  from the canonical lowercase status vocabulary in lib/doc/status-vocab.mjs.
+#}
+
+{#- Status lozenge. `colour` overrides the vocabulary colour (statusColor) — used
+    for dynamic values that aren't in the canonical vocab (e.g. the "<Client>
+    review" legend badge). Omit it and the colour is resolved from the word. -#}
+{%- macro status(text, colour) -%}
+<ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">{{ colour or statusColor(text) }}</ac:parameter><ac:parameter ac:name="title">{{ text | x }}</ac:parameter></ac:structured-macro>
+{%- endmacro -%}
+
+{#- Jira Issues macro driven by a JQL query. In Confluence Cloud the classic
+    `jira` macro binds to the linked Jira via `serverId`, which holds the site
+    cloudId; omit it (empty) and Cloud resolves the single linked Jira. Used to
+    list the Stories that remote-link this page. -#}
+{%- macro jiraIssues(jql, cloudId) -%}
+<ac:structured-macro ac:name="jira" ac:schema-version="1"><ac:parameter ac:name="server">System Jira</ac:parameter>{% if cloudId %}<ac:parameter ac:name="serverId">{{ cloudId | x }}</ac:parameter>{% endif %}<ac:parameter ac:name="jqlQuery">{{ jql | x }}</ac:parameter></ac:structured-macro>
+{%- endmacro -%}
+
+{%- macro toc(min, max) -%}
+<ac:structured-macro ac:name="toc"><ac:parameter ac:name="minLevel">{{ min }}</ac:parameter><ac:parameter ac:name="maxLevel">{{ max }}</ac:parameter><ac:parameter ac:name="outline">true</ac:parameter><ac:parameter ac:name="style">none</ac:parameter><ac:parameter ac:name="type">list</ac:parameter><ac:parameter ac:name="printable">true</ac:parameter></ac:structured-macro>
+{%- endmacro -%}
+
+{#- Static document footer (identical for FSD and ISD): a "Document Change Log"
+    H2 whose body is an `expand` macro ("View document history") wrapping the
+    native `change-history` macro. Fully static — never authored in markdown. -#}
+{%- macro changeLog() -%}
+<h2>Document Change Log</h2><ac:structured-macro ac:name="expand" ac:schema-version="1"><ac:parameter ac:name="title">View document history</ac:parameter><ac:parameter ac:name="breakoutWidth">760</ac:parameter><ac:rich-text-body><ac:structured-macro ac:name="change-history" ac:schema-version="1"/></ac:rich-text-body></ac:structured-macro>
+{%- endmacro -%}
+
+{#- A link cell value: inline smart-card, plain external link, or bare text. -#}
+{%- macro link(href, text, card) -%}
+{%- if not href or href == '-' -%}{{ (text or href or '-') | x }}
+{%- elif card -%}<a href="{{ href | xa }}" data-card-appearance="inline">{{ (text or href) | x }}</a>
+{%- else -%}<a href="{{ href | xa }}">{{ (text or href) | x }}</a>
+{%- endif -%}
+{%- endmacro -%}
+
+{#- <colgroup> from a list of pixel widths, e.g. colgroup([165, 54, 108]). -#}
+{%- macro colgroup(widths) -%}
+<colgroup>{% for w in widths %}<col style="width: {{ w }}.0px;"/>{% endfor %}</colgroup>
+{%- endmacro -%}
+
+{#- Content Properties (`details`) macro, split into an open/close pair because it
+    wraps a block a caller renders itself (the header table). Its `id` scopes a
+    Content Properties Report to this one macro; keep the pair balanced. -#}
+{%- macro propertiesOpen(id) -%}
+<ac:structured-macro ac:name="details" ac:schema-version="1"><ac:parameter ac:name="id">{{ id | x }}</ac:parameter><ac:rich-text-body>
+{%- endmacro -%}
+
+{%- macro propertiesClose() -%}
+</ac:rich-text-body></ac:structured-macro>
+{%- endmacro -%}

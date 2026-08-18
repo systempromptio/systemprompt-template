@@ -1,0 +1,10 @@
+id: git_commit
+name: "Git Commit"
+description: "Source of truth for git branch/commit/PR conventions and the full commit-to-PR workflow. Use before creating any branch, staging, writing a commit message, pushing, or opening a PR — and for the OpenSpec feature/requirements branch flow. Triggers on \"commit\", \"push\", \"branch\", \"create PR\", \"draft PR\", \"open PR\", \"commit my changes\"."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - release
+category: development
+display_category: "Development — Release"

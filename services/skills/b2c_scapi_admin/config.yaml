@@ -1,0 +1,12 @@
+id: b2c_scapi_admin
+name: "B2C SCAPI Admin"
+description: "Consume SCAPI Admin APIs for backend integrations and data management. Use when building inventory sync, order management, catalog updates, or customer data integrations. Covers Account Manager OAuth, admin scopes, and common integration patterns."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - build
+  - b2c
+  - commerce-cloud
+category: development
+display_category: "Development — B2C Build"

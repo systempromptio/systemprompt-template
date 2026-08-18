@@ -26,10 +26,28 @@ Use this skill at the start of any feature, refactor, or integration task — an
 - Specs are living documents: when reality diverges during build, update the spec in the same pull request.
 - Keep specs short — one page is the target. A spec nobody reads governs nothing.
 
+## Planning method
+
+Before writing the spec, gather context to ~90% confidence — enough to answer: which files and
+functions are relevant, how the existing code works there, which patterns and conventions the
+codebase follows, and which dependencies are involved. Breadth first, then drill down; document
+concrete file paths and function names; note existing tests and similar implementations. Where
+genuinely multiple approaches exist, present two or three with trade-offs and let the reviewer
+pick — do not research to 100% certainty before surfacing options. When a spec needs a diagram
+(system flow, sequence of calls), follow `drawio_diagrams` for a committable, re-generatable one.
+
+## Where to go deeper
+
+| Topic | Skill |
+|---|---|
+| Diagrams for specs and docs | `drawio_diagrams` |
+| Jira / Confluence mechanics | `atlassian`, `atlassian_doc_templating` |
+| Full house rules | `dev_rules` |
+
 ## Astound rules
 
-<!-- DROP-IN SECTION: Astound's plan-category Cursor rules land here verbatim
-     once approved for sharing (owner: Roman). Keep the heading; replace this
-     comment with the imported rules. -->
-
-*Astound's organisation-specific planning rules will appear here once imported.*
+The full rule text lives in `dev_rules`. Most relevant at the planning stage: **Autonomous
+verification** (research, don't ask — verify capability claims before recording them), **No
+unsolicited actions** (no Jira/Confluence writes or pushes without explicit approval), **Bug fix
+planning** (reproduce before planning a fix), and **No symptom patches** (when the right fix is
+architectural, plan the architectural fix).

@@ -1,0 +1,10 @@
+id: a11y_audit
+name: "A11y Audit"
+description: "Use when performing WCAG 2.2 accessibility audits on React components, reviewing a11y compliance, or when the user asks to check accessibility. Triggers on \"accessibility audit\", \"WCAG check\", \"a11y review\", \"screen reader test\", \"keyboard navigation check\"."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - test
+category: development
+display_category: "Development — Test"

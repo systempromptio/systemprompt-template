@@ -1,0 +1,10 @@
+id: b2c_job
+name: "B2C Job"
+description: "Run and monitor existing jobs, import/export site archives (IMPEX). Use when executing batch jobs, importing site data, running search indexing, checking job status, or viewing job logs. For creating new job code, use b2c-custom-job-steps instead."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - release
+category: development
+display_category: "Development — Release"

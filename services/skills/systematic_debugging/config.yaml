@@ -1,0 +1,10 @@
+id: systematic_debugging
+name: "Systematic Debugging"
+description: "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes"
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - test
+category: development
+display_category: "Development — Test"

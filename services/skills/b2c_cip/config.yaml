@@ -1,0 +1,11 @@
+id: b2c_cip
+name: "B2C CIP"
+description: "Run analytics reports and SQL queries against B2C Commerce Intelligence data using the b2c CLI. Use this skill whenever the user needs sales analytics, search query performance metrics, payment data, or KPI exports. Also use when they need to discover available data tables, run custom SQL, or pull aggregate reports — even if they just say \"show me sales data\" or \"what are our top search terms\"."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - operate
+  - b2c
+category: development
+display_category: "Development — Operate"

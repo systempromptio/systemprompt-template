@@ -1,0 +1,13 @@
+id: manage_sessions
+name: "Manage Sessions"
+description: "List, end, and clean up user sessions through the admin systemprompt MCP server. Use to see who is signed in, force-end a session or all of a user's sessions, or prune stale anonymous accounts. Ending a session logs the person out mid-work — confirm first."
+enabled: true
+file: SKILL.md
+tags:
+  - cli
+  - users
+  - admin
+  - sessions
+  - operations
+category: operations
+display_category: "Governance & Analytics"

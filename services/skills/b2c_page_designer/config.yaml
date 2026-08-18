@@ -1,0 +1,12 @@
+id: b2c_page_designer
+name: "B2C Page Designer"
+description: "Create Page Designer pages and components in B2C Commerce. Use when building visual merchandising tools, content slots, or experience API integrations. Covers page types, component types, regions, and attribute definitions."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - build
+  - b2c
+  - commerce-cloud
+category: development
+display_category: "Development — B2C Build"

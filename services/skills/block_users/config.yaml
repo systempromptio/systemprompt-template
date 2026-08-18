@@ -1,0 +1,13 @@
+id: block_users
+name: "Block Users"
+description: "Suspend accounts and manage IP bans through the admin systemprompt MCP server. Use when access must be cut off — suspend or reinstate an account, ban or unban an IP address, or audit the active ban list. Pair with manage_sessions to end a blocked user's live sessions."
+enabled: true
+file: SKILL.md
+tags:
+  - cli
+  - users
+  - admin
+  - security
+  - operations
+category: operations
+display_category: "Governance & Analytics"

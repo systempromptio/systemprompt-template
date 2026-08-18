@@ -1,0 +1,11 @@
+id: sfnext_hybrid_storefronts
+name: "Storefront Next Hybrid Storefronts"
+description: "Implement hybrid storefronts that run Storefront Next alongside SFRA or SiteGenesis. Use when planning gradual migration from SFRA, configuring hybrid proxy for local development, setting up session bridging between storefronts, or routing traffic between old and new implementations."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - build
+  - storefront-next
+category: development
+display_category: "Development — Storefront Next"

@@ -1,0 +1,12 @@
+{#
+  fsd.njk — Functional Specification Document.
+
+  FSD and ISD share the same chrome (the header card, approval matrix, reference
+  table, TOC) from base.njk. The document body — In Scope Functional
+  Requirements (one H3 story per requirement), Deferred Requirements, Change
+  Requests — is authored as Markdown and converted to storage upstream
+  (render-doc.mjs), then
+  injected here via the `body` block. This template exists as the FSD extension
+  point for any future FSD-only chrome divergence from ISD.
+#}
+{% extends "base.njk" %}

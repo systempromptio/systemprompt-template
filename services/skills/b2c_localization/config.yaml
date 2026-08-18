@@ -1,0 +1,12 @@
+id: b2c_localization
+name: "B2C Localization"
+description: "Localize templates, forms, and content in B2C Commerce. Use when adding translations, working with resource bundles (*.properties files), using Resource.msg, or implementing multi-locale support. Covers locale folders, string externalization, and date/currency formatting."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - build
+  - b2c
+  - commerce-cloud
+category: development
+display_category: "Development — B2C Build"

@@ -9,7 +9,7 @@ account looks like up close. This is the roster; for what those people actually 
 - "List the admins."
 - "Show me recent users as a table."
 - "How many users do we have, and how many are active?"
-- "Tell me everything about ed@tyingshoelaces.com."
+- "Tell me everything about you@example.com."
 
 ## When to Use
 
@@ -61,7 +61,7 @@ quoting the raw total.
 ```bash
 systemprompt admin users show <user-id>
 systemprompt admin users search "<name | email | full name>"
-systemprompt admin users session list --user <user-id>      # sessions for one account
+systemprompt admin users session list <user-id>             # sessions for one account
 systemprompt admin users webauthn list --user <user-id>     # registered passkeys
 ```
 
@@ -71,17 +71,12 @@ Start from `search` when you only have a name or an email - it returns the id th
 
 ```bash
 systemprompt admin users role list <user-id>
-systemprompt admin users role promote <user-id>             # grant admin
-systemprompt admin users role demote <user-id>
 ```
 
-A role change takes effect on the **next token issue**, not immediately: scopes are minted when the session
-token is issued. After promoting someone, tell them to sign out of the Bridge and back in, or their admin
-surfaces will keep returning permission errors. For the governance side of roles - watching a request flip
-from denied to allowed - use `manage_permissions`.
-
-Promote, demote, `update`, `delete`, `merge`, and `bulk` all mutate accounts. Confirm the target with `show`
-first, state plainly what you are about to change, and get the user's go-ahead before running them.
+This skill is read-only. To **change** a role (promote, demote, assign), follow `manage_roles`; to
+create, edit, delete, or merge accounts, follow `manage_users`; suspensions and IP bans are
+`block_users`, and force-logout is `manage_sessions`. For the governance side of roles - watching a
+request flip from denied to allowed - use `manage_permissions`.
 
 ## Export
 

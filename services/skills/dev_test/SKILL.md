@@ -24,10 +24,19 @@
 
 The Astound developer sandbox ships Node and Chromium, so `npx playwright test` works out of the box inside it. Cross-browser runs (WebKit/Firefox) follow the project's CI configuration — do not add browsers locally without need.
 
+## Where to go deeper
+
+| Topic | Skill |
+|---|---|
+| Browser automation mechanics | `playwright_cli` |
+| Accessibility audits | `a11y_audit` |
+| Reviewing a branch or PR | `code_review` |
+| Root-causing a failure | `systematic_debugging` |
+
 ## Astound rules
 
-<!-- DROP-IN SECTION: Astound's test-category Cursor rules land here verbatim
-     once approved for sharing (owner: Roman). Keep the heading; replace this
-     comment with the imported rules. -->
-
-*Astound's organisation-specific testing rules will appear here once imported.*
+The full rule text lives in `dev_rules`. Most relevant at the test stage: **Verification
+standards** (browser testing is mandatory — code review alone is not verification),
+**FE definition of done** and **FE edge cases checklist** (the self-check before requesting
+review), and **Process retrospective** (a bug that slipped through triggers a process-level RCA,
+not just a fix).

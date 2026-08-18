@@ -1,0 +1,12 @@
+id: b2c_slas_auth_patterns
+name: "B2C SLAS Auth Patterns"
+description: "Implement advanced SLAS authentication patterns in B2C Commerce. Use when implementing passwordless login (email OTP, SMS OTP, passkeys), session bridging between a composable storefront and SFRA, hybrid authentication, token refresh, or trusted system authentication. Covers authentication flows, token management, and JWT validation."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - build
+  - b2c
+  - commerce-cloud
+category: development
+display_category: "Development — B2C Build"

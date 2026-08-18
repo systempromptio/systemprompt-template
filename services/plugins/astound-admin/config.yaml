@@ -6,7 +6,7 @@ plugin:
   enabled: true
   author:
     name: Astound Digital
-    email: ed@tyingshoelaces.com
+    email: ed@systemprompt.io
   keywords: [admin, governance, analytics, users, audit, operations, control-plane]
   license: proprietary
   category: admin
@@ -25,6 +25,11 @@ plugin:
       - manage_services
       - inspect_mcp_and_skills
       - systemprompt_cli
+      # User management (mutations; admin_user_report stays read-only)
+      - manage_users
+      - block_users
+      - manage_roles
+      - manage_sessions
   agents:
     source: explicit
     include: []

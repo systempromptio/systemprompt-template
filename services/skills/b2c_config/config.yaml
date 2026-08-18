@@ -1,0 +1,11 @@
+id: b2c_config
+name: "B2C Config"
+description: "View and debug b2c CLI configuration and understand where credentials come from. Always reference when using the CLI to inspect configuration, manage instances, retrieve OAuth tokens, or set up IDE integration. Also use when authentication fails, connection errors occur, or the wrong instance is being used."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - operate
+  - b2c
+category: development
+display_category: "Development — Operate"

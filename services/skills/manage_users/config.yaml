@@ -1,0 +1,12 @@
+id: manage_users
+name: "Manage Users"
+description: "Create, update, delete, merge, and bulk-manage user accounts through the admin systemprompt MCP server. Use when an account needs to change — new user, edited details, account removal, duplicate merge, or a bulk cleanup. For read-only roster questions use admin_user_report instead."
+enabled: true
+file: SKILL.md
+tags:
+  - cli
+  - users
+  - admin
+  - operations
+category: operations
+display_category: "Governance & Analytics"

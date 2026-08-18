@@ -1,0 +1,11 @@
+id: sfnext_tailwind
+name: "Storefront Next Tailwind"
+description: "Style Storefront Next components with Tailwind CSS v4 (CSS-first config), shadcn/ui, and the `cn()` utility. Use when adding or editing className utilities, theming via CSS variables, adding shadcn components, or setting up the Tailwind v4 token pipeline. Triggers on tailwind, tw, classname, cn(), shadcn, design tokens, dark mode, `@theme`, `@apply`, `@utility`."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - build
+  - storefront-next
+category: development
+display_category: "Development — Storefront Next"

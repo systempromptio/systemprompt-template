@@ -1,0 +1,11 @@
+id: sfnext_project_setup
+name: "Storefront Next Project Setup"
+description: "Create and configure Storefront Next projects. Use when creating a new storefront, understanding project structure, setting up environment variables, or running the sfnext CLI for the first time. Covers project creation, directory layout, .env configuration, and sfnext CLI basics."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - build
+  - storefront-next
+category: development
+display_category: "Development — Storefront Next"

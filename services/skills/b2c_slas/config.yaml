@@ -1,0 +1,12 @@
+id: b2c_slas
+name: "B2C SLAS"
+description: "Manage SLAS (Shopper Login and API Access Service) clients for B2C Commerce (SFCC/Demandware) with the b2c cli. Always reference when using the CLI to create, update, list, or delete SLAS clients, manage shopper OAuth scopes (including custom scopes like c_loyalty), or configure shopper authentication for headless/composable storefronts. SLAS is for shopper (customer) authentication, not admin APIs."
+enabled: true
+file: SKILL.md
+tags:
+  - development
+  - build
+  - b2c
+  - commerce-cloud
+category: development
+display_category: "Development — B2C Build"

@@ -1,0 +1,20 @@
+{#
+  isd.njk — Integration Specification Document.
+
+  FSD and ISD share the same chrome (the header card — "General FSD Information"
+  on an FSD, "General ISD Information" on an ISD —
+  approval roster, Reference Materials table, TOC, status legend, Document Change
+  Log footer) from base.njk. The document body — Requirements, Integration
+  Specification, Out Of Scope / Limitations, Deferred Requirements, Change
+  Requests, Open Questions — is authored as Markdown and converted to storage
+  upstream (render-doc.mjs), then injected here via the `body` block.
+
+  The ISD canonical markdown reuses the FSD chrome skeleton so the generic parser
+  (lib/doc/model.mjs) + shared typed layer (lib/doc/types/base.mjs) and renderer
+  treat both document types identically: a card
+  section, H3 approval groups (FA / FE / BE / QA for the delivering org, plus a
+  client group), a `## Reference Materials` table (Material | Link / reference |
+  Notes), then the ISD-specific body sections. This template exists as the ISD
+  extension point for any future ISD-only chrome divergence from FSD.
+#}
+{% extends "base.njk" %}
