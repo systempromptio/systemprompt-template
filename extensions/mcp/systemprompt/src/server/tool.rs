@@ -52,13 +52,19 @@ impl McpToolHandler for SystempromptToolHandler {
             ));
         }
 
-        let summary = output.stdout.clone();
-
-        let artifact = match serde_json::from_str::<CliArtifact>(&output.stdout) {
-            Ok(artifact) => artifact,
+        // Why: the response builder pairs the summary with the artifact's text
+        // body on the wire, so echoing stdout as the summary would print the
+        // whole output twice for structured clients.
+        let (artifact, summary) = match serde_json::from_str::<CliArtifact>(&output.stdout) {
+            Ok(artifact) => (artifact, output.stdout.clone()),
             Err(e) => {
                 tracing::warn!(error = %e, "CLI stdout is not a CliArtifact, returning as text");
-                CliArtifact::text(TextArtifact::new(&output.stdout).with_title("Command Output"))
+                (
+                    CliArtifact::text(
+                        TextArtifact::new(&output.stdout).with_title("Command Output"),
+                    ),
+                    format!("Ran `{}`", input.command),
+                )
             },
         };
 
@@ -107,11 +113,6 @@ pub(super) async fn authenticate_tool_request(
     }
 }
 
-/// Route one authenticated tool call to its handler.
-///
-/// Exposed (behind `#[doc(hidden)]`) so the external test workspace can assert
-/// the unknown-tool arm without an rmcp `Peer`, which only exists once a
-/// transport is serving. Not part of the public API.
 #[doc(hidden)]
 #[derive(Debug)]
 pub struct Dispatch<'a> {
@@ -121,6 +122,11 @@ pub struct Dispatch<'a> {
     pub client: &'a ClientProfile,
 }
 
+/// Route one authenticated tool call to its handler.
+///
+/// Exposed (behind `#[doc(hidden)]`) so the external test workspace can assert
+/// the unknown-tool arm without an rmcp `Peer`, which only exists once a
+/// transport is serving. Not part of the public API.
 #[doc(hidden)]
 pub async fn dispatch_tool(
     ctx: &Dispatch<'_>,
