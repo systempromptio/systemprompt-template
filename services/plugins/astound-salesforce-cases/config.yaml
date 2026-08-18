@@ -6,7 +6,7 @@ plugin:
   enabled: true
   author:
     name: Astound Digital
-    email: ed@tyingshoelaces.com
+    email: ed@systemprompt.io
   keywords: [salesforce, cases, support, service, escalation]
   license: proprietary
   category: salesforce

@@ -4,7 +4,7 @@
 **Affected white-label:** astound-bridge 0.14.0 (commit `bad1b596`, windows x86_64)
 **Severity:** High — blocks Cowork/Claude sign-in entirely; advertised fix does not work
 **Status:** Open
-**Reporter:** Ed (ed@tyingshoelaces.com), 2026-06-25
+**Reporter:** Ed (ed@systemprompt.io), 2026-06-25
 
 ---
 

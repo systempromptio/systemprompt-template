@@ -66,5 +66,5 @@
 [2.79711, "o", "o"]
 [2.813228, "o", "w"]
 [2.82938, "o", "\r\n"]
-[3.244946, "o", "    \r\n    Session Info\r\n    {\r\n      \"sessions\": [\r\n        {\r\n          \"key\": \"local\",\r\n          \"profile_name\": \"local\",\r\n          \"user_email\": \"ed@tyingshoelaces.com\",\r\n          \"session_id\": \"sess_23d497b8-cc4c-4006-bcf5-ca834bf8a355\",\r\n          \"context_id\": \"b8c32f4f-23a9-4954-8927-24230836676b\",\r\n          \"is_active\": true,\r\n          \"is_expired\": false,\r\n          \"expires_in\": \"23h 15m\",\r\n          \"stale_warning\": null\r\n        },\r\n\r\n"]
+[3.244946, "o", "    \r\n    Session Info\r\n    {\r\n      \"sessions\": [\r\n        {\r\n          \"key\": \"local\",\r\n          \"profile_name\": \"local\",\r\n          \"user_email\": \"ed@systemprompt.io\",\r\n          \"session_id\": \"sess_23d497b8-cc4c-4006-bcf5-ca834bf8a355\",\r\n          \"context_id\": \"b8c32f4f-23a9-4954-8927-24230836676b\",\r\n          \"is_active\": true,\r\n          \"is_expired\": false,\r\n          \"expires_in\": \"23h 15m\",\r\n          \"stale_warning\": null\r\n        },\r\n\r\n"]
 [3.24531, "o", "\u001b[32m\u001b[1m>>> ALLOW\u001b[0m \u001b[32mauth once, identity flows everywhere\u001b[0m\r\n"]

@@ -58,4 +58,4 @@ Fork it, modify it, ship it.
 - Upstream template: https://github.com/systempromptio/systemprompt-template
 - Core: https://github.com/systempromptio/systemprompt-core
 - Astound Digital: https://astounddigital.com
-- Feedback: open a `feedback`-labelled issue, or email `ed@tyingshoelaces.com`
+- Feedback: open a `feedback`-labelled issue, or email `ed@systemprompt.io`

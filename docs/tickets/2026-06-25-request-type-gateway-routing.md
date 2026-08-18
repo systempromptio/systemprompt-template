@@ -4,7 +4,7 @@
 **Type:** Feature / RFC (planning)
 **Priority:** Medium — forward-compatibility seam; no user-visible behavior change on landing
 **Status:** Proposed
-**Author:** Ed (ed@tyingshoelaces.com), 2026-06-25
+**Author:** Ed (ed@systemprompt.io), 2026-06-25
 **Related:** gateway redirect (Cowork `claude-*` → Cerebras `zai-glm-4.7`); GLM cost/speed/sovereignty analysis
 
 ---
