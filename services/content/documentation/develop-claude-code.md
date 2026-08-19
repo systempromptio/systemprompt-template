@@ -172,6 +172,10 @@ just bridge-build
 just start
 ```
 
+Re-runs keep the first run's choices: a bare `just setup-local` reads the HTTP
+and Postgres ports back from the existing profile and compose file rather than
+reverting to `8080`/`5432`.
+
 The database has no users. Either register at `http://localhost:8081/admin/login`
 and take the code from the profile page, or stay headless:
 
@@ -179,6 +183,14 @@ and take the code from the profile page, or stay headless:
 systemprompt admin users create --name you --email you@example.com --if-not-exists
 systemprompt admin users role promote you@example.com
 systemprompt admin bridge issue-code --user-id you@example.com
+```
+
+Scripting the last step? Add the global `--json` flag and take the `code`
+field from the artifact instead of scraping the rendered table:
+
+```bash
+systemprompt --json admin bridge issue-code --user-id you@example.com \
+  | jq -r '.sections[] | select(.heading == "code") | .content'
 ```
 
 Both write the same `bridge_exchange_codes` row. Registering exercises the
@@ -212,3 +224,4 @@ not during sync.
 | Prompted for a code on a repeat run | The stored credential did not validate against this gateway — usually a different gateway from the one that issued it. `just claude-reset`, then connect with a fresh code. |
 | Session works, audit trail empty | Not routed through the gateway. Check `ANTHROPIC_BASE_URL` points at the loopback proxy and that `astound-bridge doctor` reports it running. |
 | Container cannot reach the gateway | Inside a container `localhost` is the container. `just claude` rewrites it; by hand, use `http://host.docker.internal:8080`. |
+| 401 from a container that signed in fine | The gateway the container passes to `login --gateway` is not the gateway the PAT was issued by. The bridge follows only its config file (`login --gateway` writes it); re-run the container with the right `ASTOUND_BRIDGE_GATEWAY_URL` and reconnect. |

@@ -25,8 +25,10 @@ in headless/proxy mode.
 
 Config, PAT, cache, and logs are isolated under the `astound` / `astound-bridge`
 paths (e.g. `~/.config/astound/astound-bridge.toml`), and all env overrides use
-the `ASTOUND_BRIDGE_` prefix (`ASTOUND_BRIDGE_GATEWAY_URL`, `ASTOUND_BRIDGE_PAT`,
-`ASTOUND_BRIDGE_CONFIG`, …).
+the `ASTOUND_BRIDGE_` prefix (`ASTOUND_BRIDGE_PAT`, `ASTOUND_BRIDGE_CONFIG`, …).
+The gateway URL is not overridable by env: it lives only in the config file
+written by `login --gateway`, so a stale environment can never silently point
+an authenticated bridge at a different gateway.
 
 ## Linux
 

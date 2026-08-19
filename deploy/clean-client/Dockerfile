@@ -99,12 +99,11 @@ RUN npm install -g @anthropic-ai/claude-code@latest \
 
 WORKDIR /home/tester/work
 
-# ASTOUND_BRIDGE_GATEWAY_URL is the one setting that must point back out of the
-# container; `just clean-client` overrides it. host.docker.internal resolves to
-# the WSL host via --add-host, so a gateway running in your primary distro on
-# :8080 is reachable without publishing anything.
-ENV ASTOUND_BRIDGE_GATEWAY_URL=http://host.docker.internal:8080 \
-    TERM=xterm-256color
+# The gateway URL is run-time-only by design: every `just` recipe passes
+# -e ASTOUND_BRIDGE_GATEWAY_URL, bootstrap.sh hard-errors when it is unset,
+# and no default is baked here. A baked default once silently overrode the
+# gateway the bridge was logged into and produced a phantom "Invalid PAT".
+ENV TERM=xterm-256color
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["bash", "-l"]
