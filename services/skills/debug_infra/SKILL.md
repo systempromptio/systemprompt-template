@@ -40,7 +40,7 @@ Build the environment table from what you found — do not invent rows:
 | Environment | Profile | Deploy method | Database | External URL |
 |---|---|---|---|---|
 | local | `profiles/local/` | `just start` on this machine | Docker Postgres from `.systemprompt/docker/local.yaml`, port from `secrets.json` (not always 5432) | localhost |
-| production (cloud) | `profiles/production/` | `just deploy` → `systemprompt cloud deploy` (Fly, driven server-side — no fly.toml exists) | Fly Postgres `systemprompt-db-prod.internal` — pooler :5433 read, :5432 write; unreachable from dev, use `systemprompt cloud db …` | per `api_external_url` |
+| production (cloud) | `profiles/production/` | `just deploy` → `systemprompt cloud deploy` (Fly, driven server-side — no fly.toml exists) | Fly Postgres — URLs must be region-pinned to the primary: `iad.systemprompt-db-prod.internal:5432`. Port 5432 is haproxy→always-primary; **:5433 is direct-to-member and bare `.internal` resolves to every cluster member including the fra read replica** — that combination silently attaches the app to a read-only replica in another region (see the latency playbook in Phase 5A). Unreachable from dev, use `systemprompt cloud db …` | per `api_external_url` |
 | self-host (Oracle VM) | your own profile dir | Phase 5B checklist | remote Postgres named in that profile's `secrets.json` | your VM/domain |
 
 Report honestly what is missing: if there is **no staging profile**, say so — staging is created by copying a profile
@@ -140,6 +140,50 @@ curl -s https://<api_external_url>/api/v1/health
 
 The production database is only reachable through `systemprompt cloud db …` (`external_db_access: false`) — a local
 `psql` failing against it is expected, not a fault.
+
+### Playbook — prod is uniformly slow, or writes fail with "read-only transaction"
+
+Symptom pair (they arrive together): every request — even a static SVG — carries the same flat ~600ms server wait,
+and app logs show `cannot execute INSERT in a read-only transaction`. Root cause: the app's `database_url` points at
+`systemprompt-db-prod.internal:5433`. Bare `.internal` DNS returns **all** cluster members (iad primary + fra
+replica) and :5433 is the direct-to-member Postgres port with no primary routing, so the pool can latch onto the fra
+read replica — every query then pays an iad↔fra round trip (~90ms), and a request doing several queries stacks them
+into a constant per-request delay. This bit astound.systemprompt.io on 2026-08-19 (620ms/request; fixed to ~50ms
+server-side by repointing to the primary).
+
+Diagnose, in order:
+
+```bash
+# 1. Prove the delay is in the app, not the edge: flat high TTFB on a static file = per-request DB work
+curl -so /dev/null -w 'ttfb:%{time_starttransfer}\n' https://sp-<tenant>.fly.dev/files/images/logo.svg
+
+# 2. Regions: where is the app, where is the DB primary vs replica
+flyctl machines list -a sp-<tenant>
+flyctl machines list -a systemprompt-db-prod      # ROLE column: primary (iad) vs replica (fra)
+
+# 3. The log signature of being attached to a replica
+timeout 15 flyctl logs -a sp-<tenant> --no-tail | grep -i 'read-only transaction'
+
+# 4. The offending config: DATABASE_URL must be iad.…:5432, never bare .internal:5433
+flyctl ssh console -a sp-<tenant> -C "sh -c 'env | grep -i database'"
+
+# 5. While you are there: staged-but-undeployed secrets are a separate common fault
+flyctl secrets list -a sp-<tenant>
+```
+
+Fix: set all of `database_url`, `internal_database_url`, `database_write_url` to
+`postgresql://…@iad.systemprompt-db-prod.internal:5432/…?sslmode=disable` and `external_database_url` to
+`postgresql://…@db.systemprompt.io:5432/…?sslmode=require` in `.systemprompt/profiles/production/secrets.json`
+(this is exactly what the systemprompt.io tenant runs), then redeploy. For an immediate hot fix note the machines
+are **not** Fly Launch managed — `fly secrets set` fails with "current release not found"; instead patch the machine
+env directly:
+
+```bash
+flyctl machine update <machine-id> -a sp-<tenant> --yes -e "DATABASE_URL=…" -e "DATABASE_WRITE_URL=…" -e "EXTERNAL_DATABASE_URL=…"
+```
+
+Verify: static-file TTFB drops to network RTT (<0.3s from EU), `grep read-only` returns nothing, and DB-heavy jobs
+speed up ~20× (blog ingestion 26.9s → 1.2s in the 2026-08-19 incident).
 
 ## Phase 5B — Deploy: self-hosted VM (Oracle) with a remote Postgres
 
