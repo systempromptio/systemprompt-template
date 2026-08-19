@@ -99,7 +99,11 @@ fn prerenderers_and_seeds_survive_an_unconfigured_profile() {
     let seed_ids: Vec<&str> = seeds.iter().map(|s| s.id).collect();
     assert_eq!(
         seed_ids,
-        ["admin_oauth_client", "marketplace_plans", "default_department"],
+        [
+            "admin_oauth_client",
+            "marketplace_plans",
+            "default_department"
+        ],
         "the boot-seed manifest is a contract: add or remove seeds deliberately"
     );
     for seed in &seeds {

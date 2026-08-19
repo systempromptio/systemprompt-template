@@ -27,6 +27,6 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
     ]
 }
 
-pub fn migrations() -> Vec<Migration> {
+pub const fn migrations() -> Vec<Migration> {
     extension_migrations!()
 }

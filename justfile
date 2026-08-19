@@ -559,7 +559,10 @@ tenant:
 #   just setup-local sk-ant-... sk-... AIza...
 # Port and Postgres port can be overridden for running multiple clones on one host:
 #   just setup-local sk-ant-... "" "" 8081 5433
-setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_PORT="5432":
+# A bare re-run preserves the ports chosen at first setup (read back from the
+# profile/compose files), so it never reverts a non-default install to 8080/5432.
+# ADMIN_EMAIL defaults to `git config user.email`.
+setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_PORT="5432" ADMIN_EMAIL="":
     #!/usr/bin/env bash
     set -euo pipefail
     ROOT="{{justfile_directory()}}"
@@ -570,7 +573,28 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     GEMINI_KEY="{{GEMINI_KEY}}"
     HTTP_PORT="{{HTTP_PORT}}"
     PG_PORT="{{PG_PORT}}"
+    ADMIN_EMAIL="{{ADMIN_EMAIL}}"
+    if [ -z "$ADMIN_EMAIL" ]; then
+        ADMIN_EMAIL="$(git config user.email 2>/dev/null || true)"
+    fi
+    if [ -z "$ADMIN_EMAIL" ]; then
+        ADMIN_EMAIL="admin@localhost.localdomain"
+    fi
     export SYSTEMPROMPT_PROFILE="$PROFILE_DIR/profile.yaml"
+    # Default ports on a re-run mean "keep what I had", not "move me back to
+    # 8080/5432": read the original choice back from the files setup wrote.
+    if [ "$HTTP_PORT" = "8080" ] && [ -f "$PROFILE_DIR/profile.yaml" ]; then
+        SAVED_HTTP="$(sed -n 's/^ *port: //p' "$PROFILE_DIR/profile.yaml" | head -1)"
+        if [ -n "$SAVED_HTTP" ]; then
+            HTTP_PORT="$SAVED_HTTP"
+        fi
+    fi
+    if [ "$PG_PORT" = "5432" ] && [ -f "$DOCKER_DIR/local.yaml" ]; then
+        SAVED_PG="$(sed -n 's/.*"\([0-9][0-9]*\):5432".*/\1/p' "$DOCKER_DIR/local.yaml" | head -1)"
+        if [ -n "$SAVED_PG" ]; then
+            PG_PORT="$SAVED_PG"
+        fi
+    fi
     # Whether a key was passed as a positional arg. When none is and there is
     # nothing to preserve, generation still needs a provider: on a TTY we let
     # `admin setup` drive its own "Select your AI provider" menu (the CLI owns
@@ -732,8 +756,8 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
     just build --release
     echo "Running database migrations..."
     just migrate
-    echo "Ensuring bootstrap admin user..."
-    "$BIN" admin bootstrap
+    echo "Ensuring bootstrap admin user ($ADMIN_EMAIL)..."
+    "$BIN" admin bootstrap --email "$ADMIN_EMAIL"
     if [ ! -f "$ROOT/signing_key.pem" ]; then
         echo "Generating JWT signing key..."
         "$BIN" admin keys generate --output "$ROOT/signing_key.pem"
