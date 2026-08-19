@@ -4,7 +4,7 @@
 //! `services/access-control/departments.yaml` is deliberately not exercised:
 //! the shipped file declares an empty list, and `upsert_department` writes no
 //! `org_id` while conflicting on a `name` key that
-//! `migrations/022_organizations_backfill.sql` replaced with `(org_id, name)`.
+//! the organizations backfill replaced with `(org_id, name)`.
 
 use std::path::Path;
 

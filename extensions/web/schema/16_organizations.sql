@@ -91,9 +91,22 @@ CREATE INDEX IF NOT EXISTS idx_organization_members_org ON organization_members(
 CREATE INDEX IF NOT EXISTS idx_organization_members_org_role
     ON organization_members(org_id, org_role);
 
--- Departments nest inside organizations. The column itself is declared on
--- `departments` in 12_management.sql, because this file is loaded after it and
--- a declarative schema may not ALTER. The foreign key, the NOT NULL, and the
--- swap of UNIQUE(name) for UNIQUE(org_id, name) all live in
--- migrations/022_organizations_backfill.sql, which is also what backfills
--- existing rows onto the house organization.
+-- Departments nest inside organizations, so they are declared here — after
+-- `organizations` exists — rather than with the rest of the management tables
+-- in 12_management.sql. Names are unique per organization, not globally: two
+-- customers may both run a "Sales". The FK constraint and unique index carry
+-- the names the pre-organization backfill migration gave them, so fresh
+-- and established databases converge on the same shape.
+CREATE TABLE IF NOT EXISTS departments (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    org_id TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT departments_org_fk FOREIGN KEY (org_id)
+        REFERENCES organizations(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_departments_org ON departments(org_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_departments_org_name ON departments(org_id, name);

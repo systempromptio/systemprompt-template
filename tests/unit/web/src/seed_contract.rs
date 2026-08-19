@@ -6,9 +6,25 @@
 
 const ADMIN_OAUTH_CLIENT: &str =
     include_str!("../../../../extensions/web/schema/seeds/admin_oauth_client.sql");
+const MARKETPLACE_PLANS: &str =
+    include_str!("../../../../extensions/web/schema/seeds/marketplace_plans.sql");
+const HOUSE_ORGANIZATION: &str =
+    include_str!("../../../../extensions/web/schema/seeds/house_organization.sql");
+
+const ALL_SEEDS: [(&str, &str); 3] = [
+    ("admin_oauth_client", ADMIN_OAUTH_CLIENT),
+    ("marketplace_plans", MARKETPLACE_PLANS),
+    ("house_organization", HOUSE_ORGANIZATION),
+];
 
 fn statements(sql: &str) -> Vec<String> {
-    sql.split(';')
+    let without_comments: String = sql
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("--"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    without_comments
+        .split(';')
         .map(str::trim)
         .filter(|s| !s.is_empty())
         .map(str::to_uppercase)
@@ -16,19 +32,39 @@ fn statements(sql: &str) -> Vec<String> {
 }
 
 #[test]
-fn admin_oauth_client_seed_is_idempotent_sql() {
-    let stmts = statements(ADMIN_OAUTH_CLIENT);
-    assert!(!stmts.is_empty());
-    for stmt in &stmts {
-        assert!(
-            stmt.starts_with("INSERT") || stmt.starts_with("UPDATE") || stmt.starts_with("MERGE"),
-            "seed statements must be INSERT/UPDATE/MERGE, found: {}...",
-            &stmt[..stmt.len().min(60)]
-        );
-        if stmt.starts_with("INSERT") {
+fn every_seed_is_idempotent_sql() {
+    for (id, sql) in ALL_SEEDS {
+        let stmts = statements(sql);
+        assert!(!stmts.is_empty(), "seed {id} has no statements");
+        for stmt in &stmts {
             assert!(
-                stmt.contains("ON CONFLICT"),
-                "INSERT without ON CONFLICT is not idempotent"
+                stmt.starts_with("INSERT")
+                    || stmt.starts_with("UPDATE")
+                    || stmt.starts_with("MERGE"),
+                "seed {id}: statements must be INSERT/UPDATE/MERGE, found: {}...",
+                &stmt[..stmt.len().min(60)]
+            );
+            if stmt.starts_with("INSERT") {
+                assert!(
+                    stmt.contains("ON CONFLICT"),
+                    "seed {id}: INSERT without ON CONFLICT is not idempotent"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn plan_and_organization_seeds_never_overwrite_operator_edits() {
+    for (id, sql) in [
+        ("marketplace_plans", MARKETPLACE_PLANS),
+        ("house_organization", HOUSE_ORGANIZATION),
+    ] {
+        for stmt in statements(sql) {
+            assert!(
+                stmt.contains("DO NOTHING"),
+                "seed {id}: inserts must be insert-if-absent (ON CONFLICT ... DO NOTHING) so an \
+                 operator's edits survive every boot"
             );
         }
     }

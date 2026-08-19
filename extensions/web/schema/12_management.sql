@@ -1,24 +1,8 @@
--- Management section: departments + desktop app device linkage.
+-- Management section: desktop app device linkage.
 --
--- Departments back the `users.department` field with a first-class table.
--- Skill assignment via access_control_rules is enabled by widening the
--- entity_type check (see migrations/008_management.sql for the constraint
--- swap on pre-existing installs). Backfill of legacy free-text departments
--- and the constraint update live in the same migration.
-
-CREATE TABLE IF NOT EXISTS departments (
-    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT NOT NULL DEFAULT '',
-    -- Departments nest inside a customer organization (16_organizations.sql).
-    -- Declared here rather than there because a declarative schema may not
-    -- ALTER an earlier table; the FK, the NOT NULL, and the swap of
-    -- UNIQUE(name) for UNIQUE(org_id, name) are applied by
-    -- migrations/022_organizations_backfill.sql once `organizations` exists.
-    org_id TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- Departments used to live here; they are declared in 16_organizations.sql
+-- now, because they carry a foreign key onto `organizations` and a declarative
+-- schema may not ALTER an earlier table.
 
 -- Desktop app linkage. device_id matches the cowork api_key id or device_cert id
 -- depending on enrolment mode; both are TEXT, so we keep this loose intentionally.

@@ -1,53 +1,47 @@
--- Give the demo fixture users real UUIDs, and stop them being platform admins.
+-- Demo customers, so the enterprise console has a portfolio to show.
 --
--- 025 seeded them with readable string ids (`demo-nw-1`, `demo-co-1`, …).
--- `users.id` is TEXT so the database accepted that happily, but the auth layer
--- does not: core parses the id as a UUID on every path that matters —
+-- Run by demo/02-seed-demo-tenants.sh only. This is demo-flow data: it is
+-- never installed by boot, migrations, or seeds, and a clean install has none
+-- of it.
 --
---   domain/oauth/services/providers.rs      "user_id {:?} is not a valid UUID"
---   domain/oauth/services/jwt/authentication.rs   Uuid::parse_str -> 401
---   domain/oauth/services/jwt/authorization.rs    Uuid::parse_str -> 401
---   entry/api/routes/oauth/endpoints/callback.rs
---
--- so a string-id user can never authenticate, and anything minting for one
--- fails. That was not theoretical: three of them carried ARRAY['user','admin'],
--- which put them in the admin block of scripts/select-user.sh, so on a fresh
--- clone `demo/00-preflight.sh` picked `demo-nw-1` and died on
--- `issue-plugin-token` — "User id 'demo-nw-1' is not a valid UUID" — taking the
--- whole demo suite down before it started. A warm working copy happened to pick
--- a real admin, which is why it never showed up locally.
---
--- The platform `admin` role goes too. These are display fixtures for the
--- cross-customer console; being an owner of their own org is already expressed
--- by organization_members.org_role, and platform admin is a different and much
--- larger grant that they never needed.
---
--- Ids are remapped by delete-and-reinsert rather than UPDATE: every foreign key
--- into users.id is NO ACTION (21 of them), so there is no ordering that lets an
--- id change in place. These rows are pure fixtures in the `demo-` namespace and
--- carry no real activity, so recreating them loses nothing. Organization and
--- department ids are deliberately left alone — nothing parses those as UUIDs.
---
--- Re-runnable: the deletes are scoped to the ten known fixture ids and the
--- inserts are guarded, so applying this twice is a no-op.
+-- Everything is keyed to demo- ids and fixed de000000-… UUIDs and guarded by
+-- ON CONFLICT, so this file is safe to re-run and never edits anyone else's
+-- rows. User ids are fixed UUID literals, not gen_random_uuid(): they have to
+-- be stable across every database so the console, the demos and the reports
+-- can be reasoned about, and users.id is parsed as a UUID on every auth path.
+-- Members carry only the `user` role: org-level ownership is expressed by
+-- organization_members.org_role, and platform admin is a much larger grant
+-- these fixtures must never hold.
 
-DELETE FROM ai_requests WHERE id LIKE 'demo-req-%';
+INSERT INTO plans (id, name, description)
+VALUES
+    ('standard', 'Standard', 'Placeholder until plans.yaml is loaded.'),
+    ('enterprise', 'Enterprise', 'Placeholder until plans.yaml is loaded.')
+ON CONFLICT (id) DO NOTHING;
 
-DELETE FROM organization_members WHERE user_id IN (
-    'demo-nw-1','demo-nw-2','demo-nw-3','demo-nw-4','demo-nw-5',
-    'demo-co-1','demo-co-2','demo-co-3','demo-it-1','demo-it-2');
+INSERT INTO organizations (id, slug, name, plan_id, status, email_domains, contract_start)
+VALUES
+    ('demo-northwind', 'northwind', 'Northwind Trading', 'enterprise', 'active',
+     ARRAY['northwind.example'], NOW()::DATE - 400),
+    ('demo-contoso', 'contoso', 'Contoso Retail', 'standard', 'active',
+     ARRAY['contoso.example'], NOW()::DATE - 180),
+    ('demo-initech', 'initech', 'Initech Systems', 'standard', 'suspended',
+     ARRAY['initech.example'], NOW()::DATE - 90)
+ON CONFLICT (slug) DO NOTHING;
 
-DELETE FROM user_profile_ext WHERE user_id IN (
-    'demo-nw-1','demo-nw-2','demo-nw-3','demo-nw-4','demo-nw-5',
-    'demo-co-1','demo-co-2','demo-co-3','demo-it-1','demo-it-2');
+INSERT INTO departments (id, name, description, org_id)
+VALUES
+    ('demo-nw-sales', 'Sales', 'Pipeline and account management', 'demo-northwind'),
+    ('demo-nw-support', 'Support', 'Customer service desk', 'demo-northwind'),
+    ('demo-nw-eng', 'Engineering', 'Platform and integrations', 'demo-northwind'),
+    ('demo-co-sales', 'Sales', 'Retail accounts', 'demo-contoso'),
+    ('demo-co-ops', 'Operations', 'Store operations', 'demo-contoso'),
+    ('demo-it-eng', 'Engineering', 'Product engineering', 'demo-initech'),
+    ('demo-it-finance', 'Finance', 'Billing and reporting', 'demo-initech')
+ON CONFLICT DO NOTHING;
 
-DELETE FROM users WHERE id IN (
-    'demo-nw-1','demo-nw-2','demo-nw-3','demo-nw-4','demo-nw-5',
-    'demo-co-1','demo-co-2','demo-co-3','demo-it-1','demo-it-2');
-
--- Fixed literals, not gen_random_uuid(): the ids have to be stable across every
--- database so the console, the demos and the reports can be reasoned about. The
--- `de…` prefix and the sequential tail make them obviously synthetic on sight.
+-- Members. `name` carries the email because `users.name` is unique and a
+-- display name is not; `display_name` is what the console shows.
 INSERT INTO users (id, name, email, display_name, status, email_verified, roles)
 VALUES
     ('de000000-0000-4000-8000-000000000001', 'ava.stone@northwind.example', 'ava.stone@northwind.example', 'Ava Stone', 'active', TRUE, ARRAY['user']),
@@ -90,9 +84,9 @@ VALUES
     ('de000000-0000-4000-8000-000000000010', 'demo-initech', 'member')
 ON CONFLICT (user_id) DO NOTHING;
 
--- Same traffic shape as 025, rebuilt against the new ids: the three tenants
--- have to keep landing in three different budget bands or the console's health
--- pill only ever shows one colour.
+-- Thirty days of traffic per member, shaped so the three tenants land in
+-- three different budget bands — or the console's health pill only ever shows
+-- one colour.
 INSERT INTO ai_requests (
     id, request_id, user_id, context_id, provider, model, input_tokens, output_tokens,
     tokens_used, cost_microdollars, latency_ms, status, actor_kind, actor_id,

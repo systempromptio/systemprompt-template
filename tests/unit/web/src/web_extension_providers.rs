@@ -96,7 +96,17 @@ fn prerenderers_and_seeds_survive_an_unconfigured_profile() {
     );
 
     let seeds = extension.seeds();
-    assert_eq!(seeds.len(), 1);
-    assert_eq!(seeds[0].id, "admin_oauth_client");
-    assert!(!seeds[0].sql.trim().is_empty());
+    let seed_ids: Vec<&str> = seeds.iter().map(|s| s.id).collect();
+    assert_eq!(
+        seed_ids,
+        [
+            "admin_oauth_client",
+            "marketplace_plans",
+            "house_organization"
+        ],
+        "the boot-seed manifest is a contract: add or remove seeds deliberately"
+    );
+    for seed in &seeds {
+        assert!(!seed.sql.trim().is_empty(), "seed {} is empty", seed.id);
+    }
 }

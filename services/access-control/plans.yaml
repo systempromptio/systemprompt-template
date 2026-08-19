@@ -103,27 +103,3 @@ organizations:
     plan: enterprise
     email_domains:
       - systemprompt.io
-
-  # Demo customers. They exist so the enterprise console has more than one
-  # tenant to show — a cross-customer view with a single row proves nothing.
-  # Their members, departments, and spend are seeded by
-  # extensions/web/schema/migrations/025_demo_organizations.sql.
-  - slug: northwind
-    name: Northwind Trading
-    plan: enterprise
-    email_domains:
-      - northwind.example
-
-  - slug: contoso
-    name: Contoso Retail
-    plan: standard
-    email_domains:
-      - contoso.example
-
-  - slug: initech
-    name: Initech Systems
-    plan: standard
-    seat_limit_override: 40
-    status: suspended
-    email_domains:
-      - initech.example
