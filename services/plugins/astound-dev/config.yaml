@@ -87,6 +87,7 @@ plugin:
       - code_review
       - playwright_cli
       - systematic_debugging
+      - debug_infra
   agents:
     source: explicit
     include: []

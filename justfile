@@ -974,6 +974,33 @@ deploy-check:
 status:
     {{CLI}} cloud status --profile {{DEPLOY_PROFILE}}
 
+# ── Profile-aware deploys (any target, not just our pinned production) ───────
+# `deploy` stays pinned to production on purpose. Operators deploying the same
+# repo to their own infra (e.g. an Oracle VM with a remote Postgres) work with
+# their own profile dir under .systemprompt/profiles/<name>/ and use these.
+
+# Validate any profile without a running server: files, secrets keys, URLs,
+# database reachability from this machine, and (with a built CLI) that the
+# profile deserializes — the loader rejects unknown YAML keys. Add --live to
+# also probe <api_external_url>/api/v1/health.
+profile-check PROFILE="local" *FLAGS:
+    @bash scripts/profile-check.sh {{PROFILE}} {{FLAGS}}
+
+# Deploy to a cloud tenant under a non-default profile. Self-host targets do
+# not cloud-deploy — use `just bundle` instead.
+deploy-to PROFILE *FLAGS: build-all
+    {{CLI_RELEASE}} cloud deploy --profile {{PROFILE}} {{FLAGS}}
+
+# Package everything a self-host deployment needs (the same manifest the
+# production Dockerfile ships) into dist/systemprompt-<profile>.tar.gz,
+# including an UNPACK.md with the first-run steps (migrate, serve, probe).
+bundle PROFILE:
+    @bash scripts/bundle-profile.sh {{PROFILE}}
+
+# Run the server in the foreground under any profile (self-host style).
+serve PROFILE="local":
+    SYSTEMPROMPT_PROFILE=.systemprompt/profiles/{{PROFILE}}/profile.yaml {{CLI}} infra services serve --foreground
+
 # ══════════════════════════════════════════════════════════════════════════════
 # MCP & BUILD ALL
 # ══════════════════════════════════════════════════════════════════════════════

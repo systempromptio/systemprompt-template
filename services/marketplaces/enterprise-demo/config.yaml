@@ -118,6 +118,7 @@ marketplace:
       - code_review
       - playwright_cli
       - systematic_debugging
+      - debug_infra
       # Admin control plane. Listed here so marketplace scoping keeps them in
       # the catalogue; per-entity rules in services/access-control/roles.yaml
       # restrict them to the admin role.
