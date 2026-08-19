@@ -2,9 +2,7 @@
 --
 -- Departments back the `users.department` field with a first-class table.
 -- Skill assignment via access_control_rules is enabled by widening the
--- entity_type check (see migrations/008_management.sql for the constraint
--- swap on pre-existing installs). Backfill of legacy free-text departments
--- and the constraint update live in the same migration.
+-- entity_type check.
 
 CREATE TABLE IF NOT EXISTS departments (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,

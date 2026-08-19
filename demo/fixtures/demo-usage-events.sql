@@ -1,6 +1,5 @@
--- Seed realistic plugin_usage_events for dashboard demonstration
--- Uses existing user IDs from the users table
--- Only inserts if the table is empty (idempotent)
+-- Dashboard usage events for demos. Run by demo/02-seed-usage-events.sh; only
+-- inserts when plugin_usage_events is empty.
 
 DO $$
 DECLARE

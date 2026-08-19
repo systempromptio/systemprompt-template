@@ -82,10 +82,20 @@ impl Extension for WebExtension {
     }
 
     fn seeds(&self) -> Vec<Seed> {
-        vec![Seed::new(
-            "admin_oauth_client",
-            include_str!("../schema/seeds/admin_oauth_client.sql"),
-        )]
+        vec![
+            Seed::new(
+                "admin_oauth_client",
+                include_str!("../schema/seeds/admin_oauth_client.sql"),
+            ),
+            Seed::new(
+                "marketplace_plans",
+                include_str!("../schema/seeds/marketplace_plans.sql"),
+            ),
+            Seed::new(
+                "default_department",
+                include_str!("../schema/seeds/default_department.sql"),
+            ),
+        ]
     }
 
     fn dependencies(&self) -> Vec<&'static str> {
