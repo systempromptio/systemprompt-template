@@ -22,7 +22,15 @@ The AI Salesforce Gateway puts your Salesforce inside Claude. You ask in plain
 English. It answers from live data, confirms with you before it changes
 anything, and records everything it does.
 
-Two ways to get connected. Pick yours.
+One distinction decides which docs you need. **Users** — everyone who works
+with Claude through the gateway, including developers who build *with* it —
+install a small client and sign in. No repository, no Rust toolchain, no
+server: the gateway runs hosted, and the two paths below are the whole setup.
+**Maintainers** — the people changing this codebase or operating the platform —
+are the only ones who ever clone and build; their docs are under
+[Advanced](#advanced).
+
+Two ways for users to get connected. Pick yours.
 
 ## I want Claude Code in my terminal
 
@@ -74,8 +82,9 @@ cases, consultancy, brand, and governance.
 ## Advanced
 
 Everything below is for admins standing the gateway up for an organization,
-operators running the platform, and developers building it from source. If you
-just want to use it, the two paths above are all you need.
+operators running the platform, and maintainers building it from source. If
+you just want to use it — even to build applications with it — the two user
+paths above are all you need, and nothing here applies.
 
 **Setting up for your organization (admins):**
 

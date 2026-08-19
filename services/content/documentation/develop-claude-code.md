@@ -22,14 +22,16 @@ related_playbooks:
 
 # Develop Against a Local Gateway
 
-Advanced developer setup — building the binary from source: an empty machine to a Claude Code session routed through a
+This is the **maintainer** path: it exists only for people changing this
+repository's code, who need a gateway built from their working tree to test
+against. It takes an empty machine to a Claude Code session routed through a
 gateway you run yourself and recorded in its audit trail. The connect step is
 one command; everything before it stands up the server that command talks to.
 
-Connecting to the hosted instance — or any gateway someone else already runs?
-You don't need this page: [Connect Claude Code](/documentation/connect-claude-code)
-is one curl command with no checkout. And to make a local gateway reachable
-from other machines, see
+Everyone else is a **user** — including developers building applications with
+the gateway — and users never need a checkout or a build: the gateway runs
+hosted, and [Connect Claude Code](/documentation/connect-claude-code) is one
+curl command. To make a local gateway reachable from other machines, see
 [Expose Your Instance Remotely](/documentation/remote-access).
 
 ## Prerequisites

@@ -22,6 +22,12 @@ related_playbooks:
 
 # Connect Claude Code
 
+This is the **user** path, and it covers everyone who works through the
+gateway — including developers building things *with* it. You never need this
+repository, a Rust toolchain, or a server of your own. Only maintainers
+changing the gateway's own code do, and their page is
+[Develop Against a Local Gateway](/documentation/develop-claude-code).
+
 One command takes a machine with nothing installed to a working `claude` wired
 to the hosted Astound instance. You do not clone anything, build anything, or
 run a server: the installer downloads from the gateway, installs Claude Code
@@ -31,9 +37,6 @@ and lands in the audit trail.
 
 Prefer a desktop app? The bridge also powers Claude Cowork on Windows and
 macOS: [Install the Desktop Bridge](/documentation/bridge-install).
-
-Running your own gateway from a checkout of this repository? That is a
-different page: [Develop Against a Local Gateway](/documentation/develop-claude-code).
 
 ## 1. Get an account
 
