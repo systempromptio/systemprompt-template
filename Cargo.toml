@@ -29,7 +29,7 @@ opt-level = "z"
 [workspace.package]
 edition = "2024"
 rust-version = "1.94"
-version = "0.32.1"
+version = "0.32.2"
 authors = ["Astound Digital <ed@systemprompt.io>"]
 repository = "https://github.com/systempromptio/systemprompt-astound"
 homepage = "https://astounddigital.com"
@@ -39,9 +39,9 @@ documentation = "https://systemprompt.io/documentation"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.32.1", default-features = false, features = ["core", "database", "config"] }
-systemprompt-security = { version = "0.32.1" }
-systemprompt-extension = { version = "0.32.1" }
+systemprompt = { version = "0.32.2", default-features = false, features = ["core", "database", "config"] }
+systemprompt-security = { version = "0.32.2" }
+systemprompt-extension = { version = "0.32.2" }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -241,7 +241,7 @@ anyhow = { workspace = true }
 workspace = true
 
 
-# INACTIVE: core 0.32.0 is published, so this repo builds from crates.io and a
+# INACTIVE: core 0.32.2 is published, so this repo builds from crates.io and a
 # fresh clone needs no sibling checkout. Uncomment (together with the mirror in
 # tests/Cargo.toml — [patch] only applies per-workspace) to work against
 # ../systemprompt-core, and add an "ACTIVE: core X.Y.Z is unreleased" marker,

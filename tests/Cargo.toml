@@ -51,8 +51,8 @@ systemprompt-cli-salesforce = { path = "../extensions/cli/salesforce" }
 # The contract crate additionally enables `full`, which links the core
 # extension crates whose `register_extension!` registrations carry the
 # migrations the admin schema needs.
-systemprompt = { version = "0.32.1", default-features = false, features = ["core", "database"] }
-systemprompt-security = { version = "0.32.1" }
+systemprompt = { version = "0.32.2", default-features = false, features = ["core", "database"] }
+systemprompt-security = { version = "0.32.2" }
 
 # HTTP contract harness — drives the real admin router in-process.
 axum = "0.8"
@@ -84,7 +84,7 @@ jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 # workspace, so without this the test crates resolve core from crates.io
 # while the extensions under test resolve it from the local checkout.
 #
-# INACTIVE: core 0.32.0 is published — see the note on the root patch block.
+# INACTIVE: core 0.32.2 is published — see the note on the root patch block.
 # Uncomment only in lockstep with that block.
 # [patch.crates-io]
 # systemprompt = { path = "../../systemprompt-core/systemprompt" }
