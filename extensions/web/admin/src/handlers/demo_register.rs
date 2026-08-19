@@ -64,6 +64,7 @@ pub(crate) async fn create_demo_user_handler(
     }
 
     let email = Email::try_new(email_str.clone())
+        // Why: lint-ok: error-adapt — email parse error is context only, no source to keep
         .map_err(|e| AdminError::BadRequest(format!("Invalid email address: {e}")))?;
 
     let user_id = derive_user_id(&email_str);

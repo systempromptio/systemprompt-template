@@ -281,11 +281,11 @@ fn snippet(body: &str) -> String {
     format!("\n      body: {head}")
 }
 
-/// The two paths that only exist to send a browser somewhere else.
-///
-/// A redirect is the whole contract here, so the assertion is the `Location`
-/// header rather than the body — a 200 with a rendered page would mean a
-/// bookmark had silently started resolving to a different screen.
+// The two paths that only exist to send a browser somewhere else.
+//
+// A redirect is the whole contract here, so the assertion is the `Location`
+// header rather than the body — a 200 with a rendered page would mean a
+// bookmark had silently started resolving to a different screen.
 #[tokio::test(flavor = "multi_thread")]
 async fn the_redirect_aliases_land_on_the_pages_they_name() {
     if !globals::init() {

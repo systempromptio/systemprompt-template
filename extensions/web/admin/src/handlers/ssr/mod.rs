@@ -107,6 +107,7 @@ fn render_unauthenticated(
 ) -> AdminHtmlResult<Response> {
     let html = engine
         .render(template, &branding_context(engine))
+        // Why: lint-ok: error-adapt — render errors are Debug-formatted for the html error page
         .map_err(|e| AdminHtmlError::internal(format!("{template} page render failed: {e:?}")))?;
     Ok(Html(html).into_response())
 }

@@ -154,23 +154,23 @@ impl App {
         self.dispatch(call, None, &[]).await
     }
 
-    /// Issue a call bearing a token this harness did not mint.
-    ///
-    /// The hook and webhook endpoints authenticate against audiences no
-    /// principal in [`Credentials`] holds — a hook token carries `aud=hook`
-    /// and a `plugin_id` claim, which the admin session token never does. The
-    /// token is therefore passed per call rather than resolved from the
-    /// principal, which also lets a case present one that is deliberately
-    /// wrong.
+    // Issue a call bearing a token this harness did not mint.
+    //
+    // The hook and webhook endpoints authenticate against audiences no
+    // principal in [`Credentials`] holds — a hook token carries `aud=hook`
+    // and a `plugin_id` claim, which the admin session token never does. The
+    // token is therefore passed per call rather than resolved from the
+    // principal, which also lets a case present one that is deliberately
+    // wrong.
     pub async fn call_with_bearer(&self, call: Call<'_>, token: &str) -> (StatusCode, String) {
         self.dispatch(call, Some(token), &[]).await
     }
 
-    /// The redirect target of a call, for the flows whose whole contract is
-    /// where they send the browser.
-    ///
-    /// `call` reads the body, which is empty on a redirect: for these routes
-    /// the entire outcome is the `Location` header.
+    // The redirect target of a call, for the flows whose whole contract is
+    // where they send the browser.
+    //
+    // `call` reads the body, which is empty on a redirect: for these routes
+    // the entire outcome is the `Location` header.
     pub async fn redirect_of(&self, call: Call<'_>) -> (StatusCode, String) {
         let request = self.build_request(call, None, &[]);
         let response = self

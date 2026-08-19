@@ -209,8 +209,10 @@ fn update_enabled_in_yaml(policy_id: &str, enabled: bool) -> Result<(), AdminErr
     let path = std::path::PathBuf::from(&bootstrap.paths.services).join("governance/config.yaml");
 
     let text = std::fs::read_to_string(&path)
+        // Why: lint-ok: error-adapt — file/YAML io adapted at the editor boundary
         .map_err(|e| AdminError::internal(format!("read {}: {e}", path.display())))?;
     let mut root: serde_yaml::Value = serde_yaml::from_str(&text)
+        // Why: lint-ok: error-adapt — file/YAML io adapted at the editor boundary
         .map_err(|e| AdminError::internal(format!("parse YAML: {e}")))?;
 
     let policies = root
@@ -251,8 +253,10 @@ fn update_enabled_in_yaml(policy_id: &str, enabled: bool) -> Result<(), AdminErr
     }
 
     let updated = serde_yaml::to_string(&root)
+        // Why: lint-ok: error-adapt — file/YAML io adapted at the editor boundary
         .map_err(|e| AdminError::internal(format!("serialize: {e}")))?;
     std::fs::write(&path, updated)
+        // Why: lint-ok: error-adapt — file/YAML io adapted at the editor boundary
         .map_err(|e| AdminError::internal(format!("write {}: {e}", path.display())))?;
     Ok(())
 }

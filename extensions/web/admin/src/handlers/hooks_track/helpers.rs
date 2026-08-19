@@ -140,8 +140,10 @@ fn truncate_json_value(value: &serde_json::Value, max_chars: usize) -> serde_jso
                     },
                 }
             }
+            // JSON: protocol boundary — see the function comment above.
             serde_json::Value::Object(result)
         },
+        // JSON: protocol boundary — see the function comment above.
         serde_json::Value::String(s) if s.len() > max_chars => {
             let end = s.char_indices().nth(max_chars).map_or(s.len(), |(i, _)| i);
             serde_json::Value::String(format!("{}...[truncated]", &s[..end]))

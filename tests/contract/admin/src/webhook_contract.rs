@@ -40,7 +40,7 @@ fn tool_event(session: &str, tool: &str, input: &str) -> String {
     )
 }
 
-/// The gate's happy path and its refusal path, both of which are `200`.
+// The gate's happy path and its refusal path, both of which are `200`.
 #[tokio::test(flavor = "multi_thread")]
 async fn govern_answers_two_hundred_with_a_decision_either_way() {
     if !globals::init() {
@@ -251,8 +251,8 @@ async fn govern_answers_two_hundred_with_a_decision_either_way() {
     );
 }
 
-/// `POST /govern/authz` — the rule-based hook core's gateway and MCP
-/// enforcement sites call.
+// `POST /govern/authz` — the rule-based hook core's gateway and MCP
+// enforcement sites call.
 #[tokio::test(flavor = "multi_thread")]
 async fn authz_hook_resolves_rules_for_every_entity_kind() {
     if !globals::init() {
@@ -457,8 +457,8 @@ async fn authz_hook_resolves_rules_for_every_entity_kind() {
     );
 }
 
-/// The statusline and transcript ingests: authenticated, shape-checked, and
-/// answering `204`.
+// The statusline and transcript ingests: authenticated, shape-checked, and
+// answering `204`.
 #[tokio::test(flavor = "multi_thread")]
 async fn statusline_and_transcript_ingests_authenticate_and_accept() {
     if !globals::init() {

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# No extension source file (excluding tests) may exceed 300 lines. Shared by
+# No production source file (excluding tests) may exceed 300 lines. Shared by
 # `just file-size` and the quality.yml file-size CI job.
 #
 # `//!` module-head lines are excluded from the count, matching the core
@@ -9,7 +9,9 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-violations=$(find extensions -name '*.rs' \
+dirs=""
+for d in extensions src bridge/src; do [ -d "$d" ] && dirs="$dirs $d"; done
+violations=$(find $dirs -name '*.rs' \
     -not -path '*/target/*' \
     -not -path '*/tests/*' \
     -exec awk '!/^\/\/!/ {n[FILENAME]++} END {for (f in n) if (n[f]>300) print n[f], f}' {} +)

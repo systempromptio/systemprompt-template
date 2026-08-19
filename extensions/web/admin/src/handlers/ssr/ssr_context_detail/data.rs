@@ -5,6 +5,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use chrono::{DateTime, Utc};
+// JSON: per-tool payloads pretty-printed for the transcript view.
 use serde_json::Value;
 use systemprompt::identifiers::AiRequestId;
 

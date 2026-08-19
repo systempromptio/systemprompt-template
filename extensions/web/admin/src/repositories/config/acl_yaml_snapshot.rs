@@ -46,6 +46,8 @@ pub async fn render_yaml_snapshot(pool: &PgPool) -> Result<String, MarketplaceEr
 
     let mut by_key: BTreeMap<(String, String, String), EntityKey> = BTreeMap::new();
     for row in rows {
+        // Why: an unknown entity_type in a DB row is a data-integrity fault, not a
+        // config-file or request error. lint-ok: error-adapt
         let entity_type: EntityKind = row.entity_type.parse().map_err(|e| {
             MarketplaceError::Internal(format!("unknown entity_type in DB row: {e}"))
         })?;

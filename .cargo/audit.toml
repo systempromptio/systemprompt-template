@@ -38,4 +38,14 @@ ignore = [
     # 1.x line pins rkyv 0.7 (the patched 0.8.17 is a breaking bump upstream).
     # Drop the ignore when rust_decimal moves to rkyv 0.8.
     "RUSTSEC-2026-0235",
+    # RUSTSEC-2026-0194 / RUSTSEC-2026-0195 — quick-xml DoS via attacker-controlled XML.
+    #
+    # quick-xml 0.39 sits in the bridge lockfile only as a dependency of
+    # `wayland-scanner`, a build-time proc-macro that parses the vendored
+    # Wayland protocol XML during compilation (pulled via winit's Linux GUI
+    # stack). No attacker-controlled XML ever reaches it and it is not linked
+    # into the runtime binary. The fixed 0.41 is a breaking bump upstream —
+    # drop the ignores when wayland-scanner moves to it.
+    "RUSTSEC-2026-0194",
+    "RUSTSEC-2026-0195",
 ]

@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
+// JSON: page data crosses the provider trait as a Value.
 use serde_json::Value;
 use systemprompt::extension::prelude::*;
 

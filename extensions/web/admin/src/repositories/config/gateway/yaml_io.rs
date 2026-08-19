@@ -21,12 +21,8 @@ pub(super) fn read_profile(profile_path: &Path) -> Result<Value, MarketplaceErro
 
 pub(super) fn write_profile(profile_path: &Path, doc: &Value) -> Result<(), MarketplaceError> {
     let yaml_str = serde_yaml::to_string(doc)?;
-    std::fs::write(profile_path, yaml_str).map_err(|e| {
-        MarketplaceError::Internal(format!(
-            "Failed to write profile {}: {e}",
-            profile_path.display()
-        ))
-    })?;
+    std::fs::write(profile_path, yaml_str)
+        .map_err(|e| MarketplaceError::config_file(profile_path.display().to_string(), e))?;
     Ok(())
 }
 

@@ -117,12 +117,8 @@ pub fn check_governance_config(
     use systemprompt::security::policy::GovernanceConfig;
 
     let path = services_path.join("governance/config.yaml");
-    GovernanceConfig::validate(&path).map_err(|e| {
-        MarketplaceError::Internal(format!(
-            "governance config at {} is invalid: {e}",
-            path.display()
-        ))
-    })?;
+    GovernanceConfig::validate(&path)
+        .map_err(|e| MarketplaceError::config_file(path.display().to_string(), e))?;
 
     let config = GovernanceConfig::load(&path);
     let active = if config.enabled {
@@ -141,10 +137,8 @@ pub fn check_governance_config(
 }
 
 async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<usize, JobError> {
-    let profile = systemprompt::config::ProfileBootstrap::get()
-        .map_err(|e| MarketplaceError::Internal(format!("profile unavailable: {e}")))?;
-    let profile_path = systemprompt::config::ProfileBootstrap::get_path()
-        .map_err(|e| MarketplaceError::Internal(format!("profile path unavailable: {e}")))?;
+    let profile = systemprompt::config::ProfileBootstrap::get()?;
+    let profile_path = systemprompt::config::ProfileBootstrap::get_path()?;
 
     let route_ids = profile
         .gateway

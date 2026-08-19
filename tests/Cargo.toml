@@ -50,8 +50,8 @@ systemprompt-web-site = { path = "../extensions/web/site" }
 # The contract crate additionally enables `full`, which links the core
 # extension crates whose `register_extension!` registrations carry the
 # migrations the admin schema needs.
-systemprompt = { version = "0.31.0", default-features = false, features = ["core", "database"] }
-systemprompt-security = { version = "0.31.0" }
+systemprompt = { version = "0.32.0", default-features = false, features = ["core", "database"] }
+systemprompt-security = { version = "0.32.0" }
 
 # HTTP contract harness — drives the real admin router in-process.
 axum = "0.8"
@@ -71,7 +71,7 @@ clap = { version = "4", features = ["derive"] }
 tempfile = "3"
 # Pinned to the exact version the root workspace pins, so the `ServerHandler`
 # trait the tests bring into scope is the one the MCP crates implement.
-rmcp = { version = "=3.0.0", features = ["server"] }
+rmcp = { version = "=3.1.3", features = ["server"] }
 uuid = { version = "1.18", features = ["v4"] }
 base64 = "0.22"
 # Pinned to the version core signs with, so the tokens this suite mints for the

@@ -61,8 +61,7 @@ fn the_master_switch_zeroes_the_count_whatever_the_policies_say() {
 fn a_file_without_a_policy_list_fails_the_job() {
     let dir = services_with(Some("governance:\n  enabled: true\n"));
     let error = check_governance_config(dir.path()).unwrap_err().to_string();
-    assert!(error.contains("governance config at"));
-    assert!(error.contains("is invalid"));
+    assert!(error.contains("governance/config.yaml"));
 }
 
 #[test]

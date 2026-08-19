@@ -59,8 +59,7 @@ pub(crate) async fn generate_robots_txt(paths: &AppPaths) -> Result<(), JobError
     use systemprompt::models::Config;
     use tokio::fs;
 
-    let global_config =
-        Config::get().map_err(|e| JobError::config(format!("Config error: {e}")))?;
+    let global_config = Config::get()?;
 
     let web_dir = paths.web().dist().to_path_buf();
     let base_url = &global_config.api_external_url;

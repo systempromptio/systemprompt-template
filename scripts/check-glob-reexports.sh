@@ -11,7 +11,7 @@
 # `// lint-ok: glob-reexport` and a reason on the preceding line.
 set -uo pipefail
 
-SEARCH_DIRS=(extensions src)
+SEARCH_DIRS=(extensions src bridge/src)
 PATTERN='^\s*pub use [A-Za-z0-9_:]+::\*;'
 
 RAW=""

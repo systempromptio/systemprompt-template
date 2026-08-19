@@ -46,6 +46,7 @@ pub(crate) async fn public_register_handler(
     validate_registration_input(&email_str, &name)?;
 
     let email = Email::try_new(email_str.clone())
+        // Why: lint-ok: error-adapt — email parse error is context only, no source to keep
         .map_err(|e| AdminError::BadRequest(format!("Invalid email address: {e}")))?;
 
     check_rate_limit(&pool, &email_str).await?;

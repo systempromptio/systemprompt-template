@@ -57,8 +57,8 @@ struct StoredAnalysis {
     client_surface: String,
 }
 
-/// The `session_analyses` columns in SELECT order, read positionally so the
-/// test sees exactly what was stored rather than what a struct decoder infers.
+// The `session_analyses` columns in SELECT order, read positionally so the
+// test sees exactly what was stored rather than what a struct decoder infers.
 type AnalysisColumns = (
     String,
     String,

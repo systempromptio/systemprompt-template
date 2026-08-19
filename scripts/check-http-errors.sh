@@ -33,6 +33,54 @@ if [ -n "$HITS" ]; then
     exit 1
 fi
 
+# The same defect in any layer: `map_err(|e| SomeError::Variant(format!(...)))`
+# stringifies the typed cause and flattens distinct failure modes into one
+# variant. Use a typed variant with #[from]/#[source] and bare `?`. Adapting a
+# genuinely variant-less foreign error may annotate the line with
+# `// lint-ok: error-adapt`.
+# A `map_err(` closure counts only when it stringifies its error binding into
+# a `format!` within the next three lines. A closure that keeps the typed
+# cause (a struct variant with a `source` field) and uses format! purely for
+# context strings is the sanctioned pattern and is not flagged. The exemption
+# may sit on the map_err line, the line above, or any line of the closure
+# (rustfmt relocates trailing comments).
+FLATTENED=$(
+    while IFS= read -r f; do
+        awk -v fname="$f" '
+            { line[FNR] = $0; n = FNR }
+            END {
+                for (i = 1; i <= n; i++) {
+                    if (!match(line[i], /map_err\(\|[a-z_][a-z0-9_]*[:|]/)) continue
+                    bind = substr(line[i], RSTART + 9, RLENGTH - 10)
+                    hi = i + 3; if (hi > n) hi = n
+                    hit = 0; kept = 0; ok = 0
+                    bre = "[^A-Za-z0-9_]" bind "[^A-Za-z0-9_]"
+                    for (j = i; j <= hi; j++) {
+                        stripped = line[j]
+                        if (j == i) sub(/.*map_err\(\|[a-z_][a-z0-9_]*[:|]*/, "", stripped)
+                        if (line[j] ~ /lint-ok: error-adapt/) ok = 1
+                        if (stripped ~ ("format!\\(.*\\)[[:space:]]*,[[:space:]]*&?" bind "[^A-Za-z0-9_]")) kept = 1
+                        else if (stripped ~ /format!/ && (" " stripped " ") ~ bre) hit = 1
+                        else if ((" " stripped " ") ~ bre) kept = 1
+                    }
+                    if (line[i-1] ~ /lint-ok: error-adapt/) ok = 1
+                    if (hit && !kept && !ok) printf "%s:%d:%s\n", fname, i, line[i]
+                }
+            }' "$f"
+    done < <(git ls-files -co --exclude-standard \
+        'extensions/**/*.rs' 'src/**/*.rs' 'bridge/src/**/*.rs' \
+        | grep -v '/tests/' | sort -u)
+)
+
+if [ -n "$FLATTENED" ]; then
+    echo "check-http-errors: map_err flattening a typed cause into format!()."
+    echo "Add a typed error variant carrying the source (#[from]/#[error(...)])"
+    echo "and propagate with bare ?, or annotate a deliberate foreign-error"
+    echo "adaptation with '// lint-ok: error-adapt':"
+    echo "$FLATTENED"
+    exit 1
+fi
+
 # The same defect, one level up: a handler that returns a bare `Response` has
 # no error channel at all, so it must build every failure by hand — which is
 # how status codes and bodies drifted apart in the first place. Handlers return

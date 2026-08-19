@@ -108,6 +108,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     ))?;
 
     let Some(config) = BlogConfigValidated::cached()
+        // Why: lint-ok: error-adapt — cached() hands back a String, no source to keep
         .map_err(|e| MarketplaceError::Internal(format!("Failed to load blog config: {e}")))?
     else {
         tracing::debug!(

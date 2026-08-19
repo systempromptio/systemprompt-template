@@ -18,8 +18,8 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt_web_admin::util::time_range::{TimeRange, TimeRangePreset};
 
-/// A window that starts 30 seconds ago and runs into the future, so a windowed
-/// query sees only what the test inserted and not the migration-seeded history.
+// A window that starts 30 seconds ago and runs into the future, so a windowed
+// query sees only what the test inserted and not the migration-seeded history.
 pub fn narrow_window() -> TimeRange {
     let now = Utc::now();
     TimeRange {
@@ -29,7 +29,7 @@ pub fn narrow_window() -> TimeRange {
     }
 }
 
-/// An hour either side of now, for tables with no seeded rows at all.
+// An hour either side of now, for tables with no seeded rows at all.
 pub fn wide_window() -> TimeRange {
     let now = Utc::now();
     TimeRange {
@@ -39,21 +39,21 @@ pub fn wide_window() -> TimeRange {
     }
 }
 
-/// A fresh, collision-proof id fragment.
+// A fresh, collision-proof id fragment.
 pub fn unique(prefix: &str) -> String {
     format!("{prefix}-{}", uuid::Uuid::new_v4().simple())
 }
 
-/// An email in a throwaway domain, so no seeded account can collide with it.
+// An email in a throwaway domain, so no seeded account can collide with it.
 pub fn unclaimed_email(local: &str) -> String {
     format!("{local}@{}.example", uuid::Uuid::new_v4().simple())
 }
 
-/// Insert an active user with the `user` role.
-///
-/// `users.name` is unique and `users.email` must already be lowercase and
-/// trimmed, so the email doubles as the name exactly as the production
-/// provisioning paths do.
+// Insert an active user with the `user` role.
+//
+// `users.name` is unique and `users.email` must already be lowercase and
+// trimmed, so the email doubles as the name exactly as the production
+// provisioning paths do.
 pub async fn insert_user(pool: &PgPool, id: &str, email: &str) -> UserId {
     insert_user_full(pool, id, email, Some(email), &["user".to_owned()]).await
 }
@@ -92,8 +92,8 @@ pub async fn set_department(pool: &PgPool, user_id: &UserId, department: &str) {
     .expect("set department");
 }
 
-/// Insert a department. `departments.name` is unique, so callers mint the name
-/// through `unique` rather than reusing a literal.
+// Insert a department. `departments.name` is unique, so callers mint the name
+// through `unique` rather than reusing a literal.
 pub async fn insert_department(pool: &PgPool, id: &str, name: &str) {
     sqlx::query("INSERT INTO departments (id, name, description) VALUES ($1, $2, $3)")
         .bind(id)
@@ -104,10 +104,10 @@ pub async fn insert_department(pool: &PgPool, id: &str, name: &str) {
         .expect("insert department");
 }
 
-/// Insert a `user_contexts` row.
-///
-/// `session_id` carries a foreign key to `user_sessions`, so pass `None`
-/// unless that session row already exists.
+// Insert a `user_contexts` row.
+//
+// `session_id` carries a foreign key to `user_sessions`, so pass `None`
+// unless that session row already exists.
 pub async fn insert_context(
     pool: &PgPool,
     context_id: &str,
@@ -127,8 +127,8 @@ pub async fn insert_context(
     .expect("insert user context");
 }
 
-/// A `plugin_session_summaries` row — the hook-side half of a session, which
-/// `find_session_header` full-outer-joins against the `ai_requests` rollup.
+// A `plugin_session_summaries` row — the hook-side half of a session, which
+// `find_session_header` full-outer-joins against the `ai_requests` rollup.
 pub struct SummarySpec<'a> {
     pub session_id: &'a str,
     pub user_id: &'a UserId,
@@ -143,7 +143,7 @@ pub struct SummarySpec<'a> {
 }
 
 impl<'a> SummarySpec<'a> {
-    /// A summary that started an hour ago and has not ended.
+    // A summary that started an hour ago and has not ended.
     pub fn open(session_id: &'a str, user_id: &'a UserId) -> Self {
         Self {
             session_id,
@@ -183,8 +183,8 @@ pub async fn insert_summary(pool: &PgPool, spec: &SummarySpec<'_>) {
     .expect("insert session summary");
 }
 
-/// `ai_requests.session_id` carries a foreign key to `user_sessions`, so a
-/// request with a session needs the session row first.
+// `ai_requests.session_id` carries a foreign key to `user_sessions`, so a
+// request with a session needs the session row first.
 pub async fn insert_session(pool: &PgPool, session_id: &str, user_id: &UserId) {
     sqlx::query("INSERT INTO user_sessions (session_id, user_id) VALUES ($1, $2)")
         .bind(session_id)
@@ -379,8 +379,8 @@ pub async fn insert_activity(
     .expect("insert user activity");
 }
 
-/// An access-control grant: which entity it is written against, which subject
-/// dimension it names, and what that subject gets.
+// An access-control grant: which entity it is written against, which subject
+// dimension it names, and what that subject gets.
 pub struct AclRuleSpec<'a> {
     pub entity_type: &'a str,
     pub entity_id: &'a str,
@@ -421,7 +421,7 @@ impl<'a> AclRuleSpec<'a> {
     }
 }
 
-/// Insert an access-control grant, creating the catalog row the FK requires.
+// Insert an access-control grant, creating the catalog row the FK requires.
 pub async fn insert_acl_rule(pool: &PgPool, spec: &AclRuleSpec<'_>) {
     let AclRuleSpec {
         entity_type,

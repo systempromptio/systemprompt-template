@@ -2,6 +2,7 @@
 
 use systemprompt::generator::PublishError;
 use systemprompt::traits::ProviderError;
+use systemprompt_web_admin::repositories::secrets::secret_crypto::SecretCryptoError;
 use systemprompt_web_shared::error::{InfraError, MarketplaceError};
 use thiserror::Error;
 
@@ -12,6 +13,18 @@ pub enum JobError {
 
     #[error("Configuration error: {0}")]
     Config(String),
+
+    #[error("Configuration error: {0}")]
+    CoreConfig(#[from] systemprompt::models::errors::ConfigError),
+
+    #[error("Profile error: {0}")]
+    Profile(#[from] systemprompt::config::ProfileBootstrapError),
+
+    #[error("Content error: {0}")]
+    Content(#[from] systemprompt::content::ContentError),
+
+    #[error("Secret crypto error: {0}")]
+    SecretCrypto(#[from] SecretCryptoError),
 
     #[error("Format error: {0}")]
     Format(#[from] std::fmt::Error),

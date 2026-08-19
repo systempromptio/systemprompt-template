@@ -10,6 +10,7 @@ pub(crate) async fn add_passkey_page(
 ) -> AdminHtmlResult<Response> {
     let html = engine
         .render("add-passkey", &super::branding_context(&engine))
+        // Why: lint-ok: error-adapt — render errors are Debug-formatted for the html error page
         .map_err(|e| AdminHtmlError::internal(format!("Add-passkey page render failed: {e:?}")))?;
     Ok(Html(html).into_response())
 }

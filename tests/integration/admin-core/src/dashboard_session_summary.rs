@@ -46,7 +46,7 @@ struct SummaryRow {
     unique_files_touched: Option<i32>,
 }
 
-/// The `plugin_session_summaries` counter columns in SELECT order.
+// The `plugin_session_summaries` counter columns in SELECT order.
 type SummaryColumns = (
     i64,
     i64,

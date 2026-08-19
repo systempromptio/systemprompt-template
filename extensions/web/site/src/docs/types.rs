@@ -5,8 +5,10 @@
 
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+// JSON: content items cross the provider trait as Values.
 use serde_json::Value;
 
+// JSON: reads the content item the provider trait hands over as a Value.
 fn parse_field<T: DeserializeOwned + Default>(item: &Value, field: &str) -> T {
     let Some(v) = item.get(field) else {
         return T::default();

@@ -26,7 +26,7 @@ use super::{DEFAULT_SAMPLE_SIZE, data, urls};
 #[derive(Debug, Deserialize)]
 pub(crate) struct RunEvalForm {
     pub kind: String,
-    /// The tab the form was fired from, so the redirect lands back on it.
+    // Why: the redirect must land back on the tab the form was fired from.
     pub tab: Option<String>,
     pub from: Option<String>,
     pub to: Option<String>,
@@ -99,9 +99,12 @@ pub(crate) async fn eval_run_action(
 
 fn credential_from_request(headers: &HeaderMap) -> Result<GatewayCredential, String> {
     let token = crate::handlers::extract_token_from_headers(headers)
+        // Why: lint-ok: error-adapt — action errors surface as user-facing strings by design
         .map_err(|e| format!("Could not read your session token: {e}"))?;
     let claims = systemprompt::security::extract_user_context(&token)
+        // Why: lint-ok: error-adapt — action errors surface as user-facing strings by design
         .map_err(|e| format!("Your session token could not be validated: {e}"))?;
+    // Why: lint-ok: error-adapt — user-facing action error strings
     let config = Config::get().map_err(|e| format!("Configuration unavailable: {e}"))?;
 
     Ok(GatewayCredential {

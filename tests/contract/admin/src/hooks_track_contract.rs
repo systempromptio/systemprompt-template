@@ -284,12 +284,12 @@ async fn hook_track_accepts_and_records_every_event_kind() {
     );
 }
 
-/// The entity detector: which skill, agent, or MCP server an event belongs to.
-///
-/// Detection runs off the tool name and the tool input, and the result lands in
-/// `session_entity_links`. Asserting on that table rather than the response is
-/// the only way to tell a detection that fired from one that returned `None` —
-/// both answer `200`.
+// The entity detector: which skill, agent, or MCP server an event belongs to.
+//
+// Detection runs off the tool name and the tool input, and the result lands in
+// `session_entity_links`. Asserting on that table rather than the response is
+// the only way to tell a detection that fired from one that returned `None` —
+// both answer `200`.
 #[tokio::test(flavor = "multi_thread")]
 async fn hook_track_links_events_to_the_entity_they_name() {
     if !globals::init() {
@@ -386,10 +386,10 @@ async fn hook_track_links_events_to_the_entity_they_name() {
     );
 }
 
-/// The dedup key, the session rollup, and the derived title.
-///
-/// These are the three side effects a caller can observe without an AI service
-/// configured, and each is a branch the status contract never reaches.
+// The dedup key, the session rollup, and the derived title.
+//
+// These are the three side effects a caller can observe without an AI service
+// configured, and each is a branch the status contract never reaches.
 #[tokio::test(flavor = "multi_thread")]
 async fn hook_track_deduplicates_and_rolls_up_the_session() {
     if !globals::init() {
@@ -471,8 +471,8 @@ async fn hook_track_deduplicates_and_rolls_up_the_session() {
     db.cleanup().await;
 }
 
-/// The token gate. Each case is wrong in exactly one way, so a `401` names the
-/// check that caught it rather than "some token problem".
+// The token gate. Each case is wrong in exactly one way, so a `401` names the
+// check that caught it rather than "some token problem".
 #[tokio::test(flavor = "multi_thread")]
 async fn hook_track_refuses_every_token_that_is_not_a_hook_token() {
     if !globals::init() {

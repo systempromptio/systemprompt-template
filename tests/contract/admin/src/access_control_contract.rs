@@ -24,7 +24,7 @@ fn api(path: &str) -> String {
     format!("{ADMIN_API_PREFIX}{path}")
 }
 
-/// The generic entity-access API: read, grant, flip the default, delete.
+// The generic entity-access API: read, grant, flip the default, delete.
 #[tokio::test(flavor = "multi_thread")]
 async fn entity_access_api_round_trips_a_grant() {
     if !globals::init() {
@@ -232,8 +232,8 @@ fn extract_json_string(body: &str, key: &str) -> Option<String> {
     Some(rest[..end].to_owned())
 }
 
-/// The older, entity-type-specific access-control surface: whole-set rule
-/// replacement, the bulk assign, the per-user matrix, and the YAML snapshot.
+// The older, entity-type-specific access-control surface: whole-set rule
+// replacement, the bulk assign, the per-user matrix, and the YAML snapshot.
 #[tokio::test(flavor = "multi_thread")]
 async fn access_control_api_replaces_rules_and_projects_a_matrix() {
     if !globals::init() {
@@ -417,14 +417,14 @@ async fn access_control_api_replaces_rules_and_projects_a_matrix() {
     );
 }
 
-/// The department API's validation and read paths.
-///
-/// The create/rename/delete round trip is *not* driven here:
-/// `create_department` inserts without `org_id`, which migration `022` made
-/// `NOT NULL` with no default, so every create answers `500`. Pinning that
-/// would turn a defect into a contract; the cases below cover the paths that
-/// behave, and the validation ladder that runs before the broken insert is
-/// reached.
+// The department API's validation and read paths.
+//
+// The create/rename/delete round trip is *not* driven here:
+// `create_department` inserts without `org_id`, which migration `022` made
+// `NOT NULL` with no default, so every create answers `500`. Pinning that
+// would turn a defect into a contract; the cases below cover the paths that
+// behave, and the validation ladder that runs before the broken insert is
+// reached.
 #[tokio::test(flavor = "multi_thread")]
 async fn department_api_validates_before_it_writes() {
     if !globals::init() {

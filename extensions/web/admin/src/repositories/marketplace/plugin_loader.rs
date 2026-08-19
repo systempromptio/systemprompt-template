@@ -9,19 +9,15 @@ use crate::types::PlatformPluginConfig;
 use systemprompt_web_shared::error::MarketplaceError;
 
 fn plugins_dir() -> Result<PathBuf, MarketplaceError> {
-    let profile = ProfileBootstrap::get().map_err(|e| {
-        tracing::error!(error = %e, "Failed to get profile bootstrap");
-        MarketplaceError::Internal(format!("Failed to get profile bootstrap: {e}"))
-    })?;
+    let profile = ProfileBootstrap::get()?;
     Ok(PathBuf::from(&profile.paths.services).join("plugins"))
 }
 
 fn parse_plugin_config_file(path: &std::path::Path) -> Result<PluginConfigFile, MarketplaceError> {
-    let content = std::fs::read_to_string(path).map_err(|e| {
-        MarketplaceError::Internal(format!("Failed to read {}: {e}", path.display()))
-    })?;
+    let content = std::fs::read_to_string(path)
+        .map_err(|e| MarketplaceError::config_file(path.display().to_string(), e))?;
     serde_yaml::from_str::<PluginConfigFile>(&content)
-        .map_err(|e| MarketplaceError::Internal(format!("Failed to parse {}: {e}", path.display())))
+        .map_err(|e| MarketplaceError::config_file(path.display().to_string(), e))
 }
 
 pub(crate) fn load_all_plugins() -> Result<Vec<(String, PlatformPluginConfig)>, MarketplaceError> {
@@ -38,9 +34,8 @@ pub(crate) fn load_all_plugins_with_paths()
         return Ok(Vec::new());
     }
 
-    let entries = std::fs::read_dir(&dir).map_err(|e| {
-        MarketplaceError::Internal(format!("Failed to read {}: {e}", dir.display()))
-    })?;
+    let entries = std::fs::read_dir(&dir)
+        .map_err(|e| MarketplaceError::config_file(dir.display().to_string(), e))?;
 
     let services_dir = dir.parent().map(std::path::Path::to_path_buf);
 

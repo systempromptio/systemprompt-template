@@ -10,7 +10,7 @@
 
 # Demo Suite
 
-**44 runnable demo scripts** organised into 9 categories, plus 2 setup scripts, plus 2 orchestrated multi-container scenarios that demonstrate the air-gap and horizontal-scaling claims in the factsheet.
+**44 runnable demo scripts** organised into 9 categories, plus 3 setup scripts, plus 2 orchestrated multi-container scenarios that demonstrate the air-gap and horizontal-scaling claims in the factsheet.
 
 Every demo is **self-testing**: it reads structured `--json` data from the CLI and asserts on it, so a script fails loudly (non-zero exit, red `✗ FAIL` line) the moment expected data is missing — it never narrates a result it didn't verify.
 
@@ -72,16 +72,16 @@ Organised by the three pillars of [systemprompt.io](https://systemprompt.io): **
 | Pillar | Category | Scripts | What it covers | Cost |
 |--------|----------|---------|----------------|------|
 | Infrastructure | [infrastructure/](infrastructure/) | 5 | Services, database, jobs, logs, configuration | Free |
-| Capabilities | [governance/](governance/) | 9 | Audit smoke, scope, secrets, blocklist, rate limit, hooks | Free |
+| Capabilities | [governance/](governance/) | 10 | Audit smoke, scope, secrets, blocklist, rate limit, hooks, Pi agent | 1 × ~$0.01 |
 | Capabilities | [mcp/](mcp/) | 3 | MCP server management, access tracking, tool execution | Free |
 | Capabilities | [analytics/](analytics/) | 8 | Overview, agents, costs, requests, sessions, content/traffic, conversations, tools | Free |
-| Capabilities | [agents/](agents/) | 5 | Agent discovery, config, messaging, tracing, A2A registry | 1 × ~$0.01 |
+| Capabilities | [agents/](agents/) | 5 | Agent discovery, config, messaging, tracing, A2A registry | Free |
 | Capabilities | [users/](users/) | 4 | User CRUD, roles, sessions, IP bans | Free |
 | Integrations | [skills/](skills/) | 5 | Skills, content, files, plugins, contexts | Free |
 | Integrations | [web/](web/) | 2 | Content types, templates, sitemaps, validation | Free |
 | Integrations | [performance/](performance/) | 2 | Request tracing, 2000-request load test | Free |
 
-**Total: 44 category scripts + 2 setup scripts. 43 free, 1 costs ~$0.01.** Plus two multi-container scenarios — see [Scenarios](#scenarios--factsheet-proofs).
+**Total: 44 category scripts + 3 setup scripts. 43 free, 1 costs ~$0.01.** Plus two multi-container scenarios — see [Scenarios](#scenarios--factsheet-proofs).
 
 ---
 
@@ -175,6 +175,11 @@ Every demo below is a single fenced command. Run them in any order once prefligh
 ./demo/governance/08-hooks.sh
 ```
 
+[`governance/09-pi-agent.sh`](governance/09-pi-agent.sh) — **governs a third-party coding agent (Pi) with a live model call (~$0.01)**.
+```bash
+./demo/governance/09-pi-agent.sh
+```
+
 ### MCP
 
 [`mcp/01-mcp-servers.sh`](mcp/01-mcp-servers.sh) — server status and tools-by-server.
@@ -246,7 +251,7 @@ Every demo below is a single fenced command. Run them in any order once prefligh
 ./demo/agents/02-agent-config.sh
 ```
 
-[`agents/03-agent-messaging.sh`](agents/03-agent-messaging.sh) — **full agent pipeline with a live Anthropic call (~$0.01)**.
+[`agents/03-agent-messaging.sh`](agents/03-agent-messaging.sh) — full agent pipeline; free in the default template state (exits cleanly when no agents are configured).
 ```bash
 ./demo/agents/03-agent-messaging.sh
 ```
@@ -338,13 +343,12 @@ Every demo below is a single fenced command. Run them in any order once prefligh
 
 ## Run them all at once
 
-Replay the entire free suite in one shot. Skips the paid `agents/03-agent-messaging.sh` — paste that one separately if you want a live Anthropic call.
+Replay the entire free suite in one shot. Skips the paid `governance/09-pi-agent.sh` — paste that one separately if you want a live model call.
 
 ```bash
-./demo/00-preflight.sh && ./demo/01-seed-data.sh && \
-for f in demo/infrastructure/*.sh demo/governance/*.sh \
-         demo/mcp/*.sh demo/analytics/*.sh \
-         demo/agents/01-*.sh demo/agents/02-*.sh demo/agents/04-*.sh demo/agents/05-*.sh \
+./demo/00-preflight.sh && ./demo/01-seed-data.sh && ./demo/02-seed-usage-events.sh && \
+for f in demo/infrastructure/*.sh demo/governance/0[0-8]*.sh \
+         demo/mcp/*.sh demo/analytics/*.sh demo/agents/*.sh \
          demo/users/*.sh demo/skills/*.sh demo/web/*.sh demo/performance/*.sh; do
   echo "=== $f ==="; ./"$f" || { echo "FAIL: $f"; break; }
 done
@@ -353,7 +357,7 @@ done
 The paid demo:
 
 ```bash
-./demo/agents/03-agent-messaging.sh
+./demo/governance/09-pi-agent.sh
 ```
 
 ---
@@ -520,23 +524,23 @@ Empty analytics / governance tables:
 
 ## Verification status
 
-All 43 category demos + 2 setup scripts + both scenario stacks were run end-to-end on **2026-06-04** against template `v0.15.0`. Every script exited `0`, and every demo's structured-data assertions (`✓ PASS` lines) held against live seeded data.
+All 44 category demos + 3 setup scripts + both scenario stacks were run end-to-end on **2026-08-19** against template `v0.32.0`. Every script exited `0`, and every demo's structured-data assertions (`✓ PASS` lines) held against live seeded data.
 
 | Set | Count | Result |
 |-----|------:|--------|
-| Setup (preflight, seed) | 2 | All pass |
+| Setup (preflight, seed, usage events) | 3 | All pass |
 | infrastructure/ | 5 | All pass |
-| governance/ | 9 | All pass |
+| governance/ | 10 | All pass (incl. paid `09-pi-agent.sh`) |
 | mcp/ | 3 | All pass |
 | analytics/ | 8 | All pass |
-| agents/ | 5 | All pass (incl. paid `03-agent-messaging.sh`) |
+| agents/ | 5 | All pass |
 | users/ | 4 | All pass |
 | skills/ | 5 | All pass |
 | web/ | 2 | All pass |
 | performance/ | 2 | All pass (incl. 2000-request load test) |
 | scenarios/airgap (just airgap-test) | 3 | All pass |
 | scenarios/scaled (just scaled-test) | 3 | All pass — long soak (`02-soak.sh`) excluded by design |
-| **Total** | **51** | **All pass** |
+| **Total** | **53** | **All pass** |
 
 ---
 

@@ -97,14 +97,16 @@ impl AdminTemplateEngine {
         if !dir.exists() {
             return Ok(());
         }
+        let dir_context = format!("partials dir: {}", dir.display());
+        let entry_context = format!("partials dir entry: {}", dir.display());
         let entries = std::fs::read_dir(dir).map_err(|source| AdminTemplateError::ReadDir {
-            context: format!("partials dir: {}", dir.display()),
+            context: dir_context,
             source,
         })?;
 
         for entry in entries {
             let entry = entry.map_err(|source| AdminTemplateError::ReadDir {
-                context: format!("partials dir entry: {}", dir.display()),
+                context: entry_context.clone(),
                 source,
             })?;
             let path = entry.path();
@@ -136,14 +138,16 @@ impl AdminTemplateEngine {
         if !dir.exists() {
             return Ok(());
         }
+        let dir_context = format!("templates dir: {}", dir.display());
+        let entry_context = format!("templates dir entry: {}", dir.display());
         let entries = std::fs::read_dir(dir).map_err(|source| AdminTemplateError::ReadDir {
-            context: format!("templates dir: {}", dir.display()),
+            context: dir_context,
             source,
         })?;
 
         for entry in entries {
             let entry = entry.map_err(|source| AdminTemplateError::ReadDir {
-                context: format!("templates dir entry: {}", dir.display()),
+                context: entry_context.clone(),
                 source,
             })?;
             let path = entry.path();
