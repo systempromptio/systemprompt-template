@@ -409,6 +409,28 @@ Routes evaluate in order; first match wins. Anthropic is a transparent byte prox
 
 ---
 
+## Upgrading core
+
+Two ways to depend on `systemprompt-core`, chosen by the `[patch.crates-io]`
+blocks in `Cargo.toml` and `tests/Cargo.toml`:
+
+```bash
+# Published release from crates.io — patch blocks commented out (the default).
+just core-bump X.Y.Z
+
+# Local sibling checkout, for a core change that is not released yet —
+# patch blocks uncommented in BOTH manifests, pins set to the core version.
+just build
+```
+
+Either way the core version pin in both manifests must match the version you
+are building against: with a stale pin the patch is dropped **silently** and
+you keep building the published crates while believing you are testing local
+core. Core ships its own migrations, so run the new binary once against your
+database after a bump.
+
+---
+
 ## License
 
 **This template** is [MIT](LICENSE). Fork it, modify it, use it however you like.
