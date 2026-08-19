@@ -113,14 +113,12 @@ async fn encrypt_and_store_secret(
     row: &secret_migration::UnencryptedSecret,
     master_key: &[u8; 32],
     actor: &UserId,
-) -> Result<(), MarketplaceError> {
-    let dek = secret_keys::get_or_create_user_dek(pool, &UserId::new(&row.user_id), master_key)
-        .await
-        .map_err(|e| MarketplaceError::Crypto(format!("DEK error: {e}")))?;
+) -> Result<(), JobError> {
+    let dek =
+        secret_keys::get_or_create_user_dek(pool, &UserId::new(&row.user_id), master_key).await?;
 
     let nonce = secret_crypto::generate_nonce();
-    let encrypted = secret_crypto::encrypt(&dek, &nonce, row.var_value.as_bytes())
-        .map_err(|e| MarketplaceError::Crypto(format!("Encryption error: {e}")))?;
+    let encrypted = secret_crypto::encrypt(&dek, &nonce, row.var_value.as_bytes())?;
 
     let key_version = secret_migration::get_key_version(pool.as_ref(), &row.user_id).await;
 

@@ -1,0 +1,72 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            u.email AS \"email!\",\n            COALESCE(NULLIF(u.display_name, ''), u.name) AS \"display_name!\",\n            COALESCE(NULLIF(e.department, ''), 'Default') AS \"department!\",\n            COUNT(*)::BIGINT AS \"requests!\",\n            COALESCE(SUM(r.input_tokens), 0)::BIGINT AS \"input_tokens!\",\n            COALESCE(SUM(r.output_tokens), 0)::BIGINT AS \"output_tokens!\",\n            COUNT(DISTINCT r.model)::BIGINT AS \"distinct_models!\"\n        FROM ai_requests r\n        JOIN organization_members m ON m.user_id = r.user_id\n        JOIN users u ON u.id = r.user_id\n        LEFT JOIN user_profile_ext e ON e.user_id = r.user_id\n        WHERE m.org_id = $1\n          AND r.created_at >= $2 AND r.created_at < $3\n        GROUP BY u.id, u.email, u.display_name, u.name, e.department\n        ORDER BY COALESCE(SUM(r.input_tokens + r.output_tokens), 0) DESC, COUNT(*) DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "email!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "department!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "distinct_models!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "fbe09017b3da00c50055ea5940b6d19ec384b121c709fe3c5a52dc61e0c64f36"
+}

@@ -1,0 +1,73 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            mc.slug as \"slug!\",\n            mc.kind as \"kind!\",\n            mc.source_id as \"source_id!: SourceId\",\n            COALESCE(mce.after_reading_this, '[]'::jsonb) as \"after_reading_this!: Json<Vec<String>>\",\n            COALESCE(mce.related_playbooks, '[]'::jsonb) as \"related_playbooks!: Json<Vec<ContentLinkMetadata>>\",\n            COALESCE(mce.related_code, '[]'::jsonb) as \"related_code!: Json<Vec<ContentLinkMetadata>>\"\n        FROM markdown_content mc\n        LEFT JOIN markdown_content_enrichment mce ON mce.content_id = mc.id\n        WHERE mc.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "slug"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "kind!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "source_id!: SourceId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "markdown_content",
+            "name": "source_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "after_reading_this!: Json<Vec<String>>",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "related_playbooks!: Json<Vec<ContentLinkMetadata>>",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "related_code!: Json<Vec<ContentLinkMetadata>>",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "89cfb435232e855e2e54107752835977f8df83c3d14b84274fe7597018eb1b51"
+}

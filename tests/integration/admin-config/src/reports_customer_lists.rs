@@ -11,8 +11,8 @@ use crate::fixtures::{
 };
 use crate::tempdb::TempDb;
 
-/// One organization on a priced plan with two members, both of whom made a
-/// request inside the historical window, plus one request outside it.
+// One organization on a priced plan with two members, both of whom made a
+// request inside the historical window, plus one request outside it.
 struct Scenario {
     org: String,
     heavy: String,

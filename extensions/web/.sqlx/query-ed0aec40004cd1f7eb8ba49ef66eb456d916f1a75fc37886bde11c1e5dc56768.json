@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    COALESCE(country, 'Unknown') as \"country\",\n                    COUNT(*)::bigint as \"count!\"\n                FROM v_engaged_traffic\n                WHERE started_at >= $1 AND started_at < $2\n                GROUP BY country\n                ORDER BY COUNT(*) DESC\n                LIMIT $3\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "country",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "ed0aec40004cd1f7eb8ba49ef66eb456d916f1a75fc37886bde11c1e5dc56768"
+}

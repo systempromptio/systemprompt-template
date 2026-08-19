@@ -174,7 +174,7 @@ _build-uncoordinated *FLAGS:
 
 # Clippy (Windows) - always uses offline mode
 [windows]
-clippy *FLAGS: lint-no-synthesis lint-gates
+clippy *FLAGS: lint-no-synthesis lint-no-untyped-admin lint-gates
     $env:SQLX_OFFLINE="true"; cargo clippy --workspace {{FLAGS}} -- -D warnings
 
 # Clippy (Unix) - single-flight, same coordinator as `just build`
@@ -184,7 +184,7 @@ clippy *FLAGS:
 
 # The real clippy. Call `just clippy` instead - this one skips coordination.
 [unix]
-_clippy-uncoordinated *FLAGS: lint-no-synthesis lint-gates
+_clippy-uncoordinated *FLAGS: lint-no-synthesis lint-no-untyped-admin lint-gates
     #!/usr/bin/env bash
     set -euo pipefail
     SECRETS_FILE="{{justfile_directory()}}/.systemprompt/profiles/local/secrets.json"
@@ -290,6 +290,9 @@ _lint-gates-uncoordinated:
     gates=(
         lint-schema.sh
         lint-extensions.sh
+        lint-layers.sh
+        lint-repo-construction.sh
+        check-json-value.sh
         check-sqlx.sh
         check-http-errors.sh
         check-test-value.sh
@@ -363,7 +366,7 @@ preflight-lint:
     {{just_executable()}} msrv-check
 
 # Weekly deep pass: preflight plus the network-touching supply-chain gates.
-preflight-full: preflight deny audit machete
+preflight-full: preflight deny audit machete hack
 
 # Rustdoc with warnings denied, across all three workspaces (root, tests/,
 # bridge/) — mirrors core's quality.yml docs job. Single-flight coordinated.
@@ -479,19 +482,59 @@ audit-standards:
 file-size:
     bash scripts/check-file-size.sh
 
-# Detect unused dependencies (same check the CI machete job runs)
-machete:
-    cargo machete
+# Every Cargo workspace in the repo. `tests/` and `bridge/` are excluded from
+# the root workspace, so a bare root-level scan silently skips their lockfiles.
+# Keep in sync with `git ls-files '*Cargo.lock'`.
+workspaces := ". tests bridge"
 
-# Supply-chain gates: cargo-deny (licenses/bans/advisories) and cargo-audit
+# Detect unused dependencies across every workspace
+machete:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for w in {{ workspaces }}; do
+        echo "==> cargo machete: $w"
+        (cd "$w" && cargo machete)
+    done
+
+# Supply-chain gates across every workspace: cargo-deny (licenses/bans/
+# advisories, root deny.toml discovered via --manifest-path) and cargo-audit
 deny:
-    cargo deny check
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for w in {{ workspaces }}; do
+        echo "==> cargo deny: $w"
+        cargo deny --manifest-path "${w%/}/Cargo.toml" check
+    done
 
 check-bans:
     cargo deny check bans
 
 audit:
-    cargo audit
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for w in {{ workspaces }}; do
+        echo "==> cargo audit: $w"
+        cargo audit --file "${w%/}/Cargo.lock"
+    done
+
+# Build every feature powerset (catches feature-flag drift); weekly tier only
+hack:
+    cargo hack --workspace --feature-powerset --depth 2 check
+
+# Structural guard: `UserId::admin()` is banned outside sanctioned call sites.
+# The allowlist is empty by design — this repo has no sanctioned site; adding
+# one requires justification in review.
+lint-no-untyped-admin:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    hits=$(grep -rn 'UserId::admin()' extensions/ src/ bridge/src/ --include='*.rs' 2>/dev/null \
+        | grep -v '/tests/' \
+        || true)
+    if [ -n "$hits" ]; then
+        echo "lint-no-untyped-admin: untyped UserId::admin() outside the sanctioned call sites:"
+        echo "$hits"
+        exit 1
+    fi
 
 # Structural guard: no string-literal `UserId::new("...")` in extension code.
 # String literals are how principal synthesis sneaks in — every legitimate
@@ -1029,6 +1072,13 @@ core-checkout:
 bridge-package-linux:
     @scripts/build-coordinator.sh run bridge-package "" -- scripts/package-bridge-linux.sh
 
+# Cross-compile the Windows bridge exe (x86_64-pc-windows-msvc via cargo-xwin —
+# msvc is required: it statically links WebView2Loader, a -gnu build ships a
+# bare exe that dies at start on "WebView2Loader.dll was not found") and stage
+# it into storage/files/downloads/. Follow with `just publish`.
+bridge-package-windows: core-checkout
+    @scripts/build-coordinator.sh run bridge-package-windows "" -- scripts/package-bridge-windows.sh
+
 # Installs the client if it is not there yet; re-running it with a fresh code
 # re-binds the machine to whoever that code belongs to.
 # Point Claude Code on THIS host at the gateway (CODE comes from /admin/profile)
@@ -1455,216 +1505,6 @@ docker-test:
     @echo "Docker build successful! Image: systemprompt-template:test"
 
 # ══════════════════════════════════════════════════════════════════════════════
-# AIR-GAPPED SCENARIO
-# ══════════════════════════════════════════════════════════════════════════════
-
-# Bring up the network-isolated air-gap stack (postgres + mock-inference + app + monitor + ingress)
-airgap-up:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    # Dockerfile.airgap-prebuilt COPYs the host-built binaries from
-    # deploy/scenarios/airgap/.bin/ — `target` is a symlink to a shared cargo
-    # cache that buildkit can't follow, so we dereference-copy them in first
-    # (mirrors scaled-up).
-    if [[ ! -x target/release/systemprompt || ! -x target/release/systemprompt-mcp-agent ]]; then
-        echo "ERROR: release binaries missing. Run: just build --release" >&2
-        exit 1
-    fi
-    mkdir -p deploy/scenarios/airgap/.bin
-    cp -L target/release/systemprompt           deploy/scenarios/airgap/.bin/systemprompt
-    cp -L target/release/systemprompt-mcp-agent deploy/scenarios/airgap/.bin/systemprompt-mcp-agent
-    docker compose -f deploy/scenarios/airgap/docker-compose.airgap.yml up -d --build
-
-# Tear down the air-gap stack and remove its volumes
-airgap-down:
-    docker compose -f deploy/scenarios/airgap/docker-compose.airgap.yml down -v
-
-# ONE-COMMAND air-gap proof. Ensures the sealed stack is up (builds the image
-# only if it is missing), warm-builds the loadtest crate so the run emits no
-# compiler spew, runs all three assertion scripts (01 egress, 02 load,
-# 03 governance) WITHOUT dying on the first failure, then prints a single
-# PASS/FAIL summary. Leaves the stack up for inspection by default — pass
-# TEARDOWN=true to remove it (and its volumes) at the end.
-#
-#   just airgap                # run, leave stack up
-#   just airgap TEARDOWN=true  # run, then tear down
-airgap TEARDOWN="false":
-    #!/usr/bin/env bash
-    set -uo pipefail
-    COMPOSE_FILE="deploy/scenarios/airgap/docker-compose.airgap.yml"
-    PORT="${AIRGAP_HTTP_PORT:-8090}"
-    LOADTEST_MANIFEST="../systemprompt-core/crates/tests/loadtest/Cargo.toml"
-
-    # 1. Ensure the stack is up. Build the image only if it is not present yet
-    #    (a first-time build pulls in ../systemprompt-core and takes ~10 min).
-    if curl -fsS -o /dev/null --max-time 3 "http://localhost:${PORT}/api/v1/health" 2>/dev/null; then
-      echo "  air-gap stack already healthy on :${PORT}"
-    else
-      if docker compose -f "$COMPOSE_FILE" config --images 2>/dev/null \
-         | xargs -r -I{} docker image inspect {} >/dev/null 2>&1; then
-        echo "  air-gap image present — starting stack (no rebuild)"
-        docker compose -f "$COMPOSE_FILE" up -d
-      else
-        echo "  air-gap image missing — building stack (first run, ~10 min)"
-        docker compose -f "$COMPOSE_FILE" up -d --build
-      fi
-      echo "  waiting for app healthcheck on :${PORT} ..."
-      for i in $(seq 1 120); do
-        if curl -fsS -o /dev/null "http://localhost:${PORT}/api/v1/health" 2>/dev/null; then
-          echo "  app healthy after ${i}s"
-          break
-        fi
-        sleep 1
-      done
-    fi
-
-    # 2. Warm-build the loadtest crate quietly so STEP 02's `cargo run` emits no
-    #    build output mid-demo. Non-fatal: 02-load.sh re-checks the manifest.
-    if [[ -f "$LOADTEST_MANIFEST" ]]; then
-      echo "  warm-building the loadtest crate ..."
-      cargo build --quiet --manifest-path "$LOADTEST_MANIFEST" 2>/dev/null || true
-    else
-      echo "  loadtest crate not found at ${LOADTEST_MANIFEST} — skipping warm-build" >&2
-      echo "  (it is unpublished systemprompt-core dev tooling; 02-load.sh will build it on demand if present)" >&2
-    fi
-
-    # 3. Run all three scripts, capturing each exit code (do NOT stop on first
-    #    failure — the operator must see the full picture).
-    declare -A RESULT
-    for s in 01-egress-assert 02-load 03-governance; do
-      echo ""
-      if "./demo/scenarios/airgap/${s}.sh"; then
-        RESULT[$s]="PASS"
-      else
-        RESULT[$s]="FAIL"
-      fi
-    done
-
-    # 4. Single PASS/FAIL summary.
-    echo ""
-    echo "══════════════════════════════════════════════════════════"
-    echo "  AIR-GAP PROOF SUMMARY"
-    echo "══════════════════════════════════════════════════════════"
-    OVERALL=0
-    for s in 01-egress-assert 02-load 03-governance; do
-      printf "  %-22s %s\n" "$s" "${RESULT[$s]}"
-      [[ "${RESULT[$s]}" == "PASS" ]] || OVERALL=1
-    done
-    echo "══════════════════════════════════════════════════════════"
-    [[ "$OVERALL" -eq 0 ]] && echo "  RESULT: PASS" || echo "  RESULT: FAIL"
-
-    # 5. Optional teardown.
-    if [[ "{{TEARDOWN}}" == "true" ]]; then
-      echo ""
-      echo "  TEARDOWN=true — removing the air-gap stack and volumes"
-      just airgap-down
-    fi
-
-    exit "$OVERALL"
-
-# Run the air-gap demo scripts in sequence, stopping on first failure.
-# Policies (quotas/safety) ship as services/gateway/policies.yaml and are
-# ingested by the publish_pipeline job at server boot. Model exposure lives
-# in the profile provider registry (profile.providers in
-# .systemprompt/profiles/airgap/profile.yaml).
-airgap-test:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    ./demo/scenarios/airgap/01-egress-assert.sh
-    ./demo/scenarios/airgap/02-load.sh
-    ./demo/scenarios/airgap/03-governance.sh
-
-# Reproducibility proof: tear down (incl. volumes), bring back up reusing the
-# already-built image, run the full assertion suite from zero state. Prints
-# wall-clock time. Use this in front of a reviewer who wants to see the demo
-# work from a clean container + clean database, without a 10-minute image
-# rebuild. Image-level reproducibility is a separate concern — see
-# demo/scenarios/airgap/architecture.md §9 (the [patch.crates-io] block
-# requires systemprompt-core >= 0.10.4 to be published before the image can
-# be rebuilt from this repo in isolation).
-airgap-fresh-test:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    COMPOSE_FILE="deploy/scenarios/airgap/docker-compose.airgap.yml"
-    # Refuse to run if the image isn't already built — the rebuild path needs
-    # the sibling systemprompt-core repo and a 10-minute window, and silently
-    # falling into that on a demo machine is a bad surprise.
-    if ! docker image inspect airgap-app >/dev/null 2>&1 \
-       && ! docker compose -f "$COMPOSE_FILE" config --images 2>/dev/null | head -1 | xargs -I{} docker image inspect {} >/dev/null 2>&1; then
-      echo "ERROR: app image not present. First-time build needed:" >&2
-      echo "  just airgap-up   # builds the image (~10 min, needs ../systemprompt-core)" >&2
-      exit 1
-    fi
-    START=$(date +%s)
-    just airgap-down
-    # No --build: reuse the existing image. This is the from-zero DATA reset,
-    # not the from-zero BUILD reset.
-    docker compose -f "$COMPOSE_FILE" up -d
-    echo "Waiting for app healthcheck..."
-    for i in $(seq 1 120); do
-      if curl -fsS -o /dev/null "http://localhost:${AIRGAP_HTTP_PORT:-8090}/api/v1/health" 2>/dev/null; then
-        echo "App healthy after ${i}s"
-        break
-      fi
-      sleep 1
-    done
-    just airgap-test
-    END=$(date +%s)
-    echo ""
-    echo "═══════════════════════════════════════════════════════"
-    echo "  FRESH AIR-GAP RUN COMPLETE in $((END - START))s"
-    echo "═══════════════════════════════════════════════════════"
-
-# ══════════════════════════════════════════════════════════════════════════════
-# SCALED / DISTRIBUTED SCENARIO
-# ══════════════════════════════════════════════════════════════════════════════
-
-# Bring up the multi-replica scaled stack (postgres primary/replica + N app replicas + 1 scheduler + nginx LB)
-scaled-up REPLICAS="3":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    # Stage the host-built binaries into a real dir inside the build context —
-    # `target` is a symlink to a shared cargo cache that buildkit can't follow.
-    if [[ ! -x target/release/systemprompt || ! -x target/release/systemprompt-mcp-agent ]]; then
-        echo "ERROR: release binaries missing. Run: just build --release" >&2
-        exit 1
-    fi
-    mkdir -p deploy/scenarios/scaled/.bin
-    cp -L target/release/systemprompt           deploy/scenarios/scaled/.bin/systemprompt
-    cp -L target/release/systemprompt-mcp-agent deploy/scenarios/scaled/.bin/systemprompt-mcp-agent
-    docker compose -f deploy/scenarios/scaled/docker-compose.scaled.yml up -d --build --scale app={{REPLICAS}}
-
-# Tear down the scaled stack and remove its volumes
-scaled-down:
-    docker compose -f deploy/scenarios/scaled/docker-compose.scaled.yml down -v
-
-# ONE COMMAND: reset → build → up → wait-for-health → mint token → run all fast
-# proofs → capture logs → single verdict. Leaves the stack up by default.
-#   just scaled-demo                # 3 replicas, stack left up
-#   REPLICAS=5 just scaled-demo     # scale wider
-#   KEEP=0 just scaled-demo         # tear down at the end
-#   SOAK=1 just scaled-demo         # also run the ~1h soak (long!)
-scaled-demo:
-    #!/usr/bin/env bash
-    set -uo pipefail
-    chmod +x demo/scenarios/scaled/run.sh
-    ./demo/scenarios/scaled/run.sh
-
-# Run the scaled demo scripts in sequence against an ALREADY-RUNNING stack.
-# Prefer `just scaled-demo` (full lifecycle). Use this only when the stack is
-# already up and healthy. Skips 02-soak.sh — the long (~1h) sustained soak; run
-# it on its own when needed: ./demo/scenarios/scaled/02-soak.sh
-scaled-test:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    chmod +x demo/scenarios/scaled/01-load.sh \
-             demo/scenarios/scaled/03-replica-distribution.sh \
-             demo/scenarios/scaled/04-scheduler-isolation.sh
-    ./demo/scenarios/scaled/01-load.sh
-    ./demo/scenarios/scaled/03-replica-distribution.sh
-    ./demo/scenarios/scaled/04-scheduler-isolation.sh
-
-# ══════════════════════════════════════════════════════════════════════════════
 # ADMIN & PLUGINS
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -1676,14 +1516,6 @@ webauthn-admin EMAIL:
 update-anthropic-plugins:
     git submodule update --remote vendor/knowledge-work-plugins
     {{CLI}} infra jobs run import_anthropic_plugins
-
-# ══════════════════════════════════════════════════════════════════════════════
-# TERMINAL RECORDINGS (README SVGs)
-# ══════════════════════════════════════════════════════════════════════════════
-
-# Regenerate terminal SVG recordings. Pass numbers to limit scope, e.g. `just record-svgs 3 7`.
-record-svgs *NUMBERS:
-    ./demo/recording/svg/record.sh {{NUMBERS}}
 
 # ══════════════════════════════════════════════════════════════════════════════
 # BENCHMARKS
@@ -1744,15 +1576,6 @@ benchmark REQUESTS="200" CONCURRENCY="100":
         -d '{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"bench","tool_input":{"file_path":"/src/main.rs"}}' \
         "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo"
 
-# Syntax-check install.sh (install.sh is the user-facing installer)
-install-sh-test:
-    bash -n scripts/install.sh
-    shellcheck scripts/install.sh 2>/dev/null || echo "(install shellcheck to lint: apt install shellcheck)"
-
-# Check the Nix flake builds + runs
-flake-check:
-    nix flake check
-    nix run .# -- --version
 
 # --- Release ------------------------------------------------------------
 

@@ -21,7 +21,6 @@ systemprompt-web-admin = { workspace = true }
 systemprompt-web-jobs = { workspace = true }
 systemprompt-web-site = { workspace = true }
 systemprompt-mcp-agent = { workspace = true }
-systemprompt-mcp-knowledge-bank = { workspace = true }
 
 chrono = { workspace = true }
 serde_json = { workspace = true }

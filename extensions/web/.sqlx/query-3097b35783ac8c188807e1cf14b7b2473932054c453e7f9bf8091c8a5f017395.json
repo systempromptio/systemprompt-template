@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT session_id as \"session_id: SessionId\" FROM ai_requests\n          WHERE id = $1 OR request_id = $1 OR trace_id = $1\n          LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id: SessionId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "session_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "3097b35783ac8c188807e1cf14b7b2473932054c453e7f9bf8091c8a5f017395"
+}

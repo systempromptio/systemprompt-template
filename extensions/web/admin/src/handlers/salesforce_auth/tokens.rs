@@ -90,12 +90,16 @@ pub(crate) async fn salesforce_token_handler(
     }
 
     // Why: The JWT-bearer `sub` must be the Salesforce Username (captured at SSO
-    // login), not the login email. Fall back to the email if this user has no
-    // stored Username (e.g. they never completed a Salesforce login) or the
-    // lookup fails.
+    // login), not the login email. No identity row means the caller never linked
+    // Salesforce — the entity gate should have kept the server out of their
+    // manifest, so answer with a clean denial rather than a doomed mint attempt.
     let username = match salesforce_identity::find(&deps.write_pool, &session.user_id).await {
         Ok(Some(u)) => u,
-        Ok(None) => session.email.as_str().to_owned(),
+        Ok(None) => {
+            return Err(AdminError::Forbidden(
+                "Salesforce account not linked".to_owned(),
+            ));
+        },
         Err(e) => {
             tracing::warn!(error = %e, user_id = %session.user_id, "Salesforce username lookup failed; falling back to email");
             session.email.as_str().to_owned()
@@ -107,6 +111,7 @@ pub(crate) async fn salesforce_token_handler(
     // server for Salesforce being down.
     let fresh = salesforce_jwt_bearer::get_token(&deps.config, &username)
         .await
+        // Why: lint-ok: error-adapt — deliberate 502 re-classification, see above
         .map_err(|e| AdminError::Upstream(format!("Salesforce token mint failed: {e}")))?;
     Ok(Json(TokenResponse {
         access_token: fresh.access_token,

@@ -80,15 +80,16 @@ async fn read_plans(services_path: &Path) -> Result<Option<PlansDoc>, Marketplac
         Ok(s) if s.trim().is_empty() => Ok(Some(PlansDoc::default())),
         Ok(s) => serde_yaml::from_str::<PlansDoc>(&s)
             .map(Some)
-            .map_err(|e| MarketplaceError::Internal(format!("{PLANS_FILE}: {e}"))),
+            .map_err(|e| MarketplaceError::config_file(PLANS_FILE, e)),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
         Err(e) => Err(e.into()),
     }
 }
 
 async fn upsert_plan(pool: &PgPool, plan: &YamlPlan) -> Result<(), MarketplaceError> {
-    let grants = serde_json::to_value(&plan.grants)
-        .map_err(|e| MarketplaceError::Internal(format!("{PLANS_FILE}: {}: {e}", plan.id)))?;
+    let entry = format!("{PLANS_FILE}: {}", plan.id);
+    let grants =
+        serde_json::to_value(&plan.grants).map_err(|e| MarketplaceError::config_file(entry, e))?;
     #[expect(
         clippy::cast_possible_truncation,
         reason = "a contract cap in dollars cannot exceed i64 microdollars at any plausible price"
@@ -169,10 +170,11 @@ async fn project_grants(
     let mut kept_ids: Vec<String> = Vec::with_capacity(grants.len());
 
     for grant in grants {
+        let entry = format!("{PLANS_FILE}: {slug}");
         let kind = EntityKind::from_str(&grant.entity_type)
-            .map_err(|e| MarketplaceError::Internal(format!("{PLANS_FILE}: {slug}: {e}")))?;
-        let access = Access::from_str(&grant.access)
-            .map_err(|e| MarketplaceError::Internal(format!("{PLANS_FILE}: {slug}: {e}")))?;
+            .map_err(|e| MarketplaceError::config_file(entry.clone(), e))?;
+        let access =
+            Access::from_str(&grant.access).map_err(|e| MarketplaceError::config_file(entry, e))?;
 
         // Why: the FK on access_control_rules requires a catalog row. An earlier
         // bootstrap pass will usually have registered it; a plan naming an

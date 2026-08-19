@@ -154,7 +154,6 @@ marketplace:
     include:
       - salesforce
       - systemprompt
-      - knowledge-bank
     exclude: []
   # No agents are published by this marketplace. Plugins ship skills, the
   # Salesforce MCP server, and artifacts only.

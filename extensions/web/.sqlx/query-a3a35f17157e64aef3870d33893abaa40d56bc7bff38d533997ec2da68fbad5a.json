@@ -1,0 +1,73 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH trace_to_session AS (\n            SELECT DISTINCT trace_id, session_id\n            FROM ai_requests\n            WHERE created_at >= $1 AND created_at < $2\n              AND trace_id IS NOT NULL AND session_id IS NOT NULL\n        ),\n        all_sessions AS (\n            SELECT session_id, created_at, NULL::text AS decision, NULL::text AS status\n            FROM plugin_usage_events\n            WHERE created_at >= $1 AND created_at < $2 AND session_id IS NOT NULL\n            UNION ALL\n            SELECT COALESCE(t.session_id, g.session_id) AS session_id,\n                   g.created_at, g.decision, NULL::text\n            FROM governance_decisions g\n            LEFT JOIN trace_to_session t ON t.trace_id = g.session_id\n            WHERE g.created_at >= $1 AND g.created_at < $2 AND g.session_id IS NOT NULL\n            UNION ALL\n            SELECT session_id, created_at, NULL::text, status::text\n            FROM ai_requests\n            WHERE created_at >= $1 AND created_at < $2 AND session_id IS NOT NULL\n        ),\n        per_session AS (\n            SELECT\n                session_id,\n                BOOL_OR(decision = 'deny') AS has_deny,\n                BOOL_OR(status NOT IN ('ok','success','completed','pending') AND status IS NOT NULL)\n                  AS has_error\n            FROM all_sessions\n            GROUP BY session_id\n        ),\n        -- Percentiles and totals come from the request rows only: a\n        -- governance-only trace has no latency, and counting it as 0 ms would\n        -- pin p50 to zero however slow the real traffic was.\n        active AS (\n            SELECT\n                session_id,\n                COALESCE(SUM(latency_ms), 0)::bigint       AS active_ms,\n                COALESCE(SUM(cost_microdollars), 0)::bigint AS cost_microdollars,\n                COALESCE(SUM(tokens_used), 0)::bigint       AS tokens\n            FROM ai_requests\n            WHERE created_at >= $1 AND created_at < $2 AND session_id IS NOT NULL\n            GROUP BY session_id\n        )\n        SELECT\n            (SELECT COUNT(*) FROM per_session)::bigint                      AS \"total_traces!\",\n            (SELECT COUNT(*) FROM per_session WHERE has_error)::bigint      AS \"error_count!\",\n            (SELECT COUNT(*) FROM per_session WHERE has_deny)::bigint       AS \"deny_count!\",\n            COALESCE(percentile_disc(0.50) WITHIN GROUP (ORDER BY active_ms), 0)::bigint\n                                                                            AS \"p50!\",\n            COALESCE(percentile_disc(0.95) WITHIN GROUP (ORDER BY active_ms), 0)::bigint\n                                                                            AS \"p95!\",\n            COALESCE(percentile_disc(0.99) WITHIN GROUP (ORDER BY active_ms), 0)::bigint\n                                                                            AS \"p99!\",\n            COALESCE(SUM(cost_microdollars), 0)::bigint                     AS \"total_cost!\",\n            COALESCE(SUM(tokens), 0)::bigint                                AS \"total_tokens!\"\n        FROM active",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total_traces!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "error_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "deny_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "p50!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "p95!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "p99!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "total_cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "total_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "a3a35f17157e64aef3870d33893abaa40d56bc7bff38d533997ec2da68fbad5a"
+}

@@ -1,0 +1,92 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO content_files (content_id, file_id, role, display_order, created_at)\n            VALUES ($1, $2, $3, $4, $5)\n            ON CONFLICT (content_id, file_id, role) DO UPDATE\n            SET display_order = $4\n            RETURNING id, content_id as \"content_id: ContentId\", file_id, role as \"role: FileRole\", display_order, created_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "content_files",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "content_id: ContentId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "content_files",
+            "name": "content_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "file_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "content_files",
+            "name": "file_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "role: FileRole",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "content_files",
+            "name": "role"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "display_order",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "content_files",
+            "name": "display_order"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "content_files",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Varchar",
+        "Int4",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0949cd68d7c9eaa89c8a72f9b6731e699c443e3b057afdda5e33cb0eb05d5c76"
+}

@@ -197,9 +197,9 @@ fn sobject_all(active: bool) -> HostedMcpServer {
     }
 }
 
-/// A server switched off in the org is drift, not a note. `apply` PATCHes
-/// `McpServerAccess.Active` back on, so reporting it as "always applied" would
-/// hide a change the tool can and will make.
+// A server switched off in the org is drift, not a note. `apply` PATCHes
+// `McpServerAccess.Active` back on, so reporting it as "always applied" would
+// hide a change the tool can and will make.
 #[test]
 fn an_inactive_hosted_mcp_server_is_drift() {
     let mut desired = spec();
@@ -219,9 +219,9 @@ fn an_inactive_hosted_mcp_server_is_drift() {
     assert_eq!(changes[0].desired, "true");
 }
 
-/// Apply is additive: it never deactivates. A server the org has active but the
-/// spec does not mention is therefore not drift — calling it drift would report
-/// a difference no apply will ever resolve.
+// Apply is additive: it never deactivates. A server the org has active but the
+// spec does not mention is therefore not drift — calling it drift would report
+// a difference no apply will ever resolve.
 #[test]
 fn an_unmanaged_active_server_is_not_drift() {
     let desired = spec();
@@ -236,8 +236,8 @@ fn an_unmanaged_active_server_is_not_drift() {
     assert!(diff(&actual, &desired).is_clean());
 }
 
-/// A server the spec names but the org does not offer cannot be fixed by
-/// activation, so it surfaces as an actionable add rather than being skipped.
+// A server the spec names but the org does not offer cannot be fixed by
+// activation, so it surfaces as an actionable add rather than being skipped.
 #[test]
 fn a_server_missing_from_the_org_is_reported() {
     let mut desired = spec();
@@ -252,8 +252,8 @@ fn a_server_missing_from_the_org_is_reported() {
     assert_eq!(changes[0].path, "hosted_mcp_servers.platform_sobject_all");
 }
 
-/// `named_user_jwt` lives on ExtlClntAppGlobalOauthSettings, which no query API
-/// exposes, so it is deployed unconditionally rather than compared.
+// `named_user_jwt` lives on ExtlClntAppGlobalOauthSettings, which no query API
+// exposes, so it is deployed unconditionally rather than compared.
 #[test]
 fn named_user_jwt_is_always_applied() {
     let desired = spec();

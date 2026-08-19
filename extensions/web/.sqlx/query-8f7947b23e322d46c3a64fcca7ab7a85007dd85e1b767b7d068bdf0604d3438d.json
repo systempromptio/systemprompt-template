@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO organizations (slug, name, plan_id, seat_limit_override, email_domains, status, is_platform)\n         VALUES ($1, $2, $3, $4, $5, $6, $7)\n         ON CONFLICT (slug) DO UPDATE\n            SET name = EXCLUDED.name,\n                plan_id = EXCLUDED.plan_id,\n                seat_limit_override = EXCLUDED.seat_limit_override,\n                email_domains = EXCLUDED.email_domains,\n                status = EXCLUDED.status,\n                is_platform = EXCLUDED.is_platform,\n                updated_at = NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "TextArray",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8f7947b23e322d46c3a64fcca7ab7a85007dd85e1b767b7d068bdf0604d3438d"
+}

@@ -26,7 +26,7 @@ Never mix idioms: no client-side data fetching where a route loader belongs, no 
 - Match the surrounding code: naming, file layout, error handling, and comment density of the file you are editing.
 - Small, single-purpose commits that map to the spec's step plan (format governed by `dev_release`).
 - No dead flags or commented-out code left behind; delete, don't disable.
-- Consult the `knowledge-bank` MCP server when a convention is unclear — prior project decisions outrank general best practice.
+- Consult prior project decisions (workshop transcripts, Jira, Confluence) when a convention is unclear — they outrank general best practice.
 - Work is not complete until it passes verification under `dev_test` (Playwright).
 
 ## Executing a plan

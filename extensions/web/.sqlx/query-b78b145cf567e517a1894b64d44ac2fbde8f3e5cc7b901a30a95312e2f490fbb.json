@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT used_at, refresh_token_id FROM oauth_auth_codes WHERE code = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "used_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth_auth_codes",
+            "name": "used_at"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "refresh_token_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth_auth_codes",
+            "name": "refresh_token_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "b78b145cf567e517a1894b64d44ac2fbde8f3e5cc7b901a30a95312e2f490fbb"
+}

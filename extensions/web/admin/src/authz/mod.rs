@@ -6,18 +6,20 @@
 //! the precedence ladder, and a [`SubjectAttributeProvider`][p] that looks up
 //! the values a user holds for it.
 //!
-//! We declare two: [`department`] and [`organization`]. They form a ladder
-//! with core's — user (0), department (100), role (200), organization (300) —
-//! where a lower number is the narrower, higher-priority scope. Adding a third
-//! — cost centre, clearance, jurisdiction — means writing a provider beside
-//! them and one `register_subject_attribute_provider!` call; no core change,
-//! and no edit to the resolve call sites, because they all read the registry
-//! through [`subject_attributes_for`] and [`dimensions`].
+//! We declare three: [`department`], [`salesforce`], and [`organization`].
+//! They form a ladder with core's — user (0), department (100), salesforce
+//! (150), role (200), organization (300) — where a lower number is the
+//! narrower, higher-priority scope. Adding another — cost centre, clearance,
+//! jurisdiction — means writing a provider beside them and one
+//! `register_subject_attribute_provider!` call; no core change, and no edit to
+//! the resolve call sites, because they all read the registry through
+//! [`subject_attributes_for`] and [`dimensions`].
 //!
 //! [p]: systemprompt_security::authz::SubjectAttributeProvider
 
 pub mod department;
 pub mod organization;
+pub mod salesforce;
 
 use std::sync::{Arc, OnceLock};
 
@@ -30,6 +32,7 @@ use systemprompt_security::authz::{
 
 use crate::authz::department::DepartmentAttributeProvider;
 use crate::authz::organization::OrganizationAttributeProvider;
+use crate::authz::salesforce::SalesforceAttributeProvider;
 
 systemprompt_security::register_subject_attribute_provider!(|ctx| {
     let provider: SharedSubjectAttributeProvider =
@@ -40,6 +43,12 @@ systemprompt_security::register_subject_attribute_provider!(|ctx| {
 systemprompt_security::register_subject_attribute_provider!(|ctx| {
     let provider: SharedSubjectAttributeProvider =
         Arc::new(OrganizationAttributeProvider::new(Arc::clone(&ctx.pool)));
+    provider
+});
+
+systemprompt_security::register_subject_attribute_provider!(|ctx| {
+    let provider: SharedSubjectAttributeProvider =
+        Arc::new(SalesforceAttributeProvider::new(Arc::clone(&ctx.pool)));
     provider
 });
 

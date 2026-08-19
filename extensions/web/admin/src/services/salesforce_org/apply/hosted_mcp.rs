@@ -17,6 +17,7 @@ use crate::services::salesforce_org::spec::OrgSpec;
 /// # Errors
 /// Propagates the Tooling query failure. A PATCH Salesforce rejects is recorded
 /// as a follow-up rather than aborting.
+// JSON: Salesforce Tooling query rows are read raw — no fixed schema.
 pub async fn apply_hosted_mcp_servers(
     conn: &Connection,
     spec: &OrgSpec,
@@ -44,6 +45,7 @@ pub async fn apply_hosted_mcp_servers(
             ));
             continue;
         };
+        // JSON: Salesforce Tooling query rows — no fixed schema.
         let active = row
             .get("Active")
             .and_then(serde_json::Value::as_bool)

@@ -9,7 +9,7 @@ Use this skill at the start of any feature, refactor, or integration task — an
 ## Workflow
 
 1. **Restate the requirement.** One paragraph, in your own words, including what is explicitly out of scope. If the ticket and the code disagree, surface the conflict — do not guess.
-2. **Gather context first.** Read the relevant cartridge/route/component code and check the project knowledge bank (workshop transcripts, Jira tickets, Confluence pages via the `knowledge-bank` MCP server) for prior decisions before proposing anything.
+2. **Gather context first.** Read the relevant cartridge/route/component code and check prior project decisions (workshop transcripts, Jira tickets, Confluence pages) before proposing anything.
 3. **Write the open spec.** A short markdown document containing:
    - **Problem** — what changes for the user or the business.
    - **Approach** — the shape of the solution: which routes, components, services, and data flows are touched.

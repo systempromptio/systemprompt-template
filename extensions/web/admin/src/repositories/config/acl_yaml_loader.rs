@@ -7,7 +7,7 @@
 //! received them, so deployments sharing the same YAML baseline can drift
 //! independently without trampling each other.
 //!
-//! Three files are read (all optional; missing-file = no-op):
+//! Four files are read (all optional; missing-file = no-op):
 //!
 //! - `services/access-control/roles.yaml` — role-scoped allow/deny rules.
 //!   Parsed into core's [`AccessControlConfig`] and projected by core
@@ -19,6 +19,9 @@
 //!   organizations on them, and the projection of each plan's grants into
 //!   `access_control_rules` at `rule_type = 'organization'`. Owned by
 //!   [`super::plan_yaml_loader`].
+//! - `services/access-control/salesforce.yaml` — entities confined to
+//!   Salesforce-linked users at `rule_type = 'salesforce'`. Owned by
+//!   [`super::salesforce_yaml_loader`].
 
 use std::path::Path;
 use std::sync::Arc;
@@ -49,11 +52,17 @@ pub async fn load_from_yaml(
     // outermost precedence band, so nothing earlier can depend on them.
     let plans = super::plan_yaml_loader::load_plans_from_yaml(pool, services_path).await?;
 
+    // Why: after the roles pass — the gate forces default_included=false on
+    // its entities and must own the final word over any role-file default.
+    let salesforce =
+        super::salesforce_yaml_loader::load_salesforce_from_yaml(pool, services_path).await?;
+
     tracing::info!(
         departments = report.departments_upserted,
         rules = report.rules_upserted,
         plans = plans.plans_upserted,
         organizations = plans.organizations_upserted,
+        salesforce_grants = salesforce.grants_projected,
         "bootstrap_yaml_loaded"
     );
     Ok(report)
@@ -68,7 +77,7 @@ async fn read_yaml<T: for<'de> Deserialize<'de> + Default>(
         Ok(s) if s.trim().is_empty() => Ok(Some(T::default())),
         Ok(s) => serde_yaml::from_str::<T>(&s)
             .map(Some)
-            .map_err(|e| MarketplaceError::Internal(format!("{rel}: {e}"))),
+            .map_err(|e| MarketplaceError::config_file(rel, e)),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
         Err(e) => Err(e.into()),
     }

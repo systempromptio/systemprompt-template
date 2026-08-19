@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT sf_username FROM salesforce_user_identities ORDER BY sf_username",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sf_username",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "salesforce_user_identities",
+            "name": "sf_username"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5c5ad429dd84cccba16ede19418a211011c6e0735aee3abba508df24f6e92894"
+}

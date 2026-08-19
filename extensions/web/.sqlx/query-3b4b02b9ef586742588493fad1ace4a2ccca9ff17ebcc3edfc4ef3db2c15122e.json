@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    landing_page as \"page\",\n                    COALESCE(referrer_source, 'direct') as \"source\",\n                    COUNT(*)::bigint as \"count!\"\n                FROM v_clean_traffic\n                WHERE started_at >= $1 AND started_at < $2\n                  AND landing_page IS NOT NULL\n                  AND ($3::text IS NULL OR COALESCE(referrer_source, 'direct') = $3)\n                  AND ($4::text IS NULL OR landing_page LIKE $4 || '%')\n                GROUP BY landing_page, referrer_source\n                ORDER BY COUNT(*) DESC\n                LIMIT $5\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "page",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "v_clean_traffic",
+            "name": "landing_page"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "source",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "3b4b02b9ef586742588493fad1ace4a2ccca9ff17ebcc3edfc4ef3db2c15122e"
+}

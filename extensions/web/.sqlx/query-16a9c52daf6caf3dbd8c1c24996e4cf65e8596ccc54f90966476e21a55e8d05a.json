@@ -1,0 +1,111 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            u.id,\n            u.email,\n            u.display_name,\n            u.status as \"status!\",\n            u.roles as \"roles!: Vec<String>\",\n            COALESCE(ar.input_tokens, 0)::BIGINT     AS \"input_tokens!\",\n            COALESCE(ar.output_tokens, 0)::BIGINT    AS \"output_tokens!\",\n            COALESCE(ar.requests, 0)::BIGINT         AS \"requests!\",\n            COALESCE(ar.cost_microdollars, 0)::BIGINT AS \"cost_microdollars!\",\n            ar.last_active                           AS last_active\n        FROM users u\n        LEFT JOIN (\n            SELECT\n                user_id,\n                COALESCE(SUM(input_tokens), 0)::BIGINT  AS input_tokens,\n                COALESCE(SUM(output_tokens), 0)::BIGINT AS output_tokens,\n                COUNT(*)::BIGINT                        AS requests,\n                COALESCE(SUM(cost_microdollars), 0)::BIGINT AS cost_microdollars,\n                MAX(created_at)                         AS last_active\n            FROM ai_requests\n            WHERE created_at >= NOW() - INTERVAL '30 days'\n            GROUP BY user_id\n        ) ar ON ar.user_id = u.id\n        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id\n        WHERE COALESCE(NULLIF(upe.department, ''), 'Default') = $1\n          AND NOT ('anonymous' = ANY(u.roles))\n          AND u.email NOT LIKE '%@anonymous.local'\n        ORDER BY (COALESCE(ar.input_tokens, 0) + COALESCE(ar.output_tokens, 0)) DESC, u.email\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "email",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "display_name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "status!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "roles!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "roles"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "last_active",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "16a9c52daf6caf3dbd8c1c24996e4cf65e8596ccc54f90966476e21a55e8d05a"
+}

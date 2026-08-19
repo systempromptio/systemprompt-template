@@ -1,0 +1,129 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            o.id AS \"org_id!\",\n            o.slug AS \"slug!\",\n            o.name AS \"name!\",\n            p.name AS \"plan_name?\",\n            COALESCE(p.monthly_price_microdollars, 0) AS \"price!\",\n            COALESCE(o.seat_limit_override, p.seat_limit) AS \"seat_limit?\",\n            (SELECT COUNT(*) FROM organization_members m\n               JOIN users u ON u.id = m.user_id\n              WHERE m.org_id = o.id AND u.status = 'active') AS \"seats_used!\",\n            usage.active_users AS \"active_users!\",\n            usage.requests AS \"requests!\",\n            usage.input_tokens AS \"input_tokens!\",\n            usage.output_tokens AS \"output_tokens!\",\n            usage.cache_read_tokens AS \"cache_read_tokens!\",\n            usage.error_count AS \"error_count!\"\n        FROM organizations o\n        LEFT JOIN plans p ON p.id = o.plan_id\n        LEFT JOIN LATERAL (\n            SELECT\n                COUNT(*)::BIGINT AS requests,\n                COUNT(DISTINCT r.user_id)::BIGINT AS active_users,\n                COALESCE(SUM(r.input_tokens), 0)::BIGINT AS input_tokens,\n                COALESCE(SUM(r.output_tokens), 0)::BIGINT AS output_tokens,\n                COALESCE(SUM(r.cache_read_tokens), 0)::BIGINT AS cache_read_tokens,\n                COUNT(*) FILTER (WHERE r.status NOT IN ('success', 'completed'))::BIGINT\n                    AS error_count\n            FROM ai_requests r\n            JOIN organization_members m ON m.user_id = r.user_id\n            WHERE m.org_id = o.id\n              AND r.created_at >= $2 AND r.created_at < $3\n        ) usage ON TRUE\n        WHERE o.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "org_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "slug!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "slug"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "plan_name?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plans",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "price!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "seat_limit?",
+        "type_info": "Int4",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "seats_used!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "active_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "cache_read_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "error_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "e4e6a842ce3af08b7fcda0ceb196dd2442e7be482ba168432201443be9fbd88c"
+}

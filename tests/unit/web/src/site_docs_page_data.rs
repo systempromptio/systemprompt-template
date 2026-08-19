@@ -163,7 +163,10 @@ fn learning_content_sets_its_guard_flag_when_any_list_is_populated() {
 
     assert_eq!(data["HAS_LEARNING_CONTENT"], true);
     assert_eq!(data["AFTER_READING_THIS"][1], "Read a trace");
-    assert_eq!(data["RELATED_PLAYBOOKS"][0]["url"], "/documentation/governance");
+    assert_eq!(
+        data["RELATED_PLAYBOOKS"][0]["url"],
+        "/documentation/governance"
+    );
     assert!(
         data.get("RELATED_CODE").is_none(),
         "an explicitly empty list is still omitted"

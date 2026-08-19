@@ -27,6 +27,8 @@ mod config_plans;
 #[cfg(test)]
 mod config_roles;
 #[cfg(test)]
+mod config_salesforce;
+#[cfg(test)]
 mod fixtures;
 #[cfg(test)]
 mod jobs_repo;

@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT COUNT(*) as \"count!\"\n            FROM user_contexts uc\n            LEFT JOIN task_messages tm ON uc.context_id = tm.context_id\n            WHERE tm.id IS NULL\n            AND NOT EXISTS (\n                SELECT 1 FROM mcp_tool_executions mte WHERE mte.context_id = uc.context_id\n            )\n            AND NOT EXISTS (\n                SELECT 1 FROM governance_decisions gd WHERE gd.context_id = uc.context_id\n            )\n            AND uc.created_at < NOW() - ($1 || ' hours')::interval\n            AND (uc.kind != $2 OR uc.session_id IS NULL)\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "3da033e63c008d29f5db346816b72b4433f39d72ee0f9cdca3eaf5bfa72bf14a"
+}

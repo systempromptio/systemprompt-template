@@ -47,22 +47,10 @@ rules:
   # No `entity_type: agent` rules — this instance defines no A2A agents, so
   # there is nothing for a user-role member to list or invoke.
 
-  # Salesforce Hosted MCP server — the one server shipped to users. Per-user
-  # Salesforce bearer is injected at call time (see services/mcp/salesforce.yaml).
-  - entity_type: mcp_server
-    entity_id: salesforce
-    access: allow
-    default_included: true
-    roles: [user]
-
-  # Project knowledge bank (stub RAG MCP). Read tools for every user; the
-  # upload_document tool is additionally admin-gated inside the server (see
-  # services/mcp/knowledge-bank.yaml).
-  - entity_type: mcp_server
-    entity_id: knowledge-bank
-    access: allow
-    default_included: true
-    roles: [user]
+  # Salesforce Hosted MCP server, plugins, and skills are NOT granted here.
+  # They are confined to Salesforce-linked users via the derived `salesforce`
+  # subject dimension — see access-control/salesforce.yaml. A role grant on any
+  # of those entities would reopen them to passkey-only accounts.
 
   # Admin control plane (astound-admin plugin). These entities are members of
   # the enterprise-demo marketplace, so without a rule of their own they would

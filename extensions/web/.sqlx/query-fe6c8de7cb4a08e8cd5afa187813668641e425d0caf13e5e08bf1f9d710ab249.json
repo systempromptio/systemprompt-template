@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO plugin_session_summaries\n            (id, session_id, user_id, total_events, tool_uses, prompts, errors,\n             content_input_bytes, content_output_bytes, subagent_spawns,\n             user_prompts, automated_actions, started_at)\n           VALUES ($1, $2, $3, 1, $4, $5, $6, $7, $8, $9, $10, $11, NOW())\n           ON CONFLICT (session_id) DO UPDATE SET\n             total_events = plugin_session_summaries.total_events + 1,\n             tool_uses = plugin_session_summaries.tool_uses + $4,\n             prompts = plugin_session_summaries.prompts + $5,\n             errors = plugin_session_summaries.errors + $6,\n             content_input_bytes = plugin_session_summaries.content_input_bytes + $7,\n             content_output_bytes = plugin_session_summaries.content_output_bytes + $8,\n             subagent_spawns = plugin_session_summaries.subagent_spawns + $9,\n             user_prompts = plugin_session_summaries.user_prompts + $10,\n             automated_actions = plugin_session_summaries.automated_actions + $11,\n             updated_at = NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fe6c8de7cb4a08e8cd5afa187813668641e425d0caf13e5e08bf1f9d710ab249"
+}

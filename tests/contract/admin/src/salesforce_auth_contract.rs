@@ -40,8 +40,8 @@ fn unreachable_org() -> SalesforceConfig {
     }
 }
 
-/// With no `salesforce.yaml`, every SSO route reports unavailable rather than
-/// pretending the flow can start.
+// With no `salesforce.yaml`, every SSO route reports unavailable rather than
+// pretending the flow can start.
 #[tokio::test(flavor = "multi_thread")]
 async fn salesforce_routes_report_unavailable_when_sso_is_not_configured() {
     if !globals::init() {
@@ -88,8 +88,8 @@ async fn salesforce_routes_report_unavailable_when_sso_is_not_configured() {
     );
 }
 
-/// With SSO configured, `start` builds the authorize redirect and the state
-/// cookie that the callback later validates against.
+// With SSO configured, `start` builds the authorize redirect and the state
+// cookie that the callback later validates against.
 #[tokio::test(flavor = "multi_thread")]
 async fn salesforce_start_issues_a_pkce_challenge_and_a_state_cookie() {
     if !globals::init() {
@@ -194,8 +194,8 @@ async fn salesforce_start_issues_a_pkce_challenge_and_a_state_cookie() {
     );
 }
 
-/// The callback's validation ladder, each rung reached by a request that is
-/// wrong in exactly one way.
+// The callback's validation ladder, each rung reached by a request that is
+// wrong in exactly one way.
 #[tokio::test(flavor = "multi_thread")]
 async fn salesforce_callback_rejects_every_malformed_return() {
     if !globals::init() {
@@ -302,8 +302,8 @@ async fn salesforce_callback_rejects_every_malformed_return() {
     );
 }
 
-/// The unlink endpoint refuses a user whose only remaining credential would be
-/// the Salesforce identity they are detaching.
+// The unlink endpoint refuses a user whose only remaining credential would be
+// the Salesforce identity they are detaching.
 #[tokio::test(flavor = "multi_thread")]
 async fn salesforce_unlink_requires_another_credential() {
     if !globals::init() {

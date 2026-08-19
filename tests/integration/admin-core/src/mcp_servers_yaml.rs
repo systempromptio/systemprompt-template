@@ -14,7 +14,7 @@ use systemprompt_web_admin::repositories::mcp::mcp_servers::list_mcp_servers;
 
 use crate::fixtures::unique;
 
-/// A services directory that removes itself when the test ends.
+// A services directory that removes itself when the test ends.
 struct ServicesDir {
     root: PathBuf,
 }
@@ -26,7 +26,7 @@ impl ServicesDir {
         Self { root }
     }
 
-    /// A services directory with no `mcp/` subdirectory at all.
+    // A services directory with no `mcp/` subdirectory at all.
     fn bare() -> Self {
         let root = std::env::temp_dir().join(unique("admin-mcp"));
         fs::create_dir_all(&root).expect("create services root");

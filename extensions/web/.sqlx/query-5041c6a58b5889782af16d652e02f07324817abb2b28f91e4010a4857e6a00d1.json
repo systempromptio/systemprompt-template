@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT session_id AS \"session_id!: SessionId\"\n           FROM plugin_usage_events\n           WHERE session_id = $1\n           LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id!: SessionId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_usage_events",
+            "name": "session_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5041c6a58b5889782af16d652e02f07324817abb2b28f91e4010a4857e6a00d1"
+}

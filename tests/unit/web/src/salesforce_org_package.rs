@@ -16,8 +16,8 @@ use systemprompt_web_admin::salesforce_org::spec::{
     ExternalClientApp, IpRelaxation, OauthSpec, OrgSpec, PolicySpec, Validity, ValidityUnit,
 };
 
-/// A stand-in PEM. Only its framing matters here — the element carries the
-/// base64 body with the BEGIN/END lines stripped.
+// A stand-in PEM. Only its framing matters here — the element carries the
+// base64 body with the BEGIN/END lines stripped.
 const CERT: &str =
     "-----BEGIN CERTIFICATE-----\nMIIBderived\nQkJCQg==\n-----END CERTIFICATE-----\n";
 
@@ -63,7 +63,7 @@ fn file(package: &[(String, String)], suffix: &str) -> String {
         .clone()
 }
 
-/// The deployed schema version is the one the element set was probed against.
+// The deployed schema version is the one the element set was probed against.
 #[test]
 fn package_xml_declares_the_metadata_version() {
     let package = build_package(&spec(), Some(CERT));
@@ -75,8 +75,8 @@ fn package_xml_declares_the_metadata_version() {
     );
 }
 
-/// Pinned as a literal as well as against the constant. Asserting only against
-/// `METADATA_VERSION` would pass for any value, including one nobody probed.
+// Pinned as a literal as well as against the constant. Asserting only against
+// `METADATA_VERSION` would pass for any value, including one nobody probed.
 #[test]
 fn the_metadata_version_is_the_probed_one() {
     assert_eq!(
@@ -86,10 +86,10 @@ fn the_metadata_version_is_the_probed_one() {
     );
 }
 
-/// The element that keeps JWT-format access tokens switched on. It is in schema
-/// from 67.0, and the REST metadata deploy this whole tool runs on is the only
-/// deploy path that accepts those tokens — so a package that omits it disables
-/// the mechanism used to deploy it.
+// The element that keeps JWT-format access tokens switched on. It is in schema
+// from 67.0, and the REST metadata deploy this whole tool runs on is the only
+// deploy path that accepts those tokens — so a package that omits it disables
+// the mechanism used to deploy it.
 #[test]
 fn global_oauth_settings_carry_named_user_jwt() {
     let package = build_package(&spec(), Some(CERT));
@@ -101,8 +101,8 @@ fn global_oauth_settings_carry_named_user_jwt() {
     );
 }
 
-/// `false` must be emitted as `false`, not omitted. An absent element takes the
-/// org default, which is not the same as declaring the value off.
+// `false` must be emitted as `false`, not omitted. An absent element takes the
+// org default, which is not the same as declaring the value off.
 #[test]
 fn named_user_jwt_false_is_emitted_not_omitted() {
     let mut spec = spec();
@@ -116,9 +116,9 @@ fn named_user_jwt_false_is_emitted_not_omitted() {
     );
 }
 
-/// The certificate is in schema on `ExtlClntAppGlobalOauthSettings`, and a
-/// declarative deploy that omits it clears the app's digital signature — which
-/// is the credential the JWT-bearer grant runs on. It must be in the package.
+// The certificate is in schema on `ExtlClntAppGlobalOauthSettings`, and a
+// declarative deploy that omits it clears the app's digital signature — which
+// is the credential the JWT-bearer grant runs on. It must be in the package.
 #[test]
 fn global_oauth_settings_carry_the_certificate() {
     let package = build_package(&spec(), Some(CERT));
@@ -130,8 +130,8 @@ fn global_oauth_settings_carry_the_certificate() {
     );
 }
 
-/// Refusing beats deploying. Without a certificate to send, the deploy would
-/// silently revoke the app's signature and lock the tool out of the org.
+// Refusing beats deploying. Without a certificate to send, the deploy would
+// silently revoke the app's signature and lock the tool out of the org.
 #[test]
 fn a_missing_certificate_is_refused() {
     assert!(check_certificate_present(None).is_err());

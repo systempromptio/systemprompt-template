@@ -11,7 +11,7 @@ published_at: "2026-07-29"
 updated_at: "2026-07-31"
 after_reading_this:
   - "Install the bridge and point it at your deployed gateway"
-  - "Complete the device-link flow using Sign in with Salesforce"
+  - "Complete the device-link flow with Salesforce SSO or a passkey"
   - "Verify the first live Salesforce query and its audit record"
   - "Support a rollout without needing an admin step per user"
 related_playbooks:
@@ -106,9 +106,12 @@ authenticated session, so an unauthenticated request can never mint a code.
 ## 4. Sync and Verify
 
 Once linked, the bridge pulls the signed marketplace manifest. It contains only
-the plugins, skills, agents, and MCP servers the user's role and organization
-entitle them to — filtered server-side, so a user cannot see or reach anything
-step 4 did not grant them.
+the plugins, skills, agents, and MCP servers the user's role, organization, and
+Salesforce link state entitle them to — filtered server-side, so a user cannot
+see or reach anything step 4 did not grant them. The Salesforce MCP server and
+the Salesforce plugins appear only for accounts with a linked Salesforce
+identity; a passkey-only account gets the rest of the marketplace without them
+(see `services/access-control/salesforce.yaml`).
 
 The `salesforce` server is advertised to the client as a gateway URL, of the
 form `https://your-host/api/v1/mcp/salesforce/mcp` — **never** the Salesforce

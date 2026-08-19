@@ -5,7 +5,7 @@
 #
 #     curl -fsSL https://your-gateway/files/downloads/install.sh | sh
 #
-# NOT to be confused with scripts/install.sh, which installs the *gateway*
+# This installs the desktop *bridge*, not the gateway server
 # server. This one takes a bare Linux box to a working `claude`:
 #
 #   download + checksum -> install bridge -> install Claude Code -> sign in

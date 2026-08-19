@@ -61,6 +61,7 @@ pub struct ToolInputSummary {
 }
 
 impl ToolInputSummary {
+    // JSON: protocol boundary — reads the untyped tool_input carried above.
     #[must_use]
     pub fn of(input: &serde_json::Value) -> Self {
         serde_json::from_value(input.clone()).unwrap_or_default()

@@ -1,0 +1,51 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                provider as \"name!\",\n                COALESCE(SUM(cost_microdollars), 0)::bigint as \"cost!\",\n                COUNT(*)::bigint as \"requests!\",\n                COALESCE(SUM(tokens_used), 0)::bigint as \"tokens!\"\n            FROM ai_requests\n            WHERE created_at >= $1 AND created_at < $2\n              AND NOT synthetic\n              AND provider IS NOT NULL\n            GROUP BY provider\n            ORDER BY SUM(cost_microdollars) DESC NULLS LAST\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "provider"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "27f5a20a196bf42e41dfd075a63fdd804cba0b25353cd932f75faff8d1cbc32c"
+}

@@ -69,6 +69,17 @@ allow-listed and a seat is free. Failures return to
 `/admin/login?sso=<reason>`; the reasons are tabulated in
 [Salesforce App Setup](/documentation/salesforce-app-setup).
 
+A Salesforce-linked account is also what unlocks the Salesforce tooling: the
+Salesforce MCP server and the Salesforce marketplace plugins are granted
+through a derived `salesforce` access dimension that holds `linked` exactly
+while the account has a Salesforce identity. Sign in another way — or
+disconnect Salesforce from the profile page — and those entries disappear from
+the marketplace and the bridge manifest; everything else on the platform is
+unaffected. Linking Salesforce from the profile restores them.
+
+Both sign-in paths link a desktop bridge equally: the device-link approval
+resumes after either a Salesforce or a passkey sign-in.
+
 ## Path 2 — Platform Operators: CLI + Passkey
 
 Operators are created out-of-band. There is no way to self-provision one.

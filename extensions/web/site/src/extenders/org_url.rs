@@ -1,6 +1,7 @@
 //! Injects the deployment's canonical organisation URL into template context.
 
 use async_trait::async_trait;
+// JSON: template context crosses the extender trait as a Value.
 use serde_json::Value;
 use systemprompt::models::Config;
 use systemprompt::template_provider::{ExtenderContext, TemplateDataExtender};
@@ -41,6 +42,8 @@ impl TemplateDataExtender for OrgUrlExtender {
         // JSON: required by trait contract
         data: &mut Value,
     ) -> Result<(), systemprompt::traits::ProviderError> {
+        // Why: lint-ok: error-adapt — core's ProviderError::Internal(String) is the
+        // trait's only failure channel; the nearby format! builds URLs, not errors.
         let config = Config::get()
             .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
         let org_url = &config.api_external_url;

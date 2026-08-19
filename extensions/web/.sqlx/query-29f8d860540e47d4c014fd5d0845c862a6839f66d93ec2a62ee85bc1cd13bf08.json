@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, content_id as \"content_id: ContentId\", file_id, role as \"role: FileRole\", display_order, created_at\n            FROM content_files\n            WHERE file_id = $1\n            ORDER BY created_at ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "content_files",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "content_id: ContentId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "content_files",
+            "name": "content_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "file_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "content_files",
+            "name": "file_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "role: FileRole",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "content_files",
+            "name": "role"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "display_order",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "content_files",
+            "name": "display_order"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "content_files",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "29f8d860540e47d4c014fd5d0845c862a6839f66d93ec2a62ee85bc1cd13bf08"
+}

@@ -54,7 +54,7 @@ fn set_env(key: &str, value: &str) {
     unsafe { std::env::set_var(key, value) };
 }
 
-/// Write an executable `/bin/sh` script and point the CLI path at it.
+// Write an executable `/bin/sh` script and point the CLI path at it.
 fn fake_cli(dir: &tempfile::TempDir, body: &str) {
     let path = dir.path().join("systemprompt");
     std::fs::write(&path, format!("#!/bin/sh\n{body}\n")).expect("write the stand-in CLI");

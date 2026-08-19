@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO mcp_sessions (session_id, initialize_params, status)\n            VALUES ($1, $2, 'active')\n            ON CONFLICT (session_id)\n            DO UPDATE SET initialize_params = EXCLUDED.initialize_params\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0fcc683562f8ee628b58a696ebd6cc7c45ab6a45a275adbc5124be2ef4d23ced"
+}

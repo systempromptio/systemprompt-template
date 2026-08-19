@@ -11,8 +11,8 @@ use systemprompt_web_admin::salesforce_org::TargetOrg;
 const PRIVATE_KEY: &str =
     "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADSECRETKEYMATERIAL\n-----END PRIVATE KEY-----";
 const CONSUMER_KEY: &str = "3MVG9SENSITIVECONSUMERKEY";
-/// Public material, so not a secret — but `Debug` still reports only whether it
-/// is present, because a full certificate in a log line is noise.
+// Public material, so not a secret — but `Debug` still reports only whether it
+// is present, because a full certificate in a log line is noise.
 const CERTIFICATE: &str = "-----BEGIN CERTIFICATE-----\nCERTBODYMARKER\n-----END CERTIFICATE-----";
 
 fn target() -> TargetOrg {

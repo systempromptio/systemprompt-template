@@ -6,6 +6,8 @@
 //! rather than being buried inside the `async` functions that hold the
 //! connection.
 
+// JSON: Salesforce REST/Tooling query rows have no fixed schema — every lookup
+// in this module matches on the raw records the SOQL projections returned.
 /// Read a string field, treating a missing field and a non-string field alike.
 #[must_use]
 pub fn str_field(value: &serde_json::Value, field: &str) -> Option<String> {
@@ -36,6 +38,7 @@ pub fn soql_list(values: &[&str]) -> String {
         .join(",")
 }
 
+// JSON: Salesforce query rows — no fixed schema.
 /// The record id of the External Client App with this developer name.
 #[must_use]
 pub fn find_app_id(apps: &[serde_json::Value], developer_name: &str) -> Option<String> {
@@ -62,6 +65,7 @@ pub fn find_user_id(users: &[serde_json::Value], username: &str) -> Option<Strin
         .and_then(|u| str_field(u, "Id"))
 }
 
+// JSON: Salesforce query rows — no fixed schema.
 /// Whether a `SetupEntityAccess` row already grants this app to this
 /// permission set.
 #[must_use]

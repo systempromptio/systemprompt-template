@@ -21,3 +21,5 @@ pub mod gateway;
 pub mod gateway_acl;
 pub mod plan_yaml_loader;
 pub mod plan_yaml_types;
+pub mod salesforce_yaml_loader;
+pub mod salesforce_yaml_types;

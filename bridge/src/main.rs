@@ -3,10 +3,11 @@
 //!
 //! A thin white-label wrapper over the systemprompt bridge: it defines the
 //! Astound [`Brand`] (chrome, on-disk paths, env prefix, default gateway, and
-//! embedded GUI assets) and hands it to [`systemprompt_bridge::run_with_brand`].
-//! All behaviour lives in the shared core library — this file is intentionally
-//! tiny so a new client bridge is "copy this crate, swap `assets/`, edit the
-//! const below". See `README.md` for the recipe.
+//! embedded GUI assets) and hands it to
+//! [`systemprompt_bridge::run_with_brand`]. All behaviour lives in the shared
+//! core library — this file is intentionally tiny so a new client bridge is
+//! "copy this crate, swap `assets/`, edit the const below". See `README.md` for
+//! the recipe.
 
 use std::process::ExitCode;
 
@@ -37,8 +38,9 @@ static ASTOUND_BRAND: Brand = Brand {
     tray_tooltip: "Astound Bridge",
     window_title: "Astound Bridge",
     app_menu_name: "Astound Bridge",
-    sign_in_label: "Sign in with Salesforce",
-    sign_in_hint: "Opens your browser. This device is linked automatically once you approve.",
+    sign_in_label: "Sign in",
+    sign_in_hint: "Opens your browser — sign in with Salesforce or a passkey. This device is \
+                   linked automatically once you approve.",
     schedule_label: "com.astounddigital.bridge-sync",
     schedule_unit: "astound-bridge-sync",
     schedule_task_name: "AstoundBridgeSync",

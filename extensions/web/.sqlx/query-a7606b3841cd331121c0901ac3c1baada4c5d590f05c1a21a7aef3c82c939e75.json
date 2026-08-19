@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO eval_judge_calls (\n                conversation_id, run_id, result_id, judge_ai_request_id,\n                rubric_id, cost_microdollars\n            )\n            VALUES ($1, $2, $3, $4, $5, $6)\n            ON CONFLICT (conversation_id) DO UPDATE\n            SET result_id = EXCLUDED.result_id,\n                judge_ai_request_id = EXCLUDED.judge_ai_request_id,\n                cost_microdollars = EXCLUDED.cost_microdollars\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a7606b3841cd331121c0901ac3c1baada4c5d590f05c1a21a7aef3c82c939e75"
+}

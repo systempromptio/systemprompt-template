@@ -94,5 +94,4 @@ plugin:
     source: explicit
     include:
       - salesforce
-      - knowledge-bank
   content_sources: {}

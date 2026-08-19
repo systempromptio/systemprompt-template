@@ -6,35 +6,14 @@ User-facing docs for the gateway published out of this repository.
 
 | | What it is | Where it runs | Tag series |
 |---|---|---|---|
-| **systemprompt-gateway** (server) | AI governance gateway — Rust HTTP server + Postgres + MCP extensions | Kubernetes / Docker / Linux VM / PaaS | `v*` |
+| **systemprompt-gateway** (server) | AI governance gateway — Rust HTTP server + Postgres + MCP extensions | Docker / Linux VM | `v*` |
 
 Clients authenticate with a personal access token issued on
-`/admin/access/tokens`; see [`examples/pi/`](../examples/pi/) for a worked
-client setup.
+`/admin/access/tokens`.
 
----
-
-## Install the gateway (server)
-
-Choose the channel that fits your environment. Each doc is a copy-paste recipe.
-
-| Channel | Doc | Audience |
-|---|---|---|
-| GitHub Container Registry | [install/ghcr.md](install/ghcr.md) | Primary public image surface |
-| Binary (`curl \| sh`) | [install/binary.md](install/binary.md) | Bare-metal, VM, one-shot installs |
-| Homebrew tap | [install/homebrew.md](install/homebrew.md) | macOS servers / development |
-| Helm chart | [install/helm.md](install/helm.md) | Kubernetes |
-| Nix flake | [install/nix.md](install/nix.md) | NixOS / Nix users |
-| Railway template | [install/railway.md](install/railway.md) | Railway PaaS |
-| Render blueprint | [install/render.md](install/render.md) | Render PaaS |
-| Coolify template | [install/coolify.md](install/coolify.md) | Coolify self-host |
-| Dokploy blueprint | [install/dokploy.md](install/dokploy.md) | Dokploy self-host |
-| Portainer app template | [install/portainer.md](install/portainer.md) | Portainer stacks |
-| CapRover one-click app | [install/caprover.md](install/caprover.md) | CapRover self-host |
-| CasaOS app | [install/casaos.md](install/casaos.md) | Home lab |
-| Zeabur template | [install/zeabur.md](install/zeabur.md) | Zeabur PaaS |
-| Northflank stack | [install/northflank.md](install/northflank.md) | Northflank PaaS |
-| DigitalOcean 1-Click | [install/digitalocean.md](install/digitalocean.md) | Single-VM droplet (bundled Postgres) |
+Deployment goes through the CLI (`just deploy` → `systemprompt cloud deploy`);
+the per-platform install recipes the generic template shipped were removed when
+this fork narrowed to the Salesforce + Claude Code use case.
 
 Maintainers: the release process (versioning, tag scheme, retention, rollback) is documented in [RELEASING.md](RELEASING.md).
 

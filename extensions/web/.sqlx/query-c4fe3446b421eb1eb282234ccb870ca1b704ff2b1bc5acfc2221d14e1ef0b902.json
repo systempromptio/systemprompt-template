@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT label AS \"category!\", COUNT(*)::BIGINT AS \"count!\"\n        FROM (\n            SELECT CASE category\n                WHEN 'login' THEN 'Logins'\n                WHEN 'skill_usage' THEN 'Skill Uses'\n                WHEN 'marketplace_edit' THEN 'Edits'\n                WHEN 'marketplace_connect' THEN 'Uploads'\n                WHEN 'session' THEN 'Sessions'\n                ELSE REPLACE(category, '_', ' ')\n            END AS label\n            FROM user_activity\n            WHERE user_id = $1\n            UNION ALL\n            SELECT 'Gateway Requests' FROM ai_requests WHERE user_id = $1\n        ) counted\n        GROUP BY label\n        ORDER BY COUNT(*) DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "category!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "c4fe3446b421eb1eb282234ccb870ca1b704ff2b1bc5acfc2221d14e1ef0b902"
+}

@@ -73,8 +73,33 @@ pub enum MarketplaceError {
     #[error("Crypto error: {0}")]
     Crypto(String),
 
+    /// A `services/` resource file failed to parse or validate, with the
+    /// offending path (and, where useful, the entry within it) kept alongside
+    /// the typed cause.
+    #[error("{path}: {source}")]
+    ConfigFile {
+        path: String,
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
+
+    #[error("Profile error: {0}")]
+    Profile(#[from] systemprompt::config::ProfileBootstrapError),
+
     #[error(transparent)]
     Infra(#[from] InfraError),
+}
+
+impl MarketplaceError {
+    pub fn config_file(
+        path: impl Into<String>,
+        source: impl Into<Box<dyn std::error::Error + Send + Sync>>,
+    ) -> Self {
+        Self::ConfigFile {
+            path: path.into(),
+            source: source.into(),
+        }
+    }
 }
 
 infra_from!(MarketplaceError: sqlx::Error, std::io::Error, serde_yaml::Error, serde_json::Error);
@@ -87,6 +112,8 @@ impl ExtensionError for MarketplaceError {
             Self::NotFound(_) => "NOT_FOUND",
             Self::Conflict(_) => "CONFLICT",
             Self::Crypto(_) => "CRYPTO_ERROR",
+            Self::ConfigFile { .. } => "CONFIG_FILE_ERROR",
+            Self::Profile(_) => "PROFILE_ERROR",
             Self::Infra(e) => e.code(),
         }
     }
@@ -96,9 +123,11 @@ impl ExtensionError for MarketplaceError {
             Self::BadRequest(_) => StatusCode::BAD_REQUEST,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
             Self::Conflict(_) => StatusCode::CONFLICT,
-            Self::Internal(_) | Self::Crypto(_) | Self::Infra(_) => {
-                StatusCode::INTERNAL_SERVER_ERROR
-            },
+            Self::Internal(_)
+            | Self::Crypto(_)
+            | Self::ConfigFile { .. }
+            | Self::Profile(_)
+            | Self::Infra(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 

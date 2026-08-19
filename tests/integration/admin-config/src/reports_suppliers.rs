@@ -11,8 +11,8 @@ use crate::fixtures::{
 };
 use crate::tempdb::TempDb;
 
-/// The same month of traffic the P&L tests read, minus the identifiers: these
-/// aggregates are keyed by supplier, not by customer.
+// The same month of traffic the P&L tests read, minus the identifiers: these
+// aggregates are keyed by supplier, not by customer.
 async fn seed(pool: &sqlx::PgPool) {
     let plan = unique("plan");
     let org = unique("org");

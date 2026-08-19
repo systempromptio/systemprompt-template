@@ -126,7 +126,10 @@ async fn a_user_with_no_row_is_rejected_rather_than_filtered_to_nothing() {
 
     let err = h
         .filter
-        .filter(&UserId::new(unique("ghost")), MarketplaceCandidate::default())
+        .filter(
+            &UserId::new(unique("ghost")),
+            MarketplaceCandidate::default(),
+        )
         .await
         .expect_err("unknown user must not resolve");
 
@@ -321,8 +324,13 @@ async fn one_marketplace_rule_covers_members_that_declare_none_of_their_own() {
     let marketplace = unique("mp");
     let skill = unique("skill");
     h.entity(EntityKind::Marketplace, &marketplace, false).await;
-    h.rule(EntityKind::Marketplace, &marketplace, "staff", Access::Allow)
-        .await;
+    h.rule(
+        EntityKind::Marketplace,
+        &marketplace,
+        "staff",
+        Access::Allow,
+    )
+    .await;
 
     let kept = h
         .filter
@@ -363,8 +371,13 @@ async fn a_member_that_declares_a_rule_owns_its_decision_over_the_marketplace() 
     let marketplace = unique("mp");
     let skill = unique("skill");
     h.entity(EntityKind::Marketplace, &marketplace, false).await;
-    h.rule(EntityKind::Marketplace, &marketplace, "staff", Access::Allow)
-        .await;
+    h.rule(
+        EntityKind::Marketplace,
+        &marketplace,
+        "staff",
+        Access::Allow,
+    )
+    .await;
     h.entity(EntityKind::Skill, &skill, false).await;
     h.rule(EntityKind::Skill, &skill, "staff", Access::Deny)
         .await;
@@ -432,6 +445,66 @@ async fn the_candidate_access_supplies_the_marketplace_default_when_no_catalog_r
         "an unregistered marketplace falls back to the candidate's declared access"
     );
     assert!(kept.access.is_some(), "the access block is carried through");
+
+    h.db.cleanup().await;
+}
+
+#[tokio::test]
+async fn a_salesforce_rule_admits_only_users_with_a_linked_identity() {
+    let Some(h) = Harness::create().await else {
+        return;
+    };
+    let mcp = unique("sf-mcp");
+    h.entity(EntityKind::McpServer, &mcp, false).await;
+    h.repo
+        .upsert_rule(UpsertRuleParams {
+            entity_type: EntityKind::McpServer,
+            entity_id: &mcp,
+            rule_type: systemprompt_web_admin::authz::salesforce::salesforce_rule_type(),
+            rule_value: systemprompt_web_admin::authz::salesforce::SALESFORCE_LINKED_VALUE,
+            access: Access::Allow,
+            justification: None,
+        })
+        .await
+        .expect("upsert salesforce rule");
+
+    let linked = h.user(&["user"]).await;
+    let unlinked = h.user(&["user"]).await;
+    systemprompt_web_admin::repositories::users::salesforce_identity::upsert(
+        &h.db.pool,
+        &linked,
+        "linked.user@example.test",
+    )
+    .await
+    .expect("link salesforce identity");
+
+    let candidate = || {
+        MarketplaceCandidate::new(
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![mcp_entry(&mcp)],
+            vec![],
+        )
+    };
+
+    let for_linked = h.filter.filter(&linked, candidate()).await.expect("linked");
+    let for_unlinked = h
+        .filter
+        .filter(&unlinked, candidate())
+        .await
+        .expect("unlinked");
+
+    assert_eq!(
+        for_linked.managed_mcp_servers.len(),
+        1,
+        "a linked identity row grants the salesforce-gated server"
+    );
+    assert!(
+        for_unlinked.managed_mcp_servers.is_empty(),
+        "a passkey-only user matches no salesforce rule and the default is closed"
+    );
 
     h.db.cleanup().await;
 }

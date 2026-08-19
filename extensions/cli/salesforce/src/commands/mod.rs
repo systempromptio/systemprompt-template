@@ -13,12 +13,18 @@ use systemprompt_web_admin::salesforce_org::{Connection, OrgSpec, TargetOrg, exp
 
 use crate::cli::{Cli, Command};
 
+pub(crate) fn stage_err<E: std::fmt::Display>(stage: impl Into<String>) -> impl Fn(E) -> String {
+    let stage = stage.into();
+    move |e| format!("{stage}: {e}")
+}
+
 pub async fn run(cli: Cli) -> Result<ExitCode, String> {
     let spec_path = PathBuf::from(&cli.spec);
     let target = TargetOrg::from_env().map_err(|e| e.to_string())?;
+    let auth_stage = format!("could not authenticate to {}", target.my_domain);
     let conn = Connection::connect(&target)
         .await
-        .map_err(|e| format!("could not authenticate to {}: {e}", target.my_domain))?;
+        .map_err(stage_err(auth_stage))?;
 
     match cli.command {
         Command::Export { out } => run_export(&conn, &spec_path, out).await,
@@ -48,8 +54,8 @@ async fn run_export(
     let yaml = exported.to_yaml().map_err(|e| e.to_string())?;
     match out {
         Some(path) => {
-            std::fs::write(&path, yaml)
-                .map_err(|e| format!("could not write {}: {e}", path.display()))?;
+            let write_stage = format!("could not write {}", path.display());
+            std::fs::write(&path, yaml).map_err(stage_err(write_stage))?;
             eprintln!("wrote {}", path.display());
         },
         None => println!("{yaml}"),

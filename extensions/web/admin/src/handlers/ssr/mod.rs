@@ -3,7 +3,7 @@
 //! Each module owns one page: it builds a typed template context and renders a
 //! `.hbs` template from `storage/files/admin/templates/` at request time.
 
-use crate::error::{AdminHtmlError, AdminHtmlResult};
+use crate::error::AdminHtmlResult;
 use crate::templates::AdminTemplateEngine;
 use axum::Extension;
 use axum::extract::Query;
@@ -88,9 +88,7 @@ pub(crate) async fn login_page(
         shell: branding_context(&engine),
         redirect_encoded,
     };
-    let html = engine
-        .render("login", &ctx)
-        .map_err(|e| AdminHtmlError::internal(format!("login page render failed: {e:?}")))?;
+    let html = engine.render("login", &ctx)?;
     Ok(Html(html).into_response())
 }
 

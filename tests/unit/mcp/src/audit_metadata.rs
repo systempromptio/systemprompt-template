@@ -10,7 +10,7 @@ use systemprompt_mcp_shared::AuditMetadata;
 fn reason_is_omitted_when_absent() {
     let metadata = AuditMetadata {
         tool_name: "search_project_context".to_owned(),
-        server: "knowledge-bank".to_owned(),
+        server: "salesforce".to_owned(),
         reason: None,
     };
     let value = serde_json::to_value(&metadata).expect("serializes");
@@ -21,7 +21,7 @@ fn reason_is_omitted_when_absent() {
     );
     assert_eq!(
         object.get("server").and_then(|v| v.as_str()),
-        Some("knowledge-bank")
+        Some("salesforce")
     );
     assert!(
         !object.contains_key("reason"),
@@ -34,7 +34,7 @@ fn reason_is_omitted_when_absent() {
 fn reason_is_written_verbatim_when_present() {
     let metadata = AuditMetadata {
         tool_name: "upload_document".to_owned(),
-        server: "knowledge-bank".to_owned(),
+        server: "salesforce".to_owned(),
         reason: Some("requires the admin role".to_owned()),
     };
     let value = serde_json::to_value(&metadata).expect("serializes");

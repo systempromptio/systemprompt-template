@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM federated_identities WHERE user_id = $1 AND issuer = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b5a501132797ff7768113435d7679099fdd95d4196176ceb8b6b3be8b5a1a3d7"
+}

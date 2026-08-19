@@ -10,7 +10,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
-/// A window far enough in the past that no migration-seeded row falls in it.
+// A window far enough in the past that no migration-seeded row falls in it.
 #[must_use]
 pub fn ancient_window() -> (DateTime<Utc>, DateTime<Utc>) {
     (at(2001, 3, 1, 0), at(2001, 4, 1, 0))
@@ -120,8 +120,8 @@ pub async fn set_user_status(pool: &PgPool, user: &str, status: &str) {
         .expect("update user status");
 }
 
-/// One `ai_requests` row. Defaults describe a completed, costed request; each
-/// test overrides only the columns its assertion reads.
+// One `ai_requests` row. Defaults describe a completed, costed request; each
+// test overrides only the columns its assertion reads.
 pub struct RequestSeed<'a> {
     pub id: &'a str,
     pub user_id: &'a str,
@@ -177,7 +177,7 @@ pub async fn insert_request(pool: &PgPool, seed: &RequestSeed<'_>) {
     .expect("insert ai request");
 }
 
-/// Registers the catalog row `access_control_rules` foreign-keys against.
+// Registers the catalog row `access_control_rules` foreign-keys against.
 pub async fn insert_acl_entity(pool: &PgPool, entity_type: &str, entity_id: &str, default: bool) {
     sqlx::query(
         "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
@@ -225,7 +225,7 @@ pub async fn count_rows(pool: &PgPool, sql: &'static str, arg: &str) -> i64 {
         .expect("count rows")
 }
 
-/// Writes `services/<rel>` under `dir`, creating parents.
+// Writes `services/<rel>` under `dir`, creating parents.
 pub fn write_services_file(dir: &std::path::Path, rel: &str, contents: &str) {
     let path = dir.join(rel);
     if let Some(parent) = path.parent() {

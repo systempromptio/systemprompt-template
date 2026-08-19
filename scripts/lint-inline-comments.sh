@@ -62,6 +62,16 @@ while IFS= read -r file; do
     [ -n "$FOUND" ] && MATCHES+="${FOUND}"$'\n'
 done < <(git ls-files -co --exclude-standard 'extensions/*.rs' 'extensions/**/*.rs' 'src/*.rs' 'src/**/*.rs' 'bridge/src/*.rs' 'bridge/src/**/*.rs' | sort -u)
 
+# `///` rustdoc is banned in test code (core rule, previously only logged by
+# the observational audit): rustdoc is never rendered for test crates, so a
+# doc there is a paraphrase by definition. Scaffolding `//` comments stay
+# legal; `//!` heads are optional and legal.
+while IFS= read -r file; do
+    FOUND=$(grep -n '^[[:space:]]*///' "$file" \
+        | sed "s|^|${file}:|;s|\$| — /// banned in test code, use //|" || true)
+    [ -n "$FOUND" ] && MATCHES+="${FOUND}"$'\n'
+done < <(git ls-files -co --exclude-standard 'tests/**/*.rs' | sort -u)
+
 if [ -z "$MATCHES" ]; then
     echo "lint-inline-comments: OK (no unlisted inline comments)"
     exit 0

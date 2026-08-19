@@ -15,6 +15,7 @@ pub(crate) fn get_cli_path() -> Result<PathBuf, McpError> {
     }
 
     let profile = ProfileBootstrap::get()
+        // Why: lint-ok: error-adapt — rmcp's ErrorData is a variant-less wire type
         .map_err(|e| McpError::internal_error(format!("Failed to get profile: {e}"), None))?;
 
     Ok(PathBuf::from(&profile.paths.bin).join("systemprompt"))
@@ -45,6 +46,7 @@ pub(crate) async fn execute(command: &str, auth_token: &str) -> Result<CliOutput
     let cli_path = get_cli_path()?;
     let workdir = workdir();
 
+    // Why: lint-ok: error-adapt — rmcp's ErrorData is a variant-less wire type
     let args = shell_words::split(command).map_err(|e| {
         McpError::invalid_params(format!("Failed to parse command arguments: {e}"), None)
     })?;
@@ -66,6 +68,7 @@ pub(crate) async fn execute(command: &str, auth_token: &str) -> Result<CliOutput
         .current_dir(workdir)
         .output()
         .await
+        // Why: lint-ok: error-adapt — rmcp's ErrorData is a variant-less wire type
         .map_err(|e| {
             McpError::internal_error(format!("Failed to execute CLI command: {e}"), None)
         })?;

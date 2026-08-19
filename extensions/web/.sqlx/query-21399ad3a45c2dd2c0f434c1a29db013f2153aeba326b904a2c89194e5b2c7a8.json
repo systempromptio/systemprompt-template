@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO funnels (id, name, description, is_active, created_at, updated_at)\n            VALUES ($1, $2, $3, TRUE, $4, $4)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "21399ad3a45c2dd2c0f434c1a29db013f2153aeba326b904a2c89194e5b2c7a8"
+}

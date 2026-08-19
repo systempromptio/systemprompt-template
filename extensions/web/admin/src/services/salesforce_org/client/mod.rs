@@ -84,6 +84,9 @@ impl Connection {
         &self.instance_url
     }
 
+    // JSON: protocol boundary — the JSON-returning methods below hand back raw
+    // Salesforce REST/Tooling responses; the projections vary per call, so
+    // there is no fixed shape to deserialize here.
     // Why: A raw authenticated GET returning JSON, exposed to the sibling
     // `deploy` module so it can poll the deploy-status resource. Errors with
     // TokenEndpoint on a non-2xx.
@@ -124,6 +127,7 @@ impl Connection {
         }
     }
 
+    // JSON: raw Salesforce response envelope — shape varies per resource.
     async fn get_json(&self, path: &str) -> Result<serde_json::Value, SalesforceError> {
         let resp = self
             .http
@@ -145,6 +149,7 @@ impl Connection {
     /// # Errors
     /// [`SalesforceError::TokenEndpoint`] on a non-2xx,
     /// [`SalesforceError::Http`] on transport or decode failure.
+    // JSON: query rows carry only the fields the SOQL projection named.
     pub async fn soql(&self, query: &str) -> Result<Vec<serde_json::Value>, SalesforceError> {
         self.query_paged(query, false).await
     }
@@ -160,6 +165,7 @@ impl Connection {
         self.query_paged(query, true).await
     }
 
+    // JSON: query rows carry only the fields the SOQL projection named.
     async fn query_paged(
         &self,
         query: &str,

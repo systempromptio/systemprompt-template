@@ -1,0 +1,78 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n             status AS \"key!\",\n             COUNT(*)::bigint AS \"requests!\",\n             COUNT(*) FILTER (WHERE status NOT IN ('completed', 'pending', 'streaming'))::bigint\n               AS \"error_count!\",\n             COALESCE(SUM(input_tokens), 0)::bigint AS \"input_tokens!\",\n             COALESCE(SUM(output_tokens), 0)::bigint AS \"output_tokens!\",\n             COALESCE(SUM(cost_microdollars), 0)::bigint AS \"cost_microdollars!\",\n             COALESCE(percentile_cont(0.50) WITHIN GROUP (ORDER BY latency_ms), 0)::float8\n               AS \"p50_latency_ms!\",\n             COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms), 0)::float8\n               AS \"p95_latency_ms!\"\n           FROM ai_requests\n           WHERE created_at >= $1 AND created_at < $2\n             AND status IS NOT NULL AND status <> ''\n           GROUP BY status\n           ORDER BY COUNT(*) DESC, status",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "key!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "error_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "p50_latency_ms!",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "p95_latency_ms!",
+        "type_info": "Float8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "7b15bea11443b7e183dc16b7438100b366b262319bcd096d517d0e2966c31daa"
+}

@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            r.model AS \"model!\",\n            COUNT(*)::BIGINT AS \"requests!\",\n            COALESCE(SUM(r.input_tokens + r.output_tokens), 0)::BIGINT AS \"tokens!\",\n            COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS \"cost!\"\n        FROM ai_requests r\n        JOIN organization_members m ON m.user_id = r.user_id\n        WHERE m.org_id = $1\n          AND r.created_at >= NOW() - INTERVAL '30 days'\n        GROUP BY r.model\n        ORDER BY 4 DESC\n        LIMIT 10\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "model!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "8b67d6f079c29259f6f5a023bf5fc2c93f042e5973949436a49d52e00df0c381"
+}

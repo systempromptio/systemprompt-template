@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO secret_audit_log (id, user_id, plugin_id, var_name, action, actor_id) VALUES ($1, $2, '', $3, 'updated', $4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c3d056ae8c0c0a8cc95331c8c4eb9dd1e6c60ecdbff5a44b994a7ff45589e1be"
+}

@@ -106,7 +106,7 @@ just verify
 ```
 
 `verify` is the whole check in one command — `cargo fmt --check`, the offline
-sqlx cache, the 19 source gates, clippy at `-D warnings`, and the unit,
+sqlx cache, the 23 source gates, clippy at `-D warnings`, and the unit,
 integration, and admin-contract test suites. It is what a CI pipeline would
 have run. Commit to main and push only once it is green.
 

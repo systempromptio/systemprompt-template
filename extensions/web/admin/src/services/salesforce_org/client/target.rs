@@ -31,11 +31,13 @@ impl TargetOrg {
     /// Read a target from `SF_TARGET_*` environment variables.
     ///
     /// # Errors
-    /// [`SalesforceError::Internal`] naming the first missing variable.
+    /// [`SalesforceError::Env`] naming the first missing variable.
     pub fn from_env() -> Result<Self, SalesforceError> {
         fn var(name: &str) -> Result<String, SalesforceError> {
-            std::env::var(name)
-                .map_err(|e| SalesforceError::Internal(format!("{name} is unusable: {e}")))
+            std::env::var(name).map_err(|e| SalesforceError::Env {
+                name: name.to_owned(),
+                source: e,
+            })
         }
         Ok(Self {
             my_domain: var("SF_TARGET_MY_DOMAIN")?.trim_end_matches('/').to_owned(),

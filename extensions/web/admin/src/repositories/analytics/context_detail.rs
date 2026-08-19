@@ -195,6 +195,7 @@ pub async fn list_context_tool_calls(
     pool: &PgPool,
     context_id: &ContextId,
 ) -> Result<Vec<ContextToolCallRow>, sqlx::Error> {
+    // JSON: per-tool payload columns — see ContextToolCallRow above.
     sqlx::query_as!(
         ContextToolCallRow,
         r#"

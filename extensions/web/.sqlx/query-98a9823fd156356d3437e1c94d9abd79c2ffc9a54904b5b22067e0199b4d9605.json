@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO access_control_rules (id, entity_type, entity_id, rule_type, rule_value, access)\n                  VALUES ($1, $2, $3, $4, $5, $6)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "98a9823fd156356d3437e1c94d9abd79c2ffc9a54904b5b22067e0199b4d9605"
+}

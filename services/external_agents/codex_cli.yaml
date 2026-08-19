@@ -1,4 +1,8 @@
 # Codex CLI — external-agent (super-agent) catalog entry.
+#
+# enabled: false removes the codex-cli host from every user's bridge manifest
+# on this installation (gateway instance_enabled_hosts gate). Deleting this
+# file would RE-enable the host: absent from the catalog means enabled.
 
 
 external_agents:
@@ -6,7 +10,7 @@ external_agents:
     id: codex_cli
     display_name: "Codex CLI"
     kind: cli_tool
-    enabled: true
+    enabled: false
     description: "OpenAI Codex CLI tool. Routes inference through this gateway."
     platforms: [macos, windows, linux]
     docs_url: "https://github.com/openai/codex"

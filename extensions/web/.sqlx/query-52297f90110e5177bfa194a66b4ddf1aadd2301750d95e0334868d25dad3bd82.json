@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT host_id FROM bridge_user_host_prefs\n            WHERE user_id = $1 AND enabled = true\n            ORDER BY host_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "host_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "bridge_user_host_prefs",
+            "name": "host_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "52297f90110e5177bfa194a66b4ddf1aadd2301750d95e0334868d25dad3bd82"
+}

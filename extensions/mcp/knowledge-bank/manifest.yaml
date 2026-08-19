@@ -1,8 +1,0 @@
-extension:
-  type: mcp
-  name: knowledge-bank
-  binary: systemprompt-mcp-knowledge-bank
-  description: Project knowledge bank (stub) - search workshop transcripts, Jira tickets, and Confluence pages
-  port: 5030
-  build_type: workspace
-  enabled: true

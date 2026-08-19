@@ -23,12 +23,12 @@ Then walk the scripts in `demo/` in order — they exercise the full governance 
 
 | Path | Contents |
 |------|----------|
-| `demo/` | Executable CLI demo scripts organised by domain |
+| `demo/` | Setup + seeding harness (preflight, seed data, sweep) |
 | `services/` | Config-as-code (YAML + Markdown): agents, AI providers, MCP servers, plugins, skills, scheduler |
 | `extensions/` | Compile-time Rust extensions (MCP servers + web rendering) |
 | `storage/`, `content/` | Static assets and Markdown content |
-| `docs/` | Public install + integration guides |
-| `deploy/` | Deployment scenarios (airgap, scaled), platform templates (Coolify, Railway, Render), Nix flake |
+| `docs/` | Release process + gateway integration guides |
+| `deploy/` | Salesforce org config-as-code and the clean-client test container |
 | `src/main.rs` | Thin binary entry point — delegates to `core/` |
 
 Full developer guidance for working in this repo lives in [`CLAUDE.md`](./CLAUDE.md).

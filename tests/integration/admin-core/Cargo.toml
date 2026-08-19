@@ -15,7 +15,6 @@ workspace = true
 systemprompt = { workspace = true, features = ["full"] }
 systemprompt-web-admin = { workspace = true }
 systemprompt-web-extension = { workspace = true }
-systemprompt-web-shared = { workspace = true }
 
 chrono = { workspace = true }
 tokio = { workspace = true }

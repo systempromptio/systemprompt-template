@@ -27,7 +27,7 @@ use axum::http::StatusCode;
 use crate::app::{App, Call};
 use crate::principal::Principal;
 use crate::tempdb::TempDb;
-use crate::{globals, principal};
+use crate::{globals, principal, seed};
 
 // A path (query string included) and the substring its response must contain.
 struct Variant {
@@ -225,6 +225,29 @@ async fn admin_pages_render_the_branch_their_query_selects() {
     };
 
     let credentials = principal::provision(&db.pool).await;
+
+    // The requests-log rows the `tab=log` variants assert on. One row keeps
+    // page 1 populated and page 2 empty, which is exactly what the variant
+    // table expects.
+    let request_user = seed::insert_user(
+        &db.pool,
+        &seed::unique("variant-user"),
+        "variant-user@contract.test",
+    )
+    .await;
+    seed::insert_request(
+        &db.pool,
+        &seed::RequestSpec {
+            id: seed::unique("variant-request"),
+            user_id: &request_user,
+            session_id: None,
+            trace_id: None,
+            context_id: None,
+            status: "completed",
+        },
+    )
+    .await;
+
     let app = App::new(&db.pool, credentials);
 
     let mut failures = Vec::new();

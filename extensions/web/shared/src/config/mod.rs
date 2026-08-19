@@ -102,12 +102,16 @@ impl BlogConfigValidated {
     }
 
     pub fn load_from_file(path: &Path) -> Result<Self, ExtensionConfigErrors> {
+        // Why: ExtensionConfigErrors is a field-keyed validation accumulator, not a
+        // variant enum; messages are its contract. lint-ok: error-adapt
         let content = std::fs::read_to_string(path).map_err(|e| {
             let mut errors = ExtensionConfigErrors::new("blog");
             errors.push("_file", format!("Failed to read config file: {e}"));
             errors
         })?;
 
+        // Why: ExtensionConfigErrors is a field-keyed validation accumulator, not a
+        // variant enum; messages are its contract. lint-ok: error-adapt
         let raw: BlogConfigRaw = serde_yaml::from_str(&content).map_err(|e| {
             let mut errors = ExtensionConfigErrors::new("blog");
             errors.push("_parse", format!("Failed to parse config YAML: {e}"));

@@ -5,6 +5,7 @@
 //! denied. Both the scan query and the decision insert live here so the
 //! handler depends on named repository methods rather than inline SQL.
 
+// JSON: governance audit payload; each policy stage writes its own shape.
 use serde_json::Value;
 use sqlx::PgPool;
 use systemprompt::identifiers::{ContextId, SessionId, UserId};

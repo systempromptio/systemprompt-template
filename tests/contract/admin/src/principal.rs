@@ -99,11 +99,11 @@ async fn provision_one(pool: &PgPool, name: &str, roles: &[&str], platform: bool
     token.as_str().to_owned()
 }
 
-/// Join a user to the platform organization, creating it when the fixture
-/// database has none.
-///
-/// The unique index on `is_platform` means at most one can exist, so this
-/// adopts whichever tenant is already there rather than insisting on its own.
+// Join a user to the platform organization, creating it when the fixture
+// database has none.
+//
+// The unique index on `is_platform` means at most one can exist, so this
+// adopts whichever tenant is already there rather than insisting on its own.
 async fn join_platform_tenant(pool: &PgPool, user_id: &UserId) {
     let org_id: String = sqlx::query_scalar(
         "INSERT INTO organizations (id, slug, name, is_platform)

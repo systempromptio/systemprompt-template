@@ -66,8 +66,7 @@ pub(crate) async fn generate_llms_txt(db_pool: DbPool, paths: &AppPaths) -> Resu
     use systemprompt::models::Config;
     use tokio::fs;
 
-    let global_config =
-        Config::get().map_err(|e| JobError::config(format!("Config error: {e}")))?;
+    let global_config = Config::get()?;
 
     let config_path = paths.system().content_config();
     let yaml_content = fs::read_to_string(&config_path).await?;
@@ -126,8 +125,7 @@ async fn build_llms_txt_content(
 
     write_header(&mut content, base_url)?;
 
-    let repo = ContentRepository::new(&db_pool)
-        .map_err(|e| JobError::other(format!("ContentRepository error: {e}")))?;
+    let repo = ContentRepository::new(&db_pool)?;
 
     write_documentation_section(&mut content, config, &repo, base_url).await?;
 

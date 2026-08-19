@@ -175,16 +175,16 @@ async fn load_db_usernames() -> Result<Vec<String>, String> {
     use systemprompt::config::{ProfileBootstrap, SecretsBootstrap, init_config};
     use systemprompt::system::AppContext;
 
-    ProfileBootstrap::init().map_err(|e| format!("profile: {e}"))?;
-    SecretsBootstrap::init().map_err(|e| format!("secrets: {e}"))?;
-    init_config().map_err(|e| format!("config: {e}"))?;
+    ProfileBootstrap::init().map_err(super::stage_err("profile"))?;
+    SecretsBootstrap::init().map_err(super::stage_err("secrets"))?;
+    init_config().map_err(super::stage_err("config"))?;
     let ctx = AppContext::new()
         .await
-        .map_err(|e| format!("app context: {e}"))?;
+        .map_err(super::stage_err("app context"))?;
     let pool = ctx
         .db_pool()
         .write_pool_arc()
-        .map_err(|e| format!("write pool: {e}"))?;
+        .map_err(super::stage_err("write pool"))?;
     salesforce_identity::list_salesforce_usernames(&pool)
         .await
         .map_err(|e| e.to_string())

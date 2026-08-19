@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE user_sessions\n                SET country = $2, region = $3, city = $4\n                WHERE session_id = $1 AND country IS NULL\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dbe5c98351216e9fab6e944099fa776777f41b5c86eb33b3fb0e939a415c7c8e"
+}

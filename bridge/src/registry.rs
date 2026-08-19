@@ -7,10 +7,10 @@
 //! overlay swaps GUI presentation, this adds server-side behaviour (host apps,
 //! host syncs, marketplace sources) with no edits to core.
 
+use systemprompt_bridge::gui::server_marketplace::MarketplaceItem;
 use systemprompt_bridge::gui::server_marketplace::source::{
     MarketplaceCategory, MarketplaceSource, MarketplaceSourceCtx,
 };
-use systemprompt_bridge::gui::server_marketplace::MarketplaceItem;
 use systemprompt_bridge::register_marketplace_source;
 
 struct AstoundArtifactsSource;

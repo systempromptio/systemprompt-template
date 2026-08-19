@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, name, dimensions, pass_threshold, prompt_template, enabled\n            FROM eval_rubrics\n            WHERE name = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_rubrics",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_rubrics",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "dimensions",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "eval_rubrics",
+            "name": "dimensions"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "pass_threshold",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "eval_rubrics",
+            "name": "pass_threshold"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "prompt_template",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_rubrics",
+            "name": "prompt_template"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "enabled",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "eval_rubrics",
+            "name": "enabled"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "b9b5147c234792816f10b4928a8b0e03722c1c80a110e0fb81433d7ab5bd40a8"
+}

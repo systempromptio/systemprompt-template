@@ -35,6 +35,9 @@ pub(crate) async fn salesforce_unlink(
     )
     .await?;
     salesforce_identity::delete(&deps.write_pool, &user_ctx.user_id).await?;
+    // Why: the `salesforce` subject dimension caches link state; without this
+    // the disconnected user keeps the Salesforce entities until the TTL runs.
+    crate::authz::salesforce::invalidate(&user_ctx.user_id).await;
 
     tracing::info!(user_id = %user_ctx.user_id, removed, "Salesforce identity unlinked");
     Ok(Json(UnlinkResponse { unlinked: true }))

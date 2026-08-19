@@ -71,6 +71,7 @@ pub(super) async fn resolve_identity(
     {
         tracing::warn!(error = %e, user_id = %resolved.user_id, "Failed to persist Salesforce username");
     }
+    crate::authz::salesforce::invalidate(&resolved.user_id).await;
 
     Ok(resolved)
 }
@@ -138,6 +139,7 @@ pub(super) async fn link_identity(
     if let Err(e) = salesforce_identity::upsert(&deps.write_pool, user_id, &sf_username).await {
         tracing::warn!(error = %e, user_id = %user_id, "Failed to persist Salesforce username");
     }
+    crate::authz::salesforce::invalidate(user_id).await;
 
     tracing::info!(user_id = %user_id, "Salesforce identity linked from profile");
     Ok("linked")

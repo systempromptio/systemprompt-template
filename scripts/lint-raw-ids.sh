@@ -5,7 +5,7 @@ BANNED='(user_id|agent_id|task_id|tenant_id|context_id|session_id|file_id|skill_
 
 PATTERN="(\bpub\s+)?\b${BANNED}\s*:\s*(Option<)?&?(\s)?(mut\s+)?(String|str)\b"
 
-SEARCH_DIRS=(extensions src)
+SEARCH_DIRS=(extensions src bridge/src)
 
 if command -v rg >/dev/null 2>&1; then
     RAW=$(rg -n --no-heading --color=never \
@@ -13,7 +13,6 @@ if command -v rg >/dev/null 2>&1; then
         -g '!tests/**' \
         -g '!**/target/**' \
         -g '!**/.sqlx/**' \
-        -g '!**/oauth/**' \
         -e "$PATTERN" \
         "${SEARCH_DIRS[@]}" 2>/dev/null || true)
 else
@@ -22,7 +21,6 @@ else
         --exclude-dir=target \
         --exclude-dir=.sqlx \
         --exclude-dir=tests \
-        --exclude-dir=oauth \
         "$PATTERN" \
         "${SEARCH_DIRS[@]}" 2>/dev/null || true)
 fi
@@ -36,8 +34,6 @@ while IFS= read -r line; do
     content="${rest#*:}"
 
     case "$file" in
-        crates/entry/api/src/routes/oauth/*) continue ;;
-        crates/tests/*) continue ;;
         */target/*|*/.sqlx/*) continue ;;
     esac
 

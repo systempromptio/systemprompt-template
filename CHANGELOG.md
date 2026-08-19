@@ -20,6 +20,25 @@ Conventions (strict — hold every entry to them):
 
 ## Unreleased
 
+### Breaking
+
+- **The web extension's migration chain is retired: a clean database bootstraps from the
+  declarative schema and boot seeds alone.** All 22 `extensions/web/schema/migrations/*.sql`
+  files are deleted. Core ≥0.32 stamps migrations as applied on fresh installs instead of
+  executing them, so migration files only ever ran on established databases — and every known
+  deployment (including the production Fly tenant, verified at head) had applied them; orphaned
+  `extension_migrations` rows are inert. `departments` moves from `12_management.sql` to
+  `16_organizations.sql` with its final shape (`org_id NOT NULL`, `departments_org_fk`,
+  `idx_departments_org_name` — the names the old backfill migration created, so fresh and
+  established databases converge). Boot seeds grow to three insert-if-absent files
+  (`admin_oauth_client`, `marketplace_plans`, `house_organization`); the seed-contract test
+  enforces both the manifest and `ON CONFLICT … DO NOTHING`. Demo tenants, users, and traffic
+  leave the boot path entirely: they are seeded only by the demo flow
+  (`demo/02-seed-demo-tenants.sh` + `demo/fixtures/demo-tenants.sql`), and
+  `services/access-control/plans.yaml` no longer recreates the demo organizations on every
+  boot. This removes the seed-data-in-migrations pattern whose checksum-drift/repair-replay
+  failure mode caused the 2026-08-19 production boot loop.
+
 ### Added
 
 - **The `astound-dev` plugin (v2.0.0) now ships the full Astound development suite** — 68 skills,
@@ -47,6 +66,22 @@ Conventions (strict — hold every entry to them):
 
 ### Changed
 
+- **Adopted systemprompt-core 0.32.0 (published).** All `systemprompt`/`systemprompt-security`/
+  `systemprompt-extension` pins move from 0.31.0 to 0.32.0, both `[patch.crates-io]` blocks are
+  re-commented (marker: `# INACTIVE: core 0.32.0 is published`) so the build resolves the
+  published crates, lockfiles re-resolve against crates.io, and the `.sqlx` offline caches were
+  regenerated (936 queries). Adoption fallout across the extensions tracks core's 0.32 API:
+  the CLI session store's `load`/`load_or_reset` split, the Salesforce CLI's staged bootstrap
+  errors (`stage_err`), and assorted admin/jobs error-adaptation sites now annotated under the
+  tightened `check-http-errors` gate.
+
+- **Adopted systemprompt-core 0.31.0 (published).** All `systemprompt`/`systemprompt-security`/
+  `systemprompt-extension` pins move from 0.30.1 to 0.31.0 via
+  `scripts/sync-release-version.sh 0.31.0` (workspace version, `tests/` pins, Helm chart 0.9.0
+  with appVersion 0.31.0, and the CasaOS/DigitalOcean image tags), with both `[patch.crates-io]`
+  blocks left commented so the build resolves the published crates. No adoption fallout: the
+  extensions already compile against the 0.31 API surface and the `.sqlx` offline caches
+  validate unchanged.
 - **Adopted systemprompt-core 0.30.1 (published).** All `systemprompt`/`systemprompt-security`/
   `systemprompt-extension` pins move from 0.29.0 to 0.30.1 via
   `scripts/sync-release-version.sh 0.30.1` (workspace version, `tests/` pins, Helm chart 0.8.0
@@ -80,6 +115,14 @@ Conventions (strict — hold every entry to them):
   invalidate coordinated build results.
 
 ### Removed
+
+- **The repo is slimmed to what this instance actually deploys.** The Helm chart (`helm/`),
+  the DigitalOcean/CasaOS deploy scenarios (`deploy/` now keeps only `clean-client/` and
+  `salesforce/`), the `demo/` recording, scenario, architecture, and governance suites
+  (`demo/` now keeps the preflight, seed, and fixtures used by live flows), and the
+  `docs/install/` tree are deleted. The preflight source-gate suite grows to 23 gates and
+  `preflight-full` adds a cargo-hack pass; `scripts/check-file-size.sh` and friends tolerate
+  the removed directories.
 
 - ~~`coverage/baseline.json`: the tracked coverage ratchet baseline is retired.~~ Reverted in
   the same release: `coverage-check` (part of `just preflight`) hard-fails without a baseline,

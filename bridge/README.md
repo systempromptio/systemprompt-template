@@ -186,8 +186,12 @@ no forking of the bridge source:
 4. Update `build.rs` (Windows metadata), `macos/Info.plist` (bundle id + names),
    and `scripts/make-mac-app.sh` (bundle/app name).
 5. Build and sign the per-platform artifacts locally — this repo runs no
-   hosted CI, so `scripts/make-mac-app.sh` and a Windows/Linux `cargo build
-   --release` are the release process.
+   hosted CI, so `scripts/make-mac-app.sh`, `just bridge-package-linux`, and
+   `just bridge-package-windows` are the release process. The Windows exe must
+   be built for `x86_64-pc-windows-msvc` (the packaging recipe does this via
+   cargo-xwin): only the msvc target statically links WebView2Loader, so a
+   `-gnu` build ships a bare exe that dies at startup with
+   "WebView2Loader.dll was not found".
 
 Everything else — auth, sync, proxy, GUI, host integrations — is inherited from
 core and stays in lockstep across all brands.

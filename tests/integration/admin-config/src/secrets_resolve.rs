@@ -15,7 +15,7 @@ use crate::tempdb::TempDb;
 
 const MASTER_KEY: [u8; 32] = [7u8; 32];
 
-/// Stores `value` as a sealed secret the way the handler path would.
+// Stores `value` as a sealed secret the way the handler path would.
 async fn store_secret(pool: &sqlx::PgPool, user: &str, plugin: &str, name: &str, value: &str) {
     let dek = get_or_create_user_dek(pool, &user_id(user), &MASTER_KEY)
         .await

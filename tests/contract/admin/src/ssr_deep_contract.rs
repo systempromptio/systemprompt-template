@@ -124,8 +124,8 @@ async fn seed_trail(pool: &PgPool) -> Trail {
     }
 }
 
-/// A detail page for a record that exists renders it; one for a record that
-/// does not is a 404 that says so.
+// A detail page for a record that exists renders it; one for a record that
+// does not is a 404 that says so.
 #[tokio::test(flavor = "multi_thread")]
 async fn seeded_detail_pages_render_the_record_and_miss_cleanly() {
     if !globals::init() {
@@ -258,7 +258,7 @@ async fn seeded_detail_pages_render_the_record_and_miss_cleanly() {
     );
 }
 
-/// The list pages, re-driven now that their lists have rows.
+// The list pages, re-driven now that their lists have rows.
 #[tokio::test(flavor = "multi_thread")]
 async fn seeded_list_pages_render_rows_rather_than_the_empty_state() {
     if !globals::init() {
@@ -373,8 +373,8 @@ async fn seeded_list_pages_render_rows_rather_than_the_empty_state() {
     );
 }
 
-/// The pages whose content comes from the organization tables rather than the
-/// activity spine: the customer roster, one customer, and the departments.
+// The pages whose content comes from the organization tables rather than the
+// activity spine: the customer roster, one customer, and the departments.
 #[tokio::test(flavor = "multi_thread")]
 async fn organization_pages_render_a_seeded_customer() {
     if !globals::init() {
@@ -484,7 +484,7 @@ async fn organization_pages_render_a_seeded_customer() {
     );
 }
 
-/// The analytics pages, driven over a window that contains the seeded trail.
+// The analytics pages, driven over a window that contains the seeded trail.
 #[tokio::test(flavor = "multi_thread")]
 async fn analytics_pages_aggregate_the_seeded_trail() {
     if !globals::init() {

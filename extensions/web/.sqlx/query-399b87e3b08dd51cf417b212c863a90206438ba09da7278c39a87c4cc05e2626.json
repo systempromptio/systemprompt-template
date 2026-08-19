@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            trace_id                                            AS \"trace_id!: TraceId\",\n            COUNT(*)::bigint                                    AS \"request_count!\",\n            MIN(created_at)                                     AS \"started_at?\",\n            MAX(COALESCE(completed_at, created_at))             AS \"ended_at?\",\n            COUNT(*) FILTER (WHERE status = 'failed')::bigint   AS \"error_count!\"\n        FROM ai_requests\n        WHERE session_id = $1 AND trace_id IS NOT NULL\n        GROUP BY trace_id\n        ORDER BY MIN(created_at) DESC\n        LIMIT 200\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "trace_id!: TraceId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "trace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "request_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "started_at?",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "ended_at?",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "error_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "399b87e3b08dd51cf417b212c863a90206438ba09da7278c39a87c4cc05e2626"
+}

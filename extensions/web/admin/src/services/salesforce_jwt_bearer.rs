@@ -75,7 +75,8 @@ pub(crate) async fn get_token(
 // here instead of being read from the ambient config and secret store.
 //
 // # Errors
-// - [`SalesforceError::Internal`] if the key is not valid PEM or signing fails.
+// - [`SalesforceError::PrivateKey`] if the key is not valid PEM,
+// [`SalesforceError::Signing`] if signing fails.
 // - [`SalesforceError::TokenEndpoint`] / [`SalesforceError::Http`] on a failed
 // POST.
 pub(crate) async fn get_token_with_key(
@@ -85,10 +86,7 @@ pub(crate) async fn get_token_with_key(
     token_url: &str,
     private_key_pem: &str,
 ) -> Result<FreshToken, SalesforceError> {
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_err(|e| SalesforceError::Internal(format!("system clock before epoch: {e}")))?
-        .as_secs();
+    let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
 
     let assertion = Assertion {
         iss: consumer_key.to_owned(),
@@ -98,16 +96,11 @@ pub(crate) async fn get_token_with_key(
     };
 
     let key = EncodingKey::from_rsa_pem(private_key_pem.as_bytes())
-        .map_err(|e| SalesforceError::Internal(format!("invalid SALESFORCE_PRIVATE_KEY: {e}")))?;
+        .map_err(SalesforceError::PrivateKey)?;
     let signed = encode(&Header::new(Algorithm::RS256), &assertion, &key)
-        .map_err(|e| SalesforceError::Internal(format!("assertion signing failed: {e}")))?;
+        .map_err(SalesforceError::Signing)?;
 
-    let body = format!(
-        "grant_type={}&assertion={}",
-        urlencoding::encode("urn:ietf:params:oauth:grant-type:jwt-bearer"),
-        urlencoding::encode(&signed),
-    );
-    let resp = post_token_request(token_url, body).await?;
+    let resp = post_token_request(token_url, assertion_form_body(&signed)).await?;
 
     // Why: The JWT-bearer grant returns the instance the token is scoped to; fall
     // back to the org base if Salesforce omits it.
@@ -120,4 +113,12 @@ pub(crate) async fn get_token_with_key(
         access_token: resp.access_token,
         instance_url,
     })
+}
+
+fn assertion_form_body(signed: &str) -> String {
+    format!(
+        "grant_type={}&assertion={}",
+        urlencoding::encode("urn:ietf:params:oauth:grant-type:jwt-bearer"),
+        urlencoding::encode(signed),
+    )
 }

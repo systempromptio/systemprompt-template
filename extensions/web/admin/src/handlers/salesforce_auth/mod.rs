@@ -60,6 +60,26 @@ pub enum SalesforceError {
     UserInfo(reqwest::StatusCode),
     #[error("SALESFORCE_PRIVATE_KEY is not set")]
     MissingPrivateKey,
+    #[error("environment variable {name} is unusable: {source}")]
+    Env {
+        name: String,
+        #[source]
+        source: std::env::VarError,
+    },
+    #[error("system clock before epoch: {0}")]
+    Clock(#[from] std::time::SystemTimeError),
+    #[error("SALESFORCE_PRIVATE_KEY is not a valid RSA private key: {0}")]
+    PrivateKey(#[source] jsonwebtoken::errors::Error),
+    #[error("assertion signing failed: {0}")]
+    Signing(#[source] jsonwebtoken::errors::Error),
+    #[error("unreadable deploy result: {0}")]
+    DeployResult(#[source] serde_json::Error),
+    #[error("deploy zip {path}: {source}")]
+    Zip {
+        path: String,
+        #[source]
+        source: zip::result::ZipError,
+    },
     #[error("Salesforce token store error: {0}")]
     Storage(#[from] systemprompt_web_shared::error::MarketplaceError),
     #[error("Salesforce token plumbing: {0}")]

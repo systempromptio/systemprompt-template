@@ -26,7 +26,7 @@
 # on the line above it, and say why.
 set -uo pipefail
 
-SRC_DIRS="${SRC_DIRS:-extensions src}"
+SRC_DIRS="${SRC_DIRS:-extensions src bridge/src}"
 
 # The crate a file belongs to: nearest ancestor directory holding a Cargo.toml.
 crate_of() {

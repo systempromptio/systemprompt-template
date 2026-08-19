@@ -31,8 +31,6 @@ systemprompt = { workspace = true, features = ["full"] }
 
 clap = { version = "4", features = ["derive"] }
 tokio = { workspace = true }
-serde_yaml = { workspace = true }
-tracing = { workspace = true }
 
 [lints]
 workspace = true

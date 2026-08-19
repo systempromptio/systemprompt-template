@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_contexts SET session_id = $1, updated_at = $2\n             WHERE context_id = (\n                 SELECT context_id FROM user_contexts\n                 WHERE user_id = $3 AND kind = $4 AND name = $5\n                 ORDER BY updated_at DESC LIMIT 1\n             )\n             RETURNING context_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_contexts",
+            "name": "context_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "23c68a9783c62cc8d29cf5e5524e5c56cbca93b014abed58594563254fb5f867"
+}

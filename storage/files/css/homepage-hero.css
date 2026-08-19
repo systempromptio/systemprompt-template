@@ -26,6 +26,17 @@ body.has-video-hero .logo-link {
   margin-top: auto;
 }
 
+.hero-pane .hero-downloads {
+  margin-bottom: auto;
+}
+
+.hero-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-space-sm);
+  margin-top: var(--sp-space-xl);
+}
+
 .hero {
   --sp-hero-frame-gutter: 0.75rem;
   position: relative;

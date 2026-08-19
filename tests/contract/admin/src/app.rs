@@ -57,14 +57,14 @@ impl App {
         Self::build(pool, credentials, admin::SalesforceConfig::disabled())
     }
 
-    /// The same router with Salesforce SSO configured.
-    ///
-    /// `new` disables it, which pins every SSO route at the "unavailable"
-    /// redirect and leaves the flow itself — PKCE, the state cookie, the
-    /// callback's validation ladder — unexercised. The config passed here
-    /// points at an address that refuses connections, so the branches before
-    /// and around the network call are reachable without a live org and
-    /// without the suite ever talking to Salesforce.
+    // The same router with Salesforce SSO configured.
+    //
+    // `new` disables it, which pins every SSO route at the "unavailable"
+    // redirect and leaves the flow itself — PKCE, the state cookie, the
+    // callback's validation ladder — unexercised. The config passed here
+    // points at an address that refuses connections, so the branches before
+    // and around the network call are reachable without a live org and
+    // without the suite ever talking to Salesforce.
     pub fn with_salesforce(
         pool: &Arc<PgPool>,
         credentials: Credentials,
@@ -187,20 +187,20 @@ impl App {
         self.dispatch(call, None, &[]).await
     }
 
-    /// Issue a call bearing a token this harness did not mint.
-    ///
-    /// The hook and webhook endpoints authenticate against audiences no
-    /// principal in [`Credentials`] holds — a hook token carries `aud=hook`
-    /// and a `plugin_id` claim, which the admin session token never does. The
-    /// token is therefore passed per call rather than resolved from the
-    /// principal, which also lets a case present one that is deliberately
-    /// wrong.
+    // Issue a call bearing a token this harness did not mint.
+    //
+    // The hook and webhook endpoints authenticate against audiences no
+    // principal in [`Credentials`] holds — a hook token carries `aud=hook`
+    // and a `plugin_id` claim, which the admin session token never does. The
+    // token is therefore passed per call rather than resolved from the
+    // principal, which also lets a case present one that is deliberately
+    // wrong.
     pub async fn call_with_bearer(&self, call: Call<'_>, token: &str) -> (StatusCode, String) {
         self.dispatch(call, Some(token), &[]).await
     }
 
-    /// The redirect target of a call, for the flows whose whole contract is
-    /// where they send the browser.
+    // The redirect target of a call, for the flows whose whole contract is
+    // where they send the browser.
     pub async fn redirect_of(&self, call: Call<'_>) -> (StatusCode, String) {
         self.redirect_with_headers(call, &[]).await
     }
@@ -218,12 +218,12 @@ impl App {
         self.response_headers_with(call, &[]).await
     }
 
-    /// Status plus the two response headers the redirect-driven flows are
-    /// specified in terms of.
-    ///
-    /// `call` reads the body, which is empty on a redirect: for the SSO flows
-    /// the entire outcome — where the browser goes, and what state it carries
-    /// there — lives in `Location` and `Set-Cookie`.
+    // Status plus the two response headers the redirect-driven flows are
+    // specified in terms of.
+    //
+    // `call` reads the body, which is empty on a redirect: for the SSO flows
+    // the entire outcome — where the browser goes, and what state it carries
+    // there — lives in `Location` and `Set-Cookie`.
     pub async fn response_headers_with(
         &self,
         call: Call<'_>,
@@ -312,7 +312,7 @@ impl App {
     }
 }
 
-/// The response headers the redirect-driven flows are specified in terms of.
+// The response headers the redirect-driven flows are specified in terms of.
 pub struct ResponseHeaders {
     pub location: Option<String>,
     pub set_cookie: Vec<String>,

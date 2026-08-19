@@ -44,6 +44,7 @@ pub async fn apply_permission_sets(
         let permset_id = if let Some(found) = found {
             str_field(found, "Id")
         } else {
+            // JSON: protocol boundary — sObject create body with fixed fields.
             let mut body = serde_json::json!({
                 "Name": wanted.name,
                 "Label": wanted.label,
@@ -150,6 +151,7 @@ pub async fn apply_assignments(
 struct Assignee<'a> {
     username: &'a str,
     user_id: &'a str,
+    // JSON: Salesforce query rows — matched via the lookup helpers.
     permsets: &'a [serde_json::Value],
 }
 

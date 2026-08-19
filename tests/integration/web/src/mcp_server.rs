@@ -1,6 +1,6 @@
 //! `SystempromptServer` constructed against a real pool.
 //!
-//! As with the knowledge bank, construction is what needs a database: the
+//! Construction is what needs a database: the
 //! server builds a `ToolUsageRepository` and an `McpArtifactRepository` off the
 //! pool before it can serve anything. The advertised identity and capability
 //! set are asserted on the constructed server, and the single CLI tool it
@@ -58,7 +58,7 @@ async fn get_info_advertises_both_tools_and_resources() {
     assert!(info.capabilities.tools.is_some(), "it serves tools");
     assert!(
         info.capabilities.resources.is_some(),
-        "it also serves the artifact-viewer resource, unlike the knowledge bank"
+        "it serves the artifact-viewer resource"
     );
 
     db.cleanup().await;

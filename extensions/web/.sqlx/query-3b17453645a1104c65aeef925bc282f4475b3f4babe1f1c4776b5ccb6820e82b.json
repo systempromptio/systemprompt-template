@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            d.id AS \"id!\",\n            d.name AS \"name!\",\n            d.description AS \"description!\",\n            (SELECT COUNT(*) FROM organization_members m\n               JOIN user_profile_ext e ON e.user_id = m.user_id\n              WHERE m.org_id = d.org_id AND e.department = d.name) AS \"member_count!\"\n        FROM departments d\n        WHERE d.org_id = $1\n        ORDER BY d.name\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "departments",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "departments",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "description!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "departments",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "member_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "3b17453645a1104c65aeef925bc282f4475b3f4babe1f1c4776b5ccb6820e82b"
+}

@@ -27,7 +27,8 @@ impl Connection {
     ///
     /// # Errors
     /// [`SalesforceError::TokenEndpoint`] if the submit is rejected,
-    /// [`SalesforceError::Internal`] on timeout or an unreadable result.
+    /// [`SalesforceError::Internal`] on timeout,
+    /// [`SalesforceError::DeployResult`] on an unreadable result.
     pub async fn deploy(
         &self,
         files: &[(String, String)],
@@ -76,6 +77,8 @@ impl Connection {
             )
             .await?;
 
+        // JSON: protocol boundary — only the `id` field of Salesforce's deploy
+        // response is needed; the rest of the envelope is opaque.
         serde_json::from_str::<serde_json::Value>(&text)
             .ok()
             .and_then(|v| v.get("id").and_then(|i| i.as_str()).map(str::to_owned))
@@ -93,8 +96,8 @@ impl Connection {
                 ))
                 .await?;
             let result = value.get("deployResult").cloned().unwrap_or(value);
-            let parsed: DeployResult = serde_json::from_value(result)
-                .map_err(|e| SalesforceError::Internal(format!("unreadable deploy result: {e}")))?;
+            let parsed: DeployResult =
+                serde_json::from_value(result).map_err(SalesforceError::DeployResult)?;
             if parsed.done {
                 return Ok(parsed);
             }
@@ -119,12 +122,20 @@ fn build_zip(files: &[(String, String)]) -> Result<Vec<u8>, SalesforceError> {
             .compression_method(zip::CompressionMethod::Deflated);
         for (path, contents) in files {
             zip.start_file(path.clone(), options)
-                .map_err(|e| SalesforceError::Internal(format!("zip entry {path}: {e}")))?;
+                .map_err(|e| SalesforceError::Zip {
+                    path: path.clone(),
+                    source: e,
+                })?;
             zip.write_all(contents.as_bytes())
-                .map_err(|e| SalesforceError::Internal(format!("zip write {path}: {e}")))?;
+                .map_err(|e| SalesforceError::Zip {
+                    path: path.clone(),
+                    source: zip::result::ZipError::Io(e),
+                })?;
         }
-        zip.finish()
-            .map_err(|e| SalesforceError::Internal(format!("zip finish: {e}")))?;
+        zip.finish().map_err(|e| SalesforceError::Zip {
+            path: "(finish)".to_owned(),
+            source: e,
+        })?;
     }
     Ok(cursor.into_inner())
 }

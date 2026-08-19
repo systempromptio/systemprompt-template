@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT o.slug\n            FROM organization_members m\n            JOIN organizations o ON o.id = m.org_id\n            WHERE m.user_id = $1 AND o.status = 'active'\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "slug"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "eb4f9fdd4f990fef47e116ef4a2469ba92b3649064d74ba148d29508e1a7ebdc"
+}

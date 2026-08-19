@@ -85,14 +85,14 @@ re-creates the contention. Escape hatches when you truly need them:
 
 ```bash
 just preflight          # the mandatory pre-merge gate: static → lint → tests → coverage
-just preflight-static   # seconds: fmt, sqlx cache, 20 source gates
+just preflight-static   # seconds: fmt, sqlx cache, 23 source gates
 just preflight-lint     # clippy (both workspaces), doc-check, msrv-check
-just preflight-full     # weekly: preflight + deny + audit + machete
+just preflight-full     # weekly: preflight + deny + audit + machete + hack
 just init-hooks         # once per clone: tracked .githooks/ (pre-commit + pre-push)
 ```
 
 `verify` = preflight minus the coverage tier; use it mid-iteration, `preflight`
-before merging. The pre-push hook runs the static + lint tiers automatically
+before merging. The pre-push hook runs the static tier automatically
 after `just init-hooks`.
 
 **Coverage floor + ratchet.** `just coverage` runs an instrumented llvm-cov

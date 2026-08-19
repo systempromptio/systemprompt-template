@@ -18,8 +18,8 @@ struct Scenario {
     org: String,
 }
 
-/// One priced organization that spent 900_000 microdollars of a 4_000_000_000
-/// licence inside the historical window, plus one request outside it.
+// One priced organization that spent 900_000 microdollars of a 4_000_000_000
+// licence inside the historical window, plus one request outside it.
 async fn seed(pool: &sqlx::PgPool) -> Scenario {
     let plan = unique("plan");
     let org = unique("org");

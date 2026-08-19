@@ -41,7 +41,7 @@ systemprompt plugins mcp call systemprompt systemprompt --args '{"command":"admi
 
 Attempt to use a plaintext secret in a tool input. The `secret_scan` stage denies it before execution - even
 for an admin agent. For a runnable recipe, see the `secret_scan` curl under "Forcing a specific decision"
-below, or run `demo/governance/06-secret-breach.sh`.
+below.
 
 ### 3. Read back the audited decisions
 
@@ -79,7 +79,7 @@ There are **two** independent limiters; only the first is the governance stage i
 ### Forcing a specific decision (deterministic demo)
 
 To force an exact stage without an agent in the loop, POST a synthetic `PreToolUse` event straight to the
-governance endpoint. This is what the repo's `demo/governance/*` scripts do.
+governance endpoint. This is how the governance endpoint is exercised directly.
 
 For `scope_check` and `tool_blocklist`, use the **user-scope** token (`demo/.token.user`), not the admin
 `demo/.token` — both policies exempt admins, so the admin token would be **allowed**. `00-preflight.sh`
@@ -107,8 +107,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
 
 For `secret_scan`, the token choice is the opposite: this stage fires for **any** scope, so use the admin
 `demo/.token` to prove even an admin caller is blocked. Put a plaintext credential anywhere in
-`tool_input`. The runnable recipe with real test credentials is `demo/governance/06-secret-breach.sh`
-(out-of-band `curl`, so the secret never enters this conversation — do **not** paste a live credential
+`tool_input`. (out-of-band `curl`, so the secret never enters this conversation — do **not** paste a live credential
 prefix into this skill body or any chat turn, or the gateway secret scanner will re-scan it on every
 turn and block the session). The shape of one call (live credential lives in the script):
 
@@ -120,7 +119,7 @@ curl -s -X POST "http://localhost:8080/api/public/hooks/govern?plugin_id=enterpr
 # -> {"permissionDecision":"deny", "reason": "...secret detected: AWS Access Key..."}
 ```
 
-The repo's `demo/governance/06-secret-breach.sh` runs this end to end against four inputs (AWS key, GitHub
+This can be run end to end against four inputs (AWS key, GitHub
 PAT, RSA private key, and a clean control) with a per-run session id and `assert_decision` checks, so it is
 self-testing — it fails loudly if the backend ever stops denying.
 

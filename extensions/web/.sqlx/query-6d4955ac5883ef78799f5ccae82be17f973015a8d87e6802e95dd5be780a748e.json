@@ -1,0 +1,69 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                uc.context_id as \"context_id!: systemprompt_identifiers::ContextId\",\n                COALESCE(at.agent_name, 'unknown') as \"agent_name!\",\n                COALESCE(u.name, 'anonymous') as \"user_name!\",\n                COALESCE(at.status, 'unknown') as \"status!\",\n                COALESCE((\n                    SELECT COUNT(*)\n                    FROM task_messages tm\n                    JOIN agent_tasks at2 ON tm.task_id = at2.task_id\n                    WHERE at2.context_id = uc.context_id\n                ), 0) as \"message_count!\",\n                uc.created_at as \"started_at!\"\n            FROM user_contexts uc\n            LEFT JOIN agent_tasks at ON at.context_id = uc.context_id\n            LEFT JOIN users u ON u.id = uc.user_id\n            WHERE uc.kind = $2\n            ORDER BY uc.created_at DESC\n            LIMIT $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id!: systemprompt_identifiers::ContextId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_contexts",
+            "name": "context_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "agent_name!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_name!",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "status!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "message_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "started_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_contexts",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "6d4955ac5883ef78799f5ccae82be17f973015a8d87e6802e95dd5be780a748e"
+}

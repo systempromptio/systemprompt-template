@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE plugin_session_summaries SET unique_files_touched = sub.cnt\n          FROM (\n            SELECT COUNT(DISTINCT f.path) AS cnt\n            FROM plugin_usage_events e,\n                 LATERAL (SELECT e.metadata->'tool_input'->>'file_path' AS path) f\n            WHERE e.session_id = $1 AND f.path IS NOT NULL AND f.path != ''\n          ) sub\n          WHERE plugin_session_summaries.session_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bb274b70932ac695dfcce34d31b226238628d32ee0988144e8e8aa92dc23757c"
+}

@@ -6,6 +6,8 @@
 use super::{API_VERSION, Connection};
 use crate::handlers::salesforce_auth::SalesforceError;
 
+// JSON: protocol boundary — sObject request bodies carry per-object field sets
+// assembled by callers; there is no fixed shape to type here.
 impl Connection {
     /// Create an sObject record, returning its new id.
     ///
@@ -34,6 +36,7 @@ impl Connection {
         if !status.is_success() {
             return Err(SalesforceError::TokenEndpoint { status, body: text });
         }
+        // JSON: only the `id` field of the create response is needed.
         serde_json::from_str::<serde_json::Value>(&text)
             .ok()
             .and_then(|v| v.get("id").and_then(|i| i.as_str()).map(str::to_owned))
@@ -50,6 +53,7 @@ impl Connection {
     /// # Errors
     /// [`SalesforceError::TokenEndpoint`] carrying Salesforce's error body on a
     /// non-2xx.
+    // JSON: sObject bodies carry per-object field sets assembled by callers.
     pub async fn update_sobject(
         &self,
         sobject: &str,

@@ -19,9 +19,9 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt_web_admin::util::time_range::{TimeRange, TimeRangePreset};
 
-/// A window that starts after the newest seeded `ai_requests` row (migration
-/// 025 writes none newer than a minute old) and runs into the future, so a
-/// windowed query sees only what the test inserted.
+// A window that starts after the newest seeded `ai_requests` row (migration
+// 025 writes none newer than a minute old) and runs into the future, so a
+// windowed query sees only what the test inserted.
 pub fn narrow_window() -> TimeRange {
     let now = Utc::now();
     TimeRange {
@@ -31,7 +31,7 @@ pub fn narrow_window() -> TimeRange {
     }
 }
 
-/// An hour either side of now, for tables with no seeded rows at all.
+// An hour either side of now, for tables with no seeded rows at all.
 pub fn wide_window() -> TimeRange {
     let now = Utc::now();
     TimeRange {
@@ -41,21 +41,21 @@ pub fn wide_window() -> TimeRange {
     }
 }
 
-/// A fresh, collision-proof id fragment.
+// A fresh, collision-proof id fragment.
 pub fn unique(prefix: &str) -> String {
     format!("{prefix}-{}", uuid::Uuid::new_v4().simple())
 }
 
-/// An email in a domain no seeded organization claims.
+// An email in a domain no seeded organization claims.
 pub fn unclaimed_email(local: &str) -> String {
     format!("{local}@{}.example", uuid::Uuid::new_v4().simple())
 }
 
-/// Insert an active user with the `user` role.
-///
-/// `users.name` is unique and `users.email` must already be lowercase and
-/// trimmed, so the email doubles as the name exactly as the production
-/// provisioning paths do.
+// Insert an active user with the `user` role.
+//
+// `users.name` is unique and `users.email` must already be lowercase and
+// trimmed, so the email doubles as the name exactly as the production
+// provisioning paths do.
 pub async fn insert_user(pool: &PgPool, id: &str, email: &str) -> UserId {
     insert_user_full(pool, id, email, Some(email), &["user".to_owned()], "active").await
 }
@@ -128,7 +128,7 @@ pub struct OrgSpec<'a> {
 }
 
 impl<'a> OrgSpec<'a> {
-    /// An active, unclaimed-domain organization on no plan.
+    // An active, unclaimed-domain organization on no plan.
     pub const fn active(id: &'a str, slug: &'a str) -> Self {
         Self {
             id,
@@ -171,8 +171,8 @@ pub async fn insert_member(pool: &PgPool, user_id: &UserId, org_id: &str, org_ro
     .expect("insert organization member");
 }
 
-/// Insert a department. `org_id` is NOT NULL from migration 022, so every
-/// department must be anchored to an organization.
+// Insert a department. `org_id` is NOT NULL from migration 022, so every
+// department must be anchored to an organization.
 pub async fn insert_department(pool: &PgPool, id: &str, name: &str, org_id: &str) {
     sqlx::query("INSERT INTO departments (id, name, description, org_id) VALUES ($1, $2, $3, $4)")
         .bind(id)
@@ -184,10 +184,10 @@ pub async fn insert_department(pool: &PgPool, id: &str, name: &str, org_id: &str
         .expect("insert department");
 }
 
-/// Insert a `user_contexts` row.
-///
-/// `session_id` carries a foreign key to `user_sessions`, so pass `None`
-/// unless that session row already exists.
+// Insert a `user_contexts` row.
+//
+// `session_id` carries a foreign key to `user_sessions`, so pass `None`
+// unless that session row already exists.
 pub async fn insert_context(
     pool: &PgPool,
     context_id: &str,
@@ -207,8 +207,8 @@ pub async fn insert_context(
     .expect("insert user context");
 }
 
-/// A `plugin_session_summaries` row — the hook-side half of a session, which
-/// `find_session_header` full-outer-joins against the `ai_requests` rollup.
+// A `plugin_session_summaries` row — the hook-side half of a session, which
+// `find_session_header` full-outer-joins against the `ai_requests` rollup.
 pub struct SummarySpec<'a> {
     pub session_id: &'a str,
     pub user_id: &'a UserId,
@@ -223,7 +223,7 @@ pub struct SummarySpec<'a> {
 }
 
 impl<'a> SummarySpec<'a> {
-    /// A summary that started an hour ago and has not ended.
+    // A summary that started an hour ago and has not ended.
     pub fn open(session_id: &'a str, user_id: &'a UserId) -> Self {
         Self {
             session_id,
@@ -263,8 +263,8 @@ pub async fn insert_summary(pool: &PgPool, spec: &SummarySpec<'_>) {
     .expect("insert session summary");
 }
 
-/// `ai_requests.session_id` carries a foreign key to `user_sessions`, so a
-/// request with a session needs the session row first.
+// `ai_requests.session_id` carries a foreign key to `user_sessions`, so a
+// request with a session needs the session row first.
 pub async fn insert_session(pool: &PgPool, session_id: &str, user_id: &UserId) {
     sqlx::query("INSERT INTO user_sessions (session_id, user_id) VALUES ($1, $2)")
         .bind(session_id)
@@ -459,7 +459,7 @@ pub async fn insert_activity(
     .expect("insert user activity");
 }
 
-/// Insert an access-control grant, creating the catalog row the FK requires.
+// Insert an access-control grant, creating the catalog row the FK requires.
 pub async fn insert_acl_rule(
     pool: &PgPool,
     entity_type: &str,

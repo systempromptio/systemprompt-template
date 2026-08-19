@@ -152,9 +152,74 @@ button.cta-button:hover {
 }
 
 
+.header-downloads {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-sm);
+}
+
+a.download-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-sm);
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  background: var(--sp-color-primary);
+  color: var(--sp-color-text-on-primary);
+  text-decoration: none;
+  border-radius: var(--sp-radius-sm);
+  border: 0;
+  cursor: pointer;
+  transition: background-color var(--sp-transition-fast), transform var(--sp-transition-fast), box-shadow var(--sp-transition-fast);
+}
+
+a.download-badge:hover {
+  background: var(--sp-color-primary-hover);
+  color: var(--sp-color-text-on-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--sp-shadow-md);
+}
+
+.download-badge-logo {
+  flex: 0 0 auto;
+}
+
+.download-badge-text {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.1;
+  font-family: var(--sp-font-brand);
+  text-align: left;
+}
+
+.download-badge-prefix {
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
+.download-badge-platform {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+
 @media (max-width: 480px) {
   .logo-svg {
     height: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-downloads {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: var(--sp-space-sm);
+  }
+  .header-downloads a.download-badge {
+    justify-content: center;
   }
 }
 

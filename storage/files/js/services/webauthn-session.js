@@ -8,8 +8,12 @@ const LOGIN_PATH = '/admin/login';
 
 export const DEFAULT_REDIRECT = '/admin/profile';
 
+const ALLOWED_REDIRECT_PREFIXES = ['/admin/', '/bridge-auth/'];
+
 export const resolveRedirect = async (target) => {
-  if (!target || !target.startsWith('/admin/')) return DEFAULT_REDIRECT;
+  if (!target || !ALLOWED_REDIRECT_PREFIXES.some((p) => target.startsWith(p))) {
+    return DEFAULT_REDIRECT;
+  }
   try {
     const probe = await rawResponse(target, { method: 'HEAD' });
     if (probe.status === 404) return DEFAULT_REDIRECT;

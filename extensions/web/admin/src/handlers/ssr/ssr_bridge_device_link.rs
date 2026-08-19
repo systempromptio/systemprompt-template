@@ -86,15 +86,9 @@ pub(crate) async fn device_link_page(
         redirect_host,
         code_ttl_seconds: bridge::EXCHANGE_CODE_TTL_SECONDS,
     };
-    let data = serde_json::to_value(&data).map_err(|e| {
-        AdminHtmlError::internal(format!(
-            "Failed to serialize bridge device-link context: {e}"
-        ))
-    })?;
+    let data = serde_json::to_value(&data).map_err(AdminHtmlError::internal)?;
 
-    let html = engine.render("bridge-device-link", &data).map_err(|e| {
-        AdminHtmlError::internal(format!("Bridge device-link page render failed: {e:?}"))
-    })?;
+    let html = engine.render("bridge-device-link", &data)?;
     Ok(Html(html).into_response())
 }
 
@@ -170,14 +164,8 @@ fn render_code_page(
     engine: &AdminTemplateEngine,
     ctx: &DeviceCodeContext<'_>,
 ) -> AdminHtmlResult<Response> {
-    let data = serde_json::to_value(ctx).map_err(|e| {
-        AdminHtmlError::internal(format!(
-            "Failed to serialize bridge device-code context: {e}"
-        ))
-    })?;
-    let html = engine.render("bridge-device-code", &data).map_err(|e| {
-        AdminHtmlError::internal(format!("Bridge device-code page render failed: {e:?}"))
-    })?;
+    let data = serde_json::to_value(ctx).map_err(AdminHtmlError::internal)?;
+    let html = engine.render("bridge-device-code", &data)?;
     Ok(Html(html).into_response())
 }
 

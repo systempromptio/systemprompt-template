@@ -6,17 +6,20 @@ cd "$(git rev-parse --show-toplevel)"
 # Match sqlx::query( and sqlx::query_{as,scalar,file,file_as,file_scalar,with,...}(
 pattern='sqlx::query[a-z_]*\('
 
+# Enumerated exceptions, core-style: each entry is one path with its reason.
+# Empty by design — adding a path requires justification in review.
 allowlist=(
-    # Test crates run live against a freshly-migrated DB with no `.sqlx`
-    # offline cache, so the compile-time macros are unavailable there.
-    '^tests/'
 )
 
-allowlist_re=$(IFS='|'; echo "${allowlist[*]}")
+if [ ${#allowlist[@]} -gt 0 ]; then
+    allowlist_re=$(IFS='|'; echo "${allowlist[*]}")
+else
+    allowlist_re='^$'
+fi
 
 # Drop lines that match the verified macro form (query!(), query_as!(), etc).
 hits=$(
-    { rg -n "$pattern" extensions/ src/ --glob '*.rs' 2>/dev/null \
+    { rg -n "$pattern" extensions/ src/ bridge/src/ --glob '*.rs' 2>/dev/null \
         | grep -Ev "^(${allowlist_re})" \
         | grep -Ev 'sqlx::query[a-z_]*!' || true; }
 )

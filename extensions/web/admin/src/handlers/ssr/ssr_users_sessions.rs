@@ -24,7 +24,7 @@ struct UsersSessionsContext {
     cli_command: &'static str,
     cli_command_list: &'static str,
     current_session: CurrentSessionView,
-    // Why: No profile enumeration is wired up yet — always empty, but the
+    // JSON: No profile enumeration is wired up yet — always empty, but the
     // template's `{{#each profiles}}` shape (name/url/active) is preserved
     // via `serde_json::Value` since there is no producer to type against.
     profiles: Vec<serde_json::Value>,

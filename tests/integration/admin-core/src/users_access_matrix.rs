@@ -20,7 +20,7 @@ use crate::fixtures::{
 };
 use crate::tempdb::TempDb;
 
-/// One section holding a single skill, which is what every test below grades.
+// One section holding a single skill, which is what every test below grades.
 pub fn one_skill(entity_id: &str) -> Vec<SectionInput> {
     vec![(
         "skill".to_owned(),

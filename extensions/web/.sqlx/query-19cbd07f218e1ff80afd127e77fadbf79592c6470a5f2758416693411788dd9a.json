@@ -1,0 +1,150 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            o.id AS \"id!\",\n            o.slug AS \"slug!\",\n            o.name AS \"name!\",\n            o.status AS \"status!\",\n            o.is_platform AS \"is_platform!\",\n            p.name AS \"plan_name?\",\n            COALESCE(p.monthly_price_microdollars, 0) AS \"revenue!\",\n            p.monthly_cost_cap_microdollars AS \"cap?\",\n            COALESCE(o.seat_limit_override, p.seat_limit) AS \"seat_limit?\",\n            (SELECT COUNT(*) FROM organization_members m\n               JOIN users u ON u.id = m.user_id\n              WHERE m.org_id = o.id AND u.status = 'active') AS \"seats_used!\",\n            usage.active_users AS \"active_users!\",\n            usage.requests AS \"requests!\",\n            usage.tokens AS \"tokens!\",\n            usage.cost AS \"cost!\"\n        FROM organizations o\n        LEFT JOIN plans p ON p.id = o.plan_id\n        LEFT JOIN LATERAL (\n            SELECT\n                COUNT(*)::BIGINT AS requests,\n                COUNT(DISTINCT r.user_id)::BIGINT AS active_users,\n                COALESCE(SUM(r.input_tokens + r.output_tokens), 0)::BIGINT AS tokens,\n                COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS cost\n            FROM ai_requests r\n            JOIN organization_members m ON m.user_id = r.user_id\n            WHERE m.org_id = o.id\n              AND r.created_at >= $1 AND r.created_at < $2\n        ) usage ON TRUE\n        ORDER BY o.is_platform DESC, o.name\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "slug!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "slug"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "status!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "is_platform!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "is_platform"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "plan_name?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plans",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "revenue!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "cap?",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "plans",
+            "name": "monthly_cost_cap_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "seat_limit?",
+        "type_info": "Int4",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "seats_used!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "active_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "19cbd07f218e1ff80afd127e77fadbf79592c6470a5f2758416693411788dd9a"
+}

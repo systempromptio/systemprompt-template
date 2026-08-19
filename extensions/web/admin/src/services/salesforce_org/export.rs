@@ -27,6 +27,9 @@ use crate::handlers::salesforce_auth::SalesforceError;
 /// validation rather than quietly pointing an org at the wrong callback.
 pub const UNREADABLE_PLACEHOLDER: &str = "UNREADABLE-SUPPLY-A-BASELINE";
 
+// JSON: Salesforce REST/Tooling query rows carry whatever fields the SOQL
+// projection named — no fixed schema to derive a struct from, so every mapper
+// in this module reads the raw records.
 fn str_field(record: &serde_json::Value, field: &str) -> Option<String> {
     record
         .get(field)
@@ -106,6 +109,7 @@ async fn export_hosted_mcp_servers(
 /// the baseline's servers, because an org offers standard servers this
 /// deployment does not manage and reporting them would be drift no `apply` will
 /// ever resolve. With no baseline the full inventory comes back instead.
+// JSON: Salesforce query rows — no fixed schema.
 #[must_use]
 pub fn hosted_mcp_from_rows(
     rows: &[serde_json::Value],
@@ -157,6 +161,7 @@ async fn export_oauth(
 
 /// Map an `ExtlClntAppOauthSettings` record onto the spec's OAuth block,
 /// carrying the write-only fields forward from `baseline`.
+// JSON: Salesforce query rows — no fixed schema.
 #[must_use]
 pub fn oauth_from_settings(settings: &serde_json::Value, baseline: Option<&OrgSpec>) -> OauthSpec {
     let scopes: Vec<OauthScope> = OauthScope::all()
@@ -214,6 +219,7 @@ async fn export_policies(conn: &Connection) -> Result<PolicySpec, SalesforceErro
 /// Unrecognised enum values fall back to the safe end of each axis rather than
 /// failing: an org can report a policy this build does not know about, and
 /// refusing to export would leave no way to see the rest of the drift.
+// JSON: Salesforce query rows — no fixed schema.
 #[must_use]
 pub fn policies_from_record(policy: &serde_json::Value) -> PolicySpec {
     let ip_relaxation = match str_field(policy, "IpRelaxationPolicyType").as_deref() {
@@ -266,6 +272,7 @@ async fn export_permission_sets(
 
 /// Join `SetupEntityAccess` grant rows against the org's app rows to produce
 /// the spec's permission sets.
+// JSON: Salesforce query rows — no fixed schema.
 #[must_use]
 pub fn permission_sets_from_rows(
     grants: &[serde_json::Value],

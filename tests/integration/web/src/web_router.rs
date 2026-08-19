@@ -74,8 +74,8 @@ impl ExtensionContext for PoolCtx {
     }
 }
 
-/// A context whose database handle is not a core `Database`, which is the one
-/// shape pool extraction cannot downcast.
+// A context whose database handle is not a core `Database`, which is the one
+// shape pool extraction cannot downcast.
 struct ForeignDbCtx;
 
 #[derive(Debug)]

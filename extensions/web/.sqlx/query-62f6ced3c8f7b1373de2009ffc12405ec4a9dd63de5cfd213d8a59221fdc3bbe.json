@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE eval_runs\n            SET scored_count = scored_count + 1,\n                failed_count = failed_count + CASE WHEN $2 THEN 1 ELSE 0 END,\n                cost_microdollars = cost_microdollars + $3\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "62f6ced3c8f7b1373de2009ffc12405ec4a9dd63de5cfd213d8a59221fdc3bbe"
+}

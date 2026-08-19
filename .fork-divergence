@@ -121,3 +121,7 @@ extensions/web/tests/asset_manifest.rs	# astound's flash guard is CSS-only, so t
 
 extensions/web/admin/src/repositories/governance/decisions.rs	# astound ships no decisions-ledger page, so list_decisions_filtered is removed here; the template still serves it
 extensions/web/tests/frontend_standards.rs	# astound ships no blog, so the blog-print !important carve-out and blog TOP_LEVEL entry are removed here; the template keeps both
+
+# Astound's error enums grew product-specific variants (Salesforce secret
+# crypto, services/ config-file validation, profile bootstrap) that the
+# template's leaner admin surface does not need.

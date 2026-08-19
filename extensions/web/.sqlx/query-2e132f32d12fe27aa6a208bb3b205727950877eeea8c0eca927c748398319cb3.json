@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE user_sessions\n        SET behavioral_bot_score = $1,\n            is_behavioral_bot = $2,\n            behavioral_bot_reason = $3,\n            last_activity_at = CURRENT_TIMESTAMP\n        WHERE session_id = $4\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2e132f32d12fe27aa6a208bb3b205727950877eeea8c0eca927c748398319cb3"
+}

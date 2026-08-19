@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE user_device_certs\n        SET revoked_at = CURRENT_TIMESTAMP\n        WHERE id = $1 AND user_id = $2 AND revoked_at IS NULL\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b330bda9df67fe32768d9459a67af50e1e6781a704bfe8a78e542d33275ed661"
+}

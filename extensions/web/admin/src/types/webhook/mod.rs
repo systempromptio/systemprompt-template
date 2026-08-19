@@ -70,6 +70,7 @@ impl HookEventPayload {
         }
     }
 
+    // JSON: hands back the untyped tool payloads carried by the event data.
     #[must_use]
     pub const fn tool_input(&self) -> Option<&serde_json::Value> {
         match &self.event {
@@ -117,6 +118,8 @@ impl HookEventPayload {
     }
 }
 
+// JSON: protocol boundary — the parse helpers below take the raw hook envelope
+// and carve typed views out of it, warning instead of rejecting on drift.
 fn parse_common_fields(raw: &serde_json::Value, warnings: &mut Vec<String>) -> HookCommonFields {
     tracing::debug!(raw_keys = ?raw.as_object().map(|o| o.keys().collect::<Vec<_>>()), "Hook payload keys");
     let common: HookCommonFields = serde_json::from_value(raw.clone()).unwrap_or_else(|e| {
@@ -156,6 +159,7 @@ const fn resolve_event_name(common: &HookCommonFields) -> &str {
     }
 }
 
+// JSON: protocol boundary — parses the raw hook envelope into a typed event.
 fn parse_event<T: serde::de::DeserializeOwned>(
     raw: &serde_json::Value,
     event_name: &str,
@@ -171,6 +175,7 @@ fn parse_event<T: serde::de::DeserializeOwned>(
     }
 }
 
+// JSON: protocol boundary — routes the raw hook envelope by event name.
 fn dispatch_event(
     event_name: &str,
     raw: &serde_json::Value,
