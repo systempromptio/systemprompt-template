@@ -69,6 +69,7 @@ fn install_config() {
         security_headers: SecurityHeadersConfig::default(),
         allow_registration: false,
         system_admin_username: "admin".to_owned(),
+        system_admin_email: None,
     });
 }
 
