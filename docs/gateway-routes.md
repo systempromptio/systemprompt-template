@@ -11,28 +11,40 @@
 ```yaml
 providers:
   - name: anthropic
-    protocol: anthropic
+    wire: anthropic
+    surface: anthropic
     endpoint: https://api.anthropic.com/v1
     api_key_secret: anthropic
     models:
       - id: claude-sonnet-4-20250514
-  - name: minimax
-    protocol: anthropic
-    endpoint: https://api.minimax.io/anthropic/v1
-    api_key_secret: minimax
+        pricing:
+          input_per_million: 3.0
+          output_per_million: 15.0
+  - name: cerebras
+    wire: openai-chat
+    surface: backend
+    endpoint: https://api.cerebras.ai/v1
+    api_key_secret: cerebras
     models:
-      - id: MiniMax-M2
+      - id: gpt-oss-120b
+        pricing:
+          input_per_million: 0.35
+          output_per_million: 0.75
 gateway:
   enabled: true
   default_provider: anthropic
   routes:
     - model_pattern: "claude-*"
       provider: anthropic
-    - model_pattern: "MiniMax-*"
-      provider: minimax
+    - model_pattern: "gpt-oss-120b"
+      provider: cerebras
 ```
 
-Each provider is declared once under `providers:` — its wire `protocol`, `endpoint`, `api_key_secret`, and the `models` it serves (each with optional `aliases` and `upstream_model`). Gateway `routes` carry no connectivity; they only map a requested `model_pattern` to a provider by name, and `default_provider` forwards any model no route matches.
+Each provider is declared once under `providers:` — its `wire`, `surface`, `endpoint`, `api_key_secret`, and the `models` it serves (each with optional `aliases` and `upstream_model`). Gateway `routes` carry no connectivity; they only map a requested `model_pattern` to a provider by name, and `default_provider` forwards any model no route matches.
+
+**`wire` vs `surface`.** `wire` is the codec spoken to the *upstream* endpoint: `anthropic`, `openai-chat`, `openai-responses`, or `gemini`. `surface` is the client-facing API family the provider's models are advertised on: `anthropic`, `openai`, `gemini`, or `backend`. They are independent — Cerebras above speaks OpenAI chat upstream (`wire: openai-chat`) while its models are served to internal/backend callers (`surface: backend`). `/v1/models` filters by surface via the `x-inference-protocol` header.
+
+**Pricing.** Per-model `pricing` lives on the provider's model entry, never on a route. Routes only resolve to priced models: metering feeds the audit trail and cost analytics, so the gateway refuses to serve a model it cannot meter. Set real per-million token rates even for flat-rate upstreams.
 
 Routes evaluate in order; first `model_pattern` match wins. On a model entry, `upstream_model` aliases a client-requested model to a different upstream name without the client knowing.
 
@@ -43,7 +55,7 @@ Worked example: proxy every Anthropic model to Gemini Flash. Instead of hand-edi
 ```bash
 # 1. Store the upstream key and register the provider + model in the profile registry
 systemprompt admin config secret set gemini <GEMINI_API_KEY>
-systemprompt admin config catalog provider add --name gemini --protocol gemini \
+systemprompt admin config catalog provider add --name gemini --wire gemini --surface gemini \
   --endpoint https://generativelanguage.googleapis.com/v1beta --api-key-secret gemini
 systemprompt admin config catalog model add --provider gemini --id gemini-2.5-flash
 
