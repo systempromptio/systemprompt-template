@@ -8,7 +8,7 @@ kind: "guide"
 public: true
 tags: ["documentation", "getting-started", "claude-code"]
 published_at: "2026-08-06"
-updated_at: "2026-08-06"
+updated_at: "2026-08-19"
 after_reading_this:
   - "Stand up the gateway from an empty clone"
   - "Connect Claude Code with one command"
@@ -21,6 +21,12 @@ after_reading_this:
 Developer setup: an empty machine to a Claude Code session routed through the
 gateway and recorded in the audit trail. The connect step is one command;
 everything before it stands up the server that command talks to.
+
+Joining a gateway someone else already runs? You don't need this page — go
+straight to [Install the Desktop Bridge](/documentation/bridge-install)
+(Windows, macOS, Linux, WSL). And to make a local gateway reachable from other
+machines, see
+[Expose Your Instance Remotely](/documentation/remote-access).
 
 ## Prerequisites
 
@@ -134,6 +140,9 @@ Without a checkout, the installer does the same directly:
 curl -fsSL https://your-gateway/files/downloads/install.sh | sh -s -- \
   --download-base https://your-gateway/files/downloads --code <code>
 ```
+
+Per-platform installer detail — including Windows, macOS, and WSL — is in
+[Install the Desktop Bridge](/documentation/bridge-install).
 
 ## Verifying from a clean state
 

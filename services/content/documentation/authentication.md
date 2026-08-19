@@ -1,6 +1,6 @@
 ---
 title: "Authentication"
-description: "The two ways into the platform: Salesforce SSO for organization users, and CLI-provisioned passkeys for platform operators. Covers sessions, JWTs, and route protection."
+description: "The three ways into the platform: Salesforce SSO, domain-gated passkey self-registration, and CLI-provisioned accounts. Covers sessions, JWTs, and route protection."
 author: "Astound Digital"
 slug: "authentication"
 keywords: "authentication, login, salesforce sso, passkey, webauthn, session, JWT, security, provisioning"
@@ -8,7 +8,7 @@ kind: "guide"
 public: true
 tags: ["authentication", "security", "login"]
 published_at: "2026-03-02"
-updated_at: "2026-07-31"
+updated_at: "2026-08-19"
 after_reading_this:
   - "Sign in as an organization user with Salesforce SSO"
   - "Provision a platform operator from the CLI and enrol their passkey"
@@ -27,22 +27,17 @@ related_playbooks:
 
 # Authentication
 
-**TL;DR:** There are exactly two ways into the platform, and no self-service
-registration. Organization users sign in with **Salesforce SSO**, which
-provisions their account on first login. Platform operators are created from the
-**CLI** and enrol a **passkey** through a setup link. No passwords are created
-or stored anywhere.
+**TL;DR:** There are three ways into the platform, and none of them creates or
+stores a password. Organization users sign in with **Salesforce SSO**, which
+provisions their account on first login. Users on an allow-listed email domain
+can **self-register with a passkey** from the login page — no Salesforce
+required. And platform operators can be created from the **CLI**, enrolling a
+passkey through a one-shot setup link.
 
-## Why There Is No Registration Page
-
-Self-service registration was removed. It created a third way for an account to
-exist, and every account it made had to be reconciled against an organization,
-a seat, and a Salesforce identity afterwards — reconciliation that had no
-automatic path and no owner.
-
-The two remaining doors each have a clear authority behind them. Salesforce
-decides who is an employee; a platform operator decides who operates the
-platform. Neither requires a signup form.
+Every door is gated by the same authority: the allow-listed email domains your
+admin configures. Salesforce decides who is an employee; the domain allow-list
+decides who may register; a platform operator decides who operates the
+platform.
 
 ## Path 1 — Organization Users: Salesforce SSO
 
@@ -77,10 +72,29 @@ disconnect Salesforce from the profile page — and those entries disappear from
 the marketplace and the bridge manifest; everything else on the platform is
 unaffected. Linking Salesforce from the profile restores them.
 
-Both sign-in paths link a desktop bridge equally: the device-link approval
+All sign-in paths link a desktop bridge equally: the device-link approval
 resumes after either a Salesforce or a passkey sign-in.
 
-## Path 2 — Platform Operators: CLI + Passkey
+## Path 2 — Self-Registration: Email + Passkey
+
+For teams evaluating the platform, or organizations that do not use Salesforce
+as their identity source, the login page at `/admin/login` offers **Create an
+account** directly:
+
+1. Enter your work email and name.
+2. The email domain is checked against the allow-list your admin configured
+   (`allowed_email_domains` in `services/web/config/salesforce.yaml`). An
+   address outside those domains is refused and no account is created.
+3. Complete the browser's passkey prompt. The passkey — not a password — is
+   the credential from then on.
+
+Registration provisions the account against the organization's seat allocation,
+exactly as SSO just-in-time provisioning does. An account that already holds a
+passkey cannot re-register; recovery goes through an operator (see below). New
+accounts start with the plain `user` role — see
+[Create & Manage Users](/documentation/admin-user-management) for promotion.
+
+## Path 3 — Platform Operators: CLI + Passkey
 
 Operators are created out-of-band. There is no way to self-provision one.
 

@@ -19,8 +19,8 @@ related_docs:
     url: "/documentation/use-case-admin"
   - title: "Authentication"
     url: "/documentation/authentication"
-  - title: "Audit Trails & Costs"
-    url: "/documentation/demo-terminal-audit"
+  - title: "Create & Manage Users"
+    url: "/documentation/admin-user-management"
 ---
 
 # Dashboard

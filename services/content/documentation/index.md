@@ -8,7 +8,7 @@ kind: "guide"
 public: true
 tags: ["documentation", "getting-started"]
 published_at: "2026-02-18"
-updated_at: "2026-07-31"
+updated_at: "2026-08-19"
 after_reading_this:
   - "Know which of the two setup paths applies to you"
   - "Get connected and ask your first question"
@@ -94,18 +94,9 @@ cases, consultancy, brand, and governance.
 - [Dashboard Usage](/documentation/dashboard) — real-time metrics, activity feed, and health indicators
 - [Gateway API](/documentation/gateway-api) — the `/v1/messages` endpoint and its governance
 
-## Under the Hood
+**Setting up your team:**
 
-Step-by-step walkthroughs of the governance and tracing machinery, for technical
-readers:
-
-- [Setup & Authentication](/documentation/demo-terminal-setup) — bring the platform up and authenticate
-- [Governance Decisions](/documentation/demo-terminal-agents) — agents making governed tool calls
-- [Audit Trails & Costs](/documentation/demo-terminal-audit) — inspect audit logs and cost attribution
-- [Governance API](/documentation/demo-terminal-governance) — drive policy decisions from the CLI
-- [MCP Access Tracking](/documentation/demo-terminal-mcp) — watch MCP tool access in real time
-- [Request Tracing & Benchmark](/documentation/demo-terminal-tracing) — trace requests end-to-end
-- [Agent Tracing](/documentation/demo-terminal-agent-tracing) — follow a single agent's lifecycle
-- [Detailed Breakdown](/documentation/demo-breakdown) — what happens under the hood on a single call
-- [An Allowed Call](/documentation/demo-happy-path) — a skill that passes governance
-- [A Refused Call](/documentation/demo-refused-path) — secret detection denying a tool call
+- [Connect Claude Code](/documentation/connect-claude-code) — from an empty machine to a gateway-routed Claude Code session
+- [Install the Desktop Bridge](/documentation/bridge-install) — Windows, macOS, Linux, and WSL
+- [Create & Manage Users](/documentation/admin-user-management) — admin CLI, bulk creation, roles, and passkey registration
+- [Expose Your Instance Remotely](/documentation/remote-access) — take the gateway from `127.0.0.1` to a public HTTPS URL
