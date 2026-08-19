@@ -104,7 +104,7 @@ Run after any change to the connect path. The failure mode is silent — a machi
 This section runs on `8081`/`5436` rather than the `8080`/`5432` defaults, so the test instance coexists with a gateway already running. Substitute the defaults if nothing else is up.
 
 ```bash
-git clone https://github.com/systempromptio/systemprompt-astound fresh && cd fresh
+git clone https://github.com/Astound-Digital/systemprompt-astound fresh && cd fresh
 just setup-local <provider-key> "" "" 8081 5436   # ports of its own
 just build
 just bridge-build

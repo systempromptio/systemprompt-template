@@ -93,13 +93,22 @@ docs_sidebar:
     links:
       - label: "Start here"
         href: "/documentation/"
-      - label: "For admins — set it up"
-        href: "/documentation/use-case-admin"
-      - label: "For Salesforce users"
-        href: "/documentation/use-case-salesforce-user"
+      - label: "Connect Claude Code"
+        href: "/documentation/connect-claude-code"
+      - label: "Install the Desktop Bridge"
+        href: "/documentation/bridge-install"
 
-  - title: "Salesforce Setup (Admins)"
+  - title: "Using It Day to Day"
     links:
+      - label: "Your Salesforce Day"
+        href: "/documentation/use-case-salesforce-user"
+      - label: "All Skills"
+        href: "/skills/"
+
+  - title: "Advanced — Salesforce Setup (Admins)"
+    links:
+      - label: "Standing Up the Gateway"
+        href: "/documentation/use-case-admin"
       - label: "Overview"
         href: "/documentation/salesforce"
       - label: "1. Salesforce App Setup"
@@ -113,26 +122,14 @@ docs_sidebar:
       - label: "5. Rolling Out the Bridge"
         href: "/documentation/salesforce-bridge-rollout"
 
-  - title: "Using the Gateway"
+  - title: "Advanced — Running & Developing"
     links:
-      - label: "Your Salesforce Day"
-        href: "/documentation/use-case-salesforce-user"
-      - label: "All Skills"
-        href: "/skills/"
-
-  - title: "Set Up Your Team"
-    links:
-      - label: "Connect Claude Code"
-        href: "/documentation/connect-claude-code"
-      - label: "Install the Desktop Bridge"
-        href: "/documentation/bridge-install"
+      - label: "Develop Against a Local Gateway"
+        href: "/documentation/develop-claude-code"
       - label: "Create & Manage Users"
         href: "/documentation/admin-user-management"
       - label: "Expose Your Instance Remotely"
         href: "/documentation/remote-access"
-
-  - title: "Running the Platform"
-    links:
       - label: "Authentication & Login"
         href: "/documentation/authentication"
       - label: "Dashboard Usage"

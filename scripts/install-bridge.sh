@@ -23,8 +23,11 @@ warn() { printf '\033[33mwarn:\033[0m %s\n' "$*" >&2; }
 fail() { printf '\033[31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 
 # ── Arguments ─────────────────────────────────────────────────────────────────
-# Default the download base to the origin this script was served from so a piped
-# install needs no arguments beyond the gateway.
+# The publish step (scripts/package-bridge-linux.sh) substitutes the instance's
+# own download URL into DEFAULT_DOWNLOAD_BASE, so a piped install needs no
+# arguments beyond the credential. Running the raw checkout copy leaves the
+# placeholder in place, and then --download-base is required as before.
+DEFAULT_DOWNLOAD_BASE="@DOWNLOAD_BASE@"
 DOWNLOAD_BASE="${ASTOUND_DOWNLOAD_BASE:-}"
 GATEWAY_URL="${ASTOUND_GATEWAY_URL:-}"
 PAT="${ASTOUND_BRIDGE_PAT:-}"
@@ -61,7 +64,12 @@ while [ $# -gt 0 ]; do
         *) fail "unknown argument: $1" ;;
     esac
 done
-[ -n "$DOWNLOAD_BASE" ] || fail "no download base — re-run with --download-base https://your-gateway/files/downloads"
+if [ -z "$DOWNLOAD_BASE" ]; then
+    case "$DEFAULT_DOWNLOAD_BASE" in
+        @*) fail "no download base — re-run with --download-base https://your-gateway/files/downloads" ;;
+        *)  DOWNLOAD_BASE="$DEFAULT_DOWNLOAD_BASE" ;;
+    esac
+fi
 DOWNLOAD_BASE="${DOWNLOAD_BASE%/}"
 # The tarball lives under the gateway that serves this script, so the gateway
 # URL is derivable: strip the /files/downloads suffix.

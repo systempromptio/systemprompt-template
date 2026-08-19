@@ -66,6 +66,11 @@ Conventions (strict — hold every entry to them):
 
 ### Changed
 
+- **Adopted systemprompt-core 0.32.1 (published).** Patch bump via
+  `scripts/sync-release-version.sh 0.32.1` (workspace version, `tests/` pins, image tags);
+  lockfiles re-resolve the published crates. Carries core's `admin bootstrap` owner-email fix
+  (explicit `system_admin.email`; already-bootstrapped installs unaffected) and the bridge
+  browser-launch stdio fix, so both bridge binaries were rebuilt and redeployed.
 - **Adopted systemprompt-core 0.32.0 (published).** All `systemprompt`/`systemprompt-security`/
   `systemprompt-extension` pins move from 0.31.0 to 0.32.0, both `[patch.crates-io]` blocks are
   re-commented (marker: `# INACTIVE: core 0.32.0 is published`) so the build resolves the

@@ -146,12 +146,17 @@ echo "    version ${VERSION} (${COMMIT})  size $(du -h "$DIST_DIR/$ASSET" | cut 
 # ── Publish the installer next to the tarball ─────────────────────────────────
 # The admin Bridge Setup page serves both from storage/files/downloads/, so the
 # installer's default download base and the tarball it fetches stay same-origin.
+# INSTALL_BASE_URL bakes that origin into the published installer's
+# DEFAULT_DOWNLOAD_BASE, so end users run it with no --download-base; override
+# it when packaging for a different deployment target.
+INSTALL_BASE_URL="${INSTALL_BASE_URL:-https://astound.systemprompt.io/files/downloads}"
 PUBLISH_DIR="$REPO_ROOT/storage/files/downloads"
 mkdir -p "$PUBLISH_DIR"
 install -m 0644 "$DIST_DIR/$ASSET" "$PUBLISH_DIR/$ASSET"
 install -m 0644 "$DIST_DIR/$ASSET.sha256" "$PUBLISH_DIR/$ASSET.sha256"
-install -m 0644 "$REPO_ROOT/scripts/install-bridge.sh" "$PUBLISH_DIR/install.sh"
-echo "==> published to $PUBLISH_DIR (tarball, .sha256, install.sh)"
+sed "s|@DOWNLOAD_BASE@|${INSTALL_BASE_URL%/}|" "$REPO_ROOT/scripts/install-bridge.sh" > "$PUBLISH_DIR/install.sh"
+chmod 0644 "$PUBLISH_DIR/install.sh"
+echo "==> published to $PUBLISH_DIR (tarball, .sha256, install.sh @ ${INSTALL_BASE_URL%/})"
 
 echo
 echo "Publish so the admin Bridge Setup links resolve:"

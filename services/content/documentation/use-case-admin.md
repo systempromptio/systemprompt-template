@@ -30,7 +30,9 @@ related_playbooks:
 # Use Case — Standing Up the Gateway for Your Organization
 
 **Who this is for:** the person who owns the Salesforce org's setup and the
-platform deployment. Usually one or two people, once per organization.
+platform deployment. Usually one or two people, once per organization. This is
+the advanced operator path — if you just want to use the gateway, start at
+[the documentation home](/documentation/) instead.
 
 **What you need before you start:** admin access to a Salesforce org, shell
 access to the deployment, and an hour. Your team needs none of this — see

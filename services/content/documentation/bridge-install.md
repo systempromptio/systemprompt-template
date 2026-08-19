@@ -25,6 +25,11 @@ related_playbooks:
 
 # Install the Desktop Bridge
 
+This page is for anyone linking a desktop AI client — Claude Cowork on Windows
+or macOS especially — to the gateway. If all you want is Claude Code in a
+terminal, [Connect Claude Code](/documentation/connect-claude-code) is one
+command and faster.
+
 The bridge is a small program on your laptop that connects your Claude Code
 (and other AI clients) to your organization's gateway. It keeps your skills,
 plugins, and MCP servers in sync, and runs a local inference proxy so every

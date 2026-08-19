@@ -8,44 +8,6 @@
         </div>
         <p>{{site.branding.tagline}}</p>
       </div>
-      <nav class="footer-nav" aria-label="Footer">
-        <div class="footer-links">
-          <h3>Product</h3>
-          {{#each site.navigation.footer.infrastructure}}
-          <a href="{{this.path}}"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{this.label}}</a>
-          {{/each}}
-        </div>
-        <div class="footer-links">
-          <h3>Industries</h3>
-          {{#each site.navigation.footer.capabilities}}
-          <a href="{{this.path}}"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{this.label}}</a>
-          {{/each}}
-        </div>
-        <div class="footer-links">
-          <h3>Company</h3>
-          {{#each site.navigation.footer.integrations}}
-          <a href="{{this.path}}"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{this.label}}</a>
-          {{/each}}
-        </div>
-        <div class="footer-links">
-          <h3>Resources</h3>
-          {{#each site.navigation.footer.resources}}
-          <a href="{{this.path}}"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{this.label}}</a>
-          {{/each}}
-        </div>
-        <div class="footer-links">
-          <h3>Legal</h3>
-          {{#each site.navigation.footer.legal}}
-          <a href="{{this.path}}"{{#if this.external}} target="_blank" rel="noopener noreferrer"{{/if}}>{{this.label}}</a>
-          {{/each}}
-        </div>
-        <div class="footer-links">
-          <h3>Contact</h3>
-          {{#each site.navigation.footer.contact}}
-          <a href="{{this.href}}" target="_blank" rel="noopener noreferrer">{{this.label}}</a>
-          {{/each}}
-        </div>
-      </nav>
     </div>
     <div class="footer-bottom">
       <p>&copy; {{site.branding.copyright}}</p>

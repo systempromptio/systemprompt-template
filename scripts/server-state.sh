@@ -57,7 +57,7 @@ server_pids() {
 key_for_binary() {
     local bsha="$1"
     [ -f "$BINARIES" ] || return 0
-    grep -F "\"binary_sha\":\"$bsha\"" "$BINARIES" 2>/dev/null | tail -1 |
+    { grep -F "\"binary_sha\":\"$bsha\"" "$BINARIES" 2>/dev/null || true; } | tail -1 |
         sed -n 's/.*"tree":"\([^"]*\)".*/\1/p'
 }
 

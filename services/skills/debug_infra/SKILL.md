@@ -46,6 +46,20 @@ Build the environment table from what you found — do not invent rows:
 Report honestly what is missing: if there is **no staging profile**, say so — staging is created by copying a profile
 directory and adjusting it against `docs/profile.schema.json`, not assumed to exist.
 
+### Phase 1b — Validate each profile
+
+```bash
+just profile-check local
+just profile-check <name>            # any profile: files, secrets keys, URLs, DB reachability, schema load
+just profile-check <name> --live     # additionally probe <api_external_url>/api/v1/health
+```
+
+`profile-check` verifies the profile files exist, `secrets.json` parses and carries `database_url` plus at least one
+AI provider key, the URLs and port look sane, the database is reachable **from this machine** (a `.internal` cloud DB
+is correctly reported as unreachable-by-design — use `systemprompt cloud db status` for those), and — when a CLI
+binary is built — that the profile deserializes cleanly, which is the authoritative unknown-YAML-key check. Fix every
+FAIL before moving on; each failure message names the fix ladder.
+
 ## Phase 2 — `just setup-local` runs clean
 
 ```bash
@@ -141,6 +155,7 @@ the offending key.
 then prove it from the VM itself:
 
 ```bash
+just profile-check <name>            # runs pg_isready + psql auth against the profile's database_url
 pg_isready -h <db-host> -p <db-port>
 psql "<database_url>" -c "select 1"
 ```
@@ -153,15 +168,21 @@ On failure, work outward in this order — this is the classic Oracle Cloud bloc
 
 **3. Ship the artifacts.** `.systemprompt/profiles/production/docker/Dockerfile` is the authoritative manifest of
 what a deployment needs: the release `systemprompt` binary, the MCP server binaries, `web/dist/`, `storage/`,
-`services/`, and the profile directory. Either build that image with your profile substituted, use the root
-`docker-compose.yml` with `DATABASE_URL` pointed at the remote Postgres instead of the bundled `postgres` service, or
-copy those paths to the VM directly after `just build-all`.
+`services/`, and the profile directory. The packaged path:
+
+```bash
+just build-all
+just bundle <name>        # dist/systemprompt-<name>.tar.gz + UNPACK.md with the first-run steps
+```
+
+Alternatively build the production Dockerfile with your profile substituted, or use the root `docker-compose.yml`
+with `DATABASE_URL` pointed at the remote Postgres instead of the bundled `postgres` service.
 
 **4. Migrate, then serve.** Always migrate with the same binary you are about to run:
 
 ```bash
 systemprompt infra db migrate --profile <name>
-SYSTEMPROMPT_PROFILE=/path/to/profiles/<name>/profile.yaml systemprompt infra services serve --foreground
+just serve <name>                    # foreground under that profile (or the SYSTEMPROMPT_PROFILE env form in UNPACK.md)
 curl -s localhost:<port>/api/v1/health
 ```
 

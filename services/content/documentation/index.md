@@ -1,6 +1,6 @@
 ---
 title: "Get Started with the AI Salesforce Gateway"
-description: "Start here. Two paths: setting the Gateway up for your organization, or using it day to day in Salesforce. Pick the one that describes you."
+description: "Start here. Two ways to get connected: Claude Code in your terminal, or the desktop bridge with Claude Cowork. Advanced setup for admins and developers below."
 author: "Astound Digital"
 slug: ""
 keywords: "get started, how to use, getting started, salesforce ai, desktop bridge, admin setup, dashboard, authentication"
@@ -22,44 +22,38 @@ The AI Salesforce Gateway puts your Salesforce inside Claude. You ask in plain
 English. It answers from live data, confirms with you before it changes
 anything, and records everything it does.
 
-There are two ways to arrive here. Pick yours.
+Two ways to get connected. Pick yours.
 
-## I need to set this up for my organization
-
-**[Standing Up the Gateway →](/documentation/use-case-admin)**
-
-You own the Salesforce org and the deployment. You will create a Salesforce app,
-point the repository at your org, apply the spec, and hand the bridge to your
-team.
-
-*Prerequisites: Salesforce admin access and shell access to the deployment.
-About an hour, once per organization.*
-
-## I am a developer running this locally
+## I want Claude Code in my terminal
 
 **[Connect Claude Code →](/documentation/connect-claude-code)**
 
-Clone, build, start the gateway, register at `/admin/login`, then one command
-with the one-shot code from your profile page. Includes the clean-state
-verification procedure for the connect path.
+One command: get a connect code from your profile page, run the installer, and
+`claude` works against the hosted gateway with your organization's skills and
+plugins already synced. No checkout, no build. This is also the path for
+developers who want to build with the gateway's capabilities — the ready-made
+binary and install script cover it.
 
-*Prerequisites: Docker, just, a Rust toolchain, and one provider API key.*
+*Prerequisites: an account on the instance. About two minutes.*
 
-## I want to use Salesforce in plain English
+## I'm on Windows and want Claude Cowork
 
-**[Your Salesforce Day →](/documentation/use-case-salesforce-user)**
+**[Install the Desktop Bridge →](/documentation/bridge-install)**
 
-You work in Salesforce — sales, service, account management. You will install
-the bridge, sign in with your normal Salesforce credentials, and start asking.
+Download the bridge, sign in with your normal Salesforce credentials, and start
+asking. It runs in your system tray and keeps your skills in sync inside Claude
+Cowork and Claude Code. macOS and Linux are covered on the same page.
 
-*Prerequisites: your Salesforce login, and someone to have done the path above.
+*Prerequisites: your Salesforce login, and an admin to have set up the gateway.
 About two minutes.*
 
 ## The Short Version
 
 For a user, getting connected is three steps and no account creation:
 
-1. **Install the desktop bridge.** Downloads are on the [homepage](/). It runs
+1. **Install the desktop bridge.** The Windows download is on the
+   [homepage](/); other platforms install via the bridge script — see
+   [Install the Desktop Bridge](/documentation/bridge-install). It runs
    in your menu bar or system tray and keeps your skills in sync inside Claude
    Code, Cowork, and Codex.
 2. **Sign in with Salesforce.** There is no signup form and no password. Your
@@ -77,10 +71,17 @@ Browse the [full skills catalogue](/skills/) — every skill lists what it does 
 example questions covering pipeline, accounts, contacts, leads, activities,
 cases, consultancy, brand, and governance.
 
-## Reference
+## Advanced
 
-**Setting up the Salesforce connector** — the five steps in full:
+Everything below is for admins standing the gateway up for an organization,
+operators running the platform, and developers building it from source. If you
+just want to use it, the two paths above are all you need.
 
+**Setting up for your organization (admins):**
+
+- [Standing Up the Gateway](/documentation/use-case-admin) — the admin journey:
+  create the Salesforce app, apply the spec, hand the bridge to your team.
+  *About an hour, once per organization.*
 - [Overview](/documentation/salesforce) — the trust chain and what is configured where
 - [1. Salesforce App Setup](/documentation/salesforce-app-setup)
 - [2. JWT-Bearer & Certificate](/documentation/salesforce-jwt-bearer)
@@ -94,9 +95,8 @@ cases, consultancy, brand, and governance.
 - [Dashboard Usage](/documentation/dashboard) — real-time metrics, activity feed, and health indicators
 - [Gateway API](/documentation/gateway-api) — the `/v1/messages` endpoint and its governance
 
-**Setting up your team:**
+**Developing and deploying:**
 
-- [Connect Claude Code](/documentation/connect-claude-code) — from an empty machine to a gateway-routed Claude Code session
-- [Install the Desktop Bridge](/documentation/bridge-install) — Windows, macOS, Linux, and WSL
+- [Develop Against a Local Gateway](/documentation/develop-claude-code) — clone, build the binary from source, and verify the connect path from a clean state
 - [Create & Manage Users](/documentation/admin-user-management) — admin CLI, bulk creation, roles, and passkey registration
 - [Expose Your Instance Remotely](/documentation/remote-access) — take the gateway from `127.0.0.1` to a public HTTPS URL

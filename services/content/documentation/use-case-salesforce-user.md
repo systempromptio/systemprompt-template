@@ -37,8 +37,9 @@ records what it did.
 
 ## Getting Set Up — About Two Minutes
 
-1. **Install the bridge.** Your admin will send you the download, or the links
-   are on the [homepage](/). It runs quietly in your menu bar or system tray.
+1. **[Install the bridge](/documentation/bridge-install).** Your admin will
+   send you the download, or the Windows download is on the [homepage](/). It
+   runs quietly in your menu bar or system tray.
 2. **Click "Sign in with Salesforce."** Your browser opens and you log in to
    Salesforce exactly as you normally do — same password, same MFA. The bridge
    never sees your credentials.

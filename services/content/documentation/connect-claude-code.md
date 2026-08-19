@@ -1,204 +1,132 @@
 ---
 title: "Connect Claude Code"
-description: "Developer setup: clone, build, start the gateway, and connect Claude Code with a one-shot code. Includes the clean-state verification procedure for the connect path."
+description: "Connect Claude Code to the hosted Astound gateway with one command: get a one-shot code from your profile page, run the installer, and every session is routed, governed, and audited — no repo, no build."
 author: "Astound Digital"
 slug: "connect-claude-code"
-keywords: "claude code, connect, bridge, one-shot code, exchange code, just claude, setup local, developer setup, clean state"
+keywords: "claude code, connect, install, bridge, one-shot code, exchange code, remote gateway, hosted instance, skills, plugins"
 kind: "guide"
 public: true
 tags: ["documentation", "getting-started", "claude-code"]
 published_at: "2026-08-06"
 updated_at: "2026-08-19"
 after_reading_this:
-  - "Stand up the gateway from an empty clone"
-  - "Connect Claude Code with one command"
-  - "Verify the connect path from a clean state"
-  - "Know what the host-install path writes, and how to undo it"
+  - "Connect Claude Code to the hosted gateway with one command"
+  - "Know what the installer writes, and how to undo it"
+  - "Verify the connection and the synced skills"
+related_playbooks:
+  - title: "Install the Desktop Bridge"
+    url: "/documentation/bridge-install"
+  - title: "Develop Against a Local Gateway"
+    url: "/documentation/develop-claude-code"
 ---
 
 # Connect Claude Code
 
-Developer setup: an empty machine to a Claude Code session routed through the
-gateway and recorded in the audit trail. The connect step is one command;
-everything before it stands up the server that command talks to.
+One command takes a machine with nothing installed to a working `claude` wired
+to the hosted Astound instance. You do not clone anything, build anything, or
+run a server: the installer downloads from the gateway, installs Claude Code
+itself if it is missing, signs you in, and syncs your organization's skills,
+plugins, and MCP servers. From then on every session routes through the gateway
+and lands in the audit trail.
 
-Joining a gateway someone else already runs? You don't need this page — go
-straight to [Install the Desktop Bridge](/documentation/bridge-install)
-(Windows, macOS, Linux, WSL). And to make a local gateway reachable from other
-machines, see
-[Expose Your Instance Remotely](/documentation/remote-access).
+Prefer a desktop app? The bridge also powers Claude Cowork on Windows and
+macOS: [Install the Desktop Bridge](/documentation/bridge-install).
 
-## Prerequisites
+Running your own gateway from a checkout of this repository? That is a
+different page: [Develop Against a Local Gateway](/documentation/develop-claude-code).
 
-Docker, [`just`](https://github.com/casey/just), a Rust toolchain, and one
-provider API key.
+## 1. Get a connect code
 
-The server needs this repository alone — the workspace resolves `systemprompt`
-from crates.io. The client does not: `bridge/` depends on `systemprompt-bridge`
-by relative path and that crate is unpublished, so building it requires
-`systemprompt-core` checked out beside this repository. `just bridge-build`
-clones it.
+Sign in at [astound.systemprompt.io/admin/login](https://astound.systemprompt.io/admin/login)
+and open your **Profile** page. It mints a one-shot connect code and prints the
+install command with the code filled in — copy that command and skip to the
+next step.
 
-## Setup
+The code is 32 random bytes, stored only as a SHA-256 hash, valid for ten
+minutes, single use. The installer redeems it for a durable personal access
+token that stays on your machine and never passes through the browser. A
+leaked code is dead within minutes; if yours expires, reload the profile page
+for a fresh one.
 
-```bash
-git clone https://github.com/systempromptio/systemprompt-astound.git && cd systemprompt-astound
-just setup-local     # profile, Docker Postgres, migrations, publish pipeline
-just build
-just bridge-build    # Claude Code client; clones systemprompt-core beside this repo
-just start           # :8080
-```
-
-`bridge-build` belongs in setup rather than in the connect step: codes expire in
-ten minutes and a first client build takes longer than that.
-
-`setup-local` prompts for the provider when called with no key. Passing keys is
-non-interactive; the first becomes the default provider. Override the ports for
-a second clone on one host: `just setup-local <key> "" "" 8081 5436`.
-
-The first build compiles the full dependency graph. Later builds are
-incremental.
-
-## Sign in
-
-Registration is web-based and passkey-backed — no password, and no account
-exists until it is created:
-
-1. Open `/admin/login`.
-2. Register. Self-registration is gated on the configured email domain.
-3. Complete the passkey prompt.
-
-The connect code is bound to the signed-in identity, so this precedes it.
-
-A new account has user permissions. Admin-only pages, the systemprompt MCP
-server, and the admin plugins remain hidden until it is promoted:
-
-```bash
-systemprompt admin users role promote <email>
-```
-
-The admin scope is minted at token-issue time, so an existing session keeps the
-old one — sign out and back in. Promotion is optional for connecting Claude
-Code; it is required to see the full dashboard.
-
-## Connect
-
-With an account signed in, the **Profile** page mints a one-shot code and prints
-the command with it filled in:
-
-```bash
-just claude <code>
-```
-
-Starts a container, redeems the code, execs `claude`. Host config is untouched.
-
-The code is needed on the first run only — the credential it is exchanged for
-persists, so later runs are just:
-
-```bash
-just claude
-```
-
-Container and home are scoped to the clone and its gateway, so several
-checkouts pointing at different gateways coexist without inheriting each
-other's credential. `just claude-reset` signs this clone out;
-`just claude-reset ALL=1` signs out every clone on the host.
-
-If the client is missing, this builds it first — and that build can outlast the
-code. Run `just bridge-build` during setup and the connect step is immediate.
-
-### The code
-
-32 random bytes, stored only as a SHA-256 hash, 10-minute TTL, single use. The
-client redeems it for a durable PAT that stays on the machine it was issued to
-and never passes through the browser. A leaked code is dead within minutes.
-
-Codes are also issuable from the CLI, which is how headless setups work:
+Administrators can also issue codes for other users, which is how headless
+setups work:
 
 ```bash
 systemprompt admin bridge issue-code --user-id <email-or-uuid>
 ```
 
-## Host install
+## 2. Run the installer
 
-For daily work on an owned machine, `just connect <code>` configures the host
-rather than a container. It writes:
+On Linux or WSL:
+
+```bash
+curl -fsSL https://astound.systemprompt.io/files/downloads/install.sh | sh -s -- --code <code>
+```
+
+For Windows and macOS, use the platform installers on
+[Install the Desktop Bridge](/documentation/bridge-install) instead. The
+Linux tarball is published for x86_64; the installer also supports aarch64
+where that artifact is staged.
+
+Run without `--code` and the installer falls back to interactive single
+sign-on: it opens a browser against the gateway (or prints the URL when there
+is no display) and you approve the machine from your signed-in session.
+
+The installer, in order: downloads the bridge binary and verifies its SHA-256
+checksum, installs Claude Code (`npm i -g @anthropic-ai/claude-code`, falling
+back to the native installer), redeems the code, writes the environment,
+starts the loopback inference proxy, syncs your organization's plugins, and
+finishes with a self-test (`astound-bridge doctor`).
+
+What it writes:
 
 | Path | Contents |
 |------|----------|
-| `~/.config/astound/` | Client config, PAT (0600), loopback key |
+| `~/.local/bin/astound-bridge` | The bridge binary (`/usr/local/bin` as root) |
+| `~/.config/astound/` | Client config, PAT (0600), loopback key, `env.sh` |
 | `~/.profile` | Managed block setting `ANTHROPIC_BASE_URL` and the auth token |
 | `~/.claude/managed-settings.json` | Base URL, `apiKeyHelper`, model discovery |
 | `~/.local/share/Claude/org-plugins/` | Organization plugins, skills, MCP servers |
 | systemd user units | 30-minute sync timer, loopback inference proxy |
 
-Open a new login shell (or `. ~/.profile`), then run `claude`.
+To undo all of it: `astound-bridge uninstall`, then remove the binary.
 
-Without a checkout, the installer does the same directly:
+## 3. Use it
 
-```bash
-curl -fsSL https://your-gateway/files/downloads/install.sh | sh -s -- \
-  --download-base https://your-gateway/files/downloads --code <code>
-```
-
-Per-platform installer detail — including Windows, macOS, and WSL — is in
-[Install the Desktop Bridge](/documentation/bridge-install).
-
-## Verifying from a clean state
-
-Run after any change to the connect path. The failure mode is silent — a machine
-holding a valid credential skips sign-in and still exits 0.
-
-Clone to a new directory with no profile and no sibling checkout. The commands
-below use `8081`/`5436` rather than the `8080`/`5432` defaults so the test
-instance coexists with a running gateway; substitute the defaults if nothing
-else is up.
+Open a new login shell (or `. ~/.profile`) and run:
 
 ```bash
-git clone https://github.com/systempromptio/systemprompt-astound.git fresh && cd fresh
-just setup-local <provider-key> "" "" 8081 5436
-just build
-just bridge-build
-just start
+claude
 ```
 
-The database has no users. Either register at `http://localhost:8081/admin/login`
-and take the code from the profile page, or stay headless:
+No exports needed — `~/.config/astound/env.sh` points Claude Code at the
+loopback proxy, which authenticates to the gateway for you. Your
+organization's skills and plugins are already registered:
 
 ```bash
-systemprompt admin users create --name you --email you@example.com --if-not-exists
-systemprompt admin users role promote you@example.com
-systemprompt admin bridge issue-code --user-id you@example.com
+claude plugin list
 ```
 
-Both write the same `bridge_exchange_codes` row. Registering exercises the
-passkey path as well; the CLI path skips it.
+The bridge re-syncs every 30 minutes, so plugins and skills published to the
+instance show up on your machine without reinstalling.
 
-`claude-reset` is load-bearing — without it a surviving credential carries the
-test:
+## Verify
 
 ```bash
-just claude-reset
-just claude <code> http://localhost:8081
+astound-bridge doctor
 ```
 
-Assert on the output, not the exit code.
-
-| Output | Meaning |
-|--------|---------|
-| `signing in with the supplied code` | Pass — the code was redeemed |
-| `already signed in — reusing the stored PAT` | Fail — sign-in never ran |
-
-`astound-bridge doctor` runs last, one line per check. The hook-token warning is
-expected: OAuth client provisioning is lazy, on the first plugin hook request,
-not during sync.
+One line per check: credential, loopback secret, proxy, org marketplace,
+filesystem layout. Exit 11 means at least one hard failure. A hook-token
+warning is expected on a fresh install — OAuth client provisioning is lazy,
+on the first plugin hook request rather than during sync.
 
 ## Troubleshooting
 
 | Symptom | Cause |
 |---------|-------|
-| `Client not built yet` | The client is a separate workspace; `just build` does not produce it. `just bridge-build` does, and clones `systemprompt-core` beside this repo because the client depends on it by path. |
-| Code rejected | 10-minute TTL, single use. Reload the profile page. |
-| Prompted for a code on a repeat run | The stored credential did not validate against this gateway — usually a different gateway from the one that issued it. `just claude-reset`, then connect with a fresh code. |
-| Session works, audit trail empty | Not routed through the gateway. Check `ANTHROPIC_BASE_URL` points at the loopback proxy and that `astound-bridge doctor` reports it running. |
-| Container cannot reach the gateway | Inside a container `localhost` is the container. `just claude` rewrites it; by hand, use `http://host.docker.internal:8080`. |
+| Code rejected | 10-minute TTL, single use. Reload the profile page for a fresh one. |
+| `claude` works, audit trail empty | Not routed through the gateway. Check `ANTHROPIC_BASE_URL` points at the loopback proxy and `astound-bridge doctor` reports it running. |
+| The proxy is not listening | Start it with `astound-bridge proxy` and check `${TMPDIR:-/tmp}/astound-bridge-proxy.log`; on systemd hosts, `systemctl --user status astound-bridge-proxy.service`. |
+| `claude plugin list` is empty | Claude Code was not installed when sync ran — the marketplace step skips silently without the CLI. Install Claude Code, then `astound-bridge sync`. |
+| No browser for SSO (SSH box) | `astound-bridge login --no-browser --gateway https://astound.systemprompt.io`, or use a `--code` from your profile page. |
