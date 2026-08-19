@@ -35,10 +35,30 @@ macOS: [Install the Desktop Bridge](/documentation/bridge-install).
 Running your own gateway from a checkout of this repository? That is a
 different page: [Develop Against a Local Gateway](/documentation/develop-claude-code).
 
-## 1. Get a connect code
+## 1. Get an account
 
-Sign in at [astound.systemprompt.io/admin/login](https://astound.systemprompt.io/admin/login)
-and open your **Profile** page. It mints a one-shot connect code and prints the
+Accounts live on the hosted instance — there is nothing to install for this
+step. At [astound.systemprompt.io/admin/login](https://astound.systemprompt.io/admin/login),
+either:
+
+- **Sign in with Salesforce.** If your email domain is on the allow-list
+  (`@astounddigital.com`, `@astoundcommerce.com`), your account is created
+  automatically the first time you sign in — no admin involved.
+- **Register with a passkey.** Same domain gate; you verify your email and
+  register a passkey, no password.
+
+If your domain is not allow-listed, an administrator creates the account and
+hands you a connect code in one step:
+
+```bash
+systemprompt admin users create --name <name> --email <email> --if-not-exists
+systemprompt --json admin bridge issue-code --user-id <email> \
+  | jq -r '.sections[] | select(.heading == "code") | .content'
+```
+
+## 2. Get a connect code
+
+Sign in and open your **Profile** page. It mints a one-shot connect code and prints the
 install command with the code filled in — copy that command and skip to the
 next step.
 
@@ -46,16 +66,10 @@ The code is 32 random bytes, stored only as a SHA-256 hash, valid for ten
 minutes, single use. The installer redeems it for a durable personal access
 token that stays on your machine and never passes through the browser. A
 leaked code is dead within minutes; if yours expires, reload the profile page
-for a fresh one.
+for a fresh one. Headless or scripted? The admin `issue-code` command in the
+previous step mints the same code without a browser.
 
-Administrators can also issue codes for other users, which is how headless
-setups work:
-
-```bash
-systemprompt admin bridge issue-code --user-id <email-or-uuid>
-```
-
-## 2. Run the installer
+## 3. Run the installer
 
 On Linux or WSL:
 
@@ -91,7 +105,7 @@ What it writes:
 
 To undo all of it: `astound-bridge uninstall`, then remove the binary.
 
-## 3. Use it
+## 4. Use it
 
 Open a new login shell (or `. ~/.profile`) and run:
 
