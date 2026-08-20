@@ -1,0 +1,33 @@
+{{!--
+  Spend-limit proximity meter: a horizontal track filled to the month-to-date
+  share of the hard cap, with an optional tick marking the soft threshold.
+
+  Invoke as: {{> components/spend-meter org_meter}}
+  The partial's root context is the meter object itself.
+
+  Inputs (fields on the passed context):
+    label              organization name
+    spent_display      month-to-date spend
+    hard_cap_display   absent on an uncapped plan
+    soft_cap_display   absent when no soft threshold is configured
+    pct                fill percent of the hard cap (0..=100)
+    soft_pct           tick position percent, absent without a soft threshold
+    state              ok | warn | over | none
+    caption            one-line summary under the track
+--}}
+<div class="spend-meter" data-state="{{state}}">
+    <div class="spend-meter__head">
+        <span class="spend-meter__label">{{label}}</span>
+        <span class="spend-meter__spent">{{spent_display}}</span>
+    </div>
+    {{#if hard_cap_display}}
+    <div class="spend-meter__track" role="img" aria-label="{{caption}}">
+        <span class="spend-meter__fill" style="--v:{{pct}}%"></span>
+        {{#if soft_pct}}
+        <span class="spend-meter__tick" style="--soft:{{soft_pct}}%"
+              title="Soft limit {{soft_cap_display}}"></span>
+        {{/if}}
+    </div>
+    {{/if}}
+    <p class="spend-meter__caption">{{caption}}</p>
+</div>

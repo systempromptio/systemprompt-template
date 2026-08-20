@@ -125,3 +125,12 @@ extensions/web/tests/frontend_standards.rs	# astound ships no blog, so the blog-
 # Astound's error enums grew product-specific variants (Salesforce secret
 # crypto, services/ config-file validation, profile bootstrap) that the
 # template's leaner admin surface does not need.
+
+# Astound's admin analytics dashboard captures usage metrics the template
+# does not: AI line deltas and observed commits at hook ingest, statusline
+# cost snapshots, and the usage_daily_rollup job feeding /admin/analytics.
+extensions/web/admin/src/handlers/hooks_track/mod.rs	# astound computes LOC deltas pre-sanitize and threads them into the event insert
+extensions/web/admin/src/handlers/hooks_track/processing.rs	# astound rolls LOC into the daily/session counters and detects commits post-insert
+extensions/web/admin/src/handlers/webhook/helpers.rs	# astound's statusline persistence needs the validated JWT subject returned
+extensions/web/admin/src/handlers/webhook/tracking.rs	# astound persists statusline cost/context-window snapshots; the template 204s them away
+extensions/web/jobs/src/lib.rs	# astound registers the usage_daily_rollup job the template does not ship

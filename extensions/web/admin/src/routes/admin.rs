@@ -75,6 +75,11 @@ fn build_admin_read_routes_inner(read_pool: &Arc<PgPool>) -> Router {
             "/management/departments",
             get(handlers::departments::list_departments_handler),
         )
+        .route(
+            "/management/organizations",
+            get(handlers::organizations::list_organizations_handler),
+        )
+        .route("/invites", get(handlers::invites::list_invites_handler))
         .with_state(Arc::clone(read_pool))
 }
 
@@ -143,6 +148,15 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
         .route(
             "/management/devices",
             post(handlers::devices::enroll_device),
+        )
+        .route(
+            "/management/users/{user_id}/organization",
+            put(handlers::organizations::set_user_organization_handler),
+        )
+        .route("/invites", post(handlers::invites::create_invite_handler))
+        .route(
+            "/invites/{invite_id}",
+            axum::routing::delete(handlers::invites::revoke_invite_handler),
         )
         .with_state(Arc::clone(write_pool))
 }

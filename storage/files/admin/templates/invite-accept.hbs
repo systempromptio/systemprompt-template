@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>{{branding.domain}} - Accept Invitation</title>
+    <link rel="stylesheet" href="/css/core/fonts.css?v={{css_version}}">
+    <link rel="stylesheet" href="/css/admin-bundle.css?v={{css_version}}">
+</head>
+<body class="auth-light">
+    <main class="auth-page">
+        <div class="auth-form-col">
+            <div class="login-container login-container--bare">
+                <div class="card">
+                    <div class="login-logo">
+                        <img src="/files/images/logo.svg" alt="{{branding.domain}}" height="40" class="logo-light">
+                        <img src="/files/images/logo-white.svg" alt="{{branding.domain}}" height="40" class="logo-dark">
+                    </div>
+
+                    {{#if valid}}
+                    <div id="pane-invite" data-invite-token="{{token}}" data-invite-email="{{email}}">
+                        <p class="login-subtitle">You're invited</p>
+                        <p>
+                            <strong>{{email}}</strong> has been invited to join
+                            <strong>{{org_name}}</strong>{{#if department}} ({{department}}){{/if}}.
+                            Accepting creates your account with a passkey —
+                            Touch&nbsp;ID, Windows&nbsp;Hello, or your phone. No password.
+                        </p>
+
+                        <div id="error" class="login-error" role="alert" aria-live="polite"></div>
+
+                        <div class="form-actions">
+                            <button type="button" id="accept-btn" class="btn btn-primary w-full">
+                                Accept and create passkey
+                            </button>
+                        </div>
+
+                        <div id="loading" class="login-loading" hidden aria-live="polite">
+                            <div class="login-spinner" role="status" aria-label="Loading"></div>
+                            <p id="loading-text">Processing...</p>
+                        </div>
+
+                        <div id="retry" class="login-retry">
+                            <a href="/admin/login">Already have an account? Sign in</a>
+                        </div>
+                    </div>
+                    {{else}}
+                    <div id="pane-invalid">
+                        <p class="login-subtitle">Invitation not available</p>
+                        <p>
+                            This invite link is invalid, expired, or has already been used.
+                            Ask your administrator for a new one.
+                        </p>
+                        <div class="form-actions">
+                            <a href="/admin/login" class="btn w-full">Go to sign in</a>
+                        </div>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    </main>
+    {{#if valid}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-invite.js"></script>
+    {{/if}}
+</body>
+</html>

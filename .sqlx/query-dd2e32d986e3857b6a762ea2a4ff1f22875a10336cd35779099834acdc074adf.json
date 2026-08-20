@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_invites SET revoked_at = NOW()\n         WHERE id = $1 AND accepted_at IS NULL AND revoked_at IS NULL\n           AND ($2::TEXT IS NULL OR org_id = $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dd2e32d986e3857b6a762ea2a4ff1f22875a10336cd35779099834acdc074adf"
+}

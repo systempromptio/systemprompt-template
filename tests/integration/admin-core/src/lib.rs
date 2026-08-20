@@ -83,6 +83,8 @@ mod traces_spans_resolve;
 #[cfg(test)]
 mod traces_stats;
 #[cfg(test)]
+mod usage_metrics;
+#[cfg(test)]
 mod users_access_matrix;
 #[cfg(test)]
 mod users_access_matrix_dimensions;

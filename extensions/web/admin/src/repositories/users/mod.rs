@@ -4,6 +4,7 @@ pub mod access_control;
 pub mod activity;
 pub mod devices;
 pub mod federated;
+pub mod invites;
 pub mod mutations;
 pub mod passkey;
 pub mod queries;

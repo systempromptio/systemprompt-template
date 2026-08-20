@@ -26,6 +26,10 @@
 #       description: optional free text
 #       seat_limit:  max active members; omit for unlimited
 #       monthly_cost_cap_usd: spend ceiling; omit for uncapped
+#       monthly_cost_warn_usd: soft warning threshold; must be below the cap
+#                      (and requires one). Crossing it never denies a request —
+#                      the gateway records it in org_budget_warnings and the
+#                      admin dashboard shows proximity. Omit for no warning.
 #       monthly_price_usd: what the customer is billed per month. The cap is
 #                      what they may spend, this is what they pay, and the
 #                      enterprise dashboard reports the difference as margin.

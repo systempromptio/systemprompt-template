@@ -56,6 +56,10 @@ pub mod test_support {
     pub use crate::handlers::hooks_track::ai_summary_types::{
         SessionAnalysis, session_analysis_schema, validate_analysis,
     };
+    pub use crate::handlers::hooks_track::commits::{
+        ParsedCommit, is_commit_command, parse_commit_stdout, response_stdout,
+    };
+    pub use crate::handlers::hooks_track::loc::{LocDelta, compute_loc_delta};
     pub use crate::handlers::hooks_track::session_summary::GeneratedSessionSummary;
     pub use crate::handlers::resolve_principal;
     pub use crate::handlers::salesforce_auth::select_sf_username;
@@ -123,8 +127,8 @@ pub fn salesforce_api_router(sf_deps: SalesforceDeps) -> Router {
         .layer(Extension(sf_deps))
 }
 
-pub fn admin_router(read_pool: Arc<PgPool>) -> Router {
-    let admin_only = routes::build_admin_only_routes(&read_pool, &read_pool);
+pub fn admin_router(read_pool: Arc<PgPool>, write_pool: &Arc<PgPool>) -> Router {
+    let admin_only = routes::build_admin_only_routes(&read_pool, write_pool);
     let auth_reads = routes::build_auth_read_routes(&read_pool);
 
     admin_only

@@ -8,8 +8,20 @@
             <input type="text" class="search-input" placeholder="Search users..." id="user-search" aria-label="Search users...">
         </div>
         <button type="button" class="btn btn-primary" id="btn-add-user" data-action="create-user">+ Add User</button>
+        <button type="button" class="btn" id="btn-invite-user">+ Invite by Link</button>
     </div>
     {{> components/create-user-panel}}
+
+    <section aria-label="Pending invites" id="invites-section" hidden>
+        <h2 class="section-caption">Pending invites</h2>
+        <div id="invite-form" class="analytics-filters">
+            <input type="email" class="search-input" id="invite-email" placeholder="person@company.com" aria-label="Invite email">
+            <input type="text" class="search-input" id="invite-org" placeholder="Organization slug" aria-label="Organization slug" hidden>
+            <input type="text" class="search-input" id="invite-department" placeholder="Department (Default)" aria-label="Department">
+            <button type="button" class="btn btn-primary" id="btn-create-invite">Create invite link</button>
+        </div>
+        <div id="invites-list"></div>
+    </section>
 
     <section aria-label="Users list" data-page="users">
     {{#if groups}}
@@ -84,5 +96,6 @@
     {{/inline}}
     {{#*inline "scripts"}}
     <script data-cfasync="false" type="module" src="/js/pages/admin-users.js"></script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-invites-panel.js"></script>
     {{/inline}}
 {{/layout}}

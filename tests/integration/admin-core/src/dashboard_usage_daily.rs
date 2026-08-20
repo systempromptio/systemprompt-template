@@ -23,11 +23,14 @@ struct DailyRow {
     error_count: i64,
     content_input_bytes: i64,
     content_output_bytes: i64,
+    loc_added: i64,
+    loc_removed: i64,
 }
 
 async fn read_daily(pool: &sqlx::PgPool, user_id: &UserId) -> Vec<DailyRow> {
-    sqlx::query_as::<_, (i64, i64, Option<i64>, Option<i64>)>(
-        "SELECT event_count, error_count, content_input_bytes, content_output_bytes
+    sqlx::query_as::<_, (i64, i64, Option<i64>, Option<i64>, i64, i64)>(
+        "SELECT event_count, error_count, content_input_bytes, content_output_bytes,
+                loc_added, loc_removed
          FROM plugin_usage_daily WHERE user_id = $1 ORDER BY event_type, tool_name",
     )
     .bind(user_id.as_str())
@@ -35,12 +38,16 @@ async fn read_daily(pool: &sqlx::PgPool, user_id: &UserId) -> Vec<DailyRow> {
     .await
     .expect("read daily aggregations")
     .into_iter()
-    .map(|(event_count, error_count, input, output)| DailyRow {
-        event_count,
-        error_count,
-        content_input_bytes: input.unwrap_or_default(),
-        content_output_bytes: output.unwrap_or_default(),
-    })
+    .map(
+        |(event_count, error_count, input, output, loc_added, loc_removed)| DailyRow {
+            event_count,
+            error_count,
+            content_input_bytes: input.unwrap_or_default(),
+            content_output_bytes: output.unwrap_or_default(),
+            loc_added,
+            loc_removed,
+        },
+    )
     .collect()
 }
 
@@ -58,6 +65,8 @@ fn daily_params<'a>(
         tool_name: Some("Bash"),
         content_input_bytes: 100,
         content_output_bytes: 40,
+        loc_added: 12,
+        loc_removed: 3,
         is_error: false,
     }
 }
@@ -78,6 +87,8 @@ async fn upsert_daily_aggregation_inserts_the_first_event_of_the_day() {
     assert_eq!(rows[0].error_count, 0);
     assert_eq!(rows[0].content_input_bytes, 100);
     assert_eq!(rows[0].content_output_bytes, 40);
+    assert_eq!(rows[0].loc_added, 12);
+    assert_eq!(rows[0].loc_removed, 3);
     db.cleanup().await;
 }
 
@@ -97,6 +108,8 @@ async fn upsert_daily_aggregation_accumulates_into_one_row_per_tool_and_day() {
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0].event_count, 3);
     assert_eq!(rows[0].content_input_bytes, 300);
+    assert_eq!(rows[0].loc_added, 36, "LOC accumulates with the counters");
+    assert_eq!(rows[0].loc_removed, 9);
     db.cleanup().await;
 }
 

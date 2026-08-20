@@ -49,6 +49,17 @@
         </a>
         {{/if}}
 
+        {{!-- ANALYTICS — the site dashboard. Admin-scoped, not
+             platform-scoped: an organization's own administrator sees their
+             own org's numbers, a platform admin sees everyone's. --}}
+        {{#if current_user.is_admin}}
+        <h2 class="nav-label">Analytics</h2>
+        <a href="/admin/analytics"{{#if (eq page "analytics-dashboard")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M3.5 13V8.5M7 13V4.5M10.5 13V6.5M14 13V3" stroke-linecap="round"/></svg>
+            Dashboard
+        </a>
+        {{/if}}
+
         {{!-- REPORTS — the month-end pack. The P&L is ours; the usage report is
              the customer's copy, so a customer's own administrator sees it too
              and a platform admin sees it for every organization. --}}

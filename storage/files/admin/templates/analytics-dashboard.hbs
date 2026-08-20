@@ -1,0 +1,263 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/page-header
+        title="Analytics"
+        subtitle="Usage, adoption, cost, and code impact across the site. Filter by organization, department, or user."}}
+
+    {{> components/time-range time_range}}
+
+    <nav class="sp-tabs" role="tablist" aria-label="Analytics views">
+        {{#each tabs}}
+        <a class="sp-tab{{#if this.is_active}} sp-tab--active{{/if}}" role="tab"
+           aria-selected="{{#if this.is_active}}true{{else}}false{{/if}}"
+           href="{{this.href}}">{{this.label}}</a>
+        {{/each}}
+    </nav>
+
+    <form method="get" action="{{base_url}}" class="analytics-filters">
+        {{#each filters.hidden}}
+        <input type="hidden" name="{{this.name}}" value="{{this.value}}">
+        {{/each}}
+        {{#if filters.show_org_select}}
+        <label class="analytics-filters__group">
+            Organization
+            <select name="org" class="search-input">
+                {{#each filters.org_options}}
+                <option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>
+                {{/each}}
+            </select>
+        </label>
+        {{/if}}
+        <label class="analytics-filters__group">
+            Department
+            <select name="department" class="search-input">
+                {{#each filters.department_options}}
+                <option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>
+                {{/each}}
+            </select>
+        </label>
+        <button type="submit" class="btn btn-sm">Apply</button>
+        <span class="analytics-filters__group">
+            {{#each filters.bucket_links}}
+            <a class="btn btn-sm{{#unless this.is_active}} btn-outline{{/unless}}"
+               href="{{this.href}}">{{this.label}}</a>
+            {{/each}}
+        </span>
+    </form>
+
+    {{#if chips}}
+    <ul class="filter-ribbon__chips" aria-label="Active filters">
+        {{#each chips}}
+        <li class="filter-ribbon__chip">
+            <span class="filter-ribbon__chip-group">{{this.group_label}}:</span>
+            <span class="filter-ribbon__chip-value">{{this.label}}</span>
+            <a class="filter-ribbon__chip-remove" href="{{this.remove_url}}"
+               aria-label="Remove {{this.group_label}} filter {{this.label}}">&times;</a>
+        </li>
+        {{/each}}
+        <li><a class="filter-ribbon__clear" href="{{clear_url}}">Clear all</a></li>
+    </ul>
+    {{/if}}
+
+    {{#if is_overview}}
+    <section aria-label="Site health">
+        <div class="kpi-strip">
+            <div class="kpi-card">
+                <span class="kpi-card__label">Requests</span>
+                <span class="kpi-card__value">{{kpis.requests}}</span>
+                <span class="kpi-card__sub">{{kpis.error_display}}</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-card__label">Total spend</span>
+                <span class="kpi-card__value">{{kpis.cost_display}}</span>
+                <span class="kpi-card__sub">{{kpis.cost_per_request_display}} per request</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-card__label">Weekly active users</span>
+                <span class="kpi-card__value">{{kpis.weekly_active_users}}</span>
+                <span class="kpi-card__sub">{{kpis.active_users}} active in window · {{kpis.requests_per_user_day_display}} req/user/day</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-card__label">Tokens</span>
+                <span class="kpi-card__value">{{kpis.tokens_display}}</span>
+                <span class="kpi-card__sub">across the window</span>
+            </div>
+            <a class="kpi-card{{#if kpis.wasted_seats}} kpi-card--warning{{/if}}" href="{{kpis.wasted_seats_url}}">
+                <span class="kpi-card__label">Wasted seats</span>
+                <span class="kpi-card__value">{{kpis.wasted_seats}}</span>
+                <span class="kpi-card__sub">no requests in 30 days</span>
+            </a>
+        </div>
+
+        <div class="analytics-grid">
+            <section class="analytics-grid__panel">
+                {{> components/timeseries-chart volume_chart}}
+            </section>
+            <section class="analytics-grid__panel">
+                {{> components/timeseries-chart cost_chart}}
+            </section>
+        </div>
+
+        <div class="analytics-grid">
+            <section class="analytics-grid__panel">
+                {{> components/pie-chart model_pie}}
+            </section>
+            {{#if own_meter}}
+            <section class="analytics-grid__panel">
+                {{> components/spend-meter own_meter}}
+            </section>
+            {{/if}}
+        </div>
+    </section>
+    {{/if}}
+
+    {{#if is_usage}}
+    <section aria-label="User adoption">
+        <div class="kpi-strip">
+            <div class="kpi-card">
+                <span class="kpi-card__label">Permission grant rate</span>
+                {{#if permissions.has_data}}
+                <span class="kpi-card__value">{{permissions.rate_display}}</span>
+                <span class="kpi-card__sub">{{permissions.granted}} of {{permissions.requests}} permission requests followed by the tool running</span>
+                {{else}}
+                <span class="kpi-card__value">—</span>
+                <span class="kpi-card__sub">no permission requests in this window</span>
+                {{/if}}
+            </div>
+        </div>
+        <p class="analytics-note">Sorted by
+            {{#each leaderboard.sort_links}}
+            <a href="{{this.href}}"{{#if this.is_active}} aria-current="true"{{/if}}>{{this.label}}</a>{{#unless @last}} · {{/unless}}
+            {{/each}}
+        </p>
+        {{#if leaderboard.has_rows}}
+        {{#> components/data-table}}
+            <thead><tr>
+                <th>User</th>
+                <th>Department</th>
+                <th class="col-share">Share</th>
+                <th class="col-num">Requests</th>
+                <th class="col-num">Req/day</th>
+                <th class="col-num">Tokens</th>
+                <th class="col-num">Cost</th>
+                <th class="col-date">Last active</th>
+                <th></th>
+            </tr></thead>
+            <tbody>
+            {{#each leaderboard.rows}}
+            <tr>
+                <td><a href="{{this.detail_url}}">{{this.label}}</a></td>
+                <td>{{this.department}}</td>
+                <td class="col-share">
+                    <span class="share-bar" style="--v:{{this.share_pct}}%"></span>
+                </td>
+                <td class="col-num">{{this.requests}}</td>
+                <td class="col-num">{{this.requests_per_day_display}}</td>
+                <td class="col-num">{{this.tokens_display}}</td>
+                <td class="col-num">{{this.cost_display}}</td>
+                <td class="col-date">{{this.last_active_display}}</td>
+                <td>
+                    <a href="{{this.scope_url}}" title="Scope the dashboard to this user">Focus</a>
+                    ·
+                    <a href="{{this.log_url}}" title="Raw request log for this user">Log</a>
+                </td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{> components/pagination leaderboard.pagination}}
+        {{else}}
+        {{> components/empty-state
+            message="No user activity in this window. Widen the time range or clear the filters."}}
+        {{/if}}
+    </section>
+    {{/if}}
+
+    {{#if is_seats}}
+    <section aria-label="Seat utilisation">
+        <div class="kpi-strip">
+            {{#each seat_summary}}
+            <div class="kpi-card">
+                <span class="kpi-card__label">{{this.org_name}}</span>
+                <span class="kpi-card__value">{{this.seats_used}} / {{this.seat_limit_display}}</span>
+                <span class="kpi-card__sub">active seats</span>
+            </div>
+            {{/each}}
+        </div>
+        <p class="section-caption">Active members with no gateway requests in the last 30 days — seats that are paid for but idle.</p>
+        {{#if has_wasted_seats}}
+        {{#> components/data-table}}
+            <thead><tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Organization</th>
+                <th class="col-date">Last request</th>
+                <th></th>
+            </tr></thead>
+            <tbody>
+            {{#each wasted_seats}}
+            <tr>
+                <td><a href="{{this.detail_url}}">{{this.label}}</a></td>
+                <td>{{this.email}}</td>
+                <td>{{this.department}}</td>
+                <td>{{this.org_name}}</td>
+                <td class="col-date">{{this.last_request_display}}</td>
+                <td><a href="{{this.detail_url}}">Manage</a></td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state
+            message="Every active seat has made a request in the last 30 days."}}
+        {{/if}}
+    </section>
+    {{/if}}
+
+    {{#if is_spend}}
+    <section aria-label="Spend against limits">
+        <p class="section-caption">Month-to-date spend against each plan's soft and hard caps — the same numbers the gateway enforces.</p>
+        {{#if has_spend_meters}}
+        <div class="spend-meter-list">
+            {{#each spend_meters}}
+            {{> components/spend-meter this}}
+            {{/each}}
+        </div>
+        {{else}}
+        {{> components/empty-state
+            message="No organizations with a capped plan are visible in this scope."}}
+        {{/if}}
+        <p class="analytics-note">Request speed is a latency distribution, not a request class —
+            see the <a href="{{latency_link}}">latency histogram on the request log</a>.</p>
+    </section>
+    {{/if}}
+
+    {{#if is_code}}
+    <section aria-label="Code impact">
+        <div class="analytics-grid">
+            <section class="analytics-grid__panel">
+                {{> components/timeseries-chart commit_chart}}
+            </section>
+            <section class="analytics-grid__panel">
+                {{> components/timeseries-chart loc_chart}}
+            </section>
+        </div>
+        <div class="code-frames">
+            {{#each code_frames}}
+            <div class="code-frame">
+                <span class="code-frame__title">{{this.title}}</span>
+                <span class="code-frame__value">{{this.value_display}}</span>
+                <p class="code-frame__caption">{{this.caption}}</p>
+            </div>
+            {{/each}}
+        </div>
+        <p class="analytics-note">AI lines and committed lines are different measurement frames —
+            hook-observed tool edits versus git diff totals — and are shown side by side, never subtracted.</p>
+    </section>
+    {{/if}}
+
+    {{/inline}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

@@ -1,0 +1,62 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COUNT(*) FILTER (WHERE r.created_at >= $1 AND r.created_at < $2)::BIGINT\n                AS \"total!\",\n            COUNT(*) FILTER (WHERE r.created_at >= $1 AND r.created_at < $2\n                AND r.status NOT IN ('completed', 'pending', 'streaming'))::BIGINT\n                AS \"errors!\",\n            COALESCE(SUM(r.cost_microdollars)\n                FILTER (WHERE r.created_at >= $1 AND r.created_at < $2), 0)::BIGINT\n                AS \"cost!\",\n            COALESCE(SUM(r.input_tokens + r.output_tokens)\n                FILTER (WHERE r.created_at >= $1 AND r.created_at < $2), 0)::BIGINT\n                AS \"tokens!\",\n            COUNT(DISTINCT r.user_id)\n                FILTER (WHERE r.created_at >= $1 AND r.created_at < $2)::BIGINT\n                AS \"active_users!\",\n            COUNT(DISTINCT r.user_id)\n                FILTER (WHERE r.created_at >= NOW() - INTERVAL '7 days')::BIGINT\n                AS \"weekly_active_users!\"\n        FROM ai_requests r\n        LEFT JOIN organization_members m ON m.user_id = r.user_id\n        LEFT JOIN organizations o ON o.id = m.org_id\n        LEFT JOIN user_profile_ext upe ON upe.user_id = r.user_id\n        WHERE NOT r.synthetic\n          AND (r.created_at >= $1 OR r.created_at >= NOW() - INTERVAL '7 days')\n          AND ($3::TEXT IS NULL OR o.slug = $3)\n          AND ($4::TEXT IS NULL OR COALESCE(NULLIF(upe.department, ''), 'Default') = $4)\n          AND ($5::TEXT IS NULL OR r.user_id = $5)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "active_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "weekly_active_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "e3c26eaf4cbb1908692b31ed0cbab6a860ec0e7f529bf7bd584e952ce0f91da8"
+}

@@ -41,6 +41,8 @@ pub struct OrganizationMetrics {
     pub cost_microdollars_mtd: i64,
     /// `None` is an uncapped plan.
     pub cap_microdollars: Option<i64>,
+    /// The plan's soft warning threshold; `None` is no warning configured.
+    pub warn_microdollars: Option<i64>,
     /// The monthly licence fee. Zero is a non-billed plan.
     pub revenue_microdollars: i64,
 }
@@ -85,6 +87,7 @@ pub async fn list_organization_metrics(
             o.is_platform AS "is_platform!",
             COALESCE(o.seat_limit_override, p.seat_limit) AS "seat_limit?",
             p.monthly_cost_cap_microdollars AS "cap?",
+            p.monthly_cost_warn_microdollars AS "warn?",
             COALESCE(p.monthly_price_microdollars, 0) AS "revenue!",
             (SELECT COUNT(*) FROM organization_members m
                JOIN users u ON u.id = m.user_id
@@ -138,6 +141,7 @@ pub async fn list_organization_metrics(
             cost_microdollars_30d: r.cost_30d,
             cost_microdollars_mtd: r.cost_mtd,
             cap_microdollars: r.cap,
+            warn_microdollars: r.warn,
             revenue_microdollars: r.revenue,
         })
         .collect())

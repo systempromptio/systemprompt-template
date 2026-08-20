@@ -1,0 +1,62 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH spine AS (\n            SELECT generate_series(\n                DATE_TRUNC('day', $1::TIMESTAMPTZ),\n                DATE_TRUNC('day', $2::TIMESTAMPTZ),\n                INTERVAL '1 day'\n            )::DATE AS date\n        ),\n        agg AS (\n            SELECT\n                ru.date,\n                COALESCE(SUM(ru.commits_count), 0)::BIGINT AS commits,\n                COALESCE(SUM(ru.commit_insertions), 0)::BIGINT AS insertions,\n                COALESCE(SUM(ru.commit_deletions), 0)::BIGINT AS deletions,\n                COALESCE(SUM(ru.loc_added_ai), 0)::BIGINT AS loc_added,\n                COALESCE(SUM(ru.loc_removed_ai), 0)::BIGINT AS loc_removed\n            FROM admin_usage_daily_rollups ru\n            LEFT JOIN organization_members m ON m.user_id = ru.user_id\n            LEFT JOIN organizations o ON o.id = m.org_id\n            LEFT JOIN user_profile_ext upe ON upe.user_id = ru.user_id\n            WHERE ru.date >= ($1::TIMESTAMPTZ)::DATE AND ru.date <= ($2::TIMESTAMPTZ)::DATE\n              AND ($3::TEXT IS NULL OR o.slug = $3)\n              AND ($4::TEXT IS NULL OR COALESCE(NULLIF(upe.department, ''), 'Default') = $4)\n              AND ($5::TEXT IS NULL OR ru.user_id = $5)\n            GROUP BY ru.date\n        )\n        SELECT\n            s.date AS \"date!\",\n            COALESCE(a.commits, 0)::BIGINT AS \"commits!\",\n            COALESCE(a.insertions, 0)::BIGINT AS \"insertions!\",\n            COALESCE(a.deletions, 0)::BIGINT AS \"deletions!\",\n            COALESCE(a.loc_added, 0)::BIGINT AS \"loc_added!\",\n            COALESCE(a.loc_removed, 0)::BIGINT AS \"loc_removed!\"\n        FROM spine s\n        LEFT JOIN agg a ON a.date = s.date\n        ORDER BY s.date\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "date!",
+        "type_info": "Date",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "commits!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "insertions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "deletions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "loc_added!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "loc_removed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "5aa8ddc8cdfa4d2a6d98102fe699623058c32f6f9316ba7b0f44af2956e6ebc5"
+}

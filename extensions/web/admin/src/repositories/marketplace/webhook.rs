@@ -19,6 +19,8 @@ pub struct UsageEventParams<'a> {
     pub dedup_key: &'a str,
     pub content_input_bytes: i64,
     pub content_output_bytes: i64,
+    pub loc_added: i64,
+    pub loc_removed: i64,
 }
 
 pub async fn insert_plugin_usage_event(
@@ -30,8 +32,9 @@ pub async fn insert_plugin_usage_event(
     let result = sqlx::query!(
         "INSERT INTO plugin_usage_events
             (id, user_id, session_id, event_type, tool_name, metadata,
-             description, prompt_preview, cwd, dedup_key)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+             description, prompt_preview, cwd, dedup_key,
+             content_input_bytes, content_output_bytes, loc_added, loc_removed)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
          ON CONFLICT (dedup_key) WHERE dedup_key IS NOT NULL DO NOTHING",
         &id,
         params.user_id.as_str(),
@@ -43,6 +46,10 @@ pub async fn insert_plugin_usage_event(
         params.prompt_preview,
         params.cwd,
         params.dedup_key,
+        params.content_input_bytes,
+        params.content_output_bytes,
+        params.loc_added,
+        params.loc_removed,
     )
     .execute(pool)
     .await?;

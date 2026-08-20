@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            u.id AS \"user_id!: UserId\",\n            COALESCE(u.display_name, u.full_name, u.name, u.email) AS \"label!\",\n            u.email AS \"email!\",\n            COALESCE(NULLIF(upe.department, ''), 'Default') AS \"department!\",\n            o.name AS \"org_name!\",\n            last.last_request_at AS \"last_request_at?\"\n        FROM organization_members m\n        JOIN users u ON u.id = m.user_id AND u.status = 'active'\n        JOIN organizations o ON o.id = m.org_id\n        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id\n        LEFT JOIN LATERAL (\n            SELECT MAX(r.created_at) AS last_request_at\n            FROM ai_requests r\n            WHERE r.user_id = u.id AND NOT r.synthetic\n        ) last ON TRUE\n        WHERE ($1::TEXT IS NULL OR o.slug = $1)\n          AND ($2::TEXT IS NULL OR COALESCE(NULLIF(upe.department, ''), 'Default') = $2)\n          AND (last.last_request_at IS NULL\n               OR last.last_request_at < NOW() - INTERVAL '30 days')\n        ORDER BY last.last_request_at ASC NULLS FIRST, u.email\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "label!",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "email!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "department!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "org_name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "last_request_at?",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      null,
+      false,
+      null
+    ]
+  },
+  "hash": "6841610de5187ed16b82095df98aa7223f182b19662bc963d54c9871f267bf56"
+}

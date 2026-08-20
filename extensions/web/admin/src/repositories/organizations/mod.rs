@@ -15,6 +15,7 @@
 //! the gateway budget guard also runs, so what an operator is shown and what a
 //! customer is throttled on cannot drift apart.
 
+pub mod budget_warnings;
 pub mod crud;
 pub mod detail;
 pub mod metrics;

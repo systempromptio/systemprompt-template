@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            o.id AS \"org_id!\",\n            o.name AS \"name!\",\n            p.monthly_cost_cap_microdollars AS \"cap!\",\n            p.monthly_cost_warn_microdollars AS \"warn?\",\n            COALESCE((\n                SELECT SUM(r.cost_microdollars)::BIGINT\n                FROM ai_requests r\n                JOIN organization_members peer ON peer.user_id = r.user_id\n                WHERE peer.org_id = o.id\n                  AND r.created_at >= DATE_TRUNC('month', NOW())\n            ), 0) AS \"spent!\"\n        FROM organization_members m\n        JOIN organizations o ON o.id = m.org_id\n        JOIN plans p ON p.id = o.plan_id\n        WHERE m.user_id = $1\n          AND o.status = 'active'\n          AND p.monthly_cost_cap_microdollars IS NOT NULL\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "org_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "cap!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "plans",
+            "name": "monthly_cost_cap_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "warn?",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "plans",
+            "name": "monthly_cost_warn_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "spent!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "588fd1c90b69126bd05ab8e6b29dc0d194b766cfd8afe2244e4cafd578488014"
+}

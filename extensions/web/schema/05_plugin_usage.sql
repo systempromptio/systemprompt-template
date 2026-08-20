@@ -14,6 +14,12 @@ CREATE TABLE IF NOT EXISTS plugin_usage_events (
     cwd TEXT,
     content_input_bytes BIGINT DEFAULT 0,
     content_output_bytes BIGINT DEFAULT 0,
+    -- AI-authored line deltas, computed at ingest from the un-truncated
+    -- Edit/Write tool input (sanitize_metadata destroys the diff text, so
+    -- these numbers cannot be back-derived later). Converged on established
+    -- databases by migrations/027_usage_loc_columns.sql.
+    loc_added BIGINT NOT NULL DEFAULT 0,
+    loc_removed BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

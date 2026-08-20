@@ -9,6 +9,7 @@ pub mod dashboard_report;
 pub mod request_stats;
 pub mod requests;
 pub mod session_detail;
+pub mod site;
 pub mod tools;
 
 pub use agents::{AgentRow, list_agents};

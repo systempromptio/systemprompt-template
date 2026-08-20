@@ -69,6 +69,33 @@
         </form>
     </div>
 
+    {{#if current_user.is_platform_admin}}
+    <div class="card mb-6">
+        <div class="card-header">
+            <h3>Organization</h3>
+            <span class="text-muted">Move this user between organizations or change their org role. Moving mints a seat in the target organization.</span>
+        </div>
+        <div id="org-membership" class="form-grid" data-user-id="{{user.user_id}}">
+            <label class="form-field">
+                <span class="form-label">Organization</span>
+                <select id="org-membership-org"></select>
+            </label>
+            <label class="form-field">
+                <span class="form-label">Org role</span>
+                <select id="org-membership-role">
+                    <option value="member">member</option>
+                    <option value="admin">admin</option>
+                    <option value="owner">owner</option>
+                </select>
+            </label>
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="org-membership-save">Move / set role</button>
+                <span class="form-status" id="org-membership-status" aria-live="polite"></span>
+            </div>
+        </div>
+    </div>
+    {{/if}}
+
     {{#if runtime}}
     <div class="card mb-6">
         <h3>Runtime</h3>

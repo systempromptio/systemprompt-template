@@ -21,7 +21,7 @@
 --}}
 <figure class="timeseries" data-tone="{{tone}}">
     <figcaption class="timeseries__head">
-        <span class="timeseries__title">{{title}}</span>
+        <span class="timeseries__title">{{chart_title}}</span>
         <span class="timeseries__subtitle">{{subtitle}}</span>
     </figcaption>
     {{#if has_data}}
@@ -32,7 +32,7 @@
             <span>0</span>
         </div>
         <div class="timeseries__bars" role="img"
-             aria-label="{{title}} from {{x_start_display}} to {{x_end_display}}, peak {{y_max_display}}">
+             aria-label="{{chart_title}} from {{x_start_display}} to {{x_end_display}}, peak {{y_max_display}}">
             {{#each series}}
             <span class="timeseries__bar" style="--v:{{this.pct}}%" title="{{this.tooltip}}"></span>
             {{/each}}

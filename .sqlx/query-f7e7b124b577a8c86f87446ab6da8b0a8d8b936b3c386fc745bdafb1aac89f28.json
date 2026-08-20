@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COALESCE(SUM(ru.loc_added_ai), 0)::BIGINT AS \"loc_added!\",\n            COALESCE(SUM(ru.loc_removed_ai), 0)::BIGINT AS \"loc_removed!\",\n            COALESCE(SUM(ru.commits_count), 0)::BIGINT AS \"commits!\",\n            COALESCE(SUM(ru.commit_insertions), 0)::BIGINT AS \"insertions!\",\n            COALESCE(SUM(ru.commit_deletions), 0)::BIGINT AS \"deletions!\"\n        FROM admin_usage_daily_rollups ru\n        LEFT JOIN organization_members m ON m.user_id = ru.user_id\n        LEFT JOIN organizations o ON o.id = m.org_id\n        LEFT JOIN user_profile_ext upe ON upe.user_id = ru.user_id\n        WHERE ru.date >= ($1::TIMESTAMPTZ)::DATE AND ru.date <= ($2::TIMESTAMPTZ)::DATE\n          AND ($3::TEXT IS NULL OR o.slug = $3)\n          AND ($4::TEXT IS NULL OR COALESCE(NULLIF(upe.department, ''), 'Default') = $4)\n          AND ($5::TEXT IS NULL OR ru.user_id = $5)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "loc_added!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "loc_removed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "commits!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "insertions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "deletions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "f7e7b124b577a8c86f87446ab6da8b0a8d8b936b3c386fc745bdafb1aac89f28"
+}

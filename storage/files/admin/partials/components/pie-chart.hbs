@@ -1,0 +1,49 @@
+{{!--
+  Distribution pie, CSS-only via conic-gradient.
+
+  Invoke as: {{> components/pie-chart model_pie}}
+  The partial's root context is the pie object itself.
+
+  The disc is decoration: its whole stop list is precomputed by the view layer
+  (`--pie-stops`), so the template does no arithmetic. The legend is the
+  accessible and interactive representation — each row carries the share, the
+  detail line, and an optional drill-down link.
+
+  Inputs (fields on the passed context):
+    title / subtitle    heading and the one-line summary under it
+    has_data            false when the window has nothing to slice
+    stops               full conic-gradient stop list
+    aria_label          spoken summary of the slices
+    legend              [{label, color_index, share_display, value_display, filter_url}]
+    empty_message       shown instead of the disc when has_data is false
+--}}
+<figure class="pie-chart">
+    <figcaption class="pie-chart__head">
+        <span class="pie-chart__title">{{chart_title}}</span>
+        <span class="pie-chart__subtitle">{{subtitle}}</span>
+    </figcaption>
+    {{#if has_data}}
+    <div class="pie-chart__body">
+        <div class="pie-chart__disc" role="img" aria-label="{{aria_label}}"
+             style="--pie-stops: {{stops}}"></div>
+        <ul class="pie-chart__legend">
+            {{#each legend}}
+            <li class="pie-chart__item">
+                <span class="pie-chart__swatch pie-chart__swatch--{{this.color_index}}" aria-hidden="true"></span>
+                <span class="pie-chart__label">
+                    {{#if this.filter_url}}
+                    <a href="{{this.filter_url}}" title="Show these calls in the request log">{{this.label}}</a>
+                    {{else}}
+                    {{this.label}}
+                    {{/if}}
+                </span>
+                <span class="pie-chart__share">{{this.share_display}}</span>
+                <span class="pie-chart__value">{{this.value_display}}</span>
+            </li>
+            {{/each}}
+        </ul>
+    </div>
+    {{else}}
+    <p class="chart-empty">{{empty_message}}</p>
+    {{/if}}
+</figure>

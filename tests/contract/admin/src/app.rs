@@ -87,7 +87,7 @@ impl App {
             .expect("build the admin template engine from storage/files/admin")
             .with_branding(branding);
 
-        let api = Router::new().nest("/admin", admin::admin_router(Arc::clone(pool)));
+        let api = Router::new().nest("/admin", admin::admin_router(Arc::clone(pool), pool));
         // Salesforce SSO is disabled by default: the suite drives routes, and a
         // configured IdP would make every sign-in path depend on a live org.
         let sf_deps = admin::SalesforceDeps {

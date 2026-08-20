@@ -34,3 +34,40 @@ if (form) {
     }
   });
 }
+
+const orgSection = document.getElementById('org-membership');
+if (orgSection) {
+  const orgSelect = document.getElementById('org-membership-org');
+  const roleSelect = document.getElementById('org-membership-role');
+  const saveBtn = document.getElementById('org-membership-save');
+  const orgStatus = document.getElementById('org-membership-status');
+
+  const loadOrgs = async () => {
+    try {
+      const orgs = await apiFetch('/management/organizations');
+      orgSelect.innerHTML = (orgs || []).map((o) => {
+        const seats = o.seat_limit == null ? `${o.seats_used}` : `${o.seats_used}/${o.seat_limit}`;
+        return `<option value="${o.slug}">${o.name} (${seats} seats)</option>`;
+      }).join('');
+    } catch {
+    }
+  };
+
+  saveBtn?.addEventListener('click', async () => {
+    const userId = orgSection.dataset.userId;
+    if (!userId || !orgSelect.value) return;
+    if (orgStatus) orgStatus.textContent = 'Saving…';
+    try {
+      await apiFetch('/management/users/' + encodeURIComponent(userId) + '/organization', {
+        method: 'PUT',
+        body: JSON.stringify({ org: orgSelect.value, org_role: roleSelect.value }),
+      });
+      if (orgStatus) orgStatus.textContent = 'Saved';
+      showToast('Organization membership updated', 'success');
+    } catch (err) {
+      if (orgStatus) orgStatus.textContent = '';
+    }
+  });
+
+  loadOrgs();
+}

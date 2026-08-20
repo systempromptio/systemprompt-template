@@ -17,6 +17,8 @@ pub(crate) const SCHEMA_AUDIT_EVENT_NOTIFY: &str =
 pub(crate) const SCHEMA_SALESFORCE_IDENTITY: &str =
     include_str!("../schema/15_salesforce_identity.sql");
 pub(crate) const SCHEMA_ORGANIZATIONS: &str = include_str!("../schema/16_organizations.sql");
+pub(crate) const SCHEMA_USAGE_METRICS: &str = include_str!("../schema/17_usage_metrics.sql");
+pub(crate) const SCHEMA_USER_INVITES: &str = include_str!("../schema/18_user_invites.sql");
 
 #[doc(hidden)]
 pub fn schema_definitions() -> Vec<SchemaDefinition> {
@@ -30,10 +32,15 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::new("", SCHEMA_AUDIT_EVENT_NOTIFY),
         SchemaDefinition::new("", SCHEMA_SALESFORCE_IDENTITY),
         SchemaDefinition::new("", SCHEMA_ORGANIZATIONS),
+        SchemaDefinition::new("", SCHEMA_USAGE_METRICS),
+        SchemaDefinition::new("", SCHEMA_USER_INVITES),
     ]
 }
 
+// Why: not `const` — with migrations present, `extension_migrations!()`
+// expands to a `vec![…]` of embedded files, which cannot be built in const
+// context (it could while the migrations directory was empty).
 #[doc(hidden)]
-pub const fn migrations() -> Vec<Migration> {
+pub fn migrations() -> Vec<Migration> {
     extension_migrations!()
 }

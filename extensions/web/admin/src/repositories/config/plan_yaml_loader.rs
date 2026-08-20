@@ -88,8 +88,8 @@ async fn read_plans(services_path: &Path) -> Result<Option<PlansDoc>, Marketplac
 
 async fn upsert_plan(pool: &PgPool, plan: &YamlPlan) -> Result<(), MarketplaceError> {
     let entry = format!("{PLANS_FILE}: {}", plan.id);
-    let grants =
-        serde_json::to_value(&plan.grants).map_err(|e| MarketplaceError::config_file(entry, e))?;
+    let grants = serde_json::to_value(&plan.grants)
+        .map_err(|e| MarketplaceError::config_file(entry.clone(), e))?;
     #[expect(
         clippy::cast_possible_truncation,
         reason = "a contract cap in dollars cannot exceed i64 microdollars at any plausible price"
@@ -104,15 +104,33 @@ async fn upsert_plan(pool: &PgPool, plan: &YamlPlan) -> Result<(), MarketplaceEr
     let price = plan
         .monthly_price_usd
         .map_or(0, |usd| (usd * MICRODOLLARS_PER_USD) as i64);
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "a warning threshold in dollars cannot exceed i64 microdollars at any plausible price"
+    )]
+    let warn = plan
+        .monthly_cost_warn_usd
+        .map(|usd| (usd * MICRODOLLARS_PER_USD) as i64);
+
+    if let Some(warn_usd) = plan.monthly_cost_warn_usd {
+        let below_cap = plan.monthly_cost_cap_usd.is_some_and(|cap| warn_usd < cap);
+        if !below_cap {
+            return Err(MarketplaceError::Internal(format!(
+                "{entry}: monthly_cost_warn_usd must be set below monthly_cost_cap_usd — a \
+                 warning threshold without a cap beneath it has nothing to warn about"
+            )));
+        }
+    }
 
     sqlx::query!(
-        "INSERT INTO plans (id, name, description, seat_limit, monthly_cost_cap_microdollars, monthly_price_microdollars, grants)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        "INSERT INTO plans (id, name, description, seat_limit, monthly_cost_cap_microdollars, monthly_cost_warn_microdollars, monthly_price_microdollars, grants)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          ON CONFLICT (id) DO UPDATE
             SET name = EXCLUDED.name,
                 description = EXCLUDED.description,
                 seat_limit = EXCLUDED.seat_limit,
                 monthly_cost_cap_microdollars = EXCLUDED.monthly_cost_cap_microdollars,
+                monthly_cost_warn_microdollars = EXCLUDED.monthly_cost_warn_microdollars,
                 monthly_price_microdollars = EXCLUDED.monthly_price_microdollars,
                 grants = EXCLUDED.grants,
                 updated_at = NOW()",
@@ -121,6 +139,7 @@ async fn upsert_plan(pool: &PgPool, plan: &YamlPlan) -> Result<(), MarketplaceEr
         plan.description,
         plan.seat_limit,
         cap,
+        warn,
         price,
         grants,
     )

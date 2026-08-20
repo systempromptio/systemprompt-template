@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            o.id AS \"id!\",\n            o.slug AS \"slug!\",\n            o.name AS \"name!\",\n            o.plan_id,\n            p.name AS \"plan_name?\",\n            o.status AS \"status!\",\n            o.is_platform AS \"is_platform!\",\n            COALESCE(o.seat_limit_override, p.seat_limit) AS \"seat_limit?\",\n            p.monthly_cost_cap_microdollars AS \"cap?\",\n            COALESCE(p.monthly_price_microdollars, 0) AS \"revenue!\",\n            (SELECT COUNT(*) FROM organization_members m\n               JOIN users u ON u.id = m.user_id\n              WHERE m.org_id = o.id AND u.status = 'active') AS \"seats_used!\",\n            (SELECT COUNT(*) FROM departments d WHERE d.org_id = o.id) AS \"departments!\",\n            (SELECT COUNT(*) FROM access_control_rules r\n              WHERE r.rule_type = $1 AND r.rule_value = o.slug AND r.access = 'allow')\n                AS \"entitlements!\",\n            usage.requests AS \"requests!\",\n            usage.tokens AS \"tokens!\",\n            usage.cost_30d AS \"cost_30d!\",\n            usage.cost_mtd AS \"cost_mtd!\"\n        FROM organizations o\n        LEFT JOIN plans p ON p.id = o.plan_id\n        LEFT JOIN LATERAL (\n            SELECT\n                COUNT(*)::BIGINT AS requests,\n                COALESCE(SUM(r.input_tokens + r.output_tokens), 0)::BIGINT AS tokens,\n                COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS cost_30d,\n                COALESCE(SUM(r.cost_microdollars)\n                    FILTER (WHERE r.created_at >= DATE_TRUNC('month', NOW())), 0)::BIGINT\n                    AS cost_mtd\n            FROM ai_requests r\n            JOIN organization_members m ON m.user_id = r.user_id\n            WHERE m.org_id = o.id\n              AND r.created_at >= NOW() - INTERVAL '30 days'\n        ) usage ON TRUE\n        ORDER BY o.is_platform DESC, o.name\n        ",
+  "query": "\n        SELECT\n            o.id AS \"id!\",\n            o.slug AS \"slug!\",\n            o.name AS \"name!\",\n            o.plan_id,\n            p.name AS \"plan_name?\",\n            o.status AS \"status!\",\n            o.is_platform AS \"is_platform!\",\n            COALESCE(o.seat_limit_override, p.seat_limit) AS \"seat_limit?\",\n            p.monthly_cost_cap_microdollars AS \"cap?\",\n            p.monthly_cost_warn_microdollars AS \"warn?\",\n            COALESCE(p.monthly_price_microdollars, 0) AS \"revenue!\",\n            (SELECT COUNT(*) FROM organization_members m\n               JOIN users u ON u.id = m.user_id\n              WHERE m.org_id = o.id AND u.status = 'active') AS \"seats_used!\",\n            (SELECT COUNT(*) FROM departments d WHERE d.org_id = o.id) AS \"departments!\",\n            (SELECT COUNT(*) FROM access_control_rules r\n              WHERE r.rule_type = $1 AND r.rule_value = o.slug AND r.access = 'allow')\n                AS \"entitlements!\",\n            usage.requests AS \"requests!\",\n            usage.tokens AS \"tokens!\",\n            usage.cost_30d AS \"cost_30d!\",\n            usage.cost_mtd AS \"cost_mtd!\"\n        FROM organizations o\n        LEFT JOIN plans p ON p.id = o.plan_id\n        LEFT JOIN LATERAL (\n            SELECT\n                COUNT(*)::BIGINT AS requests,\n                COALESCE(SUM(r.input_tokens + r.output_tokens), 0)::BIGINT AS tokens,\n                COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS cost_30d,\n                COALESCE(SUM(r.cost_microdollars)\n                    FILTER (WHERE r.created_at >= DATE_TRUNC('month', NOW())), 0)::BIGINT\n                    AS cost_mtd\n            FROM ai_requests r\n            JOIN organization_members m ON m.user_id = r.user_id\n            WHERE m.org_id = o.id\n              AND r.created_at >= NOW() - INTERVAL '30 days'\n        ) usage ON TRUE\n        ORDER BY o.is_platform DESC, o.name\n        ",
   "describe": {
     "columns": [
       {
@@ -99,48 +99,59 @@
       },
       {
         "ordinal": 9,
+        "name": "warn?",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "plans",
+            "name": "monthly_cost_warn_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
         "name": "revenue!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "seats_used!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "departments!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 12,
+        "ordinal": 13,
         "name": "entitlements!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 13,
+        "ordinal": 14,
         "name": "requests!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 14,
+        "ordinal": 15,
         "name": "tokens!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 15,
+        "ordinal": 16,
         "name": "cost_30d!",
         "type_info": "Int8",
         "origin": "Expression"
       },
       {
-        "ordinal": 16,
+        "ordinal": 17,
         "name": "cost_mtd!",
         "type_info": "Int8",
         "origin": "Expression"
@@ -161,6 +172,7 @@
       false,
       null,
       true,
+      true,
       null,
       null,
       null,
@@ -171,5 +183,5 @@
       null
     ]
   },
-  "hash": "f04c7785b71663718836da2c294bd0c90bd71ff09b15dcb41e0e0329f56d2db0"
+  "hash": "ac7ed69be3b6b6fd4400622b29a4a37d343c2e19c708f4dbf42187d998c54266"
 }

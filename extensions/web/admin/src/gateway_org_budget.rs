@@ -136,6 +136,7 @@ impl GatewayRequestGuard for OrgBudgetGuard {
             return Ok(());
         };
         if spend.spent_microdollars < spend.cap_microdollars {
+            record_soft_cap_crossing(pool, &spend).await;
             return Ok(());
         }
 
@@ -152,6 +153,36 @@ impl GatewayRequestGuard for OrgBudgetGuard {
             spend.name,
             micro_to_usd(spend.cap_microdollars),
         )))
+    }
+}
+
+// Why: warn-only — crossing the soft threshold logs and records the month's
+// crossing, never denies. The guard trait has no non-deny channel to the
+// client, so the warning surfaces in server logs and the dashboard's spend
+// view; a per-request client-visible warning would need a core trait change.
+async fn record_soft_cap_crossing(pool: &PgPool, spend: &OrganizationSpend) {
+    let Some(warn) = spend.warn_microdollars else {
+        return;
+    };
+    if spend.spent_microdollars < warn {
+        return;
+    }
+    tracing::warn!(
+        organization = %spend.name,
+        spent_microdollars = spend.spent_microdollars,
+        warn_microdollars = warn,
+        cap_microdollars = spend.cap_microdollars,
+        "organization month-to-date spend crossed its soft budget threshold",
+    );
+    if let Err(e) = organizations::budget_warnings::upsert_org_budget_warning(
+        pool,
+        &spend.org_id,
+        warn,
+        spend.spent_microdollars,
+    )
+    .await
+    {
+        tracing::warn!(error = %e, organization = %spend.name, "failed to record soft-cap crossing");
     }
 }
 

@@ -8,10 +8,12 @@ pub(crate) mod ai_context;
 pub(crate) mod ai_summary;
 pub(crate) mod ai_summary_types;
 mod auth;
+pub(crate) mod commits;
 mod dedup;
 mod description;
 mod entity;
 mod helpers;
+pub(crate) mod loc;
 mod processing;
 pub(crate) mod session_summary;
 
@@ -89,6 +91,7 @@ struct DispatchContext<'a> {
 
 async fn dispatch_inserted_event(ctx: &DispatchContext<'_>) {
     let content_bytes = helpers::compute_content_bytes(ctx.payload);
+    let loc_delta = loc::compute_loc_delta(ctx.payload);
     processing::process_inserted_event(&processing::ProcessInsertedEventParams {
         pool: ctx.pool,
         user_id: ctx.user_id,
@@ -97,6 +100,8 @@ async fn dispatch_inserted_event(ctx: &DispatchContext<'_>) {
         tool_name: ctx.payload.tool_name(),
         content_input_bytes: content_bytes.input,
         content_output_bytes: content_bytes.output,
+        loc_added: loc_delta.added,
+        loc_removed: loc_delta.removed,
         payload: ctx.payload,
         event_hub: ctx.event_hub,
         ai_service: ctx.ai_service,
@@ -111,6 +116,7 @@ async fn insert_hook_event(pool: &PgPool, user_id: &UserId, payload: &HookEventP
     let prompt_preview = helpers::generate_prompt_preview(payload);
     let dedup_key = dedup::compute_dedup_key(user_id, &session_id, payload);
     let content_bytes = helpers::compute_content_bytes(payload);
+    let loc_delta = loc::compute_loc_delta(payload);
     let sanitized_metadata = helpers::sanitize_metadata(&payload.raw);
 
     let usage_params = webhook::UsageEventParams {
@@ -125,6 +131,8 @@ async fn insert_hook_event(pool: &PgPool, user_id: &UserId, payload: &HookEventP
         dedup_key: &dedup_key,
         content_input_bytes: content_bytes.input,
         content_output_bytes: content_bytes.output,
+        loc_added: loc_delta.added,
+        loc_removed: loc_delta.removed,
     };
 
     match webhook::insert_plugin_usage_event(pool, &usage_params).await {

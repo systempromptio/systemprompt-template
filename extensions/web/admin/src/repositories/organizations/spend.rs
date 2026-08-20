@@ -17,9 +17,13 @@ use systemprompt_web_shared::error::MarketplaceError;
 /// caller reads as "no ceiling applies".
 #[derive(Debug, Clone)]
 pub struct OrganizationSpend {
+    pub org_id: String,
     pub name: String,
     pub spent_microdollars: i64,
     pub cap_microdollars: i64,
+    /// The plan's soft threshold; `None` means no warning is configured.
+    /// The loader guarantees a set value is below the cap.
+    pub warn_microdollars: Option<i64>,
 }
 
 pub async fn find_spend_for_user(
@@ -29,8 +33,10 @@ pub async fn find_spend_for_user(
     let row = sqlx::query!(
         r#"
         SELECT
+            o.id AS "org_id!",
             o.name AS "name!",
             p.monthly_cost_cap_microdollars AS "cap!",
+            p.monthly_cost_warn_microdollars AS "warn?",
             COALESCE((
                 SELECT SUM(r.cost_microdollars)::BIGINT
                 FROM ai_requests r
@@ -51,8 +57,10 @@ pub async fn find_spend_for_user(
     .await?;
 
     Ok(row.map(|r| OrganizationSpend {
+        org_id: r.org_id,
         name: r.name,
         spent_microdollars: r.spent,
         cap_microdollars: r.cap,
+        warn_microdollars: r.warn,
     }))
 }

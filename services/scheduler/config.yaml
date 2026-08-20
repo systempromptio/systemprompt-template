@@ -88,6 +88,11 @@ scheduler:
       owner: admin
       enabled: true
 
+    - name: usage_daily_rollup
+      extension: web
+      owner: admin
+      enabled: true
+
     # publish_pipeline sub-steps. The composite above runs each of these every
     # 15 minutes in dependency order; scheduling them independently would
     # double-run them, so they are disabled here (an explicit entry also

@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO users (id, name, email, display_name, status, email_verified, roles)\n        VALUES ($1, LOWER($2), LOWER($2), $2, 'active', true, $3)\n        ON CONFLICT (email) DO UPDATE SET\n            status = 'active',\n            roles = EXCLUDED.roles,\n            updated_at = NOW()\n        RETURNING id AS \"id!: UserId\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e3fd0fdb282546cab59c86e81897be83ef8d16341850d1ff2454243fd9f8969b"
+}

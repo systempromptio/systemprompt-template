@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO admin_usage_daily_rollups\n            (user_id, date, prompts, tool_uses, errors, loc_added_ai, loc_removed_ai)\n        SELECT\n            user_id,\n            date,\n            COALESCE(SUM(event_count) FILTER (WHERE event_type LIKE '%UserPromptSubmit%'), 0),\n            COALESCE(SUM(event_count)\n                FILTER (WHERE event_type IN ('PostToolUse', 'PostToolUseFailure')), 0),\n            COALESCE(SUM(error_count), 0),\n            COALESCE(SUM(loc_added), 0),\n            COALESCE(SUM(loc_removed), 0)\n        FROM plugin_usage_daily\n        WHERE date >= (NOW() AT TIME ZONE 'UTC')::DATE - ($1::INT)\n        GROUP BY user_id, date\n        ON CONFLICT (user_id, date) DO UPDATE SET\n            prompts = EXCLUDED.prompts,\n            tool_uses = EXCLUDED.tool_uses,\n            errors = EXCLUDED.errors,\n            loc_added_ai = EXCLUDED.loc_added_ai,\n            loc_removed_ai = EXCLUDED.loc_removed_ai,\n            updated_at = NOW()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e6ee200bbfbc4499e54af5c69f5012ffcb29abc52bc6eecab1bda37161b520a5"
+}

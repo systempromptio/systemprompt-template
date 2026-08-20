@@ -30,6 +30,12 @@ pub struct YamlPlan {
     /// as microdollars because that is how `ai_requests` accounts for cost.
     #[serde(default)]
     pub monthly_cost_cap_usd: Option<f64>,
+    /// Soft warning threshold below the cap. Crossing it never denies a
+    /// request — the gateway guard records it and the dashboard shows
+    /// proximity. Requires a cap, and must be below it; the loader rejects
+    /// anything else. Omit for no warning.
+    #[serde(default)]
+    pub monthly_cost_warn_usd: Option<f64>,
     /// The monthly licence fee. The cap above is what the customer may spend;
     /// this is what they pay, and the difference is the margin the enterprise
     /// dashboard reports. Absent means a non-billed plan.

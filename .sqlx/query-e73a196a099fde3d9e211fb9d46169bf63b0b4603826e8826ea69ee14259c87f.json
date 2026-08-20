@@ -1,0 +1,86 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT org_id AS \"org_id!\", month AS \"month!\",\n               threshold_microdollars AS \"threshold!\",\n               spent_microdollars AS \"spent!\",\n               first_seen_at AS \"first_seen_at!\",\n               last_seen_at AS \"last_seen_at!\"\n        FROM org_budget_warnings\n        WHERE month = DATE_TRUNC('month', NOW())::DATE\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "org_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "org_budget_warnings",
+            "name": "org_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "month!",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "org_budget_warnings",
+            "name": "month"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "threshold!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "org_budget_warnings",
+            "name": "threshold_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "spent!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "org_budget_warnings",
+            "name": "spent_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "first_seen_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "org_budget_warnings",
+            "name": "first_seen_at"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "last_seen_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "org_budget_warnings",
+            "name": "last_seen_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e73a196a099fde3d9e211fb9d46169bf63b0b4603826e8826ea69ee14259c87f"
+}

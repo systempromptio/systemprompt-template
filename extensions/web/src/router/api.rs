@@ -16,7 +16,7 @@ pub(crate) fn build(
     session_service: &Arc<SessionCreationService>,
     sf_deps: admin::SalesforceDeps,
 ) -> Router {
-    let admin_api = admin::admin_router(Arc::clone(&db.read));
+    let admin_api = admin::admin_router(Arc::clone(&db.read), &db.write);
     let webhook_api =
         admin::hooks_webhook_router(Arc::clone(&db.write), Arc::clone(session_service));
     let secrets_api = admin::secrets_router(Arc::clone(&db.write));

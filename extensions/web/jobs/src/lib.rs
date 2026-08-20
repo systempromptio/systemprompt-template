@@ -30,6 +30,7 @@ mod publish;
 mod robots;
 mod secret_migration;
 mod sitemap;
+mod usage_rollup;
 
 pub use error::JobError;
 pub use registry::{JOB_TAG, extension_jobs};
@@ -45,6 +46,7 @@ pub use publish::PublishPipelineJob;
 pub use robots::RobotsTxtGenerationJob;
 pub use secret_migration::SecretMigrationJob;
 pub use sitemap::SitemapGenerationJob;
+pub use usage_rollup::UsageDailyRollupJob;
 
 /// The pure helpers behind the jobs above, re-exported for the external test
 /// workspace so their file-format and accounting behaviour can be asserted

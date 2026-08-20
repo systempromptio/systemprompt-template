@@ -179,6 +179,7 @@ fn plan_optional_fields_default_and_grant_access_defaults_to_allow() -> anyhow::
     assert_eq!(plan.description, "");
     assert_eq!(plan.seat_limit, None);
     assert_eq!(plan.monthly_cost_cap_usd, None);
+    assert_eq!(plan.monthly_cost_warn_usd, None);
     assert_eq!(plan.monthly_price_usd, None);
     assert_eq!(plan.grants.len(), 1);
     assert_eq!(plan.grants[0].access, "allow");
@@ -195,6 +196,16 @@ fn explicit_plan_values_are_preserved() -> anyhow::Result<()> {
     assert!((plan.monthly_cost_cap_usd.expect("cap") - 500.5).abs() < f64::EPSILON);
     assert!((plan.monthly_price_usd.expect("price") - 1200.0).abs() < f64::EPSILON);
     assert_eq!(plan.grants[0].access, "deny");
+    Ok(())
+}
+
+#[test]
+fn plan_warn_threshold_is_read() -> anyhow::Result<()> {
+    let doc: PlansDoc = serde_yaml::from_str(
+        "plans:\n  - id: pro\n    name: Pro\n    monthly_cost_cap_usd: 500.0\n    monthly_cost_warn_usd: 400.0\n",
+    )?;
+    let plan = &doc.plans[0];
+    assert!((plan.monthly_cost_warn_usd.expect("warn") - 400.0).abs() < f64::EPSILON);
     Ok(())
 }
 

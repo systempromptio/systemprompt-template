@@ -29,6 +29,8 @@ fn summary_params<'a>(
         event_type,
         content_input_bytes: 10,
         content_output_bytes: 5,
+        loc_added: 7,
+        loc_removed: 2,
         is_subagent_stop: false,
         file_path: None,
         is_from_subagent: false,

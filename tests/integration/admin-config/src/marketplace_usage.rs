@@ -26,6 +26,8 @@ fn usage_params<'a>(
         dedup_key,
         content_input_bytes: 120,
         content_output_bytes: 340,
+        loc_added: 5,
+        loc_removed: 1,
     }
 }
 

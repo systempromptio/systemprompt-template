@@ -19,6 +19,11 @@ CREATE TABLE IF NOT EXISTS plans (
     -- NULL is uncapped. Enforced by the gateway guard, one request late,
     -- because a request's cost is only known after the response.
     monthly_cost_cap_microdollars BIGINT,
+    -- Soft threshold below the cap. Crossing it never denies a request; the
+    -- gateway guard records it in org_budget_warnings and the dashboard shows
+    -- proximity. NULL is no warning. The YAML loader rejects warn >= cap.
+    -- Converged on established databases by migrations/028_plans_soft_cap.sql.
+    monthly_cost_warn_microdollars BIGINT,
     -- What the customer is billed per month for the licence. The cap above is
     -- what they may spend; this is what they pay. Both are needed to state a
     -- per-organization margin, which is the number the enterprise dashboard

@@ -22,6 +22,7 @@ fn all_jobs_registered() {
         "robots_txt_generation",
         "secret_migration",
         "sitemap_generation",
+        "usage_daily_rollup",
     ]
     .into();
     assert_eq!(names, expected);

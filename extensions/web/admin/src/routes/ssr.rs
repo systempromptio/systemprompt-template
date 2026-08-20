@@ -17,6 +17,7 @@ pub fn admin_ssr_router(
     sf_deps: SalesforceDeps,
 ) -> Router {
     let inner = root_routes()
+        .merge(analytics_routes())
         .merge(enterprise_routes())
         .merge(access_routes())
         .merge(catalog_routes())
@@ -68,14 +69,36 @@ fn public_routes() -> Router<Arc<PgPool>> {
             "/auth/passkey/register",
             post(handlers::passkey_auth::passkey_register),
         )
+        // Why: public by design — the invite token in the URL/body is the
+        // authorization, exactly like the passkey register door above.
+        .route("/invite/{token}", get(handlers::ssr::invite_accept_page))
+        .route(
+            "/auth/invite/accept",
+            post(handlers::invites::accept_invite_handler),
+        )
 }
 
 fn root_routes() -> Router<Arc<PgPool>> {
     Router::new().route("/", get(root_redirect))
 }
 
-async fn root_redirect() -> axum::response::Redirect {
-    axum::response::Redirect::to("/admin/profile")
+// Why: admins land on the analytics dashboard; everyone else still gets their
+// profile — the non-admin gate would bounce them off /admin/analytics anyway.
+async fn root_redirect(
+    Extension(user_ctx): Extension<crate::types::UserContext>,
+) -> axum::response::Redirect {
+    if user_ctx.is_admin {
+        axum::response::Redirect::to("/admin/analytics")
+    } else {
+        axum::response::Redirect::to("/admin/profile")
+    }
+}
+
+// Why: admin-scoped rather than platform-scoped — an organization's own
+// administrator is a first-class viewer of their own data; the handler locks
+// their scope to their organization.
+fn analytics_routes() -> Router<Arc<PgPool>> {
+    Router::new().route("/analytics", get(handlers::ssr::analytics_dashboard_page))
 }
 
 fn enterprise_routes() -> Router<Arc<PgPool>> {

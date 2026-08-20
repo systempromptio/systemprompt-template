@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH spine AS (\n            SELECT generate_series(\n                DATE_TRUNC($6, $1::TIMESTAMPTZ),\n                DATE_TRUNC($6, $2::TIMESTAMPTZ),\n                ('1 ' || $6)::INTERVAL\n            ) AS bucket_start\n        ),\n        agg AS (\n            SELECT\n                DATE_TRUNC($6, r.created_at) AS bucket_start,\n                COUNT(*)::BIGINT AS requests,\n                COUNT(*) FILTER (WHERE r.status NOT IN ('completed', 'pending', 'streaming'))::BIGINT\n                    AS errors,\n                COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS cost,\n                COUNT(DISTINCT r.user_id)::BIGINT AS active_users\n            FROM ai_requests r\n            LEFT JOIN organization_members m ON m.user_id = r.user_id\n            LEFT JOIN organizations o ON o.id = m.org_id\n            LEFT JOIN user_profile_ext upe ON upe.user_id = r.user_id\n            WHERE r.created_at >= $1 AND r.created_at < $2\n              AND NOT r.synthetic\n              AND ($3::TEXT IS NULL OR o.slug = $3)\n              AND ($4::TEXT IS NULL OR COALESCE(NULLIF(upe.department, ''), 'Default') = $4)\n              AND ($5::TEXT IS NULL OR r.user_id = $5)\n            GROUP BY 1\n        )\n        SELECT\n            s.bucket_start AS \"bucket_start!\",\n            COALESCE(a.requests, 0)::BIGINT AS \"requests!\",\n            COALESCE(a.errors, 0)::BIGINT AS \"errors!\",\n            COALESCE(a.cost, 0)::BIGINT AS \"cost!\",\n            COALESCE(a.active_users, 0)::BIGINT AS \"active_users!\"\n        FROM spine s\n        LEFT JOIN agg a ON a.bucket_start = s.bucket_start\n        ORDER BY s.bucket_start\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "bucket_start!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "active_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "b228aaa5c5892414a32af31c89c3c6728b8b28bd1f7dfad5ada0963fc7d84722"
+}

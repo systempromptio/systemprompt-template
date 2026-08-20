@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS plugin_usage_daily (
     error_count BIGINT NOT NULL DEFAULT 0,
     content_input_bytes BIGINT DEFAULT 0,
     content_output_bytes BIGINT DEFAULT 0,
+    loc_added BIGINT NOT NULL DEFAULT 0,
+    loc_removed BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -69,6 +71,8 @@ CREATE TABLE IF NOT EXISTS plugin_session_summaries (
     subagent_spawns BIGINT NOT NULL DEFAULT 0,
     user_prompts INT,
     automated_actions INT,
+    loc_added BIGINT NOT NULL DEFAULT 0,
+    loc_removed BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
