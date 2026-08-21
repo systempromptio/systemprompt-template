@@ -118,6 +118,7 @@ pub(crate) fn install_config() {
         content_negotiation: ContentNegotiationConfig::default(),
         security_headers: SecurityHeadersConfig::default(),
         allow_registration: false,
+        login_page_url: None,
         system_admin_username: "admin".to_owned(),
         system_admin_email: None,
     });
