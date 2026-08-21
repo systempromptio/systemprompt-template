@@ -94,14 +94,16 @@ fn cases(session: &str) -> Vec<EventCase> {
             r#""prompt":"Explain the governance chain in one paragraph.""#,
             Some("UserPromptSubmit"),
         ),
-        // The one event the handler answers before persisting: the governance
-        // decision for a `PreToolUse` belongs to `/hooks/govern`, and tracking
-        // it here would double-count every tool call.
+        // Recorded, not dropped. The governance *decision* still belongs to
+        // `/hooks/govern`; this row is the attempt itself, which the grant-rate
+        // proxy needs paired with its PostToolUse. It does not double-count
+        // tool use: the rollup's `tool_uses` filters on PostToolUse and
+        // PostToolUseFailure only.
         ev(
-            "pre tool use is dropped",
+            "pre tool use",
             "PreToolUse",
             r#""tool_name":"Bash","tool_input":{"command":"ls"},"tool_use_id":"tu-1""#,
-            None,
+            Some("PreToolUse"),
         ),
         ev(
             "post tool use",
