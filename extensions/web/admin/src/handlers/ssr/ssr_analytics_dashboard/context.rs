@@ -229,6 +229,9 @@ pub(super) struct WastedSeatView {
 
 #[derive(Debug, Serialize)]
 pub(super) struct CodeFrameView {
+    // Why: serialized as frame_title — the layout partial's `title=` hash
+    // param shadows `title` even via `this.title` in nested each-blocks.
+    #[serde(rename = "frame_title")]
     pub title: &'static str,
     pub value_display: String,
     pub caption: &'static str,

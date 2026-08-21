@@ -148,10 +148,10 @@ impl GatewayRequestGuard for OrgBudgetGuard {
             "gateway request denied: organization monthly budget exhausted",
         );
         Err(GatewayDenyReason::new(format!(
-            "{} has reached its monthly spend cap of ${:.2}. Contact your administrator to raise \
+            "{} has reached its monthly spend cap of {}. Contact your administrator to raise \
              the plan limit.",
             spend.name,
-            micro_to_usd(spend.cap_microdollars),
+            display_usd(spend.cap_microdollars),
         )))
     }
 }
@@ -196,12 +196,19 @@ async fn load_org_spend(pool: &PgPool, user_id: &UserId) -> Option<OrganizationS
         .flatten()
 }
 
+// Why: two decimals round a sub-cent evaluation cap to "$0.00", which reads
+// as "no cap at all" in the denial message; tiny caps get four decimals.
 #[expect(
     clippy::cast_precision_loss,
     reason = "display only: a contract cap in dollars is far below f64's exact-integer range"
 )]
-fn micro_to_usd(microdollars: i64) -> f64 {
-    microdollars as f64 / 1_000_000.0
+fn display_usd(microdollars: i64) -> String {
+    let usd = microdollars as f64 / 1_000_000.0;
+    if microdollars < 10_000 {
+        format!("${usd:.4}")
+    } else {
+        format!("${usd:.2}")
+    }
 }
 
 register_gateway_guard!(RouteEntitlementGuard);

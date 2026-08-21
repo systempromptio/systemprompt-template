@@ -23,30 +23,30 @@ export async function clearAccessToken() {
 
 export async function showError(msg) {
   await clearAccessToken();
-  errorDiv.textContent = msg;
-  errorDiv.hidden = false;
-  loadingSection.hidden = true;
-  loginForm.hidden = true;
+  if (errorDiv) { errorDiv.textContent = msg; errorDiv.hidden = false; }
+  if (loadingSection) loadingSection.hidden = true;
+  if (loginForm) loginForm.hidden = true;
   if (registerForm) registerForm.hidden = true;
-  retrySection.hidden = false;
+  if (retrySection) retrySection.hidden = false;
 }
 
 export function showLoginForm() {
-  loginForm.hidden = false;
-  loadingSection.hidden = true;
-  retrySection.hidden = true;
-  errorDiv.hidden = true;
+  if (loginForm) loginForm.hidden = false;
+  if (loadingSection) loadingSection.hidden = true;
+  if (retrySection) retrySection.hidden = true;
+  if (errorDiv) errorDiv.hidden = true;
 }
 
 export function showLoading(msg) {
-  loadingText.textContent = msg || 'Processing...';
-  loginForm.hidden = true;
+  if (loadingText) loadingText.textContent = msg || 'Processing...';
+  if (loginForm) loginForm.hidden = true;
   if (registerForm) registerForm.hidden = true;
-  loadingSection.hidden = false;
-  retrySection.hidden = true;
+  if (loadingSection) loadingSection.hidden = false;
+  if (retrySection) retrySection.hidden = true;
 }
 
 function setErrorMessage(msg, correctUrl) {
+  if (!errorDiv) return;
   errorDiv.textContent = msg;
   if (correctUrl) {
     errorDiv.append(' ');
@@ -59,8 +59,8 @@ function setErrorMessage(msg, correctUrl) {
 }
 
 export function showPasskeyError(error) {
-  loadingSection.hidden = true;
-  loginForm.hidden = false;
+  if (loadingSection) loadingSection.hidden = true;
+  if (loginForm) loginForm.hidden = false;
   if (error.name === 'RpIdMismatchError') setErrorMessage(error.message, error.correctUrl);
   else if (error.name === 'NotAllowedError') setErrorMessage('Authentication was cancelled or not allowed.');
   else if (error.name === 'NotSupportedError') setErrorMessage('Passkeys are not supported on this device.');
@@ -74,12 +74,13 @@ export function showPasskeyError(error) {
 }
 
 export function showEmailError(msg) {
+  if (!errorDiv) return;
   errorDiv.textContent = msg;
   errorDiv.hidden = false;
 }
 
 export function showRegisterError(msg) {
-  loadingSection.hidden = true;
+  if (loadingSection) loadingSection.hidden = true;
   if (registerForm) registerForm.hidden = false;
   setErrorMessage(msg);
 }
@@ -88,9 +89,9 @@ export function initPaneToggles() {
   const ssoBlock = document.querySelector('.sso-block');
   const showPane = (showRegister) => (e) => {
     e.preventDefault();
-    errorDiv.hidden = true;
+    if (errorDiv) errorDiv.hidden = true;
     if (registerForm) registerForm.hidden = !showRegister;
-    loginForm.hidden = showRegister;
+    if (loginForm) loginForm.hidden = showRegister;
     if (ssoBlock) ssoBlock.hidden = showRegister;
   };
   document.getElementById('show-register')?.addEventListener('click', showPane(true));

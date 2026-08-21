@@ -1052,7 +1052,8 @@ build-all:
     just build --release
     just build-mcp
     just build-cli
-    just bridge-package-linux
+    just bridge-package-host
+    just downloads-fetch
     just web-build
     {{CLI_RELEASE}} infra jobs run publish_pipeline
     @echo "All components built"
@@ -1133,6 +1134,35 @@ bridge-package-linux:
 # it into storage/files/downloads/. Follow with `just publish`.
 bridge-package-windows: core-checkout
     @scripts/build-coordinator.sh run bridge-package-windows "" -- scripts/package-bridge-windows.sh
+
+# Build, sign, notarize, and stage the macOS bridge DMG (universal arm64 +
+# x86_64) into storage/files/downloads/. macOS only — needs a "Developer ID
+# Application" cert in the keychain plus a notarytool credential profile; the
+# script header has the one-time store-credentials command. Follow with
+# `just publish`.
+[macos]
+bridge-package-macos: core-checkout
+    @scripts/build-coordinator.sh run bridge-package-macos "" -- scripts/package-bridge-macos.sh
+
+# Backfill storage/files/downloads/ from the deployed host. The dir is
+# gitignored and each platform's bridge binary can only be built on that
+# platform's toolchain, so before a deploy every asset another machine produced
+# must be fetched back — otherwise the freshly baked image 404s download links
+# the site already serves. Local files always win over the remote copy.
+downloads-fetch:
+    @scripts/fetch-remote-downloads.sh
+
+# Package whatever bridge this host's toolchain can build (build-all calls
+# this; downloads-fetch then backfills the platforms this host cannot build).
+[linux]
+bridge-package-host: bridge-package-linux
+
+[macos]
+bridge-package-host: bridge-package-macos
+
+[windows]
+bridge-package-host:
+    @echo "warn: no bridge packaging runs on Windows hosts - relying on downloads-fetch."
 
 # Installs the client if it is not there yet; re-running it with a fresh code
 # re-binds the machine to whoever that code belongs to.

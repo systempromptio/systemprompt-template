@@ -157,8 +157,11 @@ Screenshot*.png
 # Storage - generated/uploaded files only
 storage/files/uploads/
 storage/files/images/generated/
-# Bridge release artefacts, produced by `just bridge-package-linux` and served
-# from the deployed host at /files/downloads.
+# Bridge release artefacts, served from the deployed host at /files/downloads.
+# Produced by `just bridge-package-{linux,windows,macos}` on the platform that
+# can build each one; `just downloads-fetch` backfills the rest from the live
+# host so a deploy from any single machine never drops another platform's
+# binary (cloud deploy bakes this whole tree into the image it ships).
 storage/files/downloads/
 
 # SQLx offline cache - MUST be committed for offline builds
