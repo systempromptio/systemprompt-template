@@ -24,7 +24,11 @@ CREATE TABLE IF NOT EXISTS plugin_usage_events (
 );
 
 CREATE INDEX IF NOT EXISTS idx_plugin_usage_user ON plugin_usage_events(user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_plugin_usage_session ON plugin_usage_events(session_id);
+-- Composite matches the trace CTE shape (created_at range, grouped by
+-- session_id); converged on established databases by
+-- migrations/029_analytics_indexes.sql, which also drops the old
+-- single-column session_id index the leftmost column covers.
+CREATE INDEX IF NOT EXISTS idx_plugin_usage_session_created ON plugin_usage_events(session_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_plugin_usage_event_type ON plugin_usage_events(event_type);
 CREATE INDEX IF NOT EXISTS idx_plugin_usage_tool_name ON plugin_usage_events(tool_name) WHERE tool_name IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_plugin_usage_created_at ON plugin_usage_events(created_at DESC);

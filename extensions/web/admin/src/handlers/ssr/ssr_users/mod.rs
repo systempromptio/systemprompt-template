@@ -121,6 +121,11 @@ pub(crate) async fn user_detail_page(
     };
 
     let departments = data::list_departments(&pool, &user_department).await;
+    let user_org_slug =
+        repositories::organizations::crud::find_organization_for_user(&pool, &user_id)
+            .await
+            .unwrap_or_default()
+            .unwrap_or_default();
 
     let has_effective_permissions = effective
         .as_ref()
@@ -133,6 +138,7 @@ pub(crate) async fn user_detail_page(
         gamification,
         not_found,
         user_department,
+        user_org_slug,
         user_assignments,
         user_devices,
         user_devices_count,
@@ -158,6 +164,7 @@ fn blank_user_detail() -> UserDetailPageData {
         gamification: None,
         not_found: true,
         user_department: String::new(),
+        user_org_slug: String::new(),
         user_assignments: super::types::UserAssignmentSummary::default(),
         user_devices: Vec::new(),
         user_devices_count: 0,

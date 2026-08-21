@@ -16,7 +16,7 @@ use systemprompt::identifiers::{Email, UserId};
 use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::error::{AdminError, AdminResult};
 use crate::repositories;
-use crate::types::{CreateUserRequest, EventsQuery, UpdateUserRequest, UserContext};
+use crate::types::{EventsQuery, UpdateUserRequest, UserContext};
 
 use super::responses::{EventsListResponse, UsersListResponse};
 
@@ -120,32 +120,6 @@ pub(crate) async fn user_usage_handler(
     let user_id = UserId::new(user_id_raw);
     let events = repositories::users::queries::list_user_usage(&pool, &user_id).await?;
     Ok(Json(EventsListResponse { events }).into_response())
-}
-
-pub(crate) async fn create_user_handler(
-    State(pool): State<Arc<PgPool>>,
-    Extension(user_ctx): Extension<UserContext>,
-    Json(body): Json<CreateUserRequest>,
-) -> AdminResult<Response> {
-    if !user_ctx.is_admin {
-        return Err(AdminError::Forbidden("Admin access required".to_owned()));
-    }
-    let user = repositories::users::mutations::create_user(&pool, &body).await?;
-    let p = Arc::clone(&pool);
-    let uid = user_ctx.user_id.clone();
-    let new_user_id = user.user_id.clone();
-    let name = user
-        .display_name
-        .clone()
-        .unwrap_or_else(|| user.user_id.as_str().to_owned());
-    tokio::spawn(async move {
-        activity::record(
-            &p,
-            NewActivity::entity_created(&uid, ActivityEntity::User, new_user_id.as_str(), &name),
-        )
-        .await;
-    });
-    Ok((StatusCode::CREATED, Json(user)).into_response())
 }
 
 pub(crate) async fn update_user_handler(

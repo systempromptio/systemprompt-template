@@ -14,9 +14,13 @@ use systemprompt::identifiers::UserId;
 pub mod code;
 pub mod distribution;
 pub mod kpis;
+pub mod latency;
 pub mod leaderboards;
+pub mod model_series;
 pub mod seats;
 pub mod series;
+pub mod session_costs;
+pub mod user_rollups;
 
 /// Optional drill-down filters, all conjunctive. `org_slug` is the URL-facing
 /// organization key (slugs are immutable; ids are not typed by hand).

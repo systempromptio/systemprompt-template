@@ -85,6 +85,12 @@ pub(crate) struct UserDetailPageData {
     pub not_found: bool,
     #[serde(default)]
     pub user_department: String,
+    // Why: the org widget's select is populated client-side from
+    // /management/organizations, which does not know which one *this* user is
+    // in — without this the control reopens on whichever org sorts first and
+    // reads as though the user had been moved there.
+    #[serde(default)]
+    pub user_org_slug: String,
     #[serde(default)]
     pub user_assignments: UserAssignmentSummary,
     #[serde(default)]

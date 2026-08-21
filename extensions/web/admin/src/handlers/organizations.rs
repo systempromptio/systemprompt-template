@@ -1,9 +1,13 @@
 //! Organization membership management: list organizations, move a user
 //! between them, change their org role.
 //!
-//! Platform-admin only. Membership is otherwise set only as a side effect of
-//! user creation or SSO just-in-time provisioning; these endpoints are the
-//! explicit door for the operator.
+//! Listing and cross-organization moves are platform-admin only. An
+//! organization's own admin (`org_role` owner/admin, `admin` role, not
+//! platform) may additionally set member↔admin for existing members of their
+//! own org — never `owner`, never a current owner, never across orgs, and
+//! never adding a non-member (membership additions stay with invites and
+//! platform admins). Membership is otherwise set only as a side effect of
+//! user creation or SSO just-in-time provisioning.
 
 use std::sync::Arc;
 
@@ -77,7 +81,9 @@ pub(crate) async fn set_user_organization_handler(
     Path(user_id_raw): Path<String>,
     Json(body): Json<SetOrganizationRequest>,
 ) -> AdminResult<Response> {
-    require_platform_admin(&user_ctx)?;
+    if !user_ctx.is_admin {
+        return Err(AdminError::Forbidden("Admin access required".to_owned()));
+    }
     let user_id = UserId::new(user_id_raw);
 
     let role = body.org_role.as_deref().unwrap_or("member");
@@ -93,11 +99,17 @@ pub(crate) async fn set_user_organization_handler(
             AdminError::NotFound(format!("No organization with slug '{}'.", body.org.trim()))
         })?;
 
-    // Why: moving into a new org mints a seat there, so the target's limit is
-    // checked; a role change inside the same org must not be blocked by a
-    // full plan (see set_membership's contract).
-    if !is_member(&pool, &user_id, &org.id).await? {
-        seats::assert_seat_available(&pool, &org.id).await?;
+    let target_role = crud::find_member_role(&pool, &user_id, &org.id).await?;
+
+    if user_ctx.is_platform_admin {
+        // Why: moving into a new org mints a seat there, so the target's
+        // limit is checked; a role change inside the same org must not be
+        // blocked by a full plan (see set_membership's contract).
+        if target_role.is_none() {
+            seats::assert_seat_available(&pool, &org.id).await?;
+        }
+    } else {
+        require_org_admin_grant(&pool, &user_ctx, &org, role, target_role.as_deref()).await?;
     }
     crud::set_membership(&pool, &user_id, &org.id, role).await?;
 
@@ -122,14 +134,50 @@ pub(crate) async fn set_user_organization_handler(
     .into_response())
 }
 
-async fn is_member(pool: &PgPool, user_id: &UserId, org_id: &str) -> AdminResult<bool> {
-    let found = sqlx::query_scalar!(
-        "SELECT 1 AS present FROM organization_members WHERE user_id = $1 AND org_id = $2",
-        user_id.as_str(),
-        org_id
-    )
-    .fetch_optional(pool)
-    .await
-    .map_err(AdminError::from)?;
-    Ok(found.is_some())
+// Why: the narrow non-platform grant — an org's own admin may toggle
+// member↔admin for people already inside their org. Everything else is
+// refused: `owner` (both setting it and demoting one) stays a platform act,
+// as do cross-org moves and membership additions, so this path never needs a
+// seat check (role changes never mint seats).
+async fn require_org_admin_grant(
+    pool: &PgPool,
+    user_ctx: &UserContext,
+    org: &crud::OrganizationSummary,
+    requested_role: &str,
+    target_role: Option<&str>,
+) -> AdminResult<()> {
+    let own_slug = crud::find_organization_for_user(pool, &user_ctx.user_id)
+        .await?
+        .ok_or_else(|| {
+            AdminError::Forbidden(
+                "You are not a member of an organization, so there are no memberships to manage."
+                    .to_owned(),
+            )
+        })?;
+    if own_slug != org.slug {
+        return Err(AdminError::Forbidden(
+            "Organization admins may only manage their own organization's members".to_owned(),
+        ));
+    }
+    let caller_role = crud::find_member_role(pool, &user_ctx.user_id, &org.id).await?;
+    if !matches!(caller_role.as_deref(), Some("owner" | "admin")) {
+        return Err(AdminError::Forbidden(
+            "Managing member roles requires the owner or admin org role".to_owned(),
+        ));
+    }
+    if requested_role == "owner" {
+        return Err(AdminError::BadRequest(
+            "Only platform administrators may assign the owner role".to_owned(),
+        ));
+    }
+    match target_role {
+        None => Err(AdminError::Forbidden(
+            "Only platform administrators (or an invite) may add members to an organization"
+                .to_owned(),
+        )),
+        Some("owner") => Err(AdminError::Forbidden(
+            "Only platform administrators may change an owner's role".to_owned(),
+        )),
+        Some(_) => Ok(()),
+    }
 }

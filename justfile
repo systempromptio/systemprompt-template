@@ -1583,6 +1583,21 @@ e2e-install:
 e2e *ARGS:
     cd playwright && npx playwright test {{ARGS}}
 
+# Seed deterministic e2e principals + analytics trail (idempotent; touches only
+# e2e-*/@e2e.local rows). `--reset` deletes and re-creates exactly those rows.
+e2e-seed *ARGS:
+    cd playwright && npx tsx setup/seed.ts {{ARGS}}
+
+# Capture full-page deliverable screenshots of the key admin pages into the
+# gitignored playwright/screenshots/ directory (needs `just start`).
+e2e-screens:
+    cd playwright && npx tsx scripts/capture.ts
+
+# Re-record the visual-regression baselines. Run only when a UI change is
+# intended -- the diff in tests/__screenshots__/ is the review artifact.
+e2e-snapshots:
+    cd playwright && npx playwright test tests/visual.spec.ts --update-snapshots
+
 # Test build without pushing
 docker-test:
     just build-all

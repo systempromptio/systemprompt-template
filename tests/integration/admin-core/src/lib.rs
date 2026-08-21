@@ -35,6 +35,8 @@ mod analytics_session_children;
 #[cfg(test)]
 mod analytics_session_detail;
 #[cfg(test)]
+mod analytics_site;
+#[cfg(test)]
 mod dashboard_apm;
 #[cfg(test)]
 mod dashboard_counters;
@@ -64,6 +66,8 @@ mod departments_rollups;
 mod fixtures;
 #[cfg(test)]
 mod governance_counts;
+#[cfg(test)]
+mod invites_regenerate;
 #[cfg(test)]
 mod governance_facets;
 #[cfg(test)]

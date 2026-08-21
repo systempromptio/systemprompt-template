@@ -134,3 +134,40 @@ extensions/web/admin/src/handlers/hooks_track/processing.rs	# astound rolls LOC 
 extensions/web/admin/src/handlers/webhook/helpers.rs	# astound's statusline persistence needs the validated JWT subject returned
 extensions/web/admin/src/handlers/webhook/tracking.rs	# astound persists statusline cost/context-window snapshots; the template 204s them away
 extensions/web/jobs/src/lib.rs	# astound registers the usage_daily_rollup job the template does not ship
+
+# ---------------------------------------------------------------------
+# USAGE CAPTURE - astound's analytics dashboard records lines-of-code and
+# content-byte deltas per plugin event plus statusline session-cost
+# snapshots; the template's usage tables have no such columns or module.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/repositories/dashboard/usage_aggregations/daily.rs	# plugin_usage_daily carries loc_added/loc_removed
+extensions/web/admin/src/repositories/dashboard/usage_aggregations/mod.rs	# astound adds the statusline snapshot module
+extensions/web/admin/src/repositories/marketplace/webhook.rs	# usage webhook persists content bytes and loc deltas
+extensions/web/admin/src/handlers/ssr/types/charts.rs	# chart title serialized as chart_title to dodge the layout partial's title= shadowing
+
+# ---------------------------------------------------------------------
+# ADMIN HARDENING - fixes and read models this fork's analytics dashboard
+# and multi-database integration suite need; each is a decision, not drift.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/handlers/webhook/governance/authz.rs	# marketplace parent cache keyed per database (the fork's suite runs many databases in one process) and awaits a 30s TTL, not 5min
+extensions/web/admin/src/handlers/webhook/governance/handler/mod.rs	# the governed decision audit is awaited before responding; only the auth-denial path stays spawned
+extensions/web/admin/src/repositories/governance/counts.rs	# secret breaches counted by policy='secret_scan', not by matching rendered reason text
+extensions/web/admin/src/repositories/governance/filter_options.rs	# module head no longer claims ai_requests.tenant_id, which core dropped
+extensions/web/admin/src/repositories/governance/rankings.rs	# same durable secret predicate as counts.rs, so the two surfaces cannot disagree
+extensions/web/admin/src/repositories/traces/list.rs	# page is selected before the per-session ARRAY_AGG/MODE/users work, so pagination is not O(all rows in window)
+extensions/web/admin/src/types/users.rs	# CreateUserRequest carries a department, which this fork's create panel sets
+
+# ---------------------------------------------------------------------
+# PRE-TOOL-USE TELEMETRY - astound persists PreToolUse (ISSUE.md #2) so the
+# permission-grant rate is a real pre/post pair instead of a time-window
+# guess; the template still drops the event at the handler.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/handlers/hooks_track/dedup.rs	# astound keys PreToolUse on tool_use_id; the template treats it as unreachable
+
+# ---------------------------------------------------------------------
+# TRACE CORRELATION - astound is on core 0.34.0, where governance_decisions
+# carries a first-class trace_id; the template still joins the trace plane
+# through the session_id overload 0.34.0 removed. Converges when the
+# template adopts 0.34.0.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/repositories/traces/stats.rs	# joins governance to requests on trace_id, not the session_id overload

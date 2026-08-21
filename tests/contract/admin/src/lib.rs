@@ -63,4 +63,6 @@ mod status_contract;
 #[cfg(test)]
 mod tempdb;
 #[cfg(test)]
+mod user_management_contract;
+#[cfg(test)]
 mod webhook_contract;

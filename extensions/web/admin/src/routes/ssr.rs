@@ -74,7 +74,7 @@ fn public_routes() -> Router<Arc<PgPool>> {
         .route("/invite/{token}", get(handlers::ssr::invite_accept_page))
         .route(
             "/auth/invite/accept",
-            post(handlers::invites::accept_invite_handler),
+            post(handlers::invite_accept::accept_invite_handler),
         )
 }
 
@@ -98,7 +98,12 @@ async fn root_redirect(
 // administrator is a first-class viewer of their own data; the handler locks
 // their scope to their organization.
 fn analytics_routes() -> Router<Arc<PgPool>> {
-    Router::new().route("/analytics", get(handlers::ssr::analytics_dashboard_page))
+    Router::new()
+        .route("/analytics", get(handlers::ssr::analytics_dashboard_page))
+        .route(
+            "/analytics/users/{user_id}",
+            get(handlers::ssr::analytics_user_page),
+        )
 }
 
 fn enterprise_routes() -> Router<Arc<PgPool>> {

@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE user_invites SET revoked_at = NOW()\n        WHERE id = $1 AND accepted_at IS NULL AND revoked_at IS NULL\n          AND expires_at > NOW()\n          AND ($2::TEXT IS NULL OR org_id = $2)\n        RETURNING email AS \"email!\", org_id AS \"org_id!\",\n                  department AS \"department!\", roles AS \"roles!: Vec<String>\",\n                  invited_by AS \"invited_by!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "email!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_invites",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_invites",
+            "name": "org_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "department!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_invites",
+            "name": "department"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "roles!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "user_invites",
+            "name": "roles"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "invited_by!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_invites",
+            "name": "invited_by"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "eef5bb1ace5f5b2544053ccc45140b7f9596ac693419c3297fecd394a0acb6d3"
+}

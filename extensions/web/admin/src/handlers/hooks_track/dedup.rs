@@ -26,9 +26,7 @@ fn build_raw_key(user_id: &UserId, session_id: &SessionId, payload: &HookEventPa
     let mut key = String::with_capacity(128);
 
     match &payload.event {
-        HookEvent::PreToolUse(_) => {
-            unreachable!("PreToolUse events are dropped before this point")
-        },
+        HookEvent::PreToolUse(d) => write_pre_tool_use(&mut key, uid, session, d),
         HookEvent::PostToolUse(d) => write_post_tool_use(&mut key, uid, session, d),
         HookEvent::PostToolUseFailure(d) => write_post_tool_failure(&mut key, uid, session, d),
         HookEvent::PermissionRequest(d) => {
@@ -78,6 +76,24 @@ fn build_raw_key(user_id: &UserId, session_id: &SessionId, payload: &HookEventPa
     }
 
     key
+}
+
+// Why: keyed on tool_use_id exactly like PostToolUse, so the pre/post pair for
+// one call shares an id and the grant-rate join is an equality, not a guess.
+// The timestamp fallback matches the post path: without an id, retries of a
+// genuinely distinct call must not collapse into one row.
+fn write_pre_tool_use(
+    key: &mut String,
+    uid: &str,
+    session: &str,
+    d: &crate::types::webhook::PreToolUseData,
+) {
+    if d.use_id.is_empty() {
+        let ts = chrono::Utc::now().timestamp();
+        _ = write!(key, "{uid}:{session}:PreToolUse:{}:{ts}", d.name);
+    } else {
+        _ = write!(key, "{uid}:{session}:PreToolUse:{}", d.use_id);
+    }
 }
 
 fn write_post_tool_use(

@@ -1,0 +1,169 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/page-header
+        title=label
+        subtitle="One person's usage, cost, model mix, and code activity."}}
+
+    <p class="analytics-note">{{email}} · roles: {{roles_display}}</p>
+
+    <p class="analytics-note">
+        <a href="/admin/analytics?tab=usage">&larr; All users</a>
+        ·
+        <a href="{{dashboard_url}}">Dashboard scoped to this user</a>
+        ·
+        <a href="{{log_url}}">Request log</a>
+        ·
+        <a href="{{manage_url}}">Manage account</a>
+    </p>
+
+    {{> components/time-range time_range}}
+
+    <section aria-label="Usage summary">
+        <div class="kpi-strip">
+            <div class="kpi-card">
+                <span class="kpi-card__label">Requests</span>
+                <span class="kpi-card__value">{{kpis.requests}}</span>
+                <span class="kpi-card__delta" data-direction="{{kpis.requests_delta.direction}}" data-tone="{{kpis.requests_delta.tone}}">{{kpis.requests_delta.display}} vs prior period</span>
+                <span class="kpi-card__sub">{{kpis.error_display}} · {{kpis.requests_per_day_display}}/day</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-card__label">Spend</span>
+                <span class="kpi-card__value">{{kpis.cost_display}}</span>
+                <span class="kpi-card__delta" data-direction="{{kpis.cost_delta.direction}}" data-tone="{{kpis.cost_delta.tone}}">{{kpis.cost_delta.display}} vs prior period</span>
+                <span class="kpi-card__sub">across the window</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-card__label">Tokens</span>
+                <span class="kpi-card__value">{{kpis.tokens_display}}</span>
+                <span class="kpi-card__delta" data-direction="{{kpis.tokens_delta.direction}}" data-tone="{{kpis.tokens_delta.tone}}">{{kpis.tokens_delta.display}} vs prior period</span>
+                <span class="kpi-card__sub">input + output</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-card__label">Permission grant rate</span>
+                {{#if kpis.grant_has_data}}
+                <span class="kpi-card__value">{{kpis.grant_rate_display}}</span>
+                <span class="kpi-card__sub">permission requests followed by the tool running</span>
+                {{else}}
+                <span class="kpi-card__value">&mdash;</span>
+                <span class="kpi-card__sub">no permission requests in this window</span>
+                {{/if}}
+            </div>
+        </div>
+
+        <div class="analytics-grid">
+            <section class="analytics-grid__panel">
+                {{> components/svg-line-chart trend_chart}}
+            </section>
+            <section class="analytics-grid__panel">
+                {{> components/pie-chart model_pie}}
+            </section>
+        </div>
+
+        <div class="analytics-grid">
+            <section class="analytics-grid__panel">
+                {{> components/svg-line-chart code_chart}}
+            </section>
+        </div>
+
+        <div class="code-frames">
+            <div class="code-frame">
+                <span class="code-frame__title">AI lines added</span>
+                <span class="code-frame__value">{{code_totals.loc_added_ai_display}}</span>
+                <span class="code-frame__caption">Applied through Edit/Write tool calls (hook-observed).</span>
+            </div>
+            <div class="code-frame">
+                <span class="code-frame__title">AI lines removed</span>
+                <span class="code-frame__value">{{code_totals.loc_removed_ai_display}}</span>
+                <span class="code-frame__caption">Replaced through Edit tool calls (hook-observed).</span>
+            </div>
+            <div class="code-frame">
+                <span class="code-frame__title">Committed lines</span>
+                <span class="code-frame__value">{{code_totals.committed_display}}</span>
+                <span class="code-frame__caption">Git diff totals — AI and manual together. A different frame from AI lines; not comparable line-for-line.</span>
+            </div>
+            <div class="code-frame">
+                <span class="code-frame__title">Commits</span>
+                <span class="code-frame__value">{{code_totals.commits_display}}</span>
+                <span class="code-frame__caption">Observed via Claude Code Bash calls only.</span>
+            </div>
+            <div class="code-frame">
+                <span class="code-frame__title">AI edit operations</span>
+                <span class="code-frame__value">{{code_totals.edit_operations_display}}</span>
+                <span class="code-frame__caption">Applied edits — Claude Code emits no accept/reject signal, so there is no acceptance rate to report.</span>
+            </div>
+        </div>
+    </section>
+
+    <section aria-label="Daily records">
+        <h2 class="section-title">Daily records</h2>
+        <p class="section-caption">From the usage rollup — updated hourly, so today's row may lag.</p>
+        {{#if has_daily_rows}}
+        {{#> components/data-table}}
+            <thead><tr>
+                <th class="col-date">Date</th>
+                <th class="col-num">Sessions</th>
+                <th class="col-num">Prompts</th>
+                <th class="col-num">Tool uses</th>
+                <th class="col-num">Requests</th>
+                <th class="col-num">AI lines</th>
+                <th class="col-num">Commits</th>
+                <th class="col-num">Cost</th>
+            </tr></thead>
+            <tbody>
+            {{#each daily_rows}}
+            <tr>
+                <td class="col-date">{{this.date_display}}</td>
+                <td class="col-num">{{this.sessions}}</td>
+                <td class="col-num">{{this.prompts}}</td>
+                <td class="col-num">{{this.tool_uses}}</td>
+                <td class="col-num">{{this.requests}}</td>
+                <td class="col-num">{{this.loc_added_display}}</td>
+                <td class="col-num">{{this.commits}}</td>
+                <td class="col-num">{{this.cost_display}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state
+            message="No rollup rows for this user in this window yet."}}
+        {{/if}}
+    </section>
+
+    <section aria-label="Session cost history">
+        <h2 class="section-title">Recent sessions</h2>
+        <p class="section-caption">Client-reported statusline snapshots: cost, context window, and cache reads per session.</p>
+        {{#if has_session_rows}}
+        {{#> components/data-table}}
+            <thead><tr>
+                <th>Session</th>
+                <th>Model</th>
+                <th class="col-num">Cost</th>
+                <th class="col-num">Context</th>
+                <th class="col-num">Cache read</th>
+                <th class="col-num">Tokens</th>
+                <th class="col-date">Updated</th>
+            </tr></thead>
+            <tbody>
+            {{#each session_rows}}
+            <tr>
+                <td><a href="{{this.session_url}}">{{this.session_id}}</a></td>
+                <td>{{this.model}}</td>
+                <td class="col-num">{{this.cost_display}}</td>
+                <td class="col-num">{{this.context_display}}</td>
+                <td class="col-num">{{this.cache_read_display}}</td>
+                <td class="col-num">{{this.tokens_display}}</td>
+                <td class="col-date">{{this.updated_display}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state
+            message="No client-reported session snapshots for this user yet."}}
+        {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

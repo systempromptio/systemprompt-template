@@ -129,6 +129,9 @@ pub struct CreateUserRequest {
     pub roles: Vec<String>,
     #[serde(default)]
     pub status: Option<String>,
+    /// Department name for `user_profile_ext`; absent leaves the default.
+    #[serde(default)]
+    pub department: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

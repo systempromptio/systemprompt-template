@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COUNT(*) FILTER (WHERE r.latency_ms < $6)::BIGINT AS \"fast!\",\n            COUNT(*) FILTER (WHERE r.latency_ms >= $6)::BIGINT AS \"slow!\",\n            COUNT(*) FILTER (WHERE r.latency_ms IS NULL)::BIGINT AS \"untimed!\",\n            COALESCE(percentile_cont(0.5) WITHIN GROUP (ORDER BY r.latency_ms), 0)\n                AS \"p50!\",\n            COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY r.latency_ms), 0)\n                AS \"p95!\"\n        FROM ai_requests r\n        LEFT JOIN organization_members m ON m.user_id = r.user_id\n        LEFT JOIN organizations o ON o.id = m.org_id\n        LEFT JOIN user_profile_ext upe ON upe.user_id = r.user_id\n        WHERE r.created_at >= $1 AND r.created_at < $2\n          AND NOT r.synthetic\n          AND ($3::TEXT IS NULL OR o.slug = $3)\n          AND ($4::TEXT IS NULL OR COALESCE(NULLIF(upe.department, ''), 'Default') = $4)\n          AND ($5::TEXT IS NULL OR r.user_id = $5)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "fast!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "slow!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "untimed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "p50!",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "p95!",
+        "type_info": "Float8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "bd54f7e8e119dcb785b148bf7199d17edd4911fa49894e9b13fc127cd7d9eced"
+}

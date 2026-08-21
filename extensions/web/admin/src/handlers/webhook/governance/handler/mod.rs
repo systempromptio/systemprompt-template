@@ -141,12 +141,37 @@ pub(crate) async fn govern_tool_use(
         // Why: the tool-call webhook carries no conversational context; only
         // the gateway path knows one.
         context_id: None,
+        // Why: the MCP tool plane is session-correlated end to end; no trace
+        // id is minted for it, and session_id is a real session here.
+        trace_id: None,
     };
-    spawn_audit_recording(&pool, audit);
+    record_governed_audit(&pool, &audit).await;
 
     build_response(&decision, response_event)
 }
 
+// Why: awaited, not spawned — the caller is already blocked on the decision
+// and this plane's whole product is the audit row, so it must be durable
+// before the response leaves. Audit failure still never fails the decision:
+// a non-200 here reads as "hook unavailable" at the enforcement site and
+// would let the call through, which is strictly worse.
+async fn record_governed_audit(pool: &PgPool, audit: &DecisionAudit) {
+    if let Err(e) = record_decision(pool, audit).await {
+        tracing::error!(
+            target: "governance.audit.write_failed",
+            error = %e,
+            session_id = %audit.principal.session_id,
+            "governance audit write failed; row dropped",
+        );
+    }
+}
+
+// Why: this path stays spawned, unlike the governed-decision audit above —
+// it runs `ensure_anonymous_user` (an upsert plus fingerprint work) before
+// the insert, and awaiting that on the response path of every unauthenticated
+// probe would hand anonymous callers a write-amplification lever. The loss
+// window is process shutdown only, the denial itself was still enforced, and
+// failures are logged under `governance.audit.write_failed`.
 fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
     let pool = Arc::<sqlx::Pool<sqlx::Postgres>>::clone(params.pool);
     let reason = reason.to_owned();
@@ -207,23 +232,9 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
             approver: None,
             act_chain: Vec::new(),
             context_id: None,
+            trace_id: None,
         };
         if let Err(e) = record_decision(&pool, &audit).await {
-            tracing::error!(
-                target: "governance.audit.write_failed",
-                error = %e,
-                session_id = %session_id,
-                "governance audit write failed; row dropped",
-            );
-        }
-    });
-}
-
-fn spawn_audit_recording(pool: &Arc<PgPool>, audit: DecisionAudit) {
-    let p = Arc::<sqlx::Pool<sqlx::Postgres>>::clone(pool);
-    tokio::spawn(async move {
-        let session_id = audit.principal.session_id.clone();
-        if let Err(e) = record_decision(&p, &audit).await {
             tracing::error!(
                 target: "governance.audit.write_failed",
                 error = %e,

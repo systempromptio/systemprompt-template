@@ -1,0 +1,52 @@
+{{!--
+  Server-rendered stacked bar chart (cost by model over time), no client JS.
+
+  Invoke as: {{> components/svg-stacked-chart model_cost_chart}}
+  The partial's root context is an SvgStackedChartView.
+
+  Every rectangle arrives with precomputed plot-space coordinates and a
+  native SVG <title> tooltip; the legend reuses the pie's swatch classes so
+  a model keeps one color across both charts.
+--}}
+<figure class="svgchart">
+    <figcaption class="timeseries__head">
+        <span class="timeseries__title">{{chart_title}}</span>
+        <span class="timeseries__subtitle">{{subtitle}}</span>
+    </figcaption>
+    {{#if has_data}}
+    <div class="timeseries__plot">
+        <div class="timeseries__y-axis" aria-hidden="true">
+            <span>{{y_max_display}}</span>
+            <span>{{y_mid_display}}</span>
+            <span>0</span>
+        </div>
+        <svg class="svgchart__plot" viewBox="0 0 100 40" preserveAspectRatio="none"
+             role="img" aria-label="{{aria_label}}">
+            {{#each rects}}
+            <rect x="{{this.x}}" y="{{this.y}}" width="{{this.w}}" height="{{this.h}}"
+                  fill="var({{this.color_token}})">
+                <title>{{this.tooltip}}</title>
+            </rect>
+            {{/each}}
+        </svg>
+    </div>
+    <div class="timeseries__x-axis" aria-hidden="true">
+        <span>{{x_start_display}}</span>
+        <span>{{x_mid_display}}</span>
+        <span>{{x_end_display}}</span>
+    </div>
+    {{#if legend}}
+    <ul class="pie-chart__legend svgchart__legend">
+        {{#each legend}}
+        <li class="pie-chart__item">
+            <span class="pie-chart__swatch pie-chart__swatch--{{this.color_index}}"></span>
+            <span class="pie-chart__label">{{this.label}}</span>
+            <span class="pie-chart__value">{{this.value_display}}</span>
+        </li>
+        {{/each}}
+    </ul>
+    {{/if}}
+    {{else}}
+    <p class="chart-empty">{{empty_message}}</p>
+    {{/if}}
+</figure>

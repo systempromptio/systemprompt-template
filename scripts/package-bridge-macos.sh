@@ -135,4 +135,4 @@ install -m 0644 "$DMG" "$DOWNLOADS_DIR/$ASSET"
 
 echo "==> staged $DOWNLOADS_DIR/$ASSET"
 cat "$DOWNLOADS_DIR/$ASSET.sha256"
-echo "Run 'just publish' to copy it into web/dist/."
+echo "Served from /files/downloads at runtime; cloud deploy bakes storage/ into the image."

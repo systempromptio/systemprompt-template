@@ -16,17 +16,15 @@ use axum::response::{IntoResponse, Response};
 use chrono::{Duration, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-use systemprompt::oauth::services::webauthn::{generate_setup_token, hash_token};
+use systemprompt::oauth::services::webauthn::generate_setup_token;
 
 use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::error::{AdminError, AdminResult};
-use crate::handlers::salesforce_auth::SalesforceDeps;
 use crate::repositories::organizations::crud;
-use crate::repositories::users::{invites, passkey};
+use crate::repositories::users::invites;
 use crate::types::UserContext;
 
 const INVITE_TTL_DAYS: i64 = 7;
-const SETUP_TOKEN_TTL_MINUTES: i64 = 10;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct CreateInviteRequest {
@@ -170,6 +168,66 @@ pub(crate) async fn revoke_invite_handler(
     Ok(StatusCode::NO_CONTENT.into_response())
 }
 
+// Why: the raw token is shown exactly once at mint time, so a lost link is
+// recovered by revoking and reminting in one transaction, never by re-reading.
+// Same response shape as create, so the client's copy affordance is shared.
+pub(crate) async fn regenerate_invite_handler(
+    State(pool): State<Arc<PgPool>>,
+    Extension(user_ctx): Extension<UserContext>,
+    Path(invite_id): Path<String>,
+) -> AdminResult<Response> {
+    let org_filter = org_filter_for(&pool, &user_ctx).await?;
+    let (raw_token, token_hash) = generate_setup_token();
+    let expires_at = Utc::now() + Duration::days(INVITE_TTL_DAYS);
+    let Some(new_id) = invites::insert_regenerated_invite(
+        &pool,
+        &invite_id,
+        org_filter.as_deref(),
+        &token_hash,
+        expires_at,
+    )
+    .await?
+    else {
+        return Err(AdminError::NotFound(
+            "No pending invite with that id".to_owned(),
+        ));
+    };
+
+    let row = invites::list_pending_invites(&pool, org_filter.as_deref())
+        .await?
+        .into_iter()
+        .find(|r| r.id == new_id);
+    let email = row.map_or_else(String::new, |r| r.email);
+
+    let p = Arc::clone(&pool);
+    let uid = user_ctx.user_id.clone();
+    let entity_id = new_id.clone();
+    let email_for_activity = email.clone();
+    tokio::spawn(async move {
+        activity::record(
+            &p,
+            NewActivity::entity_updated(
+                &uid,
+                ActivityEntity::User,
+                &entity_id,
+                &email_for_activity,
+            ),
+        )
+        .await;
+    });
+
+    Ok((
+        StatusCode::CREATED,
+        Json(CreateInviteResponse {
+            id: new_id,
+            invite_path: format!("/admin/invite/{raw_token}"),
+            email,
+            expires_at: expires_at.to_rfc3339(),
+        }),
+    )
+        .into_response())
+}
+
 // Why: platform admins see and revoke every org's invites (`None` filter);
 // other admins are confined to their own organization's.
 async fn org_filter_for(
@@ -218,54 +276,4 @@ async fn resolve_target_org(
     crud::find_organization_by_slug(pool, &slug)
         .await?
         .ok_or_else(|| AdminError::NotFound(format!("No organization with slug '{slug}'.")))
-}
-
-#[derive(Debug, Deserialize)]
-pub(crate) struct AcceptInviteRequest {
-    pub token: String,
-}
-
-#[derive(Debug, Serialize)]
-pub(crate) struct AcceptInviteResponse {
-    pub email: String,
-    pub setup_token: String,
-    pub expires_in_seconds: i64,
-}
-
-// Why: public — the invite token is the authorization. It exchanges a valid
-// token for a passkey setup token, provisioning the account as it goes; once
-// the invite is marked accepted the invitee signs in with their passkey.
-pub(crate) async fn accept_invite_handler(
-    Extension(deps): Extension<SalesforceDeps>,
-    Json(req): Json<AcceptInviteRequest>,
-) -> AdminResult<Json<AcceptInviteResponse>> {
-    let token = req.token.trim();
-    if token.is_empty() {
-        return Err(AdminError::BadRequest(
-            "An invite token is required".to_owned(),
-        ));
-    }
-    let token_hash = hash_token(token);
-    let invite = invites::find_valid_invite_by_hash(&deps.write_pool, &token_hash)
-        .await?
-        .ok_or_else(|| {
-            AdminError::NotFound(
-                "This invite link is invalid, expired, or already used.".to_owned(),
-            )
-        })?;
-
-    let user_id = invites::accept_invite_and_provision(&deps.write_pool, &invite).await?;
-    crate::authz::organization::invalidate(&user_id).await;
-
-    let (raw_token, setup_hash) = generate_setup_token();
-    let expires_at = Utc::now() + Duration::minutes(SETUP_TOKEN_TTL_MINUTES);
-    passkey::insert_setup_token(&deps.write_pool, &user_id, &setup_hash, expires_at).await?;
-
-    tracing::info!(user_id = %user_id, email = %invite.email, "Invite accepted; setup token issued");
-
-    Ok(Json(AcceptInviteResponse {
-        email: invite.email,
-        setup_token: raw_token,
-        expires_in_seconds: SETUP_TOKEN_TTL_MINUTES * 60,
-    }))
 }

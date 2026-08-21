@@ -85,7 +85,7 @@ re-creates the contention. Escape hatches when you truly need them:
 
 ```bash
 just preflight          # the mandatory pre-merge gate: static → lint → tests → coverage
-just preflight-static   # seconds: fmt, sqlx cache, 23 source gates
+just preflight-static   # seconds: fmt, sqlx cache, 22 source gates
 just preflight-lint     # clippy (both workspaces), doc-check, msrv-check
 just preflight-full     # weekly: preflight + deny + audit + machete + hack
 just init-hooks         # once per clone: tracked .githooks/ (pre-commit + pre-push)
@@ -107,6 +107,30 @@ here (it re-injects the mold linker flags and silently produces zero profraws
 Tests live in the `tests/` workspace (`unit/`, `integration/`, `contract/`) or
 in-crate `tests/` dirs — inline `#[cfg(test)]` modules are banned. DB-backed
 suites need Docker Postgres up (`just db-up`).
+
+```bash
+just test-unit          # in-crate unit tests + tests/unit/*
+just test-integration   # DB-backed; throwaway mcp_ext_test_* databases
+just test-contract      # every admin route x three principals, diffed vs baseline
+just e2e-install && just e2e   # Playwright, against an already-running `just start`
+```
+
+**Running one test.** The single-flight recipes always run the whole tier, so
+drop to `cargo nextest` directly with a filter — this bypasses the coordinator,
+so keep it to iteration and finish with the `just` recipe:
+
+```bash
+cargo nextest run -p systemprompt-web-admin --tests -E 'test(list_top_users)'
+cargo nextest run --manifest-path tests/Cargo.toml -p web-unit-tests some_name
+# DB-backed suites need the maintenance DB, normally derived from the local
+# profile; override explicitly with:
+SYSTEMPROMPT_TEST_DATABASE_URL=postgres://…/postgres \
+  cargo nextest run --manifest-path tests/Cargo.toml -p admin-db-core-tests
+```
+
+The contract suite pins HTTP status per route in
+`tests/contract/admin/baseline.txt`. A status change fails the run; if it is
+intended, re-record with `UPDATE_CONTRACT_BASELINE=1` and call it out in the PR.
 
 ---
 
@@ -158,6 +182,61 @@ systemprompt core skills show --help
 - Governance is a four-stage synchronous pipeline on every tool call: **scope check → secret scan (35+ patterns) → blocklist → rate limit**. Every decision is audited to Postgres with a trace_id linking identity → agent → tool → result → cost. **All four stages are disabled in this installation** (`services/governance/config.yaml`), as are the gateway safety scanners (`services/gateway/policies.yaml`) — both files carry the reason and the instructions to switch them back on. The chain still runs and still audits: calls are recorded as `decision=allow, policy=governance_disabled`. Authentication is separate and is *not* disabled — an invalid or expired token is still denied, with `policy=authentication`. Do not disable governance by deleting the config file: a missing file falls back to defaults, which is all four stages **enabled**.
 - Per-clone Docker Postgres: `just db-up / db-down / db-logs [tenant=local]`. Project name is derived from a hash of the repo path, so multiple clones on one host get isolated containers and volumes. There is no destructive reset recipe — recover migration checksum drift in place with `just repair-migrations`.
 - Deploy flow: `just build-all` (release binary + MCP servers + web assets) then `just deploy`. The `publish_pipeline` job also runs automatically at server startup.
+
+### Three cargo workspaces
+
+`--workspace` covers only the root one. The other two need an explicit
+`--manifest-path`, which is why `clippy`, `doc-check`, and `coverage` each run
+three times:
+
+| Workspace | Members | Note |
+|-----------|---------|------|
+| root (`Cargo.toml`) | `extensions/**` | `exclude = ["tests"]` |
+| `tests/Cargo.toml` | `unit/`, `integration/`, `contract/` crates | separate so it never compiles when extensions are consumed as deps |
+| `bridge/Cargo.toml` | the Claude Code client | depends on unpublished `systemprompt-bridge` **by path** — needs `../systemprompt-core` checked out (`just bridge-build` clones it) |
+
+### Crate layering (enforced by `scripts/lint-layers.sh`)
+
+```
+facade (src/) -> aggregator (extensions/web) -> app (site, jobs)
+  -> domain (admin, content) -> shared (web/shared, mcp/shared)
+```
+
+Membership is derived from a crate's directory, so moving a crate re-classifies
+it. Three properties are checked and must hold exactly: no dependency points
+upward, no cycles, and **no domain -> domain edges** — `admin` and `content` are
+peers, so anything they both need belongs in `shared`. `extensions/cli/*` and
+`extensions/mcp/*` sit at the entry tier beside the aggregator. Dev-dependencies
+are exempt.
+
+### Source-shape gates worth knowing before you write code
+
+`just lint-gates` runs 22 independent read-only checks concurrently (the
+`gates=()` array in the justfile is the list; every failure is reported, so one
+red gate never hides the rest). The ones that most often surprise:
+
+- **No SQL in `extension.rs`** (`lint-extensions.sh`). Schema DDL lives in
+  `<crate>/schema/**.sql` and is embedded with `include_str!`; migrations are
+  discovered from `schema/migrations/NNN_<name>.sql` and surfaced by
+  `extension_migrations!()`. A raw string literal (`r"…"`) or a hand-built
+  `Migration::new` in an `extension.rs` fails the gate.
+- **Every production source opens with a `//!` module head**
+  (`check-file-headers.sh`). Line 1 must be the head itself or an inner
+  attribute (`#![…]`) — nothing else may precede it.
+- Comment density, inline comments, file size, duplicate types, dead repository
+  code, admin template links/assets, and `services/` validity are all gates too
+  — read the failing script's header comment, which states the rule and why.
+
+### Client / bridge
+
+`bridge/` is the Claude Code client, built separately from the server.
+`just bridge-build` builds it (and clones `../systemprompt-core`, which it needs
+by path). `just claude <code>` runs it in a container scoped to this clone and
+gateway — the host's `~/.claude` and `~/.config` are untouched; `just connect
+<code>` is the host-configuring variant instead. Connect codes are single-use
+with a 10-minute TTL, so build the bridge before issuing one. Headless code
+issue: `systemprompt admin bridge issue-code --user-id <email>`.
+`just claude-reset` signs this clone out (`ALL=1` for every clone on the host).
 
 ---
 

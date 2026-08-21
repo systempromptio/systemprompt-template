@@ -13,10 +13,19 @@ use systemprompt_web_shared::error::MarketplaceError;
 use crate::repositories::organizations;
 use crate::types::{CreateUserRequest, UpdateUserRequest, UserSummary};
 
+/// The created (or adopted) row plus the organization the email domain
+/// resolved to — the handler needs the org to mint a credential-bootstrap
+/// invite without re-deriving it and risking divergence.
+#[derive(Debug)]
+pub struct CreatedUser {
+    pub summary: UserSummary,
+    pub org_id: Option<String>,
+}
+
 pub async fn create_user(
     pool: &PgPool,
     req: &CreateUserRequest,
-) -> Result<UserSummary, MarketplaceError> {
+) -> Result<CreatedUser, MarketplaceError> {
     // Why: resolved before the insert so a full plan rejects the request
     // rather than leaving behind a user who exists but is entitled to nothing.
     // An unclaimed domain is not an error — that user is not on a customer
@@ -31,6 +40,7 @@ pub async fn create_user(
     let user_id_str = req.user_id.as_str().to_owned();
     let status = req.status.clone().unwrap_or_else(|| "active".to_owned());
     let username = req.email.as_str();
+    let mut tx = pool.begin().await?;
     let summary = sqlx::query_as!(
         UserSummary,
         r#"
@@ -64,14 +74,34 @@ pub async fn create_user(
         &req.roles,
         &status,
     )
-    .fetch_one(pool)
+    .fetch_one(&mut *tx)
     .await?;
+
+    if let Some(department) = req
+        .department
+        .as_deref()
+        .map(str::trim)
+        .filter(|d| !d.is_empty())
+    {
+        sqlx::query!(
+            r#"
+            INSERT INTO user_profile_ext (user_id, department)
+            VALUES ($1, $2)
+            ON CONFLICT (user_id) DO UPDATE SET department = EXCLUDED.department
+            "#,
+            summary.user_id.as_str(),
+            department,
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+    tx.commit().await?;
 
     if let Some(org_id) = org_id.as_deref() {
         organizations::crud::set_membership(pool, &summary.user_id, org_id, "member").await?;
     }
 
-    Ok(summary)
+    Ok(CreatedUser { summary, org_id })
 }
 
 async fn is_existing_member(

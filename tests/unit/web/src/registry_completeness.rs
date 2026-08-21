@@ -18,6 +18,7 @@ fn all_jobs_registered() {
         "copy_extension_assets",
         "governance_bootstrap",
         "llms_txt_generation",
+        "plugin_usage_retention",
         "publish_pipeline",
         "robots_txt_generation",
         "secret_migration",

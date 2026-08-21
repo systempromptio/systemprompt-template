@@ -151,7 +151,7 @@ backup/
 .systemprompt/docker/*
 !.systemprompt/docker/.gitkeep
 extensions/mcp/*/.env
-Screenshot*.png
+screenshot*.png
 *.zip
 
 # Storage - generated/uploaded files only
@@ -221,3 +221,6 @@ rustc-ice-*.txt
 
 # Generated at publish time by bundle_admin_css
 storage/files/css/admin-bundle.css
+
+# Local triage notes, not part of the repo history.
+/issue.md

@@ -10,7 +10,11 @@ use crate::repositories::analytics::site::seats::InactiveSeatRow;
 use crate::repositories::organizations::metrics::OrganizationMetrics;
 use crate::util::time_range::TimeRange;
 
-use super::context::{LeaderRowView, PermissionStatsView, SeatSummaryView, WastedSeatView};
+use crate::handlers::ssr::list_view::PageWindow;
+
+use super::context::{
+    LeaderRowView, LeaderboardView, PermissionStatsView, SeatSummaryView, WastedSeatView,
+};
 use super::view::{compact, format_date, window_days};
 use super::{AnalyticsDashboardQuery, urls};
 
@@ -39,6 +43,10 @@ pub(super) fn leaderboard_rows(
             ),
             detail_url: format!(
                 "/admin/access/user?id={}",
+                urlencoding::encode(r.user_id.as_str())
+            ),
+            analytics_url: format!(
+                "/admin/analytics/users/{}",
                 urlencoding::encode(r.user_id.as_str())
             ),
         })
@@ -94,6 +102,35 @@ pub(super) fn wasted_seat_rows(rows: &[InactiveSeatRow]) -> Vec<WastedSeatView> 
                 "/admin/access/user?id={}",
                 urlencoding::encode(r.user_id.as_str())
             ),
+            analytics_url: format!(
+                "/admin/analytics/users/{}",
+                urlencoding::encode(r.user_id.as_str())
+            ),
         })
         .collect()
+}
+
+pub(super) fn leaderboard_view(
+    fetched: &super::data::AnalyticsDashboardData,
+    range: &TimeRange,
+    query: &AnalyticsDashboardQuery,
+    page: i64,
+) -> LeaderboardView {
+    let rows = leaderboard_rows(&fetched.leaderboard, range, query);
+    let pagination = urls::build_pagination(
+        query,
+        PageWindow::new(
+            page,
+            super::PAGE_SIZE,
+            fetched.leaderboard_total,
+            i64::try_from(fetched.leaderboard.len()).unwrap_or(super::PAGE_SIZE),
+            "users",
+        ),
+    );
+    LeaderboardView {
+        has_rows: !rows.is_empty(),
+        rows,
+        sort_links: super::sort_links(query),
+        pagination,
+    }
 }

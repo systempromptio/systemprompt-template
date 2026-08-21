@@ -134,7 +134,7 @@ async fn budget_warning_upserts_once_per_month() {
         .await
         .expect("second crossing");
 
-    let warnings = budget_warnings::list_current_month_warnings(&db.pool)
+    let warnings = budget_warnings::list_budget_warning_history(&db.pool, None, 1)
         .await
         .expect("list warnings");
     let w = warnings

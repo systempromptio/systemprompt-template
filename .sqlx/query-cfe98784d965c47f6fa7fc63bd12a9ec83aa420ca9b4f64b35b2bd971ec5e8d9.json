@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n            COUNT(*)::bigint AS \"total!\",\n            COUNT(*) FILTER (WHERE decision = 'allow')::bigint AS \"allowed!\",\n            COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS \"denied!\",\n            COUNT(*) FILTER (WHERE reason ILIKE '%secret%')::bigint AS \"secret_breaches!\"\n        FROM governance_decisions",
+  "query": "SELECT\n            COUNT(*)::bigint AS \"total!\",\n            COUNT(*) FILTER (WHERE decision = 'allow')::bigint AS \"allowed!\",\n            COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS \"denied!\",\n            COUNT(*) FILTER (WHERE policy = 'secret_scan' AND decision = 'deny')::bigint AS \"secret_breaches!\"\n        FROM governance_decisions\n        WHERE created_at > now() - make_interval(secs => $1::double precision)",
   "describe": {
     "columns": [
       {
@@ -29,7 +29,9 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Float8"
+      ]
     },
     "nullable": [
       null,
@@ -38,5 +40,5 @@
       null
     ]
   },
-  "hash": "6af1fc5e32faa219ac52734314b576b852f0f4a7d686e977ec04b42bb2e8161c"
+  "hash": "cfe98784d965c47f6fa7fc63bd12a9ec83aa420ca9b4f64b35b2bd971ec5e8d9"
 }

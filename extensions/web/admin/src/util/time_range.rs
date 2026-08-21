@@ -80,17 +80,37 @@ pub fn parse_time_range(query: &TimeRangeQuery) -> TimeRange {
     let parsed_from = query.from.as_deref().and_then(parse_rfc3339);
     let parsed_to = query.to.as_deref().and_then(parse_rfc3339);
     if let (Some(from), Some(to)) = (parsed_from, parsed_to) {
-        return TimeRange {
-            from,
-            to,
-            preset: TimeRangePreset::Custom,
-        };
+        return clamp_custom(from, to);
     }
 
     TimeRange {
         from: now - Duration::hours(24),
         to: now,
         preset: TimeRangePreset::Hours24,
+    }
+}
+
+/// The widest window any query may scan. Matches the widest preset (30d).
+///
+/// Why: the presets are bounded by construction, but `?from=&to=` is not —
+/// and the percentile stats behind the trace page (`repositories/traces/
+/// stats.rs`) aggregate *every* row in the window, because exact p50/p95/p99
+/// cannot be derived from a rollup. An unbounded custom range is therefore a
+/// full-table scan anyone can trigger from a query string. Bounding the window
+/// is what keeps that query O(window) instead of O(all rows).
+pub const MAX_CUSTOM_WINDOW_DAYS: i64 = 30;
+
+// Why: inverted ranges are swapped, and an over-wide one keeps its `to` and
+// pulls `from` up to the cap — anchoring on the recent end, which is the half
+// a reader is actually looking at.
+fn clamp_custom(from: DateTime<Utc>, to: DateTime<Utc>) -> TimeRange {
+    let (from, to) = if from <= to { (from, to) } else { (to, from) };
+    let max = Duration::days(MAX_CUSTOM_WINDOW_DAYS);
+    let from = if to - from > max { to - max } else { from };
+    TimeRange {
+        from,
+        to,
+        preset: TimeRangePreset::Custom,
     }
 }
 

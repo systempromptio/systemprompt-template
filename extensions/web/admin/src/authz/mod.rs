@@ -67,14 +67,20 @@ static REGISTRIES: OnceLock<Mutex<HashMap<String, &'static Registry>>> = OnceLoc
 // per-test throwaway databases do. One registry per distinct database; the
 // leak is bounded by the number of distinct databases a process ever opens
 // (one in production).
-fn registry(pool: &PgPool) -> &'static Registry {
+// Why: shared with the marketplace-parent cache in the authz webhook so the
+// two per-database keying schemes cannot drift apart.
+pub(crate) fn database_key(pool: &PgPool) -> String {
     let options = pool.connect_options();
-    let key = format!(
+    format!(
         "{}:{}/{}",
         options.get_host(),
         options.get_port(),
         options.get_database().unwrap_or_default()
-    );
+    )
+}
+
+fn registry(pool: &PgPool) -> &'static Registry {
+    let key = database_key(pool);
     let map = REGISTRIES.get_or_init(|| Mutex::new(HashMap::new()));
     let mut guard = map
         .lock()

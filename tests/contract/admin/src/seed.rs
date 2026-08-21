@@ -7,10 +7,9 @@
 //! empty state correctly and its populated state not at all passes the first
 //! and fails here, which is the split worth having.
 //!
-//! Ids are UUID-suffixed. Migration `025_demo_organizations` seeds three demo
-//! customers with ten users and roughly a thousand `ai_requests`, so a fixture
-//! that reused a plausible id would be asserting against seeded rows without
-//! knowing it.
+//! Ids are UUID-suffixed so a fixture can never collide with whatever rows a
+//! database already holds — this suite asserts against what it inserted, never
+//! against ambient data.
 
 use std::collections::BTreeMap;
 

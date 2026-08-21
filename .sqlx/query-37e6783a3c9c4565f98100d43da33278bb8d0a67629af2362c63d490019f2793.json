@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n            g.user_id::TEXT AS \"user_id!\",\n            COALESCE(u.display_name, u.full_name, u.name, u.email, g.user_id) AS \"display_name!\",\n            u.email::TEXT AS email,\n            COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS \"deny_count!\",\n            COUNT(*) FILTER (\n                WHERE g.decision = 'deny'\n                  AND (g.policy = 'secret_scan' OR g.reason ILIKE '%secret%')\n            )::bigint AS \"secret_count!\",\n            COUNT(*)::bigint AS \"total!\"\n        FROM governance_decisions g\n        LEFT JOIN users u ON u.id = g.user_id\n        WHERE g.created_at > now() - make_interval(secs => $1::double precision)\n        GROUP BY g.user_id, u.display_name, u.full_name, u.name, u.email\n        ORDER BY 4 DESC, 6 DESC\n        LIMIT $2",
+  "query": "SELECT\n            g.user_id::TEXT AS \"user_id!\",\n            COALESCE(u.display_name, u.full_name, u.name, u.email, g.user_id) AS \"display_name!\",\n            u.email::TEXT AS email,\n            COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS \"deny_count!\",\n            COUNT(*) FILTER (\n                WHERE g.decision = 'deny' AND g.policy = 'secret_scan'\n            )::bigint AS \"secret_count!\",\n            COUNT(*)::bigint AS \"total!\"\n        FROM governance_decisions g\n        LEFT JOIN users u ON u.id = g.user_id\n        WHERE g.created_at > now() - make_interval(secs => $1::double precision)\n        GROUP BY g.user_id, u.display_name, u.full_name, u.name, u.email\n        ORDER BY 4 DESC, 6 DESC\n        LIMIT $2",
   "describe": {
     "columns": [
       {
@@ -60,5 +60,5 @@
       null
     ]
   },
-  "hash": "ed13c498fa9c2bfbe928ed7f50e29199683b9a3aec54b944c4b382d47c63f326"
+  "hash": "37e6783a3c9c4565f98100d43da33278bb8d0a67629af2362c63d490019f2793"
 }

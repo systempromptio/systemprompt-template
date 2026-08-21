@@ -1,0 +1,77 @@
+{{!--
+  Server-rendered SVG line chart (single or multi series), no client JS.
+
+  Invoke as: {{> components/svg-line-chart volume_chart}}
+  The partial's root context is an SvgLineChartView.
+
+  Geometry is precomputed in Rust (util::svg) into a fixed 100x40 unit space
+  stretched responsively; strokes carry vector-effect so line weight stays
+  constant. Axis labels live in HTML gutters exactly like timeseries-chart,
+  so the SVG holds only geometry.
+
+  Inputs (fields on the passed context):
+    chart_title / subtitle       heading and one-line summary
+    has_data                     false when every bucket is zero
+    aria_label                   the plot's accessible summary
+    series                       [{path_d, area_d?, color_token, label}]
+    ref_lines                    [{y, label, tone}] cap/warn dashes
+    legend                       [{label, color_index, value_display}] (multi only)
+    y_max/y_mid_display          gridline labels
+    x_start/mid/end_display      time axis labels
+    empty_message                shown instead of the plot when empty
+--}}
+<figure class="svgchart">
+    <figcaption class="timeseries__head">
+        <span class="timeseries__title">{{chart_title}}</span>
+        <span class="timeseries__subtitle">{{subtitle}}</span>
+    </figcaption>
+    {{#if has_data}}
+    <div class="timeseries__plot">
+        <div class="timeseries__y-axis" aria-hidden="true">
+            <span>{{y_max_display}}</span>
+            <span>{{y_mid_display}}</span>
+            <span>0</span>
+        </div>
+        <svg class="svgchart__plot" viewBox="0 0 100 40" preserveAspectRatio="none"
+             role="img" aria-label="{{aria_label}}">
+            {{#each ref_lines}}
+            <line x1="0" x2="100" y1="{{this.y}}" y2="{{this.y}}"
+                  class="svgchart__ref svgchart__ref--{{this.tone}}"
+                  vector-effect="non-scaling-stroke"></line>
+            {{/each}}
+            {{#each series}}
+            {{#if this.area_d}}
+            <path d="{{this.area_d}}" fill="var({{this.color_token}})" class="svgchart__area"></path>
+            {{/if}}
+            <path d="{{this.path_d}}" fill="none" stroke="var({{this.color_token}})"
+                  vector-effect="non-scaling-stroke" class="svgchart__line"></path>
+            {{/each}}
+        </svg>
+    </div>
+    <div class="timeseries__x-axis" aria-hidden="true">
+        <span>{{x_start_display}}</span>
+        <span>{{x_mid_display}}</span>
+        <span>{{x_end_display}}</span>
+    </div>
+    {{#if ref_lines}}
+    <ul class="svgchart__refs" aria-hidden="true">
+        {{#each ref_lines}}
+        <li class="svgchart__ref-label svgchart__ref-label--{{this.tone}}">{{this.label}}</li>
+        {{/each}}
+    </ul>
+    {{/if}}
+    {{#if legend}}
+    <ul class="pie-chart__legend svgchart__legend">
+        {{#each legend}}
+        <li class="pie-chart__item">
+            <span class="pie-chart__swatch pie-chart__swatch--{{this.color_index}}"></span>
+            <span class="pie-chart__label">{{this.label}}</span>
+            <span class="pie-chart__value">{{this.value_display}}</span>
+        </li>
+        {{/each}}
+    </ul>
+    {{/if}}
+    {{else}}
+    <p class="chart-empty">{{empty_message}}</p>
+    {{/if}}
+</figure>

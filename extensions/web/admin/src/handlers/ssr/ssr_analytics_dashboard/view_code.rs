@@ -2,71 +2,77 @@
 //! measurement-frame cards. Split from `view.rs` at the 300-line ceiling;
 //! the shared label helpers stay in `view.rs` and are imported here.
 
-use crate::handlers::ssr::types::{ChartBarView, ChartView, bar_pct};
+use crate::handlers::ssr::types::{LineChartSpec, SvgLineChartView, SvgSeriesInput, line_chart};
 use crate::repositories::analytics::site::code::{CodeDayBucket, CodeTotals};
 use crate::util::time_range::TimeRange;
 
 use super::context::CodeFrameView;
 use super::view::{compact, date_label, midpoint};
 
-pub(super) fn commit_chart(buckets: &[CodeDayBucket], range: &TimeRange) -> ChartView {
-    let max = buckets.iter().map(|b| b.commits).max().unwrap_or(0);
-    let total: i64 = buckets.iter().map(|b| b.commits).sum();
-    ChartView {
+pub(super) fn commit_chart(buckets: &[CodeDayBucket], range: &TimeRange) -> SvgLineChartView {
+    let commits: i64 = buckets.iter().map(|b| b.commits).sum();
+    let insertions: i64 = buckets.iter().map(|b| b.commit_insertions).sum();
+    line_chart(LineChartSpec {
         title: "Commit activity",
-        subtitle: format!("{total} commits observed via Claude Code sessions"),
-        tone: "info",
-        series: buckets
-            .iter()
-            .map(|b| ChartBarView {
-                pct: bar_pct(b.commits, max),
-                tooltip: format!(
-                    "{}: {} commits, +{} −{}",
-                    b.date.format("%b %d"),
-                    b.commits,
-                    b.commit_insertions,
-                    b.commit_deletions
-                ),
-            })
-            .collect(),
-        has_data: max > 0,
-        y_max_display: max.to_string(),
-        y_mid_display: (max / 2).to_string(),
-        x_start_display: date_label(range.from),
-        x_mid_display: date_label(midpoint(range)),
-        x_end_display: date_label(range.to),
+        subtitle: format!(
+            "{commits} commits observed via Claude Code sessions · {} lines inserted",
+            compact(insertions)
+        ),
         empty_message: "No commits observed in this window. Only commits made through \
                         Claude Code sessions are visible.",
-    }
-}
-
-pub(super) fn loc_chart(buckets: &[CodeDayBucket], range: &TimeRange) -> ChartView {
-    let max = buckets.iter().map(|b| b.loc_added_ai).max().unwrap_or(0);
-    let total: i64 = buckets.iter().map(|b| b.loc_added_ai).sum();
-    ChartView {
-        title: "AI lines added",
-        subtitle: format!("{} lines applied through Edit/Write tools", compact(total)),
-        tone: "accent",
-        series: buckets
-            .iter()
-            .map(|b| ChartBarView {
-                pct: bar_pct(b.loc_added_ai, max),
-                tooltip: format!(
-                    "{}: +{} −{} AI lines",
-                    b.date.format("%b %d"),
-                    b.loc_added_ai,
-                    b.loc_removed_ai
-                ),
-            })
-            .collect(),
-        has_data: max > 0,
-        y_max_display: compact(max),
-        y_mid_display: compact(max / 2),
+        // Why: commits alone. Plotting them beside inserted lines put a
+        // ~50x magnitude gap on one shared axis, which flattened the commit
+        // series onto the baseline — the line totals have their own chart.
+        series: vec![SvgSeriesInput {
+            label: "commits".to_owned(),
+            values: buckets.iter().map(|b| b.commits).collect(),
+            value_display: commits.to_string(),
+        }],
+        ref_lines: Vec::new(),
+        y_max: None,
+        y_display: compact,
         x_start_display: date_label(range.from),
         x_mid_display: date_label(midpoint(range)),
         x_end_display: date_label(range.to),
+        show_area: true,
+    })
+}
+
+// Why: the two series are deliberately plotted together and never subtracted
+// — AI lines come from hook-observed tool inputs, committed lines from git
+// diff stats, and the gap between them is not "manual lines", it is two
+// different measurement frames.
+pub(super) fn loc_chart(buckets: &[CodeDayBucket], range: &TimeRange) -> SvgLineChartView {
+    let ai: i64 = buckets.iter().map(|b| b.loc_added_ai).sum();
+    let committed: i64 = buckets.iter().map(|b| b.commit_insertions).sum();
+    line_chart(LineChartSpec {
+        title: "AI lines vs committed lines",
+        subtitle: format!(
+            "{} AI lines applied · {} lines committed (different measurement frames)",
+            compact(ai),
+            compact(committed)
+        ),
         empty_message: "No AI line data in this window yet.",
-    }
+        series: vec![
+            SvgSeriesInput {
+                label: "AI lines added".to_owned(),
+                values: buckets.iter().map(|b| b.loc_added_ai).collect(),
+                value_display: compact(ai),
+            },
+            SvgSeriesInput {
+                label: "committed lines".to_owned(),
+                values: buckets.iter().map(|b| b.commit_insertions).collect(),
+                value_display: compact(committed),
+            },
+        ],
+        ref_lines: Vec::new(),
+        y_max: None,
+        y_display: compact,
+        x_start_display: date_label(range.from),
+        x_mid_display: date_label(midpoint(range)),
+        x_end_display: date_label(range.to),
+        show_area: false,
+    })
 }
 
 // Why: the two line measurements come from different frames (hook-observed

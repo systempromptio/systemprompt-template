@@ -19,7 +19,6 @@ use serde::Deserialize;
 use sqlx::PgPool;
 
 use crate::error::{AdminError, AdminHtmlResult};
-use crate::handlers::ssr::list_view::PageWindow;
 use crate::repositories::analytics::site::SiteScope;
 use crate::repositories::analytics::site::leaderboards::LeaderboardSort;
 use crate::repositories::analytics::site::series::SeriesBucket;
@@ -36,9 +35,11 @@ mod filters;
 mod urls;
 mod view;
 mod view_code;
+mod view_models;
+mod view_spend;
 mod view_tables;
 
-use context::{AnalyticsDashboardContext, DashboardTab, FiltersView, LeaderboardView};
+use context::{AnalyticsDashboardContext, DashboardTab, FiltersView};
 
 const BASE_URL: &str = "/admin/analytics";
 const PAGE_SIZE: i64 = 50;
@@ -196,24 +197,16 @@ fn page_context(input: PageInput<'_>) -> AnalyticsDashboardContext {
     } = input;
     let weekly = bucket == SeriesBucket::Week;
 
-    let leaderboard_rows = view_tables::leaderboard_rows(&fetched.leaderboard, &range, query);
-    let pagination = urls::build_pagination(
-        query,
-        PageWindow::new(
-            page,
-            PAGE_SIZE,
-            fetched.leaderboard_total,
-            i64::try_from(fetched.leaderboard.len()).unwrap_or(PAGE_SIZE),
-            "users",
-        ),
-    );
-    let sort_links = sort_links(query);
+    let leaderboard = view_tables::leaderboard_view(fetched, &range, query, page);
     let chips = urls::active_chips(query, is_platform_admin);
     let has_active_filters = !chips.is_empty();
     let meters = view::org_meters(&fetched.org_metrics);
     let own_meter = (tab == DashboardTab::Overview)
         .then(|| meters.first().cloned())
         .flatten();
+    let burndown = view_spend::burndown_view(tab, fetched);
+    let show_burndown_hint = tab == DashboardTab::Spend && burndown.is_none();
+    let charts = view_models::overview_charts(fetched, query, &range, weekly);
 
     AnalyticsDashboardContext {
         page: "analytics-dashboard",
@@ -232,18 +225,20 @@ fn page_context(input: PageInput<'_>) -> AnalyticsDashboardContext {
         clear_url: urls::clear_url(query),
         base_url: BASE_URL,
 
-        kpis: view::kpi_strip(&fetched.kpis, fetched.wasted_seat_count, &range, query),
-        volume_chart: view::volume_chart(&fetched.series, &range, weekly),
-        cost_chart: view::spend_chart(&fetched.series, &range, weekly),
-        model_pie: view::model_pie(&fetched.models, query),
+        kpis: view::kpi_strip(
+            &fetched.kpis,
+            fetched.wasted_seat_count,
+            &range,
+            query,
+            (tab == DashboardTab::Overview).then_some(fetched.series.as_slice()),
+        ),
+        volume_chart: charts.volume,
+        cost_chart: charts.cost,
+        model_pie: charts.model_pie,
+        model_cost_chart: charts.model_cost,
         own_meter,
 
-        leaderboard: LeaderboardView {
-            has_rows: !leaderboard_rows.is_empty(),
-            rows: leaderboard_rows,
-            sort_links,
-            pagination,
-        },
+        leaderboard,
         permissions: view_tables::permission_stats(&fetched.permissions),
 
         seat_summary: view_tables::seat_summaries(&fetched.org_metrics),
@@ -253,6 +248,12 @@ fn page_context(input: PageInput<'_>) -> AnalyticsDashboardContext {
         has_spend_meters: !meters.is_empty(),
         spend_meters: meters,
         latency_link: "/admin/entities/requests".to_owned(),
+        burndown,
+        show_burndown_hint,
+        has_budget_warnings: !fetched.budget_history.is_empty(),
+        budget_warnings: view_spend::budget_warning_rows(&fetched.budget_history),
+        fast_slow: view_spend::fast_slow(&fetched.latency),
+        session_costs: view_spend::session_costs(&fetched.session_costs),
 
         commit_chart: view_code::commit_chart(&fetched.code_series, &range),
         loc_chart: view_code::loc_chart(&fetched.code_series, &range),

@@ -48,10 +48,15 @@
                         {{/each}}
                     </select>
                 </label>
-                <label class="form-field">
-                    <span class="form-label">Roles</span>
-                    <input type="text" name="roles" value="{{#each user.roles}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}" placeholder="comma-separated">
-                </label>
+                <div class="form-field" role="group" aria-labelledby="user-roles-label">
+                    <span class="form-label" id="user-roles-label">Roles</span>
+                    {{!-- Checkboxes are built client-side from /users/roles plus
+                          the roles this user already holds, so a free-typed
+                          role can no longer be saved and a held role can never
+                          be dropped by a failed lookup. --}}
+                    <div class="checkbox-group" id="user-roles-group"
+                         data-roles="{{#each user.roles}}{{this}},{{/each}}"></div>
+                </div>
                 <label class="form-field form-field--inline">
                     <input type="checkbox" name="is_active"{{#if user.is_active}} checked{{/if}}>
                     <span class="form-label">Active</span>
@@ -75,7 +80,7 @@
             <h3>Organization</h3>
             <span class="text-muted">Move this user between organizations or change their org role. Moving mints a seat in the target organization.</span>
         </div>
-        <div id="org-membership" class="form-grid" data-user-id="{{user.user_id}}">
+        <div id="org-membership" class="form-grid" data-user-id="{{user.user_id}}" data-org-slug="{{user_org_slug}}">
             <label class="form-field">
                 <span class="form-label">Organization</span>
                 <select id="org-membership-org"></select>

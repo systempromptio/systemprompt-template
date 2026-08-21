@@ -15,6 +15,7 @@ fn create_request(user_id: &str, email: &str) -> CreateUserRequest {
         email: Email::try_new(email.to_owned()).expect("fixture email is valid"),
         roles: vec!["user".to_owned()],
         status: None,
+        department: None,
     }
 }
 
@@ -38,7 +39,8 @@ async fn create_user_returns_the_row_it_inserted() {
 
     let summary = users::create_user(&db.pool, &create_request(&id, &email))
         .await
-        .expect("create_user succeeds for an unclaimed domain");
+        .expect("create_user succeeds for an unclaimed domain")
+        .summary;
 
     assert_eq!(summary.user_id.as_str(), id);
     assert_eq!(summary.display_name.as_deref(), Some("Fixture User"));
@@ -57,7 +59,8 @@ async fn create_user_with_unclaimed_domain_joins_no_organization() {
 
     let summary = users::create_user(&db.pool, &create_request(&id, &email))
         .await
-        .expect("create_user succeeds");
+        .expect("create_user succeeds")
+        .summary;
 
     let org = organizations::crud::find_organization_for_user(&db.pool, &summary.user_id)
         .await
@@ -79,7 +82,8 @@ async fn create_user_honours_an_explicit_inactive_status() {
 
     let summary = users::create_user(&db.pool, &req)
         .await
-        .expect("create_user succeeds");
+        .expect("create_user succeeds")
+        .summary;
 
     assert!(!summary.is_active);
     db.cleanup().await;
@@ -100,7 +104,8 @@ async fn create_user_on_a_taken_email_updates_rather_than_duplicating() {
     second.roles = vec!["user".to_owned(), "admin".to_owned()];
     let summary = users::create_user(&db.pool, &second)
         .await
-        .expect("ON CONFLICT (email) updates the existing row");
+        .expect("ON CONFLICT (email) updates the existing row")
+        .summary;
 
     assert_eq!(
         summary.user_id.as_str(),

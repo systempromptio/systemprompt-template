@@ -70,6 +70,7 @@ const buildPopupContent = (portal, userId, isActive) => {
   const toggleBtn = buildPopupButton('actions-popup-item' + toggleClass, 'toggle', userId, isActive ? '\u2716' : '\u2714', toggleLabel);
   toggleBtn.dataset.isActive = isActive;
   portal.append(toggleBtn);
+  portal.append(buildPopupButton('actions-popup-item actions-popup-item--danger', 'delete', userId, '\u2716', 'Delete User'));
 };
 
 const handlePopupItemClick = async (item) => {
@@ -78,6 +79,19 @@ const handlePopupItemClick = async (item) => {
   closeAllPopups();
   if (action === 'edit') {
     window.location.href = BASE + '/user/?id=' + encodeURIComponent(itemUserId);
+  } else if (action === 'delete') {
+    showConfirmDialog(
+      'Delete User?',
+      'Permanently deletes the account and its memberships. Prefer Deactivate unless you mean it.',
+      'Delete',
+      async () => {
+        try {
+          await apiFetch('/users/' + encodeURIComponent(itemUserId), { method: 'DELETE' });
+          showToast('User deleted', 'success');
+          window.location.reload();
+        } catch (err) { showToast(err.message || 'Failed to delete user', 'error'); }
+      },
+    );
   } else if (action === 'toggle') {
     const currentlyActive = item.dataset.isActive === 'true';
     if (currentlyActive) {

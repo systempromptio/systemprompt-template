@@ -49,13 +49,13 @@ pub async fn list_traces(
         ),
         all_sessions AS (
             SELECT
-                COALESCE(t.session_id, g.session_id) AS session_id,
+                COALESCE(t.session_id, NULLIF(g.session_id, ''), g.trace_id) AS session_id,
                 g.user_id, g.agent_id, g.agent_scope,
                 g.created_at, g.decision, 'gov'::text AS source
             FROM governance_decisions g
-            LEFT JOIN trace_to_session t ON t.trace_id = g.session_id
+            LEFT JOIN trace_to_session t ON t.trace_id = g.trace_id
             WHERE g.created_at >= $1 AND g.created_at < $2
-              AND g.session_id IS NOT NULL
+              AND (NULLIF(g.session_id, '') IS NOT NULL OR g.trace_id IS NOT NULL)
             UNION ALL
             SELECT session_id, user_id, NULL::text AS agent_id, NULL::text AS agent_scope,
                    created_at, NULL::text AS decision, 'ai'::text AS source
@@ -83,12 +83,12 @@ pub async fn list_traces(
             FROM all_sessions
             GROUP BY session_id
         ),
-        ai_meta AS (
+        -- Stage 1 aggregates: only what filtering and sorting need. The
+        -- expensive per-session picks (ARRAY_AGG / MODE / users lateral) run
+        -- in stage 2 over the selected page alone.
+        ai_sums AS (
             SELECT
                 session_id,
-                (ARRAY_AGG(trace_id ORDER BY created_at DESC))[1]   AS trace_id,
-                (ARRAY_AGG(model    ORDER BY created_at DESC))[1]   AS model,
-                (ARRAY_AGG(provider ORDER BY created_at DESC))[1]   AS provider,
                 COUNT(*)::bigint                                    AS request_count,
                 COALESCE(SUM(tokens_used), 0)::bigint               AS total_tokens,
                 COALESCE(SUM(input_tokens), 0)::bigint              AS input_tokens,
@@ -103,24 +103,12 @@ pub async fn list_traces(
               AND session_id IS NOT NULL
             GROUP BY session_id
         ),
-        tool_meta AS (
-            SELECT
-                session_id,
-                COUNT(*)::bigint                                    AS tool_call_count,
-                MODE() WITHIN GROUP (ORDER BY tool_name)            AS top_tool
-            FROM plugin_usage_events
-            WHERE created_at >= $1 AND created_at < $2
-              AND session_id IS NOT NULL
-              AND tool_name IS NOT NULL
-            GROUP BY session_id
-        ),
         joined AS (
             SELECT
                 p.session_id,
                 p.user_id,
                 p.agent_id,
                 p.agent_scope,
-                u.label                             AS user_label,
                 p.started_at,
                 p.ended_at,
                 -- Two distinct clocks, never collapsed: `active_ms` is the work
@@ -132,28 +120,18 @@ pub async fn list_traces(
                                                     AS window_ms,
                 p.span_count,
                 COALESCE(a.request_count, 0)        AS request_count,
-                COALESCE(t.tool_call_count, 0)      AS tool_call_count,
                 p.governance_count,
                 p.deny_count,
                 (p.deny_count > 0)                  AS has_deny,
-                a.trace_id,
-                a.model,
-                a.provider,
                 COALESCE(a.total_tokens, 0)         AS total_tokens,
                 COALESCE(a.input_tokens, 0)         AS input_tokens,
                 COALESCE(a.output_tokens, 0)        AS output_tokens,
                 COALESCE(a.total_cost_microdollars, 0) AS total_cost_microdollars,
                 COALESCE(a.total_latency_ms, 0)     AS total_latency_ms,
                 COALESCE(a.cache_hit_any, false)    AS cache_hit_any,
-                t.top_tool,
                 COALESCE(a.has_error, false)        AS has_error
             FROM per_session p
-            LEFT JOIN ai_meta   a ON a.session_id = p.session_id
-            LEFT JOIN tool_meta t ON t.session_id = p.session_id
-            LEFT JOIN LATERAL (
-                SELECT COALESCE(x.display_name, x.full_name, x.name, x.email) AS label
-                FROM users x WHERE x.id = p.user_id
-            ) u ON true
+            LEFT JOIN ai_sums a ON a.session_id = p.session_id
         ),
         filtered AS (
             SELECT j.* FROM joined j
@@ -173,53 +151,98 @@ pub async fn list_traces(
               AND (NOT $8 OR j.has_error = true)
               AND (NOT $9 OR j.has_deny  = true)
         ),
-        counted AS (
+        -- The page is chosen here, so everything below runs for at most
+        -- `limit` sessions. The session_id tiebreaker makes ties (and thus
+        -- pages) deterministic; the outer ORDER BY repeats it because a join
+        -- does not preserve order.
+        page AS (
             SELECT
                 f.*,
                 COUNT(*) OVER ()::bigint AS total_count
             FROM filtered f
+            ORDER BY
+                (CASE WHEN $12 = 'started_at' AND $13 = 'asc'  THEN f.started_at END) ASC  NULLS LAST,
+                (CASE WHEN $12 = 'started_at' AND $13 = 'desc' THEN f.started_at END) DESC NULLS LAST,
+                (CASE WHEN $12 = 'duration'   AND $13 = 'asc'  THEN f.active_ms END) ASC  NULLS LAST,
+                (CASE WHEN $12 = 'duration'   AND $13 = 'desc' THEN f.active_ms END) DESC NULLS LAST,
+                (CASE WHEN $12 = 'span_count' AND $13 = 'asc'  THEN f.span_count  END) ASC  NULLS LAST,
+                (CASE WHEN $12 = 'span_count' AND $13 = 'desc' THEN f.span_count  END) DESC NULLS LAST,
+                (CASE WHEN $12 = 'cost'       AND $13 = 'asc'  THEN f.total_cost_microdollars END) ASC  NULLS LAST,
+                (CASE WHEN $12 = 'cost'       AND $13 = 'desc' THEN f.total_cost_microdollars END) DESC NULLS LAST,
+                (CASE WHEN $12 = 'tokens'     AND $13 = 'asc'  THEN f.total_tokens END) ASC  NULLS LAST,
+                (CASE WHEN $12 = 'tokens'     AND $13 = 'desc' THEN f.total_tokens END) DESC NULLS LAST,
+                f.session_id ASC
+            LIMIT $10 OFFSET $11
+        ),
+        ai_picks AS (
+            SELECT
+                session_id,
+                (ARRAY_AGG(trace_id ORDER BY created_at DESC))[1]   AS trace_id,
+                (ARRAY_AGG(model    ORDER BY created_at DESC))[1]   AS model,
+                (ARRAY_AGG(provider ORDER BY created_at DESC))[1]   AS provider
+            FROM ai_requests
+            WHERE created_at >= $1 AND created_at < $2
+              AND session_id IN (SELECT session_id FROM page)
+            GROUP BY session_id
+        ),
+        tool_meta AS (
+            SELECT
+                session_id,
+                COUNT(*)::bigint                                    AS tool_call_count,
+                MODE() WITHIN GROUP (ORDER BY tool_name)            AS top_tool
+            FROM plugin_usage_events
+            WHERE created_at >= $1 AND created_at < $2
+              AND session_id IN (SELECT session_id FROM page)
+              AND tool_name IS NOT NULL
+            GROUP BY session_id
         )
         SELECT
-            session_id              AS "session_id!: SessionId",
-            trace_id                AS "trace_id?: TraceId",
-            started_at              AS "started_at!",
-            ended_at                AS "ended_at!",
-            active_ms               AS "active_ms!",
-            window_ms               AS "window_ms!",
-            user_id                 AS "user_id?: UserId",
-            user_label              AS "user_label?",
-            agent_id                AS "agent_id?: AgentId",
-            agent_scope             AS "agent_scope?",
-            model                   AS "model?",
-            provider                AS "provider?",
-            span_count              AS "span_count!",
-            request_count           AS "request_count!",
-            tool_call_count         AS "tool_call_count!",
-            governance_count        AS "governance_count!",
-            deny_count              AS "deny_count!",
-            total_tokens            AS "total_tokens!",
-            input_tokens            AS "input_tokens!",
-            output_tokens           AS "output_tokens!",
-            total_cost_microdollars AS "total_cost_microdollars!",
-            total_latency_ms        AS "total_latency_ms!",
-            cache_hit_any           AS "cache_hit_any!",
-            top_tool                AS "top_tool?",
-            has_error               AS "has_error!",
-            has_deny                AS "has_deny!",
-            total_count             AS "total_count!"
-        FROM counted
+            pg.session_id           AS "session_id!: SessionId",
+            k.trace_id              AS "trace_id?: TraceId",
+            pg.started_at           AS "started_at!",
+            pg.ended_at             AS "ended_at!",
+            pg.active_ms            AS "active_ms!",
+            pg.window_ms            AS "window_ms!",
+            pg.user_id              AS "user_id?: UserId",
+            u.label                 AS "user_label?",
+            pg.agent_id             AS "agent_id?: AgentId",
+            pg.agent_scope          AS "agent_scope?",
+            k.model                 AS "model?",
+            k.provider              AS "provider?",
+            pg.span_count           AS "span_count!",
+            pg.request_count        AS "request_count!",
+            COALESCE(t.tool_call_count, 0) AS "tool_call_count!",
+            pg.governance_count     AS "governance_count!",
+            pg.deny_count           AS "deny_count!",
+            pg.total_tokens         AS "total_tokens!",
+            pg.input_tokens         AS "input_tokens!",
+            pg.output_tokens        AS "output_tokens!",
+            pg.total_cost_microdollars AS "total_cost_microdollars!",
+            pg.total_latency_ms     AS "total_latency_ms!",
+            pg.cache_hit_any        AS "cache_hit_any!",
+            t.top_tool              AS "top_tool?",
+            pg.has_error            AS "has_error!",
+            pg.has_deny             AS "has_deny!",
+            pg.total_count          AS "total_count!"
+        FROM page pg
+        LEFT JOIN ai_picks k ON k.session_id = pg.session_id
+        LEFT JOIN tool_meta t ON t.session_id = pg.session_id
+        LEFT JOIN LATERAL (
+            SELECT COALESCE(x.display_name, x.full_name, x.name, x.email) AS label
+            FROM users x WHERE x.id = pg.user_id
+        ) u ON true
         ORDER BY
-            (CASE WHEN $12 = 'started_at' AND $13 = 'asc'  THEN started_at END) ASC  NULLS LAST,
-            (CASE WHEN $12 = 'started_at' AND $13 = 'desc' THEN started_at END) DESC NULLS LAST,
-            (CASE WHEN $12 = 'duration'   AND $13 = 'asc'  THEN active_ms END) ASC  NULLS LAST,
-            (CASE WHEN $12 = 'duration'   AND $13 = 'desc' THEN active_ms END) DESC NULLS LAST,
-            (CASE WHEN $12 = 'span_count' AND $13 = 'asc'  THEN span_count  END) ASC  NULLS LAST,
-            (CASE WHEN $12 = 'span_count' AND $13 = 'desc' THEN span_count  END) DESC NULLS LAST,
-            (CASE WHEN $12 = 'cost'       AND $13 = 'asc'  THEN total_cost_microdollars END) ASC  NULLS LAST,
-            (CASE WHEN $12 = 'cost'       AND $13 = 'desc' THEN total_cost_microdollars END) DESC NULLS LAST,
-            (CASE WHEN $12 = 'tokens'     AND $13 = 'asc'  THEN total_tokens END) ASC  NULLS LAST,
-            (CASE WHEN $12 = 'tokens'     AND $13 = 'desc' THEN total_tokens END) DESC NULLS LAST
-        LIMIT $10 OFFSET $11"#,
+            (CASE WHEN $12 = 'started_at' AND $13 = 'asc'  THEN pg.started_at END) ASC  NULLS LAST,
+            (CASE WHEN $12 = 'started_at' AND $13 = 'desc' THEN pg.started_at END) DESC NULLS LAST,
+            (CASE WHEN $12 = 'duration'   AND $13 = 'asc'  THEN pg.active_ms END) ASC  NULLS LAST,
+            (CASE WHEN $12 = 'duration'   AND $13 = 'desc' THEN pg.active_ms END) DESC NULLS LAST,
+            (CASE WHEN $12 = 'span_count' AND $13 = 'asc'  THEN pg.span_count  END) ASC  NULLS LAST,
+            (CASE WHEN $12 = 'span_count' AND $13 = 'desc' THEN pg.span_count  END) DESC NULLS LAST,
+            (CASE WHEN $12 = 'cost'       AND $13 = 'asc'  THEN pg.total_cost_microdollars END) ASC  NULLS LAST,
+            (CASE WHEN $12 = 'cost'       AND $13 = 'desc' THEN pg.total_cost_microdollars END) DESC NULLS LAST,
+            (CASE WHEN $12 = 'tokens'     AND $13 = 'asc'  THEN pg.total_tokens END) ASC  NULLS LAST,
+            (CASE WHEN $12 = 'tokens'     AND $13 = 'desc' THEN pg.total_tokens END) DESC NULLS LAST,
+            pg.session_id ASC"#,
         range.from,
         range.to,
         filter.user_id,

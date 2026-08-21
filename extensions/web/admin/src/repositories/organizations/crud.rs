@@ -103,6 +103,23 @@ pub async fn find_organization_for_user(
     Ok(slug)
 }
 
+/// The user's `org_role` inside one organization, or `None` when they are
+/// not a member of it.
+pub async fn find_member_role(
+    pool: &PgPool,
+    user_id: &UserId,
+    org_id: &str,
+) -> Result<Option<String>, MarketplaceError> {
+    let role = sqlx::query_scalar!(
+        "SELECT org_role FROM organization_members WHERE user_id = $1 AND org_id = $2",
+        user_id.as_str(),
+        org_id,
+    )
+    .fetch_optional(pool)
+    .await?;
+    Ok(role)
+}
+
 /// Whether this user belongs to the platform tenant.
 ///
 /// The second half of the super-admin test — the first is the `admin` role.

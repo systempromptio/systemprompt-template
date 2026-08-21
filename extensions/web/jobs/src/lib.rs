@@ -30,6 +30,7 @@ mod publish;
 mod robots;
 mod secret_migration;
 mod sitemap;
+mod usage_retention;
 mod usage_rollup;
 
 pub use error::JobError;
@@ -46,6 +47,7 @@ pub use publish::PublishPipelineJob;
 pub use robots::RobotsTxtGenerationJob;
 pub use secret_migration::SecretMigrationJob;
 pub use sitemap::SitemapGenerationJob;
+pub use usage_retention::PluginUsageRetentionJob;
 pub use usage_rollup::UsageDailyRollupJob;
 
 /// The pure helpers behind the jobs above, re-exported for the external test

@@ -1,5 +1,6 @@
 import { apiFetch } from '../services/api.js';
 import { showToast } from '../services/toast.js';
+import { copyLinkPath } from '../services/clipboard.js';
 
 const section = document.getElementById('invites-section');
 const toggleBtn = document.getElementById('btn-invite-user');
@@ -11,15 +12,23 @@ const list = document.getElementById('invites-list');
 
 let isPlatformAdmin = false;
 
-const copyLink = async (path) => {
-  const url = window.location.origin + path;
-  try {
-    await navigator.clipboard.writeText(url);
-    showToast('Invite link copied to clipboard', 'success');
-  } catch {
-    window.prompt('Copy the invite link:', url);
-  }
+const expiryCell = (expiresAt) => {
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  const hours = Math.round(ms / 3_600_000);
+  const urgent = hours < 24;
+  const text = hours < 1
+    ? 'expires within the hour'
+    : (hours < 48 ? `in ${hours}h` : `in ${Math.round(hours / 24)}d`);
+  return `<span class="${urgent ? 'text-danger' : ''}">${text}</span>`;
 };
+
+const matchesFilter = (inv, term) => {
+  if (!term) return true;
+  const haystack = `${inv.email} ${inv.org_name} ${inv.department}`.toLowerCase();
+  return haystack.includes(term.toLowerCase());
+};
+
+let allInvites = [];
 
 const renderInvites = (invites) => {
   if (!invites.length) {
@@ -31,8 +40,9 @@ const renderInvites = (invites) => {
       <td>${inv.email}</td>
       <td>${inv.org_name}</td>
       <td>${inv.department}</td>
-      <td class="col-date">${new Date(inv.expires_at).toLocaleDateString()}</td>
+      <td class="col-date">${expiryCell(inv.expires_at)}</td>
       <td class="col-actions">
+        <button type="button" class="btn btn-sm" data-regenerate="${inv.id}">Regenerate link</button>
         <button type="button" class="btn btn-sm btn-outline" data-revoke="${inv.id}">Revoke</button>
       </td>
     </tr>`).join('');
@@ -51,14 +61,32 @@ const renderInvites = (invites) => {
       await loadInvites();
     });
   });
+  list.querySelectorAll('[data-regenerate]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      try {
+        const fresh = await apiFetch(`/invites/${btn.dataset.regenerate}/regenerate`, {
+          method: 'POST',
+        });
+        await copyLinkPath(fresh.invite_path, 'New invite link copied to clipboard');
+        await loadInvites();
+      } catch (err) {
+        showToast(err.message || 'Failed to regenerate the invite', 'error');
+      }
+    });
+  });
 };
 
 const loadInvites = async () => {
   try {
-    const invites = await apiFetch('/invites');
-    renderInvites(invites || []);
+    allInvites = (await apiFetch('/invites')) || [];
+    applyFilter();
   } catch {
   }
+};
+
+const applyFilter = () => {
+  const term = document.getElementById('invite-filter')?.value.trim() || '';
+  renderInvites(allInvites.filter((inv) => matchesFilter(inv, term)));
 };
 
 const detectPlatformAdmin = async () => {
@@ -88,7 +116,7 @@ const createInvite = async () => {
     body: JSON.stringify(body),
   });
   emailInput.value = '';
-  await copyLink(created.invite_path);
+  await copyLinkPath(created.invite_path);
   await loadInvites();
 };
 
@@ -100,3 +128,4 @@ toggleBtn?.addEventListener('click', async () => {
   }
 });
 createBtn?.addEventListener('click', createInvite);
+document.getElementById('invite-filter')?.addEventListener('input', applyFilter);

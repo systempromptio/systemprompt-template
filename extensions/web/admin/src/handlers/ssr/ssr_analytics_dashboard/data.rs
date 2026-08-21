@@ -7,17 +7,25 @@
 
 use std::sync::Arc;
 
+use chrono::Datelike;
 use sqlx::PgPool;
 
 use crate::repositories::analytics::site::code::{CodeDayBucket, CodeTotals};
 use crate::repositories::analytics::site::kpis::{PermissionGrantStats, SiteKpis};
+use crate::repositories::analytics::site::latency::LatencySplit;
 use crate::repositories::analytics::site::leaderboards::{
     LeaderboardPage, LeaderboardSort, UserUsageRow,
 };
+use crate::repositories::analytics::site::model_series::ModelCostBucket;
 use crate::repositories::analytics::site::seats::InactiveSeatRow;
 use crate::repositories::analytics::site::series::{SeriesBucket, UsageBucket};
+use crate::repositories::analytics::site::session_costs::SessionCostStats;
 use crate::repositories::analytics::site::{
-    SiteScope, code, distribution, kpis, leaderboards, seats, series,
+    SiteScope, code, distribution, kpis, latency, leaderboards, model_series, seats, series,
+    session_costs,
+};
+use crate::repositories::organizations::budget_warnings::{
+    BudgetWarningHistoryRow, list_budget_warning_history,
 };
 use crate::repositories::organizations::metrics::{OrganizationMetrics, list_organization_metrics};
 use crate::util::time_range::TimeRange;
@@ -37,6 +45,13 @@ pub(super) struct AnalyticsDashboardData {
     pub org_metrics: Vec<OrganizationMetrics>,
     pub code_series: Vec<CodeDayBucket>,
     pub code_totals: CodeTotals,
+    pub model_cost: Vec<ModelCostBucket>,
+    pub session_costs: SessionCostStats,
+    pub latency: LatencySplit,
+    pub budget_history: Vec<BudgetWarningHistoryRow>,
+    /// Month-to-date daily series for the burn-up chart; loaded only when
+    /// exactly one organization is in scope.
+    pub mtd_series: Vec<UsageBucket>,
 }
 
 pub(super) struct DashboardQueryPlan<'a> {
@@ -60,7 +75,8 @@ pub(super) async fn load_dashboard_data(
 ) -> AnalyticsDashboardData {
     let mut data = AnalyticsDashboardData::default();
 
-    // Why: the KPI strip and the wasted-seat count render on every tab.
+    // Why: loaded for every tab — the strip itself renders on Overview and
+    // Usage, and the wasted-seat count is a KPI card link the others reuse.
     let (kpis_res, wasted_res) = tokio::join!(
         kpis::get_site_kpis(pool, plan.range, plan.scope),
         seats::count_inactive_seats(pool, plan.scope),
@@ -76,13 +92,15 @@ pub(super) async fn load_dashboard_data(
 
     match plan.tab {
         DashboardTab::Overview => {
-            let (series_res, models_res, orgs_res) = tokio::join!(
+            let (series_res, models_res, model_cost_res, orgs_res) = tokio::join!(
                 series::list_daily_usage_series(pool, plan.range, plan.scope, plan.bucket),
                 distribution::list_model_distribution(pool, plan.range, plan.scope),
+                model_series::list_model_cost_series(pool, plan.range, plan.scope, plan.bucket),
                 list_organization_metrics(pool),
             );
             data.series = unwrap_or_empty(series_res, "list_daily_usage_series");
             data.models = unwrap_or_empty(models_res, "list_model_distribution");
+            data.model_cost = unwrap_or_empty(model_cost_res, "list_model_cost_series");
             data.org_metrics = scoped_orgs(orgs_res, &plan);
         },
         DashboardTab::Usage => load_usage_tab(pool, &plan, &mut data).await,
@@ -94,9 +112,7 @@ pub(super) async fn load_dashboard_data(
             data.inactive_seats = unwrap_or_empty(seats_res, "list_inactive_seats");
             data.org_metrics = scoped_orgs(orgs_res, &plan);
         },
-        DashboardTab::Spend => {
-            data.org_metrics = scoped_orgs(list_organization_metrics(pool).await, &plan);
-        },
+        DashboardTab::Spend => load_spend_tab(pool, &plan, &mut data).await,
         DashboardTab::Code => {
             let (series_res, totals_res) = tokio::join!(
                 code::list_daily_code_series(pool, plan.range, plan.scope),
@@ -113,12 +129,54 @@ pub(super) async fn load_dashboard_data(
     data
 }
 
+// Why: the spend tab is the one that pulls from three planes at once — org
+// metrics, latency, and the budget-warning ledger — plus a second windowed
+// series for the burn-up, so it lives in its own function rather than
+// crowding the dispatch.
+async fn load_spend_tab(
+    pool: &PgPool,
+    plan: &DashboardQueryPlan<'_>,
+    data: &mut AnalyticsDashboardData,
+) {
+    let (orgs_res, latency_res, history_res) = tokio::join!(
+        list_organization_metrics(pool),
+        latency::get_latency_split(pool, plan.range, plan.scope),
+        list_budget_warning_history(pool, plan.scope.org_slug.as_deref(), 12),
+    );
+    data.org_metrics = scoped_orgs(orgs_res, plan);
+    data.latency = latency_res.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "get_latency_split failed");
+        LatencySplit::default()
+    });
+    data.budget_history = history_res.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "list_budget_warning_history failed");
+        Vec::new()
+    });
+    // Why: a burn-up against a cap only means something for one
+    // organization; the platform's all-orgs view gets a hint instead.
+    if let Some(slug) = plan.scope.org_slug.as_deref() {
+        let month_scope = SiteScope {
+            org_slug: Some(slug.to_owned()),
+            department: None,
+            user_id: None,
+        };
+        let mtd = series::list_daily_usage_series(
+            pool,
+            month_to_date_range(),
+            &month_scope,
+            SeriesBucket::Day,
+        )
+        .await;
+        data.mtd_series = unwrap_or_empty(mtd, "list_daily_usage_series (mtd)");
+    }
+}
+
 async fn load_usage_tab(
     pool: &PgPool,
     plan: &DashboardQueryPlan<'_>,
     data: &mut AnalyticsDashboardData,
 ) {
-    let (leaders_res, perms_res) = tokio::join!(
+    let (leaders_res, perms_res, session_costs_res) = tokio::join!(
         leaderboards::list_top_users_by_requests(
             pool,
             plan.range,
@@ -130,6 +188,7 @@ async fn load_usage_tab(
             },
         ),
         kpis::get_permission_grant_stats(pool, plan.range, plan.scope),
+        session_costs::get_session_cost_stats(pool, plan.range, plan.scope),
     );
     match leaders_res {
         Ok((rows, total)) => {
@@ -142,6 +201,27 @@ async fn load_usage_tab(
         tracing::warn!(error = %e, "get_permission_grant_stats failed");
         PermissionGrantStats::default()
     });
+    data.session_costs = session_costs_res.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "get_session_cost_stats failed");
+        SessionCostStats::default()
+    });
+}
+
+// Why: the burn-up always spans the calendar month the budget guard compares
+// against, independent of the page's picked window.
+fn month_to_date_range() -> TimeRange {
+    let now = chrono::Utc::now();
+    let month_start = now
+        .date_naive()
+        .with_day(1)
+        .unwrap_or_else(|| now.date_naive())
+        .and_hms_opt(0, 0, 0)
+        .map_or(now, |d| d.and_utc());
+    TimeRange {
+        from: month_start,
+        to: now,
+        preset: crate::util::time_range::TimeRangePreset::Custom,
+    }
 }
 
 // Why: org-level tables are visibility-scoped in code, not SQL — a platform

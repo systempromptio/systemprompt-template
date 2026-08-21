@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT org_id AS \"org_id!\", month AS \"month!\",\n               threshold_microdollars AS \"threshold!\",\n               spent_microdollars AS \"spent!\",\n               first_seen_at AS \"first_seen_at!\",\n               last_seen_at AS \"last_seen_at!\"\n        FROM org_budget_warnings\n        WHERE month = DATE_TRUNC('month', NOW())::DATE\n        ",
+  "query": "\n        SELECT w.org_id AS \"org_id!\", o.name AS \"org_name!\", o.slug AS \"org_slug!\",\n               w.month AS \"month!\",\n               w.threshold_microdollars AS \"threshold!\",\n               w.spent_microdollars AS \"spent!\",\n               w.first_seen_at AS \"first_seen_at!\",\n               w.last_seen_at AS \"last_seen_at!\"\n        FROM org_budget_warnings w\n        JOIN organizations o ON o.id = w.org_id\n        WHERE w.month >= DATE_TRUNC('month', NOW())::DATE - make_interval(months => $1::INT)\n          AND ($2::TEXT IS NULL OR o.slug = $2)\n        ORDER BY w.month DESC, o.name\n        ",
   "describe": {
     "columns": [
       {
@@ -16,6 +16,28 @@
       },
       {
         "ordinal": 1,
+        "name": "org_name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "org_slug!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organizations",
+            "name": "slug"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
         "name": "month!",
         "type_info": "Date",
         "origin": {
@@ -26,7 +48,7 @@
         }
       },
       {
-        "ordinal": 2,
+        "ordinal": 4,
         "name": "threshold!",
         "type_info": "Int8",
         "origin": {
@@ -37,7 +59,7 @@
         }
       },
       {
-        "ordinal": 3,
+        "ordinal": 5,
         "name": "spent!",
         "type_info": "Int8",
         "origin": {
@@ -48,7 +70,7 @@
         }
       },
       {
-        "ordinal": 4,
+        "ordinal": 6,
         "name": "first_seen_at!",
         "type_info": "Timestamptz",
         "origin": {
@@ -59,7 +81,7 @@
         }
       },
       {
-        "ordinal": 5,
+        "ordinal": 7,
         "name": "last_seen_at!",
         "type_info": "Timestamptz",
         "origin": {
@@ -71,9 +93,14 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Int4",
+        "Text"
+      ]
     },
     "nullable": [
+      false,
+      false,
       false,
       false,
       false,
@@ -82,5 +109,5 @@
       false
     ]
   },
-  "hash": "e73a196a099fde3d9e211fb9d46169bf63b0b4603826e8826ea69ee14259c87f"
+  "hash": "110457d597fc2b816e1dbbbf83c18d188c354953099ec41ed02c383b37bde6eb"
 }

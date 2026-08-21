@@ -1,0 +1,11 @@
+{{!--
+  KPI-card sparkline: decoration only (aria-hidden) — the card's value and
+  delta text are the accessible copy. Its own 100x24 unit space.
+
+  Invoke as: {{> components/kpi-sparkline kpis.requests_spark}}
+--}}
+{{#if has_data}}
+<svg class="kpi-card__spark" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true">
+    <path d="{{path_d}}" fill="none" vector-effect="non-scaling-stroke"></path>
+</svg>
+{{/if}}

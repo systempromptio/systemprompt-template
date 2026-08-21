@@ -12,6 +12,7 @@
 //! dimension this extension declares in [`crate::authz`] — today that means a
 //! `department` rule binds here, not just in the access matrix.
 
+use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
 
@@ -37,16 +38,30 @@ struct CachedMarketplaceParents {
     fetched_at: Instant,
 }
 
-static MARKETPLACE_PARENT_CACHE: LazyLock<RwLock<Option<CachedMarketplaceParents>>> =
-    LazyLock::new(|| RwLock::new(None));
-const MARKETPLACE_PARENT_TTL: Duration = Duration::from_mins(5);
+// Why: keyed per database, exactly like `crate::authz::registry` (and with
+// its `database_key`) — a process-wide slot serves one database's marketplace
+// ACLs to another in any process that talks to more than one database, which
+// is what the integration suite's throwaway databases do. Entries refresh in
+// place, so this is a plain map, not a leak.
+static MARKETPLACE_PARENT_CACHE: LazyLock<RwLock<HashMap<String, CachedMarketplaceParents>>> =
+    LazyLock::new(|| RwLock::new(HashMap::new()));
+// Why: 30 seconds, not minutes — the subject attributes below are looked up
+// fresh so a revocation binds on the next call; marketplace parent *rules*
+// are the same class of security data, so their staleness window is kept
+// humanly imperceptible while still amortizing the per-marketplace rule
+// lookups across bursts. Rules are also written outside this process (CLI,
+// seeds), so write-path invalidation alone could never be sound and a TTL
+// stays regardless.
+const MARKETPLACE_PARENT_TTL: Duration = Duration::from_secs(30);
 
 async fn marketplace_parent_entries(
+    pool: &PgPool,
     repo: &AccessControlRepository,
 ) -> Vec<(EntityRef, Vec<AccessRule>, Option<bool>)> {
+    let key = crate::authz::database_key(pool);
     {
         let cache = MARKETPLACE_PARENT_CACHE.read().await;
-        if let Some(ref cached) = *cache
+        if let Some(cached) = cache.get(&key)
             && cached.fetched_at.elapsed() < MARKETPLACE_PARENT_TTL
         {
             return cached.entries.clone();
@@ -80,10 +95,13 @@ async fn marketplace_parent_entries(
 
     {
         let mut cache = MARKETPLACE_PARENT_CACHE.write().await;
-        *cache = Some(CachedMarketplaceParents {
-            entries: entries.clone(),
-            fetched_at: Instant::now(),
-        });
+        cache.insert(
+            key,
+            CachedMarketplaceParents {
+                entries: entries.clone(),
+                fetched_at: Instant::now(),
+            },
+        );
     }
     entries
 }
@@ -164,11 +182,9 @@ async fn audit_decision(
         // Why: the attested session, so a gateway decision keys to the same
         // session row as the prompt gate and the `ai_requests` row it belongs
         // to. Enforcement sites without a session (server-attach RBAC, MCP)
-        // send none, and the trace id keeps the row correlatable.
-        session_id: req
-            .session_id
-            .as_ref()
-            .map_or_else(|| req.trace_id.as_str(), SessionId::as_str),
+        // send none and store the empty string; `trace_id` below is what keeps
+        // those rows correlatable, so this column never carries a trace id.
+        session_id: req.session_id.as_ref().map_or("", SessionId::as_str),
         tool_name: entity_id_str,
         agent_id: None,
         // Why: authz decisions are entity-keyed, not agent-keyed; entity_type
@@ -180,6 +196,7 @@ async fn audit_decision(
         evaluated_rules: &evaluated,
         plugin_id: None,
         act_chain: &req.act_chain,
+        trace_id: Some(req.trace_id.as_str()),
         context_id: context_id.as_str(),
         task_id: req
             .task_id
@@ -204,7 +221,7 @@ pub(crate) async fn govern_authz(
         Err(resp) => return resp,
     };
 
-    let mp_entries = marketplace_parent_entries(&repo).await;
+    let mp_entries = marketplace_parent_entries(&pool, &repo).await;
     let parents: Vec<ResolveParent<'_>> = mp_entries
         .iter()
         .map(|(entity, rules, default_included)| ResolveParent {

@@ -14,7 +14,7 @@
         {{/each}}
     </nav>
 
-    <form method="get" action="{{base_url}}" class="analytics-filters">
+    <form method="get" action="{{base_url}}" class="analytics-filters analytics-filters--sticky">
         {{#each filters.hidden}}
         <input type="hidden" name="{{this.name}}" value="{{this.value}}">
         {{/each}}
@@ -65,21 +65,27 @@
             <div class="kpi-card">
                 <span class="kpi-card__label">Requests</span>
                 <span class="kpi-card__value">{{kpis.requests}}</span>
+                <span class="kpi-card__delta" data-direction="{{kpis.requests_delta.direction}}" data-tone="{{kpis.requests_delta.tone}}">{{kpis.requests_delta.display}} vs prior period</span>
                 <span class="kpi-card__sub">{{kpis.error_display}}</span>
+                {{#if kpis.requests_spark}}{{> components/kpi-sparkline kpis.requests_spark}}{{/if}}
             </div>
             <div class="kpi-card">
                 <span class="kpi-card__label">Total spend</span>
                 <span class="kpi-card__value">{{kpis.cost_display}}</span>
+                <span class="kpi-card__delta" data-direction="{{kpis.cost_delta.direction}}" data-tone="{{kpis.cost_delta.tone}}">{{kpis.cost_delta.display}} vs prior period</span>
                 <span class="kpi-card__sub">{{kpis.cost_per_request_display}} per request</span>
+                {{#if kpis.cost_spark}}{{> components/kpi-sparkline kpis.cost_spark}}{{/if}}
             </div>
             <div class="kpi-card">
                 <span class="kpi-card__label">Weekly active users</span>
                 <span class="kpi-card__value">{{kpis.weekly_active_users}}</span>
+                <span class="kpi-card__delta" data-direction="{{kpis.wau_delta.direction}}" data-tone="{{kpis.wau_delta.tone}}">{{kpis.wau_delta.display}} vs prior week</span>
                 <span class="kpi-card__sub">{{kpis.active_users}} active in window · {{kpis.requests_per_user_day_display}} req/user/day</span>
             </div>
             <div class="kpi-card">
                 <span class="kpi-card__label">Tokens</span>
                 <span class="kpi-card__value">{{kpis.tokens_display}}</span>
+                <span class="kpi-card__delta" data-direction="{{kpis.tokens_delta.direction}}" data-tone="{{kpis.tokens_delta.tone}}">{{kpis.tokens_delta.display}} vs prior period</span>
                 <span class="kpi-card__sub">across the window</span>
             </div>
             <a class="kpi-card{{#if kpis.wasted_seats}} kpi-card--warning{{/if}}" href="{{kpis.wasted_seats_url}}">
@@ -91,10 +97,10 @@
 
         <div class="analytics-grid">
             <section class="analytics-grid__panel">
-                {{> components/timeseries-chart volume_chart}}
+                {{> components/svg-line-chart volume_chart}}
             </section>
             <section class="analytics-grid__panel">
-                {{> components/timeseries-chart cost_chart}}
+                {{> components/svg-line-chart cost_chart}}
             </section>
         </div>
 
@@ -102,12 +108,18 @@
             <section class="analytics-grid__panel">
                 {{> components/pie-chart model_pie}}
             </section>
-            {{#if own_meter}}
+            <section class="analytics-grid__panel">
+                {{> components/svg-stacked-chart model_cost_chart}}
+            </section>
+        </div>
+
+        {{#if own_meter}}
+        <div class="analytics-grid">
             <section class="analytics-grid__panel">
                 {{> components/spend-meter own_meter}}
             </section>
-            {{/if}}
         </div>
+        {{/if}}
     </section>
     {{/if}}
 
@@ -122,6 +134,26 @@
                 {{else}}
                 <span class="kpi-card__value">—</span>
                 <span class="kpi-card__sub">no permission requests in this window</span>
+                {{/if}}
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-card__label">Prompt cache hit rate</span>
+                {{#if session_costs.has_data}}
+                <span class="kpi-card__value">{{session_costs.cache_hit_display}}</span>
+                <span class="kpi-card__sub">{{session_costs.cache_read_display}} tokens served from cache across {{session_costs.sessions}} sessions · client-reported</span>
+                {{else}}
+                <span class="kpi-card__value">—</span>
+                <span class="kpi-card__sub">no client-reported sessions in this window</span>
+                {{/if}}
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-card__label">Context window</span>
+                {{#if session_costs.has_data}}
+                <span class="kpi-card__value">{{session_costs.avg_context_display}}</span>
+                <span class="kpi-card__sub">average · {{session_costs.max_context_display}} peak · client-reported</span>
+                {{else}}
+                <span class="kpi-card__value">—</span>
+                <span class="kpi-card__sub">no client-reported sessions in this window</span>
                 {{/if}}
             </div>
         </div>
@@ -157,6 +189,8 @@
                 <td class="col-num">{{this.cost_display}}</td>
                 <td class="col-date">{{this.last_active_display}}</td>
                 <td>
+                    <a href="{{this.analytics_url}}" title="Full analytics for this user">Analytics</a>
+                    ·
                     <a href="{{this.scope_url}}" title="Scope the dashboard to this user">Focus</a>
                     ·
                     <a href="{{this.log_url}}" title="Raw request log for this user">Log</a>
@@ -203,7 +237,11 @@
                 <td>{{this.department}}</td>
                 <td>{{this.org_name}}</td>
                 <td class="col-date">{{this.last_request_display}}</td>
-                <td><a href="{{this.detail_url}}">Manage</a></td>
+                <td>
+                    <a href="{{this.analytics_url}}">Analytics</a>
+                    ·
+                    <a href="{{this.detail_url}}">Manage</a>
+                </td>
             </tr>
             {{/each}}
             </tbody>
@@ -228,8 +266,65 @@
         {{> components/empty-state
             message="No organizations with a capped plan are visible in this scope."}}
         {{/if}}
+        <p class="analytics-note">Spend limits are configured in plan YAML — shown here, not editable.</p>
+
+        {{#if burndown}}
+        <div class="analytics-grid">
+            <section class="analytics-grid__panel">
+                {{> components/svg-line-chart burndown}}
+            </section>
+        </div>
+        {{/if}}
+        {{#if show_burndown_hint}}
+        <p class="analytics-note">Pick an organization to see month-to-date burn-up against its cap.</p>
+        {{/if}}
+
+        <div class="kpi-strip">
+            <div class="kpi-card">
+                <span class="kpi-card__label">Fast requests (&lt;{{fast_slow.threshold_display}})</span>
+                <span class="kpi-card__value">{{fast_slow.fast}}</span>
+                <span class="kpi-card__sub">p50 {{fast_slow.p50_display}}</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-card__label">Slow requests (&ge;{{fast_slow.threshold_display}})</span>
+                <span class="kpi-card__value">{{fast_slow.slow}}</span>
+                <span class="kpi-card__sub">p95 {{fast_slow.p95_display}} · {{fast_slow.untimed}} untimed</span>
+            </div>
+        </div>
         <p class="analytics-note">Request speed is a latency distribution, not a request class —
             see the <a href="{{latency_link}}">latency histogram on the request log</a>.</p>
+
+        <h2 class="section-title">Soft-cap crossings</h2>
+        <p class="section-caption">Months where spend crossed the soft cap — written by the gateway guard at the moment of crossing.</p>
+        {{#if has_budget_warnings}}
+        {{#> components/data-table}}
+            <thead><tr>
+                <th>Organization</th>
+                <th>Month</th>
+                <th class="col-num">Threshold</th>
+                <th class="col-num">Spent</th>
+                <th class="col-num">Over by</th>
+                <th class="col-date">First seen</th>
+                <th class="col-date">Last seen</th>
+            </tr></thead>
+            <tbody>
+            {{#each budget_warnings}}
+            <tr>
+                <td>{{this.org_name}}</td>
+                <td>{{this.month_display}}</td>
+                <td class="col-num">{{this.threshold_display}}</td>
+                <td class="col-num">{{this.spent_display}}</td>
+                <td class="col-num">{{this.over_by_display}}</td>
+                <td class="col-date">{{this.first_seen_display}}</td>
+                <td class="col-date">{{this.last_seen_display}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state
+            message="No soft-cap crossings in the last 12 months."}}
+        {{/if}}
     </section>
     {{/if}}
 
@@ -237,10 +332,10 @@
     <section aria-label="Code impact">
         <div class="analytics-grid">
             <section class="analytics-grid__panel">
-                {{> components/timeseries-chart commit_chart}}
+                {{> components/svg-line-chart commit_chart}}
             </section>
             <section class="analytics-grid__panel">
-                {{> components/timeseries-chart loc_chart}}
+                {{> components/svg-line-chart loc_chart}}
             </section>
         </div>
         <div class="code-frames">

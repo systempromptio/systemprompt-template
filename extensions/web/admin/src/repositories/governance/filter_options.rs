@@ -1,9 +1,11 @@
 //! Distinct-value lookups for the identity-filter-ribbon partial.
 //!
-//! Aggregated over a `TimeRange` so the dropdowns only show identities/policies
-//! that actually appear in the user's current view. `tenant_id` lives on
-//! `ai_requests`, not `governance_decisions`, so the tenants list is sourced
-//! from `ai_requests` over the same window.
+//! Aggregated over a `TimeRange` so the dropdowns only show identities,
+//! agents, scopes, policies, and decisions that actually appear in the user's
+//! current view. Everything here reads `governance_decisions`; tenancy is no
+//! longer a request-level column anywhere (core dropped
+//! `ai_requests.tenant_id`) — organization scoping is derived through
+//! `organization_members` instead.
 
 use serde::Serialize;
 use sqlx::PgPool;

@@ -21,8 +21,7 @@ pub async fn list_top_actors(
             u.email::TEXT AS email,
             COUNT(*) FILTER (WHERE g.decision = 'deny')::bigint AS "deny_count!",
             COUNT(*) FILTER (
-                WHERE g.decision = 'deny'
-                  AND (g.policy = 'secret_scan' OR g.reason ILIKE '%secret%')
+                WHERE g.decision = 'deny' AND g.policy = 'secret_scan'
             )::bigint AS "secret_count!",
             COUNT(*)::bigint AS "total!"
         FROM governance_decisions g

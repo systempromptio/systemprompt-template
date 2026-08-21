@@ -20,7 +20,7 @@ pub(crate) mod session_summary;
 use crate::error::AdminResult;
 use crate::event_hub::EventHub;
 use crate::repositories::marketplace::webhook;
-use crate::types::webhook::{HookEvent, HookEventPayload};
+use crate::types::webhook::HookEventPayload;
 use auth::extract_and_validate_jwt;
 use axum::Json;
 use axum::extract::{Extension, State};
@@ -43,9 +43,6 @@ pub(crate) async fn handle_hook_track(
     let (user_id, plugin_id, jwt_token) = extract_and_validate_jwt(&headers)?;
     tracing::trace!(payload = %helpers::sanitize_metadata(&raw), "Hook track received payload");
     let (payload, warnings) = HookEventPayload::from_value(raw);
-    if matches!(&payload.event, HookEvent::PreToolUse(_)) {
-        return Ok(StatusCode::OK.into_response());
-    }
     log_payload_warnings(&payload, &warnings);
 
     let was_inserted = insert_hook_event(&pool, &user_id, &payload).await;

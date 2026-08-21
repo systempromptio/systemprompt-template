@@ -16,6 +16,7 @@ pub(crate) mod format;
 pub(crate) mod list_view;
 mod ssr_analytics_dashboard;
 pub(crate) mod ssr_analytics_requests;
+pub(crate) mod ssr_analytics_user;
 mod ssr_bridge_device_link;
 mod ssr_bridge_setup;
 mod ssr_chain;
@@ -43,6 +44,7 @@ pub(crate) mod types;
 
 pub(crate) use ssr_analytics_dashboard::analytics_dashboard_page;
 pub(crate) use ssr_analytics_requests::analytics_requests_page;
+pub(crate) use ssr_analytics_user::analytics_user_page;
 pub(crate) use ssr_bridge_device_link::{device_link_approve, device_link_deny, device_link_page};
 pub(crate) use ssr_bridge_setup::bridge_setup_page;
 pub(crate) use ssr_chain::chain_envelope;

@@ -19,16 +19,11 @@
         </div>
         <div class="form-group">
             <label for="new-user-dept">Department</label>
+            {{!-- Options are loaded from /management/departments when the
+                  panel opens; a hardcoded list would offer departments the
+                  server does not know and silently drop them on save. --}}
             <select class="field-input" id="new-user-dept">
                 <option value="">-- Select --</option>
-                <option value="ceo">ceo</option>
-                <option value="finance">finance</option>
-                <option value="sales">sales</option>
-                <option value="marketing">marketing</option>
-                <option value="operations">operations</option>
-                <option value="hr">hr</option>
-                <option value="it">it</option>
-                <option value="support">support</option>
             </select>
         </div>
         <div class="form-group" role="group" aria-labelledby="roles-group-label">

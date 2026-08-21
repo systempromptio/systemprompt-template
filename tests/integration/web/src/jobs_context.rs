@@ -103,6 +103,7 @@ pub(crate) fn install_config() {
         api_internal_url: BASE_URL.to_owned(),
         api_external_url: BASE_URL.to_owned(),
         jwt_issuer: "https://issuer.test".to_owned(),
+        login_page_url: None,
         jwt_access_token_expiration: 3_600,
         jwt_refresh_token_expiration: 86_400,
         jwt_audiences: vec![],

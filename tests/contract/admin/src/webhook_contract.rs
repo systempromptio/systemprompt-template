@@ -512,3 +512,116 @@ async fn statusline_and_transcript_ingests_authenticate_and_accept() {
         failures.join("\n")
     );
 }
+
+// Two databases, one process: the marketplace-parent cache must not serve one
+// database's authorization rules to another.
+//
+// This is the same defect class the subject-dimension registry carried before
+// it was keyed per database (commit 32e6cbbe) — the cache sits one file over
+// in the same authz path, so it gets the same guard. Without per-database
+// keying the second app, querying inside the TTL window, would resolve
+// against the first database's marketplace rules.
+#[tokio::test(flavor = "multi_thread")]
+async fn the_marketplace_parent_cache_is_keyed_per_database() {
+    if !globals::init() {
+        return;
+    }
+    let Some(db_a) = TempDb::create().await else {
+        return;
+    };
+    let Some(db_b) = TempDb::create().await else {
+        db_a.cleanup().await;
+        return;
+    };
+
+    let marketplace_id = seed::unique("marketplace");
+
+    // Database A: a marketplace whose rules grant the user access to a skill
+    // that cascades from it.
+    let user_a = seed::unique("cache-user-a");
+    seed::insert_user(&db_a.pool, &user_a, &format!("{user_a}@contract.test")).await;
+    seed::insert_acl_rule(
+        &db_a.pool,
+        "marketplace",
+        &marketplace_id,
+        "user",
+        &user_a,
+        "allow",
+    )
+    .await;
+
+    // Database B: the same marketplace id exists as a catalog row, but grants
+    // nothing to anyone.
+    let user_b = seed::unique("cache-user-b");
+    seed::insert_user(&db_b.pool, &user_b, &format!("{user_b}@contract.test")).await;
+
+    let app_a = App::new(&db_a.pool, principal::provision(&db_a.pool).await);
+    let app_b = App::new(&db_b.pool, principal::provision(&db_b.pool).await);
+
+    let request_a = format!(
+        r#"{{"entity":{{"kind":"marketplace","id":"{marketplace_id}"}},"user_id":"{user_a}","roles":["user"],"trace_id":"{}"}}"#,
+        seed::unique("trace")
+    );
+    let (status, body_a) = app_a.call(post(AUTHZ, &request_a)).await;
+    assert_eq!(status, StatusCode::OK, "database A decided: {body_a}");
+    assert!(
+        body_a.contains("allow"),
+        "database A grants this user the marketplace: {body_a}"
+    );
+
+    // Immediately (well inside the cache TTL), the same shape against B.
+    let request_b = format!(
+        r#"{{"entity":{{"kind":"marketplace","id":"{marketplace_id}"}},"user_id":"{user_b}","roles":["user"],"trace_id":"{}"}}"#,
+        seed::unique("trace")
+    );
+    let (status, body_b) = app_b.call(post(AUTHZ, &request_b)).await;
+    assert_eq!(status, StatusCode::OK, "database B decided: {body_b}");
+    assert!(
+        body_b.contains("deny"),
+        "database B grants nothing — a shared cache would have leaked A's rules: {body_b}"
+    );
+
+    db_a.cleanup().await;
+    db_b.cleanup().await;
+}
+
+// The decision audit is written before the response leaves, not spawned to
+// finish whenever: this endpoint's whole product is the audit row, and a
+// caller that reads it immediately must find it.
+#[tokio::test(flavor = "multi_thread")]
+async fn the_governed_decision_is_audited_before_the_response_returns() {
+    if !globals::init() {
+        return;
+    }
+    let Some(db) = TempDb::create().await else {
+        return;
+    };
+    let credentials = principal::provision(&db.pool).await;
+    let app = App::new(&db.pool, credentials);
+
+    let user_id = seed::unique("audit-user");
+    seed::insert_user(&db.pool, &user_id, &format!("{user_id}@contract.test")).await;
+    let session = seed::unique("audit-session");
+    let token = seed::mint(&TokenSpec::hook(&user_id));
+
+    let (status, body) = app
+        .call_with_bearer(
+            post(GOVERN, &tool_event(&session, "Bash", r#"{"command":"ls"}"#)),
+            &token,
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK, "the gate decided: {body}");
+
+    // No sleep, no retry: if the write were spawned this would be a race.
+    let audited: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM governance_decisions WHERE session_id = $1")
+            .bind(&session)
+            .fetch_one(&*db.pool)
+            .await
+            .expect("count governance decisions");
+    assert_eq!(
+        audited, 1,
+        "the audit row must exist the moment the decision is returned"
+    );
+    db.cleanup().await;
+}

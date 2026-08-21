@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT session_id AS \"session_id!: SessionId\", model,\n               COALESCE(total_cost_microdollars, 0)::BIGINT AS \"cost!\",\n               COALESCE(context_window_size, 0)::BIGINT AS \"context!\",\n               COALESCE(cache_read_input_tokens, 0)::BIGINT AS \"cache_read!\",\n               COALESCE(input_tokens, 0)::BIGINT AS \"input!\",\n               COALESCE(output_tokens, 0)::BIGINT AS \"output!\",\n               updated_at AS \"updated_at!\"\n        FROM session_cost_snapshots\n        WHERE user_id = $1\n        ORDER BY updated_at DESC\n        LIMIT $2\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id!: SessionId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_cost_snapshots",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_cost_snapshots",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "context!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "cache_read!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "input!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "output!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "updated_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "session_cost_snapshots",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "2799ce6861267f8bdd6125544cd2497c586b5086167316d956f822c9fb18aa80"
+}

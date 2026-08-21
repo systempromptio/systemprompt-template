@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH ranked AS (\n            SELECT r.model\n            FROM ai_requests r\n            LEFT JOIN organization_members m ON m.user_id = r.user_id\n            LEFT JOIN organizations o ON o.id = m.org_id\n            LEFT JOIN user_profile_ext upe ON upe.user_id = r.user_id\n            WHERE r.created_at >= $1 AND r.created_at < $2\n              AND NOT r.synthetic\n              AND ($3::TEXT IS NULL OR o.slug = $3)\n              AND ($4::TEXT IS NULL OR COALESCE(NULLIF(upe.department, ''), 'Default') = $4)\n              AND ($5::TEXT IS NULL OR r.user_id = $5)\n            GROUP BY r.model\n            ORDER BY SUM(r.cost_microdollars) DESC NULLS LAST\n            LIMIT 6\n        )\n        SELECT\n            DATE_TRUNC($6, r.created_at) AS \"bucket_start!\",\n            CASE WHEN k.model IS NULL THEN 'Other' ELSE r.model END AS \"model!\",\n            COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS \"cost!\",\n            COUNT(*)::BIGINT AS \"requests!\"\n        FROM ai_requests r\n        LEFT JOIN ranked k ON k.model = r.model\n        LEFT JOIN organization_members m ON m.user_id = r.user_id\n        LEFT JOIN organizations o ON o.id = m.org_id\n        LEFT JOIN user_profile_ext upe ON upe.user_id = r.user_id\n        WHERE r.created_at >= $1 AND r.created_at < $2\n          AND NOT r.synthetic\n          AND ($3::TEXT IS NULL OR o.slug = $3)\n          AND ($4::TEXT IS NULL OR COALESCE(NULLIF(upe.department, ''), 'Default') = $4)\n          AND ($5::TEXT IS NULL OR r.user_id = $5)\n        GROUP BY 1, 2\n        ORDER BY 1, 2\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "bucket_start!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "model!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "85787dbb200c9c26b25127ffd7e83621399bb4af50d960616aa89c6c5ae1bce4"
+}

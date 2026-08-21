@@ -6,8 +6,8 @@
 
 use crate::handlers::ssr::format::format_cost;
 use crate::handlers::ssr::types::{
-    ChartBarView, ChartView, MeterInput, MeterView, PieSliceInput, PieView, bar_pct, meter_view,
-    pie_view,
+    LineChartSpec, MeterInput, MeterView, PieSliceInput, PieView, SvgLineChartView, SvgSeriesInput,
+    delta_view, line_chart, meter_view, pie_view, sparkline,
 };
 use crate::repositories::analytics::site::distribution::ModelDistributionRow;
 use crate::repositories::analytics::site::kpis::SiteKpis;
@@ -49,6 +49,7 @@ pub(super) fn kpi_strip(
     wasted_seats: i64,
     range: &TimeRange,
     query: &AnalyticsDashboardQuery,
+    series: Option<&[UsageBucket]>,
 ) -> KpiStripView {
     let days = window_days(range);
     let cost_per_request = if kpis.total_requests > 0 {
@@ -84,6 +85,26 @@ pub(super) fn kpi_strip(
         wasted_seats,
         wasted_seats_url: wasted_url,
         tokens_display: compact(kpis.total_tokens),
+        // Why: polarity is stated per metric — more requests and more active
+        // users read as good, more spend does not.
+        requests_delta: delta_view(kpis.total_requests, kpis.prev_total_requests, true),
+        cost_delta: delta_view(
+            kpis.total_cost_microdollars,
+            kpis.prev_total_cost_microdollars,
+            false,
+        ),
+        wau_delta: delta_view(
+            kpis.weekly_active_users,
+            kpis.prev_weekly_active_users,
+            true,
+        ),
+        tokens_delta: delta_view(kpis.total_tokens, kpis.prev_total_tokens, true),
+        // Why: built from the series the page already loaded — a sparkline
+        // never costs an extra query, so tabs without one simply omit it.
+        requests_spark: series
+            .map(|b| sparkline(&b.iter().map(|x| x.requests).collect::<Vec<_>>())),
+        cost_spark: series
+            .map(|b| sparkline(&b.iter().map(|x| x.cost_microdollars).collect::<Vec<_>>())),
     }
 }
 
@@ -92,67 +113,61 @@ pub(super) fn window_days(range: &TimeRange) -> f64 {
     (secs / 86_400.0).max(1.0)
 }
 
-pub(super) fn volume_chart(buckets: &[UsageBucket], range: &TimeRange, weekly: bool) -> ChartView {
-    let max = buckets.iter().map(|b| b.requests).max().unwrap_or(0);
+pub(super) fn volume_chart(
+    buckets: &[UsageBucket],
+    range: &TimeRange,
+    weekly: bool,
+) -> SvgLineChartView {
     let total: i64 = buckets.iter().map(|b| b.requests).sum();
     let errors: i64 = buckets.iter().map(|b| b.errors).sum();
-    ChartView {
+    let label = if weekly {
+        "requests/week"
+    } else {
+        "requests/day"
+    };
+    line_chart(LineChartSpec {
         title: "Request volume",
         subtitle: format!("{total} requests · {errors} failed"),
-        tone: "accent",
-        series: buckets
-            .iter()
-            .map(|b| ChartBarView {
-                pct: bar_pct(b.requests, max),
-                tooltip: format!(
-                    "{}: {} requests, {} failed, {} active users",
-                    bucket_label(b.bucket_start, weekly),
-                    b.requests,
-                    b.errors,
-                    b.active_users
-                ),
-            })
-            .collect(),
-        has_data: max > 0,
-        y_max_display: max.to_string(),
-        y_mid_display: (max / 2).to_string(),
+        empty_message: "No gateway requests in this window.",
+        series: vec![SvgSeriesInput {
+            label: label.to_owned(),
+            values: buckets.iter().map(|b| b.requests).collect(),
+            value_display: total.to_string(),
+        }],
+        ref_lines: Vec::new(),
+        y_max: None,
+        y_display: |v| v.to_string(),
         x_start_display: date_label(range.from),
         x_mid_display: date_label(midpoint(range)),
         x_end_display: date_label(range.to),
-        empty_message: "No gateway requests in this window.",
-    }
+        show_area: true,
+    })
 }
 
-pub(super) fn spend_chart(buckets: &[UsageBucket], range: &TimeRange, weekly: bool) -> ChartView {
-    let max = buckets
-        .iter()
-        .map(|b| b.cost_microdollars)
-        .max()
-        .unwrap_or(0);
+pub(super) fn spend_chart(
+    buckets: &[UsageBucket],
+    range: &TimeRange,
+    weekly: bool,
+) -> SvgLineChartView {
     let total: i64 = buckets.iter().map(|b| b.cost_microdollars).sum();
-    ChartView {
+    let label = if weekly { "cost/week" } else { "cost/day" };
+    line_chart(LineChartSpec {
         title: "Cost over time",
         subtitle: format!("{} across the window", format_cost(total)),
-        tone: "success",
-        series: buckets
-            .iter()
-            .map(|b| ChartBarView {
-                pct: bar_pct(b.cost_microdollars, max),
-                tooltip: format!(
-                    "{}: {}",
-                    bucket_label(b.bucket_start, weekly),
-                    format_cost(b.cost_microdollars)
-                ),
-            })
-            .collect(),
-        has_data: max > 0,
-        y_max_display: format_cost(max),
-        y_mid_display: format_cost(max / 2),
+        empty_message: "No billed requests in this window.",
+        series: vec![SvgSeriesInput {
+            label: label.to_owned(),
+            values: buckets.iter().map(|b| b.cost_microdollars).collect(),
+            value_display: format_cost(total),
+        }],
+        ref_lines: Vec::new(),
+        y_max: None,
+        y_display: format_cost,
         x_start_display: date_label(range.from),
         x_mid_display: date_label(midpoint(range)),
         x_end_display: date_label(range.to),
-        empty_message: "No billed requests in this window.",
-    }
+        show_area: true,
+    })
 }
 
 pub(super) fn model_pie(
@@ -233,7 +248,7 @@ pub(super) fn format_date(ts: chrono::DateTime<chrono::Utc>) -> String {
         .to_string()
 }
 
-fn bucket_label(ts: chrono::DateTime<chrono::Utc>, weekly: bool) -> String {
+pub(super) fn bucket_label(ts: chrono::DateTime<chrono::Utc>, weekly: bool) -> String {
     let local = ts.with_timezone(&chrono::Local);
     if weekly {
         format!("week of {}", local.format("%b %d"))

@@ -13,7 +13,7 @@ pub async fn get_governance_counts(pool: &PgPool) -> Result<GovernanceCounts, sq
             COUNT(*)::bigint AS "total!",
             COUNT(*) FILTER (WHERE decision = 'allow')::bigint AS "allowed!",
             COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS "denied!",
-            COUNT(*) FILTER (WHERE reason ILIKE '%secret%')::bigint AS "secret_breaches!"
+            COUNT(*) FILTER (WHERE policy = 'secret_scan' AND decision = 'deny')::bigint AS "secret_breaches!"
         FROM governance_decisions"#,
     )
     .fetch_one(pool)
@@ -38,7 +38,7 @@ pub async fn get_governance_counts_windowed(
             COUNT(*)::bigint AS "total!",
             COUNT(*) FILTER (WHERE decision = 'allow')::bigint AS "allowed!",
             COUNT(*) FILTER (WHERE decision = 'deny')::bigint AS "denied!",
-            COUNT(*) FILTER (WHERE reason ILIKE '%secret%')::bigint AS "secret_breaches!"
+            COUNT(*) FILTER (WHERE policy = 'secret_scan' AND decision = 'deny')::bigint AS "secret_breaches!"
         FROM governance_decisions
         WHERE created_at > now() - make_interval(secs => $1::double precision)"#,
         window_seconds as f64,

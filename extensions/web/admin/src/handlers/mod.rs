@@ -12,6 +12,7 @@ pub(crate) mod gateway;
 pub(crate) mod gateway_access;
 pub(crate) mod gateway_catalog;
 pub(crate) mod hooks_track;
+pub(crate) mod invite_accept;
 pub(crate) mod invites;
 mod jobs;
 pub(crate) mod organizations;
@@ -26,6 +27,7 @@ pub(crate) mod share;
 pub(crate) mod shared;
 pub(crate) mod ssr;
 mod users;
+pub(crate) mod users_bootstrap;
 pub(crate) mod webhook;
 
 pub(crate) use webhook::{
@@ -42,7 +44,6 @@ pub(crate) use plugins_env::list_plugin_env_handler;
 pub use plugins_env::resolve_principal;
 pub(crate) use resources::{get_agent_handler, list_agents_handler};
 pub(crate) use users::{
-    create_user_handler, dashboard_handler, delete_user_handler, extract_user_from_cookie,
-    list_events_handler, list_users_handler, update_user_handler, user_detail_handler,
-    user_usage_handler,
+    dashboard_handler, delete_user_handler, extract_user_from_cookie, list_events_handler,
+    list_users_handler, update_user_handler, user_detail_handler, user_usage_handler,
 };

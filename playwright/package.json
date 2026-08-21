@@ -3,9 +3,17 @@
   "private": true,
   "description": "Playwright e2e suite for the Astound gateway's browser surfaces (admin login, catalog, device-link). Needs a running stack: `just start`, then `just e2e`.",
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "seed": "tsx setup/seed.ts",
+    "screens": "tsx scripts/capture.ts"
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.0"
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
+    "jose": "^5.9.6",
+    "pg": "^8.13.1",
+    "tsx": "^4.19.2",
+    "typescript": "^7.0.2"
   }
 }

@@ -7,7 +7,9 @@ use serde::Serialize;
 use systemprompt::identifiers::UserId;
 
 use crate::handlers::ssr::list_view::Pagination;
-use crate::handlers::ssr::types::{ChartView, MeterView, PieView};
+use crate::handlers::ssr::types::{
+    DeltaView, MeterView, PieView, SparklineView, SvgLineChartView, SvgStackedChartView,
+};
 
 // Why: each tab is its own GET so it can be bookmarked, and so only the
 // queries that tab renders ever run.
@@ -74,9 +76,10 @@ pub(super) struct AnalyticsDashboardContext {
     pub base_url: &'static str,
 
     pub kpis: KpiStripView,
-    pub volume_chart: ChartView,
-    pub cost_chart: ChartView,
+    pub volume_chart: SvgLineChartView,
+    pub cost_chart: SvgLineChartView,
     pub model_pie: PieView,
+    pub model_cost_chart: SvgStackedChartView,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub own_meter: Option<MeterView>,
 
@@ -90,10 +93,55 @@ pub(super) struct AnalyticsDashboardContext {
     pub spend_meters: Vec<MeterView>,
     pub has_spend_meters: bool,
     pub latency_link: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub burndown: Option<SvgLineChartView>,
+    /// Shown to a platform admin who has not picked an organization — a
+    /// burn-up against a cap only means something for one org.
+    pub show_burndown_hint: bool,
+    pub budget_warnings: Vec<BudgetWarningRowView>,
+    pub has_budget_warnings: bool,
+    pub fast_slow: FastSlowView,
 
-    pub commit_chart: ChartView,
-    pub loc_chart: ChartView,
+    pub session_costs: SessionCostsView,
+
+    pub commit_chart: SvgLineChartView,
+    pub loc_chart: SvgLineChartView,
     pub code_frames: Vec<CodeFrameView>,
+}
+
+#[derive(Debug, Serialize)]
+pub(super) struct BudgetWarningRowView {
+    pub org_name: String,
+    pub month_display: String,
+    pub threshold_display: String,
+    pub spent_display: String,
+    pub over_by_display: String,
+    pub first_seen_display: String,
+    pub last_seen_display: String,
+}
+
+#[derive(Debug, Serialize)]
+pub(super) struct FastSlowView {
+    pub fast: i64,
+    pub slow: i64,
+    pub untimed: i64,
+    pub threshold_display: &'static str,
+    pub p50_display: String,
+    pub p95_display: String,
+    pub has_data: bool,
+}
+
+// Why: every figure here is client-reported statusline data, and the template
+// labels it so — it complements the gateway's own token counts, never
+// replaces them.
+#[derive(Debug, Serialize)]
+pub(super) struct SessionCostsView {
+    pub has_data: bool,
+    pub sessions: i64,
+    pub cache_hit_display: String,
+    pub cache_read_display: String,
+    pub avg_context_display: String,
+    pub max_context_display: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -164,6 +212,14 @@ pub(super) struct KpiStripView {
     pub wasted_seats: i64,
     pub wasted_seats_url: String,
     pub tokens_display: String,
+    pub requests_delta: DeltaView,
+    pub cost_delta: DeltaView,
+    pub wau_delta: DeltaView,
+    pub tokens_delta: DeltaView,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub requests_spark: Option<SparklineView>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cost_spark: Option<SparklineView>,
 }
 
 #[derive(Debug, Serialize)]
@@ -198,6 +254,8 @@ pub(super) struct LeaderRowView {
     pub log_url: String,
     /// The user-management detail page.
     pub detail_url: String,
+    /// The per-user analytics drill-down page.
+    pub analytics_url: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -225,6 +283,7 @@ pub(super) struct WastedSeatView {
     pub org_name: String,
     pub last_request_display: String,
     pub detail_url: String,
+    pub analytics_url: String,
 }
 
 #[derive(Debug, Serialize)]

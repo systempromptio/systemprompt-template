@@ -99,7 +99,10 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
             "/gateway/routes/reorder",
             post(handlers::reorder_gateway_routes_handler),
         )
-        .route("/users", post(handlers::create_user_handler))
+        .route(
+            "/users",
+            post(handlers::users_bootstrap::create_user_handler),
+        )
         .route(
             "/users/{user_id}",
             put(handlers::update_user_handler).delete(handlers::delete_user_handler),
@@ -132,6 +135,15 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
             "/access-control/bulk-template",
             post(handlers::entity_access::apply_template_handler),
         )
+        .merge(build_management_write_routes())
+        .with_state(Arc::clone(write_pool))
+}
+
+// Why: the management surface (departments, devices, organizations, invites)
+// is split out so the gateway/user/access-control routes above stay readable
+// as one list; both halves are mounted on the same write pool.
+fn build_management_write_routes() -> Router<Arc<PgPool>> {
+    Router::new()
         .route(
             "/management/departments",
             post(handlers::departments::create_department_handler),
@@ -158,7 +170,10 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
             "/invites/{invite_id}",
             axum::routing::delete(handlers::invites::revoke_invite_handler),
         )
-        .with_state(Arc::clone(write_pool))
+        .route(
+            "/invites/{invite_id}/regenerate",
+            post(handlers::invites::regenerate_invite_handler),
+        )
 }
 
 pub(crate) fn build_auth_read_routes(read_pool: &Arc<PgPool>) -> Router {

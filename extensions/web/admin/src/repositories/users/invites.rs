@@ -147,6 +147,60 @@ pub async fn find_valid_invite_by_hash(
     }))
 }
 
+/// Revoke a pending invite and insert a fresh one in its place.
+///
+/// The recovery path for a raw token shown once and lost. One transaction,
+/// so the one-live-invite-per-email partial unique index cannot race; the
+/// new row carries the original email, org, department, and roles. `org_id`
+/// restricts the operation for org-admin callers; `None` (platform admin)
+/// may regenerate any. A `None` result means no pending invite matched.
+pub async fn insert_regenerated_invite(
+    pool: &PgPool,
+    invite_id: &str,
+    org_id: Option<&str>,
+    token_hash: &str,
+    expires_at: chrono::DateTime<chrono::Utc>,
+) -> Result<Option<String>, MarketplaceError> {
+    let mut tx = pool.begin().await?;
+    let Some(old) = sqlx::query!(
+        r#"
+        UPDATE user_invites SET revoked_at = NOW()
+        WHERE id = $1 AND accepted_at IS NULL AND revoked_at IS NULL
+          AND expires_at > NOW()
+          AND ($2::TEXT IS NULL OR org_id = $2)
+        RETURNING email AS "email!", org_id AS "org_id!",
+                  department AS "department!", roles AS "roles!: Vec<String>",
+                  invited_by AS "invited_by!"
+        "#,
+        invite_id,
+        org_id,
+    )
+    .fetch_optional(&mut *tx)
+    .await?
+    else {
+        return Ok(None);
+    };
+
+    let new_id = uuid::Uuid::new_v4().to_string();
+    sqlx::query!(
+        "INSERT INTO user_invites
+            (id, token_hash, email, org_id, department, roles, invited_by, expires_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+        &new_id,
+        token_hash,
+        old.email,
+        old.org_id,
+        old.department,
+        &old.roles,
+        old.invited_by,
+        expires_at,
+    )
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(Some(new_id))
+}
+
 /// Revoke a pending invite. `org_id` restricts the delete for org-admin
 /// callers; `None` (platform admin) may revoke any. Returns whether a row
 /// was revoked.
