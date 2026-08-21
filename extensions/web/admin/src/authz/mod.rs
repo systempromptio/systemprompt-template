@@ -21,7 +21,8 @@ pub mod department;
 pub mod organization;
 pub mod salesforce;
 
-use std::sync::{Arc, OnceLock};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, OnceLock};
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -57,19 +58,40 @@ struct Registry {
     dimensions: Vec<SubjectDimension>,
 }
 
-static REGISTRY: OnceLock<Registry> = OnceLock::new();
+static REGISTRIES: OnceLock<Mutex<HashMap<String, &'static Registry>>> = OnceLock::new();
 
+// Why: keyed per database, not once per process. The providers capture the
+// pool they are built with, so a single OnceLock would bind every later
+// caller to whichever pool arrived first — wrong in any process that talks
+// to more than one database, which is exactly what the integration suite's
+// per-test throwaway databases do. One registry per distinct database; the
+// leak is bounded by the number of distinct databases a process ever opens
+// (one in production).
 fn registry(pool: &PgPool) -> &'static Registry {
-    REGISTRY.get_or_init(|| {
-        let providers = discover_subject_providers(&AuthzHookContext {
-            pool: Arc::new(pool.clone()),
-            sink: Arc::new(NullAuditSink),
-        });
-        Registry {
-            dimensions: dimensions_of(&providers),
-            providers,
-        }
-    })
+    let options = pool.connect_options();
+    let key = format!(
+        "{}:{}/{}",
+        options.get_host(),
+        options.get_port(),
+        options.get_database().unwrap_or_default()
+    );
+    let map = REGISTRIES.get_or_init(|| Mutex::new(HashMap::new()));
+    let mut guard = map
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    if let Some(existing) = guard.get(&key) {
+        return existing;
+    }
+    let providers = discover_subject_providers(&AuthzHookContext {
+        pool: Arc::new(pool.clone()),
+        sink: Arc::new(NullAuditSink),
+    });
+    let built: &'static Registry = Box::leak(Box::new(Registry {
+        dimensions: dimensions_of(&providers),
+        providers,
+    }));
+    guard.insert(key, built);
+    built
 }
 
 /// The dimension ladder to hand
