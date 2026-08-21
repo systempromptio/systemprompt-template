@@ -1,186 +1,74 @@
-# Admin platform hardening — status update
+*Admin analytics + user management — what's live*
 
-**Branch:** `main` (working tree) · **Date:** 21 Aug 2026
+Everything below is running in the admin site now. Screenshots attached, one per section.
 
-Four workstreams landed together: governance/robustness fixes from an
-architecture review, user management completed in the admin site, the analytics
-dashboard built out, and a real authenticated browser test suite.
+*Trend charts* — `analytics-overview.png`
+• Request volume and cost over time, as line charts with filled areas
+• Day / week bucket toggle on every trend
+• Each KPI card shows the change vs the prior period (↑ +19.2%, colour-coded — green where up is good, red where up is spend) with a sparkline underneath
+• Daily commit activity gets its own trend on the Code tab
 
----
+*Model distribution* — `analytics-overview.png`
+• Pie chart of model usage with a legend showing requests, tokens and cost per model
+• Beside it, a stacked bar of *cost by model over time* — so a spend spike can be traced to the model that caused it, without reading two charts
+• Top six models keep their own colour, the tail folds into "Other", and a model keeps the same colour across both charts
 
-## TL;DR
+*Leaderboards and tables* — `analytics-usage.png`, `analytics-seats.png`
+• Top users by request volume, with share bars, req/day, tokens, cost and last-active
+• Sortable by requests, cost, tokens or last active; paginated
+• Seat utilisation per organisation
+• Wasted seats — anyone with zero requests in 30 days, listed by name with their last request date
 
-- **41/41 browser tests pass**, including the full invite → passkey → signed-in
-  journey driven through a virtual authenticator.
-- **359/359 unit tests pass**; build, clippy and all 23 lint gates green.
-- **Six real bugs** were found by the browser tests that no unit or contract
-  test would have caught — details below.
-- Analytics dashboard now has trend lines, period-over-period deltas,
-  sparklines, cost-by-model, a spend burn-up against caps, and a per-user
-  drill-down page. All charts are server-rendered SVG — no JS chart library.
+*Per-user drill-down* — `analytics-user-drilldown.png`
+New page. Click any user in the leaderboard to get their own dashboard:
+• Their requests, spend, tokens, each with period-over-period change
+• Their requests-per-day trend and their personal model mix
+• Their daily usage records — sessions, prompts, tool uses, requests, AI lines, commits, cost
+• Recent sessions with cost, context window and cache reads
+• Links straight through to their raw request log and their account page
 
----
+*Adoption* — `analytics-overview.png`, `analytics-usage.png`
+• Weekly active users, with the change vs the prior week
+• Requests per user per day
+• Prompt cache hit rate and context-window pressure (average and peak)
 
-## Screenshots
+*Cost and limits* — `analytics-spend.png`
+• Total spend and cost per request
+• Month-to-date burn-up chart against each plan's soft cap (amber dashed) and hard cap (red dashed), so proximity to the limit is visible at a glance
+• "On pace for ~$X" projection on the same chart
+• History of every month where spend crossed the soft cap
+• Fast vs slow request split (under/over 5s) with p50 and p95
 
-All captured from the running app against seeded data
-(`docs/screenshots-2026-08-21/`).
+*Code impact* — `analytics-code.png`
+• Commit activity trend
+• AI lines added vs lines actually committed, plotted together
+• Totals for AI lines added, AI lines removed, committed lines, commits, and applied AI edit operations
 
-### Analytics — Overview
-KPI cards with period-over-period deltas and sparklines; request-volume and
-cost trend lines.
+One honest note on this section: Claude Code emits no accept/reject signal, so there is no tab-acceptance rate to report and we don't invent one. What we show instead is the permission grant rate — the share of permission requests that were followed by the tool actually running — which is the real, measurable equivalent. Same for AI vs manual lines: AI lines and committed lines come from two different measurement systems, so we show both side by side and never subtract one from the other to fabricate a "manual" number.
 
-![Analytics overview](docs/screenshots-2026-08-21/analytics-overview.png)
+*Filtering and drill-down* — every tab
+• Filter by organisation, department, or individual user
+• Time range: 15m / 1h / 24h / 7d / 30d / custom
+• Active filters show as removable chips with a clear-all
+• Org admins are locked to their own organisation; platform admins can pick any
 
-### Analytics — Usage
-Permission-grant rate, prompt-cache hit rate and context-window pressure
-(client-reported, labelled as such), plus the top-users leaderboard with
-per-user drill-down links.
+*Managing users from the admin site* — `users-roster.png`, `user-detail.png`
+• Roster grouped by department, with search
+• *Add User* — creates the account and hands you a sign-in link to pass on (previously a new account had no way to sign in at all)
+• *Invite by Link* — mint an invite, copy the link, revoke it, or regenerate it if the link gets lost
+• The invited person clicks the link, creates a passkey, and is signed in — no password, no email round-trip
+• Roles are now tick-boxes rather than a free-text field, so a typo can't create a role that doesn't exist
+• Department is picked from the real department list
+• Move a user between organisations and set their org role, with the current organisation shown correctly
+• Deactivate or delete from the roster, behind a confirmation
 
-![Analytics usage](docs/screenshots-2026-08-21/analytics-usage.png)
+*Look and feel*
+• All charts are drawn by the server as SVG — no charting library, no CDN, nothing to load before a chart appears
+• Charts use the existing design tokens, so they match the rest of the admin site and follow it into dark mode
+• Every chart and table has a proper empty state rather than a blank panel
+• Filters stay pinned to the top while scrolling long tables
 
-### Analytics — Spend
-Month-to-date burn-up against the plan's soft (amber) and hard (red) caps, with
-an honest linear pace projection, plus the fast/slow latency split and the
-soft-cap crossing history.
+*Screenshots attached*
+`analytics-overview.png` · `analytics-usage.png` · `analytics-seats.png` · `analytics-spend.png` · `analytics-code.png` · `analytics-user-drilldown.png` · `users-roster.png` · `user-detail.png`
 
-![Analytics spend](docs/screenshots-2026-08-21/analytics-spend.png)
-
-### Analytics — Code
-Commit activity and AI-lines-vs-committed-lines, with the two measurement
-frames kept separate and never subtracted from one another.
-
-![Analytics code](docs/screenshots-2026-08-21/analytics-code.png)
-
-### Analytics — Seats
-Seat utilisation and the wasted-seat table (no requests in 30 days).
-
-![Analytics seats](docs/screenshots-2026-08-21/analytics-seats.png)
-
-### Per-user drill-down (new page)
-`/admin/analytics/users/{id}` — one person's usage, cost, model mix and code
-activity, with links back to the request log and their management page.
-
-![Per-user analytics](docs/screenshots-2026-08-21/analytics-user-drilldown.png)
-
-### Users roster
-Department-grouped roster with both provisioning doors: direct create and
-invite-by-link.
-
-![Users roster](docs/screenshots-2026-08-21/users-roster.png)
-
-### User detail
-Roles are now a validated checkbox set (was free-text), and the organization
-widget preselects the user's actual org.
-
-![User detail](docs/screenshots-2026-08-21/user-detail.png)
-
-### Request log
-Existing page, unchanged — included for context.
-
-![Requests log](docs/screenshots-2026-08-21/requests-log.png)
-
----
-
-## What changed
-
-### A. Robustness fixes (from the architecture review)
-
-| Fix | Why it mattered |
-|---|---|
-| Marketplace ACL cache keyed **per database** | Same bug class as the authz-registry fix one file over: a process-wide cache served one database's authorization rules to another. TTL also cut 5 min → 30 s, matching how fresh the data below it is. |
-| Governance audit write is now **awaited** before responding | This plane's whole product is the audit row; it was fire-and-forget and could be lost. |
-| Secret-breach KPI uses `policy = 'secret_scan'` | Was string-matching a rendered message — a wording change would have silently zeroed the metric. |
-| Trace-list pagination **pushdown** | Expensive per-session work now runs for the selected page only, not every session in the window. |
-| Composite indexes for the analytics query shapes | Migration `029`. |
-| Deleted an orphaned copy of core's policy engine | Undeclared module that would have drifted. |
-
-### B. User management in the admin site
-
-- Department now actually persists on create (it was silently dropped — the
-  API had no field for it at all).
-- "+ Add User" returns a **7-day sign-in link**; previously it created accounts
-  with no credential whatsoever.
-- Lost invite links are recoverable via **regenerate** (revoke + re-mint in one
-  transaction) — the raw token is shown exactly once by design.
-- Roles are a validated checkbox set instead of a free-text field.
-- Org admins can manage their own members' roles (member ↔ admin) — never
-  `owner`, never across organizations.
-- Guarded hard-delete surfaced in the roster (the endpoint was always one curl
-  away; hiding it was not a control).
-
-### C. Analytics build-out
-
-Server-rendered SVG throughout — all geometry computed in Rust, no client
-charting library, no CDN.
-
-- Line + area trend charts, sparklines on KPI cards, stacked cost-by-model.
-- Period-over-period deltas from a **single two-window query**, so both windows
-  read one snapshot.
-- Spend tab: MTD burn-up vs caps, soft-cap crossing history (that table was
-  being written but never read), latency-bucketed fast/slow split.
-- New per-user drill-down page.
-- Cache-hit rate and context-window pressure surfaced from session snapshots
-  that were previously captured and never read.
-
-**On the Cursor-style metrics:** "tab acceptance rate" and fast/slow *pools*
-don't exist on this platform — there's no editor accept/reject signal and no
-request-pool concept. Rather than fabricate them, the dashboard shows the
-nearest real thing, labelled honestly: permission-grant rate, AI lines vs
-committed lines (different measurement frames, never subtracted), and a latency
-split at a fixed 5 s threshold that matches the request log's histogram bin.
-
-### D. Browser test suite
-
-- Auth fixtures mint real JWTs and attach them as session cookies; three
-  principals (org admin, platform admin, plain user) plus anonymous.
-- Deterministic seed: orgs, departments, principals and a 14-day analytics
-  trail, all `e2e-`-prefixed and idempotent — it never touches developer data.
-- Specs cover auth boundaries, all five analytics tabs, filters, sorting,
-  pagination, empty states, the roster, invites, org membership, and the full
-  passkey invite journey.
-- `just e2e-seed`, `just e2e`, `just e2e-screens` recipes.
-
----
-
-## Bugs the browser tests caught
-
-None of these were visible to unit or contract tests.
-
-1. **Session attestation** — core replaces a cookie that doesn't name a session
-   it issued *to that user* with an **anonymous** token. Tokens were being
-   silently downgraded mid-redirect; found by tracing the cookie across the
-   redirect chain.
-2. **Duplicate invite returned 500 instead of 409** — `MarketplaceError::Conflict`
-   had no status mapping, so a normal "already invited" case looked like a
-   server fault.
-3. **Org widget didn't preselect the user's current organization** — it showed
-   whichever org sorted first, which reads as though the user had been moved.
-4. **Playwright `storageState` is file-scoped** — the first fixture design
-   silently ran every spec anonymous while appearing to pass.
-5. **Commit chart flattened its own series** — commits (37) plotted against
-   inserted lines (1.9k) on one axis pinned commits to the baseline.
-6. **Convention breaches in new front-end code** — a non-existent CSS class,
-   plus banned JS/CSS comments and token fallbacks.
-
----
-
-## Where it stands
-
-| Gate | Result |
-|---|---|
-| Build | pass |
-| Clippy + 23 lint gates | pass |
-| Unit (359 tests) | pass |
-| Browser e2e (41 tests) | pass |
-| Integration | running |
-| Contract | pending (needs a deliberate baseline re-record for the new routes) |
-
-**Not done / deliberately out of scope:** spend caps and org economics stay
-YAML-authored (surfaced read-only, not editable); no invite email delivery
-(link hand-off by design); CSV export deferred. Governance stages remain
-disabled per the documented operator decision — this work hardened the
-machinery and its audit spine without changing that posture.
-
-Pre-existing issues found along the way are written up separately in
-`issue.md`, including the ones that need a core release to fix.
+Files are in `docs/screenshots-2026-08-21/`.

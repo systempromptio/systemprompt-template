@@ -9,7 +9,7 @@ use super::helpers::truncate;
 pub(super) fn generate_description(payload: &HookEventPayload) -> Cow<'static, str> {
     match &payload.event {
         HookEvent::UserPromptSubmit(d) => describe_user_prompt(d),
-        HookEvent::PreToolUse(_) => unreachable!("PreToolUse events are dropped before this point"),
+        HookEvent::PreToolUse(d) => describe_pre_tool_use(d),
         HookEvent::PostToolUseFailure(d) => describe_post_tool_failure(d),
         HookEvent::PostToolUse(d) => describe_post_tool_use(d),
         HookEvent::PermissionRequest(d) => describe_permission_request(d),
@@ -51,6 +51,23 @@ fn describe_post_tool_failure(
     } else {
         Cow::Owned(format!("Failed: {tool} — {}", truncate(&d.error, 80)))
     }
+}
+
+fn describe_pre_tool_use(d: &crate::types::webhook::PreToolUseData) -> Cow<'static, str> {
+    let tool = if d.name.is_empty() {
+        "unknown"
+    } else {
+        &d.name
+    };
+    let summary = ToolInputSummary::of(&d.input);
+    let detail = summary
+        .file_path
+        .or_else(|| summary.command.map(|c| truncate(&c, 60)))
+        .or(summary.pattern);
+    Cow::Owned(detail.map_or_else(
+        || format!("Started: {tool}"),
+        |det| format!("Started: {tool} — {det}"),
+    ))
 }
 
 fn describe_post_tool_use(d: &crate::types::webhook::PostToolUseData) -> Cow<'static, str> {
