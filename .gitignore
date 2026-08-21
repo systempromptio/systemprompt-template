@@ -224,3 +224,6 @@ storage/files/css/admin-bundle.css
 
 # Local triage notes, not part of the repo history.
 /issue.md
+
+# Local status write-up, not part of the repo history.
+/UPDATE.md
