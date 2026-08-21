@@ -141,6 +141,9 @@ pub(crate) async fn govern_tool_use(
         // Why: the tool-call webhook carries no conversational context; only
         // the gateway path knows one.
         context_id: None,
+        // Why: the MCP tool plane is session-correlated end to end; no trace
+        // id is minted for it, and session_id is a real session here.
+        trace_id: None,
     };
     spawn_audit_recording(&pool, audit);
 
@@ -207,6 +210,7 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
             approver: None,
             act_chain: Vec::new(),
             context_id: None,
+            trace_id: None,
         };
         if let Err(e) = record_decision(&pool, &audit).await {
             tracing::error!(

@@ -47,10 +47,10 @@
       "Left": []
     },
     "nullable": [
-      false,
+      true,
       null,
-      false,
-      false
+      true,
+      true
     ]
   },
   "hash": "7db48be5832806d3e9b10b229308d06a8ead54a073b71c250c6feb5024aa8e6a"

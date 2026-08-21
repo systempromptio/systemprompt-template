@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                COUNT(*)::bigint as \"requests!\",\n                SUM(cost_microdollars)::bigint as \"cost\",\n                SUM(tokens_used)::bigint as \"tokens\"\n            FROM ai_requests\n            WHERE created_at >= $1 AND created_at < $2 AND user_id = $3\n            ",
+  "query": "\n            SELECT\n                COUNT(*)::bigint as \"requests!\",\n                SUM(cost_microdollars)::bigint as \"cost\",\n                SUM(tokens_used)::bigint as \"tokens\"\n            FROM ai_requests\n            WHERE created_at >= $1 AND created_at < $2\n              AND NOT synthetic\n            ",
   "describe": {
     "columns": [
       {
@@ -25,8 +25,7 @@
     "parameters": {
       "Left": [
         "Timestamptz",
-        "Timestamptz",
-        "Text"
+        "Timestamptz"
       ]
     },
     "nullable": [
@@ -35,5 +34,5 @@
       null
     ]
   },
-  "hash": "c465717dd00d98ba738120252af5da80e26f7f20034b3da2f28b2226968d6f1e"
+  "hash": "2cad43b5b86b0600df2b1c552c007c1d757c24cf11e6d5c213c7aca5b8e8955d"
 }

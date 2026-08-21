@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                model as \"name!\",\n                COALESCE(SUM(cost_microdollars), 0)::bigint as \"cost!\",\n                COUNT(*)::bigint as \"requests!\",\n                COALESCE(SUM(tokens_used), 0)::bigint as \"tokens!\"\n            FROM ai_requests\n            WHERE created_at >= $1 AND created_at < $2\n              AND model IS NOT NULL\n            GROUP BY model\n            ORDER BY SUM(cost_microdollars) DESC NULLS LAST\n            LIMIT $3\n            ",
+  "query": "\n            SELECT\n                provider as \"name!\",\n                COALESCE(SUM(cost_microdollars), 0)::bigint as \"cost!\",\n                COUNT(*)::bigint as \"requests!\",\n                COALESCE(SUM(tokens_used), 0)::bigint as \"tokens!\"\n            FROM ai_requests\n            WHERE created_at >= $1 AND created_at < $2\n              AND NOT synthetic\n              AND provider IS NOT NULL\n            GROUP BY provider\n            ORDER BY SUM(cost_microdollars) DESC NULLS LAST\n            LIMIT $3\n            ",
   "describe": {
     "columns": [
       {
@@ -10,7 +10,7 @@
         "origin": {
           "Table": {
             "table": "ai_requests",
-            "name": "model"
+            "name": "provider"
           }
         }
       },
@@ -47,5 +47,5 @@
       null
     ]
   },
-  "hash": "245c67eb13fa83bcd469f810b2aae50f8744522f3463bb408aa4d7b9cc2cd5a2"
+  "hash": "27f5a20a196bf42e41dfd075a63fdd804cba0b25353cd932f75faff8d1cbc32c"
 }

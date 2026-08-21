@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            id as \"id!: AiRequestId\",\n            created_at as \"created_at!\",\n            trace_id,\n            user_id as \"user_id!: UserId\",\n            actor_kind as \"actor_kind!\",\n            actor_id as \"actor_id!\",\n            provider,\n            model,\n            input_tokens,\n            output_tokens,\n            cost_microdollars as \"cost_microdollars!\",\n            latency_ms,\n            status as \"status!\"\n        FROM ai_requests\n        WHERE ($1::timestamptz IS NULL OR created_at >= $1)\n          AND ($2::text IS NULL OR model ILIKE $2)\n          AND ($3::text IS NULL OR provider ILIKE $3)\n          AND ($4::text IS NULL OR user_id = $4)\n        ORDER BY created_at DESC\n        LIMIT $5\n        ",
+  "query": "\n        SELECT\n            id as \"id!: AiRequestId\",\n            created_at as \"created_at!\",\n            trace_id,\n            user_id as \"user_id!: UserId\",\n            actor_kind as \"actor_kind!\",\n            actor_id as \"actor_id!\",\n            provider,\n            model,\n            input_tokens,\n            output_tokens,\n            cache_read_tokens,\n            cache_creation_tokens,\n            cost_microdollars as \"cost_microdollars!\",\n            latency_ms,\n            status as \"status!\"\n        FROM ai_requests\n        WHERE ($1::timestamptz IS NULL OR created_at >= $1)\n          AND ($2::text IS NULL OR model ILIKE $2)\n          AND ($3::text IS NULL OR provider ILIKE $3)\n          AND ($4::text IS NULL OR user_id = $4)\n        ORDER BY created_at DESC\n        LIMIT $5\n        ",
   "describe": {
     "columns": [
       {
@@ -115,6 +115,28 @@
       },
       {
         "ordinal": 10,
+        "name": "cache_read_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "cache_read_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "cache_creation_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "cache_creation_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
         "name": "cost_microdollars!",
         "type_info": "Int8",
         "origin": {
@@ -125,7 +147,7 @@
         }
       },
       {
-        "ordinal": 11,
+        "ordinal": 13,
         "name": "latency_ms",
         "type_info": "Int4",
         "origin": {
@@ -136,7 +158,7 @@
         }
       },
       {
-        "ordinal": 12,
+        "ordinal": 14,
         "name": "status!",
         "type_info": "Varchar",
         "origin": {
@@ -167,10 +189,12 @@
       true,
       true,
       true,
+      true,
+      true,
       false,
       true,
       false
     ]
   },
-  "hash": "7d6ed8b1f5a25f5945ccb99b510630b41ee64dedea6b6517accbbfedcaed5607"
+  "hash": "dd699d77326fc067bd47b344b3be04673de2250971c813656f7017bf8936ce46"
 }

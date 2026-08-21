@@ -49,13 +49,13 @@ pub async fn list_traces(
         ),
         all_sessions AS (
             SELECT
-                COALESCE(t.session_id, g.session_id) AS session_id,
+                COALESCE(t.session_id, NULLIF(g.session_id, ''), g.trace_id) AS session_id,
                 g.user_id, g.agent_id, g.agent_scope,
                 g.created_at, g.decision, 'gov'::text AS source
             FROM governance_decisions g
-            LEFT JOIN trace_to_session t ON t.trace_id = g.session_id
+            LEFT JOIN trace_to_session t ON t.trace_id = g.trace_id
             WHERE g.created_at >= $1 AND g.created_at < $2
-              AND g.session_id IS NOT NULL
+              AND (NULLIF(g.session_id, '') IS NOT NULL OR g.trace_id IS NOT NULL)
             UNION ALL
             SELECT session_id, user_id, NULL::text AS agent_id, NULL::text AS agent_scope,
                    created_at, NULL::text AS decision, 'ai'::text AS source
