@@ -53,15 +53,13 @@ fn registry(pool: &PgPool) -> &'static Registry {
     })
 }
 
-/// The dimension ladder to hand
-/// [`resolve`][systemprompt_security::authz::resolve].
 pub fn dimensions(pool: &PgPool) -> &'static [SubjectDimension] {
     &registry(pool).dimensions
 }
 
-/// The subject's values for every registered dimension. The one async step in
-/// the authorization path; call it once per request and reuse the result
-/// across entities.
+// Why: The subject's values for every registered dimension. The one async step
+// in the authorization path; call it once per request and reuse the result
+// across entities.
 pub async fn subject_attributes_for(pool: &PgPool, user_id: &UserId) -> SubjectAttributes {
     gather_subject_attributes(&registry(pool).providers, user_id).await
 }

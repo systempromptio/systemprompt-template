@@ -44,9 +44,6 @@ pub struct TemplateMarketplaceFilter {
 }
 
 impl TemplateMarketplaceFilter {
-    /// # Errors
-    /// Returns [`MarketplaceFilterError::Backend`] if the configured database
-    /// pool is not Postgres-backed.
     pub fn from_db(db: &DbPool) -> Result<Arc<dyn MarketplaceFilter>, MarketplaceFilterError> {
         let pool = db
             .pool_arc()

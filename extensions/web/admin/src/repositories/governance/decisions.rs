@@ -5,8 +5,6 @@ use systemprompt::identifiers::UserId;
 
 use crate::types::GovernanceDecisionRow;
 
-/// Recent decisions with optional policy / outcome / user filters — backs the
-/// decisions ledger page linked from every policy card.
 pub async fn list_decisions_filtered(
     pool: &PgPool,
     policy: Option<&str>,

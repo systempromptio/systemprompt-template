@@ -27,7 +27,6 @@ pub(super) struct RunRowView {
 pub(super) struct ResultRowView {
     pub id: String,
     pub run_id: String,
-    /// Present for judged live traffic; absent for replayed golden-set cases.
     pub ai_request_id: Option<String>,
     pub case_id: Option<String>,
     pub model: String,

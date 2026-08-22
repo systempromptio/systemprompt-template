@@ -54,7 +54,6 @@ pub(crate) struct EvalsQuery {
     pub to: Option<String>,
     pub preset: Option<String>,
     pub tab: Option<String>,
-    /// Judge tab only: narrow the scored answers to one verdict / one model.
     pub verdict: Option<String>,
     pub model: Option<String>,
     pub notice: Option<String>,
@@ -62,8 +61,8 @@ pub(crate) struct EvalsQuery {
 }
 
 impl EvalsQuery {
-    /// An empty select submits `""`, which means "any" — not a model named
-    /// empty string. Blanks are dropped here so the repository never sees one.
+    // Why: An empty select submits `""`, which means "any" — not a model named
+    // empty string. Blanks are dropped here so the repository never sees one.
     fn result_filter(&self) -> ResultFilter {
         ResultFilter {
             verdict: non_blank(self.verdict.as_deref()),

@@ -25,7 +25,6 @@ const VERBOSE_CHARS: usize = 12_000;
 #[derive(Debug, Clone)]
 pub(crate) struct PrePass {
     pub flags: Vec<String>,
-    /// Set when the item is decided without a judge call.
     pub short_circuit: Option<(EvalVerdict, String)>,
     pub prompt: Option<String>,
     pub answer: Option<String>,

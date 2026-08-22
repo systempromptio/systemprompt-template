@@ -27,8 +27,8 @@ pub enum AdminError {
     #[error("Unauthorized: {0}")]
     Unauthorized(String),
 
-    /// Credentials were rejected. The cause is logged in full; the client is
-    /// told only that it failed, so token internals never reach the wire.
+    // Why: Credentials were rejected. The cause is logged in full; the client is
+    // told only that it failed, so token internals never reach the wire.
     #[error("Authentication failed: {0}")]
     Unauthenticated(#[source] Box<dyn std::error::Error + Send + Sync>),
 
@@ -41,14 +41,14 @@ pub enum AdminError {
     #[error("Too many requests: {0}")]
     RateLimited(String),
 
-    /// A dependency this endpoint needs is not configured or not reachable.
-    /// Distinct from `Internal`: the request was well-formed and the server is
-    /// healthy, so a caller may sensibly retry or fall back.
+    // Why: A dependency this endpoint needs is not configured or not reachable.
+    // Distinct from `Internal`: the request was well-formed and the server is
+    // healthy, so a caller may sensibly retry or fall back.
     #[error("Unavailable: {0}")]
     Unavailable(String),
 
-    /// An upstream this endpoint proxies to answered badly. Kept apart from
-    /// `Internal` so a caller can tell which side actually failed.
+    // Why: An upstream this endpoint proxies to answered badly. Kept apart from
+    // `Internal` so a caller can tell which side actually failed.
     #[error("Upstream error: {0}")]
     Upstream(String),
 
@@ -143,7 +143,6 @@ impl From<MarketplaceError> for AdminError {
 }
 
 impl AdminError {
-    /// Reject a request whose credentials did not check out.
     #[must_use]
     pub fn unauthenticated<E>(err: E) -> Self
     where
@@ -172,9 +171,9 @@ impl From<systemprompt::config::ProfileBootstrapError> for AdminError {
 }
 
 impl AdminError {
-    /// Record the failure once, at the boundary, at the severity its class
-    /// deserves. Both response faces call this, so a page failure and an API
-    /// failure leave the same trail.
+    // Why: Record the failure once, at the boundary, at the severity its class
+    // deserves. Both response faces call this, so a page failure and an API
+    // failure leave the same trail.
     fn log(&self, status: StatusCode) {
         if status.is_server_error() {
             tracing::error!(error = %self, "Admin handler returned server error");
@@ -234,7 +233,6 @@ impl IntoResponse for AdminHtmlError {
 }
 
 impl AdminHtmlError {
-    /// Wrap an arbitrary failure with no better classification than 500.
     #[must_use]
     pub fn internal<E>(err: E) -> Self
     where
@@ -244,8 +242,8 @@ impl AdminHtmlError {
     }
 }
 
-/// `?` in an SSR handler goes through whatever `AdminError` already knows how
-/// to absorb, so the two faces stay in step by construction.
+// Why: `?` in an SSR handler goes through whatever `AdminError` already knows
+// how to absorb, so the two faces stay in step by construction.
 impl<E: Into<AdminError>> From<E> for AdminHtmlError {
     fn from(value: E) -> Self {
         Self(value.into())

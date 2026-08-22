@@ -35,8 +35,8 @@ pub(crate) struct ChartView {
 
 #[derive(Debug, Serialize)]
 pub(crate) struct ChartBarView {
-    /// Height as a percentage of the plot area, already floored so a non-zero
-    /// value never renders as nothing.
+    // Why: Height as a percentage of the plot area, already floored so a non-zero
+    // value never renders as nothing.
     pub pct: i64,
     pub tooltip: String,
 }
@@ -46,8 +46,8 @@ pub(crate) struct HistogramView {
     pub bars: Vec<HistogramBarView>,
     pub max_display: String,
     pub has_data: bool,
-    /// Printed as captions under the chart. `None` when the window has no timed
-    /// requests to compute them from.
+    // Why: Printed as captions under the chart. `None` when the window has no timed
+    // requests to compute them from.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub p50_display: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

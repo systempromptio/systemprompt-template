@@ -69,7 +69,6 @@ pub(super) struct TurnView {
     pub row_count: usize,
     pub denied: usize,
     pub model_calls: usize,
-    /// A turn whose prompt was denied, so no provider call followed.
     pub blocked: bool,
 }
 

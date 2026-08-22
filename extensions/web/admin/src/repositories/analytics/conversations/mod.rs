@@ -55,10 +55,8 @@ pub struct TranscriptTurn {
     pub ts: Option<DateTime<Utc>>,
     pub model: Option<String>,
     pub latency_ms: Option<i32>,
-    /// Always populated. PII-bearing substrings are replaced with sentinels.
     pub content_redacted: Option<String>,
     pub redactions_applied: u32,
-    /// Only populated when the caller holds `transcript:view_pii`.
     pub content: Option<String>,
     pub tool_calls: Vec<ToolCall>,
     pub governance: Option<TurnGovernance>,

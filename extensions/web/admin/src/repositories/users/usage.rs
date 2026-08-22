@@ -48,8 +48,8 @@ pub struct ConversationSummary {
     pub recent: Vec<RecentConversation>,
 }
 
-/// `window_days` is the trailing window; `previous` covers the equivalent prior
-/// window so the caller can compute a delta.
+// Why: `window_days` is the trailing window; `previous` covers the equivalent
+// prior window so the caller can compute a delta.
 pub async fn get_usage_window(
     pool: &PgPool,
     user_id: &UserId,
@@ -89,8 +89,6 @@ pub async fn get_usage_window(
     })
 }
 
-/// `token_share` is computed against the 30-day total and may be 0.0 when the
-/// user has no activity.
 pub async fn list_top_models(
     pool: &PgPool,
     user_id: &UserId,
@@ -142,10 +140,8 @@ pub async fn list_top_models(
         .collect())
 }
 
-/// `by_agent` is left empty when no agent label is recorded against requests.
-///
-/// `ai_requests` has no agent column today; the existing analytics surface
-/// reads agent ids from `plugin_usage_events`, which is keyed differently.
+// Why: `ai_requests` has no agent column today; the existing analytics surface
+// reads agent ids from `plugin_usage_events`, which is keyed differently.
 pub async fn get_conversation_summary(
     pool: &PgPool,
     user_id: &UserId,

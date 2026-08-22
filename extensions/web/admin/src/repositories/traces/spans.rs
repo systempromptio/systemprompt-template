@@ -30,7 +30,6 @@ struct EventSpanRaw<'a> {
     tool_name: Option<&'a str>,
 }
 
-/// Resolve `id` (a `session_id` or `trace_id`) to an absolute `session_id`.
 pub async fn resolve_trace_session(
     pool: &PgPool,
     id: &str,

@@ -191,9 +191,9 @@ pub struct McpServerDetail {
     pub oauth_audience: String,
     #[serde(default = "super::plugins::default_true")]
     pub removable: bool,
-    /// YAML file this entry was loaded from, relative to the services directory
-    /// (e.g. `services/mcp/openai.yaml`). Empty when the entry was just created
-    /// via a mutation and not yet re-read from disk.
+    // Why: YAML file this entry was loaded from, relative to the services directory
+    // (e.g. `services/mcp/openai.yaml`). Empty when the entry was just created
+    // via a mutation and not yet re-read from disk.
     #[serde(default)]
     pub source_path: String,
 }
@@ -254,9 +254,9 @@ pub struct PluginDetail {
     pub skills: Vec<SkillId>,
     pub agents: Vec<AgentId>,
     pub mcp_servers: Vec<McpServerId>,
-    /// YAML file this entry was loaded from, relative to the services directory
-    /// (e.g. `services/plugins/enterprise-demo/config.yaml`). Empty for
-    /// in-memory entries.
+    // Why: YAML file this entry was loaded from, relative to the services directory
+    // (e.g. `services/plugins/enterprise-demo/config.yaml`). Empty for
+    // in-memory entries.
     #[serde(default)]
     pub source_path: String,
 }

@@ -20,10 +20,9 @@ pub struct DemoSessionRow {
     pub session_id: SessionId,
     pub allowed: i64,
     pub denied: i64,
-    /// Provider calls this session reached, so a chip can say whether the
-    /// session got past the gates at all.
+    // Why: Provider calls this session reached, so a chip can say whether the
+    // session got past the gates at all.
     pub requests: i64,
-    /// Newest model the session asked for, absent when it never reached one.
     pub model: Option<String>,
     pub started_at: chrono::DateTime<chrono::Utc>,
     pub last_at: chrono::DateTime<chrono::Utc>,
@@ -32,27 +31,22 @@ pub struct DemoSessionRow {
 /// One event in the merged timeline.
 #[derive(Debug, Clone)]
 pub struct DemoTraceRow {
-    /// Source-row id, resolvable by `GET /admin/api/chain/{id}`.
     pub id: String,
     pub at: chrono::DateTime<chrono::Utc>,
-    /// `prompt` | `tool` | `route` | `request` | `fire`
     pub kind: String,
-    /// What was attempted: a tool name, a model id, or `user_prompt`.
     pub subject: String,
-    /// `allow` | `deny` | the request status | `ok`
     pub outcome: String,
-    /// Governing policy, where one applies.
     pub policy: String,
     pub detail: String,
     // JSON: governance audit payload; each policy stage writes its own shape.
     pub evaluated_rules: Option<serde_json::Value>,
 }
 
-/// Sessions with governance activity for one agent, newest first.
-///
-/// Rows with an empty `session_id` are excluded: the gateway writes route
-/// decisions without one, and grouping them produced a phantom "session" that
-/// pooled every unrelated run into a single unreadable list.
+// Why: Sessions with governance activity for one agent, newest first.
+//
+// Rows with an empty `session_id` are excluded: the gateway writes route
+// decisions without one, and grouping them produced a phantom "session" that
+// pooled every unrelated run into a single unreadable list.
 pub async fn list_demo_sessions(
     pool: &PgPool,
     agent_id: &AgentId,
@@ -82,12 +76,12 @@ pub async fn list_demo_sessions(
     .await
 }
 
-/// The merged, time-ordered trace for one session.
-///
-/// A `policy` of `authz_rule_based` is the gateway deciding whether the caller
-/// may reach a model route at all, which is a different gate from the tool
-/// checks the plugin hook runs; it gets its own `route` kind so the timeline
-/// does not label a model id as a tool.
+// Why: The merged, time-ordered trace for one session.
+//
+// A `policy` of `authz_rule_based` is the gateway deciding whether the caller
+// may reach a model route at all, which is a different gate from the tool
+// checks the plugin hook runs; it gets its own `route` kind so the timeline
+// does not label a model id as a tool.
 pub async fn list_demo_trace(
     pool: &PgPool,
     session_id: &SessionId,

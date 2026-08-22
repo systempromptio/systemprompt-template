@@ -65,31 +65,20 @@ Reply with a single JSON object and nothing else — no prose, no code fence:
 // before it scores.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct JudgeVerdict {
-    /// Evidence-bearing justification, written before the scores.
     pub rationale: String,
-    /// Did the answer do what was asked (1-5).
     pub instruction_following: u8,
-    /// Internal consistency and plausibility (1-5).
     pub correctness: u8,
-    /// Did it finish the job (1-5).
     pub completeness: u8,
-    /// Well-formedness of the output (1-5).
     pub format: u8,
-    /// Appropriateness of refusals and caveats (1-5).
     pub safety: u8,
-    /// Headline score (1-5).
     pub overall_score: u8,
-    /// `pass` | `partial` | `fail`.
     pub verdict: String,
-    /// Zero or more flags from the closed set in the system prompt.
     pub flags: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct PairwiseVerdict {
-    /// The concrete difference that decides it, written before the winner.
     pub rationale: String,
-    /// `a` | `b` | `tie`.
     pub winner: String,
 }
 

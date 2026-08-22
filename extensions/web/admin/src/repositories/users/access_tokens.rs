@@ -29,7 +29,6 @@ pub struct TokenUserRow {
     pub display: Option<String>,
 }
 
-/// Load every issued access token with its owner for the token console.
 pub async fn list_access_tokens(pool: &PgPool) -> Result<Vec<AccessTokenRowDb>, sqlx::Error> {
     sqlx::query_as!(
         AccessTokenRowDb,
@@ -57,7 +56,6 @@ pub async fn list_access_tokens(pool: &PgPool) -> Result<Vec<AccessTokenRowDb>, 
     .await
 }
 
-/// List human users eligible as token owners in the assignment dropdown.
 pub async fn list_token_user_options(pool: &PgPool) -> Result<Vec<TokenUserRow>, sqlx::Error> {
     sqlx::query_as!(
         TokenUserRow,

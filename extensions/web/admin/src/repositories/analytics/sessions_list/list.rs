@@ -65,8 +65,8 @@ impl From<SessionRow> for SessionListItem {
     }
 }
 
-/// The count ignores `page` and covers every row the filter matches, so a
-/// caller can render "page N of M" without a second round trip.
+// Why: The count ignores `page` and covers every row the filter matches, so a
+// caller can render "page N of M" without a second round trip.
 #[expect(
     clippy::too_many_lines,
     reason = "body is one irreducible compile-time-checked query_as! SQL literal"

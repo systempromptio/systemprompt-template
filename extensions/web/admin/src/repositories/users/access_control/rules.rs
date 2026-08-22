@@ -44,10 +44,10 @@ pub async fn list_rules_for_entity(
     .await
 }
 
-/// Replace every grant on `(entity_type, entity_id)` with `rules`.
-///
-/// Ensures the entity catalog row exists before inserting grants — the FK
-/// added in core migration 007 rejects orphan rules.
+// Why: Replace every grant on `(entity_type, entity_id)` with `rules`.
+//
+// Ensures the entity catalog row exists before inserting grants — the FK
+// added in core migration 007 rejects orphan rules.
 pub async fn set_entity_rules(
     pool: &PgPool,
     entity_type: &str,

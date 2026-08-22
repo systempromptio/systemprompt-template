@@ -13,16 +13,10 @@ use systemprompt::identifiers::UserId;
 // table that shows its output live on the same tab.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum EvalsTab {
-    /// Health of the window: KPIs, charts, and every run regardless of kind.
     Overview,
-    /// What actually went through the gateway, by model, user, and prompt
-    /// shape.
     Traffic,
-    /// Judge runs over live traffic, and the answers they scored.
     Judge,
-    /// Pairwise runs: win rates and the individual comparisons behind them.
     HeadToHead,
-    /// The golden set, and the replay runs that exercise it.
     GoldenSet,
 }
 
@@ -64,7 +58,6 @@ pub(super) struct EvalsPageContext {
     pub is_judge: bool,
     pub is_head_to_head: bool,
     pub is_golden_set: bool,
-    /// True on the tabs whose KPI strip is about traffic, not judged quality.
     pub show_traffic_kpis: bool,
     pub show_quality_kpis: bool,
     pub tabs: Vec<EvalTabLinkView>,
@@ -144,7 +137,6 @@ pub(super) struct TrafficStatsView {
     pub total_cost_display: String,
     pub user_count: i64,
     pub model_count: i64,
-    /// Whether `user_count` / `model_count` were actually fetched on this tab.
     pub has_distribution: bool,
 }
 
@@ -216,7 +208,6 @@ pub(super) struct WinRateView {
 
 #[derive(Debug, Serialize)]
 pub(super) struct ModelOptionView {
-    /// `provider/model`, the form value the run POST parses back.
     pub value: String,
     pub label: String,
 }

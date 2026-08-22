@@ -167,8 +167,8 @@ pub struct ResultFilter {
     pub model: Option<String>,
 }
 
-/// Most recent scored items across all runs in the window — the "worst first"
-/// list the page leads with, since a passing answer needs no attention.
+// Why: Most recent scored items across all runs in the window — the "worst
+// first" list the page leads with, since a passing answer needs no attention.
 pub async fn list_recent_results(
     pool: &PgPool,
     range: TimeRange,
@@ -262,8 +262,8 @@ pub struct EvalPairRow {
     pub created_at: DateTime<Utc>,
 }
 
-/// The individual verdicts behind the win-rate table, newest first. The
-/// aggregate says which model won; these say why.
+// Why: The individual verdicts behind the win-rate table, newest first. The
+// aggregate says which model won; these say why.
 pub async fn list_recent_pairs(
     pool: &PgPool,
     range: TimeRange,

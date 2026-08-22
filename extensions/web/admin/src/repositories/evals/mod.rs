@@ -18,11 +18,8 @@ pub mod scores;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum EvalRunKind {
-    /// Score real gateway traffic against the rubric.
     Judge,
-    /// Re-run the golden set and score the fresh answers.
     Replay,
-    /// Same case, two models, judge picks a winner.
     Pairwise,
 }
 

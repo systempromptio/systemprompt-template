@@ -29,11 +29,9 @@ fn compute_totals(
     totals
 }
 
-/// Fetch the full decision chain for an identifier.
-///
-/// `id` may be a `decision_id`, `request_id`, `trace_id`, or `session_id`. An
-/// id that resolves to no session yields `Ok(None)`; only a query failure is
-/// an `Err`.
+// Why: `id` may be a `decision_id`, `request_id`, `trace_id`, or `session_id`.
+// An id that resolves to no session yields `Ok(None)`; only a query failure is
+// an `Err`.
 pub async fn find_decision_chain(
     pool: &PgPool,
     id: &str,

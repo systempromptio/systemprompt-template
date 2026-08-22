@@ -21,7 +21,6 @@ pub struct CandidateFilter {
     pub user_id: Option<UserId>,
     pub model: Option<String>,
     pub provider: Option<String>,
-    /// Only sample requests that have not yet been scored by this judge model.
     pub skip_judged_by: Option<String>,
 }
 
@@ -143,9 +142,9 @@ pub async fn list_eval_candidates(
         .collect())
 }
 
-/// Record a call an eval run is about to place, so later runs can exclude it
-/// from their candidate pool. Written before the call, not after, so a call
-/// that fails mid-flight is still excluded.
+// Why: Record a call an eval run is about to place, so later runs can exclude
+// it from their candidate pool. Written before the call, not after, so a call
+// that fails mid-flight is still excluded.
 pub async fn insert_judge_call(
     pool: &PgPool,
     conversation_id: &str,
@@ -163,11 +162,11 @@ pub async fn insert_judge_call(
     Ok(())
 }
 
-/// Total cost of every call a run placed, summed from the ledger.
-///
-/// Read after the run finishes rather than per call: the gateway writes a
-/// request's cost when it completes the audit, which can land after the
-/// response has already been handed back to us.
+// Why: Total cost of every call a run placed, summed from the ledger.
+//
+// Read after the run finishes rather than per call: the gateway writes a
+// request's cost when it completes the audit, which can land after the
+// response has already been handed back to us.
 pub async fn get_run_call_cost(pool: &PgPool, run_id: &str) -> Result<i64, sqlx::Error> {
     let row = sqlx::query!(
         r#"SELECT COALESCE(SUM(ar.cost_microdollars), 0)::bigint AS "cost!"
@@ -181,9 +180,9 @@ pub async fn get_run_call_cost(pool: &PgPool, run_id: &str) -> Result<i64, sqlx:
     Ok(row.cost)
 }
 
-/// Cost of one gateway call, found by the conversation id the eval run tagged
-/// it with. That tag is why a judge call can be charged back to its run
-/// exactly, instead of being inferred from timing.
+// Why: Cost of one gateway call, found by the conversation id the eval run
+// tagged it with. That tag is why a judge call can be charged back to its run
+// exactly, instead of being inferred from timing.
 pub async fn find_conversation_cost(
     pool: &PgPool,
     conversation_id: &str,
@@ -201,7 +200,6 @@ pub async fn find_conversation_cost(
     Ok(row.map(|r| r.cost))
 }
 
-/// Everything needed to freeze one request into the golden set.
 pub async fn find_candidate_by_id(
     pool: &PgPool,
     ai_request_id: &str,

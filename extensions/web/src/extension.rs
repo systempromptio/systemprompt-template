@@ -25,10 +25,10 @@ impl WebExtension {
         Self
     }
 
-    /// The blog config shared by the link API and content ingestion.
-    ///
-    /// Backed by [`BlogConfigValidated::cached`], so every consumer sees the
-    /// same load result; a load failure is logged and treated as "no config".
+    // Why: The blog config shared by the link API and content ingestion.
+    //
+    // Backed by [`BlogConfigValidated::cached`], so every consumer sees the
+    // same load result; a load failure is logged and treated as "no config".
     #[must_use]
     pub fn blog_config() -> Option<Arc<BlogConfigValidated>> {
         match BlogConfigValidated::cached() {

@@ -21,7 +21,6 @@ pub use list::list_sessions_paged;
 #[derive(Debug, Clone, Default)]
 pub struct SessionListFilter {
     pub user_id: Option<UserId>,
-    /// Only sessions that recorded a failed request or a hook error.
     pub error_only: bool,
 }
 
@@ -38,7 +37,6 @@ pub struct SessionListItem {
     pub display_name: Option<String>,
     pub department: Option<String>,
     pub model: Option<String>,
-    /// Hook-generated summary title, when the session was summarised.
     pub ai_title: Option<String>,
     pub plugin_id: Option<PluginId>,
     pub client_source: Option<String>,
@@ -51,13 +49,10 @@ pub struct SessionListItem {
     pub trace_count: i64,
     pub tool_uses: i64,
     pub prompts: i64,
-    /// Failed gateway requests plus hook-reported errors.
     pub error_count: i64,
     pub total_input_tokens: i64,
     pub total_output_tokens: i64,
     pub total_cost_microdollars: i64,
-    /// The session produced gateway traffic (`ai_requests`).
     pub has_gateway: bool,
-    /// The session produced hook events (`plugin_session_summaries`).
     pub has_hooks: bool,
 }

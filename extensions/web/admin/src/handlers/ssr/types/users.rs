@@ -7,8 +7,6 @@ use systemprompt::identifiers::UserId;
 pub(crate) struct UserMarketplaceRef {
     pub id: String,
     pub name: String,
-    /// "default" (granted via YAML baseline) or "override" (granted via
-    /// `access_control_rules`).
     pub source: &'static str,
 }
 
@@ -49,7 +47,6 @@ pub(crate) struct EnrichedUserView {
     pub tokens_count: i64,
     #[serde(default)]
     pub lifetime_tokens: i64,
-    /// "fresh" | "idle" | "stale" | "never"
     #[serde(default)]
     pub token_freshness: String,
 }

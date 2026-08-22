@@ -81,12 +81,10 @@ impl HookEventPayload {
         }
     }
 
-    /// The raw text of a `UserPromptSubmit` event.
-    ///
-    /// Tool inputs are authored by the model; a prompt is authored by the
-    /// human. Governing both means the secret scanner sees a credential the
-    /// user pasted *before* it is serialized into a provider request, not
-    /// merely after the model has echoed it back into a tool call.
+    // Why: Tool inputs are authored by the model; a prompt is authored by the
+    // human. Governing both means the secret scanner sees a credential the
+    // user pasted *before* it is serialized into a provider request, not
+    // merely after the model has echoed it back into a tool call.
     #[must_use]
     pub fn prompt(&self) -> Option<&str> {
         match &self.event {
