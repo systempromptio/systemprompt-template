@@ -11,6 +11,7 @@ use systemprompt::identifiers::UserId;
 use systemprompt_web_shared::error::MarketplaceError;
 
 use crate::repositories::organizations;
+use crate::util::org_scope::OrgScope;
 
 #[derive(Debug, Clone)]
 pub struct UserInvite {
@@ -77,11 +78,9 @@ pub async fn insert_invite(
     Ok(id)
 }
 
-/// Pending (not accepted, not revoked, not expired) invites, optionally
-/// limited to one organization for org-admin callers.
 pub async fn list_pending_invites(
     pool: &PgPool,
-    org_id: Option<&str>,
+    scope: &OrgScope,
 ) -> Result<Vec<PendingInviteRow>, MarketplaceError> {
     let rows = sqlx::query!(
         r#"
@@ -96,7 +95,7 @@ pub async fn list_pending_invites(
           AND ($1::TEXT IS NULL OR i.org_id = $1)
         ORDER BY i.created_at DESC
         "#,
-        org_id,
+        scope.as_slug(),
     )
     .fetch_all(pool)
     .await?;
@@ -155,7 +154,7 @@ pub async fn find_valid_invite_by_hash(
 pub async fn insert_regenerated_invite(
     pool: &PgPool,
     invite_id: &str,
-    org_id: Option<&str>,
+    scope: &OrgScope,
     token_hash: &str,
     expires_at: chrono::DateTime<chrono::Utc>,
 ) -> Result<Option<String>, MarketplaceError> {
@@ -171,7 +170,7 @@ pub async fn insert_regenerated_invite(
                   invited_by AS "invited_by!"
         "#,
         invite_id,
-        org_id,
+        scope.as_slug(),
     )
     .fetch_optional(&mut *tx)
     .await?
@@ -204,14 +203,14 @@ pub async fn insert_regenerated_invite(
 pub async fn revoke_invite(
     pool: &PgPool,
     invite_id: &str,
-    org_id: Option<&str>,
+    scope: &OrgScope,
 ) -> Result<bool, MarketplaceError> {
     let result = sqlx::query!(
         "UPDATE user_invites SET revoked_at = NOW()
          WHERE id = $1 AND accepted_at IS NULL AND revoked_at IS NULL
            AND ($2::TEXT IS NULL OR org_id = $2)",
         invite_id,
-        org_id,
+        scope.as_slug(),
     )
     .execute(pool)
     .await?;

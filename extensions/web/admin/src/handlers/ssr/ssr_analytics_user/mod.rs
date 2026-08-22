@@ -22,6 +22,7 @@ use crate::repositories::analytics::site::SiteScope;
 use crate::repositories::organizations::crud;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
+use crate::util::org_scope::OrgScope;
 use crate::util::time_range::{
     TimeRange, TimeRangePreset, TimeRangeQuery, parse_time_range, preset_to_range,
 };
@@ -70,7 +71,10 @@ pub(crate) async fn analytics_user_page(
 
     let range = resolve_range(&query);
     let scope = SiteScope {
-        org_slug: None,
+        // Why: The page is already pinned to one user, and the `shares_org`
+        // check above is what keeps an org admin out of another tenant's — so
+        // the query itself needs no organization predicate.
+        org_slug: OrgScope::AllOrganizations,
         department: None,
         user_id: Some(user_id.clone()),
     };

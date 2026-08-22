@@ -89,7 +89,7 @@ pub async fn get_site_kpis(
         "#,
         range.from,
         range.to,
-        scope.org_slug.as_deref(),
+        scope.org_slug.as_slug(),
         scope.department.as_deref(),
         scope.user_id_str(),
         prev_from,
@@ -158,7 +158,7 @@ pub async fn get_permission_grant_stats(
         "#,
         range.from,
         range.to,
-        scope.org_slug.as_deref(),
+        scope.org_slug.as_slug(),
         scope.department.as_deref(),
         scope.user_id_str(),
     )

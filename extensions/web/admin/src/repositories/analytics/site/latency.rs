@@ -56,7 +56,7 @@ pub async fn get_latency_split(
         "#,
         range.from,
         range.to,
-        scope.org_slug.as_deref(),
+        scope.org_slug.as_slug(),
         scope.department.as_deref(),
         scope.user_id_str(),
         FAST_THRESHOLD_MS_I32,

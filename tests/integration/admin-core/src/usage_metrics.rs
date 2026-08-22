@@ -4,15 +4,14 @@
 //! warning row, and the invite lifecycle from mint to provisioned member.
 
 use systemprompt::identifiers::SessionId;
-use systemprompt_web_admin::repositories::dashboard::commits::{
-    NewUserCommit, insert_user_commit,
-};
+use systemprompt_web_admin::repositories::dashboard::commits::{NewUserCommit, insert_user_commit};
 use systemprompt_web_admin::repositories::dashboard::usage_rollups;
 use systemprompt_web_admin::repositories::organizations::budget_warnings;
 use systemprompt_web_admin::repositories::users::invites;
+use systemprompt_web_admin::util::org_scope::OrgScope;
 
 use crate::fixtures::{
-    OrgSpec, RequestSpec, insert_member, insert_org, insert_request, insert_user, unclaimed_email,
+    OrgSpec, RequestSpec, insert_org, insert_request, insert_user, unclaimed_email,
     unique,
 };
 use crate::tempdb::TempDb;
@@ -37,7 +36,9 @@ async fn insert_user_commit_dedupes_on_user_cwd_and_hash() {
     };
 
     let first = insert_user_commit(&db.pool, &commit).await.expect("insert");
-    let second = insert_user_commit(&db.pool, &commit).await.expect("dup insert");
+    let second = insert_user_commit(&db.pool, &commit)
+        .await
+        .expect("dup insert");
     let other_repo = insert_user_commit(
         &db.pool,
         &NewUserCommit {
@@ -62,11 +63,7 @@ async fn daily_rollups_recompute_idempotently() {
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("rollup")).await;
     let session = SessionId::new(unique("sess"));
 
-    insert_request(
-        &db.pool,
-        &RequestSpec::completed(&unique("req"), &user),
-    )
-    .await;
+    insert_request(&db.pool, &RequestSpec::completed(&unique("req"), &user)).await;
     insert_user_commit(
         &db.pool,
         &NewUserCommit {
@@ -134,14 +131,18 @@ async fn budget_warning_upserts_once_per_month() {
         .await
         .expect("second crossing");
 
-    let warnings = budget_warnings::list_budget_warning_history(&db.pool, None, 1)
-        .await
-        .expect("list warnings");
+    let warnings =
+        budget_warnings::list_budget_warning_history(&db.pool, &OrgScope::AllOrganizations, 1)
+            .await
+            .expect("list warnings");
     let w = warnings
         .iter()
         .find(|w| w.org_id == org_id)
         .expect("one row for the org");
-    assert_eq!(w.spent_microdollars, 450_000_000, "spend tracks the latest crossing");
+    assert_eq!(
+        w.spent_microdollars, 450_000_000,
+        "spend tracks the latest crossing"
+    );
     assert!(
         w.last_seen_at >= w.first_seen_at,
         "first_seen survives the upsert"

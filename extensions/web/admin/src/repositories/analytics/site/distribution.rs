@@ -40,7 +40,7 @@ pub async fn list_model_distribution(
         "#,
         range.from,
         range.to,
-        scope.org_slug.as_deref(),
+        scope.org_slug.as_slug(),
         scope.department.as_deref(),
         scope.user_id_str(),
     )

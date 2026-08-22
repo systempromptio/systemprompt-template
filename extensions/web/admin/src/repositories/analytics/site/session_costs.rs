@@ -50,7 +50,7 @@ pub async fn get_session_cost_stats(
         "#,
         range.from,
         range.to,
-        scope.org_slug.as_deref(),
+        scope.org_slug.as_slug(),
         scope.department.as_deref(),
         scope.user_id_str(),
     )

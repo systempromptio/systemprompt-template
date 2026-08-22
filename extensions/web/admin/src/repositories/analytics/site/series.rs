@@ -91,7 +91,7 @@ pub async fn list_daily_usage_series(
         "#,
         range.from,
         range.to,
-        scope.org_slug.as_deref(),
+        scope.org_slug.as_slug(),
         scope.department.as_deref(),
         scope.user_id_str(),
         unit,

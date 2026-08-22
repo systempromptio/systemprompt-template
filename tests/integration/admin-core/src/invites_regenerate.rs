@@ -5,8 +5,8 @@
 //! one live invite for the email, the old token no longer resolves, and the
 //! new one carries the original org, department, and roles.
 
-use systemprompt_web_admin::repositories::organizations::budget_warnings as _;
 use systemprompt_web_admin::repositories::users::invites;
+use systemprompt_web_admin::util::org_scope::OrgScope;
 
 use crate::fixtures::{OrgSpec, insert_org, insert_user, unclaimed_email, unique};
 use crate::tempdb::TempDb;
@@ -57,7 +57,7 @@ async fn regenerating_retires_the_old_token_and_issues_a_live_one() {
     let new_id = invites::insert_regenerated_invite(
         &db.pool,
         &f.invite_id,
-        None,
+        &OrgScope::AllOrganizations,
         &new_hash,
         chrono::Utc::now() + chrono::Duration::days(7),
     )
@@ -79,10 +79,17 @@ async fn regenerating_retires_the_old_token_and_issues_a_live_one() {
         .expect("the new token resolves");
     assert_eq!(fresh.email, f.email);
     assert_eq!(fresh.org_id, f.org_id);
-    assert_eq!(fresh.department, "Engineering", "carries the original department");
-    assert_eq!(fresh.roles, vec!["user".to_owned()], "carries the original roles");
+    assert_eq!(
+        fresh.department, "Engineering",
+        "carries the original department"
+    );
+    assert_eq!(
+        fresh.roles,
+        vec!["user".to_owned()],
+        "carries the original roles"
+    );
 
-    let pending = invites::list_pending_invites(&db.pool, Some(&f.org_id))
+    let pending = invites::list_pending_invites(&db.pool, &OrgScope::Only(f.org_id.clone()))
         .await
         .expect("list succeeds");
     assert_eq!(
@@ -105,13 +112,16 @@ async fn regenerating_another_organizations_invite_matches_nothing() {
     let result = invites::insert_regenerated_invite(
         &db.pool,
         &f.invite_id,
-        Some(&other_org),
+        &OrgScope::Only(other_org.clone()),
         &unique("hash-x"),
         chrono::Utc::now() + chrono::Duration::days(7),
     )
     .await
     .expect("query succeeds");
-    assert!(result.is_none(), "org scoping must not match across tenants");
+    assert!(
+        result.is_none(),
+        "org scoping must not match across tenants"
+    );
 
     assert!(
         invites::find_valid_invite_by_hash(&db.pool, &f.token_hash)
@@ -140,7 +150,7 @@ async fn an_accepted_invite_cannot_be_regenerated() {
     let result = invites::insert_regenerated_invite(
         &db.pool,
         &f.invite_id,
-        None,
+        &OrgScope::AllOrganizations,
         &unique("hash-y"),
         chrono::Utc::now() + chrono::Duration::days(7),
     )

@@ -23,6 +23,7 @@ use crate::error::{AdminError, AdminResult};
 use crate::repositories::organizations::crud;
 use crate::repositories::users::invites;
 use crate::types::UserContext;
+use crate::util::org_scope::OrgScope;
 
 const INVITE_TTL_DAYS: i64 = 7;
 
@@ -135,7 +136,7 @@ pub(crate) async fn list_invites_handler(
     Extension(user_ctx): Extension<UserContext>,
 ) -> AdminResult<Response> {
     let org_filter = org_filter_for(&pool, &user_ctx).await?;
-    let rows = invites::list_pending_invites(&pool, org_filter.as_deref()).await?;
+    let rows = invites::list_pending_invites(&pool, &org_filter).await?;
     let body: Vec<PendingInviteView> = rows
         .into_iter()
         .map(|r| PendingInviteView {
@@ -157,7 +158,7 @@ pub(crate) async fn revoke_invite_handler(
     Path(invite_id): Path<String>,
 ) -> AdminResult<Response> {
     let org_filter = org_filter_for(&pool, &user_ctx).await?;
-    if !invites::revoke_invite(&pool, &invite_id, org_filter.as_deref()).await? {
+    if !invites::revoke_invite(&pool, &invite_id, &org_filter).await? {
         return Err(AdminError::NotFound(
             "No pending invite with that id".to_owned(),
         ));
@@ -176,21 +177,16 @@ pub(crate) async fn regenerate_invite_handler(
     let org_filter = org_filter_for(&pool, &user_ctx).await?;
     let (raw_token, token_hash) = generate_setup_token();
     let expires_at = Utc::now() + Duration::days(INVITE_TTL_DAYS);
-    let Some(new_id) = invites::insert_regenerated_invite(
-        &pool,
-        &invite_id,
-        org_filter.as_deref(),
-        &token_hash,
-        expires_at,
-    )
-    .await?
+    let Some(new_id) =
+        invites::insert_regenerated_invite(&pool, &invite_id, &org_filter, &token_hash, expires_at)
+            .await?
     else {
         return Err(AdminError::NotFound(
             "No pending invite with that id".to_owned(),
         ));
     };
 
-    let row = invites::list_pending_invites(&pool, org_filter.as_deref())
+    let row = invites::list_pending_invites(&pool, &org_filter)
         .await?
         .into_iter()
         .find(|r| r.id == new_id);
@@ -225,14 +221,12 @@ pub(crate) async fn regenerate_invite_handler(
         .into_response())
 }
 
-// Why: platform admins see and revoke every org's invites (`None` filter);
-// other admins are confined to their own organization's.
-async fn org_filter_for(
-    pool: &PgPool,
-    user_ctx: &UserContext,
-) -> Result<Option<String>, AdminError> {
+// Why: platform admins see and revoke every org's invites; other admins are
+// confined to their own organization's. The scope carries the organization id
+// here, because that is the column the invite rows hold.
+async fn org_filter_for(pool: &PgPool, user_ctx: &UserContext) -> Result<OrgScope, AdminError> {
     if user_ctx.is_platform_admin {
-        return Ok(None);
+        return Ok(OrgScope::AllOrganizations);
     }
     let slug = crud::find_organization_for_user(pool, &user_ctx.user_id)
         .await?
@@ -245,7 +239,7 @@ async fn org_filter_for(
     let org = crud::find_organization_by_slug(pool, &slug)
         .await?
         .ok_or_else(|| AdminError::NotFound(format!("No organization with slug '{slug}'.")))?;
-    Ok(Some(org.id))
+    Ok(OrgScope::Only(org.id))
 }
 
 async fn resolve_target_org(

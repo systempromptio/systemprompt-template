@@ -11,6 +11,8 @@
 
 use systemprompt::identifiers::UserId;
 
+use crate::util::org_scope::OrgScope;
+
 pub mod code;
 pub mod distribution;
 pub mod kpis;
@@ -22,13 +24,26 @@ pub mod series;
 pub mod session_costs;
 pub mod user_rollups;
 
-/// Optional drill-down filters, all conjunctive. `org_slug` is the URL-facing
+/// Drill-down filters, all conjunctive. `org_slug` is the URL-facing
 /// organization key (slugs are immutable; ids are not typed by hand).
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct SiteScope {
-    pub org_slug: Option<String>,
+    pub org_slug: OrgScope,
     pub department: Option<String>,
     pub user_id: Option<UserId>,
+}
+
+// Why: Written out rather than derived because the derived default for the
+// organization field would be the cross-customer view, making the widest scope
+// the one a caller reaches by naming nothing.
+impl Default for SiteScope {
+    fn default() -> Self {
+        Self {
+            org_slug: OrgScope::AllOrganizations,
+            department: None,
+            user_id: None,
+        }
+    }
 }
 
 impl SiteScope {
