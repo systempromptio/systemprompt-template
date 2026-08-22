@@ -8,6 +8,7 @@ use sqlx::PgPool;
 
 use crate::repositories;
 use crate::services::marketplaces::load_marketplaces;
+use crate::util::org_scope::OrgScope;
 
 use super::super::types::{DepartmentGroup, UserAssignmentSummary, UserDeviceView};
 use super::view;
@@ -175,8 +176,12 @@ async fn collect_user_devices(pool: &PgPool, d: &crate::types::UserDetail) -> Ve
 // and the next save moves the user out of a department they were never
 // deliberately removed from. Degrading to a short list is survivable;
 // degrading to one that cannot represent the current value is not.
-pub(super) async fn list_departments(pool: &PgPool, current: &str) -> Vec<String> {
-    let mut names = repositories::departments::list_department_names(pool)
+pub(super) async fn list_departments(
+    pool: &PgPool,
+    current: &str,
+    org_scope: &OrgScope,
+) -> Vec<String> {
+    let mut names = repositories::departments::list_department_names(pool, org_scope)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "ssr_users: load departments failed"))
         .unwrap_or_default();

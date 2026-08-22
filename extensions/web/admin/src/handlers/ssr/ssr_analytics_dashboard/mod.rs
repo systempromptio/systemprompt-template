@@ -19,17 +19,19 @@ use serde::Deserialize;
 use sqlx::PgPool;
 
 use crate::error::{AdminError, AdminHtmlResult};
-use crate::repositories::analytics::site::SiteScope;
 use crate::repositories::analytics::site::leaderboards::LeaderboardSort;
 use crate::repositories::analytics::site::series::SeriesBucket;
+use crate::repositories::analytics::site::{SiteScope, seats};
 use crate::repositories::organizations::crud;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
+use crate::util::org_scope::OrgScope;
 use crate::util::time_range::{
     TimeRange, TimeRangePreset, TimeRangeQuery, parse_time_range, preset_to_range,
 };
 
 mod context;
+mod context_seats;
 mod data;
 mod filters;
 mod urls;
@@ -51,12 +53,12 @@ pub(crate) struct AnalyticsDashboardQuery {
     pub from: Option<String>,
     pub to: Option<String>,
     pub bucket: Option<String>,
-    /// Honoured for platform admins only.
     pub org: Option<String>,
     pub department: Option<String>,
     pub user_id: Option<systemprompt::identifiers::UserId>,
     pub sort: Option<String>,
     pub page: Option<i64>,
+    pub inactive_days: Option<i32>,
 }
 
 pub(crate) async fn analytics_dashboard_page(
@@ -83,6 +85,7 @@ pub(crate) async fn analytics_dashboard_page(
             None
         });
     let scope = resolve_scope(&user_ctx, &query, own_org_slug.as_deref());
+    let inactive_days = resolve_inactive_days(query.inactive_days);
 
     let fetched = data::load_dashboard_data(
         &pool,
@@ -96,6 +99,7 @@ pub(crate) async fn analytics_dashboard_page(
             offset: page * PAGE_SIZE,
             all_orgs: user_ctx.is_platform_admin,
             own_org_slug: own_org_slug.as_deref(),
+            inactive_days,
         },
     )
     .await;
@@ -110,6 +114,7 @@ pub(crate) async fn analytics_dashboard_page(
         is_platform_admin: user_ctx.is_platform_admin,
         filters,
         fetched: &fetched,
+        inactive_days,
     });
 
     Ok(super::render_typed_page(
@@ -145,15 +150,31 @@ fn resolve_scope(
     own_org_slug: Option<&str>,
 ) -> SiteScope {
     let org_slug = if user_ctx.is_platform_admin {
-        query.org.clone().filter(|s| !s.is_empty())
+        query
+            .org
+            .clone()
+            .filter(|s| !s.is_empty())
+            .map_or(OrgScope::AllOrganizations, OrgScope::Only)
     } else {
-        own_org_slug.map(str::to_owned)
+        // Why: An admin whose membership is missing scopes to the empty slug,
+        // which matches nothing. Widening them to every organization would
+        // reach the cross-customer view by having the least attachment.
+        OrgScope::Only(own_org_slug.unwrap_or_default().to_owned())
     };
     SiteScope {
         org_slug,
         department: query.department.clone().filter(|s| !s.is_empty()),
         user_id: query.user_id.clone().filter(|u| !u.as_str().is_empty()),
     }
+}
+
+// Why: clamped rather than validated-and-rejected, because this arrives from a
+// URL a person edits and a nonsensical value should show them the default
+// window rather than an error page. The ceiling is a year because the window
+// only ever asks "has this seat been used lately"; the floor is a day because
+// a zero-day window would report every seat not in use this instant.
+fn resolve_inactive_days(requested: Option<i32>) -> i32 {
+    requested.map_or(seats::DEFAULT_INACTIVE_DAYS, |d| d.clamp(1, 365))
 }
 
 fn sort_links(query: &AnalyticsDashboardQuery) -> Vec<context::SortLinkView> {
@@ -182,6 +203,7 @@ struct PageInput<'a> {
     is_platform_admin: bool,
     filters: FiltersView,
     fetched: &'a data::AnalyticsDashboardData,
+    inactive_days: i32,
 }
 
 fn page_context(input: PageInput<'_>) -> AnalyticsDashboardContext {
@@ -194,6 +216,7 @@ fn page_context(input: PageInput<'_>) -> AnalyticsDashboardContext {
         is_platform_admin,
         filters,
         fetched,
+        inactive_days,
     } = input;
     let weekly = bucket == SeriesBucket::Week;
 
@@ -244,6 +267,8 @@ fn page_context(input: PageInput<'_>) -> AnalyticsDashboardContext {
         seat_summary: view_tables::seat_summaries(&fetched.org_metrics),
         wasted_seats: view_tables::wasted_seat_rows(&fetched.inactive_seats),
         has_wasted_seats: !fetched.inactive_seats.is_empty(),
+        inactive_days,
+        inactive_day_options: urls::inactive_day_links(query, inactive_days),
 
         has_spend_meters: !meters.is_empty(),
         spend_meters: meters,

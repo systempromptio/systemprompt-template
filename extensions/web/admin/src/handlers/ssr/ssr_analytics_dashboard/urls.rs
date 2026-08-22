@@ -9,7 +9,9 @@ use urlencoding::encode as urlencode;
 
 use crate::handlers::ssr::list_view::{PageWindow, Pagination};
 
-use super::context::{BucketLinkView, DashboardTab, DashboardTabLink, ScopeChipView};
+use super::context::{
+    BucketLinkView, DashboardTab, DashboardTabLink, InactiveDayOption, ScopeChipView,
+};
 use super::{AnalyticsDashboardQuery, BASE_URL};
 
 pub(super) fn preserved_query_string(query: &AnalyticsDashboardQuery, drop: &[&str]) -> String {
@@ -44,6 +46,11 @@ pub(super) fn preserved_query_string(query: &AnalyticsDashboardQuery, drop: &[&s
         && let Some(p) = query.page.filter(|p| *p > 0)
     {
         parts.push(format!("page={p}"));
+    }
+    if !drop.contains(&"inactive_days")
+        && let Some(d) = query.inactive_days
+    {
+        parts.push(format!("inactive_days={d}"));
     }
     parts.join("&")
 }
@@ -186,4 +193,29 @@ pub(super) fn build_pagination(query: &AnalyticsDashboardQuery, window: PageWind
         prev_url,
         next_url,
     }
+}
+
+// Why: rendered as links rather than a `<select>` in the filter form. The
+// window only means anything on the Seats tab, and a GET form control would
+// have to ride along as a hidden field on every other tab to survive.
+pub(super) fn inactive_day_links(
+    query: &AnalyticsDashboardQuery,
+    active_days: i32,
+) -> Vec<InactiveDayOption> {
+    const CHOICES: [(i32, &str); 4] = [
+        (7, "7 days"),
+        (14, "14 days"),
+        (30, "30 days"),
+        (90, "90 days"),
+    ];
+    let qs = preserved_query_string(query, &["inactive_days", "page"]);
+    CHOICES
+        .iter()
+        .map(|&(days, label)| InactiveDayOption {
+            days,
+            label: label.to_owned(),
+            href: with_qs(format!("{BASE_URL}?tab=seats&inactive_days={days}"), &qs),
+            selected: days == active_days,
+        })
+        .collect()
 }

@@ -112,6 +112,15 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
             post(handlers::share::issue_share_token_handler),
         )
         .route(
+            "/users/{user_id}/sessions",
+            get(handlers::list_user_sessions_handler)
+                .delete(handlers::revoke_all_user_sessions_handler),
+        )
+        .route(
+            "/users/{user_id}/sessions/{session_id}",
+            axum::routing::delete(handlers::revoke_user_session_handler),
+        )
+        .route(
             "/access-control/entity/{entity_type}/{entity_id}",
             put(handlers::access_control::update_entity_rules_handler),
         )

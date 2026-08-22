@@ -91,7 +91,7 @@
             <a class="kpi-card{{#if kpis.wasted_seats}} kpi-card--warning{{/if}}" href="{{kpis.wasted_seats_url}}">
                 <span class="kpi-card__label">Wasted seats</span>
                 <span class="kpi-card__value">{{kpis.wasted_seats}}</span>
-                <span class="kpi-card__sub">no requests in 30 days</span>
+                <span class="kpi-card__sub">no requests in {{inactive_days}} days</span>
             </a>
         </div>
 
@@ -218,7 +218,19 @@
             </div>
             {{/each}}
         </div>
-        <p class="section-caption">Active members with no gateway requests in the last 30 days — seats that are paid for but idle.</p>
+        <p class="section-caption">Active members with no gateway requests in the last {{inactive_days}} days — seats that are paid for but idle.</p>
+        {{!-- Same control shape as the day/week bucket toggle above, and
+              deliberately not the sp-tab classes: those mark the page's one
+              active tab, and a second element carrying them makes "which tab
+              am I on" ambiguous to a reader and to a test. --}}
+        <div class="analytics-filters" role="group" aria-label="Inactivity window">
+            <span class="section-caption">Window:</span>
+            {{#each inactive_day_options}}
+            <a class="btn btn-sm{{#unless this.selected}} btn-outline{{/unless}}"
+               data-inactive-days="{{this.days}}"
+               href="{{this.href}}">{{this.label}}</a>
+            {{/each}}
+        </div>
         {{#if has_wasted_seats}}
         {{#> components/data-table}}
             <thead><tr>
@@ -248,7 +260,7 @@
         {{/components/data-table}}
         {{else}}
         {{> components/empty-state
-            message="Every active seat has made a request in the last 30 days."}}
+            message="Every active seat has made a request inside this window."}}
         {{/if}}
     </section>
     {{/if}}

@@ -38,9 +38,25 @@ allowed_email_domains:
   - astoundcommerce.com
   - systemprompt.io
 
-# Provisioning posture. When true (default), the first verified, allow-listed
-# Salesforce login auto-creates a local account — the frictionless path that lets
-# a new user link the desktop bridge with zero admin steps. Set to false to
-# require an admin to pre-create accounts: SSO then only logs in or links
-# *existing* users, and an unknown identity is rejected with `?sso=not_provisioned`.
-auto_provision: true
+# ENROLMENT IS CLOSED IN THIS INSTALLATION (REQ-002).
+#
+# The domain list above says an address *could* belong to someone who should
+# have access. It never says anyone approved them, and on its own it was the
+# whole gate — anyone with an @astounddigital.com address could create an
+# account unaided. Both switches below are therefore off, and an admin-issued
+# invite is the only way a new account comes into existence. An invite carries
+# its own authorization, so it bypasses the domain list entirely.
+#
+# Consequence: a new user must be invited. `admin users create` already mints a
+# seven-day sign-in link, and a lost one is recoverable by regenerating the
+# invite, so no one is stranded.
+#
+# auto_provision: whether a verified, allow-listed first Salesforce login
+# auto-creates a local account. With it false, SSO only logs in or links
+# *existing* users; an unknown identity is rejected with `?sso=not_provisioned`.
+auto_provision: false
+
+# allow_self_registration: whether POST /admin/auth/passkey/register may create
+# an account. With it false the endpoint refuses every caller and the login
+# page stops offering the "create an account" affordance.
+allow_self_registration: false

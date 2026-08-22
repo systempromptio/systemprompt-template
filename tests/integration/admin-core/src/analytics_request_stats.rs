@@ -4,6 +4,7 @@
 use systemprompt_web_admin::repositories::analytics::request_stats::{
     LATENCY_BIN_EDGES_MS, get_request_stats, list_latency_histogram, list_request_timeseries,
 };
+use systemprompt_web_admin::util::org_scope::OrgScope;
 
 use crate::fixtures::{
     DecisionSpec, RequestSpec, insert_decision, insert_request, insert_session, insert_user,
@@ -18,7 +19,7 @@ async fn get_request_stats_is_all_zeroes_in_an_empty_window() {
         return;
     };
 
-    let stats = get_request_stats(&db.pool, narrow_window())
+    let stats = get_request_stats(&db.pool, narrow_window(), &OrgScope::AllOrganizations)
         .await
         .expect("query succeeds");
 
@@ -53,7 +54,7 @@ async fn get_request_stats_derives_error_and_deny_rates() {
     denial.decision = "deny";
     insert_decision(&db.pool, &denial).await;
 
-    let stats = get_request_stats(&db.pool, narrow_window())
+    let stats = get_request_stats(&db.pool, narrow_window(), &OrgScope::AllOrganizations)
         .await
         .expect("query succeeds");
 
@@ -76,7 +77,7 @@ async fn list_latency_histogram_always_returns_every_bin() {
     spec.latency_ms = 75;
     insert_request(&db.pool, &spec).await;
 
-    let buckets = list_latency_histogram(&db.pool, narrow_window())
+    let buckets = list_latency_histogram(&db.pool, narrow_window(), &OrgScope::AllOrganizations)
         .await
         .expect("query succeeds");
 
@@ -110,7 +111,7 @@ async fn list_request_timeseries_returns_a_fixed_number_of_buckets() {
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("series")).await;
     insert_request(&db.pool, &RequestSpec::completed(&unique("req"), &user)).await;
 
-    let series = list_request_timeseries(&db.pool, narrow_window())
+    let series = list_request_timeseries(&db.pool, narrow_window(), &OrgScope::AllOrganizations)
         .await
         .expect("query succeeds");
 

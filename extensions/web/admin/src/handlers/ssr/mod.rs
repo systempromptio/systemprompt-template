@@ -57,7 +57,7 @@ pub(crate) use ssr_invite::invite_accept_page;
 pub(crate) use ssr_management::{management_department_detail_page, management_departments_page};
 pub(crate) use ssr_perf_trace_detail::perf_trace_detail_page;
 pub(crate) use ssr_perf_traces::perf_traces_page;
-pub(crate) use ssr_profile::profile_page;
+pub(crate) use ssr_profile::{issue_bridge_code, profile_page};
 pub(crate) use ssr_report_customer::report_customer_page;
 pub(crate) use ssr_report_internal::report_internal_page;
 pub(crate) use ssr_search_resolve::search_resolve;
@@ -77,14 +77,17 @@ pub(crate) struct LoginParams {
 struct LoginContext<'a> {
     #[serde(flatten)]
     shell: context::BrandingShell<'a>,
-    /// Percent-encoded, ready to append to an SSO start URL. Absent when the
-    /// user came to the login page directly.
     #[serde(skip_serializing_if = "Option::is_none")]
     redirect_encoded: Option<String>,
+    // Why: Whether the page offers the "create an account" path. The template
+    // renders the invite-only wording when this is false, so the UI never
+    // advertises a door the server refuses.
+    self_registration_open: bool,
 }
 
 pub(crate) async fn login_page(
     Extension(engine): Extension<AdminTemplateEngine>,
+    Extension(sf_deps): Extension<crate::handlers::salesforce_auth::SalesforceDeps>,
     Query(params): Query<LoginParams>,
 ) -> AdminHtmlResult<Response> {
     let redirect_encoded = sanitize_login_redirect(params.redirect.as_deref())
@@ -93,6 +96,7 @@ pub(crate) async fn login_page(
     let ctx = LoginContext {
         shell: branding_context(&engine),
         redirect_encoded,
+        self_registration_open: sf_deps.config.allow_self_registration,
     };
     let html = engine.render("login", &ctx)?;
     Ok(Html(html).into_response())

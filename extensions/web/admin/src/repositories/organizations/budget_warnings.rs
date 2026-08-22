@@ -8,27 +8,36 @@
 use sqlx::PgPool;
 use systemprompt_web_shared::error::MarketplaceError;
 
+use crate::util::org_scope::OrgScope;
+
+// Why: the guard calls this on every request once spend is past the
+// threshold, so "crossed" is true thousands of times a month while the event
+// worth telling a human about happens once. The bool reports whether this call
+// was the *first* crossing for the organization this month: `xmax = 0` is true
+// only on the INSERT arm of an upsert, which is exactly that — cheaper and
+// racier-proof than a SELECT-then-INSERT.
 pub async fn upsert_org_budget_warning(
     pool: &PgPool,
     org_id: &str,
     threshold_microdollars: i64,
     spent_microdollars: i64,
-) -> Result<(), MarketplaceError> {
-    sqlx::query!(
-        "INSERT INTO org_budget_warnings
+) -> Result<bool, MarketplaceError> {
+    let row = sqlx::query!(
+        r#"INSERT INTO org_budget_warnings
             (org_id, month, threshold_microdollars, spent_microdollars)
          VALUES ($1, DATE_TRUNC('month', NOW())::DATE, $2, $3)
          ON CONFLICT (org_id, month) DO UPDATE SET
             threshold_microdollars = EXCLUDED.threshold_microdollars,
             spent_microdollars = EXCLUDED.spent_microdollars,
-            last_seen_at = NOW()",
+            last_seen_at = NOW()
+         RETURNING (xmax = 0) AS "first_crossing!""#,
         org_id,
         threshold_microdollars,
         spent_microdollars,
     )
-    .execute(pool)
+    .fetch_one(pool)
     .await?;
-    Ok(())
+    Ok(row.first_crossing)
 }
 
 #[derive(Debug, Clone)]
@@ -43,12 +52,11 @@ pub struct BudgetWarningHistoryRow {
     pub last_seen_at: chrono::DateTime<chrono::Utc>,
 }
 
-/// Soft-cap crossings for the trailing `months` calendar months, newest
-/// first — the spend tab's history table. `org_slug` of `None` (platform
-/// admin) lists every organization's.
+// Why: Soft-cap crossings for the trailing `months` calendar months, newest
+// first — the spend tab's history table.
 pub async fn list_budget_warning_history(
     pool: &PgPool,
-    org_slug: Option<&str>,
+    scope: &OrgScope,
     months: i32,
 ) -> Result<Vec<BudgetWarningHistoryRow>, MarketplaceError> {
     let rows = sqlx::query!(
@@ -66,7 +74,7 @@ pub async fn list_budget_warning_history(
         ORDER BY w.month DESC, o.name
         "#,
         months,
-        org_slug,
+        scope.as_slug(),
     )
     .fetch_all(pool)
     .await?;

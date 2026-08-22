@@ -100,7 +100,7 @@ pub(super) async fn load_requests_data(
 
     let (paged, stats_res) = tokio::join!(
         list_requests_paged(pool, filter, range, page),
-        get_request_stats(pool, range),
+        get_request_stats(pool, range, &filter.org_slug),
     );
 
     let (rows, total_count) = paged.unwrap_or_else(|e| {
@@ -122,27 +122,27 @@ pub(super) async fn load_requests_data(
     match tab {
         RequestsTab::Overview => {
             let (hist_res, series_res) = tokio::join!(
-                list_latency_histogram(pool, range),
-                list_request_timeseries(pool, range),
+                list_latency_histogram(pool, range, &filter.org_slug),
+                list_request_timeseries(pool, range, &filter.org_slug),
             );
             data.hist = unwrap_or_empty(hist_res, "list_latency_histogram");
             data.series = unwrap_or_empty(series_res, "list_request_timeseries");
         },
         RequestsTab::Models => {
             data.breakdown = unwrap_or_empty(
-                list_requests_by_model(pool, range).await,
+                list_requests_by_model(pool, range, &filter.org_slug).await,
                 "list_requests_by_model",
             );
         },
         RequestsTab::Providers => {
             data.breakdown = unwrap_or_empty(
-                list_requests_by_provider(pool, range).await,
+                list_requests_by_provider(pool, range, &filter.org_slug).await,
                 "list_requests_by_provider",
             );
         },
         RequestsTab::Status => {
             data.breakdown = unwrap_or_empty(
-                list_requests_by_status(pool, range).await,
+                list_requests_by_status(pool, range, &filter.org_slug).await,
                 "list_requests_by_status",
             );
         },

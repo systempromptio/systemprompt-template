@@ -9,6 +9,7 @@ use crate::repositories::analytics::site::series::SeriesBucket;
 use crate::repositories::departments::list_department_names;
 use crate::repositories::organizations::crud;
 use crate::types::UserContext;
+use crate::util::org_scope::OrgScope;
 
 use super::context::{DashboardTab, FiltersView, HiddenFieldView, SelectOptionView};
 use super::{AnalyticsDashboardQuery, urls};
@@ -28,10 +29,10 @@ pub(super) async fn build_filters(
         let mut options = vec![SelectOptionView {
             value: String::new(),
             label: "All organizations".to_owned(),
-            selected: scope.org_slug.is_none(),
+            selected: scope.org_slug == OrgScope::AllOrganizations,
         }];
         options.extend(orgs.into_iter().map(|o| SelectOptionView {
-            selected: scope.org_slug.as_deref() == Some(o.slug.as_str()),
+            selected: scope.org_slug.as_slug() == Some(o.slug.as_str()),
             value: o.slug,
             label: o.name,
         }));
@@ -40,10 +41,15 @@ pub(super) async fn build_filters(
         Vec::new()
     };
 
-    let departments = list_department_names(pool).await.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "list_department_names failed");
-        Vec::new()
-    });
+    // Why: the dropdown follows the resolved scope rather than listing every
+    // department. The rows behind the filter are already scoped, but the
+    // option labels themselves are a customer's internal structure.
+    let departments = list_department_names(pool, &scope.org_slug)
+        .await
+        .unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "list_department_names failed");
+            Vec::new()
+        });
     let mut department_options = vec![SelectOptionView {
         value: String::new(),
         label: "All departments".to_owned(),

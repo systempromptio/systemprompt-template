@@ -5,13 +5,14 @@
 use std::sync::Arc;
 
 use axum::Json;
-use axum::extract::{Query, State};
+use axum::extract::{Extension, Query, State};
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
 use crate::error::AdminResult;
 use crate::repositories::users::queries::{list_distinct_roles, list_users};
+use crate::types::UserContext;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct DistinctRolesResponse {
@@ -47,9 +48,11 @@ pub(crate) struct UserSearchQuery {
 
 pub(crate) async fn search_users_handler(
     State(pool): State<Arc<PgPool>>,
+    Extension(user_ctx): Extension<UserContext>,
     Query(query): Query<UserSearchQuery>,
 ) -> AdminResult<Response> {
-    let users = list_users(&pool).await?;
+    let scope = crate::util::org_scope::listing_scope(&pool, &user_ctx).await;
+    let users = list_users(&pool, &scope).await?;
     let q = query.q.unwrap_or_default().to_lowercase();
     let limit = query.limit.unwrap_or(10).min(50);
     let users: Vec<UserSearchEntry> = users

@@ -9,6 +9,8 @@ use chrono::{DateTime, Utc};
 use serde::Serialize;
 use systemprompt::identifiers::{AgentId, AiRequestId, SessionId, TraceId, UserId};
 
+use crate::util::org_scope::OrgScope;
+
 mod breakdown;
 mod paged;
 
@@ -17,14 +19,38 @@ pub use breakdown::{
 };
 pub use paged::{RequestPage, list_requests_paged};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct RequestFilter {
+    // Why: Set from the caller's own organization unless they are a platform
+    // admin, exactly as the analytics dashboard scopes — a customer's own
+    // administrator holds `admin` too, so a request log spanning every
+    // organization would read as a cross-tenant one.
+    pub org_slug: OrgScope,
+    pub department: Option<String>,
     pub user_id: Option<UserId>,
     pub agent_id: Option<AgentId>,
     pub model: Option<String>,
     pub provider: Option<String>,
     pub status: Option<String>,
     pub search: Option<String>,
+}
+
+// Why: Written out rather than derived because the derived default for the
+// organization field would be the cross-customer view, making the widest scope
+// the one a caller reaches by naming nothing.
+impl Default for RequestFilter {
+    fn default() -> Self {
+        Self {
+            org_slug: OrgScope::AllOrganizations,
+            department: None,
+            user_id: None,
+            agent_id: None,
+            model: None,
+            provider: None,
+            status: None,
+            search: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

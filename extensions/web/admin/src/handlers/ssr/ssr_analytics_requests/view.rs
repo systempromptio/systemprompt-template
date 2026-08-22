@@ -11,6 +11,7 @@ use crate::repositories::analytics::request_stats::RequestStats;
 use crate::repositories::analytics::requests::{
     BreakdownRow, RequestFilter, RequestRow, RequestSortColumn, RequestSortSpec, SortDir,
 };
+use crate::util::org_scope::OrgScope;
 use crate::util::time_range::TimeRange;
 
 use super::context::{
@@ -20,8 +21,20 @@ use super::context::{
 use super::urls::{log_filter_url, preserved_query_string};
 use super::{BASE_URL, RequestsQuery};
 
-pub(super) fn filter_from_query(query: &RequestsQuery) -> RequestFilter {
+// Why: `org_scope` is the caller's resolved organization. Only a platform
+// admin arrives unpinned, and `?org=` is then theirs to narrow with; pinning
+// everyone else to their own slug is what keeps a customer's own admin inside
+// their tenant.
+pub(super) fn filter_from_query(query: &RequestsQuery, org_scope: OrgScope) -> RequestFilter {
+    let org_slug = match org_scope {
+        OrgScope::AllOrganizations => {
+            empty_to_none(query.org.as_ref()).map_or(OrgScope::AllOrganizations, OrgScope::Only)
+        },
+        own @ OrgScope::Only(_) => own,
+    };
     RequestFilter {
+        org_slug,
+        department: empty_to_none(query.department.as_ref()),
         user_id: query.user_id.clone().filter(|u| !u.as_str().is_empty()),
         agent_id: query.agent_id.clone().filter(|a| !a.as_str().is_empty()),
         model: empty_to_none(query.model.as_ref()),

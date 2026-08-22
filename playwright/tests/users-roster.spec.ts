@@ -12,10 +12,31 @@ test.describe('users roster', () => {
     await expect(sales).toContainText('e2e-member-3');
   });
 
+  // Why this asserts on what DISAPPEARS: the previous version filled the box
+  // and checked the matching row was still visible, which passed whether or not
+  // the box was wired to anything at all -- and it wasn't.
   test('search narrows the roster', async ({ adminPage: page }) => {
     await page.goto('/admin/access/users');
+    const match = page.locator('tr[data-user-name*="e2e-member-1"]');
+    const other = page.locator('tr[data-user-name*="e2e-member-3"]');
+    await expect(match).toBeVisible();
+    await expect(other).toBeVisible();
+
     await page.locator('#user-search').fill('e2e-member-1');
-    await expect(page.locator('tbody tr:visible', { hasText: 'e2e-member-1' }).first()).toBeVisible();
+    await expect(match).toBeVisible();
+    await expect(other).toBeHidden();
+    // The department that holds only non-matching members collapses with them.
+    await expect(page.locator('tbody.table-group[data-department="Sales"]')).toBeHidden();
+
+    await page.locator('#user-search').fill('');
+    await expect(other).toBeVisible();
+  });
+
+  test('a search matching nobody shows the empty state', async ({ adminPage: page }) => {
+    await page.goto('/admin/access/users');
+    await page.locator('#user-search').fill('zzz-no-such-user');
+    await expect(page.locator('#user-search-empty')).toBeVisible();
+    await expect(page.locator('tr[data-user-name]:visible')).toHaveCount(0);
   });
 
   test('create-user panel creates a user with a department', async ({ adminPage: page, request }) => {

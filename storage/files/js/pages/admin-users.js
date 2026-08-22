@@ -84,11 +84,39 @@ const bindCreatePanel = () => {
   });
 };
 
+const bindUserSearch = () => {
+  const input = document.getElementById('user-search');
+  if (!input) return;
+  const groups = Array.from(document.querySelectorAll('tbody.table-group'));
+  const apply = () => {
+    const q = input.value.trim().toLowerCase();
+    let matched = 0;
+    for (const group of groups) {
+      let visibleInGroup = 0;
+      for (const row of group.querySelectorAll('tr[data-user-name]')) {
+        const hit =
+          q === '' ||
+          (row.dataset.userName || '').includes(q) ||
+          (row.dataset.userEmail || '').includes(q);
+        row.hidden = !hit;
+        if (hit) visibleInGroup += 1;
+      }
+      group.hidden = visibleInGroup === 0;
+      matched += visibleInGroup;
+    }
+    const empty = document.getElementById('user-search-empty');
+    if (empty) empty.hidden = matched > 0;
+  };
+  input.addEventListener('input', apply);
+  apply();
+};
+
 export const initUsersPage = () => {
   const page = document.querySelector('[data-page="users"]') || document.getElementById('users-table');
   if (page) {
     bindCreatePanel();
     bindActionsPopup();
+    bindUserSearch();
     const createBtn = document.querySelector('[data-action="create-user"]');
     if (createBtn) createBtn.addEventListener('click', openCreatePanel);
   }

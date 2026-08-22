@@ -109,7 +109,13 @@ async fn run_paged_query(
                 ), 0) AS tool_call_count
             FROM ai_requests ar
             LEFT JOIN users u ON u.id = ar.user_id
+            LEFT JOIN organization_members om ON om.user_id = ar.user_id
+            LEFT JOIN organizations o ON o.id = om.org_id
+            LEFT JOIN user_profile_ext upe ON upe.user_id = ar.user_id
             WHERE ar.created_at >= $1 AND ar.created_at < $2
+              AND ($13::text IS NULL OR o.slug = $13)
+              AND ($14::text IS NULL
+                   OR COALESCE(NULLIF(upe.department, ''), 'Default') = $14)
               AND ($3::text IS NULL OR ar.user_id = $3)
               AND ($4::text IS NULL OR EXISTS (
                   SELECT 1 FROM governance_decisions g
@@ -166,6 +172,8 @@ async fn run_paged_query(
         offset,
         sort_col,
         sort_dir,
+        filter.org_slug.as_slug(),
+        filter.department.as_deref(),
     )
     .fetch_all(pool)
     .await

@@ -2,8 +2,12 @@
 //! the per-user side tables the detail page renders.
 
 use systemprompt_web_admin::repositories::users;
+use systemprompt_web_admin::util::org_scope::OrgScope;
 
-use crate::fixtures::{insert_user, insert_user_full, set_department, unclaimed_email, unique};
+use crate::fixtures::{
+    OrgSpec, insert_member, insert_org, insert_user, insert_user_full, set_department,
+    unclaimed_email, unique,
+};
 use crate::tempdb::TempDb;
 
 #[tokio::test]
@@ -13,7 +17,7 @@ async fn list_users_includes_a_freshly_created_user() {
     };
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("listed")).await;
 
-    let listed = users::queries::list_users(&db.pool)
+    let listed = users::queries::list_users(&db.pool, &OrgScope::AllOrganizations)
         .await
         .expect("listing succeeds");
 
@@ -41,7 +45,7 @@ async fn list_users_excludes_anonymous_identities() {
     )
     .await;
 
-    let listed = users::queries::list_users(&db.pool)
+    let listed = users::queries::list_users(&db.pool, &OrgScope::AllOrganizations)
         .await
         .expect("listing succeeds");
 
@@ -179,5 +183,73 @@ async fn list_device_app_links_returns_only_this_users_devices() {
     assert_eq!(devices.len(), 1);
     assert_eq!(devices[0].app_platform, "linux");
     assert_eq!(devices[0].app_version, "1.2.3");
+    db.cleanup().await;
+}
+
+// Why: `admin` is the role a customer's own administrator holds on this pooled
+// instance, so an unscoped listing hands them every other customer's roster.
+// The scope is the whole control, which makes it worth a test of its own.
+#[tokio::test]
+async fn list_users_scoped_to_an_org_excludes_other_orgs_members() {
+    let Some(db) = TempDb::create().await else {
+        return;
+    };
+    let org_a = unique("org-a");
+    let org_b = unique("org-b");
+    let slug_a = unique("slug-a");
+    let slug_b = unique("slug-b");
+    insert_org(&db.pool, &OrgSpec::active(&org_a, &slug_a)).await;
+    insert_org(&db.pool, &OrgSpec::active(&org_b, &slug_b)).await;
+
+    let ours = insert_user(&db.pool, &unique("user"), &unclaimed_email("ours")).await;
+    let theirs = insert_user(&db.pool, &unique("user"), &unclaimed_email("theirs")).await;
+    insert_member(&db.pool, &ours, &org_a, "member").await;
+    insert_member(&db.pool, &theirs, &org_b, "member").await;
+
+    let scoped = users::queries::list_users(&db.pool, &OrgScope::Only(slug_a.clone()))
+        .await
+        .expect("listing succeeds");
+    let ids: Vec<&str> = scoped.iter().map(|u| u.user_id.as_str()).collect();
+    assert!(
+        ids.contains(&ours.as_str()),
+        "the caller's own member is listed"
+    );
+    assert!(
+        !ids.contains(&theirs.as_str()),
+        "another organization's member must not be listed"
+    );
+
+    // None is the platform admin's cross-customer view, and must still span both.
+    let all = users::queries::list_users(&db.pool, &OrgScope::AllOrganizations)
+        .await
+        .expect("listing succeeds");
+    let all_ids: Vec<&str> = all.iter().map(|u| u.user_id.as_str()).collect();
+    assert!(all_ids.contains(&ours.as_str()));
+    assert!(all_ids.contains(&theirs.as_str()));
+    db.cleanup().await;
+}
+
+// Why: an empty slug is what an admin with no organization membership resolves
+// to. It must match nothing rather than falling through to "every
+// organization", which would make the widest scope the one reached by having
+// the least attachment.
+#[tokio::test]
+async fn list_users_scoped_to_an_empty_slug_lists_nobody() {
+    let Some(db) = TempDb::create().await else {
+        return;
+    };
+    let org = unique("org");
+    let slug = unique("slug");
+    insert_org(&db.pool, &OrgSpec::active(&org, &slug)).await;
+    let member = insert_user(&db.pool, &unique("user"), &unclaimed_email("member")).await;
+    insert_member(&db.pool, &member, &org, "member").await;
+
+    let listed = users::queries::list_users(&db.pool, &OrgScope::Only(String::new()))
+        .await
+        .expect("listing succeeds");
+    assert!(
+        listed.is_empty(),
+        "an empty slug must match no organization"
+    );
     db.cleanup().await;
 }

@@ -28,7 +28,8 @@ pub(crate) async fn users_page(
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
-    let users = repositories::users::queries::list_users(&pool)
+    let scope = crate::util::org_scope::listing_scope(&pool, &user_ctx).await;
+    let users = repositories::users::queries::list_users(&pool, &scope)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "Failed to list users");
@@ -120,7 +121,8 @@ pub(crate) async fn user_detail_page(
         None => None,
     };
 
-    let departments = data::list_departments(&pool, &user_department).await;
+    let dept_scope = crate::util::org_scope::listing_scope(&pool, &user_ctx).await;
+    let departments = data::list_departments(&pool, &user_department, &dept_scope).await;
     let user_org_slug =
         repositories::organizations::crud::find_organization_for_user(&pool, &user_id)
             .await

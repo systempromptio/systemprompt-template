@@ -100,7 +100,7 @@ pub(super) fn build_usage(sections: UsageSections) -> ProfileUsage {
     }
 }
 
-pub(super) fn read_config_strings() -> (Option<String>, Option<String>) {
+pub(crate) fn read_config_strings() -> (Option<String>, Option<String>) {
     Config::get().map_or((None, None), |c| {
         (
             Some(c.jwt_issuer.clone()),

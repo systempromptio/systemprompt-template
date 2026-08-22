@@ -98,7 +98,7 @@ pub(super) fn enrich_users(
                 email: u.email.as_ref().map(ToString::to_string),
                 roles: u.roles.clone(),
                 is_active: u.is_active,
-                last_active: u.last_active.to_rfc3339(),
+                last_active: u.last_active.map(|t| t.to_rfc3339()).unwrap_or_default(),
                 total_events: u.total_events,
                 last_tool: u.last_tool.clone(),
                 custom_skills_count: u.custom_skills_count,

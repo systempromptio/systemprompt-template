@@ -9,9 +9,9 @@
 use serde::Serialize;
 use sqlx::PgPool;
 
+use crate::util::org_scope::OrgScope;
 use crate::util::time_range::TimeRange;
 
-/// Fixed latency-histogram bin edges (ms). The final bin is open-ended.
 pub const LATENCY_BIN_EDGES_MS: [f64; 8] =
     [50.0, 100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0, 10_000.0];
 
@@ -32,6 +32,7 @@ pub struct RequestStats {
 pub async fn get_request_stats(
     pool: &PgPool,
     range: TimeRange,
+    scope: &OrgScope,
 ) -> Result<RequestStats, sqlx::Error> {
     let row = sqlx::query!(
         r#"WITH
@@ -39,6 +40,11 @@ pub async fn get_request_stats(
                 SELECT id, status, latency_ms, cost_microdollars, session_id, created_at
                 FROM ai_requests
                 WHERE created_at >= $1 AND created_at < $2
+             AND ($3::text IS NULL OR EXISTS (
+                 SELECT 1 FROM organization_members om
+                 JOIN organizations o ON o.id = om.org_id
+                 WHERE om.user_id = ai_requests.user_id AND o.slug = $3
+             ))
             ),
             with_deny AS (
                 SELECT DISTINCT r.session_id
@@ -65,6 +71,7 @@ pub async fn get_request_stats(
         FROM requests"#,
         range.from,
         range.to,
+        scope.as_slug(),
     )
     .fetch_one(pool)
     .await?;
@@ -110,6 +117,7 @@ pub struct LatencyBucket {
 pub async fn list_latency_histogram(
     pool: &PgPool,
     range: TimeRange,
+    scope: &OrgScope,
 ) -> Result<Vec<LatencyBucket>, sqlx::Error> {
     let edges = &LATENCY_BIN_EDGES_MS;
     let edges_pg: Vec<f64> = edges.to_vec();
@@ -121,11 +129,17 @@ pub async fn list_latency_histogram(
           FROM ai_requests
           WHERE created_at >= $2 AND created_at < $3
             AND latency_ms IS NOT NULL
+             AND ($4::text IS NULL OR EXISTS (
+                 SELECT 1 FROM organization_members om
+                 JOIN organizations o ON o.id = om.org_id
+                 WHERE om.user_id = ai_requests.user_id AND o.slug = $4
+             ))
           GROUP BY 1
           ORDER BY 1"#,
         &edges_pg,
         range.from,
         range.to,
+        scope.as_slug(),
     )
     .fetch_all(pool)
     .await?;
@@ -177,6 +191,7 @@ const TIME_BUCKETS: i32 = 24;
 pub async fn list_request_timeseries(
     pool: &PgPool,
     range: TimeRange,
+    scope: &OrgScope,
 ) -> Result<Vec<TimeBucket>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"WITH params AS (
@@ -206,6 +221,11 @@ pub async fn list_request_timeseries(
             FROM ai_requests
             WHERE created_at >= (SELECT lo FROM params)
               AND created_at <  (SELECT hi FROM params)
+              AND ($4::text IS NULL OR EXISTS (
+                  SELECT 1 FROM organization_members om
+                  JOIN organizations o ON o.id = om.org_id
+                  WHERE om.user_id = ai_requests.user_id AND o.slug = $4
+              ))
           ),
           summed AS (
             SELECT
@@ -230,6 +250,7 @@ pub async fn list_request_timeseries(
         range.from,
         range.to,
         TIME_BUCKETS,
+        scope.as_slug(),
     )
     .fetch_all(pool)
     .await?;

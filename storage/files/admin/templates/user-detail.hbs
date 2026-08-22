@@ -232,27 +232,55 @@
     </div>
     {{/if}}
 
+    {{!-- Devices and their per-device tokens. This card read `user_tokens`,
+          which nothing ever produced, so it always showed the empty state while
+          `user_devices` was loaded and dropped on the floor. --}}
     <div class="card mb-6">
-        <h3>Access tokens</h3>
-        {{#if user_tokens}}
-        <table class="data-table">
-            <thead><tr><th>Name</th><th>Prefix</th><th class="col-date">Last used</th><th class="col-status">Status</th></tr></thead>
+        <h3>Devices and access tokens</h3>
+        {{#if user_devices}}
+        <table class="data-table" id="user-devices-table">
+            <thead><tr><th>Name</th><th>Prefix</th><th>Platform</th><th class="col-date">Last seen</th><th class="col-status">Status</th><th class="col-actions"></th></tr></thead>
             <tbody>
-            {{#each user_tokens}}
-            <tr>
+            {{#each user_devices}}
+            <tr data-device-id="{{id}}">
                 <td><code class="code-inline">{{name}}</code></td>
                 <td><code class="code-inline">{{key_prefix}}</code></td>
-                <td class="col-date">{{#if last_used_at}}<span title="{{formatDate last_used_at}}">{{relativeTime last_used_at}}</span>{{else}}<span class="text-tertiary">Never</span>{{/if}}</td>
+                <td>{{#if platform}}{{platform}}{{#if app_version}} · {{app_version}}{{/if}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+                <td class="col-date">{{#if last_seen_at}}<span title="{{formatDate last_seen_at}}">{{relativeTime last_seen_at}}</span>{{else}}<span class="text-tertiary">Never</span>{{/if}}</td>
                 <td class="col-status">{{#if revoked}}<span class="badge badge-gray">Revoked</span>{{else}}<span class="badge badge-green">Active</span>{{/if}}</td>
+                <td class="col-actions">
+                    {{#unless revoked}}
+                    <button type="button" class="btn btn-sm btn-danger" data-revoke-device="{{id}}">Revoke</button>
+                    {{/unless}}
+                </td>
             </tr>
             {{/each}}
             </tbody>
         </table>
         {{else}}
-        {{> components/empty-state message="No access tokens issued."}}
+        {{> components/empty-state message="No devices linked."}}
         {{/if}}
         <div class="toolbar toolbar--compact">
             <a class="btn btn-sm btn-primary" href="/bridge-auth/device-link?prefill_user={{user.user_id}}">Link desktop app</a>
+        </div>
+    </div>
+
+    {{!-- Sign-in sessions. Revoking took a shell before this card existed. --}}
+    <div class="card mb-6">
+        <h3>Sign-in sessions</h3>
+        <p class="text-tertiary">
+            Revoking ends the session on its next request — roles and session
+            validity are re-read from the database per request, never trusted
+            from the token.
+        </p>
+        <table class="data-table" id="user-sessions-table" data-user-id="{{user.user_id}}">
+            <thead><tr><th>Session</th><th>Source</th><th>IP</th><th class="numeric col-numeric">Requests</th><th class="col-date">Last activity</th><th class="col-status">Status</th><th class="col-actions"></th></tr></thead>
+            <tbody id="user-sessions-body">
+            <tr data-placeholder><td colspan="7" class="text-tertiary">Loading sessions…</td></tr>
+            </tbody>
+        </table>
+        <div class="toolbar toolbar--compact">
+            <button type="button" class="btn btn-sm btn-danger" id="revoke-all-sessions">Sign out everywhere</button>
         </div>
     </div>
 
@@ -281,5 +309,6 @@
     {{/inline}}
     {{#*inline "scripts"}}
     <script data-cfasync="false" type="module" src="/js/pages/admin-user-detail.js"></script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-user-sessions.js"></script>
     {{/inline}}
 {{/layout}}

@@ -4,6 +4,8 @@
 //! `storage/files/admin/templates/analytics-dashboard.hbs`.
 
 use serde::Serialize;
+
+pub(super) use super::context_seats::{InactiveDayOption, SeatSummaryView, WastedSeatView};
 use systemprompt::identifiers::UserId;
 
 use crate::handlers::ssr::list_view::Pagination;
@@ -15,15 +17,10 @@ use crate::handlers::ssr::types::{
 // queries that tab renders ever run.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum DashboardTab {
-    /// KPIs, the two trend charts, the model pie, and the org spend meter.
     Overview,
-    /// Top-users leaderboard and adoption stats.
     Usage,
-    /// Seat utilisation and the wasted-seats table.
     Seats,
-    /// Per-organization spend against soft/hard caps.
     Spend,
-    /// Commit activity and AI line deltas — two measurement frames.
     Code,
 }
 
@@ -89,14 +86,19 @@ pub(super) struct AnalyticsDashboardContext {
     pub seat_summary: Vec<SeatSummaryView>,
     pub wasted_seats: Vec<WastedSeatView>,
     pub has_wasted_seats: bool,
+    // Why: The resolved inactivity window, so the copy states the window actually
+    // queried instead of a hardcoded "30 days" that a `?inactive_days=` would
+    // silently contradict.
+    pub inactive_days: i32,
+    pub inactive_day_options: Vec<InactiveDayOption>,
 
     pub spend_meters: Vec<MeterView>,
     pub has_spend_meters: bool,
     pub latency_link: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub burndown: Option<SvgLineChartView>,
-    /// Shown to a platform admin who has not picked an organization — a
-    /// burn-up against a cap only means something for one org.
+    // Why: Shown to a platform admin who has not picked an organization — a
+    // burn-up against a cap only means something for one org.
     pub show_burndown_hint: bool,
     pub budget_warnings: Vec<BudgetWarningRowView>,
     pub has_budget_warnings: bool,
@@ -163,13 +165,10 @@ pub(super) struct DashboardTabLink {
 
 #[derive(Debug, Serialize)]
 pub(super) struct FiltersView {
-    /// Platform admins only — org admins are locked to their own org.
     pub show_org_select: bool,
     pub org_options: Vec<SelectOptionView>,
     pub department_options: Vec<SelectOptionView>,
     pub bucket_links: Vec<BucketLinkView>,
-    /// Hidden fields the filter form must carry so submitting it keeps the
-    /// window and tab.
     pub hidden: Vec<HiddenFieldView>,
 }
 
@@ -248,13 +247,9 @@ pub(super) struct LeaderRowView {
     pub cost_display: String,
     pub requests_per_day_display: String,
     pub last_active_display: String,
-    /// Re-renders the dashboard scoped to this user.
     pub scope_url: String,
-    /// The raw request log, pre-filtered.
     pub log_url: String,
-    /// The user-management detail page.
     pub detail_url: String,
-    /// The per-user analytics drill-down page.
     pub analytics_url: String,
 }
 
@@ -264,26 +259,6 @@ pub(super) struct PermissionStatsView {
     pub granted: i64,
     pub rate_display: String,
     pub has_data: bool,
-}
-
-#[derive(Debug, Serialize)]
-pub(super) struct SeatSummaryView {
-    pub org_name: String,
-    pub seats_used: i64,
-    pub seat_limit_display: String,
-    pub pct: i64,
-}
-
-#[derive(Debug, Serialize)]
-pub(super) struct WastedSeatView {
-    pub user_id: UserId,
-    pub label: String,
-    pub email: String,
-    pub department: String,
-    pub org_name: String,
-    pub last_request_display: String,
-    pub detail_url: String,
-    pub analytics_url: String,
 }
 
 #[derive(Debug, Serialize)]

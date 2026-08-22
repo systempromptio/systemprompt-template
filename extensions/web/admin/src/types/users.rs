@@ -14,7 +14,11 @@ pub struct UserSummary {
     pub email: Option<Email>,
     pub roles: Vec<String>,
     pub is_active: bool,
-    pub last_active: DateTime<Utc>,
+    // Why: `None` means never active — not "active when they joined". The
+    // query takes GREATEST over the activity timestamps with no COALESCE to
+    // `created_at`, so a provisioned-but-unused seat stays distinguishable
+    // from one used on the day it was created.
+    pub last_active: Option<DateTime<Utc>>,
     pub total_events: i64,
     pub last_tool: Option<String>,
     pub custom_skills_count: i64,
@@ -32,7 +36,10 @@ pub struct UserDetail {
     pub email: Option<Email>,
     pub roles: Vec<String>,
     pub is_active: bool,
-    pub last_active: DateTime<Utc>,
+    // Why: `None` means never active. The user-detail template already renders a
+    // "Last Active" card only `{{#if user.last_active}}`, so an absent value
+    // simply drops the card rather than showing a fabricated date.
+    pub last_active: Option<DateTime<Utc>>,
     pub total_events: i64,
     pub custom_skills_count: i64,
     pub preferred_client: Option<String>,
@@ -91,8 +98,6 @@ pub struct CookieSession {
     pub user_id: UserId,
     pub username: String,
     pub email: Email,
-    /// The `session_id` claim, when the token carries one. Lets a page link the
-    /// caller to their own session's observability detail.
     pub session_id: Option<SessionId>,
 }
 
@@ -129,7 +134,6 @@ pub struct CreateUserRequest {
     pub roles: Vec<String>,
     #[serde(default)]
     pub status: Option<String>,
-    /// Department name for `user_profile_ext`; absent leaves the default.
     #[serde(default)]
     pub department: Option<String>,
 }

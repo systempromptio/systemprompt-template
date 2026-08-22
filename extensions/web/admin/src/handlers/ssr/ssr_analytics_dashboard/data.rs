@@ -28,6 +28,7 @@ use crate::repositories::organizations::budget_warnings::{
     BudgetWarningHistoryRow, list_budget_warning_history,
 };
 use crate::repositories::organizations::metrics::{OrganizationMetrics, list_organization_metrics};
+use crate::util::org_scope::OrgScope;
 use crate::util::time_range::TimeRange;
 
 use super::context::DashboardTab;
@@ -49,8 +50,6 @@ pub(super) struct AnalyticsDashboardData {
     pub session_costs: SessionCostStats,
     pub latency: LatencySplit,
     pub budget_history: Vec<BudgetWarningHistoryRow>,
-    /// Month-to-date daily series for the burn-up chart; loaded only when
-    /// exactly one organization is in scope.
     pub mtd_series: Vec<UsageBucket>,
 }
 
@@ -62,11 +61,9 @@ pub(super) struct DashboardQueryPlan<'a> {
     pub sort: LeaderboardSort,
     pub page_size: i64,
     pub offset: i64,
-    /// Whether the viewer may see every organization's rows (platform admin).
     pub all_orgs: bool,
-    /// The viewer's own org slug, for scoping org-level tables when they are
-    /// not a platform admin.
     pub own_org_slug: Option<&'a str>,
+    pub inactive_days: i32,
 }
 
 pub(super) async fn load_dashboard_data(
@@ -79,7 +76,7 @@ pub(super) async fn load_dashboard_data(
     // Usage, and the wasted-seat count is a KPI card link the others reuse.
     let (kpis_res, wasted_res) = tokio::join!(
         kpis::get_site_kpis(pool, plan.range, plan.scope),
-        seats::count_inactive_seats(pool, plan.scope),
+        seats::count_inactive_seats(pool, plan.scope, plan.inactive_days),
     );
     data.kpis = kpis_res.unwrap_or_else(|e| {
         tracing::warn!(error = %e, "get_site_kpis failed");
@@ -106,7 +103,7 @@ pub(super) async fn load_dashboard_data(
         DashboardTab::Usage => load_usage_tab(pool, &plan, &mut data).await,
         DashboardTab::Seats => {
             let (seats_res, orgs_res) = tokio::join!(
-                seats::list_inactive_seats(pool, plan.scope),
+                seats::list_inactive_seats(pool, plan.scope, plan.inactive_days),
                 list_organization_metrics(pool),
             );
             data.inactive_seats = unwrap_or_empty(seats_res, "list_inactive_seats");
@@ -141,7 +138,7 @@ async fn load_spend_tab(
     let (orgs_res, latency_res, history_res) = tokio::join!(
         list_organization_metrics(pool),
         latency::get_latency_split(pool, plan.range, plan.scope),
-        list_budget_warning_history(pool, plan.scope.org_slug.as_deref(), 12),
+        list_budget_warning_history(pool, &plan.scope.org_slug, 12),
     );
     data.org_metrics = scoped_orgs(orgs_res, plan);
     data.latency = latency_res.unwrap_or_else(|e| {
@@ -154,9 +151,9 @@ async fn load_spend_tab(
     });
     // Why: a burn-up against a cap only means something for one
     // organization; the platform's all-orgs view gets a hint instead.
-    if let Some(slug) = plan.scope.org_slug.as_deref() {
+    if let OrgScope::Only(slug) = &plan.scope.org_slug {
         let month_scope = SiteScope {
-            org_slug: Some(slug.to_owned()),
+            org_slug: OrgScope::Only(slug.clone()),
             department: None,
             user_id: None,
         };
@@ -240,7 +237,7 @@ fn scoped_orgs(
             if plan.all_orgs {
                 plan.scope
                     .org_slug
-                    .as_deref()
+                    .as_slug()
                     .is_none_or(|slug| o.slug == slug)
             } else {
                 plan.own_org_slug.is_some_and(|slug| o.slug == slug)

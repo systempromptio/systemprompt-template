@@ -670,6 +670,10 @@ start-release:
     fi
     exec {{CLI_RELEASE}} infra services start --profile local
 
+# Stop this clone's services
+stop:
+    {{CLI}} infra services stop --all
+
 # Run migrations
 migrate:
     #!/usr/bin/env bash
@@ -1090,7 +1094,7 @@ web-build:
 
 # Build Docker image for local testing
 docker-build TAG="local":
-    docker build -f .systemprompt/Dockerfile -t systemprompt-template:{{TAG}} .
+    docker build -f Dockerfile -t systemprompt-template:{{TAG}} .
 
 # Run image locally for testing
 docker-run TAG="local":
@@ -1588,15 +1592,16 @@ e2e *ARGS:
 e2e-seed *ARGS:
     cd playwright && npx tsx setup/seed.ts {{ARGS}}
 
-# Capture full-page deliverable screenshots of the key admin pages into the
-# gitignored playwright/screenshots/ directory (needs `just start`).
+# Capture the requirements evidence pack -- one named screenshot per REQ row,
+# plus an index.md recording the URL and principal each came from -- into the
+# gitignored playwright/screenshots/<stamp>/ directory (needs `just start`).
 e2e-screens:
     cd playwright && npx tsx scripts/capture.ts
 
-# Re-record the visual-regression baselines. Run only when a UI change is
-# intended -- the diff in tests/__screenshots__/ is the review artifact.
-e2e-snapshots:
-    cd playwright && npx playwright test tests/visual.spec.ts --update-snapshots
+# Prove one requirements-register row end to end (see
+# requirements/compliance-register.md). Needs `just start` and `just e2e-seed`.
+e2e-req REQ:
+    cd playwright && npx playwright test --grep "@{{REQ}}"
 
 # Test build without pushing
 docker-test:

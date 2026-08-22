@@ -22,9 +22,11 @@
 //! after its response. That is true of core's own ceilings too, and for a
 //! monthly contract cap overshooting by one request is immaterial.
 
+use chrono::{DateTime, Months, Utc};
 use sqlx::PgPool;
 use systemprompt::extension::{
-    GatewayDenyReason, GatewayGuardRequest, GatewayRequestGuard, register_gateway_guard,
+    GatewayDenyKind, GatewayDenyReason, GatewayGuardRequest, GatewayRequestGuard,
+    register_gateway_guard,
 };
 use systemprompt::identifiers::UserId;
 use systemprompt_security::authz::{Decision, EntityRef, ResolveInput, resolve};
@@ -33,6 +35,7 @@ use crate::authz;
 use crate::repositories::config::gateway_acl;
 use crate::repositories::organizations;
 use crate::repositories::organizations::spend::OrganizationSpend;
+use crate::util::month_range::month_start;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct RouteEntitlementGuard;
@@ -42,15 +45,15 @@ pub struct OrgBudgetGuard;
 
 #[async_trait::async_trait]
 impl GatewayRequestGuard for RouteEntitlementGuard {
-    /// Fails **open** on a lookup error and on an unresolved route, and
-    /// **closed** on an actual deny decision.
-    ///
-    /// The asymmetry is deliberate. A deny is an answer — the resolver read
-    /// the rules and the customer is not entitled — and honouring it is the
-    /// whole point. A database error is not an answer, and treating it as one
-    /// would turn a blip into a total inference outage for every customer at
-    /// once. An unmatched route means the request never reached a governed
-    /// entity and the gateway will fail it on its own terms.
+    // Why: Fails **open** on a lookup error and on an unresolved route, and
+    // **closed** on an actual deny decision.
+    //
+    // The asymmetry is deliberate. A deny is an answer — the resolver read
+    // the rules and the customer is not entitled — and honouring it is the
+    // whole point. A database error is not an answer, and treating it as one
+    // would turn a blip into a total inference outage for every customer at
+    // once. An unmatched route means the request never reached a governed
+    // entity and the gateway will fail it on its own terms.
     async fn check(
         &self,
         pool: &PgPool,
@@ -122,10 +125,16 @@ async fn load_roles(pool: &PgPool, user_id: &UserId) -> Option<Vec<String>> {
 
 #[async_trait::async_trait]
 impl GatewayRequestGuard for OrgBudgetGuard {
-    /// Fails **open**: a user with no organization, an organization with no
-    /// cap, or a lookup error all allow the request. A cap that is one request
-    /// late on a transient error is the cheaper failure, and the audit trail
-    /// still records the spend.
+    // Why: Fails **open**: a user with no organization, an organization with no
+    // cap, or a lookup error all allow the request. A cap that is one request
+    // late on a transient error is the cheaper failure, and the audit trail
+    // still records the spend.
+    //
+    // The denial carries `retry-after` set to the month boundary rather than
+    // the default zero. A budget deny is a 429 because the month rolls over,
+    // but it does not roll over *soon*, and a zero tells a well-behaved client
+    // to come straight back — which is how one exhausted cap turns into ten
+    // rejected requests.
     async fn check(
         &self,
         pool: &PgPool,
@@ -147,12 +156,16 @@ impl GatewayRequestGuard for OrgBudgetGuard {
             cap_microdollars = spend.cap_microdollars,
             "gateway request denied: organization monthly budget exhausted",
         );
-        Err(GatewayDenyReason::new(format!(
-            "{} has reached its monthly spend cap of {}. Contact your administrator to raise \
-             the plan limit.",
-            spend.name,
-            display_usd(spend.cap_microdollars),
-        )))
+        Err(GatewayDenyReason {
+            message: format!(
+                "{} has reached its monthly spend cap of {}. Contact your administrator to raise \
+                 the plan limit.",
+                spend.name,
+                display_usd(spend.cap_microdollars),
+            ),
+            retry_after_seconds: seconds_until_next_month(Utc::now()),
+            kind: GatewayDenyKind::Quota,
+        })
     }
 }
 
@@ -174,7 +187,7 @@ async fn record_soft_cap_crossing(pool: &PgPool, spend: &OrganizationSpend) {
         cap_microdollars = spend.cap_microdollars,
         "organization month-to-date spend crossed its soft budget threshold",
     );
-    if let Err(e) = organizations::budget_warnings::upsert_org_budget_warning(
+    match organizations::budget_warnings::upsert_org_budget_warning(
         pool,
         &spend.org_id,
         warn,
@@ -182,7 +195,22 @@ async fn record_soft_cap_crossing(pool: &PgPool, spend: &OrganizationSpend) {
     )
     .await
     {
-        tracing::warn!(error = %e, organization = %spend.name, "failed to record soft-cap crossing");
+        // Why: only the first crossing alerts. This runs on every request once
+        // spend is past the threshold, so alerting unconditionally would post
+        // once per request for the rest of the month. The dashboard already
+        // shows the standing state; the alert is for the transition.
+        Ok(true) => crate::slack_alerts::send_alert(format!(
+            "*Budget warning* — {} has crossed its soft spend threshold for this \
+             month. Spent {} of a {} cap (warning at {}).",
+            spend.name,
+            display_usd(spend.spent_microdollars),
+            display_usd(spend.cap_microdollars),
+            display_usd(warn),
+        )),
+        Ok(false) => {},
+        Err(e) => {
+            tracing::warn!(error = %e, organization = %spend.name, "failed to record soft-cap crossing");
+        },
     }
 }
 
@@ -194,6 +222,16 @@ async fn load_org_spend(pool: &PgPool, user_id: &UserId) -> Option<OrganizationS
         })
         .ok()
         .flatten()
+}
+
+// Why: Seconds from `now` until the next calendar month begins in UTC. The
+// boundary is UTC month start because that is what the spend query counts from
+// (`DATE_TRUNC('month', NOW())`), so the hint expires exactly when the budget
+// it describes resets. Shares `month_start` with the month-scoped reports,
+// which bill against the same boundary.
+pub fn seconds_until_next_month(now: DateTime<Utc>) -> i32 {
+    let seconds = (month_start(now) + Months::new(1) - now).num_seconds();
+    i32::try_from(seconds.max(0)).unwrap_or(i32::MAX)
 }
 
 // Why: two decimals round a sub-cent evaluation cap to "$0.00", which reads

@@ -90,6 +90,9 @@
         </tbody>
         {{/each}}
     {{/components/data-table}}
+    <div id="user-search-empty" hidden>
+        {{> components/empty-state message="No users match that search."}}
+    </div>
     {{else}}
     {{> components/empty-state message="No users found."}}
     {{/if}}

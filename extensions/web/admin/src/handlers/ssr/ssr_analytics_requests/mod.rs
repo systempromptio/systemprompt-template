@@ -47,6 +47,8 @@ pub(crate) struct RequestsQuery {
     pub sort: Option<String>,
     pub dir: Option<String>,
     pub page: Option<i64>,
+    pub org: Option<String>,
+    pub department: Option<String>,
 }
 
 pub(crate) async fn analytics_requests_page(
@@ -61,7 +63,8 @@ pub(crate) async fn analytics_requests_page(
     }
 
     let tab = RequestsTab::from_query(query.tab.as_deref());
-    let filter = view::filter_from_query(&query);
+    let org_scope = crate::util::org_scope::listing_scope(&pool, &user_ctx).await;
+    let filter = view::filter_from_query(&query, org_scope);
     let sort = view::sort_from_query(&query);
     let page = query.page.unwrap_or(0).max(0);
     let offset = page * PAGE_SIZE;

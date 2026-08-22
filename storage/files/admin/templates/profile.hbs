@@ -46,59 +46,70 @@
                     <h2>Connect Claude Code on your machine</h2>
                     <span class="sp-chip">for developers</span>
                 </div>
-                {{#if bridge_connect}}
+                {{#if bridge_connect_available}}
                 <span class="sp-profile-card__hint">
-                    one-shot code · valid ten minutes · single use · reload this page for a fresh one
+                    one-shot code · valid ten minutes · single use · issued only when you ask
                 </span>
                 {{/if}}
             </header>
 
-            {{#if bridge_connect}}
+            {{#if bridge_connect_available}}
             <div class="sp-connect">
                 <p class="sp-connect__lede">
-                    Run this on Linux or WSL. It installs the bridge and Claude Code, signs this
-                    machine in as <strong>{{identity.email}}</strong>, and syncs your organization's
-                    skills, plugins, and MCP servers. The code is bound to your identity and works once.
+                    Run the command below on Linux or WSL. It installs the bridge and Claude Code,
+                    signs this machine in as <strong>{{identity.email}}</strong>, and syncs your
+                    organization's skills, plugins, and MCP servers. The code is bound to your
+                    identity and works once.
                 </p>
 
+                {{!-- The code is minted on request, never on page load: it is a
+                      bearer credential, and this page gets left open and reloaded. --}}
                 <div class="sp-connect__step">
-                    <span class="sp-connect__label">Install and connect — copy, paste, done</span>
-                    <pre class="sp-connect__cmd"><code>{{bridge_connect.install_command}}</code></pre>
+                    <button type="button" class="btn btn-primary" id="issue-connect-code">
+                        Generate a connect code
+                    </button>
+                    <p class="sp-connect__hint" id="connect-code-error" role="alert" hidden></p>
                 </div>
 
-                <p class="sp-connect__lede">
-                    On Windows or macOS, or for the full walkthrough, see
-                    <a href="/documentation/connect-claude-code">Connect Claude Code</a>.
-                </p>
+                <div id="connect-code-output" hidden>
+                    <div class="sp-connect__step">
+                        <span class="sp-connect__label">Install and connect — copy, paste, done</span>
+                        <pre class="sp-connect__cmd"><code data-connect-field="install_command"></code></pre>
+                    </div>
 
-                <details class="sp-connect__raw">
-                    <summary>Advanced — bridge already installed, or developing from a checkout of this repository</summary>
-                    <div class="sp-connect__step">
-                        <span class="sp-connect__label">Bridge already installed on this machine</span>
-                        <pre class="sp-connect__cmd"><code>{{bridge_connect.login_command}}</code></pre>
-                    </div>
-                    <div class="sp-connect__step">
-                        <span class="sp-connect__label">Maintainers with this repository checked out — Claude Code in a throwaway container</span>
-                        <pre class="sp-connect__cmd"><code>{{bridge_connect.just_install_command}}</code></pre>
-                    </div>
-                    <div class="sp-connect__step">
-                        <span class="sp-connect__label">Maintainers — configure this host directly (writes ~/.profile, managed settings, and a sync service)</span>
-                        <pre class="sp-connect__cmd"><code>{{bridge_connect.just_login_command}}</code></pre>
-                    </div>
-                    <div class="sp-connect__step">
-                        <span class="sp-connect__label">Just the code</span>
-                        <pre class="sp-connect__cmd"><code>{{bridge_connect.code}}</code></pre>
-                    </div>
-                </details>
+                    <p class="sp-connect__lede">
+                        On Windows or macOS, or for the full walkthrough, see
+                        <a href="/documentation/connect-claude-code">Connect Claude Code</a>.
+                    </p>
+
+                    <details class="sp-connect__raw">
+                        <summary>Advanced — bridge already installed, or developing from a checkout of this repository</summary>
+                        <div class="sp-connect__step">
+                            <span class="sp-connect__label">Bridge already installed on this machine</span>
+                            <pre class="sp-connect__cmd"><code data-connect-field="login_command"></code></pre>
+                        </div>
+                        <div class="sp-connect__step">
+                            <span class="sp-connect__label">Maintainers with this repository checked out — Claude Code in a throwaway container</span>
+                            <pre class="sp-connect__cmd"><code data-connect-field="just_install_command"></code></pre>
+                        </div>
+                        <div class="sp-connect__step">
+                            <span class="sp-connect__label">Maintainers — configure this host directly (writes ~/.profile, managed settings, and a sync service)</span>
+                            <pre class="sp-connect__cmd"><code data-connect-field="just_login_command"></code></pre>
+                        </div>
+                        <div class="sp-connect__step">
+                            <span class="sp-connect__label">Just the code</span>
+                            <pre class="sp-connect__cmd"><code data-connect-field="code"></code></pre>
+                        </div>
+                    </details>
+                </div>
             </div>
             {{else}}
             <div class="sp-connect">
                 <p class="sp-connect__lede">
-                    A connect code could not be minted just now —
-                    <a href="/admin/profile">reload this page</a> to try again.
-                    If it keeps happening, an administrator can issue one from the server with
-                    <code>systemprompt admin bridge issue-code --user-id {{identity.email}}</code>
-                    and check the server logs. Full instructions:
+                    No gateway URL is configured, so a connect code cannot be minted here.
+                    An administrator can issue one from the server with
+                    <code>systemprompt admin bridge issue-code --user-id {{identity.email}}</code>.
+                    Full instructions:
                     <a href="/documentation/connect-claude-code">Connect Claude Code</a>.
                 </p>
             </div>
@@ -393,5 +404,6 @@
     {{#*inline "scripts"}}
     <script src="/js/components/sp-copy.js?v={{css_version}}" defer></script>
     <script src="/js/pages/profile-salesforce.js?v={{css_version}}" type="module"></script>
+    <script src="/js/pages/profile-connect-code.js?v={{css_version}}" type="module"></script>
     {{/inline}}
 {{/layout}}

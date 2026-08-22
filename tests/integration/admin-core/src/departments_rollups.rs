@@ -2,6 +2,7 @@
 //! and the cross-user aggregates the management views read.
 
 use systemprompt_web_admin::repositories::departments;
+use systemprompt_web_admin::util::org_scope::OrgScope;
 
 use crate::fixtures::{
     insert_acl_rule, insert_department, insert_user, insert_user_full, set_department,
@@ -19,7 +20,7 @@ async fn list_department_names_includes_a_new_department() {
     let name = unique("Legal");
     insert_department(&db.pool, &unique("dept"), &name, HOUSE).await;
 
-    let names = departments::list_department_names(&db.pool)
+    let names = departments::list_department_names(&db.pool, &OrgScope::AllOrganizations)
         .await
         .expect("listing succeeds");
 

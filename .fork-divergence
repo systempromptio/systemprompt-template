@@ -67,6 +67,7 @@ extensions/web/admin/tests/authz_marketplace_pure.rs	# astound tests the organiz
 extensions/web/admin/tests/util_ranges.rs	# astound covers util::month_range behind its enterprise reports; the template has only util::time_range
 extensions/web/admin/src/authz/mod.rs	# astound registers the organization subject dimension at precedence 300; the template has one tenant and no such band
 extensions/web/admin/src/repositories/config/acl_yaml_loader.rs	# astound reads a third bootstrap file, plans.yaml, and projects each plan's grants onto its organizations
+extensions/web/admin/src/repositories/users/federated.rs	# astound additionally carries the Salesforce JIT provisioning path (seat check, org membership, verified-email merge); the template carries only the messaging link/unlink pair
 extensions/web/admin/src/repositories/users/mutations.rs	# astound resolves the new user's organization from their email domain and refuses a full plan, so creation returns MarketplaceError rather than sqlx::Error
 
 
@@ -163,6 +164,8 @@ extensions/web/admin/src/types/users.rs	# CreateUserRequest carries a department
 # guess; the template still drops the event at the handler.
 # ---------------------------------------------------------------------
 extensions/web/admin/src/handlers/hooks_track/dedup.rs	# astound keys PreToolUse on tool_use_id; the template treats it as unreachable
+extensions/web/admin/src/handlers/hooks_track/description.rs	# astound describes a PreToolUse event; the template still calls it unreachable
+extensions/web/admin/src/handlers/hooks_track/helpers.rs	# astound counts PreToolUse input bytes; the template still calls it unreachable
 
 # ---------------------------------------------------------------------
 # TRACE CORRELATION - astound is on core 0.34.0, where governance_decisions
@@ -170,4 +173,52 @@ extensions/web/admin/src/handlers/hooks_track/dedup.rs	# astound keys PreToolUse
 # through the session_id overload 0.34.0 removed. Converges when the
 # template adopts 0.34.0.
 # ---------------------------------------------------------------------
-extensions/web/admin/src/repositories/traces/stats.rs	# joins governance to requests on trace_id, not the session_id overload
+
+# ---------------------------------------------------------------------
+# TENANT SCOPING - astound is a pooled multi-tenant instance, so `admin` is
+# the role a *customer's own* administrator holds. Every listing and
+# aggregate below therefore takes an organization scope that the
+# single-tenant template has no use for: there, `admin` already means
+# "administers the only tenant", and the parameter would always be None.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/repositories/users/queries/listing.rs	# list_users takes an org scope, and last_active is null rather than the join date
+extensions/web/admin/src/repositories/users/queries/detail.rs	# same null-not-join-date rule for the detail summary
+extensions/web/admin/src/repositories/departments/summaries.rs	# list_department_names is org-scoped so one customer's dropdown cannot name another's departments
+extensions/web/admin/src/handlers/gateway_access.rs	# user search resolves the caller's org scope before listing
+extensions/web/admin/src/handlers/ssr/ssr_skills_contexts/mod.rs	# the contexts page's user filter is org-scoped
+extensions/web/admin/src/repositories/analytics/requests/mod.rs	# RequestFilter carries org_slug and department
+extensions/web/admin/src/repositories/analytics/requests/paged.rs	# the request log joins organization_members to honour that scope
+extensions/web/admin/src/repositories/analytics/requests/breakdown.rs	# the model/provider/status rollups take an org scope
+extensions/web/admin/src/repositories/analytics/request_stats.rs	# request stats, latency histogram and timeseries take an org scope
+extensions/web/admin/src/handlers/ssr/ssr_analytics_requests/mod.rs	# the requests page resolves that scope and accepts ?org= / ?department=
+extensions/web/admin/src/handlers/ssr/ssr_analytics_requests/view.rs	# filter_from_query pins a non-platform admin to their own organization
+extensions/web/admin/src/handlers/ssr/ssr_analytics_requests/data.rs	# threads the org scope into every requests-page query
+
+# ---------------------------------------------------------------------
+# CLOSED ENROLMENT - astound is an enterprise deployment where an admin
+# invite is the only way an account comes into existence (REQ-002). The
+# template keeps the domain-allowlist front door.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/handlers/ssr/mod.rs	# the login page is told whether to offer a registration path at all
+
+# ---------------------------------------------------------------------
+# SESSION REVOCATION + BRIDGE ISSUANCE - astound surfaces session
+# lifecycle in the admin UI and issues bridge connect codes on request
+# rather than on every profile render.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/handlers/mod.rs	# mounts the user-session handlers
+extensions/web/admin/src/handlers/users.rs	# update_user_handler carries the platform-admin role-escalation guard, and list_users_handler is org-scoped
+extensions/web/admin/src/handlers/ssr/ssr_profile/mod.rs	# adds the connect-code issuance endpoint beside the profile page
+extensions/web/admin/src/handlers/ssr/ssr_users/mod.rs	# the roster and user detail resolve an org scope for their listings
+extensions/web/admin/src/handlers/ssr/ssr_users/data.rs	# the department list is org-scoped
+extensions/web/admin/src/handlers/ssr/ssr_users/view.rs	# renders an absent last_active as empty rather than a date
+extensions/web/admin/src/types/users.rs	# last_active is optional on both the summary and the detail
+extensions/web/admin/src/assets.rs	# registers the session-revocation and connect-code page scripts
+extensions/web/admin/src/routes/ssr.rs	# mounts the connect-code issuance route
+extensions/web/admin/src/routes/admin.rs	# mounts the user-session listing and revocation routes
+
+# ---------------------------------------------------------------------
+# CONFIGURABLE SEAT WINDOW + BUDGET ALERTING - astound's enterprise
+# reporting takes an inactivity window as a parameter and alerts on the
+# first soft-cap crossing of a month.
+# ---------------------------------------------------------------------

@@ -16,8 +16,11 @@ use crate::types::UserContext;
 
 use assemble::{
     build_agents_block, build_bridge_profile_block, build_usage, load_usage_sections,
-    read_config_strings, read_tenant_id,
+    read_tenant_id,
 };
+// Why: re-exported because the profile page's on-demand connect-code endpoint
+// needs the gateway URL, which lives one module over.
+pub(crate) use assemble::read_config_strings;
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ProfileIdentity {
@@ -72,13 +75,8 @@ pub(crate) struct BridgeConnectBlock {
     pub code: String,
     pub expires_in_seconds: i64,
     pub gateway: String,
-    /// For a machine with no bridge yet — the command the page leads with,
-    /// matching the documented connect flow.
     pub install_command: String,
-    /// For a machine that already has one.
     pub login_command: String,
-    /// The same two via `just` recipes, for a maintainer with this repo
-    /// checked out — shown only under the advanced disclosure.
     pub just_install_command: String,
     pub just_login_command: String,
 }
@@ -91,7 +89,6 @@ pub(crate) const BRIDGE_BINARY: &str = "astound-bridge";
 pub(crate) struct SalesforceLinkBlock {
     pub linked: bool,
     pub sf_username: Option<String>,
-    /// Whether disconnecting is safe — a passkey exists to sign in with.
     pub has_passkey: bool,
 }
 
@@ -100,14 +97,22 @@ pub(crate) struct BridgeProfilePageData {
     pub page: &'static str,
     pub title: &'static str,
     pub identity: ProfileIdentity,
-    pub bridge_connect: Option<BridgeConnectBlock>,
+    // Why: Whether a gateway is configured, and so whether the page may offer to
+    // issue a connect code. The code itself is never part of page data.
+    pub bridge_connect_available: bool,
     pub bridge_profile: Option<BridgeProfileBlock>,
     pub usage: ProfileUsage,
     pub agents: AgentsBlock,
     pub salesforce: SalesforceLinkBlock,
 }
 
-async fn build_bridge_connect(
+// Why: not called while assembling the page. A connect code is a bearer
+// credential — redeeming one yields a durable PAT that signs in as its owner.
+// Minting on every render printed a fresh one into the HTML of a page people
+// leave open, screen-share and reload, and burned a code per view for the
+// majority of views that never connect anything. Issuing is an explicit act,
+// so a code exists because someone asked for one.
+pub(crate) async fn issue_bridge_connect(
     pool: &PgPool,
     user_ctx: &UserContext,
     gateway: Option<&str>,
@@ -118,7 +123,7 @@ async fn build_bridge_connect(
         .map_err(|e| {
             tracing::warn!(
                 error = %e,
-                "could not mint a bridge exchange code for the profile page"
+                "could not mint a bridge exchange code"
             );
         })
         .ok()?;
@@ -162,7 +167,9 @@ pub(crate) async fn build_bridge_profile_data(
 
     let (jwt_issuer, gateway_url) = read_config_strings();
     let bridge_profile = build_bridge_profile_block();
-    let bridge_connect = build_bridge_connect(&pool, user_ctx, gateway_url.as_deref()).await;
+    // Why: the page only offers the button; `issue_bridge_connect` answers it,
+    // so no credential is assembled into page data.
+    let bridge_connect_available = gateway_url.is_some();
 
     let identity = ProfileIdentity {
         email: user_ctx.email.as_str().to_owned(),
@@ -184,7 +191,7 @@ pub(crate) async fn build_bridge_profile_data(
         page: "profile",
         title: "Profile",
         identity,
-        bridge_connect,
+        bridge_connect_available,
         bridge_profile,
         usage,
         agents,

@@ -4,12 +4,24 @@
 use sqlx::PgPool;
 
 use crate::types::departments::{DepartmentMember, DepartmentSummary, DepartmentTopTool};
+use crate::util::org_scope::OrgScope;
 
-/// List department names alphabetically — backs the department filter dropdown.
-pub async fn list_department_names(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
-    sqlx::query_scalar!("SELECT name FROM departments ORDER BY name")
-        .fetch_all(pool)
-        .await
+// Why: Department names are a customer's internal structure, so a dropdown
+// that spans every organization shows one customer the shape of another even
+// though the rows behind the filter stay correctly scoped.
+pub async fn list_department_names(
+    pool: &PgPool,
+    scope: &OrgScope,
+) -> Result<Vec<String>, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT DISTINCT d.name FROM departments d
+           JOIN organizations o ON o.id = d.org_id
+           WHERE ($1::TEXT IS NULL OR o.slug = $1)
+           ORDER BY d.name"#,
+        scope.as_slug(),
+    )
+    .fetch_all(pool)
+    .await
 }
 
 pub async fn list_departments(pool: &PgPool) -> Result<Vec<DepartmentSummary>, sqlx::Error> {

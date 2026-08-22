@@ -97,8 +97,12 @@ pub(crate) async fn dashboard_handler(State(pool): State<Arc<PgPool>>) -> AdminR
     Ok(Json(data).into_response())
 }
 
-pub(crate) async fn list_users_handler(State(pool): State<Arc<PgPool>>) -> AdminResult<Response> {
-    let users = repositories::users::queries::list_users(&pool).await?;
+pub(crate) async fn list_users_handler(
+    State(pool): State<Arc<PgPool>>,
+    Extension(user_ctx): Extension<UserContext>,
+) -> AdminResult<Response> {
+    let scope = crate::util::org_scope::listing_scope(&pool, &user_ctx).await;
+    let users = repositories::users::queries::list_users(&pool, &scope).await?;
     Ok(Json(UsersListResponse { users }).into_response())
 }
 
@@ -131,6 +135,19 @@ pub(crate) async fn update_user_handler(
     let user_id = UserId::new(user_id_raw);
     if !user_ctx.is_admin {
         return Err(AdminError::Forbidden("Admin access required".to_owned()));
+    }
+    // Why: the same escalation rule create and invite already enforce. Without
+    // it the edit form is a way around them — an org admin could not create a
+    // colleague with an elevated role, but could grant one afterwards.
+    if !user_ctx.is_platform_admin
+        && body
+            .roles
+            .as_ref()
+            .is_some_and(|roles| roles.iter().any(|r| r != "user"))
+    {
+        return Err(AdminError::Forbidden(
+            "Only platform administrators may assign elevated roles".to_owned(),
+        ));
     }
     let user = repositories::users::mutations::update_user(&pool, &user_id, &body)
         .await?

@@ -10,6 +10,7 @@ use systemprompt_web_admin::repositories::analytics::requests::{
     list_requests_by_model, list_requests_by_provider, list_requests_by_status,
     list_requests_paged,
 };
+use systemprompt_web_admin::util::org_scope::OrgScope;
 
 use crate::fixtures::{
     DecisionSpec, EventSpec, RequestSpec, insert_decision, insert_event, insert_request,
@@ -331,7 +332,7 @@ async fn list_requests_by_model_rolls_up_the_windows_traffic() {
         insert_request(&db.pool, &spec).await;
     }
 
-    let rows = list_requests_by_model(&db.pool, narrow_window())
+    let rows = list_requests_by_model(&db.pool, narrow_window(), &OrgScope::AllOrganizations)
         .await
         .expect("query succeeds");
 
@@ -361,10 +362,11 @@ async fn list_requests_by_provider_and_status_agree_on_what_an_error_is() {
     fine.provider = "flaky-provider";
     insert_request(&db.pool, &fine).await;
 
-    let by_provider = list_requests_by_provider(&db.pool, narrow_window())
-        .await
-        .expect("query succeeds");
-    let by_status = list_requests_by_status(&db.pool, narrow_window())
+    let by_provider =
+        list_requests_by_provider(&db.pool, narrow_window(), &OrgScope::AllOrganizations)
+            .await
+            .expect("query succeeds");
+    let by_status = list_requests_by_status(&db.pool, narrow_window(), &OrgScope::AllOrganizations)
         .await
         .expect("query succeeds");
 

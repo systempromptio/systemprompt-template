@@ -89,9 +89,14 @@
                             <div class="form-actions">
                                 <button type="button" id="sign-in-btn" class="btn btn-primary w-full">Sign in with Passkey</button>
                             </div>
+                            {{#if self_registration_open}}
                             <p class="login-switch">New here? <a href="#" id="show-register">Create an account</a></p>
+                            {{else}}
+                            <p class="login-switch">New here? Ask an administrator for an invite link.</p>
+                            {{/if}}
                         </div>
 
+                        {{#if self_registration_open}}
                         <div id="register-form" hidden>
                             <div class="form-group">
                                 <label for="register-email">Work email</label>
@@ -106,6 +111,7 @@
                             </div>
                             <p class="login-switch">Already registered? <a href="#" id="show-signin">Sign in</a></p>
                         </div>
+                        {{/if}}
 
                         <div id="loading" class="login-loading" hidden aria-live="polite">
                             <div class="login-spinner" role="status" aria-label="Loading"></div>

@@ -4,8 +4,13 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 
 use crate::types::UserSummary;
+use crate::util::org_scope::OrgScope;
 
-pub async fn list_users(pool: &PgPool) -> Result<Vec<UserSummary>, sqlx::Error> {
+// Why: `admin` is the role a *customer's own* administrator holds, so a
+// listing that spans every organization hands them every user on a pooled
+// instance. That is why the scope is a parameter rather than a filter the
+// caller applies afterwards.
+pub async fn list_users(pool: &PgPool, scope: &OrgScope) -> Result<Vec<UserSummary>, sqlx::Error> {
     sqlx::query_as!(
         UserSummary,
         r#"SELECT
@@ -14,12 +19,19 @@ pub async fn list_users(pool: &PgPool) -> Result<Vec<UserSummary>, sqlx::Error> 
                 u.email AS "email?: Email",
                 u.roles AS "roles!: Vec<String>",
                 (u.status = 'active') AS "is_active!",
+                -- Why no COALESCE to u.created_at: it made a user who has
+                -- never done anything report their join date as their last
+                -- activity, so "provisioned but never used" was indistinguishable
+                -- from "used on the day they joined" -- which is exactly the
+                -- population REQ-005's wasted-seat reporting is about. Postgres
+                -- GREATEST ignores NULLs and yields NULL only when every input
+                -- is NULL, which is precisely "never active".
                 GREATEST(
-                    COALESCE(MAX(p.created_at), u.created_at),
-                    COALESCE(ua.last_ua, u.created_at),
-                    COALESCE(mcp.last_mcp, u.created_at),
-                    COALESCE(air.last_request, u.created_at)
-                ) AS "last_active!",
+                    MAX(p.created_at),
+                    ua.last_ua,
+                    mcp.last_mcp,
+                    air.last_request
+                ) AS "last_active?",
                 (COALESCE(COUNT(DISTINCT p.id), 0) + COALESCE(air.request_count, 0))::BIGINT AS "total_events!",
                 (SELECT tool_name FROM plugin_usage_events p2
                  WHERE p2.user_id = u.id
@@ -52,13 +64,17 @@ pub async fn list_users(pool: &PgPool) -> Result<Vec<UserSummary>, sqlx::Error> 
                 SELECT user_id, MAX(created_at) AS last_request, COUNT(*)::BIGINT AS request_count
                 FROM ai_requests GROUP BY user_id
             ) air ON air.user_id = u.id
+            LEFT JOIN organization_members om ON om.user_id = u.id
+            LEFT JOIN organizations o ON o.id = om.org_id
             WHERE NOT ('anonymous' = ANY(u.roles))
               AND u.email NOT LIKE '%@anonymous.local'
+              AND ($1::TEXT IS NULL OR o.slug = $1)
             GROUP BY u.id, u.created_at, u.name, u.display_name, u.full_name, u.email,
                      u.roles, u.status, bytes.total_bytes,
                      ua.logins, ua.last_ua, mcp.last_mcp, air.last_request,
                      air.request_count
-            ORDER BY 6 DESC"#,
+            ORDER BY 6 DESC NULLS LAST"#,
+        scope.as_slug(),
     )
     .fetch_all(pool)
     .await

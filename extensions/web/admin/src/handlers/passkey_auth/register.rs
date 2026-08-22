@@ -37,6 +37,17 @@ pub(crate) async fn passkey_register(
             "A valid email address is required".to_owned(),
         ));
     }
+    // Why: this precedes the domain check because with closed enrolment the
+    // domain is not the question. Answering "your domain is not eligible" to
+    // an out-of-domain address would also confirm which domains *are*, so both
+    // cases get the same refusal.
+    if !deps.config.allow_self_registration {
+        return Err(AdminError::Forbidden(
+            "This platform does not accept self-registration. \
+             Ask an administrator for an invite link."
+                .to_owned(),
+        ));
+    }
     if !deps.config.email_allowed(&email) {
         return Err(AdminError::Forbidden(
             "This email domain is not eligible for self-registration. \

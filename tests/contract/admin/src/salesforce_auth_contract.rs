@@ -37,6 +37,7 @@ fn unreachable_org() -> SalesforceConfig {
         scopes: "openid email profile api".to_owned(),
         allowed_email_domains: vec!["contract.test".to_owned()],
         auto_provision: true,
+        allow_self_registration: false,
     }
 }
 

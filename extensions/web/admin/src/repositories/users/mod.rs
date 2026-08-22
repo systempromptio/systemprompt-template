@@ -9,6 +9,7 @@ pub mod mutations;
 pub mod passkey;
 pub mod queries;
 pub mod salesforce_identity;
+pub mod sessions;
 pub mod share_token;
 pub mod usage;
 pub mod user_queries;

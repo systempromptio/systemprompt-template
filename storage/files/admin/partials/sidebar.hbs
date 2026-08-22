@@ -60,6 +60,25 @@
         </a>
         {{/if}}
 
+        {{!-- PEOPLE — user administration. Admin-scoped for the same reason
+             analytics is: `admin` is what a customer's own administrator
+             holds, and managing their own members is precisely their job.
+             Platform admins reach the same pages through Enterprises, which is
+             why these links were the only ones with no home in the nav at all
+             for an org admin — leaving them a breadcrumb on a page they had no
+             way to arrive at. --}}
+        {{#if current_user.is_admin}}
+        <h2 class="nav-label">People</h2>
+        <a href="/admin/access/users"{{#if (eq page "users")}} class="active" aria-current="page"{{else}}{{#if (eq page "user-detail")}} class="active" aria-current="page"{{/if}}{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><path d="M1.5 13.5c0-2.5 2-4.5 4.5-4.5s4.5 2 4.5 4.5"/><path d="M11 3.2a2.5 2.5 0 010 4.6M12.5 13.5c0-1.6-.5-3-1.4-4" stroke-linecap="round"/></svg>
+            Users
+        </a>
+        <a href="/admin/access/departments"{{#if (eq page "management-departments")}} class="active" aria-current="page"{{else}}{{#if (eq page "management-department-detail")}} class="active" aria-current="page"{{/if}}{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+            Departments
+        </a>
+        {{/if}}
+
         {{!-- REPORTS — the month-end pack. The P&L is ours; the usage report is
              the customer's copy, so a customer's own administrator sees it too
              and a platform admin sees it for every organization. --}}

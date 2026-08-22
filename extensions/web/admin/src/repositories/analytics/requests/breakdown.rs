@@ -1,6 +1,10 @@
 //! Per-dimension `ai_requests` rollups for the Models / Providers / Status
 //! tabs.
 //!
+//! Each takes an [`OrgScope`] for the same reason the request log does: these
+//! are aggregates over every user's traffic, and `admin` is the role a
+//! customer's own administrator holds.
+//!
 //! One row per distinct model, provider, or status in the window, carrying the
 //! same measures the KPI strip reports so a reader can attribute traffic,
 //! spend, latency, and failures without leaving the tab. The error predicate
@@ -13,6 +17,7 @@
 
 use sqlx::PgPool;
 
+use crate::util::org_scope::OrgScope;
 use crate::util::time_range::TimeRange;
 
 #[derive(Debug, Clone)]
@@ -30,6 +35,7 @@ pub struct BreakdownRow {
 pub async fn list_requests_by_model(
     pool: &PgPool,
     range: TimeRange,
+    scope: &OrgScope,
 ) -> Result<Vec<BreakdownRow>, sqlx::Error> {
     sqlx::query_as!(
         BreakdownRow,
@@ -45,13 +51,19 @@ pub async fn list_requests_by_model(
                AS "p50_latency_ms!",
              COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms), 0)::float8
                AS "p95_latency_ms!"
-           FROM ai_requests
-           WHERE created_at >= $1 AND created_at < $2
+           FROM ai_requests ar
+           WHERE ar.created_at >= $1 AND ar.created_at < $2
+             AND ($3::text IS NULL OR EXISTS (
+                 SELECT 1 FROM organization_members om
+                 JOIN organizations o ON o.id = om.org_id
+                 WHERE om.user_id = ar.user_id AND o.slug = $3
+             ))
              AND model IS NOT NULL AND model <> ''
            GROUP BY model
            ORDER BY COUNT(*) DESC, model"#,
         range.from,
         range.to,
+        scope.as_slug(),
     )
     .fetch_all(pool)
     .await
@@ -60,6 +72,7 @@ pub async fn list_requests_by_model(
 pub async fn list_requests_by_provider(
     pool: &PgPool,
     range: TimeRange,
+    scope: &OrgScope,
 ) -> Result<Vec<BreakdownRow>, sqlx::Error> {
     sqlx::query_as!(
         BreakdownRow,
@@ -75,13 +88,19 @@ pub async fn list_requests_by_provider(
                AS "p50_latency_ms!",
              COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms), 0)::float8
                AS "p95_latency_ms!"
-           FROM ai_requests
-           WHERE created_at >= $1 AND created_at < $2
+           FROM ai_requests ar
+           WHERE ar.created_at >= $1 AND ar.created_at < $2
+             AND ($3::text IS NULL OR EXISTS (
+                 SELECT 1 FROM organization_members om
+                 JOIN organizations o ON o.id = om.org_id
+                 WHERE om.user_id = ar.user_id AND o.slug = $3
+             ))
              AND provider IS NOT NULL AND provider <> ''
            GROUP BY provider
            ORDER BY COUNT(*) DESC, provider"#,
         range.from,
         range.to,
+        scope.as_slug(),
     )
     .fetch_all(pool)
     .await
@@ -90,6 +109,7 @@ pub async fn list_requests_by_provider(
 pub async fn list_requests_by_status(
     pool: &PgPool,
     range: TimeRange,
+    scope: &OrgScope,
 ) -> Result<Vec<BreakdownRow>, sqlx::Error> {
     sqlx::query_as!(
         BreakdownRow,
@@ -105,13 +125,19 @@ pub async fn list_requests_by_status(
                AS "p50_latency_ms!",
              COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms), 0)::float8
                AS "p95_latency_ms!"
-           FROM ai_requests
-           WHERE created_at >= $1 AND created_at < $2
+           FROM ai_requests ar
+           WHERE ar.created_at >= $1 AND ar.created_at < $2
+             AND ($3::text IS NULL OR EXISTS (
+                 SELECT 1 FROM organization_members om
+                 JOIN organizations o ON o.id = om.org_id
+                 WHERE om.user_id = ar.user_id AND o.slug = $3
+             ))
              AND status IS NOT NULL AND status <> ''
            GROUP BY status
            ORDER BY COUNT(*) DESC, status"#,
         range.from,
         range.to,
+        scope.as_slug(),
     )
     .fetch_all(pool)
     .await

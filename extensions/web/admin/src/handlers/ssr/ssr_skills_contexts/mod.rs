@@ -13,6 +13,7 @@ use crate::repositories;
 use crate::repositories::analytics::contexts_list;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
+use crate::util::org_scope::OrgScope;
 use axum::extract::{Extension, Query, State};
 use axum::response::Response;
 use chrono::{DateTime, Duration, Utc};
@@ -99,6 +100,7 @@ struct ContextsPageData {
 async fn load_page_data(
     pool: &PgPool,
     filter: &contexts_list::ContextListFilter,
+    user_scope: &OrgScope,
 ) -> ContextsPageData {
     let contexts = contexts_list::list_context_list(pool, filter)
         .await
@@ -132,7 +134,7 @@ async fn load_page_data(
             tracing::warn!(error = %e, "list_distinct_models failed");
             Vec::new()
         });
-    let users_for_filter = repositories::users::queries::list_users(pool)
+    let users_for_filter = repositories::users::queries::list_users(pool, user_scope)
         .await
         .unwrap_or_else(|e| {
             tracing::warn!(error = %e, "list_users failed in contexts page");
@@ -221,7 +223,8 @@ pub(crate) async fn skills_contexts_page(
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
     let inputs = parse_inputs(params);
-    let data = load_page_data(&pool, &inputs.filter).await;
+    let scope = crate::util::org_scope::listing_scope(&pool, &user_ctx).await;
+    let data = load_page_data(&pool, &inputs.filter, &scope).await;
     let payload = build_page_json(&inputs, &data);
     Ok(super::render_typed_page(
         &engine,

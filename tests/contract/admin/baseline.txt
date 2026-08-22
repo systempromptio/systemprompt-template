@@ -8,6 +8,8 @@ DELETE /api/public/admin/gateway/routes/{idx}                anonymous=401 non-a
 DELETE /api/public/admin/invites/{invite_id}                 anonymous=401 non-admin=403 admin=404
 DELETE /api/public/admin/management/departments/{id}         anonymous=401 non-admin=403 admin=404
 DELETE /api/public/admin/users/{user_id}                     anonymous=401 non-admin=403 admin=404
+DELETE /api/public/admin/users/{user_id}/sessions            anonymous=401 non-admin=403 admin=200
+DELETE /api/public/admin/users/{user_id}/sessions/{session_id} anonymous=401 non-admin=403 admin=404
 GET    /admin                                                anonymous=307 non-admin=303 admin=303
 GET    /admin/access/departments                             anonymous=307 non-admin=303 admin=200
 GET    /admin/access/departments/{id}                        anonymous=307 non-admin=303 admin=404
@@ -70,10 +72,12 @@ GET    /api/public/admin/users                               anonymous=401 non-a
 GET    /api/public/admin/users/roles                         anonymous=401 non-admin=403 admin=200
 GET    /api/public/admin/users/search                        anonymous=401 non-admin=403 admin=200
 GET    /api/public/admin/users/{user_id}/detail              anonymous=401 non-admin=403 admin=404
+GET    /api/public/admin/users/{user_id}/sessions            anonymous=401 non-admin=403 admin=200
 GET    /api/public/admin/users/{user_id}/usage               anonymous=401 non-admin=403 admin=200
 PATCH  /api/public/admin/access-control/entity/{entity_type}/{entity_id}/default anonymous=401 non-admin=403 admin=422
 PATCH  /api/public/admin/gateway                             anonymous=401 non-admin=403 admin=200
 PATCH  /api/public/admin/gateway/routes/{idx}                anonymous=401 non-admin=403 admin=400
+POST   /admin/api/profile/bridge-code                        anonymous=307 non-admin=200 admin=200
 POST   /admin/api/profile/salesforce/unlink                  anonymous=307 non-admin=409 admin=409
 POST   /admin/auth/invite/accept                             anonymous=422 non-admin=422 admin=422
 POST   /admin/auth/passkey/register                          anonymous=422 non-admin=422 admin=422
