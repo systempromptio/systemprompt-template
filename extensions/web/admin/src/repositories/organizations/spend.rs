@@ -21,8 +21,8 @@ pub struct OrganizationSpend {
     pub name: String,
     pub spent_microdollars: i64,
     pub cap_microdollars: i64,
-    /// The plan's soft threshold; `None` means no warning is configured.
-    /// The loader guarantees a set value is below the cap.
+    // Why: the loader guarantees a set value is below the cap, so a warning can
+    // never fire after the cap it is meant to precede. `None` is no warning.
     pub warn_microdollars: Option<i64>,
 }
 

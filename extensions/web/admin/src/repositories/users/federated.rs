@@ -129,13 +129,12 @@ async fn link_existing(
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LinkOutcome {
     Linked,
-    /// The external identity already belongs to a different local user.
     AlreadyLinkedElsewhere,
 }
 
-/// Attach an external identity to `user_id` (the profile "Connect" flow).
-/// Idempotent when the pair already points at this user; refuses to steal a
-/// mapping owned by another user.
+// Why: Attach an external identity to `user_id` (the profile "Connect" flow).
+// Idempotent when the pair already points at this user; refuses to steal a
+// mapping owned by another user.
 pub async fn link_identity_to_user(
     pool: &PgPool,
     issuer: &str,
@@ -161,8 +160,6 @@ pub async fn link_identity_to_user(
     }
 }
 
-/// Remove every mapping between `user_id` and `issuer` (the profile
-/// "Disconnect" flow). Returns the number of rows removed.
 pub async fn delete_federated_identities_for_issuer(
     pool: &PgPool,
     user_id: &UserId,
@@ -245,16 +242,14 @@ async fn create_federated(
     })
 }
 
-/// Resolve an external identity to a local user, linking-or-creating as needed.
-///
-/// `email` / `display_name` come from the verified `IdP` claims. The caller is
-/// responsible for the upstream gate (`email_verified == true` and an
-/// allow-listed domain) before invoking this.
-///
-/// When `auto_provision` is `false` and the identity matches neither an
-/// existing mapping nor an active local account, returns `Ok(None)` — the
-/// caller should surface "this account must be created by an admin first"
-/// rather than minting a session.
+// Why: `email` / `display_name` come from the verified `IdP` claims. The caller
+// is responsible for the upstream gate (`email_verified == true` and an
+// allow-listed domain) before invoking this.
+//
+// When `auto_provision` is `false` and the identity matches neither an
+// existing mapping nor an active local account, returns `Ok(None)` — the
+// caller should surface "this account must be created by an admin first"
+// rather than minting a session.
 pub async fn resolve_federated_user(
     pool: &PgPool,
     claims: &FederatedClaims<'_>,

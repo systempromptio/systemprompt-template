@@ -42,8 +42,8 @@ pub struct UsageBucket {
     pub active_users: i64,
 }
 
-/// Zero-filled calendar spine `LEFT JOIN`ed to the aggregate, so quiet days
-/// render as gaps rather than disappearing and compressing the x-axis.
+// Why: Zero-filled calendar spine `LEFT JOIN`ed to the aggregate, so quiet days
+// render as gaps rather than disappearing and compressing the x-axis.
 pub async fn list_daily_usage_series(
     pool: &PgPool,
     range: TimeRange,

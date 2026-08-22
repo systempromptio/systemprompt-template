@@ -64,7 +64,6 @@ pub(crate) struct ApplyTemplateBody {
     pub entity_type: String,
     pub subject_type: String,
     pub subject_value: String,
-    /// One of: "allow", "deny", "clear".
     pub action: String,
 }
 

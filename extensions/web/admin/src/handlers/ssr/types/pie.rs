@@ -16,8 +16,6 @@ pub(crate) struct PieView {
     pub title: &'static str,
     pub subtitle: String,
     pub has_data: bool,
-    /// Full `conic-gradient` stop list, e.g.
-    /// `var(--sp-chart-purple) 0% 34.2%, var(--sp-chart-blue) 34.2% 61%`.
     pub stops: String,
     pub aria_label: String,
     pub legend: Vec<PieSliceView>,
@@ -27,7 +25,6 @@ pub(crate) struct PieView {
 #[derive(Debug, Serialize)]
 pub(crate) struct PieSliceView {
     pub label: String,
-    /// Index into the categorical swatch classes (`pie-chart__swatch--N`).
     pub color_index: usize,
     pub share_display: String,
     pub value_display: String,

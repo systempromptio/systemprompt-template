@@ -12,15 +12,10 @@ use crate::handlers::ssr::types::{ChartView, HistogramView};
 // queries that tab renders ever run.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum RequestsTab {
-    /// Health of the window: KPIs, traffic, spend, and latency shape.
     Overview,
-    /// Spend and failure attributed to the model that produced it.
     Models,
-    /// The same, rolled up to the upstream provider.
     Providers,
-    /// Outcome mix: what completed, what failed, and how much it still cost.
     Status,
-    /// The raw call log, filtered by whatever the breakdown tabs selected.
     Log,
 }
 
@@ -79,8 +74,8 @@ pub(super) struct TabLinkView {
     pub label: &'static str,
     pub href: String,
     pub is_active: bool,
-    /// Shown as a count pill next to the label. Only the Log tab carries one:
-    /// on the other tabs the number the reader wants is already in the table.
+    // Why: Shown as a count pill next to the label. Only the Log tab carries one:
+    // on the other tabs the number the reader wants is already in the table.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub count: Option<i64>,
 }
@@ -108,7 +103,6 @@ pub(super) struct BreakdownRowView {
     pub error_count: i64,
     pub error_rate_display: String,
     pub has_errors: bool,
-    /// Jumps to the Log tab pre-filtered to this row.
     pub filter_url: String,
 }
 
@@ -167,9 +161,9 @@ pub(super) struct TimeRangeView {
     pub to: String,
     pub base_url: &'static str,
     pub query: String,
-    /// Only meaningful when the requested window had to be widened; the
-    /// template gates its notice banner on `{{#if time_range.auto_widened}}`,
-    /// so an *absent* key (not `null`) must mean "not widened".
+    // Why: Only meaningful when the requested window had to be widened; the
+    // template gates its notice banner on `{{#if time_range.auto_widened}}`,
+    // so an *absent* key (not `null`) must mean "not widened".
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auto_widened: Option<&'static str>,
 }

@@ -8,28 +8,20 @@
 /// A formatted delta: the display string, an arrow direction, and a tone.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Delta {
-    /// `"+12.4%"`, `"−8.0%"`, `"new"` (nothing before, something now), or
-    /// `"—"` (nothing in either window).
     pub display_kind: DeltaKind,
-    /// `up` | `down` | `flat` — which arrow the template draws.
     pub direction: &'static str,
-    /// `good` | `bad` | `neutral` — how the template tints it.
     pub tone: &'static str,
 }
 
 /// The display split from the numbers so formatting stays in one place.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DeltaKind {
-    /// Percentage change in tenths of a percent (so 124 renders "+12.4%").
     Pct(i64),
-    /// Previous was zero, current is not.
     New,
-    /// Both windows are zero.
     None,
 }
 
 impl Delta {
-    /// Render the display string the KPI card prints.
     #[must_use]
     pub fn display(&self) -> String {
         match self.display_kind {
@@ -43,7 +35,6 @@ impl Delta {
     }
 }
 
-/// Compare two windows. `up_is_good` decides which direction tints `good`.
 #[must_use]
 pub fn delta(current: i64, previous: i64, up_is_good: bool) -> Delta {
     if previous == 0 && current == 0 {

@@ -21,21 +21,21 @@ pub use target::TargetOrg;
 use crate::handlers::salesforce_auth::SalesforceError;
 use crate::services::salesforce_jwt_bearer;
 
-/// Salesforce API version for REST and Tooling *resource paths*.
-///
-/// Independent of [`METADATA_VERSION`] despite holding the same value today.
-/// This one only decides which `/services/data/vNN.0/` URLs are called, so it
-/// governs which sObjects exist — `McpServerAccess`, for one, appears at 67.0.
+// Why: Salesforce API version for REST and Tooling *resource paths*.
+//
+// Independent of [`METADATA_VERSION`] despite holding the same value today.
+// This one only decides which `/services/data/vNN.0/` URLs are called, so it
+// governs which sObjects exist — `McpServerAccess`, for one, appears at 67.0.
 pub const API_VERSION: &str = "67.0";
 
-/// Metadata API *schema* version, emitted as `<version>` in `package.xml`.
-///
-/// Separate from [`API_VERSION`] because this one selects a schema, not a URL:
-/// it decides which elements a deployed component may carry. Bumping it is a
-/// deliberate act — the deploy is declarative, so an element that comes newly
-/// into scope and is then omitted takes its default rather than being left
-/// alone. See `deploy/salesforce/README.md` for the probe method that
-/// establishes the accepted element set for a version.
+// Why: Metadata API *schema* version, emitted as `<version>` in `package.xml`.
+//
+// Separate from [`API_VERSION`] because this one selects a schema, not a URL:
+// it decides which elements a deployed component may carry. Bumping it is a
+// deliberate act — the deploy is declarative, so an element that comes newly
+// into scope and is then omitted takes its default rather than being left
+// alone. See `deploy/salesforce/README.md` for the probe method that
+// establishes the accepted element set for a version.
 pub const METADATA_VERSION: &str = "67.0";
 
 /// A live, authenticated connection to one org.
@@ -57,11 +57,6 @@ impl std::fmt::Debug for Connection {
 }
 
 impl Connection {
-    /// Mint a token and open a connection.
-    ///
-    /// # Errors
-    /// Propagates signing and token-endpoint failures from
-    /// `salesforce_jwt_bearer::get_token_with_key`.
     pub async fn connect(target: &TargetOrg) -> Result<Self, SalesforceError> {
         let token = salesforce_jwt_bearer::get_token_with_key(
             &target.consumer_key,
@@ -78,7 +73,6 @@ impl Connection {
         })
     }
 
-    /// The instance the token is scoped to.
     #[must_use]
     pub fn instance_url(&self) -> &str {
         &self.instance_url
@@ -154,10 +148,6 @@ impl Connection {
         self.query_paged(query, false).await
     }
 
-    /// As [`soql`](Self::soql), against the Tooling API.
-    ///
-    /// # Errors
-    /// Same as [`soql`](Self::soql).
     pub async fn tooling_soql(
         &self,
         query: &str,

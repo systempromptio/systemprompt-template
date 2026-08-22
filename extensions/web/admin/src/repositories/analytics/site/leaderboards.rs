@@ -57,8 +57,6 @@ pub struct LeaderboardPage {
     pub offset: i64,
 }
 
-/// A page of users by usage plus the total number of distinct users in the
-/// window, for pagination.
 pub async fn list_top_users_by_requests(
     pool: &PgPool,
     range: TimeRange,

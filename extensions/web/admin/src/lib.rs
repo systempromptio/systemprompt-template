@@ -45,8 +45,6 @@ use sqlx::PgPool;
 
 pub use handlers::salesforce_auth::{SalesforceConfig, SalesforceDeps, SalesforceError};
 pub use routes::{admin_ssr_router, bridge_auth_ssr_router};
-/// Salesforce org configuration as code — export, diff and apply an org's
-/// identity and MCP setup.
 pub use services::salesforce_org;
 pub use types::{CreateUserRequest, MarketplaceContext, UserContext, UserSummary, UserUsageEvent};
 
@@ -114,10 +112,9 @@ pub fn secrets_router(pool: Arc<PgPool>) -> Router {
         .with_state(pool)
 }
 
-/// The typed Salesforce token accessor (`GET /api/public/salesforce/token`).
-///
-/// Core's external-MCP client calls it to obtain a fresh per-user Salesforce
-/// bearer + instance URL. Self-authenticates via cookie/bearer in the handler.
+// Why: Core's external-MCP client calls it to obtain a fresh per-user
+// Salesforce bearer + instance URL. Self-authenticates via cookie/bearer in the
+// handler.
 pub fn salesforce_api_router(sf_deps: SalesforceDeps) -> Router {
     Router::new()
         .route(

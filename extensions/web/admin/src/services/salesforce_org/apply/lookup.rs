@@ -8,7 +8,6 @@
 
 // JSON: Salesforce REST/Tooling query rows have no fixed schema — every lookup
 // in this module matches on the raw records the SOQL projections returned.
-/// Read a string field, treating a missing field and a non-string field alike.
 #[must_use]
 pub fn str_field(value: &serde_json::Value, field: &str) -> Option<String> {
     value
@@ -17,18 +16,15 @@ pub fn str_field(value: &serde_json::Value, field: &str) -> Option<String> {
         .map(str::to_owned)
 }
 
-/// Escape a value for interpolation into a SOQL string literal.
-///
-/// SOQL literals are single-quoted with backslash escapes. These values are
-/// Salesforce usernames and permission set API names rather than free text, but
-/// building a query by concatenation without escaping is the kind of thing that
-/// stops being true later.
+// Why: SOQL literals are single-quoted with backslash escapes. These values are
+// Salesforce usernames and permission set API names rather than free text, but
+// building a query by concatenation without escaping is the kind of thing that
+// stops being true later.
 #[must_use]
 pub fn soql_escape(raw: &str) -> String {
     raw.replace('\\', "\\\\").replace('\'', "\\'")
 }
 
-/// Render values as a quoted, comma-separated SOQL `IN` list.
 #[must_use]
 pub fn soql_list(values: &[&str]) -> String {
     values
@@ -39,7 +35,6 @@ pub fn soql_list(values: &[&str]) -> String {
 }
 
 // JSON: Salesforce query rows — no fixed schema.
-/// The record id of the External Client App with this developer name.
 #[must_use]
 pub fn find_app_id(apps: &[serde_json::Value], developer_name: &str) -> Option<String> {
     apps.iter()
@@ -47,7 +42,6 @@ pub fn find_app_id(apps: &[serde_json::Value], developer_name: &str) -> Option<S
         .and_then(|a| str_field(a, "Id"))
 }
 
-/// The record id of the permission set with this API name.
 #[must_use]
 pub fn find_permission_set_id(permsets: &[serde_json::Value], name: &str) -> Option<String> {
     permsets
@@ -56,7 +50,6 @@ pub fn find_permission_set_id(permsets: &[serde_json::Value], name: &str) -> Opt
         .and_then(|p| str_field(p, "Id"))
 }
 
-/// The record id of the user with this username.
 #[must_use]
 pub fn find_user_id(users: &[serde_json::Value], username: &str) -> Option<String> {
     users
@@ -66,8 +59,6 @@ pub fn find_user_id(users: &[serde_json::Value], username: &str) -> Option<Strin
 }
 
 // JSON: Salesforce query rows — no fixed schema.
-/// Whether a `SetupEntityAccess` row already grants this app to this
-/// permission set.
 #[must_use]
 pub fn grant_exists(grants: &[serde_json::Value], permset_id: &str, app_id: &str) -> bool {
     grants.iter().any(|g| {
@@ -76,8 +67,6 @@ pub fn grant_exists(grants: &[serde_json::Value], permset_id: &str, app_id: &str
     })
 }
 
-/// Whether the queried `PermissionSetAssignment` rows already include this
-/// permission set.
 #[must_use]
 pub fn holds_permission_set(held: &[serde_json::Value], name: &str) -> bool {
     held.iter().any(|h| {

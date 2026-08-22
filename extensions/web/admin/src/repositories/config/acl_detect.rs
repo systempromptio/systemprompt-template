@@ -33,8 +33,6 @@ pub struct GatewayAclDecision<'a> {
     pub evaluated_rules: &'a Value,
 }
 
-/// List recent requests that were not already rejected/denied, for the
-/// detector to re-evaluate.
 pub async fn list_recent_unrejected_requests(
     pool: &PgPool,
     since_minutes: i64,
@@ -51,8 +49,6 @@ pub async fn list_recent_unrejected_requests(
     .await
 }
 
-/// Insert a redundancy-check `governance_decisions` row for a request the ACL
-/// would have denied.
 pub async fn insert_gateway_acl_decision(
     pool: &PgPool,
     decision: GatewayAclDecision<'_>,

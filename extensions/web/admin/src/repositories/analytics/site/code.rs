@@ -29,9 +29,9 @@ pub struct CodeTotals {
     pub commits: i64,
     pub commit_insertions: i64,
     pub commit_deletions: i64,
-    /// Applied Edit/Write tool calls — the honest replacement for "accepts":
-    /// Claude Code emits no accept/reject signal, so this counts edits that
-    /// landed, with no denominator to rate them against.
+    // Why: Applied Edit/Write tool calls — the honest replacement for "accepts":
+    // Claude Code emits no accept/reject signal, so this counts edits that
+    // landed, with no denominator to rate them against.
     pub ai_edit_operations: i64,
 }
 

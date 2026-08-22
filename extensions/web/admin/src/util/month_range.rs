@@ -24,16 +24,13 @@ pub struct MonthQuery {
 /// A resolved calendar month.
 #[derive(Debug, Clone)]
 pub struct MonthRange {
-    /// `YYYY-MM`, the form the URL carries.
     pub key: String,
-    /// `March 2026`, the form a customer reads.
     pub label: String,
     pub from: DateTime<Utc>,
-    /// Exclusive upper bound: the first instant of the following month.
     pub to: DateTime<Utc>,
-    /// False for the month currently in progress. A report over a partial
-    /// month is still useful, but it must say so — a half-month of cost read
-    /// as a full month makes every margin look twice as good as it is.
+    // Why: False for the month currently in progress. A report over a partial
+    // month is still useful, but it must say so — a half-month of cost read
+    // as a full month makes every margin look twice as good as it is.
     pub is_complete: bool,
 }
 
@@ -46,8 +43,8 @@ pub struct MonthOption {
 }
 
 impl MonthRange {
-    /// The equivalent rolling-window type, so repositories already written
-    /// against [`TimeRange`] can be reused for a month unchanged.
+    // Why: The equivalent rolling-window type, so repositories already written
+    // against [`TimeRange`] can be reused for a month unchanged.
     #[must_use]
     pub const fn as_time_range(&self) -> TimeRange {
         TimeRange {
@@ -57,13 +54,11 @@ impl MonthRange {
         }
     }
 
-    /// The month before this one.
     #[must_use]
     pub fn previous(&self) -> Self {
         from_start(self.from - Months::new(1))
     }
 
-    /// The month after this one, or `None` when that month has not started.
     #[must_use]
     pub fn next(&self) -> Option<Self> {
         let candidate = from_start(self.to);
@@ -71,12 +66,10 @@ impl MonthRange {
     }
 }
 
-/// Resolve `?month=` to a calendar month.
-///
-/// Anything absent or unparseable falls back to the last *complete* month.
-/// These are end-of-month reports, and opening one on the 2nd to a
-/// two-days-of-data month reads as a collapse in usage rather than as a
-/// month that has barely started.
+// Why: Anything absent or unparseable falls back to the last *complete* month.
+// These are end-of-month reports, and opening one on the 2nd to a
+// two-days-of-data month reads as a collapse in usage rather than as a
+// month that has barely started.
 #[must_use]
 pub fn parse_month_range(query: &MonthQuery) -> MonthRange {
     query
@@ -86,7 +79,6 @@ pub fn parse_month_range(query: &MonthQuery) -> MonthRange {
         .map_or_else(last_complete_month, from_start)
 }
 
-/// The picker's options, newest first, with `selected` marking the active one.
 #[must_use]
 pub fn list_month_options(selected: &MonthRange) -> Vec<MonthOption> {
     let newest = month_start(Utc::now());

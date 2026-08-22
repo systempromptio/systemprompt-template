@@ -30,14 +30,11 @@ pub struct ContextListFilter {
 pub struct ContextListItem {
     pub context_id: ContextId,
     pub name: Option<String>,
-    /// `user_contexts.kind` — `"user"` or `"cli_session"` (ephemeral CLI rows).
     pub kind: Option<String>,
     pub user_id: Option<UserId>,
     pub display_name: Option<String>,
     pub session_id: Option<SessionId>,
     pub model: Option<String>,
-    /// Opening user turn, truncated — the table's at-a-glance "what was this
-    /// conversation about" column. `None` when the context has no user message.
     pub summary: Option<String>,
     pub request_count: i64,
     pub message_count: i64,

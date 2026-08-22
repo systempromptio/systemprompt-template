@@ -22,12 +22,11 @@ pub struct CustomerMonthSummary {
     pub slug: String,
     pub name: String,
     pub plan_name: Option<String>,
-    /// The contracted monthly licence fee — what this month costs them.
     pub price_microdollars: i64,
     pub seat_limit: Option<i32>,
     pub seats_used: i64,
-    /// Seats that actually made a request. The gap against `seats_used` is the
-    /// number a customer's own administrator is usually looking for.
+    // Why: Seats that actually made a request. The gap against `seats_used` is the
+    // number a customer's own administrator is usually looking for.
     pub active_users: i64,
     pub requests: i64,
     pub input_tokens: i64,
@@ -121,10 +120,8 @@ pub struct CustomerUserUsage {
     pub distinct_models: i64,
 }
 
-/// Every member who made at least one request, heaviest first.
-///
-/// Members with no activity are omitted: their row would be a line of zeroes,
-/// and on a large customer that is most of the table.
+// Why: Members with no activity are omitted: their row would be a line of
+// zeroes, and on a large customer that is most of the table.
 pub async fn list_customer_month_users(
     pool: &PgPool,
     org_id: &str,

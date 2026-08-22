@@ -11,8 +11,8 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
-/// Record (or refresh) the Salesforce Username for `user_id`. Idempotent: a
-/// repeat login overwrites the stored Username and bumps `updated_at`.
+// Why: Record (or refresh) the Salesforce Username for `user_id`. Idempotent: a
+// repeat login overwrites the stored Username and bumps `updated_at`.
 pub async fn upsert(pool: &PgPool, user_id: &UserId, sf_username: &str) -> Result<(), sqlx::Error> {
     sqlx::query!(
         "INSERT INTO salesforce_user_identities (user_id, sf_username) \
@@ -27,13 +27,11 @@ pub async fn upsert(pool: &PgPool, user_id: &UserId, sf_username: &str) -> Resul
     Ok(())
 }
 
-/// Every Salesforce Username this deployment knows about, sorted.
-///
-/// The source of truth for "who our users are" when provisioning an org: these
-/// are the accounts that completed a Salesforce SSO login, so these are the
-/// accounts `salesforce apply` assigns the MCP permission set to. Keeping the
-/// list here rather than in `org.yaml` keeps personal data out of the
-/// repository and out of a file that gets copied between orgs.
+// Why: The source of truth for "who our users are" when provisioning an org:
+// these are the accounts that completed a Salesforce SSO login, so these are
+// the accounts `salesforce apply` assigns the MCP permission set to. Keeping
+// the list here rather than in `org.yaml` keeps personal data out of the
+// repository and out of a file that gets copied between orgs.
 pub async fn list_salesforce_usernames(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
     let rows = sqlx::query!(
         "SELECT DISTINCT sf_username FROM salesforce_user_identities ORDER BY sf_username"
@@ -43,9 +41,9 @@ pub async fn list_salesforce_usernames(pool: &PgPool) -> Result<Vec<String>, sql
     Ok(rows.into_iter().map(|r| r.sf_username).collect())
 }
 
-/// Remove the stored Salesforce Username for `user_id` (the profile
-/// "Disconnect" flow). Absent row is fine — the state is already what the
-/// caller asked for.
+// Why: Remove the stored Salesforce Username for `user_id` (the profile
+// "Disconnect" flow). Absent row is fine — the state is already what the
+// caller asked for.
 pub async fn delete(pool: &PgPool, user_id: &UserId) -> Result<(), sqlx::Error> {
     sqlx::query!(
         "DELETE FROM salesforce_user_identities WHERE user_id = $1",
@@ -56,9 +54,9 @@ pub async fn delete(pool: &PgPool, user_id: &UserId) -> Result<(), sqlx::Error> 
     Ok(())
 }
 
-/// The Salesforce Username for `user_id`, or `None` if this user never
-/// completed a Salesforce SSO login (in which case the caller falls back to the
-/// email).
+// Why: The Salesforce Username for `user_id`, or `None` if this user never
+// completed a Salesforce SSO login (in which case the caller falls back to the
+// email).
 pub async fn find(pool: &PgPool, user_id: &UserId) -> Result<Option<String>, sqlx::Error> {
     let row = sqlx::query!(
         "SELECT sf_username FROM salesforce_user_identities WHERE user_id = $1",

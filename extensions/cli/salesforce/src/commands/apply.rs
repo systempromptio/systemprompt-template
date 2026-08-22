@@ -151,8 +151,6 @@ async fn collect_assignees(extra: Vec<String>) -> (Vec<String>, Option<String>) 
     }
 }
 
-/// Combine the database usernames with the `--user` values into the assignment
-/// list: one entry per username, in a stable order.
 #[doc(hidden)]
 pub fn merge_assignees(mut from_db: Vec<String>, extra: Vec<String>) -> Vec<String> {
     from_db.extend(extra);
@@ -161,7 +159,6 @@ pub fn merge_assignees(mut from_db: Vec<String>, extra: Vec<String>) -> Vec<Stri
     from_db
 }
 
-/// The follow-up printed when the database could not be read.
 #[doc(hidden)]
 pub fn db_unreachable_note(error: &str) -> String {
     format!(

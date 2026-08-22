@@ -35,7 +35,6 @@ const BASE_URL: &str = "/admin/reports/customer";
 #[derive(Debug, Deserialize)]
 pub(crate) struct CustomerReportQuery {
     pub month: Option<String>,
-    /// Honoured for platform admins only.
     pub org: Option<String>,
 }
 

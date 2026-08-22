@@ -37,7 +37,6 @@ pub(crate) struct SvgRectView {
     pub w: String,
     pub h: String,
     pub color_token: &'static str,
-    /// Rendered as an SVG `<title>` child — the native tooltip.
     pub tooltip: String,
 }
 
@@ -53,9 +52,7 @@ pub(crate) struct StackedChartSpec {
     pub title: &'static str,
     pub subtitle: String,
     pub empty_message: &'static str,
-    /// Ranked descending by total; caller folds the tail into "Other".
     pub series: Vec<StackSeriesInput>,
-    /// Labels one bucket for tooltips, e.g. "Aug 12".
     pub bucket_labels: Vec<String>,
     pub value_display: fn(i64) -> String,
     pub x_start_display: String,

@@ -28,37 +28,27 @@ pub struct OrganizationMetrics {
     pub status: String,
     pub is_platform: bool,
     pub seats_used: i64,
-    /// The org override when set, otherwise the plan's; `None` is unlimited.
     pub seat_limit: Option<i32>,
     pub departments: i64,
-    /// Allow rules the plan projected for this organization.
     pub entitlements: i64,
     pub requests_30d: i64,
     pub tokens_30d: i64,
     pub cost_microdollars_30d: i64,
-    /// Spend since the start of the calendar month — what the budget guard
-    /// compares against `cap_microdollars`.
     pub cost_microdollars_mtd: i64,
-    /// `None` is an uncapped plan.
     pub cap_microdollars: Option<i64>,
-    /// The plan's soft warning threshold; `None` is no warning configured.
     pub warn_microdollars: Option<i64>,
-    /// The monthly licence fee. Zero is a non-billed plan.
     pub revenue_microdollars: i64,
 }
 
 impl OrganizationMetrics {
-    /// Licence revenue less inference cost for the current month.
     #[must_use]
     pub const fn margin_microdollars(&self) -> i64 {
         self.revenue_microdollars - self.cost_microdollars_mtd
     }
 
-    /// Month-to-date spend as a percentage of the plan's cap.
-    ///
-    /// `None` for an uncapped plan: an uncapped customer has no budget health
-    /// to report, and rendering them at 0% would read as "plenty of headroom"
-    /// rather than "not applicable".
+    // Why: `None` for an uncapped plan: an uncapped customer has no budget health
+    // to report, and rendering them at 0% would read as "plenty of headroom"
+    // rather than "not applicable".
     #[must_use]
     pub fn budget_used_pct(&self) -> Option<i64> {
         let cap = self.cap_microdollars.filter(|c| *c > 0)?;
@@ -66,11 +56,9 @@ impl OrganizationMetrics {
     }
 }
 
-/// Every organization with its headline figures, most valuable first.
-///
-/// Ordering is by margin because that is the question the page exists to
-/// answer. A customer burning more inference than their licence covers sorts
-/// to the bottom, which is where an operator wants to find them.
+// Why: Ordering is by margin because that is the question the page exists to
+// answer. A customer burning more inference than their licence covers sorts
+// to the bottom, which is where an operator wants to find them.
 pub async fn list_organization_metrics(
     pool: &PgPool,
 ) -> Result<Vec<OrganizationMetrics>, MarketplaceError> {
@@ -147,7 +135,6 @@ pub async fn list_organization_metrics(
         .collect())
 }
 
-/// One organization's headline figures, by slug.
 pub async fn find_organization_metrics(
     pool: &PgPool,
     slug: &str,

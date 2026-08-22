@@ -18,8 +18,8 @@ pub struct SessionCostStats {
     pub cache_read_tokens: i64,
     pub cache_creation_tokens: i64,
     pub input_tokens: i64,
-    /// `cache_read / (cache_read + input)` — the share of prompt tokens served
-    /// from cache. 0 when there are no tokens at all.
+    // Why: `cache_read / (cache_read + input)` — the share of prompt tokens served
+    // from cache. 0 when there are no tokens at all.
     pub cache_hit_pct: f64,
     pub avg_context_window: i64,
     pub max_context_window: i64,
@@ -87,8 +87,6 @@ pub struct UserSessionCostRow {
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-/// The user's most recently updated sessions, for the drill-down page's
-/// cost-history table.
 pub async fn list_user_session_costs(
     pool: &PgPool,
     user_id: &UserId,

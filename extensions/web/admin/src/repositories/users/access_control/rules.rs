@@ -22,9 +22,6 @@ pub async fn list_all_rules(pool: &PgPool) -> Result<Vec<AccessControlRule>, sql
     .await
 }
 
-/// Count access-control grants per `entity_id` for one `entity_type`.
-///
-/// Backs the catalog pages' per-row "assignment count" badge.
 pub async fn count_assignments_by_entity_type(
     pool: &PgPool,
     entity_type: &str,
@@ -63,10 +60,8 @@ pub async fn list_rules_for_entity(
     .await
 }
 
-/// Replace every grant on `(entity_type, entity_id)` with `rules`.
-///
-/// Ensures the entity catalog row exists before inserting grants — the FK
-/// added in core migration 007 rejects orphan rules.
+// Why: Ensures the entity catalog row exists before inserting grants — the FK
+// added in core migration 007 rejects orphan rules.
 pub async fn set_entity_rules(
     pool: &PgPool,
     entity_type: &str,

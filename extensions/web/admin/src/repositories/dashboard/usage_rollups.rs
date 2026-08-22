@@ -10,8 +10,8 @@
 use sqlx::PgPool;
 use systemprompt_web_shared::error::MarketplaceError;
 
-/// Recompute rollup rows for every UTC day in the trailing window
-/// (`days_back = 1` covers yesterday and today). Returns rows written.
+// Why: Recompute rollup rows for every UTC day in the trailing window
+// (`days_back = 1` covers yesterday and today). Returns rows written.
 pub async fn upsert_daily_rollups_for_window(
     pool: &PgPool,
     days_back: i32,

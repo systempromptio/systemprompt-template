@@ -39,15 +39,12 @@ type OrganizationCache = HashMap<String, (Vec<String>, Instant)>;
 static ORGANIZATION_CACHE: LazyLock<RwLock<OrganizationCache>> =
     LazyLock::new(|| RwLock::new(HashMap::new()));
 
-/// The slug this dimension owns, as core's open rule-type vocabulary sees it.
 #[must_use]
 pub fn organization_rule_type() -> RuleType {
     RuleType::extension(ORGANIZATION_SLUG)
         .unwrap_or_else(|e| unreachable!("`{ORGANIZATION_SLUG}` is a well-formed slug: {e}"))
 }
 
-/// The dimension's descriptor, also used by the access matrix to label the
-/// layer that decided a cell.
 #[must_use]
 pub fn organization_dimension() -> SubjectDimension {
     SubjectDimension {
@@ -85,8 +82,8 @@ impl OrganizationAttributeProvider {
     }
 }
 
-/// Drop a user's cached organization, so a seat move or a suspension binds on
-/// the next request rather than at the end of the TTL.
+// Why: Drop a user's cached organization, so a seat move or a suspension binds
+// on the next request rather than at the end of the TTL.
 pub async fn invalidate(user_id: &UserId) {
     ORGANIZATION_CACHE.write().await.remove(user_id.as_str());
 }
@@ -97,15 +94,15 @@ impl SubjectAttributeProvider for OrganizationAttributeProvider {
         organization_dimension()
     }
 
-    /// A user belongs to exactly one organization, so this yields zero or one
-    /// value — zero when the org is suspended or cancelled, which is what
-    /// makes suspension revoke every plan grant at once without touching a
-    /// single rule row.
-    ///
-    /// Fails soft for the same reason the department provider does: a lookup
-    /// error means "no organization", making organization rules unmatchable
-    /// and handing the decision to the narrower bands, rather than turning a
-    /// transient database blip into a site-wide outage.
+    // Why: A user belongs to exactly one organization, so this yields zero or one
+    // value — zero when the org is suspended or cancelled, which is what
+    // makes suspension revoke every plan grant at once without touching a
+    // single rule row.
+    //
+    // Fails soft for the same reason the department provider does: a lookup
+    // error means "no organization", making organization rules unmatchable
+    // and handing the decision to the narrower bands, rather than turning a
+    // transient database blip into a site-wide outage.
     async fn values_for(&self, user_id: &UserId) -> Vec<String> {
         if let Some(values) = Self::cached(user_id).await {
             return values;

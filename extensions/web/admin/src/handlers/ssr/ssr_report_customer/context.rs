@@ -17,7 +17,6 @@ pub(super) struct ReportCustomerContext {
     pub org_name: String,
     pub org_slug: String,
     pub plan_name: Option<String>,
-    /// The contracted monthly licence fee. Rendered by `formatUsd`.
     pub plan_price_microdollars: i64,
     pub has_price: bool,
     pub month_key: String,
@@ -29,14 +28,14 @@ pub(super) struct ReportCustomerContext {
     pub has_next: bool,
     pub base_url: &'static str,
     pub generated_at: String,
-    /// The org switcher only renders for a platform admin; a customer-side
-    /// administrator sees their own organization and no way to name another.
+    // Why: The org switcher only renders for a platform admin; a customer-side
+    // administrator sees their own organization and no way to name another.
     pub is_platform_admin: bool,
     pub org_options: Vec<OrgOption>,
     pub summary: CustomerSummaryView,
-    /// Handlebars reads an empty array as falsy, so each table gates on the
-    /// collection itself rather than on a parallel `has_` flag that could
-    /// disagree with it.
+    // Why: Handlebars reads an empty array as falsy, so each table gates on the
+    // collection itself rather than on a parallel `has_` flag that could
+    // disagree with it.
     pub users: Vec<UserUsageView>,
     pub departments: Vec<DepartmentUsageView>,
     pub models: Vec<ModelUsageView>,
@@ -55,7 +54,6 @@ pub(super) struct CustomerSummaryView {
     pub seat_limit: Option<i32>,
     pub has_seat_limit: bool,
     pub seats_display: String,
-    /// Seats that made at least one request this month.
     pub active_users: i64,
     pub requests: i64,
     pub total_tokens: i64,

@@ -16,7 +16,6 @@ use systemprompt_web_shared::error::MarketplaceError;
 #[derive(Debug, Clone, Copy)]
 pub struct SeatUsage {
     pub used: i64,
-    /// `None` is unlimited.
     pub limit: Option<i32>,
 }
 
@@ -65,18 +64,16 @@ pub async fn get_seat_usage(pool: &PgPool, org_id: &str) -> Result<SeatUsage, Ma
     })
 }
 
-/// Fail unless the organization has room for one more active member.
-///
-/// A full plan is a conflict, not a bad request: the caller has nothing to
-/// correct, the customer needs to buy seats or deactivate someone, and the
-/// message says so.
-///
-/// There is a race here between the check and the insert that would let two
-/// simultaneous invitations both land on the last seat. It is left open
-/// deliberately rather than papered over with a lock: overshooting a seat cap
-/// by one on a genuine race is a billing reconciliation, whereas serialising
-/// every user creation on a per-org lock is a cost paid on every request. The
-/// admin surface shows `used`/`limit`, so the overshoot is visible.
+// Why: A full plan is a conflict, not a bad request: the caller has nothing to
+// correct, the customer needs to buy seats or deactivate someone, and the
+// message says so.
+//
+// There is a race here between the check and the insert that would let two
+// simultaneous invitations both land on the last seat. It is left open
+// deliberately rather than papered over with a lock: overshooting a seat cap
+// by one on a genuine race is a billing reconciliation, whereas serialising
+// every user creation on a per-org lock is a cost paid on every request. The
+// admin surface shows `used`/`limit`, so the overshoot is visible.
 pub async fn assert_seat_available(pool: &PgPool, org_id: &str) -> Result<(), MarketplaceError> {
     let usage = get_seat_usage(pool, org_id).await?;
     if usage.is_full() {

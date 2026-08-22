@@ -59,9 +59,9 @@ pub async fn upsert_session_cost_snapshot(
     Ok(())
 }
 
-/// Backfill the session summary's never-populated token columns from the
-/// statusline's cumulative report. No-op when the summary row doesn't exist
-/// yet — the hook path owns row creation.
+// Why: Backfill the session summary's never-populated token columns from the
+// statusline's cumulative report. No-op when the summary row doesn't exist
+// yet — the hook path owns row creation.
 pub async fn set_session_summary_tokens(
     pool: &PgPool,
     session_id: &SessionId,

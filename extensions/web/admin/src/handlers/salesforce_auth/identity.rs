@@ -17,9 +17,9 @@ struct SalesforceUserInfo {
     #[serde(default)]
     email_verified: bool,
     name: Option<String>,
-    /// The Salesforce Username (e.g. `ed.aa…@agentforce.com`) — distinct from
-    /// the login email, and the value the JWT-bearer grant matches on
-    /// `sub`.
+    // Why: The Salesforce Username (e.g. `ed.aa…@agentforce.com`) — distinct from
+    // the login email, and the value the JWT-bearer grant matches on
+    // `sub`.
     preferred_username: Option<String>,
 }
 
@@ -168,11 +168,9 @@ fn gate_claims(
     Ok((info.sub, email, display_name, sf_username))
 }
 
-/// The Salesforce Username to sign JWT-bearer assertions with.
-///
-/// Uses the userinfo `preferred_username` when present and non-blank, else the
-/// login email — the latter is only correct for orgs where the email *is* the
-/// Username.
+// Why: Uses the userinfo `preferred_username` when present and non-blank, else
+// the login email — the latter is only correct for orgs where the email *is*
+// the Username.
 pub fn select_sf_username(preferred_username: Option<&str>, email: &str) -> String {
     preferred_username
         .map(str::trim)

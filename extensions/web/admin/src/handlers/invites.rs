@@ -29,8 +29,6 @@ const INVITE_TTL_DAYS: i64 = 7;
 #[derive(Debug, Deserialize)]
 pub(crate) struct CreateInviteRequest {
     pub email: String,
-    /// Organization slug. Optional for org admins (forced to their own);
-    /// required for platform admins.
     pub org: Option<String>,
     pub department: Option<String>,
     pub roles: Option<Vec<String>>,
@@ -39,7 +37,6 @@ pub(crate) struct CreateInviteRequest {
 #[derive(Debug, Serialize)]
 pub(crate) struct CreateInviteResponse {
     pub id: String,
-    /// Path-only URL — the client prefixes its own origin when copying.
     pub invite_path: String,
     pub email: String,
     pub expires_at: String,

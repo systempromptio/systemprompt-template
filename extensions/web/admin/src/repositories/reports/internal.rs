@@ -21,8 +21,8 @@ pub struct OrganizationMonthPnl {
     pub slug: String,
     pub name: String,
     pub status: String,
-    /// The operator's own tenant. Its spend is real and belongs in the cost
-    /// total, but it bills nobody, so it must not dilute the margin.
+    // Why: The operator's own tenant. Its spend is real and belongs in the cost
+    // total, but it bills nobody, so it must not dilute the margin.
     pub is_platform: bool,
     pub plan_name: Option<String>,
     pub revenue_microdollars: i64,
@@ -36,14 +36,13 @@ pub struct OrganizationMonthPnl {
 }
 
 impl OrganizationMonthPnl {
-    /// Licence revenue less inference cost for the month.
     #[must_use]
     pub const fn margin_microdollars(&self) -> i64 {
         self.revenue_microdollars - self.cost_microdollars
     }
 
-    /// Margin as a percentage of revenue. `None` on a non-billed plan, where
-    /// the ratio is undefined rather than zero.
+    // Why: Margin as a percentage of revenue. `None` on a non-billed plan, where
+    // the ratio is undefined rather than zero.
     #[must_use]
     pub const fn margin_pct(&self) -> Option<i64> {
         if self.revenue_microdollars <= 0 {
@@ -52,8 +51,8 @@ impl OrganizationMonthPnl {
         Some(self.margin_microdollars().saturating_mul(100) / self.revenue_microdollars)
     }
 
-    /// What one seat cost to serve. The figure that says whether a per-seat
-    /// price is holding as a customer grows into their plan.
+    // Why: What one seat cost to serve. The figure that says whether a per-seat
+    // price is holding as a customer grows into their plan.
     #[must_use]
     pub const fn cost_per_seat_microdollars(&self) -> i64 {
         if self.seats_used <= 0 {
@@ -62,8 +61,8 @@ impl OrganizationMonthPnl {
         self.cost_microdollars / self.seats_used
     }
 
-    /// Month spend against the plan's cap. `None` is an uncapped plan, which
-    /// must not render as 0% — that reads as headroom rather than as N/A.
+    // Why: Month spend against the plan's cap. `None` is an uncapped plan, which
+    // must not render as 0% — that reads as headroom rather than as N/A.
     #[must_use]
     pub fn budget_used_pct(&self) -> Option<i64> {
         let cap = self.cap_microdollars.filter(|c| *c > 0)?;
@@ -71,8 +70,6 @@ impl OrganizationMonthPnl {
     }
 }
 
-/// Every organization's month, with the operator's own tenant first and the
-/// customers after it in name order.
 pub async fn list_organization_month_pnl(
     pool: &PgPool,
     from: DateTime<Utc>,
@@ -148,8 +145,9 @@ pub struct SupplierMonthCost {
     pub cost_microdollars: i64,
 }
 
-/// The supplier bill, by provider. Rejected requests never reached an upstream
-/// and carry no provider, so they are excluded rather than grouped as blank.
+// Why: The supplier bill, by provider. Rejected requests never reached an
+// upstream and carry no provider, so they are excluded rather than grouped as
+// blank.
 pub async fn list_provider_month_costs(
     pool: &PgPool,
     from: DateTime<Utc>,
@@ -185,7 +183,6 @@ pub async fn list_provider_month_costs(
         .collect())
 }
 
-/// The same bill, one level down: which model the money went to.
 pub async fn list_model_month_costs(
     pool: &PgPool,
     from: DateTime<Utc>,

@@ -122,11 +122,9 @@ pub struct Dispatch<'a> {
     pub client: &'a ClientProfile,
 }
 
-/// Route one authenticated tool call to its handler.
-///
-/// Exposed (behind `#[doc(hidden)]`) so the external test workspace can assert
-/// the unknown-tool arm without an rmcp `Peer`, which only exists once a
-/// transport is serving. Not part of the public API.
+// Why: Exposed (behind `#[doc(hidden)]`) so the external test workspace can
+// assert the unknown-tool arm without an rmcp `Peer`, which only exists once a
+// transport is serving. Not part of the public API.
 #[doc(hidden)]
 pub async fn dispatch_tool(
     ctx: &Dispatch<'_>,

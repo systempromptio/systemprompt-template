@@ -15,7 +15,6 @@ use serde::{Deserialize, Serialize};
 
 use super::scope::OauthScope;
 
-/// Where the spec lives relative to the `services/` root.
 pub const SPEC_RELATIVE_PATH: &str = "salesforce/org.yaml";
 
 #[derive(Debug, Clone, thiserror::Error)]
@@ -37,9 +36,9 @@ pub struct OrgSpec {
     pub external_client_app: ExternalClientApp,
     #[serde(default)]
     pub permission_sets: Vec<PermissionSetSpec>,
-    /// Standard hosted MCP servers. Never *created* — an org either offers a
-    /// standard server or it does not — but their `Active` flag is read and
-    /// written through the Tooling `McpServerAccess` object.
+    // Why: Standard hosted MCP servers. Never *created* — an org either offers a
+    // standard server or it does not — but their `Active` flag is read and
+    // written through the Tooling `McpServerAccess` object.
     #[serde(default)]
     pub hosted_mcp_servers: Vec<HostedMcpServer>,
 }
@@ -47,16 +46,16 @@ pub struct OrgSpec {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ExternalClientApp {
-    /// Immutable API name. Every dependent metadata record keys off this, so
-    /// renaming it creates a second app rather than renaming the first.
+    // Why: Immutable API name. Every dependent metadata record keys off this, so
+    // renaming it creates a second app rather than renaming the first.
     pub developer_name: String,
     pub label: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     pub contact_email: String,
-    /// Salesforce enum `ExtlClntAppDistState`. Salesforce does not publish the
-    /// value set and its parse error does not enumerate it; `Local` is verified
-    /// against a live org. Invalid values fail the deploy with a clear message.
+    // Why: Salesforce enum `ExtlClntAppDistState`. Salesforce does not publish the
+    // value set and its parse error does not enumerate it; `Local` is verified
+    // against a live org. Invalid values fail the deploy with a clear message.
     pub distribution_state: String,
     pub oauth: OauthSpec,
     pub policies: PolicySpec,
@@ -65,8 +64,8 @@ pub struct ExternalClientApp {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OauthSpec {
-    /// Must match the platform's `redirect_uri` in `salesforce.yaml` exactly —
-    /// Salesforce compares them character for character.
+    // Why: Must match the platform's `redirect_uri` in `salesforce.yaml` exactly —
+    // Salesforce compares them character for character.
     pub callback_url: String,
     pub scopes: Vec<OauthScope>,
     #[serde(default)]
@@ -75,14 +74,12 @@ pub struct OauthSpec {
     pub pkce_required: bool,
     #[serde(default)]
     pub consumer_secret_optional: bool,
-    /// Issue JWT-format access tokens for named users.
-    ///
-    /// Declared explicitly rather than left implicit because the whole tool
-    /// depends on it: the SOAP Metadata API rejects JWT-format tokens but the
-    /// REST deploy resource accepts them, which is the only reason a headless
-    /// apply is possible at all. The element is out of schema at metadata
-    /// version 64.0 and in scope at 67.0, so from 67.0 a deploy that omitted it
-    /// would reset it and lock the tool out of the org it just configured.
+    // Why: Declared explicitly rather than left implicit because the whole tool
+    // depends on it: the SOAP Metadata API rejects JWT-format tokens but the
+    // REST deploy resource accepts them, which is the only reason a headless
+    // apply is possible at all. The element is out of schema at metadata
+    // version 64.0 and in scope at 67.0, so from 67.0 a deploy that omitted it
+    // would reset it and lock the tool out of the org it just configured.
     #[serde(default = "default_true")]
     pub named_user_jwt: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -92,11 +89,10 @@ pub struct OauthSpec {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PolicySpec {
-    /// Salesforce enum `PermittedUsersPolicyType`. `AdminApprovedPreAuthorized`
-    /// is verified live and is what gates access to a permission set.
+    // Why: Salesforce enum `PermittedUsersPolicyType`. `AdminApprovedPreAuthorized`
+    // is verified live and is what gates access to a permission set.
     pub permitted_users: String,
     pub ip_relaxation: IpRelaxation,
-    /// Salesforce enum `RefreshTokenPolicyType`; `SpecificLifetime` verified.
     pub refresh_token_policy: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub refresh_token_validity: Option<Validity>,
@@ -161,9 +157,9 @@ pub struct PermissionSetSpec {
     pub label: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    /// Developer name of the External Client App this permission set
-    /// pre-authorizes. This is the `SetupEntityAccess` grant, and it is what
-    /// makes `PermittedUsersPolicyType: AdminApprovedPreAuthorized` usable.
+    // Why: Developer name of the External Client App this permission set
+    // pre-authorizes. This is the `SetupEntityAccess` grant, and it is what
+    // makes `PermittedUsersPolicyType: AdminApprovedPreAuthorized` usable.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub grants_app: Option<String>,
 }
@@ -171,17 +167,15 @@ pub struct PermissionSetSpec {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct HostedMcpServer {
-    /// `McpServerAccess.MasterLabel`, e.g. `sobject-all`. The human-facing
-    /// name, and what Setup shows.
     pub name: String,
-    /// `McpServerAccess.DeveloperName`, e.g. `platform_sobject_all`. The stable
-    /// key `apply` matches on — labels are translatable, developer names are
-    /// not.
+    // Why: `McpServerAccess.DeveloperName`, e.g. `platform_sobject_all`. The stable
+    // key `apply` matches on — labels are translatable, developer names are
+    // not.
     pub developer_name: String,
     pub endpoint: String,
-    /// Desired `Active` state. Apply switches a server on; it never switches
-    /// one off, and a server absent from the org is an error rather than
-    /// something activation could fix.
+    // Why: Desired `Active` state. Apply switches a server on; it never switches
+    // one off, and a server absent from the org is an error rather than
+    // something activation could fix.
     #[serde(default = "default_true")]
     pub active: bool,
 }
@@ -191,12 +185,6 @@ const fn default_true() -> bool {
 }
 
 impl OrgSpec {
-    /// Read a spec from disk.
-    ///
-    /// # Errors
-    /// [`SpecError::NotFound`] if the path does not exist, [`SpecError::Read`]
-    /// on an unreadable file, [`SpecError::Parse`] on malformed or unknown
-    /// YAML.
     pub fn load(path: &Path) -> Result<Self, SpecError> {
         if !path.exists() {
             return Err(SpecError::NotFound(path.to_path_buf()));
@@ -211,10 +199,6 @@ impl OrgSpec {
         })
     }
 
-    /// Render the spec back to YAML.
-    ///
-    /// # Errors
-    /// [`SpecError::Serialise`] if the spec cannot be represented as YAML.
     pub fn to_yaml(&self) -> Result<String, SpecError> {
         serde_yaml::to_string(self).map_err(|e| SpecError::Serialise(e.to_string()))
     }

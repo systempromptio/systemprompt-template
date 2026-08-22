@@ -18,12 +18,9 @@ pub(crate) struct MeterView {
     pub hard_cap_display: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub soft_cap_display: Option<String>,
-    /// Percent of the hard cap, clamped to 0..=100 for the track width.
     pub pct: i64,
-    /// Soft-cap tick position as a percent of the hard cap.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub soft_pct: Option<i64>,
-    /// ok | warn | over | none — none is an uncapped plan.
     pub state: &'static str,
     pub caption: String,
 }

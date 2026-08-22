@@ -15,10 +15,6 @@ use crate::handlers::salesforce_auth::SalesforceError;
 use crate::services::salesforce_org::client::Connection;
 use crate::services::salesforce_org::spec::OrgSpec;
 
-/// Create the permission sets and app-access grants the spec calls for.
-///
-/// # Errors
-/// Propagates query and create failures.
 pub async fn apply_permission_sets(
     conn: &Connection,
     spec: &OrgSpec,
@@ -83,19 +79,16 @@ pub async fn apply_permission_sets(
     Ok(())
 }
 
-/// Assign every spec permission set to each of `usernames`.
-///
-/// A username with no matching active Salesforce user is recorded as a
-/// follow-up rather than failing the apply — one stale row in the platform
-/// database should not block configuring the org.
-///
-/// This must run *before*
-/// [`apply_metadata`](crate::services::salesforce_org::apply::apply_metadata)
-/// flips the app to `AdminApprovedPreAuthorized`. See the module docs.
-///
-/// # Errors
-/// Propagates query failures. Individual assignment creates that Salesforce
-/// rejects are collected as follow-ups.
+// Why: A username with no matching active Salesforce user is recorded as a
+// follow-up rather than failing the apply — one stale row in the platform
+// database should not block configuring the org.
+//
+// This must run *before*
+// [`apply_metadata`](crate::services::salesforce_org::apply::apply_metadata)
+// flips the app to `AdminApprovedPreAuthorized`. See the module docs.
+//
+// Propagates query failures. Individual assignment creates that Salesforce
+// rejects are collected as follow-ups.
 pub async fn apply_assignments(
     conn: &Connection,
     spec: &OrgSpec,

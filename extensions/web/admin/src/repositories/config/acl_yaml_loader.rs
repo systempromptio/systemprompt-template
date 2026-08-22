@@ -7,7 +7,8 @@
 //! received them, so deployments sharing the same YAML baseline can drift
 //! independently without trampling each other.
 //!
-//! Four files are read (all optional; missing-file = no-op):
+//! Four files are read (all optional; missing-file = no-op), plus one
+//! projection out of the services config:
 //!
 //! - `services/access-control/roles.yaml` — role-scoped allow/deny rules.
 //!   Parsed into core's [`AccessControlConfig`] and projected by core
@@ -22,6 +23,9 @@
 //! - `services/access-control/salesforce.yaml` — entities confined to
 //!   Salesforce-linked users at `rule_type = 'salesforce'`. Owned by
 //!   [`super::salesforce_yaml_loader`].
+//! - `services/slack/*.yaml` — each app's `authz.allowed_roles`, projected onto
+//!   its `slack_workspace` entity. Core writes the rows; nothing called it, so
+//!   an app's `allowed_roles` documented an intention it never enforced.
 
 use std::path::Path;
 use std::sync::Arc;

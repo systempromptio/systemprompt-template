@@ -43,26 +43,18 @@ pub struct ApplyReport {
     pub deploy: Option<DeployResult>,
     pub permission_sets_created: Vec<String>,
     pub app_grants_created: Vec<String>,
-    /// `username -> permission set` pairs newly assigned.
     pub assignments_created: Vec<String>,
-    /// Hosted MCP servers switched from inactive to active.
     pub servers_activated: Vec<String>,
-    /// Things apply could not do and a human must resolve — a server the org
-    /// does not offer, a username with no matching Salesforce user, or an
-    /// unreachable platform database.
     pub manual_followups: Vec<String>,
 }
 
-/// Apply the app-level metadata.
-///
-/// With `check_only` the deploy is validated in full and nothing is written,
-/// which is what `--dry-run` uses. Salesforce reports component-level failures
-/// either way.
-///
-/// # Errors
-/// Propagates deploy failures. A deploy that runs but reports component errors
-/// returns `Ok` with an unsuccessful [`DeployResult`] — inspect
-/// [`DeployResult::failure_lines`].
+// Why: With `check_only` the deploy is validated in full and nothing is
+// written, which is what `--dry-run` uses. Salesforce reports component-level
+// failures either way.
+//
+// Propagates deploy failures. A deploy that runs but reports component errors
+// returns `Ok` with an unsuccessful [`DeployResult`] — inspect
+// [`DeployResult::failure_lines`].
 pub async fn apply_metadata(
     conn: &Connection,
     spec: &OrgSpec,
@@ -74,20 +66,17 @@ pub async fn apply_metadata(
     conn.deploy(&package, check_only).await
 }
 
-/// Refuse to deploy a package that would clear the app's signing certificate.
-///
-/// A metadata deploy is declarative: `certificate` is in schema on
-/// `ExtlClntAppGlobalOauthSettings`, so a package that omits it clears the
-/// digital signature — and the JWT-bearer grant this whole tool authenticates
-/// with then fails with `invalid_grant: invalid assertion`. The certificate is
-/// not readable back through any API, so apply cannot preserve it by round-trip
-/// and must be given it.
-///
-/// This is a guard, not a fix: it converts a silent, self-inflicted lockout
-/// into a refusal before anything is sent.
-///
-/// # Errors
-/// [`SalesforceError::Internal`] naming the variable to set.
+// Why: A metadata deploy is declarative: `certificate` is in schema on
+// `ExtlClntAppGlobalOauthSettings`, so a package that omits it clears the
+// digital signature — and the JWT-bearer grant this whole tool authenticates
+// with then fails with `invalid_grant: invalid assertion`. The certificate is
+// not readable back through any API, so apply cannot preserve it by round-trip
+// and must be given it.
+//
+// This is a guard, not a fix: it converts a silent, self-inflicted lockout
+// into a refusal before anything is sent.
+//
+// [`SalesforceError::Internal`] naming the variable to set.
 pub fn check_certificate_present(certificate: Option<&str>) -> Result<(), SalesforceError> {
     if certificate.is_some_and(|c| !c.trim().is_empty()) {
         return Ok(());

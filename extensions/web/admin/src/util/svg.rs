@@ -7,16 +7,12 @@
 //! in HTML gutters exactly like the CSS bar charts, which keeps this module
 //! free of text layout entirely.
 
-/// Plot-space width: x spans `0..=PLOT_W`.
 pub const PLOT_W: f64 = 100.0;
-/// Plot-space height: y spans `0..=PLOT_H`, with 0 at the top (SVG-style).
 pub const PLOT_H: f64 = 40.0;
 
-/// Map a series onto plot space against a shared `y_max`.
-///
-/// The scale is never per-series — every series on one chart must share one
-/// or the chart lies. X sits at bucket centers; y is inverted and clamped.
-/// Empty input or a non-positive max yields no points.
+// Why: The scale is never per-series — every series on one chart must share one
+// or the chart lies. X sits at bucket centers; y is inverted and clamped.
+// Empty input or a non-positive max yields no points.
 #[must_use]
 pub fn scale_points(values: &[i64], y_max: i64) -> Vec<(f64, f64)> {
     if values.is_empty() || y_max <= 0 {
@@ -35,7 +31,6 @@ pub fn scale_points(values: &[i64], y_max: i64) -> Vec<(f64, f64)> {
         .collect()
 }
 
-/// `M x0,y0 L x1,y1 …` with two-decimal coordinates. Empty points yield "".
 #[must_use]
 pub fn line_path(points: &[(f64, f64)]) -> String {
     let mut d = String::new();
@@ -46,7 +41,6 @@ pub fn line_path(points: &[(f64, f64)]) -> String {
     d.trim_end().to_owned()
 }
 
-/// The line path closed down to the baseline for an area fill. Empty yields "".
 #[must_use]
 pub fn area_path(points: &[(f64, f64)]) -> String {
     if points.is_empty() {
@@ -58,8 +52,6 @@ pub fn area_path(points: &[(f64, f64)]) -> String {
     format!("{line} L{last_x:.2},{PLOT_H} L{first_x:.2},{PLOT_H} Z")
 }
 
-/// Y for a horizontal reference line at `value` on the shared scale (the cap
-/// and warn lines on the burn-up chart). `None` when the value is off-plot.
 #[must_use]
 pub fn ref_line_y(value: i64, y_max: i64) -> Option<f64> {
     if y_max <= 0 || value < 0 || value > y_max {
@@ -68,7 +60,6 @@ pub fn ref_line_y(value: i64, y_max: i64) -> Option<f64> {
     Some(PLOT_H * (1.0 - value as f64 / y_max as f64))
 }
 
-/// Running cumulative sum, for burn-up series.
 #[must_use]
 pub fn cumulative(values: &[i64]) -> Vec<i64> {
     let mut total = 0;
@@ -81,9 +72,6 @@ pub fn cumulative(values: &[i64]) -> Vec<i64> {
         .collect()
 }
 
-/// Stacked-bar segments for one bucket: `(y, height)` pairs in plot space,
-/// stacked bottom-up in input order against the shared `y_max`. Zero segments
-/// yield zero heights (the caller skips them).
 #[must_use]
 pub fn stack_segments(segment_values: &[i64], y_max: i64) -> Vec<(f64, f64)> {
     if y_max <= 0 {
@@ -101,8 +89,6 @@ pub fn stack_segments(segment_values: &[i64], y_max: i64) -> Vec<(f64, f64)> {
         .collect()
 }
 
-/// Bar layout: `(x, width)` for `n` bars across the plot, with `gap_ratio` of
-/// each slot left as spacing (0.0 = touching, 0.5 = half the slot is gap).
 #[must_use]
 pub fn bar_slots(n: usize, gap_ratio: f64) -> Vec<(f64, f64)> {
     if n == 0 {
@@ -116,8 +102,6 @@ pub fn bar_slots(n: usize, gap_ratio: f64) -> Vec<(f64, f64)> {
         .collect()
 }
 
-/// The smallest of `1|2|2.5|5 × 10^k >= raw_max`, so the top gridline label is
-/// a round number. Non-positive input yields 0.
 #[must_use]
 pub fn nice_max(raw_max: i64) -> i64 {
     if raw_max <= 0 {

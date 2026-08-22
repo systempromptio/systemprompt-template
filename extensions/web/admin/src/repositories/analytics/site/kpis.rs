@@ -12,23 +12,22 @@ pub struct SiteKpis {
     pub error_count: i64,
     pub total_cost_microdollars: i64,
     pub total_tokens: i64,
-    /// Distinct users with at least one request in the window.
     pub active_users: i64,
-    /// Distinct users with at least one request in the trailing 7 days —
-    /// computed against `NOW()` regardless of the picked window, and labeled
-    /// that way on the page.
+    // Why: Distinct users with at least one request in the trailing 7 days —
+    // computed against `NOW()` regardless of the picked window, and labeled
+    // that way on the page.
     pub weekly_active_users: i64,
-    /// The same aggregates over the immediately preceding window of equal
-    /// width (`[from - (to-from), from)`), read in the same statement so both
-    /// windows see one snapshot and a delta can never be skewed by writes
-    /// landing between two queries.
+    // Why: The same aggregates over the immediately preceding window of equal
+    // width (`[from - (to-from), from)`), read in the same statement so both
+    // windows see one snapshot and a delta can never be skewed by writes
+    // landing between two queries.
     pub prev_total_requests: i64,
     pub prev_error_count: i64,
     pub prev_total_cost_microdollars: i64,
     pub prev_total_tokens: i64,
     pub prev_active_users: i64,
-    /// WAU for the prior trailing week (`NOW()-14d .. NOW()-7d`), anchored to
-    /// the same `NOW()` as `weekly_active_users`.
+    // Why: WAU for the prior trailing week (`NOW()-14d .. NOW()-7d`), anchored to
+    // the same `NOW()` as `weekly_active_users`.
     pub prev_weekly_active_users: i64,
 }
 
@@ -117,13 +116,10 @@ pub async fn get_site_kpis(
 #[derive(Debug, Default, Clone, Copy)]
 pub struct PermissionGrantStats {
     pub requests: i64,
-    /// Permission requests answered by a matching tool use before the next
-    /// request for the same tool in the same session.
-    ///
-    /// Each request owns the interval up to its own successor, so a
-    /// re-prompted identical call is attributed to its own request rather than
-    /// to an earlier one. Still an observable proxy: the hook stream reports
-    /// that a tool ran, not that a human clicked allow.
+    // Why: Each request owns the interval up to its own successor, so a
+    // re-prompted identical call is attributed to its own request rather than
+    // to an earlier one. Still an observable proxy: the hook stream reports
+    // that a tool ran, not that a human clicked allow.
     pub granted: i64,
 }
 

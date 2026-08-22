@@ -147,13 +147,11 @@ pub async fn find_valid_invite_by_hash(
     }))
 }
 
-/// Revoke a pending invite and insert a fresh one in its place.
-///
-/// The recovery path for a raw token shown once and lost. One transaction,
-/// so the one-live-invite-per-email partial unique index cannot race; the
-/// new row carries the original email, org, department, and roles. `org_id`
-/// restricts the operation for org-admin callers; `None` (platform admin)
-/// may regenerate any. A `None` result means no pending invite matched.
+// Why: The recovery path for a raw token shown once and lost. One transaction,
+// so the one-live-invite-per-email partial unique index cannot race; the
+// new row carries the original email, org, department, and roles. The scope
+// restricts the operation for org-admin callers. A `None` result means no
+// pending invite matched.
 pub async fn insert_regenerated_invite(
     pool: &PgPool,
     invite_id: &str,
@@ -201,9 +199,8 @@ pub async fn insert_regenerated_invite(
     Ok(Some(new_id))
 }
 
-/// Revoke a pending invite. `org_id` restricts the delete for org-admin
-/// callers; `None` (platform admin) may revoke any. Returns whether a row
-/// was revoked.
+// Why: Revoke a pending invite. The scope restricts the delete for org-admin
+// callers. Returns whether a row was revoked.
 pub async fn revoke_invite(
     pool: &PgPool,
     invite_id: &str,
@@ -221,14 +218,12 @@ pub async fn revoke_invite(
     Ok(result.rows_affected() > 0)
 }
 
-/// Provision the invited user and mark the invite accepted, in one transaction.
-///
-/// Mirrors `passkey::insert_passkey_user`'s rules (`name = email`,
-/// `email_verified` on the invite's authority) but takes the org, department,
-/// and roles from the invite instead of the email domain.
-///
-/// An existing active account with this email is adopted rather than
-/// recreated — the invite then just (re)assigns org, department, and roles.
+// Why: Mirrors `passkey::insert_passkey_user`'s rules (`name = email`,
+// `email_verified` on the invite's authority) but takes the org, department,
+// and roles from the invite instead of the email domain.
+//
+// An existing active account with this email is adopted rather than
+// recreated — the invite then just (re)assigns org, department, and roles.
 pub async fn accept_invite_and_provision(
     pool: &PgPool,
     invite: &UserInvite,

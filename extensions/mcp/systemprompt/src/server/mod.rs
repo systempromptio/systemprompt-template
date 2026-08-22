@@ -178,9 +178,6 @@ impl ServerHandler for SystempromptServer {
         })))
     }
 
-    /// Serves the static shell, plus any `ui://systemprompt/artifact/<id>`
-    /// the host chooses to resolve instead of using the copy embedded in the
-    /// tool result.
     async fn read_resource(
         &self,
         request: ReadResourceRequestParams,

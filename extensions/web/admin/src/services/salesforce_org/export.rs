@@ -21,10 +21,10 @@ use super::spec::{
 };
 use crate::handlers::salesforce_auth::SalesforceError;
 
-/// Placeholder emitted for a write-only field when no baseline is supplied.
-///
-/// Deliberately not a plausible value: applying it fails Salesforce's URL
-/// validation rather than quietly pointing an org at the wrong callback.
+// Why: Placeholder emitted for a write-only field when no baseline is supplied.
+//
+// Deliberately not a plausible value: applying it fails Salesforce's URL
+// validation rather than quietly pointing an org at the wrong callback.
 pub const UNREADABLE_PLACEHOLDER: &str = "UNREADABLE-SUPPLY-A-BASELINE";
 
 // JSON: Salesforce REST/Tooling query rows carry whatever fields the SOQL
@@ -45,15 +45,12 @@ fn bool_field(record: &serde_json::Value, field: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// Read the org's identity and MCP configuration.
-///
-/// `baseline` supplies the write-only fields that no API exposes. Pass the
-/// committed spec when there is one; without it those fields come back as
-/// [`UNREADABLE_PLACEHOLDER`].
-///
-/// # Errors
-/// Propagates query failures. Returns [`SalesforceError::Internal`] if the org
-/// has no External Client App, since there is then nothing to describe.
+// Why: `baseline` supplies the write-only fields that no API exposes. Pass the
+// committed spec when there is one; without it those fields come back as
+// [`UNREADABLE_PLACEHOLDER`].
+//
+// Propagates query failures. Returns [`SalesforceError::Internal`] if the org
+// has no External Client App, since there is then nothing to describe.
 pub async fn export_org(
     conn: &Connection,
     baseline: Option<&OrgSpec>,

@@ -14,7 +14,6 @@ pub struct DeviceAppLinkRow {
     pub last_seen_at: Option<DateTime<Utc>>,
 }
 
-/// Load app-link telemetry for a single user's enrolled devices.
 pub async fn list_device_app_links(
     pool: &PgPool,
     user_id: &UserId,

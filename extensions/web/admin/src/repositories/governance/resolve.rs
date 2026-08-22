@@ -21,8 +21,6 @@ pub struct ResolvedId {
     pub id: String,
 }
 
-/// `id` may be a request, decision, trace, context, or session identifier; the
-/// most specific match wins.
 pub async fn resolve_id(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, sqlx::Error> {
     if let Some(r) = lookup_request_by_id(pool, id).await? {
         return Ok(Some(r));

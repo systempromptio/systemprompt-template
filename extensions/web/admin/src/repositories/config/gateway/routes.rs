@@ -23,9 +23,9 @@ pub fn validate_route(route: &GatewayRouteView) -> Result<(), MarketplaceError> 
     Ok(())
 }
 
-/// Ensure every route in the profile has an explicit stable `id`, persisting
-/// synthesized ids back to disk if any were missing. Returns true when the
-/// profile was rewritten.
+// Why: Ensure every route in the profile has an explicit stable `id`,
+// persisting synthesized ids back to disk if any were missing. Returns true
+// when the profile was rewritten.
 pub fn ensure_route_ids(profile_path: &Path) -> Result<bool, MarketplaceError> {
     let mut doc = read_profile(profile_path)?;
     let mut changed = false;

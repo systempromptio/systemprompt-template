@@ -20,24 +20,24 @@ pub(super) struct ReportInternalContext {
     pub subtitle: &'static str,
     pub month_key: String,
     pub month_label: String,
-    /// False while the month is still running. The template turns this into a
-    /// banner, because a partial month's margin is not a result.
+    // Why: False while the month is still running. The template turns this into a
+    // banner, because a partial month's margin is not a result.
     pub month_complete: bool,
     pub months: Vec<MonthOption>,
     pub prev_url: String,
     pub next_url: Option<String>,
     pub has_next: bool,
     pub base_url: &'static str,
-    /// Always null here. The shared month-selector partial preserves an
-    /// organization across a month change on the customer report, and
-    /// Handlebars runs in strict mode: the key has to exist even where the
-    /// page has no organization to carry.
+    // Why: Always null here. The shared month-selector partial preserves an
+    // organization across a month change on the customer report, and
+    // Handlebars runs in strict mode: the key has to exist even where the
+    // page has no organization to carry.
     pub org_slug: Option<String>,
     pub generated_at: String,
     pub totals: InternalTotals,
-    /// Handlebars reads an empty array as falsy, so each table gates on the
-    /// collection itself rather than on a parallel `has_` flag that could
-    /// disagree with it.
+    // Why: Handlebars reads an empty array as falsy, so each table gates on the
+    // collection itself rather than on a parallel `has_` flag that could
+    // disagree with it.
     pub organizations: Vec<OrgPnlView>,
     pub providers: Vec<SupplierView>,
     pub models: Vec<SupplierView>,
@@ -58,13 +58,11 @@ pub(super) struct InternalTotals {
     pub cost_microdollars: i64,
     pub margin_microdollars: i64,
     pub margin_positive: bool,
-    /// Tile modifier when money is going the wrong way.
     pub margin_variant: &'static str,
-    /// `None` when nothing was billed — a percentage of zero revenue is
-    /// undefined, not 0%.
+    // Why: `None` when nothing was billed — a percentage of zero revenue is
+    // undefined, not 0%.
     pub margin_pct: Option<i64>,
     pub margin_pct_display: String,
-    /// Unit economics: what a million tokens cost us to serve.
     pub cost_per_1m_display: String,
     pub cost_per_request_display: String,
 }
@@ -94,8 +92,8 @@ pub(super) struct OrgPnlView {
     pub has_budget: bool,
     pub budget_state: &'static str,
     pub detail_url: String,
-    /// Deep-links to the customer-facing report for the same month, so an
-    /// operator can read exactly what the customer will read.
+    // Why: Deep-links to the customer-facing report for the same month, so an
+    // operator can read exactly what the customer will read.
     pub customer_report_url: String,
 }
 

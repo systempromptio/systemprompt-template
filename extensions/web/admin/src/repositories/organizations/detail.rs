@@ -58,11 +58,9 @@ pub struct OrganizationEntitlement {
     pub access: String,
 }
 
-/// The rules this organization's plan projected, as the resolver sees them.
-///
-/// Read-only by design. Entitlement is authored in `plans.yaml` and derived
-/// from the plan the customer is on; a screen that let an operator edit the
-/// projection would be editing a value the next bootstrap pass overwrites.
+// Why: Read-only by design. Entitlement is authored in `plans.yaml` and derived
+// from the plan the customer is on; a screen that let an operator edit the
+// projection would be editing a value the next bootstrap pass overwrites.
 pub async fn list_organization_entitlements(
     pool: &PgPool,
     slug: &str,

@@ -16,7 +16,6 @@ use super::series::SeriesBucket;
 #[derive(Debug, Clone)]
 pub struct ModelCostBucket {
     pub bucket_start: chrono::DateTime<chrono::Utc>,
-    /// `"Other"` for the folded tail.
     pub model: String,
     pub cost_microdollars: i64,
     pub requests: i64,

@@ -20,15 +20,12 @@ const DEPLOY_TIMEOUT: Duration = Duration::from_secs(300);
 const DEPLOY_POLL_INTERVAL: Duration = Duration::from_secs(3);
 
 impl Connection {
-    /// Submit a metadata package and wait for it to finish.
-    ///
-    /// `check_only` runs Salesforce's full validation and writes nothing, which
-    /// is what backs `apply --dry-run`.
-    ///
-    /// # Errors
-    /// [`SalesforceError::TokenEndpoint`] if the submit is rejected,
-    /// [`SalesforceError::Internal`] on timeout,
-    /// [`SalesforceError::DeployResult`] on an unreadable result.
+    // Why: `check_only` runs Salesforce's full validation and writes nothing, which
+    // is what backs `apply --dry-run`.
+    //
+    // [`SalesforceError::TokenEndpoint`] if the submit is rejected,
+    // [`SalesforceError::Internal`] on timeout,
+    // [`SalesforceError::DeployResult`] on an unreadable result.
     pub async fn deploy(
         &self,
         files: &[(String, String)],
@@ -195,7 +192,6 @@ where
 }
 
 impl DeployResult {
-    /// Every component-level failure, formatted one per line.
     #[must_use]
     pub fn failure_lines(&self) -> Vec<String> {
         self.details

@@ -7,13 +7,10 @@ use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ChangeKind {
-    /// Present in both, with different values.
     Update,
-    /// In the desired spec, absent from the org.
     Add,
-    /// In the org, absent from the desired spec.
     Remove,
-    /// Deployed on every apply because it cannot be read back to compare.
+    // Why: Deployed on every apply because it cannot be read back to compare.
     AlwaysApplied,
 }
 
@@ -32,7 +29,6 @@ impl fmt::Display for ChangeKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Change {
     pub kind: ChangeKind,
-    /// Dotted path into the spec, e.g. `external_client_app.oauth.scopes`.
     pub path: String,
     pub actual: String,
     pub desired: String,
@@ -60,7 +56,6 @@ pub struct ChangeSet {
 }
 
 impl ChangeSet {
-    /// Changes that represent real, detected drift.
     #[must_use]
     pub fn drift(&self) -> Vec<&Change> {
         self.changes
@@ -69,7 +64,6 @@ impl ChangeSet {
             .collect()
     }
 
-    /// Whether the org matches the spec on everything readable.
     #[must_use]
     pub fn is_clean(&self) -> bool {
         self.drift().is_empty()

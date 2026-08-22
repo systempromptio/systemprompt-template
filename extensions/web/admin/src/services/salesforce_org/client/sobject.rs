@@ -9,11 +9,8 @@ use crate::handlers::salesforce_auth::SalesforceError;
 // JSON: protocol boundary — sObject request bodies carry per-object field sets
 // assembled by callers; there is no fixed shape to type here.
 impl Connection {
-    /// Create an sObject record, returning its new id.
-    ///
-    /// # Errors
-    /// [`SalesforceError::TokenEndpoint`] carrying Salesforce's error body on a
-    /// non-2xx — which is where validation failures surface.
+    // Why: [`SalesforceError::TokenEndpoint`] carrying Salesforce's error body on a
+    // non-2xx — which is where validation failures surface.
     pub async fn create_sobject(
         &self,
         sobject: &str,
@@ -80,10 +77,6 @@ impl Connection {
         Ok(())
     }
 
-    /// Delete an sObject record.
-    ///
-    /// # Errors
-    /// [`SalesforceError::TokenEndpoint`] on a non-2xx.
     pub async fn delete_sobject(
         &self,
         sobject: &str,

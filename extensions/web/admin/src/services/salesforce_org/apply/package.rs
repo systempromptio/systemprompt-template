@@ -26,11 +26,9 @@ fn element(name: &str, value: &str) -> String {
     format!("    <{name}>{}</{name}>\n", xml_escape(value))
 }
 
-/// Build the deployable metadata package for an org spec.
-///
-/// Returned as `(path_in_zip, contents)` pairs so the caller can inspect or
-/// print the package without deploying it — which is what makes `--dry-run`
-/// able to show exactly what would be sent.
+// Why: Returned as `(path_in_zip, contents)` pairs so the caller can inspect or
+// print the package without deploying it — which is what makes `--dry-run`
+// able to show exactly what would be sent.
 #[must_use]
 pub fn build_package(spec: &OrgSpec, certificate: Option<&str>) -> Vec<(String, String)> {
     let app = &spec.external_client_app;

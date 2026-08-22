@@ -20,8 +20,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum OauthScope {
-    /// Identity URL access. Salesforce calls this `Basic`, the sObject calls it
-    /// `SSO`, and the Setup UI calls it "Access the identity URL service".
+    // Why: Identity URL access. Salesforce calls this `Basic`, the sObject calls it
+    // `SSO`, and the Setup UI calls it "Access the identity URL service".
     Basic,
     Api,
     Web,
@@ -49,8 +49,8 @@ pub enum OauthScope {
     SfApiPlatform,
     Scrt,
     Chatbot,
-    /// Salesforce Hosted MCP. This is the scope the platform's JWT-bearer mint
-    /// depends on; dropping it breaks every MCP tool call.
+    // Why: Salesforce Hosted MCP. This is the scope the platform's JWT-bearer mint
+    // depends on; dropping it breaks every MCP tool call.
     Mcp,
     Cdp,
     CdpQuery,
@@ -63,7 +63,6 @@ pub enum OauthScope {
 }
 
 impl OauthScope {
-    /// The token used in the Metadata API's `commaSeparatedOauthScopes`.
     #[must_use]
     pub const fn metadata_token(self) -> &'static str {
         match self {
@@ -106,7 +105,6 @@ impl OauthScope {
         }
     }
 
-    /// The `ExtlClntAppOauthSettings` boolean column that reports this scope.
     #[must_use]
     pub const fn sobject_field(self) -> &'static str {
         match self {
@@ -149,8 +147,8 @@ impl OauthScope {
         }
     }
 
-    /// Every scope, in a stable order. Export iterates this to turn the
-    /// sObject's boolean columns back into a scope set.
+    // Why: Every scope, in a stable order. Export iterates this to turn the
+    // sObject's boolean columns back into a scope set.
     #[must_use]
     pub const fn all() -> &'static [Self] {
         &[
@@ -193,7 +191,6 @@ impl OauthScope {
         ]
     }
 
-    /// The SOQL projection listing every scope column, for the export query.
     #[must_use]
     pub fn soql_projection() -> String {
         Self::all()
@@ -204,7 +201,7 @@ impl OauthScope {
     }
 }
 
-/// `OauthScopesHUB_API` exists on the sObject but has no counterpart in the
-/// metadata token list Salesforce returns, so it cannot round-trip. Export
-/// warns rather than dropping it silently.
+// Why: `OauthScopesHUB_API` exists on the sObject but has no counterpart in the
+// metadata token list Salesforce returns, so it cannot round-trip. Export
+// warns rather than dropping it silently.
 pub const UNMAPPED_SCOPE_FIELDS: &[&str] = &["OauthScopesHUB_API"];

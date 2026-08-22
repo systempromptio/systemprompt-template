@@ -91,7 +91,6 @@ pub enum SalesforceError {
 #[derive(Clone)]
 pub struct SalesforceDeps {
     pub config: Arc<SalesforceConfig>,
-    /// Write-capable pool — the callback may provision a federated user.
     pub write_pool: Arc<PgPool>,
     pub session_service: Arc<SessionCreationService>,
 }

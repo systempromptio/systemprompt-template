@@ -26,19 +26,19 @@ pub struct YamlPlan {
     pub description: String,
     #[serde(default)]
     pub seat_limit: Option<i32>,
-    /// Authored in dollars because that is how a contract is written; stored
-    /// as microdollars because that is how `ai_requests` accounts for cost.
+    // Why: Authored in dollars because that is how a contract is written; stored
+    // as microdollars because that is how `ai_requests` accounts for cost.
     #[serde(default)]
     pub monthly_cost_cap_usd: Option<f64>,
-    /// Soft warning threshold below the cap. Crossing it never denies a
-    /// request — the gateway guard records it and the dashboard shows
-    /// proximity. Requires a cap, and must be below it; the loader rejects
-    /// anything else. Omit for no warning.
+    // Why: Soft warning threshold below the cap. Crossing it never denies a
+    // request — the gateway guard records it and the dashboard shows
+    // proximity. Requires a cap, and must be below it; the loader rejects
+    // anything else. Omit for no warning.
     #[serde(default)]
     pub monthly_cost_warn_usd: Option<f64>,
-    /// The monthly licence fee. The cap above is what the customer may spend;
-    /// this is what they pay, and the difference is the margin the enterprise
-    /// dashboard reports. Absent means a non-billed plan.
+    // Why: The monthly licence fee. The cap above is what the customer may spend;
+    // this is what they pay, and the difference is the margin the enterprise
+    // dashboard reports. Absent means a non-billed plan.
     #[serde(default)]
     pub monthly_price_usd: Option<f64>,
     #[serde(default)]
@@ -68,13 +68,12 @@ pub struct YamlOrganization {
     pub plan: String,
     #[serde(default)]
     pub seat_limit_override: Option<i32>,
-    /// Email domains whose SSO arrivals join this organization.
     #[serde(default)]
     pub email_domains: Vec<String>,
     #[serde(default = "default_status")]
     pub status: String,
-    /// The operator's own tenant. Its members administer every organization,
-    /// and no SSO arrival ever joins it, whatever domain they present.
+    // Why: The operator's own tenant. Its members administer every organization,
+    // and no SSO arrival ever joins it, whatever domain they present.
     #[serde(default)]
     pub platform: bool,
 }

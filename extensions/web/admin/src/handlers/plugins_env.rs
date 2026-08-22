@@ -70,12 +70,9 @@ pub(crate) async fn list_plugin_env_handler(
     .into_response())
 }
 
-/// Resolve the principal for a plugin-env request from already-validated
-/// inputs.
-///
-/// A principal resolves only from an authenticated cookie session or an
-/// explicit `user_id` query parameter. Absent both, the request has no
-/// principal — one is never synthesized to make the call succeed.
+// Why: A principal resolves only from an authenticated cookie session or an
+// explicit `user_id` query parameter. Absent both, the request has no
+// principal — one is never synthesized to make the call succeed.
 pub fn resolve_principal(
     cookie_user_id: Option<&str>,
     query_user_id: Option<&str>,
@@ -116,7 +113,6 @@ pub(crate) struct PluginVariableDef {
     pub name: String,
     #[serde(default)]
     pub description: String,
-    /// A declared variable is required unless it says otherwise.
     #[serde(default = "required_by_default")]
     pub required: bool,
     #[serde(default)]

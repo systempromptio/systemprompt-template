@@ -69,9 +69,7 @@ pub(crate) async fn list_organizations_handler(
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct SetOrganizationRequest {
-    /// Organization slug — the URL-facing immutable key.
     pub org: String,
-    /// owner | admin | member; defaults to member.
     pub org_role: Option<String>,
 }
 

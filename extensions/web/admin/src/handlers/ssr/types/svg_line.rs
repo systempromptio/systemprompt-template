@@ -35,7 +35,6 @@ pub(crate) struct SvgLineChartView {
     pub aria_label: String,
     pub series: Vec<SvgSeriesView>,
     pub ref_lines: Vec<SvgRefLineView>,
-    /// Empty for single-series charts; the template guards with `{{#if}}`.
     pub legend: Vec<SvgLegendItemView>,
     pub y_max_display: String,
     pub y_mid_display: String,
@@ -49,8 +48,6 @@ pub(crate) struct SvgSeriesView {
     pub path_d: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub area_d: Option<String>,
-    /// A `--sp-chart-*` custom property; the template prints
-    /// `stroke="var({{color_token}})"`.
     pub color_token: &'static str,
     pub label: String,
 }
@@ -59,14 +56,12 @@ pub(crate) struct SvgSeriesView {
 pub(crate) struct SvgRefLineView {
     pub y: String,
     pub label: String,
-    /// `warn` | `over` — picks the dash color.
     pub tone: &'static str,
 }
 
 #[derive(Debug, Serialize)]
 pub(crate) struct SvgLegendItemView {
     pub label: String,
-    /// Index into the shared swatch classes (`pie-chart__swatch--N`).
     pub color_index: usize,
     pub value_display: String,
 }
@@ -92,7 +87,7 @@ pub(crate) struct LineChartSpec {
     pub x_start_display: String,
     pub x_mid_display: String,
     pub x_end_display: String,
-    /// Fill under the line — single-series charts only (stacked fills lie).
+    // Why: Fill under the line — single-series charts only (stacked fills lie).
     pub show_area: bool,
 }
 

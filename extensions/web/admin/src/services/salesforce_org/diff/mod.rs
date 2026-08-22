@@ -17,7 +17,6 @@ use change::{compare_str, push};
 
 use super::spec::{ExternalClientApp, HostedMcpServer, OrgSpec, PermissionSetSpec, Validity};
 
-/// Compare `actual` (as exported from an org) against `desired`.
 #[must_use]
 pub fn diff(actual: &OrgSpec, desired: &OrgSpec) -> ChangeSet {
     let mut changes = Vec::new();

@@ -12,8 +12,8 @@ use crate::util::time_range::TimeRange;
 
 use super::SiteScope;
 
-/// Boundary between "fast" and "slow", in milliseconds. Matches the 5s bin
-/// edge in `analytics::request_stats::LATENCY_BIN_EDGES_MS`.
+// Why: Boundary between "fast" and "slow", in milliseconds. Matches the 5s bin
+// edge in `analytics::request_stats::LATENCY_BIN_EDGES_MS`.
 pub const FAST_THRESHOLD_MS: i64 = 5_000;
 
 // Why: `ai_requests.latency_ms` is INT, so the bind must be too; derived from
@@ -22,11 +22,8 @@ const FAST_THRESHOLD_MS_I32: i32 = FAST_THRESHOLD_MS as i32;
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct LatencySplit {
-    /// `latency_ms < FAST_THRESHOLD_MS`.
     pub fast: i64,
-    /// `latency_ms >= FAST_THRESHOLD_MS`.
     pub slow: i64,
-    /// `latency_ms IS NULL` — requests that never reported a duration.
     pub untimed: i64,
     pub p50_ms: f64,
     pub p95_ms: f64,

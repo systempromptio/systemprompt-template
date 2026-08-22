@@ -16,17 +16,15 @@ pub(crate) struct EnterpriseView {
     pub plan_name: Option<String>,
     pub status: String,
     pub is_active: bool,
-    /// The operator's own tenant. Shown, because its spend is real, but it is
-    /// not a customer and carries no licence revenue.
+    // Why: The operator's own tenant. Shown, because its spend is real, but it is
+    // not a customer and carries no licence revenue.
     pub is_platform: bool,
     pub seats_used: i64,
-    /// `None` is an unlimited plan.
     pub seat_limit: Option<i32>,
-    /// Whether a limit applies at all. Separate from `seats_pct` because a
-    /// template cannot tell "no limit" from "0% used" — both are falsy — and
-    /// an empty enterprise on a capped plan must not read as unlimited.
+    // Why: Whether a limit applies at all. Separate from `seats_pct` because a
+    // template cannot tell "no limit" from "0% used" — both are falsy — and
+    // an empty enterprise on a capped plan must not read as unlimited.
     pub has_seat_limit: bool,
-    /// Seats used as a percentage of the limit, capped at 100 for the bar.
     pub seats_pct: i64,
     pub departments: i64,
     pub entitlements: i64,
@@ -37,11 +35,10 @@ pub(crate) struct EnterpriseView {
     pub revenue_microdollars: i64,
     pub margin_microdollars: i64,
     pub margin_positive: bool,
-    /// Whether the plan caps spend at all — the same "falsy zero" trap as
-    /// `has_seat_limit`.
+    // Why: Whether the plan caps spend at all — the same "falsy zero" trap as
+    // `has_seat_limit`.
     pub has_budget: bool,
     pub budget_pct: i64,
-    /// "ok" | "warn" | "over" | "none" — drives the health pill.
     pub budget_state: &'static str,
 }
 
@@ -58,9 +55,9 @@ pub(crate) struct EnterprisesPageData {
     pub total_revenue_microdollars: i64,
     pub total_cost_microdollars: i64,
     pub total_margin_microdollars: i64,
-    /// Modifier class for the margin tile: empty when the portfolio is in
-    /// profit. Decided here rather than in the template, so "what counts as
-    /// bad" is one rule rather than one per surface that renders money.
+    // Why: Modifier class for the margin tile: empty when the portfolio is in
+    // profit. Decided here rather than in the template, so "what counts as
+    // bad" is one rule rather than one per surface that renders money.
     pub margin_variant: &'static str,
 }
 
@@ -96,7 +93,6 @@ pub(crate) struct EnterpriseModelUsageView {
     pub requests: i64,
     pub tokens: i64,
     pub cost_microdollars: i64,
-    /// Share of the organization's 30-day spend, for the bar width.
     pub share_pct: i64,
 }
 

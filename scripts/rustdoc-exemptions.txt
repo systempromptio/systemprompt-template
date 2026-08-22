@@ -1,0 +1,14 @@
+# Files exempt from the `///` placement rule in lint-inline-comments.sh.
+# One path per line. Reserve this for files where rustdoc is *load-bearing*
+# rather than decorative — never to mute a fixable violation.
+
+# clap-derive command surface: `///` on a field or variant IS the generated
+# `--help` text for that flag or subcommand. Deleting it or demoting it to a
+# `// Why:` comment silently strips the CLI's help output, so the placement
+# rule cannot apply here.
+extensions/cli/salesforce/src/cli.rs
+
+# schemars-derived MCP tool schema: `///` on a `JsonSchema` field becomes the
+# tool parameter description the model reads. Converting it to `// Why:` empties
+# the description from the generated schema, so the placement rule cannot apply.
+extensions/mcp/systemprompt/src/tools.rs

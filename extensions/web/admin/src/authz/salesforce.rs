@@ -31,8 +31,8 @@ const SALESFORCE_PRECEDENCE: u16 = 150;
 
 const SALESFORCE_TTL: Duration = Duration::from_secs(60);
 
-/// The value a linked user holds. The rule rows seeded from
-/// `services/access-control/salesforce.yaml` are written against it.
+// Why: The value a linked user holds. The rule rows seeded from
+// `services/access-control/salesforce.yaml` are written against it.
 pub const SALESFORCE_LINKED_VALUE: &str = "linked";
 
 type SalesforceCache = HashMap<String, (Vec<String>, Instant)>;
@@ -40,15 +40,12 @@ type SalesforceCache = HashMap<String, (Vec<String>, Instant)>;
 static SALESFORCE_CACHE: LazyLock<RwLock<SalesforceCache>> =
     LazyLock::new(|| RwLock::new(HashMap::new()));
 
-/// The slug this dimension owns, as core's open rule-type vocabulary sees it.
 #[must_use]
 pub fn salesforce_rule_type() -> RuleType {
     RuleType::extension(SALESFORCE_SLUG)
         .unwrap_or_else(|e| unreachable!("`{SALESFORCE_SLUG}` is a well-formed slug: {e}"))
 }
 
-/// The dimension's descriptor, also used by the access matrix to label the
-/// layer that decided a cell.
 #[must_use]
 pub fn salesforce_dimension() -> SubjectDimension {
     SubjectDimension {
@@ -58,8 +55,8 @@ pub fn salesforce_dimension() -> SubjectDimension {
     }
 }
 
-/// Drop the cached value for one user, so a Salesforce link change takes
-/// effect on the next request instead of after the TTL.
+// Why: Drop the cached value for one user, so a Salesforce link change takes
+// effect on the next request instead of after the TTL.
 pub async fn invalidate(user_id: &UserId) {
     let mut cache = SALESFORCE_CACHE.write().await;
     cache.remove(user_id.as_str());
@@ -99,12 +96,12 @@ impl SubjectAttributeProvider for SalesforceAttributeProvider {
         salesforce_dimension()
     }
 
-    /// `linked` while an identity row exists, otherwise nothing.
-    ///
-    /// Fails soft: a lookup error means "not linked", which hides the
-    /// Salesforce entities for this request rather than denying everything the
-    /// user can otherwise reach; the resolver's default already closes the
-    /// unmatched case.
+    // Why: `linked` while an identity row exists, otherwise nothing.
+    //
+    // Fails soft: a lookup error means "not linked", which hides the
+    // Salesforce entities for this request rather than denying everything the
+    // user can otherwise reach; the resolver's default already closes the
+    // unmatched case.
     async fn values_for(&self, user_id: &UserId) -> Vec<String> {
         if let Some(values) = Self::cached(user_id).await {
             return values;

@@ -63,8 +63,8 @@ pub(super) struct AuthDenialParams<'a> {
     pub pool: &'a Arc<PgPool>,
     pub session_id: &'a SessionId,
     pub tool_name: &'a str,
-    /// Echoed into the response envelope so a `UserPromptSubmit` caller is not
-    /// answered with a `PreToolUse` denial it has to reinterpret.
+    // Why: Echoed into the response envelope so a `UserPromptSubmit` caller is not
+    // answered with a `PreToolUse` denial it has to reinterpret.
     pub hook_event_name: &'static str,
     pub agent_id: Option<&'a AgentId>,
     pub plugin_id: Option<&'a PluginId>,

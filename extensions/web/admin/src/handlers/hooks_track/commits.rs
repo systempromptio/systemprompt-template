@@ -98,9 +98,9 @@ pub struct ParsedCommit {
     pub deletions: Option<i32>,
 }
 
-/// A chained command (`git commit && git commit`) can print several summary
-/// lines; each becomes one commit, taking the first stats line that follows it
-/// before the next summary line.
+// Why: A chained command (`git commit && git commit`) can print several summary
+// lines; each becomes one commit, taking the first stats line that follows it
+// before the next summary line.
 pub fn parse_commit_stdout(stdout: &str) -> Vec<ParsedCommit> {
     let lines: Vec<&str> = stdout.lines().collect();
     let mut out = Vec::new();
