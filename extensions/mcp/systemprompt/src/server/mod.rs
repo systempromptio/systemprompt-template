@@ -11,9 +11,9 @@ use crate::error::SystempromptToolError;
 use crate::tools::{self, SERVER_NAME};
 use rmcp::model::{
     CallToolRequestParams, CallToolResponse, Icon, Implementation, InitializeRequestParams,
-    InitializeResult, ListResourcesResult, ListToolsResult, PaginatedRequestParams,
-    ProtocolVersion, ReadResourceRequestParams, ReadResourceResponse, ServerCapabilities,
-    ServerInfo,
+    InitializeResult, ListResourceTemplatesResult, ListResourcesResult, ListToolsResult,
+    PaginatedRequestParams, ProtocolVersion, ReadResourceRequestParams, ReadResourceResponse,
+    ServerCapabilities, ServerInfo,
 };
 use rmcp::service::{MaybeSendFuture, RequestContext, RoleServer};
 use rmcp::{ErrorData as McpError, ServerHandler};
@@ -24,7 +24,8 @@ use systemprompt::identifiers::McpServerId;
 use systemprompt::mcp::repository::ToolUsageRepository;
 use systemprompt::mcp::{
     ArtifactViewerConfig, McpArtifactRepository, McpToolExecutor, WEBSITE_URL,
-    build_artifact_viewer_resource, build_extension_capabilities, read_artifact_viewer_resource,
+    build_artifact_viewer_resource, build_extension_capabilities,
+    build_resource_template_list_result, build_tool_list_result, read_artifact_viewer_resource,
 };
 use systemprompt::security::authz::SharedAuthzHook;
 use systemprompt_mcp_shared::record_mcp_access;
@@ -115,7 +116,16 @@ impl ServerHandler for SystempromptServer {
         _ctx: RequestContext<RoleServer>,
     ) -> impl Future<Output = Result<ListToolsResult, McpError>> + MaybeSendFuture + '_ {
         let tool_list = tools::list_tools();
-        std::future::ready(Ok(ListToolsResult::with_all_items(tool_list)))
+        std::future::ready(Ok(build_tool_list_result(tool_list)))
+    }
+
+    fn list_resource_templates(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _ctx: RequestContext<RoleServer>,
+    ) -> impl Future<Output = Result<ListResourceTemplatesResult, McpError>> + MaybeSendFuture + '_
+    {
+        std::future::ready(Ok(build_resource_template_list_result()))
     }
 
     async fn call_tool(

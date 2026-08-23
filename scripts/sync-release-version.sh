@@ -118,10 +118,23 @@ $chart_ver
 EOV
         new_chart="$cmaj.$((cmin + 1)).0"
         sed -i.bak "s|^version: $chart_ver\$|version: $new_chart|" helm/gateway/Chart.yaml && rm -f helm/gateway/Chart.yaml.bak
-        # Prepend a changelog entry inside the artifacthub.io/changes block.
-        sed -i.bak "/^  artifacthub.io\/changes: |/a\\
-    - kind: changed\\
-      description: Bumped appVersion to $VERSION (core + gateway version alignment)." helm/gateway/Chart.yaml && rm -f helm/gateway/Chart.yaml.bak
+        # Why: sed's `a\` continuation drops the trailing newline under BSD sed,
+        # which silently welded the 0.34.0 entry onto the next list item and left
+        # invalid YAML in the published annotation.
+        VERSION="$VERSION" python3 - helm/gateway/Chart.yaml <<'PYEOF'
+import os, sys
+path = sys.argv[1]
+marker = "  artifacthub.io/changes: |\n"
+entry = (
+    "    - kind: changed\n"
+    "      description: Bumped appVersion to %s (core + gateway version alignment).\n"
+    % os.environ["VERSION"]
+)
+text = open(path).read()
+if text.count(marker) != 1:
+    sys.exit("Chart.yaml: expected exactly one artifacthub.io/changes block")
+open(path, "w").write(text.replace(marker, marker + entry, 1))
+PYEOF
         echo "chart version: $chart_ver -> $new_chart"
     fi
     echo "version sync applied: $VERSION"

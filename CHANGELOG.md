@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## [0.35.0] - 2026-08-23
+
+Tracks systemprompt-core 0.35.0. The 0.30.0 through 0.34.0 template releases were
+cut without changelog entries; this entry covers only the work landed since 0.29.0
+that had not yet been written up, and the gap above it is acknowledged rather than
+reconstructed.
 
 ### Added
 
@@ -24,6 +29,13 @@
   `roles.yaml` pass, writing a `slack_workspace:<workspace_id>` entity with
   `default_included=false` and an allow rule per listed role — so the app file is the single
   place that says who may drive a workspace.
+- The bundled `systemprompt` MCP server stamps its `tools/list` and
+  `resources/templates/list` results through core's `build_tool_list_result` and
+  `build_resource_template_list_result`, so both carry the SEP-2549 cache metadata
+  (`ttlMs`, `cacheScope`) that protocol `2026-07-28` requires. A client that parks
+  connectors on a missing stamp now sees the template's server as conformant.
+- Helm chart 0.17.0 with appVersion 0.35.0; the CasaOS, DigitalOcean, and Packer
+  manifests pin the 0.35.0 image.
 
 ## [0.29.0] - 2026-08-05
 

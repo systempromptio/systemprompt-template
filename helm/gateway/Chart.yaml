@@ -2,8 +2,8 @@ apiVersion: v2
 name: gateway
 description: The governance layer for AI agents — a single compiled Rust binary that authenticates, authorises, rate-limits, logs, and costs every AI interaction. Self-hosted, air-gap capable, provider-agnostic.
 type: application
-version: 0.16.0
-appVersion: "0.34.0"
+version: 0.17.0
+appVersion: "0.35.0"
 kubeVersion: ">=1.24.0"
 home: https://systemprompt.io
 icon: https://systemprompt.io/files/images/logo.svg
@@ -56,7 +56,7 @@ annotations:
       url: https://discord.gg/wkAbSuPWpr
   artifacthub.io/images: |
     - name: gateway
-      image: ghcr.io/systempromptio/systemprompt-template:0.34.0
+      image: ghcr.io/systempromptio/systemprompt-template:0.35.0
       platforms:
         - linux/amd64
         - linux/arm64
@@ -65,7 +65,10 @@ annotations:
       url: https://systemprompt.io/files/images/og-image.jpg
   artifacthub.io/changes: |
     - kind: changed
-      description: Bumped appVersion to 0.34.0 (core + gateway version alignment).    - kind: changed
+      description: Bumped appVersion to 0.35.0 (core + gateway version alignment).
+    - kind: changed
+      description: Bumped appVersion to 0.34.0 (core + gateway version alignment).
+    - kind: changed
       description: Bumped appVersion to 0.32.2 (core + gateway version alignment).
     - kind: changed
       description: Bumped appVersion to 0.31.0 (core + gateway version alignment).
