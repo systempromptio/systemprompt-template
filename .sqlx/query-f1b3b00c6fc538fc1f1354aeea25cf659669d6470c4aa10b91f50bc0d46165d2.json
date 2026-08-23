@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO federated_identities (issuer, external_sub, user_id) VALUES ($1, $2, $3) ON CONFLICT (issuer, external_sub) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f1b3b00c6fc538fc1f1354aeea25cf659669d6470c4aa10b91f50bc0d46165d2"
+}

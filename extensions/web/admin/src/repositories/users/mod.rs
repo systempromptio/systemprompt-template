@@ -4,6 +4,7 @@ pub mod access_control;
 pub mod access_tokens;
 pub mod access_tree;
 pub mod activity;
+pub mod federated;
 pub mod identity;
 pub mod magic_links;
 pub mod mutations;

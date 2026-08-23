@@ -34,7 +34,7 @@ services:
         target: /app/storage/data
       - type: volume
         source: app_profiles
-        target: /app/services/profiles/docker
+        target: /app/.systemprompt/profiles/docker
     x-casaos:
       envs:
         - container: ANTHROPIC_API_KEY

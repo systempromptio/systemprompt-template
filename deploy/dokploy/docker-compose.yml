@@ -24,7 +24,7 @@ services:
     volumes:
       - systemprompt_web:/app/web
       - systemprompt_storage:/app/storage/data
-      - systemprompt_profiles:/app/services/profiles/docker
+      - systemprompt_profiles:/app/.systemprompt/profiles/docker
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
       interval: 30s

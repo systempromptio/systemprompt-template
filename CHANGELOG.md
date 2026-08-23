@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Inbound Slack, shipped disabled.** `services/slack/example.yaml` declares an app (workspace
+  id, signing secret and bot token by reference, `enabled: false`) and routes the
+  `/systemprompt` slash command to `developer_agent`, which already carries the `systemprompt`
+  MCP server and `oauth.scopes: [admin]`. Route the command rather than a channel: core
+  dispatches on every `message` in a routed channel, not only `app_mention`. The binary opts
+  into the transport with the `slack` feature in `Cargo.toml`.
+- **`POST|DELETE /api/public/admin/users/{user_id}/slack-identity`** — link or detach the Slack
+  account a user drives the platform from, for accounts whose Slack profile carries an
+  unconfirmed or different email and so cannot be linked automatically. Body:
+  `{"slack_user_id": "U…"}`. Writes a `federated_identities` row under `https://slack.com`
+  (`repositories::users::federated`) and refuses to steal a mapping owned by another user.
+
+### Changed
+
+- **A Slack app's `authz.allowed_roles` is now enforced, not just documented.** Core wrote the
+  projection (`ingest_slack_apps`) but nothing called it, so the field described an intention no
+  rule backed. `repositories/config/acl_yaml_loader.rs` runs it at startup beside the
+  `roles.yaml` pass, writing a `slack_workspace:<workspace_id>` entity with
+  `default_included=false` and an allow rule per listed role — so the app file is the single
+  place that says who may drive a workspace.
+
 ## [0.29.0] - 2026-08-05
 
 ### Breaking

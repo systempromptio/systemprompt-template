@@ -204,11 +204,47 @@ services/
   plugins/<name>.yaml       Flat plugin binding descriptors
   ai/config.yaml            AI provider config
   scheduler/config.yaml     Job scheduler
+  slack/<name>.yaml         Inbound Slack apps (`slack_apps:` map — ships disabled)
   web/config.yaml           Web frontend config (full WebConfig)
   content/config.yaml       Content source config
 ```
 
 Unknown YAML keys cause loud errors at load time (`#[serde(deny_unknown_fields)]`). Nested `includes:` resolve recursively. Plugin YAMLs are binding descriptors that reference top-level agents, skills, mcp servers, and content sources by id — never inline copies.
+
+---
+
+## Slack (inbound, off by default)
+
+`services/slack/example.yaml` ships **disabled**. Fill in the workspace id, install a
+Slack app, put `slack_signing_secret` / `slack_bot_token` in the profile secret store,
+then flip `enabled: true`. Core mounts the transport already
+(`POST /api/v1/slack/{events,commands,interactivity}`); the binary opts in with the
+`slack` feature in `Cargo.toml`.
+
+Route the slash command, not a channel: core's event handler dispatches on both
+`message` and `app_mention`, so a routed channel sends every line of chatter to the
+agent. The example routes `/systemprompt` to `developer_agent`, which already carries
+the `systemprompt` MCP server and `oauth.scopes: [admin]`.
+
+Four gates stand between a Slack message and a tool call, each denying by default:
+
+1. **Workspace** — `authz.allowed_roles` is projected at startup into an
+   `access_control_rules` row for `slack_workspace:<workspace_id>` with
+   `default_included=false` (`repositories/config/acl_yaml_loader.rs`).
+2. **Identity** — the sender must map to an account holding the granted role.
+   `link_by_workspace_email: true` attaches them to the account owning their *confirmed*
+   Slack email; otherwise link by hand with
+   `POST /api/public/admin/users/{user_id}/slack-identity` (`{"slack_user_id": "U…"}`),
+   `DELETE` to detach. An unlinked sender becomes a role-less first-touch user and fails
+   gate 1.
+3. **Token** — core mints the A2A token with the sender's own permissions (`admin` role
+   ⇒ `Admin`, everyone else ⇒ `User`) and audience `[a2a, mcp]`; an agent declaring
+   `oauth.scopes: [admin]` rejects the weaker token.
+4. **MCP server** — `services/mcp/systemprompt.yaml` requires audience `mcp` and scope
+   `admin`, and `roles.yaml` grants `mcp_server:systemprompt` to `admin` only.
+
+Bot scopes: `commands`, `chat:write`, `users:read`, plus `users:read.email` only if
+`link_by_workspace_email` is on.
 
 ---
 

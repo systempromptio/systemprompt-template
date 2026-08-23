@@ -858,7 +858,7 @@ web-build:
 
 # Build Docker image for local testing
 docker-build TAG="local":
-    docker build -f .systemprompt/Dockerfile -t systemprompt-template:{{TAG}} .
+    docker build -f Dockerfile -t systemprompt-template:{{TAG}} .
 
 # Run image locally for testing
 docker-run TAG="local":

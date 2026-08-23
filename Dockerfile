@@ -60,7 +60,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN useradd -m -u 1000 app
 WORKDIR /app
 
-RUN mkdir -p /app/bin /app/logs /app/storage /app/web /app/services/profiles/docker
+RUN mkdir -p /app/bin /app/logs /app/storage /app/web /app/.systemprompt/profiles/docker
 
 COPY --from=builder /out/bin/ /app/bin/
 COPY --from=heybuilder /go/bin/hey /app/bin/hey

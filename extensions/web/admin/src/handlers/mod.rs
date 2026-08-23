@@ -22,6 +22,7 @@ pub(crate) mod responses;
 pub(crate) mod secrets;
 pub(crate) mod share;
 pub(crate) mod shared;
+pub(crate) mod slack_identity;
 pub(crate) mod ssr;
 mod users;
 pub(crate) mod webhook;

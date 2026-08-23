@@ -4623,6 +4623,7 @@ dependencies = [
  "systemprompt-runtime",
  "systemprompt-scheduler",
  "systemprompt-security",
+ "systemprompt-slack",
  "systemprompt-template-provider",
  "systemprompt-traits",
  "systemprompt-users",

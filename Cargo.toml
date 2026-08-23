@@ -223,7 +223,7 @@ path = "src/main.rs"
 
 [dependencies]
 # Core framework (facade)
-systemprompt = { workspace = true, features = ["full"] }
+systemprompt = { workspace = true, features = ["full", "slack"] }
 
 # Local extensions
 systemprompt-web-extension = { workspace = true }

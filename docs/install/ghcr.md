@@ -32,7 +32,7 @@ docker run --rm -p 8080:8080 \
   ghcr.io/systempromptio/systemprompt-template:latest
 ```
 
-On first boot the entrypoint writes `/app/services/profiles/docker/{profile.yaml,secrets.json}`, waits for Postgres, runs migrations, and starts the API on port 8080.
+On first boot the entrypoint writes `/app/.systemprompt/profiles/docker/{profile.yaml,secrets.json}`, waits for Postgres, runs migrations, and starts the API on port 8080.
 
 ## Tags
 

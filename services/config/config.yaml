@@ -21,6 +21,9 @@ includes:
   - ../agents/developer_agent.yaml
   - ../agents/associate_agent.yaml
 
+  # Inbound Slack app (ships disabled; see the file header)
+  - ../slack/example.yaml
+
   # External agents (super-agents — native apps + CLI tools that run off our infra, distinct from A2A agents above)
   - ../external_agents/claude_desktop.yaml
   - ../external_agents/codex_cli.yaml

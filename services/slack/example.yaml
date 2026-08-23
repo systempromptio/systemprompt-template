@@ -1,0 +1,33 @@
+# Inbound Slack app — shipped DISABLED. Fill in the workspace id, install the
+# app, put the two secrets in the profile secret store, then flip `enabled`.
+#
+# Core mounts POST /api/v1/slack/{events,commands,interactivity} always; this
+# file is what decides whether an inbound request resolves to an app at all,
+# which agent answers, and who may drive it.
+#
+# Only the slash command is routed. Core's event handler dispatches on both
+# `message` and `app_mention`, so routing a channel id here would send every
+# line of chatter in that channel to the agent.
+#
+# `authz.allowed_roles` is projected into `access_control_rules` as
+# `slack_workspace:<workspace_id>` at startup (see
+# extensions/web/admin/src/repositories/config/acl_yaml_loader.rs) with
+# default_included=false — a role that is not listed is denied.
+#
+# Bot scopes needed: commands, chat:write, users:read, and — only if
+# link_by_workspace_email is on — users:read.email.
+
+slack_apps:
+  example:
+    workspace_id: "T00000000000"
+    signing_secret_ref: slack_signing_secret
+    bot_token_ref: slack_bot_token
+    enabled: false
+    routing:
+      "/systemprompt": developer_agent
+    authz:
+      allowed_roles: [admin]
+      # Attaches a sender to the account that already owns their *confirmed*
+      # Slack email, instead of minting a role-less user on first contact.
+      # Leave off unless the app holds users:read.email.
+      link_by_workspace_email: false
