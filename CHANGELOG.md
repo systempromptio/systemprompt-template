@@ -41,6 +41,37 @@ Conventions (strict — hold every entry to them):
 
 ### Added
 
+- **Slack is now an inbound surface, restricted to admins.** `/systemprompt <cli command>` in
+  Slack runs against this instance and answers in the channel. `services/slack/astound.yaml`
+  declares the app (signing secret and bot token by reference, the bot shared with the existing
+  outbound alerting in `slack_alerts.rs`) and routes the slash-command key — not a channel id,
+  because core dispatches on every `message` in a routed channel, not only `app_mention`. Four
+  gates stand between a Slack message and a CLI call, each denying by default: the workspace
+  rule projected from `authz.allowed_roles`, the sender's identity, the scope of the token core
+  mints for them, and the MCP server's own audience/scope/role requirements. A non-admin gets an
+  ephemeral `⛔`, audited like any other refusal.
+- **`services/agents/admin_console.yaml` — the first A2A agent this instance ships.** The
+  inbound messaging pipeline can only dispatch to an agent; this one carries the `systemprompt`
+  MCP server and nothing else, runs on port 9101, and declares `oauth.scopes: [admin]` so a
+  token minted for a non-admin sender is refused at the A2A door. It is bound into the
+  `astound-admin` plugin and declares its own admin-only rule in `roles.yaml`, which opts it out
+  of the marketplace's `[user]` cascade.
+- **`POST|DELETE /api/public/admin/users/{user_id}/slack-identity`** — link or detach the Slack
+  account a user drives the platform from, for accounts whose Slack profile carries an
+  unconfirmed or different email and so cannot take the automatic path. Body:
+  `{"slack_user_id": "U…"}`. Writes the same `federated_identities` row the Salesforce Connect
+  flow uses, under `https://slack.com`, and refuses to steal a mapping owned by another user.
+
+### Changed
+
+- **A Slack app's `authz.allowed_roles` is now enforced, not just documented.** Core wrote the
+  projection (`ingest_slack_apps`) but nothing ever called it, so the field described an
+  intention no rule backed. `repositories/config/acl_yaml_loader.rs` now runs it at startup
+  beside the `roles.yaml` pass, writing a `slack_workspace:<workspace_id>` entity with
+  `default_included=false` and an allow rule per listed role. The Slack app file therefore stays
+  the single place that says who may drive a workspace — `roles.yaml` deliberately carries no
+  `slack_workspace` rules, only a pointer.
+
 - **The `astound-dev` plugin (v2.0.0) now ships the full Astound development suite** — 68 skills,
   mirroring the team's [sfcc-next-cursor](https://github.com/Astound-Digital/sfcc-next-cursor)
   Cursor tooling repo. 62 skills are ported 1:1 into `services/skills/` (snake_case ids:

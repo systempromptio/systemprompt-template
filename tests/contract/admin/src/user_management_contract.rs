@@ -296,7 +296,11 @@ async fn an_org_admin_may_promote_their_own_member_but_not_beyond() {
             &org_admin.token,
         )
         .await;
-    assert_eq!(status, StatusCode::OK, "member -> admin is allowed: {response}");
+    assert_eq!(
+        status,
+        StatusCode::OK,
+        "member -> admin is allowed: {response}"
+    );
 
     let body = format!(r#"{{"org":"{}","org_role":"owner"}}"#, org_admin.org_slug);
     let (status, _) = app
@@ -403,7 +407,10 @@ async fn regenerating_an_invite_issues_a_new_path_and_refuses_across_tenants() {
     assert_eq!(status, StatusCode::CREATED, "body: {created}");
     let minted: serde_json::Value = serde_json::from_str(&created).expect("invite json");
     let invite_id = minted["id"].as_str().expect("invite id").to_owned();
-    let original_path = minted["invite_path"].as_str().expect("invite path").to_owned();
+    let original_path = minted["invite_path"]
+        .as_str()
+        .expect("invite path")
+        .to_owned();
 
     let path = format!("/api/public/admin/invites/{invite_id}/regenerate");
 
@@ -503,9 +510,14 @@ async fn creating_a_user_on_an_unclaimed_domain_explains_the_missing_link() {
         .await;
     assert_eq!(status, StatusCode::CREATED, "body: {body}");
     let created: serde_json::Value = serde_json::from_str(&body).expect("created json");
-    assert!(created["invite_path"].is_null(), "no org, no invite: {body}");
     assert!(
-        created["invite_note"].as_str().is_some_and(|n| !n.is_empty()),
+        created["invite_path"].is_null(),
+        "no org, no invite: {body}"
+    );
+    assert!(
+        created["invite_note"]
+            .as_str()
+            .is_some_and(|n| !n.is_empty()),
         "the operator must be told why: {body}"
     );
     db.cleanup().await;

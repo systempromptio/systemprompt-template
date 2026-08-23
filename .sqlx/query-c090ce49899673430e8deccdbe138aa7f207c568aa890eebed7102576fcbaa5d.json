@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT name FROM departments ORDER BY name",
+  "query": "SELECT DISTINCT d.name FROM departments d\n           JOIN organizations o ON o.id = d.org_id\n           WHERE ($1::TEXT IS NULL OR o.slug = $1)\n           ORDER BY d.name",
   "describe": {
     "columns": [
       {
@@ -16,11 +16,13 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Text"
+      ]
     },
     "nullable": [
       false
     ]
   },
-  "hash": "675a2d8ffd6f1eac340f08f03a9e9f10d94be67ec2739894ad27564f8e34d454"
+  "hash": "c090ce49899673430e8deccdbe138aa7f207c568aa890eebed7102576fcbaa5d"
 }

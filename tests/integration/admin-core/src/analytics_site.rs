@@ -3,17 +3,17 @@
 //! client-reported session snapshots, and the per-user daily rollups.
 
 use chrono::{Duration, Utc};
+use systemprompt_web_admin::repositories::analytics::site::SiteScope;
+use systemprompt_web_admin::repositories::analytics::site::kpis::get_site_kpis;
 use systemprompt_web_admin::repositories::analytics::site::latency::{
     FAST_THRESHOLD_MS, get_latency_split,
 };
-use systemprompt_web_admin::repositories::analytics::site::kpis::get_site_kpis;
 use systemprompt_web_admin::repositories::analytics::site::model_series::list_model_cost_series;
 use systemprompt_web_admin::repositories::analytics::site::series::SeriesBucket;
 use systemprompt_web_admin::repositories::analytics::site::session_costs::{
     get_session_cost_stats, list_user_session_costs,
 };
 use systemprompt_web_admin::repositories::analytics::site::user_rollups::list_user_daily_rollups;
-use systemprompt_web_admin::repositories::analytics::site::SiteScope;
 use systemprompt_web_admin::util::time_range::{TimeRange, TimeRangePreset};
 
 use crate::fixtures::{RequestSpec, insert_request, insert_user, unclaimed_email, unique};
@@ -115,7 +115,11 @@ async fn list_model_cost_series_folds_everything_past_the_sixth_model() {
     let mut labels: Vec<String> = rows.iter().map(|r| r.model.clone()).collect();
     labels.sort();
     labels.dedup();
-    assert_eq!(labels.len(), 7, "six models plus the Other fold: {labels:?}");
+    assert_eq!(
+        labels.len(),
+        7,
+        "six models plus the Other fold: {labels:?}"
+    );
     assert!(labels.iter().any(|m| m == "Other"));
 
     let other_cost: i64 = rows
@@ -152,7 +156,10 @@ async fn get_latency_split_buckets_on_the_fixed_threshold() {
         .expect("latency split succeeds");
 
     assert_eq!(split.fast, 1, "4999ms is fast");
-    assert_eq!(split.slow, 1, "5000ms is slow — the boundary is inclusive up");
+    assert_eq!(
+        split.slow, 1,
+        "5000ms is slow — the boundary is inclusive up"
+    );
     assert!(split.p95_ms >= split.p50_ms);
     db.cleanup().await;
 }
@@ -191,7 +198,11 @@ async fn session_cost_snapshots_aggregate_and_list_per_user() {
     assert_eq!(stats.sessions, 2);
     assert_eq!(stats.cache_read_tokens, 4_000);
     // cache_read / (cache_read + input) = 4000 / (4000 + 2000).
-    assert!((stats.cache_hit_pct - 66.6).abs() < 0.2, "{}", stats.cache_hit_pct);
+    assert!(
+        (stats.cache_hit_pct - 66.6).abs() < 0.2,
+        "{}",
+        stats.cache_hit_pct
+    );
     assert_eq!(stats.max_context_window, 150_000);
 
     let rows = list_user_session_costs(&db.pool, &user, 1)

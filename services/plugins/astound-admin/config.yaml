@@ -30,9 +30,13 @@ plugin:
       - block_users
       - manage_roles
       - manage_sessions
+  # The Slack-facing operator agent. It declares its own admin-only rule in
+  # services/access-control/roles.yaml, which opts it out of the marketplace
+  # cascade the same way every other member of this plugin does.
   agents:
     source: explicit
-    include: []
+    include:
+      - admin_console
   # The admin CLI-passthrough server. Gated to the admin role twice over: an
   # entity rule in services/access-control/roles.yaml keeps it out of a
   # non-admin's signed manifest, and oauth.scopes in services/mcp/systemprompt.yaml

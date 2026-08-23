@@ -18,9 +18,13 @@ includes:
   - ../ai/config.yaml
   - ../scheduler/config.yaml
 
-  # No A2A agents. This instance ships skills, MCP servers, and artifacts only —
-  # nothing under services/agents/, nothing spawned on the agent port range, and
-  # no agents/<id>.md emitted into any plugin bundle.
+  # Agents (flat, wrapped in `agents:` map). One only: the admin console the
+  # Slack slash command dispatches to. The inbound messaging pipeline can only
+  # dispatch to an A2A agent, which is why this instance now ships one.
+  - ../agents/admin_console.yaml
+
+  # Inbound Slack app. Its authz.allowed_roles is the workspace-level gate.
+  - ../slack/astound.yaml
 
   # External agents (super-agents — native apps + CLI tools that run off our infra, distinct from A2A agents above)
   - ../external_agents/claude_desktop.yaml

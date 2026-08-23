@@ -32,6 +32,7 @@ use std::sync::Arc;
 
 use serde::Deserialize;
 use sqlx::PgPool;
+use systemprompt::loader::ConfigLoader;
 use systemprompt_security::authz::{
     AccessControlConfig, AccessControlIngestionService, IngestOptions,
 };
@@ -61,12 +62,15 @@ pub async fn load_from_yaml(
     let salesforce =
         super::salesforce_yaml_loader::load_salesforce_from_yaml(pool, services_path).await?;
 
+    let slack_workspaces = load_slack_apps(pool).await?;
+
     tracing::info!(
         departments = report.departments_upserted,
         rules = report.rules_upserted,
         plans = plans.plans_upserted,
         organizations = plans.organizations_upserted,
         salesforce_grants = salesforce.grants_projected,
+        slack_workspaces,
         "bootstrap_yaml_loaded"
     );
     Ok(report)
@@ -125,6 +129,31 @@ async fn load_roles_file(
         .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
     report.rules_upserted = ingested.inserted + ingested.updated;
     Ok(())
+}
+
+// Why: an unreadable services config is not this loader's failure to report —
+// the server does not start without one, and treating it as fatal here would
+// turn every unrelated config error into "access control failed to load".
+async fn load_slack_apps(pool: &PgPool) -> Result<usize, MarketplaceError> {
+    let Ok(services) = ConfigLoader::load() else {
+        return Ok(0);
+    };
+    if services.slack_apps.is_empty() {
+        return Ok(0);
+    }
+
+    let svc = AccessControlIngestionService::from_pool(Arc::new(pool.clone()));
+    let ingested = svc
+        .ingest_slack_apps(
+            &services.slack_apps,
+            IngestOptions {
+                override_existing: true,
+                delete_orphans: false,
+            },
+        )
+        .await
+        .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
+    Ok(ingested.inserted + ingested.updated)
 }
 
 async fn upsert_department(pool: &PgPool, dept: &YamlDepartment) -> Result<(), MarketplaceError> {

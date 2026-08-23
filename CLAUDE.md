@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Astound Digital
 
-**Use the CLI to discover commands.** `systemprompt --help` is your starting point.
+**Nothing in this file is a startup routine.** It describes how to do work in this
+repo *once you have been given a task*. On arrival, run no commands and read no
+state — wait for the task, then come back for the part that applies.
+
+**When a task needs a command you don't know, discover it from the CLI.**
+`systemprompt --help` is your starting point.
 
 ---
 
@@ -40,7 +45,7 @@ systemprompt core skills list
 
 ---
 
-## Shared Build State (read this before you compile)
+## Shared Build State (read this when you are about to compile)
 
 Several agents work this clone at once. Builds, clippy, and tests are expensive
 and take a shared cargo lock, so a build started mid-iteration stalls everyone.
@@ -49,7 +54,8 @@ and take a shared cargo lock, so a build started mid-iteration stalls everyone.
 `just clippy` between edits to see how you're doing; finish the change set, then
 run the gate a single time.
 
-**Check the shared state before spending anything:**
+**Once a task has you compiling, check the shared state before spending anything**
+(these are pre-compile checks, not things to run on arrival):
 
 ```bash
 just build-status     # in-flight run + last result per recipe + is it still fresh?
@@ -74,6 +80,17 @@ a server another agent is already running (say so and stop), and it warns when
 the binary predates the current source, but it only refuses outright when there
 is no binary at all. Staleness is reported from the ledger when the binary came
 from a coordinated build, and from file mtimes otherwise.
+
+**Orphaned MCP children on macOS.** Core's two halves of child supervision have
+different reach. Parent-death prevention is `prctl(PR_SET_PDEATHSIG)` and stays
+Linux-only, so a `SIGKILL`ed or crashed server on macOS leaves its MCP servers
+reparented to `launchd`, still holding their ports. Identity verification now
+works on both platforms (`/proc/<pid>/environ` on Linux,
+`sysctl(KERN_PROCARGS2)` on macOS), so the next `just start` recognises those
+orphans as its own and reclaims the ports — no manual cleanup, no
+`PortOwnedByForeignProcess`. If startup instead reports `PortHolderUnverifiable`,
+the platform genuinely cannot check identity and the process must be stopped by
+hand. `just stop` shuts services down cleanly and avoids the orphaning entirely.
 
 Always go through the justfile. A bare `cargo build` bypasses coordination and
 re-creates the contention. Escape hatches when you truly need them:
@@ -112,6 +129,7 @@ suites need Docker Postgres up (`just db-up`).
 just test-unit          # in-crate unit tests + tests/unit/*
 just test-integration   # DB-backed; throwaway mcp_ext_test_* databases
 just test-contract      # every admin route x three principals, diffed vs baseline
+just test               # all three tiers, in that order
 just e2e-install && just e2e   # Playwright, against an already-running `just start`
 ```
 
@@ -211,9 +229,12 @@ are exempt.
 
 ### Source-shape gates worth knowing before you write code
 
-`just lint-gates` runs 22 independent read-only checks concurrently (the
-`gates=()` array in the justfile is the list; every failure is reported, so one
-red gate never hides the rest). The ones that most often surprise:
+`just lint-gates` runs 23 independent read-only checks concurrently (the
+`gates=()` array in the justfile is the list — trust the array, not this count;
+every failure is reported, so one red gate never hides the rest). Two frontend
+gates that used to live there — admin CSS classes and frontend standards — are
+now cargo tests in `extensions/web/tests/`, so they surface from `just
+test-unit` rather than `lint-gates`. The ones that most often surprise:
 
 - **No SQL in `extension.rs`** (`lint-extensions.sh`). Schema DDL lives in
   `<crate>/schema/**.sql` and is embedded with `include_str!`; migrations are
@@ -226,6 +247,28 @@ red gate never hides the rest). The ones that most often surprise:
 - Comment density, inline comments, file size, duplicate types, dead repository
   code, admin template links/assets, and `services/` validity are all gates too
   — read the failing script's header comment, which states the rule and why.
+
+`just clippy` additionally depends on two identity gates that are not in that
+array, so they fail the lint tier rather than `lint-gates`:
+
+- **`lint-no-synthesis`** — no `UserId::new("…")` with a string literal anywhere
+  under `extensions/`. Every legitimate `UserId::new` takes an identifier
+  validated from a cookie, query, JWT claim, or DB row. Genuine provisioning
+  code belongs in `extensions/**/bootstrap/`, which is exempt.
+- **`lint-no-untyped-admin`** — no `UserId::admin()` outside its sanctioned call
+  sites (tests are exempt).
+
+### This repo is a fork, and the drift is tracked
+
+The extension sources are shared with a sibling fork (`../systemprompt-template`
+by default; override with `SIBLING_REPO`). `check-fork-drift.sh` requires every
+shared `.rs` file that differs to have an entry with a reason in
+`.fork-divergence`. An undeclared difference fails; so does an entry whose file
+no longer differs — the list can only shrink. Without `SIBLING_REPO` set the
+gate skips, so a green run on a single checkout proves nothing about drift. When
+you change a shared file, the choice is to port the change to the sibling or to
+record the divergence as a decision — a reason that would be true of any file in
+the repo is not a reason.
 
 ### Client / bridge
 
@@ -305,7 +348,7 @@ All runtime configuration lives as YAML under `services/`. The root `services/co
 ```
 services/
   config/config.yaml        Root aggregator (includes the flat resource files)
-  agents/<id>.yaml          Flat agent definitions (none ship here — see below)
+  agents/<id>.yaml          Flat agent definitions (one: admin_console — see below)
   mcp/<name>.yaml           Flat MCP server definitions
   skills/<id>/config.yaml   Skill definitions (nested dir, auto-discovered)
   plugins/<id>/config.yaml  Plugin binding descriptors (nested dir, auto-discovered)
@@ -313,13 +356,57 @@ services/
   gateway/policies.yaml     Gateway quotas + safety scanners (scanners off here)
   ai/config.yaml            AI provider config
   scheduler/config.yaml     Job scheduler
+  slack/<name>.yaml         Inbound Slack apps (`slack_apps:` map — see below)
   web/config.yaml           Web frontend config (full WebConfig)
   content/config.yaml       Content source config
 ```
 
 Unknown YAML keys cause loud errors at load time (`#[serde(deny_unknown_fields)]`). Nested `includes:` resolve recursively. Plugin YAMLs are binding descriptors that reference top-level agents, skills, mcp servers, and content sources by id — never inline copies.
 
-**This instance ships no A2A agents.** `services/config/config.yaml` says so explicitly: nothing under `services/agents/`, nothing spawned on the agent port range, and no `agents/<id>.md` in any plugin bundle. Skills, MCP servers and artifacts carry the capability instead — so `admin agents list` returning nothing is the correct answer here, not a fault.
+**This instance ships exactly one A2A agent: `admin_console`.** It exists because the
+inbound Slack pipeline can only dispatch to an agent. It carries the `systemprompt`
+MCP server and nothing else, runs on port 9101, and its `oauth.scopes: [admin]`
+refuses a token minted for a non-admin sender. Everything else on this instance is
+still skills, MCP servers, and artifacts — `admin agents list` returning one row, not
+none, is now the correct answer.
+
+---
+
+## Slack (inbound, admin-only)
+
+`/systemprompt <cli command>` in Slack runs against this instance. Core owns the
+transport (`POST /api/v1/slack/{events,commands,interactivity}`, mounted always); this
+repo owns who may drive it.
+
+- **App config** — `services/slack/astound.yaml` (`slack_apps:`), listed in the
+  aggregator's `includes:`. Only the slash-command key is routed: core's event handler
+  dispatches on both `message` and `app_mention`, so routing a channel id would send
+  every line of chatter to the agent.
+- **Secrets** — `slack_signing_secret` and `slack_bot_token` in the profile secret
+  store, referenced by name. The bot token is shared with the outbound alerting in
+  `extensions/web/admin/src/slack_alerts.rs`, so one Slack app covers both directions.
+- **Bot scopes** — `commands`, `chat:write`, `users:read`, `users:read.email`.
+
+A Slack message reaches the CLI only if all four gates pass, and every one of them
+denies by default:
+
+1. **Workspace** — `authz.allowed_roles: [admin]` in the app YAML, projected at startup
+   into an `access_control_rules` row for `slack_workspace:<workspace_id>` with
+   `default_included=false` (`repositories/config/acl_yaml_loader.rs`).
+2. **Identity** — the sender must map to a systemprompt account holding `admin`.
+   `link_by_workspace_email: true` attaches them to the account owning their *confirmed*
+   Slack email; otherwise link by hand with
+   `POST /api/public/admin/users/{user_id}/slack-identity` (`{"slack_user_id": "U…"}`),
+   `DELETE` to detach. An unlinked sender becomes a role-less first-touch user and fails
+   gate 1.
+3. **Token** — core mints the A2A token with the sender's own permissions
+   (`admin` role ⇒ `Admin`, everyone else ⇒ `User`) and audience `[a2a, mcp]`; the
+   agent's `oauth.scopes: [admin]` rejects the weaker token.
+4. **MCP server** — `services/mcp/systemprompt.yaml` requires audience `mcp` and scope
+   `admin`, and `roles.yaml` grants `mcp_server:systemprompt` to `admin` only.
+
+Denials come back to the sender as an ephemeral `⛔ <policy>: <reason>` and are audited
+like any other call — `systemprompt infra logs trace list`.
 
 ---
 

@@ -112,6 +112,11 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
             post(handlers::share::issue_share_token_handler),
         )
         .route(
+            "/users/{user_id}/slack-identity",
+            post(handlers::slack_identity::link_slack_identity_handler)
+                .delete(handlers::slack_identity::unlink_slack_identity_handler),
+        )
+        .route(
             "/users/{user_id}/sessions",
             get(handlers::list_user_sessions_handler)
                 .delete(handlers::revoke_all_user_sessions_handler),

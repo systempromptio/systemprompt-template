@@ -96,10 +96,10 @@ plans:
 
   - id: pilot
     name: Pilot
-    description: Evaluation tenant. Tiny spend cap with a soft warning, Haiku-tier only.
+    description: Evaluation tenant. Small spend cap with a soft warning, Haiku-tier only.
     seat_limit: 5
-    monthly_cost_cap_usd: 0.02
-    monthly_cost_warn_usd: 0.001
+    monthly_cost_cap_usd: 2
+    monthly_cost_warn_usd: 1.5
     monthly_price_usd: 0
     grants:
       - entity_type: gateway_route

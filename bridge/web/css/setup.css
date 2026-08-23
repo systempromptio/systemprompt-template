@@ -208,12 +208,18 @@ body.is-setup-mode .sp-setup {
   font-size: 13px;
 }
 .sp-setup__error {
-  display: block;
+  display: flex;
+  gap: var(--sp-space-2);
   margin-top: var(--sp-space-3);
+  padding: var(--sp-space-2-5) var(--sp-space-3);
+  border: 1px solid color-mix(in srgb, var(--sp-err) 40%, transparent);
+  border-radius: var(--sp-corners-xs);
+  background: color-mix(in srgb, var(--sp-err) 10%, transparent);
   font-size: 12px;
-  color: var(--sp-err);
-  line-height: 1.4;
+  line-height: 1.45;
+  color: oklch(0.86 0.10 25);
 }
+.sp-setup__error b { font-weight: 700; flex: none; }
 
 .sp-setup__advanced {
   margin-top: var(--sp-space-6);
@@ -268,6 +274,238 @@ body.is-setup-mode .sp-setup {
 .sp-setup__meta a:hover { color: var(--sp-accent); border-bottom-color: var(--sp-accent); }
 .sp-setup__docs { font-weight: 600; }
 
+/* Connection strip ---------------------------------------------------------
+ *
+ * Always on screen during setup: which gateway, who is signed in, how long the
+ * session is good for, and whether the local proxy is up. Every row is a field
+ * that already existed in `state.snapshot` and was simply never shown here. */
+
+.sp-conn {
+  margin: 0 0 var(--sp-space-6);
+  border: 1px solid var(--sp-line);
+  border-radius: var(--sp-corners-sm);
+  background: var(--sp-bg-elev-1);
+  overflow: hidden;
+}
+.sp-conn--empty { min-height: 40px; }
+
+.sp-conn__row {
+  display: grid;
+  grid-template-columns: 10px 68px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-space-2);
+  padding: var(--sp-space-2-5) var(--sp-space-3);
+  font-size: 12px;
+}
+.sp-conn__row + .sp-conn__row { border-top: 1px solid var(--sp-line-soft); }
+
+.sp-conn__key {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--sp-muted);
+}
+.sp-conn__val {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--sp-text);
+}
+.sp-conn__val--muted { color: var(--sp-muted); }
+.sp-conn__val--warn  { color: var(--sp-warn); }
+.sp-conn__val--err   { color: var(--sp-err); }
+.sp-conn__url { font-family: var(--sp-font-mono); font-size: 11.5px; }
+
+.sp-conn__aside {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-space-2);
+  min-width: 0;
+  font-size: 11px;
+  color: var(--sp-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+}
+/* Text in the aside may ellipsis; a control in it may not shrink. */
+.sp-conn__aside > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* A four-character latency must never be the thing that gets ellipsised. */
+.sp-conn__probe { flex: none; }
+.sp-conn__aside > button { flex: none; }
+.sp-conn__probe { font-family: var(--sp-font-mono); }
+
+.sp-conn__btn {
+  padding: var(--sp-space-0-5) var(--sp-space-2);
+  border: 1px solid var(--sp-line);
+  border-radius: var(--sp-corners-pill);
+  background: transparent;
+  color: var(--sp-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.sp-conn__btn:hover { color: var(--sp-text); border-color: var(--sp-muted); }
+
+/* The gateway address is editable in place on the sign-in step. It keeps core's
+ * `#setup-gateway` id so sp-setup-gateway's focus guard still recognises it. */
+.sp-conn__edit {
+  width: 100%;
+  padding: var(--sp-space-1) var(--sp-space-2);
+  font-family: var(--sp-font-mono);
+  font-size: 11.5px;
+  border-radius: var(--sp-corners-xs);
+}
+
+/* The probe reason gets its own full-width line rather than competing with the
+ * address for the row. Crowding it into the aside squeezed the editable input
+ * to zero width on the sign-in step and pushed Re-check outside the box. */
+.sp-conn__reason {
+  margin: 0;
+  padding: var(--sp-space-1-5) var(--sp-space-3) var(--sp-space-2-5);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--sp-muted);
+}
+.sp-conn__reason[data-state="unreachable"] { color: var(--sp-err); }
+.sp-conn__reason[data-state="probing"] { color: var(--sp-warn); }
+
+.sp-conn__foot {
+  margin: 0;
+  padding: var(--sp-space-2) var(--sp-space-3);
+  border-top: 1px solid var(--sp-line-soft);
+  font-size: 11px;
+  color: var(--sp-muted);
+}
+
+/* Onboarding agent cards ---------------------------------------------------
+ *
+ * Deliberately not `.sp-setup-agent`: core's agents.css owns that name, styles
+ * it as a centred row, and is imported after this file — so the two would
+ * fight. These cards stack their evidence vertically instead. */
+
+.sp-onb-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-2-5);
+  margin: var(--sp-space-4) 0 var(--sp-space-1);
+}
+
+.sp-onb-agent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-2);
+  padding: var(--sp-space-3) var(--sp-space-3-5);
+  border: 1px solid var(--sp-line);
+  border-left: 3px solid var(--sp-line);
+  border-radius: var(--sp-corners-sm);
+  background: var(--sp-bg-elev-1);
+}
+.sp-onb-agent[data-state="ok"]      { border-left-color: var(--sp-ok); }
+.sp-onb-agent[data-state="warn"]    { border-left-color: var(--sp-warn); }
+.sp-onb-agent[data-state="err"]     { border-left-color: var(--sp-err); }
+.sp-onb-agent[data-state="probing"] { border-left-color: var(--sp-muted); }
+
+.sp-onb-agent__head { display: flex; align-items: center; gap: var(--sp-space-2); }
+.sp-onb-agent__name { font-weight: 700; font-size: 14px; }
+.sp-onb-agent__spacer { flex: 1; }
+.sp-onb-agent__sub { margin: 0; font-size: 12px; color: var(--sp-muted); line-height: 1.45; }
+
+.sp-onb-agent__checks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sp-onb-agent__check {
+  display: flex;
+  gap: var(--sp-space-2);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--sp-muted-strong);
+}
+.sp-onb-agent__check i {
+  flex: none;
+  width: 13px;
+  font-style: normal;
+  font-weight: 700;
+  text-align: center;
+  color: var(--sp-muted);
+}
+.sp-onb-agent__check[data-result="ok"] i   { color: var(--sp-ok); }
+.sp-onb-agent__check[data-result="no"] i   { color: var(--sp-err); }
+.sp-onb-agent__check[data-result="warn"] i { color: var(--sp-warn); }
+.sp-onb-agent__check code {
+  font-family: var(--sp-font-mono);
+  font-size: 11px;
+  color: var(--sp-text);
+}
+
+.sp-onb-agent__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-space-2);
+}
+.sp-onb-agent__foot .sp-btn-primary,
+.sp-onb-agent__foot .sp-btn-ghost {
+  padding: var(--sp-space-2) var(--sp-space-3);
+  font-size: 12px;
+}
+.sp-onb-agent__note { margin: 0; font-size: 11px; color: var(--sp-muted); line-height: 1.45; }
+
+/* A failed install used to be reported through the button's tooltip and a
+ * console warning, which reads as nothing having happened. */
+.sp-onb-agent__error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-1-5);
+  padding: var(--sp-space-2-5) var(--sp-space-3);
+  border: 1px solid color-mix(in srgb, var(--sp-err) 40%, transparent);
+  border-radius: var(--sp-corners-xs);
+  background: color-mix(in srgb, var(--sp-err) 10%, transparent);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: oklch(0.86 0.10 25);
+}
+.sp-onb-agent__error b { font-weight: 700; }
+.sp-onb-agent__error code {
+  font-family: var(--sp-font-mono);
+  font-size: 10.5px;
+  word-break: break-word;
+}
+
+/* Closing step -------------------------------------------------------------- */
+
+.sp-setup__done {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-2);
+  margin-bottom: var(--sp-space-6);
+}
+.sp-setup__done-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-space-2);
+  font-size: 13px;
+}
+.sp-setup__done-row i { font-style: normal; font-weight: 700; color: var(--sp-ok); }
+.sp-setup__done-row[data-ok="no"] i { color: var(--sp-warn); }
+.sp-setup__done-row span { color: var(--sp-muted); }
+.sp-setup__done-row b {
+  font-family: var(--sp-font-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--sp-text);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+
 /* Narrow windows collapse to the form column; the brand panel keeps only its
  * logo and footer so the pitch never squeezes the form off-screen. */
 @media (max-width: 900px) {
@@ -285,4 +523,12 @@ body.is-setup-mode .sp-setup {
   .sp-setup__demo { display: none; }
   .sp-setup__brand-foot { align-items: flex-end; }
   .sp-setup__panel { padding: var(--sp-space-8) var(--sp-space-6); align-items: flex-start; }
+}
+
+/* The strip's fixed label column is the first thing to squeeze on a narrow
+   window; drop the label and let the value take the width. */
+@media (max-width: 900px) {
+  .sp-conn__row { grid-template-columns: 10px minmax(0, 1fr) auto; }
+  .sp-conn__key { display: none; }
+  .sp-onb-agent__foot { gap: var(--sp-space-1-5); }
 }

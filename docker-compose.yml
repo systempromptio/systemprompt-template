@@ -35,7 +35,7 @@ services:
     volumes:
       - app_web:/app/web
       - app_storage_data:/app/storage/data
-      - app_profiles:/app/services/profiles/docker
+      - app_profiles:/app/.systemprompt/profiles/docker
 
 volumes:
   postgres_data:

@@ -1,18 +1,18 @@
-import { t } from "/assets/js/i18n.js";
+import { tr } from "/assets/js/utils/l10n.js";
 
 export function probeView(snap) {
   const status = (snap && snap.gateway_status) || { state: "unknown" };
   if (status.state === "reachable") {
-    return { dot: "sp-dot--ok", muted: false, text: t("setup-gateway-reachable", { latency: status.latency_ms }) || `reachable · ${status.latency_ms}ms` };
+    return { dot: "sp-dot--ok", muted: false, text: tr("setup-gateway-reachable", `reachable · ${status.latency_ms}ms`, { latency: status.latency_ms }) };
   }
   if (status.state === "probing") {
-    return { dot: "sp-dot--probing", muted: true, text: t("setup-gateway-probing") || "probing…" };
+    return { dot: "sp-dot--probing", muted: true, text: tr("setup-gateway-probing", "probing…") };
   }
   if (status.state === "unreachable") {
-    return { dot: "sp-dot--err", muted: false, text: t("setup-gateway-unreachable", { reason: status.reason || "unknown" }) || `unreachable · ${status.reason || "unknown"}` };
+    return { dot: "sp-dot--err", muted: false, text: tr("setup-gateway-unreachable", `unreachable · ${status.reason || "unknown"}`, { reason: status.reason || "unknown" }) };
   }
   const empty = !(snap && snap.gateway_url);
-  return { dot: "sp-dot--unknown", muted: true, text: empty ? (t("setup-gateway-empty") || "enter a URL to probe…") : (t("setup-gateway-not-probed") || "not probed yet") };
+  return { dot: "sp-dot--unknown", muted: true, text: empty ? (tr("setup-gateway-empty", "enter a URL to probe…")) : (tr("setup-gateway-not-probed", "not probed yet")) };
 }
 
 export function probeErrorMessage(snap) {
@@ -20,10 +20,10 @@ export function probeErrorMessage(snap) {
   const status = snap.gateway_status || { state: "unknown" };
   const verified = snap.verified_identity && snap.verified_identity.user_id;
   if (status.state === "reachable" && snap.pat_present && !verified) {
-    return "Token rejected by gateway. Issue a fresh PAT and try again.";
+    return tr("astound-gateway-token-rejected", "Your access token was rejected. Issue a fresh one and try again.");
   }
   if (status.state === "unreachable" && snap.pat_present) {
-    return `Gateway unreachable: ${status.reason || "unknown error"}`;
+    return tr("astound-gateway-unreachable", `Gateway unreachable: ${status.reason || "unknown error"}`);
   }
   return "";
 }
@@ -47,35 +47,44 @@ function escapeHtml(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
+function gatewayHost(url) {
+  try { return new URL(url).host; } catch (e) { return "the gateway"; }
+}
+
 export function renderGatewayForm(state) {
-  const probe = probeView(state.snapshot);
   const link = patLinkFor(state.gateway);
   const linkDisabled = link === "#";
-  const editBtn = state.patSaved ? `<button class="sp-btn-ghost" type="button" data-action="edit-pat">Edit</button>` : "";
-  const errBlock = state.error ? `<span class="sp-setup__error">${escapeHtml(state.error)}</span>` : "";
-  const btnLabel = state.pending ? (t("setup-connecting") || "Connecting…") : "Connect";
+  const editBtn = state.patSaved ? `<button class="sp-btn-ghost" type="button" data-action="edit-pat">${escapeHtml(tr("astound-gateway-edit", "Edit"))}</button>` : "";
+  const errBlock = state.error
+    ? `<div class="sp-setup__error" role="alert"><b aria-hidden="true">✗</b><span>${escapeHtml(state.error)}</span></div>`
+    : "";
+  const btnLabel = state.pending ? (tr("setup-connecting", "Connecting…")) : "Connect";
   const snap = state.snapshot || {};
   const signInLabel = snap.sign_in_label || "Sign in to your gateway";
-  const signInHint = snap.sign_in_hint || "Opens your browser to sign in on the gateway; this device is linked automatically.";
   const signInBusy = state.signingIn;
-  const signInText = signInBusy ? t("setup-signing-in") : signInLabel;
+  const signInText = signInBusy ? tr("setup-signing-in", "Waiting for your browser…") : signInLabel;
   const keepChecked = state.keepSignedIn === false ? "" : "checked";
+  const host = gatewayHost(snap.gateway_url || state.gateway);
   // The device-link flow round-trips through the gateway's browser login, so an
   // unreachable gateway can only ever fail — gate the button and say why rather
   // than opening a browser at a dead host.
   const reachable = (snap.gateway_status || {}).state === "reachable";
   const signInDisabled = signInBusy || state.pending || !reachable;
-  const gateReason = reachable || signInBusy || state.pending
-    ? ""
-    : `<p class="sp-setup__hint sp-setup__hint--gate">${escapeHtml(t("setup-gateway-required"))}</p>`;
   const cancelBtn = signInBusy
     ? `<button class="sp-btn-ghost" type="button" data-action="cancel-sign-in">
-        <span class="sp-btn__label">${escapeHtml(t("setup-sign-in-cancel"))}</span>
+        <span class="sp-btn__label">${escapeHtml(tr("setup-sign-in-cancel", "Cancel"))}</span>
       </button>`
     : "";
-  // The gateway URL is pre-filled from the brand default and almost never
-  // edited, so it lives under Advanced alongside the PAT. The probe line stays
-  // in the primary column — it is the only visible reason the button is gated.
+  // The gateway address, its probe state and the re-check control all live in
+  // <sp-setup-connection> above this form now — it is the one place that answers
+  // "where am I pointed", and it stays on screen for the whole flow. What is
+  // left here is the decision: sign in, or fall back to a pasted token.
+  const hint = reachable || signInBusy || state.pending
+    ? `<p class="sp-setup__hint">Opens your browser to sign in on ${escapeHtml(host)}.
+        This Mac is linked automatically — there is no code to copy.</p>`
+    : `<p class="sp-setup__hint sp-setup__hint--gate">Can't reach ${escapeHtml(host)} yet, so signing
+        in would fail. Check the address above, or your VPN, then re-check.</p>`;
+
   return `
     <div class="sp-setup__actions">
       <button class="sp-btn-primary" type="button" ${signInDisabled ? "disabled" : ""} data-action="sign-in">
@@ -84,26 +93,19 @@ export function renderGatewayForm(state) {
       ${cancelBtn}
       <label class="sp-setup__keep">
         <input id="setup-keep" type="checkbox" ${keepChecked} ${signInBusy ? "disabled" : ""} data-input="keep" />
-        <span>Keep me signed in on this device</span>
+        <span>${escapeHtml(tr("astound-gateway-keep", "Stay signed in on this Mac"))}</span>
       </label>
-      <div class="sp-setup__status" role="status">
-        <span class="sp-dot ${probe.dot}" aria-hidden="true"></span>
-        <span class="${probe.muted ? "sp-u-muted" : ""}">${escapeHtml(probe.text)}</span>
-      </div>
-      ${reachable ? `<p class="sp-setup__hint">${escapeHtml(signInHint)}</p>` : gateReason}
+      ${hint}
     </div>
+    ${errBlock}
     <details class="sp-setup__advanced">
-      <summary>Advanced — gateway URL &amp; access token</summary>
-      <div class="sp-setup__field">
-        <label for="setup-gateway" data-l10n-id="setup-gateway-label">Gateway URL</label>
-        <input id="setup-gateway" type="url" placeholder="http://127.0.0.1:8080" autocomplete="off" spellcheck="false" data-input="gateway" />
-      </div>
+      <summary>${escapeHtml(tr("astound-gateway-advanced", "Use an access token instead"))}</summary>
       <div class="sp-setup__field">
         <label for="setup-pat" data-l10n-id="setup-pat-label">Personal access token</label>
         <input id="setup-pat" type="password" placeholder="sp-live-…" autocomplete="off" spellcheck="false" data-input="pat" />
         <p class="sp-setup__hint">
           <span data-l10n-id="setup-pat-hint">Don't have one yet?</span>
-          <a class="sp-setup__pat-link ${linkDisabled ? "is-disabled" : ""}" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer" aria-disabled="${linkDisabled}">Open the gateway login →</a>
+          <a class="sp-setup__pat-link ${linkDisabled ? "is-disabled" : ""}" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer" aria-disabled="${linkDisabled}">${escapeHtml(tr("astound-gateway-pat-link", "Open the gateway login \u2192"))}</a>
           ${editBtn}
         </p>
       </div>
@@ -113,6 +115,5 @@ export function renderGatewayForm(state) {
         </button>
       </div>
     </details>
-    ${errBlock}
   `;
 }

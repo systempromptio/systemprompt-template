@@ -12,3 +12,27 @@
 .sp-setup__brand {
   box-shadow: 12px 0 40px oklch(0 0 0 / 0.28);
 }
+
+/* Core sets the primary button's label to oklch(0.20 0.04 50) — a dark brown
+ * picked against its orange accent, where it lands comfortably. Astound's
+ * accent is a deep red (oklch 0.63), and that same brown drops to roughly
+ * 3.4:1 against it, below the 4.5:1 floor for the small bold type these
+ * buttons use. White holds at ~4.9:1 on the same fill. This is a legibility
+ * correction, not a style preference, and it is Astound-specific because the
+ * accent it fails against is. */
+button.sp-btn-primary {
+  color: oklch(0.99 0 0);
+}
+button.sp-btn-primary:focus-visible {
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.30) inset,
+    0 -1px 0 oklch(0 0 0 / 0.18) inset,
+    0 0 0 3px var(--sp-accent-ring),
+    0 2px 8px oklch(0.58 0.25 28 / 0.20);
+}
+
+/* The checkbox tick is drawn with a border in the same brown, for the same
+ * reason. */
+input[type="checkbox"]:checked::after {
+  border-color: oklch(0.99 0 0);
+}

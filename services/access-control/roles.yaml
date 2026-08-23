@@ -9,6 +9,7 @@
 # Schema:
 #   rules:
 #     - entity_type:    gateway_route | mcp_server | plugin | agent | marketplace | skill | hook
+#                       | slack_workspace  (written by services/slack/*.yaml, not here)
 #       entity_id:      string id of the entity        (exactly one of entity_id / entity_match)
 #       entity_match:   glob pattern over catalog ids  (exactly one of entity_id / entity_match)
 #       access:         allow | deny  (default: allow)
@@ -44,8 +45,14 @@ rules:
   # authz). Add an entity-level rule here only to DENY a specific member — an
   # entity-level deny overrides the inherited marketplace allow (deny-overrides).
 
-  # No `entity_type: agent` rules — this instance defines no A2A agents, so
-  # there is nothing for a user-role member to list or invoke.
+  # This instance defines exactly one A2A agent, `admin_console` (the Slack
+  # slash command dispatches to it). Its rule sits with the rest of the admin
+  # control plane below.
+  #
+  # `slack_workspace` rules are NOT written here. They are projected from
+  # `authz.allowed_roles` in services/slack/*.yaml at startup — see
+  # extensions/web/admin/src/repositories/config/acl_yaml_loader.rs — so the
+  # Slack app file stays the single place that says who may drive a workspace.
 
   # Salesforce Hosted MCP server, plugins, and skills are NOT granted here.
   # They are confined to Salesforce-linked users via the derived `salesforce`
@@ -63,6 +70,11 @@ rules:
   # oauth.scopes in services/mcp/systemprompt.yaml.
   - entity_type: mcp_server
     entity_id: systemprompt
+    access: allow
+    default_included: false
+    roles: [admin]
+  - entity_type: agent
+    entity_id: admin_console
     access: allow
     default_included: false
     roles: [admin]

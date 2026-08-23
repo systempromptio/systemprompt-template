@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT COUNT(*)::BIGINT AS \"count!\"\n        FROM organization_members m\n        JOIN users u ON u.id = m.user_id AND u.status = 'active'\n        JOIN organizations o ON o.id = m.org_id\n        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id\n        WHERE ($1::TEXT IS NULL OR o.slug = $1)\n          AND ($2::TEXT IS NULL OR COALESCE(NULLIF(upe.department, ''), 'Default') = $2)\n          AND NOT EXISTS (\n            SELECT 1 FROM ai_requests r\n            WHERE r.user_id = u.id AND NOT r.synthetic\n              AND r.created_at >= NOW() - make_interval(days => $3)\n          )\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e24cefcb151f39b1156fe8b31a3fd5d46020735f21bed1c4bcc92db1a9d3a991"
+}

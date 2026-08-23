@@ -1,0 +1,33 @@
+# Inbound Slack app — the admin control plane, reachable from Slack chat.
+#
+# Only the slash command is routed. `handle_events` in core dispatches on both
+# `message` and `app_mention`, so routing a channel id here would send every
+# line of chatter in that channel to the agent; routing the command key means
+# the agent runs only when someone types it.
+#
+# Who may drive it is decided here, not in roles.yaml: `authz.allowed_roles` is
+# projected into `access_control_rules` as `slack_workspace:<workspace_id>` at
+# startup (see extensions/web/admin/src/repositories/config/acl_yaml_loader.rs),
+# with default_included=false — so a role that is not listed is denied.
+#
+# Secrets are references, resolved from the profile secret store. The bot token
+# is the same one slack_alerts.rs posts with, so one Slack app covers both
+# directions.
+#
+# workspace_id is a placeholder until the app is installed: an unknown team_id
+# resolves to no app and every inbound request is a 200 no-op.
+
+slack_apps:
+  astound:
+    workspace_id: "T00000000000"
+    signing_secret_ref: slack_signing_secret
+    bot_token_ref: slack_bot_token
+    enabled: true
+    routing:
+      "/systemprompt": admin_console
+    authz:
+      allowed_roles: [admin]
+      # Attaches a sender to the account that already owns their Slack email,
+      # rather than minting a role-less user. Needs the `users:read.email` bot
+      # scope; without it the lookup fails closed and the sender stays unlinked.
+      link_by_workspace_email: true

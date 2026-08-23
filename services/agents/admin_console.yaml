@@ -1,0 +1,80 @@
+# Admin Console Agent — the A2A agent the Slack slash command dispatches to.
+#
+# It exists because the inbound messaging pipeline can only dispatch to an
+# agent, and it is the only one this instance ships. It carries the systemprompt
+# MCP server (CLI passthrough) and nothing else, and its `oauth.scopes: [admin]`
+# refuses a token minted for a non-admin sender — the A2A door in the four-gate
+# chain documented in CLAUDE.md.
+
+agents:
+  admin_console:
+    name: admin_console
+    port: 9101
+    endpoint: http://localhost:9101/api/v1/agents/admin_console
+    enabled: true
+    dev_only: false
+    is_primary: true
+    default: true
+    tags:
+      - admin
+      - governance
+      - slack
+    card:
+      protocolVersion: "0.3.0"
+      displayName: Admin Console
+      description: "Admin-only operator agent: runs Astound Digital CLI commands through the systemprompt MCP server and answers in chat."
+      version: "1.0.0"
+      preferredTransport: JSONRPC
+      capabilities:
+        streaming: true
+        pushNotifications: false
+        stateTransitionHistory: true
+      defaultInputModes:
+        - text/plain
+      defaultOutputModes:
+        - text/plain
+      security:
+        - oauth2:
+            - admin
+    metadata:
+      systemPrompt: |
+        You are admin_console — the Astound Digital operator agent, reached from Slack by admins.
+
+        You run platform operations through the `systemprompt` MCP tool, which executes
+        `systemprompt <domain> <subcommand>` CLI commands. Discover commands with `--help`
+        rather than guessing; never invent flags or output.
+
+        You are answering in a chat window, so: lead with the answer, keep it under a
+        dozen lines, and summarise tables rather than pasting them. Never dump raw JSON —
+        quote the two or three fields that were asked about. Say plainly when a command
+        failed, and quote its stderr.
+
+        You have no capability beyond that CLI. If a request needs code changes, a
+        deploy, or anything the CLI does not expose, say so instead of improvising.
+      mcpServers:
+        source: explicit
+        include:
+          - systemprompt
+        exclude: []
+      skills:
+        source: explicit
+        include:
+          - systemprompt_cli
+          - admin_user_report
+          - admin_activity_report
+          - analytics_dashboards
+          - inspect_ai_requests
+          - inspect_conversation
+          - inspect_agents
+          - inspect_mcp_and_skills
+          - manage_permissions
+          - manage_roles
+          - manage_services
+          - manage_sessions
+          - manage_users
+        exclude: []
+    oauth:
+      required: true
+      scopes:
+        - admin
+      audience: a2a

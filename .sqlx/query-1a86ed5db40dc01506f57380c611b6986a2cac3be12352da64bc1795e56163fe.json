@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n             status AS \"key!\",\n             COUNT(*)::bigint AS \"requests!\",\n             COUNT(*) FILTER (WHERE status NOT IN ('completed', 'pending', 'streaming'))::bigint\n               AS \"error_count!\",\n             COALESCE(SUM(input_tokens), 0)::bigint AS \"input_tokens!\",\n             COALESCE(SUM(output_tokens), 0)::bigint AS \"output_tokens!\",\n             COALESCE(SUM(cost_microdollars), 0)::bigint AS \"cost_microdollars!\",\n             COALESCE(percentile_cont(0.50) WITHIN GROUP (ORDER BY latency_ms), 0)::float8\n               AS \"p50_latency_ms!\",\n             COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms), 0)::float8\n               AS \"p95_latency_ms!\"\n           FROM ai_requests\n           WHERE created_at >= $1 AND created_at < $2\n             AND status IS NOT NULL AND status <> ''\n           GROUP BY status\n           ORDER BY COUNT(*) DESC, status",
+  "query": "SELECT\n             status AS \"key!\",\n             COUNT(*)::bigint AS \"requests!\",\n             COUNT(*) FILTER (WHERE status NOT IN ('completed', 'pending', 'streaming'))::bigint\n               AS \"error_count!\",\n             COALESCE(SUM(input_tokens), 0)::bigint AS \"input_tokens!\",\n             COALESCE(SUM(output_tokens), 0)::bigint AS \"output_tokens!\",\n             COALESCE(SUM(cost_microdollars), 0)::bigint AS \"cost_microdollars!\",\n             COALESCE(percentile_cont(0.50) WITHIN GROUP (ORDER BY latency_ms), 0)::float8\n               AS \"p50_latency_ms!\",\n             COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms), 0)::float8\n               AS \"p95_latency_ms!\"\n           FROM ai_requests ar\n           WHERE ar.created_at >= $1 AND ar.created_at < $2\n             AND ($3::text IS NULL OR EXISTS (\n                 SELECT 1 FROM organization_members om\n                 JOIN organizations o ON o.id = om.org_id\n                 WHERE om.user_id = ar.user_id AND o.slug = $3\n             ))\n             AND status IS NOT NULL AND status <> ''\n           GROUP BY status\n           ORDER BY COUNT(*) DESC, status",
   "describe": {
     "columns": [
       {
@@ -60,7 +60,8 @@
     "parameters": {
       "Left": [
         "Timestamptz",
-        "Timestamptz"
+        "Timestamptz",
+        "Text"
       ]
     },
     "nullable": [
@@ -74,5 +75,5 @@
       null
     ]
   },
-  "hash": "7b15bea11443b7e183dc16b7438100b366b262319bcd096d517d0e2966c31daa"
+  "hash": "1a86ed5db40dc01506f57380c611b6986a2cac3be12352da64bc1795e56163fe"
 }

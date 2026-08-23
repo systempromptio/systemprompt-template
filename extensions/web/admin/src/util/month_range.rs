@@ -119,7 +119,7 @@ fn from_start(instant: DateTime<Utc>) -> MonthRange {
     }
 }
 
-fn month_start(instant: DateTime<Utc>) -> DateTime<Utc> {
+pub(crate) fn month_start(instant: DateTime<Utc>) -> DateTime<Utc> {
     // Why: the first of the month at midnight always exists, so the fallible
     // constructors cannot fail here; returning the input unchanged rather than
     // panicking keeps a report renderable in the impossible case.
