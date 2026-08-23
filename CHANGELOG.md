@@ -43,6 +43,12 @@ reconstructed.
   `extensions/**/tests/*.rs` passed without being read -- the exact failure the
   gate exists to prevent. Widened, and the 21 `///` uses it surfaced in test code
   converted to `//`.
+- **`setup-local` failed on a clean clone.** `services/slack/example.yaml`
+  documented a `link_by_workspace_email` option core does not implement, and the
+  config structs are `deny_unknown_fields`, so profile validation refused the whole
+  services tree and setup aborted before writing a profile. The field is removed,
+  and a new test deserialises every shipped YAML that declares a `ServicesConfig`
+  section -- nothing else in the suite reads them, because nothing else runs setup.
 
 ## [0.29.0] - 2026-08-05
 

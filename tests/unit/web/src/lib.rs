@@ -81,6 +81,8 @@ mod shared_ids;
 #[cfg(test)]
 mod short_id_display;
 #[cfg(test)]
+mod shipped_services_yaml;
+#[cfg(test)]
 mod site_assets;
 #[cfg(test)]
 mod site_config_loader;

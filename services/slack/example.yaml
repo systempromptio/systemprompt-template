@@ -27,7 +27,3 @@ slack_apps:
       "/systemprompt": developer_agent
     authz:
       allowed_roles: [admin]
-      # Attaches a sender to the account that already owns their *confirmed*
-      # Slack email, instead of minting a role-less user on first contact.
-      # Leave off unless the app holds users:read.email.
-      link_by_workspace_email: false
