@@ -6,6 +6,14 @@
 //! it should be absent is as damaging as one omitted when it should be present:
 //! either way the org ends up in a state nobody wrote down.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::unwrap_used,
+    clippy::separated_literal_suffix,
+    reason = "test code: panics are the assertion mechanism"
+)]
+
 use systemprompt_web_admin::salesforce_org::apply::build_package;
 use systemprompt_web_admin::salesforce_org::scope::OauthScope;
 use systemprompt_web_admin::salesforce_org::spec::{
@@ -51,8 +59,8 @@ fn file(package: &[(String, String)], suffix: &str) -> String {
         .clone()
 }
 
-/// The scope list is deployed as one comma-separated element in the spec's
-/// order, using the Metadata API tokens rather than the YAML names.
+// The scope list is deployed as one comma-separated element in the spec's
+// order, using the Metadata API tokens rather than the YAML names.
 #[test]
 fn scopes_deploy_as_their_metadata_tokens() {
     let oauth = file(&build_package(&spec(), None), ".ecaOauth");
@@ -123,8 +131,8 @@ fn every_ip_relaxation_deploys_its_metadata_token() {
     }
 }
 
-/// Both halves or neither. A period without its unit is not a value the API
-/// accepts.
+// Both halves or neither. A period without its unit is not a value the API
+// accepts.
 #[test]
 fn refresh_token_validity_deploys_as_a_pair() {
     let policies = file(&build_package(&spec(), None), ".ecaOauthPlcy");
@@ -167,8 +175,8 @@ fn the_required_session_level_is_emitted_only_when_set() {
     );
 }
 
-/// Building the same spec twice must produce the same bytes, or a re-run of
-/// apply looks like a change.
+// Building the same spec twice must produce the same bytes, or a re-run of
+// apply looks like a change.
 #[test]
 fn the_package_is_deterministic() {
     assert_eq!(

@@ -5,6 +5,14 @@
 //! are worse still: no API exposes them, so export carries them from a baseline
 //! and inventing a value there would deploy it.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::unwrap_used,
+    clippy::separated_literal_suffix,
+    reason = "test code: panics are the assertion mechanism"
+)]
+
 use systemprompt_web_admin::salesforce_org::export::{
     UNREADABLE_PLACEHOLDER, oauth_from_settings, policies_from_record,
 };
@@ -74,16 +82,16 @@ fn an_absent_column_is_not_a_scope() {
     assert!(oauth.scopes.is_empty());
 }
 
-/// A column reported as a string rather than a boolean must not read as
-/// enabled. Coercing it would invent a grant.
+// A column reported as a string rather than a boolean must not read as
+// enabled. Coercing it would invent a grant.
 #[test]
 fn a_non_boolean_column_is_not_a_scope() {
     let settings = serde_json::json!({ "OauthScopesAPI": "true", "OauthScopesMCP_API": null });
     assert!(oauth_from_settings(&settings, None).scopes.is_empty());
 }
 
-/// `OauthScopesHUB_API` has no metadata token. It is warned about, never
-/// represented — a spec cannot carry it, so it must not become a scope.
+// `OauthScopesHUB_API` has no metadata token. It is warned about, never
+// represented — a spec cannot carry it, so it must not become a scope.
 #[test]
 fn the_unmapped_column_never_becomes_a_scope() {
     let settings = serde_json::json!({ "OauthScopesHUB_API": true });
@@ -108,8 +116,8 @@ fn the_single_logout_url_is_read_from_the_record() {
     );
 }
 
-/// Salesforce returns an unset text field as `""` as often as `null`. Treating
-/// the empty string as a value would diff a URL against nothing.
+// Salesforce returns an unset text field as `""` as often as `null`. Treating
+// the empty string as a value would diff a URL against nothing.
 #[test]
 fn an_empty_logout_url_is_absent_not_empty() {
     let record = serde_json::json!({ "SingleLogoutUrl": "" });
@@ -120,9 +128,9 @@ fn an_empty_logout_url_is_absent_not_empty() {
     );
 }
 
-/// Without a baseline the callback URL is deliberately unusable rather than
-/// plausible: applying the placeholder fails Salesforce's URL validation
-/// instead of quietly pointing the org somewhere wrong.
+// Without a baseline the callback URL is deliberately unusable rather than
+// plausible: applying the placeholder fails Salesforce's URL validation
+// instead of quietly pointing the org somewhere wrong.
 #[test]
 fn the_unreadable_callback_url_is_a_refusal_not_a_guess() {
     let oauth = oauth_from_settings(&serde_json::json!({}), None);
@@ -130,9 +138,9 @@ fn the_unreadable_callback_url_is_a_refusal_not_a_guess() {
     assert!(!UNREADABLE_PLACEHOLDER.starts_with("http"));
 }
 
-/// With no baseline the two safety flags come back on, so an unattended export
-/// cannot be applied into an org that then stops requiring PKCE or issuing the
-/// JWT-format tokens the deploy path depends on.
+// With no baseline the two safety flags come back on, so an unattended export
+// cannot be applied into an org that then stops requiring PKCE or issuing the
+// JWT-format tokens the deploy path depends on.
 #[test]
 fn unreadable_flags_default_to_the_safe_side() {
     let oauth = oauth_from_settings(&serde_json::json!({}), None);
@@ -151,9 +159,9 @@ fn the_baseline_supplies_every_unreadable_field() {
     assert!(oauth.consumer_secret_optional);
 }
 
-/// The baseline supplies only what cannot be read. Its scopes are not carried
-/// forward — that would report the org as compliant with a spec it has drifted
-/// from.
+// The baseline supplies only what cannot be read. Its scopes are not carried
+// forward — that would report the org as compliant with a spec it has drifted
+// from.
 #[test]
 fn the_baseline_does_not_override_readable_fields() {
     let baseline = baseline();
@@ -200,8 +208,8 @@ fn every_ip_relaxation_token_is_recognised() {
     }
 }
 
-/// An unknown or absent value reads as `Enforce`, the strict end. Guessing a
-/// bypass would present the org as more permissive than it is.
+// An unknown or absent value reads as `Enforce`, the strict end. Guessing a
+// bypass would present the org as more permissive than it is.
 #[test]
 fn an_unrecognised_ip_relaxation_falls_back_to_enforce() {
     for value in [
@@ -251,8 +259,8 @@ fn every_validity_unit_is_recognised() {
     }
 }
 
-/// Half a validity is no validity. Defaulting the missing half would diff a
-/// value the org never reported.
+// Half a validity is no validity. Defaulting the missing half would diff a
+// value the org never reported.
 #[test]
 fn a_half_reported_validity_is_none() {
     let cases = [

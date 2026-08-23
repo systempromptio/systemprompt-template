@@ -1,3 +1,11 @@
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::unwrap_used,
+    clippy::separated_literal_suffix,
+    reason = "test code: panics are the assertion mechanism"
+)]
+
 use std::path::Path;
 
 use systemprompt::identifiers::AgentId;

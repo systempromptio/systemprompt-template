@@ -7,6 +7,14 @@
 //! revokes something nobody asked for. These tests pin all three mappings and
 //! their mutual consistency.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::unwrap_used,
+    clippy::separated_literal_suffix,
+    reason = "test code: panics are the assertion mechanism"
+)]
+
 use std::collections::BTreeSet;
 
 use systemprompt_web_admin::salesforce_org::scope::{OauthScope, UNMAPPED_SCOPE_FIELDS};
@@ -52,8 +60,8 @@ fn no_token_or_field_is_blank() {
     }
 }
 
-/// Every scope column on `ExtlClntAppOauthSettings` shares this prefix. A
-/// mapping that does not is a typo that would silently read as `false`.
+// Every scope column on `ExtlClntAppOauthSettings` shares this prefix. A
+// mapping that does not is a typo that would silently read as `false`.
 #[test]
 fn every_sobject_field_is_a_scope_column() {
     for scope in OauthScope::all() {
@@ -65,8 +73,8 @@ fn every_sobject_field_is_a_scope_column() {
     }
 }
 
-/// The mappings that are not a straight uppercase of the variant name. These
-/// were read back from a live org and are the ones a refactor would get wrong.
+// The mappings that are not a straight uppercase of the variant name. These
+// were read back from a live org and are the ones a refactor would get wrong.
 #[test]
 fn the_irregular_mappings_are_pinned() {
     let cases = [
@@ -154,8 +162,8 @@ fn the_everyday_scopes_map_as_expected() {
     }
 }
 
-/// Export drives its SOQL off this, so a column missing from the projection is
-/// a scope that always reads back as absent.
+// Export drives its SOQL off this, so a column missing from the projection is
+// a scope that always reads back as absent.
 #[test]
 fn the_projection_lists_every_column() {
     let projection = OauthScope::soql_projection();
@@ -194,8 +202,8 @@ fn the_projection_entries_are_the_columns_in_declared_order() {
     assert_eq!(projection.split(',').collect::<Vec<_>>(), expected);
 }
 
-/// `OauthScopesHUB_API` has no metadata token, so it cannot round-trip.
-/// Querying it would invite export to represent something apply then clears.
+// `OauthScopesHUB_API` has no metadata token, so it cannot round-trip.
+// Querying it would invite export to represent something apply then clears.
 #[test]
 fn the_unmapped_column_is_kept_out_of_the_projection() {
     let projection = OauthScope::soql_projection();
@@ -251,8 +259,8 @@ fn the_snake_case_names_are_the_documented_ones() {
     }
 }
 
-/// Diff sorts scope sets before comparing, so the ordering must be total and
-/// stable rather than incidental.
+// Diff sorts scope sets before comparing, so the ordering must be total and
+// stable rather than incidental.
 #[test]
 fn scopes_order_by_declaration() {
     let mut scopes = vec![OauthScope::Mcp, OauthScope::Basic, OauthScope::Api];

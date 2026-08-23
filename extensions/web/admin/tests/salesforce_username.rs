@@ -3,6 +3,14 @@
 //! the Username is a generated handle. These tests pin the selection +
 //! fallback.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::unwrap_used,
+    clippy::separated_literal_suffix,
+    reason = "test code: panics are the assertion mechanism"
+)]
+
 use systemprompt_web_admin::test_support::select_sf_username;
 
 #[test]

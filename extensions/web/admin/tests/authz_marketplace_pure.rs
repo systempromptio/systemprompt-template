@@ -1,6 +1,14 @@
 //! The subject dimensions this extension adds, and the pure shape-shuffling
 //! the marketplace filter does around the access-control resolver.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::unwrap_used,
+    clippy::separated_literal_suffix,
+    reason = "test code: panics are the assertion mechanism"
+)]
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use systemprompt::marketplace::MarketplaceCandidate;

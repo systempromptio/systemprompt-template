@@ -1,7 +1,8 @@
 #![allow(
     clippy::expect_used,
     clippy::panic,
-    reason = "test code: panics are the assertion mechanism"
+    clippy::too_many_arguments,
+    reason = "test code: panics are the assertion mechanism, and a date-literal helper reads better with one parameter per field"
 )]
 
 use chrono::{TimeZone, Utc};

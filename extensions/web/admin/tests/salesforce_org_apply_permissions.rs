@@ -6,6 +6,14 @@
 //! escaping matters for the same reason — a value that closes the literal early
 //! turns a lookup into a different query.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::unwrap_used,
+    clippy::separated_literal_suffix,
+    reason = "test code: panics are the assertion mechanism"
+)]
+
 use systemprompt_web_admin::salesforce_org::apply::lookup::{
     find_app_id, find_permission_set_id, find_user_id, grant_exists, holds_permission_set,
     soql_escape, soql_list, str_field,
@@ -60,16 +68,16 @@ fn an_ordinary_value_needs_no_escaping() {
     );
 }
 
-/// A single quote would otherwise close the literal and let the rest of the
-/// value be read as SOQL.
+// A single quote would otherwise close the literal and let the rest of the
+// value be read as SOQL.
 #[test]
 fn a_quote_is_escaped() {
     assert_eq!(soql_escape("o'brien@example.com"), "o\\'brien@example.com");
     assert_eq!(soql_escape("' OR Id != null--"), "\\' OR Id != null--");
 }
 
-/// The backslash goes first, so an escape the value already contains is not
-/// mistaken for one this function added.
+// The backslash goes first, so an escape the value already contains is not
+// mistaken for one this function added.
 #[test]
 fn a_backslash_is_escaped_before_the_quote() {
     assert_eq!(soql_escape("a\\b"), "a\\\\b");
@@ -104,8 +112,8 @@ fn an_app_is_found_by_developer_name() {
     );
 }
 
-/// Names are matched exactly. Salesforce developer names are case sensitive,
-/// and a loose match would grant the wrong app.
+// Names are matched exactly. Salesforce developer names are case sensitive,
+// and a loose match would grant the wrong app.
 #[test]
 fn an_app_lookup_does_not_match_loosely() {
     assert!(find_app_id(&apps(), "systemprompt_sso").is_none());
@@ -138,8 +146,8 @@ fn a_user_is_found_by_username() {
     );
 }
 
-/// The username is not the email, and a miss must stay a miss: apply records a
-/// follow-up rather than assigning a permission set to the wrong person.
+// The username is not the email, and a miss must stay a miss: apply records a
+// follow-up rather than assigning a permission set to the wrong person.
 #[test]
 fn an_unknown_username_is_not_resolved() {
     assert!(find_user_id(&users(), "ed@systemprompt.io").is_none());
@@ -159,8 +167,8 @@ fn an_existing_grant_is_recognised() {
     assert!(grant_exists(&grants(), "0PS0000000001", "0Ci0000000001"));
 }
 
-/// Both halves must match. Treating either alone as a hit would skip a grant
-/// the app needs to be pre-authorized.
+// Both halves must match. Treating either alone as a hit would skip a grant
+// the app needs to be pre-authorized.
 #[test]
 fn a_partial_grant_match_is_not_a_grant() {
     assert!(!grant_exists(&grants(), "0PS0000000002", "0Ci0000000001"));
@@ -198,8 +206,8 @@ fn an_absent_assignment_reads_as_missing() {
     assert!(!holds_permission_set(&[], "Salesforce_MCP_Access"));
 }
 
-/// A row whose relationship did not come back must not read as held —
-/// that would skip an assignment the user never received.
+// A row whose relationship did not come back must not read as held —
+// that would skip an assignment the user never received.
 #[test]
 fn a_row_without_the_nested_record_is_not_held() {
     let rows = vec![

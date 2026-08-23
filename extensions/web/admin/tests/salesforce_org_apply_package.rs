@@ -8,6 +8,14 @@
 //! schema version, `isNamedUserJwtEnabled` and the certificate; these tests
 //! cover the derived names, the escaping and the optional elements.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::unwrap_used,
+    clippy::separated_literal_suffix,
+    reason = "test code: panics are the assertion mechanism"
+)]
+
 use systemprompt_web_admin::salesforce_org::apply::build_package;
 use systemprompt_web_admin::salesforce_org::scope::OauthScope;
 use systemprompt_web_admin::salesforce_org::spec::{
@@ -57,17 +65,17 @@ fn paths(package: &[(String, String)]) -> Vec<String> {
     package.iter().map(|(path, _)| path.clone()).collect()
 }
 
-/// All four components plus the manifest. A deploy missing one of these is not
-/// a partial deploy — the Metadata API rejects the package.
+// All four components plus the manifest. A deploy missing one of these is not
+// a partial deploy — the Metadata API rejects the package.
 #[test]
 fn the_package_carries_the_manifest_and_four_components() {
     let package = build_package(&spec(), None);
     assert_eq!(package.len(), 5, "{:?}", paths(&package));
 }
 
-/// The dependent components' names are derived from the app's developer name.
-/// Salesforce matches them by name, so a changed suffix creates a second,
-/// unlinked component rather than updating the first.
+// The dependent components' names are derived from the app's developer name.
+// Salesforce matches them by name, so a changed suffix creates a second,
+// unlinked component rather than updating the first.
 #[test]
 fn component_paths_are_derived_from_the_developer_name() {
     let package = build_package(&spec(), None);
@@ -83,8 +91,8 @@ fn component_paths_are_derived_from_the_developer_name() {
     );
 }
 
-/// Every manifest member must name a file actually in the package, or the
-/// deploy fails on a component it was told to expect.
+// Every manifest member must name a file actually in the package, or the
+// deploy fails on a component it was told to expect.
 #[test]
 fn the_manifest_names_every_component() {
     let package = build_package(&spec(), None);
@@ -127,8 +135,8 @@ fn every_component_declares_the_metadata_namespace() {
     }
 }
 
-/// Each dependent component points back at the app by name. Without it the
-/// component deploys unattached to anything.
+// Each dependent component points back at the app by name. Without it the
+// component deploys unattached to anything.
 #[test]
 fn each_dependent_component_names_its_app() {
     let package = build_package(&spec(), None);
@@ -176,8 +184,8 @@ fn a_present_description_is_emitted() {
     );
 }
 
-/// An unescaped `&` or `<` makes the whole package unparseable, and these are
-/// operator-supplied strings.
+// An unescaped `&` or `<` makes the whole package unparseable, and these are
+// operator-supplied strings.
 #[test]
 fn markup_characters_are_escaped() {
     let mut spec = spec();
@@ -220,8 +228,8 @@ fn the_callback_url_is_deployed_verbatim() {
     );
 }
 
-/// Salesforce compares the callback character for character, so a URL with a
-/// query string must not be reformatted or its `&` left raw.
+// Salesforce compares the callback character for character, so a URL with a
+// query string must not be reformatted or its `&` left raw.
 #[test]
 fn a_callback_url_with_a_query_string_survives() {
     let mut spec = spec();
@@ -233,16 +241,16 @@ fn a_callback_url_with_a_query_string_survives() {
     );
 }
 
-/// Without a certificate the element is absent rather than empty. An empty one
-/// would clear the app's signature just as effectively.
+// Without a certificate the element is absent rather than empty. An empty one
+// would clear the app's signature just as effectively.
 #[test]
 fn no_certificate_means_no_certificate_element() {
     let global = file(&build_package(&spec(), None), ".ecaGlblOauth");
     assert!(!global.contains("<certificate>"), "{global}");
 }
 
-/// The operator has a PEM on disk next to the private key; a bare base64 body
-/// is accepted unchanged so either form works.
+// The operator has a PEM on disk next to the private key; a bare base64 body
+// is accepted unchanged so either form works.
 #[test]
 fn a_bare_certificate_body_passes_through() {
     let global = file(&build_package(&spec(), Some("QkJCQg==")), ".ecaGlblOauth");
@@ -262,8 +270,8 @@ fn a_multi_line_pem_is_joined_without_its_framing() {
     );
 }
 
-/// The order is the one the Metadata API accepted. It is not alphabetical by
-/// accident — reordering these has been rejected by the API.
+// The order is the one the Metadata API accepted. It is not alphabetical by
+// accident — reordering these has been rejected by the API.
 #[test]
 fn global_oauth_elements_keep_their_accepted_order() {
     let global = file(&build_package(&spec(), Some("QkJCQg==")), ".ecaGlblOauth");

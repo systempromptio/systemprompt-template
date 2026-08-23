@@ -63,7 +63,7 @@ fn walk(dir: &Path, ext: &str, out: &mut Vec<PathBuf>) {
     }
 }
 
-/// Generated at publish time by `bundle_admin_css`; absent in a fresh checkout.
+// Generated at publish time by `bundle_admin_css`; absent in a fresh checkout.
 const GENERATED: &[&str] = &["css/admin-bundle.css"];
 
 #[test]
@@ -286,8 +286,8 @@ fn custom_properties_use_sp_prefix() {
     );
 }
 
-/// Scoped custom properties assigned contextually (per-section accents,
-/// per-element fills, responsive gutter overrides), not design tokens.
+// Scoped custom properties assigned contextually (per-section accents,
+// per-element fills, responsive gutter overrides), not design tokens.
 const SCOPED_PROPERTIES: &[&str] = &[
     "--sp-section-color",
     "--sp-fill",

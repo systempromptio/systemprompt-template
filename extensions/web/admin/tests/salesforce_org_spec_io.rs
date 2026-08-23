@@ -5,6 +5,14 @@
 //! operator a document that no longer describes their org, and the next apply
 //! would deploy the loss.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::unwrap_used,
+    clippy::separated_literal_suffix,
+    reason = "test code: panics are the assertion mechanism"
+)]
+
 use std::path::Path;
 
 use systemprompt_web_admin::salesforce_org::spec::{OrgSpec, SpecError};
@@ -86,8 +94,8 @@ fn a_minimal_spec_round_trips_through_yaml() {
     assert_eq!(parse(&yaml), spec);
 }
 
-/// Absent optionals must stay absent. Emitting `description: null` would fail
-/// the next parse of a file this tool wrote itself.
+// Absent optionals must stay absent. Emitting `description: null` would fail
+// the next parse of a file this tool wrote itself.
 #[test]
 fn absent_optionals_are_not_emitted() {
     let yaml = parse(MINIMAL).to_yaml().expect("serialises");

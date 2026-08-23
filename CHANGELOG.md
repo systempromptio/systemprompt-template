@@ -20,6 +20,21 @@ Conventions (strict — hold every entry to them):
 
 ## Unreleased
 
+### Added
+
+- The bundled `systemprompt` MCP server stamps `tools/list` and
+  `resources/templates/list` through core's `build_tool_list_result` and
+  `build_resource_template_list_result`, so both carry the SEP-2549 cache metadata
+  (`ttlMs`, `cacheScope`) that protocol `2026-07-28` requires. A client that parks
+  connectors on a missing stamp now sees this server as conformant.
+
+### Fixed
+
+- The inline-comment gate walked only top-level `tests/**/*.rs`, so every nested
+  `extensions/**/tests/*.rs` passed vacuously. Widening the glob surfaced 22 real
+  `///` uses in test code, now converted, and two clippy failures that had been
+  invisible to the gate.
+
 ### Breaking
 
 - **The web extension's migration chain is retired: a clean database bootstraps from the

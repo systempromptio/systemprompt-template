@@ -6,6 +6,14 @@
 //! leaving it alone. These tests pin the defaults, the strictness that rejects
 //! a typo'd key, and the YAML round-trip.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    clippy::unwrap_used,
+    clippy::separated_literal_suffix,
+    reason = "test code: panics are the assertion mechanism"
+)]
+
 use systemprompt_web_admin::salesforce_org::scope::OauthScope;
 use systemprompt_web_admin::salesforce_org::spec::{
     IpRelaxation, OrgSpec, SPEC_RELATIVE_PATH, Validity, ValidityUnit,
@@ -112,9 +120,9 @@ fn omitted_optionals_default_to_none() {
     );
 }
 
-/// Both default *on*. They are emitted on every deploy, so defaulting either
-/// to `false` would silently disable PKCE or the JWT-format access tokens the
-/// REST metadata deploy runs on.
+// Both default *on*. They are emitted on every deploy, so defaulting either
+// to `false` would silently disable PKCE or the JWT-format access tokens the
+// REST metadata deploy runs on.
 #[test]
 fn pkce_and_named_user_jwt_default_on() {
     let oauth = parse(MINIMAL).external_client_app.oauth;
@@ -185,8 +193,8 @@ fn a_permission_set_without_a_grant_parses() {
     assert!(spec.permission_sets[0].description.is_none());
 }
 
-/// A misspelled key must fail loudly. Silently ignoring it would deploy the
-/// default for the field the operator thought they had set.
+// A misspelled key must fail loudly. Silently ignoring it would deploy the
+// default for the field the operator thought they had set.
 #[test]
 fn an_unknown_key_is_rejected() {
     let cases = [
@@ -214,8 +222,8 @@ fn an_unknown_scope_is_rejected() {
     assert!(serde_yaml::from_str::<OrgSpec>(&yaml).is_err());
 }
 
-/// The scope vocabulary is snake_case in YAML even where Salesforce's own
-/// tokens are not.
+// The scope vocabulary is snake_case in YAML even where Salesforce's own
+// tokens are not.
 #[test]
 fn scopes_use_the_snake_case_vocabulary() {
     let replacement = "      - open_id\n      - refresh_token\n      - einstein_gpt\n      - data_cloud_user_claims";

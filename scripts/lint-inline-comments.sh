@@ -94,7 +94,7 @@ while IFS= read -r file; do
     FOUND=$(grep -n '^[[:space:]]*///' "$file" \
         | sed "s|^|${file}:|;s|\$| — /// banned in test code, use //|" || true)
     [ -n "$FOUND" ] && MATCHES+="${FOUND}"$'\n'
-done < <(git ls-files -co --exclude-standard 'tests/**/*.rs' | sort -u)
+done < <(git ls-files -co --exclude-standard 'tests/**/*.rs' ':(glob)**/tests/**/*.rs' | sort -u)
 
 if [ -z "$MATCHES" ]; then
     echo "lint-inline-comments: OK (no unlisted inline comments)"

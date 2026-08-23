@@ -6,8 +6,8 @@
 
 //! `/hooks/track` LOC counting: the line deltas computed from the
 //! un-truncated tool input before `sanitize_metadata` destroys it. These pin
-//! the tool-shape rules: Write counts content lines as added, Edit counts
-//! new/old string lines, MultiEdit sums its edits array, failures and
+//! the tool-shape rules: `Write` counts content lines as added, `Edit` counts
+//! new/old string lines, `MultiEdit` sums its edits array, failures and
 //! non-edit tools count zero.
 
 use systemprompt_web_admin::test_support::{LocDelta, compute_loc_delta};
