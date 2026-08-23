@@ -36,7 +36,7 @@ fn admin_dir_with(templates: &[(&str, &str)], partials: &[(&str, &str)]) -> temp
     dir
 }
 
-/// The real `storage/files/admin` tree, found by walking up from this crate.
+// The real `storage/files/admin` tree, found by walking up from this crate.
 fn repo_admin_dir() -> Option<PathBuf> {
     let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     loop {

@@ -52,10 +52,10 @@ fn exemptions(root: &Path) -> BTreeSet<String> {
         .collect()
 }
 
-/// Replace every `{{...}}` expression (possibly spanning lines) with one
-/// space BEFORE finding attributes: an expression can contain a `"` (e.g.
-/// `{{#if (eq x "active")}}`) that would otherwise terminate the
-/// `class="..."` match early and spill junk tokens. Braces do not nest.
+// Replace every `{{...}}` expression (possibly spanning lines) with one
+// space BEFORE finding attributes: an expression can contain a `"` (e.g.
+// `{{#if (eq x "active")}}`) that would otherwise terminate the
+// `class="..."` match early and spill junk tokens. Braces do not nest.
 fn strip_handlebars(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let mut rest = text;
@@ -75,10 +75,10 @@ fn strip_handlebars(text: &str) -> String {
     out
 }
 
-/// Class tokens from a template. Dynamic or too-generic tokens are
-/// discarded: anything still holding braces, shorter than three
-/// characters, starting with a non-letter, or ending in `-` (the stump of
-/// a stripped dynamic modifier such as `cc-bp-item--{{status}}`).
+// Class tokens from a template. Dynamic or too-generic tokens are
+// discarded: anything still holding braces, shorter than three
+// characters, starting with a non-letter, or ending in `-` (the stump of
+// a stripped dynamic modifier such as `cc-bp-item--{{status}}`).
 fn classes_in(template: &str) -> BTreeSet<String> {
     let text = strip_handlebars(template);
     let mut found = BTreeSet::new();
@@ -112,8 +112,8 @@ fn classes_in(template: &str) -> BTreeSet<String> {
     found
 }
 
-/// A class `foo` is satisfied when `.foo` appears in the CSS corpus not
-/// immediately followed by another class-name character.
+// A class `foo` is satisfied when `.foo` appears in the CSS corpus not
+// immediately followed by another class-name character.
 fn has_rule(css: &str, class: &str) -> bool {
     let needle = format!(".{class}");
     for (idx, _) in css.match_indices(&needle) {

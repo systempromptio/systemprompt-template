@@ -37,6 +37,13 @@ reconstructed.
 - Helm chart 0.17.0 with appVersion 0.35.0; the CasaOS, DigitalOcean, and Packer
   manifests pin the 0.35.0 image.
 
+### Fixed
+
+- The inline-comment gate globbed only top-level `tests/**/*.rs`, so every nested
+  `extensions/**/tests/*.rs` passed without being read -- the exact failure the
+  gate exists to prevent. Widened, and the 21 `///` uses it surfaced in test code
+  converted to `//`.
+
 ## [0.29.0] - 2026-08-05
 
 ### Breaking

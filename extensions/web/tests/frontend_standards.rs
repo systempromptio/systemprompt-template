@@ -50,9 +50,9 @@ const fn is_word(c: char) -> bool {
     c.is_ascii_alphanumeric() || c == '_'
 }
 
-/// Strip string literals ('…', "…", `…`, non-multiline) and a trailing
-/// `//` comment, so `==` inside strings and URLs never fire on code rules.
-/// Each removed literal becomes one space to preserve token boundaries.
+// Strip string literals ('…', "…", `…`, non-multiline) and a trailing
+// `//` comment, so `==` inside strings and URLs never fire on code rules.
+// Each removed literal becomes one space to preserve token boundaries.
 fn strip_literals_and_comment(line: &str) -> String {
     let mut out = String::with_capacity(line.len());
     let mut chars = line.chars().peekable();
@@ -81,8 +81,8 @@ fn strip_literals_and_comment(line: &str) -> String {
     out
 }
 
-/// Occurrence of `needle` whose preceding character fails `prev_ok`
-/// (start-of-line counts as ok unless `require_prev`).
+// Occurrence of `needle` whose preceding character fails `prev_ok`
+// (start-of-line counts as ok unless `require_prev`).
 fn has_call(hay: &str, needle: &str, require_prev: bool, prev_ok: impl Fn(char) -> bool) -> bool {
     for (idx, _) in hay.match_indices(needle) {
         match hay[..idx].chars().next_back() {
@@ -132,8 +132,8 @@ fn has_token_fallback(line: &str) -> bool {
     false
 }
 
-/// Files whose job is fetch/event wiring for the public site; mirrors the
-/// path excludes in the shell gate.
+// Files whose job is fetch/event wiring for the public site; mirrors the
+// path excludes in the shell gate.
 fn is_site_entry(rel: &str) -> bool {
     const TOP_LEVEL: &[&str] = &["analytics", "homepage", "blog-list", "docs", "mobile-menu"];
     rel.contains("services/api.js")
