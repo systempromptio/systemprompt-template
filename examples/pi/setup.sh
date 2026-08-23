@@ -76,7 +76,11 @@ _jwt_payload_b64() {
   payload=$(printf '%s' "$1" | cut -d. -f2)
   pad=$(( (4 - ${#payload} % 4) % 4 ))
   printf '%s' "$payload"
-  [[ $pad -gt 0 ]] && printf '%.0s=' $(seq 1 $pad)
+  # Why: this is the function's last command, so a bare `&&` test would return
+  # 1 whenever the payload needs no padding -- and under `set -e` with
+  # `pipefail` that kills the caller's pipeline. Whether it fires depends on the
+  # JWT's length, so it fails only for some tokens.
+  if [[ $pad -gt 0 ]]; then printf '%.0s=' $(seq 1 $pad); fi
 }
 SESSION_ID=$(_jwt_payload_b64 "$TOKEN" | tr '_-' '/+' | base64 -d 2>/dev/null \
   | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)

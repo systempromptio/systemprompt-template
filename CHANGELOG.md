@@ -43,6 +43,12 @@ reconstructed.
   `extensions/**/tests/*.rs` passed without being read -- the exact failure the
   gate exists to prevent. Widened, and the 21 `///` uses it surfaced in test code
   converted to `//`.
+- **`examples/pi/setup.sh` aborted depending on the token's length.**
+  `_jwt_payload_b64` ended on a bare `[[ $pad -gt 0 ]] && …` test, so it returned 1
+  whenever the JWT payload needed no base64 padding; under `set -e` with `pipefail`
+  that killed the caller's pipeline right after the session id was extracted, with
+  no error message. `trace.sh` carried the same pattern inside a pipeline and
+  survived only on payload length. Both are now `if` statements.
 - **`setup-local` failed on a clean clone.** `services/slack/example.yaml`
   documented a `link_by_workspace_email` option core does not implement, and the
   config structs are `deny_unknown_fields`, so profile validation refused the whole

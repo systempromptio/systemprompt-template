@@ -85,7 +85,9 @@ jwt_session_claim() {
   [[ "$(printf '%s' "$1" | awk -F. '{print NF}')" == "3" ]] || return 0
   payload=$(printf '%s' "$1" | cut -d. -f2)
   pad=$(( (4 - ${#payload} % 4) % 4 ))
-  { printf '%s' "$payload"; [[ $pad -gt 0 ]] && printf '%.0s=' $(seq 1 $pad); } \
+  # Why: a bare `&&` test as the group's last command returns 1 when the payload
+  # needs no padding, and `pipefail` then fails the whole pipeline for nothing.
+  { printf '%s' "$payload"; if [[ $pad -gt 0 ]]; then printf '%.0s=' $(seq 1 $pad); fi; } \
     | tr '_-' '/+' | base64 -d 2>/dev/null \
     | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1
 }
