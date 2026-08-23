@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.36.0] - 2026-08-24
+
+Tracks systemprompt-core 0.36.0. Helm chart 0.18.0 with appVersion 0.36.0; the
+CasaOS, DigitalOcean, and Packer manifests pin the 0.36.0 image.
+
+### Added
+
+- `services/slack/example.yaml` documents `link_by_workspace_email` again. Core
+  0.36.0 implements it: `SlackClient::user_info` reads the sender's profile and an
+  address Slack reports as confirmed attaches them to the account that already
+  owns it. It was removed in 0.35.0 because the field existed only in this example
+  and made a clean `setup-local` fail; the shipped-YAML gate added then keeps that
+  from recurring.
+
 ## [0.35.0] - 2026-08-23
 
 Tracks systemprompt-core 0.35.0. The 0.30.0 through 0.34.0 template releases were
