@@ -6,6 +6,7 @@ DELETE /api/public/admin/access-control/entity/{entity_type}/{entity_id}/rules/{
 DELETE /api/public/admin/gateway/routes/{idx}                anonymous=401 non-admin=403 admin=400
 DELETE /api/public/admin/management/departments/{id}         anonymous=401 non-admin=403 admin=404
 DELETE /api/public/admin/users/{user_id}                     anonymous=401 non-admin=403 admin=404
+DELETE /api/public/admin/users/{user_id}/slack-identity      anonymous=401 non-admin=403 admin=200
 GET    /admin                                                anonymous=307 non-admin=303 admin=303
 GET    /admin/access/departments                             anonymous=307 non-admin=303 admin=200
 GET    /admin/access/departments/{id}                        anonymous=307 non-admin=303 admin=404
@@ -84,6 +85,7 @@ POST   /api/public/admin/management/departments              anonymous=401 non-a
 POST   /api/public/admin/users                               anonymous=401 non-admin=403 admin=422
 POST   /api/public/admin/users/{user_id}/pats                anonymous=401 non-admin=403 admin=422
 POST   /api/public/admin/users/{user_id}/share-token         anonymous=401 non-admin=403 admin=404
+POST   /api/public/admin/users/{user_id}/slack-identity      anonymous=401 non-admin=403 admin=422
 PUT    /api/public/admin/access-control/bulk                 anonymous=401 non-admin=403 admin=422
 PUT    /api/public/admin/access-control/entity/{entity_type}/{entity_id} anonymous=401 non-admin=403 admin=422
 PUT    /api/public/admin/management/departments/{id}         anonymous=401 non-admin=403 admin=422
