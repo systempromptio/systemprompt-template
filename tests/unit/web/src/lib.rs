@@ -79,9 +79,9 @@ mod shared_errors;
 #[cfg(test)]
 mod shared_ids;
 #[cfg(test)]
-mod short_id_display;
-#[cfg(test)]
 mod shipped_services_yaml;
+#[cfg(test)]
+mod short_id_display;
 #[cfg(test)]
 mod site_assets;
 #[cfg(test)]
