@@ -20,6 +20,12 @@ Conventions (strict — hold every entry to them):
 
 ## Unreleased
 
+### Changed
+
+- Tracks systemprompt-core 0.36.0. Pin-only: the breaking
+  `McpDomainError::PortHolderUnverifiable` variant is not matched in this repo, and
+  the messaging and Slack APIs 0.36.0 changed are not used here.
+
 ### Added
 
 - The bundled `systemprompt` MCP server stamps `tools/list` and
