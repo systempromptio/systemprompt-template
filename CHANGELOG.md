@@ -1,5 +1,61 @@
 # Changelog
 
+## [0.37.1] - 2026-08-25
+
+Tracks systemprompt-core **0.37.0** — the first template release whose version
+does not match the core release it carries. Helm chart 0.19.1 with appVersion
+0.37.1; the CasaOS, DigitalOcean, and Packer manifests pin the 0.37.1 image.
+
+### Fixed
+
+- A trace written by an enforcement site that made no AI request could not be
+  resolved. The lookup searched `ai_requests` alone, but such a decision only
+  ever writes a `governance_decisions` row, and since core 0.34.0 that row
+  carries its own `trace_id` — so those traces resolved to nothing and the
+  governance chain behind them was unreachable. The lookup now unions both
+  tables.
+- The trace list and stats no longer read a `trace_id` as if it were a
+  `session_id`. That fallback existed to keep governance-only rows visible; it
+  conflated two identifiers, and those rows now surface through the resolver
+  above instead.
+
+### Changed
+
+- `scripts/sync-release-version.sh` accepts `CORE_VERSION`, so a template
+  release can name a core release with a different number. Without it the script
+  pinned the core crates to the template's own version, which for this release
+  would have named a core 0.37.1 that was never published. In `--check` mode it
+  defaults to the pin already in `Cargo.toml`, so the release guard asserts that
+  every core pin agrees rather than that it equals the tag. The chart bump now
+  follows the shape of the release: a patch release bumps the chart's patch.
+
+## [0.37.0] - 2026-08-24
+
+Tracks systemprompt-core 0.37.0. Helm chart 0.19.0 with appVersion 0.37.0; the
+CasaOS, DigitalOcean, and Packer manifests pin the 0.37.0 image.
+
+### Changed
+
+- The scaled scenario runs the scheduler on **every** replica rather than a
+  single dedicated container. A replica now claims each job with a Postgres
+  advisory lock keyed on the job name (`scheduler.distributed_lock`, on by
+  default) and the losers skip, so the dedicated scheduler node and the
+  `scheduler-disabled` config override — both deployment-time mitigations for a
+  limitation the engine has since fixed — are gone. The two Kubernetes
+  Deployments collapse into one, and `04-scheduler-isolation.sh` becomes
+  `04-scheduler-exactly-once.sh`: it proves every replica starts the engine and
+  the job still executes exactly once, which is the stronger property and the
+  one that survives losing a node.
+
+### Fixed
+
+- Three pieces of configuration were read from process-global state, so tests
+  that varied them were correct only one-per-process. The MCP CLI's binary and
+  working directory now come from a `CliLocation` resolved at the composition
+  root, the ingestion job takes `delete_orphans` as a job parameter and resolves
+  its blog config from the job context's own `AppPaths`, and the
+  subject-dimension registry is cached per database.
+
 ## [0.36.0] - 2026-08-24
 
 Tracks systemprompt-core 0.36.0. Helm chart 0.18.0 with appVersion 0.36.0; the
