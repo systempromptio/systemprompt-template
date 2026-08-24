@@ -138,11 +138,9 @@ pub(crate) async fn govern_tool_use(
         chain,
         approver: None,
         act_chain: Vec::new(),
-        // Why: the tool-call webhook carries no conversational context; only
-        // the gateway path knows one.
+        // Why: the tool-call webhook carries no conversational context and no
+        // request-plane trace; only the gateway path knows either.
         context_id: None,
-        // Why: the MCP tool plane is session-correlated end to end; no trace
-        // id is minted for it, and session_id is a real session here.
         trace_id: None,
     };
     spawn_audit_recording(&pool, audit);

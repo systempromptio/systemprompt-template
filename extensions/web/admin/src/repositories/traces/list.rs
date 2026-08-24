@@ -16,11 +16,6 @@ pub struct TracePage {
     pub offset: i64,
 }
 
-// Why: The sort is a closed `TraceSort` (five columns × two directions).
-//
-// Each `(column, dir)` pair is bound as text and selected by a per-key `CASE`
-// in the `ORDER BY`, so the whole statement stays a single compile-time
-// `query_as!` rather than an interpolated string.
 #[expect(
     clippy::too_many_lines,
     reason = "body is one irreducible compile-time-checked query_as! SQL literal; see comment above"
@@ -49,13 +44,13 @@ pub async fn list_traces(
         ),
         all_sessions AS (
             SELECT
-                COALESCE(t.session_id, NULLIF(g.session_id, ''), g.trace_id) AS session_id,
+                COALESCE(NULLIF(g.session_id, ''), t.session_id) AS session_id,
                 g.user_id, g.agent_id, g.agent_scope,
                 g.created_at, g.decision, 'gov'::text AS source
             FROM governance_decisions g
             LEFT JOIN trace_to_session t ON t.trace_id = g.trace_id
             WHERE g.created_at >= $1 AND g.created_at < $2
-              AND (NULLIF(g.session_id, '') IS NOT NULL OR g.trace_id IS NOT NULL)
+              AND (NULLIF(g.session_id, '') IS NOT NULL OR t.session_id IS NOT NULL)
             UNION ALL
             SELECT session_id, user_id, NULL::text AS agent_id, NULL::text AS agent_scope,
                    created_at, NULL::text AS decision, 'ai'::text AS source

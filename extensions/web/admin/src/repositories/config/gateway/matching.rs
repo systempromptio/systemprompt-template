@@ -60,8 +60,6 @@ pub fn synthesize_route_id(model_pattern: &str, provider: &str) -> String {
     format!("{}-{}", slugify_pattern(model_pattern), hash6)
 }
 
-// Why: Best-effort: which route index (if any) would match the given model
-// string, using the same first-match-wins glob semantics the gateway uses.
 #[must_use]
 pub fn find_matching_route_index(routes: &[GatewayRouteView], model: &str) -> Option<usize> {
     routes

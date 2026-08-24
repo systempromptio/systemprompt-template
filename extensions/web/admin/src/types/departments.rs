@@ -4,13 +4,6 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-// Why: The department a user belongs to when nobody has assigned them one.
-//
-// It is a real row in `departments`, not a rendered placeholder: the delete
-// path reassigns members here, the SQL rollups coalesce an empty
-// `user_profile_ext.department` to it, and department access rules written
-// against it bind like any other. Admin surfaces must not invent a second
-// name for the same state.
 pub const DEFAULT_DEPARTMENT: &str = "Default";
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

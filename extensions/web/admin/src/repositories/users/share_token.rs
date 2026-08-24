@@ -7,8 +7,6 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
-// Why: A user with no `user_profile_ext` row resolves to `Ok(None)` — absence
-// of a profile is not an error here.
 pub async fn find_share_token_version(
     pool: &PgPool,
     user_id: &UserId,

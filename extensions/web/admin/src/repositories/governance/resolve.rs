@@ -82,9 +82,17 @@ async fn lookup_request_by_governance_id(
 }
 
 async fn lookup_trace(pool: &PgPool, id: &str) -> Result<Option<ResolvedId>, sqlx::Error> {
+    // Why: an enforcement site with no AI request still writes a governance
+    // row, and since core 0.34.0 its trace id lives in `governance_decisions`
+    // alone -- searching `ai_requests` only would leave those traces
+    // unresolvable.
     let row = sqlx::query!(
-        r#"SELECT trace_id AS "trace_id!" FROM ai_requests
-           WHERE trace_id = $1 LIMIT 1"#,
+        r#"SELECT trace_id AS "trace_id!" FROM (
+               SELECT trace_id FROM ai_requests WHERE trace_id = $1
+               UNION ALL
+               SELECT trace_id FROM governance_decisions WHERE trace_id = $1
+           ) t
+           WHERE trace_id IS NOT NULL LIMIT 1"#,
         id,
     )
     .fetch_optional(pool)

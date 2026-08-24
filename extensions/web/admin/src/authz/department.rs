@@ -83,13 +83,6 @@ impl SubjectAttributeProvider for DepartmentAttributeProvider {
         department_dimension()
     }
 
-    // Why: A user has at most one department, so this yields zero or one value.
-    //
-    // Fails soft: a lookup error means "no department", which makes every
-    // department rule unmatchable for this request and hands the decision to
-    // the role band. Denying instead would turn a transient database blip
-    // into a site-wide outage, and the resolver's own default already closes
-    // the unmatched case.
     async fn values_for(&self, user_id: &UserId) -> Vec<String> {
         if let Some(values) = Self::cached(user_id).await {
             return values;

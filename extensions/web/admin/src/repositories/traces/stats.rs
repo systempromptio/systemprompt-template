@@ -18,12 +18,12 @@ pub async fn get_trace_stats(pool: &PgPool, range: TimeRange) -> Result<TraceSta
             FROM plugin_usage_events
             WHERE created_at >= $1 AND created_at < $2 AND session_id IS NOT NULL
             UNION ALL
-            SELECT COALESCE(t.session_id, NULLIF(g.session_id, ''), g.trace_id) AS session_id,
+            SELECT COALESCE(NULLIF(g.session_id, ''), t.session_id) AS session_id,
                    g.created_at, g.decision, NULL::text
             FROM governance_decisions g
             LEFT JOIN trace_to_session t ON t.trace_id = g.trace_id
             WHERE g.created_at >= $1 AND g.created_at < $2
-              AND (NULLIF(g.session_id, '') IS NOT NULL OR g.trace_id IS NOT NULL)
+              AND (NULLIF(g.session_id, '') IS NOT NULL OR t.session_id IS NOT NULL)
             UNION ALL
             SELECT session_id, created_at, NULL::text, status::text
             FROM ai_requests

@@ -1,8 +1,9 @@
 //! Decision chain assembly.
 //!
-//! `governance_decisions` and `plugin_usage_events` do not carry a `trace_id`
-//! column today, so the chain is anchored on `session_id` (shared by all four
-//! tables) and surfaces the `trace_id` from `ai_requests` when available.
+//! `governance_decisions` carries its own `trace_id` as of core 0.34.0;
+//! `plugin_usage_events` still does not. The chain is anchored on `session_id`
+//! (shared by all four tables) and surfaces the `trace_id` from `ai_requests`
+//! when available.
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;

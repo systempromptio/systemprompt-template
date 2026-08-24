@@ -31,9 +31,6 @@ impl AuditEventBus {
 
 static BUS: OnceLock<AuditEventBus> = OnceLock::new();
 
-// Why: If the listener fails to start (e.g. the `audit_events` channel doesn't
-// exist yet because the migration hasn't run), the bus is still returned and
-// SSE subscribers receive an empty stream — keep-alives but no payloads.
 pub fn get_or_init(pool: Arc<PgPool>) -> AuditEventBus {
     BUS.get_or_init(|| {
         let (sender, _) = broadcast::channel::<String>(BROADCAST_CAPACITY);

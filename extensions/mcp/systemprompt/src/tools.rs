@@ -11,8 +11,6 @@ pub const SERVER_NAME: &str = "systemprompt";
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CliInput {
-    /// The CLI command to execute (without 'systemprompt' prefix). Examples:
-    /// 'plugins run discord send "message"', 'core skills list'
     pub command: String,
 }
 
