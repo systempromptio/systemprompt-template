@@ -14,12 +14,17 @@ CasaOS, DigitalOcean, and Packer manifests pin the 0.36.0 image.
   and made a clean `setup-local` fail; the shipped-YAML gate added then keeps that
   from recurring.
 
-## [0.35.0] - 2026-08-23
+## [0.35.0] — chart only, never released
 
-Tracks systemprompt-core 0.35.0. The 0.30.0 through 0.34.0 template releases were
-cut without changelog entries; this entry covers only the work landed since 0.29.0
-that had not yet been written up, and the gap above it is acknowledged rather than
-reconstructed.
+Chart 0.17.0 went out with `appVersion: 0.35.0`, but no `v0.35.0` tag was ever
+pushed, so `release-gateway.yml` never ran and
+`ghcr.io/systempromptio/systemprompt-template:0.35.0` does not exist. There is no
+installable 0.35.0: everything listed below reached users in 0.36.0. The entry is
+kept rather than deleted because the chart version is public.
+
+The 0.30.0 through 0.34.0 template releases were cut without changelog entries;
+this entry covers only the work landed since 0.29.0 that had not yet been written
+up, and the gap above it is acknowledged rather than reconstructed.
 
 ### Added
 
