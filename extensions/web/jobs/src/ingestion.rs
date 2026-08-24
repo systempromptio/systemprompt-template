@@ -131,6 +131,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         .join("config/blog.yaml");
 
     let Some(config) = load_blog_config(&config_path)
+        // Why: lint-ok: error-adapt — the loader hands back a String, no source to keep
         .map_err(|e| MarketplaceError::Internal(format!("Failed to load blog config: {e}")))?
     else {
         tracing::debug!(
