@@ -7,7 +7,7 @@
 
 [package]
 name = "astound-bridge"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Astound Digital <ed@systemprompt.io>"]
 description = "Astound Digital desktop bridge — branded build of the systemprompt bridge."
