@@ -18,12 +18,11 @@ use rmcp::model::CallToolRequestParams;
 use sqlx::PgPool;
 use systemprompt::database::Database;
 use systemprompt::identifiers::{AgentName, ContextId, SessionId, TraceId};
-use systemprompt_mcp_agent::CliLocation;
 use systemprompt::mcp::repository::ToolUsageRepository;
 use systemprompt::mcp::{McpArtifactRepository, McpToolExecutor};
 use systemprompt::models::artifacts::{CliArtifact, TextArtifact};
 use systemprompt::models::execution::context::RequestContext as SysRequestContext;
-use systemprompt_mcp_agent::filter_hallucinated_args;
+use systemprompt_mcp_agent::{CliLocation, filter_hallucinated_args};
 
 use crate::tempdb::TempDb;
 
@@ -310,9 +309,13 @@ async fn the_hallucinated_flags_never_reach_the_spawned_process() {
     let dir = tempfile::tempdir().expect("tempdir");
     let cli = fake_cli(&dir, "printf '%s' \"$*\"");
 
-    let result = run(&db, &cli, "core skills list --json --format --output-format")
-        .await
-        .expect("a zero-exit CLI call succeeds");
+    let result = run(
+        &db,
+        &cli,
+        "core skills list --json --format --output-format",
+    )
+    .await
+    .expect("a zero-exit CLI call succeeds");
 
     assert_eq!(
         body_of(&result),

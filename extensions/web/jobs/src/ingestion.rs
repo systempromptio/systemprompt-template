@@ -4,8 +4,8 @@
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt::models::AppPaths;
 use systemprompt::database::DbPool;
+use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::error::JobError;
@@ -99,9 +99,7 @@ impl Job for ContentIngestionJob {
     }
 }
 
-fn load_blog_config(
-    path: &std::path::Path,
-) -> Result<Option<Arc<BlogConfigValidated>>, String> {
+fn load_blog_config(path: &std::path::Path) -> Result<Option<Arc<BlogConfigValidated>>, String> {
     if !path.exists() {
         return Ok(None);
     }
