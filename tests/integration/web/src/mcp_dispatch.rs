@@ -70,6 +70,12 @@ async fn an_unknown_systemprompt_tool_points_the_caller_at_the_cli_skill() {
             request: &request,
             request_context: &request_context(),
             client: &profile,
+            // Why: these dispatch paths return before any handler is built, so
+            // the location is never read.
+            cli: &systemprompt_mcp_agent::CliLocation {
+                bin: std::path::PathBuf::from("/nonexistent"),
+                workdir: std::path::PathBuf::from("/nonexistent"),
+            },
         },
         "not_a_tool",
         "unused-token",

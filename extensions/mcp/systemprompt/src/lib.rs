@@ -10,7 +10,7 @@ mod cli;
 pub mod error;
 
 #[doc(hidden)]
-pub use cli::filter_hallucinated_args;
+pub use cli::{CliLocation, filter_hallucinated_args};
 pub mod server;
 pub mod tools;
 

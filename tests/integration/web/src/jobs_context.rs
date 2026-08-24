@@ -218,13 +218,22 @@ impl Harness {
         std::fs::write(dir.join(name), contents).expect("write the stylesheet");
     }
 
-    // `BlogConfigValidated` resolves its file from `BLOG_CONFIG` before it
-    // consults the profile, which is how the ingestion job can be pointed at a
-    // per-test tree without a profile on disk.
+    // The ingestion job resolves its config from this context's own paths, so a
+    // per-test tree needs nothing process-global -- the file just has to sit
+    // where those paths say.
     fn point_blog_config_at(&self, yaml: &str) {
-        let path = self.tmp.path().join("blog.yaml");
-        std::fs::write(&path, yaml).expect("write the blog config");
-        unsafe { std::env::set_var("BLOG_CONFIG", &path) };
+        let dir = self.paths.system().services().join("config");
+        std::fs::create_dir_all(&dir).expect("create the services config directory");
+        std::fs::write(dir.join("blog.yaml"), yaml).expect("write the blog config");
+    }
+
+    fn context_with(&self, parameters: &[(&str, &str)]) -> JobContext {
+        self.context().with_parameters(
+            parameters
+                .iter()
+                .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+                .collect(),
+        )
     }
 
     async fn seed_plaintext_secret(&self, id: &str, user_id: &str, name: &str, value: &str) {
@@ -870,10 +879,9 @@ async fn content_ingestion_prunes_orphans_only_when_the_environment_asks_for_it(
     write_article(&tree, "kept.md", "kept");
     h.point_blog_config_at(&single_source_config(&tree));
     seed_orphan(&h, "vanished").await;
-    unsafe { std::env::set_var("CONTENT_INGESTION_DELETE_ORPHANS", "true") };
 
     ContentIngestionJob
-        .execute(&h.context())
+        .execute(&h.context_with(&[("delete_orphans", "true")]))
         .await
         .expect("ingest with pruning on");
 
@@ -891,10 +899,6 @@ async fn content_ingestion_is_skipped_when_the_profile_has_no_blog_config() {
     let Some(h) = Harness::create().await else {
         return;
     };
-    unsafe {
-        std::env::set_var("BLOG_CONFIG", h.tmp.path().join("absent.yaml"));
-    }
-
     let result = ContentIngestionJob
         .execute(&h.context())
         .await

@@ -36,6 +36,15 @@ Conventions (strict — hold every entry to them):
 
 ### Fixed
 
+- **The MCP CLI location and the ingestion job's settings were read from
+  process-global state**, so tests that varied them were only correct one per
+  process. The CLI's binary and working directory now come from a `CliLocation`
+  resolved at the composition root, replacing the `SYSTEMPROMPT_CLI_PATH` and
+  `SYSTEMPROMPT_WORKDIR` reads; the ingestion job takes `delete_orphans` as a job
+  parameter and resolves its blog config from the job context's own `AppPaths`
+  rather than the process-wide `BlogConfigValidated::cached()`. None of those
+  environment variables was sanctioned, and nothing outside the tests set them.
+  The subject-dimension registry here was already keyed per database.
 - The inline-comment gate walked only top-level `tests/**/*.rs`, so every nested
   `extensions/**/tests/*.rs` passed vacuously. Widening the glob surfaced 22 real
   `///` uses in test code, now converted, and two clippy failures that had been

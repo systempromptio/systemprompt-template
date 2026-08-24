@@ -11,8 +11,7 @@ use systemprompt_web_admin::repositories::users::invites;
 use systemprompt_web_admin::util::org_scope::OrgScope;
 
 use crate::fixtures::{
-    OrgSpec, RequestSpec, insert_org, insert_request, insert_user, unclaimed_email,
-    unique,
+    OrgSpec, RequestSpec, insert_org, insert_request, insert_user, unclaimed_email, unique,
 };
 use crate::tempdb::TempDb;
 

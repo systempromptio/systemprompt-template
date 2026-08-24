@@ -18,11 +18,12 @@ use systemprompt::models::execution::context::RequestContext as SysRequestContex
 use systemprompt::security::authz::SharedAuthzHook;
 use systemprompt_mcp_shared::{record_mcp_access, record_mcp_access_rejected};
 
-pub(super) struct SystempromptToolHandler {
+pub(super) struct SystempromptToolHandler<'a> {
     pub(super) auth_token: String,
+    pub(super) cli: &'a cli::CliLocation,
 }
 
-impl McpToolHandler for SystempromptToolHandler {
+impl McpToolHandler for SystempromptToolHandler<'_> {
     type Input = CliInput;
     type Output = CliArtifact;
 
@@ -40,7 +41,7 @@ impl McpToolHandler for SystempromptToolHandler {
         _ctx: &SysRequestContext,
         _exec_id: &McpExecutionId,
     ) -> Result<(Self::Output, String), McpError> {
-        let output = cli::execute(&input.command, &self.auth_token).await?;
+        let output = cli::execute(self.cli, &input.command, &self.auth_token).await?;
 
         if !output.success {
             return Err(McpError::internal_error(
@@ -120,6 +121,7 @@ pub struct Dispatch<'a> {
     pub request: &'a CallToolRequestParams,
     pub request_context: &'a SysRequestContext,
     pub client: &'a ClientProfile,
+    pub cli: &'a cli::CliLocation,
 }
 
 // Why: Exposed (behind `#[doc(hidden)]`) so the external test workspace can
@@ -135,6 +137,7 @@ pub async fn dispatch_tool(
         "systemprompt" => {
             let handler = SystempromptToolHandler {
                 auth_token: auth_token.to_owned(),
+                cli: ctx.cli,
             };
             ctx.executor
                 .execute(&handler, ctx.request, ctx.request_context, ctx.client)
