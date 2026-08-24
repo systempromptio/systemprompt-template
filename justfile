@@ -290,6 +290,7 @@ _lint-gates-uncoordinated:
     gates=(
         lint-schema.sh
         lint-extensions.sh
+        check-migration-numbers.sh
         lint-layers.sh
         lint-repo-construction.sh
         check-json-value.sh
