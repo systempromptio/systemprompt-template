@@ -9,24 +9,29 @@ use std::path::PathBuf;
 use systemprompt::config::ProfileBootstrap;
 use tokio::process::Command;
 
-pub(crate) fn get_cli_path() -> Result<PathBuf, McpError> {
-    if let Ok(path) = std::env::var("SYSTEMPROMPT_CLI_PATH") {
-        return Ok(PathBuf::from(path));
-    }
-
-    let profile = ProfileBootstrap::get()
-        // Why: lint-ok: error-adapt — rmcp's ErrorData is a variant-less wire type
-        .map_err(|e| McpError::internal_error(format!("Failed to get profile: {e}"), None))?;
-
-    Ok(PathBuf::from(&profile.paths.bin).join("systemprompt"))
+/// Where the CLI lives and what directory it runs in.
+///
+/// Resolved once by the caller and passed down, rather than read from the
+/// environment at each call: the environment is process-global, so a test that
+/// pointed it at a stand-in binary changed the binary every other test in the
+/// process would spawn.
+#[derive(Debug)]
+pub struct CliLocation {
+    pub bin: PathBuf,
+    pub workdir: PathBuf,
 }
 
-pub(crate) fn workdir() -> PathBuf {
-    if let Ok(path) = std::env::var("SYSTEMPROMPT_WORKDIR") {
-        return PathBuf::from(path);
-    }
+impl CliLocation {
+    pub fn from_profile() -> Result<Self, McpError> {
+        let profile = ProfileBootstrap::get()
+            // Why: lint-ok: error-adapt — rmcp's ErrorData is a variant-less wire type
+            .map_err(|e| McpError::internal_error(format!("Failed to get profile: {e}"), None))?;
 
-    ProfileBootstrap::get().map_or_else(|_| PathBuf::from("."), |p| PathBuf::from(&p.paths.system))
+        Ok(Self {
+            bin: PathBuf::from(&profile.paths.bin).join("systemprompt"),
+            workdir: PathBuf::from(&profile.paths.system),
+        })
+    }
 }
 
 // Why: Strip CLI flags that models routinely hallucinate onto `systemprompt`
@@ -42,9 +47,13 @@ pub fn filter_hallucinated_args(args: Vec<String>) -> Vec<String> {
         .collect()
 }
 
-pub(crate) async fn execute(command: &str, auth_token: &str) -> Result<CliOutput, McpError> {
-    let cli_path = get_cli_path()?;
-    let workdir = workdir();
+pub(crate) async fn execute(
+    location: &CliLocation,
+    command: &str,
+    auth_token: &str,
+) -> Result<CliOutput, McpError> {
+    let cli_path = &location.bin;
+    let workdir = &location.workdir;
 
     // Why: lint-ok: error-adapt — rmcp's ErrorData is a variant-less wire type
     let args = shell_words::split(command).map_err(|e| {
@@ -60,7 +69,7 @@ pub(crate) async fn execute(command: &str, auth_token: &str) -> Result<CliOutput
         "Executing CLI command"
     );
 
-    let output = Command::new(&cli_path)
+    let output = Command::new(cli_path)
         .args(&args)
         .env("SYSTEMPROMPT_NON_INTERACTIVE", "1")
         .env("SYSTEMPROMPT_OUTPUT_FORMAT", "json")

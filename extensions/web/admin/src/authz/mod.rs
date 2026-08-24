@@ -16,7 +16,8 @@
 
 pub mod department;
 
-use std::sync::{Arc, OnceLock};
+use std::collections::HashMap;
+use std::sync::{Arc, LazyLock, Mutex};
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -38,19 +39,48 @@ struct Registry {
     dimensions: Vec<SubjectDimension>,
 }
 
-static REGISTRY: OnceLock<Registry> = OnceLock::new();
+// Why: the providers close over the pool they were built with, so a single
+// process-wide registry answers every later caller from whichever database
+// asked first. One server has one database and never noticed; a test process
+// has one per test, and every test after the first silently resolved its
+// users against another test's database and saw no attributes at all.
+//
+// Keyed by the database the pool points at, and leaked so the borrow can stay
+// `'static` for the call sites: one entry per distinct database, which is one
+// in production.
+static REGISTRIES: LazyLock<Mutex<HashMap<String, &'static Registry>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+fn database_key(pool: &PgPool) -> String {
+    let opts = pool.connect_options();
+    format!(
+        "{}:{}/{}",
+        opts.get_host(),
+        opts.get_port(),
+        opts.get_database().unwrap_or_default()
+    )
+}
 
 fn registry(pool: &PgPool) -> &'static Registry {
-    REGISTRY.get_or_init(|| {
-        let providers = discover_subject_providers(&AuthzHookContext {
-            pool: Arc::new(pool.clone()),
-            sink: Arc::new(NullAuditSink),
-        });
-        Registry {
-            dimensions: dimensions_of(&providers),
-            providers,
-        }
-    })
+    let key = database_key(pool);
+    let mut registries = REGISTRIES
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+
+    if let Some(existing) = registries.get(&key) {
+        return existing;
+    }
+
+    let providers = discover_subject_providers(&AuthzHookContext {
+        pool: Arc::new(pool.clone()),
+        sink: Arc::new(NullAuditSink),
+    });
+    let registry: &'static Registry = Box::leak(Box::new(Registry {
+        dimensions: dimensions_of(&providers),
+        providers,
+    }));
+    registries.insert(key, registry);
+    registry
 }
 
 pub fn dimensions(pool: &PgPool) -> &'static [SubjectDimension] {

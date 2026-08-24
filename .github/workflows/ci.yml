@@ -109,10 +109,10 @@ jobs:
             .
             tests
 
-      # Several integration tests drive process-global state (SYSTEMPROMPT_CLI_PATH,
-      # BLOG_CONFIG, CONTENT_INGESTION_DELETE_ORPHANS) and are only correct when each
-      # test owns its process. `cargo test` threads them into one process, where they
-      # race and fail; nextest is what `just test-*` runs, so CI must match it.
+      # nextest is what `just test-*` runs, so CI matches it. It is no longer
+      # load-bearing for correctness: the tests that used to depend on
+      # process-per-test isolation now take their CLI location, blog config and
+      # prune flag as arguments rather than reading process-global state.
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-nextest

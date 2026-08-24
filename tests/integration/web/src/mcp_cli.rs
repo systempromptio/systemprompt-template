@@ -1,17 +1,16 @@
 //! The `systemprompt` MCP tool driven end to end against a stand-in CLI.
 //!
-//! `SystempromptToolHandler::handle` shells out to whatever binary
-//! `SYSTEMPROMPT_CLI_PATH` names, so pointing that variable at a shell script
-//! written into a tempdir makes every branch of `cli::execute` and the handler
-//! above it reachable without running the real CLI against the machine's
-//! profile: the spawn failure, the argument-parse failure, the non-zero exit,
-//! and both artifact arms (stdout that deserialises into a `CliArtifact` and
-//! stdout that does not).
+//! `SystempromptToolHandler::handle` shells out to the binary its `CliLocation`
+//! names, so handing dispatch a location pointing at a shell script written
+//! into a tempdir makes every branch of `cli::execute` and the handler above it
+//! reachable without running the real CLI against the machine's profile: the
+//! spawn failure, the argument-parse failure, the non-zero exit, and both
+//! artifact arms (stdout that deserialises into a `CliArtifact` and stdout that
+//! does not).
 //!
-//! The environment is process-global, so these tests rely on nextest's
-//! process-per-test execution: each one owns its process and cannot race
-//! another. The variable is read inside `cli::execute` on every call, so
-//! setting it before dispatch is enough.
+//! The location is passed per call rather than read from the environment, so
+//! these tests share no process-global state and are correct however the
+//! harness schedules them.
 
 use std::sync::Arc;
 
@@ -19,6 +18,7 @@ use rmcp::model::CallToolRequestParams;
 use sqlx::PgPool;
 use systemprompt::database::Database;
 use systemprompt::identifiers::{AgentName, ContextId, SessionId, TraceId};
+use systemprompt_mcp_agent::CliLocation;
 use systemprompt::mcp::repository::ToolUsageRepository;
 use systemprompt::mcp::{McpArtifactRepository, McpToolExecutor};
 use systemprompt::models::artifacts::{CliArtifact, TextArtifact};
@@ -46,16 +46,10 @@ fn request_context() -> SysRequestContext {
     )
 }
 
-// Why: `set_var` is unsafe from edition 2024 because another thread may be
-// reading the environment concurrently. Under nextest each test is its own
-// process and sets the variable before spawning anything, so there is no
-// concurrent reader.
-fn set_env(key: &str, value: &str) {
-    unsafe { std::env::set_var(key, value) };
-}
-
-// Write an executable `/bin/sh` script and point the CLI path at it.
-fn fake_cli(dir: &tempfile::TempDir, body: &str) {
+// Write an executable `/bin/sh` stand-in and return where it lives. The caller
+// hands the path to `run`, so nothing here touches process-global state and the
+// tests are correct however the harness schedules them.
+fn fake_cli(dir: &tempfile::TempDir, body: &str) -> CliLocation {
     let path = dir.path().join("systemprompt");
     std::fs::write(&path, format!("#!/bin/sh\n{body}\n")).expect("write the stand-in CLI");
     #[cfg(unix)]
@@ -64,7 +58,10 @@ fn fake_cli(dir: &tempfile::TempDir, body: &str) {
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755))
             .expect("make the stand-in CLI executable");
     }
-    set_env("SYSTEMPROMPT_CLI_PATH", &path.to_string_lossy());
+    CliLocation {
+        bin: path,
+        workdir: dir.path().to_path_buf(),
+    }
 }
 
 fn call(command: &str) -> CallToolRequestParams {
@@ -75,7 +72,11 @@ fn call(command: &str) -> CallToolRequestParams {
     CallToolRequestParams::new("systemprompt").with_arguments(arguments)
 }
 
-async fn run(db: &TempDb, command: &str) -> Result<rmcp::model::CallToolResult, rmcp::ErrorData> {
+async fn run(
+    db: &TempDb,
+    cli: &CliLocation,
+    command: &str,
+) -> Result<rmcp::model::CallToolResult, rmcp::ErrorData> {
     let executor = executor(&db.pool);
     let request = call(command);
     let profile = client();
@@ -85,6 +86,7 @@ async fn run(db: &TempDb, command: &str) -> Result<rmcp::model::CallToolResult, 
             request: &request,
             request_context: &request_context(),
             client: &profile,
+            cli,
         },
         "systemprompt",
         "test-bearer-token",
@@ -163,9 +165,9 @@ async fn stdout_that_deserialises_into_an_artifact_is_returned_as_that_artifact(
     let artifact =
         CliArtifact::text(TextArtifact::new("rendered from the CLI").with_title("Skills"));
     let encoded = serde_json::to_string(&artifact).expect("the artifact serialises");
-    fake_cli(&dir, &format!("cat <<'ARTIFACT'\n{encoded}\nARTIFACT"));
+    let cli = fake_cli(&dir, &format!("cat <<'ARTIFACT'\n{encoded}\nARTIFACT"));
 
-    let result = run(&db, "core skills list")
+    let result = run(&db, &cli, "core skills list")
         .await
         .expect("a zero-exit CLI call succeeds");
 
@@ -184,9 +186,9 @@ async fn stdout_that_is_not_an_artifact_falls_back_to_a_text_artifact() {
         return;
     };
     let dir = tempfile::tempdir().expect("tempdir");
-    fake_cli(&dir, "printf 'plain human output'");
+    let cli = fake_cli(&dir, "printf 'plain human output'");
 
-    let result = run(&db, "core skills list")
+    let result = run(&db, &cli, "core skills list")
         .await
         .expect("a zero-exit CLI call succeeds");
 
@@ -210,9 +212,9 @@ async fn a_non_zero_exit_reports_the_code_and_the_stderr() {
         return;
     };
     let dir = tempfile::tempdir().expect("tempdir");
-    fake_cli(&dir, "echo 'no such skill' >&2\nexit 3");
+    let cli = fake_cli(&dir, "echo 'no such skill' >&2\nexit 3");
 
-    let error = run(&db, "core skills show nope")
+    let error = run(&db, &cli, "core skills show nope")
         .await
         .expect_err("a non-zero exit is an error, not an artifact");
 
@@ -236,12 +238,12 @@ async fn a_cli_path_that_does_not_exist_is_reported_as_a_spawn_failure() {
         return;
     };
     let dir = tempfile::tempdir().expect("tempdir");
-    set_env(
-        "SYSTEMPROMPT_CLI_PATH",
-        &dir.path().join("absent").to_string_lossy(),
-    );
+    let cli = CliLocation {
+        bin: dir.path().join("absent"),
+        workdir: dir.path().to_path_buf(),
+    };
 
-    let error = run(&db, "core skills list")
+    let error = run(&db, &cli, "core skills list")
         .await
         .expect_err("a missing binary cannot be executed");
 
@@ -260,9 +262,9 @@ async fn an_unbalanced_quote_is_refused_before_anything_is_spawned() {
         return;
     };
     let dir = tempfile::tempdir().expect("tempdir");
-    fake_cli(&dir, "echo 'this must never run'\nexit 1");
+    let cli = fake_cli(&dir, "echo 'this must never run'\nexit 1");
 
-    let error = run(&db, "core skills show \"unterminated")
+    let error = run(&db, &cli, "core skills show \"unterminated")
         .await
         .expect_err("a command that does not tokenise is refused");
 
@@ -281,13 +283,13 @@ async fn the_caller_token_and_the_non_interactive_flags_reach_the_process() {
         return;
     };
     let dir = tempfile::tempdir().expect("tempdir");
-    fake_cli(
+    let cli = fake_cli(
         &dir,
         "printf '%s|%s|%s' \"$SYSTEMPROMPT_AUTH_TOKEN\" \"$SYSTEMPROMPT_NON_INTERACTIVE\" \
          \"$SYSTEMPROMPT_OUTPUT_FORMAT\"",
     );
 
-    let result = run(&db, "core skills list")
+    let result = run(&db, &cli, "core skills list")
         .await
         .expect("a zero-exit CLI call succeeds");
 
@@ -306,9 +308,9 @@ async fn the_hallucinated_flags_never_reach_the_spawned_process() {
         return;
     };
     let dir = tempfile::tempdir().expect("tempdir");
-    fake_cli(&dir, "printf '%s' \"$*\"");
+    let cli = fake_cli(&dir, "printf '%s' \"$*\"");
 
-    let result = run(&db, "core skills list --json --format --output-format")
+    let result = run(&db, &cli, "core skills list --json --format --output-format")
         .await
         .expect("a zero-exit CLI call succeeds");
 
@@ -329,10 +331,10 @@ async fn the_process_runs_in_the_configured_workdir() {
     let dir = tempfile::tempdir().expect("tempdir");
     let workdir = tempfile::tempdir().expect("workdir");
     let canonical = workdir.path().canonicalize().expect("canonical workdir");
-    fake_cli(&dir, "printf '%s' \"$(pwd -P)\"");
-    set_env("SYSTEMPROMPT_WORKDIR", &canonical.to_string_lossy());
+    let mut cli = fake_cli(&dir, "printf '%s' \"$(pwd -P)\"");
+    cli.workdir = canonical.clone();
 
-    let result = run(&db, "core skills list")
+    let result = run(&db, &cli, "core skills list")
         .await
         .expect("a zero-exit CLI call succeeds");
 
@@ -345,24 +347,18 @@ async fn the_process_runs_in_the_configured_workdir() {
     db.cleanup().await;
 }
 
-// This test deliberately sets no `SYSTEMPROMPT_CLI_PATH`: with no profile
-// bootstrapped in the test process, resolving the binary from the profile's
-// bin directory is the failure the handler must surface.
-#[tokio::test]
-async fn without_the_env_override_the_path_comes_from_the_profile() {
-    let Some(db) = TempDb::create().await else {
-        return;
-    };
-
-    let error = run(&db, "core skills list")
-        .await
-        .expect_err("no profile is bootstrapped in a test process");
+// The location comes from the profile, and no profile is bootstrapped in a test
+// process, so resolving it is the failure the server must surface rather than
+// falling back to some guessed path.
+#[test]
+fn the_location_comes_from_the_profile_and_says_so_when_there_is_none() {
+    let error = CliLocation::from_profile()
+        .err()
+        .expect("no profile is bootstrapped in a test process");
 
     assert!(
         error.message.contains("Failed to get profile"),
         "the missing profile is named as the reason the CLI could not be located: {}",
         error.message
     );
-
-    db.cleanup().await;
 }

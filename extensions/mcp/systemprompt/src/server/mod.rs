@@ -155,12 +155,14 @@ impl ServerHandler for SystempromptServer {
         .await;
 
         let client = client_profile_from_peer(&ctx);
+        let cli = crate::cli::CliLocation::from_profile()?;
         dispatch_tool(
             &tool::Dispatch {
                 executor: &self.executor,
                 request: &request,
                 request_context: &request_context,
                 client: &client,
+                cli: &cli,
             },
             &tool_name,
             &auth_token,

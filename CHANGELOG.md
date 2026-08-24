@@ -5,6 +5,21 @@
 Tracks systemprompt-core 0.36.0. Helm chart 0.18.0 with appVersion 0.36.0; the
 CasaOS, DigitalOcean, and Packer manifests pin the 0.36.0 image.
 
+### Fixed
+
+- **Three pieces of configuration were read from process-global state**, so the
+  tests that varied them were only correct one-per-process and `cargo test`
+  produced failures that were not real. The MCP CLI's binary and working
+  directory now come from a `CliLocation` resolved at the composition root
+  (replacing `SYSTEMPROMPT_CLI_PATH`/`SYSTEMPROMPT_WORKDIR`); the ingestion job
+  takes `delete_orphans` as a job parameter and resolves its blog config from the
+  job context's own `AppPaths` rather than the process-wide
+  `BlogConfigValidated::cached()`; and the subject-dimension registry is cached
+  per database instead of in a single `OnceLock` bound to whichever pool asked
+  first. None of those environment variables was sanctioned, and nothing outside
+  the tests ever set them. The suite passes under `cargo test` as well as
+  `cargo nextest`: 828 tests, no failures.
+
 ### Added
 
 - `services/slack/example.yaml` documents `link_by_workspace_email` again. Core
