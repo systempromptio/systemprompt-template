@@ -1076,10 +1076,10 @@ scaled-test:
     set -euo pipefail
     chmod +x demo/scenarios/scaled/01-load.sh \
              demo/scenarios/scaled/03-replica-distribution.sh \
-             demo/scenarios/scaled/04-scheduler-isolation.sh
+             demo/scenarios/scaled/04-scheduler-exactly-once.sh
     ./demo/scenarios/scaled/01-load.sh
     ./demo/scenarios/scaled/03-replica-distribution.sh
-    ./demo/scenarios/scaled/04-scheduler-isolation.sh
+    ./demo/scenarios/scaled/04-scheduler-exactly-once.sh
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ADMIN & PLUGINS

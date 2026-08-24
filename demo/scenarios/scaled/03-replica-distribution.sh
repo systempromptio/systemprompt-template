@@ -335,7 +335,7 @@ VERDICT=0
 if (( VERDICT == 0 )); then
   pass "REPLICA DISTRIBUTION VERIFIED"
   info "LB spreads evenly; event bus fans out across replicas via PostgresEventBridge."
-  info "Next: ./demo/scenarios/scaled/04-scheduler-isolation.sh"
+  info "Next: ./demo/scenarios/scaled/04-scheduler-exactly-once.sh"
 else
   fail "REPLICA DISTRIBUTION CHECK FAILED — see results/replica-distribution.json"
 fi

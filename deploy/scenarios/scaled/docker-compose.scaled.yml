@@ -2,22 +2,21 @@
 #
 # Topology:
 #   lb (nginx)  ──►  app x N   ──►  postgres-primary
-#                    scheduler ──►  postgres-primary
 #                    postgres-replica  ◄── streaming replication from primary
 #
 # Run from the repo root:
 #   docker compose -f deploy/scenarios/scaled/docker-compose.scaled.yml up --build --scale app=3 -d
 #
 # Key topology decisions:
-#   * The API tier (`app`) scales horizontally — it is stateless. It is therefore
-#     declared WITHOUT a fixed host port so `--scale app=N` works; only the LB is
-#     published.
-#   * The `scheduler` is pinned to exactly ONE replica. The scheduler / cron engine
-#     is single-node-bound: running it on every API replica would execute every cron
-#     job N times. A dedicated single node is the deployment-time mitigation.
-#   * API replicas bind-mount a scheduler-disable override onto the global scheduler
-#     config so they never run cron jobs — this is a mitigation, NOT a fix for the
-#     single-node scheduler limitation.
+#   * There is ONE kind of node. `app` is the whole product — HTTP API, MCP
+#     servers, marketplace and the scheduler all run in the same process. Scale it
+#     with `--scale app=N`; every replica is identical and interchangeable.
+#   * It is stateless, so it is declared WITHOUT a fixed host port and only the LB
+#     is published.
+#   * Cron jobs do NOT need a dedicated node. Every replica runs the scheduler and
+#     claims each job with a Postgres advisory lock before dispatch
+#     (`scheduler.distributed_lock`, on by default), so a job executes exactly once
+#     across the fleet. Losing a replica does not stop scheduled work.
 #
 # Build context is the repo root (`../../..` relative to this file).
 
@@ -49,13 +48,14 @@ services:
       - "hot_standby=on"
       - "-c"
       - "listen_addresses=*"
-      # Connection ceiling. Each app/scheduler node opens an sqlx pool of up to 50
+      # Connection ceiling. Each app node opens an sqlx pool of up to 50
       # (hardcoded in core's build_pool_options()), plus per-agent and MCP pools,
-      # and the replica consumes WAL-sender slots. The postgres default of 100 is
+      # one held connection per in-flight scheduled job's advisory lock, and the
+      # replica consumes WAL-sender slots. The postgres default of 100 is
       # exhausted under the `scaled` load profile (ramps to 1000 virtual users
       # across N replicas) — the primary then dies with "too many clients already"
-      # and takes the whole stack down. 400 covers 3 app + 1 scheduler under load
-      # with headroom; raise alongside REPLICAS if you scale past ~6 nodes.
+      # and takes the whole stack down. 400 covers ~4 app nodes under load with
+      # headroom; raise alongside the replica count if you scale past ~6 nodes.
       - "-c"
       - "max_connections=400"
     volumes:
@@ -124,9 +124,10 @@ services:
       timeout: 5s
       retries: 12
 
-  # ── API tier (horizontally scaled) ────────────────────────────────────────
-  # Stateless. Start N copies with `--scale app=N`. No host port is published so
-  # scaling does not collide; the LB is the single ingress.
+  # ── The application (horizontally scaled) ─────────────────────────────────
+  # The only node type. One binary serving the API, MCP servers, marketplace and
+  # the scheduler. Stateless — start N copies with `--scale app=N`. No host port
+  # is published so scaling does not collide; the LB is the single ingress.
   app:
     build:
       context: ../../..
@@ -149,7 +150,7 @@ services:
     # docker DNS round-robin on `app:8080`.
     expose:
       - "8080"
-    # Seed the scaled-api profile into each replica's own writable copy before
+    # Seed the scaled profile into each replica's own writable copy before
     # the real entrypoint runs. The profile cannot be bind-mounted directly onto
     # /app/services/profiles/docker/profile.yaml: the engine rewrites (normalises)
     # the profile during init, which fails on a read-only mount — and a single
@@ -161,62 +162,13 @@ services:
       - "-c"
       - "mkdir -p /app/services/profiles/docker && cp /seed/profile.yaml /app/services/profiles/docker/profile.yaml && cp /seed/secrets.json /app/services/profiles/docker/secrets.json && cp /seed/signing_key.pem /app/services/profiles/docker/signing_key.pem && exec /app/entrypoint.sh"
     volumes:
-      - ../../../.systemprompt/profiles/scaled-api/profile.yaml:/seed/profile.yaml:ro
-      - ../../../.systemprompt/profiles/scaled-api/secrets.json:/seed/secrets.json:ro
-      # RSA signing key — shared by every app replica so a token minted on one
+      - ../../../.systemprompt/profiles/scaled/profile.yaml:/seed/profile.yaml:ro
+      - ../../../.systemprompt/profiles/scaled/secrets.json:/seed/secrets.json:ro
+      # RSA signing key — shared by every replica so a token minted on one
       # replica validates on all of them (and on the SSE subscriber replica).
       # Without it the stack cannot mint or validate any JWT (every auth path
       # 401s). See architecture.md §"Authentication".
-      - ../../../.systemprompt/profiles/scaled-api/signing_key.pem:/seed/signing_key.pem:ro
-      # Disable the scheduler on every API replica. Without this, all N replicas
-      # would run the 5 cron jobs concurrently. Deployment-time mitigation for the
-      # single-node scheduler limitation — NOT a fix.
-      - ./scheduler-disabled.config.yaml:/app/services/scheduler/config.yaml:ro
-    networks:
-      - scaled
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/health || exit 1"]
-      interval: 15s
-      timeout: 10s
-      start_period: 40s
-      retries: 5
-
-  # ── Scheduler node (exactly one) ──────────────────────────────────────────
-  # The ONLY node that runs cron jobs. Pinned to a single replica because the
-  # cron / scheduler engine is single-node-bound — multiple schedulers would
-  # double-execute every job. It uses the default (enabled) scheduler config:
-  # no scheduler-disable override is mounted here.
-  scheduler:
-    build:
-      context: ../../..
-      dockerfile: deploy/scenarios/scaled/Dockerfile.scaled-prebuilt
-    restart: unless-stopped
-    deploy:
-      # Hard constraint: there must never be more than one scheduler.
-      replicas: 1
-    depends_on:
-      postgres-primary:
-        condition: service_healthy
-    env_file: ../../../.env
-    environment:
-      DATABASE_URL: postgres://systemprompt:${POSTGRES_PASSWORD:-systemprompt}@postgres-primary:5432/systemprompt
-      PG_HOST: postgres-primary
-      # See the `app` service: pin the in-container profile path so env_file's
-      # host-absolute SYSTEMPROMPT_PROFILE does not leak in.
-      SYSTEMPROMPT_PROFILE: /app/services/profiles/docker/profile.yaml
-    expose:
-      - "8080"
-    # Seed the scaled-scheduler profile into the node's own writable copy — see
-    # the `app` service for why the profile is copied rather than bind-mounted.
-    # NO scheduler-disable override is mounted here: this node runs cron jobs.
-    entrypoint:
-      - "sh"
-      - "-c"
-      - "mkdir -p /app/services/profiles/docker && cp /seed/profile.yaml /app/services/profiles/docker/profile.yaml && cp /seed/secrets.json /app/services/profiles/docker/secrets.json && cp /seed/signing_key.pem /app/services/profiles/docker/signing_key.pem && exec /app/entrypoint.sh"
-    volumes:
-      - ../../../.systemprompt/profiles/scaled-scheduler/profile.yaml:/seed/profile.yaml:ro
-      - ../../../.systemprompt/profiles/scaled-scheduler/secrets.json:/seed/secrets.json:ro
-      - ../../../.systemprompt/profiles/scaled-scheduler/signing_key.pem:/seed/signing_key.pem:ro
+      - ../../../.systemprompt/profiles/scaled/signing_key.pem:/seed/signing_key.pem:ro
     networks:
       - scaled
     healthcheck:

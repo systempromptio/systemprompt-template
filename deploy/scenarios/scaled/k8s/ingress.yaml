@@ -1,11 +1,10 @@
-# Ingress fronting the API Service.
+# Ingress fronting the systemprompt Service.
 #
-# Routes external traffic to the `systemprompt-api` ClusterIP Service (API pods
-# only — never the scheduler). Annotations disable response buffering and raise
-# the proxy read timeout so SSE / streaming gateway responses are not buffered
-# or cut short — the k8s equivalent of the nginx.conf SSE tuning in the compose
-# stack. Annotations shown are for the ingress-nginx controller; adjust for your
-# controller.
+# Routes external traffic to the `systemprompt-api` ClusterIP Service. Annotations
+# disable response buffering and raise the proxy read timeout so SSE / streaming
+# gateway responses are not buffered or cut short — the k8s equivalent of the
+# nginx.conf SSE tuning in the compose stack. Annotations shown are for the
+# ingress-nginx controller; adjust for your controller.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

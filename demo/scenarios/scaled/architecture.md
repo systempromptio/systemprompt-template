@@ -2,14 +2,13 @@
 
 A technical reference for the horizontally-scaled deployment: what every
 container is, what every script proves, and how a request travels from the
-operator through the load balancer, across N stateless API replicas, with the
-scheduler isolated on its own single node.
+operator through the load balancer, across N identical stateless replicas. There
+is one kind of node: every replica runs the API, the MCP servers, the marketplace
+and the scheduler in a single process.
 
 > **Source files referenced.** `deploy/scenarios/scaled/docker-compose.scaled.yml`,
 > `deploy/scenarios/scaled/nginx.conf`,
-> `deploy/scenarios/scaled/scheduler-disabled.config.yaml`,
-> `.systemprompt/profiles/scaled-api/profile.yaml`,
-> `.systemprompt/profiles/scaled-scheduler/profile.yaml`, and the four scripts
+> `.systemprompt/profiles/scaled/profile.yaml`, and the four scripts
 > in this directory. The loadtest runner lives in
 > `../systemprompt-core/crates/tests/loadtest/`.
 
@@ -22,7 +21,7 @@ scheduler isolated on its own single node.
 | **The API tier scales horizontally** | `app` is declared with no fixed host port; nginx round-robins on docker DNS `app:8080`; `--scale app=N` registers every replica. | `01-load.sh` (p95 ≤ 500 ms, error ≤ 2 % through the LB) |
 | **Load balancing is fair** | Empirical bucketing of responses by `x-served-by` (each replica stamps its replica id on every response). | `03-replica-distribution.sh` part (a) — the `lb-fairness` loadtest scenario |
 | **The event/SSE bus crosses replicas** | `PostgresEventBridge` relays the in-process event bus over `LISTEN/NOTIFY`; it is started unconditionally at boot. | `03-replica-distribution.sh` part (b) — subscribe on replica B, publish on replica A, assert delivery |
-| **Cron jobs do NOT double-execute** | Scheduler is deployment-time isolated: every API replica gets a scheduler-disable bind-mount; exactly one dedicated `scheduler` node runs the default scheduler config. | `04-scheduler-isolation.sh` — `infra jobs history` and per-container log markers |
+| **Cron jobs do NOT double-execute** | Every replica runs the scheduler. Before dispatch, a replica claims the job with a Postgres advisory lock keyed on the job name (`scheduler.distributed_lock`, on by default); the losers skip. No dedicated node, no single point of failure. | `04-scheduler-exactly-once.sh` — `infra jobs history` and per-container log markers |
 | **No drift under sustained load** | Sustained run with periodic latency windows + a memory sampler across replicas. | `02-soak.sh` — `soak_analysis` p95 drift ≤ 5 %, no growing memory |
 
 The scenario explicitly does **not** prove DB read-replica routing — see
@@ -84,11 +83,10 @@ work without host-port collisions.
 |---------|---------------|------|---------|
 | `postgres-primary` | `postgres:18-alpine` with `wal_level=replica`, `max_wal_senders=10`, `max_replication_slots=10`, `hot_standby=on` | Accepts every write; streams WAL to the replica via the `replicator` role created by `primary-init.sh`. | 1 |
 | `postgres-replica` | `postgres:18-alpine` | Hot standby initialised from the primary with `pg_basebackup -R`. Wired for failover headroom and topology realism; **the engine does not currently read from it.** | 1 |
-| `app` | `Dockerfile.scaled-prebuilt`, scaled-api profile copied into each replica's own writable layer; `scheduler-disabled.config.yaml` bind-mounted onto `services/scheduler/config.yaml`. | Stateless API tier. Every replica handles full request lifecycle (governance, routing, audit). Never runs cron. | `--scale app=N` (default 3) |
-| `scheduler` | `Dockerfile.scaled-prebuilt`, scaled-scheduler profile, **no** scheduler-disable override. | The one and only node that runs cron jobs. Otherwise functionally identical to an `app` replica. | `deploy.replicas: 1` (hard constraint) |
+| `app` | `Dockerfile.scaled-prebuilt`, scaled profile copied into each replica's own writable layer. | The whole product. Every replica handles the full request lifecycle (governance, routing, audit) **and** runs the scheduler; jobs are de-duplicated across replicas by a Postgres advisory lock. | `--scale app=N` (default 3) |
 | `lb` | `nginx:alpine` with `nginx.conf` | TLS-terminating-equivalent edge. Round-robin upstream `app:8080`. Streaming-tuned (`proxy_buffering off`, `proxy_read_timeout 3600s`). | 1 |
 
-**Profile copy, not bind-mount.** Both `app` and `scheduler` *copy* their
+**Profile copy, not bind-mount.** Every `app` replica *copies* its
 profile into the container's own writable layer in the entrypoint, then exec
 the real entrypoint:
 
@@ -190,58 +188,56 @@ user-scoped `A2A_BROADCASTER`. That delivery — across two processes — is the
 empirical evidence that the bus scales across nodes. The A2A broadcaster is
 user-scoped, so the subscriber and the router must authenticate as the same
 user; the orchestrator mints a token signed by the scaled stack's own secret
-(see `run.sh`) because the scaled-api profile's `jwt_secret` differs from the
+(see `run.sh`) because the scaled profile's `jwt_secret` differs from the
 local profile's.
 
 ---
 
-## 6. Scheduler isolation
+## 6. Exactly-once scheduling
 
 ```
    ┌──────────────────────────────────────────────────────────┐
-   │ ALL replicas built from the same image                   │
+   │ ALL replicas built from the same image, same config      │
    │                                                          │
-   │  app #1   app #2   app #N           scheduler            │
-   │    │       │        │                  │                 │
-   │    └───────┴────────┘                  │                 │
-   │           │ each gets a bind-mount:    │ no override:    │
-   │           │ scheduler-disabled.config  │ default config  │
-   │           ▼   yaml → enabled: false    ▼                 │
-   │     scheduler runtime sees           scheduler runtime   │
-   │     `enabled: false` → no jobs       loads all jobs and  │
-   │     fire here                        runs the cron loop  │
+   │   app #1        app #2        app #N                     │
+   │     │             │             │                        │
+   │     └─────────────┴─────────────┘                        │
+   │                   │ every replica runs the cron loop     │
+   │                   ▼                                      │
+   │        on each tick, claim the job:                      │
+   │        pg_try_advisory_lock(hashtext(job_name))          │
+   │                   │                                      │
+   │        ┌──────────┴──────────┐                           │
+   │        ▼                     ▼                           │
+   │   one winner            the rest skip                    │
+   │   runs the job          event=scheduler.job              │
+   │   releases the lock          .skipped_by_lock            │
    └──────────────────────────────────────────────────────────┘
 ```
 
-**Two independent layers now guard against double-execution.**
+**De-duplication lives in the engine, not in the deployment.**
+`SchedulerConfig.distributed_lock` defaults to `true` and is wired through
+`crates/app/scheduler/src/services/scheduling/dispatch.rs`: before running a job
+a replica calls `try_acquire_job_lock` (a Postgres session-scoped advisory lock
+keyed on `hashtext(job_name)`) and skips the tick if a peer already holds it,
+emitting `event = "scheduler.job.skipped_by_lock"`. The winner pins the locking
+connection for the job's lifetime and releases on that same connection.
 
-1. **Code-time (core 0.11): a real distributed lock.** `SchedulerConfig
-   .distributed_lock` defaults to `true` and is now wired through
-   `crates/app/scheduler/src/services/scheduling/dispatch.rs`: before running a
-   job, a replica calls `try_acquire_job_lock` (a Postgres advisory lock) and
-   skips the tick if a peer already holds it (`event =
-   "scheduler.job.skipped_by_lock"`). So even if N replicas all had the
-   scheduler enabled, each scheduled tick would execute on exactly one of them.
-   This supersedes the earlier "dead config" state — the flag is live.
+So every replica is identical: there is no dedicated scheduler node, no
+scheduler-disable override, and no single point of failure for scheduled work.
+Losing any replica leaves the rest scheduling normally.
 
-2. **Deployment-time (this stack): scheduler disabled on the API tier.** Every
-   `app` replica bind-mounts
-   `deploy/scenarios/scaled/scheduler-disabled.config.yaml` onto
-   `/app/services/scheduler/config.yaml` (`enabled: false`), so the cron loop
-   never starts there at all. The dedicated `scheduler` service is
-   `deploy.replicas: 1` and keeps the default (enabled) config. This belt-and-
-   suspenders layer keeps the API tier doing nothing but serve requests, and is
-   what `04-scheduler-isolation.sh` observes.
+> **Superseded.** Earlier revisions of this stack ran one dedicated `scheduler`
+> service and bind-mounted a `scheduler-disabled.config.yaml` onto every API
+> replica. That was a deployment-time mitigation for a core limitation that has
+> since been fixed; both the extra service and the override file are gone.
 
-The `Profile` schema still has no scheduler section, so the per-replica disable
-is expressed via the bind-mounted YAML override rather than `profile.yaml` — see
-*Known limits*.
-
-`04-scheduler-isolation.sh` watches a window covering at least one scheduled
+`04-scheduler-exactly-once.sh` watches a window covering at least one scheduled
 run and asserts:
+- every replica started the cron engine (`Scheduler started`);
 - `infra jobs history` shows jobs executed during the window;
-- `docker compose logs <container>` shows scheduler-execution markers only on
-  the `scheduler` container, on **no** `app` replica.
+- replicas that lost a claim logged `scheduler.job.skipped_by_lock`, i.e. the
+  lock genuinely arbitrated rather than jobs simply not firing.
 
 ---
 
@@ -291,7 +287,7 @@ and validates JWTs with an **RSA signing key** at
 `signing_key_path: /app/services/profiles/docker/signing_key.pem`.
 
 - The committed seed lives at
-  `.systemprompt/profiles/scaled-api/signing_key.pem` (generate with
+  `.systemprompt/profiles/scaled/signing_key.pem` (generate with
   `systemprompt admin keys generate --output <path>`), copied into every `app`
   and `scheduler` replica by the entrypoint. **All replicas share one key**, so
   a token minted on any replica validates on every other — required for the LB
@@ -344,7 +340,7 @@ route a real A2A event on replica A, assert delivery — the live
 `PostgresEventBridge` proof described in §5. All curls run from inside an `app`
 replica (it has `curl`; `nginx:alpine` only ships `wget`).
 
-### `04-scheduler-isolation.sh` — no duplicate cron execution
+### `04-scheduler-exactly-once.sh` — no duplicate cron execution
 
 Proves which node runs the cron engine, independent of cron timing:
 

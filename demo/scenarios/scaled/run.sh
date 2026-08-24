@@ -87,7 +87,7 @@ step "2/5  Waiting up to ${HEALTH_TIMEOUT}s for all containers to report healthy
 
 # Services that MUST be healthy before we test. The read replica is wired for
 # topology realism only (no read routing yet); we report it but do not block on it.
-REQUIRED_SVCS=(postgres-primary app scheduler lb)
+REQUIRED_SVCS=(postgres-primary app lb)
 
 health_snapshot() {
   # One line per container: "<service>\t<state>\t<health>". Robust across compose
@@ -187,8 +187,8 @@ fi
 subheader "03 — replica distribution + real cross-replica event"
 "$SCALED_DIR/03-replica-distribution.sh"; RC_DIST=$?
 
-subheader "04 — scheduler isolation (no duplicate cron)"
-"$SCALED_DIR/04-scheduler-isolation.sh"; RC_SCHED=$?
+subheader "04 — scheduled jobs run exactly once"
+"$SCALED_DIR/04-scheduler-exactly-once.sh"; RC_SCHED=$?
 
 subheader "05 — throughput + audit-spine quick proof (through the LB)"
 TARGET_URL="$LB_URL" "$SCALED_DIR/05-quick-proof.sh"; RC_QUICK=$?
@@ -217,7 +217,7 @@ echo ""
 verdict_line "01 load SLO"                "$RC_LOAD"
 verdict_line "02 soak"                    "$RC_SOAK"
 verdict_line "03 distribution + event"    "$RC_DIST"
-verdict_line "04 scheduler isolation"     "$RC_SCHED"
+verdict_line "04 exactly-once scheduling" "$RC_SCHED"
 verdict_line "05 throughput + audit spine" "$RC_QUICK"
 echo ""
 

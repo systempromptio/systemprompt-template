@@ -425,7 +425,7 @@ Architecture and per-script walkthrough: [`scenarios/scaled/architecture.md`](sc
 just scaled-up 3
 ```
 
-**Run the assertions.** Runs `01-load.sh`, `03-replica-distribution.sh`, `04-scheduler-isolation.sh` in order — skips the long soak test:
+**Run the assertions.** Runs `01-load.sh`, `03-replica-distribution.sh`, `04-scheduler-exactly-once.sh` in order — skips the long soak test:
 
 ```bash
 just scaled-test
@@ -448,9 +448,9 @@ Or run them individually:
 ./demo/scenarios/scaled/03-replica-distribution.sh
 ```
 
-[`scenarios/scaled/04-scheduler-isolation.sh`](scenarios/scaled/04-scheduler-isolation.sh) — asserts that scheduled jobs execute exactly once across the fleet. API replicas mount a `scheduler-disabled` config; only the dedicated scheduler container runs cron. Verified via `infra jobs history` row counts and per-container log markers.
+[`scenarios/scaled/04-scheduler-exactly-once.sh`](scenarios/scaled/04-scheduler-exactly-once.sh) — asserts that scheduled jobs execute exactly once across the fleet. Every replica runs the scheduler and claims each job with a Postgres advisory lock before dispatch, so the losers skip. Verified via `infra jobs history` row counts and per-container log markers.
 ```bash
-./demo/scenarios/scaled/04-scheduler-isolation.sh
+./demo/scenarios/scaled/04-scheduler-exactly-once.sh
 ```
 
 [`scenarios/scaled/05-quick-proof.sh`](scenarios/scaled/05-quick-proof.sh) — fast end-to-end proof useful for screencasts: hits the LB N times, prints the replica distribution, fires a cross-replica SSE event, confirms a job ran exactly once.
