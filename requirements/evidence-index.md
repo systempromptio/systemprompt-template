@@ -1,13 +1,17 @@
 # Requirements evidence pack
 
-Screenshot evidence for [compliance-register.md](../compliance-register.md).
-Regenerate with `just e2e-screens` against a running `just start`; this file
-is written by the same script, so it cannot drift from the images beside it.
+Screenshot evidence for [compliance-register.md](compliance-register.md). The
+images themselves live at `../storage/files/images/evidence/`, the single copy
+the running server also serves at `/files/images/evidence/…` and the published
+enterprise documentation embeds. Regenerate with `just e2e-screens` against a
+running `just start` — it writes a stamped set under the gitignored
+`playwright/screenshots/`; copy that set over the served directory and update
+the table below to match.
 
 Captured 2026-08-25T16-53-56 against http://localhost:8080.
 Principals come from the deterministic e2e seed (`just e2e-seed --reset`).
 
-| File | Path | Principal |
+| File (under `../storage/files/images/evidence/`) | Path | Principal |
 |------|------|-----------|
 | req-002-login-invite-only.png | `/admin/login` | anonymous |
 | req-001-users-roster.png | `/admin/access/users` | admin |
