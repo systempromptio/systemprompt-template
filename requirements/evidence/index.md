@@ -4,7 +4,7 @@ Screenshot evidence for [compliance-register.md](../compliance-register.md).
 Regenerate with `just e2e-screens` against a running `just start`; this file
 is written by the same script, so it cannot drift from the images beside it.
 
-Captured 2026-08-22T10-54-50 against http://localhost:8080.
+Captured 2026-08-25T16-53-56 against http://localhost:8080.
 Principals come from the deterministic e2e seed (`just e2e-seed --reset`).
 
 | File | Path | Principal |
@@ -23,3 +23,7 @@ Principals come from the deterministic e2e seed (`just e2e-seed --reset`).
 | req-007-008-code-tab.png | `/admin/analytics?tab=code&preset=30d&org=e2e-corp` | platform admin |
 | req-009-spend-meters.png | `/admin/analytics?tab=spend&org=e2e-corp` | platform admin |
 | requests-log.png | `/admin/entities/requests` | platform admin |
+| req-026-requests-audit.png | `/admin/entities/requests/e2e-req-e2e-member-1-0-0` | platform admin |
+| req-027-trace-chain.png | `/admin/entities/traces/e2e-trace-e2e-member-1-0` | platform admin |
+| req-037-gateway-routes.png | `/api/public/admin/gateway` | platform admin |
+| req-042-mcp-catalog.png | `/admin/catalog/mcp` | admin |

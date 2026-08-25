@@ -10,7 +10,7 @@
 //
 // Reuses the storageStates minted by global-setup; run `just e2e` (or any spec)
 // first if .auth/ is empty, or this script mints them itself via the same setup.
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from '@playwright/test';
 import globalSetup, { AUTH } from '../setup/global-setup';
@@ -87,6 +87,33 @@ const PAGES: { name: string; path: string; state: string }[] = [
   },
 
   { name: 'requests-log', path: '/admin/entities/requests', state: AUTH.platformAdmin },
+
+  // req-007-code-tab is deliberately NOT a separate entry: the Code tab is
+  // already captured above as req-007-008-code-tab, and a second file of the
+  // same URL would be duplicate bytes pretending to be independent evidence.
+  {
+    name: 'req-026-requests-audit',
+    path: '/admin/entities/requests/e2e-req-e2e-member-1-0-0',
+    state: AUTH.platformAdmin,
+  },
+  {
+    name: 'req-027-trace-chain',
+    path: '/admin/entities/traces/e2e-trace-e2e-member-1-0',
+    state: AUTH.platformAdmin,
+  },
+  {
+    // There is no admin gateway-routes page — routing config (including the
+    // requires/no_retain policy block) is API-only, so the evidence is the
+    // rendered JSON of the config endpoint.
+    name: 'req-037-gateway-routes',
+    path: '/api/public/admin/gateway',
+    state: AUTH.platformAdmin,
+  },
+  {
+    name: 'req-042-mcp-catalog',
+    path: '/admin/catalog/mcp',
+    state: AUTH.admin,
+  },
 ];
 
 async function main() {
@@ -148,7 +175,18 @@ async function main() {
   ].join('\n');
   writeFileSync(join(outDir, 'index.md'), `${manifest}\n`);
 
-  console.log(`screenshots in ${outDir}`);
+  // The docs site embeds these under /files/images/evidence/<name>.png, so a
+  // regenerated pack must land in the published asset tree in the same run —
+  // otherwise the site keeps showing screenshots the register no longer means.
+  // requirements/evidence/ stays the pack of record (index.md included); this
+  // is a mirror of the PNGs only.
+  const siteDir = join(HERE, '..', '..', 'storage', 'files', 'images', 'evidence');
+  mkdirSync(siteDir, { recursive: true });
+  for (const p of PAGES) {
+    copyFileSync(join(outDir, `${p.name}.png`), join(siteDir, `${p.name}.png`));
+  }
+
+  console.log(`screenshots in ${outDir}, mirrored to ${siteDir}`);
 }
 
 main().catch((e) => {

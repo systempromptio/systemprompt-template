@@ -14,14 +14,13 @@ test.describe('invites panel', () => {
     await page.locator('#invite-department').fill('Engineering');
     await page.locator('#btn-create-invite').click();
 
-    const row = page.locator('#invites-list', { hasText: email });
+    const row = page.locator('#invites-list tr', { hasText: email });
     await expect(row).toBeVisible();
 
-    // Revoke it so reruns stay clean.
-    const revoke = page
-      .locator('#invites-list [data-revoke], #invites-list button', { hasText: /revoke/i })
-      .first();
-    await revoke.click();
+    // Revoke it so reruns stay clean. Scoped to THIS invite's row: a parallel
+    // worker can have its own invite listed first, and `.first()` would revoke
+    // that one instead.
+    await row.locator('[data-revoke]').click();
     await expect(page.locator('#invites-list')).not.toContainText(email);
   });
 

@@ -222,3 +222,13 @@ extensions/web/admin/src/routes/admin.rs	# mounts the user-session listing and r
 # reporting takes an inactivity window as a parameter and alerts on the
 # first soft-cap crossing of a month.
 # ---------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
+# GOVERNANCE SSR FEATURE GATE - astound compiles the governance SSR
+# repositories behind the `governance-ssr` cargo feature and deleted the
+# demo-trace module; the template ships the demo-trace page and compiles
+# the governance SSR surface unconditionally.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/repositories/governance/mod.rs	# astound gates the SSR count/decision/ranking exports behind `governance-ssr` and drops demo_trace, which the template still mounts
+extensions/web/admin/src/repositories/governance/hook_events.rs	# astound compiles the whole module only under the `governance-ssr` feature
+extensions/web/admin/src/handlers/entity_access/support.rs  user-subject boundary check: template requires UUID user ids; astound ids are slug/email-derived (invite + SSO provisioning), so the gate is non-empty/colon-free instead

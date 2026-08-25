@@ -1,8 +1,10 @@
 # Enterprise Requirements Register — Compliance Status
 
-Traceability for the nine-row register supplied by Astound Digital
-(*[Enterprise AI] SystemPrompt requirements register*, REQ-001…009, requested by
-a.nagornyy@astounddigital.com).
+Traceability for the requirements register supplied by Astound Digital
+(*[Enterprise AI] SystemPrompt requirements register*): REQ-001…009 requested by
+a.nagornyy@astounddigital.com, REQ-010…043 by O. Manatskyi. The updated register
+CSV with per-row status and comments is `register-updated-2026-08-25.csv`; the
+executive bucketing is `../REQUIREMENTS-DELIVERY-STATUS.md`.
 
 This file is the answer to that register. It is scoped to the **admin and governance
 surface**; [`requirements.md`](requirements.md) is the earlier POC scope (skills, harness
@@ -32,6 +34,46 @@ just e2e-screens                 # regenerate the evidence pack
 | 007 | AI development productivity | P2 | Gap | **Not feasible as specified** |
 | 008 | Commit activity analytics | P2 | Not native | **Partial** — Claude Code commits only |
 | 009 | Spend limits & budget monitoring | P1 | Partial | **Met** |
+
+
+Rows 010–043 (assessed 2026-08-25 against core 0.38.0; sections below):
+
+| REQ | Requirement | Status here |
+|-----|-------------|-------------|
+| 010 | Real-time spend attribution | **Met** (org/department/user/model/provider) |
+| 011 | Spend overrun early warning | **Met** — forecast projection + Slack alert (new) |
+| 012 | Soft budget alerts | **Met** |
+| 013 | Hard budget cutoffs | **Met** (organization scope) |
+| 014 | Burndown forecasting | **Met** (new, with 011) |
+| 015 | Self-service cost reporting | **Met** — CLI + new web CSV export |
+| 016 | Scheduled cost digests | **Met** — new `cost_digest` job |
+| 017 | Provider cost comparison | **Met** (cost side; quality baseline pending) |
+| 018 | Cost/quality/latency optimization | **Partial** — routing seam, no optimizer |
+| 019 | Tenant-isolated semantic caching | **Gap** |
+| 020 | Provider abstraction | **Met** |
+| 021 | Central model access policy | **Met** |
+| 022 | Governed virtual keys | **Partial** — no per-key budget/rate (core change) |
+| 023 | Enterprise SSO provisioning | **Met** — new deprovisioning reconciliation |
+| 024 | Shadow AI detection | **Met** governed-side; non-gateway traffic is a network control |
+| 025 | Time-bound external access | **Partial** — share-token expiry new; grant expiry needs core |
+| 026 | Immutable audit trail | **Met** with caveat — append-only by convention, no WORM |
+| 027 | End-to-end traceability | **Met** |
+| 028 | Observability export (OTEL) | **Partial** — ingest + SSE stream, no SIEM egress |
+| 029 | Latency SLOs | **Met** — configurable threshold + breach share (new) |
+| 030 | Content safety guardrails | **Partial, enabled** — jailbreak/PII/secrets on; no toxicity taxonomy |
+| 031 | Usage anomaly detection | **Met** — persisted hourly sweep + alerts (new) |
+| 032 | Automatic provider failover | **Gap** (register correction: was "Partial") |
+| 033 | Per-consumer rate limiting | **Met** — quota windows configured + enabled (new) |
+| 034 | Private/self-hosted routing | **Met** |
+| 035 | A/B model testing | **Gap** |
+| 036 | PII/PHI detection & redaction | **Partial, enabled** — +SSN/phone (new); no PHI taxonomy |
+| 037 | Data residency routing | **Met (new)** — `governance:` model metadata + route `requires:` enforced at boot and dispatch |
+| 038 | No-train/no-retain enforcement | **Met (new)** — `governance.no_retain` + `requires: {no_retain: true}` on routes |
+| 039 | Prompt versioning & rollback | **Gap** |
+| 040 | Central prompt distribution | **Partial** — signed skills channel, no template lifecycle |
+| 041 | Pre-execution tool governance | **Met** — 4-stage chain now enabled |
+| 042 | Governed MCP registry | **Met** |
+| 043 | Tool schema validation | **Met** with caveat — no JSON-Schema meta-validation |
 
 > **The register's "Current Assessment" column describes a deployed environment, not this
 > repository.** Most of the analytics and user-management surface it calls missing was built
@@ -382,10 +424,166 @@ thresholds" and only the first is true:
 
 ---
 
+
+---
+
+# REQ-010…043 — assessment and delivery notes (2026-08-25)
+
+Assessed against HEAD at core 0.38.0. "New" marks work delivered in this pass.
+
+## FinOps (REQ-010…017)
+
+- **010 Spend attribution — Met.** Every `ai_requests` row carries user, org (via
+  `organization_members`), department (`user_profile_ext`), model, provider,
+  `cost_microdollars`; dashboards and reports slice on all of them
+  (`repositories/analytics/site/`, `repositories/reports/`). Team/product/project are the
+  REQ-006 Hub decision.
+- **011/014 Forecasting — Met (new).** `gateway_org_budget::projected_month_end_spend`
+  computes a seconds-based linear projection on the request path; the first
+  projected-overrun crossing per org per month lands in `org_budget_warnings`
+  (`kind='forecast_overrun'`, migration 031) and fires the Slack alert. Surfaced in the
+  spend tab's warning table. No projection before three elapsed days — early-month noise
+  must not train people to ignore the alert.
+- **012/013 Budgets — Met.** Soft warn + hard cap per org plan
+  (`services/access-control/plans.yaml`), enforced by `OrgBudgetGuard` (429 + retry-after at
+  the month boundary). Organization scope; team/project awaits Hub.
+- **015 Self-service reporting — Met (new).** CLI already had `--since/--until` + CSV;
+  the admin UI now exports CSV: `/admin/reports/internal.csv?month=&dimension=organization|provider|model`
+  (platform admin) and `/admin/reports/customer.csv?month=&org=&dimension=users|departments|models`
+  (org-scoped), with download buttons on both report pages. Integer-microdollar precision
+  survives the export.
+- **016 Digests — Met (new).** `cost_digest` job (weekly, Monday 08:00 UTC,
+  `extensions/web/jobs/src/cost_digest.rs`): per-org MTD spend vs cap, trailing-week spend
+  and requests, linear pace — delivered through `slack_alerts`. The orphaned
+  `daily_summary` module (declared a repository that did not exist, wired to nothing) is
+  deleted.
+- **017 Provider comparison — Met, cost side.** Internal report + CLI break cost down by
+  provider and model. "Quality-normalized" needs an agreed quality baseline from Astound;
+  the acceptance criterion is untestable without one.
+
+## Optimization & access (REQ-018…025)
+
+- **018 Model optimization — Partial.** Declarative `RouteMatch` predicates + the
+  `RouteSelector` inventory seam exist in core; no optimizer scores cost/quality/latency.
+  Blocked on the same quality baseline as 017.
+- **019 Semantic cache — Gap.** Nothing in the gateway; provider prompt-caching
+  passthrough is not a tenant cache. Scoped in the design note.
+- **020 Provider abstraction — Met.** `/v1/messages` + `/v1/responses`, four wire
+  protocols, `upstream_model` rewrite; production routes already redirect claude-* traffic
+  to alternate providers with zero app changes.
+- **021 Model access policy — Met.** `gateway_route` entities + plan/role/department ACL
+  grants, enforced by `RouteEntitlementGuard` (403), auditable and revocable centrally.
+- **022 Virtual keys — Partial.** PATs revoke and expire (`user_api_keys`), org budgets and
+  quota buckets bound the damage — but a key is not a governance subject
+  (`authenticate_api_key` collapses to `user_id`; `ai_gateway_policies` rows are global).
+  Per-key budget/rate/scope needs a core change; scoped in the design note.
+- **023 SSO provisioning — Met (new).** Salesforce OIDC + PKCE with gated JIT provisioning
+  was already in; offboarding is now closed by `salesforce_deprovision`
+  (`extensions/web/jobs/src/salesforce_deprovision.rs`, half-hourly): accounts whose
+  Salesforce user is deactivated/deleted are disabled with sessions and PATs revoked, via
+  the existing `SF_TARGET_*` JWT-bearer integration identity. SCIM was deliberately not
+  built — Salesforce does not push standards SCIM to third-party apps and Odoo has none, so
+  an endpoint would have no caller; revisit if Okta/Entra ever fronts the instance.
+- **024 Shadow AI — Met, governed side.** `allow_unlisted_models: false`, route
+  entitlements, full audit. Detecting AI traffic that never reaches the gateway is an
+  egress/network control outside this platform — named for Astound IT rather than
+  half-built here.
+- **025 Time-bound access — Partial (new).** Share tokens now expire (30-day TTL inside the
+  HMAC payload, `handlers/share.rs`; the 4-part token shape is pinned by the contract
+  suite, expiry tamper included). Invites (7d), setup tokens (10m), exchange codes and JWTs
+  were already bounded; PAT expiry remains optional. Grant-level `valid_until` needs a
+  column and resolver change in core's `access_control_rules` — recorded as a core
+  follow-up rather than forked.
+
+## Observability & safety (REQ-026…031)
+
+- **026 Audit trail — Met with caveat.** Full per-call audit rows with DB-locked actor
+  attribution; append-only by convention, not mechanism (no REVOKE/WORM/hash chain), and no
+  retention policy on `ai_requests`. Hardening options in the design note.
+- **027 Traceability — Met.** `trace_id`/`session_id`/`mcp_execution_id` on every row;
+  `ssr_chain` resolves any of them to the full chain.
+- **028 Observability export — Partial.** OTLP ingest and the SSE audit stream exist;
+  no push egress to Datadog/Splunk/OTEL collector. First exporter to build once Astound
+  names the target stack.
+- **029 Latency SLOs — Met (new).** The 5s constant is now a clamped `?slo_ms=` threshold
+  (500–60000, picker on the spend tab), with breach share reported beside p50/p95 —
+  same bound-parameter pattern REQ-005's window used. Per-use-case SLO taxonomy needs
+  Astound's SLO definitions.
+- **030 Safety guardrails — Partial, now enabled.** `services/gateway/policies.yaml`
+  runs `[heuristic, secrets, pii_extended]`, blocking jailbreak/credit-card/SSN on ingress
+  and secrets/SSN on buffered egress; streamed egress stays audit-only by design.
+  pii_email/pii_phone are audit-only deliberately. No toxicity/brand-risk classifier —
+  extend once Astound signs off the category set.
+- **031 Anomaly detection — Met (new).** `usage_anomaly` job (hourly,
+  `extensions/web/jobs/src/usage_anomaly.rs`): requests/cost/errors vs the trailing-week
+  hourly baseline with multiplier + floor thresholds, persisted to `usage_anomalies`
+  (migration 032) so restarts cannot forget an incident, Slack-alerted on first detection,
+  surfaced on the spend tab. Thresholds will need tuning against real traffic.
+
+## Gateway & lifecycle (REQ-032…043)
+
+- **032 Provider failover — Gap (register correction).** The register said Partial; no
+  failover exists in the gateway dispatch path — the "fallback" config it saw belongs to
+  the agent AI service. Needs secondary-provider route fields + retry in core (est 2–3
+  wks). Interim: a route flip is a one-line profile change.
+- **033 Rate limiting — Met (new config).** Core quota machinery was unconfigured here;
+  `policies.yaml` now carries per-user hourly (600 req / $20) and per-organization daily
+  ($200) windows as a runaway backstop above the plan budgets, plus the existing role-tier
+  multipliers. Sizes are first-pass — review against real traffic.
+- **034 Private routing — Met.** Any compatible endpoint is a `ProviderEntry`; `Backend`
+  surface keeps it un-advertised; boot validates route→provider references.
+- **035 A/B testing — Gap.** First-match routing only; no split/assignment machinery. P3 —
+  defer until a concrete experiment exists.
+- **036 PII/PHI — Partial, now enabled (new).** 34 secret patterns + entropy backstop
+  (ingress, governance) — note: the register's "35+" was optimistic and none are PHI.
+  New `pii_extended` scanner adds conservative SSN + E.164 phone detection both directions
+  (`gateway_safety.rs`), and the transcript redactor masks SSNs. Enforcement blocks rather
+  than redacts in flight; PHI taxonomy and true redaction are scoped items.
+- **037 Data residency — Met (new).** Provider/model YAML now carries
+  `governance: {european, no_retain}` (`ModelGovernance`, core patch); routes declare
+  `requires:` (`RouteRequirements`) and `GatewayConfig::validate` refuses to boot a route
+  whose reachable provider/model cannot satisfy it. Dispatch re-checks (selector-refined
+  routes and unlisted models included) and records `requires:...` in the route-match
+  descriptor on the audit row. Classification decision per Ed: the scheme IS these model
+  booleans — no separate taxonomy is owed.
+  **Specs:** `req_037_residency.rs` in `tests/integration/gateway`; `@REQ-037` in
+  `playwright/tests/requirements/req-037-038-residency.spec.ts`.
+- **038 No-train enforcement — Met (new).** Same mechanism: `governance.no_retain` on the
+  provider (model-level override wins), route `requires: {no_retain: true}`. The local
+  profile's `claude-star-4203d1` route carries it as the live demonstration.
+  **Specs:** `req_038_no_retain.rs` in `tests/integration/gateway`; `@REQ-038` in
+  `playwright/tests/requirements/req-037-038-residency.spec.ts`.
+- **039 Prompt versioning — Gap.** No registry; system-prompt overrides have no history.
+  Design-first item.
+- **040 Prompt distribution — Partial.** Ed25519-signed manifest distribution (skills)
+  can carry prompt content with central revocation today; it is not a versioned template
+  object with parameters and rollback (that is 039's design).
+- **041 Tool governance — Met, now enabled.** All four stages of the chain
+  (`services/governance/config.yaml`) run synchronously pre-dispatch, first-deny-wins,
+  audited. They had been deliberately disabled during evaluation.
+- **042 MCP registry — Met.** Declarative per-server YAML with oauth scopes/audience,
+  plan entitlement, org-suspension revocation, JTI token revocation.
+- **043 Schema validation — Met with caveat.** Registration fails fast on missing/invalid
+  manifests and schema sync; tool `input_schema` is captured but not meta-validated
+  against JSON Schema (a well-formed-but-wrong schema passes). Add if CI-level
+  malformed-schema tests become a hard requirement.
+
+## Two-organization split (b.gulyaev)
+
+`ai-kit` and `ai-sdlc-delivery` are registered as sibling organizations on the `standard`
+plan (`services/access-control/plans.yaml`) — separate seats, budgets, analytics, and ACLs;
+org-scoped rosters mean neither group's admin can see the other's users. Deliberately no
+`email_domains`: both groups arrive from domains `astound-digital` already claims, so
+membership is an explicit admin invite into the org (or a move via
+`PUT /admin/api/management/users/{id}/organization`). A "project" dimension *below* an
+organization is the open Hub question (REQ-006).
+
 ## Open items for Astound
 
-1. **Define "Hub"** (REQ-006) — blocks the org-hierarchy design and, with it, per-team and
-   per-project budgets.
+1. ~~Define "Hub"~~ **Decided 2026-08-25: a Hub is a geographic grouping** (region/
+   location), not a team or project. The dimension (analytics filter, budgets, rate-limit
+   scope) is now implementable per `design-org-hierarchy-and-scm.md` — read "Hub" there as
+   geographic; scheduled as the next follow-on pass. Team/project remain undefined.
 2. **Confirm the 30-day analytics ceiling** (REQ-003) satisfies "historical usage trends".
 3. **Decide on Bridge device-link gating** (REQ-002) — self-service for account holders, or
    admin approval per device.
@@ -393,3 +591,14 @@ thresholds" and only the first is true:
 5. **Accept the onboarding trade** (REQ-002) — invite-only means an admin step per new user.
 6. **Confirm which build is deployed** — several rows the register calls Partial have been
    built since the environment Astound assessed.
+7. **Sign off the enabled governance posture** (REQ-030/033/036/041) — the chain, safety
+   scanners, and quota windows are now ON with first-pass category/size choices; review
+   the block list and quota sizes against real traffic.
+8. **Name the observability target stack** (REQ-028) — Datadog, Splunk, or LGTM decides
+   which exporter is built first.
+9. ~~Quality baseline / data-classification scheme~~ Decided: quality comparison ships on
+   sensible defaults (cost/latency, no normalization) and is revisited when a quality
+   signal exists (017/018); classification is the `governance:` booleans on model YAML,
+   landed and enforced (037/038).
+10. **Fresh sheet export** — the Google Sheet has been extended past REQ-043; rows beyond
+    it need a re-export to be assessed.

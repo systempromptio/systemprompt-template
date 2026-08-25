@@ -82,13 +82,21 @@ test.describe('@REQ-005 adoption analytics', () => {
     // Seeded members made requests on every one of the last 14 days, so they are
     // active at 7 days. A 90-day window cannot contain FEWER wasted seats than a
     // 7-day one -- widening the window can only ever add people.
+    // Counted rows are pinned to the two seed principals no other spec
+    // touches: parallel specs create transient users in this org and the
+    // REQ-006 oracle test moves e2e-victim across organizations mid-run, so
+    // counting anything wider makes the two windows race.
+    const seeded = page
+      .locator('tbody tr')
+      .filter({ hasText: /e2e-(admin|user)@e2e\.local/ });
+
     await page.goto('/admin/analytics?tab=seats&org=e2e-corp&inactive_days=7');
     await expect(page.locator('.section-caption').first()).toContainText('7 days');
-    const at7 = await page.locator('tbody tr').count();
+    const at7 = await seeded.count();
 
     await page.goto('/admin/analytics?tab=seats&org=e2e-corp&inactive_days=90');
     await expect(page.locator('.section-caption').first()).toContainText('90 days');
-    const at90 = await page.locator('tbody tr').count();
+    const at90 = await seeded.count();
 
     expect(at90).toBeGreaterThanOrEqual(at7);
   });
