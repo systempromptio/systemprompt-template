@@ -145,7 +145,9 @@ fn keep_sets_shrink_every_list_to_what_survived() {
     let kept = retained(
         candidate(),
         &EntryKeepSets {
-            plugins: keep(&["demo-commons"], |s| PluginId::try_new(s).expect("plugin id")),
+            plugins: keep(&["demo-commons"], |s| {
+                PluginId::try_new(s).expect("plugin id")
+            }),
             skills: keep(&["skill-b"], |s| SkillId::try_new(s).expect("skill id")),
             agents: std::collections::HashSet::new(),
             hooks: keep(&["hook-a"], |s| HookId::new(s)),
@@ -167,7 +169,9 @@ fn an_artifact_survives_only_while_one_of_its_owning_plugins_does() {
     let kept = retained(
         candidate(),
         &EntryKeepSets {
-            plugins: keep(&["demo-commons"], |s| PluginId::try_new(s).expect("plugin id")),
+            plugins: keep(&["demo-commons"], |s| {
+                PluginId::try_new(s).expect("plugin id")
+            }),
             skills: std::collections::HashSet::new(),
             agents: std::collections::HashSet::new(),
             hooks: std::collections::HashSet::new(),
@@ -205,7 +209,9 @@ fn an_unowned_artifact_is_dropped_rather_than_defaulting_to_visible() {
     let kept = retained(
         input,
         &EntryKeepSets {
-            plugins: keep(&["demo-admin", "demo-commons"], |s| PluginId::try_new(s).expect("plugin id")),
+            plugins: keep(&["demo-admin", "demo-commons"], |s| {
+                PluginId::try_new(s).expect("plugin id")
+            }),
             skills: std::collections::HashSet::new(),
             agents: std::collections::HashSet::new(),
             hooks: std::collections::HashSet::new(),
@@ -225,7 +231,9 @@ fn the_assembly_context_passes_through_untouched() {
     let kept = retained(
         input,
         &EntryKeepSets {
-            plugins: keep(&["demo-admin"], |s| PluginId::try_new(s).expect("plugin id")),
+            plugins: keep(&["demo-admin"], |s| {
+                PluginId::try_new(s).expect("plugin id")
+            }),
             skills: std::collections::HashSet::new(),
             agents: std::collections::HashSet::new(),
             hooks: std::collections::HashSet::new(),
@@ -245,8 +253,12 @@ fn keeping_everything_is_the_identity() {
     let kept = retained(
         candidate(),
         &EntryKeepSets {
-            plugins: keep(&["demo-admin", "demo-commons"], |s| PluginId::try_new(s).expect("plugin id")),
-            skills: keep(&["skill-a", "skill-b"], |s| SkillId::try_new(s).expect("skill id")),
+            plugins: keep(&["demo-admin", "demo-commons"], |s| {
+                PluginId::try_new(s).expect("plugin id")
+            }),
+            skills: keep(&["skill-a", "skill-b"], |s| {
+                SkillId::try_new(s).expect("skill id")
+            }),
             agents: keep(&["agent-a"], |s| AgentId::new(s)),
             hooks: keep(&["hook-a"], |s| HookId::new(s)),
             mcp_servers: keep(&["files", "systemprompt"], |s| McpServerId::new(s)),
