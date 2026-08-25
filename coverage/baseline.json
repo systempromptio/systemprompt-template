@@ -1,0 +1,15 @@
+{
+  "floor": 78.0,
+  "total": 79.48,
+  "per_crate": {
+    "extensions/cli/salesforce": 100.0,
+    "extensions/mcp/shared": 90.83,
+    "extensions/mcp/systemprompt": 52.28,
+    "extensions/web": 83.5,
+    "extensions/web/admin": 78.71,
+    "extensions/web/content": 96.24,
+    "extensions/web/jobs": 68.2,
+    "extensions/web/shared": 96.78,
+    "extensions/web/site": 87.72
+  }
+}

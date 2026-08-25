@@ -64,6 +64,8 @@ mod jobs_assets_copy;
 mod jobs_bundles;
 #[cfg(test)]
 mod jobs_errors_stats;
+
+mod jobs_finops;
 #[cfg(test)]
 mod jobs_governance_config;
 #[cfg(test)]

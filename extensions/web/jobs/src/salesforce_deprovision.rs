@@ -71,19 +71,7 @@ async fn query_active_usernames(
     target: &TargetOrg,
     linked: &[salesforce_identity::LinkedSalesforceIdentity],
 ) -> Result<std::collections::HashSet<String>, JobError> {
-    let names: Vec<String> = linked
-        .iter()
-        .map(|l| {
-            format!(
-                "'{}'",
-                l.sf_username.replace('\\', "\\\\").replace('\'', "\\'")
-            )
-        })
-        .collect();
-    let soql = format!(
-        "SELECT Username FROM User WHERE IsActive = true AND Username IN ({})",
-        names.join(",")
-    );
+    let soql = build_active_users_soql(linked);
     let conn = Connection::connect(target)
         .await
         // Why: SalesforceError is foreign to JobError and this job is its
@@ -100,6 +88,26 @@ async fn query_active_usernames(
         .filter_map(|r| r.get("Username").and_then(|v| v.as_str()))
         .map(str::to_lowercase)
         .collect())
+}
+
+// Why: quoting is the whole defense here — the usernames come from our own
+// database, but they originated in Salesforce SSO userinfo, so backslashes
+// and quotes are escaped rather than trusted. Public for the unit tests
+// behind `internals`.
+pub fn build_active_users_soql(linked: &[salesforce_identity::LinkedSalesforceIdentity]) -> String {
+    let names: Vec<String> = linked
+        .iter()
+        .map(|l| {
+            format!(
+                "'{}'",
+                l.sf_username.replace('\\', "\\\\").replace('\'', "\\'")
+            )
+        })
+        .collect();
+    format!(
+        "SELECT Username FROM User WHERE IsActive = true AND Username IN ({})",
+        names.join(",")
+    )
 }
 
 // Why: disable is an UPDATE of `users.status`, never a delete — the account's

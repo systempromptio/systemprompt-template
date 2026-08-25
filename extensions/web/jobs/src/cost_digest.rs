@@ -20,12 +20,15 @@ use crate::error::JobError;
 #[derive(Debug, Clone, Copy, Default)]
 pub(crate) struct CostDigestJob;
 
-struct OrgDigestRow {
-    name: String,
-    cap_microdollars: Option<i64>,
-    mtd_microdollars: i64,
-    week_microdollars: i64,
-    week_requests: i64,
+/// One organization's digest line inputs. Public for the unit tests behind
+/// `internals`; production construction stays in this module's query.
+#[derive(Debug, Clone)]
+pub struct OrgDigestRow {
+    pub name: String,
+    pub cap_microdollars: Option<i64>,
+    pub mtd_microdollars: i64,
+    pub week_microdollars: i64,
+    pub week_requests: i64,
 }
 
 impl CostDigestJob {
@@ -87,7 +90,7 @@ async fn load_org_digest_rows(pool: &PgPool) -> Result<Vec<OrgDigestRow>, JobErr
         .collect())
 }
 
-fn compose_digest(rows: &[OrgDigestRow]) -> String {
+pub fn compose_digest(rows: &[OrgDigestRow]) -> String {
     let now = chrono::Utc::now();
     let mut lines = vec![format!(
         "*Weekly AI cost digest* — {} · spend by organization",
@@ -99,7 +102,7 @@ fn compose_digest(rows: &[OrgDigestRow]) -> String {
     lines.join("\n")
 }
 
-fn compose_org_line(row: &OrgDigestRow, now: chrono::DateTime<chrono::Utc>) -> String {
+pub fn compose_org_line(row: &OrgDigestRow, now: chrono::DateTime<chrono::Utc>) -> String {
     let cap = row.cap_microdollars.map_or_else(
         || "uncapped".to_owned(),
         |cap| {

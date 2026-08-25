@@ -86,14 +86,15 @@ impl UsageAnomalyJob {
     }
 }
 
+/// A metric past its threshold. Public for the unit tests behind `internals`.
 #[derive(Debug, Clone, Copy)]
-struct Finding {
-    metric: &'static str,
-    observed: i64,
-    baseline: i64,
+pub struct Finding {
+    pub metric: &'static str,
+    pub observed: i64,
+    pub baseline: i64,
 }
 
-fn evaluate(
+pub fn evaluate(
     metric: &'static str,
     observed: i64,
     baseline: i64,

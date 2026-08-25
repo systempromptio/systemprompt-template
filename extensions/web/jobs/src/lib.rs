@@ -61,8 +61,11 @@ pub use usage_rollup::UsageDailyRollupJob;
 pub mod internals {
     pub use crate::bundle_admin_css::{collect_css_files, concatenate_css_files};
     pub use crate::copy_assets::{copy_all_assets, copy_asset};
+    pub use crate::cost_digest::{OrgDigestRow, compose_digest, compose_org_line};
     pub use crate::governance_bootstrap::{GovernanceStatus, check_governance_config};
     pub use crate::llms_txt::{sort_entries_in_place, write_header, write_section};
     pub use crate::publish::PipelineStats;
     pub use crate::robots::build_robots_txt_content;
+    pub use crate::salesforce_deprovision::build_active_users_soql;
+    pub use crate::usage_anomaly::{Finding, evaluate};
 }
