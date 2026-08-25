@@ -163,9 +163,10 @@ async fn list_context_tool_calls_is_empty_for_a_context_with_no_calls() {
         return;
     };
 
-    let calls = repo::list_context_tool_calls(&db.pool, &ContextId::new_unchecked(new_context_id()))
-        .await
-        .expect("list tool calls");
+    let calls =
+        repo::list_context_tool_calls(&db.pool, &ContextId::new_unchecked(new_context_id()))
+            .await
+            .expect("list tool calls");
 
     assert!(calls.is_empty());
     db.cleanup().await;

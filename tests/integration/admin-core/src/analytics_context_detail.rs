@@ -17,8 +17,9 @@ use crate::fixtures::{
 };
 use crate::tempdb::TempDb;
 
-// `ContextId::new_unchecked` panics on anything that is not a UUID v4, so context ids
-// here are minted as UUIDs rather than with the suite's readable `unique`.
+// `ContextId::new_unchecked` panics on anything that is not a UUID v4, so
+// context ids here are minted as UUIDs rather than with the suite's readable
+// `unique`.
 pub fn new_context_id() -> String {
     uuid::Uuid::new_v4().to_string()
 }
