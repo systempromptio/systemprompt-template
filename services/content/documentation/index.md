@@ -8,7 +8,7 @@ kind: "guide"
 public: true
 tags: ["documentation", "getting-started"]
 published_at: "2026-02-18"
-updated_at: "2026-08-19"
+updated_at: "2026-08-25"
 after_reading_this:
   - "Know which of the two setup paths applies to you"
   - "Get connected and ask your first question"
@@ -78,6 +78,25 @@ For a user, getting connected is three steps and no account creation:
 Browse the [full skills catalogue](/skills/) — every skill lists what it does and
 example questions covering pipeline, accounts, contacts, leads, activities,
 cases, consultancy, brand, and governance.
+
+## Enterprise Administration
+
+The enterprise operations handbook — nine pages covering user and access
+management, organizations, analytics, cost and budget controls, model routing
+and data residency, audit and observability, safety guardrails, tool
+governance, and the roadmap. Every page ends with its verified evidence: the
+tagged end-to-end tests and screenshots that prove the capability, and the
+commands to replicate them.
+
+- [User & Access Management](/documentation/enterprise-user-access)
+- [Organizations, Departments & Hubs](/documentation/enterprise-organizations)
+- [Usage, Adoption & Productivity Analytics](/documentation/enterprise-analytics)
+- [Cost Management, Budgets & FinOps](/documentation/enterprise-cost-management)
+- [Model Gateway, Routing & Data Residency](/documentation/enterprise-model-routing)
+- [Audit Trail, Traceability & Observability](/documentation/enterprise-audit-observability)
+- [Content Safety, PII & Guardrails](/documentation/enterprise-safety-guardrails)
+- [MCP, Tool Governance & Distribution](/documentation/enterprise-tool-governance)
+- [Enterprise Roadmap & Known Limitations](/documentation/enterprise-roadmap)
 
 ## Advanced
 

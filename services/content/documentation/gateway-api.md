@@ -8,7 +8,7 @@ kind: "guide"
 public: true
 tags: ["gateway", "api", "governance"]
 published_at: "2026-05-19"
-updated_at: "2026-05-19"
+updated_at: "2026-08-25"
 after_reading_this:
   - "Call the governed inference gateway at POST /v1/messages"
   - "Supply the required x-session-id header so a request is not rejected with HTTP 400"
@@ -62,6 +62,15 @@ Gateway-route RBAC additionally keys on the route `id`. If the caller's role or
 department is not assigned to the route (and the route is not `default_included`), the
 gateway returns `403` with a message that names the route id, the model, and the
 remedy.
+
+## Governance requirements on routes
+
+Providers and models can carry a `governance:` block (`european`, `no_retain`)
+and a route can demand it with `requires:`. A route whose provider or model
+cannot satisfy its requirement refuses to boot, and dispatch re-checks the
+resolved target — a denied call is audited with the requirement named in the
+route-match descriptor. The full walkthrough, with a worked YAML example, is in
+[Model Gateway, Routing & Data Residency](/documentation/enterprise-model-routing).
 
 ## Profile API URLs
 
