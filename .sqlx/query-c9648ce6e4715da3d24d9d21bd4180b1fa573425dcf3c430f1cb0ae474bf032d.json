@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ai_gateway_policies (id, name, spec, enabled, priority, created_at, updated_at)\n            VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)\n            ON CONFLICT (name) DO UPDATE\n            SET spec = EXCLUDED.spec,\n                enabled = EXCLUDED.enabled,\n                priority = EXCLUDED.priority,\n                updated_at = CURRENT_TIMESTAMP\n            RETURNING id as \"id!: AiGatewayPolicyId\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: AiGatewayPolicyId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_gateway_policies",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Varchar",
+        "Jsonb",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c9648ce6e4715da3d24d9d21bd4180b1fa573425dcf3c430f1cb0ae474bf032d"
+}

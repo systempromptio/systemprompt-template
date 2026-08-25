@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT metric AS \"metric!\", window_start AS \"window_start!\",\n               observed AS \"observed!\", baseline AS \"baseline!\",\n               detected_at AS \"detected_at!\"\n        FROM usage_anomalies\n        ORDER BY detected_at DESC\n        LIMIT $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "metric!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "usage_anomalies",
+            "name": "metric"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "window_start!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "usage_anomalies",
+            "name": "window_start"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "observed!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "usage_anomalies",
+            "name": "observed"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "baseline!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "usage_anomalies",
+            "name": "baseline"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "detected_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "usage_anomalies",
+            "name": "detected_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "7e35e1cf81eb93bfe35b4994f7fcd014bb4718bb377d2289f4984b3829d8105d"
+}

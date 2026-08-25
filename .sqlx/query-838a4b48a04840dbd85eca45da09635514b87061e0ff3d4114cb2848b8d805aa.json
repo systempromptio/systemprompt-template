@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO org_budget_warnings\n            (org_id, month, kind, threshold_microdollars, spent_microdollars)\n         VALUES ($1, DATE_TRUNC('month', NOW())::DATE, $2, $3, $4)\n         ON CONFLICT (org_id, month, kind) DO UPDATE SET\n            threshold_microdollars = EXCLUDED.threshold_microdollars,\n            spent_microdollars = EXCLUDED.spent_microdollars,\n            last_seen_at = NOW()\n         RETURNING (xmax = 0) AS \"first_crossing!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "first_crossing!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "838a4b48a04840dbd85eca45da09635514b87061e0ff3d4114cb2848b8d805aa"
+}

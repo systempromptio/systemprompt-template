@@ -118,7 +118,21 @@ pub fn update_route(
         if index >= routes.len() {
             return Ok(false);
         }
-        routes[index] = route_to_yaml(route);
+        let mut merged = route.clone();
+        if let Some(existing) = routes[index].as_mapping() {
+            // Why: an update body that omits pricing/when/requires must keep
+            // the on-disk blocks — the admin UI never round-trips them.
+            merged.pricing = merged
+                .pricing
+                .or_else(|| existing.get(Value::from("pricing")).cloned());
+            merged.when = merged
+                .when
+                .or_else(|| existing.get(Value::from("when")).cloned());
+            merged.requires = merged
+                .requires
+                .or_else(|| existing.get(Value::from("requires")).cloned());
+        }
+        routes[index] = route_to_yaml(&merged);
     }
     write_profile(profile_path, &doc)?;
     Ok(true)

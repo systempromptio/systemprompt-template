@@ -253,7 +253,7 @@ _test-integration-uncoordinated:
     print(up.urlunsplit((u.scheme, u.netloc, '/postgres', '', '')))")
         export SYSTEMPROMPT_TEST_DATABASE_URL
     fi
-    cargo nextest run --manifest-path tests/Cargo.toml -p mcp-integration-tests -p web-integration-tests -p admin-db-core-tests -p admin-db-config-tests
+    cargo nextest run --manifest-path tests/Cargo.toml -p mcp-integration-tests -p web-integration-tests -p admin-db-core-tests -p admin-db-config-tests -p gateway-integration-tests
 
 # HTTP contract suite: drives every admin route under three principals and
 # diffs the result against tests/contract/admin/baseline.txt. Same throwaway-
@@ -626,6 +626,15 @@ prepare:
     done
     # Workspace-level prepare (catches lib crates)
     cargo sqlx prepare --workspace
+    # Second pass: the tests workspace builds systemprompt-web-admin with
+    # `governance-ssr`, whose queries a default-feature prepare never expands
+    # (and therefore prunes). prepare regenerates .sqlx wholesale, so the two
+    # passes are unioned by hand — query filenames are content hashes, so a
+    # plain copy merge cannot collide.
+    cp -a .sqlx .sqlx.default-pass
+    cargo sqlx prepare --workspace -- --package systemprompt-web-admin --features systemprompt-web-admin/governance-ssr
+    cp -n .sqlx.default-pass/query-*.json .sqlx/ 2>/dev/null || true
+    rm -rf .sqlx.default-pass
     # Per-crate prepare for binary/extension crates that cargo sqlx skips
     EXTENSION_DIRS="extensions/web extensions/mcp/shared extensions/mcp/systemprompt"
     for dir in $EXTENSION_DIRS; do

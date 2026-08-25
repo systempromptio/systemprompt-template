@@ -14,6 +14,15 @@ pub struct GatewayRouteView {
     pub upstream_model: Option<String>,
     #[serde(default)]
     pub extra_headers: BTreeMap<String, String>,
+    // Why: opaque passthrough of route blocks the admin UI does not edit
+    // (pricing/when/requires) — typed forms live in core; dropping them on a
+    // round-trip silently rewrites routing policy.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pricing: Option<serde_yaml::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub when: Option<serde_yaml::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub requires: Option<serde_yaml::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Default)]

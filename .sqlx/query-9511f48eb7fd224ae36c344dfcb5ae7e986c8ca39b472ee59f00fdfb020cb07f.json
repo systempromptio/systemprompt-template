@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT w.org_id AS \"org_id!\", o.name AS \"org_name!\", o.slug AS \"org_slug!\",\n               w.month AS \"month!\",\n               w.threshold_microdollars AS \"threshold!\",\n               w.spent_microdollars AS \"spent!\",\n               w.first_seen_at AS \"first_seen_at!\",\n               w.last_seen_at AS \"last_seen_at!\"\n        FROM org_budget_warnings w\n        JOIN organizations o ON o.id = w.org_id\n        WHERE w.month >= DATE_TRUNC('month', NOW())::DATE - make_interval(months => $1::INT)\n          AND ($2::TEXT IS NULL OR o.slug = $2)\n        ORDER BY w.month DESC, o.name\n        ",
+  "query": "\n        SELECT w.org_id AS \"org_id!\", o.name AS \"org_name!\", o.slug AS \"org_slug!\",\n               w.kind AS \"kind!\",\n               w.month AS \"month!\",\n               w.threshold_microdollars AS \"threshold!\",\n               w.spent_microdollars AS \"spent!\",\n               w.first_seen_at AS \"first_seen_at!\",\n               w.last_seen_at AS \"last_seen_at!\"\n        FROM org_budget_warnings w\n        JOIN organizations o ON o.id = w.org_id\n        WHERE w.month >= DATE_TRUNC('month', NOW())::DATE - make_interval(months => $1::INT)\n          AND ($2::TEXT IS NULL OR o.slug = $2)\n        ORDER BY w.month DESC, o.name\n        ",
   "describe": {
     "columns": [
       {
@@ -38,6 +38,17 @@
       },
       {
         "ordinal": 3,
+        "name": "kind!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "org_budget_warnings",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
         "name": "month!",
         "type_info": "Date",
         "origin": {
@@ -48,7 +59,7 @@
         }
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "threshold!",
         "type_info": "Int8",
         "origin": {
@@ -59,7 +70,7 @@
         }
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "spent!",
         "type_info": "Int8",
         "origin": {
@@ -70,7 +81,7 @@
         }
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "first_seen_at!",
         "type_info": "Timestamptz",
         "origin": {
@@ -81,7 +92,7 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "last_seen_at!",
         "type_info": "Timestamptz",
         "origin": {
@@ -106,8 +117,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "110457d597fc2b816e1dbbbf83c18d188c354953099ec41ed02c383b37bde6eb"
+  "hash": "9511f48eb7fd224ae36c344dfcb5ae7e986c8ca39b472ee59f00fdfb020cb07f"
 }

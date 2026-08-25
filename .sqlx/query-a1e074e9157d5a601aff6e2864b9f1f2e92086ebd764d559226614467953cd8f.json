@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO usage_anomalies (metric, window_start, observed, baseline)\n         VALUES ($1, $2, $3, $4)\n         ON CONFLICT (metric, window_start) DO UPDATE SET\n            observed = EXCLUDED.observed,\n            baseline = EXCLUDED.baseline\n         RETURNING (xmax = 0) AS \"first_detection!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "first_detection!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "a1e074e9157d5a601aff6e2864b9f1f2e92086ebd764d559226614467953cd8f"
+}
