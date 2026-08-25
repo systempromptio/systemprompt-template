@@ -23,6 +23,9 @@ pub fn validate_route(route: &GatewayRouteView) -> Result<(), MarketplaceError> 
     Ok(())
 }
 
+// Why: Ensure every route in the profile has an explicit stable `id`,
+// persisting synthesized ids back to disk if any were missing. Returns true
+// when the profile was rewritten.
 pub fn ensure_route_ids(profile_path: &Path) -> Result<bool, MarketplaceError> {
     let mut doc = read_profile(profile_path)?;
     let mut changed = false;
@@ -115,7 +118,21 @@ pub fn update_route(
         if index >= routes.len() {
             return Ok(false);
         }
-        routes[index] = route_to_yaml(route);
+        let mut merged = route.clone();
+        if let Some(existing) = routes[index].as_mapping() {
+            // Why: an update body that omits pricing/when/requires must keep
+            // the on-disk blocks — the admin UI never round-trips them.
+            merged.pricing = merged
+                .pricing
+                .or_else(|| existing.get(Value::from("pricing")).cloned());
+            merged.when = merged
+                .when
+                .or_else(|| existing.get(Value::from("when")).cloned());
+            merged.requires = merged
+                .requires
+                .or_else(|| existing.get(Value::from("requires")).cloned());
+        }
+        routes[index] = route_to_yaml(&merged);
     }
     write_profile(profile_path, &doc)?;
     Ok(true)

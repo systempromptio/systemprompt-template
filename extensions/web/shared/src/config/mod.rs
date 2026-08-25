@@ -107,9 +107,10 @@ impl BlogConfigValidated {
         Self::validate(raw, base_path)
     }
 
+    // Why: ExtensionConfigErrors is a field-keyed validation accumulator, not a
+    // variant enum; messages are its contract. lint-ok: error-adapt
     fn read_raw(path: &Path) -> Result<BlogConfigRaw, ExtensionConfigErrors> {
-        // Why: ExtensionConfigErrors is a field-keyed validation accumulator, not
-        // a variant enum; messages are its contract. lint-ok: error-adapt
+        // Why: field-keyed accumulator, not a variant enum. lint-ok: error-adapt
         let content = std::fs::read_to_string(path).map_err(|e| {
             let mut errors = ExtensionConfigErrors::new("blog");
             errors.push("_file", format!("Failed to read config file: {e}"));
@@ -124,6 +125,9 @@ impl BlogConfigValidated {
         })
     }
 
+    // Why: A missing file resolves to `Ok(None)`: "blog disabled" is a supported
+    // state, not a degraded one. `Err` is reserved for a file that exists but
+    // cannot be read, parsed, or validated.
     pub fn load_from_env_or_none() -> Result<Option<Arc<Self>>, ExtensionConfigErrors> {
         let config_path = resolve_blog_config_path();
         if config_path.exists() {
@@ -133,6 +137,9 @@ impl BlogConfigValidated {
         }
     }
 
+    // Why: Every consumer of the blog config (link API routing, content
+    // ingestion) must go through this single load path so they cannot
+    // disagree about which config the process is running with.
     pub fn cached() -> Result<Option<Arc<Self>>, String> {
         static CACHED: OnceLock<Result<Option<Arc<BlogConfigValidated>>, String>> = OnceLock::new();
         CACHED

@@ -130,6 +130,11 @@ pub struct StopData {
 pub struct SubagentStartData;
 
 impl<'de> Deserialize<'de> for SubagentStartData {
+    // Why: Accepts the whole envelope and discards it.
+    //
+    // Why: the derived unit-struct impl only accepts `null`, so every real
+    // `SubagentStart` post — a JSON object — failed to parse and landed as
+    // [`HookEvent::Unknown`], a hole in the audit trail.
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         serde::de::IgnoredAny::deserialize(deserializer)?;
         Ok(Self)

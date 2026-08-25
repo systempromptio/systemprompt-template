@@ -32,9 +32,15 @@ use repositories::insert_mcp_access_rejection;
 
 const ACTION_USED: &str = "used";
 
+// Why: Maximum length (in bytes) of the reason text kept in a rejection
+// description before it is truncated. Truncated text gains a "..." suffix, so
+// the reason portion never exceeds `MAX_REASON_LEN + 3` bytes.
 #[doc(hidden)]
 pub const MAX_REASON_LEN: usize = 117;
 
+// Why: Exposed (behind `#[doc(hidden)]`) so the external test workspace can
+// assert the char-boundary and "..." suffix semantics directly; not part of the
+// public API.
 #[doc(hidden)]
 pub fn truncate_on_char_boundary(s: &str, max_bytes: usize) -> String {
     if s.len() <= max_bytes {

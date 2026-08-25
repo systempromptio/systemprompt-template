@@ -90,14 +90,19 @@ pub fn parse_time_range(query: &TimeRangeQuery) -> TimeRange {
     }
 }
 
-// Why: the presets are bounded by construction, but `?from=&to=` is not, and
-// the percentile stats behind the trace page aggregate every row in the window
-// because exact p50/p95/p99 cannot be derived from a rollup. An unbounded
-// custom range is a full-table scan anyone can trigger from a query string.
+// Why: The widest window any query may scan. Matches the widest preset (30d).
+//
+// Why: the presets are bounded by construction, but `?from=&to=` is not —
+// and the percentile stats behind the trace page (`repositories/traces/
+// stats.rs`) aggregate *every* row in the window, because exact p50/p95/p99
+// cannot be derived from a rollup. An unbounded custom range is therefore a
+// full-table scan anyone can trigger from a query string. Bounding the window
+// is what keeps that query O(window) instead of O(all rows).
 pub const MAX_CUSTOM_WINDOW_DAYS: i64 = 30;
 
-// Why: an over-wide range keeps its `to` and pulls `from` up to the cap,
-// anchoring on the recent end — the half a reader is actually looking at.
+// Why: inverted ranges are swapped, and an over-wide one keeps its `to` and
+// pulls `from` up to the cap — anchoring on the recent end, which is the half
+// a reader is actually looking at.
 fn clamp_custom(from: DateTime<Utc>, to: DateTime<Utc>) -> TimeRange {
     let (from, to) = if from <= to { (from, to) } else { (to, from) };
     let max = Duration::days(MAX_CUSTOM_WINDOW_DAYS);
@@ -117,6 +122,9 @@ fn parse_rfc3339(s: &str) -> Option<DateTime<Utc>> {
         .map(|dt| dt.with_timezone(&Utc))
 }
 
+// Why: Resolve a fixed [`TimeRangePreset`] (not Custom) to a concrete window
+// anchored at `now()`. Returns the same window `parse_time_range` would have
+// produced for the matching preset string.
 pub fn preset_to_range(preset: TimeRangePreset) -> TimeRange {
     let now = Utc::now();
     let d = preset.duration().unwrap_or_else(|| Duration::hours(24));
@@ -127,6 +135,9 @@ pub fn preset_to_range(preset: TimeRangePreset) -> TimeRange {
     }
 }
 
+// Why: Cheap probe for the auto-widen path: just count rows in `ai_requests`
+// inside the candidate window. Used to decide whether the default 24h
+// window has data, or whether to fall back to a wider preset.
 pub async fn count_requests_in_range(pool: &PgPool, range: TimeRange) -> Result<i64, sqlx::Error> {
     let row = sqlx::query!(
         r#"SELECT COUNT(*)::bigint AS "count!"

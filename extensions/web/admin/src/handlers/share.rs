@@ -1,8 +1,11 @@
 //! Per-user shareable manifest export.
 //!
 //! Issuance: admins POST `/admin/users/:id/share-token` to mint a signed token
-//! that encodes the `user_id` and the current `users.share_token_version`.
-//! Rotating the version revokes every previously-issued token.
+//! that encodes the `user_id`, the current `users.share_token_version`, and an
+//! expiry instant. Rotating the version revokes every previously-issued token;
+//! the expiry bounds a token nobody remembered to revoke (REQ-025) — this is
+//! the platform's most external-facing credential and it must not be the only
+//! one without a clock.
 //!
 //! Verification: GET `/share/manifest/:token` is **public** (no auth
 //! middleware). The token is validated, the version is rechecked against the
@@ -26,8 +29,12 @@ use crate::handlers::shared;
 use crate::repositories;
 use crate::types::UserContext;
 
-fn sign(secret: &[u8], user_id: &UserId, version: i32) -> String {
-    let payload = format!("{user_id}:{version}");
+// Why: thirty days — long enough that a shared catalog link survives a
+// procurement cycle, short enough that a forgotten one dies on its own.
+const SHARE_TOKEN_TTL_DAYS: i64 = 30;
+
+fn sign(secret: &[u8], user_id: &UserId, version: i32, expires_unix: i64) -> String {
+    let payload = format!("{user_id}:{version}:{expires_unix}");
     let mut padded = [0u8; 64];
     if secret.len() > 64 {
         let mut h = Sha256::new();
@@ -55,24 +62,30 @@ fn sign(secret: &[u8], user_id: &UserId, version: i32) -> String {
     let b64 = base64::engine::general_purpose::URL_SAFE_NO_PAD;
     let uid_b64 = b64.encode(user_id.as_str().as_bytes());
     let ver_b64 = b64.encode(version.to_string().as_bytes());
+    let exp_b64 = b64.encode(expires_unix.to_string().as_bytes());
     let mut mac_hex = String::with_capacity(mac.len() * 2);
     for b in mac {
         use std::fmt::Write;
         _ = write!(mac_hex, "{b:02x}");
     }
-    format!("{uid_b64}:{ver_b64}:{mac_hex}")
+    format!("{uid_b64}:{ver_b64}:{exp_b64}:{mac_hex}")
 }
 
+// Why: expiry is checked *after* the MAC, so a forged expiry can never buy
+// time, and an expired-but-genuine token fails exactly like a tampered one —
+// the public endpoint gives an anonymous caller one answer, not three.
 fn verify(secret: &[u8], token: &str) -> Option<(UserId, i32)> {
     let parts: Vec<&str> = token.split(':').collect();
-    if parts.len() != 3 {
+    if parts.len() != 4 {
         return None;
     }
     let b64 = base64::engine::general_purpose::URL_SAFE_NO_PAD;
     let user_id = UserId::new(String::from_utf8(b64.decode(parts[0]).ok()?).ok()?);
     let ver_s = String::from_utf8(b64.decode(parts[1]).ok()?).ok()?;
     let version: i32 = ver_s.parse().ok()?;
-    let expected = sign(secret, &user_id, version);
+    let exp_s = String::from_utf8(b64.decode(parts[2]).ok()?).ok()?;
+    let expires_unix: i64 = exp_s.parse().ok()?;
+    let expected = sign(secret, &user_id, version, expires_unix);
     if expected.len() != token.len() {
         return None;
     }
@@ -80,11 +93,10 @@ fn verify(secret: &[u8], token: &str) -> Option<(UserId, i32)> {
     for (a, b) in expected.bytes().zip(token.bytes()) {
         diff |= a ^ b;
     }
-    if diff == 0 {
-        Some((user_id, version))
-    } else {
-        None
+    if diff != 0 {
+        return None;
     }
+    (chrono::Utc::now().timestamp() < expires_unix).then_some((user_id, version))
 }
 
 #[derive(Debug, Serialize)]
@@ -106,7 +118,9 @@ pub(crate) async fn issue_share_token_handler(
     let version = repositories::users::find_share_token_version(&pool, &target_user_id)
         .await?
         .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
-    let token = sign(&secret, &target_user_id, version);
+    let expires_unix =
+        (chrono::Utc::now() + chrono::Duration::days(SHARE_TOKEN_TTL_DAYS)).timestamp();
+    let token = sign(&secret, &target_user_id, version, expires_unix);
     let url = format!("/share/manifest/{token}");
     Ok(Json(ShareTokenResponse { token, url }).into_response())
 }

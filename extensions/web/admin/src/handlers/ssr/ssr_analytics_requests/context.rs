@@ -74,6 +74,8 @@ pub(super) struct TabLinkView {
     pub label: &'static str,
     pub href: String,
     pub is_active: bool,
+    // Why: Shown as a count pill next to the label. Only the Log tab carries one:
+    // on the other tabs the number the reader wants is already in the table.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub count: Option<i64>,
 }
@@ -159,6 +161,9 @@ pub(super) struct TimeRangeView {
     pub to: String,
     pub base_url: &'static str,
     pub query: String,
+    // Why: Only meaningful when the requested window had to be widened; the
+    // template gates its notice banner on `{{#if time_range.auto_widened}}`,
+    // so an *absent* key (not `null`) must mean "not widened".
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auto_widened: Option<&'static str>,
 }

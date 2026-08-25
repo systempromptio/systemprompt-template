@@ -56,6 +56,9 @@ pub(super) fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
         provider,
         upstream_model,
         extra_headers,
+        pricing: map.get(Value::from("pricing")).cloned(),
+        when: map.get(Value::from("when")).cloned(),
+        requires: map.get(Value::from("requires")).cloned(),
     })
 }
 
@@ -81,6 +84,15 @@ pub(super) fn route_to_yaml(route: &GatewayRouteView) -> Value {
             hdr.insert(Value::from(k.clone()), Value::from(v.clone()));
         }
         map.insert(Value::from("extra_headers"), Value::Mapping(hdr));
+    }
+    if let Some(pricing) = &route.pricing {
+        map.insert(Value::from("pricing"), pricing.clone());
+    }
+    if let Some(when) = &route.when {
+        map.insert(Value::from("when"), when.clone());
+    }
+    if let Some(requires) = &route.requires {
+        map.insert(Value::from("requires"), requires.clone());
     }
     Value::Mapping(map)
 }
