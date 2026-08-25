@@ -44,8 +44,8 @@ pub(super) struct ReportInternalContext {
     pub trend: ChartView,
 }
 
-// Why: The portfolio line. Every figure is folded from the same organization
-// rows the table prints, so the header and the body cannot disagree.
+// Why: every figure is folded from the same organization rows the table
+// prints, so the header and the body cannot disagree.
 #[derive(Debug, Serialize)]
 pub(super) struct InternalTotals {
     pub customers: i64,

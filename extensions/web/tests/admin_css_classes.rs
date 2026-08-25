@@ -12,31 +12,12 @@
 //! scripts/admin-css-class-exemptions.txt. Reserve it for classes toggled
 //! or generated at runtime by JS, never for a rule that is simply missing.
 
+mod support;
+
+use support::{repo_root, walk};
+
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Path, PathBuf};
-
-fn repo_root() -> PathBuf {
-    // Why: extensions/web sits two levels below the repo root.
-    let mut root = Path::new(env!("CARGO_MANIFEST_DIR")).to_path_buf();
-    for _ in 0..2 {
-        root.pop();
-    }
-    root
-}
-
-fn walk(dir: &Path, ext: &str, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            walk(&path, ext, out);
-        } else if path.extension().is_some_and(|e| e == ext) {
-            out.push(path);
-        }
-    }
-}
+use std::path::Path;
 
 fn exemptions(root: &Path) -> BTreeSet<String> {
     let path = root.join("scripts/admin-css-class-exemptions.txt");

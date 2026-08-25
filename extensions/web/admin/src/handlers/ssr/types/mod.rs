@@ -1,5 +1,6 @@
 //! Template context types for the SSR pages.
 
+mod budget;
 mod charts;
 mod enterprises;
 mod meter;
@@ -9,6 +10,7 @@ mod svg_line;
 mod svg_stack;
 mod users;
 
+pub(crate) use budget::*;
 pub(crate) use charts::*;
 pub(crate) use enterprises::*;
 pub(crate) use meter::*;

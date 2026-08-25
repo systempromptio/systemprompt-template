@@ -52,9 +52,6 @@ pub async fn load_from_yaml(
     load_departments_file(pool, services_path, &mut report).await?;
     load_roles_file(pool, services_path, &mut report).await?;
 
-    // Why: last — a plan's grants name marketplaces and routes whose catalog
-    // rows the passes above materialise, and its organization rules sit at the
-    // outermost precedence band, so nothing earlier can depend on them.
     let plans = super::plan_yaml_loader::load_plans_from_yaml(pool, services_path).await?;
 
     // Why: after the roles pass — the gate forces default_included=false on

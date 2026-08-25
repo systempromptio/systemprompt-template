@@ -17,13 +17,12 @@ use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{RuleId, UserId};
 use systemprompt_security::authz::{
-    Access, AccessRule, Decision, DenyReason, EntityKind, MatchedBy, ResolveInput,
+    Access, AccessRule, Decision, DenyReason, EntityKind, EntityRef, MatchedBy, ResolveInput,
     SubjectAttributes, SubjectDimension, resolve,
 };
 
 use super::rules::list_all_rules;
 use crate::authz::{dimensions, subject_attributes_for};
-use crate::marketplace_filter::entity_ref_for;
 use crate::types::access_control::{AccessControlRule, AccessDecision};
 
 #[derive(Debug, Serialize)]
@@ -215,7 +214,7 @@ fn resolve_effective(cell: &MatrixCell<'_>) -> (String, MatrixSource) {
             },
         );
     };
-    let entity = entity_ref_for(kind, cell.entity_id);
+    let entity = EntityRef::from_kind_and_id(kind, cell.entity_id);
     let rules: Vec<AccessRule> = cell
         .all_rules
         .iter()

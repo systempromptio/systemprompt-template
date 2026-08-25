@@ -40,7 +40,7 @@ fn request_context() -> SysRequestContext {
     SysRequestContext::new(
         SessionId::new("cli-session"),
         TraceId::new("cli-trace"),
-        ContextId::new("00000000-0000-4000-8000-00000000c11e"),
+        ContextId::new_unchecked("00000000-0000-4000-8000-00000000c11e"),
         AgentName::new("cli-agent"),
     )
 }

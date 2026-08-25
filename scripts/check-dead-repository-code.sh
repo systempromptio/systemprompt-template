@@ -22,12 +22,23 @@
 #
 # Exemption: annotate a deliberately-unused public entry point with
 # `// lint-ok: unused-pub` in the comment block directly above it, and say why.
+#
+# Files whose head carries an inner `#![cfg(feature = "...")]` are compiled only
+# under that feature; their liveness belongs to the feature's consumers, not to
+# this tree, so they are skipped entirely.
 set -uo pipefail
 
 REPO_DIR="${REPO_DIR:-extensions/web/admin/src/repositories}"
 SIBLING_REPO="${SIBLING_REPO:-}"
 
 [ -d "$REPO_DIR" ] || { echo "check-dead-repository-code: no $REPO_DIR - nothing to check"; exit 0; }
+
+RS_FILES=()
+while IFS= read -r f; do
+    head -n 30 "$f" | grep -q '^#!\[cfg(feature' && continue
+    RS_FILES+=("$f")
+done < <(find "$REPO_DIR" -name '*.rs' | sort)
+[ "${#RS_FILES[@]}" -gt 0 ] || { echo "check-dead-repository-code: OK (no non-feature-gated files)"; exit 0; }
 
 roots_for() {
     local base="$1"
@@ -40,7 +51,7 @@ roots_for() {
 declare -A ALIAS
 while IFS=' ' read -r orig alias; do
     [ -n "${orig:-}" ] && [ -n "${alias:-}" ] && ALIAS["$orig"]+=" $alias"
-done < <(grep -rhoE '\b[A-Za-z0-9_]+ as [A-Za-z0-9_]+' "$REPO_DIR" --include='*.rs' 2>/dev/null \
+done < <(grep -hoE '\b[A-Za-z0-9_]+ as [A-Za-z0-9_]+' "${RS_FILES[@]}" 2>/dev/null \
          | sed -E 's/ as / /' | sort -u)
 
 # Functions annotated `// lint-ok: unused-pub` in the preceding comment block are
@@ -48,21 +59,21 @@ done < <(grep -rhoE '\b[A-Za-z0-9_]+ as [A-Za-z0-9_]+' "$REPO_DIR" --include='*.
 declare -A EXEMPT
 while IFS= read -r fn; do
     [ -n "$fn" ] && EXEMPT["$fn"]=1
-done < <(find "$REPO_DIR" -name '*.rs' -exec awk '
+done < <(awk '
     /lint-ok: unused-pub/ { skip = 1; next }
     skip && match($0, /^[[:space:]]*pub (async )?fn [a-z_0-9]+/) {
         sub(/.*fn /, ""); sub(/[^a-z_0-9].*/, ""); print; skip = 0; next
     }
     skip && /^[[:space:]]*(\/\/|#!?\[)/ { next }
     { skip = 0 }
-' {} + 2>/dev/null | sort -u)
+' "${RS_FILES[@]}" 2>/dev/null | sort -u)
 
 # Call sites are matched by bare name, so two repository functions sharing a
 # name also share liveness — one live one hides a dead one. Distinct names are
 # therefore a precondition of the dead-code check, not a style preference.
 # Methods (`self` receiver) are excluded: same-named methods on different
 # types are idiomatic and resolve through their receiver.
-DUPES=$(grep -rhoE '^\s*pub (async )?fn [a-z_0-9]+\([^)]*' "$REPO_DIR" --include='*.rs' 2>/dev/null \
+DUPES=$(grep -hoE '^\s*pub (async )?fn [a-z_0-9]+\([^)]*' "${RS_FILES[@]}" 2>/dev/null \
         | grep -vE '\(\s*&?\s*(mut\s+)?self\b' | sed -E 's/.*fn ([a-z_0-9]+)\(.*/\1/' | sort | uniq -d)
 if [ -n "$DUPES" ]; then
     echo "check-dead-repository-code: duplicate public function name(s) in $REPO_DIR."
@@ -88,7 +99,7 @@ while IFS= read -r fn; do
         done < <(roots_for "$base")
     done
     [ "$hits" -eq 0 ] && DEAD+=("$fn")
-done < <(grep -rhoE '^\s*pub (async )?fn [a-z_0-9]+' "$REPO_DIR" --include='*.rs' 2>/dev/null \
+done < <(grep -hoE '^\s*pub (async )?fn [a-z_0-9]+' "${RS_FILES[@]}" 2>/dev/null \
          | sed 's/.*fn //' | sort -u)
 
 if [ "${#DEAD[@]}" -gt 0 ]; then

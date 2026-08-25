@@ -175,14 +175,10 @@ async fn an_entity_with_no_rule_and_no_catalog_row_is_dropped() {
         .filter
         .filter(
             &user,
-            MarketplaceCandidate::new(
-                vec![plugin_entry(&plugin)],
-                vec![],
-                vec![],
-                vec![],
-                vec![],
-                vec![],
-            ),
+            MarketplaceCandidate {
+                plugins: vec![plugin_entry(&plugin)],
+                ..MarketplaceCandidate::default()
+            },
         )
         .await
         .expect("filter");
@@ -208,14 +204,10 @@ async fn a_default_included_catalog_row_makes_an_entity_visible_to_everyone() {
         .filter
         .filter(
             &user,
-            MarketplaceCandidate::new(
-                vec![plugin_entry(&plugin)],
-                vec![],
-                vec![],
-                vec![],
-                vec![],
-                vec![],
-            ),
+            MarketplaceCandidate {
+                plugins: vec![plugin_entry(&plugin)],
+                ..MarketplaceCandidate::default()
+            },
         )
         .await
         .expect("filter");
@@ -238,15 +230,9 @@ async fn a_role_rule_admits_only_the_role_it_names() {
 
     let admin = h.user(&["admin"]).await;
     let plain = h.user(&["user"]).await;
-    let candidate = || {
-        MarketplaceCandidate::new(
-            vec![plugin_entry(&plugin)],
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-        )
+    let candidate = || MarketplaceCandidate {
+        plugins: vec![plugin_entry(&plugin)],
+        ..MarketplaceCandidate::default()
     };
 
     let for_admin = h.filter.filter(&admin, candidate()).await.expect("admin");
@@ -293,14 +279,14 @@ async fn every_entity_kind_is_resolved_against_its_own_rules() {
         .filter
         .filter(
             &user,
-            MarketplaceCandidate::new(
-                vec![plugin_entry(&plugin)],
-                vec![skill_entry(&skill_yes), skill_entry(&skill_no)],
-                vec![agent_entry(&agent)],
-                vec![hook_entry(&hook)],
-                vec![mcp_entry(&mcp)],
-                vec![],
-            ),
+            MarketplaceCandidate {
+                plugins: vec![plugin_entry(&plugin)],
+                skills: vec![skill_entry(&skill_yes), skill_entry(&skill_no)],
+                agents: vec![agent_entry(&agent)],
+                hooks: vec![hook_entry(&hook)],
+                managed_mcp_servers: vec![mcp_entry(&mcp)],
+                ..MarketplaceCandidate::default()
+            },
         )
         .await
         .expect("filter");
@@ -336,14 +322,10 @@ async fn one_marketplace_rule_covers_members_that_declare_none_of_their_own() {
         .filter
         .filter(
             &user,
-            MarketplaceCandidate::new(
-                vec![],
-                vec![skill_entry(&skill)],
-                vec![],
-                vec![],
-                vec![],
-                vec![],
-            )
+            MarketplaceCandidate {
+                skills: vec![skill_entry(&skill)],
+                ..MarketplaceCandidate::default()
+            }
             .with_marketplace(MarketplaceId::new(marketplace.clone()), None),
         )
         .await
@@ -386,14 +368,10 @@ async fn a_member_that_declares_a_rule_owns_its_decision_over_the_marketplace() 
         .filter
         .filter(
             &user,
-            MarketplaceCandidate::new(
-                vec![],
-                vec![skill_entry(&skill)],
-                vec![],
-                vec![],
-                vec![],
-                vec![],
-            )
+            MarketplaceCandidate {
+                skills: vec![skill_entry(&skill)],
+                ..MarketplaceCandidate::default()
+            }
             .with_marketplace(MarketplaceId::new(marketplace), None),
         )
         .await
@@ -426,14 +404,10 @@ async fn the_candidate_access_supplies_the_marketplace_default_when_no_catalog_r
         .filter
         .filter(
             &user,
-            MarketplaceCandidate::new(
-                vec![],
-                vec![skill_entry(&skill)],
-                vec![],
-                vec![],
-                vec![],
-                vec![],
-            )
+            MarketplaceCandidate {
+                skills: vec![skill_entry(&skill)],
+                ..MarketplaceCandidate::default()
+            }
             .with_marketplace(MarketplaceId::new(marketplace), Some(access)),
         )
         .await
@@ -478,15 +452,9 @@ async fn a_salesforce_rule_admits_only_users_with_a_linked_identity() {
     .await
     .expect("link salesforce identity");
 
-    let candidate = || {
-        MarketplaceCandidate::new(
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-            vec![mcp_entry(&mcp)],
-            vec![],
-        )
+    let candidate = || MarketplaceCandidate {
+        managed_mcp_servers: vec![mcp_entry(&mcp)],
+        ..MarketplaceCandidate::default()
     };
 
     let for_linked = h.filter.filter(&linked, candidate()).await.expect("linked");
@@ -535,14 +503,11 @@ async fn artifacts_follow_the_plugin_decision_the_database_produced() {
         .filter
         .filter(
             &user,
-            MarketplaceCandidate::new(
-                vec![plugin_entry(&kept_plugin), plugin_entry(&dropped_plugin)],
-                vec![],
-                vec![],
-                vec![],
-                vec![],
-                vec![artifact_entry("art-keep"), artifact_entry("art-drop")],
-            )
+            MarketplaceCandidate {
+                plugins: vec![plugin_entry(&kept_plugin), plugin_entry(&dropped_plugin)],
+                artifacts: vec![artifact_entry("art-keep"), artifact_entry("art-drop")],
+                ..MarketplaceCandidate::default()
+            }
             .with_artifact_owners(owners),
         )
         .await

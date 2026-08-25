@@ -8,6 +8,7 @@ use systemprompt::identifiers::{AgentId, McpServerId, SkillId};
 use crate::repositories::marketplace::plugin_loader;
 use crate::repositories::marketplace::plugin_resolvers::resolve_all_plugin_skill_ids;
 use crate::types::{AgentCatalogEntry, SkillCatalogEntry};
+use crate::util::source_path::display_source_path;
 use systemprompt_web_shared::error::MarketplaceError;
 
 pub fn list_skill_catalog(
@@ -66,13 +67,7 @@ pub fn list_skill_catalog(
             .get("enabled")
             .and_then(serde_yaml::Value::as_bool)
             .unwrap_or(true);
-        // Why: `strip_prefix` returns Err when the path isn't under services_path
-        // (e.g. an absolute legacy entry); fall back to the full display path.
-        let source_path = cfg
-            .strip_prefix(services_path)
-            .ok()
-            .and_then(|p| p.to_str())
-            .map_or_else(|| cfg.display().to_string(), |s| format!("services/{s}"));
+        let source_path = display_source_path(&cfg, services_path);
         out.push(SkillCatalogEntry {
             id,
             name,
@@ -108,12 +103,7 @@ pub fn list_agent_catalog(
         let Ok(val): Result<serde_yaml::Value, _> = serde_yaml::from_str(&raw) else {
             continue;
         };
-        // Why: see `list_skill_catalog` — same fallback semantics on prefix miss.
-        let source_path = path
-            .strip_prefix(services_path)
-            .ok()
-            .and_then(|p| p.to_str())
-            .map_or_else(|| path.display().to_string(), |s| format!("services/{s}"));
+        let source_path = display_source_path(&path, services_path);
         let Some(map) = val.get("agents").and_then(|m| m.as_mapping()) else {
             continue;
         };

@@ -66,6 +66,12 @@ urlencoding = { workspace = true }
 inventory = { workspace = true }
 async-trait = { workspace = true }
 
+[features]
+# The ssr_governance surface lives upstream in systemprompt-template; this fork
+# does not ship it. The feature keeps the shared repository files identical
+# across both trees while compiling their dead-in-this-fork queries out.
+governance-ssr = []
+
 [dev-dependencies]
 anyhow = { workspace = true }
 chrono = { workspace = true }

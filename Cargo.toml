@@ -29,7 +29,7 @@ opt-level = "z"
 [workspace.package]
 edition = "2024"
 rust-version = "1.94"
-version = "0.37.0"
+version = "0.38.0"
 authors = ["Astound Digital <ed@systemprompt.io>"]
 repository = "https://github.com/systempromptio/systemprompt-astound"
 homepage = "https://astounddigital.com"
@@ -39,9 +39,9 @@ documentation = "https://systemprompt.io/documentation"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.37.0", default-features = false, features = ["core", "database", "config"] }
-systemprompt-security = { version = "0.37.0" }
-systemprompt-extension = { version = "0.37.0" }
+systemprompt = { version = "0.38.0", default-features = false, features = ["core", "database", "config"] }
+systemprompt-security = { version = "0.38.0" }
+systemprompt-extension = { version = "0.38.0" }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -241,10 +241,7 @@ anyhow = { workspace = true }
 workspace = true
 
 
-# ACTIVE: core 0.34.0 is unreleased — the macOS child-identity fix
-# (sysctl(KERN_PROCARGS2)) lives only in the sibling checkout, so this repo
-# builds from ../systemprompt-core until 0.34.0 ships. Re-comment this block
-# (and the mirror in the other workspace) before landing. Uncomment (together with the mirror in
+# Core 0.38.0 is published; the patch below is dormant. Uncomment (together with the mirror in
 # tests/Cargo.toml — [patch] only applies per-workspace) to work against
 # ../systemprompt-core, and add an "ACTIVE: core X.Y.Z is unreleased" marker,
 # which the pre-commit hook requires before an active patch may be committed.

@@ -16,11 +16,14 @@ pub mod hook_events;
 pub mod rankings;
 pub mod resolve;
 
+#[cfg(feature = "governance-ssr")]
 pub use counts::{
     get_governance_counts, get_governance_counts_windowed, list_per_policy_counts,
     list_per_policy_counts_windowed,
 };
+#[cfg(feature = "governance-ssr")]
 pub use decisions::list_decisions_for_policy;
+#[cfg(feature = "governance-ssr")]
 pub use rankings::{list_top_actors, list_top_policies};
 
 #[derive(Debug, Clone, Copy, Default)]

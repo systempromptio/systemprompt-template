@@ -63,7 +63,7 @@ async fn list_context_requests_returns_the_oldest_request_first() {
     new.context_id = Some(&context);
     insert_request(&db.pool, &new).await;
 
-    let requests = repo::list_context_requests(&db.pool, &ContextId::new(context))
+    let requests = repo::list_context_requests(&db.pool, &ContextId::new_unchecked(context))
         .await
         .expect("list requests");
 
@@ -86,7 +86,7 @@ async fn list_context_messages_is_empty_when_no_request_carries_messages() {
     spec.context_id = Some(&context);
     insert_request(&db.pool, &spec).await;
 
-    let messages = repo::list_context_messages(&db.pool, &ContextId::new(context))
+    let messages = repo::list_context_messages(&db.pool, &ContextId::new_unchecked(context))
         .await
         .expect("list messages");
 
@@ -115,7 +115,7 @@ async fn list_context_messages_orders_by_request_then_sequence() {
     insert_message(&db.pool, &first_req, 0, "user", "first line").await;
     insert_message(&db.pool, &second_req, 0, "user", "third line").await;
 
-    let messages = repo::list_context_messages(&db.pool, &ContextId::new(context))
+    let messages = repo::list_context_messages(&db.pool, &ContextId::new_unchecked(context))
         .await
         .expect("list messages");
 
@@ -140,7 +140,7 @@ async fn list_context_tool_calls_returns_the_calls_in_sequence_order() {
     insert_tool_call(&db.pool, &request, 1, "Read").await;
     insert_tool_call(&db.pool, &request, 0, "Bash").await;
 
-    let calls = repo::list_context_tool_calls(&db.pool, &ContextId::new(context))
+    let calls = repo::list_context_tool_calls(&db.pool, &ContextId::new_unchecked(context))
         .await
         .expect("list tool calls");
 
@@ -163,9 +163,10 @@ async fn list_context_tool_calls_is_empty_for_a_context_with_no_calls() {
         return;
     };
 
-    let calls = repo::list_context_tool_calls(&db.pool, &ContextId::new(new_context_id()))
-        .await
-        .expect("list tool calls");
+    let calls =
+        repo::list_context_tool_calls(&db.pool, &ContextId::new_unchecked(new_context_id()))
+            .await
+            .expect("list tool calls");
 
     assert!(calls.is_empty());
     db.cleanup().await;

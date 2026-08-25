@@ -81,6 +81,7 @@ async fn load_plans_from_yaml_stores_prices_as_microdollars() {
     let dir = tempfile::tempdir().expect("temp services dir");
     let plan = unique("plan");
     let org = unique("org");
+    insert_acl_entity(&db.pool, "marketplace", "test-marketplace", false).await;
     write_services_file(
         dir.path(),
         "access-control/plans.yaml",
@@ -119,6 +120,7 @@ async fn load_plans_from_yaml_projects_grants_onto_the_organization_slug() {
     let dir = tempfile::tempdir().expect("temp services dir");
     let plan = unique("plan");
     let org = unique("org");
+    insert_acl_entity(&db.pool, "marketplace", "test-marketplace", false).await;
     write_services_file(
         dir.path(),
         "access-control/plans.yaml",
@@ -139,8 +141,11 @@ async fn load_plans_from_yaml_projects_grants_onto_the_organization_slug() {
     )
     .fetch_one(&*db.pool)
     .await
-    .expect("grant registered its catalog row");
-    assert_eq!(entity_source, "plans.yaml");
+    .expect("catalog row still present");
+    assert_eq!(
+        entity_source, "test",
+        "projection consumes the pre-registered catalog row; it never mints one"
+    );
 
     db.cleanup().await;
 }
@@ -153,6 +158,8 @@ async fn load_plans_from_yaml_retracts_grants_the_plan_no_longer_carries() {
     let dir = tempfile::tempdir().expect("temp services dir");
     let plan = unique("plan");
     let org = unique("org");
+    insert_acl_entity(&db.pool, "marketplace", "first-marketplace", false).await;
+    insert_acl_entity(&db.pool, "marketplace", "second-marketplace", false).await;
     write_services_file(
         dir.path(),
         "access-control/plans.yaml",
@@ -199,6 +206,7 @@ async fn load_plans_from_yaml_leaves_another_organizations_rules_alone() {
 
     let plan = unique("plan");
     let org = unique("org");
+    insert_acl_entity(&db.pool, "marketplace", "own-marketplace", false).await;
     write_services_file(
         dir.path(),
         "access-control/plans.yaml",
@@ -270,6 +278,7 @@ async fn load_plans_from_yaml_defaults_status_and_platform() {
     let dir = tempfile::tempdir().expect("temp services dir");
     let plan = unique("plan");
     let org = unique("org");
+    insert_acl_entity(&db.pool, "marketplace", "test-marketplace", false).await;
     write_services_file(
         dir.path(),
         "access-control/plans.yaml",
@@ -291,6 +300,48 @@ async fn load_plans_from_yaml_defaults_status_and_platform() {
     assert_eq!(row.0, "active");
     assert!(!row.1, "an ordinary customer is never the platform tenant");
     assert_eq!(row.2, vec!["test.example".to_owned()]);
+
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn load_plans_from_yaml_rejects_a_grant_with_no_catalog_row_and_writes_nothing() {
+    let Some(db) = TempDb::create().await else {
+        return;
+    };
+    let dir = tempfile::tempdir().expect("temp services dir");
+    let plan = unique("plan");
+    let org = unique("org");
+    write_services_file(
+        dir.path(),
+        "access-control/plans.yaml",
+        &plans_yaml(&plan, &org, "no-such-marketplace"),
+    );
+
+    let result = load_plans_from_yaml(&db.pool, dir.path()).await;
+
+    let message = result
+        .err()
+        .expect("an unregistered entity id is a typo, not a new catalog row")
+        .to_string();
+    assert!(
+        message.contains("no-such-marketplace"),
+        "the message must name the offending id, got: {message}"
+    );
+
+    let plans = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM plans WHERE id = $1")
+        .bind(&plan)
+        .fetch_one(&*db.pool)
+        .await
+        .expect("count plans");
+    assert_eq!(plans, 0, "validation failed, so nothing was persisted");
+    let minted = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM access_control_entities WHERE entity_id = 'no-such-marketplace'",
+    )
+    .fetch_one(&*db.pool)
+    .await
+    .expect("count entities");
+    assert_eq!(minted, 0, "no phantom catalog row");
 
     db.cleanup().await;
 }

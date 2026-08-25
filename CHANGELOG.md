@@ -22,7 +22,33 @@ Conventions (strict — hold every entry to them):
 
 ### Changed
 
-- Tracks systemprompt-core 0.36.0. Pin-only: the breaking
+- Adopted systemprompt core 0.38.0 from crates.io (typed marketplace keep-sets,
+  the `keep_sets` authz resolver with bulk entity loading, `SubjectRef`/`DeviceId`
+  identifiers, fallible `ContextId` construction, and the
+  `ai_gateway_policies.priority` / `users.name`-uniqueness migrations). The
+  marketplace filter's hand-rolled shrinking (`marketplace_filter/keepsets.rs`)
+  is deleted in favour of core's `MarketplaceCandidate::retain_entries`, and
+  polymorphic entity/subject references across the admin repositories and
+  handlers now use typed ids (`EntityRef`, `SubjectRef`, `DeviceId`,
+  `MarketplaceId`, `UserId`) instead of raw strings; JSON/template output is
+  unchanged.
+- Plan and ACL YAML loaders now validate the whole document before writing:
+  a grant naming an entity with no catalog row is an error instead of minting a
+  phantom catalog entry. Two kinds of inert grant left `plans.yaml`: the
+  `astound-admin` marketplace grants (the admin control plane is not a
+  marketplace — access rides the `roles.yaml` admin gating), and the pilot
+  plan's `claude-opus-tier` gateway-route deny, whose route id no profile or
+  roles pass ever registered.
+- Governance SSR repositories are gated behind a new `governance-ssr` cargo
+  feature (default off in this fork, which does not ship the upstream
+  `ssr_governance` surface); the shared repository files stay identical across
+  the fork family while their dead-in-this-fork queries compile out.
+- The bridge is rebuilt against systemprompt-core 0.38.0 (the sibling
+  `../systemprompt-core` checkout at the v0.38.0 release commit,
+  `3730961ea4cd`) and restaged into `storage/files/downloads/`, tagged
+  `bridge-v0.18.0`.
+- Tracked systemprompt-core 0.36.0, then 0.37.0, on the way to the 0.38.0
+  adoption above. The 0.36.0 hop was pin-only: the breaking
   `McpDomainError::PortHolderUnverifiable` variant is not matched in this repo, and
   the messaging and Slack APIs 0.36.0 changed are not used here.
 

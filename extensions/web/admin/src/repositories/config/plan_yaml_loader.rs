@@ -1,21 +1,29 @@
 //! Bootstrap loader: `services/access-control/plans.yaml` → DB.
 //!
 //! Runs inside the same governance bootstrap pass as the roles and departments
-//! files, after them, because a plan's grants reference marketplaces and routes
-//! whose catalog rows the earlier passes materialise.
+//! files, whose earlier passes materialise the catalog rows a plan's grants
+//! reference.
 //!
-//! Three steps: upsert `plans`, upsert `organizations`, then project each
-//! organization's plan grants into `access_control_rules` at
-//! `rule_type = 'organization'`. Projection is the whole point — a plan is a
-//! named bundle of ordinary rules, so nothing downstream needs to know plans
-//! exist. The resolver, the access matrix, and the governance audit all see
-//! rule rows they already understand.
+//! The load is staged so nothing is written until the whole document is known
+//! to be coherent: [`validate`] parses every reference in the file,
+//! [`resolve_catalog`] proves each granted entity already has a catalog row,
+//! and only then does [`persist`] upsert plans and organizations and project
+//! each organization's plan grants into `access_control_rules` at
+//! `rule_type = 'organization'`. Each stage consumes its predecessor's output,
+//! so the ordering is carried by the types rather than by call-site
+//! discipline. A grant naming an entity no earlier pass registered is a typo
+//! in the YAML and fails the load; it does not mint a phantom catalog row.
+//!
+//! Projection is the whole point — a plan is a named bundle of ordinary rules,
+//! so nothing downstream needs to know plans exist. The resolver, the access
+//! matrix, and the governance audit all see rule rows they already understand.
 //!
 //! Like every other bootstrap loader here, the direction is fixed (YAML → DB)
 //! and there is no write-back: a customer's own narrowing of their plan lives
 //! in the DB and survives redeploys, because projection only ever touches rows
 //! whose `rule_value` is an organization slug.
 
+use std::collections::BTreeSet;
 use std::path::Path;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -30,40 +38,20 @@ use super::plan_yaml_types::{PlanLoadReport, PlansDoc, YamlGrant, YamlOrganizati
 
 const PLANS_FILE: &str = "access-control/plans.yaml";
 
-const SOURCE_LABEL: &str = "plans.yaml";
-
 const MICRODOLLARS_PER_USD: f64 = 1_000_000.0;
 
 pub async fn load_plans_from_yaml(
     pool: &PgPool,
     services_path: &Path,
 ) -> Result<PlanLoadReport, MarketplaceError> {
-    let mut report = PlanLoadReport::default();
     let Some(doc) = read_plans(services_path).await? else {
-        return Ok(report);
+        return Ok(PlanLoadReport::default());
     };
 
-    for plan in &doc.plans {
-        upsert_plan(pool, plan).await?;
-        report.plans_upserted += 1;
-    }
-
     let repo = AccessControlRepository::from_pool(Arc::new(pool.clone()));
-    for org in &doc.organizations {
-        // Why: the plan must resolve before the insert, or the organizations
-        // FK fails first and the operator gets a constraint name instead of
-        // the line of YAML that is wrong.
-        let Some(plan) = doc.plans.iter().find(|p| p.id == org.plan) else {
-            return Err(MarketplaceError::Internal(format!(
-                "{PLANS_FILE}: organization '{}' references unknown plan '{}'",
-                org.slug, org.plan
-            )));
-        };
-
-        upsert_organization(pool, org).await?;
-        report.organizations_upserted += 1;
-        report.grants_projected += project_grants(pool, &repo, &org.slug, &plan.grants).await?;
-    }
+    let validated = validate(&doc)?;
+    let resolved = resolve_catalog(&repo, validated).await?;
+    let report = persist(pool, &repo, resolved).await?;
 
     tracing::info!(
         plans = report.plans_upserted,
@@ -71,6 +59,103 @@ pub async fn load_plans_from_yaml(
         grants = report.grants_projected,
         "bootstrap_plans_loaded"
     );
+    Ok(report)
+}
+
+struct ValidatedGrant<'a> {
+    kind: EntityKind,
+    access: Access,
+    grant: &'a YamlGrant,
+}
+
+struct ValidatedOrg<'a> {
+    org: &'a YamlOrganization,
+    grants: Vec<ValidatedGrant<'a>>,
+}
+
+struct ValidatedDoc<'a> {
+    plans: &'a [YamlPlan],
+    organizations: Vec<ValidatedOrg<'a>>,
+    referenced: BTreeSet<(EntityKind, &'a str)>,
+}
+
+struct ResolvedDoc<'a>(ValidatedDoc<'a>);
+
+fn validate(doc: &PlansDoc) -> Result<ValidatedDoc<'_>, MarketplaceError> {
+    let mut referenced = BTreeSet::new();
+    let mut organizations = Vec::with_capacity(doc.organizations.len());
+
+    for org in &doc.organizations {
+        let Some(plan) = doc.plans.iter().find(|p| p.id == org.plan) else {
+            return Err(MarketplaceError::Internal(format!(
+                "{PLANS_FILE}: organization '{}' references unknown plan '{}'",
+                org.slug, org.plan
+            )));
+        };
+
+        let mut grants = Vec::with_capacity(plan.grants.len());
+        for grant in &plan.grants {
+            let entry = format!("{PLANS_FILE}: {}", org.slug);
+            let kind = EntityKind::from_str(&grant.entity_type)
+                .map_err(|e| MarketplaceError::config_file(entry.clone(), e))?;
+            let access = Access::from_str(&grant.access)
+                .map_err(|e| MarketplaceError::config_file(entry, e))?;
+            referenced.insert((kind, grant.entity_id.as_str()));
+            grants.push(ValidatedGrant {
+                kind,
+                access,
+                grant,
+            });
+        }
+        organizations.push(ValidatedOrg { org, grants });
+    }
+
+    Ok(ValidatedDoc {
+        plans: &doc.plans,
+        organizations,
+        referenced,
+    })
+}
+
+async fn resolve_catalog<'a>(
+    repo: &AccessControlRepository,
+    doc: ValidatedDoc<'a>,
+) -> Result<ResolvedDoc<'a>, MarketplaceError> {
+    for (kind, entity_id) in &doc.referenced {
+        let known = repo
+            .get_entity(*kind, entity_id)
+            .await
+            .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
+        if known.is_none() {
+            return Err(MarketplaceError::Internal(format!(
+                "{PLANS_FILE}: grant references {kind} '{entity_id}', which no catalog row \
+                 registers — check the id, or the bootstrap pass that should have loaded it",
+                kind = kind.as_str(),
+            )));
+        }
+    }
+    Ok(ResolvedDoc(doc))
+}
+
+async fn persist(
+    pool: &PgPool,
+    repo: &AccessControlRepository,
+    ResolvedDoc(doc): ResolvedDoc<'_>,
+) -> Result<PlanLoadReport, MarketplaceError> {
+    let mut report = PlanLoadReport::default();
+
+    for plan in doc.plans {
+        upsert_plan(pool, plan).await?;
+        report.plans_upserted += 1;
+    }
+
+    for entry in &doc.organizations {
+        upsert_organization(pool, entry.org).await?;
+        report.organizations_upserted += 1;
+        report.grants_projected +=
+            project_grants(pool, repo, &entry.org.slug, &entry.grants).await?;
+    }
+
     Ok(report)
 }
 
@@ -182,40 +267,26 @@ async fn project_grants(
     pool: &PgPool,
     repo: &AccessControlRepository,
     slug: &str,
-    grants: &[YamlGrant],
+    grants: &[ValidatedGrant<'_>],
 ) -> Result<usize, MarketplaceError> {
     let rule_type = organization_rule_type();
     let mut kept_types: Vec<String> = Vec::with_capacity(grants.len());
     let mut kept_ids: Vec<String> = Vec::with_capacity(grants.len());
 
-    for grant in grants {
-        let entry = format!("{PLANS_FILE}: {slug}");
-        let kind = EntityKind::from_str(&grant.entity_type)
-            .map_err(|e| MarketplaceError::config_file(entry.clone(), e))?;
-        let access =
-            Access::from_str(&grant.access).map_err(|e| MarketplaceError::config_file(entry, e))?;
-
-        // Why: the FK on access_control_rules requires a catalog row. An earlier
-        // bootstrap pass will usually have registered it; a plan naming an
-        // entity that pass did not see must still resolve, so register it here
-        // rather than failing the whole load on ordering.
-        repo.upsert_entity(kind, &grant.entity_id, false, SOURCE_LABEL)
-            .await
-            .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
-
+    for entry in grants {
         repo.upsert_rule(UpsertRuleParams {
-            entity_type: kind,
-            entity_id: &grant.entity_id,
+            entity_type: entry.kind,
+            entity_id: &entry.grant.entity_id,
             rule_type: rule_type.clone(),
             rule_value: slug,
-            access,
+            access: entry.access,
             justification: Some("granted by plan"),
         })
         .await
         .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
 
-        kept_types.push(grant.entity_type.clone());
-        kept_ids.push(grant.entity_id.clone());
+        kept_types.push(entry.grant.entity_type.clone());
+        kept_ids.push(entry.grant.entity_id.clone());
     }
 
     sqlx::query!(

@@ -5,14 +5,13 @@
 //! how a share bar scales, when a budget pill turns red — has one home.
 
 use crate::handlers::ssr::format::{format_cost, format_token_total};
-use crate::handlers::ssr::types::{ChartBarView, ChartView, bar_pct};
+use crate::handlers::ssr::types::{BudgetState, ChartBarView, ChartView, bar_pct};
 use crate::repositories::reports::internal::{
     OrganizationMonthPnl, PlatformMonthPoint, SupplierMonthCost,
 };
 
 use super::context::{InternalTotals, OrgPnlView, SupplierView};
 
-// Why: Modifier the margin tile takes when money is going the wrong way.
 pub(super) const fn margin_variant(margin_microdollars: i64) -> &'static str {
     if margin_microdollars < 0 {
         "stat-card--negative"
@@ -48,16 +47,14 @@ pub(super) fn org_view(row: &OrganizationMonthPnl, month_key: &str) -> OrgPnlVie
         cost_per_seat_microdollars: row.cost_per_seat_microdollars(),
         budget_pct,
         has_budget: budget_pct.is_some(),
-        budget_state: budget_state(budget_pct),
+        budget_state: budget_pct.map_or("ok", |p| BudgetState::from_pct(p).as_str()),
     }
 }
 
-// Why: Portfolio totals folded from the rows the table prints.
-//
-// The platform tenant is included in cost — its spend is real money — and
-// excluded from the customer count and from revenue, because it bills nobody
-// and would otherwise drag the portfolio margin down as if a customer were
-// underwater.
+// Why: the platform tenant is included in cost — its spend is real money —
+// and excluded from the customer count and from revenue, because it bills
+// nobody and would otherwise drag the portfolio margin down as if a customer
+// were underwater.
 pub(super) fn totals(rows: &[OrganizationMonthPnl]) -> InternalTotals {
     let revenue: i64 = rows
         .iter()
@@ -103,7 +100,6 @@ pub(super) fn supplier_views(rows: &[SupplierMonthCost]) -> Vec<SupplierView> {
         .collect()
 }
 
-// Why: Trailing months of platform spend, as the CSS bar chart reads it.
 pub(super) fn trend_chart(points: &[PlatformMonthPoint]) -> ChartView {
     let max = points
         .iter()
@@ -154,14 +150,4 @@ fn per_unit_display(cost: i64, units: i64, per: i64) -> String {
         return "—".to_owned();
     }
     format_cost(cost.saturating_mul(per) / units)
-}
-
-// Why: the thresholds match the enterprise console's, so a customer that reads
-// as "at risk" on one page reads the same on the other.
-const fn budget_state(pct: Option<i64>) -> &'static str {
-    match pct {
-        Some(p) if p >= 100 => "over",
-        Some(p) if p >= 80 => "warn",
-        _ => "ok",
-    }
 }

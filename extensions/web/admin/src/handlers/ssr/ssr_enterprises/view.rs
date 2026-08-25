@@ -7,11 +7,9 @@ use crate::repositories::organizations::detail::{
 use crate::repositories::organizations::metrics::OrganizationMetrics;
 
 use super::super::types::{
-    EnterpriseDepartmentView, EnterpriseEntitlementView, EnterpriseMemberView,
+    BudgetState, EnterpriseDepartmentView, EnterpriseEntitlementView, EnterpriseMemberView,
     EnterpriseModelUsageView, EnterpriseView,
 };
-
-const BUDGET_WARN_PCT: i64 = 80;
 
 pub(super) fn enterprise_view(m: &OrganizationMetrics) -> EnterpriseView {
     let budget_pct = m.budget_used_pct();
@@ -40,7 +38,7 @@ pub(super) fn enterprise_view(m: &OrganizationMetrics) -> EnterpriseView {
         margin_positive: margin >= 0,
         has_budget: budget_pct.is_some(),
         budget_pct: budget_pct.unwrap_or_default(),
-        budget_state: budget_state(budget_pct),
+        budget_state: budget_pct.map_or("none", |p| BudgetState::from_pct(p).as_str()),
     }
 }
 
@@ -49,15 +47,6 @@ fn seats_pct(used: i64, limit: Option<i32>) -> i64 {
         return 0;
     };
     (used.saturating_mul(100) / limit).min(100)
-}
-
-const fn budget_state(pct: Option<i64>) -> &'static str {
-    match pct {
-        None => "none",
-        Some(p) if p >= 100 => "over",
-        Some(p) if p >= BUDGET_WARN_PCT => "warn",
-        Some(_) => "ok",
-    }
 }
 
 pub(super) fn member_view(m: OrganizationMember) -> EnterpriseMemberView {
@@ -89,9 +78,7 @@ pub(super) fn entitlement_view(e: OrganizationEntitlement) -> EnterpriseEntitlem
     }
 }
 
-// Why: Model rows with each one's share of the period's spend.
-//
-// The share is of cost rather than of requests: a handful of calls to an
+// Why: the share is of cost rather than of requests: a handful of calls to an
 // expensive model is the line an operator needs to see, and counting requests
 // would bury it under chatter.
 pub(super) fn model_views(rows: Vec<OrganizationModelUsage>) -> Vec<EnterpriseModelUsageView> {

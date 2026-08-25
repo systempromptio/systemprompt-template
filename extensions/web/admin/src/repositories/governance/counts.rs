@@ -1,12 +1,10 @@
 //! Allow/deny/secret rollups: overall and per-policy, lifetime and windowed.
+#![cfg(feature = "governance-ssr")]
 
 use sqlx::PgPool;
 
 use super::{GovernanceCounts, PerPolicyCounts};
 
-// Why: lint-ok: unused-pub — live upstream via the ssr_governance handlers,
-// which this fork does not ship; kept so shared repository files stay
-// identical.
 pub async fn get_governance_counts(pool: &PgPool) -> Result<GovernanceCounts, sqlx::Error> {
     let row = sqlx::query!(
         r#"SELECT
@@ -26,9 +24,6 @@ pub async fn get_governance_counts(pool: &PgPool) -> Result<GovernanceCounts, sq
     })
 }
 
-// Why: lint-ok: unused-pub — live upstream via the ssr_governance handlers,
-// which this fork does not ship; kept so shared repository files stay
-// identical.
 pub async fn get_governance_counts_windowed(
     pool: &PgPool,
     window_seconds: i64,
@@ -53,9 +48,6 @@ pub async fn get_governance_counts_windowed(
     })
 }
 
-// Why: lint-ok: unused-pub — live upstream via the ssr_governance handlers,
-// which this fork does not ship; kept so shared repository files stay
-// identical.
 pub async fn list_per_policy_counts(pool: &PgPool) -> Result<Vec<PerPolicyCounts>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT
@@ -80,9 +72,6 @@ pub async fn list_per_policy_counts(pool: &PgPool) -> Result<Vec<PerPolicyCounts
         .collect())
 }
 
-// Why: lint-ok: unused-pub — live upstream via the ssr_governance handlers,
-// which this fork does not ship; kept so shared repository files stay
-// identical.
 pub async fn list_per_policy_counts_windowed(
     pool: &PgPool,
     window_seconds: i64,

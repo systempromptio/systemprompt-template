@@ -35,7 +35,7 @@ fn request_context() -> systemprompt::models::execution::context::RequestContext
     systemprompt::models::execution::context::RequestContext::new(
         SessionId::new("dispatch-session"),
         TraceId::new("dispatch-trace"),
-        ContextId::new("00000000-0000-4000-8000-00000000d15b"),
+        ContextId::new_unchecked("00000000-0000-4000-8000-00000000d15b"),
         AgentName::new("dispatch-agent"),
     )
 }

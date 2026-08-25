@@ -190,7 +190,9 @@ fn record_click_params_full_chain_sets_every_field() {
         Utc.with_ymd_and_hms(2026, 5, 5, 12, 0, 0).unwrap(),
     )
     .with_user_id(Some(UserId::new("user_1")))
-    .with_context_id(Some(ContextId::new("9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d")))
+    .with_context_id(Some(ContextId::new_unchecked(
+        "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    )))
     .with_task_id(Some(TaskId::new("task_1")))
     .with_referrer_page(Some("/blog".to_owned()))
     .with_referrer_url(Some("https://news.example/x".to_owned()))
@@ -240,7 +242,9 @@ fn track_click_params_defaults_hold_only_the_link_and_session() {
 fn track_click_params_full_chain_sets_every_field() {
     let params = TrackClickParams::new(LinkId::new("link_1"), SessionId::new("sess_1"))
         .with_user_id(Some(UserId::new("user_1")))
-        .with_context_id(Some(ContextId::new("9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d")))
+        .with_context_id(Some(ContextId::new_unchecked(
+            "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+        )))
         .with_task_id(Some(TaskId::new("task_1")))
         .with_referrer_page(Some("/pricing".to_owned()))
         .with_referrer_url(Some("https://ref.example".to_owned()))

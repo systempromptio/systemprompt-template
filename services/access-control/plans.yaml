@@ -66,11 +66,12 @@ plans:
   - id: house
     name: House
     description: Astound-internal. Unlimited seats, no spend cap, everything on.
+    # The admin control plane is not a marketplace: the astound-admin plugin
+    # is admin-role-gated in roles.yaml, so no marketplace grant exists for it
+    # and the loader rejects one as a typo'd entity id.
     grants:
       - entity_type: marketplace
         entity_id: enterprise-demo
-      - entity_type: marketplace
-        entity_id: astound-admin
 
   - id: standard
     name: Standard
@@ -91,8 +92,6 @@ plans:
     grants:
       - entity_type: marketplace
         entity_id: enterprise-demo
-      - entity_type: marketplace
-        entity_id: astound-admin
 
   - id: pilot
     name: Pilot
@@ -101,10 +100,12 @@ plans:
     monthly_cost_cap_usd: 2
     monthly_cost_warn_usd: 1.5
     monthly_price_usd: 0
-    grants:
-      - entity_type: gateway_route
-        entity_id: claude-opus-tier
-        access: deny
+    # No grants: the deny formerly carried here named `claude-opus-tier`, a
+    # gateway_route id no profile or roles pass registers, so it never matched
+    # a dispatchable route — the loader now rejects unregistered ids instead of
+    # minting them. Re-add the tier deny against a real route id from the
+    # profile's gateway.routes when Opus gating is wired up.
+    grants: []
 
 organizations:
   - slug: astound-digital

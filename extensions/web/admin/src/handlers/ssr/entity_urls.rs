@@ -7,7 +7,6 @@
 
 use systemprompt::identifiers::{AiRequestId, ContextId, SessionId, TraceId};
 
-// Why: `/admin/entities/sessions/{session_id}` — single-session detail page.
 pub(crate) fn session_detail_url(session: &SessionId) -> String {
     format!(
         "/admin/entities/sessions/{}",
@@ -15,7 +14,6 @@ pub(crate) fn session_detail_url(session: &SessionId) -> String {
     )
 }
 
-// Why: `/admin/entities/contexts/{context_id}` — single-context detail page.
 pub(crate) fn context_detail_url(context: &ContextId) -> String {
     format!(
         "/admin/entities/contexts/{}",
@@ -23,7 +21,6 @@ pub(crate) fn context_detail_url(context: &ContextId) -> String {
     )
 }
 
-// Why: `/admin/entities/requests/{request_id}` — single AI-request detail page.
 pub(crate) fn request_detail_url(request: &AiRequestId) -> String {
     format!(
         "/admin/entities/requests/{}",
@@ -31,8 +28,6 @@ pub(crate) fn request_detail_url(request: &AiRequestId) -> String {
     )
 }
 
-// Why: `/admin/entities/traces/{trace_id}` — single performance-trace detail
-// page.
 pub(crate) fn trace_detail_url(trace: &TraceId) -> String {
     format!(
         "/admin/entities/traces/{}",

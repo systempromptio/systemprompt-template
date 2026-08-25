@@ -39,7 +39,7 @@ pub(super) async fn load_user_groups(
             Vec::new()
         });
 
-    // Why: Why an empty list is not a safe default here: `resolve_marketplaces`
+    // Why: an empty list is not a safe default here: `resolve_marketplaces`
     // seeds from every YAML marketplace and *subtracts* the deny rows, so
     // losing the overrides does not lose grants — it loses the denials, and
     // every explicitly denied marketplace renders as granted. That is the one

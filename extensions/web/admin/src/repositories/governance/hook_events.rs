@@ -1,4 +1,5 @@
 //! Hook event counts and recent-event listings for the governance pages.
+#![cfg(feature = "governance-ssr")]
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
@@ -17,9 +18,6 @@ pub struct RecentHookEvent {
     pub status: Option<String>,
 }
 
-// Why: lint-ok: unused-pub — live upstream via the ssr_governance handlers,
-// which this fork does not ship; kept so shared repository files stay
-// identical.
 pub async fn count_pretool_fired_24h(pool: &PgPool) -> Result<i64, MarketplaceError> {
     let row = sqlx::query!(
         "SELECT COUNT(*)::BIGINT AS n FROM governance_decisions \
@@ -30,9 +28,6 @@ pub async fn count_pretool_fired_24h(pool: &PgPool) -> Result<i64, MarketplaceEr
     Ok(row.n.unwrap_or(0))
 }
 
-// Why: lint-ok: unused-pub — live upstream via the ssr_governance handlers,
-// which this fork does not ship; kept so shared repository files stay
-// identical.
 pub async fn count_posttool_fired_24h(pool: &PgPool) -> Result<i64, MarketplaceError> {
     let row = sqlx::query!(
         "SELECT COUNT(*)::BIGINT AS n FROM plugin_usage_events \
@@ -43,9 +38,6 @@ pub async fn count_posttool_fired_24h(pool: &PgPool) -> Result<i64, MarketplaceE
     Ok(row.n.unwrap_or(0))
 }
 
-// Why: lint-ok: unused-pub — live upstream via the ssr_governance handlers,
-// which this fork does not ship; kept so shared repository files stay
-// identical.
 pub async fn recent_hook_events(
     pool: &PgPool,
     limit: i64,

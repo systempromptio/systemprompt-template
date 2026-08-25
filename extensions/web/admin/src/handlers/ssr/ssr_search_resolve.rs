@@ -59,7 +59,10 @@ pub(crate) async fn search_resolve(
         ResolvedKind::Request => ("request", request_detail_url(&AiRequestId::new(&r.id))),
         ResolvedKind::Trace => ("trace", trace_detail_url(&TraceId::new(&r.id))),
         ResolvedKind::Session => ("session", session_detail_url(&SessionId::new(&r.id))),
-        ResolvedKind::Context => ("context", context_detail_url(&ContextId::new(&r.id))),
+        ResolvedKind::Context => (
+            "context",
+            context_detail_url(&ContextId::new_unchecked(&r.id)),
+        ),
     };
     Ok(Json(SearchResponse {
         kind,

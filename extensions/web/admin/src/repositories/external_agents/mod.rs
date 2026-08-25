@@ -3,6 +3,7 @@
 //! Reads `services/external_agents/*.yaml` from disk and exposes a flat list
 //! consumable by the admin SSR handler. Distinct from `agents` (A2A agents);
 //! the `id` field MUST equal the bridge `HostApp::id()` for the same host.
+#![cfg(feature = "governance-ssr")]
 
 use std::path::{Path, PathBuf};
 
@@ -41,10 +42,6 @@ struct DiskFile {
     external_agents: std::collections::BTreeMap<String, DiskEntry>,
 }
 
-// Why: Live upstream in systemprompt-template via the ssr_governance
-// handlers, which this fork does not ship. Kept so the shared
-// repository files stay identical across both trees.
-// Why: lint-ok: unused-pub
 pub fn list_external_agents() -> Vec<ExternalAgentRow> {
     let dir = resolve_dir();
     let Ok(entries) = std::fs::read_dir(&dir) else {
