@@ -7,14 +7,15 @@
 
 use crate::handlers::ssr::format::{format_cost, format_duration_ms};
 use crate::handlers::ssr::types::{LineChartSpec, SvgLineChartView, SvgSeriesInput, line_chart};
-use crate::repositories::analytics::site::latency::{FAST_THRESHOLD_MS, LatencySplit};
+use crate::repositories::analytics::site::anomalies::UsageAnomalyRow;
+use crate::repositories::analytics::site::latency::LatencySplit;
 use crate::repositories::analytics::site::series::UsageBucket;
 use crate::repositories::analytics::site::session_costs::SessionCostStats;
 use crate::repositories::organizations::budget_warnings::BudgetWarningHistoryRow;
 use crate::repositories::organizations::metrics::OrganizationMetrics;
 use crate::util::svg;
 
-use super::context::{BudgetWarningRowView, FastSlowView, SessionCostsView};
+use super::context::{AnomalyRowView, BudgetWarningRowView, FastSlowView, SessionCostsView};
 use super::view::compact;
 
 // Why: the y-axis is pinned to the cap (when there is one) so the cap line is
@@ -78,10 +79,35 @@ pub(super) fn burndown_chart(mtd: &[UsageBucket], org: &OrganizationMetrics) -> 
     })
 }
 
+// Why: cost renders as dollars and the counting metrics as counts; the rows
+// come from one table, so the discrimination lives here rather than in SQL.
+pub(super) fn anomaly_rows(rows: &[UsageAnomalyRow]) -> Vec<AnomalyRowView> {
+    rows.iter()
+        .map(|r| {
+            let (observed, baseline) = if r.metric == "cost" {
+                (format_cost(r.observed), format_cost(r.baseline))
+            } else {
+                (r.observed.to_string(), r.baseline.to_string())
+            };
+            AnomalyRowView {
+                metric: r.metric.clone(),
+                window_display: r.window_start.format("%Y-%m-%d %H:%M UTC").to_string(),
+                observed_display: observed,
+                baseline_display: baseline,
+            }
+        })
+        .collect()
+}
+
 pub(super) fn budget_warning_rows(rows: &[BudgetWarningHistoryRow]) -> Vec<BudgetWarningRowView> {
     rows.iter()
         .map(|r| BudgetWarningRowView {
             org_name: r.org_name.clone(),
+            kind_display: if r.kind == "forecast_overrun" {
+                "Forecast overrun"
+            } else {
+                "Soft cap"
+            },
             month_display: r.month.format("%B %Y").to_string(),
             threshold_display: format_cost(r.threshold_microdollars),
             spent_display: format_cost(r.spent_microdollars),
@@ -93,23 +119,28 @@ pub(super) fn budget_warning_rows(rows: &[BudgetWarningHistoryRow]) -> Vec<Budge
 }
 
 // Why: this platform has no fast/slow request pools, so the split is stated
-// as what it actually is — a latency bucket at a fixed threshold — with the
-// percentiles beside it and untimed requests shown rather than folded away.
+// as what it actually is — a latency bucket at the caller's SLO threshold —
+// with the percentiles and breach share beside it and untimed requests shown
+// rather than folded away. The displays derive from the threshold the query
+// actually bound, so the caption can never contradict the split.
 pub(super) fn fast_slow(split: &LatencySplit) -> FastSlowView {
+    let timed = split.fast + split.slow;
     FastSlowView {
         fast: split.fast,
         slow: split.slow,
         untimed: split.untimed,
-        threshold_display: "5s",
+        threshold_display: format_duration_ms(i64::from(split.threshold_ms)),
+        breach_pct_display: if timed > 0 {
+            let permille = split.slow.saturating_mul(1000) / timed;
+            format!("{}.{}%", permille / 10, permille % 10)
+        } else {
+            "–".to_owned()
+        },
         p50_display: format_duration_ms(split.p50_ms.round() as i64),
         p95_display: format_duration_ms(split.p95_ms.round() as i64),
-        has_data: split.fast + split.slow + split.untimed > 0,
+        has_data: timed + split.untimed > 0,
     }
 }
-
-// Why: the "5s" caption below is written out, so this pins it to the constant
-// the query actually binds — changing one without the other stops compiling.
-const _: () = assert!(FAST_THRESHOLD_MS == 5_000);
 
 pub(super) fn session_costs(stats: &SessionCostStats) -> SessionCostsView {
     SessionCostsView {

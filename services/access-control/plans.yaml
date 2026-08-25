@@ -126,3 +126,16 @@ organizations:
     plan: pilot
     email_domains:
       - pilotlabs.test
+
+  # The two internal stakeholder groups (b.gulyaev, 2026-08-25) run as sibling
+  # organizations so their users, analytics, budgets, and ACLs cannot overlap.
+  # Deliberately no email_domains: both groups arrive from @astounddigital.com,
+  # which astound-digital already claims, so membership is assigned explicitly
+  # — an admin invite into the org, or a move via the management API.
+  - slug: ai-kit
+    name: AI Kit
+    plan: standard
+
+  - slug: ai-sdlc-delivery
+    name: AI SDLC Delivery
+    plan: standard

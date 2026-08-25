@@ -10,7 +10,7 @@ use urlencoding::encode as urlencode;
 use crate::handlers::ssr::list_view::{PageWindow, Pagination};
 
 use super::context::{
-    BucketLinkView, DashboardTab, DashboardTabLink, InactiveDayOption, ScopeChipView,
+    BucketLinkView, DashboardTab, DashboardTabLink, InactiveDayOption, ScopeChipView, SloOption,
 };
 use super::{AnalyticsDashboardQuery, BASE_URL};
 
@@ -51,6 +51,11 @@ pub(super) fn preserved_query_string(query: &AnalyticsDashboardQuery, drop: &[&s
         && let Some(d) = query.inactive_days
     {
         parts.push(format!("inactive_days={d}"));
+    }
+    if !drop.contains(&"slo_ms")
+        && let Some(ms) = query.slo_ms
+    {
+        parts.push(format!("slo_ms={ms}"));
     }
     parts.join("&")
 }
@@ -193,6 +198,22 @@ pub(super) fn build_pagination(query: &AnalyticsDashboardQuery, window: PageWind
         prev_url,
         next_url,
     }
+}
+
+// Why: same link-not-select shape as the inactivity window below, for the
+// same reason: the SLO threshold only means anything on the Spend tab.
+pub(super) fn slo_links(query: &AnalyticsDashboardQuery, active_ms: i32) -> Vec<SloOption> {
+    const CHOICES: [(i32, &str); 4] =
+        [(1_000, "1s"), (2_000, "2s"), (5_000, "5s"), (10_000, "10s")];
+    let qs = preserved_query_string(query, &["slo_ms", "page"]);
+    CHOICES
+        .iter()
+        .map(|&(ms, label)| SloOption {
+            label: label.to_owned(),
+            href: with_qs(format!("{BASE_URL}?tab=spend&slo_ms={ms}"), &qs),
+            selected: ms == active_ms,
+        })
+        .collect()
 }
 
 // Why: rendered as links rather than a `<select>` in the filter form. The

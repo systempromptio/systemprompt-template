@@ -58,5 +58,44 @@ pub fn redact_text(input: &str) -> (String, u32) {
             idx += ch;
         }
     }
+    redact_ssn(&out, count)
+}
+
+// Why: a second pass for the one PII shape worth masking in a transcript view
+// — the canonical AAA-GG-SSSS SSN, digit-bounded so ids and hashes pass
+// through. Last four kept, the convention SSNs are displayed with everywhere.
+fn redact_ssn(input: &str, mut count: u32) -> (String, u32) {
+    let bytes = input.as_bytes();
+    let mut out = String::with_capacity(input.len());
+    let mut idx = 0usize;
+    while idx < bytes.len() {
+        if idx + 11 <= bytes.len() && is_ssn_at(bytes, idx) {
+            out.push_str("***-**-");
+            out.push_str(&input[idx + 7..idx + 11]);
+            count = count.saturating_add(1);
+            idx += 11;
+        } else {
+            let ch = input[idx..].chars().next().map_or(1, char::len_utf8);
+            out.push_str(&input[idx..idx + ch]);
+            idx += ch;
+        }
+    }
     (out, count)
+}
+
+fn is_ssn_at(bytes: &[u8], i: usize) -> bool {
+    let w = &bytes[i..i + 11];
+    let shape = w[..3].iter().all(u8::is_ascii_digit)
+        && w[3] == b'-'
+        && w[4..6].iter().all(u8::is_ascii_digit)
+        && w[6] == b'-'
+        && w[7..].iter().all(u8::is_ascii_digit);
+    if !shape {
+        return false;
+    }
+    let before = i.checked_sub(1).map(|j| bytes[j]);
+    let after = bytes.get(i + 11).copied();
+    let bounded = !before.is_some_and(|b| b.is_ascii_digit() || b == b'-')
+        && !after.is_some_and(|b| b.is_ascii_digit() || b == b'-');
+    bounded && w[0] != b'9' && &w[..3] != b"000" && &w[..3] != b"666"
 }

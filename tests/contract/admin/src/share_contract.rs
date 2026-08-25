@@ -1,11 +1,11 @@
 //! Share-token issuance and the public manifest it unlocks.
 //!
 //! These two halves are only meaningful together. `POST /admin/users/{id}/
-//! share-token` mints an HMAC over `user_id:version`; `GET /share/manifest/
-//! {token}` is the one route in the admin plane with **no** authentication
-//! middleware in front of it, so that HMAC and the version recheck behind it
-//! are the entire access control. The suite has never driven the second half
-//! at all — `share_manifest_router` is merged at the root by
+//! share-token` mints an HMAC over `user_id:version:expiry`; `GET
+//! /share/manifest/ {token}` is the one route in the admin plane with **no**
+//! authentication middleware in front of it, so that HMAC and the version
+//! recheck behind it are the entire access control. The suite has never driven
+//! the second half at all — `share_manifest_router` is merged at the root by
 //! `extensions/web/src/router/api.rs`, outside both route modules the contract
 //! table is derived from.
 //!
@@ -144,8 +144,8 @@ async fn an_issued_token_unlocks_that_user_s_manifest() {
     assert_eq!(url, manifest_path(&token), "the url embeds the token");
     assert_eq!(
         token.split(':').count(),
-        3,
-        "the token is user:version:mac, got {token}"
+        4,
+        "the token is user:version:expiry:mac, got {token}"
     );
 
     let (status, body) = app.call(Call::get(&url, Principal::Anonymous)).await;
@@ -245,13 +245,13 @@ async fn a_tampered_token_is_refused() {
 
     // Flip one hex digit of the MAC, keeping the length identical so the
     // constant-time compare — not the length precheck — is what rejects it.
-    let mac = parts[2];
+    let mac = parts[3];
     let flipped = if mac.starts_with('0') {
         format!("1{}", &mac[1..])
     } else {
         format!("0{}", &mac[1..])
     };
-    let forged = format!("{}:{}:{flipped}", parts[0], parts[1]);
+    let forged = format!("{}:{}:{}:{flipped}", parts[0], parts[1], parts[2]);
     let (status, body) = app
         .call(Call::get(&manifest_path(&forged), Principal::Anonymous))
         .await;
@@ -261,7 +261,7 @@ async fn a_tampered_token_is_refused() {
     // Same MAC, different user. A token that carried over to another id would
     // be the worst possible failure of this endpoint.
     let other = b64.encode(b"someone-else");
-    let swapped = format!("{other}:{}:{}", parts[1], parts[2]);
+    let swapped = format!("{other}:{}:{}:{}", parts[1], parts[2], parts[3]);
     let (status, body) = app
         .call(Call::get(&manifest_path(&swapped), Principal::Anonymous))
         .await;
@@ -269,7 +269,7 @@ async fn a_tampered_token_is_refused() {
 
     // Same MAC, different version.
     let bumped = b64.encode(b"99");
-    let reversioned = format!("{}:{bumped}:{}", parts[0], parts[2]);
+    let reversioned = format!("{}:{bumped}:{}:{}", parts[0], parts[2], parts[3]);
     let (status, _) = app
         .call(Call::get(
             &manifest_path(&reversioned),
@@ -277,6 +277,18 @@ async fn a_tampered_token_is_refused() {
         ))
         .await;
     assert_eq!(status, StatusCode::UNAUTHORIZED, "swapped version");
+
+    // Same MAC, different expiry. A stretched clock must fail like any other
+    // tamper — the expiry is inside the signed payload, not advisory.
+    let stretched = b64.encode(b"9999999999");
+    let restretched = format!("{}:{}:{stretched}:{}", parts[0], parts[1], parts[3]);
+    let (status, _) = app
+        .call(Call::get(
+            &manifest_path(&restretched),
+            Principal::Anonymous,
+        ))
+        .await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED, "stretched expiry");
 
     db.cleanup().await;
 }
@@ -301,16 +313,24 @@ async fn malformed_tokens_are_refused_the_same_way() {
     let cases = [
         ("no separators", "not-a-token".to_owned()),
         ("two parts", format!("{user}:{version}")),
-        ("four parts", format!("{user}:{version}:aa:bb")),
-        ("subject is not base64", format!("!!!:{version}:aa")),
-        ("version is not base64", format!("{user}:!!!:aa")),
+        (
+            "three parts (the pre-expiry shape)",
+            format!("{user}:{version}:aa"),
+        ),
+        ("five parts", format!("{user}:{version}:aa:bb:cc")),
+        ("subject is not base64", format!("!!!:{version}:aa:bb")),
+        ("version is not base64", format!("{user}:!!!:aa:bb")),
         (
             "version is not a number",
-            format!("{user}:{}:aa", b64.encode(b"one")),
+            format!("{user}:{}:aa:bb", b64.encode(b"one")),
+        ),
+        (
+            "expiry is not a number",
+            format!("{user}:{version}:{}:bb", b64.encode(b"never")),
         ),
         (
             "subject is not utf-8",
-            format!("{}:{version}:aa", b64.encode([0xff, 0xfe])),
+            format!("{}:{version}:aa:bb", b64.encode([0xff, 0xfe])),
         ),
     ];
 

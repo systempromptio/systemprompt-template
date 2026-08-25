@@ -55,7 +55,7 @@ async fn insert_audit_entry_then_list_audit_log_round_trips() {
         .expect("list audit log");
 
     assert_eq!(rows.len(), 2);
-    assert!(rows.iter().all(|r| r.actor_id == user));
+    assert!(rows.iter().all(|r| r.actor_id.as_str() == user));
     assert!(rows.iter().all(|r| r.var_name == "*"));
 
     db.cleanup().await;

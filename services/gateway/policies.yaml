@@ -9,31 +9,50 @@
 #
 # safety.scanners names resolve against the gateway's SafetyScannerRegistry:
 # the built-in `heuristic` scanner plus any extension-registered scanner. The
-# admin extension registers `secrets` (extensions/web/admin/src/gateway_safety.rs).
-# A request whose content yields a finding in `block_categories` is denied
-# before the upstream call, with an `ai_safety_findings` audit row.
+# admin extension registers `secrets` and `pii_extended`
+# (extensions/web/admin/src/gateway_safety.rs). A request whose content yields
+# a finding in `block_categories` is denied before the upstream call, with an
+# `ai_safety_findings` audit row.
 #
 # `block_response_categories` does the same for the reply, and applies to
 # buffered replies only — a streamed reply is already on the wire when the scan
-# runs, so its findings are recorded and never block. Leave the list empty to
-# keep every response scan audit-only.
+# runs, so its findings are recorded and never block.
 #
 # `secrets` is egress-only: it returns nothing for requests, because the
 # `secret_scan` governance policy already covers ingress and runs first. Listing
 # it under `block_categories` therefore does nothing — it belongs in
-# `block_response_categories`.
-
-# SAFETY SCANNING IS INTENTIONALLY OFF in this installation. The paragraphs
-# above describe the mechanism, not current behaviour: with `scanners` empty no
-# scan runs, so nothing is blocked and no `ai_safety_findings` rows are written.
-# The policy chain is disabled to match — see services/governance/config.yaml.
-# To restore: scanners: [heuristic, secrets] with block_categories: [secret]
-# for the heuristic plane and block_response_categories: [secret] for `secrets`.
+# `block_response_categories`. `pii_extended` scans both directions.
+#
+# SAFETY SCANNING AND QUOTAS ARE ON in this installation (REQ-030/033/036,
+# switched on 2026-08-25 for the enterprise rollout). Blocking is limited to
+# the high-confidence categories: jailbreak, credit cards, and SSNs on the way
+# in; secrets and SSNs on the way out. pii_email and pii_phone are audit-only —
+# an email address in a prompt is routine, and blocking on it would make every
+# support conversation a denial.
+#
+# The quota windows are a house-wide runaway backstop, not the budget: the
+# per-organization monthly caps in services/access-control/plans.yaml are the
+# spend control (OrgBudgetGuard), and these windows sit far above normal use so
+# only a loop or a leak hits them. Cost ceilings are enforced one request late
+# by design (a request's cost is known after its response).
 
 policies:
   - name: default-quotas
     enabled: true
     spec:
+      quota_windows:
+        # Per user, hourly: a runaway agent stops within the hour without any
+        # normal developer session ever noticing the ceiling.
+        - subject: user
+          window_seconds: 3600
+          max_requests: 600
+          max_cost_microdollars: 20000000
+        # Per organization, daily: no customer can burn more than $200 in a
+        # day regardless of how many seats do it in parallel.
+        - subject: organization
+          window_seconds: 86400
+          max_cost_microdollars: 200000000
       safety:
-        scanners: []
-        block_categories: []
+        scanners: [heuristic, secrets, pii_extended]
+        block_categories: [jailbreak, pii_credit_card, pii_ssn]
+        block_response_categories: [secret, pii_ssn]

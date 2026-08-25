@@ -11,6 +11,7 @@ use axum::response::{Html, IntoResponse, Response};
 
 
 mod context;
+pub(crate) mod csv;
 pub(crate) mod entity_urls;
 pub(crate) mod format;
 pub(crate) mod list_view;
@@ -58,7 +59,9 @@ pub(crate) use ssr_management::{management_department_detail_page, management_de
 pub(crate) use ssr_perf_trace_detail::perf_trace_detail_page;
 pub(crate) use ssr_perf_traces::perf_traces_page;
 pub(crate) use ssr_profile::{issue_bridge_code, profile_page};
+pub(crate) use ssr_report_customer::csv::report_customer_csv;
 pub(crate) use ssr_report_customer::report_customer_page;
+pub(crate) use ssr_report_internal::csv::report_internal_csv;
 pub(crate) use ssr_report_internal::report_internal_page;
 pub(crate) use ssr_search_resolve::search_resolve;
 pub(crate) use ssr_session_detail::session_detail_page;

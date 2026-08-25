@@ -10,6 +10,7 @@ use std::sync::Arc;
 use chrono::Datelike;
 use sqlx::PgPool;
 
+use crate::repositories::analytics::site::anomalies::UsageAnomalyRow;
 use crate::repositories::analytics::site::code::{CodeDayBucket, CodeTotals};
 use crate::repositories::analytics::site::kpis::{PermissionGrantStats, SiteKpis};
 use crate::repositories::analytics::site::latency::LatencySplit;
@@ -21,8 +22,8 @@ use crate::repositories::analytics::site::seats::InactiveSeatRow;
 use crate::repositories::analytics::site::series::{SeriesBucket, UsageBucket};
 use crate::repositories::analytics::site::session_costs::SessionCostStats;
 use crate::repositories::analytics::site::{
-    SiteScope, code, distribution, kpis, latency, leaderboards, model_series, seats, series,
-    session_costs,
+    SiteScope, anomalies, code, distribution, kpis, latency, leaderboards, model_series, seats,
+    series, session_costs,
 };
 use crate::repositories::organizations::budget_warnings::{
     BudgetWarningHistoryRow, list_budget_warning_history,
@@ -50,6 +51,7 @@ pub(super) struct AnalyticsDashboardData {
     pub session_costs: SessionCostStats,
     pub latency: LatencySplit,
     pub budget_history: Vec<BudgetWarningHistoryRow>,
+    pub anomalies: Vec<UsageAnomalyRow>,
     pub mtd_series: Vec<UsageBucket>,
 }
 
@@ -64,6 +66,7 @@ pub(super) struct DashboardQueryPlan<'a> {
     pub all_orgs: bool,
     pub own_org_slug: Option<&'a str>,
     pub inactive_days: i32,
+    pub slo_ms: i32,
 }
 
 pub(super) async fn load_dashboard_data(
@@ -135,10 +138,11 @@ async fn load_spend_tab(
     plan: &DashboardQueryPlan<'_>,
     data: &mut AnalyticsDashboardData,
 ) {
-    let (orgs_res, latency_res, history_res) = tokio::join!(
+    let (orgs_res, latency_res, history_res, anomalies_res) = tokio::join!(
         list_organization_metrics(pool),
-        latency::get_latency_split(pool, plan.range, plan.scope),
+        latency::get_latency_split(pool, plan.range, plan.scope, plan.slo_ms),
         list_budget_warning_history(pool, &plan.scope.org_slug, 12),
+        anomalies::list_recent_anomalies(pool, 10),
     );
     data.org_metrics = scoped_orgs(orgs_res, plan);
     data.latency = latency_res.unwrap_or_else(|e| {
@@ -149,6 +153,7 @@ async fn load_spend_tab(
         tracing::warn!(error = %e, "list_budget_warning_history failed");
         Vec::new()
     });
+    data.anomalies = unwrap_or_empty(anomalies_res, "list_recent_anomalies");
     // Why: a burn-up against a cap only means something for one
     // organization; the platform's all-orgs view gets a hint instead.
     if let OrgScope::Only(slug) = &plan.scope.org_slug {

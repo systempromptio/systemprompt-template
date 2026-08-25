@@ -8,8 +8,7 @@ pub struct AuditLogRow {
     pub id: String,
     pub var_name: String,
     pub action: String,
-    // Why: opaque actor identifier (serialized Actor), no typed-ID equivalent
-    pub actor_id: String,
+    pub actor_id: UserId,
     pub ip_address: Option<String>,
     pub created_at: String,
 }
@@ -21,7 +20,7 @@ pub async fn list_audit_log(
 ) -> Result<Vec<AuditLogRow>, sqlx::Error> {
     let rows = sqlx::query_as!(
         AuditLogRow,
-        r#"SELECT id, var_name, action, actor_id, ip_address, created_at::text as "created_at!" FROM secret_audit_log WHERE user_id = $1 AND plugin_id = $2 ORDER BY created_at DESC LIMIT 100"#,
+        r#"SELECT id, var_name, action, actor_id AS "actor_id!: UserId", ip_address, created_at::text as "created_at!" FROM secret_audit_log WHERE user_id = $1 AND plugin_id = $2 ORDER BY created_at DESC LIMIT 100"#,
         user_id.as_str(),
         plugin_id,
     )

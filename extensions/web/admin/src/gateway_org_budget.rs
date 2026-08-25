@@ -146,6 +146,7 @@ impl GatewayRequestGuard for OrgBudgetGuard {
         };
         if spend.spent_microdollars < spend.cap_microdollars {
             record_soft_cap_crossing(pool, &spend).await;
+            record_forecast_overrun(pool, &spend, Utc::now()).await;
             return Ok(());
         }
 
@@ -190,6 +191,7 @@ async fn record_soft_cap_crossing(pool: &PgPool, spend: &OrganizationSpend) {
     match organizations::budget_warnings::upsert_org_budget_warning(
         pool,
         &spend.org_id,
+        organizations::budget_warnings::BudgetWarningKind::SoftCap,
         warn,
         spend.spent_microdollars,
     )
@@ -212,6 +214,66 @@ async fn record_soft_cap_crossing(pool: &PgPool, spend: &OrganizationSpend) {
             tracing::warn!(error = %e, organization = %spend.name, "failed to record soft-cap crossing");
         },
     }
+}
+
+// Why: three or more elapsed days before projecting — a linear run-rate over
+// the month's first hours multiplies noise into an alert, and a projection
+// that cries wolf on the 1st teaches budget owners to ignore the one that
+// matters on the 20th. The projection alerts only while actual spend is still
+// under the cap: once the cap itself is crossed the guard denies, which is a
+// louder signal than any forecast.
+const MIN_PROJECTION_ELAPSED_SECONDS: i64 = 3 * 24 * 3600;
+
+async fn record_forecast_overrun(pool: &PgPool, spend: &OrganizationSpend, now: DateTime<Utc>) {
+    let Some(projected) = projected_month_end_spend(spend.spent_microdollars, now) else {
+        return;
+    };
+    if projected <= spend.cap_microdollars {
+        return;
+    }
+    tracing::warn!(
+        organization = %spend.name,
+        spent_microdollars = spend.spent_microdollars,
+        projected_microdollars = projected,
+        cap_microdollars = spend.cap_microdollars,
+        "organization spend is on pace to exceed its monthly cap",
+    );
+    match organizations::budget_warnings::upsert_org_budget_warning(
+        pool,
+        &spend.org_id,
+        organizations::budget_warnings::BudgetWarningKind::ForecastOverrun,
+        spend.cap_microdollars,
+        spend.spent_microdollars,
+    )
+    .await
+    {
+        Ok(true) => crate::slack_alerts::send_alert(format!(
+            "*Budget forecast warning* — {} is on pace to exceed its monthly cap. Spent {} so \
+             far; linear projection ~{} against a {} cap. Intervene now or the cap will start \
+             refusing requests before month end.",
+            spend.name,
+            display_usd(spend.spent_microdollars),
+            display_usd(projected),
+            display_usd(spend.cap_microdollars),
+        )),
+        Ok(false) => {},
+        Err(e) => {
+            tracing::warn!(error = %e, organization = %spend.name, "failed to record forecast-overrun crossing");
+        },
+    }
+}
+
+// Why: seconds-based rather than day-based so the projection moves smoothly
+// through the day instead of jumping at midnight, and `None` before the
+// minimum elapsed window rather than a wildly-extrapolated number.
+pub fn projected_month_end_spend(spent_microdollars: i64, now: DateTime<Utc>) -> Option<i64> {
+    let start = month_start(now);
+    let elapsed = (now - start).num_seconds();
+    if elapsed < MIN_PROJECTION_ELAPSED_SECONDS {
+        return None;
+    }
+    let month_total = (month_start(now) + Months::new(1) - start).num_seconds();
+    Some(spent_microdollars.saturating_mul(month_total) / elapsed.max(1))
 }
 
 async fn load_org_spend(pool: &PgPool, user_id: &UserId) -> Option<OrganizationSpend> {

@@ -46,7 +46,9 @@ GET    /admin/invite/{token}                                 anonymous=200 non-a
 GET    /admin/login                                          anonymous=200 non-admin=200 admin=200
 GET    /admin/profile                                        anonymous=307 non-admin=200 admin=200
 GET    /admin/reports/customer                               anonymous=307 non-admin=303 admin=200
+GET    /admin/reports/customer.csv                           anonymous=307 non-admin=303 admin=200
 GET    /admin/reports/internal                               anonymous=307 non-admin=303 admin=200
+GET    /admin/reports/internal.csv                           anonymous=307 non-admin=303 admin=200
 GET    /admin/settings                                       anonymous=307 non-admin=200 admin=200
 GET    /admin/setup                                          anonymous=307 non-admin=200 admin=200
 GET    /admin/user                                           anonymous=307 non-admin=303 admin=200

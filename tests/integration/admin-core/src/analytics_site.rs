@@ -151,16 +151,27 @@ async fn get_latency_split_buckets_on_the_fixed_threshold() {
     slow.latency_ms = i32::try_from(FAST_THRESHOLD_MS).expect("threshold fits i32");
     insert_request(&db.pool, &slow).await;
 
-    let split = get_latency_split(&db.pool, window(24), &scope)
+    let default_ms = i32::try_from(FAST_THRESHOLD_MS).expect("threshold fits i32");
+    let split = get_latency_split(&db.pool, window(24), &scope, default_ms)
         .await
         .expect("latency split succeeds");
 
-    assert_eq!(split.fast, 1, "4999ms is fast");
+    assert_eq!(split.fast, 1, "4999ms is fast at the default threshold");
     assert_eq!(
         split.slow, 1,
         "5000ms is slow — the boundary is inclusive up"
     );
     assert!(split.p95_ms >= split.p50_ms);
+
+    // The threshold is caller-configurable (REQ-029): at 2s both seeded
+    // requests land on the slow side of the same query.
+    let tight = get_latency_split(&db.pool, window(24), &scope, 2_000)
+        .await
+        .expect("latency split succeeds");
+    assert_eq!(tight.fast, 0, "nothing beats a 2s SLO here");
+    assert_eq!(tight.slow, 2);
+    assert_eq!(tight.threshold_ms, 2_000);
+
     db.cleanup().await;
 }
 

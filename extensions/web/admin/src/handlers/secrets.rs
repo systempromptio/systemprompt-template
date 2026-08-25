@@ -65,7 +65,7 @@ pub(crate) async fn audit_log_handler(
             id: row.id,
             var_name: row.var_name,
             action: row.action,
-            actor_id: row.actor_id,
+            actor_id: row.actor_id.as_str().to_owned(),
             ip_address: row.ip_address,
             created_at: row.created_at,
         })

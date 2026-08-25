@@ -5,6 +5,7 @@
 
     <div class="report-toolbar">
         {{> components/month-selector}}
+        <a class="btn btn-secondary" href="/admin/reports/internal.csv?month={{month_key}}" data-print-hide>Download CSV</a>
         <button class="btn btn-secondary" type="button" data-print-report>Print / Save PDF</button>
     </div>
 

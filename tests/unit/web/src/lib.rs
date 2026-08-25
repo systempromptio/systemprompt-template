@@ -78,6 +78,8 @@ mod month_range;
 mod page_window;
 #[cfg(test)]
 mod paper_metadata;
+
+mod pii_scanner;
 #[cfg(test)]
 mod registry_completeness;
 #[cfg(test)]
@@ -94,6 +96,7 @@ mod salesforce_org_package;
 mod salesforce_org_secrets;
 #[cfg(test)]
 mod secrets_scanner_response;
+
 #[cfg(test)]
 mod seed_contract;
 #[cfg(test)]
@@ -126,6 +129,7 @@ mod site_partials;
 mod site_skills_grouping;
 #[cfg(test)]
 mod site_skills_prerenderer;
+mod spend_forecast;
 #[cfg(test)]
 mod web_extension_providers;
 #[cfg(test)]

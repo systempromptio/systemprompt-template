@@ -6,7 +6,7 @@
 use systemprompt::identifiers::SessionId;
 use systemprompt_web_admin::repositories::dashboard::commits::{NewUserCommit, insert_user_commit};
 use systemprompt_web_admin::repositories::dashboard::usage_rollups;
-use systemprompt_web_admin::repositories::organizations::budget_warnings;
+use systemprompt_web_admin::repositories::organizations::budget_warnings::{self, BudgetWarningKind};
 use systemprompt_web_admin::repositories::users::invites;
 use systemprompt_web_admin::util::org_scope::OrgScope;
 
@@ -123,10 +123,10 @@ async fn budget_warning_upserts_once_per_month() {
     let org_id = unique("org");
     insert_org(&db.pool, &OrgSpec::active(&org_id, &org_id)).await;
 
-    budget_warnings::upsert_org_budget_warning(&db.pool, &org_id, 400_000_000, 410_000_000)
+    budget_warnings::upsert_org_budget_warning(&db.pool, &org_id, BudgetWarningKind::SoftCap, 400_000_000, 410_000_000)
         .await
         .expect("first crossing");
-    budget_warnings::upsert_org_budget_warning(&db.pool, &org_id, 400_000_000, 450_000_000)
+    budget_warnings::upsert_org_budget_warning(&db.pool, &org_id, BudgetWarningKind::SoftCap, 400_000_000, 450_000_000)
         .await
         .expect("second crossing");
 

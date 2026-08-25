@@ -19,13 +19,14 @@ use std::time::{Duration, Instant};
 use async_trait::async_trait;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
-use systemprompt_security::authz::{RuleType, SubjectAttributeProvider, SubjectDimension};
+use systemprompt_security::authz::{
+    ROLE_PRECEDENCE, RuleType, SubjectAttributeProvider, SubjectDimension, USER_PRECEDENCE,
+};
 use tokio::sync::RwLock;
 
 const DEPARTMENT_SLUG: &str = "department";
 
-// Why: between core's `USER` (0) and `ROLE` (200).
-const DEPARTMENT_PRECEDENCE: u16 = 100;
+const DEPARTMENT_PRECEDENCE: u16 = USER_PRECEDENCE + (ROLE_PRECEDENCE - USER_PRECEDENCE) / 2;
 
 const DEPARTMENT_TTL: Duration = Duration::from_secs(60);
 
@@ -83,13 +84,6 @@ impl SubjectAttributeProvider for DepartmentAttributeProvider {
         department_dimension()
     }
 
-    // Why: A user has at most one department, so this yields zero or one value.
-    //
-    // Fails soft: a lookup error means "no department", which makes every
-    // department rule unmatchable for this request and hands the decision to
-    // the role band. Denying instead would turn a transient database blip
-    // into a site-wide outage, and the resolver's own default already closes
-    // the unmatched case.
     async fn values_for(&self, user_id: &UserId) -> Vec<String> {
         if let Some(values) = Self::cached(user_id).await {
             return values;

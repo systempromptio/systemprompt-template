@@ -16,13 +16,16 @@ fn all_jobs_registered() {
         "content_analytics_aggregation",
         "content_prerender",
         "copy_extension_assets",
+        "cost_digest",
         "governance_bootstrap",
         "llms_txt_generation",
         "plugin_usage_retention",
         "publish_pipeline",
         "robots_txt_generation",
+        "salesforce_deprovision",
         "secret_migration",
         "sitemap_generation",
+        "usage_anomaly",
         "usage_daily_rollup",
     ]
     .into();

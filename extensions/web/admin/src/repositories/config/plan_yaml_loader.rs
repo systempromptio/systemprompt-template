@@ -5,9 +5,9 @@
 //! reference.
 //!
 //! The load is staged so nothing is written until the whole document is known
-//! to be coherent: [`validate`] parses every reference in the file,
-//! [`resolve_catalog`] proves each granted entity already has a catalog row,
-//! and only then does [`persist`] upsert plans and organizations and project
+//! to be coherent: `validate` parses every reference in the file,
+//! `resolve_catalog` proves each granted entity already has a catalog row,
+//! and only then does `persist` upsert plans and organizations and project
 //! each organization's plan grants into `access_control_rules` at
 //! `rule_type = 'organization'`. Each stage consumes its predecessor's output,
 //! so the ordering is carried by the types rather than by call-site

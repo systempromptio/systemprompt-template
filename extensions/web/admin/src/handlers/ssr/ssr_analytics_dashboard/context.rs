@@ -91,6 +91,7 @@ pub(super) struct AnalyticsDashboardContext {
     // silently contradict.
     pub inactive_days: i32,
     pub inactive_day_options: Vec<InactiveDayOption>,
+    pub slo_options: Vec<SloOption>,
 
     pub spend_meters: Vec<MeterView>,
     pub has_spend_meters: bool,
@@ -102,6 +103,8 @@ pub(super) struct AnalyticsDashboardContext {
     pub show_burndown_hint: bool,
     pub budget_warnings: Vec<BudgetWarningRowView>,
     pub has_budget_warnings: bool,
+    pub anomalies: Vec<AnomalyRowView>,
+    pub has_anomalies: bool,
     pub fast_slow: FastSlowView,
 
     pub session_costs: SessionCostsView,
@@ -114,6 +117,7 @@ pub(super) struct AnalyticsDashboardContext {
 #[derive(Debug, Serialize)]
 pub(super) struct BudgetWarningRowView {
     pub org_name: String,
+    pub kind_display: &'static str,
     pub month_display: String,
     pub threshold_display: String,
     pub spent_display: String,
@@ -123,14 +127,30 @@ pub(super) struct BudgetWarningRowView {
 }
 
 #[derive(Debug, Serialize)]
+pub(super) struct AnomalyRowView {
+    pub metric: String,
+    pub window_display: String,
+    pub observed_display: String,
+    pub baseline_display: String,
+}
+
+#[derive(Debug, Serialize)]
 pub(super) struct FastSlowView {
     pub fast: i64,
     pub slow: i64,
     pub untimed: i64,
-    pub threshold_display: &'static str,
+    pub threshold_display: String,
+    pub breach_pct_display: String,
     pub p50_display: String,
     pub p95_display: String,
     pub has_data: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub(super) struct SloOption {
+    pub label: String,
+    pub href: String,
+    pub selected: bool,
 }
 
 // Why: every figure here is client-reported statusline data, and the template

@@ -198,6 +198,11 @@ async fn load_plans_from_yaml_is_idempotent_across_two_boots() {
     let dir: &Path = tmp.path();
     let plan = unique("plan");
     let org = unique("org");
+    // The loader validates every grant against the catalog, so the entity an
+    // earlier bootstrap pass would have registered must exist. Without this
+    // row the test only passed on a template database polluted by a previous
+    // run — the entity is part of the fixture, not ambient state.
+    insert_acl_entity(&db.pool, "marketplace", "mkt", false).await;
     write_services_file(
         dir,
         "access-control/plans.yaml",

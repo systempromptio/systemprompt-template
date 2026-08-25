@@ -66,3 +66,35 @@ pub async fn find(pool: &PgPool, user_id: &UserId) -> Result<Option<String>, sql
     .await?;
     Ok(row.map(|r| r.sf_username))
 }
+
+/// A local account and the Salesforce Username it is linked to.
+#[derive(Debug, Clone)]
+pub struct LinkedSalesforceIdentity {
+    pub user_id: UserId,
+    pub sf_username: String,
+}
+
+// Why: the deprovisioning reconciler needs the pair, not just the username —
+// a deactivated Salesforce user has to map back to the local account being
+// disabled. Only active local accounts are listed: re-disabling a disabled
+// account every sweep would churn the audit log with no state change.
+pub async fn list_linked_identities(
+    pool: &PgPool,
+) -> Result<Vec<LinkedSalesforceIdentity>, sqlx::Error> {
+    let rows = sqlx::query!(
+        "SELECT s.user_id, s.sf_username
+         FROM salesforce_user_identities s
+         JOIN users u ON u.id = s.user_id
+         WHERE u.status = 'active'
+         ORDER BY s.sf_username"
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| LinkedSalesforceIdentity {
+            user_id: UserId::new(r.user_id),
+            sf_username: r.sf_username,
+        })
+        .collect())
+}

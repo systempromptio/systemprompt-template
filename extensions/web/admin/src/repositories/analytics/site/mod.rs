@@ -13,6 +13,7 @@ use systemprompt::identifiers::UserId;
 
 use crate::util::org_scope::OrgScope;
 
+pub mod anomalies;
 pub mod code;
 pub mod distribution;
 pub mod kpis;

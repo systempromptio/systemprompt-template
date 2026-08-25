@@ -15,6 +15,7 @@ systemprompt-web-content = { workspace = true }
 # Audit: uses ai, content, database, extension, generator, identifiers, models, traits — requires `full`.
 systemprompt = { workspace = true, features = ["full"] }
 sqlx = { workspace = true }
+chrono = { workspace = true }
 tokio = { workspace = true }
 async-trait = { workspace = true }
 tracing = { workspace = true }

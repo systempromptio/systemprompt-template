@@ -291,27 +291,36 @@
         <p class="analytics-note">Pick an organization to see month-to-date burn-up against its cap.</p>
         {{/if}}
 
+        <div class="analytics-filters" role="group" aria-label="Latency SLO threshold">
+            <span class="section-caption">Latency SLO:</span>
+            {{#each slo_options}}
+            <a class="btn btn-sm{{#unless this.selected}} btn-outline{{/unless}}"
+               data-slo-option
+               href="{{this.href}}">{{this.label}}</a>
+            {{/each}}
+        </div>
         <div class="kpi-strip">
             <div class="kpi-card">
-                <span class="kpi-card__label">Fast requests (&lt;{{fast_slow.threshold_display}})</span>
+                <span class="kpi-card__label">Within SLO (&lt;{{fast_slow.threshold_display}})</span>
                 <span class="kpi-card__value">{{fast_slow.fast}}</span>
                 <span class="kpi-card__sub">p50 {{fast_slow.p50_display}}</span>
             </div>
             <div class="kpi-card">
-                <span class="kpi-card__label">Slow requests (&ge;{{fast_slow.threshold_display}})</span>
+                <span class="kpi-card__label">Breaching SLO (&ge;{{fast_slow.threshold_display}})</span>
                 <span class="kpi-card__value">{{fast_slow.slow}}</span>
-                <span class="kpi-card__sub">p95 {{fast_slow.p95_display}} · {{fast_slow.untimed}} untimed</span>
+                <span class="kpi-card__sub">{{fast_slow.breach_pct_display}} of timed requests · p95 {{fast_slow.p95_display}} · {{fast_slow.untimed}} untimed</span>
             </div>
         </div>
         <p class="analytics-note">Request speed is a latency distribution, not a request class —
             see the <a href="{{latency_link}}">latency histogram on the request log</a>.</p>
 
-        <h2 class="section-title">Soft-cap crossings</h2>
-        <p class="section-caption">Months where spend crossed the soft cap — written by the gateway guard at the moment of crossing.</p>
+        <h2 class="section-title">Budget warnings</h2>
+        <p class="section-caption">Months where spend crossed the soft cap, or the linear projection first exceeded the hard cap — written by the gateway guard at the moment of crossing.</p>
         {{#if has_budget_warnings}}
         {{#> components/data-table}}
             <thead><tr>
                 <th>Organization</th>
+                <th>Kind</th>
                 <th>Month</th>
                 <th class="col-num">Threshold</th>
                 <th class="col-num">Spent</th>
@@ -323,6 +332,7 @@
             {{#each budget_warnings}}
             <tr>
                 <td>{{this.org_name}}</td>
+                <td>{{this.kind_display}}</td>
                 <td>{{this.month_display}}</td>
                 <td class="col-num">{{this.threshold_display}}</td>
                 <td class="col-num">{{this.spent_display}}</td>
@@ -335,7 +345,33 @@
         {{/components/data-table}}
         {{else}}
         {{> components/empty-state
-            message="No soft-cap crossings in the last 12 months."}}
+            message="No budget warnings in the last 12 months."}}
+        {{/if}}
+
+        <h2 class="section-title">Usage anomalies</h2>
+        <p class="section-caption">Hours where instance-wide requests, cost, or errors spiked past the trailing-week hourly baseline — written by the hourly anomaly sweep.</p>
+        {{#if has_anomalies}}
+        {{#> components/data-table}}
+            <thead><tr>
+                <th>Metric</th>
+                <th>Hour</th>
+                <th class="col-num">Observed</th>
+                <th class="col-num">Baseline</th>
+            </tr></thead>
+            <tbody>
+            {{#each anomalies}}
+            <tr>
+                <td>{{this.metric}}</td>
+                <td>{{this.window_display}}</td>
+                <td class="col-num">{{this.observed_display}}</td>
+                <td class="col-num">{{this.baseline_display}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+        {{else}}
+        {{> components/empty-state
+            message="No usage anomalies detected."}}
         {{/if}}
     </section>
     {{/if}}

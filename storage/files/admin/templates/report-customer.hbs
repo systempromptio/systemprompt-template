@@ -21,6 +21,7 @@
         </form>
         {{/if}}
         {{> components/month-selector}}
+        <a class="btn btn-secondary" href="/admin/reports/customer.csv?month={{month_key}}{{#if org_slug}}&org={{org_slug}}{{/if}}" data-print-hide>Download CSV</a>
         <button class="btn btn-secondary" type="button" data-print-report>Print / Save PDF</button>
     </div>
 

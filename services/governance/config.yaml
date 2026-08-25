@@ -1,19 +1,20 @@
-# Governance policy chain. Every stage is disabled in this installation — no
-# scope, secret, blocklist or rate-limit checking runs. The per-stage settings
-# below are kept intact so governance can be turned back on by flipping the four
-# `enabled` flags.
+# Governance policy chain — ENABLED in this installation (REQ-041, switched on
+# 2026-08-25 for the enterprise rollout after the evaluation phase ran it
+# disabled). All four stages run synchronously before every tool dispatch,
+# first-deny-wins, every decision audited to governance_decisions.
 #
 # Do not disable governance by deleting this file or emptying `policies`: a
 # missing or malformed file falls back to GovernanceConfig::defaults(), which is
-# all four stages ENABLED. Explicit `enabled: false` is the only reliable off.
+# all four stages ENABLED with default tunables. Explicit `enabled: false` per
+# stage is the only reliable off.
 #
 # The gateway safety scanners are a second, independent plane — see
-# services/gateway/policies.yaml. They are switched off there.
+# services/gateway/policies.yaml. They are switched on there too.
 
 governance:
   policies:
   - id: secret_scan
-    enabled: false
+    enabled: true
     # The 32 vendor patterns (AWS, GitHub, Stripe, sk-ant-, PEM, DB URLs) are
     # fixed. The high-entropy backstop that catches prefixless keys is tunable
     # here, so one false positive no longer forces the whole stage off:
@@ -27,16 +28,16 @@ governance:
     #
     # Omit the block for the built-in defaults shown above.
   - id: scope_check
-    enabled: false
+    enabled: true
     admin_only_prefixes:
     - mcp__systemprompt__
   - id: tool_blocklist
-    enabled: false
+    enabled: true
     patterns:
     - delete
     - drop
     - destroy
   - id: rate_limit
-    enabled: false
+    enabled: true
     requests_per_window: 300
     window_secs: 60

@@ -22,14 +22,17 @@ mod registry;
 mod bundle_admin_css;
 mod content_analytics;
 mod copy_assets;
+mod cost_digest;
 mod governance_bootstrap;
 mod ingestion;
 mod llms_txt;
 mod prerender;
 mod publish;
 mod robots;
+mod salesforce_deprovision;
 mod secret_migration;
 mod sitemap;
+mod usage_anomaly;
 mod usage_retention;
 mod usage_rollup;
 

@@ -8,7 +8,8 @@
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt_security::authz::{Access, AccessControlRepository, EntityKind, RuleType};
+use systemprompt::identifiers::{DepartmentId, RoleId, UserId};
+use systemprompt_security::authz::{Access, AccessControlRepository, EntityKind, SubjectRef};
 
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared;
@@ -27,15 +28,26 @@ pub(super) fn repo(pool: &PgPool) -> AccessControlRepository {
     AccessControlRepository::from_pool(Arc::new(pool.clone()))
 }
 
-// Why: deliberately narrower than core's open rule-type vocabulary — this form
-// edits user and role grants only (department rules are owned by the department
-// screens), and an unrecognised value is rejected rather than minted so a typo
-// cannot create a dimension nothing resolves.
-pub(super) fn parse_rule_type(s: &str) -> Option<RuleType> {
-    match s {
-        "user" => Some(RuleType::USER),
-        "role" => Some(RuleType::ROLE),
-        _ => None,
+pub(super) fn parse_subject(rule_type: &str, rule_value: &str) -> Option<SubjectRef> {
+    let subject = match rule_type {
+        // Why: `UserId` is a plain id with no validator, and on this instance
+        // user ids are not UUIDs — invite- and SSO-provisioned accounts carry
+        // slug/email-derived ids — so the boundary check is shape-light:
+        // non-empty and colon-free (a colon would corrupt the rule key).
+        "user" => {
+            if rule_value.is_empty() || rule_value.contains(':') {
+                return None;
+            }
+            SubjectRef::User(UserId::new(rule_value))
+        },
+        "role" => SubjectRef::Role(RoleId::try_new(rule_value).ok()?),
+        "department" => SubjectRef::Department(DepartmentId::try_new(rule_value).ok()?),
+        _ => return None,
+    };
+    match subject {
+        s @ (SubjectRef::User(_) | SubjectRef::Role(_)) => Some(s),
+        // Why: department editing is owned by the department screens.
+        SubjectRef::Department(_) => None,
     }
 }
 

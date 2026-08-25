@@ -59,6 +59,7 @@ pub(crate) struct AnalyticsDashboardQuery {
     pub sort: Option<String>,
     pub page: Option<i64>,
     pub inactive_days: Option<i32>,
+    pub slo_ms: Option<i32>,
 }
 
 pub(crate) async fn analytics_dashboard_page(
@@ -86,6 +87,7 @@ pub(crate) async fn analytics_dashboard_page(
         });
     let scope = resolve_scope(&user_ctx, &query, own_org_slug.as_deref());
     let inactive_days = resolve_inactive_days(query.inactive_days);
+    let slo_ms = crate::repositories::analytics::site::latency::resolve_slo_ms(query.slo_ms);
 
     let fetched = data::load_dashboard_data(
         &pool,
@@ -100,6 +102,7 @@ pub(crate) async fn analytics_dashboard_page(
             all_orgs: user_ctx.is_platform_admin,
             own_org_slug: own_org_slug.as_deref(),
             inactive_days,
+            slo_ms,
         },
     )
     .await;
@@ -115,6 +118,7 @@ pub(crate) async fn analytics_dashboard_page(
         filters,
         fetched: &fetched,
         inactive_days,
+        slo_ms,
     });
 
     Ok(super::render_typed_page(
@@ -204,6 +208,7 @@ struct PageInput<'a> {
     filters: FiltersView,
     fetched: &'a data::AnalyticsDashboardData,
     inactive_days: i32,
+    slo_ms: i32,
 }
 
 fn page_context(input: PageInput<'_>) -> AnalyticsDashboardContext {
@@ -217,6 +222,7 @@ fn page_context(input: PageInput<'_>) -> AnalyticsDashboardContext {
         filters,
         fetched,
         inactive_days,
+        slo_ms,
     } = input;
     let weekly = bucket == SeriesBucket::Week;
 
@@ -269,6 +275,7 @@ fn page_context(input: PageInput<'_>) -> AnalyticsDashboardContext {
         has_wasted_seats: !fetched.inactive_seats.is_empty(),
         inactive_days,
         inactive_day_options: urls::inactive_day_links(query, inactive_days),
+        slo_options: urls::slo_links(query, slo_ms),
 
         has_spend_meters: !meters.is_empty(),
         spend_meters: meters,
@@ -277,6 +284,8 @@ fn page_context(input: PageInput<'_>) -> AnalyticsDashboardContext {
         show_burndown_hint,
         has_budget_warnings: !fetched.budget_history.is_empty(),
         budget_warnings: view_spend::budget_warning_rows(&fetched.budget_history),
+        has_anomalies: !fetched.anomalies.is_empty(),
+        anomalies: view_spend::anomaly_rows(&fetched.anomalies),
         fast_slow: view_spend::fast_slow(&fetched.latency),
         session_costs: view_spend::session_costs(&fetched.session_costs),
 

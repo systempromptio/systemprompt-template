@@ -93,6 +93,30 @@ scheduler:
       owner: admin
       enabled: true
 
+    # Weekly per-organization spend/budget digest to Slack (REQ-016). Runs on
+    # the job's built-in schedule (Monday 08:00 UTC); delivery is best-effort
+    # via the same transport as the budget alerts.
+    - name: cost_digest
+      extension: web
+      owner: admin
+      enabled: true
+
+    # Hourly usage spike detection (REQ-031): requests/cost/errors vs the
+    # trailing-week hourly baseline, persisted to usage_anomalies and
+    # Slack-alerted on first detection per window.
+    - name: usage_anomaly
+      extension: web
+      owner: admin
+      enabled: true
+
+    # SSO offboarding reconciliation (REQ-023): disables local accounts whose
+    # Salesforce user is deactivated/deleted, revoking sessions and PATs.
+    # No-op until the SF_TARGET_* integration-user env vars are configured.
+    - name: salesforce_deprovision
+      extension: web
+      owner: admin
+      enabled: true
+
     # publish_pipeline sub-steps. The composite above runs each of these every
     # 15 minutes in dependency order; scheduling them independently would
     # double-run them, so they are disabled here (an explicit entry also

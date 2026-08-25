@@ -117,6 +117,10 @@ fn enterprise_routes() -> Router<Arc<PgPool>> {
             "/reports/internal",
             get(handlers::ssr::report_internal_page),
         )
+        .route(
+            "/reports/internal.csv",
+            get(handlers::ssr::report_internal_csv),
+        )
         .layer(axum_middleware::from_fn(
             middleware::require_platform_admin_middleware,
         ))
@@ -141,6 +145,10 @@ fn access_routes() -> Router<Arc<PgPool>> {
         .route(
             "/reports/customer",
             get(handlers::ssr::report_customer_page),
+        )
+        .route(
+            "/reports/customer.csv",
+            get(handlers::ssr::report_customer_csv),
         )
         // Why: the token and access-matrix *pages* are gone — entitlement is
         // derived from the organization's plan, and tokens are minted by the

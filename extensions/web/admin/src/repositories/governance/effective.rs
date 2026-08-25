@@ -30,7 +30,6 @@ use crate::repositories::mcp::mcp_servers;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct EntityDecision {
-    // Why: polymorphic entity reference (gateway_route/mcp_server), no single typed-ID equivalent
     pub entity_id: String,
     pub decision: String,
     pub reason: String,
@@ -76,8 +75,6 @@ pub async fn compute_effective_permissions(
             .flatten()
             .map(|e| e.default_included);
         gateway_routes.push(decide(DecideArgs {
-            entity_id: id,
-            entity_type: "gateway_route",
             entity: EntityRef::GatewayRoute(RouteId::new(id.clone())),
             rules: &rules,
             user_id: user_id.as_str(),
@@ -101,8 +98,6 @@ pub async fn compute_effective_permissions(
             .flatten()
             .map(|e| e.default_included);
         mcp_servers.push(decide(DecideArgs {
-            entity_id: id,
-            entity_type: "mcp_server",
             entity: EntityRef::McpServer(McpServerId::new(id.clone())),
             rules: &rules,
             user_id: user_id.as_str(),
@@ -120,8 +115,6 @@ pub async fn compute_effective_permissions(
 }
 
 struct DecideArgs<'a> {
-    entity_id: &'a str,
-    entity_type: &'a str,
     entity: EntityRef,
     rules: &'a [AccessRule],
     user_id: &'a str,
@@ -133,8 +126,6 @@ struct DecideArgs<'a> {
 
 fn decide(args: DecideArgs<'_>) -> EntityDecision {
     let DecideArgs {
-        entity_id,
-        entity_type,
         entity,
         rules,
         user_id,
@@ -158,19 +149,16 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
         Decision::Allow { matched_by } => ("allow".to_owned(), allow_reason(&uid, &matched_by)),
         Decision::Deny { reason } => ("deny".to_owned(), reason.to_string()),
     };
+    let tab = if entity.kind() == EntityKind::GatewayRoute {
+        "gateway"
+    } else {
+        "mcp"
+    };
     EntityDecision {
-        entity_id: entity_id.to_owned(),
+        entity_id: entity.id_str().to_owned(),
         decision,
         reason,
-        matrix_url: format!(
-            "/admin/access?tab={}#{}",
-            if entity_type == "gateway_route" {
-                "gateway"
-            } else {
-                "mcp"
-            },
-            entity_id
-        ),
+        matrix_url: format!("/admin/access?tab={tab}#{}", entity.id_str()),
     }
 }
 

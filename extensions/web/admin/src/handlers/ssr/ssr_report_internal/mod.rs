@@ -23,6 +23,7 @@ use crate::types::{MarketplaceContext, UserContext};
 use crate::util::month_range::{MonthQuery, list_month_options, parse_month_range};
 
 mod context;
+pub(crate) mod csv;
 mod view;
 
 use context::ReportInternalContext;
