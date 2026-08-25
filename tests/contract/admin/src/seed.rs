@@ -29,6 +29,14 @@ pub fn unique(prefix: &str) -> String {
     format!("{prefix}-{}", uuid::Uuid::new_v4().simple())
 }
 
+// A fresh user id. Unlike `unique`, this carries no prefix: every user id in
+// this system is a UUID, and the access-control API parses the value it is
+// handed rather than trusting it, so a prefixed fixture id is rejected at the
+// boundary the same way a real one would be.
+pub fn unique_user_id() -> String {
+    uuid::Uuid::new_v4().to_string()
+}
+
 // Mint a token for an arbitrary audience / scope / `plugin_id` triple.
 //
 // The hook endpoints validate against `aud=hook` and `scope=hook:*`, which

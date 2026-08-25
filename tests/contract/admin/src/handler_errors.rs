@@ -288,7 +288,7 @@ const MALFORMED: [Case; 17] = [
     json(
         "post",
         "/api/public/admin/access-control/entity/skill/some-skill/rules",
-        r#"{"rule_type": "user", "rule_value": "someone", "access": "maybe"}"#,
+        r#"{"rule_type": "user", "rule_value": "6f1b0f7a-3c2e-4a51-9b8d-2f0c5a7e14d3", "access": "maybe"}"#,
         Expect::Status(BAD_REQUEST),
         Some("invalid access"),
     ),

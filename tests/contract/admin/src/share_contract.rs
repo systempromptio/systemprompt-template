@@ -144,8 +144,8 @@ async fn an_issued_token_unlocks_that_user_s_manifest() {
     assert_eq!(url, manifest_path(&token), "the url embeds the token");
     assert_eq!(
         token.split(':').count(),
-        3,
-        "the token is user:version:mac, got {token}"
+        4,
+        "the token is user:version:expiry:mac, got {token}"
     );
 
     let (status, body) = app.call(Call::get(&url, Principal::Anonymous)).await;

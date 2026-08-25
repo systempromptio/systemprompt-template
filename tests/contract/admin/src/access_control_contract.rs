@@ -36,7 +36,7 @@ async fn entity_access_api_round_trips_a_grant() {
 
     let credentials = principal::provision(&db.pool).await;
     let app = App::new(&db.pool, credentials);
-    let user_id = seed::unique("access-user");
+    let user_id = seed::unique_user_id();
     seed::insert_user(&db.pool, &user_id, &format!("{user_id}@contract.test")).await;
     let entity = seed::unique("skill-entity");
 
