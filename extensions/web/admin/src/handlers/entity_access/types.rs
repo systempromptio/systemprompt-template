@@ -7,7 +7,6 @@ use systemprompt_security::authz::AccessRule;
 #[derive(Debug, Serialize)]
 pub(crate) struct EntityAccessResponse {
     pub entity_type: String,
-    // Why: polymorphic entity reference (gateway_route/mcp_server), no single typed-ID equivalent
     pub entity_id: String,
     pub default_included: bool,
     pub rules: Vec<AccessRule>,
@@ -35,7 +34,6 @@ pub(crate) struct DefaultIncludedBody {
 #[derive(Debug, Serialize)]
 pub(crate) struct EntityDefaultResponse {
     pub entity_type: String,
-    // Why: polymorphic entity reference (gateway_route/mcp_server), no single typed-ID equivalent
     pub entity_id: String,
     pub default_included: bool,
 }
@@ -47,7 +45,6 @@ pub(crate) struct AllAccessQuery {
 
 #[derive(Debug, Serialize)]
 pub(crate) struct EntityAccessEntry {
-    // Why: polymorphic entity reference (gateway_route/mcp_server), no single typed-ID equivalent
     pub entity_id: String,
     pub default_included: bool,
     pub rules: Vec<AccessRule>,

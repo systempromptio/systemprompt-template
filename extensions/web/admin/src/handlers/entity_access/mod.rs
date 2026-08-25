@@ -17,11 +17,11 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 use systemprompt::identifiers::RuleId;
-use systemprompt_security::authz::{Access, AccessRule, UpsertRuleParams};
+use systemprompt_security::authz::{Access, AccessRule, EntityRef, UpsertRuleParams};
 
 use crate::error::{AdminError, AdminResult};
 
-use support::{collect_entity_ids, parse_access, parse_rule_type, repo, validate_entity_type};
+use support::{collect_entity_ids, parse_access, parse_subject, repo, validate_entity_type};
 use types::{
     AllAccessQuery, ApplyTemplateBody, ApplyTemplateResponse, DefaultIncludedBody,
     EntityAccessEntry, EntityAccessResponse, EntityDefaultResponse, ListAllEntityAccessResponse,
@@ -33,19 +33,20 @@ pub(crate) async fn list_entity_access_handler(
     Path((entity_type, entity_id)): Path<(String, String)>,
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&entity_type)?;
+    let entity = EntityRef::from_kind_and_id(kind, &entity_id);
     let r = repo(&pool);
     let rules = r
-        .list_rules_for_entity(kind, &entity_id)
+        .list_rules_for_entity(entity.kind(), entity.id_str())
         .await
         .map_err(AdminError::internal)?;
     let default_included = r
-        .get_entity(kind, &entity_id)
+        .get_entity(entity.kind(), entity.id_str())
         .await
         .map_err(AdminError::internal)?
         .is_some_and(|entity| entity.default_included);
     Ok(Json(EntityAccessResponse {
-        entity_type,
-        entity_id,
+        entity_type: entity.kind().as_str().to_owned(),
+        entity_id: entity.id_str().to_owned(),
         default_included,
         rules,
     })
@@ -58,7 +59,7 @@ pub(crate) async fn upsert_entity_rule_handler(
     Json(body): Json<UpsertRuleBody>,
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&entity_type)?;
-    let rule_type = parse_rule_type(&body.rule_type)
+    let subject = parse_subject(&body.rule_type, &body.rule_value)
         .ok_or_else(|| AdminError::BadRequest("invalid rule_type".to_owned()))?;
     let access = parse_access(&body.access)
         .ok_or_else(|| AdminError::BadRequest("invalid access".to_owned()))?;
@@ -69,8 +70,8 @@ pub(crate) async fn upsert_entity_rule_handler(
         .upsert_rule(UpsertRuleParams {
             entity_type: kind,
             entity_id: &entity_id,
-            rule_type,
-            rule_value: &body.rule_value,
+            rule_type: subject.rule_type(),
+            rule_value: subject.value(),
             access,
             justification: body.justification.as_deref(),
         })
@@ -100,13 +101,19 @@ pub(crate) async fn set_entity_default_handler(
     Json(body): Json<DefaultIncludedBody>,
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&entity_type)?;
+    let entity = EntityRef::from_kind_and_id(kind, &entity_id);
     repo(&pool)
-        .upsert_entity(kind, &entity_id, body.default_included, "admin:dashboard")
+        .upsert_entity(
+            entity.kind(),
+            entity.id_str(),
+            body.default_included,
+            "admin:dashboard",
+        )
         .await
         .map_err(AdminError::internal)?;
     Ok(Json(EntityDefaultResponse {
-        entity_type,
-        entity_id,
+        entity_type: entity.kind().as_str().to_owned(),
+        entity_id: entity.id_str().to_owned(),
         default_included: body.default_included,
     })
     .into_response())
@@ -127,8 +134,9 @@ pub(crate) async fn list_all_entity_access_handler(
         .map_err(AdminError::internal)?;
     let mut entries: Vec<EntityAccessEntry> = Vec::with_capacity(entity_ids.len());
     for eid in &entity_ids {
+        let entity = EntityRef::from_kind_and_id(kind, eid);
         let default_included = r
-            .get_entity(kind, eid)
+            .get_entity(entity.kind(), entity.id_str())
             .await
             .inspect_err(
                 |e| tracing::warn!(error = %e, eid = %eid, "entity_access: get_entity failed"),
@@ -138,7 +146,7 @@ pub(crate) async fn list_all_entity_access_handler(
             .is_some_and(|e| e.default_included);
         let rules: Vec<AccessRule> = bulk.get(eid).cloned().unwrap_or_default();
         entries.push(EntityAccessEntry {
-            entity_id: eid.clone(),
+            entity_id: entity.id_str().to_owned(),
             default_included,
             rules,
         });
@@ -155,7 +163,7 @@ pub(crate) async fn apply_template_handler(
     Json(body): Json<ApplyTemplateBody>,
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&body.entity_type)?;
-    let rule_type = parse_rule_type(&body.subject_type)
+    let subject = parse_subject(&body.subject_type, &body.subject_value)
         .ok_or_else(|| AdminError::BadRequest("invalid subject_type".to_owned()))?;
     if body.subject_value.trim().is_empty() {
         return Err(AdminError::BadRequest("subject_value required".to_owned()));
@@ -175,7 +183,7 @@ pub(crate) async fn apply_template_handler(
         if body.action == "clear" {
             let existing = r.list_rules_for_entity(kind, eid).await.unwrap_or_default();
             for rule in existing {
-                if rule.rule_type == rule_type && rule.rule_value == body.subject_value {
+                if rule.rule_type == subject.rule_type() && rule.rule_value == subject.value() {
                     if r.delete_rule(&rule.id).await.is_ok() {
                         applied += 1;
                     } else {
@@ -193,8 +201,8 @@ pub(crate) async fn apply_template_handler(
                 .upsert_rule(UpsertRuleParams {
                     entity_type: kind,
                     entity_id: eid,
-                    rule_type: rule_type.clone(),
-                    rule_value: &body.subject_value,
+                    rule_type: subject.rule_type(),
+                    rule_value: subject.value(),
                     access,
                     justification: None,
                 })

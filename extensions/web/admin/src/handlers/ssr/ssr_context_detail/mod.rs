@@ -37,8 +37,6 @@ pub(crate) async fn context_detail_page(
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
-    // Why: `ContextId::new` panics on anything that is not a UUID, and this
-    // segment comes straight off the URL.
     let Ok(context_id) = ContextId::try_new(context_id.trim()) else {
         return Err(AdminError::NotFound(
             "No context, AI request, or message rows match that context id.".to_owned(),

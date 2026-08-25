@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT entity_type, entity_id, default_included, source\n            FROM access_control_entities\n            WHERE entity_type = $1 AND entity_id = $2\n            ",
+  "query": "\n            SELECT entity_type AS \"kind: EntityKind\", entity_id AS id, default_included, source\n            FROM access_control_entities\n            WHERE entity_type = $1\n            ORDER BY entity_id\n            ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "entity_type",
+        "name": "kind: EntityKind",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -16,7 +16,7 @@
       },
       {
         "ordinal": 1,
-        "name": "entity_id",
+        "name": "id",
         "type_info": "Text",
         "origin": {
           "Table": {
@@ -50,7 +50,6 @@
     ],
     "parameters": {
       "Left": [
-        "Text",
         "Text"
       ]
     },
@@ -61,5 +60,5 @@
       false
     ]
   },
-  "hash": "8f06c15386a21f9628bc65838ed33a8624f60f3c6b66e48864da570c0f5c5641"
+  "hash": "f0fbb3a74f0b7854cb9843fd76a65adf695468b4f4943f4f41553411b44ca303"
 }

@@ -33,9 +33,6 @@ pub async fn list_decisions_filtered(
     .await
 }
 
-// Why: lint-ok: unused-pub — live upstream via the ssr_governance handlers,
-// which this fork does not ship; kept so shared repository files stay
-// identical.
 pub async fn list_decisions_for_policy(
     pool: &PgPool,
     policy_id: &str,

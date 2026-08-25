@@ -19,13 +19,14 @@ use std::time::{Duration, Instant};
 use async_trait::async_trait;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
-use systemprompt_security::authz::{RuleType, SubjectAttributeProvider, SubjectDimension};
+use systemprompt_security::authz::{
+    ROLE_PRECEDENCE, RuleType, SubjectAttributeProvider, SubjectDimension, USER_PRECEDENCE,
+};
 use tokio::sync::RwLock;
 
 const DEPARTMENT_SLUG: &str = "department";
 
-// Why: between core's `USER` (0) and `ROLE` (200).
-const DEPARTMENT_PRECEDENCE: u16 = 100;
+const DEPARTMENT_PRECEDENCE: u16 = USER_PRECEDENCE + (ROLE_PRECEDENCE - USER_PRECEDENCE) / 2;
 
 const DEPARTMENT_TTL: Duration = Duration::from_secs(60);
 

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, name, email, full_name, display_name, status, email_verified,\n                   roles, avatar_url, is_bot, is_scanner, created_at, updated_at\n            FROM users\n            WHERE name = $1 AND status != $2\n            ",
+  "query": "\n            SELECT id, name, email, full_name, display_name, status, email_verified,\n                   roles, avatar_url, is_bot, is_scanner, created_at, updated_at\n            FROM users\n            WHERE name = $1 AND status != $2\n            ORDER BY created_at ASC\n            LIMIT 1\n            ",
   "describe": {
     "columns": [
       {
@@ -169,5 +169,5 @@
       false
     ]
   },
-  "hash": "f86b69ee5451ab4ab302cf0ed174ae1bc744443ee9c26112e15dc8a9c6425204"
+  "hash": "3745aef8a07d06a9a4739220ca97191379f3abac958ec5574e953d8259fc0667"
 }

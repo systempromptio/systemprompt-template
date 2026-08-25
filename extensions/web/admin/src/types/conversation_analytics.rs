@@ -44,7 +44,6 @@ pub struct SkillEffectiveness {
 pub struct EntityUsageSummary {
     pub entity_type: String,
     pub entity_name: String,
-    // Why: polymorphic entity reference (skill/agent/mcp), no single typed-ID equivalent
     pub entity_id: String,
     pub total_uses: i64,
     pub session_count: i64,

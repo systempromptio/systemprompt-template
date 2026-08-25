@@ -328,6 +328,6 @@ async fn context_ids_round_trip_through_the_typed_identifier() {
         .expect("query succeeds");
 
     assert_eq!(rows.len(), 1);
-    assert_eq!(rows[0].context_id, ContextId::new(context));
+    assert_eq!(rows[0].context_id, ContextId::new_unchecked(context));
     db.cleanup().await;
 }

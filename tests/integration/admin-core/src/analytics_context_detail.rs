@@ -17,7 +17,7 @@ use crate::fixtures::{
 };
 use crate::tempdb::TempDb;
 
-// `ContextId::new` panics on anything that is not a UUID v4, so context ids
+// `ContextId::new_unchecked` panics on anything that is not a UUID v4, so context ids
 // here are minted as UUIDs rather than with the suite's readable `unique`.
 pub fn new_context_id() -> String {
     uuid::Uuid::new_v4().to_string()
@@ -29,7 +29,7 @@ async fn find_context_header_returns_none_for_an_unknown_context() {
         return;
     };
 
-    let header = repo::find_context_header(&db.pool, &ContextId::new(new_context_id()))
+    let header = repo::find_context_header(&db.pool, &ContextId::new_unchecked(new_context_id()))
         .await
         .expect("query header");
 
@@ -48,7 +48,7 @@ async fn find_context_header_resolves_a_context_known_only_to_requests() {
     spec.context_id = Some(&context);
     insert_request(&db.pool, &spec).await;
 
-    let header = repo::find_context_header(&db.pool, &ContextId::new(context.clone()))
+    let header = repo::find_context_header(&db.pool, &ContextId::new_unchecked(context.clone()))
         .await
         .expect("query header")
         .expect("header present");
@@ -72,7 +72,7 @@ async fn find_context_header_resolves_a_stored_context_with_no_requests() {
     let context = new_context_id();
     insert_context(&db.pool, &context, &user, None, "Design review").await;
 
-    let header = repo::find_context_header(&db.pool, &ContextId::new(context))
+    let header = repo::find_context_header(&db.pool, &ContextId::new_unchecked(context))
         .await
         .expect("query header")
         .expect("header present");
@@ -98,7 +98,7 @@ async fn find_context_header_carries_the_session_from_the_stored_row() {
     spec.session_id = Some(&session);
     insert_request(&db.pool, &spec).await;
 
-    let header = repo::find_context_header(&db.pool, &ContextId::new(context))
+    let header = repo::find_context_header(&db.pool, &ContextId::new_unchecked(context))
         .await
         .expect("query header")
         .expect("header present");
@@ -117,7 +117,7 @@ async fn get_context_kpis_returns_zeroes_for_a_context_with_no_requests() {
         return;
     };
 
-    let kpis = repo::get_context_kpis(&db.pool, &ContextId::new(new_context_id()))
+    let kpis = repo::get_context_kpis(&db.pool, &ContextId::new_unchecked(new_context_id()))
         .await
         .expect("query kpis");
 
@@ -144,7 +144,7 @@ async fn get_context_kpis_sums_the_requests_and_counts_failures() {
         insert_request(&db.pool, &spec).await;
     }
 
-    let kpis = repo::get_context_kpis(&db.pool, &ContextId::new(context))
+    let kpis = repo::get_context_kpis(&db.pool, &ContextId::new_unchecked(context))
         .await
         .expect("query kpis");
 
@@ -176,7 +176,7 @@ async fn get_context_kpis_reports_the_model_of_the_newest_request() {
     new.model = "new-model";
     insert_request(&db.pool, &new).await;
 
-    let kpis = repo::get_context_kpis(&db.pool, &ContextId::new(context))
+    let kpis = repo::get_context_kpis(&db.pool, &ContextId::new_unchecked(context))
         .await
         .expect("query kpis");
 

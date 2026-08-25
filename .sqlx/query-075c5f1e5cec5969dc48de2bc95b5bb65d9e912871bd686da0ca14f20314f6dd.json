@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id as \"id!: AiGatewayPolicyId\", name, spec, enabled\n            FROM ai_gateway_policies\n            WHERE enabled = TRUE\n            ORDER BY name ASC\n            ",
+  "query": "\n            SELECT id as \"id!: AiGatewayPolicyId\", name, spec, enabled, priority\n            FROM ai_gateway_policies\n            WHERE enabled = TRUE\n            ORDER BY priority ASC, name ASC\n            ",
   "describe": {
     "columns": [
       {
@@ -46,6 +46,17 @@
             "name": "enabled"
           }
         }
+      },
+      {
+        "ordinal": 4,
+        "name": "priority",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_gateway_policies",
+            "name": "priority"
+          }
+        }
       }
     ],
     "parameters": {
@@ -55,8 +66,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "0698be166c221265443002d562f7733293fb60834a02888956e7d530781d25ca"
+  "hash": "075c5f1e5cec5969dc48de2bc95b5bb65d9e912871bd686da0ca14f20314f6dd"
 }

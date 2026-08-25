@@ -3,6 +3,7 @@
 use std::path::Path;
 
 use crate::types::McpServerDetail;
+use crate::util::source_path::display_source_path;
 use systemprompt::identifiers::McpServerId;
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -26,22 +27,7 @@ pub fn list_mcp_servers(services_path: &Path) -> Result<Vec<McpServerDetail>, Ma
             Ok(c) => c,
             Err(_) => continue,
         };
-        let rel_source = path
-            // Why: strip_prefix returns Err when the path isn't under services_path
-            // (e.g. an absolute legacy entry); the fallback constructs a synthetic
-            // path string instead of bailing.
-            .strip_prefix(services_path)
-            .ok()
-            .and_then(|p| p.to_str())
-            .map_or_else(
-                || {
-                    format!(
-                        "services/mcp/{}",
-                        path.file_name().and_then(|n| n.to_str()).unwrap_or("")
-                    )
-                },
-                |s| format!("services/{s}"),
-            );
+        let rel_source = display_source_path(&path, services_path);
         if let Some(mcp_map) = config.get("mcp_servers").and_then(|m| m.as_mapping()) {
             for (key, val) in mcp_map {
                 if let Some(server_id) = key.as_str()

@@ -12,23 +12,10 @@ marketplace:
     - demo
     - enterprise
   license: proprietary
-  category: governance
   access:
     default_included: true
     roles: [user]
     justification: "Public enterprise governance evaluation demo"
-  skills:
-    include:
-      - use_dangerous_secret
-      - demonstrate_governance
-      - manage_permissions
-      - inspect_conversation
-      - inspect_ai_requests
-      - analytics_dashboards
-      - inspect_agents
-      - inspect_mcp_and_skills
-      - manage_services
-      - systemprompt_cli
   mcp_servers:
     source: explicit
     include:

@@ -59,7 +59,13 @@ pub(crate) async fn search_resolve(
         ResolvedKind::Request => ("request", request_detail_url(&AiRequestId::new(&r.id))),
         ResolvedKind::Trace => ("trace", trace_detail_url(&TraceId::new(&r.id))),
         ResolvedKind::Session => ("session", session_detail_url(&SessionId::new(&r.id))),
-        ResolvedKind::Context => ("context", context_detail_url(&ContextId::new(&r.id))),
+        ResolvedKind::Context => match ContextId::try_new(&r.id) {
+            Ok(id) => ("context", context_detail_url(&id)),
+            Err(e) => {
+                tracing::warn!(error = %e, "resolved context id is not a UUID");
+                return Ok(unresolved());
+            },
+        },
     };
     Ok(Json(SearchResponse {
         kind,

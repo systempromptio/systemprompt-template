@@ -11,16 +11,14 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use systemprompt::marketplace::MarketplaceCandidate;
-use systemprompt::models::bridge::ids::{LibraryArtifactId, PluginId};
+use systemprompt::identifiers::{AgentId, HookId, McpServerId};
+use systemprompt::marketplace::{EntryKeepSets, MarketplaceCandidate};
+use systemprompt::models::bridge::ids::{LibraryArtifactId, PluginId, SkillId};
 use systemprompt::models::bridge::manifest::{
     AgentEntry, ArtifactEntry, HookEntry, ManagedMcpServer, PluginEntry, SkillEntry,
 };
 use systemprompt_security::authz::{EntityKind, EntityRef};
 use systemprompt_web_admin::authz::department::{department_dimension, department_rule_type};
-use systemprompt_web_admin::marketplace_filter::keepsets::{
-    CandidateEntityIds, KeepSet, KeepSets, apply_keep_sets, entity_ref_for,
-};
 
 #[test]
 fn the_department_dimension_sits_between_user_and_role() {
@@ -42,27 +40,11 @@ fn department_is_the_only_dimension_this_extension_adds() {
 
 #[test]
 fn every_entity_kind_maps_to_its_own_typed_reference() {
-    let kinds = [
-        EntityKind::Plugin,
-        EntityKind::Skill,
-        EntityKind::Agent,
-        EntityKind::McpServer,
-        EntityKind::Marketplace,
-        EntityKind::GatewayRoute,
-        EntityKind::Hook,
-        EntityKind::SlackWorkspace,
-        EntityKind::SlackChannel,
-        EntityKind::TeamsTenant,
-        EntityKind::TeamsConversation,
-    ];
     let mut seen = Vec::new();
-    for kind in kinds {
-        let entity = entity_ref_for(kind, "id-1");
-        let rendered = format!("{entity:?}");
-        assert!(
-            rendered.contains("id-1"),
-            "{kind:?} dropped the id: {rendered}"
-        );
+    for kind in EntityKind::ALL {
+        let entity = EntityRef::from_kind_and_id(*kind, "id-1");
+        assert_eq!(entity.kind(), *kind);
+        assert_eq!(entity.id_str(), "id-1");
         assert!(
             !seen.contains(&std::mem::discriminant(&entity)),
             "{kind:?} reuses another kind's EntityRef variant"
@@ -70,7 +52,7 @@ fn every_entity_kind_maps_to_its_own_typed_reference() {
         seen.push(std::mem::discriminant(&entity));
     }
     assert!(matches!(
-        entity_ref_for(EntityKind::Plugin, "p"),
+        EntityRef::from_kind_and_id(EntityKind::Plugin, "p"),
         EntityRef::Plugin(_)
     ));
 }
@@ -83,14 +65,15 @@ fn owned_by(artifact: &str, plugin: &str) -> (LibraryArtifactId, BTreeSet<Plugin
 }
 
 fn candidate() -> MarketplaceCandidate {
-    MarketplaceCandidate::new(
-        vec![plugin_entry("demo-admin"), plugin_entry("demo-commons")],
-        vec![skill_entry("skill-a"), skill_entry("skill-b")],
-        vec![agent_entry("agent-a")],
-        vec![hook_entry("hook-a")],
-        vec![mcp_entry("files"), mcp_entry("systemprompt")],
-        vec![artifact_entry("art-admin"), artifact_entry("art-common")],
-    )
+    MarketplaceCandidate {
+        plugins: vec![plugin_entry("demo-admin"), plugin_entry("demo-commons")],
+        skills: vec![skill_entry("skill-a"), skill_entry("skill-b")],
+        agents: vec![agent_entry("agent-a")],
+        hooks: vec![hook_entry("hook-a")],
+        managed_mcp_servers: vec![mcp_entry("files"), mcp_entry("systemprompt")],
+        artifacts: vec![artifact_entry("art-admin"), artifact_entry("art-common")],
+        ..MarketplaceCandidate::default()
+    }
     .with_artifact_owners(BTreeMap::from([
         owned_by("art-admin", "demo-admin"),
         owned_by("art-common", "demo-commons"),
@@ -144,31 +127,29 @@ fn artifact_entry(id: &str) -> ArtifactEntry {
     .expect("artifact entry")
 }
 
-fn keep(ids: &[&str]) -> KeepSet {
-    ids.iter().map(|s| (*s).to_owned()).collect()
+fn keep<T, F>(ids: &[&str], make: F) -> std::collections::HashSet<T>
+where
+    T: Eq + std::hash::Hash,
+    F: Fn(&str) -> T,
+{
+    ids.iter().map(|s| make(s)).collect()
 }
 
-#[test]
-fn candidate_ids_are_read_off_every_entry_list() {
-    let ids = CandidateEntityIds::from_candidate(&candidate());
-    assert_eq!(ids.plugins, ["demo-admin", "demo-commons"]);
-    assert_eq!(ids.skills, ["skill-a", "skill-b"]);
-    assert_eq!(ids.agents, ["agent-a"]);
-    assert_eq!(ids.hooks, ["hook-a"]);
-    // Why: an MCP server is keyed by its name, not an id field.
-    assert_eq!(ids.mcp, ["files", "systemprompt"]);
+fn retained(mut input: MarketplaceCandidate, keep_sets: &EntryKeepSets) -> MarketplaceCandidate {
+    input.retain_entries(keep_sets);
+    input
 }
 
 #[test]
 fn keep_sets_shrink_every_list_to_what_survived() {
-    let kept = apply_keep_sets(
+    let kept = retained(
         candidate(),
-        &KeepSets {
-            plugins: keep(&["demo-commons"]),
-            skills: keep(&["skill-b"]),
-            agents: KeepSet::new(),
-            hooks: keep(&["hook-a"]),
-            mcp: keep(&["files"]),
+        &EntryKeepSets {
+            plugins: keep(&["demo-commons"], |s| PluginId::try_new(s).expect("plugin id")),
+            skills: keep(&["skill-b"], |s| SkillId::try_new(s).expect("skill id")),
+            agents: std::collections::HashSet::new(),
+            hooks: keep(&["hook-a"], |s| HookId::new(s)),
+            mcp_servers: keep(&["files"], |s| McpServerId::new(s)),
         },
     );
     assert_eq!(kept.plugins.len(), 1);
@@ -183,14 +164,14 @@ fn keep_sets_shrink_every_list_to_what_survived() {
 
 #[test]
 fn an_artifact_survives_only_while_one_of_its_owning_plugins_does() {
-    let kept = apply_keep_sets(
+    let kept = retained(
         candidate(),
-        &KeepSets {
-            plugins: keep(&["demo-commons"]),
-            skills: KeepSet::new(),
-            agents: KeepSet::new(),
-            hooks: KeepSet::new(),
-            mcp: KeepSet::new(),
+        &EntryKeepSets {
+            plugins: keep(&["demo-commons"], |s| PluginId::try_new(s).expect("plugin id")),
+            skills: std::collections::HashSet::new(),
+            agents: std::collections::HashSet::new(),
+            hooks: std::collections::HashSet::new(),
+            mcp_servers: std::collections::HashSet::new(),
         },
     );
     let ids: Vec<_> = kept.artifacts.iter().map(|a| a.id.to_string()).collect();
@@ -203,14 +184,14 @@ fn an_artifact_survives_only_while_one_of_its_owning_plugins_does() {
 
 #[test]
 fn dropping_every_plugin_drops_every_artifact() {
-    let kept = apply_keep_sets(
+    let kept = retained(
         candidate(),
-        &KeepSets {
-            plugins: KeepSet::new(),
-            skills: keep(&["skill-a"]),
-            agents: KeepSet::new(),
-            hooks: KeepSet::new(),
-            mcp: KeepSet::new(),
+        &EntryKeepSets {
+            plugins: std::collections::HashSet::new(),
+            skills: keep(&["skill-a"], |s| SkillId::try_new(s).expect("skill id")),
+            agents: std::collections::HashSet::new(),
+            hooks: std::collections::HashSet::new(),
+            mcp_servers: std::collections::HashSet::new(),
         },
     );
     assert!(kept.artifacts.is_empty());
@@ -221,33 +202,34 @@ fn dropping_every_plugin_drops_every_artifact() {
 fn an_unowned_artifact_is_dropped_rather_than_defaulting_to_visible() {
     let mut input = candidate();
     input.artifact_owners.clear();
-    let kept = apply_keep_sets(
+    let kept = retained(
         input,
-        &KeepSets {
-            plugins: keep(&["demo-admin", "demo-commons"]),
-            skills: KeepSet::new(),
-            agents: KeepSet::new(),
-            hooks: KeepSet::new(),
-            mcp: KeepSet::new(),
+        &EntryKeepSets {
+            plugins: keep(&["demo-admin", "demo-commons"], |s| PluginId::try_new(s).expect("plugin id")),
+            skills: std::collections::HashSet::new(),
+            agents: std::collections::HashSet::new(),
+            hooks: std::collections::HashSet::new(),
+            mcp_servers: std::collections::HashSet::new(),
         },
     );
     assert!(kept.artifacts.is_empty());
 }
 
 #[test]
-fn the_owner_map_and_marketplace_scope_pass_through_untouched() {
+fn the_assembly_context_passes_through_untouched() {
     let mut input = candidate();
     input.marketplace_id = Some(systemprompt::identifiers::MarketplaceId::new("demo"));
+    input.diagnostics.push("assembly warning".to_owned());
     let owners = input.artifact_owners.clone();
 
-    let kept = apply_keep_sets(
+    let kept = retained(
         input,
-        &KeepSets {
-            plugins: keep(&["demo-admin"]),
-            skills: KeepSet::new(),
-            agents: KeepSet::new(),
-            hooks: KeepSet::new(),
-            mcp: KeepSet::new(),
+        &EntryKeepSets {
+            plugins: keep(&["demo-admin"], |s| PluginId::try_new(s).expect("plugin id")),
+            skills: std::collections::HashSet::new(),
+            agents: std::collections::HashSet::new(),
+            hooks: std::collections::HashSet::new(),
+            mcp_servers: std::collections::HashSet::new(),
         },
     );
     assert_eq!(kept.artifact_owners, owners);
@@ -255,18 +237,19 @@ fn the_owner_map_and_marketplace_scope_pass_through_untouched() {
         kept.marketplace_id.map(|id| id.to_string()),
         Some("demo".to_owned())
     );
+    assert_eq!(kept.diagnostics, vec!["assembly warning".to_owned()]);
 }
 
 #[test]
 fn keeping_everything_is_the_identity() {
-    let kept = apply_keep_sets(
+    let kept = retained(
         candidate(),
-        &KeepSets {
-            plugins: keep(&["demo-admin", "demo-commons"]),
-            skills: keep(&["skill-a", "skill-b"]),
-            agents: keep(&["agent-a"]),
-            hooks: keep(&["hook-a"]),
-            mcp: keep(&["files", "systemprompt"]),
+        &EntryKeepSets {
+            plugins: keep(&["demo-admin", "demo-commons"], |s| PluginId::try_new(s).expect("plugin id")),
+            skills: keep(&["skill-a", "skill-b"], |s| SkillId::try_new(s).expect("skill id")),
+            agents: keep(&["agent-a"], |s| AgentId::new(s)),
+            hooks: keep(&["hook-a"], |s| HookId::new(s)),
+            mcp_servers: keep(&["files", "systemprompt"], |s| McpServerId::new(s)),
         },
     );
     assert_eq!(kept.plugins.len(), 2);
