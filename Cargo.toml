@@ -29,7 +29,7 @@ opt-level = "z"
 [workspace.package]
 edition = "2024"
 rust-version = "1.94"
-version = "0.38.0"
+version = "0.39.0"
 authors = ["Astound Digital <ed@systemprompt.io>"]
 repository = "https://github.com/systempromptio/systemprompt-astound"
 homepage = "https://astounddigital.com"
@@ -39,9 +39,9 @@ documentation = "https://systemprompt.io/documentation"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.38.0", default-features = false, features = ["core", "database", "config"] }
-systemprompt-security = { version = "0.38.0" }
-systemprompt-extension = { version = "0.38.0" }
+systemprompt = { version = "0.39.0", default-features = false, features = ["core", "database", "config"] }
+systemprompt-security = { version = "0.39.0" }
+systemprompt-extension = { version = "0.39.0" }
 
 # ============================================
 # LOCAL EXTENSIONS
