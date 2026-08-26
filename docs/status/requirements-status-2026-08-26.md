@@ -2,7 +2,7 @@
 
 Date: 2026-08-26 · Branch: `next` · Register: `[Enterprise AI] systemprompt.io requirements register (1).xlsx` (53 REQs)
 
-Every status below was revalidated by running the evidence suites on this date against a freshly started local stack (`just start` + deterministic `just e2e-seed`):
+Every status below was verified by running the evidence suites on this date against a freshly started local stack (`just start` + deterministic `just e2e-seed`):
 
 - **Playwright requirements suite** (`just e2e`): **126 passed, 4 skipped, 0 failed** (36.7s). The 4 skips are the deliberate `test.fixme` placeholders for the roadmap rows REQ-019/032/035/039.
 - **Gateway integration tier** (`just test-integration`, `req_0NN_*` Rust modules among the DB-backed suites): **685 passed, 0 failed** (10m22s).
@@ -22,7 +22,7 @@ Replication per requirement: `just e2e-req REQ-0NN` (or the register's `just e2e
 
 ## Done (27)
 
-All 27 register rows marked Delivered on 2026-08-25/26 revalidated green today. Each row: at least one passing tagged e2e test, a documentation page, and screenshot evidence.
+All 27 Delivered rows verified green. Each row: at least one passing tagged e2e test, a documentation page, and screenshot evidence.
 
 | REQ | Requirement | e2e proof (all passing) | Docs page | Screenshot(s) |
 |---|---|---|---|---|
