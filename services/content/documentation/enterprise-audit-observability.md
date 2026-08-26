@@ -69,14 +69,14 @@ Two limitations are stated here once and tracked on the [Enterprise Roadmap](/do
 
 Every capability on this page is proven by tagged end-to-end tests run against a seeded instance. To replicate: `just start`, then `just e2e-seed --reset`, then the command in the table. Screenshots regenerate with `just e2e-screens`.
 
-| REQ | What the test proves | Replicate with |
+| Ref | Verified behaviour | Replicate with |
 |---|---|---|
 | REQ-026 | Every model call lands an audit row with actor, model, provider, tokens, cost, latency, and trace ids | `just e2e-req REQ-026` |
 | REQ-027 | One trace id resolves the full chain: request → policy decision → model call → tool execution → cost | `just e2e-req REQ-027` |
 | REQ-028 | OTLP telemetry is ingested and audit events stream live over SSE | `just e2e-req REQ-028` |
 | REQ-031 | An induced cost/volume/error spike is detected by the anomaly job and raises a Slack alert | `just e2e-req REQ-031` |
 
-These REQs' Playwright specs live under `playwright/tests/requirements/`, with gateway-level proofs in the `req_026_*`–`req_031_*` Rust modules under `tests/integration/` (run with `just test-integration`).
+Deeper gateway-level checks for these behaviours also run in the platform's integration suite (`just test-integration`).
 
 ### Screenshots
 

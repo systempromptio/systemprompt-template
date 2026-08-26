@@ -67,14 +67,14 @@ Signed manifests can carry prompt content, but there is no first-class **version
 
 Every capability on this page is proven by tagged end-to-end tests run against a seeded instance. To replicate: `just start`, then `just e2e-seed --reset`, then the command in the table. Screenshots regenerate with `just e2e-screens`.
 
-| REQ | What the test proves | Replicate with |
+| Ref | Verified behaviour | Replicate with |
 |---|---|---|
 | REQ-040 | A signed skill/plugin installs after signature verification and disappears from circulation on central revocation | `just e2e-req REQ-040` |
 | REQ-041 | Each of the four chain stages denies its case pre-execution, first-deny-wins, with the decision audited under a trace id | `just e2e-req REQ-041` |
 | REQ-042 | The registry enforces per-server auth/scopes/audience and plan entitlement, and JTI revocation kills an issued token | `just e2e-req REQ-042` |
 | REQ-043 | Registration of a server with a missing or invalid manifest fails fast; tool schemas are captured at discovery | `just e2e-req REQ-043` |
 
-These REQs' Playwright specs live under `playwright/tests/requirements/`, with gateway-level proofs in the `req_040_*`–`req_043_*` Rust modules under `tests/integration/` (run with `just test-integration`).
+Deeper gateway-level checks for these behaviours also run in the platform's integration suite (`just test-integration`).
 
 ### Screenshots
 

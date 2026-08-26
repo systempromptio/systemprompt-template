@@ -46,11 +46,11 @@ The gateway runs with **`allow_unlisted_models: false`**: a model that is not ex
 
 ## Latency SLOs
 
-A **configurable latency SLO threshold** is tracked per the reporting views: breach percentage over the period, alongside **p50 and p95** latency and per-model latency data. Per-use-case SLO taxonomies and error-budget alerting await agreed SLO definitions.
+A **configurable latency SLO threshold** is tracked per the reporting views: breach percentage over the period, alongside **p50 and p95** latency and per-model latency data. Per-use-case SLO taxonomies and error-budget alerting are planned — see the [roadmap](/documentation/enterprise-roadmap).
 
 ## Quota windows
 
-Rate limiting ships **configured and enabled with sensible defaults**: quota windows on requests, tokens, and cost, applied per user or per organization, with role-tier multipliers and per-organization caps. The defaults are a starting point Astound can tune; sizing sign-off is an open decision.
+Rate limiting ships **configured and enabled with sensible defaults**: quota windows on requests, tokens, and cost, applied per user or per organization, with role-tier multipliers and per-organization caps. The defaults are a starting point — tune the windows to your traffic profile from the gateway configuration.
 
 ## Private and self-hosted endpoints
 
@@ -79,13 +79,13 @@ Enforcement happens twice:
 - **At boot** — the server refuses to start a route whose provider or model does not satisfy the route's `requires:` block. A misconfiguration is caught before any traffic flows.
 - **At dispatch** — a request that would land on a non-satisfying provider is denied, with a policy audit row whose descriptor records the failed `requires:` condition, so the denial is explainable after the fact.
 
-This turns residency and no-retain from convention into a declared, machine-checked property. Classifying *data* (rather than routes) still needs Astound's classification scheme — tracked on the [roadmap](/documentation/enterprise-roadmap).
+This turns residency and no-retain from convention into a declared, machine-checked property. Classifying *data* (rather than routes) is planned — see the [roadmap](/documentation/enterprise-roadmap).
 
 ## Verified evidence
 
 Every capability on this page is proven by tagged end-to-end tests run against a seeded instance. To replicate: `just start`, then `just e2e-seed --reset`, then the command in the table. Screenshots regenerate with `just e2e-screens`.
 
-| REQ | What the test proves | Replicate with |
+| Ref | Verified behaviour | Replicate with |
 |---|---|---|
 | REQ-018 | Declarative routing matches on request shape and the `RouteSelector` seam is exercised | `just e2e-req REQ-018` |
 | REQ-020 | The same client is served by a substituted upstream provider via `upstream_model` with no application change | `just e2e-req REQ-020` |
@@ -98,7 +98,7 @@ Every capability on this page is proven by tagged end-to-end tests run against a
 | REQ-037 | A route with a `requires:` block refuses to boot on a non-satisfying provider and denies at dispatch with an audit row | `just e2e-req REQ-037` |
 | REQ-038 | A `requires: {no_retain: true}` route only ever dispatches to a provider whose governance metadata satisfies it | `just e2e-req REQ-038` |
 
-These REQs are gateway-level: their Playwright specs live under `playwright/tests/requirements/` and their protocol proofs in the `req_018_*`–`req_038_*` Rust modules under `tests/integration/` (run with `just test-integration`).
+Deeper protocol-level checks for these behaviours also run in the platform's integration suite (`just test-integration`).
 
 ### Screenshots
 

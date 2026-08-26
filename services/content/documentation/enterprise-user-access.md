@@ -70,7 +70,7 @@ Salesforce sign-in is retired as a login-page entry point — the login page is 
 
 Deprovisioning is automatic: a **scheduled reconciliation job** compares the local roster against Salesforce. A user who has been deactivated or removed in Salesforce is disabled here, with their sessions and personal access tokens revoked in the same pass.
 
-SCIM provisioning is deliberately deferred — neither Salesforce (as IdP) nor Odoo pushes standards-based SCIM, so an endpoint would have no caller. See the [Enterprise Roadmap](/documentation/enterprise-roadmap) for when this changes.
+SCIM provisioning is not offered — neither Salesforce (as IdP) nor Odoo pushes standards-based SCIM, so an endpoint would have no caller. See the [Enterprise Roadmap](/documentation/enterprise-roadmap) for when this changes.
 
 ## Personal access tokens and devices
 
@@ -84,7 +84,7 @@ Share tokens and access grants carry expiry: share tokens honour an expiry times
 
 Every capability on this page is proven by tagged end-to-end tests run against a seeded instance. To replicate: `just start`, then `just e2e-seed --reset`, then the command in the table. Screenshots regenerate with `just e2e-screens`.
 
-| REQ | What the test proves | Replicate with |
+| Ref | Verified behaviour | Replicate with |
 |---|---|---|
 | REQ-001 | An admin can search, create, edit roles/status, disable, and revoke sessions and PATs for a user entirely from the admin UI | `just e2e-req REQ-001` |
 | REQ-002 | An unapproved visitor cannot register on any of the three doors; an admin invite is the only working path in | `just e2e-req REQ-002` |
@@ -92,12 +92,12 @@ Every capability on this page is proven by tagged end-to-end tests run against a
 | REQ-025 | Share tokens and grants stop working after their expiry / `valid_until` boundary | `just e2e-req REQ-025` |
 
 ![The user roster at /admin/access/users with search and role columns](/files/images/evidence/req-001-users-roster.png)
-*REQ-001 — the user roster: search, roles, status, and last-active at a glance.*
+*The user roster: search, roles, status, and last-active at a glance.*
 
 ![A user detail page showing role editing and session/PAT revocation](/files/images/evidence/req-001-user-detail.png)
-*REQ-001 — a user's detail page with role edit, disable, and session and PAT revocation.*
+*A user's detail page with role edit, disable, and session and PAT revocation.*
 
 ![The login page offering invite-only enrolment, with no self-registration](/files/images/evidence/req-002-login-invite-only.png)
-*REQ-002 — the login surface: no self-registration path; enrolment is invite-only.*
+*The login surface: no self-registration path; enrolment is invite-only.*
 
-REQ-023 and REQ-025 have gateway-level proofs in the `req_023_*` / `req_025_*` Rust modules under `tests/integration/` (run with `just test-integration`); the screenshot pack grows with `just e2e-screens`.
+Deeper gateway-level checks for these behaviours also run in the platform's integration suite (`just test-integration`).

@@ -54,7 +54,7 @@ Each organization plan defines two budget lines:
 - **Soft threshold** — non-blocking. On the first crossing in a month, a Slack alert fires (once per transition, not per request) and the crossing is recorded.
 - **Hard monthly cap** — enforced at the gateway. Once an organization's month-to-date spend reaches its cap, further requests are refused with **HTTP 429 and a `retry-after`** pointing at the month boundary. Traffic resumes automatically when the month rolls over.
 
-Budget scope is the organization. Per-team and per-project budgets await the open hierarchy decisions, and per-key budgets are a known limitation — see the [roadmap](/documentation/enterprise-roadmap).
+Budget scope is the organization. Per-team, per-project, and per-key budgets are not yet available — see the [roadmap](/documentation/enterprise-roadmap).
 
 ## Early warning: projected overruns
 
@@ -71,13 +71,13 @@ A scheduled digest job delivers **weekly or monthly summaries to Slack** over th
 
 ## Provider and model cost comparison
 
-An internal report (also reachable from the CLI) breaks cost and margin down **by provider and by model**, so you can see what a switch of route would save. Quality-normalized comparison ("is the cheaper model good enough?") requires an agreed quality baseline, which is an open decision — noted on the [roadmap](/documentation/enterprise-roadmap).
+An internal report (also reachable from the CLI) breaks cost and margin down **by provider and by model**, so you can see what a switch of route would save. Quality-normalized comparison ("is the cheaper model good enough?") requires a quality baseline for your workloads — see the [roadmap](/documentation/enterprise-roadmap).
 
 ## Verified evidence
 
 Every capability on this page is proven by tagged end-to-end tests run against a seeded instance. To replicate: `just start`, then `just e2e-seed --reset`, then the command in the table. Screenshots regenerate with `just e2e-screens`.
 
-| REQ | What the test proves | Replicate with |
+| Ref | Verified behaviour | Replicate with |
 |---|---|---|
 | REQ-004 | The Spend tab shows total spend, daily trend, cost/request, token counters, and cost-by-model distribution | `just e2e-req REQ-004` |
 | REQ-009 | The hard monthly cap returns 429 at the gateway; the soft threshold records and Slack-alerts on first crossing | `just e2e-req REQ-009` |
@@ -91,12 +91,12 @@ Every capability on this page is proven by tagged end-to-end tests run against a
 | REQ-017 | The comparison report breaks cost down by provider and by model | `just e2e-req REQ-017` |
 
 ![The Spend tab with total spend, trend, and cost per request](/files/images/evidence/req-004-spend.png)
-*REQ-004 — the Spend tab: total spend, daily cost trend, and cost per request.*
+*The Spend tab: total spend, daily cost trend, and cost per request.*
 
 ![Cost distribution across models](/files/images/evidence/req-004-model-mix.png)
-*REQ-004 — the model mix: where spend actually lands, by model.*
+*The model mix: where spend actually lands, by model.*
 
 ![Per-organization spend meters against soft threshold and hard cap](/files/images/evidence/req-009-spend-meters.png)
-*REQ-009 — spend meters: month-to-date spend against each organization's threshold and cap.*
+*Spend meters: month-to-date spend against each organization's threshold and cap.*
 
-REQ-010 through REQ-017 additionally have gateway-level proofs in the `req_010_*`–`req_017_*` Rust modules under `tests/integration/` (run with `just test-integration`); the screenshot pack grows with `just e2e-screens`.
+Deeper gateway-level checks for these behaviours also run in the platform's integration suite (`just test-integration`).

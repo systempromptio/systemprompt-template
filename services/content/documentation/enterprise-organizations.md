@@ -52,18 +52,18 @@ Each organization has its own roster (populated by admin invites per group), its
 
 A **Hub is a geographical grouping** — a region or location dimension that sits alongside organizations and departments rather than inside them. This is the agreed definition.
 
-The Hub *analytics dimension* itself — filtering dashboards and reports by Hub — is not yet available; it is scheduled as the next delivery pass. Until it ships, geographic reporting is approximated by mapping locations onto organizations or departments. Track its status on the [Enterprise Roadmap](/documentation/enterprise-roadmap).
+The Hub *analytics dimension* itself — filtering dashboards and reports by Hub — is not yet available. Until it ships, geographic reporting is approximated by mapping locations onto organizations or departments — see the [Enterprise Roadmap](/documentation/enterprise-roadmap).
 
 ## Verified evidence
 
 Every capability on this page is proven by tagged end-to-end tests run against a seeded instance. To replicate: `just start`, then `just e2e-seed --reset`, then the command in the table. Screenshots regenerate with `just e2e-screens`.
 
-| REQ | What the test proves | Replicate with |
+| Ref | Verified behaviour | Replicate with |
 |---|---|---|
 | REQ-006 | Analytics drill down by organization, department, and individual user, with the two seeded organizations fully isolated from each other | `just e2e-req REQ-006` |
 
 ![Analytics drill-down filtered by organization and department](/files/images/evidence/req-006-drilldown.png)
-*REQ-006 — the same dashboard re-scoped by the organization and department filters.*
+*The same dashboard re-scoped by the organization and department filters.*
 
 ![Analytics drill-down narrowed to a single user](/files/images/evidence/req-006-user-drilldown.png)
-*REQ-006 — narrowing further to one individual user without leaving the view.*
+*Narrowing further to one individual user without leaving the view.*

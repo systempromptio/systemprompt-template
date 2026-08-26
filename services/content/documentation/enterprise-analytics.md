@@ -75,7 +75,7 @@ Both limitations have their canonical home on the [Enterprise Roadmap](/document
 
 Every capability on this page is proven by tagged end-to-end tests run against a seeded instance. To replicate: `just start`, then `just e2e-seed --reset`, then the command in the table. Screenshots regenerate with `just e2e-screens`.
 
-| REQ | What the test proves | Replicate with |
+| Ref | Verified behaviour | Replicate with |
 |---|---|---|
 | REQ-003 | The dashboard shows request volume, error rate, active users, and daily/weekly trends across selectable periods | `just e2e-req REQ-003` |
 | REQ-005 | WAU with deltas, requests/user/day, the top-user leaderboard, and the inactive-seat report at every window (7/14/30/90d) | `just e2e-req REQ-005` |
@@ -83,16 +83,16 @@ Every capability on this page is proven by tagged end-to-end tests run against a
 | REQ-008 | Commits observed through Claude Code sessions are deduplicated, rolled up daily, and plotted beside AI usage | `just e2e-req REQ-008` |
 
 ![The analytics Overview tab with volume, errors, and active users](/files/images/evidence/req-003-overview.png)
-*REQ-003 — the Overview tab: request volume, error rate, and active users for the selected period.*
+*The Overview tab: request volume, error rate, and active users for the selected period.*
 
 ![Daily and weekly usage trend charts](/files/images/evidence/req-003-usage-trends.png)
-*REQ-003 — daily/weekly usage trends with the period selector.*
+*Daily/weekly usage trends with the period selector.*
 
 ![The Seats tab with WAU and requests per user per day](/files/images/evidence/req-005-seats.png)
-*REQ-005 — the Seats tab: WAU with deltas and per-user intensity.*
+*The Seats tab: WAU with deltas and per-user intensity.*
 
 ![The inactive-seat report with its configurable window](/files/images/evidence/req-005-inactive-seats.png)
-*REQ-005 — inactive seats at a configurable 7/14/30/90-day window.*
+*Inactive seats at a configurable 7/14/30/90-day window.*
 
 ![The Code tab showing productivity proxy metrics](/files/images/evidence/req-007-008-code-tab.png)
-*REQ-007/008 — the Code tab: AI-authored LOC, applied edits, permission-grant rate, and commit lines.*
+*The Code tab: AI-authored LOC, applied edits, permission-grant rate, and commit lines.*

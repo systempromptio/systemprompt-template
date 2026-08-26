@@ -25,7 +25,7 @@ related_docs:
 
 # Content Safety, PII & Guardrails
 
-**TL;DR:** The four-stage governance chain and the gateway safety scanners are **enabled** on this deployment. Requests pass jailbreak heuristics, 34 secret patterns with an entropy backstop, and PII detection (email, credit card, SSN, phone). Buffered responses can be blocked outright; streamed responses are scanned audit-only; transcripts redact detected values at display time. The category set is a sensible default Astound can tune.
+**TL;DR:** The four-stage governance chain and the gateway safety scanners are **enabled** on this deployment. Requests pass jailbreak heuristics, 34 secret patterns with an entropy backstop, and PII detection (email, credit card, SSN, phone). Buffered responses can be blocked outright; streamed responses are scanned audit-only; transcripts redact detected values at display time. The category set and each category's block-vs-audit disposition are configurable per deployment.
 
 ## The governance chain is on
 
@@ -41,7 +41,7 @@ The shipped default category set:
 | **Secrets** | 34 known credential patterns (API keys, tokens, private keys) plus a high-entropy-string backstop for secrets no pattern names |
 | **PII** | Email addresses, credit card numbers, US Social Security numbers, phone numbers |
 
-This set is the **sensible default, not a fixed contract** — categories and their block-vs-audit disposition are configurable, and the intended workflow is that Astound signs off the category set it requires. A PHI taxonomy (health identifiers) is not yet part of the set — see the [roadmap](/documentation/enterprise-roadmap).
+This set is the **sensible default, not a fixed contract** — categories and their block-vs-audit disposition are configurable, so a deployment enforces exactly the policy its owners require. A PHI taxonomy (health identifiers) is not yet part of the set — see the [roadmap](/documentation/enterprise-roadmap).
 
 ## Blocking vs. auditing: why streaming differs
 
@@ -52,7 +52,7 @@ Enforcement depends on how the response is delivered:
 
 This is a deliberate design, not a gap: the alternative — buffering every stream — would destroy the latency profile streaming exists to provide. Where blocking matters more than latency, use non-streaming calls.
 
-Note also that in-flight enforcement **blocks rather than redacts** — a flagged buffered response is refused whole, not rewritten with masked values. A full in-flight redaction pipeline is a scoped design item on the roadmap.
+Note also that in-flight enforcement **blocks rather than redacts** — a flagged buffered response is refused whole, not rewritten with masked values. In-flight redaction (masking values instead of refusing the response) is planned — see the [roadmap](/documentation/enterprise-roadmap).
 
 ## Display-layer redaction
 
@@ -66,12 +66,12 @@ Every scanner decision is an audit row on the same spine as everything else — 
 
 Every capability on this page is proven by tagged end-to-end tests run against a seeded instance. To replicate: `just start`, then `just e2e-seed --reset`, then the command in the table. Screenshots regenerate with `just e2e-screens`.
 
-| REQ | What the test proves | Replicate with |
+| Ref | Verified behaviour | Replicate with |
 |---|---|---|
 | REQ-030 | The enabled safety chain flags jailbreak patterns and PII, blocks a flagged buffered response, and audits a streamed one | `just e2e-req REQ-030` |
 | REQ-036 | Secret patterns and the entropy backstop catch credential egress, and transcripts render detected values redacted | `just e2e-req REQ-036` |
 
-These REQs' Playwright specs live under `playwright/tests/requirements/`, with gateway-level proofs in the `req_030_*` / `req_036_*` Rust modules under `tests/integration/` (run with `just test-integration`).
+Deeper gateway-level checks for these behaviours also run in the platform's integration suite (`just test-integration`).
 
 ### Screenshots
 

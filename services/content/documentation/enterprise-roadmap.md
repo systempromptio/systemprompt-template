@@ -33,7 +33,7 @@ related_docs:
 
 **What it will do:** serve semantically similar requests from a cache instead of re-billing the provider, with strict tenant isolation so one organization's cached responses can never leak into another's.
 
-**Current state:** no semantic cache exists in the gateway today. Building one needs embedding infrastructure, similarity thresholds, and a tenant-isolation proof — a project in its own right, currently being evaluated as build vs. integrate.
+**Current state:** no semantic cache exists in the gateway today. Building one needs embedding infrastructure, similarity thresholds, and a tenant-isolation proof — a project in its own right.
 
 **Honest note:** not yet available; today every request goes to the provider (provider-side prompt caching still applies where the provider offers it).
 
@@ -49,7 +49,7 @@ related_docs:
 
 **What it will do:** split live traffic on a route between models by percentage, with stable experiment assignment, so model changes can be evaluated on real usage before a full switch.
 
-**Current state:** route resolution is strictly first-match; no percentage split or experiment-assignment machinery exists. A moderate core change, currently deprioritized behind the items above.
+**Current state:** route resolution is strictly first-match; no percentage split or experiment-assignment machinery exists.
 
 **Honest note:** not yet available; comparisons today are done by switching routes for a cohort (for example, one organization) and comparing the [cost and usage reports](/documentation/enterprise-cost-management).
 
@@ -57,7 +57,7 @@ related_docs:
 
 **What it will do:** a first-class prompt-template registry with versions, parameters, pinning, and one-click rollback, distributed through the same signed catalog as skills and plugins.
 
-**Current state:** no prompt registry exists; the nearest primitive (system-prompt overrides) keeps no version history. The signed distribution channel described in [Tool Governance](/documentation/enterprise-tool-governance) can carry prompt content, so the transport exists — the lifecycle object does not. A design is proposed before building.
+**Current state:** no prompt registry exists; the nearest primitive (system-prompt overrides) keeps no version history. The signed distribution channel described in [Tool Governance](/documentation/enterprise-tool-governance) can carry prompt content, so the transport exists — the lifecycle object does not.
 
 **Honest note:** not yet available; prompt content today is versioned the way the rest of your configuration is — in git.
 
@@ -66,16 +66,16 @@ related_docs:
 | Limitation | Current state | Where it is discussed |
 |---|---|---|
 | **SCIM provisioning** | Deliberately deferred: neither Salesforce (as IdP) nor Odoo pushes standards-based SCIM, so an endpoint would have no caller. Revisit if Okta or Entra fronts the instance. | [User & Access Management](/documentation/enterprise-user-access) |
-| **WORM audit immutability** | Audit rows are append-only by convention, not mechanism — no WORM storage or hash-chaining. Options scoped: revoked UPDATE/DELETE grants, hash-chaining, export-to-WORM. | [Audit & Observability](/documentation/enterprise-audit-observability) |
-| **Observability push egress** | OTLP flows in and SSE streams out to connected clients, but nothing pushes audit data to Datadog, Splunk, or an external OTEL collector. Scoped as an integration design. | [Audit & Observability](/documentation/enterprise-audit-observability) |
+| **WORM audit immutability** | Audit rows are append-only by convention, not mechanism — no WORM storage or hash-chaining. Planned hardening options: revoked UPDATE/DELETE grants, hash-chaining, or export to WORM storage. | [Audit & Observability](/documentation/enterprise-audit-observability) |
+| **Observability push egress** | OTLP flows in and SSE streams out to connected clients, but nothing pushes audit data to Datadog, Splunk, or an external OTEL collector yet. | [Audit & Observability](/documentation/enterprise-audit-observability) |
 | **PHI taxonomy** | PII scanning covers email, credit card, SSN, and phone; health-identifier categories are not yet in the set. | [Content Safety & Guardrails](/documentation/enterprise-safety-guardrails) |
-| **Per-key budgets** | An API key or PAT inherits its owner's scope — it is not its own governance subject, so no per-key budget, rate, or model scope. A core change, scoped in design. | [Model Gateway & Routing](/documentation/enterprise-model-routing) |
-| **Tab-acceptance metric** | Not feasible as specified: Claude Code emits no accept/reject signal and no manual-LOC baseline exists. Needs an IDE-level integration. | [Analytics](/documentation/enterprise-analytics) |
-| **Hub analytics dimension** | A Hub is defined as a *geographical* grouping; the analytics dimension for it is designed and scheduled for the next pass, not yet shipped. | [Organizations & Departments](/documentation/enterprise-organizations) |
+| **Per-key budgets** | An API key or PAT inherits its owner's scope — it is not its own governance subject, so no per-key budget, rate, or model scope. | [Model Gateway & Routing](/documentation/enterprise-model-routing) |
+| **Tab-acceptance metric** | Not currently measurable: Claude Code emits no accept/reject signal and no manual-LOC baseline exists. Needs an IDE-level integration. | [Analytics](/documentation/enterprise-analytics) |
+| **Hub analytics dimension** | A Hub is defined as a *geographical* grouping; filtering dashboards and reports by Hub is not yet available. | [Organizations & Departments](/documentation/enterprise-organizations) |
 
 ## Verified evidence
 
-The roadmap items on this page are tracked in the same tagged end-to-end suite as everything delivered — as **`test.fixme` placeholders**. REQ-019, REQ-032, REQ-035, and REQ-039 each have a tagged spec that reports as **skipped**: the suite cannot pass a test for an unbuilt feature, which is the honesty guarantee. The day one of these capabilities ships, its placeholder becomes a real test and must pass; until then, `just e2e-req REQ-019` (or 032, 035, 039) visibly reports the gap rather than a green run.
+Each roadmap item is tracked in the same automated test suite as everything delivered — as an explicitly **skipped placeholder**. The suite cannot pass a test for an unbuilt feature, so a test run visibly reports the gap rather than a false green; the day a capability ships, its placeholder becomes a real test that must pass.
 
 ## Everything else
 
