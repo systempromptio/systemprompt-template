@@ -27,6 +27,6 @@ pub(super) fn governed_input(payload: &HookEventPayload) -> GovernedInput {
                 payload.tool_input().cloned().unwrap_or_default(),
             ))
         },
-        |text| GovernedInput::prompt(text.to_owned()),
+        |text| GovernedInput::prompt_text(text.to_owned()),
     )
 }

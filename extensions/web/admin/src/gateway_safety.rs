@@ -91,7 +91,10 @@ impl SafetyScanner for PiiScanner {
     }
 
     async fn scan_request(&self, req: &CanonicalRequest) -> Vec<Finding> {
-        pii_findings(&req.flatten_text(), "request")
+        req.message_units()
+            .into_iter()
+            .flat_map(|unit| pii_findings(&unit, "request"))
+            .collect()
     }
 
     async fn scan_response_final(&self, response: &CanonicalResponse) -> Vec<Finding> {

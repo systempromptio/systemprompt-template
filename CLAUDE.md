@@ -12,38 +12,88 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **All work lands on `next`. Never push to `main`.**
 
-`main` is protected by a ruleset that requires a pull request and grants **no
-bypass to anyone** — a direct `git push origin main` is refused for agents,
-sessions and repository admins alike. That is deliberate: it is the mechanism,
-not a convention you could talk your way around.
+`next` is the repository's default branch, so a fresh clone starts there. `main`
+is protected by a ruleset that requires a pull request and grants **no bypass to
+anyone** — a direct `git push origin main` is refused for agents, sessions and
+repository admins alike. Protection is pinned to `main` by name, so moving the
+default branch does not move it.
 
 ```
-next   ← every agent, every session, every commit. Push freely.
-  ↓ nightly (03:17 UTC): auto-fix → full gate cycle → promote (only if green)
+next   ← default branch. Every agent, every session. Push freely.
+         Bar to land: it builds and works. No gates, no test suites.
+  ↓ `just gate` when you are ready, then `just promote` to open the release PR
+         This is where every pre-release check runs.
 main   ← protected, release-only. Tagged. Never pushed to directly.
 ```
 
-**Do not run the pre-release gate cycle to land ordinary work.** The full cycle is expensive and
-runs **once nightly** (`.github/workflows/nightly.yml`), not on your push.
-Committing and pushing to `next` without gating is the intended workflow.
+**What you owe before pushing to `next`:** the code compiles and is functional.
+That is the whole bar. Run `just build` once at the end of your change set, make
+sure it does not error, and push. Do **not** run `just gate`, the test suites, or
+any other pre-release check as part of landing on `next`.
 
-What the nightly does, in order:
+**The pre-release cycle belongs to the `next` -> `main` transition, not to
+`next`.** There is no scheduled job and nothing gating a push to `next`. The
+gates run when a person decides to promote, and only then:
 
-1. **Auto-fixes the mechanical standards** — rustfmt across every workspace in
-   the repo plus clippy's machine-applicable suggestions — and commits the
-   result straight back to `next`. **Do not spend a turn on formatting**; it is
-   applied for you. Anything needing judgement is not touched.
-2. **Runs the whole cycle** (CI, Quality) against that commit.
-3. **Promotes `next` → `main`** by merging a pull request, but only when every
-   gate is green. A failure leaves `main` at its last good commit.
+1. `just gate [REF]` — dispatches every gate workflow against the ref
+   (default: the tip of `next`) and waits.
+2. `just promote [SHA]` — freezes that commit on the `promote` ref and **opens**
+   the release pull request onto `main`. It does not merge; you do.
+3. Tag `main` once merged. Tags are not covered by the ruleset.
 
-So the standard obligations still hold — your commit should compile and its own
-tests should pass, and the coding standards below are not optional — but
-*proving* it across the whole repo is not your turn to spend. A red gate is the
-highest-priority work next morning: `main` is frozen until it is green.
+The commit is frozen on `promote` rather than the PR being headed at `next`
+because a PR headed at `next` merges whatever `next` points at *when you merge
+it* — anything pushed meanwhile would ride along ungated. That happened once
+for real.
 
-Releasing is a separate, deliberate act (the gateway release tag drives `release-gateway.yml`), run on demand from a
-green `main` — never automatically.
+## Building Against Local Core (`next` tracks `next`)
+
+While `next` is open, this template builds against the **sibling
+`../systemprompt-core` checkout on its own `next` branch**, not against the
+published crates.io release. Core `next` carries unreleased API changes, so a
+build resolved from crates.io would not be validating the code that actually
+ships together.
+
+**The patch is a local working-tree edit and is never committed.** What is
+committed always pins a published core with both `[patch.crates-io]` blocks
+commented out, so nobody else ends up building against a path on your machine.
+A `.git/hooks/pre-commit` guard rejects any commit that stages an active patch
+block or a local `../systemprompt-core` path.
+
+Two blocks route the `systemprompt-*` crates at the local checkout, and **they
+must be uncommented and commented in lockstep**:
+
+| Manifest | Patches |
+|----------|---------|
+| `Cargo.toml` | the root workspace: the binary and every `extensions/` crate |
+| `tests/Cargo.toml` | the `tests/` workspace, which is a *separate* workspace |
+
+`[patch]` only applies from the manifest of the workspace being built. Patch the
+root alone and the test crates silently resolve core from crates.io while the
+extensions under test resolve it locally, so the suites compile against a
+different core than the binary does. That mismatch surfaces as a confusing
+"variant not found" error naming a path under `~/.cargo/registry/`. If you see a
+core path in an error that is not `../systemprompt-core/`, the patch blocks are
+out of lockstep.
+
+To enable the patch locally, uncomment both blocks and hide all four files from
+git so ordinary commits never carry them:
+
+```bash
+git update-index --skip-worktree Cargo.toml Cargo.lock tests/Cargo.toml tests/Cargo.lock
+```
+
+The lockfiles are hidden alongside the manifests because resolving against the
+local checkout rewrites them too. To land a genuine manifest change (a new
+dependency, a version bump), clear the flag with `--no-skip-worktree`, comment
+the patch blocks back out, commit, then re-enable both.
+
+`just core-bump` refuses to run while the root block is active: publish core,
+bump the pinned version, and re-comment both blocks before promoting to `main`.
+
+**Do not run `just prepare` while the patch is active.** It bakes core's own
+queries into the template's `.sqlx/` cache. Local core edits need core's
+per-crate cache regenerated in the core checkout instead.
 
 ## Quick Start
 
@@ -287,7 +337,7 @@ Bot scopes: `commands`, `chat:write`, `users:read`, plus `users:read.email` only
 
 ## Critical Rules
 
-1. **Core is a crate dependency** — consumed from crates.io; the sibling `../systemprompt-core` checkout IS editable for cross-repo work via the `[patch.crates-io]` toggle (publish + bump + re-comment before landing).
+1. **Core is a crate dependency** — pinned to crates.io for published builds, and every commit keeps it that way. Locally, both `[patch.crates-io]` blocks (root + `tests/`) are uncommented as a working-tree edit held back by `skip-worktree`, routing core at the sibling `../systemprompt-core` checkout on its `next` branch. That checkout IS editable for cross-repo work. Publish + bump before promoting to `main`. See [Building Against Local Core](#building-against-local-core-next-tracks-next).
 2. **Rust code -> `extensions/`** — All `.rs` files live here.
 3. **Config only -> `services/`** — YAML/Markdown only. No Rust code.
 4. **CSS files -> `storage/files/css/`** — NEVER put CSS in `extensions/*/assets/css/`.
