@@ -226,3 +226,7 @@ storage/files/css/admin-bundle.css
 /UPDATE.md
 MISSING-FEATURES-SPEC.md
 .vendor/
+
+# Local working artifacts (requirements registers, spreadsheets) — never tracked
+*.xlsx
+*.xls
