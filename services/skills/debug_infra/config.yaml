@@ -1,8 +1,0 @@
-id: debug_infra
-name: "Debug Infrastructure"
-description: "Use when setup, build, start, or deploy commands fail or the deployment target is unclear — discovers which infra this clone targets (SystemPrompt Cloud on Fly, or a self-hosted VM such as Oracle with a remote Postgres), verifies just setup-local/build/start/deploy run cleanly, and produces an assessment with copy-paste fixes."
-enabled: true
-file: SKILL.md
-tags: [cli, infrastructure, deploy, debugging, database]
-category: development
-display_category: "Development — Test"
