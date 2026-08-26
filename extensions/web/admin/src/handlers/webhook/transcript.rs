@@ -29,7 +29,10 @@ pub(crate) async fn track_transcript_event(
     let user_id = authenticate_webhook(&headers)?;
 
     if let Some(session_id) = payload.session_id.as_ref() {
-        let plugin_id = query.plugin_id.as_ref().map(|p| p.as_str());
+        let plugin_id = query
+            .plugin_id
+            .as_ref()
+            .map(systemprompt_web_shared::PluginId::as_str);
         if let Err(e) =
             upsert_session_transcript(&pool, &user_id, session_id, plugin_id, &payload.transcript)
                 .await

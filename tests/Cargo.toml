@@ -53,8 +53,8 @@ systemprompt-cli-salesforce = { path = "../extensions/cli/salesforce" }
 # The contract crate additionally enables `full`, which links the core
 # extension crates whose `register_extension!` registrations carry the
 # migrations the admin schema needs.
-systemprompt = { version = "0.39.0", default-features = false, features = ["core", "database"] }
-systemprompt-security = { version = "0.39.0" }
+systemprompt = { version = "0.40.0", default-features = false, features = ["core", "database"] }
+systemprompt-security = { version = "0.40.0" }
 
 # HTTP contract harness — drives the real admin router in-process.
 axum = "0.8"
@@ -89,40 +89,39 @@ jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 # workspace, so without this the test crates resolve core from crates.io
 # while the extensions under test resolve it from the local checkout.
 #
-# Core 0.39.0 pins with the patch ACTIVE: the governance secret-scan fix rides
+# Core 0.40.0 pins with the patch ACTIVE: the governance secret-scan fix rides
 # the unreleased core on next. Re-comment both blocks and bump the pins once
 # the overnight core release is published.
-# ACTIVE: core 0.39.1 is unreleased — vendored from ../systemprompt-core (next) via `just vendor-core`
-[patch.crates-io]
-systemprompt = { path = "../.vendor/systemprompt-core/systemprompt" }
-systemprompt-models = { path = "../.vendor/systemprompt-core/crates/shared/models" }
-systemprompt-traits = { path = "../.vendor/systemprompt-core/crates/shared/traits" }
-systemprompt-identifiers = { path = "../.vendor/systemprompt-core/crates/shared/identifiers" }
-systemprompt-extension = { path = "../.vendor/systemprompt-core/crates/shared/extension" }
-systemprompt-provider-contracts = { path = "../.vendor/systemprompt-core/crates/shared/provider-contracts" }
-systemprompt-client = { path = "../.vendor/systemprompt-core/crates/shared/client" }
-systemprompt-template-provider = { path = "../.vendor/systemprompt-core/crates/shared/template-provider" }
-systemprompt-database = { path = "../.vendor/systemprompt-core/crates/infra/database" }
-systemprompt-events = { path = "../.vendor/systemprompt-core/crates/infra/events" }
-systemprompt-security = { path = "../.vendor/systemprompt-core/crates/infra/security" }
-systemprompt-config = { path = "../.vendor/systemprompt-core/crates/infra/config" }
-systemprompt-logging = { path = "../.vendor/systemprompt-core/crates/infra/logging" }
-systemprompt-loader = { path = "../.vendor/systemprompt-core/crates/infra/loader" }
-systemprompt-cloud = { path = "../.vendor/systemprompt-core/crates/infra/cloud" }
-systemprompt-users = { path = "../.vendor/systemprompt-core/crates/domain/users" }
-systemprompt-oauth = { path = "../.vendor/systemprompt-core/crates/domain/oauth" }
-systemprompt-files = { path = "../.vendor/systemprompt-core/crates/domain/files" }
-systemprompt-analytics = { path = "../.vendor/systemprompt-core/crates/domain/analytics" }
-systemprompt-content = { path = "../.vendor/systemprompt-core/crates/domain/content" }
-systemprompt-ai = { path = "../.vendor/systemprompt-core/crates/domain/ai" }
-systemprompt-mcp = { path = "../.vendor/systemprompt-core/crates/domain/mcp" }
-systemprompt-agent = { path = "../.vendor/systemprompt-core/crates/domain/agent" }
-systemprompt-marketplace = { path = "../.vendor/systemprompt-core/crates/domain/marketplace" }
-systemprompt-templates = { path = "../.vendor/systemprompt-core/crates/domain/templates" }
-systemprompt-runtime = { path = "../.vendor/systemprompt-core/crates/app/runtime" }
-systemprompt-scheduler = { path = "../.vendor/systemprompt-core/crates/app/scheduler" }
-systemprompt-generator = { path = "../.vendor/systemprompt-core/crates/app/generator" }
-systemprompt-api = { path = "../.vendor/systemprompt-core/crates/entry/api" }
-systemprompt-cli = { path = "../.vendor/systemprompt-core/crates/entry/cli" }
-systemprompt-slack = { path = "../.vendor/systemprompt-core/crates/domain/slack" }
-systemprompt-teams = { path = "../.vendor/systemprompt-core/crates/domain/teams" }
+# [patch.crates-io]
+# systemprompt = { path = "../.vendor/systemprompt-core/systemprompt" }
+# systemprompt-models = { path = "../.vendor/systemprompt-core/crates/shared/models" }
+# systemprompt-traits = { path = "../.vendor/systemprompt-core/crates/shared/traits" }
+# systemprompt-identifiers = { path = "../.vendor/systemprompt-core/crates/shared/identifiers" }
+# systemprompt-extension = { path = "../.vendor/systemprompt-core/crates/shared/extension" }
+# systemprompt-provider-contracts = { path = "../.vendor/systemprompt-core/crates/shared/provider-contracts" }
+# systemprompt-client = { path = "../.vendor/systemprompt-core/crates/shared/client" }
+# systemprompt-template-provider = { path = "../.vendor/systemprompt-core/crates/shared/template-provider" }
+# systemprompt-database = { path = "../.vendor/systemprompt-core/crates/infra/database" }
+# systemprompt-events = { path = "../.vendor/systemprompt-core/crates/infra/events" }
+# systemprompt-security = { path = "../.vendor/systemprompt-core/crates/infra/security" }
+# systemprompt-config = { path = "../.vendor/systemprompt-core/crates/infra/config" }
+# systemprompt-logging = { path = "../.vendor/systemprompt-core/crates/infra/logging" }
+# systemprompt-loader = { path = "../.vendor/systemprompt-core/crates/infra/loader" }
+# systemprompt-cloud = { path = "../.vendor/systemprompt-core/crates/infra/cloud" }
+# systemprompt-users = { path = "../.vendor/systemprompt-core/crates/domain/users" }
+# systemprompt-oauth = { path = "../.vendor/systemprompt-core/crates/domain/oauth" }
+# systemprompt-files = { path = "../.vendor/systemprompt-core/crates/domain/files" }
+# systemprompt-analytics = { path = "../.vendor/systemprompt-core/crates/domain/analytics" }
+# systemprompt-content = { path = "../.vendor/systemprompt-core/crates/domain/content" }
+# systemprompt-ai = { path = "../.vendor/systemprompt-core/crates/domain/ai" }
+# systemprompt-mcp = { path = "../.vendor/systemprompt-core/crates/domain/mcp" }
+# systemprompt-agent = { path = "../.vendor/systemprompt-core/crates/domain/agent" }
+# systemprompt-marketplace = { path = "../.vendor/systemprompt-core/crates/domain/marketplace" }
+# systemprompt-templates = { path = "../.vendor/systemprompt-core/crates/domain/templates" }
+# systemprompt-runtime = { path = "../.vendor/systemprompt-core/crates/app/runtime" }
+# systemprompt-scheduler = { path = "../.vendor/systemprompt-core/crates/app/scheduler" }
+# systemprompt-generator = { path = "../.vendor/systemprompt-core/crates/app/generator" }
+# systemprompt-api = { path = "../.vendor/systemprompt-core/crates/entry/api" }
+# systemprompt-cli = { path = "../.vendor/systemprompt-core/crates/entry/cli" }
+# systemprompt-slack = { path = "../.vendor/systemprompt-core/crates/domain/slack" }
+# systemprompt-teams = { path = "../.vendor/systemprompt-core/crates/domain/teams" }

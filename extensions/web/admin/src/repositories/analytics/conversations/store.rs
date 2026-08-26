@@ -41,6 +41,7 @@ pub async fn upsert_session_transcript(
         .iter()
         .map(|e| usage_total(e, "output_tokens"))
         .sum();
+    // JSON: third-party Claude Code transcript shape; see entry_field above.
     let model = entries_vec
         .iter()
         .rev()
