@@ -4,68 +4,14 @@
     "name": "Astound Digital"
   },
   "metadata": {
-    "description": "A Salesforce-first workspace: plain-English assistants for your deals, accounts, contacts, leads, cases, and to-dos. One plugin per common object, each bundling skills, dashboards, and the Salesforce MCP server.",
-    "version": "3.1.0"
+    "description": "The reduced Astound Digital workspace: the systemprompt admin plugin (admin skills, dashboards, and the systemprompt MCP server). The Salesforce, commons, and dev suites return in later stages — full set preserved on the backup/full-marketplace-and-skills branch.",
+    "version": "4.0.0"
   },
   "plugins": [
-    {
-      "name": "astound-commons",
-      "source": "./storage/files/plugins/astound-commons",
-      "description": "First-run workspace setup (installs the Salesforce dashboards into your Artifacts library) plus shared brand skills: voice, document formatting, client email, company boilerplate, and terminology",
-      "version": "2.0.0"
-    },
     {
       "name": "astound-admin",
       "source": "./storage/files/plugins/astound-admin",
       "description": "Admin-only control plane: who is using the platform, what it costs, what failed, and why. Ships the systemprompt CLI server plus governance, analytics, and operations skills, and three live dashboards.",
-      "version": "1.0.0"
-    },
-    {
-      "name": "astound-salesforce",
-      "source": "./storage/files/plugins/astound-salesforce",
-      "description": "Your Salesforce assistant: what it can do, and how to ask in plain English across deals, accounts, contacts, leads, cases, and tasks",
-      "version": "1.0.0"
-    },
-    {
-      "name": "astound-dev",
-      "source": "./storage/files/plugins/astound-dev",
-      "description": "Astound's development workflow for Salesforce Commerce Cloud / Storefront Next projects: plan (open spec & architecture), build (Storefront Next conventions), release (commits & PRs), and test (Playwright verification)",
-      "version": "1.0.0"
-    },
-    {
-      "name": "astound-salesforce-opportunities",
-      "source": "./storage/files/plugins/astound-salesforce-opportunities",
-      "description": "Work with your Salesforce opportunities: find deals, read your pipeline and forecast, and safely create and update deals",
-      "version": "1.0.0"
-    },
-    {
-      "name": "astound-salesforce-accounts",
-      "source": "./storage/files/plugins/astound-salesforce-accounts",
-      "description": "Work with your Salesforce accounts: find customers, get a 360° briefing before a call, and safely create and update account records",
-      "version": "1.0.0"
-    },
-    {
-      "name": "astound-salesforce-contacts",
-      "source": "./storage/files/plugins/astound-salesforce-contacts",
-      "description": "Work with the people in your Salesforce: find contacts, get briefed on who you know at an account, and safely create and update contact records",
-      "version": "1.0.0"
-    },
-    {
-      "name": "astound-salesforce-leads",
-      "source": "./storage/files/plugins/astound-salesforce-leads",
-      "description": "Work with your Salesforce leads: find and filter prospects, read your funnel insights, and safely capture and update leads",
-      "version": "1.0.0"
-    },
-    {
-      "name": "astound-salesforce-cases",
-      "source": "./storage/files/plugins/astound-salesforce-cases",
-      "description": "Work with your Salesforce support cases: find cases, read your queue and backlog, and safely create and update cases",
-      "version": "1.0.0"
-    },
-    {
-      "name": "astound-salesforce-activities",
-      "source": "./storage/files/plugins/astound-salesforce-activities",
-      "description": "Work with your Salesforce activities: find what's due and overdue, read your day and week at a glance, and safely log calls, set follow-ups, and schedule meetings",
       "version": "1.0.0"
     }
   ]

@@ -55,5 +55,10 @@ plugin:
       - admin-users-directory
       - admin-activity-requests
       - admin-usage-costs
-  # No hooks: astound-commons owns the session-global governance hooks, and
+  # Claude Code runs plugin hooks session-globally, so the governance hooks
+  # are declared once here and cover every tool call in the session. This
+  # ownership moved from astound-commons when the marketplace was reduced
+  # (backup/full-marketplace-and-skills) — no other plugin should set this:
   # each extra owner is another govern call per tool.
+  hooks:
+    governance: true
