@@ -13,6 +13,13 @@ state — wait for the task, then come back for the part that applies.
 
 ---
 
+## Branching (this repo)
+
+**Astound works directly on `main`. Commit and push to `main`.** There is no
+`next`-branch promotion flow here — that convention belongs to other repos in
+the family; do not import it. The gates below (`just verify` / `just preflight`)
+are still the bar a commit must clear, and deploys run from `main`.
+
 ## Quick Start
 
 ```bash
