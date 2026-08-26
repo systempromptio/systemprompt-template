@@ -71,4 +71,10 @@ Every capability on this page is proven by tagged end-to-end tests run against a
 | REQ-030 | The enabled safety chain flags jailbreak patterns and PII, blocks a flagged buffered response, and audits a streamed one | `just e2e-req REQ-030` |
 | REQ-036 | Secret patterns and the entropy backstop catch credential egress, and transcripts render detected values redacted | `just e2e-req REQ-036` |
 
-These REQs' Playwright specs live under `playwright/tests/requirements/`, with gateway-level proofs in the `req_030_*` / `req_036_*` Rust modules under `tests/integration/` (run with `just test-integration`). No screenshots exist for them yet — the pack grows with `just e2e-screens`.
+These REQs' Playwright specs live under `playwright/tests/requirements/`, with gateway-level proofs in the `req_030_*` / `req_036_*` Rust modules under `tests/integration/` (run with `just test-integration`).
+
+### Screenshots
+
+![A policy denial landing in the same audit chain as the request, with the policy named](/files/images/evidence/req-026-requests-audit.png)
+
+![The governed request status log the quota guard reads](/files/images/evidence/req-033-requests-log.png)

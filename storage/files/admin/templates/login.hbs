@@ -15,9 +15,9 @@
                 <div class="auth-badge">Astound Digital &middot; Internal AI Platform</div>
                 <h2>Welcome</h2>
                 <p>
-                    This is Astound Digital's internal AI platform. Sign in with your Salesforce
-                    account, or create an account with your work email and a passkey. Salesforce
-                    can be connected later from your profile. No passwords are created or stored.
+                    This is Astound Digital's internal AI platform. Sign in with your work
+                    email and a passkey. No passwords are created or stored. Salesforce can
+                    be connected later from your profile.
                 </p>
 
                 <details class="auth-more">
@@ -26,7 +26,7 @@
 
                 <h2>Getting Started</h2>
                 <div class="auth-flow-steps">
-                    <div class="auth-flow-step"><span class="step-num">1</span><span>Sign in with Salesforce, or create an account with your Astound work email and a passkey</span></div>
+                    <div class="auth-flow-step"><span class="step-num">1</span><span>Create an account with your Astound work email and a passkey</span></div>
                     <div class="auth-flow-step"><span class="step-num">2</span><span>Download the desktop bridge for <a href="/files/downloads/astound-bridge-macos.dmg">Mac</a>, <a href="/files/downloads/astound-bridge-windows.exe">Windows</a>, or <a href="/files/downloads/astound-bridge-linux-x86_64.tar.gz">Linux</a></span></div>
                     <div class="auth-flow-step"><span class="step-num">3</span><span>Approve the device link &mdash; the bridge installs your Cowork profile and syncs your skills</span></div>
                     <div class="auth-flow-step"><span class="step-num">4</span><span>Use Astound skills and your own Salesforce data directly inside your AI tools</span></div>
@@ -35,11 +35,7 @@
                 <hr class="auth-divider">
 
                 <h2>How Sign-In Works</h2>
-                <p>Salesforce sign-in happens against Astound's Salesforce org over OAuth 2.0 with PKCE,
-                    so your org's existing login policies &mdash; including MFA &mdash; apply unchanged.
-                    Your first sign-in provisions your account automatically, provided your work email
-                    is verified and on an allow-listed domain.</p>
-                <p>Email registration is limited to the same allow-listed work-email domains. Instead
+                <p>Email registration is limited to allow-listed work-email domains. Instead
                     of a password you create a passkey &mdash; Touch&nbsp;ID, Windows&nbsp;Hello, or your
                     phone &mdash; and sign in with it from then on. You can connect your Salesforce
                     account afterwards from your profile page, but it is optional.</p>
@@ -48,9 +44,8 @@
 
                 <h2>Trouble Signing In?</h2>
                 <p>
-                    If Salesforce sign-in is refused, the message above the button explains why.
-                    Platform operators who have lost passkey access should contact the platform
-                    team for a new setup link.
+                    If you have lost access to your passkey, contact the platform team for a
+                    new setup link.
                 </p>
                 </details>
             </div>
@@ -70,18 +65,7 @@
 
                         <div id="error" class="login-error" role="alert" aria-live="polite"></div>
 
-                        <div class="sso-block">
-                            {{!-- redirect_encoded carries where the user was headed
-                                  before the gate bounced them here, so flows that
-                                  start outside the console (device-link) resume
-                                  after sign-in instead of landing on the dashboard. --}}
-                            <a id="salesforce-login" href="/admin/auth/salesforce/start{{#if redirect_encoded}}?redirect={{redirect_encoded}}{{/if}}" class="btn w-full sso-btn">
-                                Sign in with Salesforce
-                            </a>
-                            <div class="sso-divider"><span>or use a passkey</span></div>
-                        </div>
-
-                        <div id="login-form" hidden>
+                        <div id="login-form">
                             <div class="form-group">
                                 <label for="login-email">Email</label>
                                 <input class="form-input" type="email" id="login-email" placeholder="you@astounddigital.com" required autocomplete="email" aria-describedby="error">

@@ -98,4 +98,10 @@ Every capability on this page is proven by tagged end-to-end tests run against a
 | REQ-037 | A route with a `requires:` block refuses to boot on a non-satisfying provider and denies at dispatch with an audit row | `just e2e-req REQ-037` |
 | REQ-038 | A `requires: {no_retain: true}` route only ever dispatches to a provider whose governance metadata satisfies it | `just e2e-req REQ-038` |
 
-These REQs are gateway-level: their Playwright specs live under `playwright/tests/requirements/` and their protocol proofs in the `req_018_*`–`req_038_*` Rust modules under `tests/integration/` (run with `just test-integration`). No screenshots exist for them yet — the pack grows with `just e2e-screens`.
+These REQs are gateway-level: their Playwright specs live under `playwright/tests/requirements/` and their protocol proofs in the `req_018_*`–`req_038_*` Rust modules under `tests/integration/` (run with `just test-integration`).
+
+### Screenshots
+
+![The gateway routing configuration, including the requires/no_retain policy block](/files/images/evidence/req-037-gateway-routes.png)
+
+![Per-model latency and spend reported for the same period](/files/images/evidence/req-018-models-latency.png)

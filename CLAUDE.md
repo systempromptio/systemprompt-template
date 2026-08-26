@@ -290,6 +290,37 @@ issue: `systemprompt admin bridge issue-code --user-id <email>`.
 
 ---
 
+## Operating on production from this machine
+
+Two separate auth planes; nothing tells you which one a command wants:
+
+| plane | command | what it unlocks |
+|-------|---------|-----------------|
+| Cloud (Fly/registry) | `just login` (= `cloud auth login production`) | `just deploy` / `cloud deploy`, image push |
+| Instance admin session | `systemprompt admin session login` (production profile active) | remote-routed CLI commands (`infra db`, `infra logs`, `analytics`, …) |
+
+Remote routing needs BOTH of these true, or it fails with circular-looking
+errors:
+
+1. **`database.external_db_access: true`** in
+   `.systemprompt/profiles/production/profile.yaml`. Without it the CLI
+   resolves the Fly-internal DB hostname (`iad.…internal` — unresolvable off
+   the Fly network) and bootstrap dies before anything runs. With it, the
+   `external_database_url` secret (public `db.systemprompt.io`) is used and
+   local `/app` path validation is skipped.
+2. **An admin session for the production profile**:
+   `systemprompt admin session switch production`, then
+   `systemprompt admin session login`. The session is minted directly against
+   the external DB and stored in `.systemprompt/sessions/`; remote-routed
+   commands then execute on the tenant (`Remote` target) with that token.
+   (Core older than the 2026-08-26 `next` fix refused `session login` on
+   external-DB profiles — the guard exempted only `admin users`.)
+
+A CLI **session token is not a gateway credential** — `/v1/messages` wants a
+PAT or bridge JWT plus an `x-session-id` header; a session token fails with
+`kid does not match any known signing key`. To exercise inference, use a PAT
+(see Debugging below), never the session token.
+
 ## Debugging & Troubleshooting
 
 ```bash

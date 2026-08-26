@@ -1,7 +1,9 @@
-// The requirements evidence pack: one full-page screenshot per REQ row of
-// requirements/compliance-register.md, written into the tracked
-// requirements/evidence/ directory alongside an index.md recording the URL and
-// principal each came from.
+// The requirements evidence pack: one full-page screenshot per REQ row of the
+// requirements register (the xlsx is the master), written into the tracked
+// storage/files/images/evidence/ directory alongside an index.md recording the
+// URL and principal each came from. The documentation pages under
+// services/content/documentation/enterprise-*.md embed these PNGs as
+// /files/images/evidence/<name>.png.
 //
 // Written straight into the repo rather than into a gitignored scratch
 // directory that someone then hand-copies: the previous pack under
@@ -10,7 +12,7 @@
 //
 // Reuses the storageStates minted by global-setup; run `just e2e` (or any spec)
 // first if .auth/ is empty, or this script mints them itself via the same setup.
-import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from '@playwright/test';
 import globalSetup, { AUTH } from '../setup/global-setup';
@@ -19,8 +21,10 @@ const HERE = __dirname;
 const BASE = process.env.GATEWAY_URL ?? 'http://localhost:8080';
 
 // Named by requirement, not by page: this directory is the evidence pack for
-// requirements/compliance-register.md, and a reviewer reading a register row
-// needs to find its screenshot by its REQ id.
+// the requirements register, and a reviewer reading a register row needs to
+// find its screenshot by its REQ id. A REQ whose surface is the same URL as an
+// existing entry reuses that entry's PNG in the docs rather than capturing a
+// duplicate file of the same bytes.
 const PAGES: { name: string; path: string; state: string }[] = [
   { name: 'req-002-login-invite-only', path: '/admin/login', state: '' },
 
@@ -86,7 +90,23 @@ const PAGES: { name: string; path: string; state: string }[] = [
     state: AUTH.platformAdmin,
   },
 
-  { name: 'requests-log', path: '/admin/entities/requests', state: AUTH.platformAdmin },
+  {
+    // REQ-033's quota guard reads this same status log; the log tab is the
+    // surface the spec asserts on.
+    name: 'req-033-requests-log',
+    path: '/admin/entities/requests?tab=log&preset=30d',
+    state: AUTH.platformAdmin,
+  },
+  {
+    name: 'req-018-models-latency',
+    path: '/admin/entities/requests?tab=models&preset=30d',
+    state: AUTH.platformAdmin,
+  },
+  {
+    name: 'req-029-latency-slo',
+    path: '/admin/analytics?tab=spend&org=e2e-corp&slo_ms=2000',
+    state: AUTH.platformAdmin,
+  },
 
   // req-007-code-tab is deliberately NOT a separate entry: the Code tab is
   // already captured above as req-007-008-code-tab, and a second file of the
@@ -114,6 +134,16 @@ const PAGES: { name: string; path: string; state: string }[] = [
     path: '/admin/catalog/mcp',
     state: AUTH.admin,
   },
+  {
+    name: 'req-040-plugin-catalog',
+    path: '/admin/catalog/plugins',
+    state: AUTH.admin,
+  },
+  {
+    name: 'req-040-skills-catalog',
+    path: '/admin/catalog/skills',
+    state: AUTH.admin,
+  },
 ];
 
 async function main() {
@@ -123,7 +153,7 @@ async function main() {
   // reported success. globalSetup is idempotent, so re-running it is cheap.
   await globalSetup({ projects: [{ use: { baseURL: BASE } }] } as never);
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const outDir = join(HERE, '..', '..', 'requirements', 'evidence');
+  const outDir = join(HERE, '..', '..', 'storage', 'files', 'images', 'evidence');
   mkdirSync(outDir, { recursive: true });
 
   const browser = await chromium.launch();
@@ -157,7 +187,8 @@ async function main() {
   const manifest = [
     `# Requirements evidence pack`,
     ``,
-    `Screenshot evidence for [compliance-register.md](../compliance-register.md).`,
+    `Screenshot evidence for the requirements register (xlsx master). The`,
+    `documentation pages embed these as \`/files/images/evidence/<name>.png\`.`,
     `Regenerate with \`just e2e-screens\` against a running \`just start\`; this file`,
     `is written by the same script, so it cannot drift from the images beside it.`,
     ``,
@@ -175,18 +206,7 @@ async function main() {
   ].join('\n');
   writeFileSync(join(outDir, 'index.md'), `${manifest}\n`);
 
-  // The docs site embeds these under /files/images/evidence/<name>.png, so a
-  // regenerated pack must land in the published asset tree in the same run —
-  // otherwise the site keeps showing screenshots the register no longer means.
-  // requirements/evidence/ stays the pack of record (index.md included); this
-  // is a mirror of the PNGs only.
-  const siteDir = join(HERE, '..', '..', 'storage', 'files', 'images', 'evidence');
-  mkdirSync(siteDir, { recursive: true });
-  for (const p of PAGES) {
-    copyFileSync(join(outDir, `${p.name}.png`), join(siteDir, `${p.name}.png`));
-  }
-
-  console.log(`screenshots in ${outDir}, mirrored to ${siteDir}`);
+  console.log(`screenshots in ${outDir}`);
 }
 
 main().catch((e) => {

@@ -74,4 +74,14 @@ Every capability on this page is proven by tagged end-to-end tests run against a
 | REQ-042 | The registry enforces per-server auth/scopes/audience and plan entitlement, and JTI revocation kills an issued token | `just e2e-req REQ-042` |
 | REQ-043 | Registration of a server with a missing or invalid manifest fails fast; tool schemas are captured at discovery | `just e2e-req REQ-043` |
 
-These REQs' Playwright specs live under `playwright/tests/requirements/`, with gateway-level proofs in the `req_040_*`–`req_043_*` Rust modules under `tests/integration/` (run with `just test-integration`). No screenshots exist for them yet — the pack grows with `just e2e-screens`.
+These REQs' Playwright specs live under `playwright/tests/requirements/`, with gateway-level proofs in the `req_040_*`–`req_043_*` Rust modules under `tests/integration/` (run with `just test-integration`).
+
+### Screenshots
+
+![The MCP server catalog with the systemprompt server registered and its admin scope visible](/files/images/evidence/req-042-mcp-catalog.png)
+
+![The plugin catalog listing centrally-managed bundles](/files/images/evidence/req-040-plugin-catalog.png)
+
+![The skills catalog listing distributable skill entries](/files/images/evidence/req-040-skills-catalog.png)
+
+![A denied tool call surfacing as a DENY with its governing policy and tool named](/files/images/evidence/req-026-requests-audit.png)

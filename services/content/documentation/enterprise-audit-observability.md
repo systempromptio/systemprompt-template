@@ -76,4 +76,14 @@ Every capability on this page is proven by tagged end-to-end tests run against a
 | REQ-028 | OTLP telemetry is ingested and audit events stream live over SSE | `just e2e-req REQ-028` |
 | REQ-031 | An induced cost/volume/error spike is detected by the anomaly job and raises a Slack alert | `just e2e-req REQ-031` |
 
-These REQs' Playwright specs live under `playwright/tests/requirements/`, with gateway-level proofs in the `req_026_*`–`req_031_*` Rust modules under `tests/integration/` (run with `just test-integration`). No screenshots exist for them yet — the pack grows with `just e2e-screens`.
+These REQs' Playwright specs live under `playwright/tests/requirements/`, with gateway-level proofs in the `req_026_*`–`req_031_*` Rust modules under `tests/integration/` (run with `just test-integration`).
+
+### Screenshots
+
+![A request audit record showing actor, model, policy chain, cost, and trace ids](/files/images/evidence/req-026-requests-audit.png)
+
+![One trace id resolving the full chain: session, identity, and spans](/files/images/evidence/req-027-trace-chain.png)
+
+![Latency reported against a configured SLO threshold on the spend dashboard](/files/images/evidence/req-029-latency-slo.png)
+
+![The spend dashboard's budget warnings and anomalies sections](/files/images/evidence/req-009-spend-meters.png)

@@ -1622,12 +1622,13 @@ e2e-seed *ARGS:
 
 # Capture the requirements evidence pack -- one named screenshot per REQ row,
 # plus an index.md recording the URL and principal each came from -- into the
-# gitignored playwright/screenshots/<stamp>/ directory (needs `just start`).
+# tracked storage/files/images/evidence/ directory the documentation pages
+# embed (needs `just start`).
 e2e-screens:
     cd playwright && npx tsx scripts/capture.ts
 
-# Prove one requirements-register row end to end (see
-# requirements/compliance-register.md). Needs `just start` and `just e2e-seed`.
+# Prove one requirements-register row end to end (the xlsx register is the
+# master). Needs `just start` and `just e2e-seed`.
 e2e-req REQ:
     cd playwright && npx playwright test --grep "@{{REQ}}"
 
