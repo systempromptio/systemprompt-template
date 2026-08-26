@@ -355,10 +355,14 @@ verify: preflight-static preflight-lint test
 preflight: preflight-static preflight-lint test coverage-check
 
 # Tier 0 — seconds. Formatting, sqlx cache freshness, and the source gates.
+# The gates run UNCOORDINATED here on purpose: they are read-only shell
+# checks, so queueing them on the build lock only made pre-push hang behind
+# whoever was mid test run. `just lint-gates` stays coordinated for callers
+# that want dedupe (clippy's dependency).
 preflight-static:
     cargo fmt --all -- --check
     bash scripts/check-sqlx-cache.sh
-    {{just_executable()}} lint-gates
+    {{just_executable()}} _lint-gates-uncoordinated
 
 # Tier 1 — compilers. Clippy (both workspaces), rustdoc as errors, MSRV.
 preflight-lint:
