@@ -1,13 +1,23 @@
 name: Quality
 
 on:
-  push:
-    branches: [main]
+  workflow_call:
+    inputs:
+      ref:
+        description: "Commit SHA or branch to gate. Defaults to the triggering ref."
+        type: string
+        required: false
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit SHA or branch to gate. Defaults to the triggering ref."
+        type: string
+        required: false
   pull_request:
-    branches: [main]
+    branches: [main, next]
 
 concurrency:
-  group: quality-${{ github.ref }}
+  group: quality-${{ inputs.ref || github.ref }}
   cancel-in-progress: true
 
 env:
@@ -23,6 +33,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       # Clippy runs on the pinned nightly (channel + clippy component) declared
       # in rust-toolchain.toml, which `rustup show` installs — so lint results
       # match local `just clippy` with no channel duplicated here.
@@ -37,6 +49,8 @@ jobs:
       RUSTDOCFLAGS: "-D warnings"
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo doc --workspace --no-deps
@@ -46,6 +60,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       - name: Install ripgrep
         run: sudo apt-get update && sudo apt-get install -y ripgrep
       # The five structural gate scripts ported from systemprompt-core, plus the
@@ -96,6 +112,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       # No extension source file (excluding tests) may exceed 300 lines. Same
       # script as `just file-size`.
       - name: Enforce 300-line ceiling on extension sources
@@ -106,6 +124,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       - uses: dtolnay/rust-toolchain@1.94.0
       - uses: Swatinem/rust-cache@v2
       - run: cargo check --workspace
@@ -118,6 +138,8 @@ jobs:
       checks: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       - uses: rustsec/audit-check@v2.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -127,6 +149,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
           command: check
@@ -136,6 +160,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-machete
