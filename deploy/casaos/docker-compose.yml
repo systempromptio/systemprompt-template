@@ -8,7 +8,7 @@
 name: systemprompt
 services:
   app:
-    image: ghcr.io/systempromptio/systemprompt-template:0.39.0
+    image: ghcr.io/systempromptio/systemprompt-template:0.40.0
     restart: unless-stopped
     depends_on:
       postgres:
@@ -102,7 +102,7 @@ x-casaos:
   port_map: "8080"
   scheme: http
   index: /
-  version: "0.39.0"
+  version: "0.40.0"
   update_at: "2026-07-16"
   title:
     en_US: systemprompt
