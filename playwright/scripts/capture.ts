@@ -16,6 +16,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from '@playwright/test';
 import globalSetup, { AUTH } from '../setup/global-setup';
+import { driveFlows } from '../setup/flows';
 
 const HERE = __dirname;
 const BASE = process.env.GATEWAY_URL ?? 'http://localhost:8080';
@@ -144,6 +145,11 @@ const PAGES: { name: string; path: string; state: string }[] = [
     path: '/admin/catalog/skills',
     state: AUTH.admin,
   },
+  {
+    name: 'req-045-history',
+    path: '/admin/history',
+    state: AUTH.admin,
+  },
 ];
 
 async function main() {
@@ -152,6 +158,9 @@ async function main() {
   // every capture became a photograph of the login page and the script still
   // reported success. globalSetup is idempotent, so re-running it is cheap.
   await globalSetup({ projects: [{ use: { baseURL: BASE } }] } as never);
+  // Populate the surfaces with traffic that really transited the stack —
+  // screenshots of empty pages are not evidence.
+  await driveFlows(BASE);
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   const outDir = join(HERE, '..', '..', 'storage', 'files', 'images', 'evidence');
   mkdirSync(outDir, { recursive: true });

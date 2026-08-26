@@ -151,6 +151,8 @@ docs_sidebar:
         href: "/documentation/enterprise-model-routing"
       - label: "Audit & Observability"
         href: "/documentation/enterprise-audit-observability"
+      - label: "Conversation History & Search"
+        href: "/documentation/enterprise-conversation-history"
       - label: "Content Safety & Guardrails"
         href: "/documentation/enterprise-safety-guardrails"
       - label: "MCP & Tool Governance"

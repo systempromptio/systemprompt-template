@@ -61,6 +61,24 @@ related_docs:
 
 **Honest note:** not yet available; prompt content today is versioned the way the rest of your configuration is — in git.
 
+### Enterprise knowledge platform (RAG)
+
+**What it will do:** governed retrieval over enterprise knowledge — Jira, Confluence, GitHub, and Salesforce — through a `knowledge-bank` MCP server, with source-system permissions respected at retrieval time.
+
+**Current state:** the MCP server ships today (visible in the [MCP catalog](/documentation/enterprise-tool-governance), disabled by default) with its three-tool contract — `search_knowledge`, `list_knowledge_sources`, `knowledge_index_stats` — pinned by tests. It answers honestly that no retrieval backend is configured; the retrieval backend is the piece being built. [Conversation history search](/documentation/enterprise-conversation-history) is live and is the foundation the conversations-as-knowledge experience builds on.
+
+### ADFS SSO
+
+**What it will do:** authenticate through Astound's ADFS, with Active Directory groups mapping to platform roles and permissions.
+
+**Current state:** the OIDC path is proven end-to-end (the Salesforce identity flow runs on the same primitives) and a generic trusted-issuer seam is ready. The protocol choice and the AD-group → role mapping rules are the inputs still needed before implementation.
+
+### OpenAI-compatible IDE endpoint
+
+**What it will do:** a `/openai/v1/chat/completions` endpoint so OpenCode and VS Code Copilot route IDE traffic through platform governance to approved models (including GCP Vertex AI), with per-role model access and monthly budgets.
+
+**Current state:** the gateway already speaks the OpenAI wire on its existing endpoints; the dedicated OpenAI-path endpoint, the Vertex AI provider, and per-role monthly budget policies are the build items.
+
 ## Known limitations
 
 | Limitation | Current state | Where it is discussed |

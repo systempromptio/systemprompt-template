@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO session_transcripts\n            (id, user_id, session_id, plugin_id, transcript,\n             total_input_tokens, total_output_tokens, model, entries_counted, captured_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())\n        ON CONFLICT (id) DO UPDATE SET\n            transcript = EXCLUDED.transcript,\n            plugin_id = COALESCE(EXCLUDED.plugin_id, session_transcripts.plugin_id),\n            total_input_tokens = EXCLUDED.total_input_tokens,\n            total_output_tokens = EXCLUDED.total_output_tokens,\n            model = COALESCE(EXCLUDED.model, session_transcripts.model),\n            entries_counted = EXCLUDED.entries_counted,\n            captured_at = NOW()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Int8",
+        "Int8",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "42795ae25640621005dcd16444ac16726a3cb2d54447634f82ab2db627d16d45"
+}

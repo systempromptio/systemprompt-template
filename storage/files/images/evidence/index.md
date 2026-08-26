@@ -5,7 +5,7 @@ documentation pages embed these as `/files/images/evidence/<name>.png`.
 Regenerate with `just e2e-screens` against a running `just start`; this file
 is written by the same script, so it cannot drift from the images beside it.
 
-Captured 2026-08-26T13-17-32 against http://localhost:8080.
+Captured 2026-08-26T14-55-02 against http://localhost:8080.
 Principals come from the deterministic e2e seed (`just e2e-seed --reset`).
 
 | File | Path | Principal |
@@ -32,3 +32,4 @@ Principals come from the deterministic e2e seed (`just e2e-seed --reset`).
 | req-042-mcp-catalog.png | `/admin/catalog/mcp` | admin |
 | req-040-plugin-catalog.png | `/admin/catalog/plugins` | admin |
 | req-040-skills-catalog.png | `/admin/catalog/skills` | admin |
+| req-045-history.png | `/admin/history` | admin |

@@ -8,6 +8,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { FullConfig } from '@playwright/test';
 import { mintToken } from './mint-token';
+import { startMockInference } from './mock-inference';
 import { E2E, E2E_SESSIONS, seed } from './seed';
 
 const REPO = join(__dirname, '..', '..');
@@ -85,6 +86,10 @@ export default async function globalSetup(config: FullConfig) {
     );
   }
   if (!health.ok) throw new Error(`health check at ${baseURL}/health returned ${health.status}`);
+
+  // The mock lives in the runner process and dies with it; the gateway
+  // reaches it through the `e2e-mock` provider in the local profile.
+  await startMockInference();
 
   await seed();
 

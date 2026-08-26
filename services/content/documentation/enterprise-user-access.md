@@ -80,6 +80,10 @@ SCIM provisioning is not offered — neither Salesforce (as IdP) nor Odoo pushes
 
 Share tokens and access grants carry expiry: share tokens honour an expiry timestamp, and grants respect a `valid_until` boundary. Invites, setup tokens, and JWTs are already time-bound, so no standing credential lives forever by default. There is currently no forced maximum PAT lifetime policy — for contractors, lean on account-level disable plus PAT revocation (see the [roadmap](/documentation/enterprise-roadmap)).
 
+## Context-aware access control
+
+What a session can reach — MCP servers, gateway routes and models, plugins — is decided per request from the user's **current context**: role, organization, department, and derived state such as whether a Salesforce identity is linked. Rules are evaluated deny-overrides with narrowest-band-wins, and an entity that has rules **defaults to deny** for anyone the rules don't name. Two users with different contexts get different authorized sets from the same instance, and unlinking or demotion narrows access on the next request.
+
 ## Verified evidence
 
 Every capability on this page is proven by tagged end-to-end tests run against a seeded instance. To replicate: `just start`, then `just e2e-seed --reset`, then the command in the table. Screenshots regenerate with `just e2e-screens`.
@@ -90,6 +94,7 @@ Every capability on this page is proven by tagged end-to-end tests run against a
 | REQ-002 | An unapproved visitor cannot register on any of the three doors; an admin invite is the only working path in | `just e2e-req REQ-002` |
 | REQ-023 | The login page is passkey-only (no SSO door), Salesforce linking lives on the profile, and the reconciliation job disables a user removed in Salesforce | `just e2e-req REQ-023` |
 | REQ-025 | Share tokens and grants stop working after their expiry / `valid_until` boundary | `just e2e-req REQ-025` |
+| REQ-044 | Role, organization, department, and Salesforce-linked context each change the authorized entity set; deny overrides allow; ruled entities default to deny | `just test-integration` |
 
 ![The user roster at /admin/access/users with search and role columns](/files/images/evidence/req-001-users-roster.png)
 *The user roster: search, roles, status, and last-active at a glance.*

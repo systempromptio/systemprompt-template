@@ -18,6 +18,7 @@ mod detail;
 pub mod history;
 mod redact;
 pub mod scope;
+mod store;
 mod transcript;
 
 pub use detail::find_raw_turns;
@@ -27,6 +28,7 @@ pub use scope::{
     HistoryScope, has_full_history_view, history_scope_for, list_managed_member_ids,
     resolve_history_scope,
 };
+pub use store::upsert_session_transcript;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ConversationListItem {
