@@ -8,6 +8,43 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## Branching & Release Flow
+
+**All work lands on `next`. Never push to `main`.**
+
+`main` is protected by a ruleset that requires a pull request and grants **no
+bypass to anyone** — a direct `git push origin main` is refused for agents,
+sessions and repository admins alike. That is deliberate: it is the mechanism,
+not a convention you could talk your way around.
+
+```
+next   ← every agent, every session, every commit. Push freely.
+  ↓ nightly (03:17 UTC): auto-fix → full gate cycle → promote (only if green)
+main   ← protected, release-only. Tagged. Never pushed to directly.
+```
+
+**Do not run the pre-release gate cycle to land ordinary work.** The full cycle is expensive and
+runs **once nightly** (`.github/workflows/nightly.yml`), not on your push.
+Committing and pushing to `next` without gating is the intended workflow.
+
+What the nightly does, in order:
+
+1. **Auto-fixes the mechanical standards** — rustfmt across every workspace in
+   the repo plus clippy's machine-applicable suggestions — and commits the
+   result straight back to `next`. **Do not spend a turn on formatting**; it is
+   applied for you. Anything needing judgement is not touched.
+2. **Runs the whole cycle** (CI, Quality) against that commit.
+3. **Promotes `next` → `main`** by merging a pull request, but only when every
+   gate is green. A failure leaves `main` at its last good commit.
+
+So the standard obligations still hold — your commit should compile and its own
+tests should pass, and the coding standards below are not optional — but
+*proving* it across the whole repo is not your turn to spend. A red gate is the
+highest-priority work next morning: `main` is frozen until it is green.
+
+Releasing is a separate, deliberate act (the gateway release tag drives `release-gateway.yml`), run on demand from a
+green `main` — never automatically.
+
 ## Quick Start
 
 ```bash

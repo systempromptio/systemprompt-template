@@ -142,17 +142,25 @@ jobs:
             echo "main already contains $SHA — nothing to promote."
             exit 0
           fi
+          # `gh pr create` has no --json flag: it prints the URL. Ask for the
+          # number separately rather than trying to capture it from the create.
           NUM=$(gh pr list --base main --head next --state open \
                   --json number --jq '.[0].number // empty')
           if [ -z "$NUM" ]; then
             gh pr create --base main --head next \
               --title "Promote next to main" \
-              --body "Opened by the Nightly workflow after every gate passed against \`$SHA\`." || true
+              --body "Opened by the Nightly workflow after every gate passed against \`$SHA\`."
             NUM=$(gh pr list --base main --head next --state open \
-                    --json number --jq '.[0].number')
+                    --json number --jq '.[0].number // empty')
+          fi
+          if [ -z "$NUM" ]; then
+            echo "::error::could not open or find a next -> main pull request"
+            exit 1
           fi
           echo "merging PR #$NUM"
-          gh pr merge "$NUM" --merge --admin
+          # No --admin: the ruleset requires 0 approvals, so an ordinary merge
+          # satisfies it. --admin would need admin rights GITHUB_TOKEN lacks.
+          gh pr merge "$NUM" --merge
           echo "promoted $SHA to main via PR #$NUM"
 
       - name: Summary
