@@ -112,12 +112,12 @@ just preflight          # the mandatory pre-merge gate: static → lint → test
 just preflight-static   # seconds: fmt, sqlx cache, 22 source gates
 just preflight-lint     # clippy (both workspaces), doc-check, msrv-check
 just preflight-full     # weekly: preflight + deny + audit + machete + hack
-just init-hooks         # once per clone: tracked .githooks/ (pre-commit + pre-push)
+just init-hooks         # once per clone: tracked .githooks/ (pre-commit only)
 ```
 
-`verify` = preflight minus the coverage tier; use it mid-iteration, `preflight`
-before merging. The pre-push hook runs the static tier automatically
-after `just init-hooks`.
+`verify` = preflight minus the coverage tier; use it mid-iteration. There is
+no pre-push hook and pushes to `next` are ungated; `just preflight` is run
+manually when landing `next` onto `main`.
 
 **Coverage floor + ratchet.** `just coverage` runs an instrumented llvm-cov
 pass over all three workspaces (root, `tests/`, `bridge/`) into

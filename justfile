@@ -460,8 +460,10 @@ coverage-clean:
     fi
     rm -rf coverage-report/
 
-# Point git at the tracked hooks (pre-commit patch-marker guard + fast gates,
-# pre-push static+lint tiers). Run once per clone.
+# Point git at the tracked hooks (pre-commit patch-marker guard + fast
+# gates). There is deliberately NO pre-push hook: pushes to next are free,
+# and `just preflight` is run manually when landing next -> main. Run once
+# per clone.
 init-hooks:
     git config core.hooksPath .githooks
     @echo "git hooks now sourced from .githooks/"
