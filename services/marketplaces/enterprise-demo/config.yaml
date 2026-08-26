@@ -1,41 +1,30 @@
 marketplace:
   id: enterprise-demo
-  name: "Astound Digital — Salesforce Productivity"
-  description: "A Salesforce-first workspace: plain-English assistants for your deals, accounts, contacts, leads, cases, and to-dos. One plugin per common object, each bundling skills, dashboards, and the Salesforce MCP server."
-  version: "3.1.0"
+  name: "Astound Digital — Platform Workspace"
+  description: "The reduced Astound Digital workspace: the systemprompt admin plugin (admin skills, dashboards, and the systemprompt MCP server). The Salesforce, commons, and dev suites return in later stages — full set preserved on the backup/full-marketplace-and-skills branch."
+  version: "4.0.0"
   visibility: public
   author:
     name: Astound Digital
     email: ed@systemprompt.io
   keywords:
-    - salesforce
-    - sales
-    - crm
+    - systemprompt
+    - admin
     - productivity
   license: proprietary
   access:
     default_included: true
     roles: [user]
-    justification: "Public Salesforce productivity workspace for signed-in users"
+    justification: "Public platform workspace for signed-in users"
   plugins:
     include:
-      - astound-commons
       - astound-admin
-      - astound-salesforce
-      - astound-dev
-      - astound-salesforce-opportunities
-      - astound-salesforce-accounts
-      - astound-salesforce-contacts
-      - astound-salesforce-leads
-      - astound-salesforce-cases
-      - astound-salesforce-activities
   mcp_servers:
     source: explicit
     include:
-      - salesforce
       - systemprompt
     exclude: []
-  # No agents are published by this marketplace. Plugins ship skills, the
-  # Salesforce MCP server, and artifacts only.
+  # No agents are published by this marketplace. Plugins ship skills and
+  # artifacts only.
   agents:
     include: []

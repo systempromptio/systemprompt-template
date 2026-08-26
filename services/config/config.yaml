@@ -9,7 +9,6 @@
 includes:
   # MCP servers
   - ../mcp/systemprompt.yaml
-  - ../mcp/salesforce.yaml
   - ../mcp/knowledge-bank.yaml
 
   # AI, scheduler, content
