@@ -1,6 +1,6 @@
 ---
 title: "User & Access Management"
-description: "Manage enterprise users from the admin UI: search, roles, invites, session and PAT revocation, closed registration, Salesforce SSO with gated JIT provisioning."
+description: "Manage enterprise users from the admin UI: search, roles, invites, session and PAT revocation, closed registration, passkey-only sign-in with Salesforce linked from the profile."
 author: "Astound Digital"
 slug: "enterprise-user-access"
 keywords: "users, access, roles, invites, sso, salesforce, pat, sessions, registration, deprovisioning"
@@ -26,7 +26,7 @@ related_docs:
 
 # User & Access Management
 
-**TL;DR:** Every user-lifecycle operation — search, create, role and status changes, disable or delete, session and personal-access-token revocation — lives in the admin UI at `/admin/access/users`. Self-registration is closed on all three doors; the only way in is an admin invite or Salesforce SSO with gated just-in-time provisioning, and a scheduled reconciliation job disables accounts removed in Salesforce.
+**TL;DR:** Every user-lifecycle operation — search, create, role and status changes, disable or delete, session and personal-access-token revocation — lives in the admin UI at `/admin/access/users`. Self-registration is closed on all three doors; the only way in is an admin invite followed by passkey enrolment. Salesforce is connected from the profile page after sign-in (it gates the Salesforce MCP and plugins), and a scheduled reconciliation job disables accounts removed in Salesforce.
 
 ## Managing users from the admin UI
 
@@ -66,7 +66,7 @@ An unapproved visitor cannot create an account or connect a Bridge. The only enr
 
 ## Salesforce SSO and deprovisioning
 
-"Sign in with Salesforce" uses OIDC with PKCE. Just-in-time provisioning is **gated**: an SSO login only creates an account when the instance's provisioning policy allows it — otherwise the login is refused.
+Salesforce sign-in is retired as a login-page entry point — the login page is passkey-only. The Salesforce OIDC (PKCE) flow remains for **connecting** a Salesforce identity from the profile page after sign-in, which is what gates access to the Salesforce MCP server and plugins. Where SSO-initiated provisioning is enabled, it is **gated**: an account is only created when the instance's provisioning policy allows it.
 
 Deprovisioning is automatic: a **scheduled reconciliation job** compares the local roster against Salesforce. A user who has been deactivated or removed in Salesforce is disabled here, with their sessions and personal access tokens revoked in the same pass.
 
@@ -88,7 +88,7 @@ Every capability on this page is proven by tagged end-to-end tests run against a
 |---|---|---|
 | REQ-001 | An admin can search, create, edit roles/status, disable, and revoke sessions and PATs for a user entirely from the admin UI | `just e2e-req REQ-001` |
 | REQ-002 | An unapproved visitor cannot register on any of the three doors; an admin invite is the only working path in | `just e2e-req REQ-002` |
-| REQ-023 | Salesforce OIDC sign-in works with gated JIT, and the reconciliation job disables a user removed in Salesforce | `just e2e-req REQ-023` |
+| REQ-023 | The login page is passkey-only (no SSO door), Salesforce linking lives on the profile, and the reconciliation job disables a user removed in Salesforce | `just e2e-req REQ-023` |
 | REQ-025 | Share tokens and grants stop working after their expiry / `valid_until` boundary | `just e2e-req REQ-025` |
 
 ![The user roster at /admin/access/users with search and role columns](/files/images/evidence/req-001-users-roster.png)

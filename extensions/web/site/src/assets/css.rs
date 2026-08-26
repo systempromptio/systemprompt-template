@@ -44,6 +44,7 @@ fn docs_css(p: &Path) -> Vec<AssetDefinition> {
         css!(p, "docs-layout.css"),
         css!(p, "docs-header.css"),
         css!(p, "docs-content.css"),
+        css!(p, "docs-evidence-gallery.css"),
         css!(p, "docs-pagination.css"),
         css!(p, "docs-toc.css"),
         css!(p, "docs-responsive.css"),

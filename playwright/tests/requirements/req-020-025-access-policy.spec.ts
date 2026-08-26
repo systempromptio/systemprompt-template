@@ -100,13 +100,17 @@ test.describe('@REQ-022 governed personal access tokens', () => {
 });
 
 test.describe('@REQ-023 enterprise SSO', () => {
-  test('@REQ-023 Salesforce is offered as the sign-in path on the login page', async ({
+  test('@REQ-023 passkey enrolment is the only sign-in door; Salesforce is a profile link', async ({
     anonPage: page,
   }) => {
     // UI evidence only: the OIDC handshake and the deprovisioning
     // reconciliation are proven in the Rust tier / live against the IdP.
+    // Salesforce sign-in was retired as an entry point (passkey-only login);
+    // connecting Salesforce moved to the profile page, where it gates the
+    // Salesforce MCP and plugins.
     await page.goto('/admin/login');
-    await expect(page.locator('main')).toContainText(/sign in with.*salesforce/i);
+    await expect(page.locator('main input[type="email"]')).toBeVisible();
+    await expect(page.locator('main')).not.toContainText(/sign in with salesforce/i);
   });
 
   test('@REQ-023 the Salesforce reconciliation job is registered on the scheduler', async ({
