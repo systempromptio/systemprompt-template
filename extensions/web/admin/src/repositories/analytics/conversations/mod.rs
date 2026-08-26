@@ -15,11 +15,18 @@ use serde::Serialize;
 use systemprompt::identifiers::{PluginId, SessionId, TraceId, UserId};
 
 mod detail;
+pub mod history;
 mod redact;
+pub mod scope;
 mod transcript;
 
 pub use detail::find_raw_turns;
+pub use history::{HistoryListItem, list_transcripts_matching};
 pub use redact::redact_text;
+pub use scope::{
+    HistoryScope, has_full_history_view, history_scope_for, list_managed_member_ids,
+    resolve_history_scope,
+};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ConversationListItem {

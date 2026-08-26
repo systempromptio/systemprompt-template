@@ -79,6 +79,8 @@ mod organizations_seats;
 #[cfg(test)]
 mod req_026_audit_completeness;
 #[cfg(test)]
+mod req_044_access_matrix;
+#[cfg(test)]
 mod tempdb;
 #[cfg(test)]
 mod traces_list;

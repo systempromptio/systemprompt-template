@@ -55,6 +55,8 @@ mod content_validation_results;
 #[cfg(test)]
 mod format_display;
 #[cfg(test)]
+mod history_scope;
+#[cfg(test)]
 mod hook_event_dispatch;
 #[cfg(test)]
 mod html_escape;

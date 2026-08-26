@@ -40,6 +40,7 @@ missing_errors_doc = "allow"
 # Local extension crates under test (paths relative to tests/).
 systemprompt-mcp-shared = { path = "../extensions/mcp/shared" }
 systemprompt-mcp-agent = { path = "../extensions/mcp/systemprompt" }
+systemprompt-mcp-knowledge-bank = { path = "../extensions/mcp/knowledge-bank" }
 systemprompt-web-shared = { path = "../extensions/web/shared" }
 systemprompt-web-admin = { path = "../extensions/web/admin", features = ["governance-ssr"] }
 systemprompt-web-content = { path = "../extensions/web/content" }

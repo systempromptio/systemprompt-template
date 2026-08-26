@@ -20,6 +20,7 @@ GET    /admin/analytics                                      anonymous=307 non-a
 GET    /admin/analytics/users/{user_id}                      anonymous=307 non-admin=303 admin=404
 GET    /admin/api/chain/{id}                                 anonymous=307 non-admin=403 admin=404
 GET    /admin/api/conversations/{session_id}/raw             anonymous=307 non-admin=403 admin=404
+GET    /admin/api/history/search                             anonymous=307 non-admin=200 admin=200
 GET    /admin/api/search/resolve                             anonymous=307 non-admin=403 admin=200
 GET    /admin/auth/me                                        anonymous=307 non-admin=200 admin=200
 GET    /admin/auth/salesforce/callback                       anonymous=303 non-admin=303 admin=303
@@ -42,6 +43,7 @@ GET    /admin/entities/sessions                              anonymous=307 non-a
 GET    /admin/entities/sessions/{session_id}                 anonymous=307 non-admin=303 admin=404
 GET    /admin/entities/traces                                anonymous=307 non-admin=303 admin=200
 GET    /admin/entities/traces/{trace_id}                     anonymous=307 non-admin=303 admin=404
+GET    /admin/history                                        anonymous=307 non-admin=200 admin=200
 GET    /admin/invite/{token}                                 anonymous=200 non-admin=200 admin=200
 GET    /admin/login                                          anonymous=200 non-admin=200 admin=200
 GET    /admin/profile                                        anonymous=307 non-admin=200 admin=200

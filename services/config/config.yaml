@@ -10,6 +10,7 @@ includes:
   # MCP servers
   - ../mcp/systemprompt.yaml
   - ../mcp/salesforce.yaml
+  - ../mcp/knowledge-bank.yaml
 
   # AI, scheduler, content
   # Note: ../web/config.yaml is NOT included here — the web domain validator

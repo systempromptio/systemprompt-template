@@ -91,7 +91,14 @@ CREATE TABLE IF NOT EXISTS session_transcripts (
     total_output_tokens BIGINT DEFAULT 0,
     model TEXT,
     entries_counted INT DEFAULT 0,
-    captured_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    captured_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    -- Full-text search for the identity-scoped conversation-history surface.
+    -- Generated rather than trigger-maintained so it can never drift from the
+    -- transcript; capped at 256KB of text so a pathological transcript cannot
+    -- exceed the 1MB tsvector limit and reject the insert. Established
+    -- databases converge via migrations/033_transcript_fts.sql.
+    search_tsv tsvector
+        GENERATED ALWAYS AS (to_tsvector('english', left(transcript::text, 262144))) STORED
 );
 CREATE INDEX IF NOT EXISTS idx_session_transcripts_user ON session_transcripts(user_id, captured_at DESC);
 CREATE INDEX IF NOT EXISTS idx_session_transcripts_session ON session_transcripts(session_id, captured_at DESC);
@@ -102,6 +109,9 @@ CREATE INDEX IF NOT EXISTS idx_session_transcripts_session ON session_transcript
 -- a requirement for the conversations page, so we skip the generated tsvector
 -- column and the trigger maintenance it would imply.
 CREATE INDEX IF NOT EXISTS idx_session_transcripts_jsonb ON session_transcripts USING GIN (transcript jsonb_path_ops);
+
+CREATE INDEX IF NOT EXISTS idx_session_transcripts_fts
+    ON session_transcripts USING GIN (search_tsv);
 
 -- `governance_decisions` schema is owned by core's authz extension
 -- (`systemprompt_security::authz::AuthzExtension`). The table and its indexes

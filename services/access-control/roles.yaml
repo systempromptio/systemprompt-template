@@ -73,6 +73,13 @@ rules:
     access: allow
     default_included: false
     roles: [admin]
+  # Knowledge-bank MCP (REQ-047): admin-only while the backend is a stub;
+  # widen deliberately once the Bedrock retriever ships.
+  - entity_type: mcp_server
+    entity_id: knowledge-bank
+    access: allow
+    default_included: false
+    roles: [admin]
   - entity_type: agent
     entity_id: admin_console
     access: allow

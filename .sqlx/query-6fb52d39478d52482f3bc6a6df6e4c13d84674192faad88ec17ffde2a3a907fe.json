@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM organization_members m\n         USING organizations o\n         WHERE o.id = m.org_id AND o.is_platform AND m.user_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6fb52d39478d52482f3bc6a6df6e4c13d84674192faad88ec17ffde2a3a907fe"
+}

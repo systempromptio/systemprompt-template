@@ -1,0 +1,37 @@
+[package]
+name = "systemprompt-mcp-knowledge-bank"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Knowledge-bank MCP server: enterprise knowledge retrieval behind a pluggable backend trait (Bedrock implementation pending AWS access)."
+repository.workspace = true
+homepage.workspace = true
+publish = false
+
+[[bin]]
+name = "systemprompt-mcp-knowledge-bank"
+path = "src/main.rs"
+
+[dependencies]
+# Audit: uses database, identifiers, logging, mcp, models, system (api), traits — requires `full`.
+systemprompt = { workspace = true, features = ["full"] }
+
+anyhow.workspace = true
+async-trait.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+rmcp.workspace = true
+
+axum.workspace = true
+
+schemars.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+tracing.workspace = true
+
+systemprompt-mcp-shared.workspace = true
+
+[lints]
+workspace = true

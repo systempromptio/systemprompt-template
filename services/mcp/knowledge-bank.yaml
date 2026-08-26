@@ -1,0 +1,25 @@
+# Knowledge-bank MCP server (REQ-047/048).
+#
+# Scaffolding only: the binary ships with a stub retrieval backend that
+# reports "knowledge backend not configured" instead of results. Disabled by
+# default — flip `enabled: true` once the AWS Bedrock retriever lands
+# (credentials, region, and model ids pending; see
+# docs/tickets/req-047-knowledge-bank-mcp.md). Access is additionally gated to
+# role admin in services/access-control/roles.yaml.
+
+mcp_servers:
+  knowledge-bank:
+    type: internal
+    binary: systemprompt-mcp-knowledge-bank
+    package: knowledge-bank
+    port: 5030
+    enabled: false
+    display_in_web: false
+    removable: true
+    description: Enterprise knowledge retrieval (Bedrock backend pending — stub only)
+    oauth:
+      required: true
+      scopes:
+      - admin
+      audience: mcp
+      client_id: null

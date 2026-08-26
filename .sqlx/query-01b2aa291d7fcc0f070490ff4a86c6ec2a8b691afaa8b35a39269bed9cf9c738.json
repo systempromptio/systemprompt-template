@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT m2.user_id AS \"user_id!: UserId\"\n           FROM organization_members m1\n           JOIN organizations o ON o.id = m1.org_id AND o.status = 'active'\n           JOIN organization_members m2 ON m2.org_id = m1.org_id\n           WHERE m1.user_id = $1 AND m1.org_role IN ('owner', 'admin')",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "organization_members",
+            "name": "user_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "01b2aa291d7fcc0f070490ff4a86c6ec2a8b691afaa8b35a39269bed9cf9c738"
+}

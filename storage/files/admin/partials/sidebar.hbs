@@ -102,6 +102,10 @@
             <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
             Profile
         </a>
+        <a href="/admin/history"{{#if (eq page "history")}} class="active" aria-current="page"{{/if}}>
+            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 3.5h11v8h-6l-2.5 2v-2h-2.5z" stroke-linejoin="round"/><path d="M5 6.5h6M5 9h4" stroke-linecap="round"/></svg>
+            My conversations
+        </a>
         <a href="/admin/settings"{{#if (eq page "settings")}} class="active" aria-current="page"{{/if}}>
             <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 100 6.492 3.246 3.246 0 000-6.492zM5.754 8a2.246 2.246 0 114.492 0 2.246 2.246 0 01-4.492 0z"/></svg>
             Settings

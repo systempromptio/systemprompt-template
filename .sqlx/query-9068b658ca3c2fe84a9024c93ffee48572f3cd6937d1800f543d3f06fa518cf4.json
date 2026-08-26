@@ -1,0 +1,133 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH latest AS (\n            SELECT DISTINCT ON (st.session_id)\n                st.session_id, st.user_id, st.model, st.transcript,\n                st.captured_at,\n                COALESCE(st.entries_counted, 0) AS entries_counted,\n                COALESCE(st.total_input_tokens, 0) AS total_input_tokens,\n                COALESCE(st.total_output_tokens, 0) AS total_output_tokens,\n                CASE WHEN $1::text IS NULL THEN NULL\n                     ELSE ts_rank(st.search_tsv, websearch_to_tsquery('english', $1))\n                END AS rank\n            FROM session_transcripts st\n            WHERE ($2::text[] IS NULL OR st.user_id = ANY($2))\n              AND ($1::text IS NULL\n                   OR st.search_tsv @@ websearch_to_tsquery('english', $1))\n            ORDER BY st.session_id, st.captured_at DESC\n        )\n        SELECT\n            l.session_id AS \"session_id!: SessionId\",\n            l.user_id AS \"user_id!: UserId\",\n            pss.ai_title,\n            l.model,\n            pss.started_at,\n            l.captured_at AS \"captured_at!\",\n            l.entries_counted AS \"entries_counted!\",\n            l.total_input_tokens AS \"total_input_tokens!\",\n            l.total_output_tokens AS \"total_output_tokens!\",\n            l.rank,\n            CASE WHEN $1::text IS NULL THEN NULL\n                 ELSE ts_headline('english', left(l.transcript::text, 262144),\n                                  websearch_to_tsquery('english', $1),\n                                  'StartSel=[, StopSel=], MaxWords=24, MinWords=8, MaxFragments=2')\n            END AS snippet,\n            (SELECT COUNT(*) FROM latest)::bigint AS \"total_count!\"\n        FROM latest l\n        LEFT JOIN plugin_session_summaries pss ON pss.session_id = l.session_id\n        ORDER BY l.rank DESC NULLS LAST, l.captured_at DESC\n        LIMIT $3 OFFSET $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id!: SessionId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_transcripts",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_transcripts",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "ai_title",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "ai_title"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_transcripts",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "started_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "started_at"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "captured_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "session_transcripts",
+            "name": "captured_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "entries_counted!",
+        "type_info": "Int4",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "total_input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "total_output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "rank",
+        "type_info": "Float4",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "snippet",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "total_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "9068b658ca3c2fe84a9024c93ffee48572f3cd6937d1800f543d3f06fa518cf4"
+}

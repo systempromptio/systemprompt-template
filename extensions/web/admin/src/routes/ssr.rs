@@ -227,6 +227,9 @@ fn entity_routes() -> Router<Arc<PgPool>> {
 fn account_routes() -> Router<Arc<PgPool>> {
     Router::new()
         .route("/profile", get(handlers::ssr::profile_page))
+        // Why: identity-scoped, not admin-gated — the handler resolves what
+        // the viewer may see (self, org members, or everything) per request.
+        .route("/history", get(handlers::ssr::history_page))
         .route("/settings", get(handlers::ssr::settings_page))
         .route("/setup", get(handlers::ssr::setup_page))
 }
@@ -239,6 +242,7 @@ fn api_routes() -> Router<Arc<PgPool>> {
             get(handlers::ssr::conversations_raw),
         )
         .route("/api/chain/{id}", get(handlers::ssr::chain_envelope))
+        .route("/api/history/search", get(handlers::ssr::history_search))
         .route("/api/search/resolve", get(handlers::ssr::search_resolve))
         .route(
             "/api/profile/salesforce/unlink",

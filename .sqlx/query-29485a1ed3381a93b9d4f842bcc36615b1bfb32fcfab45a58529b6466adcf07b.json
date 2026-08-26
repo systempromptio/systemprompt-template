@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*) AS \"count!\" FROM organization_members m\n           JOIN organizations o ON o.id = m.org_id\n           WHERE o.is_platform",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "29485a1ed3381a93b9d4f842bcc36615b1bfb32fcfab45a58529b6466adcf07b"
+}

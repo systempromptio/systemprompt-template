@@ -1,0 +1,74 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/page-header
+        title=title
+        subtitle="Search and review your AI conversation history — prompts, responses, tools used, and timestamps."}}
+
+    <section aria-label="Conversation history">
+        <p class="text-muted text-xs">Showing {{scope_label}}.</p>
+
+        <form method="get" action="/admin/history" class="toolbar audit-toolbar">
+            {{#if filter_user_id}}
+            <input type="hidden" name="user_id" value="{{filter_user_id}}">
+            {{/if}}
+            <div class="search-group">
+                <input type="text" name="q" placeholder="Search your conversations..."
+                       value="{{search_query}}" class="search-input"
+                       aria-label="Search conversation history">
+            </div>
+            <button type="submit" class="btn btn-sm">Search</button>
+            {{#if search_query}}
+            <a href="/admin/history" class="btn btn-sm btn-outline">Clear</a>
+            {{/if}}
+        </form>
+
+        {{#if has_rows}}
+        {{#> components/data-table}}
+            <thead><tr>
+                <th class="col-date">When</th>
+                <th>Conversation</th>
+                <th>User</th>
+                <th>Model</th>
+                <th class="col-num">Turns</th>
+                <th class="col-num">Tokens</th>
+            </tr></thead>
+            <tbody>
+            {{#each rows}}
+            <tr>
+                <td class="col-date">{{this.when_local}}</td>
+                <td>
+                    {{#if this.session_url}}
+                    <a href="{{this.session_url}}">{{this.title}}</a>
+                    {{else}}
+                    {{this.title}}
+                    {{/if}}
+                    <span class="text-muted text-xs"><code class="code-inline">{{this.session_id_short}}</code></span>
+                    {{#if this.snippet}}
+                    <div class="text-muted text-xs">{{this.snippet}}</div>
+                    {{/if}}
+                </td>
+                <td>
+                    {{#if this.is_own}}
+                    <span class="badge badge-info">you</span>
+                    {{else}}
+                    {{this.user_id}}
+                    {{/if}}
+                </td>
+                <td>{{#if this.model}}<code class="code-inline">{{this.model}}</code>{{else}}&mdash;{{/if}}</td>
+                <td class="col-num">{{this.entries_counted}}</td>
+                <td class="col-num">{{this.tokens_display}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/data-table}}
+
+        {{> components/pagination pagination}}
+        {{else}}
+        {{> components/empty-state
+            message="No conversations match. Clear the search, or start a session to populate history."}}
+        {{/if}}
+    </section>
+    {{/inline}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}
