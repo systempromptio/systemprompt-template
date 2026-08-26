@@ -18,14 +18,24 @@ sessions and repository admins alike. That is deliberate: it is the mechanism,
 not a convention you could talk your way around.
 
 ```
-next   ← every agent, every session, every commit. Push freely.
+next   ← the repo's DEFAULT branch. Every agent, every session. Push freely.
   ↓ nightly (03:17 UTC): auto-fix → full gate cycle → promote (only if green)
 main   ← protected, release-only. Tagged. Never pushed to directly.
 ```
 
+`next` is the GitHub default, so a fresh clone lands on it. Protection is pinned
+to `main` **by name**, not to "whichever branch is default".
+
 **Do not run the pre-release gate cycle to land ordinary work.** The full cycle is expensive and
 runs **once nightly** (`.github/workflows/nightly.yml`), not on your push.
 Committing and pushing to `next` without gating is the intended workflow.
+
+**Core (`../systemprompt-core`) is write-only from here.** When patch-active
+work needs a core change: write the functionality, commit on core's `next`
+branch, push. Run NO validation in the core checkout — no tests, no clippy, no
+fmt, no cargo check loops; core's CI on `next` is its validation surface. All
+building and testing happens in this repo, which compiles the patched core
+anyway.
 
 What the nightly does, in order:
 

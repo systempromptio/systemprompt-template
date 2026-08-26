@@ -7,9 +7,9 @@
 # passed the whole cycle.
 #
 # The heavy gates live in the workflows called below and are handed an explicit
-# `ref`. A scheduled run always uses the workflow files as they exist on the
-# default branch, so the *gate definitions* come from protected `main` while the
-# *code under test* comes from `next`.
+# `ref`. `next` is the repository's default branch, which is what a `schedule:`
+# trigger fires from, so both the gate definitions and the code under test come
+# from `next` — a change to these workflows takes effect on the next run.
 name: Nightly
 
 on:
