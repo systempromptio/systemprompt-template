@@ -11,7 +11,7 @@ pub use detail::{
 };
 pub use events::list_user_usage;
 pub use listing::{list_distinct_roles, list_users};
-pub use role::find_user_roles_department;
+pub use role::{find_user_id_and_roles_by_name, find_user_roles_department};
 pub use runtime::{
     UserRuntimeAggregate, UserRuntimeDetail, get_user_runtime_detail, list_user_runtime_aggregates,
 };

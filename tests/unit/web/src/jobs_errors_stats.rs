@@ -98,10 +98,13 @@ fn every_cron_scheduled_job_has_six_fields() {
     for job in extension_jobs() {
         let schedule = job.schedule();
         if schedule.is_empty() {
-            assert_eq!(
-                job.name(),
-                "governance_bootstrap",
-                "only the bootstrap job may opt out of a cron schedule"
+            assert!(
+                matches!(
+                    job.name(),
+                    "governance_bootstrap" | "platform_admin_bootstrap"
+                ),
+                "only the boot-time bootstrap jobs may opt out of a cron schedule, not {}",
+                job.name()
             );
             continue;
         }

@@ -10,11 +10,12 @@ members = [
     "extensions/mcp/knowledge-bank",
     "extensions/mcp/shared",
     "extensions/cli/salesforce",
+    "extensions/cli/platform",
 ]
 # The test workspace under tests/ is a separate workspace so it never compiles
 # when these extension crates are consumed as dependencies. Run it explicitly:
 #   cargo test --manifest-path tests/Cargo.toml
-exclude = ["tests"]
+exclude = ["tests", ".vendor"]
 resolver = "2"
 
 [profile.dev]
@@ -247,36 +248,37 @@ workspace = true
 # requirements above must track whatever the patch points at: a patch whose
 # version does not satisfy them is silently ignored and the build falls back
 # to the last published release.
-# [patch.crates-io]
-# systemprompt = { path = "../systemprompt-core/systemprompt" }
-# systemprompt-models = { path = "../systemprompt-core/crates/shared/models" }
-# systemprompt-traits = { path = "../systemprompt-core/crates/shared/traits" }
-# systemprompt-identifiers = { path = "../systemprompt-core/crates/shared/identifiers" }
-# systemprompt-extension = { path = "../systemprompt-core/crates/shared/extension" }
-# systemprompt-provider-contracts = { path = "../systemprompt-core/crates/shared/provider-contracts" }
-# systemprompt-client = { path = "../systemprompt-core/crates/shared/client" }
-# systemprompt-template-provider = { path = "../systemprompt-core/crates/shared/template-provider" }
-# systemprompt-database = { path = "../systemprompt-core/crates/infra/database" }
-# systemprompt-events = { path = "../systemprompt-core/crates/infra/events" }
-# systemprompt-security = { path = "../systemprompt-core/crates/infra/security" }
-# systemprompt-config = { path = "../systemprompt-core/crates/infra/config" }
-# systemprompt-logging = { path = "../systemprompt-core/crates/infra/logging" }
-# systemprompt-loader = { path = "../systemprompt-core/crates/infra/loader" }
-# systemprompt-cloud = { path = "../systemprompt-core/crates/infra/cloud" }
-# systemprompt-users = { path = "../systemprompt-core/crates/domain/users" }
-# systemprompt-oauth = { path = "../systemprompt-core/crates/domain/oauth" }
-# systemprompt-files = { path = "../systemprompt-core/crates/domain/files" }
-# systemprompt-analytics = { path = "../systemprompt-core/crates/domain/analytics" }
-# systemprompt-content = { path = "../systemprompt-core/crates/domain/content" }
-# systemprompt-ai = { path = "../systemprompt-core/crates/domain/ai" }
-# systemprompt-mcp = { path = "../systemprompt-core/crates/domain/mcp" }
-# systemprompt-slack = { path = "../systemprompt-core/crates/domain/slack" }
-# systemprompt-teams = { path = "../systemprompt-core/crates/domain/teams" }
-# systemprompt-agent = { path = "../systemprompt-core/crates/domain/agent" }
-# systemprompt-marketplace = { path = "../systemprompt-core/crates/domain/marketplace" }
-# systemprompt-templates = { path = "../systemprompt-core/crates/domain/templates" }
-# systemprompt-runtime = { path = "../systemprompt-core/crates/app/runtime" }
-# systemprompt-scheduler = { path = "../systemprompt-core/crates/app/scheduler" }
-# systemprompt-generator = { path = "../systemprompt-core/crates/app/generator" }
-# systemprompt-api = { path = "../systemprompt-core/crates/entry/api" }
-# systemprompt-cli = { path = "../systemprompt-core/crates/entry/cli" }
+# ACTIVE: core 0.39.1 is unreleased — vendored from ../systemprompt-core (next) via `just vendor-core`
+[patch.crates-io]
+systemprompt = { path = ".vendor/systemprompt-core/systemprompt" }
+systemprompt-models = { path = ".vendor/systemprompt-core/crates/shared/models" }
+systemprompt-traits = { path = ".vendor/systemprompt-core/crates/shared/traits" }
+systemprompt-identifiers = { path = ".vendor/systemprompt-core/crates/shared/identifiers" }
+systemprompt-extension = { path = ".vendor/systemprompt-core/crates/shared/extension" }
+systemprompt-provider-contracts = { path = ".vendor/systemprompt-core/crates/shared/provider-contracts" }
+systemprompt-client = { path = ".vendor/systemprompt-core/crates/shared/client" }
+systemprompt-template-provider = { path = ".vendor/systemprompt-core/crates/shared/template-provider" }
+systemprompt-database = { path = ".vendor/systemprompt-core/crates/infra/database" }
+systemprompt-events = { path = ".vendor/systemprompt-core/crates/infra/events" }
+systemprompt-security = { path = ".vendor/systemprompt-core/crates/infra/security" }
+systemprompt-config = { path = ".vendor/systemprompt-core/crates/infra/config" }
+systemprompt-logging = { path = ".vendor/systemprompt-core/crates/infra/logging" }
+systemprompt-loader = { path = ".vendor/systemprompt-core/crates/infra/loader" }
+systemprompt-cloud = { path = ".vendor/systemprompt-core/crates/infra/cloud" }
+systemprompt-users = { path = ".vendor/systemprompt-core/crates/domain/users" }
+systemprompt-oauth = { path = ".vendor/systemprompt-core/crates/domain/oauth" }
+systemprompt-files = { path = ".vendor/systemprompt-core/crates/domain/files" }
+systemprompt-analytics = { path = ".vendor/systemprompt-core/crates/domain/analytics" }
+systemprompt-content = { path = ".vendor/systemprompt-core/crates/domain/content" }
+systemprompt-ai = { path = ".vendor/systemprompt-core/crates/domain/ai" }
+systemprompt-mcp = { path = ".vendor/systemprompt-core/crates/domain/mcp" }
+systemprompt-slack = { path = ".vendor/systemprompt-core/crates/domain/slack" }
+systemprompt-teams = { path = ".vendor/systemprompt-core/crates/domain/teams" }
+systemprompt-agent = { path = ".vendor/systemprompt-core/crates/domain/agent" }
+systemprompt-marketplace = { path = ".vendor/systemprompt-core/crates/domain/marketplace" }
+systemprompt-templates = { path = ".vendor/systemprompt-core/crates/domain/templates" }
+systemprompt-runtime = { path = ".vendor/systemprompt-core/crates/app/runtime" }
+systemprompt-scheduler = { path = ".vendor/systemprompt-core/crates/app/scheduler" }
+systemprompt-generator = { path = ".vendor/systemprompt-core/crates/app/generator" }
+systemprompt-api = { path = ".vendor/systemprompt-core/crates/entry/api" }
+systemprompt-cli = { path = ".vendor/systemprompt-core/crates/entry/cli" }

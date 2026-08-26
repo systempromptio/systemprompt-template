@@ -21,3 +21,13 @@ pub async fn find_user_roles_department(
 
     Ok(row.map(|r| (r.roles, r.department)))
 }
+
+pub async fn find_user_id_and_roles_by_name(
+    pool: &PgPool,
+    name: &str,
+) -> Result<Option<(UserId, Vec<String>)>, sqlx::Error> {
+    let row = sqlx::query!("SELECT id, roles FROM users WHERE name = $1", name)
+        .fetch_optional(pool)
+        .await?;
+    Ok(row.map(|r| (UserId::new(r.id), r.roles)))
+}

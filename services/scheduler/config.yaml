@@ -170,6 +170,7 @@ scheduler:
   # so authorization is correct at app start.
   bootstrap_jobs:
     - governance_bootstrap
+    - platform_admin_bootstrap
     - database_cleanup
     - cleanup_inactive_sessions
     # Publish web assets before the cron loop: web/dist is generated, not

@@ -15,10 +15,22 @@ state — wait for the task, then come back for the part that applies.
 
 ## Branching (this repo)
 
-**Astound works directly on `main`. Commit and push to `main`.** There is no
-`next`-branch promotion flow here — that convention belongs to other repos in
-the family; do not import it. The gates below (`just verify` / `just preflight`)
-are still the bar a commit must clear, and deploys run from `main`.
+**`main` must always build against the latest published core crates** — the
+`[patch.crates-io]` blocks commented out, pins at the released version. Deploys
+run from `main`.
+
+**Work that depends on unreleased core goes on `next`** with the patch blocks
+active. When the core release publishes: bump the pins in `Cargo.toml` and
+`tests/Cargo.toml`, re-comment both patch blocks, verify, and land `next` onto
+`main`. The gates below (`just verify` / `just preflight`) are the bar on both
+branches.
+
+**Core (`../systemprompt-core`) is write-only from here.** When patch-active
+work needs a core change: write the functionality, commit on core's `next`
+branch, push. Run NO validation in the core checkout — no tests, no clippy, no
+fmt, no cargo check loops; core's CI on `next` is its validation surface. All
+building and testing happens in this repo, which compiles the patched core
+anyway.
 
 ## Quick Start
 
@@ -264,18 +276,6 @@ array, so they fail the lint tier rather than `lint-gates`:
   code belongs in `extensions/**/bootstrap/`, which is exempt.
 - **`lint-no-untyped-admin`** — no `UserId::admin()` outside its sanctioned call
   sites (tests are exempt).
-
-### This repo is a fork, and the drift is tracked
-
-The extension sources are shared with a sibling fork (`../systemprompt-template`
-by default; override with `SIBLING_REPO`). `check-fork-drift.sh` requires every
-shared `.rs` file that differs to have an entry with a reason in
-`.fork-divergence`. An undeclared difference fails; so does an entry whose file
-no longer differs — the list can only shrink. Without `SIBLING_REPO` set the
-gate skips, so a green run on a single checkout proves nothing about drift. When
-you change a shared file, the choice is to port the change to the sibling or to
-record the divergence as a decision — a reason that would be true of any file in
-the repo is not a reason.
 
 ### Client / bridge
 

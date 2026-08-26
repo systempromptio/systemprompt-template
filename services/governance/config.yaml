@@ -17,16 +17,18 @@ governance:
     enabled: true
     # The 32 vendor patterns (AWS, GitHub, Stripe, sk-ant-, PEM, DB URLs) are
     # fixed. The high-entropy backstop that catches prefixless keys is tunable
-    # here, so one false positive no longer forces the whole stage off:
-    #
-    #   entropy:
-    #     enabled: true    # false keeps the vendor patterns, drops the backstop
-    #     min_len: 32
-    #     threshold: 0.80  # Shannon entropy / the token length's ceiling
-    #     allowlist:       # regexes; a matching token is never reported
-    #     - '^CAIS'
-    #
-    # Omit the block for the built-in defaults shown above.
+    # here. The block is explicit — the values below ARE the live behaviour,
+    # never a silent core default (2026-08-26: an SRI hash in forwarded page
+    # assets tripped the backstop and denied every gateway prompt).
+    entropy:
+      enabled: true      # false keeps the vendor patterns, drops the backstop
+      min_len: 32
+      threshold: 0.80    # Shannon entropy / the token length's ceiling
+      # Regexes; a matching token is never reported. SRI integrity hashes are
+      # public metadata — core also length-verifies sha256/384/512- digests,
+      # this entry keeps the exemption effective on an unpatched binary.
+      allowlist:
+      - '^sha(256|384|512)-[A-Za-z0-9+/=_-]+$'
   - id: scope_check
     enabled: true
     admin_only_prefixes:

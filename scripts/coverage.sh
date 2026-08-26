@@ -111,7 +111,7 @@ for b in $BINS; do OBJ_ARGS+=(--object "$b"); done
 # bridge/src/main.rs is a process supervisor (brand consts + run_with_brand
 # delegation); on Linux it is the crate's only compiled file, mirroring core's
 # explicit process-entry exclusions.
-IGNORE_RE="(\.cargo|/rustc/|/registry/|/debug/build/|/tests/|/target/|systemprompt-core/|systemprompt-astound/src/(main|lib)\.rs|bridge/src/main\.rs|extensions/cli/salesforce/src/(main\.rs|commands/)|extensions/.*/extension\.rs|build\.rs)"
+IGNORE_RE="(\.cargo|/rustc/|/registry/|/debug/build/|/tests/|/target/|systemprompt-core/|systemprompt-astound/src/(main|lib)\.rs|bridge/src/main\.rs|extensions/cli/[^/]+/src/(main\.rs|commands/)|extensions/.*/extension\.rs|build\.rs)"
 
 echo "==> Coverage report"
 "$LLVM_COV" report \

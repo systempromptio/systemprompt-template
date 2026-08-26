@@ -113,6 +113,77 @@ pub async fn find_member_role(
     Ok(role)
 }
 
+pub async fn find_platform_organization(
+    pool: &PgPool,
+) -> Result<Option<(String, String)>, MarketplaceError> {
+    let row = sqlx::query!("SELECT id, name FROM organizations WHERE is_platform")
+        .fetch_optional(pool)
+        .await?;
+    Ok(row.map(|r| (r.id, r.name)))
+}
+
+pub async fn find_membership_org(
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Result<Option<String>, MarketplaceError> {
+    let org_id = sqlx::query_scalar!(
+        "SELECT org_id FROM organization_members WHERE user_id = $1",
+        user_id.as_str()
+    )
+    .fetch_optional(pool)
+    .await?;
+    Ok(org_id)
+}
+
+// Why: `ON CONFLICT DO NOTHING` on the user_id PK keeps this idempotent and
+// non-destructive — a user already in an organization (this one or another)
+// is left exactly where they are, and the return value says whether a row
+// landed so callers can distinguish "granted" from "already settled".
+pub async fn insert_membership_if_absent(
+    pool: &PgPool,
+    user_id: &UserId,
+    org_id: &str,
+    org_role: &str,
+) -> Result<bool, MarketplaceError> {
+    let result = sqlx::query!(
+        "INSERT INTO organization_members (user_id, org_id, org_role)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (user_id) DO NOTHING",
+        user_id.as_str(),
+        org_id,
+        org_role,
+    )
+    .execute(pool)
+    .await?;
+    Ok(result.rows_affected() > 0)
+}
+
+pub async fn delete_platform_membership(
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Result<bool, MarketplaceError> {
+    let result = sqlx::query!(
+        "DELETE FROM organization_members m
+         USING organizations o
+         WHERE o.id = m.org_id AND o.is_platform AND m.user_id = $1",
+        user_id.as_str()
+    )
+    .execute(pool)
+    .await?;
+    Ok(result.rows_affected() > 0)
+}
+
+pub async fn count_platform_members(pool: &PgPool) -> Result<i64, MarketplaceError> {
+    let count = sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "count!" FROM organization_members m
+           JOIN organizations o ON o.id = m.org_id
+           WHERE o.is_platform"#
+    )
+    .fetch_one(pool)
+    .await?;
+    Ok(count)
+}
+
 // Why: The second half of the super-admin test — the first is the `admin` role.
 // A customer's own administrator holds that role too, so the role alone says
 // "may administer an organization", and this says "may administer *every*

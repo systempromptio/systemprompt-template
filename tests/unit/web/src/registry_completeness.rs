@@ -19,6 +19,7 @@ fn all_jobs_registered() {
         "cost_digest",
         "governance_bootstrap",
         "llms_txt_generation",
+        "platform_admin_bootstrap",
         "plugin_usage_retention",
         "publish_pipeline",
         "robots_txt_generation",

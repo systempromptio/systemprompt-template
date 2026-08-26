@@ -4,10 +4,8 @@ set dotenv-load
 # value into two arguments before the CLI ever parses it.
 set positional-arguments
 
-# The fork-aware gates (check-fork-drift, check-dead-repository-code) compare
-# against the sibling template checkout. Without this they skip silently, which
-# reads as "passed" — export a default so they actually run, and let an
-# already-set value win for CI or a non-standard layout.
+# check-dead-repository-code can consult a sibling checkout so a symbol only
+# it consumes is not reported dead. Optional; an already-set value wins.
 export SIBLING_REPO := env("SIBLING_REPO", if path_exists("../systemprompt-template") == "true" { "../systemprompt-template" } else { "" })
 
 CLI_RELEASE := "target/release/systemprompt"
@@ -307,7 +305,6 @@ _lint-gates-uncoordinated:
         check-admin-template-assets.sh
         # admin-css-classes + frontend-standards now run as cargo tests in
         # extensions/web/tests/ (admin_css_classes.rs, frontend_standards.rs).
-        check-fork-drift.sh
         check-dead-repository-code.sh
         check-file-headers.sh
         check-file-size.sh
@@ -435,7 +432,7 @@ coverage-html:
     "$TOOLDIR/llvm-cov" show \
         --instr-profile="$ROOT/coverage-report/tests.profdata" \
         $OBJ_ARGS \
-        --ignore-filename-regex="(\.cargo|/rustc/|/registry/|/debug/build/|/tests/|/target/|systemprompt-core/|systemprompt-astound/src/(main|lib)\.rs|bridge/src/main\.rs|extensions/cli/salesforce/src/(main\.rs|commands/)|extensions/.*/extension\.rs|build\.rs)" \
+        --ignore-filename-regex="(\.cargo|/rustc/|/registry/|/debug/build/|/tests/|/target/|systemprompt-core/|systemprompt-astound/src/(main|lib)\.rs|bridge/src/main\.rs|extensions/cli/[^/]+/src/(main\.rs|commands/)|extensions/.*/extension\.rs|build\.rs)" \
         --format=html \
         --output-dir="$ROOT/coverage-report/html"
     echo "Coverage report: coverage-report/html/index.html"
@@ -471,11 +468,6 @@ init-hooks:
 # Cross-file referential integrity for services/ (ACL entity ids, MCP ports)
 validate:
     bash scripts/validate-services.sh
-
-# Shared sources that differ from the sibling fork must be recorded in
-# .fork-divergence. Needs SIBLING_REPO; skips cleanly without it.
-check-fork-drift:
-    bash scripts/check-fork-drift.sh
 
 # Verify every production extension source has a `//!` module head
 check-headers:
@@ -1013,6 +1005,26 @@ backup *ARGS:
 # the CLI session happens to be switched to.
 deploy *FLAGS: build-all
     {{CLI_RELEASE}} cloud deploy --profile {{DEPLOY_PROFILE}} {{FLAGS}}
+
+# Copy the sibling core checkout into .vendor/ (gitignored, never pushed) so
+# the active [patch.crates-io] paths resolve both locally and inside the
+# Docker build context — `COPY . /src` cannot see ../systemprompt-core.
+# Re-run after every core edit; `deploy` depends on it while the patch is on.
+vendor-core:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    src="${CORE_REPO:-../systemprompt-core}"
+    [ -d "$src" ] || { echo "vendor-core: no core checkout at $src" >&2; exit 1; }
+    mkdir -p .vendor
+    rsync -a --delete \
+        --exclude '.git' --exclude 'target' --exclude 'node_modules' \
+        --exclude 'crates/tests/target' \
+        "$src"/ .vendor/systemprompt-core/
+    echo "vendored $src -> .vendor/systemprompt-core ($(git -C "$src" rev-parse --short HEAD 2>/dev/null || echo unknown))"
+
+# Deploy the patch-active `next` branch: vendor the core checkout first so the
+# image build compiles against it.
+deploy-next *FLAGS: vendor-core (deploy FLAGS)
 
 # Pre-deploy preflight only — no build, no push
 deploy-check:

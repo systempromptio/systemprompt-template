@@ -1,0 +1,15 @@
+extension:
+  type: cli
+  name: platform
+  binary: systemprompt-cli-platform
+  description: Grant, revoke and inspect platform-organization membership
+  build_type: workspace
+  enabled: true
+  supports_json_output: false
+  commands:
+    - name: grant
+      description: Make an admin-role user a member of the platform organization
+    - name: revoke
+      description: Remove a user's platform-organization membership
+    - name: status
+      description: Show the platform organization and its members
