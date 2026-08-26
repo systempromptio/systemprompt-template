@@ -1,12 +1,6 @@
 name: Quality
 
 on:
-  workflow_call:
-    inputs:
-      ref:
-        description: "Commit SHA or branch to gate. Defaults to the triggering ref."
-        type: string
-        required: false
   workflow_dispatch:
     inputs:
       ref:

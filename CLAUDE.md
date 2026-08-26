@@ -12,48 +12,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **All work lands on `next`. Never push to `main`.**
 
-`main` is protected by a ruleset that requires a pull request and grants **no
-bypass to anyone** — a direct `git push origin main` is refused for agents,
-sessions and repository admins alike. That is deliberate: it is the mechanism,
-not a convention you could talk your way around.
+`next` is the repository's default branch, so a fresh clone starts there. `main`
+is protected by a ruleset that requires a pull request and grants **no bypass to
+anyone** — a direct `git push origin main` is refused for agents, sessions and
+repository admins alike. Protection is pinned to `main` by name, so moving the
+default branch does not move it.
 
 ```
-next   ← the repo's DEFAULT branch. Every agent, every session. Push freely.
-  ↓ nightly (03:17 UTC): auto-fix → full gate cycle → promote (only if green)
+next   ← default branch. Every agent, every session. Push freely, no gates.
+  ↓ `just gate` when you are ready, then `just promote` to open the release PR
 main   ← protected, release-only. Tagged. Never pushed to directly.
 ```
 
-`next` is the GitHub default, so a fresh clone lands on it. Protection is pinned
-to `main` **by name**, not to "whichever branch is default".
+**Nothing runs the pre-release cycle for you.** There is no scheduled job and
+nothing gating a push to `next`. The gates run when a person decides to run
+them:
 
-**Do not run the pre-release gate cycle to land ordinary work.** The full cycle is expensive and
-runs **once nightly** (`.github/workflows/nightly.yml`), not on your push.
-Committing and pushing to `next` without gating is the intended workflow.
+1. `just gate [REF]` — dispatches every gate workflow against the ref
+   (default: the tip of `next`) and waits.
+2. `just promote [SHA]` — freezes that commit on the `promote` ref and **opens**
+   the release pull request onto `main`. It does not merge; you do.
+3. Tag `main` once merged. Tags are not covered by the ruleset.
 
-**Core (`../systemprompt-core`) is write-only from here.** When patch-active
-work needs a core change: write the functionality, commit on core's `next`
-branch, push. Run NO validation in the core checkout — no tests, no clippy, no
-fmt, no cargo check loops; core's CI on `next` is its validation surface. All
-building and testing happens in this repo, which compiles the patched core
-anyway.
-
-What the nightly does, in order:
-
-1. **Auto-fixes the mechanical standards** — rustfmt across every workspace in
-   the repo plus clippy's machine-applicable suggestions — and commits the
-   result straight back to `next`. **Do not spend a turn on formatting**; it is
-   applied for you. Anything needing judgement is not touched.
-2. **Runs the whole cycle** (CI, Quality) against that commit.
-3. **Promotes `next` → `main`** by merging a pull request, but only when every
-   gate is green. A failure leaves `main` at its last good commit.
-
-So the standard obligations still hold — your commit should compile and its own
-tests should pass, and the coding standards below are not optional — but
-*proving* it across the whole repo is not your turn to spend. A red gate is the
-highest-priority work next morning: `main` is frozen until it is green.
-
-Releasing is a separate, deliberate act (the gateway release tag drives `release-gateway.yml`), run on demand from a
-green `main` — never automatically.
+The commit is frozen on `promote` rather than the PR being headed at `next`
+because a PR headed at `next` merges whatever `next` points at *when you merge
+it* — anything pushed meanwhile would ride along ungated. That happened once
+for real.
 
 ## Quick Start
 

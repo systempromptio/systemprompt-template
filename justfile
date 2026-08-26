@@ -1200,3 +1200,62 @@ release version:
     git tag "v{{version}}"
     git push origin "v{{version}}"
     @echo "v{{version}} pushed — watch Actions: docker (image), release-gateway (tarballs), helm (chart), smoke-tests"
+
+# Run every pre-release gate against a ref (default: the tip of `next`).
+#
+# Dispatches the gate workflows on GitHub and waits for them, so the heavy
+# compile happens on runners rather than this machine. Nothing runs on a
+# schedule and nothing runs on a push to `next` — this is how the gates get
+# run, when you decide to run them.
+gate REF="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+    REF="{{REF}}"; [ -n "$REF" ] || REF=$(git rev-parse origin/next)
+    REF=$(git rev-parse "$REF")
+    echo "Gating ${REF:0:9} on $REPO"
+    WFS=(ci.yml quality.yml)
+    [ -f .github/workflows/supply-chain.yml ] && WFS+=(supply-chain.yml)
+    for wf in "${WFS[@]}"; do
+        gh workflow run "$wf" --ref "$(git rev-parse --abbrev-ref HEAD)" -f ref="$REF"
+        echo "  dispatched $wf"
+    done
+    echo "Waiting for results (ctrl-c is safe; the runs continue)..."
+    sleep 15
+    FAIL=0
+    for wf in "${WFS[@]}"; do
+        ID=$(gh run list --workflow="$wf" --limit 1 --json databaseId --jq '.[0].databaseId')
+        gh run watch "$ID" --exit-status >/dev/null 2>&1 && R=pass || { R=FAIL; FAIL=1; }
+        printf "  %-18s %s\n" "$wf" "$R"
+    done
+    [ "$FAIL" = 0 ] && echo "All gates green for ${REF:0:9} — 'just promote ${REF:0:9}' to open the release PR." \
+                    || { echo "Gates failed; main untouched."; exit 1; }
+
+# Open the release pull request from a gated commit onto the protected `main`.
+#
+# `main` refuses direct pushes, so a PR is the only way in. The commit is frozen
+# on the `promote` ref first: a PR headed at `next` would merge whatever `next`
+# points at when you merge it, so anything pushed meanwhile would ride along
+# ungated. This only OPENS the PR — you review and merge it.
+promote SHA="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+    SHA="{{SHA}}"; [ -n "$SHA" ] || SHA=$(git rev-parse origin/next)
+    SHA=$(git rev-parse "$SHA")
+    git fetch -q origin main
+    if git merge-base --is-ancestor "$SHA" origin/main; then
+        echo "main already contains ${SHA:0:9} — nothing to promote."; exit 0
+    fi
+    echo "Release PR will carry ${SHA:0:9} onto main:"
+    git log --oneline origin/main.."$SHA" | sed 's/^/    /'
+    git push --force origin "$SHA:refs/heads/promote"
+    NUM=$(gh pr list --base main --head promote --state open --json number --jq '.[0].number // empty')
+    if [ -z "$NUM" ]; then
+        NUM=$(gh api -X POST "repos/$REPO/pulls" -f title="Release: promote next to main" \
+                -f head=promote -f base=main \
+                -f body="Frozen at $SHA. Gate with 'just gate $SHA' before merging." --jq .number)
+    fi
+    echo
+    echo "Opened https://github.com/$REPO/pull/$NUM"
+    echo "Review it, then merge when you are ready:  gh pr merge $NUM --merge"
