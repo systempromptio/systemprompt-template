@@ -254,7 +254,7 @@ impl Harness {
         let path = self.paths.system().content_config();
         std::fs::create_dir_all(path.parent().expect("content config has a parent"))
             .expect("create the content config directory");
-        std::fs::write(&path, yaml).expect("write the content config");
+        std::fs::write(path, yaml).expect("write the content config");
     }
 
     async fn cleanup(self) {

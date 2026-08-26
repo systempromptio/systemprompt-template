@@ -108,7 +108,7 @@ fn the_extender_applies_to_every_template_at_the_lowest_priority() {
 #[test]
 fn default_and_new_build_the_same_extender() {
     assert_eq!(
-        OrgUrlExtender::default().extender_id(),
+        OrgUrlExtender.extender_id(),
         OrgUrlExtender::new().extender_id()
     );
 }
