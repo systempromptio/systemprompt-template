@@ -4,7 +4,7 @@
 
 # Avoid false positives for common patterns
 avoid-breaking-exported-api = false
-msrv = "1.94"
+msrv = "1.96"
 
 # COGNITIVE COMPLEXITY - Keep code simple and maintainable
 cognitive-complexity-threshold = 30

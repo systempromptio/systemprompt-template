@@ -27,7 +27,7 @@ opt-level = "z"
 
 [workspace.package]
 edition = "2024"
-rust-version = "1.94"
+rust-version = "1.96"
 version = "0.40.0"
 authors = ["systemprompt.io <ed@systemprompt.io>"]
 license = "MIT"

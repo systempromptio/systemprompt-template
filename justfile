@@ -264,6 +264,12 @@ _test-contract-uncoordinated:
 test: test-unit test-integration test-contract
 
 # Source gates ported from systemprompt-core (scripts/*.sh)
+# Both workspaces must build on the declared minimum supported Rust version,
+# and must declare the same one. The number is read from the manifests, never
+# hardcoded — see scripts/check-msrv.sh for why that matters.
+msrv-check:
+    bash scripts/check-msrv.sh
+
 lint-gates:
     @scripts/build-coordinator.sh run lint-gates "" -- {{just_executable()}} _lint-gates-uncoordinated
 

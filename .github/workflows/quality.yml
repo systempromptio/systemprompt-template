@@ -114,15 +114,22 @@ jobs:
         run: bash scripts/check-file-size.sh
 
   msrv:
-    name: MSRV check (Rust 1.94)
+    name: MSRV check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
-      - uses: dtolnay/rust-toolchain@1.94.0
+      - uses: dtolnay/rust-toolchain@1.96.0
       - uses: Swatinem/rust-cache@v2
-      - run: cargo check --workspace
+      # The MSRV is read from the manifest, never named here — a number in this
+      # file stops matching the day someone edits `rust-version`. The job also
+      # used to install a toolchain and then run a bare `cargo check`, which
+      # silently ran the nightly from `rust-toolchain.toml`: it passed while
+      # testing nothing. `scripts/check-msrv.sh` sets RUSTUP_TOOLCHAIN, which is
+      # what actually outranks a toolchain file, and asserts the running cargo
+      # before it checks anything.
+      - run: bash scripts/check-msrv.sh
 
   audit:
     name: cargo-audit
