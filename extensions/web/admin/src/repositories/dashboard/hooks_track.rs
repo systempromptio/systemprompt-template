@@ -13,21 +13,6 @@ pub async fn mark_session_ended(pool: &PgPool, session_id: &SessionId) -> Result
     Ok(())
 }
 
-pub async fn count_concurrent_sessions(
-    pool: &PgPool,
-    user_id: &UserId,
-    session_id: &SessionId,
-) -> Result<i64, sqlx::Error> {
-    sqlx::query_scalar!(
-        "SELECT COUNT(*)::BIGINT FROM plugin_session_summaries WHERE user_id = $1 AND started_at <= NOW() AND (ended_at IS NULL OR ended_at >= NOW()) AND session_id != $2",
-        user_id.as_str(),
-        session_id.as_str(),
-    )
-    .fetch_one(pool)
-    .await
-    .map(|v| v.unwrap_or(0))
-}
-
 #[derive(sqlx::FromRow, Debug)]
 pub struct SessionEventRow {
     pub event_type: String,

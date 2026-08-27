@@ -7,7 +7,6 @@ use systemprompt_web_admin::repositories::dashboard::hooks_track;
 use crate::fixtures::{EventSpec, insert_event, insert_user, unclaimed_email, unique};
 use crate::tempdb::TempDb;
 
-
 pub async fn insert_mcp_execution(pool: &sqlx::PgPool, user: &str, tool: &str, status: &str) {
     sqlx::query(
         "INSERT INTO mcp_tool_executions
@@ -106,25 +105,6 @@ async fn mark_session_ended_closes_an_open_session_once() {
         first, second,
         "the guard stops a second end from moving the timestamp"
     );
-    db.cleanup().await;
-}
-
-#[tokio::test]
-async fn count_concurrent_sessions_excludes_the_asking_session() {
-    let Some(db) = TempDb::create().await else {
-        return;
-    };
-    let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("concurrent")).await;
-    let asking = unique("session");
-    let other = unique("session");
-    insert_session_summary(&db.pool, &asking, user.as_str()).await;
-    insert_session_summary(&db.pool, &other, user.as_str()).await;
-
-    let count = hooks_track::count_concurrent_sessions(&db.pool, &user, &SessionId::new(asking))
-        .await
-        .expect("count succeeds");
-
-    assert_eq!(count, 1);
     db.cleanup().await;
 }
 
