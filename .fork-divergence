@@ -1,5 +1,12 @@
 # Shared `.rs` files allowed to differ from the sibling fork.
 #
+# This list is the mirror of systemprompt-internal's `.fork-divergence`, and is
+# kept identical to it. Divergence is symmetric — the same file pair differs
+# from either side — so two lists that disagree just means one of them has
+# rotted. Before this was synchronised the two had drifted to 27 entries here
+# against 76 there, and all 10 entries unique to this side were stale.
+# Every reason below names both forks, so it reads correctly from either.
+#
 # Enforced by scripts/check-fork-drift.sh. A shared file that differs
 # without an entry here fails the check; an entry whose file no longer
 # differs also fails. The list can therefore only shrink.
@@ -32,36 +39,133 @@ extensions/web/src/lib.rs	# brand: crate doc names the product
 # not drift. Converging these would mean shipping one product's pages
 # from the other's binary.
 # ---------------------------------------------------------------------
-extensions/web/admin/src/handlers/catalog/mod.rs	# astound serves plugins/skills/mcp; template serves marketplace/a2a/external
-extensions/web/admin/src/handlers/catalog/view.rs	# renders the catalog families above, which differ
-extensions/web/admin/src/handlers/public_register.rs	# astound limits registration to @astounddigital.com / @astoundcommerce.com; template takes a role argument
-extensions/web/admin/src/handlers/users.rs	# astound adds extract_mcp_accessor_user, accepting an Mcp-audience JWT for the Salesforce token accessor
-extensions/web/admin/src/lib.rs	# astound mounts the Salesforce token + Slack alert surface; template mounts the bridge plugin-file plane
-extensions/mcp/systemprompt/src/server/mod.rs	# astound serves artifact resources by URI (parse/read/shell template); template serves only the viewer resource
-extensions/web/src/schemas.rs	# astound ships the Salesforce identity schema
-extensions/web/jobs/src/llms_txt.rs	# template emits a blog section; astound has no blog
-extensions/web/site/src/lib.rs	# template ships blog + features sections; astound ships the skills page
+extensions/web/admin/src/lib.rs	# internal mounts the Odoo account-linking deps + Slack alert surface; template mounts the bridge plugin-file plane
+extensions/mcp/systemprompt/src/server/mod.rs	# internal serves artifact resources by URI (parse/read/shell template); template serves only the viewer resource
+extensions/web/src/schemas.rs	# internal ships the Odoo identity schema
+extensions/web/src/router/pools.rs	# internal builds the OAuth repository Odoo sign-in mints codes through; template has no Odoo sign-in
+extensions/web/jobs/src/llms_txt.rs	# template emits a blog section; internal has no blog
+extensions/web/site/src/lib.rs	# template ships blog + features sections; internal ships the skills page
 extensions/web/site/src/navigation/provider.rs	# the blog nav link exists in the template only
-extensions/web/site/src/assets/css.rs	# template ships feature-page CSS; astound ships skills-page and showreel CSS
-extensions/web/site/src/assets/mod.rs	# astound serves the homepage showreel video
-extensions/web/site/src/assets/js_pages.rs	# astound ships the admin entities page
+extensions/web/site/src/partials.rs	# internal dropped the mid-priority partial along with the animation partials, so PRIORITY_MID has no user here
+extensions/web/site/src/assets/css.rs	# template ships feature-page CSS; internal ships skills-page and showreel CSS
+extensions/web/site/src/assets/mod.rs	# internal serves the homepage showreel video
+extensions/web/site/src/homepage/mod.rs	# the template homepage renders the demo showcase; internal's does not, so the scanner and its config types are gone
+extensions/web/site/src/homepage/config/mod.rs	# no `demos` section: internal's homepage has no demo showcase to configure
 
-# The template ships an SSR governance policy editor that astound does not. It
+# The template ships an SSR governance policy editor that internal does not. It
 # needs every policy to declare the file it is defined in so the page can link
-# to it "as code"; in astound the field and its accessors would be dead code.
-extensions/web/admin/src/handlers/ssr/mod.rs	# template ships the SSR governance policy editor; astound does not
-extensions/web/admin/src/handlers/webhook/governance/policy.rs	# source_path field + source_path_for/reload back the editor above
+# to it "as code"; in internal the field and its accessors would be dead code.
+extensions/web/admin/src/handlers/ssr/mod.rs	# template ships the SSR governance policy editor; internal does not
 extensions/web/admin/src/handlers/webhook/governance/mod.rs	# re-exports the policy editor the template alone mounts
-extensions/web/admin/src/handlers/webhook/governance/policies/rate_limit.rs	# source_path feeds the template-only policy editor
-extensions/web/admin/src/handlers/webhook/governance/policies/scope_check.rs	# source_path feeds the template-only policy editor
-extensions/web/admin/src/handlers/webhook/governance/policies/secret_scan.rs	# source_path feeds the template-only policy editor
-extensions/web/admin/src/handlers/webhook/governance/policies/tool_blocklist.rs	# source_path feeds the template-only policy editor
-extensions/web/src/extension.rs	# astound loads a Salesforce SSO config and a skills-page config; template loads a feature-pages config
-extensions/web/src/extension_impl.rs	# astound mounts the Salesforce router and skills-page prerenderer; template mounts blog providers, feature prerenderers, the bridge router and an oauth-client seed
-extensions/web/admin/src/routes/ssr.rs	# astound mounts the Salesforce auth routes and redirects admins to /admin/access/users; template mounts the governance routes and always redirects to /admin/profile
-extensions/web/admin/src/activity/constructors_session.rs	# astound records session_started/session_ended/teammate_idle from Claude Code hook events; template has no such feed
+extensions/web/src/extension.rs	# internal loads a skills-page config; template loads a feature-pages config
+extensions/web/src/extension_impl.rs	# internal mounts the skills-page prerenderer; template mounts blog providers, feature prerenderers, the bridge router and an oauth-client seed
+extensions/web/admin/src/routes/ssr.rs	# internal mounts the Odoo account-linking routes and the enterprise console, and opens platform admins on /admin/enterprises; template mounts the governance routes and always redirects to /admin/profile
+
+# Internal is a pooled multi-tenant instance: its console is a cross-customer
+# view of organizations, plans, and margin, gated on membership of the platform
+# tenant. The template is single-tenant, has no such tenant to belong to, and
+# gates on the admin role alone.
+extensions/web/admin/src/types/user_context.rs	# internal carries is_platform_admin alongside is_admin
+extensions/web/admin/src/handlers/ssr/context.rs	# internal exposes is_platform_admin to the page shell, which is what the nav renders on
+extensions/web/admin/src/middleware/gates.rs	# internal adds the platform-admin gate guarding the cross-customer pages
+extensions/web/admin/src/handlers/ssr/types/mod.rs	# declares internal's enterprise page context types
+extensions/web/admin/src/handlers/ssr/ssr_demo_help/mod.rs	# internal explains the enterprise console; the template has no such page
+extensions/web/admin/src/handlers/ssr/ssr_management/departments.rs	# internal derives department entitlement from the enterprise plan, so it has no access-matrix link to pass the template
+extensions/web/admin/tests/authz_marketplace_pure.rs	# internal tests the organization subject dimension at precedence 300; the template has one tenant and no such band
+extensions/web/admin/tests/util_ranges.rs	# internal covers util::month_range behind its enterprise reports; the template has only util::time_range
+extensions/web/admin/src/authz/mod.rs	# internal registers the organization subject dimension at precedence 300; the template has one tenant and no such band
+extensions/web/admin/src/repositories/config/acl_yaml_loader.rs	# internal reads a third bootstrap file, plans.yaml, and projects each plan's grants onto its organizations
+extensions/web/admin/src/repositories/users/mutations.rs	# internal resolves the new user's organization from their email domain and refuses a full plan, so creation returns MarketplaceError rather than sqlx::Error
+
+
+
+# ---------------------------------------------------------------------
+# BRIDGE - internal ships a white-label desktop client (bridge/) that signs
+# in over /bridge-auth/device-link. The template retired that plane and
+# renamed its credentials to access tokens. Converging would delete the
+# endpoint internal's own binary calls at runtime.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/error.rs	# internal carries a BridgeRepo error variant; the template's is AccessTokenRepo
+extensions/web/admin/src/routes/mod.rs	# internal exports bridge_auth_ssr_router alongside the admin router
+extensions/web/admin/src/routes/admin.rs	# internal issues per-device PATs under /users/:id/devices; the template issues account access tokens
+extensions/web/admin/src/middleware/mod.rs	# internal keeps auth_me_handler, which the bridge polls to confirm a linked session
+extensions/web/admin/src/handlers/ssr/ssr_management/mod.rs	# internal's fleet page lists devices and their online state; the template lists access tokens
+extensions/web/admin/src/handlers/ssr/ssr_profile/mod.rs	# internal assembles a bridge profile block (device certs, exchange codes)
+extensions/web/admin/src/handlers/ssr/ssr_users/data.rs	# internal loads each user's devices and per-device PATs
+extensions/web/admin/src/handlers/ssr/ssr_users/mod.rs	# internal's user detail reports device connectivity, not request counts
+extensions/web/admin/src/handlers/ssr/ssr_users/view.rs	# internal renders device freshness from last heartbeat, not last request
+extensions/web/admin/src/handlers/ssr/types/users.rs	# UserDeviceView has no counterpart in the template
+extensions/web/admin/src/repositories/users/queries/runtime.rs	# internal sources per-user runtime from bridge_sessions; the template sources it from ai_requests
+extensions/web/admin/src/repositories/departments/aggregates.rs	# internal counts devices per department; the template counts tokens
+extensions/web/src/router/mod.rs	# internal nests /bridge-auth and builds the auth deps the SSR plane needs
+extensions/web/src/router/admin_ssr.rs	# internal builds the bridge sign-in router beside the dashboard, from the same engine
+extensions/web/admin/src/repositories/users/mod.rs	# internal persists devices, federated identities and Odoo credentials
+
+# ---------------------------------------------------------------------
+# ODOO / CATALOG - surface the template does not ship.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/handlers/users.rs	# internal's token extraction is Api-audience only; the template additionally accepts an Mcp-audience accessor token
+extensions/web/admin/src/assets.rs	# internal registers the devices, entities and Odoo-profile page scripts; the template registers access-tokens and models
+extensions/web/admin/tests/activity_constructors.rs	# internal's activity fixtures name the Odoo MCP server; the template names its own
+extensions/web/admin/src/repositories/users/access_control/mod.rs	# re-exports count_assignments_by_entity_type for the catalog pages below
+extensions/web/admin/src/repositories/users/access_control/rules.rs	# count_assignments_by_entity_type backs the internal-only catalog counts
+extensions/web/admin/src/repositories/users/user_queries.rs	# internal's department rollup labels the unassigned bucket, which its access matrix reads back
+extensions/web/site/src/config_loader/mod.rs	# internal loads the skills-page config; the template loads a feature-pages config
+extensions/web/admin/src/handlers/mod.rs	# internal mounts the catalog and device handlers; the template mounts access tokens
+extensions/web/admin/src/handlers/ssr/format.rs	# span and local-time helpers back the template-only evals and sessions pages
+extensions/web/admin/src/handlers/ssr/list_view.rs	# chip, preset and preserved-query helpers back the template-only list pages
 
 # ---------------------------------------------------------------------
 # DEBT - one side is simply ahead. Port it, then delete the line.
 # ---------------------------------------------------------------------
-# (empty)
+extensions/web/admin/src/repositories/governance/counts.rs	# internal gates the ssr_governance-only rollups behind the governance-ssr feature; port with the Why-comment cleanup wave
+extensions/web/admin/src/repositories/governance/hook_events.rs	# internal gates the ssr_governance-only hook-event queries behind the governance-ssr feature; port with the Why-comment cleanup wave
+extensions/web/admin/src/repositories/governance/mod.rs	# internal cfg-gates the governance-ssr re-exports the template consumes unconditionally; port with the Why-comment cleanup wave
+extensions/web/admin/src/repositories/governance/rankings.rs	# internal gates the ssr_governance-only rankings behind the governance-ssr feature; port with the Why-comment cleanup wave
+# (2026-08-05: the coverage-campaign seams and bug fixes were all ported to
+# the template and the files converged; only genuinely product-divergent test
+# files remain, listed under PRODUCT.)
+
+# Internal ships one theme. The template keeps the light/dark toggle, so it
+# still registers the theme module and still emits the colorScheme snippets
+# the inline-code gate has to excuse; neither exists here.
+extensions/web/site/src/assets/js_services.rs	# template registers theme.js for its light/dark toggle; internal has no theme module
+extensions/web/tests/asset_manifest.rs	# internal's flash guard is CSS-only, so the shell needs the critical-CSS carve-out and not the template's colorScheme-script one
+
+extensions/web/admin/src/repositories/governance/decisions.rs	# internal ships no decisions-ledger page, so list_decisions_filtered is removed here; the template still serves it
+extensions/web/tests/frontend_standards.rs	# internal ships no blog, so the blog-print !important carve-out and blog TOP_LEVEL entry are removed here; the template keeps both
+
+extensions/web/admin/src/gateway_safety.rs	# internal adds the WordBlocklistScanner (client-specific banned-word list); the template ships only the secrets scanner
+
+# ---------------------------------------------------------------------
+# APPROVAL (2026-08-27) - internal handles `Decision::Pending`, the third
+# governance verdict. The template pins released systemprompt 0.40.0 from
+# crates.io, whose `Decision` enum has only Allow and Deny — the variant
+# landed on core's `next` after that release. These are not a decision to
+# diverge: they are debt with a date on it. When the template adopts a core
+# that carries Pending, port them and delete these five lines.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/handlers/webhook/governance/authz.rs	# internal degrades a hold to a deny on a plane that cannot park a request, and audits it verbatim; template's core has no Pending to match on
+extensions/web/admin/src/handlers/webhook/governance/handler/mod.rs	# internal renders a hold as a [GOVERNANCE] reason on the hook plane; template's core has no Pending to match on
+extensions/web/admin/src/handlers/webhook/governance/types.rs	# internal carries the `Ask` wire value — Pending rendered for a caller at a terminal, asked in place rather than parked; template's core has no Pending
+extensions/web/admin/src/repositories/governance/effective.rs	# internal reports a hold as its own "pending" verdict rather than collapsing it to allow or deny; template's core has no Pending
+extensions/web/admin/src/repositories/users/access_control/matrix.rs	# internal renders the "pending" cell in the access matrix; template's core has no Pending
+
+# ---------------------------------------------------------------------
+# SESSION REGISTRY (2026-08-27) - internal's migration 030 added cwd,
+# workspace, handle, last_event_at and the live-session columns to
+# plugin_session_summaries so a session can be addressed and its cost
+# attributed to a repository. The template's schema has none of them, so
+# these files reference columns that do not exist there. Port the schema
+# first, or not at all; the code cannot move on its own.
+# ---------------------------------------------------------------------
+extensions/web/admin/src/handlers/hooks_track/processing.rs	# internal writes the session-registry columns and implements /hooks/statusline; template has neither the columns nor the handler
+extensions/web/admin/src/handlers/webhook/tracking.rs	# internal binds the statusline payload (model, running cost, context window) that template's handler discards
+extensions/web/admin/src/handlers/webhook/helpers.rs	# internal returns the validated JwtClaims so statusline rows carry user attribution; template's webhook auth has no consumer for them
+extensions/web/admin/src/repositories/dashboard/usage_aggregations/daily.rs	# internal upserts cwd/workspace/last_event_at on the daily rollup; those columns do not exist in the template
+
+# ---------------------------------------------------------------------
+# PRODUCT (2026-08-27)
+# ---------------------------------------------------------------------
+extensions/mcp/shared/src/lib.rs	# internal declares the approval gate and the brand ArtifactTheme; the template ships neither
+extensions/web/admin/src/handlers/ssr/ssr_setup.rs	# each fork's setup cards link into its own documentation site; the two sites have different pages

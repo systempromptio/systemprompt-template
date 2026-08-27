@@ -59,16 +59,17 @@ pub(crate) async fn upsert_entity_rule_handler(
     Json(body): Json<UpsertRuleBody>,
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&entity_type)?;
-    // Why: the emptiness check precedes subject parsing — a blank value would
-    // fail the parse too, and "invalid rule_type" for a missing value points
-    // the caller at the wrong field.
     if body.rule_value.trim().is_empty() {
         return Err(AdminError::BadRequest("rule_value required".to_owned()));
     }
-    let subject = parse_subject(&body.rule_type, &body.rule_value)
-        .ok_or_else(|| AdminError::BadRequest("invalid rule_type".to_owned()))?;
     let access = parse_access(&body.access)
         .ok_or_else(|| AdminError::BadRequest("invalid access".to_owned()))?;
+    // Why: parse_subject rejects both an unknown rule_type and a rule_value
+    // that does not parse for it, so it runs last — otherwise a malformed
+    // value reports the type as invalid and hides the real fault.
+    let subject = parse_subject(&body.rule_type, &body.rule_value).ok_or_else(|| {
+        AdminError::BadRequest("invalid rule_type or rule_value for it".to_owned())
+    })?;
     let rule = repo(&pool)
         .upsert_rule(UpsertRuleParams {
             entity_type: kind,
