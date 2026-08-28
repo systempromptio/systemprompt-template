@@ -216,6 +216,42 @@ async fn govern_answers_two_hundred_with_a_decision_either_way() {
         status,
     );
 
+    // The envelope's agent id is a self-report: it must reach the audit blob
+    // as a claim and never the `agent_id` identity column, and it must not
+    // raise the scope the call is governed under.
+    // The audit row is written off the request path, so poll for it rather
+    // than read once — a single read passes or fails on scheduling, which is
+    // the one thing an assertion about a security boundary must not do.
+    let mut claimed: Vec<(Option<String>, Option<String>)> = Vec::new();
+    for _ in 0..50 {
+        claimed = sqlx::query_as(
+            "SELECT agent_id, evaluated_rules->'principal'->'claimed'->>'agent_id' \
+             FROM governance_decisions WHERE session_id = $1 \
+             AND evaluated_rules->'principal'->'claimed' IS NOT NULL",
+        )
+        .bind(&session)
+        .fetch_all(&*db.pool)
+        .await
+        .expect("read claimed-agent rows");
+        if !claimed.is_empty() {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    }
+    if claimed.is_empty() {
+        failures.push("  the subagent's self-reported id was not kept as a claim".to_owned());
+    }
+    for (agent_id, claimed_id) in &claimed {
+        if agent_id.is_some() {
+            failures.push(format!(
+                "  a self-reported agent id landed in the identity column: {agent_id:?}"
+            ));
+        }
+        if claimed_id.as_deref() != Some("contract-agent") {
+            failures.push(format!("  the claim recorded the wrong id: {claimed_id:?}"));
+        }
+    }
+
     // An envelope with nothing recognisable still gets a decision — the gate
     // cannot answer "I do not know" without letting the call through.
     let (status, body) = app.call_with_bearer(post(GOVERN, "{}"), &token).await;
