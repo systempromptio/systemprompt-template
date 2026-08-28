@@ -67,13 +67,6 @@ rate_limits:
   stream_per_second: 100
   content_per_second: 50
   burst_multiplier: 3
-  tier_multipliers:
-    admin: 10.0
-    user: 1.0
-    a2a: 5.0
-    mcp: 5.0
-    service: 5.0
-    anon: 0.5
 system_admin:
   username: admin
 runtime:
