@@ -178,6 +178,10 @@ async fn audit_decision(
         policy: POLICY_NAME,
         reason: &reason_str,
         evaluated_rules: &evaluated,
+        client_id: req
+            .client_id
+            .as_ref()
+            .map(systemprompt::identifiers::ClientId::as_str),
         plugin_id: None,
         act_chain: &req.act_chain,
         context_id: context_id.as_str(),

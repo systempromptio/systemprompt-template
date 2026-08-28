@@ -50,8 +50,8 @@ systemprompt-web-site = { path = "../extensions/web/site" }
 # The contract crate additionally enables `full`, which links the core
 # extension crates whose `register_extension!` registrations carry the
 # migrations the admin schema needs.
-systemprompt = { version = "0.40.0", default-features = false, features = ["core", "database"] }
-systemprompt-security = { version = "0.40.0" }
+systemprompt = { version = "0.41.0", default-features = false, features = ["core", "database"] }
+systemprompt-security = { version = "0.41.0" }
 
 # HTTP contract harness — drives the real admin router in-process.
 axum = "0.8"
@@ -82,8 +82,8 @@ jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 # the manifest of the workspace being built, and tests/ is a separate
 # workspace, so without this the test crates resolve core from crates.io
 # while the extensions under test resolve it from the local checkout.
-# Keep commented for published builds and uncomment in lockstep with the
-# root patch block.
+# Commented in lockstep with the root patch block: core 0.41.0 is published,
+# so both workspaces build against the crate.
 # [patch.crates-io]
 # systemprompt = { path = "../../systemprompt-core/systemprompt" }
 # systemprompt-models = { path = "../../systemprompt-core/crates/shared/models" }

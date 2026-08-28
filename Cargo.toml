@@ -28,7 +28,7 @@ opt-level = "z"
 [workspace.package]
 edition = "2024"
 rust-version = "1.96"
-version = "0.40.0"
+version = "0.41.0"
 authors = ["systemprompt.io <ed@systemprompt.io>"]
 license = "MIT"
 repository = "https://github.com/systempromptio/systemprompt-template"
@@ -39,8 +39,8 @@ documentation = "https://systemprompt.io/documentation"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.40.0", default-features = false, features = ["core", "database", "config"] }
-systemprompt-security = { version = "0.40.0" }
+systemprompt = { version = "0.41.0", default-features = false, features = ["core", "database", "config"] }
+systemprompt-security = { version = "0.41.0" }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -236,10 +236,14 @@ anyhow = { workspace = true }
 workspace = true
 
 
-# Local development patch: route systemprompt-* crates to a local
-# systemprompt-core checkout so changes there are picked up without a
-# crates.io release. Keep this commented for published builds; uncomment
-# only for local cross-repo work against an unreleased core.
+# `next` builds against the sibling systemprompt-core checkout on its own
+# `next`; `main` builds against the published crate. CI materialises the
+# sibling at bridge/CORE_REF. The version requirements above must track
+# whatever the patch points at: a patch whose version does not satisfy them is
+# silently ignored and the build falls back to the last published release.
+# COMMENTED: core 0.41.0 is published, so this builds against the crate.
+# Uncomment only for local cross-repo work against an unreleased core, and
+# bump the version requirements above to match it.
 # [patch.crates-io]
 # systemprompt = { path = "../systemprompt-core/systemprompt" }
 # systemprompt-models = { path = "../systemprompt-core/crates/shared/models" }

@@ -175,9 +175,14 @@ async fn set_entity_rules_replaces_the_previous_grants_rather_than_adding_to_the
     .await
     .expect("set initial rules");
 
-    set_entity_rules(&db.pool, EntityKind::Skill, &entity, &[deny_role("contractor")])
-        .await
-        .expect("replace rules");
+    set_entity_rules(
+        &db.pool,
+        EntityKind::Skill,
+        &entity,
+        &[deny_role("contractor")],
+    )
+    .await
+    .expect("replace rules");
 
     let rules = list_rules_for_entity(&db.pool, "skill", &entity)
         .await

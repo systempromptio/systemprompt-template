@@ -11,14 +11,14 @@ use axum::http::{HeaderMap, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use sqlx::PgPool;
-use systemprompt::identifiers::{CallId, SessionId};
+use systemprompt::identifiers::{AgentId, CallId, ClientId, SessionId, UserId};
 use systemprompt::oauth::SessionCreationService;
 use systemprompt::traits::SessionAnalytics;
 use systemprompt_security::authz::Decision;
 use systemprompt_security::policy::types::AccessScope;
 use systemprompt_security::policy::{
-    AgentScope, AuditOrigin, AuditTarget, ChainEntryOutcome, ChainEntryResult, DecisionAudit,
-    PolicyContext, PrincipalSnapshot, record_decision,
+    AgentScope, AuditOrigin, AuditTarget, ChainEntryOutcome, ChainEntryResult, ClaimedAgent,
+    DecisionAudit, PolicyContext, PrincipalSnapshot, record_decision,
 };
 
 use crate::types::webhook::{GovernQuery, HookEventPayload};
@@ -53,6 +53,31 @@ fn build_response(decision: &Decision, hook_event_name: &'static str) -> Respons
         },
     };
     (StatusCode::OK, Json(response)).into_response()
+}
+
+// Why: the hook payload's agent id is asserted by the caller, not verified
+// from the credential, so it lands in `claimed`. Core writes `agent_id` to the
+// verified identity column and keeps `claimed` in the audit blob only, where
+// it is never an input to a decision.
+fn principal_snapshot(
+    user_id: UserId,
+    session_id: SessionId,
+    agent_scope: AccessScope,
+    client_id: Option<ClientId>,
+    claimed_agent: Option<&AgentId>,
+) -> PrincipalSnapshot {
+    PrincipalSnapshot {
+        user_id,
+        session_id,
+        agent_session: None,
+        agent_id: None,
+        agent_scope,
+        client_id,
+        claimed: claimed_agent.map(|id| ClaimedAgent {
+            agent_id: id.as_str().to_owned(),
+            agent_type: None,
+        }),
+    }
 }
 
 pub(crate) async fn govern_tool_use(
@@ -97,6 +122,7 @@ pub(crate) async fn govern_tool_use(
         Err(e) => return e.into_response(),
     };
     let user_id = principal.user_id;
+    let client_id = principal.client_id;
 
     let db_scope = scope::scope_from_user_roles(&pool, &user_id).await;
     let principal_scope = scope::higher_privilege(principal.token_scope, db_scope);
@@ -125,13 +151,13 @@ pub(crate) async fn govern_tool_use(
         call_id: call_id.as_str().to_owned(),
         origin: AuditOrigin::Governed,
         decision: decision.clone(),
-        principal: PrincipalSnapshot {
+        principal: principal_snapshot(
             user_id,
-            session_id: session_id.clone(),
-            agent_session: None,
-            agent_id: agent_id.cloned(),
-            agent_scope: access_scope,
-        },
+            session_id.clone(),
+            access_scope,
+            client_id,
+            agent_id,
+        ),
         target: AuditTarget {
             tool_name: target.as_str().to_owned(),
             plugin_id: plugin_id.cloned(),
@@ -189,13 +215,16 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
             call_id: CallId::generate().as_str().to_owned(),
             origin: AuditOrigin::Governed,
             decision: deny_for_auth_failure(&reason),
-            principal: PrincipalSnapshot {
+            // Why: authentication is what failed, so nothing about this
+            // caller was verified — no client id, and the agent id it sent
+            // stays a claim.
+            principal: principal_snapshot(
                 user_id,
-                session_id: session_id.clone(),
-                agent_session: None,
-                agent_id,
-                agent_scope: AccessScope::Unknown,
-            },
+                session_id.clone(),
+                AccessScope::Unknown,
+                None,
+                agent_id.as_ref(),
+            ),
             target: AuditTarget {
                 tool_name,
                 plugin_id,
