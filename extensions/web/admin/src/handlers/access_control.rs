@@ -1,5 +1,6 @@
 //! HTTP handlers for the access-control matrix and rule editing.
 
+use std::str::FromStr;
 use std::sync::Arc;
 
 use axum::Json;
@@ -9,11 +10,13 @@ use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
+use systemprompt::security::authz::{EntityKind, RegisteredEntities};
 
 use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared;
 use crate::repositories;
+use crate::repositories::config::gateway::registered_routes_from_profile;
 use crate::types::UserContext;
 use crate::types::access_control::{
     AccessControlQuery, AccessControlRule, BulkAssignRequest, UpdateEntityRulesRequest,
@@ -49,28 +52,12 @@ pub(crate) async fn update_entity_rules_handler(
     Path((entity_type, entity_id)): Path<(String, String)>,
     Json(body): Json<UpdateEntityRulesRequest>,
 ) -> AdminResult<Response> {
-    if ![
-        "plugin",
-        "agent",
-        "mcp_server",
-        "marketplace",
-        "gateway_route",
-    ]
-    .contains(&entity_type.as_str())
-    {
-        return Err(AdminError::BadRequest(
-            "Invalid entity_type. Must be plugin, agent, mcp_server, marketplace, or gateway_route."
-                .to_owned(),
-        ));
-    }
+    let kind = editable_entity_kind(&entity_type)?;
+    registered_routes_from_profile()?.require(kind, &entity_id)?;
 
-    let rules = repositories::users::access_control::set_entity_rules(
-        &pool,
-        &entity_type,
-        &entity_id,
-        &body.rules,
-    )
-    .await?;
+    let rules =
+        repositories::users::access_control::set_entity_rules(&pool, kind, &entity_id, &body.rules)
+            .await?;
 
     if entity_type == "gateway_route" {
         let uid = user_ctx.user_id.clone();
@@ -91,11 +78,14 @@ pub(crate) async fn bulk_assign_handler(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<BulkAssignRequest>,
 ) -> AdminResult<Response> {
-    let entities: Vec<(String, String)> = body
+    // Why: every entity is checked before any is written, so a bad id in the
+    // batch rejects the whole request rather than half-applying it.
+    let registered = registered_routes_from_profile()?;
+    let entities = body
         .entities
         .iter()
-        .map(|e| (e.entity_type.clone(), e.entity_id.clone()))
-        .collect();
+        .map(|e| registered_entity(&registered, &e.entity_type, &e.entity_id))
+        .collect::<AdminResult<Vec<(EntityKind, String)>>>()?;
 
     let rules_per_entity = body.rules.len();
     let updated_count =
@@ -105,6 +95,35 @@ pub(crate) async fn bulk_assign_handler(
         rules_per_entity,
     })
     .into_response())
+}
+
+fn editable_entity_kind(entity_type: &str) -> AdminResult<EntityKind> {
+    let kind = EntityKind::from_str(entity_type)?;
+    if matches!(
+        kind,
+        EntityKind::Plugin
+            | EntityKind::Agent
+            | EntityKind::McpServer
+            | EntityKind::Marketplace
+            | EntityKind::GatewayRoute
+    ) {
+        Ok(kind)
+    } else {
+        Err(AdminError::BadRequest(
+            "Invalid entity_type. Must be plugin, agent, mcp_server, marketplace, or gateway_route."
+                .to_owned(),
+        ))
+    }
+}
+
+fn registered_entity(
+    registered: &RegisteredEntities,
+    entity_type: &str,
+    entity_id: &str,
+) -> AdminResult<(EntityKind, String)> {
+    let kind = EntityKind::from_str(entity_type)?;
+    registered.require(kind, entity_id)?;
+    Ok((kind, entity_id.to_owned()))
 }
 
 pub(crate) async fn user_matrix_handler(

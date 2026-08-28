@@ -26,7 +26,10 @@ impl GovernanceDecision {
     pub const fn from_decision(d: &Decision) -> Self {
         match d {
             Decision::Allow { .. } => Self::Allow,
-            Decision::Deny { .. } => Self::Deny,
+            // Why: this webhook cannot park a call, so a governance hold is
+            // refused rather than admitted — the same degradation core's
+            // `RuleBasedHook` applies.
+            Decision::Deny { .. } | Decision::Pending { .. } => Self::Deny,
         }
     }
 }

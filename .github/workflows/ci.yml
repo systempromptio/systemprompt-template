@@ -32,6 +32,20 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
+      # The root workspace builds against the sibling core checkout via
+      # [patch.crates-io] on `next`, and bridge/ depends on systemprompt-bridge
+      # by path. Materialise the sibling at the ref bridge/CORE_REF pins: the
+      # checkout must land inside the workspace, so link it into place.
+      - name: Read pinned core ref
+        id: core
+        run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: systempromptio/systemprompt-core
+          ref: ${{ steps.core.outputs.ref }}
+          path: .core-sibling
+      - name: Link sibling core beside the workspace
+        run: ln -sfn "$GITHUB_WORKSPACE/.core-sibling" "$GITHUB_WORKSPACE/../systemprompt-core"
       # rust-toolchain.toml pins the nightly channel and its components
       # (rustfmt, clippy, llvm-tools). `rustup show` installs exactly that
       # toolchain, so fmt runs on the same version developers use locally with
@@ -48,6 +62,20 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
+      # The root workspace builds against the sibling core checkout via
+      # [patch.crates-io] on `next`, and bridge/ depends on systemprompt-bridge
+      # by path. Materialise the sibling at the ref bridge/CORE_REF pins: the
+      # checkout must land inside the workspace, so link it into place.
+      - name: Read pinned core ref
+        id: core
+        run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: systempromptio/systemprompt-core
+          ref: ${{ steps.core.outputs.ref }}
+          path: .core-sibling
+      - name: Link sibling core beside the workspace
+        run: ln -sfn "$GITHUB_WORKSPACE/.core-sibling" "$GITHUB_WORKSPACE/../systemprompt-core"
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --workspace --locked
@@ -59,6 +87,20 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
+      # The root workspace builds against the sibling core checkout via
+      # [patch.crates-io] on `next`, and bridge/ depends on systemprompt-bridge
+      # by path. Materialise the sibling at the ref bridge/CORE_REF pins: the
+      # checkout must land inside the workspace, so link it into place.
+      - name: Read pinned core ref
+        id: core
+        run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: systempromptio/systemprompt-core
+          ref: ${{ steps.core.outputs.ref }}
+          path: .core-sibling
+      - name: Link sibling core beside the workspace
+        run: ln -sfn "$GITHUB_WORKSPACE/.core-sibling" "$GITHUB_WORKSPACE/../systemprompt-core"
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       # Every extension crate that invokes a sqlx query macro must ship a
@@ -101,6 +143,20 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
+      # The root workspace builds against the sibling core checkout via
+      # [patch.crates-io] on `next`, and bridge/ depends on systemprompt-bridge
+      # by path. Materialise the sibling at the ref bridge/CORE_REF pins: the
+      # checkout must land inside the workspace, so link it into place.
+      - name: Read pinned core ref
+        id: core
+        run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: systempromptio/systemprompt-core
+          ref: ${{ steps.core.outputs.ref }}
+          path: .core-sibling
+      - name: Link sibling core beside the workspace
+        run: ln -sfn "$GITHUB_WORKSPACE/.core-sibling" "$GITHUB_WORKSPACE/../systemprompt-core"
 
       - name: Check for tests workspace
         id: tests

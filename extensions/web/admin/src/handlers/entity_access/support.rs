@@ -8,6 +8,7 @@
 use std::sync::Arc;
 
 use sqlx::PgPool;
+use systemprompt::config::ProfileBootstrap;
 use systemprompt::identifiers::{DepartmentId, RoleId, UserId};
 use systemprompt_security::authz::{Access, AccessControlRepository, EntityKind, SubjectRef};
 
@@ -59,12 +60,9 @@ pub(super) fn parse_access(s: &str) -> Option<Access> {
 
 pub(super) fn collect_entity_ids(entity_type: &str) -> AdminResult<Vec<String>> {
     match entity_type {
-        "gateway_route" => {
-            let profile_path = shared::get_profile_path()?;
-            let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
-                .map_err(AdminError::internal)?;
-            Ok(cfg.routes.into_iter().map(|r| r.id).collect())
-        },
+        "gateway_route" => Ok(repositories::config::gateway::dispatchable_route_ids(
+            ProfileBootstrap::get()?,
+        )),
         "mcp_server" => {
             let services_path = shared::get_services_path()?;
             let servers =

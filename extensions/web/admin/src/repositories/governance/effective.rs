@@ -17,9 +17,10 @@ use std::sync::Arc;
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{McpServerId, RouteId, UserId};
+use systemprompt_security::authz::resolver::{ResolveInput, resolve};
 use systemprompt_security::authz::{
-    AccessControlRepository, AccessRule, Decision, EntityKind, EntityRef, MatchedBy, ResolveInput,
-    SubjectAttributes, SubjectDimension, resolve,
+    AccessControlRepository, AccessRule, Decision, EntityKind, EntityRef, MatchedBy,
+    SubjectAttributes, SubjectDimension,
 };
 
 use crate::authz::{dimensions, subject_attributes_for};
@@ -148,6 +149,7 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
     let (decision, reason) = match dec {
         Decision::Allow { matched_by } => ("allow".to_owned(), allow_reason(&uid, &matched_by)),
         Decision::Deny { reason } => ("deny".to_owned(), reason.to_string()),
+        Decision::Pending { reason } => ("pending".to_owned(), reason.to_string()),
     };
     let tab = if entity.kind() == EntityKind::GatewayRoute {
         "gateway"

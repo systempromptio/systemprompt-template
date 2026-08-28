@@ -21,9 +21,10 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 use systemprompt::identifiers::{Actor, MarketplaceId, SessionId};
+use systemprompt_security::authz::resolver::{ResolveInput, ResolveParent, resolve};
 use systemprompt_security::authz::{
     AccessControlRepository, AccessRule, AuthzDecision, AuthzRequest, Decision, DecisionTag,
-    EntityKind, EntityRef, EntityRow, ResolveInput, ResolveParent, resolve,
+    DenyReason, EntityKind, EntityRef, EntityRow,
 };
 use tokio::sync::RwLock;
 
@@ -131,6 +132,7 @@ async fn audit_decision(
         match decision {
             Decision::Allow { .. } => (DecisionTag::Allow, String::new(), None),
             Decision::Deny { reason } => (DecisionTag::Deny, reason.to_string(), None),
+            Decision::Pending { reason } => (DecisionTag::Pending, reason.to_string(), None),
         };
     let id = uuid::Uuid::new_v4().to_string();
     let entity_type_str = req.entity.kind().as_str();
@@ -236,6 +238,27 @@ pub(crate) async fn govern_authz(
         Decision::Deny { reason } => AuthzDecision::Deny {
             reason,
             policy: POLICY_NAME.to_owned(),
+        },
+        // Why: the rule resolver answers "may this subject reach this entity",
+        // which has no third answer — only the governance chain's
+        // `require_approval` returns `Pending`, and it never runs here. A hold
+        // reaching this webhook means a policy was mounted where it cannot be
+        // honoured, so it degrades to a deny rather than an allow.
+        Decision::Pending { reason } => {
+            tracing::error!(
+                %reason,
+                "a governance hold reached the admin authz webhook, which cannot park a request; \
+                 refusing it"
+            );
+            AuthzDecision::Deny {
+                reason: DenyReason::PolicyViolation {
+                    policy: "require_approval".to_owned(),
+                    detail: std::borrow::Cow::Borrowed(
+                        "approval required, but this enforcement point cannot hold a request",
+                    ),
+                },
+                policy: POLICY_NAME.to_owned(),
+            }
         },
     };
     (StatusCode::OK, Json(resp)).into_response()

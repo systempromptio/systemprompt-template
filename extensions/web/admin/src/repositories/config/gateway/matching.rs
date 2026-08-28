@@ -3,61 +3,28 @@
 //! Route ids are stable, slug-based identifiers derived from the model pattern
 //! plus a short hash of `(model_pattern, provider)`. [`glob_match`] implements
 //! the same first-match-wins `*` semantics the gateway uses at request time.
-
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
+//!
+//! Synthesis itself belongs to core and lives in
+//! `systemprompt::models::profile`. A second implementation here would only
+//! ever agree with core's by accident — the id is a hash, and any drift in the
+//! algorithm mints ids the gateway cannot dispatch — so the functions below
+//! delegate. They exist only to keep the `String`-returning signature this
+//! crate's callers expect, rather than core's `RouteId`.
 
 use crate::types::GatewayRouteView;
 
+#[must_use]
 pub fn slugify_pattern(pattern: &str) -> String {
-    let mut out = String::with_capacity(pattern.len());
-    let mut last_dash = false;
-    for ch in pattern.chars() {
-        let mapped: Option<&str> = if ch == '*' {
-            Some("star")
-        } else if ch.is_ascii_alphanumeric() {
-            None
-        } else {
-            Some("-")
-        };
-        match mapped {
-            Some("-") => {
-                if !last_dash && !out.is_empty() {
-                    out.push('-');
-                    last_dash = true;
-                }
-            },
-            Some(s) => {
-                out.push_str(s);
-                last_dash = false;
-            },
-            None => {
-                for lc in ch.to_lowercase() {
-                    out.push(lc);
-                }
-                last_dash = false;
-            },
-        }
-    }
-    while out.ends_with('-') {
-        out.pop();
-    }
-    while out.starts_with('-') {
-        out.remove(0);
-    }
-    if out.is_empty() {
-        out.push_str("route");
-    }
-    out
+    systemprompt::models::profile::slugify_pattern(pattern)
 }
 
+// Why: `String` rather than core's `RouteId` because every caller here writes
+// the id straight into profile YAML as a scalar.
+#[must_use]
 pub fn synthesize_route_id(model_pattern: &str, provider: &str) -> String {
-    let mut hasher = DefaultHasher::new();
-    model_pattern.hash(&mut hasher);
-    provider.hash(&mut hasher);
-    let h = hasher.finish();
-    let hash6: String = format!("{h:016x}").chars().take(6).collect();
-    format!("{}-{}", slugify_pattern(model_pattern), hash6)
+    systemprompt::models::profile::synthesize_route_id(model_pattern, provider)
+        .as_str()
+        .to_owned()
 }
 
 // Why: Best-effort: which route index (if any) would match the given model

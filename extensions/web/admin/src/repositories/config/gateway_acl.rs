@@ -20,7 +20,8 @@ use systemprompt_security::authz::{
     AccessControlRepository, AuthzError, EntityKind, EntityRow, UpsertRuleParams,
 };
 
-pub use systemprompt_security::authz::{Access, AccessRule, Decision, RuleType, resolve};
+pub use systemprompt_security::authz::resolver::resolve;
+pub use systemprompt_security::authz::{Access, AccessRule, Decision, RuleType};
 
 const ENTITY_TYPE: EntityKind = EntityKind::GatewayRoute;
 

@@ -45,22 +45,7 @@ fn build_session_cookies(body: &SetSessionRequest) -> HeaderMap {
 }
 
 fn build_clear_cookies() -> HeaderMap {
-    let secure_flag = if is_secure_context() { "; Secure" } else { "" };
-    let access_cookie =
-        format!("access_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0{secure_flag}");
-    let refresh_cookie = format!(
-        "refresh_token=; Path=/api/public/auth; HttpOnly; SameSite=Lax; Max-Age=0{secure_flag}"
-    );
-
-    let mut headers = HeaderMap::new();
-    if let Ok(val) = access_cookie.parse() {
-        headers.insert(SET_COOKIE, val);
-    }
-    if let Ok(val) = refresh_cookie.parse() {
-        headers.append(SET_COOKIE, val);
-    }
-
-    headers
+    systemprompt_web_shared::session_cookies::clear()
 }
 
 pub async fn set_session(

@@ -16,9 +16,10 @@ use std::str::FromStr;
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{RuleId, UserId};
+use systemprompt_security::authz::resolver::{ResolveInput, resolve};
 use systemprompt_security::authz::{
-    Access, AccessRule, Decision, DenyReason, EntityKind, EntityRef, MatchedBy, ResolveInput,
-    SubjectAttributes, SubjectDimension, resolve,
+    Access, AccessRule, Decision, DenyReason, EntityKind, EntityRef, MatchedBy, SubjectAttributes,
+    SubjectDimension,
 };
 
 use super::rules::list_all_rules;
@@ -237,6 +238,13 @@ fn resolve_effective(cell: &MatrixCell<'_>) -> (String, MatrixSource) {
     match decision {
         Decision::Allow { matched_by } => ("allow".to_owned(), allow_source(&uid, &matched_by)),
         Decision::Deny { reason } => ("deny".to_owned(), deny_source(&uid, &reason)),
+        Decision::Pending { reason } => (
+            "pending".to_owned(),
+            MatrixSource {
+                layer: "policy".into(),
+                detail: reason.to_string(),
+            },
+        ),
     }
 }
 

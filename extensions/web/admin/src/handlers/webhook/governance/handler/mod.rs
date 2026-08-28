@@ -43,6 +43,7 @@ fn build_response(decision: &Decision, hook_event_name: &'static str) -> Respons
     let permission_decision_reason = match decision {
         Decision::Allow { .. } => None,
         Decision::Deny { reason } => Some(format!("[GOVERNANCE] {reason}")),
+        Decision::Pending { reason } => Some(format!("[GOVERNANCE] {reason}")),
     };
     let response = GovernanceResponse {
         hook_specific_output: HookSpecificOutput {

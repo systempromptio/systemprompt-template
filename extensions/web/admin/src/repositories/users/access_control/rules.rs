@@ -3,6 +3,8 @@
 
 use sqlx::PgPool;
 
+use systemprompt::security::authz::EntityKind;
+
 use crate::types::access_control::{
     AccessControlRule, AccessControlRuleInput, AccessDecision, RuleType,
 };
@@ -50,10 +52,11 @@ pub async fn list_rules_for_entity(
 // added in core migration 007 rejects orphan rules.
 pub async fn set_entity_rules(
     pool: &PgPool,
-    entity_type: &str,
+    entity_type: EntityKind,
     entity_id: &str,
     rules: &[AccessControlRuleInput],
 ) -> Result<Vec<AccessControlRule>, sqlx::Error> {
+    let entity_type = entity_type.as_str();
     let mut tx = pool.begin().await?;
 
     sqlx::query!(
@@ -106,13 +109,14 @@ pub async fn set_entity_rules(
 
 pub async fn bulk_set_rules(
     pool: &PgPool,
-    entities: &[(String, String)],
+    entities: &[(EntityKind, String)],
     rules: &[AccessControlRuleInput],
 ) -> Result<usize, sqlx::Error> {
     let mut tx = pool.begin().await?;
     let mut count = 0usize;
 
-    for (entity_type, entity_id) in entities {
+    for (kind, entity_id) in entities {
+        let entity_type = kind.as_str();
         sqlx::query!(
             "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
              VALUES ($1, $2, false, 'admin:dashboard')
