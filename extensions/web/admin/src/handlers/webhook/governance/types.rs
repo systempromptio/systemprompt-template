@@ -21,16 +21,18 @@ use systemprompt_security::policy::ClaimedAgent;
 pub enum GovernanceDecision {
     Allow,
     Deny,
+    // Why: the hook contract's third value. It renders `Decision::Pending` on
+    // this plane — the caller is a person at a terminal, so the approval is
+    // asked for in place rather than parked for the admin console.
+    Ask,
 }
 
 impl GovernanceDecision {
     pub const fn from_decision(d: &Decision) -> Self {
         match d {
             Decision::Allow { .. } => Self::Allow,
-            // Why: this webhook cannot park a call, so a governance hold is
-            // refused rather than admitted — the same degradation core's
-            // `RuleBasedHook` applies.
-            Decision::Deny { .. } | Decision::Pending { .. } => Self::Deny,
+            Decision::Deny { .. } => Self::Deny,
+            Decision::Pending { .. } => Self::Ask,
         }
     }
 }
@@ -40,6 +42,7 @@ impl From<GovernanceDecision> for DecisionTag {
         match d {
             GovernanceDecision::Allow => Self::Allow,
             GovernanceDecision::Deny => Self::Deny,
+            GovernanceDecision::Ask => Self::Pending,
         }
     }
 }
