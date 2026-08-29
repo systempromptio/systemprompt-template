@@ -1,6 +1,6 @@
 //! Per-user access matrix: the effective grant for every catalog entity.
 //!
-//! This calls the same [`systemprompt_security::authz::resolve`] that
+//! This calls the same [`systemprompt_security::authz::resolver::resolve`] that
 //! `POST /govern/authz` calls, over the same rules and the same subject
 //! dimensions, so a cell here and a decision at the enforcement point cannot
 //! disagree. It used to carry its own forked `user > department > role`
