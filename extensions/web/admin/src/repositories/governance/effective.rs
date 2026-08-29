@@ -1,10 +1,10 @@
 //! Effective-permissions computation for the user-detail page.
 //!
 //! For a given user's roles, runs the pure
-//! [`systemprompt_security::authz::resolver::resolve`] resolver against every gateway
-//! route and every MCP server, returning per-entity Allow/Deny decisions
-//! with the rule that decided. The view layer renders these as collapsible
-//! sections under an "Effective Permissions" tab.
+//! [`systemprompt_security::authz::resolver::resolve`] resolver against every
+//! gateway route and every MCP server, returning per-entity Allow/Deny
+//! decisions with the rule that decided. The view layer renders these as
+//! collapsible sections under an "Effective Permissions" tab.
 //!
 //! Every subject dimension this extension declares participates, not just user
 //! and role: the department a user belongs to is looked up once per page via
