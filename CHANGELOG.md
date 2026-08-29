@@ -1,5 +1,61 @@
 # Changelog
 
+## [0.41.0] - 2026-08-29
+
+Tracks systemprompt-core **0.41.0**, the first template release built against
+the published crates rather than a path patch since the core version and the
+template version realigned.
+
+### Fixed
+
+- **Security:** the governance hook's `agent_id` can no longer raise the
+  caller's scope. `POST /hooks/govern` looked the payload's `agent_id` up in
+  `services/agents/*.yaml` and took the higher of that scope and the caller's
+  own, so a user-scoped token naming an admin-scoped agent was governed as
+  admin — waiving the tool blocklist and the approval hold. The value is a
+  self-report (a Claude Code subagent id) and never a platform agent. Scope now
+  derives from the token's permissions and the user's stored roles only; the
+  reported id is kept in `evaluated_rules` under `principal.claimed` and the
+  `agent_id` column holds credential-derived identity alone.
+  `resolve_agent_scope` and `load_all_agent_scopes` are removed outright.
+- `bridge/CORE_REF` is tracked. Sixteen workflow steps read it to materialise
+  the core sibling checkout, and on a clean CI checkout it did not exist.
+- Three stale intra-doc links to `systemprompt_security::authz::resolve`, which
+  moved to `authz::resolver::` in core 0.41.0.
+
+### Changed
+
+- **Breaking:** `rate_limits.tier_multipliers` is gone from the profile schema,
+  following its removal in core 0.41.0. `RateLimitsConfig` is
+  `deny_unknown_fields`, so a profile still carrying the block fails to load —
+  delete it.
+- The admin extension follows core's typed entity catalog and its three-way
+  `Decision`: a rule may now resolve to `Pending`, which the hook answers as
+  "ask" rather than collapsing to allow or deny.
+- The minimum supported Rust version is 1.96, and the MSRV job now actually
+  tests it.
+- CI gates pushes to `next`, not only pull requests.
+- `analytics`: `count_concurrent_sessions` and the actions-per-minute metrics
+  are removed.
+
+## [0.40.0] - 2026-08-26
+
+Tracks systemprompt-core **0.40.0**. Release-process work: promotion freezes a
+ref so a concurrent push cannot ride into `main`, `next` becomes the default
+branch, and the scheduled gate is dropped in favour of an on-demand pre-release
+cycle. Two call sites realigned with core.
+
+## [0.39.0] - 2026-08-25
+
+Tracks systemprompt-core **0.39.0**. The trace-list query is cached and four
+stale fixtures refreshed; setup-phase guides point at documentation pages that
+exist.
+
+## [0.38.0] - 2026-08-25
+
+Tracks systemprompt-core **0.38.0**. Carried no template-side changes of its
+own — released to keep the template's core pin current.
+
 ## [0.37.1] - 2026-08-25
 
 Tracks systemprompt-core **0.37.0** — the first template release whose version
