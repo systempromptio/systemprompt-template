@@ -9,6 +9,12 @@ on:
         required: false
   pull_request:
     branches: [main, next]
+  # Work lands on `next` by push, not through a pull request, so a PR-only
+  # trigger meant every commit that went straight to `next` was ungated. On
+  # 2026-08-29 three such commits sat there with no CI at all. The dispatch
+  # input above still exists for gating an explicit SHA at release time.
+  push:
+    branches: [next]
 
 concurrency:
   group: ci-${{ inputs.ref || github.ref }}
