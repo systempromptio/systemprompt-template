@@ -98,7 +98,7 @@ Five properties, each one demonstrable on your laptop before any procurement cal
 </details>
 
 <details>
-<summary><strong>Run the proof: 45 scripted demos, 44 cost nothing</strong></summary>
+<summary><strong>Run the proof: 45 scripted demos, 43 cost nothing</strong></summary>
 
 <br>
 
@@ -123,7 +123,7 @@ Every claim in this README has a script that executes it against the live binary
 ./demo/performance/02-load-test.sh        # 3,308 req/s burst, p99 22.7 ms
 ```
 
-Full index: [`demo/README.md`](demo/README.md). 44 of 45 scripts are free; one costs ~$0.01 (a real model call).
+Full index: [`demo/README.md`](demo/README.md). 43 of 45 scripts are free; two cost a real model call (~$0.01 and ~$0.001).
 
 </details>
 

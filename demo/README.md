@@ -180,7 +180,7 @@ Every demo below is a single fenced command. Run them in any order once prefligh
 ./demo/governance/09-pi-agent.sh
 ```
 
-[`governance/10-safety-scanner.sh`](governance/10-safety-scanner.sh) — the gateway safety scanner detects a jailbreak phrase and a card, and does **not** flag a trace id, a 40-digit run, or "you are now" in ordinary prose.
+[`governance/10-safety-scanner.sh`](governance/10-safety-scanner.sh) — **the gateway safety scanner detects a jailbreak phrase and a card, and does not flag a trace id, a 40-digit run, or "you are now" in ordinary prose (two small model calls, ~$0.001)**.
 ```bash
 ./demo/governance/10-safety-scanner.sh
 ```
