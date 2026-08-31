@@ -208,3 +208,9 @@ rustc-ice-*.txt
 
 # Generated at publish time by bundle_admin_css
 storage/files/css/admin-bundle.css
+
+# Per-crate sqlx caches are scratch for `just prepare`, which copies their
+# queries into the root .sqlx/ and then deletes them. Only the root cache is
+# tracked; every crate below it is a workspace member and resolves against it.
+extensions/**/.sqlx/
+!/.sqlx/

@@ -5,11 +5,13 @@
 //! mutate, and re-serialize that block while keeping every route's stable `id`
 //! synchronized.
 
+mod catalog;
 mod config;
 mod matching;
 mod routes;
 mod yaml_io;
 
+pub use catalog::{dispatchable_route_ids, registered_routes, registered_routes_from_profile};
 pub use config::{get_gateway_config, update_gateway_settings};
 pub use matching::{
     find_matching_route, find_matching_route_index, find_route_index_by_id, glob_match,

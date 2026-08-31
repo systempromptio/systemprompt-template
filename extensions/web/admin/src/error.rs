@@ -158,6 +158,15 @@ impl From<systemprompt::oauth::OauthError> for AdminError {
     }
 }
 
+impl From<systemprompt::security::authz::AuthzError> for AdminError {
+    fn from(value: systemprompt::security::authz::AuthzError) -> Self {
+        match value {
+            systemprompt::security::authz::AuthzError::Validation(msg) => Self::BadRequest(msg),
+            other => Self::Internal(Box::new(other)),
+        }
+    }
+}
+
 impl From<systemprompt::models::errors::ConfigError> for AdminError {
     fn from(value: systemprompt::models::errors::ConfigError) -> Self {
         Self::Internal(Box::new(value))

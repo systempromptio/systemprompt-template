@@ -52,15 +52,29 @@ known = {
     "marketplace": marketplaces,
     "plugin": plugins,
 }
-# gateway_route and hook entities are registered from the runtime profile at
-# startup and cannot be resolved statically.
-unresolvable = {"gateway_route", "hook"}
+# Nothing registers a `hook` entity: no loader or bootstrap writes that kind,
+# so a literal hook id has no catalog to be checked against — and, like a
+# gateway_route id, it would be minted rather than validated. A hook rule may
+# use entity_match; a literal id is rejected below with the route ids.
+minted_not_validated = {"gateway_route", "hook"}
 
 roles = load(root / "services/access-control/roles.yaml")
 for rule in roles.get("rules") or []:
     etype = rule.get("entity_type")
     eid = rule.get("entity_id")
-    if eid is None or etype in unresolvable:
+    if eid is None:
+        continue
+    # A literal gateway_route id cannot be validated here (profiles are
+    # gitignored, so CI has no route list) and cannot be correct either: route
+    # ids are generated as synthesize_route_id(model_pattern, provider), so no
+    # hand-written id matches a real route. Reject the practice rather than the
+    # value — that needs no profile.
+    if etype in minted_not_validated:
+        errors.append(
+            f"roles.yaml: {etype} rules must use entity_match, not a literal "
+            f"entity_id ('{eid}') — no catalog registers a written-out {etype} id, "
+            f"so it would be minted, not checked"
+        )
         continue
     pool = known.get(etype)
     if pool is None:

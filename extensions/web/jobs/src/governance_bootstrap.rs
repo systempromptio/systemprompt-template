@@ -5,12 +5,18 @@
 //! 0. Validate `services/governance/config.yaml`, failing the boot rather than
 //!    letting an unparseable file degrade to the built-in defaults unnoticed,
 //!    and warn when the resulting chain enforces nothing.
-//! 1. Materialise the profile's gateway-route entities into
+//! 1. Reconcile the profile's gateway-route entities into
 //!    `access_control_entities` (so the FK on `access_control_rules` is
 //!    satisfied and a `gateway_route` `entity_match` glob has routes to expand
-//!    over).
+//!    over), deleting catalog rows no profile route claims.
 //! 2. Project `services/access-control/*.yaml` into the authz tables via core
-//!    ingestion.
+//!    ingestion, handing it step 1's route ids as the authoritative
+//!    `gateway_route` catalog. For a kind it is not handed, core ingestion
+//!    self-materialises a catalog row for any literal `entity_id`, which would
+//!    turn a mistyped or invented route id into a silent grant on a route that
+//!    can never dispatch; passing the real set makes ingestion reject it
+//!    instead. Step 1 must therefore run first — it is what makes the set
+//!    authoritative.
 //! 3. Load the gateway model allow-list into `ai_gateway_policies`.
 //!
 //! Runs once at boot as a `scheduler.bootstrap_jobs` entry so authorization is
@@ -25,8 +31,13 @@ use systemprompt::database::DbPool;
 use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
+use systemprompt::security::authz::{EntityKind, RegisteredEntities};
+
 use crate::error::JobError;
 use systemprompt_web_admin::repositories::config::acl_yaml_loader;
+use systemprompt_web_admin::repositories::config::gateway::{
+    dispatchable_route_ids, registered_routes,
+};
 use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -74,12 +85,12 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 
     let governance = check_governance_config(&services_path)?;
 
-    let registered = bootstrap_gateway_entities(db_pool).await?;
+    let catalog = bootstrap_gateway_entities(db_pool).await?;
 
     let pool = db_pool.write_pool().ok_or(MarketplaceError::Internal(
         "PgPool not available from database".to_owned(),
     ))?;
-    acl_yaml_loader::load_from_yaml(&pool, &services_path)
+    acl_yaml_loader::load_from_yaml(&pool, &services_path, &catalog.registered)
         .await
         .map_err(JobError::from)?;
 
@@ -91,7 +102,8 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 
     let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
     tracing::info!(
-        gateway_entities = registered,
+        gateway_entities = catalog.registered.known_ids(EntityKind::GatewayRoute).len(),
+        gateway_entities_pruned = catalog.pruned,
         gateway_policies = policy.inserted + policy.updated,
         governance_policies_active = governance.active,
         duration_ms,
@@ -136,26 +148,47 @@ pub fn check_governance_config(
     Ok(GovernanceStatus { active })
 }
 
-async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<usize, JobError> {
+struct GatewayCatalog {
+    registered: RegisteredEntities,
+    pruned: u64,
+}
+
+async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<GatewayCatalog, JobError> {
     let profile = systemprompt::config::ProfileBootstrap::get()?;
     let profile_path = systemprompt::config::ProfileBootstrap::get_path()?;
 
-    let route_ids = profile
-        .gateway
-        .as_ref()
-        .map(|gateway| gateway.dispatchable_route_ids(&profile.providers))
-        .unwrap_or_default();
-    let id_refs: Vec<&str> = route_ids
-        .iter()
-        .map(systemprompt::identifiers::RouteId::as_str)
-        .collect();
+    let route_ids = dispatchable_route_ids(profile);
+    let registered = registered_routes(&route_ids);
+    let id_refs: Vec<&str> = route_ids.iter().map(String::as_str).collect();
+
+    // Why: reconciling against an empty set would delete every gateway_route
+    // entity and cascade away every route grant. A profile with no gateway is
+    // a legitimate configuration, not a signal to empty the catalog, so leave
+    // it untouched and let step 2 run unenforced.
+    if id_refs.is_empty() {
+        tracing::warn!(
+            profile = %profile_path,
+            "profile declares no dispatchable gateway routes — leaving the gateway_route \
+             catalog untouched and not enforcing route ids in roles.yaml"
+        );
+        return Ok(GatewayCatalog {
+            registered,
+            pruned: 0,
+        });
+    }
 
     let source = format!("profile:{profile_path}");
     let repo = systemprompt::security::authz::AccessControlRepository::new(db_pool)
         .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
-    systemprompt::security::authz::reconcile_gateway_entities(&repo, &id_refs, &source)
-        .await
-        .map_err(|e| JobError::from(MarketplaceError::Internal(e.to_string())))
+    let report =
+        systemprompt::security::authz::reconcile_gateway_entities_exact(&repo, &id_refs, &source)
+            .await
+            .map_err(|e| JobError::from(MarketplaceError::Internal(e.to_string())))?;
+
+    Ok(GatewayCatalog {
+        registered,
+        pruned: report.pruned,
+    })
 }
 
 systemprompt::traits::submit_job!(&GovernanceBootstrapJob);

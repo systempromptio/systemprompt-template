@@ -14,6 +14,7 @@ workspace = true
 # departments, plugin_usage_*) the admin repositories own.
 systemprompt = { workspace = true, features = ["full"] }
 systemprompt-web-admin = { workspace = true }
+systemprompt-security = { workspace = true }
 systemprompt-web-extension = { workspace = true }
 
 chrono = { workspace = true }

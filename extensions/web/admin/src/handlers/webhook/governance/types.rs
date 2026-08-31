@@ -10,9 +10,10 @@ use serde::Serialize;
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt::identifiers::{AgentId, PluginId, SessionId};
+use systemprompt::identifiers::{PluginId, SessionId};
 use systemprompt::oauth::SessionCreationService;
 use systemprompt_security::authz::{Decision, DecisionTag};
+use systemprompt_security::policy::ClaimedAgent;
 
 /// Anthropic-mandated wire enum for `permissionDecision`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -20,6 +21,10 @@ use systemprompt_security::authz::{Decision, DecisionTag};
 pub enum GovernanceDecision {
     Allow,
     Deny,
+    // Why: the hook contract's third value. It renders `Decision::Pending` on
+    // this plane — the caller is a person at a terminal, so the approval is
+    // asked for in place rather than parked for the admin console.
+    Ask,
 }
 
 impl GovernanceDecision {
@@ -27,6 +32,7 @@ impl GovernanceDecision {
         match d {
             Decision::Allow { .. } => Self::Allow,
             Decision::Deny { .. } => Self::Deny,
+            Decision::Pending { .. } => Self::Ask,
         }
     }
 }
@@ -36,6 +42,7 @@ impl From<GovernanceDecision> for DecisionTag {
         match d {
             GovernanceDecision::Allow => Self::Allow,
             GovernanceDecision::Deny => Self::Deny,
+            GovernanceDecision::Ask => Self::Pending,
         }
     }
 }
@@ -66,7 +73,7 @@ pub(super) struct AuthDenialParams<'a> {
     // Why: Echoed into the response envelope so a `UserPromptSubmit` caller is not
     // answered with a `PreToolUse` denial it has to reinterpret.
     pub hook_event_name: &'static str,
-    pub agent_id: Option<&'a AgentId>,
+    pub claimed: Option<&'a ClaimedAgent>,
     pub plugin_id: Option<&'a PluginId>,
     pub session_service: &'a Arc<SessionCreationService>,
     pub headers: &'a HeaderMap,

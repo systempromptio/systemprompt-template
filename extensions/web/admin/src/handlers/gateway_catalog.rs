@@ -18,7 +18,8 @@ use serde::Serialize;
 use sqlx::PgPool;
 
 use systemprompt::identifiers::{RouteId, UserId};
-use systemprompt_security::authz::{EntityRef, ResolveInput};
+use systemprompt_security::authz::EntityRef;
+use systemprompt_security::authz::resolver::ResolveInput;
 
 use crate::authz::{dimensions, subject_attributes_for};
 use crate::error::{AdminError, AdminResult};

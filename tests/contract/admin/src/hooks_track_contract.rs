@@ -6,7 +6,7 @@
 //! handler. Everything that makes the endpoint interesting is downstream of a
 //! *recognised* event: the description generator, the dedup key, the entity
 //! detector, the daily aggregation, the session rollup, the title derivation,
-//! and the APM calculation all branch on the event kind and on which optional
+//! and the session analysis all branch on the event kind and on which optional
 //! fields the payload carries.
 //!
 //! Two properties are asserted:
@@ -448,8 +448,8 @@ async fn hook_track_deduplicates_and_rolls_up_the_session() {
             .expect("count daily aggregations");
     assert!(daily > 0, "ingestion must upsert the daily usage rollup");
 
-    // `Stop` runs the APM calculation and the concurrent-session count, and
-    // `SessionEnd` closes the summary — the two paths gated on event type.
+    // `Stop` runs the session analysis and `SessionEnd` closes the summary —
+    // the two paths gated on event type.
     for event in ["Stop", "SessionEnd"] {
         let body = format!(
             r#"{{{},"stop_hook_active":false,"reason":"clear"}}"#,

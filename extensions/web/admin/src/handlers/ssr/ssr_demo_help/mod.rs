@@ -20,7 +20,7 @@ pub(super) fn demo_help_text(page: &str) -> (&'static str, &'static str) {
 fn demo_help_core_pages(page: &str) -> Option<(&'static str, &'static str)> {
     match page {
         "control-center" => Some((
-            "The <strong>Control Center</strong> is your real-time operations hub. It shows live Claude sessions, APM (Actions Per Minute) metrics, conversation history, skill effectiveness ratings, and session health analytics. In a production deployment, this page streams live updates via SSE as your team uses Claude, giving you instant visibility into AI usage patterns and performance. The Control Center is fully functional in this demo &mdash; connect via <strong>Claude Code</strong> to see live session data populate in real time. Claude Code is the recommended integration for evaluation.",
+            "The <strong>Control Center</strong> is your real-time operations hub. It shows live Claude sessions, conversation history, skill effectiveness ratings, and session health analytics. In a production deployment, this page streams live updates via SSE as your team uses Claude, giving you instant visibility into AI usage patterns and performance. The Control Center is fully functional in this demo &mdash; connect via <strong>Claude Code</strong> to see live session data populate in real time. Claude Code is the recommended integration for evaluation.",
             "dashboard",
         )),
         "profile" => Some((

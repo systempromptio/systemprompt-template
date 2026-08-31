@@ -11,14 +11,14 @@ use axum::http::{HeaderMap, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use sqlx::PgPool;
-use systemprompt::identifiers::{CallId, SessionId};
+use systemprompt::identifiers::{CallId, ClientId, SessionId, UserId};
 use systemprompt::oauth::SessionCreationService;
 use systemprompt::traits::SessionAnalytics;
 use systemprompt_security::authz::Decision;
 use systemprompt_security::policy::types::AccessScope;
 use systemprompt_security::policy::{
-    AgentScope, AuditOrigin, AuditTarget, ChainEntryOutcome, ChainEntryResult, DecisionAudit,
-    PolicyContext, PrincipalSnapshot, record_decision,
+    AgentScope, AuditOrigin, AuditTarget, ChainEntryOutcome, ChainEntryResult, ClaimedAgent,
+    DecisionAudit, PolicyContext, PrincipalSnapshot, record_decision,
 };
 
 use crate::types::webhook::{GovernQuery, HookEventPayload};
@@ -43,6 +43,7 @@ fn build_response(decision: &Decision, hook_event_name: &'static str) -> Respons
     let permission_decision_reason = match decision {
         Decision::Allow { .. } => None,
         Decision::Deny { reason } => Some(format!("[GOVERNANCE] {reason}")),
+        Decision::Pending { reason } => Some(format!("[GOVERNANCE] {reason}")),
     };
     let response = GovernanceResponse {
         hook_specific_output: HookSpecificOutput {
@@ -52,6 +53,28 @@ fn build_response(decision: &Decision, hook_event_name: &'static str) -> Respons
         },
     };
     (StatusCode::OK, Json(response)).into_response()
+}
+
+// Why: the hook payload's agent id is asserted by the caller, not verified
+// from the credential, so it lands in `claimed`. Core writes `agent_id` to the
+// verified identity column and keeps `claimed` in the audit blob only, where
+// it is never an input to a decision.
+const fn principal_snapshot(
+    user_id: UserId,
+    session_id: SessionId,
+    agent_scope: AccessScope,
+    client_id: Option<ClientId>,
+    claimed: Option<ClaimedAgent>,
+) -> PrincipalSnapshot {
+    PrincipalSnapshot {
+        user_id,
+        session_id,
+        agent_session: None,
+        agent_id: None,
+        agent_scope,
+        client_id,
+        claimed,
+    }
 }
 
 pub(crate) async fn govern_tool_use(
@@ -77,7 +100,13 @@ pub(crate) async fn govern_tool_use(
         "PreToolUse"
     };
     let session_id = SessionId::new(payload.session_id());
-    let agent_id = payload.common.agent_id.as_ref();
+    // Why: the hook body's agent id is a self-report — a Claude Code subagent
+    // id, never a platform agent. It is kept for display and never becomes an
+    // identity or a scope input.
+    let claimed = payload.common.agent_id.as_ref().map(|id| ClaimedAgent {
+        agent_id: id.as_str().to_owned(),
+        agent_type: payload.common.agent_type.clone(),
+    });
     let plugin_id = query.plugin_id.as_ref();
 
     let denial_params = AuthDenialParams {
@@ -85,7 +114,7 @@ pub(crate) async fn govern_tool_use(
         session_id: &session_id,
         tool_name: target.as_str(),
         hook_event_name: response_event,
-        agent_id,
+        claimed: claimed.as_ref(),
         plugin_id,
         session_service: &session_service,
         headers: &headers,
@@ -96,12 +125,10 @@ pub(crate) async fn govern_tool_use(
         Err(e) => return e.into_response(),
     };
     let user_id = principal.user_id;
+    let client_id = principal.client_id;
 
     let db_scope = scope::scope_from_user_roles(&pool, &user_id).await;
-    let principal_scope = scope::higher_privilege(principal.token_scope, db_scope);
-    let access_scope = agent_id.map_or(principal_scope, |id| {
-        scope::higher_privilege(principal_scope, scope::resolve_agent_scope(id))
-    });
+    let access_scope = scope::higher_privilege(principal.token_scope, db_scope);
 
     // Why: one POST is one call, and this hook is the only point that sees it —
     // an out-of-process agent has no second enforcement point to inherit from.
@@ -124,13 +151,13 @@ pub(crate) async fn govern_tool_use(
         call_id: call_id.as_str().to_owned(),
         origin: AuditOrigin::Governed,
         decision: decision.clone(),
-        principal: PrincipalSnapshot {
+        principal: principal_snapshot(
             user_id,
-            session_id: session_id.clone(),
-            agent_session: None,
-            agent_id: agent_id.cloned(),
-            agent_scope: access_scope,
-        },
+            session_id.clone(),
+            access_scope,
+            client_id,
+            claimed,
+        ),
         target: AuditTarget {
             tool_name: target.as_str().to_owned(),
             plugin_id: plugin_id.cloned(),
@@ -153,7 +180,7 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
     let reason = reason.to_owned();
     let session_id = params.session_id.clone();
     let tool_name = params.tool_name.to_owned();
-    let agent_id = params.agent_id.cloned();
+    let claimed = params.claimed.cloned();
     let plugin_id = params.plugin_id.cloned();
     let session_service = Arc::clone(params.session_service);
     let headers = params.headers.clone();
@@ -188,13 +215,16 @@ fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
             call_id: CallId::generate().as_str().to_owned(),
             origin: AuditOrigin::Governed,
             decision: deny_for_auth_failure(&reason),
-            principal: PrincipalSnapshot {
+            // Why: authentication is what failed, so nothing about this
+            // caller was verified — no client id, and the agent id it sent
+            // stays a claim.
+            principal: principal_snapshot(
                 user_id,
-                session_id: session_id.clone(),
-                agent_session: None,
-                agent_id,
-                agent_scope: AccessScope::Unknown,
-            },
+                session_id.clone(),
+                AccessScope::Unknown,
+                None,
+                claimed,
+            ),
             target: AuditTarget {
                 tool_name,
                 plugin_id,

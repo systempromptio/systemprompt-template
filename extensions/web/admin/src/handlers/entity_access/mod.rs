@@ -20,6 +20,7 @@ use systemprompt::identifiers::RuleId;
 use systemprompt_security::authz::{Access, AccessRule, EntityRef, UpsertRuleParams};
 
 use crate::error::{AdminError, AdminResult};
+use crate::repositories::config::gateway::registered_routes_from_profile;
 
 use support::{collect_entity_ids, parse_access, parse_subject, repo, validate_entity_type};
 use types::{
@@ -59,16 +60,17 @@ pub(crate) async fn upsert_entity_rule_handler(
     Json(body): Json<UpsertRuleBody>,
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&entity_type)?;
-    // Why: the emptiness check precedes subject parsing — a blank value would
-    // fail the parse too, and "invalid rule_type" for a missing value points
-    // the caller at the wrong field.
     if body.rule_value.trim().is_empty() {
         return Err(AdminError::BadRequest("rule_value required".to_owned()));
     }
-    let subject = parse_subject(&body.rule_type, &body.rule_value)
-        .ok_or_else(|| AdminError::BadRequest("invalid rule_type".to_owned()))?;
     let access = parse_access(&body.access)
         .ok_or_else(|| AdminError::BadRequest("invalid access".to_owned()))?;
+    // Why: parse_subject rejects both an unknown rule_type and a rule_value
+    // that does not parse for it, so it runs last — otherwise a malformed
+    // value reports the type as invalid and hides the real fault.
+    let subject = parse_subject(&body.rule_type, &body.rule_value).ok_or_else(|| {
+        AdminError::BadRequest("invalid rule_type or rule_value for it".to_owned())
+    })?;
     let rule = repo(&pool)
         .upsert_rule(UpsertRuleParams {
             entity_type: kind,
@@ -104,6 +106,7 @@ pub(crate) async fn set_entity_default_handler(
     Json(body): Json<DefaultIncludedBody>,
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&entity_type)?;
+    registered_routes_from_profile()?.require(kind, &entity_id)?;
     let entity = EntityRef::from_kind_and_id(kind, &entity_id);
     repo(&pool)
         .upsert_entity(
@@ -122,8 +125,8 @@ pub(crate) async fn set_entity_default_handler(
     .into_response())
 }
 
-// Why: entity ids come from the on-disk profile (`gateway_route`) or
-// `services/mcp/*.yaml` (`mcp_server`), not from the database.
+// Why: entity ids come from the profile's dispatchable routes (`gateway_route`)
+// or `services/mcp/*.yaml` (`mcp_server`), not from the database.
 pub(crate) async fn list_all_entity_access_handler(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<AllAccessQuery>,

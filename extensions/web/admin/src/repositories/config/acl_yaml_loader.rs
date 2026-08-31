@@ -12,8 +12,10 @@
 //!
 //! - `services/access-control/roles.yaml` — role-scoped allow/deny rules.
 //!   Parsed into core's [`AccessControlConfig`] and projected by core
-//!   ingestion, which owns `entity_id` self-materialisation, `entity_match`
-//!   glob expansion, and `default_included`.
+//!   ingestion, which owns `entity_match` glob expansion, `default_included`,
+//!   and `entity_id` self-materialisation for the kinds the caller does not
+//!   enforce through [`RegisteredEntities`] — a `gateway_route` id outside the
+//!   profile's routes is rejected, never materialised.
 //! - `services/access-control/departments.yaml` — the web-owned `departments`
 //!   table.
 //! - `services/slack/*.yaml` — each app's `authz.allowed_roles`, projected onto
@@ -27,7 +29,7 @@ use serde::Deserialize;
 use sqlx::PgPool;
 use systemprompt::loader::ConfigLoader;
 use systemprompt_security::authz::{
-    AccessControlConfig, AccessControlIngestionService, IngestOptions,
+    AccessControlConfig, AccessControlIngestionService, IngestOptions, RegisteredEntities,
 };
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -36,14 +38,19 @@ use super::acl_yaml_types::{DepartmentsDoc, LoadReport, YamlDepartment};
 const ROLES_FILE: &str = "access-control/roles.yaml";
 const DEPARTMENTS_FILE: &str = "access-control/departments.yaml";
 
+// Why: `registered` is the caller's because only the caller knows where its
+// truth lives — for `gateway_route` that is the live profile, reconciled by
+// the governance bootstrap immediately before this runs. An empty
+// `RegisteredEntities` enforces nothing.
 pub async fn load_from_yaml(
     pool: &PgPool,
     services_path: &Path,
+    registered: &RegisteredEntities,
 ) -> Result<LoadReport, MarketplaceError> {
     let mut report = LoadReport::default();
 
     load_departments_file(pool, services_path, &mut report).await?;
-    load_roles_file(pool, services_path, &mut report).await?;
+    load_roles_file(pool, services_path, registered, &mut report).await?;
 
     let slack_workspaces = load_slack_apps(pool).await?;
 
@@ -90,6 +97,7 @@ async fn load_departments_file(
 async fn load_roles_file(
     pool: &PgPool,
     services_path: &Path,
+    registered: &RegisteredEntities,
     report: &mut LoadReport,
 ) -> Result<(), MarketplaceError> {
     let Some(cfg) = read_yaml::<AccessControlConfig>(services_path, ROLES_FILE).await? else {
@@ -104,6 +112,7 @@ async fn load_roles_file(
                 override_existing: true,
                 delete_orphans: false,
             },
+            registered,
         )
         .await
         .map_err(|e| MarketplaceError::Internal(e.to_string()))?;

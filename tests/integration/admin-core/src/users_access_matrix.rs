@@ -3,11 +3,11 @@
 //!
 //! The matrix does not implement its own precedence: it loads the rules and
 //! the catalog defaults, gathers the subject's dimension values, and hands all
-//! of it to the same `systemprompt_security::authz::resolve` the enforcement
-//! webhook calls. These tests therefore assert on the *reported layer* as much
-//! as on allow/deny, because the layer is what proves which band decided and
-//! that the extension dimensions (department, organization) reached the
-//! resolver at all.
+//! of it to the same `systemprompt_security::authz::resolver::resolve` the
+//! enforcement webhook calls. These tests therefore assert on the *reported
+//! layer* as much as on allow/deny, because the layer is what proves which band
+//! decided and that the extension dimensions (department, organization) reached
+//! the resolver at all.
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
