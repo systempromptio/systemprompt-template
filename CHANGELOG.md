@@ -1,10 +1,20 @@
 # Changelog
 
-## [0.41.0] - 2026-08-29
+## [0.42.0] - 2026-08-31
 
-Tracks systemprompt-core **0.41.0**, the first template release built against
-the published crates rather than a path patch since the core version and the
-template version realigned.
+Tracks systemprompt-core **0.42.0**. This entry also carries the work written
+up as 0.41.0, which was never released: the template was out of scope for that
+core release, so no `v0.41.0` tag and no `0.41.0` image were ever published.
+Recording it as shipped would have advertised a chart appVersion whose image
+does not exist, which is the failure `check-release-tag.sh` exists to prevent.
+
+### Changed
+
+- **Breaking (from core):** `DenyReason::HookUnavailable` gained a `detail`
+  field. The governance webhook's `deny_for_auth_failure` had been smuggling
+  the cause into `policy` as `auth_failure: <reason>`, which made every distinct
+  failure its own policy name and nothing groupable; the cause now goes in
+  `detail` and `policy` is the constant `auth_failure`.
 
 ### Fixed
 

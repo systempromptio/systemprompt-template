@@ -24,9 +24,14 @@ pub(super) struct Principal {
 }
 
 pub(super) fn deny_for_auth_failure(reason: &str) -> Decision {
+    // Why: core 0.42.0 split the cause out of `policy` into `detail`, so an
+    // audit row can tell a transient fault from a rejected token. The reason
+    // was being smuggled into `policy` as "auth_failure: <reason>", which made
+    // every distinct failure a distinct policy name and nothing groupable.
     Decision::Deny {
         reason: DenyReason::HookUnavailable {
-            policy: format!("auth_failure: {reason}"),
+            policy: "auth_failure".to_owned(),
+            detail: reason.to_owned(),
         },
     }
 }
