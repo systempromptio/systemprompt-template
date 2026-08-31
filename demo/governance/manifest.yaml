@@ -69,6 +69,17 @@ steps:
       Three denies (secret_scan) and one allow, all attributed to an admin
       agent in the audit table — proof the safety net holds against
       prompt-injection exfiltration.
+  - script: 10-safety-scanner.sh
+    label: Prove the gateway safety scanner detects, and does not over-detect
+    narrative: >
+      Four /v1/messages requests and four assertions on ai_safety_findings. A
+      jailbreak phrase and a Luhn-valid card are detected; a 32-hex trace id,
+      a 40-digit run, and the words "you are now" in ordinary prose are not.
+    outcome: >
+      Exactly one jailbreak finding and exactly one credit-card finding. The
+      equality is the assertion that matters: a scanner flagging every long
+      digit run passes both detection checks and is still the defect that
+      denied real traffic in production before core 0.42.0.
   - script: 07-rate-limiting.sh
     label: Exceed the rate-limit policy and watch governance deny
     narrative: >

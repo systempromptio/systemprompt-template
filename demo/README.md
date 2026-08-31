@@ -180,6 +180,11 @@ Every demo below is a single fenced command. Run them in any order once prefligh
 ./demo/governance/09-pi-agent.sh
 ```
 
+[`governance/10-safety-scanner.sh`](governance/10-safety-scanner.sh) — the gateway safety scanner detects a jailbreak phrase and a card, and does **not** flag a trace id, a 40-digit run, or "you are now" in ordinary prose.
+```bash
+./demo/governance/10-safety-scanner.sh
+```
+
 ### MCP
 
 [`mcp/01-mcp-servers.sh`](mcp/01-mcp-servers.sh) — server status and tools-by-server.
