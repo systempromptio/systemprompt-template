@@ -452,7 +452,16 @@ prepare:
     done
     # Workspace-level prepare (catches lib crates)
     cargo sqlx prepare --workspace
-    # Per-crate prepare for binary/extension crates that cargo sqlx skips
+    # Per-crate prepare for binary/extension crates that cargo sqlx skips.
+    #
+    # These caches are SCRATCH, not artefacts: each crate's queries are copied
+    # into the root .sqlx below and the per-crate directory is then removed.
+    # Every crate here is a root workspace member, so the root cache is the one
+    # the macros resolve against — `extensions/mcp/systemprompt` is a member
+    # that has never had its own cache and builds fine, and a workspace-wide
+    # `SQLX_OFFLINE=true cargo check --all-targets` passes with them deleted.
+    # Leaving them on disk committed a duplicate copy of the root cache, which
+    # is why a routine prepare showed up as a large unrelated diff.
     EXTENSION_DIRS="extensions/web extensions/mcp/shared extensions/mcp/systemprompt"
     for dir in $EXTENSION_DIRS; do
         if [ -f "{{justfile_directory()}}/$dir/Cargo.toml" ]; then
@@ -466,6 +475,8 @@ prepare:
             if ls "{{justfile_directory()}}/$dir/.sqlx/"*.json >/dev/null 2>&1; then
                 cp "{{justfile_directory()}}/$dir/.sqlx/"*.json "{{justfile_directory()}}/.sqlx/"
             fi
+            # Scratch, not an artefact — the queries now live in the root cache.
+            rm -rf "{{justfile_directory()}}/$dir/.sqlx"
         fi
     done
     echo "SQLx cache prepared successfully ($(ls {{justfile_directory()}}/.sqlx/ | wc -l) queries cached)"
