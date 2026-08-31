@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.42.1] - 2026-08-31
+
+Tracks systemprompt-core **0.42.0** — a template-only patch. No core change.
+
+### Fixed
+
+- Container deployments could not complete first boot. `docker/entrypoint.sh`
+  called `admin setup` without `--admin-email`, which core has required since
+  0.41.0, so every image-based install died with "An administrator email is
+  required" before serving anything. It affected every channel that boots this
+  image — compose, Coolify, Dokploy, Portainer, CapRover, CasaOS, Railway,
+  Render, Zeabur, Northflank and the DigitalOcean 1-Click droplet. The binary,
+  Homebrew, Helm and crates paths of 0.42.0 were unaffected.
+
+  `ADMIN_EMAIL` is now required rather than defaulted. Core stopped inventing an
+  address deliberately: the fabricated one was displayed as the operator's
+  identity on the device-link consent screen, directly above the control that
+  mints a durable personal access token. The entrypoint names the variable and
+  explains it, the compose templates declare `${ADMIN_EMAIL:?…}` so the failure
+  arrives at `docker compose up` with a usable message rather than in a crash
+  loop, and both compose smokes now set it.
+
 ## [0.42.0] - 2026-08-31
 
 Tracks systemprompt-core **0.42.0**. This entry also carries the work written

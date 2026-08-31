@@ -29,6 +29,7 @@ services:
         condition: service_healthy
     env_file: .env
     environment:
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?set ADMIN_EMAIL to an address you control}
       DATABASE_URL: postgres://systemprompt:${POSTGRES_PASSWORD:-systemprompt}@postgres:5432/systemprompt
     ports:
       - "${HTTP_PORT:-8080}:8080"
