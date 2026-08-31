@@ -1129,60 +1129,65 @@ record-svgs *NUMBERS:
 # BENCHMARKS
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Benchmark governance endpoint. Downloads `hey` for the host OS/arch on first run.
+# Benchmark the governance endpoint against the running profile.
+#
+# Why the URL is derived and not hardcoded: this recipe pointed at
+# http://localhost:8080 regardless of the profile. On an instance brought up by
+# `just setup-local <keys> <http_port> <pg_port>` that benchmarks nothing, or
+# worse, whichever unrelated instance happens to hold 8080 -- and it reports a
+# number either way. The demos already solve this in demo/_common.sh; this reads
+# the same api_server_url.
+#
+# `hey` must be installed. The old auto-download from
+# hey-release.s3.us-east-2.amazonaws.com now answers 403 for every asset, so the
+# fallback could only ever produce a confusing failure part-way through a run.
 benchmark REQUESTS="200" CONCURRENCY="100":
     #!/usr/bin/env bash
-    set -e
-    # Use system hey if available, else /tmp/hey
-    if command -v hey >/dev/null 2>&1; then
-        HEY="$(command -v hey)"
-    else
-        HEY="/tmp/hey"
+    set -euo pipefail
+    ROOT="{{justfile_directory()}}"
+    if ! command -v hey >/dev/null 2>&1; then
+        echo "benchmark: 'hey' is not installed." >&2
+        echo "  Debian/Ubuntu: sudo apt-get install hey" >&2
+        echo "  macOS:         brew install hey" >&2
+        echo "  Any platform:  go install github.com/rakyll/hey@latest" >&2
+        exit 1
     fi
-    # Re-download if the cached binary can't execute here (e.g. Linux hey on a Mac).
-    if ! { [[ -x "$HEY" ]] && "$HEY" --help >/dev/null 2>&1; }; then
-        rm -f "$HEY"
-        HEY="/tmp/hey"
-        OS_ARCH="$(uname -s)/$(uname -m)"
-        case "$OS_ARCH" in
-            Darwin/*)
-                HEY_URL="https://hey-release.s3.us-east-2.amazonaws.com/hey_darwin_amd64"
-                echo "Installing hey from $HEY_URL..."
-                curl -fsSL "$HEY_URL" -o "$HEY" && chmod +x "$HEY"
-                ;;
-            Linux/x86_64|Linux/amd64)
-                HEY_URL="https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64"
-                echo "Installing hey from $HEY_URL..."
-                if ! curl -fsSL "$HEY_URL" -o "$HEY"; then
-                    echo "ERROR: failed to download hey. Run: sudo apt-get install hey" >&2; exit 1
-                fi
-                chmod +x "$HEY"
-                ;;
-            *) echo "ERROR: no prebuilt hey for $OS_ARCH. Install with 'brew install hey' or 'go install github.com/rakyll/hey@latest'." >&2; exit 1 ;;
-        esac
-        if ! "$HEY" --help >/dev/null 2>&1; then
-            echo "ERROR: hey won't run on $OS_ARCH." >&2
-            if [[ "$OS_ARCH" == "Darwin/arm64" ]]; then
-                echo "       Apple Silicon: 'softwareupdate --install-rosetta' or 'brew install hey'." >&2
-            else
-                echo "       Install manually: 'sudo apt-get install hey' or 'go install github.com/rakyll/hey@latest'." >&2
-            fi
-            rm -f "$HEY"; exit 1
-        fi
+    # SYSTEMPROMPT_PROFILE is not always a profile NAME. `set dotenv-load` pulls
+    # in .env, where it is conventionally an absolute path to a profile.yaml --
+    # and in a copied .env, a path into a different checkout entirely. Accept
+    # both forms and never build a directory out of a path.
+    PROFILE_YAML=""
+    case "${SYSTEMPROMPT_PROFILE:-}" in
+        */*.yaml|*/*.yml) PROFILE_YAML="$SYSTEMPROMPT_PROFILE" ;;
+        "")               PROFILE_YAML="$ROOT/.systemprompt/profiles/local/profile.yaml" ;;
+        *)                PROFILE_YAML="$ROOT/.systemprompt/profiles/${SYSTEMPROMPT_PROFILE}/profile.yaml" ;;
+    esac
+    # A profile belonging to another checkout describes another server; prefer
+    # this one's if the pointed-at file is outside the tree.
+    case "$PROFILE_YAML" in
+        "$ROOT"/*) ;;
+        *) [ -f "$ROOT/.systemprompt/profiles/local/profile.yaml" ] \
+             && PROFILE_YAML="$ROOT/.systemprompt/profiles/local/profile.yaml" ;;
+    esac
+    BASE_URL="${BASE_URL:-}"
+    if [ -z "$BASE_URL" ] && [ -f "$PROFILE_YAML" ]; then
+        BASE_URL=$(grep -E '^[[:space:]]*api_server_url:' "$PROFILE_YAML" | head -1 \
+            | sed -E 's/.*api_server_url:[[:space:]]*//; s/[[:space:]]*$//; s/^"//; s/"$//')
     fi
-    TOKEN_FILE="demo/.token"
-    if [[ ! -f "$TOKEN_FILE" ]]; then
-        echo "ERROR: No token. Run: ./demo/00-preflight.sh" >&2
+    [ -n "$BASE_URL" ] && [ "$BASE_URL" != "null" ] || BASE_URL="http://localhost:8080"
+    TOKEN_FILE="$ROOT/demo/.token"
+    if [ ! -s "$TOKEN_FILE" ]; then
+        echo "benchmark: no token at $TOKEN_FILE — run ./demo/00-preflight.sh first." >&2
         exit 1
     fi
     TOKEN=$(cat "$TOKEN_FILE")
-    echo "Governance endpoint: {{REQUESTS}} requests, {{CONCURRENCY}} concurrent"
+    echo "Governance endpoint at $BASE_URL: {{REQUESTS}} requests, {{CONCURRENCY}} concurrent"
     echo ""
-    "$HEY" -n {{REQUESTS}} -c {{CONCURRENCY}} -m POST \
+    hey -n {{REQUESTS}} -c {{CONCURRENCY}} -m POST \
         -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" \
         -d '{"hook_event_name":"PreToolUse","tool_name":"Read","agent_id":"developer_agent","session_id":"bench","tool_input":{"file_path":"/src/main.rs"}}' \
-        "http://localhost:8080/api/public/hooks/govern?plugin_id=enterprise-demo"
+        "$BASE_URL/api/public/hooks/govern?plugin_id=enterprise-demo"
 
 # Syntax-check install.sh (install.sh is the user-facing installer)
 install-sh-test:
