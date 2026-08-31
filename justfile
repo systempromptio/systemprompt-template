@@ -719,6 +719,7 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
             "$BIN" admin setup --yes --no-migrate --environment local \
                 --db-host localhost --db-port "$PG_PORT" \
                 --db-user systemprompt --db-password 123 --db-name systemprompt \
+                --admin-email "$ADMIN_EMAIL" \
                 --default-provider "$DEFAULT_PROVIDER" \
                 "${KEY_ARGS[@]}"
         else
@@ -728,7 +729,8 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
             # provider becomes the default.
             SYSTEMPROMPT_NON_INTERACTIVE=1 "$BIN" admin setup --no-migrate --environment local \
                 --db-host localhost --db-port "$PG_PORT" \
-                --db-user systemprompt --db-password 123 --db-name systemprompt
+                --db-user systemprompt --db-password 123 --db-name systemprompt \
+                --admin-email "$ADMIN_EMAIL"
         fi
         if [ "$HTTP_PORT" != "8080" ]; then
             "$BIN" admin config server set --port "$HTTP_PORT" \
