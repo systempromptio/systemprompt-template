@@ -5301,7 +5301,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-mcp-agent"
-version = "0.42.0"
+version = "0.42.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -5319,7 +5319,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-mcp-shared"
-version = "0.42.0"
+version = "0.42.1"
 dependencies = [
  "serde",
  "sqlx",
@@ -5640,7 +5640,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-web-admin"
-version = "0.42.0"
+version = "0.42.1"
 dependencies = [
  "async-trait",
  "axum",
@@ -5672,7 +5672,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-web-content"
-version = "0.42.0"
+version = "0.42.1"
 dependencies = [
  "axum",
  "chrono",
@@ -5691,7 +5691,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-web-extension"
-version = "0.42.0"
+version = "0.42.1"
 dependencies = [
  "axum",
  "inventory",
@@ -5707,7 +5707,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-web-jobs"
-version = "0.42.0"
+version = "0.42.1"
 dependencies = [
  "async-trait",
  "inventory",
@@ -5726,7 +5726,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-web-shared"
-version = "0.42.0"
+version = "0.42.1"
 dependencies = [
  "axum",
  "chrono",
@@ -5744,7 +5744,7 @@ dependencies = [
 
 [[package]]
 name = "systemprompt-web-site"
-version = "0.42.0"
+version = "0.42.1"
 dependencies = [
  "async-trait",
  "chrono",
