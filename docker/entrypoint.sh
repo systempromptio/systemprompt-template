@@ -50,7 +50,20 @@ else
         elif [ -n "${OPENAI_API_KEY:-}" ]; then DEFAULT_PROVIDER=openai
         else DEFAULT_PROVIDER=gemini
         fi
+        # Why: core requires --admin-email since 0.41.0. It refuses to invent
+        # one because the address is shown as the operator's identity on the
+        # device-link consent screen, directly above the control that mints a
+        # durable personal access token. Ask here, with the variable named,
+        # rather than letting first boot die on the CLI's own error.
+        if [ -z "${ADMIN_EMAIL:-}" ]; then
+            echo "ERROR: ADMIN_EMAIL is required on first boot." >&2
+            echo "  It identifies the platform admin on sign-in and consent screens," >&2
+            echo "  so it must be an address you control. Set it in your .env or as" >&2
+            echo "  an environment variable on this service, then start again." >&2
+            exit 1
+        fi
         /app/bin/systemprompt admin setup -e docker \
+            --admin-email "$ADMIN_EMAIL" \
             --default-provider "$DEFAULT_PROVIDER" --yes --no-migrate
 
         # Setup authors a localhost dev profile; patch the parts the
