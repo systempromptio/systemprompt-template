@@ -6,7 +6,6 @@ use std::sync::Arc;
 use sqlx::PgPool;
 use systemprompt_security::authz::{Access, AccessControlRepository, EntityKind, RuleType};
 
-use crate::handlers::shared;
 use crate::repositories;
 use crate::repositories::analytics::requests::{
     RequestFilter, RequestPage, RequestSortSpec, list_requests_paged,
@@ -22,8 +21,7 @@ pub(super) async fn load_model_rows(
     pool: &PgPool,
     selected_user: Option<&str>,
 ) -> Result<Vec<ModelRowView>, crate::error::AdminHtmlError> {
-    let profile_path = shared::get_profile_path().map_err(crate::error::AdminHtmlError::from)?;
-    let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
+    let cfg = repositories::config::gateway::get_gateway_config()
         .map_err(|e| crate::error::AdminHtmlError::internal(e.to_string()))?;
 
     let repo = AccessControlRepository::from_pool(Arc::new(pool.clone()));

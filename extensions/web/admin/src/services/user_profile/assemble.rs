@@ -119,17 +119,14 @@ pub(super) fn read_tenant_id() -> Option<TenantId> {
 
 pub(super) fn build_gateway_access_block() -> Option<GatewayAccessBlock> {
     let profile = ProfileBootstrap::get().ok()?;
-    let gateway = profile
-        .gateway
-        .as_ref()
-        .and_then(systemprompt::models::profile::GatewayState::resolved)
-        .filter(|g| g.enabled)?;
+    let services = systemprompt::loader::ServicesBootstrap::get().ok()?;
+    let gateway = services.gateway_config().filter(|g| g.enabled)?;
 
     let base = profile.server.api_external_url.trim_end_matches('/');
     let prefix = gateway.inference_path_prefix.trim_end_matches('/');
     let inference_gateway_base_url = format!("{base}{prefix}");
 
-    let models: Vec<String> = profile
+    let models: Vec<String> = services
         .providers
         .advertised_model_ids(&[])
         .into_iter()

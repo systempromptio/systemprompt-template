@@ -23,7 +23,6 @@ use systemprompt_security::authz::resolver::ResolveInput;
 
 use crate::authz::{dimensions, subject_attributes_for};
 use crate::error::{AdminError, AdminResult};
-use crate::handlers::shared;
 use crate::repositories;
 use crate::repositories::config::acl_detect;
 use crate::repositories::config::gateway_acl::{self, Decision};
@@ -53,9 +52,7 @@ pub(crate) async fn for_user_handler(
     if !user_ctx.is_admin && user_ctx.user_id != user_id {
         return Err(AdminError::Forbidden("Forbidden".to_owned()));
     }
-    let profile_path = shared::get_profile_path()?;
-    let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
-        .map_err(AdminError::internal)?;
+    let cfg = repositories::config::gateway::get_gateway_config().map_err(AdminError::internal)?;
 
     let (user_roles, _department) =
         repositories::users::queries::find_user_roles_department(&pool, &user_id)
@@ -134,9 +131,7 @@ pub(crate) async fn detect_handler(
     if !user_ctx.is_admin {
         return Err(AdminError::Forbidden("Admin only".to_owned()));
     }
-    let profile_path = shared::get_profile_path()?;
-    let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
-        .map_err(AdminError::internal)?;
+    let cfg = repositories::config::gateway::get_gateway_config().map_err(AdminError::internal)?;
     let emitted = detect_after_the_fact(&pool, &cfg.routes, query.since_minutes).await?;
     Ok(Json(DetectResponse {
         emitted,

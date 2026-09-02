@@ -20,7 +20,7 @@ use systemprompt::identifiers::RuleId;
 use systemprompt_security::authz::{Access, AccessRule, EntityRef, UpsertRuleParams};
 
 use crate::error::{AdminError, AdminResult};
-use crate::repositories::config::gateway::registered_routes_from_profile;
+use crate::repositories::config::gateway::registered_routes_from_services;
 
 use support::{collect_entity_ids, parse_access, parse_subject, repo, validate_entity_type};
 use types::{
@@ -106,7 +106,7 @@ pub(crate) async fn set_entity_default_handler(
     Json(body): Json<DefaultIncludedBody>,
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&entity_type)?;
-    registered_routes_from_profile()?.require(kind, &entity_id)?;
+    registered_routes_from_services()?.require(kind, &entity_id)?;
     let entity = EntityRef::from_kind_and_id(kind, &entity_id);
     repo(&pool)
         .upsert_entity(

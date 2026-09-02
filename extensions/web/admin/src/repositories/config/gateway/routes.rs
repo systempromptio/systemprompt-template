@@ -1,15 +1,14 @@
-//! Route CRUD against the profile YAML's `gateway.routes` sequence.
-
-use std::collections::BTreeMap;
-use std::path::Path;
+//! Route CRUD against the services tree's `gateway.routes` sequence.
 
 use serde_yaml::Value;
+use std::collections::BTreeMap;
+use std::path::Path;
 use systemprompt_web_shared::error::MarketplaceError;
 
 use crate::types::GatewayRouteView;
 
 use super::matching::synthesize_route_id;
-use super::yaml_io::{read_profile, route_to_yaml, routes_seq_mut, write_profile};
+use super::yaml_io::{read_gateway_file, route_to_yaml, routes_seq_mut, write_gateway_file};
 
 pub fn validate_route(route: &GatewayRouteView) -> Result<(), MarketplaceError> {
     if route.model_pattern.trim().is_empty() {
@@ -23,11 +22,11 @@ pub fn validate_route(route: &GatewayRouteView) -> Result<(), MarketplaceError> 
     Ok(())
 }
 
-// Why: Ensure every route in the profile has an explicit stable `id`,
-// persisting synthesized ids back to disk if any were missing. Returns true
-// when the profile was rewritten.
-pub fn ensure_route_ids(profile_path: &Path) -> Result<bool, MarketplaceError> {
-    let mut doc = read_profile(profile_path)?;
+// Why: Ensure every route has an explicit stable `id`, persisting synthesized
+// ids back to disk if any were missing. Returns true when the file was
+// rewritten.
+pub fn ensure_route_ids(config_path: &Path) -> Result<bool, MarketplaceError> {
+    let mut doc = read_gateway_file(config_path)?;
     let mut changed = false;
     let Some(gateway) = doc
         .as_mapping_mut()
@@ -68,22 +67,22 @@ pub fn ensure_route_ids(profile_path: &Path) -> Result<bool, MarketplaceError> {
         changed = true;
     }
     if changed {
-        write_profile(profile_path, &doc)?;
+        write_gateway_file(config_path, &doc)?;
     }
     Ok(changed)
 }
 
 pub fn create_route(
-    profile_path: &Path,
+    config_path: &Path,
     route: &GatewayRouteView,
 ) -> Result<usize, MarketplaceError> {
     validate_route(route)?;
-    ensure_route_ids(profile_path)?;
+    ensure_route_ids(config_path)?;
     let mut to_insert = route.clone();
     if to_insert.id.trim().is_empty() {
         to_insert.id = synthesize_route_id(&to_insert.model_pattern, &to_insert.provider);
     }
-    let mut doc = read_profile(profile_path)?;
+    let mut doc = read_gateway_file(config_path)?;
     let new_index = {
         let routes = routes_seq_mut(&mut doc)?;
         for existing in routes.iter() {
@@ -102,17 +101,17 @@ pub fn create_route(
         routes.push(route_to_yaml(&to_insert));
         routes.len() - 1
     };
-    write_profile(profile_path, &doc)?;
+    write_gateway_file(config_path, &doc)?;
     Ok(new_index)
 }
 
 pub fn update_route(
-    profile_path: &Path,
+    config_path: &Path,
     index: usize,
     route: &GatewayRouteView,
 ) -> Result<bool, MarketplaceError> {
     validate_route(route)?;
-    let mut doc = read_profile(profile_path)?;
+    let mut doc = read_gateway_file(config_path)?;
     {
         let routes = routes_seq_mut(&mut doc)?;
         if index >= routes.len() {
@@ -134,12 +133,12 @@ pub fn update_route(
         }
         routes[index] = route_to_yaml(&merged);
     }
-    write_profile(profile_path, &doc)?;
+    write_gateway_file(config_path, &doc)?;
     Ok(true)
 }
 
-pub fn delete_route(profile_path: &Path, index: usize) -> Result<bool, MarketplaceError> {
-    let mut doc = read_profile(profile_path)?;
+pub fn delete_route(config_path: &Path, index: usize) -> Result<bool, MarketplaceError> {
+    let mut doc = read_gateway_file(config_path)?;
     {
         let routes = routes_seq_mut(&mut doc)?;
         if index >= routes.len() {
@@ -147,12 +146,12 @@ pub fn delete_route(profile_path: &Path, index: usize) -> Result<bool, Marketpla
         }
         routes.remove(index);
     }
-    write_profile(profile_path, &doc)?;
+    write_gateway_file(config_path, &doc)?;
     Ok(true)
 }
 
-pub fn reorder_routes(profile_path: &Path, order: &[usize]) -> Result<(), MarketplaceError> {
-    let mut doc = read_profile(profile_path)?;
+pub fn reorder_routes(config_path: &Path, order: &[usize]) -> Result<(), MarketplaceError> {
+    let mut doc = read_gateway_file(config_path)?;
     {
         let routes = routes_seq_mut(&mut doc)?;
         let n = routes.len();
@@ -179,6 +178,6 @@ pub fn reorder_routes(profile_path: &Path, order: &[usize]) -> Result<(), Market
             }
         }
     }
-    write_profile(profile_path, &doc)?;
+    write_gateway_file(config_path, &doc)?;
     Ok(())
 }

@@ -16,7 +16,7 @@ use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared;
 use crate::repositories;
-use crate::repositories::config::gateway::registered_routes_from_profile;
+use crate::repositories::config::gateway::registered_routes_from_services;
 use crate::types::UserContext;
 use crate::types::access_control::{
     AccessControlQuery, AccessControlRule, BulkAssignRequest, UpdateEntityRulesRequest,
@@ -53,7 +53,7 @@ pub(crate) async fn update_entity_rules_handler(
     Json(body): Json<UpdateEntityRulesRequest>,
 ) -> AdminResult<Response> {
     let kind = editable_entity_kind(&entity_type)?;
-    registered_routes_from_profile()?.require(kind, &entity_id)?;
+    registered_routes_from_services()?.require(kind, &entity_id)?;
 
     let rules =
         repositories::users::access_control::set_entity_rules(&pool, kind, &entity_id, &body.rules)
@@ -80,7 +80,7 @@ pub(crate) async fn bulk_assign_handler(
 ) -> AdminResult<Response> {
     // Why: every entity is checked before any is written, so a bad id in the
     // batch rejects the whole request rather than half-applying it.
-    let registered = registered_routes_from_profile()?;
+    let registered = registered_routes_from_services()?;
     let entities = body
         .entities
         .iter()
@@ -131,9 +131,8 @@ pub(crate) async fn user_matrix_handler(
     Path(user_id): Path<String>,
 ) -> AdminResult<Response> {
     let services_path = shared::get_services_path()?;
-    let profile_path = shared::get_profile_path()?;
 
-    let sections = build_matrix_sections(&services_path, &profile_path);
+    let sections = build_matrix_sections(&services_path);
 
     let user_id = UserId::new(user_id);
     let matrix =
@@ -145,13 +144,12 @@ pub(crate) async fn user_matrix_handler(
 
 fn build_matrix_sections(
     services_path: &std::path::Path,
-    profile_path: &std::path::Path,
 ) -> Vec<repositories::users::access_control::SectionInput> {
     // Why: each source is best-effort — a config that fails to load is skipped
     // so the matrix renders whatever resolved instead of failing the whole view.
     let mut sections: Vec<repositories::users::access_control::SectionInput> = Vec::new();
 
-    if let Ok(cfg) = repositories::config::gateway::get_gateway_config(profile_path) {
+    if let Ok(cfg) = repositories::config::gateway::get_gateway_config() {
         let rows = cfg
             .routes
             .into_iter()

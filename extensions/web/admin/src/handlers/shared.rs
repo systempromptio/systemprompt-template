@@ -17,7 +17,3 @@ pub(crate) struct ErrorBody {
 pub(crate) fn get_services_path() -> AdminResult<PathBuf> {
     Ok(PathBuf::from(&ProfileBootstrap::get()?.paths.services))
 }
-
-pub(crate) fn get_profile_path() -> AdminResult<PathBuf> {
-    Ok(PathBuf::from(ProfileBootstrap::get_path()?))
-}

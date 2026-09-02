@@ -8,7 +8,7 @@
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt::config::ProfileBootstrap;
+use systemprompt::loader::ServicesBootstrap;
 use systemprompt::identifiers::{DepartmentId, RoleId, UserId};
 use systemprompt_security::authz::{Access, AccessControlRepository, EntityKind, SubjectRef};
 
@@ -60,9 +60,14 @@ pub(super) fn parse_access(s: &str) -> Option<Access> {
 
 pub(super) fn collect_entity_ids(entity_type: &str) -> AdminResult<Vec<String>> {
     match entity_type {
-        "gateway_route" => Ok(repositories::config::gateway::dispatchable_route_ids(
-            ProfileBootstrap::get()?,
-        )),
+        "gateway_route" => {
+            let services = ServicesBootstrap::get()
+                // Why: lint-ok: error-adapt — ConfigLoadError is core's variant-less loader error.
+                .map_err(|e| AdminError::internal(format!("services tree is not loaded: {e}")))?;
+            Ok(repositories::config::gateway::dispatchable_route_ids(
+                services,
+            ))
+        },
         "mcp_server" => {
             let services_path = shared::get_services_path()?;
             let servers =
