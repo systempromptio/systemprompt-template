@@ -49,6 +49,7 @@ fn install_config() {
         web_metadata_path: "/tmp".to_owned(),
         host: "127.0.0.1".to_owned(),
         port: 0,
+        metrics_port: None,
         api_server_url: ORG_URL.to_owned(),
         api_internal_url: ORG_URL.to_owned(),
         api_external_url: ORG_URL.to_owned(),
