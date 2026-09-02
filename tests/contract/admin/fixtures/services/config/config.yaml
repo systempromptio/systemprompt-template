@@ -1,0 +1,14 @@
+# Root services aggregator for the admin contract fixture.
+#
+# Core 0.44 moved the provider catalog and the gateway routes out of the
+# profile and into the services tree, so the fixture needs a services root of
+# its own. It is deliberately NOT the repository's `services/` tree: those two
+# files are what this suite asserts against, and reading the shipped catalog
+# would turn the catalog and ACL contracts into assertions about whatever we
+# happen to ship.
+#
+# Includes resolve relative to the directory of the file that lists them, not
+# the services root, which is why these are `../ai/...` and not `ai/...`.
+includes:
+  - ../ai/providers.yaml
+  - ../ai/gateway.yaml

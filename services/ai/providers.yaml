@@ -1,0 +1,989 @@
+# Provider catalog: which models this deployment exposes, at what price, with
+# what capabilities and limits. Shipped with the image alongside the agent and
+# MCP trees, so every environment boots the same models and only the
+# credentials named by `api_key_secret` differ.
+#
+# Included from services/config/config.yaml as `../ai/providers.yaml`.
+# Distinct from services/ai/config.yaml, which is the AI domain's own
+# configuration (per-provider toggles and defaults), not a priced catalog.
+providers:
+- name: anthropic
+  wire: anthropic
+  surface: anthropic
+  endpoint: https://api.anthropic.com/v1
+  api_key_secret: anthropic
+  models:
+  - id: claude-sonnet-4-6
+    pricing:
+      input_per_million: 3.0
+      output_per_million: 15.0
+      cache_read_per_million: 0.3
+      cache_write_per_million: 3.75
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 128000
+  - id: claude-opus-5
+    pricing:
+      input_per_million: 5.0
+      output_per_million: 25.0
+      cache_read_per_million: 0.5
+      cache_write_per_million: 6.25
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 128000
+  - id: claude-sonnet-5
+    pricing:
+      input_per_million: 3.0
+      output_per_million: 15.0
+      cache_read_per_million: 0.3
+      cache_write_per_million: 3.75
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 128000
+  - id: claude-fable-5
+    pricing:
+      input_per_million: 10.0
+      output_per_million: 50.0
+      cache_read_per_million: 1.0
+      cache_write_per_million: 12.5
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 128000
+  - id: claude-opus-4-8
+    pricing:
+      input_per_million: 5.0
+      output_per_million: 25.0
+      cache_read_per_million: 0.5
+      cache_write_per_million: 6.25
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 128000
+  - id: claude-opus-4-7
+    pricing:
+      input_per_million: 5.0
+      output_per_million: 25.0
+      cache_read_per_million: 0.5
+      cache_write_per_million: 6.25
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 128000
+  - id: claude-opus-4-6
+    pricing:
+      input_per_million: 5.0
+      output_per_million: 25.0
+      cache_read_per_million: 0.5
+      cache_write_per_million: 6.25
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 128000
+  - id: claude-haiku-4-5
+    aliases:
+    - claude-haiku-4-5-20251001
+    pricing:
+      input_per_million: 1.0
+      output_per_million: 5.0
+      cache_read_per_million: 0.1
+      cache_write_per_million: 1.25
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 200000
+      max_output_tokens: 64000
+  - id: claude-opus-4-5
+    aliases:
+    - claude-opus-4-5-20251101
+    pricing:
+      input_per_million: 5.0
+      output_per_million: 25.0
+      cache_read_per_million: 0.5
+      cache_write_per_million: 6.25
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 200000
+      max_output_tokens: 64000
+  - id: claude-sonnet-4-5
+    aliases:
+    - claude-sonnet-4-5-20250929
+    pricing:
+      input_per_million: 3.0
+      output_per_million: 15.0
+      cache_read_per_million: 0.3
+      cache_write_per_million: 3.75
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 200000
+      max_output_tokens: 64000
+  - id: claude-opus-4-1-20250805
+    pricing:
+      input_per_million: 15.0
+      output_per_million: 75.0
+      cache_read_per_million: 1.5
+      cache_write_per_million: 18.75
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 200000
+      max_output_tokens: 32000
+  - id: claude-sonnet-4-20250514
+    pricing:
+      input_per_million: 3.0
+      output_per_million: 15.0
+      cache_read_per_million: 0.3
+      cache_write_per_million: 3.75
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 200000
+      max_output_tokens: 64000
+  - id: claude-opus-4-20250514
+    pricing:
+      input_per_million: 15.0
+      output_per_million: 75.0
+      cache_read_per_million: 1.5
+      cache_write_per_million: 18.75
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 200000
+      max_output_tokens: 32000
+- name: openai
+  wire: openai-chat
+  surface: openai
+  endpoint: https://api.openai.com/v1
+  api_key_secret: openai
+  models:
+  - id: gpt-4.1
+    pricing:
+      input_per_million: 2.0
+      output_per_million: 8.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 32768
+  - id: gpt-4.1-mini
+    pricing:
+      input_per_million: 0.4
+      output_per_million: 1.6
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 32768
+  - id: gpt-4.1-nano
+    pricing:
+      input_per_million: 0.1
+      output_per_million: 0.4
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 32768
+  - id: gpt-5
+    pricing:
+      input_per_million: 1.25
+      output_per_million: 10.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 400000
+      max_output_tokens: 128000
+  - id: gpt-5.1
+    pricing:
+      input_per_million: 1.25
+      output_per_million: 10.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 400000
+      max_output_tokens: 128000
+  - id: gpt-5-mini
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 2.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 400000
+      max_output_tokens: 128000
+  - id: gpt-5-nano
+    pricing:
+      input_per_million: 0.05
+      output_per_million: 0.4
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 400000
+      max_output_tokens: 128000
+  - id: o4-mini
+    pricing:
+      input_per_million: 1.1
+      output_per_million: 4.4
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: false
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 200000
+      max_output_tokens: 100000
+  - id: o3
+    pricing:
+      input_per_million: 10.0
+      output_per_million: 40.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: false
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 200000
+      max_output_tokens: 100000
+  - id: o3-mini
+    pricing:
+      input_per_million: 1.1
+      output_per_million: 4.4
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: false
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 200000
+      max_output_tokens: 100000
+  - id: gpt-4o
+    pricing:
+      input_per_million: 2.5
+      output_per_million: 10.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 128000
+      max_output_tokens: 16384
+  - id: gpt-4o-mini
+    pricing:
+      input_per_million: 0.15
+      output_per_million: 0.6
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 128000
+      max_output_tokens: 16384
+  - id: gpt-4-turbo
+    pricing:
+      input_per_million: 10.0
+      output_per_million: 30.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 128000
+      max_output_tokens: 4096
+  - id: gpt-4
+    pricing:
+      input_per_million: 10.0
+      output_per_million: 30.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: false
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 8192
+      max_output_tokens: 4096
+  - id: gpt-3.5-turbo
+    pricing:
+      input_per_million: 0.5
+      output_per_million: 1.5
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: false
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 16385
+      max_output_tokens: 4096
+  - id: o1
+    pricing:
+      input_per_million: 15.0
+      output_per_million: 60.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: false
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 200000
+      max_output_tokens: 100000
+  - id: gpt-image-1
+    pricing:
+      input_per_million: 0.0
+      output_per_million: 0.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: 4.0
+    capabilities:
+      vision: false
+      audio_input: false
+      video_input: false
+      image_generation: true
+      audio_generation: false
+      streaming: false
+      tools: false
+      structured_output: false
+      system_prompts: false
+      image_resolution_config: false
+    limits:
+      context_window: 0
+      max_output_tokens: 0
+  - id: gpt-image-1-mini
+    pricing:
+      input_per_million: 0.0
+      output_per_million: 0.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: 4.0
+    capabilities:
+      vision: false
+      audio_input: false
+      video_input: false
+      image_generation: true
+      audio_generation: false
+      streaming: false
+      tools: false
+      structured_output: false
+      system_prompts: false
+      image_resolution_config: false
+    limits:
+      context_window: 0
+      max_output_tokens: 0
+- name: gemini
+  wire: gemini
+  surface: gemini
+  endpoint: https://generativelanguage.googleapis.com/v1beta
+  api_key_secret: gemini
+  models:
+  - id: gemini-3.1-flash-lite-preview
+    pricing:
+      input_per_million: 0.25
+      output_per_million: 1.5
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 65536
+      max_thinking_budget: 24576
+  - id: gemini-3.1-pro-preview
+    pricing:
+      input_per_million: 2.0
+      output_per_million: 12.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 65536
+      max_thinking_budget: 32768
+  - id: gemini-3.5-flash
+    pricing:
+      input_per_million: 1.5
+      output_per_million: 9.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 65536
+      max_thinking_budget: 24576
+  - id: gemini-3.1-flash-image-preview
+    pricing:
+      input_per_million: 0.5
+      output_per_million: 3.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: 4.0
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: true
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 65536
+  - id: gemini-3-flash-preview
+    pricing:
+      input_per_million: 0.5
+      output_per_million: 3.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 65536
+      max_thinking_budget: 24576
+  - id: gemini-3-pro-image-preview
+    pricing:
+      input_per_million: 2.0
+      output_per_million: 12.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: 4.0
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: true
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 65536
+  - id: gemini-pro-latest
+    pricing:
+      input_per_million: 2.0
+      output_per_million: 12.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 65536
+      max_thinking_budget: 32768
+  - id: gemini-flash-latest
+    pricing:
+      input_per_million: 1.5
+      output_per_million: 9.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 65536
+      max_thinking_budget: 24576
+  - id: gemini-2.5-flash-lite
+    pricing:
+      input_per_million: 0.1
+      output_per_million: 0.4
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 65536
+      max_thinking_budget: 24576
+  - id: gemini-2.5-flash
+    pricing:
+      input_per_million: 0.3
+      output_per_million: 2.5
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 65536
+      max_thinking_budget: 24576
+  - id: gemini-2.5-pro
+    pricing:
+      input_per_million: 1.25
+      output_per_million: 10.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 65536
+      max_thinking_budget: 32768
+  - id: gemini-2.0-flash
+    pricing:
+      input_per_million: 0.1
+      output_per_million: 0.4
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 8192
+      max_thinking_budget: 24576
+  - id: gemini-2.0-flash-lite
+    pricing:
+      input_per_million: 0.1
+      output_per_million: 0.4
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 8192
+      max_thinking_budget: 24576
+  - id: gemini-2.5-flash-image
+    pricing:
+      input_per_million: 0.0
+      output_per_million: 0.0
+      cache_read_per_million: 0.0
+      cache_write_per_million: 0.0
+      per_image_cents: 4.0
+    capabilities:
+      vision: false
+      audio_input: false
+      video_input: false
+      image_generation: true
+      audio_generation: false
+      streaming: false
+      tools: false
+      structured_output: false
+      system_prompts: false
+      image_resolution_config: false
+    limits:
+      context_window: 0
+      max_output_tokens: 0

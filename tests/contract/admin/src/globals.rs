@@ -52,6 +52,21 @@ fn try_init() -> bool {
 
     systemprompt::config::ProfileBootstrap::init_from_path(&profile)
         .expect("initialise the contract fixture profile");
+
+    // The fixture ships its own services tree rather than the repository's:
+    // the catalog and ACL contracts assert against a controlled two-route
+    // gateway, and reading the shipped catalog would turn them into assertions
+    // about whatever this deployment happens to expose.
+    let services_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/services");
+    // Why: names the fixture tree as the services root, so the admin gateway
+    // editor writes the fixture's gateway.yaml. Without it the editor resolves
+    // the repository's own services tree from the profile's `paths.services`
+    // — which the rest of this suite still reads — and a contract row that
+    // PATCHes the gateway rewrites a tracked config file.
+    unsafe { std::env::set_var("SYSTEMPROMPT_SERVICES_PATH", &services_root) };
+    systemprompt::loader::ServicesBootstrap::init_from_path(&services_root.join("config/config.yaml"))
+        .expect("initialise the contract fixture services tree");
+
     systemprompt::config::SecretsBootstrap::try_init().expect("load the fixture profile's secrets");
     systemprompt::config::try_init_config().expect("build config from the fixture profile");
 

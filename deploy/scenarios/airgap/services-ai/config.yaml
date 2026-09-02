@@ -1,0 +1,27 @@
+ai:
+  default_provider: anthropic
+  default_max_output_tokens: 4096
+  sampling:
+    enable_smart_routing: false
+    fallback_enabled: true
+  providers:
+    anthropic:
+      enabled: true
+      google_search_enabled: false
+      default_model: claude-sonnet-5
+    openai:
+      enabled: true
+      default_model: gpt-5
+      google_search_enabled: false
+    gemini:
+      enabled: true
+      default_model: gemini-2.5-flash
+      google_search_enabled: false
+  mcp:
+    auto_discover: true
+    connect_timeout_ms: 5000
+    execution_timeout_ms: 30000
+    retry_attempts: 3
+  history:
+    retention_days: 30
+    log_tool_executions: true

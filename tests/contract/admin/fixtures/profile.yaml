@@ -83,42 +83,6 @@ secrets:
   source: file
 extensions:
   disabled: []
-# One provider, carrying the model `crate::seed` writes into `ai_requests`.
-# Boot refuses a gateway route whose provider is not in the registry, and
-# refuses a model with no pricing, so both halves have to be declared for the
-# two routes below to exist at all.
-providers:
-- name: anthropic
-  wire: anthropic
-  surface: anthropic
-  endpoint: https://api.anthropic.com/v1
-  api_key_secret: anthropic
-  models:
-  - id: claude-contract-model
-    pricing:
-      input_per_million: 1.0
-      output_per_million: 1.0
-      cache_read_per_million: 0.1
-      cache_write_per_million: 1.0
-      per_image_cents: null
-gateway:
-  enabled: false
-  # Two routes so the per-user catalog and the after-the-fact ACL detector
-  # have something to iterate: with an empty list both loops run zero times
-  # and every case against them passes vacuously. `claude-*` is the wildcard
-  # the detector matches recorded requests against; the second route proves
-  # a rule on one does not silently apply to the other.
-  routes:
-  - id: contract-claude
-    model_pattern: claude-*
-    provider: anthropic
-  - id: contract-gpt
-    model_pattern: gpt-*
-    provider: anthropic
-  default_provider: null
-  allow_unlisted_models: false
-  auth_scheme: bearer
-  inference_path_prefix: /v1
 governance:
   authz:
     hook:

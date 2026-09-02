@@ -1,0 +1,23 @@
+# Gateway routes: how an inbound model name is dispatched to a provider in the
+# catalog. Included from services/config/config.yaml as `../ai/gateway.yaml`.
+#
+# Route ids are generated, never authored — core derives them as
+# synthesize_route_id(model_pattern, provider). The governance bootstrap hands
+# core these ids as the authoritative catalog, so an invented id fails boot.
+gateway:
+  enabled: true
+  routes:
+  - id: claude-star-4203d1
+    model_pattern: claude-*
+    provider: anthropic
+  - id: gpt-star-d0e2e6
+    model_pattern: gpt-*
+    provider: openai
+    upstream_model: gpt-5-mini
+  - id: gemini-star-5db635
+    model_pattern: gemini-*
+    provider: gemini
+  default_provider: anthropic
+  allow_unlisted_models: false
+  auth_scheme: bearer
+  inference_path_prefix: /v1

@@ -1,0 +1,18 @@
+gateway:
+  enabled: false
+  # Two routes so the per-user catalog and the after-the-fact ACL detector
+  # have something to iterate: with an empty list both loops run zero times
+  # and every case against them passes vacuously. `claude-*` is the wildcard
+  # the detector matches recorded requests against; the second route proves
+  # a rule on one does not silently apply to the other.
+  routes:
+  - id: contract-claude
+    model_pattern: claude-*
+    provider: anthropic
+  - id: contract-gpt
+    model_pattern: gpt-*
+    provider: anthropic
+  default_provider: null
+  allow_unlisted_models: false
+  auth_scheme: bearer
+  inference_path_prefix: /v1
