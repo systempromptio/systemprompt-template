@@ -821,9 +821,15 @@ backup *ARGS:
 
 # Deploy to cloud
 # Note: publish_pipeline runs automatically on server startup with correct profile URLs
-deploy *FLAGS:
+deploy *FLAGS: deploy-check
     just build --release
     {{CLI_RELEASE}} cloud deploy {{FLAGS}}
+
+# Pre-deploy preflight — no build, no push. `deploy` depends on it, so a
+# cloud profile the binary would refuse to boot (no server.instance_id,
+# missing identity secrets) is caught here, not after the image is live.
+deploy-check:
+    {{CLI}} cloud doctor --distributed
 
 # Check deployment status
 status:
