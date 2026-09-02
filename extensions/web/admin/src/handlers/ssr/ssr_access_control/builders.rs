@@ -34,7 +34,7 @@ pub(super) struct EntityCatalogue {
 
 pub(super) fn build_entity_catalogue(services_path: &Path) -> EntityCatalogue {
     EntityCatalogue {
-        gateway_routes: build_gateway_routes(services_path),
+        gateway_routes: build_gateway_routes(),
         mcp_servers: build_mcp_servers(services_path),
         plugins: build_plugins(services_path),
         agents: build_agents(services_path),
@@ -42,34 +42,23 @@ pub(super) fn build_entity_catalogue(services_path: &Path) -> EntityCatalogue {
     }
 }
 
-fn build_gateway_routes(services_path: &Path) -> Vec<RouteRef> {
-    let Some(parent) = services_path.parent() else {
-        return Vec::new();
-    };
-    let candidates = [
-        parent.join("profile.yaml"),
-        services_path.join("../.systemprompt/profiles/local/profile.yaml"),
-    ];
-    // Why: an unparseable profile.yaml would otherwise leave no trace at all: the
+fn build_gateway_routes() -> Vec<RouteRef> {
+    // Why: an unreadable catalog would otherwise leave no trace at all — the
     // catalogue renders "No entities of this type configured", which is
     // indistinguishable from a gateway that genuinely has no routes.
-    for path in &candidates {
-        if path.exists()
-            && let Ok(cfg) = repositories::config::gateway::get_gateway_config(path)
-                .inspect_err(|e| tracing::warn!(error = %e, path = %path.display(), "gateway config unreadable; routes omitted from the access-control catalogue"))
-        {
-            return cfg
-                .routes
+    repositories::config::gateway::get_gateway_config()
+        .inspect_err(|e| tracing::warn!(error = %e, "gateway config unreadable; routes omitted from the access-control catalogue"))
+        .map(|cfg| {
+            cfg.routes
                 .into_iter()
                 .map(|r| RouteRef {
                     id: r.id,
                     label: r.model_pattern,
                     provider: r.provider,
                 })
-                .collect();
-        }
-    }
-    Vec::new()
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 fn build_mcp_servers(services_path: &Path) -> Vec<EntityOption> {
