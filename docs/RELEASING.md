@@ -26,8 +26,25 @@ files: CasaOS compose, DigitalOcean compose + Packer default), runs
 `just clippy`.
 
 Then: run the test suite, exercise anything the core changelog touches,
-**write the `CHANGELOG.md` entry for this version**, review the diff, commit
-to main, push. This is the human gate.
+**write the `CHANGELOG.md` entry for this version**, review the diff, and
+commit to `next`. This is the human gate.
+
+`main` is release-only and is reached by pull request, never by a direct
+push:
+
+```bash
+just gate [REF]      # dispatch ci.yml + quality.yml against the ref (default: origin/next)
+just promote [SHA]   # freeze the SHA on the `promote` ref and open the PR onto main
+gh pr merge <NUM> --merge
+```
+
+`just promote` opens the pull request and stops; merging is yours. The commit
+is frozen on `promote` rather than the PR being headed at `next` because a PR
+headed at `next` merges whatever `next` points at when you merge it, so
+anything pushed in the meantime rides along ungated.
+
+Step B tags `main`, so run it only once the release PR is merged and your
+local `main` is up to date.
 
 `sync-release-version.sh` deliberately does not touch `CHANGELOG.md`: only a
 human knows which of the release's changes are breaking for a consumer. Head
