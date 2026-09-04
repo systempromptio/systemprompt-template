@@ -169,3 +169,11 @@ extensions/web/admin/src/repositories/dashboard/usage_aggregations/daily.rs	# in
 # ---------------------------------------------------------------------
 extensions/mcp/shared/src/lib.rs	# internal declares the approval gate and the brand ArtifactTheme; the template ships neither
 extensions/web/admin/src/handlers/ssr/ssr_setup.rs	# each fork's setup cards link into its own documentation site; the two sites have different pages
+extensions/web/admin/src/handlers/ssr/ssr_governance_decisions.rs	# internal scopes the ledger to one policy stage as the dashboard's drill-through; the fork ships the fuller filterable ledger
+
+# ---------------------------------------------------------------------
+# PRODUCT (2026-09-04)
+# ---------------------------------------------------------------------
+extensions/web/admin/src/handlers/ssr/ssr_demo_help/pages.rs	# internal ships help copy for the four /admin/demo/* pages; the template mounts no demo surface
+extensions/web/admin/src/handlers/webhook/governance/types.rs	# internal maps core `next`'s Decision::Warn onto the Allow wire value; the template's 0.44 core has no Warn variant to match on
+extensions/web/admin/src/handlers/ssr/types/charts.rs	# internal adds the daily-count chart builder over the demo series repository, which the template does not have
