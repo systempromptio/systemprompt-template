@@ -15,13 +15,13 @@ export class SessionsPage extends BasePage {
 
   /** Every session id link in the table, in row order. */
   sessionLinks(): Locator {
-    return this.page.locator(`${SEL.tableRow} a[href^="/admin/sessions/"]`);
+    return this.page.locator(`${SEL.tableRow} a[href^="/admin/contexts/"]`);
   }
 
   /** Open the first session and return the detail object standing on it. */
   async openFirst(): Promise<SessionDetailPage> {
     await this.sessionLinks().first().click();
-    await expect(this.page).toHaveURL(/\/admin\/sessions\/.+/);
+    await expect(this.page).toHaveURL(/\/admin\/contexts\/.+/);
     return new SessionDetailPage(this.page, this.page.url());
   }
 
@@ -76,6 +76,6 @@ export class SessionDetailPage extends BasePage {
   }
 
   requestsTable(): Locator {
-    return this.tableCaptioned(/Requests in this session/i);
+    return this.tableCaptioned(/Requests in this conversation/i);
   }
 }

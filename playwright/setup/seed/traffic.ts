@@ -50,7 +50,7 @@ export function modelOf(n: number) {
 }
 
 export function actorOf(n: number): string {
-  return ACTORS[n % ACTORS.length];
+  return ACTORS[(n % SESSION_COUNT) % ACTORS.length];
 }
 
 export function sessionOf(n: number): string {
@@ -105,7 +105,7 @@ async function insertRequest(db: Client, n: number, rand: () => number) {
       ID.request(n),
       actorOf(n),
       sessionOf(n),
-      `e2e-dtrace-${n % 40}`,
+      `e2e-dtrace-${n % SESSION_COUNT}`,
       contextFor(n),
       rejected ? null : mix.provider,
       rejected ? null : mix.model,
@@ -162,7 +162,7 @@ async function seedExecutions(db: Client) {
         actorOf(n),
         sessionOf(n),
         contextFor(n),
-        `e2e-dtrace-${n % 40}`,
+        `e2e-dtrace-${n % SESSION_COUNT}`,
       ],
     );
     // One in four executions is also an assistant tool call on a request, so

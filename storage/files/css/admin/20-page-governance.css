@@ -25,13 +25,13 @@
 }
 
 .sp-t-decisions th:nth-child(1) { inline-size: 15%; }
-.sp-t-decisions th:nth-child(2) { inline-size: 7%; }
+.sp-t-decisions th:nth-child(2) { inline-size: 9%; }
 .sp-t-decisions th:nth-child(3) { inline-size: 15%; }
 .sp-t-decisions th:nth-child(4) { inline-size: 8%; }
 .sp-t-decisions th:nth-child(5) { inline-size: 11%; }
 .sp-t-decisions th:nth-child(6) { inline-size: 14%; }
 .sp-t-decisions th:nth-child(7) { inline-size: 8%; }
-.sp-t-decisions th:nth-child(8) { inline-size: 16%; }
+.sp-t-decisions th:nth-child(8) { inline-size: 14%; }
 .sp-t-decisions th:nth-child(9) { inline-size: 6%; }
 
 .sp-t-findings th:nth-child(1) { inline-size: 15%; }

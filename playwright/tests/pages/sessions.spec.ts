@@ -31,6 +31,7 @@ test.describe('renders', () => {
     await list.goto(WINDOW);
     const detail = await list.openFirst();
     await expect(detail.breadcrumb()).toBeVisible();
+    await adminPage.getByRole('tab', { name: /^Requests/ }).click();
     await expect(detail.requestsTable()).toBeVisible();
   });
 });
@@ -77,7 +78,7 @@ test.describe('design language', () => {
   test('meets the density bar', async ({ adminPage }) => {
     const page = new SessionsPage(adminPage);
     await page.goto(WINDOW);
-    await expectDensity(adminPage, 'list');
+    await expectDensity(adminPage, 'stackedList');
   });
 
   test('the detail page meets the density bar', async ({ adminPage }) => {

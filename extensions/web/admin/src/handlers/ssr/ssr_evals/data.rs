@@ -150,12 +150,14 @@ pub(super) async fn fetch_evals_data(
             data.topics = unwrap_or_empty(topics, "list_prompt_topics");
         },
         EvalsTab::Judge => {
-            let (models, results) = tokio::join!(
+            let (models, results, runs) = tokio::join!(
                 list_eval_model_distribution(pool, range),
                 list_recent_results(pool, range, RESULT_LIMIT, filter),
+                list_recent_runs(pool, range, RUN_LIMIT),
             );
             data.models = unwrap_or_empty(models, "list_eval_model_distribution");
             data.results = unwrap_or_empty(results, "list_recent_results");
+            data.runs = unwrap_or_empty(runs, "list_recent_runs");
         },
         EvalsTab::HeadToHead => {
             let (models, win_rates, pairs, cases) = tokio::join!(

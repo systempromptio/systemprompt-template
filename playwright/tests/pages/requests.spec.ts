@@ -112,7 +112,7 @@ test.describe('design language', () => {
   test('meets the density bar', async ({ adminPage }) => {
     const page = new RequestsPage(adminPage);
     await page.goto(WINDOW);
-    await expectDensity(adminPage, 'list');
+    await expectDensity(adminPage, 'stackedList');
   });
 
   test('the detail page meets the density bar', async ({ adminPage }) => {

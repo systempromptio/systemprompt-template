@@ -16,7 +16,7 @@
     {{/components/page-header}}
 
     <section class="sp-kpi-grid" aria-label="Trace summary">
-      {{> components/kpi label="Spans" value=summary.span_count note="gateway, governance and tool events"}}
+      {{> components/kpi label="Spans" value=summary.span_count note="all recorded events"}}
       {{> components/kpi label="Duration" value=summary.duration_display note="first to last event"}}
       {{> components/kpi label="Requests" value=summary.request_count note="gateway calls in this trace"}}
       {{> components/kpi label="Cost" value=summary.cost_display note="billed across the trace"}}
@@ -25,7 +25,6 @@
       {{> components/kpi label="Rejected" value=summary.rejected_count tone="err"
           note="refused before any provider"
           hint="A rejected request never reached a provider, so it has no model and no cost"}}
-      {{> components/kpi label="Identity" value=summary.identity note="who drove this trace"}}
     </section>
 
     <section class="sp-waterfall" aria-labelledby="waterfall-title">
@@ -76,7 +75,7 @@
     <section aria-labelledby="span-list-title">
       {{> components/section title="Spans" count=span_count
           note="Every span in order, with the provider, model, cost and latency it reported."}}
-      {{#> components/table caption="Spans in this trace"}}
+      {{#> components/table caption="Spans in this trace" modifier="sp-p-trace-detail__spans"}}
         <thead><tr>
           <th class="sp-col-date">Started</th>
           <th class="sp-col-status">Offset</th>
@@ -101,7 +100,7 @@
             </td>
             <td class="sp-u-truncate sp-table__cell--mono" title="{{this.name}}">{{this.name}}</td>
             <td class="sp-col-status sp-table__cell--muted">{{this.provider}}</td>
-            <td class="sp-col-model sp-table__cell--mono">{{this.model}}</td>
+            <td class="sp-col-model sp-table__cell--mono" title="{{this.model}}">{{this.model}}</td>
             <td class="sp-table__cell--num">{{this.latency_display}}</td>
             <td class="sp-table__cell--num">{{this.duration_display}}</td>
             <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>

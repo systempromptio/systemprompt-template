@@ -77,7 +77,7 @@ export async function densityMetrics(page: Page): Promise<DensityMetrics> {
     for (const table of tables) {
       const firstRowCells = Array.from(
         table.querySelectorAll(':scope > tbody > tr:first-child > td'),
-      );
+      ).filter((cell) => cell.getClientRects().length > 0);
       for (let i = 1; i < firstRowCells.length; i += 1) {
         const a = firstRowCells[i - 1].getBoundingClientRect();
         const b = firstRowCells[i].getBoundingClientRect();

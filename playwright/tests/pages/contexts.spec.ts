@@ -31,7 +31,7 @@ test.describe('renders', () => {
     await list.goto();
     const detail = await list.openFirst();
     await expect(detail.breadcrumb()).toBeVisible();
-    await expect(detail.breadcrumb().getByRole('link', { name: /contexts/i })).toBeVisible();
+    await expect(detail.breadcrumb().getByRole('link', { name: /conversations/i })).toBeVisible();
   });
 });
 

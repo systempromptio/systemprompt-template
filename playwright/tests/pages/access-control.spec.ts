@@ -33,10 +33,10 @@ test.describe('renders', () => {
     expect(await adminPage.locator(SEL.kpi).count()).toBeGreaterThan(0);
   });
 
-  test('still offers the grant editor and its tree', async ({ adminPage }) => {
+  test('links to the group rule editors', async ({ adminPage }) => {
     const page = new AccessControlPage(adminPage);
     await page.goto();
-    await expect(page.tree()).toBeVisible();
+    await expect(adminPage.getByRole("link", { name: "Group rules", exact: true })).toHaveAttribute("href", "/admin/groups");
   });
 });
 
@@ -65,11 +65,12 @@ test.describe('actions', () => {
     expect(['ascending', 'descending']).toContain(direction);
   });
 
-  test('selecting a department opens its band editor', async ({ adminPage }) => {
+  test('opens the group creation form', async ({ adminPage }) => {
     const page = new AccessControlPage(adminPage);
     await page.goto();
-    await page.selectGroup('Default');
-    await expect(page.editorPane()).toBeVisible();
+    await adminPage.getByRole("button", { name: "+ New group", exact: true }).click();
+    await expect(adminPage.getByRole("dialog", { name: "Create group" })).toBeVisible();
+    await expect(adminPage.getByRole("textbox", { name: "Identifier", exact: true })).toBeVisible();
   });
 });
 

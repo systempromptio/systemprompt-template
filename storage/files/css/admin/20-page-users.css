@@ -98,10 +98,10 @@
 .sp-p-users__table th.sp-p-users__select { width: 3%; }
 .sp-p-users__table th.sp-col-user { width: 17%; }
 .sp-p-users__table th.sp-col-email { width: 14%; }
-.sp-p-users__table th.sp-col-roles { width: 15%; }
-.sp-p-users__table th.sp-col-scope { width: 15%; }
+.sp-p-users__table th.sp-col-roles { width: 13%; }
+.sp-p-users__table th.sp-col-scope { width: 13%; }
 .sp-p-users__table th.sp-table__cell--date { width: 8%; }
-.sp-p-users__table th.sp-table__cell--num { width: 7%; }
+.sp-p-users__table th.sp-table__cell--num { width: 9%; }
 .sp-p-users__table th.sp-col-status { width: 8%; }
 .sp-p-users__table th.sp-table__cell--actions { width: 6%; }
 

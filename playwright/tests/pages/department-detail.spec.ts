@@ -47,7 +47,7 @@ test.describe('actions', () => {
     const detail = new DepartmentDetailPage(adminPage, PATH);
     await detail.goto();
     await detail.memberLinks().first().click();
-    await expect(adminPage).toHaveURL(/\/admin\/user\?id=/);
+    await expect(adminPage).toHaveURL(/\/admin\/users\//);
   });
 });
 

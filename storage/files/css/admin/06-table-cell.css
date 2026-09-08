@@ -90,6 +90,9 @@ td.sp-table__cell--num { white-space: nowrap; }
 /* Both lines of a stacked cell are single lines. The second one is a
    description the row does not depend on, so it is the one that gets clipped;
    left to wrap it pushed its row into the next one. */
+td.sp-table__cell--stacked { display: table-cell; }
+td.sp-table__cell--stacked > * { display: block; }
+
 .sp-table__cell--stacked > * {
     min-width: 0;
     overflow: hidden;

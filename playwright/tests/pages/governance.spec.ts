@@ -8,19 +8,19 @@ import { authorizationTable, designLanguageTests } from '../support/shared';
 
 const PATH = PATHS.governance;
 // services/governance/config.yaml, by id.
-const POLICIES = ['secret_scan', 'scope_check', 'tool_blocklist', 'rate_limit'];
+const POLICIES = ['secret_scan', 'agent_scope', 'tool_blocklist', 'rate_limit'];
 
 test.describe('renders', () => {
-  test('lists every declared policy', async ({ adminPage }) => {
+  test('shows deny counts for all four chain stages', async ({ adminPage }) => {
     const page = new GovernancePage(adminPage);
     await page.goto();
-    for (const id of POLICIES) await expect(page.row(id), id).toBeVisible();
+    for (const id of POLICIES) await expect(adminPage.locator(`nav[aria-label="Deny counts by chain stage"] a[href*="policy=${id}"]`), id).toBeVisible();
   });
 
-  test('links each policy to its editor', async ({ adminPage }) => {
+  test('links each recorded decision to its audit detail', async ({ adminPage }) => {
     const page = new GovernancePage(adminPage);
     await page.goto();
-    expect(await page.policyLinks().count()).toBeGreaterThanOrEqual(POLICIES.length);
+    expect(await adminPage.locator(`a[href^="/admin/governance/decisions/"]`).count()).toBeGreaterThan(0);
   });
 
   test('the editor names the policy and offers the toggle', async ({ adminPage }) => {
@@ -32,11 +32,12 @@ test.describe('renders', () => {
 });
 
 test.describe('actions', () => {
-  test('a policy row opens its editor', async ({ adminPage }) => {
+  test('a stage count filters the decision log', async ({ adminPage }) => {
     const page = new GovernancePage(adminPage);
     await page.goto();
-    await page.row('rate_limit').locator('a[href^="/admin/governance/policies/"]').first().click();
-    await expect(adminPage).toHaveURL(/\/admin\/governance\/policies\/rate_limit/);
+    await adminPage.locator(`nav[aria-label="Deny counts by chain stage"] a[href*="policy=secret_scan"]`).click();
+    await expect(adminPage).toHaveURL(/policy=secret_scan/);
+    await expect(adminPage.locator(".sp-table__el tbody tr").first()).toContainText("secret_scan");
   });
 
   test('an unknown policy is a 404, not a 500', async ({ browser }) => {

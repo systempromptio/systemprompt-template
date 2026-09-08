@@ -9,6 +9,10 @@ export class ContextsPage extends BasePage {
     super(page, PATHS.contexts);
   }
 
+  async goto(query: Record<string, string> = {}): Promise<void> {
+    await super.goto({ view: "all", ...query });
+  }
+
   contextLinks(): Locator {
     return this.page.locator(`${SEL.tableRow} a[href^="/admin/contexts/"]`);
   }

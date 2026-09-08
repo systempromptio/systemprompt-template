@@ -127,7 +127,7 @@ body.sp-auth-light {
 
 .sp-login-switch a {
     color: var(--sp-accent-text);
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 .sp-login-switch a:hover {

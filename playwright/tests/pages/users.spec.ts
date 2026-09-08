@@ -18,7 +18,7 @@ test.describe('renders', () => {
     await expect(adminPage.locator(SEL.tableRow).filter({ hasText: 'e2e-member-1' })).toHaveCount(1);
   });
 
-  test('names each person\'s department', async ({ adminPage }) => {
+  test('names each person\'s group', async ({ adminPage }) => {
     const page = new UsersPage(adminPage);
     await page.goto();
     await page.table().filter('e2e-member-4');
@@ -52,8 +52,8 @@ test.describe('actions', () => {
     const page = new UsersPage(adminPage);
     await page.goto();
     await page.table().filter('e2e-member-1');
-    await adminPage.locator(`${SEL.tableRow} a[href^="/admin/user?id="]`).first().click();
-    await expect(adminPage).toHaveURL(/\/admin\/user\?id=e2e-member-1/);
+    await adminPage.locator(`${SEL.tableRow} a[href^="/admin/users/"]`).first().click();
+    await expect(adminPage).toHaveURL(/\/admin\/users\/e2e-member-1/);
   });
 
   test('creates a user through the API the page posts to, then removes it', async ({ request }) => {

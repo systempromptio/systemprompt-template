@@ -17,12 +17,13 @@ test.describe('renders', () => {
     await expect(adminPage.locator(SEL.pageHeader)).toContainText(SUBJECT);
   });
 
-  test('states their department and roles', async ({ adminPage }) => {
+  test('states their group and roles', async ({ adminPage }) => {
     const detail = new UserDetailPage(adminPage, SUBJECT);
-    await detail.goto();
+    await detail.openTab('membership');
     const main = adminPage.locator('main');
     await expect(main).toContainText('Engineering');
-    await expect(main).toContainText('user');
+    await detail.openTab('identity');
+    await expect(adminPage.getByRole('checkbox', { name: 'User', exact: true })).toBeChecked();
   });
 
   test('links back to the roster', async ({ adminPage }) => {
@@ -33,19 +34,19 @@ test.describe('renders', () => {
 });
 
 test.describe('actions', () => {
-  test('the activity tab lists the seeded sessions', async ({ adminPage }) => {
+  test('the usage tab lists the seeded conversations', async ({ adminPage }) => {
     const detail = new UserDetailPage(adminPage, SUBJECT);
-    await detail.openTab('activity');
+    await detail.openTab('usage');
     expect(await adminPage.locator(SEL.tableRow).count()).toBeGreaterThan(0);
   });
 
-  test('a session row opens the session', async ({ adminPage }) => {
+  test('a conversation row opens its reader', async ({ adminPage }) => {
     const detail = new UserDetailPage(adminPage, SUBJECT);
-    await detail.openTab('activity');
-    const link = adminPage.locator(`${SEL.tableRow} a[href^="/admin/sessions/"]`).first();
+    await detail.openTab('usage');
+    const link = adminPage.locator(`${SEL.tableRow} a[href^="/admin/contexts/"]`).first();
     await expect(link).toBeVisible();
     await link.click();
-    await expect(adminPage).toHaveURL(/\/admin\/sessions\/.+/);
+    await expect(adminPage).toHaveURL(/\/admin\/contexts\/.+/);
   });
 });
 
@@ -72,7 +73,7 @@ test.describe('design language', () => {
 
   test('meets the density bar', async ({ adminPage }) => {
     const detail = new UserDetailPage(adminPage, SUBJECT);
-    await detail.openTab('activity');
-    await expectDensity(adminPage, 'detail');
+    await detail.openTab('usage');
+    await expectDensity(adminPage, 'waterfall');
   });
 });

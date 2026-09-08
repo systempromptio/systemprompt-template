@@ -46,6 +46,8 @@ impl ScopeRequest {
     // back, never an error that would tell them the group exists.
     #[must_use]
     pub fn from_query(user_ctx: &UserContext, group: Option<&str>, project: Option<&str>) -> Self {
+        let group = group.map(str::trim).filter(|value| !value.is_empty());
+        let project = project.map(str::trim).filter(|value| !value.is_empty());
         let visibility = Visibility::for_user(user_ctx);
         let group = match (&visibility, group) {
             (_, None) => None,

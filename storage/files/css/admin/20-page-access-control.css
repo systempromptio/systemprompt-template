@@ -1,5 +1,10 @@
 @layer components {
 
+.sp-shell__main:has(.sp-p-ac__ledger) .sp-page-header {
+    margin-block: var(--sp-space-2);
+}
+
+
 /* Why: the entity id and the subject are what say which rule this is, so the
    two of them take the slack and every other column is sized to its label. */
 .sp-p-ac__ledger .sp-col-kind { width: 9rem; }

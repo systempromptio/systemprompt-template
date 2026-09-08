@@ -1,6 +1,5 @@
 // /admin/evals — the quality dashboard over the seeded traffic and the judge
-// run the seed completed over it. Also the console's front door: /admin 308s
-// here.
+// run the seed completed over it.
 import { test, expect, AUTH, CONSOLE_ACCESS } from '../support/fixtures';
 import { expectDensity } from '../support/a11y';
 import { PATHS } from '../support/paths';
@@ -13,11 +12,11 @@ const PATH = PATHS.evals;
 const WINDOW = { preset: '30d' };
 
 test.describe('renders', () => {
-  test('is where /admin lands', async ({ browser }) => {
+  test('the overview links to evaluations', async ({ browser }) => {
     const context = await browser.newContext({ storageState: AUTH.admin });
     const res = await context.request.get(PATHS.root, { maxRedirects: 0 });
-    expect(res.status()).toBe(308);
-    expect(res.headers().location).toBe(PATH);
+    expect(res.status()).toBe(200);
+    expect(await res.text()).toContain(`href="${PATH}"`);
     await context.close();
   });
 
@@ -30,7 +29,7 @@ test.describe('renders', () => {
   test('the judge tab lists the seeded run', async ({ adminPage }) => {
     const page = new EvalsPage(adminPage);
     await page.openTab('judge');
-    await expect(page.runLinks().filter({ hasText: EVAL_RUN_ID })).not.toHaveCount(0);
+    await expect(adminPage.locator(`a[href="${PATHS.evalRun(EVAL_RUN_ID)}"]`)).not.toHaveCount(0);
   });
 });
 

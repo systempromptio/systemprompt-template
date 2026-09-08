@@ -5,11 +5,11 @@
 // extensions/web/admin/src/routes/ssr.rs — flat `/admin/<x>[/{id}]` for every
 // entity, with the user detail page still on its query form.
 export const PATHS = {
-  // /admin itself is a 308 to the evals page.
+  // /admin serves the overview dashboard.
   root: '/admin',
 
   users: '/admin/users',
-  user: (id: string) => `/admin/user?id=${encodeURIComponent(id)}`,
+  user: (id: string) => `/admin/users/${encodeURIComponent(id)}`,
   departments: '/admin/departments',
   department: (id: string) => `/admin/departments/${id}`,
   accessTokens: '/admin/access-tokens',

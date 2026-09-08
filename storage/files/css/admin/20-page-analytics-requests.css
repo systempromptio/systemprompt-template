@@ -59,8 +59,9 @@
     margin-right: auto;
 }
 
-@media (max-width: 80rem) {
-    .sp-p-requests-table .sp-col-group { display: none; }
+@media (max-width: 90rem) {
+    .sp-p-requests-table .sp-col-group,
+    .sp-p-requests-table .sp-col-project { display: none; }
 }
 
 }

@@ -223,10 +223,13 @@ jobs:
       # step and never reaches the health wait.
       - name: Start the stack (detached)
         run: nohup just start > e2e-server.log 2>&1 &
-      - name: Wait for /health
+      - name: Wait for gateway health and signing keys
         run: |
           for _ in $(seq 1 60); do
-            curl -fsS -o /dev/null http://localhost:8080/health && exit 0
+            if curl -fsS http://localhost:8080/health | jq -e '.status == "healthy"' > /dev/null &&
+               curl -fsS http://localhost:8080/.well-known/jwks.json | jq -e '.keys | length > 0' > /dev/null; then
+              exit 0
+            fi
             sleep 2
           done
           echo "server never became healthy"; exit 1

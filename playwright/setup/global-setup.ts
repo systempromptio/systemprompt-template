@@ -109,8 +109,8 @@ export default async function globalSetup(config: FullConfig) {
   const jwks = (await (await fetch(`${baseURL}/.well-known/jwks.json`)).json()) as {
     keys: { kid: string }[];
   };
-  const kid = jwks.keys[0]?.kid;
-  if (!kid) throw new Error('no kid in /.well-known/jwks.json');
+  const kid = jwks.keys?.[0]?.kid;
+  if (!kid) throw new Error('no signing key in /.well-known/jwks.json; wait for gateway startup to finish');
 
   const issuer = resolveIssuer(baseURL);
   let signingPem: string;

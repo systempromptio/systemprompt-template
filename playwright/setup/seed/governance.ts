@@ -8,6 +8,7 @@ import {
   EXECUTION_COUNT,
   LEGACY_CONTEXT_ID,
   REQUEST_COUNT,
+  SESSION_COUNT,
   TOOLS,
   actorOf,
   outcomeOf,
@@ -57,7 +58,7 @@ async function seedDecisions(db: Client) {
         decision,
         denied || warned ? policy : 'governance_allow',
         denied || warned ? DENY_REASONS[policy] : 'no rule matched',
-        `e2e-dtrace-${n % 40}`,
+        `e2e-dtrace-${n % SESSION_COUNT}`,
         ago(n % 14, 2 + (n % 9)),
       ],
     );

@@ -73,7 +73,7 @@
         {{!-- GOVERNANCE — what the policy chain decided, and what it is still
              waiting on a human for. --}}
         <h2 class="sp-nav-label">Governance</h2>
-        {{#> nav-item href="/admin/governance" text="Governance" leaf="governance-warnings" child="governance-decisions" page=page}}
+        {{#> nav-item href="/admin/governance" text="Governance" leaf="governance-warnings" child="governance-policy-edit" page=page}}
             {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l6 11H2z" stroke-linejoin="round"/><path d="M8 6.5v3M8 11.5v.01" stroke-linecap="round"/></svg>{{/inline}}
         {{/nav-item}}
         <a href="/admin/governance/approvals"{{navActive page "governance-approvals"}}>

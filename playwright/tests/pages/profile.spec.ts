@@ -33,10 +33,10 @@ test.describe('renders', () => {
 });
 
 test.describe('actions', () => {
-  test('the header links reach settings', async ({ userPage }) => {
+  test('the header links reach the setup guide', async ({ userPage }) => {
     const page = new ProfilePage(userPage);
     await page.goto();
-    await expect(userPage.locator(`main a[href="${PATHS.settings}"]`).first()).toBeVisible();
+    await expect(userPage.locator(`main a[href="${PATHS.setup}"]`).first()).toBeVisible();
   });
 });
 
@@ -62,6 +62,6 @@ test.describe('design language', () => {
   test('meets the density bar', async ({ userPage }) => {
     const page = new ProfilePage(userPage);
     await page.goto();
-    await expectDensity(userPage, 'detail');
+    await expectDensity(userPage, 'form');
   });
 });

@@ -139,6 +139,14 @@ export async function seedPrincipals(db: Client) {
       [p.id, DEPARTMENT_OF[p.id] ?? 'Default'],
     );
   }
+  // Group membership is the dashboard's organization model; departments remain
+  // seeded for the compatibility pages.
+  for (const [userId, name] of Object.entries(DEPARTMENT_OF)) {
+    const id = `e2e-group-${name.toLowerCase()}`;
+    await db.query("INSERT INTO groups (id, name, source) VALUES ($1, $2, 'dashboard') ON CONFLICT (id) DO NOTHING", [id, name]);
+    await db.query("INSERT INTO group_members (group_id, user_id, source) VALUES ($1, $2, 'manual') ON CONFLICT DO NOTHING", [id, userId]);
+    await db.query("INSERT INTO user_scope_defaults (user_id, primary_group_id, source) VALUES ($1, $2, 'manual') ON CONFLICT (user_id) DO UPDATE SET primary_group_id = EXCLUDED.primary_group_id", [userId, id]);
+  }
   for (const [userId, sessionId] of Object.entries(E2E_SESSIONS)) {
     await db.query(
       `INSERT INTO user_sessions (session_id, user_id, user_type, expires_at, last_activity_at)

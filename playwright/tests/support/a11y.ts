@@ -24,10 +24,14 @@ export async function expectAccessible(page: Page): Promise<void> {
 
 /** What "dense enough" means, per page shape. */
 const BAR = {
-  list: { rowsVisible: 12 },
-  detail: { rowsVisible: 8 },
+  list: { rowsVisible: 12, rowHeight: 36 },
+  detail: { rowsVisible: 8, rowHeight: 36 },
+  // Identity plus metadata occupies two lines on the migrated activity lists.
+  stackedList: { rowsVisible: 6, rowHeight: 64 },
+  // Connection forms lead with controls; their secondary tables sit below them.
+  form: { rowsVisible: 0, rowHeight: 36 },
   // Why: a page whose body is a chart, with the table as its index below it.
-  waterfall: { rowsVisible: 0 },
+  waterfall: { rowsVisible: 0, rowHeight: 36 },
 } as const;
 
 export type PageShape = keyof typeof BAR;
@@ -49,7 +53,7 @@ export async function expectDensity(page: Page, shape: PageShape): Promise<void>
   expect(m.rowsVisible, `${wanted} rows should fit above the fold — ${context}`).toBeGreaterThanOrEqual(wanted);
 
   if (m.rowH !== null) {
-    expect(m.rowH, `row height — ${context}`).toBeLessThanOrEqual(36);
+    expect(m.rowH, `row height — ${context}`).toBeLessThanOrEqual(BAR[shape].rowHeight);
   }
   if (m.kpiH !== null) {
     expect(m.kpiH, `KPI strip height — ${context}`).toBeLessThanOrEqual(110);

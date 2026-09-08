@@ -94,7 +94,7 @@ export class UserDetailPage extends BasePage {
   }
 
   async openTab(slug: string): Promise<void> {
-    await this.page.goto(`${PATHS.user(this.userId)}&tab=${slug}`);
+    await this.page.goto(`${PATHS.user(this.userId)}?tab=${slug}`);
     await expect(this.page.locator('h1').first()).toBeVisible();
   }
 

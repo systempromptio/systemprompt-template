@@ -2,7 +2,7 @@
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/breadcrumbs crumbs=breadcrumbs}}
-    {{#> components/page-header title=title subtitle="Every access-control rule on this instance, and where it came from. Rules are written where their subject lives: a group's band on its Access tab, a person's overrides on theirs."}}
+    {{#> components/page-header title=title subtitle="Review every rule, its subject and source. Edit grants on the group or user's Access tab."}}
         {{#*inline "header_actions"}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/groups">Group rules</a>
         <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="show-yaml">Show as YAML</button>
@@ -14,8 +14,6 @@
         <span><strong>{{stats.groups}}</strong> groups</span>
         <span><strong>{{stats.projects}}</strong> projects</span>
         <span><strong>{{stats.users}}</strong> people</span>
-        <span>Rules bootstrap from <code class="sp-code-inline">services/**/*.yaml</code>; edits made in the console stay in this instance</span>
-        <span>Per-person access: open a user and choose Access</span>
         {{/inline}}
     {{/components/page-header}}
 
@@ -25,7 +23,7 @@
         {{/each}}
     </section>
 
-    {{#> components/section title="Rule ledger" count=ledger.total note="Every access-control rule on this instance, and whether the YAML in the source repository declares it."}}
+    {{#> components/section title="Rule ledger" count=ledger.total note="Each rule, where it applies, and whether configuration declares it."}}
         {{#*inline "section_actions"}}
         {{#if ledger.filters_applied}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{ledger.clear_url}}">Clear filters</a>{{/if}}
         {{/inline}}

@@ -31,7 +31,7 @@ export class BasePage {
   }
 
   activeNavItem(): Locator {
-    return this.page.locator(SEL.navLinkActive);
+    return this.page.locator(`${SEL.navLinkActive}:not([href=""]), ${SEL.nav} a.is-ancestor`);
   }
 
   breadcrumb(): Locator {

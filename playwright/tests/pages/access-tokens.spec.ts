@@ -52,7 +52,7 @@ test.describe('actions', () => {
     const page = new AccessTokensPage(adminPage);
     await page.goto();
     await page.row('member-1 laptop').locator('a[href^="/admin/user?id="]').first().click();
-    await expect(adminPage).toHaveURL(/\/admin\/user\?id=e2e-member-1/);
+    await expect(adminPage).toHaveURL(/\/admin\/users\/e2e-member-1/);
   });
 
   test('revoking through the API the page posts to marks the token revoked', async ({
