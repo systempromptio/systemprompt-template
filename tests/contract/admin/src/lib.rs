@@ -77,4 +77,5 @@ mod dev_login_contract;
 #[cfg(test)]
 mod write_boundaries;
 
+#[cfg(test)]
 mod registration_security_contract;
