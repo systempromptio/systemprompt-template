@@ -103,4 +103,10 @@ CREATE INDEX IF NOT EXISTS idx_session_transcripts_jsonb ON session_transcripts 
 -- before this analytics extension runs (migration_weight 110 vs analytics ~200).
 -- Triggers that depend on the table live in 14_audit_event_notify.sql.
 
--- The FTS index is installed by migration 059 after existing tables gain search_tsv.
+-- Core 0.48 runs structural CREATE TABLE, then pending migrations, then
+-- dependent CREATE INDEX statements. Migration 059 adds search_tsv on existing
+-- tables before this index runs. Fresh installs stamp (do not run) migrations,
+-- so both the column above and this declarative index are required.
+-- Regression: tests/integration/admin-core/src/usage_conversation_summary_schema.rs.
+CREATE INDEX IF NOT EXISTS idx_session_transcripts_fts
+    ON session_transcripts USING GIN (search_tsv);

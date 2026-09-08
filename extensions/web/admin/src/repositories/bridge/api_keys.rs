@@ -173,6 +173,26 @@ pub async fn enroll_device(
     })
 }
 
+// Why: lint-ok: unused-pub — the internal fork uses this shared query in setup
+// and user inventory.
+pub async fn list_api_keys_for_user(
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Result<Vec<BridgeApiKeyRow>> {
+    let rows = sqlx::query_as!(
+        BridgeApiKeyRow,
+        r#"
+        SELECT id, name, key_prefix, created_at, last_used_at, expires_at, revoked_at
+        FROM user_api_keys
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+        "#,
+        user_id.as_str(),
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
 
 pub async fn revoke_bridge_api_key(pool: &PgPool, user_id: &UserId, id: &str) -> Result<bool> {
     let result = sqlx::query!(

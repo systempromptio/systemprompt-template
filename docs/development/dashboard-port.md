@@ -2,7 +2,7 @@
 
 Source: `systemprompt-astound` at `083df9e1` (changes reviewed August 31–September 8, 2026).
 Destinations: template and internal. This document records the feature boundary;
-build and runtime results are recorded below once validation completes.
+build and runtime results are recorded below.
 
 | Feature | Source anchors | Integrated surface |
 | --- | --- | --- |
@@ -62,8 +62,8 @@ rows, credentials, server processes or database objects were changed.
   group is an explicit boot seed, separate from declarative DDL.
 
 This validates SQL installation and preservation, not the complete application
-startup or migration-ledger orchestration. Those are covered by the isolated
-runtime smoke below when the newly built binaries are available.
+startup or migration-ledger orchestration. Those are covered by the completed isolated
+runtime smoke and production-installer regression below.
 
 ## Isolated runtime and browser smoke
 
@@ -204,12 +204,12 @@ and screenshots remain under `/tmp/dashboard-port-smoke/` for review.
 ## Focused Rust regression checks
 
 `just test-dashboard` runs the focused checks under the existing build coordinator.
-The optional `unit`, `contract`, `integration`, and `registry` stages allow a failed
+The optional `unit`, `contract`, `integration`, `registry`, and `boundaries` stages allow a failed
 stage to be resumed without repeating passing stages. Tests use disposable databases.
 
 Template: 42 unit tests, 28 contract tests (including the hook rollup regression),
 and 80 scoped database integration tests passed, including the populated
-transcript upgrade lifecycle regression (46.6 seconds for the integration stage). Coverage includes department ACL
+transcript upgrade lifecycle regression. Coverage includes department ACL
 compatibility, custom roles, account closure/audit retention, read-only mutation and
 raw-evidence denial, developer-login redemption, project-scoped traces, conversation
 classification and session/daily counters.
@@ -226,3 +226,8 @@ migrations without executing them, so moving the index exclusively to migration
 059 would omit it. `usage_conversation_summary_schema` exercises this production
 lifecycle against a populated transcript after removing the search column and
 only its migration-ledger entry; it never pre-applies migration SQL.
+
+Internal's scoped integration stage passed all 84 tests, including organization
+and department ACL dimensions, own-device isolation, and the populated transcript
+upgrade through the production installer (no manual SQL preapplication).
+Both workspaces passed coordinated builds with the 0.48 dependencies.

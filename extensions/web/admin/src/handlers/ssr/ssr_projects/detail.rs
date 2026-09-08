@@ -178,11 +178,11 @@ pub(super) fn page_data(
             mapping_count: mappings.len() as i64,
             feeding_groups: mapping_rows(
                 mappings.into_iter().map(|m| (m.ad_group, m.source)),
-                user_ctx.is_platform_admin,
+                crate::types::roles_grant_platform(&user_ctx.roles),
             ),
             gated_count: rules.len() as i64,
             gated_entities: gated_rows(rules),
-            can_map: user_ctx.is_platform_admin,
+            can_map: crate::types::roles_grant_platform(&user_ctx.roles),
             can_delete: user_ctx.is_admin,
         }),
         project_id: project.id.clone(),

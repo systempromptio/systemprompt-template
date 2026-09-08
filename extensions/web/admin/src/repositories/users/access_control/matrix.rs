@@ -12,7 +12,6 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::{RuleId, UserId};
 use systemprompt_security::authz::resolver::{ResolveInput, resolve};
@@ -26,49 +25,9 @@ use super::rules::list_all_rules;
 use crate::authz::dimensions;
 use crate::types::access_control::{AccessControlRule, AccessDecision};
 
-#[derive(Debug, Serialize)]
-pub struct UserMatrix {
-    pub user: UserMatrixUser,
-    pub sections: Vec<MatrixSection>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct UserMatrixUser {
-    pub id: String,
-    pub email: Option<String>,
-    pub display_name: Option<String>,
-    pub roles: Vec<String>,
-    pub group_ids: Vec<String>,
-    pub project_ids: Vec<String>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct MatrixSection {
-    pub entity_type: String,
-    pub label: String,
-    pub rows: Vec<MatrixRow>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct MatrixRow {
-    // Why: polymorphic entity reference (gateway_route/mcp_server), no single typed-ID equivalent
-    pub entity_id: String,
-    pub entity_name: String,
-    pub description: Option<String>,
-    pub effective: String,
-    pub source: MatrixSource,
-    pub default_included: bool,
-}
-
-#[derive(Debug, Serialize)]
-pub struct MatrixSource {
-    pub layer: String,
-    pub detail: String,
-}
-
-/// Section definition supplied by the caller — list of entities of a given
-/// kind that exist on this deployment.
-pub type SectionInput = (String, String, Vec<(String, String, Option<String>)>);
+pub use super::matrix_types::{
+    MatrixRow, MatrixSection, MatrixSource, SectionInput, UserMatrix, UserMatrixUser,
+};
 
 pub async fn filter_catalog_for_user(
     pool: &PgPool,
@@ -204,11 +163,19 @@ async fn find_user_for_matrix(
     )
     .fetch_optional(pool)
     .await?;
+    let department = if row.is_some() {
+        crate::repositories::users::queries::find_user_roles_department(pool, user_id)
+            .await?
+            .map(|(_, department)| department)
+    } else {
+        None
+    };
     Ok(row.map(|row| UserMatrixUser {
         id: row.id,
         email: Some(row.email),
         display_name: row.display_name,
         roles: row.roles,
+        department,
         group_ids: row.group_ids,
         project_ids: row.project_ids,
     }))

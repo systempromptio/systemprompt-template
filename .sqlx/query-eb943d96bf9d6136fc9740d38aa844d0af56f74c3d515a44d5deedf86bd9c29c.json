@@ -1,0 +1,57 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            u.id AS \"user_id!: UserId\",\n            COALESCE(upe.department, '') AS \"department!\",\n            acr.entity_id AS \"entity_id!: MarketplaceId\",\n            acr.access AS \"access!\"\n        FROM users u\n        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id\n        JOIN access_control_rules acr\n          ON acr.entity_type = 'marketplace'\n         AND ((acr.rule_type = 'user' AND acr.rule_value = u.id)\n              OR (acr.rule_type = 'department' AND acr.rule_value = COALESCE(upe.department, '')))\n        WHERE NOT ('anonymous' = ANY(u.roles))\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "department!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "entity_id!: MarketplaceId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "entity_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "access!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "access"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      false
+    ]
+  },
+  "hash": "eb943d96bf9d6136fc9740d38aa844d0af56f74c3d515a44d5deedf86bd9c29c"
+}

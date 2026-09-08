@@ -128,7 +128,7 @@ pub(super) fn share(value: i64, max: i64) -> i64 {
 }
 
 // Why: model and skill ids carry a namespace prefix — `deepseek-ai/` on a
-// model, `astound-cowork-deliverables:` on a skill — that repeats down the
+// model, `example-plugin:` on a skill — that repeats down the
 // whole column and pushes the distinguishing half out of view. The name cell
 // shows what differs; the prefix goes to the muted line under it.
 pub(crate) fn short_name(id: &str, sep: char) -> String {

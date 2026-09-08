@@ -9,7 +9,7 @@ pub mod exchange_codes;
 
 pub use api_keys::{
     BridgeApiKeyRow, BridgeIssuedApiKey, EnrollDeviceParams, EnrolledDevice, enroll_device,
-    issue_bridge_api_key, revoke_bridge_api_key,
+    issue_bridge_api_key, list_api_keys_for_user, revoke_bridge_api_key,
 };
 pub use bridge_users::{BridgeIdentityRow, find_bridge_user};
 pub use device_certs::{DeviceCertRow, revoke_device_cert};

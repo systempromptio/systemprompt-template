@@ -10,7 +10,11 @@ use sha2::{Digest, Sha256};
 use std::time::Duration;
 use systemprompt::identifiers::ClientId;
 
+// Why: lint-ok: web-transport — OAuth token exchanges require the external
+// identity provider.
 pub(super) fn client() -> AdminResult<reqwest::Client> {
+    // Why: lint-ok: web-transport — bounded outbound OAuth exchange, not dashboard
+    // data loading.
     reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
         .redirect(reqwest::redirect::Policy::none())

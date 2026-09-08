@@ -5,7 +5,10 @@ mod aggregates;
 mod crud;
 mod summaries;
 
-pub use aggregates::{DepartmentUserManagementAggregate, DepartmentUserMarketplaceOverride};
+pub use aggregates::{
+    DepartmentUserManagementAggregate, DepartmentUserMarketplaceOverride,
+    list_department_user_management_aggregates, list_department_user_marketplace_overrides,
+};
 pub use crud::{
     assign_user_to_department, create_department, delete_department, find_department,
     find_department_by_name, update_department,

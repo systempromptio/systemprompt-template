@@ -27,6 +27,8 @@ pub(crate) async fn post_token_request(
     token_url: &str,
     body: String,
 ) -> Result<SalesforceTokenResponse, SalesforceError> {
+    // Why: lint-ok: web-transport — exchanges an authorization code with
+    // Salesforce.
     let resp = reqwest::Client::new()
         .post(token_url)
         .header(

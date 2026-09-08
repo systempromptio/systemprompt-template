@@ -14,7 +14,7 @@
 
 use serde::Serialize;
 
-// Why: one sortable column header, as `components/sort-header` reads it.
+// Why: One sortable column header, as `components/sort-header` reads it.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct SortHeaderView {
     pub label: &'static str,

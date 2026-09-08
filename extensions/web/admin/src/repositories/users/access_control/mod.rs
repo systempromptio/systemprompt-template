@@ -8,6 +8,7 @@
 pub(crate) mod matrix;
 mod matrix_source;
 pub mod matrix_subject;
+mod matrix_types;
 mod rules;
 
 pub use matrix::{

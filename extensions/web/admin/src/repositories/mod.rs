@@ -23,11 +23,9 @@ pub mod mcp;
 pub mod overview;
 pub mod people_usage;
 pub mod projects;
+pub mod reports;
 pub mod roles;
 pub mod scope;
 pub mod secrets;
 pub mod traces;
 pub mod users;
-
-
-pub mod reports;

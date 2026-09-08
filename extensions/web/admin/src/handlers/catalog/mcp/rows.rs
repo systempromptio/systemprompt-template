@@ -77,7 +77,7 @@ impl Runtime {
 //
 // The liveness third is `overview::liveness`'s rule verbatim, interval and all,
 // so the dashboard strip and this table cannot disagree about the same server.
-pub(crate) fn status_of(
+fn status_of(
     configured: bool,
     enabled: bool,
     heartbeat: Option<chrono::DateTime<chrono::Utc>>,

@@ -101,7 +101,7 @@ pub(crate) async fn groups_page(
         pagination,
         total_groups,
         can_manage: user_ctx.is_admin,
-        can_map: user_ctx.is_platform_admin,
+        can_map: crate::types::roles_grant_platform(&user_ctx.roles),
         group_options: group_options(&pool).await,
         unkeyed_people: listing.unkeyed_people,
     };
