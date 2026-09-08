@@ -82,7 +82,8 @@ COPY extensions/mcp /app/extensions/mcp
 COPY docker/entrypoint.sh /app/entrypoint.sh
 COPY docker/migrate-profile.py /app/migrate-profile.py
 COPY docker/container-state.py /app/container-state.py
-RUN chmod +x /app/entrypoint.sh /app/bin/* \
+RUN mkdir -p /app/storage/files/uploads /app/storage/files/images/generated \
+    && chmod +x /app/entrypoint.sh /app/bin/* \
     && chown -R app:app /app
 
 USER app
