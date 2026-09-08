@@ -35,23 +35,9 @@ jobs:
     name: Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
-      # The root workspace builds against the sibling core checkout via
-      # [patch.crates-io] on `next`, and bridge/ depends on systemprompt-bridge
-      # by path. Materialise the sibling at the ref bridge/CORE_REF pins: the
-      # checkout must land inside the workspace, so link it into place.
-      - name: Read pinned core ref
-        id: core
-        run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
-        with:
-          repository: systempromptio/systemprompt-core
-          ref: ${{ steps.core.outputs.ref }}
-          path: .core-sibling
-      - name: Link sibling core beside the workspace
-        run: ln -sfn "$GITHUB_WORKSPACE/.core-sibling" "$GITHUB_WORKSPACE/../systemprompt-core"
       # rust-toolchain.toml pins the nightly channel and its components
       # (rustfmt, clippy, llvm-tools). `rustup show` installs exactly that
       # toolchain, so fmt runs on the same version developers use locally with
@@ -65,24 +51,10 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
-      # The root workspace builds against the sibling core checkout via
-      # [patch.crates-io] on `next`, and bridge/ depends on systemprompt-bridge
-      # by path. Materialise the sibling at the ref bridge/CORE_REF pins: the
-      # checkout must land inside the workspace, so link it into place.
-      - name: Read pinned core ref
-        id: core
-        run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
-        with:
-          repository: systempromptio/systemprompt-core
-          ref: ${{ steps.core.outputs.ref }}
-          path: .core-sibling
-      - name: Link sibling core beside the workspace
-        run: ln -sfn "$GITHUB_WORKSPACE/.core-sibling" "$GITHUB_WORKSPACE/../systemprompt-core"
-      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup show
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --workspace --locked
 
@@ -90,29 +62,17 @@ jobs:
     name: SQLx Offline Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
-      # The root workspace builds against the sibling core checkout via
-      # [patch.crates-io] on `next`, and bridge/ depends on systemprompt-bridge
-      # by path. Materialise the sibling at the ref bridge/CORE_REF pins: the
-      # checkout must land inside the workspace, so link it into place.
-      - name: Read pinned core ref
-        id: core
-        run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
-        with:
-          repository: systempromptio/systemprompt-core
-          ref: ${{ steps.core.outputs.ref }}
-          path: .core-sibling
-      - name: Link sibling core beside the workspace
-        run: ln -sfn "$GITHUB_WORKSPACE/.core-sibling" "$GITHUB_WORKSPACE/../systemprompt-core"
-      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup show
       - uses: Swatinem/rust-cache@v2
       # Every extension crate that invokes a sqlx query macro must ship a
       # committed .sqlx/ cache so the -D warnings offline build above is
       # reproducible. Find crates whose sources use a query!-family macro but
       # lack a sibling .sqlx directory and fail loudly, naming them.
+      - name: Verify release version pins
+        run: bash scripts/sync-release-version.sh "$(sed -n 's/^version = "\([0-9.]*\)"/\1/p' Cargo.toml | head -1)" --check
       - name: Verify offline sqlx cache is current
         run: bash scripts/check-sqlx-cache.sh
       - run: cargo check --workspace --locked
@@ -146,23 +106,9 @@ jobs:
           --health-timeout 3s
           --health-retries 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
-      # The root workspace builds against the sibling core checkout via
-      # [patch.crates-io] on `next`, and bridge/ depends on systemprompt-bridge
-      # by path. Materialise the sibling at the ref bridge/CORE_REF pins: the
-      # checkout must land inside the workspace, so link it into place.
-      - name: Read pinned core ref
-        id: core
-        run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
-        with:
-          repository: systempromptio/systemprompt-core
-          ref: ${{ steps.core.outputs.ref }}
-          path: .core-sibling
-      - name: Link sibling core beside the workspace
-        run: ln -sfn "$GITHUB_WORKSPACE/.core-sibling" "$GITHUB_WORKSPACE/../systemprompt-core"
 
       - name: Check for tests workspace
         id: tests
@@ -174,7 +120,7 @@ jobs:
             echo "::notice::tests/Cargo.toml not present yet; skipping test job."
           fi
 
-      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup show
         if: steps.tests.outputs.present == 'true'
       - uses: Swatinem/rust-cache@v2
         if: steps.tests.outputs.present == 'true'
@@ -204,15 +150,98 @@ jobs:
         if: steps.tests.outputs.present == 'true'
         env:
           SYSTEMPROMPT_TEST_DATABASE_URL: postgres://test:test@localhost:5432/test
-        run: cargo nextest run --manifest-path tests/Cargo.toml --workspace
+        run: cargo nextest run --locked --manifest-path tests/Cargo.toml --workspace
 
       - name: Run admin unit tests
         if: steps.tests.outputs.present == 'true'
         env:
           SQLX_OFFLINE: "true"
-        run: cargo nextest run -p systemprompt-web-admin --tests
+        run: cargo nextest run --locked -p systemprompt-web-admin --tests
 
       - name: Front-end asset manifest and standards gate
         env:
           SQLX_OFFLINE: "true"
-        run: cargo nextest run -p systemprompt-web-extension --tests
+        run: cargo nextest run --locked -p systemprompt-web-extension --tests
+
+  e2e:
+    name: E2E (Playwright, admin console)
+    needs: test
+    runs-on: ubuntu-latest
+    # A debug build of the server, a seeded database and a browser walk of every
+    # admin page. Slower than `test`, and it needs the stack alive, so it is its
+    # own job rather than a step appended to one.
+    timeout-minutes: 60
+    env:
+      RUSTFLAGS: ""
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      GATEWAY_URL: http://localhost:8080
+    steps:
+      - name: Reclaim runner disk
+        run: |
+          echo "before:"; df -h / | tail -1
+          sudo rm -rf \
+            /usr/local/lib/android \
+            /opt/hostedtoolcache \
+            /usr/share/dotnet \
+            /opt/ghc /usr/local/.ghcup \
+            /usr/share/swift \
+            /usr/local/share/powershell \
+            /usr/share/miniconda \
+            /usr/lib/google-cloud-sdk \
+            /opt/microsoft /opt/az /usr/share/az_* \
+            /usr/local/graalvm /usr/share/kotlinc \
+            /usr/local/share/boost /usr/local/julia* \
+            /opt/pipx /usr/local/aws-cli /usr/local/lib/heroku \
+            "${AGENT_TOOLSDIRECTORY:-}" 2>/dev/null || true
+          sudo apt-get clean
+          echo "after:"; df -h / | tail -1
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: extractions/setup-just@v2
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends clang mold libpq-dev libssl-dev pkg-config python3 postgresql-client
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            tests
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - run: just build
+      # setup-local brings up its own Docker Postgres, so this job takes no
+      # `services:` block: the seed then reads the same profile secrets a
+      # developer's machine does, and CI and local disagree about nothing.
+      #
+      # The key is a placeholder and is never used: no page spec exercises
+      # inference, and setup-local simply refuses to generate a profile with no
+      # provider key at all off a TTY.
+      - name: Provision the local profile
+        run: just setup-local "sk-ant-e2e-placeholder" "" "" 8080 5432 e2e@example.invalid
+      # `infra services start` holds the terminal for the life of the server, so
+      # it must be detached here or the job spends its whole timeout on this
+      # step and never reaches the health wait.
+      - name: Start the stack (detached)
+        run: nohup just start > e2e-server.log 2>&1 &
+      - name: Wait for /health
+        run: |
+          for _ in $(seq 1 60); do
+            curl -fsS -o /dev/null http://localhost:8080/health && exit 0
+            sleep 2
+          done
+          echo "server never became healthy"; exit 1
+      - run: just e2e-install
+      - run: just e2e --project chromium
+      - if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: playwright/playwright-report/
+          retention-days: 7
+      - if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: e2e-server-log
+          path: e2e-server.log

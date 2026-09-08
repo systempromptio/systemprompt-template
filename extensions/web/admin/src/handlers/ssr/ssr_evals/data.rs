@@ -111,8 +111,9 @@ pub(super) async fn fetch_evals_data(
     tab: EvalsTab,
     filter: &ResultFilter,
 ) -> EvalsData {
+    let scope = crate::repositories::scope::SubjectScope::All;
     let (stats, scores) = tokio::join!(
-        get_request_stats(pool, range),
+        get_request_stats(pool, range, &scope),
         get_eval_score_summary(pool, range),
     );
 
@@ -125,8 +126,8 @@ pub(super) async fn fetch_evals_data(
     match tab {
         EvalsTab::Overview => {
             let (hist, series, runs) = tokio::join!(
-                list_latency_histogram(pool, range),
-                list_request_timeseries(pool, range),
+                list_latency_histogram(pool, range, &scope),
+                list_request_timeseries(pool, range, &scope),
                 list_recent_runs(pool, range, RUN_LIMIT),
             );
             data.hist = unwrap_or_empty(hist, "list_latency_histogram");

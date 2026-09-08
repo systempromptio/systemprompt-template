@@ -10,7 +10,7 @@ use crate::repositories::evals::runs::EvalRunRow;
 
 use super::BASE_URL;
 use super::context_runs::{CaseRowView, DimensionView, ResultRowView, RunRowView};
-use super::format::{format_cost, local_time, score_pct, short_id};
+use super::format::{format_cost, local_time, score_pct, short_id, truncate};
 
 pub(super) fn run_rows(runs: &[EvalRunRow]) -> Vec<RunRowView> {
     runs.iter().map(run_row).collect()
@@ -28,7 +28,13 @@ pub(super) fn run_row(r: &EvalRunRow) -> RunRowView {
     RunRowView {
         id: r.id.clone(),
         short_id: short_id(&r.id),
+        kind_label: kind_label(&r.kind),
         kind: r.kind.clone(),
+        status_tone: match r.status.as_str() {
+            "failed" => "err",
+            "running" => "warn",
+            _ => "ok",
+        },
         status: r.status.clone(),
         is_running: r.status == "running",
         is_failed: r.status == "failed",
@@ -43,6 +49,15 @@ pub(super) fn run_row(r: &EvalRunRow) -> RunRowView {
         created_by: r.created_by.clone(),
         created_at_local: local_time(r.created_at),
         detail_url: format!("{BASE_URL}/runs/{}", r.id),
+    }
+}
+
+fn kind_label(kind: &str) -> &'static str {
+    match kind {
+        "judge" => "Judge",
+        "pairwise" => "Head-to-head",
+        "replay" => "Replay",
+        _ => "Eval",
     }
 }
 
@@ -63,13 +78,21 @@ pub(super) fn result_row(r: &EvalResultRow) -> ResultRowView {
             .overall_score
             .map_or_else(|| "—".to_owned(), |s| format!("{s}/5")),
         score_pct: score_pct(f64::from(score)),
+        verdict_tone: match r.verdict.as_str() {
+            "pass" => "ok",
+            "partial" => "warn",
+            _ => "err",
+        },
         verdict: r.verdict.clone(),
         is_pass: r.verdict == "pass",
         is_partial: r.verdict == "partial",
         is_fail: r.verdict == "fail",
+        rationale_short: truncate(r.rationale.as_deref().unwrap_or_default(), 120),
         rationale: r.rationale.clone().unwrap_or_default(),
+        flags_display: r.flags.join(", "),
         flags: r.flags.clone(),
         has_flags: !r.flags.is_empty(),
+        dimensions_display: dimensions_display(&r.dimension_scores),
         dimensions: dimension_views(&r.dimension_scores),
         prompt_excerpt: r.prompt_excerpt.clone().unwrap_or_default(),
         response_excerpt: r.response_excerpt.clone().unwrap_or_default(),
@@ -92,6 +115,18 @@ fn dimension_views(scores: &DimensionScores) -> Vec<DimensionView> {
             })
         })
         .collect()
+}
+
+fn dimensions_display(scores: &DimensionScores) -> String {
+    scores
+        .labelled()
+        .into_iter()
+        .filter_map(|(label, score)| {
+            let short: String = label.chars().take(4).collect();
+            score.map(|s| format!("{short} {s}"))
+        })
+        .collect::<Vec<_>>()
+        .join(" · ")
 }
 
 pub(super) fn case_rows(cases: &[EvalCaseRow]) -> Vec<CaseRowView> {

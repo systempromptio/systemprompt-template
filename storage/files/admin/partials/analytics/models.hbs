@@ -1,0 +1,73 @@
+{{!--
+  Models tab. One row per model the gateway served, plus the `unrouted` bucket
+  for requests rejected before a route was chosen — never dropped.
+--}}
+<section aria-label="Model usage">
+    {{> analytics/kpi-row tiles=models.kpis}}
+
+    {{#> components/section title="Models" count=models.model_count note=models.total_display}}
+      {{#*inline "section_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/gateway">Gateway routes</a>
+      {{/inline}}
+    {{/components/section}}
+
+    {{#if models.has_rows}}
+    {{#> components/table caption="Gateway requests, tokens, cost and latency by model"}}
+        <thead><tr>
+            <th scope="col">Model</th>
+            <th scope="col" class="sp-table__cell--num" aria-sort="descending">Requests</th>
+            <th scope="col" class="sp-table__cell--spark">Share</th>
+            <th scope="col" class="sp-table__cell--num" title="Prompt tokens over completion tokens">Tokens</th>
+            <th scope="col" class="sp-table__cell--num">Cost</th>
+            <th scope="col" class="sp-table__cell--num" title="Median over 95th percentile latency">Latency</th>
+            <th scope="col" class="sp-table__cell--num">Errors</th>
+            <th scope="col" class="sp-table__cell--num" title="Requests whose requested model differed from the one that served them">Redirects</th>
+        </tr></thead>
+        <tbody>
+        {{#each models.rows}}
+        <tr>
+            <td class="sp-table__cell--mono sp-table__cell--primary sp-p-analytics__name">
+                <a href="{{this.drill_url}}"
+                   title="{{this.model}} · {{this.qualifier_display}}">{{this.name_display}}</a>
+                {{#if this.is_unrouted}} {{> components/badge tone="err" text="REJECTED"}}{{/if}}
+            </td>
+            <td class="sp-table__cell--num sp-u-num">{{this.requests}}</td>
+            <td class="sp-table__cell--spark"><span class="sp-p-analytics__bar" style="--v:{{this.share_pct}}%"></span></td>
+            <td class="sp-table__cell--num sp-u-num"
+                title="{{this.cache_display}} cache reads, {{this.reasoning_display}} reasoning tokens">{{this.input_display}} <span class="sp-table__cell--muted">/ {{this.output_display}}</span></td>
+            <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.p50_display}} <span class="sp-table__cell--muted">/ {{this.p95_display}}</span></td>
+            <td class="sp-table__cell--num sp-u-num">{{> components/badge tone=this.error_tone text=this.error_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.redirected_display}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No model traffic"
+        message="No gateway requests in this window. Widen the time range or clear the scope."}}
+    {{/if}}
+
+    {{#> components/section title="Route redirects" count=models.redirect_count
+        note="Requests whose requested model differed from the model that served them."}}{{/components/section}}
+    {{#if models.has_redirects}}
+    {{#> components/table caption="Requested model versus served model"}}
+        <thead><tr>
+            <th scope="col">Requested</th>
+            <th scope="col">Served</th>
+            <th scope="col" class="sp-table__cell--num" aria-sort="descending">Requests</th>
+        </tr></thead>
+        <tbody>
+        {{#each models.redirects}}
+        <tr>
+            <td class="sp-table__cell--mono sp-table__cell--primary">{{this.requested_model}}</td>
+            <td class="sp-table__cell--mono"><a href="{{this.drill_url}}">{{this.served_model}}</a></td>
+            <td class="sp-table__cell--num sp-u-num">{{this.requests}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state message="No route rewrote a model in this window."}}
+    {{/if}}
+</section>

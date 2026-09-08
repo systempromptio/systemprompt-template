@@ -1,0 +1,30 @@
+<div class="sp-audience-matrix-wrap" tabindex="0" role="region" aria-label="Audience matrix">
+    <table class="sp-audience-matrix sp-table__el">
+        <caption class="sp-audience-matrix__caption">
+            Resolved by the same authorization resolver the gateway calls, so a cell here is the decision an enforcement point makes.
+        </caption>
+        <thead>
+            <tr>
+                <th scope="col">Subject</th>
+                {{#each columns}}
+                <th scope="col" class="sp-audience-matrix__col">{{name}}</th>
+                {{/each}}
+            </tr>
+        </thead>
+        <tbody>
+            {{#each rows}}
+            <tr data-subject="{{subject}}" class="sp-audience-matrix__row sp-audience-matrix__row--{{kind}}">
+                <th scope="row" class="sp-audience-matrix__subject">
+                    <span class="sp-audience-matrix__label">{{label}}</span>
+                    <span class="sp-audience-matrix__kind">{{kind}}</span>
+                </th>
+                {{#each cells}}
+                <td data-marketplace="{{marketplace_id}}" class="sp-audience-matrix__cell {{#if is_allow}}is-allow{{else}}is-deny{{/if}}" title="{{detail}}">
+                    <span class="sp-audience-matrix__layer">{{layer}}</span>
+                </td>
+                {{/each}}
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+</div>

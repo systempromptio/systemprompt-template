@@ -30,7 +30,7 @@ pub enum GovernanceDecision {
 impl GovernanceDecision {
     pub const fn from_decision(d: &Decision) -> Self {
         match d {
-            Decision::Allow { .. } => Self::Allow,
+            Decision::Allow { .. } | Decision::Warn { .. } => Self::Allow,
             Decision::Deny { .. } => Self::Deny,
             Decision::Pending { .. } => Self::Ask,
         }

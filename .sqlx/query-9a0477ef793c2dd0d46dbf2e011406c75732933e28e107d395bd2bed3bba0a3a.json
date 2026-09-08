@@ -1,0 +1,60 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE dev_login_codes c SET consumed_at = COALESCE(c.consumed_at, NOW())\n           FROM users u\n           WHERE c.code_hash = $1\n             AND (c.consumed_at IS NULL\n                  OR c.consumed_at > NOW() - make_interval(secs => $2))\n             AND c.expires_at > NOW()\n             AND u.id = c.user_id\n             AND u.status = 'active'\n           RETURNING u.id AS \"user_id: UserId\",\n                     u.email AS \"email!\",\n                     COALESCE(u.display_name, u.name) AS \"display_name!\",\n                     u.roles AS \"roles!: Vec<String>\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "email!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name!",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "roles!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "roles"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false
+    ]
+  },
+  "hash": "9a0477ef793c2dd0d46dbf2e011406c75732933e28e107d395bd2bed3bba0a3a"
+}

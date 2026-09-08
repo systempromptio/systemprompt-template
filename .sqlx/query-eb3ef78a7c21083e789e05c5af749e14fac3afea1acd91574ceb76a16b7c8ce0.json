@@ -1,0 +1,102 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.source_type,s.requested,s.completed,s.last_sync_at,s.last_error,\n        COALESCE(f.status,'empty') AS \"status!\",COALESCE(f.project_id,'unassigned') AS \"project_id!\",\n        COALESCE(f.project_name,'Unassigned') AS \"project_name!\",COUNT(f.file_id) AS \"files!\"\n        FROM knowledge_drive_sources s LEFT JOIN knowledge_drive_files f ON f.source_type=s.source_type\n        GROUP BY s.source_type,f.status,f.project_id,f.project_name ORDER BY s.source_type,f.project_name,f.status",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "source_type",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_sources",
+            "name": "source_type"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "requested",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_sources",
+            "name": "requested"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "completed",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_sources",
+            "name": "completed"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "last_sync_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_sources",
+            "name": "last_sync_at"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "last_error",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_sources",
+            "name": "last_error"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "status!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "project_id!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "project_name!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "files!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "eb3ef78a7c21083e789e05c5af749e14fac3afea1acd91574ceb76a16b7c8ce0"
+}

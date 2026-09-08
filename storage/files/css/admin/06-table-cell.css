@@ -1,0 +1,164 @@
+@layer components {
+
+.sp-table__el th[aria-sort] { cursor: pointer; }
+
+/* The sort link wraps with its header rather than forcing one line. */
+/* The sort control fills its header, padding included. As an inline link it
+   occupied only the text, so a click anywhere else in a wide column landed on
+   the header's padding and did nothing — and a header that looks sortable and
+   ignores half its own clicks is worse than one that is not sortable at all.
+   The negative margin is what reclaims the padding the th already owns; the
+   link then re-applies it so the text stays where it was. */
+.sp-table__sort {
+    display: block;
+    margin: calc(-1 * var(--sp-density-cell-y)) calc(-1 * var(--sp-density-cell-x));
+    padding: var(--sp-density-cell-y) var(--sp-density-cell-x);
+    color: inherit;
+    text-align: inherit;
+    text-decoration: none;
+    white-space: normal;
+}
+
+.sp-table__sort:focus-visible {
+    outline: 2px solid var(--sp-accent);
+    outline-offset: -2px;
+}
+.sp-table__el th[aria-sort]:hover { color: var(--sp-text-secondary); }
+
+.sp-table__sort-icon {
+    display: inline-block;
+    margin-left: var(--sp-space-1);
+    opacity: 0.3;
+    transition: opacity var(--sp-duration-fast);
+}
+
+.sp-table__el th[aria-sort="ascending"] .sp-table__sort-icon,
+.sp-table__el th[aria-sort="descending"] .sp-table__sort-icon {
+    opacity: 1;
+    color: var(--sp-accent-text);
+}
+
+/* The width sizes the column and applies to the header too; nowrap and the
+   ceiling are data-cell rules, because a header that cannot wrap and cannot
+   overflow is a header that gets cut in half. */
+.sp-table__cell--num {
+    width: 7ch;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+td.sp-table__cell--num { white-space: nowrap; }
+
+.sp-table__el th.sp-table__cell--num { text-align: right; }
+
+/* A timestamp that wraps doubles the row height and halves how much of the
+   table a reader sees at once, which is the whole point of the compact table. */
+.sp-table__cell--date {
+    width: 12ch;
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-table__cell--mono {
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-2xs);
+}
+
+/* An id is recognised by its first characters, so it is clipped rather than
+   given the width its full length would demand. */
+.sp-table__cell--id {
+    width: 14ch;
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-2xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-table__cell--muted { color: var(--sp-text-tertiary); }
+.sp-table__cell--primary { color: var(--sp-text-primary); }
+.sp-table__cell--secondary { color: var(--sp-text-secondary); }
+.sp-table__cell--flush { padding: 0; }
+
+.sp-table__cell--stacked {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+/* Both lines of a stacked cell are single lines. The second one is a
+   description the row does not depend on, so it is the one that gets clipped;
+   left to wrap it pushed its row into the next one. */
+.sp-table__cell--stacked > * {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-table__cell--spark {
+    width: 6rem;
+    min-width: 6rem;
+}
+
+.sp-table__cell--spark svg { display: block; width: 100%; height: 1.25rem; }
+
+.sp-table__el td.sp-table__cell--actions,
+.sp-table__el th.sp-table__cell--actions {
+    position: sticky;
+    right: 0;
+    z-index: var(--sp-z-sticky-header);
+    width: 1%;
+    white-space: nowrap;
+    text-align: right;
+    background: var(--sp-bg-surface);
+    border-left: 1px solid var(--sp-border-subtle);
+}
+
+.sp-table__el th.sp-table__cell--actions { background: var(--sp-bg-card-header); }
+
+.sp-table__el tbody tr:nth-child(even) td.sp-table__cell--actions,
+.sp-table__el tbody tr:hover td.sp-table__cell--actions {
+    background: var(--sp-bg-surface);
+}
+
+.sp-table__el .sp-col-checkbox    { width: 2.5rem; }
+.sp-table__el .sp-col-status { width: 9ch; }
+
+/* The ceilings are on data cells only. On a th they clipped the header, and a
+   header is the one thing that may never be clipped: it names the column, and
+   the column is entitled to be as wide as its name. */
+/* No ceiling on a number. Every cell is border-box, so a 9ch cap was 9ch less
+   the 1.5ch of horizontal padding, and "$0.2964" came back as "$0.29…". A
+   number's length is bounded by the formatter that produced it, which is a
+   better bound than anything set here, and a truncated figure is worse than a
+   wide column: it reads as a different, smaller number. */
+.sp-table__el td.sp-table__cell--num { white-space: nowrap; }
+.sp-table__el td.sp-table__cell--date { max-width: 16ch; white-space: nowrap; }
+.sp-table__el td.sp-table__cell--id { max-width: 14ch; }
+.sp-table__el td.sp-col-status { max-width: 12ch; }
+
+/* A badge is a label, not a reason to widen a column. */
+.sp-table__el .sp-badge {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sp-table__el .sp-col-thumbnail   { width: 3.5rem; min-width: 3.5rem; }
+.sp-table__el .sp-col-date        { width: 6.5rem; min-width: 5.5rem; }
+.sp-table__el .sp-col-currency    { width: 7rem;   min-width: 6rem; }
+.sp-table__el .sp-col-status      { width: 7rem;   min-width: 5.5rem; }
+.sp-table__el .sp-col-boolean     { width: 4.5rem; min-width: 4rem; }
+.sp-table__el .sp-col-badge_count { width: 5rem;   min-width: 4.5rem; }
+.sp-table__el .sp-col-tags        { width: 9.5rem; min-width: 7.5rem; }
+.sp-table__el .sp-col-text        { min-width: 6.5rem; }
+
+.sp-table__el td.sp-u-truncate {
+    max-width: 18rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+}

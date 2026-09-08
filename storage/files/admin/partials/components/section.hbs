@@ -1,0 +1,15 @@
+{{!--
+  Section heading: title, optional count, optional supporting note, optional
+  actions slot. The note is `note`, not `sub`: `sub` is a registered helper, so
+  a bare `sub` mustache printed its zero-argument result on every heading.
+
+    {{#> components/section title="Recent warnings" count=total note="…"}}
+      {{#*inline "section_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{csv_url}}">CSV</a>{{/inline}}
+    {{/components/section}}
+--}}
+<div class="sp-section__head">
+    <h2 class="sp-section__title">{{title}}</h2>
+    {{#if count}}<span class="sp-section__count">{{count}}</span>{{/if}}
+    {{#if note}}<p class="sp-section__sub">{{note}}</p>{{/if}}
+    <div class="sp-section__actions">{{#> section_actions}}{{/section_actions}}</div>
+</div>

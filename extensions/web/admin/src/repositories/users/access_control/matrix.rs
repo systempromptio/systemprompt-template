@@ -3,9 +3,8 @@
 //! This calls the same [`systemprompt_security::authz::resolver::resolve`] that
 //! `POST /govern/authz` calls, over the same rules and the same subject
 //! dimensions, so a cell here and a decision at the enforcement point cannot
-//! disagree. It used to carry its own forked `user > department > role`
-//! implementation; that fork is gone, and department is now a subject
-//! dimension the resolver understands (see [`crate::authz::department`]).
+//! disagree. Every subject dimension this extension declares (see
+//! [`crate::authz`]) takes part, exactly as at the enforcement point.
 //!
 //! `MatrixSource::layer` names which band decided, mapped back from the
 //! resolver's `MatchedBy` / `DenyReason`.
@@ -18,12 +17,13 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{RuleId, UserId};
 use systemprompt_security::authz::resolver::{ResolveInput, resolve};
 use systemprompt_security::authz::{
-    Access, AccessRule, Decision, DenyReason, EntityKind, EntityRef, MatchedBy, SubjectAttributes,
-    SubjectDimension,
+    Access, AccessRule, Decision, EntityKind, EntityRef, SubjectAttributes, SubjectDimension,
 };
 
+use super::matrix_source::{allow_source, deny_source};
+use super::matrix_subject::{MatrixSubject, user_subject};
 use super::rules::list_all_rules;
-use crate::authz::{dimensions, subject_attributes_for};
+use crate::authz::dimensions;
 use crate::types::access_control::{AccessControlRule, AccessDecision};
 
 #[derive(Debug, Serialize)]
@@ -39,6 +39,8 @@ pub struct UserMatrixUser {
     pub display_name: Option<String>,
     pub roles: Vec<String>,
     pub department: Option<String>,
+    pub group_ids: Vec<String>,
+    pub project_ids: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -85,27 +87,68 @@ pub async fn resolve_user_matrix(
     let Some(user) = find_user_for_matrix(pool, user_id).await? else {
         return Ok(None);
     };
-    let all_rules = list_all_rules(pool).await?;
-    let defaults = load_entity_defaults(pool).await?;
     // Why: the same lookup the enforcement webhook performs, so the matrix and
     // the decision see identical subject values.
-    let attributes = subject_attributes_for(pool, user_id).await;
-    let dimensions = dimensions(pool);
+    let subject = user_subject(pool, user_id, user.roles.clone()).await;
+    let sections = resolve_sections_for(pool, &subject, sections_in).await?;
+    Ok(Some(UserMatrix { user, sections }))
+}
 
+// Why: Resolve every supplied section for one subject — a person, a group, or a
+// role. The subject abstraction is what lets the audience matrix ask the
+// question of a group without inventing a second resolver.
+pub(super) async fn resolve_sections_for(
+    pool: &PgPool,
+    subject: &MatrixSubject,
+    sections_in: Vec<SectionInput>,
+) -> Result<Vec<MatrixSection>, sqlx::Error> {
+    let inputs = resolution_inputs(pool).await?;
+    Ok(sections_with(
+        &inputs,
+        dimensions(pool),
+        subject,
+        sections_in,
+    ))
+}
+
+// Why: The rule set and entity defaults every cell resolves against. Loaded
+// once per page rather than once per subject: the audience matrix asks the same
+// question of a dozen subjects, and re-reading the whole rule table for each
+// of them turns one page render into two dozen round trips.
+pub(super) struct ResolutionInputs {
+    rules: Vec<AccessControlRule>,
+    defaults: HashMap<(String, String), bool>,
+}
+
+pub(super) async fn resolution_inputs(pool: &PgPool) -> Result<ResolutionInputs, sqlx::Error> {
+    Ok(ResolutionInputs {
+        rules: list_all_rules(pool).await?,
+        defaults: load_entity_defaults(pool).await?,
+    })
+}
+
+pub(super) fn sections_with(
+    inputs: &ResolutionInputs,
+    dimensions: &[SubjectDimension],
+    subject: &MatrixSubject,
+    sections_in: Vec<SectionInput>,
+) -> Vec<MatrixSection> {
     let mut sections: Vec<MatrixSection> = Vec::with_capacity(sections_in.len());
     for (entity_type, label, rows_in) in sections_in {
         let mut out_rows = Vec::with_capacity(rows_in.len());
         for (entity_id, name, desc) in rows_in {
-            let default_included = defaults
+            let default_included = inputs
+                .defaults
                 .get(&(entity_type.clone(), entity_id.clone()))
                 .copied()
                 .unwrap_or(false);
             let (effective, source) = resolve_effective(&MatrixCell {
-                all_rules: &all_rules,
+                all_rules: &inputs.rules,
                 entity_type: &entity_type,
                 entity_id: &entity_id,
-                user: &user,
-                attributes: &attributes,
+                subject_id: &subject.id,
+                subject_roles: &subject.roles,
+                attributes: &subject.attributes,
                 dimensions,
                 default_included,
             });
@@ -124,8 +167,7 @@ pub async fn resolve_user_matrix(
             rows: out_rows,
         });
     }
-
-    Ok(Some(UserMatrix { user, sections }))
+    sections
 }
 
 async fn load_entity_defaults(
@@ -153,27 +195,31 @@ async fn find_user_for_matrix(
                   u.email,
                   COALESCE(u.display_name, u.full_name, u.name) AS display_name,
                   u.roles AS "roles!: Vec<String>",
-                  COALESCE(upe.department, 'Default') AS "department!"
+                  ARRAY(SELECT ug.group_id FROM user_groups ug
+                        WHERE ug.user_id = u.id) AS "group_ids!: Vec<String>",
+                  ARRAY(SELECT DISTINCT pm.project_id FROM project_members pm
+                        WHERE pm.user_id = u.id) AS "project_ids!: Vec<String>"
            FROM users u
-           LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
            WHERE u.id = $1"#,
         user_id.as_str()
     )
     .fetch_optional(pool)
     .await?;
-    Ok(row.map(|row| {
-        let dept = if row.department.trim().is_empty() {
-            None
-        } else {
-            Some(row.department)
-        };
-        UserMatrixUser {
-            id: row.id,
-            email: Some(row.email),
-            display_name: row.display_name,
-            roles: row.roles,
-            department: dept,
-        }
+    let department = if row.is_some() {
+        crate::repositories::users::queries::find_user_roles_department(pool, user_id)
+            .await?
+            .map(|(_, department)| department)
+    } else {
+        None
+    };
+    Ok(row.map(|row| UserMatrixUser {
+        id: row.id,
+        email: Some(row.email),
+        display_name: row.display_name,
+        roles: row.roles,
+        department,
+        group_ids: row.group_ids,
+        project_ids: row.project_ids,
     }))
 }
 
@@ -190,17 +236,21 @@ fn as_access_rule(row: &AccessControlRule) -> AccessRule {
     }
 }
 
-struct MatrixCell<'a> {
-    all_rules: &'a [AccessControlRule],
-    entity_type: &'a str,
-    entity_id: &'a str,
-    user: &'a UserMatrixUser,
-    attributes: &'a SubjectAttributes,
-    dimensions: &'a [SubjectDimension],
-    default_included: bool,
+// Why: the cell names a *subject*, not a user — the group and role rows of the
+// audience matrix resolve through the same resolver call as a person does, and
+// only the id and the role list differ between them.
+pub(crate) struct MatrixCell<'a> {
+    pub all_rules: &'a [AccessControlRule],
+    pub entity_type: &'a str,
+    pub entity_id: &'a str,
+    pub subject_id: &'a UserId,
+    pub subject_roles: &'a [String],
+    pub attributes: &'a SubjectAttributes,
+    pub dimensions: &'a [SubjectDimension],
+    pub default_included: bool,
 }
 
-fn resolve_effective(cell: &MatrixCell<'_>) -> (String, MatrixSource) {
+pub(crate) fn resolve_effective(cell: &MatrixCell<'_>) -> (String, MatrixSource) {
     let Ok(kind) = EntityKind::from_str(cell.entity_type) else {
         return (
             if cell.default_included {
@@ -223,12 +273,12 @@ fn resolve_effective(cell: &MatrixCell<'_>) -> (String, MatrixSource) {
         .map(as_access_rule)
         .collect();
 
-    let uid = UserId::new(&cell.user.id);
+    let uid = cell.subject_id;
     let decision = resolve(ResolveInput {
         entity: &entity,
         rules: &rules,
-        user_id: &uid,
-        user_roles: &cell.user.roles,
+        user_id: uid,
+        user_roles: cell.subject_roles,
         default_included: Some(cell.default_included),
         parents: &[],
         attributes: cell.attributes,
@@ -236,65 +286,26 @@ fn resolve_effective(cell: &MatrixCell<'_>) -> (String, MatrixSource) {
     });
 
     match decision {
-        Decision::Allow { matched_by } => ("allow".to_owned(), allow_source(&uid, &matched_by)),
-        Decision::Deny { reason } => ("deny".to_owned(), deny_source(&uid, &reason)),
-        Decision::Pending { reason } => (
-            "pending".to_owned(),
+        Decision::Allow { matched_by } => ("allow".to_owned(), allow_source(uid, &matched_by)),
+        // Why: a warning is a reach, but not a clean one. The cell names it so
+        // an operator reading the matrix under warn mode sees which cells are
+        // only open because enforcement is currently off.
+        Decision::Warn { reason } => (
+            "warn".to_owned(),
             MatrixSource {
-                layer: "policy".into(),
+                layer: "warn".into(),
                 detail: reason.to_string(),
             },
         ),
-    }
-}
-
-fn allow_source(user_id: &UserId, matched_by: &MatchedBy) -> MatrixSource {
-    match matched_by {
-        MatchedBy::UserAllow => MatrixSource {
-            layer: "user".into(),
-            detail: format!("user:{user_id} allow"),
-        },
-        MatchedBy::RoleAllow { role } => MatrixSource {
-            layer: "role".into(),
-            detail: format!("role:{role} allow"),
-        },
-        MatchedBy::AttributeAllow { rule_type, value } => MatrixSource {
-            layer: rule_type.to_string(),
-            detail: format!("{rule_type}:{value} allow"),
-        },
-        MatchedBy::DefaultIncluded => MatrixSource {
-            layer: "default".into(),
-            detail: "default-included".into(),
-        },
-        MatchedBy::PolicyAllow { policy_id, detail } => MatrixSource {
-            layer: "policy".into(),
-            detail: format!("{policy_id}: {detail}"),
-        },
-    }
-}
-
-fn deny_source(user_id: &UserId, reason: &DenyReason) -> MatrixSource {
-    match reason {
-        DenyReason::UserDeny { .. } => MatrixSource {
-            layer: "user".into(),
-            detail: format!("user:{user_id} deny"),
-        },
-        DenyReason::RoleDeny { role, .. } => MatrixSource {
-            layer: "role".into(),
-            detail: format!("role:{role} deny"),
-        },
-        DenyReason::AttributeDeny {
-            rule_type, value, ..
-        } => MatrixSource {
-            layer: rule_type.to_string(),
-            detail: format!("{rule_type}:{value} deny"),
-        },
-        // Why: everything else is the resolver closing the default rather than
-        // a rule firing, so the cell reports the default layer and lets the
-        // reason speak for itself.
-        other => MatrixSource {
-            layer: "default".into(),
-            detail: other.to_string(),
-        },
+        Decision::Deny { reason } => ("deny".to_owned(), deny_source(uid, &reason)),
+        // Why: a hold is neither reach nor refusal, and flattening it into
+        // either would misreport the matrix. The cell names it.
+        Decision::Pending { reason } => (
+            "pending".to_owned(),
+            MatrixSource {
+                layer: "approval".into(),
+                detail: reason.to_string(),
+            },
+        ),
     }
 }

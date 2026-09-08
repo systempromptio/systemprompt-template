@@ -1,1 +1,4 @@
-<div class="empty-state" role="status"><p>{{message}}</p></div>
+<div class="sp-empty" role="status">
+  {{#if title}}<p class="sp-empty__title">{{title}}</p>{{/if}}
+  <p>{{message}}</p>
+</div>

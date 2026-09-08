@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO knowledge_documents\n            (doc_id, source_type, source, source_ref, title, uri, doc_date, date_source,\n             content_hash, mtime, indexed_at, archived)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), $11)\n        ON CONFLICT (doc_id) DO UPDATE SET\n            source_type = EXCLUDED.source_type,\n            source = EXCLUDED.source,\n            source_ref = EXCLUDED.source_ref,\n            title = EXCLUDED.title,\n            uri = EXCLUDED.uri,\n            doc_date = EXCLUDED.doc_date,\n            date_source = EXCLUDED.date_source,\n            content_hash = EXCLUDED.content_hash,\n            mtime = EXCLUDED.mtime,\n            indexed_at = EXCLUDED.indexed_at,\n            archived = EXCLUDED.archived\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Date",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "71ce34c5cdadca04b6c6ef67b042f050cb1f7c3893b361e45364f12ec3ef7557"
+}

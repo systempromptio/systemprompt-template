@@ -67,6 +67,10 @@ impl From<SessionRow> for SessionListItem {
 
 // Why: The count ignores `page` and covers every row the filter matches, so a
 // caller can render "page N of M" without a second round trip.
+//
+// The sort is a closed `(column, dir)` pair bound as two text parameters and
+// selected by a `CASE` in the `ORDER BY`, so the statement stays one
+// compile-time-checked literal rather than an interpolated string.
 #[expect(
     clippy::too_many_lines,
     reason = "body is one irreducible compile-time-checked query_as! SQL literal"
@@ -77,6 +81,8 @@ pub async fn list_sessions_paged(
     range: TimeRange,
     page: SessionPage,
 ) -> Result<(Vec<SessionListItem>, i64), sqlx::Error> {
+    let sort_col = page.sort.column.as_str();
+    let sort_dir = page.sort.dir.as_str();
     let rows = sqlx::query_as!(
         SessionRow,
         r#"
@@ -169,13 +175,30 @@ pub async fn list_sessions_paged(
             has_hooks               AS "has_hooks!",
             total_count             AS "total_count!"
         FROM counted
-        ORDER BY started_at DESC NULLS LAST, session_id
-        LIMIT $5 OFFSET $6
+        ORDER BY
+            CASE WHEN $5 = 'started_at' AND $6 = 'desc' THEN started_at END DESC NULLS LAST,
+            CASE WHEN $5 = 'started_at' AND $6 = 'asc'  THEN started_at END ASC  NULLS LAST,
+            CASE WHEN $5 = 'duration' AND $6 = 'desc'
+                 THEN EXTRACT(EPOCH FROM (last_activity_at - started_at)) END DESC NULLS LAST,
+            CASE WHEN $5 = 'duration' AND $6 = 'asc'
+                 THEN EXTRACT(EPOCH FROM (last_activity_at - started_at)) END ASC NULLS LAST,
+            CASE WHEN $5 = 'requests' AND $6 = 'desc' THEN request_count END DESC NULLS LAST,
+            CASE WHEN $5 = 'requests' AND $6 = 'asc'  THEN request_count END ASC  NULLS LAST,
+            CASE WHEN $5 = 'tokens' AND $6 = 'desc'
+                 THEN total_input_tokens + total_output_tokens END DESC NULLS LAST,
+            CASE WHEN $5 = 'tokens' AND $6 = 'asc'
+                 THEN total_input_tokens + total_output_tokens END ASC NULLS LAST,
+            CASE WHEN $5 = 'cost' AND $6 = 'desc' THEN total_cost_microdollars END DESC NULLS LAST,
+            CASE WHEN $5 = 'cost' AND $6 = 'asc'  THEN total_cost_microdollars END ASC  NULLS LAST,
+            session_id
+        LIMIT $7 OFFSET $8
         "#,
         range.from,
         range.to,
         filter.user_id.as_ref().map(UserId::as_str),
         filter.error_only,
+        sort_col,
+        sort_dir,
         page.limit,
         page.offset,
     )

@@ -1,161 +1,196 @@
-//! View-model assembly for the user roster and detail pages.
+//! Shaping the loaded data into the detail page's tab views.
 //!
-//! Pure transforms from repository rows into the serde structs the `users` /
-//! `user-detail` templates render: marketplace resolution, per-user
-//! enrichment, and department grouping. `UsersPageData` / `UserDetailPageData`
-//! are fully self-contained typed structs; callers in `mod.rs` populate them
-//! directly and hand them to `render_typed_page` with no post-hoc value
-//! mutation.
+//! Pure transforms: every function takes what `data.rs` and the repositories
+//! returned and writes the view type the `user-detail` template reads.
 
-use crate::repositories;
+use chrono::{DateTime, Utc};
 
-use super::super::types::{DepartmentGroup, EnrichedUserView, UserMarketplaceRef};
+use crate::handlers::ssr::entity_urls::session_detail_url;
+use crate::handlers::ssr::format::{format_token_total, short_id};
+use crate::handlers::ssr::list_view::SelectOptionView;
+use crate::handlers::ssr::types::{UserRuntimeView, UserTokenView};
+use crate::repositories::governance::effective::EffectivePermissions;
+use crate::types::UserDetail;
 
-fn freshness_for(ts: Option<chrono::DateTime<chrono::Utc>>) -> &'static str {
-    ts.map_or("never", |t| {
-        let age = chrono::Utc::now() - t;
-        if age < chrono::Duration::minutes(5) {
-            "fresh"
-        } else if age < chrono::Duration::hours(1) {
-            "idle"
+use super::context::{
+    AccessTabView, ActivityTabView, CategoryRowView, DetailKpiView, EventRowView, IdentityTabView,
+    RoleChoiceView, SessionRowView, ToolRowView, UserHeaderView,
+};
+use super::data::DetailExtras;
+
+// Why: one date format across every tab. An absent timestamp renders as an
+// em dash, never as the epoch or as "now".
+pub(super) fn stamp(value: Option<DateTime<Utc>>) -> String {
+    value.map_or_else(
+        || "—".to_owned(),
+        |t| t.format("%Y-%m-%d %H:%M").to_string(),
+    )
+}
+
+pub(super) fn display_name(detail: &UserDetail) -> String {
+    detail
+        .display_name
+        .clone()
+        .filter(|n| !n.trim().is_empty())
+        .unwrap_or_else(|| detail.user_id.as_str().to_owned())
+}
+
+pub(super) fn header(detail: &UserDetail) -> UserHeaderView {
+    let encoded = urlencoding::encode(detail.user_id.as_str()).into_owned();
+    UserHeaderView {
+        name: display_name(detail),
+        email: detail
+            .email
+            .as_ref()
+            .map(ToString::to_string)
+            .unwrap_or_default(),
+        created_at: stamp(Some(detail.created_at)),
+        last_active: stamp(Some(detail.last_active)),
+        status_label: if detail.is_active {
+            "Active"
         } else {
-            "stale"
-        }
-    })
+            "Inactive"
+        },
+        status_tone: if detail.is_active { "ok" } else { "muted" },
+        permissions_url: format!("/admin/access-control?user_id={encoded}"),
+        requests_url: format!("/admin/requests?user_id={encoded}"),
+        user_id: detail.user_id.clone(),
+    }
 }
 
-pub(super) fn resolve_marketplaces(
-    yaml_defaults: &[(String, String)],
-    overrides: &[&repositories::departments::UserMarketplaceOverride],
-) -> Vec<UserMarketplaceRef> {
-    let mut entries: Vec<UserMarketplaceRef> = yaml_defaults
-        .iter()
-        .map(|(id, name)| UserMarketplaceRef {
-            id: id.clone(),
-            name: name.clone(),
-            source: "default",
-        })
-        .collect();
-
-    for ovr in overrides {
-        match ovr.access.as_str() {
-            "allow" if !entries.iter().any(|e| e.id == ovr.entity_id) => {
-                let name = yaml_defaults
-                    .iter()
-                    .find(|(id, _)| id == &ovr.entity_id)
-                    .map_or_else(|| ovr.entity_id.clone(), |(_, n)| n.clone());
-                entries.push(UserMarketplaceRef {
-                    id: ovr.entity_id.clone(),
-                    name,
-                    source: "override",
-                });
-            },
-            "deny" => entries.retain(|e| e.id != ovr.entity_id),
-            _ => {},
-        }
+pub(super) fn kpis(
+    detail: &UserDetail,
+    runtime: &UserRuntimeView,
+    tokens_count: i64,
+) -> DetailKpiView {
+    DetailKpiView {
+        requests_display: format_token_total(runtime.requests),
+        tokens_in_display: format_token_total(runtime.tokens_in),
+        tokens_out_display: format_token_total(runtime.tokens_out),
+        last_request: runtime
+            .last_request_at
+            .clone()
+            .unwrap_or_else(|| "Never".to_owned()),
+        events_display: format_token_total(detail.total_events),
+        tokens_count,
     }
-    entries
 }
 
-pub(super) fn enrich_users(
-    users: &[crate::types::UserSummary],
-    aggregates: &[repositories::departments::UserManagementAggregate],
-    runtime: &[repositories::users::queries::UserRuntimeAggregate],
-    overrides: &[repositories::departments::UserMarketplaceOverride],
-    yaml_marketplaces: &[(String, String)],
-) -> Vec<EnrichedUserView> {
-    let agg_map: std::collections::HashMap<
-        &str,
-        &repositories::departments::UserManagementAggregate,
-    > = aggregates.iter().map(|a| (a.user_id.as_str(), a)).collect();
-    let rt_map: std::collections::HashMap<
-        &str,
-        &repositories::users::queries::UserRuntimeAggregate,
-    > = runtime.iter().map(|r| (r.user_id.as_str(), r)).collect();
-    let mut ovr_map: std::collections::HashMap<
-        &str,
-        Vec<&repositories::departments::UserMarketplaceOverride>,
-    > = std::collections::HashMap::new();
-    for o in overrides {
-        ovr_map.entry(o.user_id.as_str()).or_default().push(o);
+// Why: every role the instance knows plus every role this account already
+// holds, so an unusual grant is a checked box rather than a silently dropped
+// one when the form is saved.
+fn role_choices(known: &[String], held: &[String]) -> Vec<RoleChoiceView> {
+    let mut ids: Vec<String> = vec!["user".to_owned(), "admin".to_owned()];
+    for role in known.iter().chain(held.iter()) {
+        if !ids.contains(role) {
+            ids.push(role.clone());
+        }
     }
-
-    users
-        .iter()
-        .map(|u| {
-            let agg = agg_map.get(u.user_id.as_str());
-            let rt = rt_map.get(u.user_id.as_str());
-            let token_freshness = freshness_for(rt.and_then(|r| r.newest_token_used_at)).to_owned();
-            let user_overrides = ovr_map.get(u.user_id.as_str()).cloned().unwrap_or_default();
-            let marketplaces = resolve_marketplaces(yaml_marketplaces, &user_overrides);
-            EnrichedUserView {
-                user_id: u.user_id.clone(),
-                display_name: u.display_name.clone(),
-                email: u.email.as_ref().map(ToString::to_string),
-                roles: u.roles.clone(),
-                is_active: u.is_active,
-                last_active: u.last_active.to_rfc3339(),
-                total_events: u.total_events,
-                last_tool: u.last_tool.clone(),
-                custom_skills_count: u.custom_skills_count,
-                preferred_client: u.preferred_client.clone(),
-                prompts: u.prompts,
-                sessions: u.sessions,
-                bytes: u.bytes,
-                logins: u.logins,
-                department: agg.map(|a| a.department.clone()).unwrap_or_default(),
-                created_at: agg.map(|a| a.created_at.to_rfc3339()).unwrap_or_default(),
-                marketplaces,
-                assigned_skills_count: agg.map_or(0, |a| a.assigned_skills_count),
-                tokens_count: agg.map_or(0, |a| a.tokens_count),
-                lifetime_tokens: rt.map_or(0, |r| r.lifetime_tokens),
-                token_freshness,
-            }
+    ids.into_iter()
+        .map(|id| RoleChoiceView {
+            held: held.contains(&id),
+            id,
         })
         .collect()
 }
 
-pub(super) fn group_by_department(users: Vec<EnrichedUserView>) -> Vec<DepartmentGroup> {
-    let mut buckets: std::collections::BTreeMap<String, Vec<EnrichedUserView>> =
-        std::collections::BTreeMap::new();
-    for u in users {
-        let key = if u.department.is_empty() {
-            crate::types::departments::DEFAULT_DEPARTMENT.to_owned()
-        } else {
-            u.department.clone()
-        };
-        buckets.entry(key).or_default().push(u);
+pub(super) fn identity_tab(
+    detail: &UserDetail,
+    extras: DetailExtras,
+    departments: &[String],
+    known_roles: &[String],
+) -> IdentityTabView {
+    let encoded = urlencoding::encode(detail.user_id.as_str()).into_owned();
+    IdentityTabView {
+        display_name: detail.display_name.clone().unwrap_or_default(),
+        email: detail
+            .email
+            .as_ref()
+            .map(ToString::to_string)
+            .unwrap_or_default(),
+        is_active: detail.is_active,
+        department_options: departments
+            .iter()
+            .map(|name| SelectOptionView {
+                value: name.clone(),
+                label: name.clone(),
+                selected: *name == extras.department,
+            })
+            .collect(),
+        department: extras.department,
+        role_choices: role_choices(known_roles, &extras.roles),
+        has_marketplaces: !extras.assignments.marketplaces.is_empty(),
+        marketplaces: extras.assignments.marketplaces.clone(),
+        assignments: extras.assignments,
+        matrix_url: format!("/admin/access-control?user_id={encoded}"),
     }
+}
 
-    let mut groups: Vec<DepartmentGroup> = buckets
-        .into_iter()
-        .map(|(department, mut users)| {
-            users.sort_by(|a, b| {
-                let an = a.display_name.as_deref().unwrap_or(a.user_id.as_str());
-                let bn = b.display_name.as_deref().unwrap_or(b.user_id.as_str());
-                an.to_lowercase().cmp(&bn.to_lowercase())
-            });
-            let total_tokens = users.iter().map(|u| u.lifetime_tokens).sum();
-            let total_sessions = users.iter().map(|u| u.sessions).sum();
-            DepartmentGroup {
-                user_count: users.len(),
-                total_tokens,
-                total_sessions,
-                department,
-                users,
-            }
+pub(super) const fn access_tab(
+    effective: EffectivePermissions,
+    tokens: Vec<UserTokenView>,
+) -> AccessTabView {
+    AccessTabView {
+        has_gateway_routes: !effective.gateway_routes.is_empty(),
+        has_mcp_servers: !effective.mcp_servers.is_empty(),
+        effective,
+        has_tokens: !tokens.is_empty(),
+        tokens,
+        tokens_url: "/admin/access-tokens",
+    }
+}
+
+pub(super) fn activity_tab(detail: &UserDetail, runtime: UserRuntimeView) -> ActivityTabView {
+    let categories: Vec<CategoryRowView> = detail
+        .activity_summary
+        .iter()
+        .map(|c| CategoryRowView {
+            category: c.category.clone(),
+            count: c.count,
         })
         .collect();
-
-    groups.sort_by(|a, b| {
-        fn rank(name: &str) -> u8 {
-            u8::from(name != crate::types::departments::DEFAULT_DEPARTMENT)
-        }
-        rank(&a.department).cmp(&rank(&b.department)).then_with(|| {
-            a.department
-                .to_lowercase()
-                .cmp(&b.department.to_lowercase())
+    let tools: Vec<ToolRowView> = detail
+        .top_tools
+        .iter()
+        .map(|t| ToolRowView {
+            tool_name: t.tool_name.clone(),
+            count: t.count,
         })
-    });
-    groups
+        .collect();
+    let sessions: Vec<SessionRowView> = detail
+        .sessions
+        .iter()
+        .map(|s| SessionRowView {
+            session_id: s.session_id.clone(),
+            short_id: short_id(s.session_id.as_str()),
+            detail_url: session_detail_url(&s.session_id),
+            started_at: stamp(s.started_at),
+            total_events: s.total_events,
+            tool_uses: s.tool_uses,
+            prompts: s.prompts,
+            errors: s.errors,
+            error_tone: if s.errors > 0 { "err" } else { "muted" },
+        })
+        .collect();
+    let events: Vec<EventRowView> = detail
+        .recent_activity
+        .iter()
+        .map(|e| EventRowView {
+            category: e.category.to_string(),
+            description: e.description.clone(),
+            created_at: stamp(Some(e.created_at)),
+            created_at_title: e.created_at.to_rfc3339(),
+        })
+        .collect();
+    ActivityTabView {
+        runtime,
+        has_categories: !categories.is_empty(),
+        categories,
+        has_tools: !tools.is_empty(),
+        tools,
+        has_sessions: !sessions.is_empty(),
+        sessions,
+        has_events: !events.is_empty(),
+        events,
+    }
 }

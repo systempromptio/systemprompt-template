@@ -4,7 +4,7 @@ import { onKey } from './events.js';
 const ID_SHAPE = /^[A-Za-z0-9_\-:.]{6,128}$/;
 
 const showError = (form, status, message) => {
-  form.classList.add('admin-header__search--error');
+  form.classList.add('sp-topbar__search--error');
   if (status) status.textContent = message;
 };
 
@@ -24,8 +24,8 @@ const runResolve = async (input, status, form) => {
     return;
   }
 
-  form.classList.remove('admin-header__search--error');
-  form.classList.add('admin-header__search--loading');
+  form.classList.remove('sp-topbar__search--error');
+  form.classList.add('sp-topbar__search--loading');
   if (status) status.textContent = 'Resolving…';
 
   try {
@@ -38,7 +38,7 @@ const runResolve = async (input, status, form) => {
   } catch {
     showError(form, status, 'Lookup failed');
   } finally {
-    form.classList.remove('admin-header__search--loading');
+    form.classList.remove('sp-topbar__search--loading');
   }
 };
 
@@ -69,7 +69,7 @@ export const initHeaderSearch = () => {
   onKey('/', focusOnSlash(input));
 
   input.addEventListener('input', () => {
-    form.classList.remove('admin-header__search--error');
+    form.classList.remove('sp-topbar__search--error');
     if (status) status.textContent = '';
   });
 };

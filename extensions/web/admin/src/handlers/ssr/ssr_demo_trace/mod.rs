@@ -18,6 +18,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::{AgentId, SessionId};
 
 use crate::error::{AdminError, AdminHtmlResult};
+use crate::handlers::ssr::types::BreadcrumbView;
 use crate::repositories::governance::demo_trace;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -37,17 +38,48 @@ pub(crate) struct DemoTraceQuery {
 struct DemoTraceContext {
     page: &'static str,
     title: &'static str,
-    hero_title: &'static str,
-    hero_subtitle: &'static str,
+    breadcrumbs: Vec<BreadcrumbView>,
+    base_url: &'static str,
     sessions: Vec<SessionView>,
+    session_count: usize,
     has_sessions: bool,
     session_id: SessionId,
     session_detail_url: String,
     turns: Vec<TurnView>,
+    turn_count: usize,
     has_rows: bool,
-    prompts_blocked: usize,
-    tools_blocked: usize,
-    model_calls: usize,
+    kpis: Vec<DemoTraceKpiView>,
+}
+
+#[derive(Debug, Serialize)]
+struct DemoTraceKpiView {
+    label: &'static str,
+    value: String,
+    note: &'static str,
+    tone: &'static str,
+}
+
+fn kpis(prompts_blocked: usize, tools_blocked: usize, model_calls: usize) -> Vec<DemoTraceKpiView> {
+    vec![
+        DemoTraceKpiView {
+            label: "Prompts blocked",
+            value: prompts_blocked.to_string(),
+            note: "the secret scan caught the credential before it left",
+            tone: if prompts_blocked > 0 { "err" } else { "ok" },
+        },
+        DemoTraceKpiView {
+            label: "Tool calls blocked",
+            value: tools_blocked.to_string(),
+            note: "scope, blocklist or route policy refused the call",
+            tone: if tools_blocked > 0 { "err" } else { "ok" },
+        },
+        DemoTraceKpiView {
+            label: "Model calls made",
+            value: model_calls.to_string(),
+            note: "what actually reached a provider",
+            tone: "accent",
+        },
+    ]
 }
 
 pub(crate) async fn demo_trace_page(
@@ -94,19 +126,22 @@ pub(crate) async fn demo_trace_page(
 
     let ctx = DemoTraceContext {
         page: "demo-trace",
-        title: "Demo Trace",
-        hero_title: "Demo Trace",
-        hero_subtitle: "Every gate one agent session passed through, in order. Click any row \
-                        for its full chain of custody.",
+        title: "Trace demo",
+        breadcrumbs: vec![
+            BreadcrumbView::link("Admin", "/admin"),
+            BreadcrumbView::link("Governance", "/admin/governance"),
+            BreadcrumbView::current("Trace demo"),
+        ],
+        base_url: "/admin/demo/trace",
+        session_count: session_views.len(),
         has_sessions: !session_views.is_empty(),
         sessions: session_views,
         session_detail_url: super::entity_urls::session_detail_url(&session_id),
         session_id,
+        turn_count: turns.len(),
         has_rows: !turns.is_empty(),
         turns,
-        prompts_blocked,
-        tools_blocked,
-        model_calls,
+        kpis: kpis(prompts_blocked, tools_blocked, model_calls),
     };
 
     Ok(super::render_typed_page(

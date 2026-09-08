@@ -1,18 +1,30 @@
 {{#> layout title=title page=page}}
     {{#*inline "content"}}
-    {{> components/page-header
-        title="Inference Requests"
-        subtitle="Every /v1/messages call through the gateway. Click any log row for the full chain of custody."}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{csv_url}}">Export CSV</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/traces">Trace explorer</a>
+        <a class="sp-btn sp-btn--sm sp-btn--primary" href="/admin/analytics">Analytics</a>
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        <span data-window="{{time_range.preset}}">Window {{time_range.preset}}</span>
+        <span>{{row_count_label}}</span>
+        {{/inline}}
+    {{/components/page-header}}
 
-    {{> components/time-range time_range}}
+    {{#if time_range.rejected}}
+    {{> components/notice tone="warn"
+        message="That range could not be read, so this page is showing the default window."}}
+    {{/if}}
 
     {{#if time_range.auto_widened}}
-    <p class="audit-toolbar__notice text-muted text-xs">
+    <p class="sp-toolbar__notice">
         No inference requests in the last 24h — auto-widened to last {{time_range.auto_widened}}.
     </p>
     {{/if}}
 
-    <nav class="sp-tabs" role="tablist" aria-label="Request views">
+    <nav class="sp-tabs sp-p-requests__band" role="tablist" aria-label="Request views">
         {{#each tabs}}
         <a class="sp-tab{{#if this.is_active}} sp-tab--active{{/if}}" role="tab"
            aria-selected="{{#if this.is_active}}true{{else}}false{{/if}}"
@@ -21,159 +33,203 @@
         {{/each}}
     </nav>
 
+    <section class="sp-kpi-grid sp-p-requests__band" aria-label="Request totals">
+      {{> components/kpi label="Requests" value=kpis.total_display
+          note=kpis.attribution_sub
+          hint="Calls matching the current filters and window"}}
+      {{> components/kpi label="Cost" value=kpis.cost_display note=kpis.tokens_sub
+          hint="Billed cost across the filtered calls"}}
+      {{> components/kpi label="Error rate" value=kpis.error_rate_display
+          note=kpis.failed_sub tone="err"
+          hint="Share of filtered calls that failed after dispatch"}}
+      {{> components/kpi label="p95" value=kpis.p95_display
+          note=kpis.latency_sub
+          hint="95th percentile wall-clock latency"}}
+      {{> components/kpi label="Rejected" value=kpis.rejected tone="warn"
+          note="pre-dispatch" href=kpis.rejected_url active=kpis.rejected_active
+          hint="Show only calls the gateway rejected before routing"}}
+      {{> components/kpi label="Tool calls" value=kpis.tool_calls
+          note=kpis.tool_calls_sub tone="accent"
+          hint="Tools the models asked to run, and pre-flight denies"}}
+    </section>
+
     {{#if chips}}
-    <ul class="filter-ribbon__chips" aria-label="Active filters">
+    <ul class="sp-filter-ribbon__chips" aria-label="Active filters">
         {{#each chips}}
-        <li class="filter-ribbon__chip">
-            <span class="filter-ribbon__chip-group">{{this.group_label}}:</span>
-            <span class="filter-ribbon__chip-value">{{this.label}}</span>
-            <a class="filter-ribbon__chip-remove" href="{{this.remove_url}}"
+        <li class="sp-filter-ribbon__chip">
+            <span class="sp-filter-ribbon__chip-group">{{this.group_label}}:</span>
+            <span class="sp-filter-ribbon__chip-value">{{this.label}}</span>
+            <a class="sp-filter-ribbon__chip-remove" href="{{this.remove_url}}"
                aria-label="Remove {{this.group_label}} filter {{this.label}}">&times;</a>
         </li>
         {{/each}}
-        <li><a class="filter-ribbon__clear" href="{{clear_url}}">Clear all</a></li>
+        <li><a class="sp-filter-ribbon__clear" href="{{clear_url}}">Clear all</a></li>
     </ul>
     {{/if}}
 
     {{#if is_overview}}
-    <section class="requests-section" aria-label="Window health">
-        <div class="kpi-strip">
-            <div class="kpi-card">
-                <span class="kpi-card__label">Requests</span>
-                <span class="kpi-card__value">{{stats.total}}</span>
-                <span class="kpi-card__sub">{{stats.requests_per_minute}}/min</span>
-            </div>
-            <div class="kpi-card">
-                <span class="kpi-card__label">p50 latency</span>
-                <span class="kpi-card__value">{{stats.p50_latency_ms}} ms</span>
-                <span class="kpi-card__sub">p95 {{stats.p95_latency_ms}} · p99 {{stats.p99_latency_ms}}</span>
-            </div>
-            <div class="kpi-card">
-                <span class="kpi-card__label">Total cost</span>
-                <span class="kpi-card__value">{{stats.total_cost_display}}</span>
-                <span class="kpi-card__sub">across the window</span>
-            </div>
-            <div class="kpi-card{{#if stats.error_count}} kpi-card--danger{{/if}}">
-                <span class="kpi-card__label">Errors</span>
-                <span class="kpi-card__value">{{stats.error_count}}</span>
-                <span class="kpi-card__sub">{{stats.error_rate_pct}}% of calls</span>
-            </div>
-            <div class="kpi-card{{#if stats.denied_session_count}} kpi-card--warning{{/if}}">
-                <span class="kpi-card__label">Pre-flight denies</span>
-                <span class="kpi-card__value">{{stats.denied_session_count}}</span>
-                <span class="kpi-card__sub">{{stats.denied_session_rate_pct}}% of sessions</span>
-            </div>
-        </div>
-
-        <div class="requests-charts">
-            <section class="requests-charts__panel">
+    <section class="sp-requests-section" aria-label="Window health">
+        <div class="sp-requests-charts">
+            <section class="sp-requests-charts__panel">
                 {{> components/timeseries-chart traffic_chart}}
             </section>
-            <section class="requests-charts__panel">
+            <section class="sp-requests-charts__panel">
                 {{> components/timeseries-chart cost_chart}}
             </section>
         </div>
-
-        <section class="requests-charts__panel requests-charts__panel--wide">
-            <h3 class="requests-charts__title">Latency distribution</h3>
+        <section class="sp-requests-charts__panel sp-requests-charts__panel--wide">
+            <h2 class="sp-requests-charts__title">Latency distribution</h2>
             {{> components/latency-histogram histogram}}
         </section>
     </section>
     {{/if}}
 
     {{#if is_breakdown}}
-    <section class="requests-section" aria-label="{{breakdown.dimension_label}} breakdown">
+    <section class="sp-requests-section" aria-label="{{breakdown.dimension_label}} breakdown">
         {{> components/breakdown-table breakdown}}
     </section>
     {{/if}}
 
     {{#if is_log}}
-    <section class="requests-section" aria-label="Request log">
-        <form method="get" action="{{base_url}}" class="toolbar audit-toolbar">
-            <input type="hidden" name="tab" value="log">
-            <input type="hidden" name="preset" value="{{time_range.preset}}">
-            <input type="hidden" name="from" value="{{time_range.from}}">
-            <input type="hidden" name="to" value="{{time_range.to}}">
-            <div class="search-group">
-                <input type="text" name="q" placeholder="Search user / model / trace_id / error..."
-                       value="{{search_query}}" class="search-input"
-                       aria-label="Search requests">
+    <form method="get" action="{{base_url}}" class="sp-toolbar sp-p-requests__band" role="search"
+          aria-label="Filter the request log">
+        {{#each filters.hidden}}
+        <input type="hidden" name="{{this.name}}" value="{{this.value}}">
+        {{/each}}
+        <span class="sp-toolbar__count">{{row_count_label}}</span>
+        <div class="sp-p-requests__filters">
+            <div class="sp-toolbar__search">
+                <label class="sp-u-sr-only" for="req-q">Search requests</label>
+                <input type="search" id="req-q" name="q" value="{{search_query}}"
+                       class="sp-search-input" placeholder="user / model / trace / error">
             </div>
-            <button type="submit" class="btn btn-sm">Search</button>
+            <label class="sp-u-sr-only" for="req-model">Model</label>
+            <select id="req-model" name="model" class="sp-search-input">
+                {{#each filters.models}}<option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>{{/each}}
+            </select>
+            <label class="sp-u-sr-only" for="req-provider">Provider</label>
+            <select id="req-provider" name="provider" class="sp-search-input">
+                {{#each filters.providers}}<option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>{{/each}}
+            </select>
+            <label class="sp-u-sr-only" for="req-status">Status</label>
+            <select id="req-status" name="status" class="sp-search-input">
+                {{#each filters.statuses}}<option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>{{/each}}
+            </select>
+            <label class="sp-u-sr-only" for="req-tool">Tool</label>
+            <select id="req-tool" name="tool" class="sp-search-input">
+                {{#each filters.tools}}<option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>{{/each}}
+            </select>
+        </div>
+        <div class="sp-toolbar__actions">
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Apply</button>
             {{#if has_active_filters}}
-            <a href="{{clear_url}}" class="btn btn-sm btn-outline">Clear</a>
+            <a href="{{clear_url}}" class="sp-btn sp-btn--sm sp-btn--outline">Clear</a>
             {{/if}}
-        </form>
+        </div>
+    </form>
 
-        {{#if has_rows}}
-        {{#> components/data-table}}
-            <thead><tr>
-                <th class="col-date">Time</th>
-                <th>Identity</th>
-                <th>Model</th>
-                <th class="col-status">Status</th>
-                <th class="col-num">Tokens</th>
-                <th class="col-num">Cost</th>
-                <th class="col-num">Latency</th>
-                <th class="col-status">Denies</th>
-                <th>trace_id</th>
-            </tr></thead>
-            <tbody>
-            {{#each rows}}
-            <tr data-chain-id="{{this.id}}" class="audit-row" tabindex="0"
-                role="button" aria-label="Open chain of custody for {{this.id}}">
-                <td class="col-date" title="{{this.created_at}}">{{this.created_at_local}}</td>
-                <td>
-                    <div class="audit-identity">
-                        <a href="/admin/user?id={{this.user_id}}">{{truncate this.user_label 16}}</a>
-                    </div>
-                </td>
-                <td>
-                    <code class="code-inline">{{this.model}}</code>
-                    <span class="text-muted text-xs">{{this.provider}}</span>
-                </td>
-                <td class="col-status">
+    {{#if has_rows}}
+    {{#> components/table caption="Inference requests in the selected window"
+         pagination=pagination modifier="sp-p-requests-table"}}
+        <thead><tr>
+            {{> components/sort-header sort_headers.time}}
+            <th class="sp-col-identity">Identity</th>
+            <th class="sp-col-project">Project</th>
+            <th class="sp-col-group">Group</th>
+            <th class="sp-col-model">Model</th>
+            <th class="sp-col-status">Status</th>
+            {{> components/sort-header sort_headers.tokens}}
+            {{> components/sort-header sort_headers.cost}}
+            {{> components/sort-header sort_headers.latency}}
+            <th class="sp-table__cell--num">Tools</th>
+            <th class="sp-col-status">Governance</th>
+            <th class="sp-table__cell--actions">Trace</th>
+        </tr></thead>
+        <tbody>
+        {{#each rows}}
+        <tr class="sp-table__row" data-request-row data-href="{{this.detail_url}}">
+            <td class="sp-col-date">
+                <div class="sp-table__cell--stacked">
+                    <a class="sp-table__cell--primary" href="{{this.detail_url}}"
+                       title="{{this.created_at}}">{{this.created_at_time}}</a>
+                    <span class="sp-table__cell--secondary">{{this.created_at_day}}</span>
+                </div>
+            </td>
+            <td class="sp-col-identity">
+                <a href="{{this.user_url}}" title="{{this.user_id}}">{{this.user_label}}</a>
+            </td>
+            <td class="sp-col-project">
+                {{#if this.project_url}}
+                    <a href="{{this.project_url}}">{{this.project_label}}</a>
+                {{else}}
+                    <span class="sp-table__cell--muted">{{this.project_label}}</span>
+                {{/if}}
+            </td>
+            <td class="sp-col-group">
+                {{#if this.group_url}}
+                    <a href="{{this.group_url}}">{{this.group_label}}</a>
+                {{else}}
+                    <span class="sp-table__cell--muted">{{this.group_label}}</span>
+                {{/if}}
+            </td>
+            <td class="sp-col-model">
+                {{#if this.has_model}}
+                <div class="sp-table__cell--stacked">
+                    <span class="sp-table__cell--primary sp-u-mono">{{this.model}}</span>
+                    <span class="sp-table__cell--secondary">{{this.provider}}</span>
+                </div>
+                {{else}}
+                <span class="sp-table__cell--muted">{{this.model}}</span>
+                {{/if}}
+            </td>
+            <td class="sp-col-status">
+                {{#if this.is_rejected}}
+                    {{> components/badge tone="warn" text="REJECTED"}}
+                {{else}}
                     {{#if this.is_error}}
-                      <span class="mcp-badge mcp-badge-danger" title="{{this.error_message}}">{{this.status}}</span>
+                        {{> components/badge tone="err" text=this.status}}
                     {{else}}
-                      <span class="mcp-badge mcp-badge-success">{{this.status}}</span>
+                        {{> components/badge tone="ok" text=this.status}}
                     {{/if}}
-                </td>
-                <td class="col-num">
-                    {{#if this.input_tokens}}{{this.input_tokens}}{{else}}—{{/if}}
-                    /
-                    {{#if this.output_tokens}}{{this.output_tokens}}{{else}}—{{/if}}
-                </td>
-                <td class="col-num">{{this.cost_display}}</td>
-                <td class="col-num">{{#if this.latency_ms}}{{this.latency_ms}} ms{{else}}—{{/if}}</td>
-                <td class="col-status">
-                    {{#if this.is_denied_preflight}}
-                      <span class="mcp-badge mcp-badge-danger">{{this.deny_count}}</span>
-                    {{else}}
-                      {{#if this.tool_call_count}}
-                        <span class="text-muted">{{this.tool_call_count}} tool</span>
-                      {{else}}—{{/if}}
-                    {{/if}}
-                </td>
-                <td>
-                    {{#if this.trace_id}}
-                        <code class="code-inline">{{truncate this.trace_id 8}}</code>
-                    {{else}}—{{/if}}
-                </td>
-            </tr>
-            {{/each}}
-            </tbody>
-        {{/components/data-table}}
-
-        {{> components/pagination pagination}}
-        {{else}}
-        {{> components/empty-state
-            message="No inference requests match. Widen the time range, clear the filters, or run a demo to populate data."}}
-        {{/if}}
-    </section>
+                {{/if}}
+            </td>
+            <td class="sp-table__cell--num">{{this.tokens_display}}</td>
+            <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+            <td class="sp-table__cell--num">{{this.latency_display}}</td>
+            <td class="sp-table__cell--num">{{this.tool_call_count}}</td>
+            <td class="sp-col-status">
+                {{#if this.is_denied_preflight}}
+                    {{> components/badge tone="err" text=this.governance_display}}
+                {{else}}
+                    <span class="sp-table__cell--muted">{{this.governance_display}}</span>
+                {{/if}}
+            </td>
+            <td class="sp-table__cell--actions">
+                {{#if this.trace_id_short}}
+                    <a class="sp-u-mono" href="/admin/traces/{{this.trace_id}}">{{this.trace_id_short}}</a>
+                {{else}}
+                    <span class="sp-table__cell--muted">&mdash;</span>
+                {{/if}}
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{#if rows_unavailable}}
+    {{> components/notice tone="err" title="The log could not be read"
+        message="The request list query failed, so these rows are missing rather than absent. The totals above were read separately and are still accurate."}}
+    {{else}}
+    {{> components/empty-state
+        title="No requests match"
+        message="No inference requests match. Widen the time range, clear the filters, or run a demo to populate data."}}
+    {{/if}}
+    {{/if}}
     {{/if}}
 
     {{/inline}}
     {{#*inline "head_extra"}}{{/inline}}
-    {{#*inline "scripts"}}{{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-requests.js"></script>
+    {{/inline}}
 {{/layout}}

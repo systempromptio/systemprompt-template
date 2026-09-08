@@ -1,0 +1,86 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.commit_hash AS \"commit_hash!\", c.message, c.branch,\n                  COALESCE(c.files_changed, 0) AS \"files_changed!\",\n                  COALESCE(c.insertions, 0) AS \"insertions!\",\n                  COALESCE(c.deletions, 0) AS \"deletions!\",\n                  c.committed_at AS \"committed_at!\"\n             FROM user_commits c\n            WHERE c.user_id = $1\n            ORDER BY c.committed_at DESC\n            LIMIT $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "commit_hash!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_commits",
+            "name": "commit_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "message",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_commits",
+            "name": "message"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "branch",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_commits",
+            "name": "branch"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "files_changed!",
+        "type_info": "Int4",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "insertions!",
+        "type_info": "Int4",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "deletions!",
+        "type_info": "Int4",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "committed_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_commits",
+            "name": "committed_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      null,
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "9bb8e1ee5f8ecf888d493ee6e1d91592e29b49b9a65074d77c0ceee2b6f5cf67"
+}

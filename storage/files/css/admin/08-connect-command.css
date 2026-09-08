@@ -1,0 +1,75 @@
+@layer components {
+
+.sp-connect__cmd {
+    margin: 0;
+    padding: var(--sp-space-3) var(--sp-space-4);
+    background: var(--sp-bg-surface-alt);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-sm);
+    overflow-x: auto;
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-sm);
+    line-height: 1.6;
+    color: var(--sp-text-primary);
+    user-select: all;
+}
+
+.sp-copy {
+    position: relative;
+    min-width: 0;
+}
+
+.sp-copy .sp-connect__cmd {
+    padding-right: calc(var(--sp-space-4) + 2rem);
+}
+
+.sp-copy__btn {
+    position: absolute;
+    top: var(--sp-space-2);
+    right: var(--sp-space-2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    padding: 0;
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-sm);
+    color: var(--sp-text-tertiary);
+    cursor: pointer;
+    opacity: 0.75;
+                color var(--sp-duration-fast) ease;
+}
+
+.sp-copy__btn svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.sp-copy__btn:hover,
+.sp-copy__btn:focus-visible {
+    opacity: 1;
+    color: var(--sp-text-primary);
+}
+
+.sp-copy__btn.is-copied {
+    opacity: 1;
+    color: var(--sp-success-strong);
+    border-color: var(--sp-success);
+}
+
+.sp-copy__btn.is-failed {
+    opacity: 1;
+    color: var(--sp-danger-strong);
+    border-color: var(--sp-danger);
+}
+
+.sp-connect__raw summary {
+    cursor: pointer;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    margin-bottom: var(--sp-space-2);
+}
+
+}

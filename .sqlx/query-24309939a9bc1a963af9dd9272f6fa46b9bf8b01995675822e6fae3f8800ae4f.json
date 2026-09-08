@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM knowledge_documents\n        WHERE source_type = $1\n          AND NOT (source_ref = ANY($2))\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "24309939a9bc1a963af9dd9272f6fa46b9bf8b01995675822e6fae3f8800ae4f"
+}

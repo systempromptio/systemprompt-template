@@ -1,0 +1,96 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle=subtitle}}
+        {{#*inline "header_meta"}}
+            <span>Declared in services/marketplaces</span>
+            <span>Entitlement resolved through the access-control chain</span>
+        {{/inline}}
+        {{#*inline "header_actions"}}
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{access_control_url}}">Edit entitlement</a>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/groups">Groups</a>
+        {{/inline}}
+    {{/components/page-header}}
+
+    <section class="sp-kpi-grid" aria-label="Marketplace totals">
+        {{#each kpis}}
+        {{> components/kpi label=this.label value=this.value note=this.sub tone=this.tone}}
+        {{/each}}
+    </section>
+
+    {{> components/tabs tabs=tabs nav_label="Marketplace views"}}
+
+    {{#unless show_audience}}
+    <section aria-label="Marketplaces">
+    {{> components/section title="Marketplaces" count=marketplaces_count note="Declared members on the left, resolved audience on the right. The two can disagree."}}
+    {{#> components/toolbar toolbar_count=marketplaces_count}}
+        {{#*inline "toolbar_filters"}}
+        <form class="sp-toolbar__search" method="get" action="/admin/marketplaces" role="search">
+            <label class="sp-u-sr-only" for="catalog-search">Search marketplaces</label>
+            <input type="search" name="q" class="sp-search-input" id="catalog-search" value="{{search}}" placeholder="Filter marketplaces…">
+        </form>
+        {{/inline}}
+        {{#*inline "toolbar_actions"}}
+        {{#if search}}<a class="sp-btn sp-btn--xs sp-btn--ghost" href="/admin/marketplaces">Clear filter</a>{{/if}}
+        {{/inline}}
+    {{/components/toolbar}}
+
+    {{#if marketplaces_count}}
+    {{#> components/table caption="Marketplaces with their members and the groups entitled to them" modifier="sp-p-catalog__table"}}
+        <thead><tr>
+            <th aria-sort="none">Marketplace</th>
+            <th aria-sort="none">Status</th>
+            <th aria-sort="none">Granted</th>
+            <th class="sp-table__cell--num" aria-sort="none">Plugins</th>
+            <th class="sp-table__cell--num" aria-sort="none">Skills</th>
+            <th class="sp-table__cell--num" aria-sort="none">Reaches</th>
+            <th class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody>
+        {{#each marketplaces}}
+        <tr data-marketplace-id="{{id}}">
+            <td class="sp-table__cell--primary"><a class="sp-table__link" href="{{detail_url}}" title="{{description}}">{{name}}</a></td>
+            <td title="v{{version}} · {{visibility}}{{#if default_included}} · open by default{{/if}}">{{#if enabled}}{{> components/badge tone="ok" text="enabled"}}{{else}}{{> components/badge tone="muted" text="disabled"}}{{/if}}</td>
+            <td class="sp-table__cell--muted">{{#if assigned_group_count}}{{assigned_group_count}} group{{#unless (eq assigned_group_count 1)}}s{{/unless}}{{else}}none{{/if}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{plugin_count}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{skill_count}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{allowed_subjects}}</td>
+            <td class="sp-table__cell--actions"><a class="sp-btn sp-btn--xs sp-btn--outline" href="{{detail_url}}">Open</a></td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{#> components/table caption="Marketplaces with their members and the groups entitled to them" modifier="sp-p-catalog__table"}}
+        <thead><tr>
+            <th aria-sort="none">Marketplace</th>
+            <th aria-sort="none">Status</th>
+            <th aria-sort="none">Granted</th>
+            <th class="sp-table__cell--num" aria-sort="none">Plugins</th>
+            <th class="sp-table__cell--num" aria-sort="none">Skills</th>
+            <th class="sp-table__cell--num" aria-sort="none">Reaches</th>
+            <th class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody><tr class="sp-table__empty"><td colspan="7">
+            {{#if search}}
+            {{> components/empty-state title="Nothing matches" message="No marketplace matches that filter."}}
+            {{else}}
+            {{> components/empty-state title="No marketplaces" message="Add a services/marketplaces/<id>/config.yaml and restart."}}
+            {{/if}}
+        </td></tr></tbody>
+    {{/components/table}}
+    {{/if}}
+    </section>
+    {{else}}
+    <section class="sp-mkt-audience" aria-labelledby="audience-heading">
+        <h2 id="audience-heading" class="sp-mkt-audience__heading">Audience matrix</h2>
+        <p class="sp-u-text-muted">Groups first, then roles. Each cell names the band that decided it, so a marketplace a manifest offers but a rule closes is visible as such.</p>
+        {{#if audience.has_rows}}
+        {{> components/audience-matrix audience}}
+        {{else}}
+        {{> components/empty-state message="No groups or roles to resolve against yet."}}
+        {{/if}}
+    </section>
+    {{/unless}}
+    {{/inline}}
+{{/layout}}

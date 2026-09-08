@@ -1,225 +1,147 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title=title}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="Every access-control rule on this instance, and where it came from. Rules are written where their subject lives: a group's band on its Access tab, a person's overrides on theirs."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/groups">Group rules</a>
+        <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="show-yaml">Show as YAML</button>
+        {{#if can_write}}
+        <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="new-group">+ New group</button>
+        {{/if}}
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        <span><strong>{{stats.groups}}</strong> groups</span>
+        <span><strong>{{stats.projects}}</strong> projects</span>
+        <span><strong>{{stats.users}}</strong> people</span>
+        <span>Rules bootstrap from <code class="sp-code-inline">services/**/*.yaml</code>; edits made in the console stay in this instance</span>
+        <span>Per-person access: open a user and choose Access</span>
+        {{/inline}}
+    {{/components/page-header}}
 
-    <!-- ===== Toolbar / source-of-truth ===== -->
-    <div class="ac-toolbar" role="toolbar" aria-label="Access control toolbar">
-        <div class="ac-search-group">
-            <input type="search" class="search-input" id="ac-search"
-                   placeholder="Search users, departments, entities…"
-                   aria-label="Search">
-        </div>
-        <div class="ac-source-pill" data-tip="Bootstrap config is read from services/access-control/*.yaml on startup. Live edits are written to this instance's database only — they never get pushed back to the YAML or to git.">
-            <strong>Bootstrap:</strong> services/access-control/*.yaml &nbsp;·&nbsp;
-            <strong>Runtime edits:</strong> this instance's database
-        </div>
-        <button type="button" class="btn btn-secondary" id="ac-show-yaml">
-            Show as YAML
-        </button>
-        <button type="button" class="btn btn-secondary" id="ac-new-department">
-            + New department
-        </button>
-    </div>
+    <section class="sp-kpi-grid" aria-label="Rule totals">
+        {{#each ledger.kpis}}
+        {{> components/kpi label=label value=value note=note tone=tone}}
+        {{/each}}
+    </section>
 
-    <div class="ac-stats">
-        <span><strong>{{stats.department_count}}</strong> department{{#unless (eq stats.department_count 1)}}s{{/unless}}</span>
-        <span>·</span>
-        <span><strong>{{stats.user_count}}</strong> users</span>
-    </div>
+    {{#> components/section title="Rule ledger" count=ledger.total note="Every access-control rule on this instance, and whether the YAML in the source repository declares it."}}
+        {{#*inline "section_actions"}}
+        {{#if ledger.filters_applied}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{ledger.clear_url}}">Clear filters</a>{{/if}}
+        {{/inline}}
+    {{/components/section}}
 
-    <!-- ===== Three-pane layout ===== -->
-    <div class="ac-layout">
-        <!-- Left: department tree -->
-        <aside class="ac-tree" aria-label="Departments and users">
-            <h3 class="ac-tree-heading">Departments</h3>
-            {{#each departments}}
-            <div class="ac-tree-dept" data-dept="{{name}}">
-                <button type="button" class="ac-dept-row" data-action="select-dept" data-dept="{{name}}">
-                    <span class="ac-dept-name">{{name}}</span>
-                    <span class="ac-dept-count">{{user_count}}</span>
-                </button>
-                <ul class="ac-dept-users" role="list">
-                    {{#each users}}
-                    <li>
-                        <button type="button" class="ac-user-row {{#unless is_active}}is-inactive{{/unless}}"
-                                data-action="select-user"
-                                data-user-id="{{id}}"
-                                data-user-display="{{display_name}}"
-                                data-user-email="{{email}}">
-                            <span class="ac-user-name">{{display_name}}</span>
-                            <span class="ac-user-roles">
-                                {{#each roles}}<span class="ac-role-chip">{{this}}</span>{{/each}}
-                            </span>
-                        </button>
-                    </li>
-                    {{/each}}
-                </ul>
-            </div>
-            {{/each}}
-        </aside>
-
-        <!-- Center pane: switches between welcome / dept editor / user matrix -->
-        <section class="ac-detail" id="ac-detail" aria-live="polite">
-            <div class="ac-welcome" id="ac-welcome">
-                <h3 class="ac-welcome-title">Nothing selected yet</h3>
-                <p>Pick a department to assign access at the group level, or pick a user to see their full permission matrix.</p>
-                <details class="ac-welcome-tips-wrap">
-                    <summary>How changes are stored</summary>
-                    <ul class="ac-welcome-tips">
-                        <li><strong>Bootstrap config comes from YAML.</strong> Edits made here apply to this instance only.</li>
-                        <li>Use <em>Show as YAML</em> to copy the current state as a snippet you can commit back to the source repo.</li>
-                    </ul>
-                </details>
-            </div>
-
-            <!-- Department editor (rendered by JS) -->
-            <div class="ac-dept-editor" id="ac-dept-editor" hidden></div>
-
-            <!-- User permission matrix (rendered by JS) -->
-            <div class="ac-user-matrix" id="ac-user-matrix" hidden></div>
-        </section>
-    </div>
-
-    <!-- ===== Modal overlay shells ===== -->
-    <div class="panel-overlay" id="ac-modal-overlay" hidden></div>
-    <div class="ac-modal" id="ac-yaml-modal" role="dialog" aria-modal="true" aria-labelledby="ac-yaml-title" tabindex="-1" hidden>
-        <div class="ac-modal-header">
-            <h2 id="ac-yaml-title">Current state as YAML</h2>
-            <button type="button" class="panel-close" id="ac-yaml-close" aria-label="Close">&times;</button>
-        </div>
-        <div class="ac-modal-body">
-            <p class="ac-modal-hint">
-                This is the current database state of role/department rules on this instance,
-                rendered in the loader's YAML schema. Copy any rules you want to make
-                permanent into <code>services/access-control/*.yaml</code> in the source repo
-                and redeploy. Per-user overrides are intentionally excluded.
-            </p>
-            <pre class="ac-yaml-pre" id="ac-yaml-content">Loading…</pre>
-            <div class="ac-modal-actions">
-                <button type="button" class="btn btn-secondary" id="ac-yaml-copy">Copy</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="ac-modal" id="ac-new-dept-modal" role="dialog" aria-modal="true" aria-labelledby="ac-new-dept-title" tabindex="-1" hidden>
-        <div class="ac-modal-header">
-            <h2 id="ac-new-dept-title">Create department</h2>
-            <button type="button" class="panel-close" id="ac-new-dept-close" aria-label="Close">&times;</button>
-        </div>
-        <div class="ac-modal-body">
-            <label class="ac-field">
-                <span>Name</span>
-                <input type="text" id="ac-new-dept-name" class="search-input" placeholder="e.g. Engineering" autocomplete="off" maxlength="64">
-            </label>
-            <label class="ac-field">
-                <span>Description (optional)</span>
-                <input type="text" id="ac-new-dept-desc" class="search-input" autocomplete="off">
-            </label>
-            <p class="ac-form-error" id="ac-new-dept-error" hidden></p>
-            <p class="ac-modal-hint">
-                Saving creates the department in this instance's database.
-                Users you have not assigned anywhere sit in <strong>Default</strong>.
-                To make a department part of the bootstrap baseline, add it to
-                <code>services/access-control/departments.yaml</code> in the source repo.
-            </p>
-            <div class="ac-modal-actions">
-                <button type="button" class="btn btn-primary" id="ac-new-dept-save">Create</button>
-                <button type="button" class="btn btn-secondary" id="ac-new-dept-cancel">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== Render templates cloned by the JS controller ===== -->
-    <template id="ac-tpl-dept-editor">
-        <div>
-            <div class="ac-user-header">
-                <h2 data-slot="name"></h2>
-                <div class="ac-user-meta">Department editor · changes save to this instance's database</div>
-            </div>
-            <p>Toggle access for the whole department here. To make a rule permanent across deployments, copy it into <code>services/access-control/departments.yaml</code> in the source repo.</p>
-            <div data-slot="sections"></div>
-        </div>
-    </template>
-    <template id="ac-tpl-dept-unselected">
-        <p><em>Pick a department from the tree to manage its access.</em></p>
-    </template>
-    <template id="ac-tpl-dept-section">
-        <div class="ac-section">
-            <h3 data-slot="label"></h3>
-            <div class="ac-dept-rule-list" data-slot="rules"></div>
-        </div>
-    </template>
-    <template id="ac-tpl-dept-rule-empty">
-        <div class="ac-dept-rule"><em>No entities of this type configured.</em></div>
-    </template>
-    <template id="ac-tpl-dept-rule">
-        <div class="ac-dept-rule">
-            <span class="ac-matrix-entity"><span data-slot="label"></span><span class="id" data-slot="id"></span></span>
-            <span class="ac-source">—</span>
-            <select data-action="dept-rule-access">
-                <option value="inherit">inherit</option>
-                <option value="allow">allow</option>
-                <option value="deny">deny</option>
+    <form class="sp-toolbar sp-toolbar--fields" method="get" action="/admin/access-control" role="search" aria-label="Filter access rules">
+        <div class="sp-toolbar__field">
+            <label class="sp-toolbar__field-label" for="ac-filter-subject">Subject kind</label>
+            <select class="sp-select" id="ac-filter-subject" name="subject_kind">
+            {{#each ledger.subject_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
             </select>
-            <span></span>
         </div>
-    </template>
-    <template id="ac-tpl-matrix-loading">
-        <p>Loading matrix for <strong data-slot="name"></strong>…</p>
-    </template>
-    <template id="ac-tpl-matrix-error">
-        <p class="error">Failed to load the permission matrix for this user.</p>
-    </template>
-    <template id="ac-tpl-matrix">
-        <div>
-            <div class="ac-user-header">
-                <h2 data-slot="name"></h2>
-                <div class="ac-user-meta">
-                    <span data-slot="email"></span>
-                    <span>·</span>
-                    <span data-slot="roles"></span>
-                    <span>·</span>
-                    <label>department:
-                        <select data-action="assign-dept" aria-label="Assign department"></select>
-                    </label>
-                </div>
-            </div>
-            <p>Per-user overrides are saved to this instance's database only and are intentionally never written back to YAML.</p>
-            <div data-slot="sections"></div>
+        <div class="sp-toolbar__field">
+            <label class="sp-toolbar__field-label" for="ac-filter-entity">Entity kind</label>
+            <select class="sp-select" id="ac-filter-entity" name="entity_kind">
+            {{#each ledger.entity_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+            </select>
         </div>
-    </template>
-    <template id="ac-tpl-matrix-section">
-        <div class="ac-matrix-section">
-            <div class="ac-matrix-section-header"><span data-slot="label"></span><span data-slot="count"></span></div>
+        <div class="sp-toolbar__field">
+            <label class="sp-toolbar__field-label" for="ac-filter-source">Rule source</label>
+            <select class="sp-select" id="ac-filter-source" name="source">
+            {{#each ledger.source_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+            </select>
         </div>
-    </template>
-    <template id="ac-tpl-matrix-empty">
-        <div class="ac-matrix-row"><em>No entities of this type configured.</em></div>
-    </template>
-    <template id="ac-tpl-matrix-row">
-        <div class="ac-matrix-row">
-            <div class="ac-matrix-entity"><span data-slot="name"></span><span class="id" data-slot="id"></span></div>
-            <div class="ac-effective" data-slot="effective"></div>
-            <div class="ac-source">
-                <span class="ac-layer-tag" data-slot="layer"></span>
-                <span data-slot="detail"></span>
-            </div>
-            <div class="ac-override">
-                <button type="button" class="is-allow" data-override="allow">Allow</button>
-                <button type="button" class="is-deny" data-override="deny">Deny</button>
-                <button type="button" class="is-inherit" data-override="inherit">Inherit</button>
-            </div>
+        <label class="sp-u-sr-only" for="ac-filter-q">Search rules</label>
+        <div class="sp-toolbar__search">
+            <input class="sp-search-input" id="ac-filter-q" type="search" name="q" value="{{ledger.search}}" placeholder="Entity or subject">
         </div>
-    </template>
+        <div class="sp-toolbar__actions">
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--secondary">Apply</button>
+        </div>
+    </form>
 
-    <!-- Embedded data for the JS controller. -->
-    <script type="application/json" id="ac-entity-catalogue">{{{json entity_catalogue}}}</script>
-    <script type="application/json" id="ac-known-roles">{{{json known_roles}}}</script>
-    <script type="application/json" id="ac-departments">{{{json department_names}}}</script>
+    {{#if ledger.rows}}
+    {{#> components/table caption="Access-control rules on this instance" pagination=ledger.pagination modifier="sp-p-ac__ledger"}}
+        <thead><tr>
+            {{#each ledger.sort_headers}}{{> components/sort-header this}}{{/each}}
+            <th class="sp-col-default">Entity default</th>
+            <th class="sp-col-why">Why</th>
+        </tr></thead>
+        <tbody>
+        {{#each ledger.rows}}
+        <tr>
+            <td>{{entity_type_label}}</td>
+            <td class="sp-u-mono">{{entity_id}}</td>
+            <td>{{subject_kind}}</td>
+            <td class="sp-u-mono">{{subject}}</td>
+            <td>{{> components/badge tone=access_tone text=access}}</td>
+            <td>{{> components/badge tone=source_tone text=source}}</td>
+            <td class="sp-u-text-muted">{{default_label}}</td>
+            <td class="sp-u-text-muted">{{truncate justification 60}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No rules match" message="No access-control rule matches these filters. Clear them to see the whole ledger."}}
+    {{/if}}
+
+    {{#if ledger.capped}}
+    {{> components/notice tone="warn" title="Listing is capped" message="Only the first 1000 rules are shown. Narrow the filters to see the rest."}}
+    {{/if}}
+
+    <dialog class="sp-dialog sp-ac-dialog" data-dialog="yaml" aria-labelledby="ac-yaml-title">
+        <div class="sp-ac-dialog__header">
+            <h2 id="ac-yaml-title">Current state as YAML</h2>
+            <button type="button" class="sp-ac-dialog__close" data-action="close-dialog" aria-label="Close">&times;</button>
+        </div>
+        <div class="sp-ac-dialog__body">
+            <p class="sp-ac-modal-hint">
+                The database state of the band rules on this instance, in the loader's schema.
+                Copy what you want to keep into <code class="sp-code-inline">services/</code> in the
+                source repository and redeploy. Per-user overrides are deliberately excluded.
+            </p>
+            <pre class="sp-ac-yaml-pre" data-ac="yaml-content"><span class="sp-loading">Loading…</span></pre>
+        </div>
+        <div class="sp-ac-dialog__actions">
+            <button type="button" class="sp-btn sp-btn--secondary" data-action="copy-yaml">Copy</button>
+            <button type="button" class="sp-btn sp-btn--outline" data-action="close-dialog">Close</button>
+        </div>
+    </dialog>
+
+    {{#if can_write}}
+    <dialog class="sp-dialog sp-ac-dialog" data-dialog="new-group" aria-labelledby="ac-new-group-title">
+        <div class="sp-ac-dialog__header">
+            <h2 id="ac-new-group-title">Create group</h2>
+            <button type="button" class="sp-ac-dialog__close" data-action="close-dialog" aria-label="Close">&times;</button>
+        </div>
+        <div class="sp-ac-dialog__body">
+            <label class="sp-ac-field">
+                <span>Identifier</span>
+                <input type="text" data-ac="new-group-id" class="sp-search-input" placeholder="engineering" autocomplete="off" maxlength="64">
+            </label>
+            <label class="sp-ac-field">
+                <span>Name</span>
+                <input type="text" data-ac="new-group-name" class="sp-search-input" placeholder="Engineering" autocomplete="off" maxlength="64">
+            </label>
+            <label class="sp-ac-field">
+                <span>Description</span>
+                <input type="text" data-ac="new-group-desc" class="sp-search-input" autocomplete="off">
+            </label>
+            <p class="sp-ac-form-error" data-ac="new-group-error" hidden></p>
+            <p class="sp-ac-modal-hint">
+                The group is created in this instance's database. People the directory has not
+                placed anywhere stay in <strong>Unassigned</strong>.
+            </p>
+        </div>
+        <div class="sp-ac-dialog__actions">
+            <button type="button" class="sp-btn sp-btn--primary" data-action="save-group">Create</button>
+            <button type="button" class="sp-btn sp-btn--outline" data-action="close-dialog">Cancel</button>
+        </div>
+    </dialog>
+    {{/if}}
 
     {{/inline}}
     {{#*inline "scripts"}}
-    <script data-cfasync="false" type="module" src="/js/pages/admin-access-control.js"></script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-access-control.js?v={{css_version}}"></script>
     {{/inline}}
 {{/layout}}

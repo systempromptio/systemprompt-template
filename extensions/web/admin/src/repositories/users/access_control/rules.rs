@@ -1,9 +1,13 @@
 //! CRUD over `access_control_rules`: listing grants and replacing them
 //! transactionally for one or many entities.
+//!
+//! The entity catalog is core's table: the row a grant's FK needs is ensured
+//! through [`AccessControlRepository`], never written here.
+
+use std::sync::Arc;
 
 use sqlx::PgPool;
-
-use systemprompt::security::authz::EntityKind;
+use systemprompt::security::authz::{AccessControlRepository, AuthzError, EntityKind};
 
 use crate::types::access_control::{
     AccessControlRule, AccessControlRuleInput, AccessDecision, RuleType,
@@ -22,6 +26,22 @@ pub async fn list_all_rules(pool: &PgPool) -> Result<Vec<AccessControlRule>, sql
     )
     .fetch_all(pool)
     .await
+}
+
+pub async fn count_assignments_by_entity_type(
+    pool: &PgPool,
+    entity_type: &str,
+) -> Result<std::collections::HashMap<String, i64>, sqlx::Error> {
+    let rows = sqlx::query!(
+        r#"SELECT entity_id, COUNT(*)::BIGINT AS "count!"
+           FROM access_control_rules
+           WHERE entity_type = $1
+           GROUP BY entity_id"#,
+        entity_type,
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows.into_iter().map(|r| (r.entity_id, r.count)).collect())
 }
 
 pub async fn list_rules_for_entity(
@@ -46,28 +66,23 @@ pub async fn list_rules_for_entity(
     .await
 }
 
-// Why: Replace every grant on `(entity_type, entity_id)` with `rules`.
-//
-// Ensures the entity catalog row exists before inserting grants — the FK
-// added in core migration 007 rejects orphan rules.
+const SOURCE_LABEL: &str = "admin:dashboard";
+
 pub async fn set_entity_rules(
     pool: &PgPool,
     entity_type: EntityKind,
     entity_id: &str,
     rules: &[AccessControlRuleInput],
-) -> Result<Vec<AccessControlRule>, sqlx::Error> {
+) -> Result<Vec<AccessControlRule>, AuthzError> {
+    // Why: core's `ensure_entity` takes the pool, not this transaction, so the
+    // catalog row is committed before the rules are replaced. A failure between
+    // the two leaves a catalog row with no grants — an entity that exists and
+    // grants nothing, which is what an unruled entity already means here.
+    catalog(pool)
+        .ensure_entity(entity_type, entity_id, SOURCE_LABEL)
+        .await?;
     let entity_type = entity_type.as_str();
     let mut tx = pool.begin().await?;
-
-    sqlx::query!(
-        "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
-         VALUES ($1, $2, false, 'admin:dashboard')
-         ON CONFLICT (entity_type, entity_id) DO NOTHING",
-        entity_type,
-        entity_id,
-    )
-    .execute(&mut *tx)
-    .await?;
 
     sqlx::query!(
         "DELETE FROM access_control_rules WHERE entity_type = $1 AND entity_id = $2",
@@ -111,22 +126,19 @@ pub async fn bulk_set_rules(
     pool: &PgPool,
     entities: &[(EntityKind, String)],
     rules: &[AccessControlRuleInput],
-) -> Result<usize, sqlx::Error> {
+) -> Result<usize, AuthzError> {
+    let catalog = catalog(pool);
+    for (entity_type, entity_id) in entities {
+        catalog
+            .ensure_entity(*entity_type, entity_id, SOURCE_LABEL)
+            .await?;
+    }
+
     let mut tx = pool.begin().await?;
     let mut count = 0usize;
 
-    for (kind, entity_id) in entities {
-        let entity_type = kind.as_str();
-        sqlx::query!(
-            "INSERT INTO access_control_entities (entity_type, entity_id, default_included, source)
-             VALUES ($1, $2, false, 'admin:dashboard')
-             ON CONFLICT (entity_type, entity_id) DO NOTHING",
-            entity_type,
-            entity_id,
-        )
-        .execute(&mut *tx)
-        .await?;
-
+    for (entity_type, entity_id) in entities {
+        let entity_type = entity_type.as_str();
         sqlx::query!(
             "DELETE FROM access_control_rules WHERE entity_type = $1 AND entity_id = $2",
             entity_type,
@@ -157,4 +169,8 @@ pub async fn bulk_set_rules(
 
     tx.commit().await?;
     Ok(count)
+}
+
+fn catalog(pool: &PgPool) -> AccessControlRepository {
+    AccessControlRepository::from_pool(Arc::new(pool.clone()))
 }

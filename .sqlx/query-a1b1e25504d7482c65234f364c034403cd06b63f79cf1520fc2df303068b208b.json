@@ -1,0 +1,39 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH windowed AS (\n            SELECT ar.id, ar.model, ar.provider, ar.status\n            FROM ai_requests ar\n            WHERE ar.created_at >= $1 AND ar.created_at < $2\n              AND ($3::TEXT[] IS NULL OR ar.user_id = ANY($3))\n        ),\n        facets AS (\n            (SELECT 'model' AS kind, model AS value, COUNT(*) AS n\n               FROM windowed WHERE model IS NOT NULL\n               GROUP BY model ORDER BY COUNT(*) DESC LIMIT 60)\n            UNION ALL\n            (SELECT 'provider', provider, COUNT(*)\n               FROM windowed WHERE provider IS NOT NULL\n               GROUP BY provider ORDER BY COUNT(*) DESC LIMIT 30)\n            UNION ALL\n            (SELECT 'status', status, COUNT(*)\n               FROM windowed GROUP BY status ORDER BY COUNT(*) DESC LIMIT 30)\n            UNION ALL\n            (SELECT 'tool', tc.tool_name, COUNT(*)\n               FROM ai_request_tool_calls tc\n               JOIN windowed w ON w.id = tc.request_id\n               GROUP BY tc.tool_name ORDER BY COUNT(*) DESC LIMIT 60)\n        )\n        SELECT kind AS \"kind!\", value AS \"value!\", n::bigint AS \"count!\"\n        FROM facets\n        ORDER BY kind ASC, n DESC, value ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "kind!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "value!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "a1b1e25504d7482c65234f364c034403cd06b63f79cf1520fc2df303068b208b"
+}

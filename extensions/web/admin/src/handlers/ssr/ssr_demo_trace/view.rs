@@ -18,6 +18,7 @@ use super::super::entity_urls::session_detail_url;
 pub(super) struct SessionView {
     pub session_id: SessionId,
     pub label: String,
+    pub option_label: String,
     pub allowed: i64,
     pub denied: i64,
     pub requests: i64,
@@ -36,6 +37,7 @@ pub(super) struct SessionView {
 pub(super) struct StageView {
     pub policy: String,
     pub result: String,
+    pub tone: &'static str,
     pub detail: String,
     pub is_fail: bool,
     pub is_skip: bool,
@@ -51,6 +53,8 @@ pub(super) struct TraceRowView {
     pub kind_label: String,
     pub subject: String,
     pub outcome: String,
+    pub outcome_label: String,
+    pub outcome_tone: &'static str,
     pub policy: String,
     pub has_policy: bool,
     pub detail: String,
@@ -64,6 +68,8 @@ pub(super) struct TraceRowView {
 #[derive(Debug, Serialize)]
 pub(super) struct TurnView {
     pub ordinal: usize,
+    pub heading: String,
+    pub summary: String,
     pub prompt: String,
     pub rows: Vec<TraceRowView>,
     pub row_count: usize,
@@ -108,6 +114,11 @@ fn to_stage_views(rules: Option<&serde_json::Value>) -> Vec<StageView> {
                     .and_then(|v| v.as_str())
                     .unwrap_or_default()
                     .to_owned(),
+                tone: match result.as_str() {
+                    "fail" => "err",
+                    "skip" => "muted",
+                    _ => "ok",
+                },
                 is_fail: result == "fail",
                 is_skip: result == "skip",
                 result,
@@ -136,11 +147,23 @@ pub(super) fn to_session_views(
         .into_iter()
         .map(|s| {
             let model = s.model.unwrap_or_default();
+            let label = s.started_at.format("%b %-d, %H:%M").to_string();
             SessionView {
                 is_active: selected == Some(&s.session_id),
                 url: format!("/admin/demo/trace?session={}", s.session_id),
                 detail_url: session_detail_url(&s.session_id),
-                label: s.started_at.format("%b %-d, %H:%M").to_string(),
+                option_label: format!(
+                    "{label} · {} · {} allow / {} deny / {} calls",
+                    if model.is_empty() {
+                        "no model call"
+                    } else {
+                        model.as_str()
+                    },
+                    s.allowed,
+                    s.denied,
+                    s.requests
+                ),
+                label,
                 started_at: s.started_at.format("%Y-%m-%d %H:%M:%S").to_string(),
                 last_at: s.last_at.format("%Y-%m-%d %H:%M:%S").to_string(),
                 session_id: s.session_id,
@@ -158,14 +181,28 @@ fn to_row_view(r: DemoTraceRow, origin: chrono::DateTime<chrono::Utc>) -> TraceR
     let stages = to_stage_views(r.evaluated_rules.as_ref());
     let detail = decisive_detail(&r.detail, &stages);
     let elapsed = (r.at - origin).num_milliseconds().max(0);
+    let is_deny = r.outcome == "deny";
+    let is_request = r.kind == "request";
     TraceRowView {
         chain_id: r.id,
         at: r.at.format("%H:%M:%S").to_string(),
         at_full: r.at.format("%Y-%m-%d %H:%M:%S UTC").to_string(),
         offset: format!("+{:.2}s", elapsed as f64 / 1000.0),
         kind_label: kind_label(&r.kind).to_owned(),
-        is_deny: r.outcome == "deny",
-        is_request: r.kind == "request",
+        outcome_label: if is_deny {
+            "blocked".to_owned()
+        } else {
+            r.outcome.clone()
+        },
+        outcome_tone: if is_deny {
+            "err"
+        } else if is_request {
+            "info"
+        } else {
+            "ok"
+        },
+        is_deny,
+        is_request,
         has_policy: !r.policy.is_empty(),
         kind: r.kind,
         subject: r.subject,
@@ -183,11 +220,24 @@ fn close_turn(turn: &mut TurnView) {
     turn.denied = turn.rows.iter().filter(|r| r.is_deny).count();
     turn.model_calls = turn.rows.iter().filter(|r| r.is_request).count();
     turn.blocked = turn.model_calls == 0 && turn.denied > 0;
+    turn.summary = format!(
+        "{} · {} blocked · {} model calls{}",
+        turn.prompt,
+        turn.denied,
+        turn.model_calls,
+        if turn.blocked {
+            " · the prompt never reached a provider"
+        } else {
+            ""
+        }
+    );
 }
 
 fn new_turn(ordinal: usize, prompt: &str) -> TurnView {
     TurnView {
         ordinal,
+        heading: format!("Turn {ordinal}"),
+        summary: String::new(),
         prompt: prompt.to_owned(),
         rows: Vec::new(),
         row_count: 0,

@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO event_outbox (id, channel, user_id, payload, actor_kind, actor_id, origin_instance_id) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "672a482d8fbc1e647b13b87803c8a143e896ff78c2fee44ea9561c4c05bdc5b0"
+}

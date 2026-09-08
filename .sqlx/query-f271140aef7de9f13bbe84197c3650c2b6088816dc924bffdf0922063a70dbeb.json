@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT subject_value AS \"user_id!\" FROM knowledge_document_grants\n               WHERE subject_kind = $1\n               UNION\n               SELECT DISTINCT user_id FROM knowledge_user_sync_state",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f271140aef7de9f13bbe84197c3650c2b6088816dc924bffdf0922063a70dbeb"
+}

@@ -1,263 +1,140 @@
 {{#> layout title=title page=page}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title="Governance Policies" subtitle="Code-defined policies. Runtime-enforced. Inspect the chain, see what each policy is doing in production."}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="Every policy the chain runs, in execution order, with what it decided in the last 24 hours. Policies are Rust code; order, enablement and parameters are config."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/decisions">Decisions</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/hooks">Hooks</a>
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        <span>Config <code class="sp-code-inline">{{config_path}}</code></span>
+        <span>The driver stops at the first deny; edits to the file reload without a restart.</span>
+        {{/inline}}
+    {{/components/page-header}}
 
-    <nav class="sp-tabs" role="tablist" aria-label="Governance sections">
-        <a href="/admin/governance/policies" class="sp-tab sp-tab--active" role="tab">Policies</a>
-        <a href="/admin/governance/decisions" class="sp-tab" role="tab">Decisions</a>
-        <a href="/admin/governance/hooks" class="sp-tab" role="tab">Hooks</a>
-    </nav>
-
-    <div class="stat-grid">
-        {{> components/stat-card label="Decisions · 24h" value=window_total}}
-        {{> components/stat-card label="Allowed · 24h" value=window_allowed variant="success"}}
-        {{> components/stat-card label="Denied · 24h" value=window_denied variant="danger"}}
-        {{#if window_breaches}}
-        {{> components/stat-card label="Secret breaches · 24h" value=window_breaches variant="danger"}}
-        {{else}}
-        {{> components/stat-card label="Secret breaches · 24h" value=window_breaches}}
-        {{/if}}
-        {{> components/stat-card label="Decisions · all time" value=lifetime_total}}
-    </div>
-
-    <section class="policy-chain-intro">
-        <h2 class="policy-chain-intro__title">Policies are Rust code. Order is config.</h2>
-        <p class="policy-chain-intro__body">
-            Each policy is a <code class="code-inline">Policy</code> trait impl registered at compile time
-            via <code class="code-inline">inventory::submit!</code>. The pipeline driver iterates the
-            ordered, enabled list on every tool call and stops on the first deny.
-            Order, enable/disable, and per-policy parameters live in
-            <code class="code-inline">{{config_path}}</code> — edits there reload without a restart.
-        </p>
-        <p class="policy-chain-intro__hint text-muted">
-            To add a policy: create a file under
-            <code class="code-inline">extensions/web/admin/src/handlers/webhook/governance/policies/</code>,
-            implement <code class="code-inline">Policy</code>, submit a <code class="code-inline">PolicyRegistration</code>,
-            then list its id in the YAML.
-        </p>
+    <section class="sp-kpi-grid" aria-label="Enforcement summary">
+        {{#each kpis}}
+        {{> components/kpi label=this.label value=this.value note=this.note tone=this.tone href=this.href}}
+        {{/each}}
     </section>
+
+    {{#> components/section title="Policy chain" count=policy_count note="Execution order, current parameters, and 24h enforcement counts from governance_decisions."}}{{/components/section}}
 
     {{#if has_policies}}
-    <ol class="policy-chain" aria-label="Policy chain in execution order">
+    {{#> components/table caption="Policy chain in execution order" modifier="sp-p-governance__table"}}
+        <thead><tr>
+            <th scope="col" class="sp-p-governance__order">#</th>
+            <th scope="col">Policy</th>
+            <th scope="col" class="sp-col-status">State</th>
+            <th scope="col">Parameters</th>
+            <th scope="col" class="sp-table__cell--num">Evaluations 24h</th>
+            <th scope="col" class="sp-table__cell--num">Allowed</th>
+            <th scope="col" class="sp-table__cell--num">Denied</th>
+            <th scope="col" class="sp-table__cell--num">Deny rate</th>
+            <th scope="col" class="sp-col-date">Last fired</th>
+            <th scope="col" class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody>
         {{#each policies}}
-        <li class="policy-chain__step{{#unless enabled}} policy-chain__step--disabled{{/unless}}">
-            <div class="policy-chain__rail">
-                <span class="policy-chain__order" aria-label="Step {{add @index 1}}">{{add @index 1}}</span>
-                {{#unless @last}}<span class="policy-chain__connector" aria-hidden="true"></span>{{/unless}}
-            </div>
-            <article class="policy-chain__card">
-                <header class="policy-chain__header">
-                    <div class="policy-chain__title">
-                        <a class="policy-chain__name" href="{{edit_url}}">{{name}}</a>
-                        <code class="code-inline policy-chain__id">{{id}}</code>
-                    </div>
-                    {{#if enabled}}
-                    <span class="mcp-badge mcp-badge-success">ENABLED</span>
-                    {{else}}
-                    <span class="mcp-badge">DISABLED</span>
-                    {{/if}}
-                </header>
-
-                <p class="policy-chain__description">{{description}}</p>
-
-                <dl class="policy-chain__meta">
-                    <div class="policy-chain__meta-row">
-                        <dt>As code</dt>
-                        <dd><code class="code-inline">{{source_path}}</code></dd>
-                    </div>
-                    <div class="policy-chain__meta-row">
-                        <dt>Config</dt>
-                        <dd>
-                            {{#if has_params}}
-                            <ul class="policy-chain__params">
-                                {{#each params_preview}}
-                                <li><code class="code-inline">{{key}}</code>: <span class="policy-chain__param-value">{{value}}</span></li>
-                                {{/each}}
-                            </ul>
-                            {{else}}
-                            <span class="text-muted">No tunable parameters</span>
-                            {{/if}}
-                        </dd>
-                    </div>
-                </dl>
-
-                <div class="policy-chain__stats">
-                    <a class="policy-chain__stat policy-chain__stat--allow" href="{{decisions_url}}&outcome=allow">
-                        <span class="policy-chain__stat-value">{{window_allowed}}</span>
-                        <span class="policy-chain__stat-label">Allowed · 24h</span>
-                    </a>
-                    {{#if has_recent_denies}}
-                    <a class="policy-chain__stat policy-chain__stat--deny" href="{{deny_decisions_url}}">
-                        <span class="policy-chain__stat-value">{{window_denied}}</span>
-                        <span class="policy-chain__stat-label">Denied · 24h</span>
-                    </a>
-                    {{else}}
-                    <div class="policy-chain__stat policy-chain__stat--deny policy-chain__stat--zero">
-                        <span class="policy-chain__stat-value">0</span>
-                        <span class="policy-chain__stat-label">Denied · 24h</span>
-                    </div>
-                    {{/if}}
-                    <div class="policy-chain__stat">
-                        <span class="policy-chain__stat-value">{{deny_rate}}</span>
-                        <span class="policy-chain__stat-label">Deny rate · 24h</span>
-                    </div>
-                    <div class="policy-chain__stat">
-                        <span class="policy-chain__stat-value">{{#if last_at}}{{last_at}}{{else}}—{{/if}}</span>
-                        <span class="policy-chain__stat-label">Last fired</span>
-                    </div>
-                </div>
-
-                <footer class="policy-chain__actions">
-                    <a href="{{edit_url}}" class="btn btn-sm btn-outline">Edit config</a>
-                    <a href="{{decisions_url}}" class="btn btn-sm btn-ghost">View decisions</a>
-                </footer>
-            </article>
-        </li>
+        <tr>
+            <td class="sp-p-governance__order sp-u-num">{{order}}</td>
+            <td class="sp-p-governance__policy" title="{{description}}"><a href="{{edit_url}}">{{name}}</a> <code class="sp-code-inline">{{id}}</code></td>
+            <td>{{> components/badge tone=state_tone text=state}}</td>
+            <td class="sp-p-governance__params" title="{{params_line}}">{{#if has_params}}{{params_line}}{{else}}<span class="sp-u-text-muted">none</span>{{/if}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{formatNumber window_evaluations}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{formatNumber window_allowed}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{#if has_recent_denies}}<a class="sp-u-text-danger" href="{{deny_decisions_url}}">{{formatNumber window_denied}}</a>{{else}}{{window_denied}}{{/if}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{deny_rate}}</td>
+            <td class="sp-table__cell--date">{{#if last_at}}{{last_at}}{{else}}—{{/if}}</td>
+            <td class="sp-table__cell--actions"><a class="sp-p-governance__action" href="{{decisions_url}}">Decisions</a></td>
+        </tr>
         {{/each}}
-    </ol>
+        </tbody>
+    {{/components/table}}
+    {{#unless has_enforcement_activity}}
+    <p class="sp-u-text-muted sp-u-text-sm">No policy evaluations in the last 24h. Run a few tool calls (or one of the demo/governance/*.sh scripts) to populate the counts.</p>
+    {{/unless}}
     {{else}}
-    {{> components/empty-state message="No policies registered. Build the workspace and check that extensions/web/admin/src/handlers/webhook/governance/policies/ submits at least one PolicyRegistration."}}
+    {{> components/empty-state title="No policies registered" message="Build the workspace and check that extensions/web/admin/src/handlers/webhook/governance/policies/ submits at least one PolicyRegistration."}}
     {{/if}}
 
-    <section class="enforcement-section">
-        <header class="enforcement-section__header">
-            <h2>Enforcement (last 24h)</h2>
-            <p class="text-muted">What the chain is actually doing — execution counts pulled from <code class="code-inline">governance_decisions</code>.</p>
-        </header>
-
-        <h3 class="enforcement-section__sub">Per-policy execution</h3>
-        {{#if has_enforcement_activity}}
-        {{#> components/data-table}}
-            <thead><tr>
-                <th>Policy</th>
-                <th class="col-status">State</th>
-                <th class="num">Evaluations</th>
-                <th class="num">Allowed</th>
-                <th class="num">Denied</th>
-                <th class="num">Deny rate</th>
-                <th class="col-date">Last fired</th>
-                <th class="col-status">Actions</th>
-            </tr></thead>
-            <tbody>
-            {{#each enforcement}}
-            <tr{{#unless enabled}} class="row-muted"{{/unless}}>
-                <td>
-                    <strong>{{name}}</strong><br>
-                    <code class="code-inline">{{id}}</code>
-                </td>
-                <td class="col-status">
-                    {{#if enabled}}
-                    <span class="mcp-badge mcp-badge-success">ENABLED</span>
-                    {{else}}
-                    <span class="mcp-badge">DISABLED</span>
-                    {{/if}}
-                </td>
-                <td class="num">{{window_evaluations}}</td>
-                <td class="num text-success">{{window_allowed}}</td>
-                <td class="num">
-                    {{#if has_recent_denies}}
-                    <a class="text-danger" href="{{deny_decisions_url}}"><strong>{{window_denied}}</strong></a>
-                    {{else}}
-                    {{window_denied}}
-                    {{/if}}
-                </td>
-                <td class="num">{{deny_rate}}</td>
-                <td class="col-date">{{#if last_at_window}}{{last_at_window}}{{else}}—{{/if}}</td>
-                <td class="col-status">
-                    <a href="{{decisions_url}}" class="btn btn-sm btn-outline">Open</a>
-                </td>
-            </tr>
-            {{/each}}
-            </tbody>
-        {{/components/data-table}}
-        {{else}}
-        {{> components/empty-state message="No policy evaluations in the last 24h. Run a few tool calls (or one of the demo/governance/*.sh scripts) to populate this table."}}
-        {{/if}}
-
-        <div class="enforcement-section__grid">
-            <div>
-                <h3 class="enforcement-section__sub">Top denying tool calls · 24h</h3>
-                {{#if has_top_tools}}
-                {{#> components/data-table}}
-                    <thead><tr>
-                        <th>Policy</th>
-                        <th>Tool</th>
-                        <th class="num">Denies</th>
-                        <th class="num">Distinct actors</th>
-                    </tr></thead>
-                    <tbody>
-                    {{#each top_tools}}
-                    <tr>
-                        <td><a href="{{decisions_url}}"><code class="code-inline">{{policy}}</code></a></td>
-                        <td><code class="code-inline">{{tool_name}}</code></td>
-                        <td class="num text-danger"><strong>{{hits}}</strong></td>
-                        <td class="num">{{distinct_actors}}</td>
-                    </tr>
-                    {{/each}}
-                    </tbody>
-                {{/components/data-table}}
-                {{else}}
-                {{> components/empty-state message="No denied tool calls in the last 24h."}}
-                {{/if}}
-            </div>
-
-            <div>
-                <h3 class="enforcement-section__sub">Top denied actors · 24h</h3>
-                {{#if has_top_actors}}
-                {{#> components/data-table}}
-                    <thead><tr>
-                        <th>User</th>
-                        <th class="num">Denies</th>
-                        <th class="num">Secret blocks</th>
-                        <th class="num">Total decisions</th>
-                    </tr></thead>
-                    <tbody>
-                    {{#each top_actors}}
-                    <tr>
-                        <td>
-                            <a href="{{decisions_url}}"><strong>{{display_name}}</strong></a>
-                            {{#if email}}<br><span class="text-muted">{{email}}</span>{{/if}}
-                        </td>
-                        <td class="num text-danger"><strong>{{deny_count}}</strong></td>
-                        <td class="num">{{secret_count}}</td>
-                        <td class="num">{{total}}</td>
-                    </tr>
-                    {{/each}}
-                    </tbody>
-                {{/components/data-table}}
-                {{else}}
-                {{> components/empty-state message="No actor denies in the last 24h."}}
-                {{/if}}
-            </div>
+    <div class="sp-p-governance__ranks">
+        <div>
+            {{#> components/section title="Top denying tool calls" note="Last 24h, by policy and tool."}}{{/components/section}}
+            {{#if has_top_tools}}
+            {{#> components/table caption="Top denying tool calls in the last 24h" modifier="sp-p-governance__rank"}}
+                <thead><tr>
+                    <th scope="col">Policy</th>
+                    <th scope="col">Tool</th>
+                    <th scope="col" class="sp-table__cell--num">Denies</th>
+                    <th scope="col" class="sp-table__cell--num">Actors</th>
+                </tr></thead>
+                <tbody>
+                {{#each top_tools}}
+                <tr>
+                    <td><a href="{{decisions_url}}"><code class="sp-code-inline">{{policy}}</code></a></td>
+                    <td class="sp-u-mono sp-u-truncate" title="{{tool_name}}">{{tool_name}}</td>
+                    <td class="sp-table__cell--num sp-u-num sp-u-text-danger">{{formatNumber hits}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{formatNumber distinct_actors}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            {{/components/table}}
+            {{else}}
+            {{> components/empty-state title="No denied tool calls" message="Nothing was denied in the last 24h."}}
+            {{/if}}
         </div>
-    </section>
+        <div>
+            {{#> components/section title="Top denied actors" note="Last 24h, by person."}}{{/components/section}}
+            {{#if has_top_actors}}
+            {{#> components/table caption="Top denied actors in the last 24h" modifier="sp-p-governance__rank"}}
+                <thead><tr>
+                    <th scope="col">Person</th>
+                    <th scope="col" class="sp-table__cell--num">Denies</th>
+                    <th scope="col" class="sp-table__cell--num">Secrets</th>
+                    <th scope="col" class="sp-table__cell--num">Decisions</th>
+                </tr></thead>
+                <tbody>
+                {{#each top_actors}}
+                <tr>
+                    <td class="sp-u-truncate" title="{{email}}"><a href="{{user_url}}">{{display_name}}</a></td>
+                    <td class="sp-table__cell--num sp-u-num"><a class="sp-u-text-danger" href="{{decisions_url}}">{{formatNumber deny_count}}</a></td>
+                    <td class="sp-table__cell--num sp-u-num">{{formatNumber secret_count}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{formatNumber total}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            {{/components/table}}
+            {{else}}
+            {{> components/empty-state title="No actor denies" message="No one was denied in the last 24h."}}
+            {{/if}}
+        </div>
+    </div>
 
     {{#if has_orphans}}
-    <details class="policy-chain-orphans">
-        <summary>Historical policies (no longer registered) · {{orphans_count}}</summary>
-        <p class="text-muted">These policy ids appear in <code class="code-inline">governance_decisions</code> but no Rust impl is currently registered for them — likely renamed or removed.</p>
-        {{#> components/data-table}}
+    <details class="sp-p-governance__orphans">
+        <summary>Historical policies no longer registered · {{orphans_count}}</summary>
+        <p class="sp-u-text-muted sp-u-text-sm">These ids appear in governance_decisions but no Rust impl is registered for them — likely renamed or removed.</p>
+        {{#> components/table caption="Policies with decisions but no registration" modifier="sp-p-governance__rank"}}
             <thead><tr>
-                <th>Policy id</th>
-                <th class="num">Allowed</th>
-                <th class="num">Denied</th>
-                <th class="col-date">Last seen</th>
+                <th scope="col">Policy id</th>
+                <th scope="col" class="sp-table__cell--num">Allowed</th>
+                <th scope="col" class="sp-table__cell--num">Denied</th>
+                <th scope="col" class="sp-col-date">Last seen</th>
             </tr></thead>
             <tbody>
             {{#each orphans}}
             <tr>
-                <td><code class="code-inline">{{id}}</code></td>
-                <td class="num">{{allowed}}</td>
-                <td class="num">{{denied}}</td>
-                <td class="col-date">{{last_at}}</td>
+                <td><code class="sp-code-inline">{{id}}</code></td>
+                <td class="sp-table__cell--num sp-u-num">{{formatNumber allowed}}</td>
+                <td class="sp-table__cell--num sp-u-num">{{formatNumber denied}}</td>
+                <td class="sp-table__cell--date">{{last_at}}</td>
             </tr>
             {{/each}}
             </tbody>
-        {{/components/data-table}}
+        {{/components/table}}
     </details>
     {{/if}}
-
     {{/inline}}
     {{#*inline "scripts"}}{{/inline}}
 {{/layout}}

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM knowledge_documents d\n        WHERE NOT EXISTS (\n            SELECT 1 FROM knowledge_document_grants g WHERE g.doc_id = d.doc_id\n        )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "d3603bad4e643c982bc725065c0f44d0ca99e96be88b573e187d43e8635dd593"
+}

@@ -18,6 +18,7 @@ services:
     image: ghcr.io/systempromptio/systemprompt-template:0
     restart: always
     environment:
+      ADMIN_EMAIL: $$cap_admin_email
       DATABASE_URL: postgres://systemprompt:$$cap_pg_password@srv-captain--$$cap_appname-db:5432/systemprompt
       ANTHROPIC_API_KEY: $$cap_anthropic_key
       OPENAI_API_KEY: $$cap_openai_key
@@ -38,6 +39,10 @@ services:
 
 caproverOneClickApp:
   variables:
+    - id: $$cap_admin_email
+      label: Administrator email
+      description: Required email address you control.
+      validRegex: /^.+@.+\..+$/
     - id: $$cap_pg_password
       label: Postgres password
       defaultValue: $$cap_gen_random_hex(24)

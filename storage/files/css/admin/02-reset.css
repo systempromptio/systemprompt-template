@@ -1,0 +1,40 @@
+@layer reset {
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+    background: var(--sp-bg-base);
+    color: var(--sp-text-primary);
+    overflow-x: hidden;
+}
+
+html, body {
+    margin: 0;
+    font-family: var(--sp-font-family);
+}
+
+body {
+    color: var(--sp-text-primary);
+    background: var(--sp-bg-base);
+    font-size: var(--sp-text-base);
+    line-height: var(--sp-leading-normal);
+    overflow-x: hidden;
+}
+
+[hidden] { display: none; }
+
+:focus-visible {
+    outline: 2px solid var(--sp-accent);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+}

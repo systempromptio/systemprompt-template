@@ -8,34 +8,39 @@
     <link rel="stylesheet" href="/css/core/fonts.css?v={{css_version}}">
     <link rel="stylesheet" href="/css/admin-bundle.css?v={{css_version}}">
 </head>
-<body>
-    <div class="login-container">
-        <div class="card">
-            <div class="login-logo"><img src="/files/images/logo.svg" alt="{{branding.domain}}" height="40"></div>
-            <p class="login-subtitle">Add a passkey to sign in</p>
+<body class="sp-auth-light">
+    <main class="sp-login-container">
+        <div class="sp-card sp-auth-card">
+            <div class="sp-card__body">
+            <div class="sp-login-logo">
+                <img src="/files/images/logo.svg" alt="{{branding.domain}}" height="40" class="sp-logo-light">
+                <img src="/files/images/logo-white.svg" alt="{{branding.domain}}" height="40" class="sp-logo-dark">
+            </div>
+            <p class="sp-login-subtitle">Add a passkey to sign in</p>
 
-            <div id="error" class="login-error" hidden></div>
+            <div id="error" class="sp-login-error" role="alert" aria-live="polite" hidden></div>
 
             <div id="passkey-form" hidden>
-                <p class="text-center text-sm text-tertiary mb-3">
-                    Creating a passkey for <strong id="user-email" class="text-primary"></strong>
+                <p class="sp-login-switch">
+                    Creating a passkey for <strong id="user-email"></strong>
                 </p>
-                <div class="form-actions">
-                    <button type="button" id="create-passkey-btn" class="btn btn-primary w-full">Create Passkey</button>
+                <div class="sp-form-actions">
+                    <button type="button" id="create-passkey-btn" class="sp-btn sp-btn--primary sp-u-w-full">Create passkey</button>
                 </div>
             </div>
 
-            <div id="loading" class="login-loading">
-                <div class="login-spinner"></div>
+            <div id="loading" class="sp-login-loading" aria-live="polite">
+                <div class="sp-login-spinner" role="status" aria-label="Loading"></div>
                 <p id="loading-text">Validating link...</p>
             </div>
 
-            <div id="retry" class="login-retry" hidden>
+            <div id="retry" class="sp-login-retry" hidden>
                 <a href="/admin/login">Back to sign in</a>
             </div>
+            </div>
         </div>
-    </div>
+    </main>
 
-    <script data-cfasync="false" src="/js/services/webauthn-passkey.js?v=3" type="module"></script>
+    <script data-cfasync="false" src="/js/services/webauthn-passkey.js?v={{css_version}}" type="module"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-//! `/admin/governance/{policy_id}` — per-policy detail / editor.
+//! `/admin/governance/policies/{policy_id}` — per-policy detail / editor.
 //!
 //! Reads the live policy for `policy_id` from the `GovernanceEngine`
 //! and pairs it with the recent decisions that policy has produced.
@@ -14,17 +14,18 @@ use systemprompt::identifiers::{AgentId, UserId};
 
 use axum::Form;
 use axum::extract::{Extension, Path, State};
+use axum::http::StatusCode;
 use axum::response::{IntoResponse, Redirect, Response};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
 use crate::error::{AdminError, AdminHtmlResult};
-
+use crate::handlers::ssr::format::local_time;
+use crate::handlers::ssr::types::BreadcrumbView;
 use crate::handlers::webhook::governance;
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{DECISION_DENY, MarketplaceContext, UserContext};
-
 
 const RECENT_LIMIT: i64 = 50;
 
@@ -32,11 +33,15 @@ const RECENT_LIMIT: i64 = 50;
 struct PolicyEditContext {
     page: &'static str,
     title: String,
+    breadcrumbs: Vec<BreadcrumbView>,
     policy: PolicySummary,
     params_yaml: String,
     recent: Vec<RecentDecisionRow>,
+    recent_count: usize,
     has_recent: bool,
     config_path: &'static str,
+    toggle_url: String,
+    decisions_url: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -45,12 +50,15 @@ struct PolicySummary {
     name: String,
     description: String,
     enabled: bool,
+    state: &'static str,
+    state_tone: &'static str,
 }
 
 #[derive(Debug, Serialize)]
 struct UnknownPolicyContext {
     page: &'static str,
     title: &'static str,
+    breadcrumbs: Vec<BreadcrumbView>,
     policy_id: String,
 }
 
@@ -58,13 +66,23 @@ struct UnknownPolicyContext {
 struct RecentDecisionRow {
     id: String,
     user_id: UserId,
+    user_url: String,
     tool_name: String,
     agent_id: Option<AgentId>,
-    agent_scope: Option<String>,
+    agent_scope: String,
     decision: String,
+    decision_tone: &'static str,
     is_denied: bool,
     reason: String,
     created_at: String,
+}
+
+fn crumbs(current: &str) -> Vec<BreadcrumbView> {
+    vec![
+        BreadcrumbView::link("Admin", "/admin"),
+        BreadcrumbView::link("Governance", "/admin/governance"),
+        BreadcrumbView::current(current),
+    ]
 }
 
 pub(crate) async fn governance_policy_edit_page(
@@ -79,20 +97,25 @@ pub(crate) async fn governance_policy_edit_page(
     }
 
     let Some((id_str, name, description, params_yaml, enabled, lookup_id)) =
-        find_policy_snapshot(&policy_id)
+        find_policy_snapshot(&policy_id).map_err(AdminError::internal)?
     else {
         let ctx = UnknownPolicyContext {
-            page: "governance",
+            page: "governance-unknown-policy",
             title: "Unknown policy",
+            breadcrumbs: crumbs("Unknown policy"),
             policy_id,
         };
-        return Ok(super::render_typed_page(
+        // Why: the unknown-policy page is a rendered 404, not a 200 that merely
+        // reads like one — a probe for a policy that does not exist must say so.
+        let mut response = super::render_typed_page(
             &engine,
             "governance-unknown-policy",
             &ctx,
             &user_ctx,
             &mkt_ctx,
-        ));
+        );
+        *response.status_mut() = StatusCode::NOT_FOUND;
+        return Ok(response);
     };
 
     let recent = repositories::governance::list_decisions_for_policy(
@@ -109,15 +132,21 @@ pub(crate) async fn governance_policy_edit_page(
     let recent_json = recent_decisions_json(&recent);
 
     let ctx = PolicyEditContext {
-        page: "governance",
-        title: format!("{name} — Policy"),
+        page: "governance-policy-edit",
+        breadcrumbs: crumbs(&name),
+        title: name.clone(),
+        toggle_url: format!("/admin/governance/policies/{id_str}/toggle"),
+        decisions_url: format!("/admin/governance/decisions?policy={id_str}"),
         policy: PolicySummary {
             id: id_str,
             name,
             description,
             enabled,
+            state: if enabled { "Enabled" } else { "Disabled" },
+            state_tone: if enabled { "ok" } else { "muted" },
         },
         params_yaml,
+        recent_count: recent_json.len(),
         has_recent: !recent_json.is_empty(),
         recent: recent_json,
         config_path: "services/governance/config.yaml",
@@ -134,10 +163,12 @@ pub(crate) async fn governance_policy_edit_page(
 
 type PolicySnapshot = (String, String, String, String, bool, String);
 
-fn find_policy_snapshot(policy_id: &str) -> Option<PolicySnapshot> {
-    let engine = governance::engine();
+fn find_policy_snapshot(
+    policy_id: &str,
+) -> Result<Option<PolicySnapshot>, systemprompt_security::policy::GovernanceEngineError> {
+    let engine = governance::engine()?;
 
-    engine
+    Ok(engine
         .policies()
         .find(|(_, p)| p.id().as_str() == policy_id)
         .map(|(cfg, p)| {
@@ -150,26 +181,27 @@ fn find_policy_snapshot(policy_id: &str) -> Option<PolicySnapshot> {
                 cfg.enabled,
                 id,
             )
-        })
+        }))
 }
 
 fn recent_decisions_json(recent: &[crate::types::GovernanceDecisionRow]) -> Vec<RecentDecisionRow> {
     recent
         .iter()
-        .map(|r| RecentDecisionRow {
-            id: r.id.clone(),
-            user_id: r.user_id.clone(),
-            tool_name: r.tool_name.clone(),
-            agent_id: r.agent_id.clone(),
-            agent_scope: r.agent_scope.clone(),
-            decision: r.decision.clone(),
-            is_denied: r.decision == DECISION_DENY,
-            reason: r.reason.clone(),
-            created_at: r
-                .created_at
-                .with_timezone(&chrono::Local)
-                .format("%Y-%m-%d %H:%M:%S")
-                .to_string(),
+        .map(|r| {
+            let is_denied = r.decision == DECISION_DENY;
+            RecentDecisionRow {
+                id: r.id.clone(),
+                user_url: format!("/admin/user?id={}", urlencoding::encode(r.user_id.as_str())),
+                user_id: r.user_id.clone(),
+                tool_name: r.tool_name.clone(),
+                agent_id: r.agent_id.clone(),
+                agent_scope: r.agent_scope.clone().unwrap_or_default(),
+                decision: r.decision.clone(),
+                decision_tone: if is_denied { "err" } else { "ok" },
+                is_denied,
+                reason: r.reason.clone(),
+                created_at: local_time(r.created_at),
+            }
         })
         .collect()
 }
@@ -200,7 +232,7 @@ pub(crate) async fn governance_policy_toggle(
         enabled = want_enabled,
         "governance policy toggled on disk; the running engine keeps its current chain until restart"
     );
-    Ok(Redirect::to(&format!("/admin/governance/{policy_id}")).into_response())
+    Ok(Redirect::to(&format!("/admin/governance/policies/{policy_id}")).into_response())
 }
 
 fn update_enabled_in_yaml(policy_id: &str, enabled: bool) -> Result<(), AdminError> {

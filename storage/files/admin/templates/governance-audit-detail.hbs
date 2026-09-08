@@ -1,23 +1,19 @@
 {{#> layout title=title page=page}}
     {{#*inline "content"}}
-    <a href="{{back_url}}" class="back-link">&larr; All decisions</a>
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    <a href="{{back_url}}" class="sp-back-link">&larr; Back to the request log</a>
 
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="/admin/entities/requests">Requests</a>
-        <span class="breadcrumbs__sep" aria-hidden="true">›</span>
-        <span aria-current="page">Request audit</span>
-    </nav>
     {{> components/page-header
         title=title
         subtitle="Single-request audit chain: identity, policy evaluations, model traffic, and linked trace."}}
 
     {{#if banner}}
-    <section class="alert {{#if banner.is_denial}}alert--danger{{else}}alert--warning{{/if}}" role="alert">
-      <h2 class="alert__title">
+    <section class="sp-notice {{#if banner.is_denial}}sp-notice--err{{else}}sp-notice--warn{{/if}}" role="alert">
+      <h2 class="sp-notice__title">
         {{#if banner.is_denial}}Request denied by governance{{else}}Request {{banner.status}}{{/if}}
       </h2>
       {{#if banner.denial}}
-        <p><strong>Policy:</strong> <code class="code-inline">{{banner.denial.policy}}</code>
+        <p><strong>Policy:</strong> <code class="sp-code-inline">{{banner.denial.policy}}</code>
            {{#if banner.denial.tool_name}}· <strong>Tool:</strong> {{banner.denial.tool_name}}{{/if}}</p>
         <p><strong>Reason:</strong> {{banner.denial.reason}}</p>
       {{/if}}
@@ -28,169 +24,169 @@
     {{/if}}
 
     {{#if primary}}
-    <section class="trace-detail__summary" aria-label="Primary request">
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Request</span>
-        <code class="code-inline" title="{{primary.id}}">{{primary.request_id}}</code>
+    <section class="sp-trace-detail__summary" aria-label="Primary request">
+      <div class="sp-trace-detail__field">
+        <span class="sp-trace-detail__label">Request</span>
+        <code class="sp-code-inline" title="{{primary.id}}">{{primary.request_id}}</code>
       </div>
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Status</span>
-        <span{{#if primary.is_failed}} class="text-danger"{{/if}}>{{primary.status}}</span>
+      <div class="sp-trace-detail__field">
+        <span class="sp-trace-detail__label">Status</span>
+        <span{{#if primary.is_failed}} class="sp-u-text-danger"{{/if}}>{{primary.status}}</span>
       </div>
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Model</span>
+      <div class="sp-trace-detail__field">
+        <span class="sp-trace-detail__label">Model</span>
         <span>{{primary.provider}} · {{primary.model}}</span>
       </div>
       {{#if primary.latency_ms}}
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Latency</span>
+      <div class="sp-trace-detail__field">
+        <span class="sp-trace-detail__label">Latency</span>
         <span>{{primary.latency_ms}} ms</span>
       </div>
       {{/if}}
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Created</span>
+      <div class="sp-trace-detail__field">
+        <span class="sp-trace-detail__label">Created</span>
         <span>{{primary.created_at_local}}</span>
       </div>
     </section>
     {{/if}}
 
-    <section class="trace-detail__summary" aria-label="Request summary">
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">User</span>
-        <code class="code-inline" title="{{summary.user_id}}">{{summary.user_id}}</code>
+    <section class="sp-trace-detail__summary" aria-label="Request summary">
+      <div class="sp-trace-detail__field">
+        <span class="sp-trace-detail__label">User</span>
+        <code class="sp-code-inline" title="{{summary.user_id}}">{{summary.user_id}}</code>
       </div>
       {{#if summary.tenant_id}}
-        <div class="trace-detail__field">
-          <span class="trace-detail__label">Tenant</span>
+        <div class="sp-trace-detail__field">
+          <span class="sp-trace-detail__label">Tenant</span>
           <span>{{summary.tenant_id}}</span>
         </div>
       {{/if}}
       {{#if summary.agent_id}}
-        <div class="trace-detail__field">
-          <span class="trace-detail__label">Agent</span>
+        <div class="sp-trace-detail__field">
+          <span class="sp-trace-detail__label">Agent</span>
           <span>{{summary.agent_id}}{{#if summary.agent_scope}} <em>({{summary.agent_scope}})</em>{{/if}}</span>
         </div>
       {{/if}}
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Session</span>
-        <a href="{{summary.session_url}}"><code class="code-inline" title="{{summary.session_id}}">{{summary.session_id_short}}</code></a>
+      <div class="sp-trace-detail__field">
+        <span class="sp-trace-detail__label">Session</span>
+        <a href="{{summary.session_url}}"><code class="sp-code-inline" title="{{summary.session_id}}">{{summary.session_id_short}}</code></a>
       </div>
       {{#if summary.trace_url}}
-        <div class="trace-detail__field">
-          <span class="trace-detail__label">Trace</span>
+        <div class="sp-trace-detail__field">
+          <span class="sp-trace-detail__label">Trace</span>
           <a href="{{summary.trace_url}}">Open waterfall &rarr;</a>
         </div>
       {{/if}}
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Decisions</span>
+      <div class="sp-trace-detail__field">
+        <span class="sp-trace-detail__label">Decisions</span>
         <span>{{summary.decision_count}}</span>
       </div>
       {{#if summary.deny_count}}
-        <div class="trace-detail__field">
-          <span class="trace-detail__label">Denies</span>
-          <span class="text-danger">{{summary.deny_count}}</span>
+        <div class="sp-trace-detail__field">
+          <span class="sp-trace-detail__label">Denies</span>
+          <span class="sp-u-text-danger">{{summary.deny_count}}</span>
         </div>
       {{/if}}
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Tokens</span>
+      <div class="sp-trace-detail__field">
+        <span class="sp-trace-detail__label">Tokens</span>
         <span>{{summary.input_tokens}} in · {{summary.output_tokens}} out</span>
       </div>
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Cost</span>
+      <div class="sp-trace-detail__field">
+        <span class="sp-trace-detail__label">Cost</span>
         <span>${{summary.cost_usd}}</span>
       </div>
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Latency</span>
+      <div class="sp-trace-detail__field">
+        <span class="sp-trace-detail__label">Latency</span>
         <span>{{summary.latency_ms}} ms</span>
       </div>
     </section>
 
     <section aria-labelledby="policy-chain-title">
-      <div class="portfolio-section__header">
-        <h2 class="portfolio-section__title" id="policy-chain-title">Policy chain</h2>
+      <div class="sp-section__head">
+        <h2 class="sp-section__title" id="policy-chain-title">Policy chain</h2>
       </div>
       {{#if decisions}}
-        {{#> components/data-table}}
+        {{#> components/table}}
           <thead><tr>
             <th>Policy</th>
             <th>Tool</th>
-            <th class="col-status">Decision</th>
+            <th class="sp-col-status">Decision</th>
             <th>Reason</th>
-            <th class="col-date">When</th>
+            <th class="sp-col-date">When</th>
           </tr></thead>
           <tbody>
           {{#each decisions}}
             <tr>
-              <td><code class="code-inline">{{this.policy}}</code></td>
+              <td><code class="sp-code-inline">{{this.policy}}</code></td>
               <td>{{this.tool_name}}</td>
-              <td class="col-status">
-                {{#if (eq this.decision "deny")}}<span class="mcp-badge mcp-badge-danger">DENY</span>{{/if}}
-                {{#if (eq this.decision "allow")}}<span class="mcp-badge mcp-badge-success">ALLOW</span>{{/if}}
-                {{#if (eq this.decision "warn")}}<span class="mcp-badge mcp-badge-warning">WARN</span>{{/if}}
+              <td class="sp-col-status">
+                {{#if (eq this.decision "deny")}}<span class="sp-badge sp-badge--err">DENY</span>{{/if}}
+                {{#if (eq this.decision "allow")}}<span class="sp-badge sp-badge--ok">ALLOW</span>{{/if}}
+                {{#if (eq this.decision "warn")}}<span class="sp-badge sp-badge--warn">WARN</span>{{/if}}
               </td>
               <td>{{this.reason}}</td>
-              <td class="col-date">{{this.created_at}}</td>
+              <td class="sp-col-date">{{this.created_at}}</td>
             </tr>
           {{/each}}
           </tbody>
-        {{/components/data-table}}
+        {{/components/table}}
       {{else}}
-        <p class="empty-state">No policy decisions recorded for this session.</p>
+        <p class="sp-empty">No policy decisions recorded for this session.</p>
       {{/if}}
     </section>
 
     <section aria-labelledby="requests-title">
-      <div class="portfolio-section__header">
-        <h2 class="portfolio-section__title" id="requests-title">AI requests</h2>
+      <div class="sp-section__head">
+        <h2 class="sp-section__title" id="requests-title">AI requests</h2>
       </div>
       {{#if requests}}
-        {{#> components/data-table}}
+        {{#> components/table}}
           <thead><tr>
             <th>Request</th>
             <th>Provider</th>
             <th>Model</th>
-            <th class="col-status">Status</th>
-            <th class="col-num">Tokens</th>
-            <th class="col-num">Cost</th>
-            <th class="col-num">Latency</th>
-            <th class="col-actions"></th>
+            <th class="sp-col-status">Status</th>
+            <th class="sp-table__cell--num">Tokens</th>
+            <th class="sp-table__cell--num">Cost</th>
+            <th class="sp-table__cell--num">Latency</th>
+            <th class="sp-table__cell--actions"></th>
           </tr></thead>
           <tbody>
           {{#each requests}}
             <tr>
-              <td><code class="code-inline">{{this.request_id}}</code></td>
+              <td><code class="sp-code-inline">{{this.request_id}}</code></td>
               <td>{{this.provider}}</td>
               <td>{{this.model}}</td>
-              <td class="col-status">
-                {{#if (eq this.status "success")}}<span class="mcp-badge mcp-badge-success">OK</span>{{else}}<span class="mcp-badge mcp-badge-warning">{{this.status}}</span>{{/if}}
+              <td class="sp-col-status">
+                {{#if (eq this.status "success")}}<span class="sp-badge sp-badge--ok">OK</span>{{else}}<span class="sp-badge sp-badge--warn">{{this.status}}</span>{{/if}}
               </td>
-              <td class="col-num">{{this.input_tokens}} / {{this.output_tokens}}</td>
-              <td class="col-num">${{this.cost_microdollars}} µ</td>
-              <td class="col-num">{{this.latency_ms}} ms</td>
-              <td class="col-actions">
-                <button type="button" class="btn btn-sm btn-outline" data-chain-id="{{this.id}}">Chain</button>
+              <td class="sp-table__cell--num">{{this.input_tokens}} / {{this.output_tokens}}</td>
+              <td class="sp-table__cell--num">${{this.cost_microdollars}} µ</td>
+              <td class="sp-table__cell--num">{{this.latency_ms}} ms</td>
+              <td class="sp-table__cell--actions">
+                <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-chain-id="{{this.id}}">Chain</button>
               </td>
             </tr>
           {{/each}}
           </tbody>
-        {{/components/data-table}}
+        {{/components/table}}
       {{else}}
-        <p class="empty-state">No model traffic recorded for this session.</p>
+        <p class="sp-empty">No model traffic recorded for this session.</p>
       {{/if}}
     </section>
 
     {{#if events}}
     <section aria-labelledby="events-title">
-      <div class="portfolio-section__header">
-        <h2 class="portfolio-section__title" id="events-title">Plugin events</h2>
+      <div class="sp-section__head">
+        <h2 class="sp-section__title" id="events-title">Plugin events</h2>
       </div>
-      {{#> components/data-table}}
+      {{#> components/table}}
         <thead><tr>
           <th>Type</th>
           <th>Tool</th>
           <th>Plugin</th>
           <th>Description</th>
-          <th class="col-date">When</th>
+          <th class="sp-col-date">When</th>
         </tr></thead>
         <tbody>
         {{#each events}}
@@ -199,22 +195,84 @@
             <td>{{this.tool_name}}</td>
             <td>{{this.plugin_id}}</td>
             <td>{{this.description}}</td>
-            <td class="col-date">{{this.created_at}}</td>
+            <td class="sp-col-date">{{this.created_at}}</td>
           </tr>
         {{/each}}
         </tbody>
-      {{/components/data-table}}
+      {{/components/table}}
     </section>
     {{/if}}
 
+    <section aria-label="Safety findings">
+      {{> components/section title="Safety findings" count=evidence.finding_count
+          note="The gateway's scanners run on both directions. Every finding is audited; only some categories block."}}
+      {{#if evidence.has_findings}}
+        {{#> components/table caption="Safety scanner findings for this request"}}
+          <thead><tr>
+            <th class="sp-col-status">Outcome</th>
+            <th>Category</th>
+            <th>Scanner</th>
+            <th>Phase</th>
+            <th>Severity</th>
+            <th>Excerpt</th>
+            <th class="sp-col-date">When</th>
+          </tr></thead>
+          <tbody>
+          {{#each evidence.findings}}
+            <tr>
+              <td class="sp-col-status">{{> components/badge tone=this.tone text=this.outcome}}</td>
+              <td>{{this.category}}</td>
+              <td><code class="sp-code-inline">{{this.scanner}}</code></td>
+              <td>{{this.phase}}</td>
+              <td>{{this.severity}}</td>
+              <td class="sp-table__cell--muted">{{this.excerpt}}</td>
+              <td class="sp-col-date">{{this.created_at}}</td>
+            </tr>
+          {{/each}}
+          </tbody>
+        {{/components/table}}
+      {{else}}
+        {{> components/empty-state message="No scanner findings recorded for this request."}}
+      {{/if}}
+    </section>
+
+    <section aria-label="Tool calls">
+      {{> components/section title="Tool calls" count=evidence.tool_call_count
+          note="What the model asked to run, in the order it asked."}}
+      {{#if evidence.has_tool_calls}}
+        {{#> components/table caption="Tool calls issued by this request"}}
+          <thead><tr>
+            <th class="sp-table__cell--num">#</th>
+            <th>Tool</th>
+            <th>MCP execution</th>
+            <th>Result</th>
+            <th class="sp-col-date">When</th>
+          </tr></thead>
+          <tbody>
+          {{#each evidence.tool_calls}}
+            <tr>
+              <td class="sp-table__cell--num">{{this.sequence_number}}</td>
+              <td><code class="sp-code-inline">{{this.tool_name}}</code></td>
+              <td class="sp-u-mono">{{#if this.mcp_execution_id}}{{this.mcp_execution_id}}{{else}}&mdash;{{/if}}</td>
+              <td>{{this.result_label}}</td>
+              <td class="sp-col-date">{{this.created_at}}</td>
+            </tr>
+          {{/each}}
+          </tbody>
+        {{/components/table}}
+      {{else}}
+        {{> components/empty-state message="This request issued no tool calls."}}
+      {{/if}}
+    </section>
+
     {{#if transcript}}
     <section aria-labelledby="transcript-title">
-      <div class="portfolio-section__header">
-        <h2 class="portfolio-section__title" id="transcript-title">Transcript</h2>
+      <div class="sp-section__head">
+        <h2 class="sp-section__title" id="transcript-title">Transcript</h2>
       </div>
-      <details class="code-collapsible">
+      <details class="sp-code-collapsible">
         <summary>Show transcript ({{transcript.entries_counted}} entries)</summary>
-        <pre class="code-block"><code>{{transcript.transcript}}</code></pre>
+        <pre class="sp-code-block"><code>{{transcript.transcript}}</code></pre>
       </details>
     </section>
     {{/if}}

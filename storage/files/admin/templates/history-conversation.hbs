@@ -1,0 +1,45 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    <a href="/admin/history" class="sp-back-link">&larr; My Conversations</a>
+
+    <nav class="sp-breadcrumbs" aria-label="Breadcrumb">
+        <a href="/admin/history">My Conversations</a>
+        <span class="sp-breadcrumbs__sep" aria-hidden="true">›</span>
+        <span aria-current="page">{{title}}</span>
+    </nav>
+    {{#> components/page-header title=title}}
+      {{#*inline "header_meta"}}
+        <span class="sp-conversation__facts">
+          {{#if timeline}}<span>{{timeline}}</span>{{/if}}
+          {{#each stats.models}}
+          <span class="sp-badge sp-badge--muted sp-badge--nodot sp-u-mono">{{this}}</span>
+          {{/each}}
+          {{#if status_badge}}
+          {{> components/badge tone=status_badge.tone text=status_badge.text}}
+          {{/if}}
+          {{#if admin_url}}
+          <span class="sp-conversation__facts-sep" aria-hidden="true">·</span>
+          <a href="{{admin_url}}">Open in admin context view</a>
+          {{/if}}
+        </span>
+      {{/inline}}
+    {{/components/page-header}}
+
+    <section class="sp-kpi-grid" aria-label="Conversation stats">
+      {{> components/kpi label="Turns" value=stats.turn_count}}
+      {{> components/kpi label="Tool calls" value=stats.tool_call_count}}
+      {{> components/kpi label="Tokens" value=stats.tokens_display note=stats.tokens_note}}
+      {{> components/kpi label="Cost" value=stats.cost_display}}
+      {{#if stats.error_count}}
+      {{> components/kpi label="Errors" value=stats.error_count tone="err"}}
+      {{else}}
+      {{> components/kpi label="Errors" value=stats.error_count}}
+      {{/if}}
+      {{> components/kpi label="Side calls" value=stats.side_call_count note=stats.side_call_cost_display href="#side-calls"}}
+    </section>
+
+    {{> components/conversation conversation}}
+    {{/inline}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

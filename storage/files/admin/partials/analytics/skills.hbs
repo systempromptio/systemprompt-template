@@ -1,0 +1,82 @@
+{{!--
+  Skills tab. Cost is measured or blank: a slash invocation sends no tool call,
+  so nothing can price it, and the unattributed column states how many.
+--}}
+<section aria-label="Skill adoption">
+    {{> analytics/kpi-row tiles=skills.kpis}}
+
+    {{> components/notice tone="info" title="How cost is measured"
+        message=skills.measurement_note}}
+
+    {{#> components/section title="Skills" count=skills.skill_count}}
+      {{#*inline "section_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/skills">Skill catalog</a>
+      {{/inline}}
+    {{/components/section}}
+
+    {{#if skills.has_rows}}
+    {{#> components/table caption="Skill invocations, reach, measured cost and rating"
+         pagination=skills.pagination}}
+        <thead><tr>
+            <th scope="col">Skill</th>
+            <th scope="col" class="sp-table__cell--num" aria-sort="descending">Invocations</th>
+            <th scope="col" class="sp-table__cell--spark">Share</th>
+            <th scope="col" class="sp-table__cell--num" title="Typed as a /plugin:skill command">Slash</th>
+            <th scope="col" class="sp-table__cell--num" title="Dispatched by the model as a Skill tool call">Tool</th>
+            <th scope="col" class="sp-table__cell--num">Users</th>
+            <th scope="col" class="sp-table__cell--num">Sessions</th>
+            <th scope="col" class="sp-table__cell--num" title="Measured through a gateway request; blank where none exists">Cost</th>
+            <th scope="col" class="sp-table__cell--num" title="Invocations with no gateway request to price">Unattributed</th>
+            <th scope="col" class="sp-table__cell--num">Rating</th>
+        </tr></thead>
+        <tbody>
+        {{#each skills.rows}}
+        <tr>
+            <td class="sp-table__cell--mono sp-table__cell--primary sp-p-analytics__name">
+                <a href="{{this.drill_url}}"
+                   title="{{this.skill}}">{{this.name_display}}</a>
+            </td>
+            <td class="sp-table__cell--num sp-u-num">{{this.invocations}}</td>
+            <td class="sp-table__cell--spark"><span class="sp-p-analytics__bar" style="--v:{{this.share_pct}}%"></span></td>
+            <td class="sp-table__cell--num sp-u-num">{{this.slash_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.tool_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.users}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.sessions}}</td>
+            <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+            <td class="sp-table__cell--num sp-u-num sp-table__cell--muted">{{this.unattributed_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.rating_display}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No skill invocations"
+        message="Nobody ran a skill in this window. Widen the time range or clear the scope."}}
+    {{/if}}
+
+    {{#> components/section title="Skill by model" count=skills.by_model_count
+        note="Only the tool-dispatched arm carries a model, so this table is empty on an instance whose clients only type slash commands."}}{{/components/section}}
+    {{#if skills.has_by_model}}
+    {{#> components/table caption="Which model served each skill's measured work"}}
+        <thead><tr>
+            <th scope="col">Skill</th>
+            <th scope="col">Model</th>
+            <th scope="col" class="sp-table__cell--num" aria-sort="descending">Requests</th>
+            <th scope="col" class="sp-table__cell--num">Cost</th>
+        </tr></thead>
+        <tbody>
+        {{#each skills.by_model}}
+        <tr>
+            <td class="sp-table__cell--mono">{{this.skill}}</td>
+            <td class="sp-table__cell--mono"><a href="{{this.drill_url}}">{{this.model}}</a></td>
+            <td class="sp-table__cell--num sp-u-num">{{this.requests}}</td>
+            <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state
+        message="No skill invocation in this window carries a gateway request that names a model."}}
+    {{/if}}
+</section>

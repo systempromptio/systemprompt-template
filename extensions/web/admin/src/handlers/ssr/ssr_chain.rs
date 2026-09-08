@@ -22,7 +22,7 @@ pub(crate) async fn chain_envelope(
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
 ) -> AdminResult<Response> {
-    if !user_ctx.is_admin {
+    if !crate::repositories::analytics::conversations::has_full_history_view(&user_ctx) {
         return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
 

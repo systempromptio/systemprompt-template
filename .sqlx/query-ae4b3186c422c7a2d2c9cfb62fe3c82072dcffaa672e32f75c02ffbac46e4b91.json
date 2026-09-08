@@ -1,0 +1,154 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT f.id, f.created_at, f.category, f.scanner, f.severity, f.phase,\n                  f.blocked, f.excerpt, f.ai_request_id,\n                  r.user_id AS \"user_id: UserId\", r.model\n           FROM ai_safety_findings f\n           LEFT JOIN ai_requests r ON r.id = f.ai_request_id\n           WHERE f.created_at >= $1 AND f.created_at < $2\n             AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))\n             AND ($4::TEXT IS NULL OR f.category = $4)\n             AND ($5::BOOLEAN IS NULL OR f.blocked = $5)\n           ORDER BY f.created_at DESC, f.id\n           LIMIT $6 OFFSET $7",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "category",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "category"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "scanner",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "scanner"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "severity",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "severity"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "phase",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "phase"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "blocked",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "blocked"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "excerpt",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "excerpt"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "ai_request_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "ai_request_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "user_id: UserId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "model"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "ae4b3186c422c7a2d2c9cfb62fe3c82072dcffaa672e32f75c02ffbac46e4b91"
+}

@@ -41,13 +41,13 @@ pub(super) struct TraceRow {
     total_tokens: i64,
     tokens_display: String,
     tokens_split_display: String,
-    activity_display: String,
-    governance_display: String,
+    spans_breakdown: String,
     cost_display: String,
     total_cost_microdollars: i64,
     cache_hit_any: bool,
     top_tool: Option<String>,
     has_error: bool,
+    error_count: i64,
     has_deny: bool,
     detail_url: String,
 }
@@ -84,13 +84,13 @@ pub(super) fn trace_to_json(t: &TraceSummary) -> TraceRow {
         total_tokens: t.total_tokens,
         tokens_display: format_token_total(t.total_tokens),
         tokens_split_display: format_token_split(t.total_tokens, t.input_tokens, t.output_tokens),
-        activity_display: format_requests(t.request_count),
-        governance_display: format_governance(t.governance_count, t.tool_call_count),
+        spans_breakdown: format_spans_breakdown(t),
         cost_display: format_cost(t.total_cost_microdollars),
         total_cost_microdollars: t.total_cost_microdollars,
         cache_hit_any: t.cache_hit_any,
         top_tool: t.top_tool.clone(),
         has_error: t.has_error,
+        error_count: t.error_count,
         has_deny: t.has_deny,
         detail_url: format!("{BASE_URL}/{}", urlencode(t.session_id.as_str())),
     }
@@ -113,31 +113,30 @@ fn short_model(model: &str) -> String {
     ellipsize(trimmed, 22)
 }
 
-fn format_requests(requests: i64) -> String {
-    match requests {
-        0 => "no requests".to_owned(),
-        1 => "1 req".to_owned(),
-        n => format!("{n} reqs"),
-    }
-}
-
-fn format_governance(governance: i64, tools: i64) -> String {
-    let mut parts = Vec::new();
-    if governance > 0 {
-        parts.push(format!("{governance} gov"));
-    }
-    if tools > 0 {
-        parts.push(format!("{tools} tool"));
-    }
-    if parts.is_empty() {
-        return String::new();
-    }
-    parts.join(" · ")
-}
-
 fn format_token_split(total: i64, input: i64, output: i64) -> String {
     if total <= 0 {
         return String::new();
     }
     format!("{} in / {} out", short_num(input), short_num(output))
+}
+
+// Why: the trace's size is one column now, so the split it used to spend three
+// more columns on lives on the cell's title instead. Naming each part keeps the
+// number honest: a trace of forty spans that issued two requests is a different
+// thing from one that issued forty.
+fn format_spans_breakdown(t: &TraceSummary) -> String {
+    let mut parts = Vec::new();
+    if t.request_count > 0 {
+        parts.push(format!("{} request(s)", t.request_count));
+    }
+    if t.governance_count > 0 {
+        parts.push(format!("{} governance decision(s)", t.governance_count));
+    }
+    if t.tool_call_count > 0 {
+        parts.push(format!("{} tool call(s)", t.tool_call_count));
+    }
+    if parts.is_empty() {
+        return "no spans".to_owned();
+    }
+    parts.join(" · ")
 }

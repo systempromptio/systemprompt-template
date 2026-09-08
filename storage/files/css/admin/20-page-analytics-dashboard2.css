@@ -1,0 +1,69 @@
+@layer components {
+
+.sp-pie-chart__value {
+    grid-area: value;
+    text-align: right;
+    white-space: nowrap;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Index order mirrors CHART_COLOR_TOKENS in the admin line-chart module so
+   a model keeps one colour across the disc, the bars and both legends. */
+.sp-pie-chart__swatch--1 { background: var(--sp-chart-purple); }
+.sp-pie-chart__swatch--2 { background: var(--sp-chart-blue); }
+.sp-pie-chart__swatch--3 { background: var(--sp-chart-green); }
+.sp-pie-chart__swatch--4 { background: var(--sp-chart-amber); }
+.sp-pie-chart__swatch--5 { background: var(--sp-chart-red); }
+.sp-pie-chart__swatch--6 { background: var(--sp-chart-cyan); }
+.sp-pie-chart__swatch--7 { background: var(--sp-chart-indigo); }
+
+.sp-svgchart__legend {
+    flex: 0 0 auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: var(--sp-space-1) var(--sp-space-4);
+}
+
+@media (max-width: 64rem) {
+    .sp-analytics-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.sp-code-frames {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--sp-space-4);
+    margin-block: var(--sp-space-4);
+}
+
+.sp-code-frame {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+    padding: var(--sp-space-5);
+}
+
+.sp-code-frame__title {
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+}
+
+.sp-code-frame__value {
+    font-size: var(--sp-text-xl);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--sp-text-primary);
+}
+
+.sp-code-frame__caption {
+    margin: 0;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+}

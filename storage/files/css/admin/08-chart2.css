@@ -1,0 +1,162 @@
+
+
+@layer components {
+
+.sp-timeseries__plot {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--sp-space-3);
+    flex: 1;
+    min-height: 150px;
+}
+
+.sp-timeseries__y-axis {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.sp-timeseries__bars {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--sp-space-05);
+    border-bottom: 1px solid var(--sp-border-default);
+    background-image: linear-gradient(
+        transparent 1px 100%
+    );
+    background-size: 100% 50%;
+    background-repeat: repeat-y;
+}
+
+.sp-timeseries__bar {
+    flex: 1 1 0;
+    min-width: 0;
+    height: var(--v, 0%);
+    border-radius: var(--sp-radius-sm) var(--sp-radius-sm) 0 0;
+    background: var(--sp-chart-blue);
+    transition: filter var(--sp-duration-fast);
+}
+
+.sp-timeseries[data-tone="success"] .sp-timeseries__bar {
+    background: var(--sp-chart-green);
+}
+
+.sp-timeseries__bar:hover {
+    filter: brightness(1.12);
+}
+
+.sp-timeseries__x-axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-chart-caption {
+    margin: 0;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.sp-waterfall {
+    margin: var(--sp-space-6) 0 0;
+}
+
+.sp-waterfall__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sp-waterfall__legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.sp-waterfall__swatch {
+    display: inline-block;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: var(--sp-radius-sm);
+    background: var(--sp-warm-500);
+}
+
+.sp-waterfall__swatch--gateway    { background: var(--sp-chart-blue); }
+
+.sp-waterfall__swatch--governance { background: var(--sp-chart-amber); }
+
+.sp-waterfall__swatch--tool       { background: var(--sp-chart-green); }
+
+.sp-waterfall__swatch--model      { background: var(--sp-chart-purple); }
+
+.sp-waterfall__swatch--spawn      { background: var(--sp-chart-indigo); }
+
+.sp-waterfall__root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+    margin-top: var(--sp-space-4);
+}
+
+.sp-waterfall__row {
+    display: grid;
+    grid-template-columns: minmax(8rem, 14rem) 1fr auto;
+    align-items: center;
+    gap: var(--sp-space-3);
+    min-height: 1.5rem;
+}
+
+.sp-waterfall__name {
+    font-size: var(--sp-text-xs);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sp-waterfall__track {
+    position: relative;
+    height: 0.75rem;
+    background: color-mix(in oklch, var(--sp-warm-900) 5%, transparent);
+    border-radius: var(--sp-radius-sm);
+}
+
+.sp-waterfall__bar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--start, 0%);
+    width: var(--w, 0.5%);
+    min-width: 2px;
+    border-radius: var(--sp-radius-sm);
+    background: var(--sp-warm-500);
+}
+
+}
+
+@layer components {
+
+.sp-waterfall__bar--tool       { background: var(--sp-chart-green); }
+
+}
+
+@layer components {
+
+.sp-waterfall__dur {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+}

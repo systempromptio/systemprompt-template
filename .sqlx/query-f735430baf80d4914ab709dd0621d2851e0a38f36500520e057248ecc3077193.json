@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO knowledge_source_text(doc_id,body,content_hash) VALUES($1,$2,$3) ON CONFLICT(doc_id) DO UPDATE SET body=EXCLUDED.body,content_hash=EXCLUDED.content_hash",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f735430baf80d4914ab709dd0621d2851e0a38f36500520e057248ecc3077193"
+}

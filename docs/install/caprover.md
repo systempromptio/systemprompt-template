@@ -1,5 +1,7 @@
 # Deploy the gateway on CapRover
 
+Set `ADMIN_EMAIL` to an email address you control before first boot, alongside at least one AI provider key. The gateway requires this administrator identity.
+
 Deploys the `systemprompt-gateway` server on [CapRover](https://caprover.com) as a one-click app (gateway + bundled Postgres from the GHCR image).
 
 ## Install

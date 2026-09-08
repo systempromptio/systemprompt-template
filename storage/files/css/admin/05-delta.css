@@ -1,0 +1,26 @@
+@layer components {
+
+.sp-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    font-variant-numeric: tabular-nums;
+    color: var(--sp-text-tertiary);
+}
+
+/* The glyph carries the direction as well as the colour: a red number and a
+   green number are the same number to a reader who cannot separate the two. */
+.sp-delta::before { content: "→"; }
+.sp-delta--up::before { content: "↑"; }
+.sp-delta--down::before { content: "↓"; }
+
+.sp-delta--up { color: var(--sp-success-strong); }
+.sp-delta--down { color: var(--sp-danger-strong); }
+.sp-delta--up-bad { color: var(--sp-danger-strong); }
+.sp-delta--up-bad::before { content: "↑"; }
+.sp-delta--down-good { color: var(--sp-success-strong); }
+.sp-delta--down-good::before { content: "↓"; }
+
+}

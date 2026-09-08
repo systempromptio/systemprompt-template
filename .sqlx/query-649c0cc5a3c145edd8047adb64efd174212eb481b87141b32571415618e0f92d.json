@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT to_jsonb(j) || CASE WHEN status='running' AND started_at < NOW()-INTERVAL '16 minutes'\n            THEN jsonb_build_object('status','failed','error','Validation worker expired; retry validation')\n            ELSE '{}'::jsonb END AS \"job!: Value\"\n            FROM requirements_validation_jobs j WHERE workflow_id=$1 ORDER BY started_at DESC LIMIT 20",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "job!: Value",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "649c0cc5a3c145edd8047adb64efd174212eb481b87141b32571415618e0f92d"
+}

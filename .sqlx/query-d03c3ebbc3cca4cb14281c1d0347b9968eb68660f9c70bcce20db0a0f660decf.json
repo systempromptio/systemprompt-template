@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_documents SET title=$2,uri=$3,mtime=$4 WHERE doc_id=$1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d03c3ebbc3cca4cb14281c1d0347b9968eb68660f9c70bcce20db0a0f660decf"
+}

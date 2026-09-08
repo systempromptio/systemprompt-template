@@ -1,8 +1,8 @@
-//! `/admin/entities/contexts/{context_id}` — single-context detail page.
+//! `/admin/contexts/{context_id}` — the conversation reader.
 //!
-//! Renders header, KPIs, the chronological conversation transcript (every
-//! user/assistant message + tool call interleaved by request and sequence),
-//! and the request rollup. Mirrors `core contexts show` plus message detail.
+//! Renders the title bar, stat strip and one of three tabs (`?tab=`): the
+//! turn-by-turn conversation, the request rollup with each request's kind,
+//! and what the session touched.
 
 mod context;
 mod data;
@@ -10,8 +10,9 @@ mod data;
 use crate::error::AdminError;
 use std::sync::Arc;
 
-use axum::extract::{Extension, Path, State};
+use axum::extract::{Extension, Path, Query, State};
 use axum::response::Response;
+use serde::Deserialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::ContextId;
 
@@ -23,17 +24,26 @@ use crate::repositories::analytics::context_detail::{
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
-use data::{build_detail_data, default_kpis};
+use data::{DetailInputs, build_detail_data, default_kpis, resolve_tab};
 
+#[derive(Debug, Deserialize)]
+pub(crate) struct ContextTabQuery {
+    tab: Option<String>,
+}
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "axum handler: every argument is an extractor"
+)]
 pub(crate) async fn context_detail_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Path(context_id): Path<String>,
+    Query(query): Query<ContextTabQuery>,
 ) -> AdminHtmlResult<Response> {
-    if !user_ctx.is_admin {
+    if !crate::repositories::analytics::conversations::has_full_history_view(&user_ctx) {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
@@ -41,14 +51,14 @@ pub(crate) async fn context_detail_page(
     // segment comes straight off the URL.
     let Ok(context_id) = ContextId::try_new(context_id.trim()) else {
         return Err(AdminError::NotFound(
-            "No context, AI request, or message rows match that context id.".to_owned(),
+            "No conversation, AI request, or message rows match that context id.".to_owned(),
         )
         .into());
     };
 
     let Some(header) = find_context_header(&pool, &context_id).await? else {
         return Err(AdminError::NotFound(
-            "No context, AI request, or message rows match that context id.".to_owned(),
+            "No conversation, AI request, or message rows match that context id.".to_owned(),
         )
         .into());
     };
@@ -80,7 +90,34 @@ pub(crate) async fn context_detail_page(
     // degradation.
     let tool_calls = tool_calls_res?;
 
-    let data = build_detail_data(&header, &kpis, &requests, &messages, &tool_calls);
+    // Why: only a context that belongs to a session has entity links; a
+    // gateway-only context has no hook events, so the panel is legitimately
+    // empty rather than missing.
+    let entity_links = match header.session_id.as_ref() {
+        Some(session_id) => {
+            crate::repositories::dashboard::conversation_analytics::list_session_entity_links(
+                &pool, session_id,
+            )
+            .await
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "list_session_entity_links failed");
+                Vec::new()
+            })
+        },
+        None => Vec::new(),
+    };
+
+    let data = build_detail_data(
+        &header,
+        &DetailInputs {
+            kpis: &kpis,
+            requests: &requests,
+            messages: &messages,
+            tool_calls: &tool_calls,
+            entity_links: &entity_links,
+            active_tab: resolve_tab(query.tab.as_deref()),
+        },
+    );
 
     Ok(super::render_typed_page(
         &engine,

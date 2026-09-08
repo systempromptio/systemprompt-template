@@ -1,21 +1,52 @@
-//! Typed template-context structs for the context-detail page
+//! Typed template-context structs for the conversation reader
 //! (`context-detail.hbs`).
 
 use serde::Serialize;
+
+pub(super) use crate::handlers::ssr::types::{BreadcrumbView, TabLinkView};
 use systemprompt::identifiers::{AiRequestId, ContextId, SessionId, TraceId, UserId};
+
+pub(super) use crate::handlers::ssr::conversation_header::{
+    ConversationStatsView, StatusBadgeView,
+};
+pub(super) use crate::handlers::ssr::transcript_view::ConversationView;
 
 #[derive(Debug, Serialize)]
 pub(super) struct ContextDetailPageContext {
     pub(super) page: &'static str,
     pub(super) title: String,
     pub(super) header: HeaderView,
-    pub(super) kpis: KpisView,
-    pub(super) transcript: Vec<TranscriptEntryView>,
-    pub(super) has_transcript: bool,
+    pub(super) stats: ConversationStatsView,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) status_badge: Option<StatusBadgeView>,
+    pub(super) tabs: Vec<TabLinkView>,
+    pub(super) show_conversation: bool,
+    pub(super) show_requests: bool,
+    pub(super) show_touched: bool,
+    pub(super) conversation: ConversationView,
     pub(super) requests: Vec<ContextRequestRowView>,
     pub(super) has_requests: bool,
+    pub(super) request_count: usize,
     pub(super) back_url: String,
     pub(super) back_label: String,
+    pub(super) breadcrumbs: Vec<BreadcrumbView>,
+    // Why: what the session this context belongs to actually touched — the
+    // files, tools and repositories the hooks pipeline recorded. Empty for a
+    // context with no session, which is the gateway-only case.
+    pub(super) entity_links: Vec<EntityLinkView>,
+    pub(super) has_entity_links: bool,
+    pub(super) entity_link_count: usize,
+}
+
+#[derive(Debug, Serialize)]
+pub(super) struct EntityLinkView {
+    pub(super) entity_type: String,
+    pub(super) entity_name: String,
+    pub(super) usage_count: i32,
+    // Why: the width of the bar in the usage column, as a percentage of the
+    // most-used entity on this context — a table of bare counts hides which
+    // one dominated.
+    pub(super) share_pct: f64,
 }
 
 #[derive(Debug, Serialize)]
@@ -29,73 +60,16 @@ pub(super) struct HeaderView {
     pub(super) session_id: Option<SessionId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) session_url: Option<String>,
-    pub(super) name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) created_at: Option<String>,
+    pub(super) client_session_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) created_at_local: Option<String>,
+    pub(super) hooks_session_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) updated_at_local: Option<String>,
-}
-
-#[derive(Debug, Serialize)]
-pub(super) struct KpisView {
-    pub(super) request_count: i64,
-    pub(super) trace_count: i64,
-    pub(super) error_count: i64,
-    pub(super) total_input_tokens: i64,
-    pub(super) total_output_tokens: i64,
-    pub(super) total_tokens: i64,
-    pub(super) total_cost_microdollars: i64,
-    pub(super) total_cost_display: String,
+    pub(super) timeline: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) model: Option<String>,
+    pub(super) first_at: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) first_request_at_local: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) last_request_at_local: Option<String>,
-}
-
-#[derive(Debug, Serialize)]
-pub(super) struct TranscriptEntryView {
-    // Why: display DTO; request id carried as string from the transcript grouping key
-    pub(super) request_id: AiRequestId,
-    pub(super) request_id_short: String,
-    pub(super) request_url: String,
-    // Why: Telemetry for the request that carried this turn. `None` when the
-    // transcript row outlives its `ai_requests` row (retention trims the
-    // request rollup before the messages), so the turn still renders.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) meta: Option<TranscriptMetaView>,
-    pub(super) ts_local: String,
-    pub(super) ts_full: String,
-    pub(super) kind: &'static str,
-    pub(super) role: String,
-    pub(super) is_user: bool,
-    pub(super) is_assistant: bool,
-    pub(super) is_system: bool,
-    pub(super) is_tool: bool,
-    pub(super) content_preview: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) tool_name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) tool_input_pretty: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) tool_result_pretty: Option<String>,
-}
-
-// Why: The per-turn telemetry rail: how the turn was served and what it cost.
-// Cloned onto every turn of the same request, so all of a request's messages
-// state the same numbers rather than only the last one.
-#[derive(Debug, Clone, Serialize)]
-pub(super) struct TranscriptMetaView {
-    pub(super) model: String,
-    pub(super) status: String,
-    pub(super) is_error: bool,
-    pub(super) latency_display: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) token_display: Option<String>,
-    pub(super) cost_display: String,
+    pub(super) last_at: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -108,6 +82,9 @@ pub(super) struct ContextRequestRowView {
     pub(super) trace_id_short: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) trace_url: Option<String>,
+    pub(super) kind: String,
+    pub(super) kind_tone: &'static str,
+    pub(super) message_count: i64,
     pub(super) model: String,
     pub(super) status: String,
     pub(super) is_error: bool,

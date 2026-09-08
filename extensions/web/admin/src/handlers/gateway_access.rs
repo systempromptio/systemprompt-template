@@ -49,7 +49,7 @@ pub(crate) async fn search_users_handler(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<UserSearchQuery>,
 ) -> AdminResult<Response> {
-    let users = list_users(&pool).await?;
+    let users = list_users(&pool, &crate::repositories::scope::SubjectScope::All).await?;
     let q = query.q.unwrap_or_default().to_lowercase();
     let limit = query.limit.unwrap_or(10).min(50);
     let users: Vec<UserSearchEntry> = users

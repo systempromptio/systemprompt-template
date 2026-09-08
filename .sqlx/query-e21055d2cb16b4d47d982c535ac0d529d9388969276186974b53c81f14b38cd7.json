@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT COUNT(*)::bigint AS \"count!\" FROM users u\n        WHERE NOT ('anonymous' = ANY(u.roles)) AND u.email NOT LIKE '%@anonymous.local'\n          AND ($1::text[] IS NULL OR u.id = ANY($1))\n          AND ($2::text IS NULL OR $2 = ANY(u.roles))\n          AND ($3::text IS NULL OR position(lower($3) in lower(\n              COALESCE(u.display_name, u.full_name, u.name, '') || ' ' || COALESCE(u.email, '') || ' ' || u.id)) > 0)\n          AND CASE $4::text\n            WHEN 'unassigned' THEN NOT EXISTS (SELECT 1 FROM group_members gm WHERE gm.user_id = u.id)\n                OR EXISTS (SELECT 1 FROM group_members gm WHERE gm.user_id = u.id AND gm.group_id = 'unassigned')\n            WHEN 'no-role' THEN cardinality(array_remove(array_remove(u.roles, 'user'), 'anonymous')) = 0\n            WHEN 'inactive-30d' THEN\n                NOT EXISTS (SELECT 1 FROM ai_requests ar WHERE ar.user_id = u.id AND ar.created_at >= NOW() - INTERVAL '30 days')\n                AND NOT EXISTS (SELECT 1 FROM user_sessions us WHERE us.user_id = u.id AND us.last_activity_at >= NOW() - INTERVAL '30 days')\n                AND NOT EXISTS (SELECT 1 FROM user_activity ua WHERE ua.user_id = u.id AND ua.created_at >= NOW() - INTERVAL '30 days')\n            ELSE TRUE END\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e21055d2cb16b4d47d982c535ac0d529d9388969276186974b53c81f14b38cd7"
+}

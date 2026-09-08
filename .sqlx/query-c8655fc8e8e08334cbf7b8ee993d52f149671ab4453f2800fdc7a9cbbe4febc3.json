@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE services SET heartbeat_at = CURRENT_TIMESTAMP WHERE instance_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c8655fc8e8e08334cbf7b8ee993d52f149671ab4453f2800fdc7a9cbbe4febc3"
+}

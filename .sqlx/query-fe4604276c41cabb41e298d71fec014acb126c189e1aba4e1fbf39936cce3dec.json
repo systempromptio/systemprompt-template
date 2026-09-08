@@ -1,0 +1,33 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COUNT(*)::BIGINT AS \"requests!\",\n            COUNT(*) FILTER (WHERE EXISTS (\n                SELECT 1 FROM plugin_usage_events g\n                WHERE g.session_id = p.session_id\n                  AND g.event_type IN ('PostToolUse', 'PostToolUseFailure')\n                  AND g.tool_name IS NOT DISTINCT FROM p.tool_name\n                  AND g.created_at >= p.created_at\n                  AND (p.next_request_at IS NULL OR g.created_at < p.next_request_at)\n            ))::BIGINT AS \"granted!\"\n        FROM (\n            SELECT e.*,\n                   LEAD(e.created_at) OVER (\n                       PARTITION BY e.session_id, e.tool_name ORDER BY e.created_at\n                   ) AS next_request_at\n            FROM plugin_usage_events e\n            WHERE e.event_type = 'PermissionRequest'\n        ) p\n        WHERE p.created_at >= $1 AND p.created_at < $2\n          AND ($3::TEXT[] IS NULL OR p.user_id = ANY($3))\n          AND ($4::TEXT IS NULL OR p.user_id = $4)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "granted!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "fe4604276c41cabb41e298d71fec014acb126c189e1aba4e1fbf39936cce3dec"
+}

@@ -1,0 +1,148 @@
+@layer components {
+
+.sp-form-group {
+    margin-bottom: var(--sp-space-5);
+    border-radius: var(--sp-radius-sm);
+}
+
+.sp-form-group label {
+    display: block;
+    font-size: var(--sp-text-sm);
+    font-weight: 500;
+    color: var(--sp-text-secondary);
+    margin-bottom: var(--sp-space-1);
+}
+
+.sp-form-group input,
+.sp-form-group select,
+.sp-form-group textarea {
+    width: 100%;
+    background: var(--sp-bg-base);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-sm);
+    padding: var(--sp-space-2) var(--sp-space-3);
+    color: var(--sp-text-primary);
+    font-size: var(--sp-text-base);
+    font-family: inherit;
+    outline: none;
+    transition: border-color var(--sp-duration-fast), box-shadow var(--sp-duration-fast);
+    box-sizing: border-box;
+}
+
+.sp-form-group input:focus-visible,
+.sp-form-group select:focus-visible,
+.sp-form-group textarea:focus-visible {
+    border-color: var(--sp-accent);
+    outline: 2px solid var(--sp-accent-dim);
+    outline-offset: -1px;
+}
+
+.sp-form-group input::placeholder,
+.sp-form-group textarea::placeholder {
+    color: var(--sp-text-disabled);
+}
+
+.sp-form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.sp-form-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    margin-top: var(--sp-space-6);
+    padding-top: var(--sp-space-5);
+    border-top: 1px solid var(--sp-border-subtle);
+}
+
+.sp-btn[aria-busy="true"] {
+    position: relative;
+    color: transparent;
+    pointer-events: none;
+}
+
+.sp-btn[aria-busy="true"]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 1.125em;
+    height: 1.125em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: var(--sp-radius-full);
+    animation: spin 0.6s linear infinite;
+    color: var(--sp-text-on-accent);
+}
+
+.sp-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sp-field-input {
+    width: 100%;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    font-size: var(--sp-text-sm);
+    font-family: inherit;
+    color: var(--sp-text-primary);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+    transition: border-color var(--sp-duration-fast);
+}
+.sp-field-input:focus { outline: none; border-color: var(--sp-accent); box-shadow: 0 0 0 2px color-mix(in oklch, var(--sp-accent) 20%, transparent); }
+
+
+/* The field primitives every edit form is built from. They used to live on the
+   user-detail page under a page-scoped prefix, which left the same markup on
+   the gateway and access-control pages unstyled. */
+.sp-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+    min-width: 0;
+}
+
+.sp-form-field--inline {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--sp-space-2);
+    align-self: end;
+}
+
+.sp-form-field--readonly { color: var(--sp-text-tertiary); }
+
+.sp-form-label {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    color: var(--sp-text-secondary);
+}
+
+.sp-form-field input:not([type="checkbox"]):not([type="radio"]),
+.sp-form-field select,
+.sp-form-field textarea {
+    width: 100%;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-sm);
+    background: var(--sp-bg-surface);
+    color: var(--sp-text-primary);
+    font: inherit;
+    font-size: var(--sp-text-sm);
+    transition: border-color var(--sp-duration-fast);
+}
+
+.sp-form-field input:disabled,
+.sp-form-field select:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.sp-form-status {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-tertiary);
+}
+
+}

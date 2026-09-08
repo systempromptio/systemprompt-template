@@ -1,0 +1,125 @@
+@layer components {
+
+/* The device-link and device-code pages are the only console screens a user
+   meets outside the shell, so they borrow the sign-in page's light ground and
+   nothing else: one centred card, the wordmark at reading size, and a single
+   pair of actions. The card is width-capped here because these pages have no
+   sidebar to constrain it. */
+
+.sp-device-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: var(--sp-space-6);
+    background: linear-gradient(180deg, var(--sp-bg-canvas) 0%, var(--sp-bg-base) 100%);
+    color: var(--sp-text-primary);
+    font-family: var(--sp-font-body);
+}
+
+.sp-device-card {
+    width: 100%;
+    max-width: 30rem;
+    padding: var(--sp-space-6);
+}
+
+.sp-device-card__brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-space-4);
+    padding-bottom: var(--sp-space-4);
+    border-bottom: 1px solid var(--sp-border-subtle);
+    margin-bottom: var(--sp-space-5);
+}
+
+.sp-device-card__logo {
+    display: block;
+    width: auto;
+    height: 1.5rem;
+}
+
+.sp-device-card__eyebrow {
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.sp-device-card__title {
+    margin: 0 0 var(--sp-space-2);
+    font-size: var(--sp-text-xl);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.sp-device-card__lede {
+    margin: 0 0 var(--sp-space-5);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+    line-height: 1.55;
+}
+
+.sp-device-facts {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--sp-space-2) var(--sp-space-4);
+    margin: 0 0 var(--sp-space-5);
+    padding: var(--sp-space-4);
+    background: var(--sp-bg-surface-alt);
+    border-radius: var(--sp-corners-sm);
+    font-size: var(--sp-text-sm);
+}
+
+.sp-device-facts__key {
+    margin: 0;
+    color: var(--sp-text-tertiary);
+}
+
+.sp-device-facts__value {
+    margin: 0;
+    color: var(--sp-text-primary);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.sp-device-note {
+    margin: 0 0 var(--sp-space-5);
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    line-height: 1.6;
+}
+
+.sp-device-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-space-3);
+}
+
+.sp-device-actions__form {
+    display: block;
+    margin: 0;
+}
+
+.sp-device-actions .sp-btn {
+    width: 100%;
+}
+
+.sp-device-footnote {
+    margin: var(--sp-space-5) 0 0;
+    padding-top: var(--sp-space-4);
+    border-top: 1px solid var(--sp-border-subtle);
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    text-align: center;
+}
+
+@media (max-width: 30rem) {
+    .sp-device-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+}

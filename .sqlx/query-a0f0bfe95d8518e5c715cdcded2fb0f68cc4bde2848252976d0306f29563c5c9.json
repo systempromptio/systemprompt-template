@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM group_ad_mappings WHERE source = 'yaml'\n         AND (ad_group, group_id) NOT IN\n         (SELECT a, i FROM UNNEST($1::TEXT[], $2::TEXT[]) AS kept(a, i))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a0f0bfe95d8518e5c715cdcded2fb0f68cc4bde2848252976d0306f29563c5c9"
+}

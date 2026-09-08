@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE admin_usage_daily_rollups r\n        SET group_id = d.primary_group_id,\n            project_id = d.primary_project_id,\n            updated_at = NOW()\n        FROM user_scope_defaults d\n        WHERE d.user_id = r.user_id\n          AND r.date >= (NOW() AT TIME ZONE 'UTC')::DATE - ($1::INT)\n          AND (r.group_id IS DISTINCT FROM d.primary_group_id\n               OR r.project_id IS DISTINCT FROM d.primary_project_id)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "45a193f42af49c7b8a849ee473cf51ffa068ad741d5a8cc6196e4fb388672f06"
+}

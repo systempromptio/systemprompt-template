@@ -1,0 +1,41 @@
+
+
+@layer components {
+
+.sp-chain-drawer__raw {
+    padding: 1rem 1.25rem;
+}
+
+.sp-chain-drawer__raw summary {
+    cursor: pointer;
+    font-size: 0.8125rem;
+    color: var(--sp-text-tertiary);
+}
+
+.sp-chain-drawer__raw[open] summary {
+    color: var(--sp-text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.sp-chain-drawer__raw-tree {
+    margin-top: 0.5rem;
+    max-height: 320px;
+    overflow: auto;
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-sm);
+    padding: 0.5rem;
+    background: var(--sp-bg-tertiary);
+}
+
+@media (max-width: 720px) {
+    .sp-chain-drawer__panel {
+        width: 100vw;
+    }
+    .sp-chain-drawer__totals {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .sp-chain-drawer__stepper {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+}

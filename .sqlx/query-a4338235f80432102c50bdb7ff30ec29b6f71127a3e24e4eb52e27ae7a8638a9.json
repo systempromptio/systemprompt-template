@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COUNT(*) FILTER (WHERE r.latency_ms < $5)::BIGINT AS \"fast!\",\n            COUNT(*) FILTER (WHERE r.latency_ms >= $5)::BIGINT AS \"slow!\",\n            COUNT(*) FILTER (WHERE r.latency_ms IS NULL)::BIGINT AS \"untimed!\",\n            COALESCE(percentile_cont(0.5) WITHIN GROUP (ORDER BY r.latency_ms), 0)\n                AS \"p50!\",\n            COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY r.latency_ms), 0)\n                AS \"p95!\"\n        FROM ai_requests r\n        WHERE r.created_at >= $1 AND r.created_at < $2\n          AND NOT r.synthetic\n          AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))\n          AND ($4::TEXT IS NULL OR r.user_id = $4)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "fast!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "slow!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "untimed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "p50!",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "p95!",
+        "type_info": "Float8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "a4338235f80432102c50bdb7ff30ec29b6f71127a3e24e4eb52e27ae7a8638a9"
+}

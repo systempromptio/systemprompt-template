@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*)::BIGINT AS \"count!\"\n           FROM users u\n           WHERE NOT ('anonymous' = ANY(u.roles))\n             AND NOT EXISTS (\n                 SELECT 1 FROM user_scope_defaults d\n                 WHERE d.user_id = u.id AND d.primary_group_id IS NOT NULL)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "77666ded9bee6c6797b0b21b9a24f5cc4fe8aada1234e600ed4d8de7a5b9ad16"
+}

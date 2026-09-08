@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM project_ad_mappings WHERE project_id = $1 AND ad_group = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a048a42589fadbd7790b0232e481399ab72b6f84a6edd2f8c00bbe3ea655fd9a"
+}

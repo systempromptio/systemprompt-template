@@ -1,0 +1,33 @@
+@layer tokens {
+
+/* Every shadow is the same hue at a different opacity. A dark theme changes
+   --sp-shadow-color once rather than re-authoring eighteen shadow stacks. */
+
+:root {
+    --sp-shadow-color: var(--sp-primitive-brand-700);
+    --sp-shadow-a04: color-mix(in oklch, var(--sp-shadow-color) 4%, transparent);
+    --sp-shadow-a07: color-mix(in oklch, var(--sp-shadow-color) 7%, transparent);
+    --sp-shadow-a10: color-mix(in oklch, var(--sp-shadow-color) 10%, transparent);
+
+    --sp-shadow-xs: 0 1px 2px var(--sp-shadow-a04);
+    --sp-shadow-sm: 0 1px 3px var(--sp-shadow-a07), 0 1px 2px var(--sp-shadow-a04);
+    --sp-shadow-md: 0 4px 8px var(--sp-shadow-a07), 0 2px 4px var(--sp-shadow-a04);
+    --sp-shadow-lg: 0 10px 25px var(--sp-shadow-a10), 0 4px 10px var(--sp-shadow-a07);
+    --sp-shadow-xl: 0 20px 40px var(--sp-shadow-a10), 0 8px 16px var(--sp-shadow-a07);
+    --sp-shadow-inset-sm: inset 0 1px 2px var(--sp-shadow-a04);
+    --sp-shadow-card: 0 1px 2px var(--sp-shadow-a04), 0 0 0 1px var(--sp-shadow-a07);
+    --sp-shadow-card-hover: 0 1px 2px var(--sp-shadow-a07), 0 0 0 1px var(--sp-shadow-a10);
+    --sp-shadow-elevated: 0 4px 16px var(--sp-shadow-a10), 0 2px 6px var(--sp-shadow-a07), 0 0 1px var(--sp-shadow-a10);
+    --sp-shadow-float: 0 12px 40px var(--sp-shadow-a10), 0 4px 12px var(--sp-shadow-a07);
+    --sp-shadow-drawer-panel: -8px 0 32px -12px var(--sp-shadow-a10);
+    --sp-shadow-login-card: 0 8px 32px var(--sp-shadow-a10), 0 2px 8px var(--sp-shadow-a07);
+    --sp-text-shadow-badge: 0 1px 2px var(--sp-shadow-a10);
+    --sp-shadow-accent-sm: 0 2px 8px color-mix(in oklch, var(--sp-accent) 16%, transparent);
+    --sp-shadow-accent-md: 0 4px 16px color-mix(in oklch, var(--sp-accent) 20%, transparent);
+    --sp-shadow-inner-glow: none;
+    --sp-shadow-hero: var(--sp-shadow-card);
+    --sp-shadow-lift: 0 6px 20px var(--sp-shadow-a10), 0 2px 6px var(--sp-shadow-a07), 0 0 0 1px var(--sp-shadow-a04);
+    --sp-shadow-focus-inset: inset 2px 0 0 var(--sp-accent), 0 0 0 1px var(--sp-accent);
+}
+
+}

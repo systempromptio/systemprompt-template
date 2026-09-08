@@ -1,0 +1,12 @@
+@layer components {
+
+.sp-notice-region {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+    margin: var(--sp-space-3) 0;
+}
+
+.sp-notice-region:empty { display: none; }
+
+}

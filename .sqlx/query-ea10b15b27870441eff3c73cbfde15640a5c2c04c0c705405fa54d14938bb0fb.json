@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM user_rate_limit_buckets WHERE window_start < $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ea10b15b27870441eff3c73cbfde15640a5c2c04c0c705405fa54d14938bb0fb"
+}

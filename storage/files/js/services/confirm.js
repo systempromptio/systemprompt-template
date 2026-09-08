@@ -11,7 +11,7 @@ const getDialog = () => {
 };
 
 export const showConfirmDialog = async (title, message, confirmLabel, onConfirm, opts = {}) => {
-  const result = await getDialog().confirm(title, message, confirmLabel, { primary: opts.btnClass === 'btn-primary' });
+  const result = await getDialog().confirm(title, message, confirmLabel, { primary: opts.btnClass === 'sp-btn--primary' });
   if (result) onConfirm();
 };
 
@@ -22,7 +22,7 @@ export const showDeleteConfirmDialog = (title, itemId) => {
 };
 
 export const closeDeleteConfirm = () => {
-  if (dialogEl) dialogEl.removeAttribute('open');
+  if (dialogEl) dialogEl.removeAttribute('is-open');
 };
 
 export const showPromptDialog = async (title, message, defaultValue, onSubmit) => {

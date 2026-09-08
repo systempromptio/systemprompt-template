@@ -11,12 +11,13 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use systemprompt::identifiers::{AgentId, HookId, McpServerId};
-use systemprompt::marketplace::{EntryKeepSets, MarketplaceCandidate};
+use systemprompt::identifiers::{AgentId, HookId, MarketplaceId, McpServerId};
+use systemprompt::marketplace::{EntryKeepSets, MarketplaceCandidate, MarketplaceMembership};
 use systemprompt::models::bridge::ids::{LibraryArtifactId, PluginId, SkillId};
 use systemprompt::models::bridge::manifest::{
     AgentEntry, ArtifactEntry, HookEntry, ManagedMcpServer, PluginEntry, SkillEntry,
 };
+use systemprompt::models::services::MarketplaceAccess;
 use systemprompt_security::authz::{EntityKind, EntityRef};
 use systemprompt_web_admin::authz::department::{department_dimension, department_rule_type};
 
@@ -152,6 +153,7 @@ fn keep_sets_shrink_every_list_to_what_survived() {
             agents: std::collections::HashSet::new(),
             hooks: keep(&["hook-a"], |s| HookId::new(s)),
             mcp_servers: keep(&["files"], |s| McpServerId::new(s)),
+            marketplaces: std::collections::HashSet::new(),
         },
     );
     assert_eq!(kept.plugins.len(), 1);
@@ -176,6 +178,7 @@ fn an_artifact_survives_only_while_one_of_its_owning_plugins_does() {
             agents: std::collections::HashSet::new(),
             hooks: std::collections::HashSet::new(),
             mcp_servers: std::collections::HashSet::new(),
+            marketplaces: std::collections::HashSet::new(),
         },
     );
     let ids: Vec<_> = kept.artifacts.iter().map(|a| a.id.to_string()).collect();
@@ -196,6 +199,7 @@ fn dropping_every_plugin_drops_every_artifact() {
             agents: std::collections::HashSet::new(),
             hooks: std::collections::HashSet::new(),
             mcp_servers: std::collections::HashSet::new(),
+            marketplaces: std::collections::HashSet::new(),
         },
     );
     assert!(kept.artifacts.is_empty());
@@ -216,6 +220,7 @@ fn an_unowned_artifact_is_dropped_rather_than_defaulting_to_visible() {
             agents: std::collections::HashSet::new(),
             hooks: std::collections::HashSet::new(),
             mcp_servers: std::collections::HashSet::new(),
+            marketplaces: std::collections::HashSet::new(),
         },
     );
     assert!(kept.artifacts.is_empty());
@@ -223,8 +228,12 @@ fn an_unowned_artifact_is_dropped_rather_than_defaulting_to_visible() {
 
 #[test]
 fn the_assembly_context_passes_through_untouched() {
-    let mut input = candidate();
-    input.marketplace_id = Some(systemprompt::identifiers::MarketplaceId::new("demo"));
+    let demo = MarketplaceId::new("demo");
+    let membership = MarketplaceMembership {
+        access: BTreeMap::from([(demo.clone(), MarketplaceAccess::default())]),
+        ..MarketplaceMembership::default()
+    };
+    let mut input = candidate().with_membership(membership);
     input.diagnostics.push("assembly warning".to_owned());
     let owners = input.artifact_owners.clone();
 
@@ -238,13 +247,11 @@ fn the_assembly_context_passes_through_untouched() {
             agents: std::collections::HashSet::new(),
             hooks: std::collections::HashSet::new(),
             mcp_servers: std::collections::HashSet::new(),
+            marketplaces: std::collections::HashSet::new(),
         },
     );
     assert_eq!(kept.artifact_owners, owners);
-    assert_eq!(
-        kept.marketplace_id.map(|id| id.to_string()),
-        Some("demo".to_owned())
-    );
+    assert!(kept.membership.access.contains_key(&demo));
     assert_eq!(kept.diagnostics, vec!["assembly warning".to_owned()]);
 }
 
@@ -262,6 +269,7 @@ fn keeping_everything_is_the_identity() {
             agents: keep(&["agent-a"], |s| AgentId::new(s)),
             hooks: keep(&["hook-a"], |s| HookId::new(s)),
             mcp_servers: keep(&["files", "systemprompt"], |s| McpServerId::new(s)),
+            marketplaces: std::collections::HashSet::new(),
         },
     );
     assert_eq!(kept.plugins.len(), 2);

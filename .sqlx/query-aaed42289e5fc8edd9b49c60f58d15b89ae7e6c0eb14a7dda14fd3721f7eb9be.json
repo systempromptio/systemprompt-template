@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT COALESCE(SUM(d.event_count), 0)::BIGINT AS \"count!\"\n        FROM plugin_usage_daily d\n        WHERE d.date >= ($1::TIMESTAMPTZ)::DATE AND d.date <= ($2::TIMESTAMPTZ)::DATE\n          AND d.event_type = 'PostToolUse'\n          AND d.tool_name IN ('Edit', 'Write', 'MultiEdit', 'NotebookEdit')\n          AND ($3::TEXT[] IS NULL OR d.user_id = ANY($3))\n          AND ($4::TEXT IS NULL OR d.user_id = $4)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "aaed42289e5fc8edd9b49c60f58d15b89ae7e6c0eb14a7dda14fd3721f7eb9be"
+}

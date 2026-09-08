@@ -1,153 +1,80 @@
-//! SSR for `/admin/access-control` — unified Access Control page.
+//! `/admin/access-control` — the rule ledger.
 //!
-//! Three-pane layout:
-//!   - Left: Departments tree (DB) with member chips.
-//!   - Center: department editor or user permission matrix (matrix loads via
-//!     JS).
-//!   - Toolbar: source-of-truth status + "Show as YAML" + filters.
+//! Every access-control rule on this instance, and whether the YAML in the
+//! source repository declares it. Editing lives with the subject: a group's
+//! band on its Access tab, a person's overrides on theirs. Reading here is
+//! the CONSOLE tier so a project manager can audit; the two dialogs that
+//! write (YAML export, new group) are gated on MANAGE.
 
-mod builders;
+mod data;
+pub(crate) mod rules;
+pub(crate) mod rules_controls;
+mod view;
 
-use crate::error::AdminError;
 use std::sync::Arc;
 
-use crate::error::AdminHtmlResult;
-use crate::repositories;
-use crate::repositories::users::access_tree::{AccessTreeUserRow, list_users_for_access_tree};
-use crate::templates::AdminTemplateEngine;
-use crate::types::departments::DEFAULT_DEPARTMENT;
-use crate::types::{MarketplaceContext, UserContext};
-use axum::extract::{Extension, State};
-use axum::response::Response;
-use builders::EntityCatalogue;
-use serde::Serialize;
+use axum::extract::{Extension, Query, State};
+use axum::response::{IntoResponse, Redirect, Response};
 use sqlx::PgPool;
 
+use crate::error::{AdminError, AdminHtmlResult};
+use crate::handlers::shared;
+use crate::handlers::ssr::types::BreadcrumbView;
+use crate::templates::AdminTemplateEngine;
+use crate::types::{MarketplaceContext, UserContext};
 
-#[derive(Debug, Serialize)]
-struct SerializedUser {
-    id: String,
-    email: String,
-    display_name: String,
-    roles: Vec<String>,
-    is_active: bool,
-}
-
-#[derive(Debug, Serialize)]
-struct DeptGroup {
-    name: String,
-    user_count: i64,
-    active_count: i64,
-    users: Vec<SerializedUser>,
-}
-
-#[derive(Debug, Serialize)]
-struct Stats {
-    department_count: usize,
-    user_count: usize,
-}
-
-#[derive(Debug, Serialize)]
-struct AccessControlPageContext {
-    page: &'static str,
-    title: &'static str,
-    known_roles: Vec<&'static str>,
-    departments: Vec<DeptGroup>,
-    department_names: Vec<String>,
-    entity_catalogue: EntityCatalogue,
-    stats: Stats,
-}
-
-async fn fetch_users_for_tree(pool: &PgPool) -> Vec<AccessTreeUserRow> {
-    list_users_for_access_tree(pool).await.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "Failed to fetch users for access-control tree");
-        Vec::new()
-    })
-}
+use rules_controls::RulesQuery;
+use view::AccessControlPageData;
 
 pub(crate) async fn access_control_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
+    Query(query): Query<RulesQuery>,
 ) -> AdminHtmlResult<Response> {
-    if !user_ctx.is_admin {
+    if !user_ctx.is_console {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
-
-    let services_path = super::get_services_path()?;
-
-    // Why: the `departments` table is the registry — it decides which
-    // departments exist. Membership only decides who is in one. Deriving the
-    // list from membership hid every department nobody had joined yet, which
-    // left the assign-department control with nothing to offer and made the
-    // department write path unreachable.
-    let department_names = repositories::departments::list_department_names(&pool)
-        .await
-        .inspect_err(|e| tracing::warn!(error = %e, "access-control: load departments failed"))
-        .unwrap_or_default();
-    let dept_stats = repositories::users::user_queries::list_department_stats(&pool)
-        .await
-        .unwrap_or_default();
-    let users = fetch_users_for_tree(&pool).await;
-    let known_roles = vec!["admin", "developer", "analyst", "viewer"];
-
-    let entity_catalogue = builders::build_entity_catalogue(&services_path);
-
-    let mut buckets: std::collections::BTreeMap<String, Vec<&AccessTreeUserRow>> =
-        std::collections::BTreeMap::new();
-    for u in &users {
-        let key = if u.department.is_empty() {
-            DEFAULT_DEPARTMENT.to_owned()
-        } else {
-            u.department.clone()
-        };
-        buckets.entry(key).or_default().push(u);
+    if let Some(user) = query.user.as_deref().filter(|u| !u.is_empty()) {
+        let target = format!("/admin/users/{}?tab=access", urlencoding::encode(user));
+        return Ok(Redirect::permanent(&target).into_response());
     }
-    let dept_groups: Vec<DeptGroup> = department_names
-        .iter()
-        .map(|name| {
-            let users_in: &[&AccessTreeUserRow] = buckets.get(name).map_or(&[][..], Vec::as_slice);
-            let stats = dept_stats.iter().find(|d| &d.department == name);
-            DeptGroup {
-                name: name.clone(),
-                user_count: stats.map_or(0, |d| d.user_count),
-                active_count: stats.map_or(0, |d| d.active_count),
-                users: users_in.iter().map(serialize_user).collect(),
-            }
-        })
-        .collect();
+    let services_path = shared::get_services_path()?;
 
-    let stats = Stats {
-        department_count: department_names.len(),
-        user_count: users.len(),
-    };
+    let stats = data::load_stats(&pool).await;
 
-    let ctx = AccessControlPageContext {
+    let ledger_rows = crate::repositories::access_control::rules::list_ledger_rules(&pool)
+        .await
+        .inspect_err(|e| tracing::warn!(error = %e, "access-control: rule listing failed"))
+        .unwrap_or_default();
+    let open_entities = crate::repositories::access_control::rules::count_open_entities(&pool)
+        .await
+        .unwrap_or_default();
+    let declared =
+        crate::repositories::access_control::yaml_declared::load_declared_rules(&services_path);
+    let capped = i64::try_from(ledger_rows.len()).unwrap_or(i64::MAX)
+        >= crate::repositories::access_control::rules::RULE_CAP;
+    let ledger = rules::build(&ledger_rows, &declared, open_entities, &query, capped);
+
+    let page = AccessControlPageData {
         page: "access-control",
-        title: "Access matrix",
-        known_roles,
-        departments: dept_groups,
-        department_names,
-        entity_catalogue,
+        title: "Access control",
+        can_write: user_ctx.is_admin,
         stats,
+        breadcrumbs: vec![
+            BreadcrumbView::link("Admin", "/admin"),
+            BreadcrumbView::link("People & access", "/admin/users"),
+            BreadcrumbView::current("Access control"),
+        ],
+        ledger,
     };
 
     Ok(super::render_typed_page(
         &engine,
         "access-control",
-        &ctx,
+        &page,
         &user_ctx,
         &mkt_ctx,
     ))
-}
-
-fn serialize_user(u: &&AccessTreeUserRow) -> SerializedUser {
-    SerializedUser {
-        id: u.id.clone(),
-        email: u.email.clone(),
-        display_name: u.display_name.clone().unwrap_or_else(|| u.email.clone()),
-        roles: u.roles.clone(),
-        is_active: u.is_active,
-    }
 }

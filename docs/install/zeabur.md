@@ -1,5 +1,7 @@
 # Deploy the gateway on Zeabur
 
+Set `ADMIN_EMAIL` to an email address you control before first boot, alongside at least one AI provider key. The gateway requires this administrator identity.
+
 Deploys the `systemprompt-gateway` server on [Zeabur](https://zeabur.com) (gateway + Postgres from the GHCR image).
 
 ## One-click install

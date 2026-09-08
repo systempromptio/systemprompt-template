@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            e.server_name AS \"server_name!\",\n            COUNT(*)::BIGINT AS \"executions!\",\n            COUNT(*) FILTER (WHERE e.status = 'success')::BIGINT AS \"succeeded!\",\n            COUNT(DISTINCT e.tool_name)::BIGINT AS \"tools!\",\n            COUNT(DISTINCT e.user_id)::BIGINT AS \"distinct_users!\"\n        FROM mcp_tool_executions e\n        WHERE e.started_at >= $1 AND e.started_at < $2\n          AND ($3::TEXT[] IS NULL OR e.user_id = ANY($3))\n          AND ($4::TEXT IS NULL OR e.user_id = $4)\n        GROUP BY e.server_name\n        ORDER BY COUNT(*) DESC\n        LIMIT 25\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "server_name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "server_name"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "executions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "succeeded!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "tools!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "distinct_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "b8691e625602a335cbab135ba92493b0ab75e96aeb2e688c1759ab261a3ed0ca"
+}

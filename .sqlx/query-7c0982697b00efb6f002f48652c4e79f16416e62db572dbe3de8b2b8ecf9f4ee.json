@@ -1,0 +1,186 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT date AS \"date!\", sessions_count AS \"sessions_count!\",\n               prompts AS \"prompts!\", tool_uses AS \"tool_uses!\",\n               errors AS \"errors!\",\n               loc_added_ai AS \"loc_added_ai!\", loc_removed_ai AS \"loc_removed_ai!\",\n               commits_count AS \"commits_count!\",\n               commit_insertions AS \"commit_insertions!\",\n               commit_deletions AS \"commit_deletions!\",\n               ai_requests_count AS \"ai_requests_count!\",\n               input_tokens AS \"input_tokens!\", output_tokens AS \"output_tokens!\",\n               cost_microdollars AS \"cost_microdollars!\"\n        FROM admin_usage_daily_rollups\n        WHERE user_id = $1 AND date >= $2::DATE AND date <= $3::DATE\n        ORDER BY date DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "date!",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "date"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "sessions_count!",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "sessions_count"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "prompts!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "prompts"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "tool_uses!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "tool_uses"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "errors!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "errors"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "loc_added_ai!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "loc_added_ai"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "loc_removed_ai!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "loc_removed_ai"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "commits_count!",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "commits_count"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "commit_insertions!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "commit_insertions"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "commit_deletions!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "commit_deletions"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "ai_requests_count!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "ai_requests_count"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "input_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "output_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "admin_usage_daily_rollups",
+            "name": "cost_microdollars"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Date",
+        "Date"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "7c0982697b00efb6f002f48652c4e79f16416e62db572dbe3de8b2b8ecf9f4ee"
+}

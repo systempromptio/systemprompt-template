@@ -1,0 +1,123 @@
+{{#> layout title="Connect your workstation" page="bridge-setup"}}
+    {{#*inline "content"}}
+    {{> components/page-header title="Connect your workstation"}}
+
+    <div class="sp-card sp-u-mb-6">
+        <div class="sp-card__body">
+            <p>Three steps. About a minute. Signed in as <strong>{{user_email}}</strong>.
+               <span id="gateway-pill" class="sp-pill is-pending" data-gateway-url="{{gateway_url}}" data-download-base="{{download_base_url}}">Checking gateway&hellip;</span>
+            </p>
+
+            <div class="sp-setup-step">
+                <div class="sp-step-num">1</div>
+                <div>
+                    <h2 class="sp-section__title">Download the bridge</h2>
+                    {{#if download_base_url}}
+                    <p class="sp-u-text-tertiary">Double-click to launch. A tray icon appears in your menu bar.</p>
+                    <p>
+                        <a id="download-cta" class="sp-download-cta" href="{{download_base_url}}/systemprompt-bridge-windows.exe" rel="noopener">Download for Windows</a>
+                        <a id="download-checksum" href="{{download_base_url}}/systemprompt-bridge-windows.exe.sha256">sha256</a>
+                    </p>
+                    <details class="sp-download-other">
+                        <summary>Other platforms</summary>
+                        <ul>
+                            <li><a href="{{download_base_url}}/systemprompt-bridge-macos.dmg">macOS (.dmg)</a></li>
+                            <li><a href="{{download_base_url}}/systemprompt-bridge-windows.exe">Windows (.exe)</a></li>
+                            <li><a href="{{download_base_url}}/systemprompt-bridge-linux-x86_64.tar.gz">Linux (.tar.gz, x86_64)</a></li>
+                            <li><a href="{{download_base_url}}/systemprompt-bridge-linux-aarch64.tar.gz">Linux (.tar.gz, aarch64)</a></li>
+                        </ul>
+                    </details>
+                    {{else}}<p>Desktop client downloads are not configured. An already-installed bridge can still sign in with the steps below.</p>{{/if}}
+                </div>
+            </div>
+
+            <div class="sp-setup-step">
+                <div class="sp-step-num">2</div>
+                <div>
+                    <h2 class="sp-section__title">Get your access token</h2>
+                    <p>Open <a href="/bridge-auth/device-link" class="sp-download-cta">/bridge-auth/device-link &rarr;</a></p>
+                    <p class="sp-u-text-tertiary">Approve the request, then copy the <code>sp-live-&hellip;</code> token. It is shown once.</p>
+                </div>
+            </div>
+
+            <div class="sp-setup-step">
+                <div class="sp-step-num">3</div>
+                <div>
+                    <h2 class="sp-section__title">Paste it into the bridge</h2>
+                    <div class="sp-tabs" role="tablist" data-tabs="bridge-setup" aria-label="How to sign in">
+                        <button type="button" class="sp-tab sp-tab--active" role="tab" id="tab-btn-tray" aria-controls="tab-tray" aria-selected="true" data-tab="tray">Tray app (macOS / Windows)</button>
+                        <button type="button" class="sp-tab" role="tab" id="tab-btn-terminal" aria-controls="tab-terminal" aria-selected="false" tabindex="-1" data-tab="terminal">Terminal (any OS)</button>
+                        <button type="button" class="sp-tab" role="tab" id="tab-btn-linux" aria-controls="tab-linux" aria-selected="false" tabindex="-1" data-tab="linux">Linux (one-line install)</button>
+                    </div>
+                    <div class="sp-tab-panel" id="tab-tray" role="tabpanel" aria-labelledby="tab-btn-tray">
+                        <ol>
+                            <li>Click the systemprompt tray icon.</li>
+                            <li>Paste your <code>sp-live-&hellip;</code> token.</li>
+                            <li>Click <strong>Sign in</strong>. The icon turns green.</li>
+                        </ol>
+                    </div>
+                    <div class="sp-tab-panel" id="tab-terminal" role="tabpanel" aria-labelledby="tab-btn-terminal" hidden>
+                        <div class="sp-snippet">
+                            <button type="button" class="sp-btn sp-btn--sm sp-btn--copy" id="cli-copy-btn">Copy</button>
+                            <pre><code id="cli-snippet">systemprompt-bridge login sp-live-YOUR_TOKEN --gateway {{gateway_url}}</code></pre>
+                        </div>
+                        <p class="sp-u-text-tertiary sp-u-text-sm">Replace <code>sp-live-YOUR_TOKEN</code> with the token from step 2.</p>
+                    </div>
+                    <div class="sp-tab-panel" id="tab-linux" role="tabpanel" aria-labelledby="tab-btn-linux" hidden>
+                        <p>One command &mdash; downloads, verifies the checksum, installs to <code>~/.local/bin</code>, and writes the environment.</p>
+                        {{#if download_base_url}}
+                        <div class="sp-snippet">
+                            <button type="button" class="sp-btn sp-btn--sm sp-btn--copy" id="linux-copy-btn">Copy</button>
+                            <pre><code id="linux-snippet">{{install_command}}</code></pre>
+                        </div>
+                        <p class="sp-u-text-tertiary sp-u-text-sm">Then run <code>claude</code> — no new shell and nothing to source. The installer merges the gateway settings into <code>~/.claude/settings.json</code>, which Claude Code reads on every run, and registers the systemd user units for sync and the loopback proxy. It also writes <code>~/.config/systemprompt/env.sh</code> for other Anthropic-API clients.</p>
+                        {{else}}<p>Desktop client downloads are not configured.</p>{{/if}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <details class="is-advanced sp-card">
+        <summary class="sp-section__head">Advanced &mdash; manual config, session &amp; mTLS modes, revoke</summary>
+        <div class="sp-card__body">
+            <h3 class="sp-section__title">Revoke a token</h3>
+            <p>On the owner's user page click <strong>Revoke</strong> on the token row. Locally, run <code>systemprompt-bridge logout</code> to wipe the on-disk credential.</p>
+
+            <h3 class="sp-section__title">Hand-edit the config</h3>
+            <p>The bridge writes its own config; only edit by hand if you need session or mTLS mode.</p>
+            <div class="sp-snippet">
+                <button type="button" class="sp-btn sp-btn--sm sp-btn--copy" id="toml-copy-btn">Copy</button>
+                <pre><code id="toml-snippet">gateway_url = "{{gateway_url}}"
+
+# Pick one section. Providers probe in order: mtls -> session -> pat.
+
+[session]
+enabled = true
+
+# [pat]
+# file = "/abs/path/to/pat.txt"  # contents = the sp-live-... secret
+
+# [mtls]
+# On Linux cert_keystore_ref is the path to the device certificate.
+# On macOS/Windows its presence only means "use mTLS" &mdash; the certificate is
+# named by SYSTEMPROMPT_BRIDGE_DEVICE_CERT_LABEL (Keychain label) or
+# SYSTEMPROMPT_BRIDGE_DEVICE_CERT_SHA256 (cert-store thumbprint).
+# cert_keystore_ref = "~/.config/systemprompt/device.pem"</code></pre>
+            </div>
+            <p class="sp-u-text-tertiary sp-u-text-sm">
+                Stored at <code>$XDG_CONFIG_HOME/systemprompt/</code> on Linux,
+                <code>~/Library/Application Support/systemprompt/</code> on macOS,
+                <code>%APPDATA%\systemprompt\</code> on Windows.
+            </p>
+
+            <h3 class="sp-section__title">Session &amp; mTLS modes</h3>
+            <p>See <code>systemprompt-core/bin/bridge/README.md</code> for browser-consent (session) and OS-keystore-certificate (mTLS) flows, including the <code>systemprompt admin bridge enroll-cert</code> step required for mTLS.</p>
+        </div>
+    </details>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script type="module" src="/js/pages/admin-bridge-setup.js?v={{css_version}}"></script>
+    {{/inline}}
+{{/layout}}

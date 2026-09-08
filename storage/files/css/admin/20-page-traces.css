@@ -1,0 +1,19 @@
+@layer components {
+
+/* Floors, never ceilings: a header must never be narrower than its own label,
+   which is what took this table to eleven clipped headings. The Started cell
+   was ellipsizing the timestamp that says which trace a row is, and the status
+   cell wrapped its badges onto a second line — that was the 57px row. */
+.sp-trace-table .sp-col-started  { inline-size: auto; min-inline-size: 10rem; }
+.sp-trace-table .sp-col-trace    { inline-size: auto; min-inline-size: 11rem; }
+.sp-trace-table .sp-col-identity { inline-size: auto; min-inline-size: 9rem; }
+.sp-trace-table .sp-col-model    { inline-size: auto; min-inline-size: 9rem; }
+.sp-trace-table .sp-col-spans    { inline-size: auto; min-inline-size: 5rem; }
+.sp-trace-table .sp-col-tokens   { inline-size: auto; min-inline-size: 6rem; }
+.sp-trace-table .sp-col-cost     { inline-size: auto; min-inline-size: 8.5rem; }
+.sp-trace-table .sp-col-duration { inline-size: auto; min-inline-size: 6rem; }
+.sp-trace-table .sp-col-status   { inline-size: auto; min-inline-size: 11rem; }
+
+.sp-trace-row__badges { white-space: nowrap; }
+
+}

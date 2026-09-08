@@ -1,0 +1,79 @@
+@layer components {
+
+.sp-user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--sp-radius-full);
+    background: linear-gradient(135deg, var(--sp-accent), color-mix(in oklch, var(--sp-accent) 70%, var(--sp-success)));
+    color: var(--sp-text-on-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--sp-text-xs);
+    font-weight: 700;
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
+    box-shadow: var(--sp-shadow-sm);
+    position: relative;
+}
+
+.sp-user-name {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-primary);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.sp-user-meta {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sp-btn--logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-md);
+    background: var(--sp-bg-surface);
+    color: var(--sp-text-secondary);
+    cursor: pointer;
+                border-color var(--sp-duration-fast);
+    flex-shrink: 0;
+}
+
+.sp-btn--logout:hover {
+    color: var(--sp-text-primary);
+    background: var(--sp-bg-surface-raised);
+    border-color: var(--sp-border-strong);
+}
+
+.sp-btn--logout svg {
+    display: block;
+}
+
+.sp-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--sp-radius-full);
+    background: linear-gradient(135deg, var(--sp-accent), color-mix(in oklch, var(--sp-accent) 70%, var(--sp-success)));
+    color: var(--sp-text-on-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--sp-text-xs);
+    font-weight: 700;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+.sp-avatar img,
+.sp-avatar__img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sp-avatar-sm { width: 28px; height: 28px; font-size: 0.625rem; }
+}

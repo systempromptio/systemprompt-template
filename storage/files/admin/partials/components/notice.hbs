@@ -1,0 +1,5 @@
+{{!-- {{> components/notice tone="warn" title="Warn mode" message="…"}} --}}
+<div class="sp-notice{{#if tone}} sp-notice--{{tone}}{{/if}}" role="status">
+  {{#if title}}<p class="sp-notice__title">{{title}}</p>{{/if}}
+  <p>{{message}}</p>
+</div>

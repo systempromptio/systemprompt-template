@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT doc_date, date_source FROM knowledge_date_cache\n           WHERE doc_id = $1 AND content_hash = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "doc_date",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "knowledge_date_cache",
+            "name": "doc_date"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "date_source",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_date_cache",
+            "name": "date_source"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      false
+    ]
+  },
+  "hash": "838c6c0fb71efa86139b18f09a1045c97a20dcf36222491d09e28e501bd23899"
+}

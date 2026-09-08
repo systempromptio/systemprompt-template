@@ -2,12 +2,15 @@
 //! (`session-detail.hbs`).
 
 use serde::Serialize;
+
+pub(super) use crate::handlers::ssr::types::BreadcrumbView;
 use systemprompt::identifiers::{AiRequestId, ContextId, PluginId, SessionId, TraceId, UserId};
 
 #[derive(Debug, Serialize)]
 pub(super) struct SessionDetailPageContext {
     pub(super) page: &'static str,
     pub(super) title: String,
+    pub(super) breadcrumbs: Vec<BreadcrumbView>,
     pub(super) header: SessionHeaderView,
     pub(super) kpis: SessionKpisView,
     pub(super) contexts: Vec<SessionContextRowView>,
@@ -17,6 +20,51 @@ pub(super) struct SessionDetailPageContext {
     pub(super) has_traces: bool,
     pub(super) has_requests: bool,
     pub(super) back_url: &'static str,
+    // Why: absent until the hooks pipeline has summarised the run, which is
+    // the normal state for a session still in flight — the page says so rather
+    // than rendering an empty verdict panel.
+    pub(super) analysis: Option<AnalysisView>,
+    pub(super) ratings: Vec<RatingView>,
+    pub(super) has_ratings: bool,
+    pub(super) rating_count: usize,
+    pub(super) rating_average: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub(super) struct AnalysisView {
+    pub(super) title: String,
+    pub(super) summary: String,
+    pub(super) category: String,
+    pub(super) outcome: String,
+    pub(super) goal_achieved: String,
+    pub(super) quality_score: i16,
+    pub(super) quality_tone: &'static str,
+    pub(super) goal_tone: &'static str,
+    pub(super) tags: Vec<String>,
+    pub(super) has_tags: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) recommendations: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) improvement_hints: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) error_analysis: Option<String>,
+    pub(super) corrections_count: i32,
+    pub(super) duration_display: String,
+    pub(super) turns_display: String,
+    pub(super) updated_at_local: String,
+}
+
+#[derive(Debug, Serialize)]
+pub(super) struct RatingView {
+    pub(super) user_id: UserId,
+    pub(super) user_label: String,
+    pub(super) user_url: String,
+    pub(super) rating: i16,
+    pub(super) stars: String,
+    pub(super) tone: &'static str,
+    pub(super) outcome: String,
+    pub(super) notes: String,
+    pub(super) created_at_local: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -28,7 +76,7 @@ pub(super) struct SessionHeaderView {
     pub(super) user_url: Option<String>,
     pub(super) display_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) department: Option<String>,
+    pub(super) groups_display: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) started_at: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -109,6 +157,7 @@ pub(super) struct SessionRequestRowView {
     pub(super) model: String,
     pub(super) status: String,
     pub(super) is_error: bool,
+    pub(super) is_rejected: bool,
     pub(super) latency_display: String,
     pub(super) cost_display: String,
     pub(super) created_at_local: String,

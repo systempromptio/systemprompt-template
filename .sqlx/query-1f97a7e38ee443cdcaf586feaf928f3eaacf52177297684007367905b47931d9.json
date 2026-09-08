@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO requirements_publication_attempts(workflow_id,title,content_hash,status) VALUES($1,$2,$3,'started') ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1f97a7e38ee443cdcaf586feaf928f3eaacf52177297684007367905b47931d9"
+}

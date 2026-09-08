@@ -48,8 +48,8 @@ MAX_RUNS=200
 # Everything the compiler reads. `services/` is in the list because the
 # public-site partials are include_str!-compiled into the binary.
 FINGERPRINT_PATHS=(
-    Cargo.toml Cargo.lock rust-toolchain.toml clippy.toml
-    src extensions migrations tests services scripts .sqlx
+    Cargo.toml Cargo.lock rust-toolchain.toml clippy.toml justfile .cargo storage
+    src extensions migrations tests services scripts .sqlx vendor
 )
 
 sha() {
@@ -99,7 +99,7 @@ compute_tree() {
 }
 
 compute_key() {
-    printf '%s\n%s\n%s\n' "$1" "$2" "$(compute_tree)" | sha
+    printf '%s\n%s\n%s\n%s\n' "$1" "$2" "$(compute_tree)" "${RUSTFLAGS:-}|${RUSTUP_TOOLCHAIN:-}|${CC:-}|${CXX:-}|${SQLX_OFFLINE:-}" | sha
 }
 
 lock_alive() {

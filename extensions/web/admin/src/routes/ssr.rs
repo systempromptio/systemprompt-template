@@ -11,12 +11,18 @@ use super::super::templates::AdminTemplateEngine;
 use super::super::{handlers, middleware};
 
 pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Router {
-    let inner = root_routes()
+    let inner = super::dashboard_redirects::legacy_routes()
+        .merge(super::ssr_dashboard::dashboard_routes())
+        .merge(root_routes())
         .merge(access_routes())
         .merge(governance_routes())
         .merge(entity_routes())
         .merge(account_routes())
         .merge(api_routes())
+        .merge(super::ssr_redirects::legacy_routes())
+        .layer(axum_middleware::from_fn(
+            super::ssr_write_gate::require_write_access,
+        ))
         .layer(Extension(engine.clone()))
         .layer(axum_middleware::from_fn(
             middleware::marketplace_context_middleware,
@@ -46,7 +52,7 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
 }
 
 fn public_routes() -> Router<Arc<PgPool>> {
-    Router::new()
+    let public = Router::new()
         .route("/login", get(handlers::ssr::login_page))
         .route("/register", get(handlers::ssr::register_page))
         .route("/add-passkey", get(handlers::ssr::add_passkey_page))
@@ -62,40 +68,36 @@ fn public_routes() -> Router<Arc<PgPool>> {
         .route(
             "/api/register",
             post(handlers::public_register::public_register_handler),
+        );
+    if handlers::dev_login::dev_login_enabled() {
+        public.route(
+            "/auth/dev/login",
+            get(handlers::dev_login::dev_login_redeem),
         )
+    } else {
+        public
+    }
 }
 
 fn root_routes() -> Router<Arc<PgPool>> {
-    Router::new().route(
-        "/",
-        get(|| async { axum::response::Redirect::to("/admin/profile") }),
-    )
+    Router::new().route("/", get(handlers::ssr::overview_page))
 }
 
 fn access_routes() -> Router<Arc<PgPool>> {
     Router::new()
-        .route("/access/users", get(handlers::ssr::users_page))
-        .route("/access/user", get(handlers::ssr::user_detail_page))
         .route("/user", get(handlers::ssr::user_detail_page))
         .route(
-            "/access/departments",
+            "/departments",
             get(handlers::ssr::management_departments_page),
         )
         .route(
-            "/access/departments/{id}",
+            "/departments/{id}",
             get(handlers::ssr::management_department_detail_page),
         )
         .route(
-            "/access/tokens",
+            "/access-tokens",
             get(handlers::ssr::management_access_tokens_page),
         )
-        // Why: /access/devices was the bridge-era name for this page; keep the
-        // redirect so bookmarks and older links still land somewhere.
-        .route(
-            "/access/devices",
-            get(|| async { axum::response::Redirect::permanent("/admin/access/tokens") }),
-        )
-        .route("/access/matrix", get(handlers::ssr::access_control_page))
         .route("/tokens/pats", post(handlers::access_tokens::issue_pat))
         .route(
             "/tokens/pats/{id}",
@@ -105,7 +107,7 @@ fn access_routes() -> Router<Arc<PgPool>> {
 
 fn governance_routes() -> Router<Arc<PgPool>> {
     Router::new()
-        .route("/governance/policies", get(handlers::ssr::governance_page))
+        .route("/governance", get(handlers::ssr::governance_page))
         .route(
             "/governance/policies/{policy_id}",
             get(handlers::ssr::governance_policy_edit_page),
@@ -128,24 +130,6 @@ fn governance_routes() -> Router<Arc<PgPool>> {
 
 fn entity_routes() -> Router<Arc<PgPool>> {
     Router::new()
-        .route(
-            "/entities/requests",
-            get(handlers::ssr::analytics_requests_page),
-        )
-        .route(
-            "/entities/requests/{request_id}",
-            get(handlers::ssr::governance_audit_detail_page),
-        )
-        .route("/entities/sessions", get(handlers::ssr::sessions_list_page))
-        .route(
-            "/entities/sessions/{session_id}",
-            get(handlers::ssr::session_detail_page),
-        )
-        .route("/entities/traces", get(handlers::ssr::perf_traces_page))
-        .route(
-            "/entities/traces/{trace_id}",
-            get(handlers::ssr::perf_trace_detail_page),
-        )
         .route("/evals", get(handlers::ssr::evals_page))
         .route("/evals/run", post(handlers::ssr::eval_run_action))
         .route(
@@ -155,14 +139,6 @@ fn entity_routes() -> Router<Arc<PgPool>> {
         .route(
             "/evals/runs/{run_id}",
             get(handlers::ssr::eval_run_detail_page),
-        )
-        .route(
-            "/entities/contexts",
-            get(handlers::ssr::skills_contexts_page),
-        )
-        .route(
-            "/entities/contexts/{context_id}",
-            get(handlers::ssr::context_detail_page),
         )
 }
 
@@ -176,6 +152,10 @@ fn account_routes() -> Router<Arc<PgPool>> {
 
 fn api_routes() -> Router<Arc<PgPool>> {
     Router::new()
+        .route(
+            "/api/profile/salesforce/unlink",
+            post(handlers::salesforce_auth::salesforce_unlink),
+        )
         .route("/auth/me", get(middleware::auth_me_handler))
         .route(
             "/api/conversations/{session_id}/raw",

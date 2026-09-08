@@ -1,0 +1,44 @@
+@layer components {
+
+/* The access-token console. The table, KPIs, toolbar and side panel are
+   shared components; what the page adds is column widths and the issued
+   token's setup snippet inside the panel. */
+
+/* Columns: owner, token, prefix, department, created, expires, last used,
+   status, actions. The owner email is the one cell that can afford to clip. */
+.sp-p-access-tokens__table { table-layout: fixed; width: 100%; }
+.sp-p-access-tokens__table th:nth-child(1) { width: 18%; }
+.sp-p-access-tokens__table th:nth-child(2) { width: 16%; }
+.sp-p-access-tokens__table th:nth-child(3) { width: 10%; }
+.sp-p-access-tokens__table th:nth-child(4) { width: 11%; }
+.sp-p-access-tokens__table th:nth-child(5) { width: 9%; }
+.sp-p-access-tokens__table th:nth-child(6) { width: 9%; }
+.sp-p-access-tokens__table th:nth-child(7) { width: 9%; }
+.sp-p-access-tokens__table th:nth-child(8) { width: 10%; }
+.sp-p-access-tokens__table th:nth-child(9) { width: 8%; }
+
+/* A row action is a link-styled control, not a button: `sp-btn--sm` is 30px
+   tall, and with the cell's own padding that alone made a 43px row. */
+.sp-p-access-tokens__action {
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  background: none;
+  line-height: var(--sp-space-5);
+  font: inherit;
+  font-size: var(--sp-text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sp-p-access-tokens__action--danger { color: var(--sp-danger-strong); }
+
+/* The snippet block hosts the absolutely positioned copy button. */
+.sp-p-access-tokens__snippet { position: relative; }
+
+.sp-p-access-tokens__snippet .sp-code-block {
+  padding-inline-end: var(--sp-space-16);
+}
+
+}

@@ -18,7 +18,7 @@ if (form) {
   }
 }
 
-for (const tab of document.querySelectorAll('.tabs [data-view]')) {
+for (const tab of document.querySelectorAll('.sp-tabs [data-view]')) {
   tab.addEventListener('click', () => {
     const view = tab.dataset.view;
     if (!view || !viewInput || !form) return;
@@ -27,7 +27,7 @@ for (const tab of document.querySelectorAll('.tabs [data-view]')) {
   });
 }
 
-for (const btn of document.querySelectorAll('.row-expand-toggle')) {
+for (const btn of document.querySelectorAll('.sp-table__row-toggle')) {
   btn.addEventListener('click', () => {
     const target = document.getElementById(btn.getAttribute('aria-controls') || '');
     if (!target) return;

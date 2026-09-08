@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*)::BIGINT AS \"n!\"\n           FROM ai_safety_findings f\n           LEFT JOIN ai_requests r ON r.id = f.ai_request_id\n           WHERE f.created_at >= $1 AND f.created_at < $2\n             AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))\n             AND ($4::TEXT IS NULL OR f.category = $4)\n             AND ($5::BOOLEAN IS NULL OR f.blocked = $5)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "n!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e032381ae112aca0f3041bf8656b9389b11ef9b39241eb8e03f6a8667fda4156"
+}

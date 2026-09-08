@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(DISTINCT c.user_id) AS \"total!\"\n             FROM user_device_certs c\n            WHERE ($1::TEXT = 'all')\n               OR ($1::TEXT = 'active' AND c.revoked_at IS NULL)\n               OR ($1::TEXT = 'revoked' AND c.revoked_at IS NOT NULL)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f7f007a391df4114feda7b5a55b39f36fccb7320d7bbb23963198eeccf01daad"
+}

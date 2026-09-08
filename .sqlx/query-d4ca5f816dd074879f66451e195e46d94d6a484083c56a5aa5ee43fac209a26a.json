@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.user_id AS \"user_id!: UserId\", u.name AS \"user_name!\",\n                  COUNT(*) AS \"total!\",\n                  COUNT(*) FILTER (WHERE c.revoked_at IS NULL) AS \"active!\",\n                  MAX(c.enrolled_at) AS \"latest_enrolled_at!\"\n             FROM user_device_certs c\n             JOIN users u ON u.id = c.user_id\n            WHERE ($1::TEXT = 'all')\n               OR ($1::TEXT = 'active' AND c.revoked_at IS NULL)\n               OR ($1::TEXT = 'revoked' AND c.revoked_at IS NOT NULL)\n            GROUP BY c.user_id, u.name\n            ORDER BY\n              CASE WHEN $2::TEXT = 'desc' THEN EXTRACT(EPOCH FROM MAX(c.enrolled_at)) END\n                DESC NULLS LAST,\n              CASE WHEN $2::TEXT = 'asc' THEN EXTRACT(EPOCH FROM MAX(c.enrolled_at)) END\n                ASC NULLS LAST,\n              c.user_id\n            LIMIT $3 OFFSET $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_device_certs",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "active!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "latest_enrolled_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "d4ca5f816dd074879f66451e195e46d94d6a484083c56a5aa5ee43fac209a26a"
+}

@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT issuer AS \"issuer!\", external_sub AS \"external_sub!\",\n                  created_at, last_seen_at\n             FROM federated_identities\n            WHERE user_id = $1\n            ORDER BY last_seen_at DESC NULLS LAST, issuer",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issuer!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "federated_identities",
+            "name": "issuer"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "external_sub!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "federated_identities",
+            "name": "external_sub"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "federated_identities",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "last_seen_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "federated_identities",
+            "name": "last_seen_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b93451a23683e63bdec24cb73c43e7961173070ba827afab6ec0e791badba567"
+}

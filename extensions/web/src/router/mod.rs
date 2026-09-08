@@ -29,9 +29,10 @@ pub(crate) fn build(ctx: &dyn ExtensionContext) -> Option<ExtensionRouter> {
         .nest("/api/public", api_router);
 
     match admin_ssr::build(&db) {
-        Some(ssr_router) => {
+        Some(ssr) => {
             combined = Router::new()
-                .nest_service("/admin", ssr_router)
+                .nest_service("/admin", ssr.admin)
+                .nest_service("/bridge-auth", ssr.bridge_auth)
                 .merge(combined);
         },
         None => {

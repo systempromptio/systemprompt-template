@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_sync_runs SET status=$2,report=$3,finished_at=NOW() WHERE run_id=$1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "77caabec5c4ba7678ec9cf9f00f2a355318c5df1d0b55f8724c2dc3f7133e87a"
+}

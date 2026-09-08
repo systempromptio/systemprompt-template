@@ -1,0 +1,108 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n             s.session_id AS \"session_id!: SessionId\",\n             s.user_id AS \"user_id?: UserId\",\n             s.status AS \"status!\",\n             s.created_at AS \"created_at!\",\n             s.last_activity_at AS \"last_activity_at!\",\n             s.expires_at AS \"expires_at!\",\n             (p.session_id IS NOT NULL AND p.expires_at > NOW()) AS \"has_proxy_identity!\",\n             p.user_type AS \"proxy_user_type?\"\n           FROM mcp_sessions s\n           LEFT JOIN mcp_proxy_identities p ON p.session_id = s.session_id\n          WHERE s.mcp_server_id = $1\n          ORDER BY s.last_activity_at DESC\n          LIMIT $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id!: SessionId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id?: UserId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "status!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "last_activity_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "last_activity_at"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "expires_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "expires_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "has_proxy_identity!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "proxy_user_type?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_proxy_identities",
+            "name": "user_type"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      null,
+      false
+    ]
+  },
+  "hash": "ac73dfe1aaee92c9c87491d37dd3beee1b6c062fec1a2830da795cb8df8711b3"
+}

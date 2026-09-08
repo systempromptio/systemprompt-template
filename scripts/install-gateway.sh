@@ -96,7 +96,7 @@ if [ "$VERIFY_COSIGN" = "true" ]; then
   curl -fsSL "${base}/SHA256SUMS.gateway.sig" -o "${tmp}/SHA256SUMS.gateway.sig"
   curl -fsSL "${base}/SHA256SUMS.gateway.pem" -o "${tmp}/SHA256SUMS.gateway.pem"
   cosign verify-blob \
-    --certificate-identity-regexp="https://github.com/systempromptio/systemprompt-deploy/" \
+    --certificate-identity-regexp="https://github.com/systempromptio/systemprompt-template/.github/workflows/release-gateway.yml@" \
     --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
     --signature "${tmp}/SHA256SUMS.gateway.sig" \
     --certificate "${tmp}/SHA256SUMS.gateway.pem" \
@@ -128,6 +128,17 @@ for b in systemprompt systemprompt-mcp-agent systemprompt-mcp-marketplace; do
 done
 
 [ -n "$installed" ] || die "no binaries found in tarball (stage dir: ${stage_dir})"
+
+# Keep runtime resources together without overwriting an operator's edited config.
+resources="${PREFIX}/share/systemprompt/${ver_noprefix}"
+mkdir -p "$resources"
+for directory in services storage web demo extensions; do
+  [ -d "${stage_dir}/${directory}" ] || die "release is missing ${directory}"
+  if [ ! -e "${resources}/${directory}" ]; then
+    cp -R "${stage_dir}/${directory}" "$resources/"
+  fi
+done
+log "runtime resources: ${resources} (run setup from this directory)"
 
 log "installed:${installed}"
 log "location: ${dest}"

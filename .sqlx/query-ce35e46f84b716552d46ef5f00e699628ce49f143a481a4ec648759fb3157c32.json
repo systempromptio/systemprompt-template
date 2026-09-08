@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO requirements_validation_jobs(id,workflow_id,phase,revision,status) VALUES($1,$2,$3,$4,'running')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ce35e46f84b716552d46ef5f00e699628ce49f143a481a4ec648759fb3157c32"
+}

@@ -5,7 +5,7 @@
 use serde::Serialize;
 
 use super::context_runs::{CaseRowView, ResultRowView, RunRowView};
-use crate::handlers::ssr::types::{ChartView, HistogramView};
+use crate::handlers::ssr::types::{BreadcrumbView, ChartView, HistogramView, TabLinkView};
 use systemprompt::identifiers::UserId;
 
 // Why: Which section of the page is being looked at. The page is split by *kind
@@ -52,6 +52,7 @@ impl EvalsTab {
 pub(super) struct EvalsPageContext {
     pub page: &'static str,
     pub title: &'static str,
+    pub breadcrumbs: Vec<BreadcrumbView>,
     pub tab: &'static str,
     pub is_overview: bool,
     pub is_traffic: bool,
@@ -60,7 +61,7 @@ pub(super) struct EvalsPageContext {
     pub is_golden_set: bool,
     pub show_traffic_kpis: bool,
     pub show_quality_kpis: bool,
-    pub tabs: Vec<EvalTabLinkView>,
+    pub tabs: Vec<TabLinkView>,
     pub time_range: EvalTimeRangeView,
     pub traffic: TrafficStatsView,
     pub scores: ScoreSummaryView,
@@ -82,14 +83,6 @@ pub(super) struct EvalsPageContext {
     pub base_url: &'static str,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notice: Option<NoticeView>,
-}
-
-#[derive(Debug, Serialize)]
-pub(super) struct EvalTabLinkView {
-    pub slug: &'static str,
-    pub label: &'static str,
-    pub href: String,
-    pub is_active: bool,
 }
 
 // Why: State of the Judge tab's verdict and model filters, echoed back so the
@@ -124,6 +117,7 @@ pub(super) struct PairRowView {
 #[derive(Debug, Serialize)]
 pub(super) struct NoticeView {
     pub is_error: bool,
+    pub tone: &'static str,
     pub message: String,
 }
 
@@ -219,6 +213,9 @@ pub(super) struct EvalTimeRangeView {
     pub to: String,
     pub base_url: &'static str,
     pub query: String,
+    // Why: the shared time-range partial reads `rejected` to say the window
+    // shown is the default rather than the one the URL asked for.
+    pub rejected: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auto_widened: Option<&'static str>,
 }
@@ -227,7 +224,8 @@ pub(super) struct EvalTimeRangeView {
 pub(super) struct RunDetailContext {
     pub page: &'static str,
     pub title: String,
+    pub breadcrumbs: Vec<BreadcrumbView>,
     pub run: RunRowView,
     pub results: Vec<ResultRowView>,
-    pub back_url: &'static str,
+    pub result_count: usize,
 }

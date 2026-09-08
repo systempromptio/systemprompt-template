@@ -4,20 +4,17 @@
 use serde::Serialize;
 use systemprompt::identifiers::UserId;
 
+use crate::handlers::ssr::types::BreadcrumbView;
+
 #[derive(Debug, Serialize)]
 pub(super) struct GovernancePageContext {
     pub(super) page: &'static str,
     pub(super) title: &'static str,
-    pub(super) lifetime_total: i64,
-    pub(super) lifetime_allowed: i64,
-    pub(super) lifetime_denied: i64,
-    pub(super) window_total: i64,
-    pub(super) window_allowed: i64,
-    pub(super) window_denied: i64,
-    pub(super) window_breaches: i64,
+    pub(super) breadcrumbs: Vec<BreadcrumbView>,
+    pub(super) kpis: Vec<GovernanceKpiView>,
     pub(super) policies: Vec<PolicyRow>,
+    pub(super) policy_count: usize,
     pub(super) has_policies: bool,
-    pub(super) enforcement: Vec<PolicyRow>,
     pub(super) has_enforcement_activity: bool,
     pub(super) top_tools: Vec<TopToolRow>,
     pub(super) has_top_tools: bool,
@@ -29,14 +26,28 @@ pub(super) struct GovernancePageContext {
     pub(super) config_path: &'static str,
 }
 
+// Why: the five numbers an operator reads before opening any policy — the
+// window's volume, its split, the secret breaches inside it, and lifetime for
+// scale. One band, one line each, so the chain table stays above the fold.
+#[derive(Debug, Serialize)]
+pub(super) struct GovernanceKpiView {
+    pub(super) label: &'static str,
+    pub(super) value: String,
+    pub(super) note: String,
+    pub(super) tone: &'static str,
+    pub(super) href: String,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub(super) struct PolicyRow {
+    pub(super) order: usize,
     pub(super) id: String,
     pub(super) name: String,
     pub(super) description: String,
     pub(super) enabled: bool,
-    pub(super) source_path: String,
-    pub(super) params_preview: Vec<ParamPreview>,
+    pub(super) state: &'static str,
+    pub(super) state_tone: &'static str,
+    pub(super) params_line: String,
     pub(super) has_params: bool,
     pub(super) lifetime_allowed: i64,
     pub(super) lifetime_denied: i64,
@@ -46,16 +57,9 @@ pub(super) struct PolicyRow {
     pub(super) deny_rate: String,
     pub(super) has_recent_denies: bool,
     pub(super) last_at: String,
-    pub(super) last_at_window: String,
     pub(super) edit_url: String,
     pub(super) decisions_url: String,
     pub(super) deny_decisions_url: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub(super) struct ParamPreview {
-    pub(super) key: String,
-    pub(super) value: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -79,9 +83,10 @@ pub(super) struct TopToolRow {
 pub(super) struct TopActorRow {
     pub(super) user_id: UserId,
     pub(super) display_name: String,
-    pub(super) email: Option<String>,
+    pub(super) email: String,
     pub(super) deny_count: i64,
     pub(super) secret_count: i64,
     pub(super) total: i64,
     pub(super) decisions_url: String,
+    pub(super) user_url: String,
 }

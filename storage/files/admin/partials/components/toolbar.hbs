@@ -1,0 +1,15 @@
+{{!--
+  Toolbar row above a table. Every parameter and slot is namespaced: a bare
+  `count` shadowed each chip's own count inside the slots, the same way `label`
+  shadowed each tab's. Fill the slots you need:
+
+    {{#> components/toolbar toolbar_count="1,204 requests"}}
+      {{#*inline "toolbar_filters"}}…selects…{{/inline}}
+      {{#*inline "toolbar_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{csv_url}}">Export CSV</a>{{/inline}}
+    {{/components/toolbar}}
+--}}
+<div class="sp-toolbar">
+  {{#if toolbar_count}}<span class="sp-toolbar__count">{{toolbar_count}}</span>{{/if}}
+  {{#> toolbar_filters}}{{/toolbar_filters}}
+  <div class="sp-toolbar__actions">{{#> toolbar_actions}}{{/toolbar_actions}}</div>
+</div>

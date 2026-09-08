@@ -1,5 +1,7 @@
 # Deploy the gateway on Northflank
 
+Set `ADMIN_EMAIL` to an email address you control before first boot, alongside at least one AI provider key. The gateway requires this administrator identity.
+
 Deploys the `systemprompt-gateway` server on [Northflank](https://northflank.com) as a stack template (gateway service + managed Postgres addon + persistent volume).
 
 ## One-click install

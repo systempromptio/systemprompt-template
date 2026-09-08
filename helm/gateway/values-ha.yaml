@@ -1,8 +1,8 @@
 # HA values: 3 replicas, external Postgres, Ingress on TLS.
 replicaCount: 3
 
-postgresql:
-  enabled: false
+profile:
+  existingSecret: systemprompt-profile
 
 externalDatabase:
   url: postgres://systemprompt:CHANGE_ME@postgres.example.com:5432/systemprompt

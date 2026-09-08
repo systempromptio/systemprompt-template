@@ -1,0 +1,87 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle=subtitle}}
+        {{#*inline "header_meta"}}<span>{{window_label}}</span>{{/inline}}
+        {{#*inline "header_actions"}}
+        {{#if can_manage}}
+        <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="new-project">New project</button>
+        {{/if}}
+        {{/inline}}
+    {{/components/page-header}}
+
+    <section class="sp-kpi-grid" aria-label="Project totals">
+        {{#each kpis}}
+        {{> components/kpi label=label value=value note=this.note tone=tone}}
+        {{/each}}
+    </section>
+
+    {{#if truncated}}
+    {{> components/notice tone="warn" title="Listing capped" message="Only the first 500 projects are read. Narrow with the search box."}}
+    {{/if}}
+
+    <section aria-label="Projects">
+        {{#> components/toolbar toolbar_count=count_label}}
+            {{#*inline "toolbar_filters"}}
+            <form class="sp-toolbar__search" method="get" action="/admin/projects" role="search">
+                <label class="sp-u-sr-only" for="project-search">Search projects</label>
+                <input type="search" id="project-search" name="q" value="{{query}}" placeholder="Search by name or id">
+            </form>
+            {{/inline}}
+        {{/components/toolbar}}
+
+        {{#> components/table caption="Projects with their membership, spend and tool health" pagination=pagination}}
+            <thead><tr>
+                {{> components/sort-header sort_headers.name}}
+                {{> components/sort-header sort_headers.members}}
+                {{> components/sort-header sort_headers.groups}}
+                {{> components/sort-header sort_headers.requests}}
+                {{> components/sort-header sort_headers.cost}}
+                {{> components/sort-header sort_headers.tools}}
+                {{> components/sort-header sort_headers.skills}}
+            </tr></thead>
+            <tbody>
+            {{#each rows}}
+            <tr data-project-id="{{id}}">
+                <td class="sp-p-projects__col-name">
+                    <a href="{{href}}" class="sp-table__cell--primary">{{name}}</a>
+                    <span class="sp-p-projects__sub">{{#if description}}{{truncate description 48}}{{else}}{{id}}{{/if}}</span>
+                </td>
+                <td class="sp-table__cell--num sp-u-num">{{formatNumber member_count}}<span class="sp-p-projects__sub">{{active_members}} active</span></td>
+                <td class="sp-table__cell--num sp-u-num">{{formatNumber group_count}}</td>
+                <td class="sp-table__cell--num sp-u-num">{{formatNumber requests}}</td>
+                <td class="sp-table__cell--num sp-u-num sp-u-mono">{{cost_display}}</td>
+                <td class="sp-table__cell--num sp-u-num">{{> components/badge tone=tool_tone text=(concat tool_success_pct "%")}}<span class="sp-p-projects__sub">{{formatNumber tool_calls}} calls</span></td>
+                <td class="sp-table__cell--num sp-u-num">{{formatNumber skills_used}}</td>
+            </tr>
+            {{else}}
+            <tr class="sp-table__empty"><td colspan="7">
+                {{> components/empty-state title="No projects match" message="Clear the search, or create a project to start attributing work."}}
+            </td></tr>
+            {{/each}}
+            </tbody>
+        {{/components/table}}
+    </section>
+
+    {{#if can_manage}}
+    <dialog class="sp-dialog" data-dialog="new-project" aria-label="New project">
+        <form class="sp-dialog-form" method="dialog">
+            <h2 class="sp-section__title">New project</h2>
+            <label for="new-project-id">Identifier</label>
+            <input type="text" id="new-project-id" class="sp-search-input" data-field="new-project-id" placeholder="storefront" autocomplete="off">
+            <label for="new-project-name">Name</label>
+            <input type="text" id="new-project-name" class="sp-search-input" data-field="new-project-name" placeholder="Storefront" autocomplete="off">
+            <label for="new-project-description">Description</label>
+            <input type="text" id="new-project-description" class="sp-search-input" data-field="new-project-description" autocomplete="off">
+            <menu>
+                <button type="button" class="sp-btn sp-btn--outline" data-action="close-new-project">Cancel</button>
+                <button type="button" class="sp-btn sp-btn--primary" data-action="confirm-new-project">Create</button>
+            </menu>
+        </form>
+    </dialog>
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-projects.js"></script>
+    {{/inline}}
+{{/layout}}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>{{branding.domain}} — {{#if approved}}Device code{{else}}Not approved{{/if}}</title>
+    <link rel="stylesheet" href="/css/core/fonts.css?v={{css_version}}">
+    <link rel="stylesheet" href="/css/admin-bundle.css?v={{css_version}}">
+</head>
+<body class="sp-device-page">
+    <main class="sp-card sp-device-card">
+        <div class="sp-device-card__brand">
+            <img class="sp-device-card__logo" src="/files/images/logo.svg" alt="{{branding.domain}}">
+            <span class="sp-device-card__eyebrow">Device authorisation</span>
+        </div>
+
+        {{#if approved}}
+        <h1 class="sp-device-card__title">Your device code</h1>
+        <p class="sp-device-card__lede">
+            Paste this command into the terminal that asked for a code. It can be used once.
+        </p>
+
+        <dl class="sp-device-facts">
+            <dt class="sp-device-facts__key">Account</dt>
+            <dd class="sp-device-facts__value">{{user_email}}</dd>
+            <dt class="sp-device-facts__key">Expires in</dt>
+            <dd class="sp-device-facts__value">{{expires_in_seconds}}&nbsp;seconds</dd>
+        </dl>
+
+        <pre class="sp-connect__cmd"><code>{{login_command}}</code></pre>
+
+        <details class="sp-connect__raw sp-u-mt-3">
+            <summary>Just the code</summary>
+            <pre class="sp-connect__cmd"><code>{{code}}</code></pre>
+        </details>
+
+        <p class="sp-device-footnote">
+            Expired before you got to it? Reload the sign-in URL to issue a new code.
+        </p>
+        {{else}}
+        <h1 class="sp-device-card__title">Not approved</h1>
+        <p class="sp-device-card__lede">
+            No code was issued and nothing was granted. You can close this page.
+        </p>
+        <p class="sp-device-footnote">
+            Review your active tokens on <a href="/admin/profile">your profile</a>.
+        </p>
+        {{/if}}
+    </main>
+    <script src="/js/components/sp-copy.js?v={{css_version}}" defer></script>
+</body>
+</html>

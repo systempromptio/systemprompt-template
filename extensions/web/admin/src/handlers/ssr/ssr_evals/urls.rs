@@ -8,7 +8,9 @@ use urlencoding::encode as urlencode;
 
 use crate::util::time_range::TimeRange;
 
-use super::context::{EvalTabLinkView, EvalTimeRangeView, EvalsTab};
+use crate::handlers::ssr::types::TabLinkView;
+
+use super::context::{EvalTimeRangeView, EvalsTab};
 use super::{BASE_URL, EvalsQuery};
 
 
@@ -19,17 +21,17 @@ pub(super) fn tab_links(
     active: EvalsTab,
     range: &TimeRange,
     query: &EvalsQuery,
-) -> Vec<EvalTabLinkView> {
+) -> Vec<TabLinkView> {
     const TABS: [(EvalsTab, &str); 5] = [
         (EvalsTab::Overview, "Overview"),
         (EvalsTab::Traffic, "Traffic"),
-        (EvalsTab::Judge, "Scored answers"),
+        (EvalsTab::Judge, "Judge"),
         (EvalsTab::HeadToHead, "Head-to-head"),
         (EvalsTab::GoldenSet, "Golden set"),
     ];
 
     TABS.iter()
-        .map(|&(tab, label)| EvalTabLinkView {
+        .map(|&(tab, label)| TabLinkView {
             slug: tab.as_str(),
             label,
             href: format!(
@@ -38,6 +40,7 @@ pub(super) fn tab_links(
                 range_query(range, query)
             ),
             is_active: tab == active,
+            count: None,
         })
         .collect()
 }
@@ -74,6 +77,7 @@ pub(super) fn time_range_context(
         // Why: Preserves the tab across the time-range picker's own links, which
         // would otherwise drop the reader back on Overview.
         query: format!("&tab={}", tab.as_str()),
+        rejected: range.rejected_bounds,
         auto_widened,
     }
 }

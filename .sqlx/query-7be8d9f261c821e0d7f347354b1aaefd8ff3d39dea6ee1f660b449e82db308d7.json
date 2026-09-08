@@ -1,0 +1,37 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*) AS \"total!\",\n                  COUNT(*) FILTER (\n                      WHERE last_heartbeat_at >= NOW() - make_interval(days => $1)\n                  ) AS \"active!\",\n                  COUNT(DISTINCT bridge_version) AS \"versions!\"\n             FROM bridge_sessions",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "active!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "versions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "7be8d9f261c821e0d7f347354b1aaefd8ff3d39dea6ee1f660b449e82db308d7"
+}

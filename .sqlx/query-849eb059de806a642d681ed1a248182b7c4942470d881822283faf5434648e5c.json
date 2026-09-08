@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM knowledge_document_grants g\n        USING knowledge_documents d\n        WHERE g.doc_id = d.doc_id\n          AND d.source_type = $1\n          AND g.subject_kind = $2\n          AND g.subject_value = $3\n          AND NOT (d.source_ref = ANY($4))\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "849eb059de806a642d681ed1a248182b7c4942470d881822283faf5434648e5c"
+}

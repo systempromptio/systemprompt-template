@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT to_jsonb(r) AS \"run!\" FROM knowledge_sync_runs r WHERE user_id=$1 ORDER BY started_at DESC,run_id DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "run!",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "191e9e331aa9f03e383ad87123bc8d3ad4840d709849d538c0e60916b893763e"
+}

@@ -16,6 +16,11 @@ pub(crate) struct CurrentUser<'a> {
     username: &'a str,
     roles: &'a [String],
     is_admin: bool,
+    // Why: the sidebar gates read sections on `is_console` and write controls
+    // on `is_admin`, so a project manager sees the People pages without
+    // seeing the buttons that change them.
+    is_console: bool,
+    is_platform_admin: bool,
 }
 
 impl<'a> From<&'a UserContext> for CurrentUser<'a> {
@@ -25,6 +30,8 @@ impl<'a> From<&'a UserContext> for CurrentUser<'a> {
             username: &ctx.username,
             roles: &ctx.roles,
             is_admin: ctx.is_admin,
+            is_console: ctx.is_console,
+            is_platform_admin: ctx.is_platform_admin,
         }
     }
 }
@@ -89,6 +96,10 @@ pub(crate) struct PageShell<'a, T> {
     demo_help: Option<&'static str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     demo_help_url: Option<String>,
+    // Why: the shell decides this, not the page. Every AI-activity page shares
+    // one scope contract, and a page author who forgot the flag would silently
+    // lose the control — so it is derived from the page id in one place.
+    scope_selector: bool,
     #[serde(flatten)]
     page: &'a T,
 }
@@ -109,7 +120,23 @@ impl<'a, T: Serialize> PageShell<'a, T> {
             page_stats: [],
             demo_help: help.map(|(text, _)| text),
             demo_help_url: help.map(|(_, slug)| format!("/documentation/{slug}")),
+            scope_selector: takes_scope_selector(page_id),
             page,
         }
     }
+}
+
+// Why: the AI-activity listings, the pages whose rows a scope and a time range
+// narrow. Detail pages are absent on purpose: one row is already the narrowest
+// scope there is, and a filter above it would do nothing.
+const SCOPED_PAGES: [&str; 5] = [
+    "analytics-dashboard",
+    "requests",
+    "sessions",
+    "traces",
+    "contexts",
+];
+
+fn takes_scope_selector(page_id: Option<&str>) -> bool {
+    page_id.is_some_and(|id| SCOPED_PAGES.contains(&id))
 }

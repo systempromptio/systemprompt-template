@@ -77,6 +77,22 @@ pub(crate) async fn issue_user_pat(
     .into_response())
 }
 
+// Why: the console lists every account's tokens, so an admin revoking a
+// stale one from that page must not be limited to their own. The owner is
+// part of the path so the row's identity is asserted, not guessed.
+pub(crate) async fn revoke_user_pat(
+    Extension(user_ctx): Extension<UserContext>,
+    State(pool): State<Arc<PgPool>>,
+    Path((user_id, id)): Path<(String, String)>,
+) -> AdminResult<Response> {
+    if !user_ctx.is_admin {
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()));
+    }
+    let target = UserId::new(user_id);
+    access_token_service::revoke_pat(&pool, &target, &id).await?;
+    Ok(StatusCode::NO_CONTENT.into_response())
+}
+
 pub(crate) async fn revoke_pat(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,

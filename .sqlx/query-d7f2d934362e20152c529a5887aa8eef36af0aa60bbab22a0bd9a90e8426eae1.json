@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            u.roles AS \"roles!: Vec<String>\",\n            COALESCE(\n                (SELECT ARRAY_AGG(ug.group_id ORDER BY ug.group_id)\n                 FROM user_groups ug WHERE ug.user_id = u.id),\n                ARRAY[]::TEXT[]\n            ) AS \"group_ids!: Vec<String>\",\n            COALESCE(\n                (SELECT ARRAY_AGG(DISTINCT pm.project_id)\n                 FROM project_members pm WHERE pm.user_id = u.id),\n                ARRAY[]::TEXT[]\n            ) AS \"project_ids!: Vec<String>\"\n        FROM users u\n        WHERE u.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "roles!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "roles"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "group_ids!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "project_ids!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "d7f2d934362e20152c529a5887aa8eef36af0aa60bbab22a0bd9a90e8426eae1"
+}

@@ -1,0 +1,168 @@
+@layer components {
+
+.sp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-2) var(--sp-space-4);
+    border: 1px solid transparent;
+    border-radius: var(--sp-corners-sm);
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+                transform var(--sp-duration-fast) var(--sp-ease-in-out);
+    text-decoration: none;
+    white-space: nowrap;
+    line-height: 20px;
+}
+
+.sp-btn:active { transform: scale(0.97); }
+
+.sp-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--sp-bg-canvas), 0 0 0 4px var(--sp-accent);
+}
+
+.sp-btn--primary {
+    background: var(--sp-accent-fill);
+    color: var(--sp-text-on-accent);
+    border-color: var(--sp-accent);
+    box-shadow: var(--sp-shadow-accent-sm);
+}
+
+.sp-btn--primary:hover {
+    background: var(--sp-accent-hover);
+    border-color: var(--sp-accent-hover);
+    box-shadow: var(--sp-shadow-accent-md);
+}
+
+.sp-btn--primary:active {
+    box-shadow: var(--sp-shadow-xs);
+}
+
+.sp-btn--secondary {
+    background: transparent;
+    color: var(--sp-text-secondary);
+    border-color: var(--sp-border-default);
+    box-shadow: var(--sp-shadow-xs);
+}
+
+.sp-btn--secondary:hover {
+    background: color-mix(in oklch, var(--sp-warm-900) 4%, transparent);
+    border-color: var(--sp-border-strong);
+    color: var(--sp-text-primary);
+}
+
+.sp-btn--danger {
+    background: transparent;
+    color: var(--sp-danger-strong);
+    border-color: color-mix(in oklch, var(--sp-danger) 30%, transparent);
+    box-shadow: var(--sp-shadow-xs);
+}
+
+.sp-btn--danger:hover {
+    background: var(--sp-danger-dim);
+    border-color: color-mix(in oklch, var(--sp-danger) 50%, transparent);
+}
+
+.sp-btn--view {
+    background: transparent;
+    color: var(--sp-accent-text);
+    border-color: color-mix(in oklch, var(--sp-accent) 30%, transparent);
+    box-shadow: var(--sp-shadow-xs);
+}
+
+.sp-btn--view:hover {
+    background: var(--sp-accent-dim);
+    border-color: var(--sp-accent);
+}
+
+.sp-btn--sm {
+    padding: var(--sp-space-1) var(--sp-space-3);
+    font-size: var(--sp-text-xs);
+}
+
+.sp-btn--icon {
+    padding: var(--sp-space-2);
+    min-width: 36px;
+    justify-content: center;
+}
+
+.sp-btn--sm.sp-btn--icon {
+    padding: var(--sp-space-1);
+    min-width: 28px;
+    font-size: var(--sp-text-sm);
+}
+
+.sp-btn--outline {
+    background: transparent;
+    color: var(--sp-text-secondary);
+    border-color: var(--sp-border-default);
+}
+.sp-btn--outline:hover {
+    background: color-mix(in oklch, var(--sp-warm-900) 4%, transparent);
+    border-color: var(--sp-border-strong);
+    color: var(--sp-text-primary);
+}
+
+.sp-btn--outline-primary {
+    background: transparent;
+    color: var(--sp-accent-text);
+    border-color: color-mix(in oklch, var(--sp-accent) 40%, transparent);
+}
+.sp-btn--outline-primary:hover {
+    background: var(--sp-accent-dim);
+    border-color: var(--sp-accent);
+}
+
+.sp-btn--outline-danger {
+    background: transparent;
+    color: var(--sp-danger-strong);
+    border-color: color-mix(in oklch, var(--sp-danger) 40%, transparent);
+}
+.sp-btn--outline-danger:hover {
+    background: var(--sp-danger-dim);
+    border-color: var(--sp-danger);
+}
+
+.sp-btn--ghost {
+    background: transparent;
+    color: var(--sp-text-secondary);
+    border-color: transparent;
+}
+.sp-btn--ghost:hover {
+    background: color-mix(in oklch, var(--sp-warm-900) 4%, transparent);
+    color: var(--sp-text-primary);
+}
+
+.sp-btn--tertiary {
+    background: transparent;
+    color: var(--sp-accent-text);
+    border-color: transparent;
+    box-shadow: none;
+}
+.sp-btn--tertiary:hover {
+    background: var(--sp-accent-dim);
+    color: var(--sp-accent-hover);
+}
+
+.sp-btn--xs {
+    padding: 0.0625rem var(--sp-space-2);
+    font-size: var(--sp-text-xs);
+}
+.sp-btn--files {
+    flex-shrink: 0;
+    align-self: flex-start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sp-btn {
+        transition: none;
+    }
+    .sp-btn:active {
+        transform: none;
+    }
+}
+
+}

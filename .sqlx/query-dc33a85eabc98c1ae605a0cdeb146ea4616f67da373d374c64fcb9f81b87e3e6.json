@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO groups (id, name, description, source)\n         VALUES ($1, $2, $3, 'yaml') ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,\n         description = EXCLUDED.description, updated_at = CURRENT_TIMESTAMP",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dc33a85eabc98c1ae605a0cdeb146ea4616f67da373d374c64fcb9f81b87e3e6"
+}

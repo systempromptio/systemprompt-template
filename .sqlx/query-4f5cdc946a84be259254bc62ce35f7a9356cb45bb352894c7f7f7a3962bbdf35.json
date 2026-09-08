@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n                r.rule_value AS \"role!\",\n                r.entity_type AS \"entity_type!\",\n                r.entity_id AS \"entity_id!\",\n                r.access AS \"access!: AccessDecision\",\n                COALESCE(e.default_included, false) AS \"default_included!\"\n           FROM access_control_rules r\n           LEFT JOIN access_control_entities e\n                  ON e.entity_type = r.entity_type AND e.entity_id = r.entity_id\n           WHERE r.rule_type = 'role'\n           ORDER BY r.rule_value, r.entity_type, r.entity_id\n           LIMIT $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "role!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "rule_value"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "entity_type!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "entity_type"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "entity_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "entity_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "access!: AccessDecision",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "access"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "default_included!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "4f5cdc946a84be259254bc62ce35f7a9356cb45bb352894c7f7f7a3962bbdf35"
+}

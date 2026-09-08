@@ -1,0 +1,26 @@
+@layer components {
+
+.sp-p-models__select { min-width: 18rem; max-width: 30rem; }
+
+/* Why: fixed layout keeps both tables inside the viewport. Model ids are the
+   cells allowed to clip, with the full value on the title. */
+.sp-p-models__table,
+.sp-p-models__usage { table-layout: fixed; width: 100%; }
+
+.sp-p-models__table th:nth-child(1) { width: 26%; }
+.sp-p-models__table th:nth-child(2) { width: 12%; }
+.sp-p-models__table th:nth-child(3) { width: 20%; }
+.sp-p-models__table th:nth-child(4) { width: 20%; }
+.sp-p-models__table th:nth-child(5) { width: 10%; }
+.sp-p-models__table th:nth-child(6) { width: 12%; }
+
+.sp-p-models__usage th:nth-child(1) { width: 15%; }
+.sp-p-models__usage th:nth-child(2) { width: 22%; }
+.sp-p-models__usage th:nth-child(3) { width: 11%; }
+.sp-p-models__usage th:nth-child(4) { width: 11%; }
+.sp-p-models__usage th:nth-child(5) { width: 13%; }
+.sp-p-models__usage th:nth-child(6) { width: 10%; }
+.sp-p-models__usage th:nth-child(7) { width: 9%; }
+.sp-p-models__usage th:nth-child(8) { width: 9%; }
+
+}

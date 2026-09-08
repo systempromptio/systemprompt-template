@@ -1,0 +1,83 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            r.user_id AS \"user_id!: UserId\",\n            COALESCE(u.display_name, u.full_name, u.name, u.email, r.user_id) AS \"label!\",\n            ARRAY(SELECT ug.group_id FROM user_groups ug WHERE ug.user_id = r.user_id) AS \"groups!: Vec<String>\",\n            COUNT(*)::BIGINT AS \"requests!\",\n            COALESCE(SUM(r.tokens_used), 0)::BIGINT AS \"tokens!\",\n            COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS \"cost!\",\n            MAX(r.created_at) AS \"last_active?\",\n            COUNT(*) OVER ()::BIGINT AS \"total_users!\"\n        FROM ai_requests r\n        LEFT JOIN users u ON u.id = r.user_id\n        WHERE r.created_at >= $1 AND r.created_at < $2\n          AND NOT r.synthetic\n          AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))\n          AND ($4::TEXT IS NULL OR r.user_id = $4)\n        GROUP BY r.user_id, u.display_name, u.full_name, u.name, u.email\n        ORDER BY\n            CASE WHEN $5::INT = 0 THEN COUNT(*) END DESC,\n            CASE WHEN $5 = 1 THEN COALESCE(SUM(r.cost_microdollars), 0) END DESC,\n            CASE WHEN $5 = 2 THEN COALESCE(SUM(r.tokens_used), 0) END DESC,\n            CASE WHEN $5 = 3 THEN MAX(r.created_at) END DESC,\n            COUNT(*) DESC\n        LIMIT $6 OFFSET $7\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "label!",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "groups!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_active?",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "total_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text",
+        "Int4",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "b75164d96e5522664f0a9742741a33749a3f2c473a7e8683b46fd3eab88251f1"
+}

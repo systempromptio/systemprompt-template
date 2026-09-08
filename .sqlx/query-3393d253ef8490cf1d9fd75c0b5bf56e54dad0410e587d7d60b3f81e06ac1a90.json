@@ -1,0 +1,66 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            ug.user_id AS \"user_id!: UserId\",\n            u.display_name AS \"display_name?\",\n            u.email AS \"email?\",\n            COALESCE(\n                (SELECT ARRAY_AGG(DISTINCT gm.source) FROM group_members gm\n                 WHERE gm.group_id = ug.group_id AND gm.user_id = ug.user_id),\n                ARRAY['derived']::TEXT[]\n            ) AS \"sources!\",\n            COALESCE(\n                (SELECT ARRAY_AGG(DISTINCT gm.source_ad_group) FROM group_members gm\n                 WHERE gm.group_id = ug.group_id AND gm.user_id = ug.user_id\n                   AND gm.source_ad_group IS NOT NULL),\n                ARRAY[]::TEXT[]\n            ) AS \"source_ad_groups!\"\n        FROM user_groups ug\n        JOIN users u ON u.id = ug.user_id\n        WHERE ug.group_id = $1\n        ORDER BY u.display_name NULLS LAST, ug.user_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_groups",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name?",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "display_name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "email?",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "sources!",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "source_ad_groups!",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "3393d253ef8490cf1d9fd75c0b5bf56e54dad0410e587d7d60b3f81e06ac1a90"
+}

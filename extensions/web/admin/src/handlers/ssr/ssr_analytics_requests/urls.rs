@@ -9,7 +9,9 @@ use urlencoding::encode as urlencode;
 
 use crate::handlers::ssr::list_view::{PageWindow, Pagination};
 
-use super::context::{ChipView, RequestsTab, TabLinkView};
+use crate::handlers::ssr::list_view::Chip;
+
+use super::context::{RequestsTab, TabLinkView};
 use super::{BASE_URL, RequestsQuery};
 
 // Why: a breakdown row drills into the Log tab carrying its own dimension as a
@@ -33,11 +35,11 @@ pub(super) fn tab_links(
     total: i64,
 ) -> Vec<TabLinkView> {
     const TABS: [(RequestsTab, &str); 5] = [
+        (RequestsTab::Log, "Log"),
         (RequestsTab::Overview, "Overview"),
         (RequestsTab::Models, "Models"),
         (RequestsTab::Providers, "Providers"),
         (RequestsTab::Status, "Status"),
-        (RequestsTab::Log, "Log"),
     ];
 
     let qs = preserved_query_string(query, &["tab", "page"]);
@@ -61,21 +63,25 @@ pub(super) fn tab_links(
 
 // Why: removing a chip drops just that parameter and keeps the tab, window,
 // and every other filter intact.
-pub(super) fn active_chips(query: &RequestsQuery) -> Vec<ChipView> {
+pub(super) fn active_chips(query: &RequestsQuery) -> Vec<Chip> {
     let mut chips = Vec::new();
     for (param, group_label, value) in [
         ("model", "Model", query.model.as_deref()),
         ("provider", "Provider", query.provider.as_deref()),
         ("status", "Status", query.status.as_deref()),
+        ("tool", "Tool", query.tool.as_deref()),
+        ("group", "Group", query.group.as_deref()),
+        ("project", "Project", query.project.as_deref()),
         ("q", "Search", query.q.as_deref()),
     ] {
         let Some(value) = value.filter(|s| !s.is_empty()) else {
             continue;
         };
         let qs = preserved_query_string(query, &[param, "page"]);
-        chips.push(ChipView {
+        chips.push(Chip {
             group_label,
             label: value.to_owned(),
+            value: value.to_owned(),
             remove_url: if qs.is_empty() {
                 BASE_URL.to_owned()
             } else {
@@ -92,7 +98,7 @@ pub(super) fn clear_url(query: &RequestsQuery) -> String {
     let qs = preserved_query_string(
         query,
         &[
-            "model", "provider", "status", "q", "user_id", "agent_id", "page",
+            "model", "provider", "status", "tool", "q", "user_id", "agent_id", "page",
         ],
     );
     if qs.is_empty() {
@@ -104,8 +110,10 @@ pub(super) fn clear_url(query: &RequestsQuery) -> String {
 
 pub(super) fn preserved_query_string(query: &RequestsQuery, drop: &[&str]) -> String {
     let mut parts: Vec<String> = Vec::new();
-    let pairs_str: [(&str, Option<&str>); 12] = [
+    let pairs_str: [(&str, Option<&str>); 15] = [
         ("tab", query.tab.as_deref()),
+        ("group", query.group.as_deref()),
+        ("project", query.project.as_deref()),
         ("preset", query.preset.as_deref()),
         ("from", query.from.as_deref()),
         ("to", query.to.as_deref()),
@@ -126,6 +134,7 @@ pub(super) fn preserved_query_string(query: &RequestsQuery, drop: &[&str]) -> St
         ("model", query.model.as_deref()),
         ("provider", query.provider.as_deref()),
         ("status", query.status.as_deref()),
+        ("tool", query.tool.as_deref()),
         ("q", query.q.as_deref()),
         ("sort", query.sort.as_deref()),
         ("dir", query.dir.as_deref()),
@@ -145,6 +154,29 @@ pub(super) fn preserved_query_string(query: &RequestsQuery, drop: &[&str]) -> St
         parts.push(format!("page={p}"));
     }
     parts.join("&")
+}
+
+// Why: a sortable header keeps every filter and the window, and drops the page
+// — re-sorting a list puts different rows on page one, so staying on page 7
+// would land the reader somewhere they did not choose.
+pub(super) fn sort_url_prefix(query: &RequestsQuery) -> String {
+    let qs = preserved_query_string(query, &["sort", "dir", "page"]);
+    if qs.is_empty() {
+        format!("{BASE_URL}?")
+    } else {
+        format!("{BASE_URL}?{qs}&")
+    }
+}
+
+// Why: the export is the same question the table is answering, so it carries
+// every filter and the window rather than dumping the raw table.
+pub(super) fn csv_url(query: &RequestsQuery) -> String {
+    let qs = preserved_query_string(query, &["tab", "page"]);
+    if qs.is_empty() {
+        "/admin/requests.csv".to_owned()
+    } else {
+        format!("/admin/requests.csv?{qs}")
+    }
 }
 
 pub(super) fn build_pagination(query: &RequestsQuery, window: PageWindow) -> Pagination {

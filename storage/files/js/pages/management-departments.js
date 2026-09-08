@@ -1,68 +1,69 @@
+// The departments listing's write actions: creating and deleting a
+// department. Search is a link the server answers.
+
 import { rawFetch } from '../services/api.js';
 import { showConfirmDialog } from '../services/confirm.js';
+import { showToast } from '../services/toast.js';
+import { on, initDelegation } from '../services/events.js';
 
 const DEPARTMENTS_URL = '/admin/management/departments';
 
-const showInlineError = (el, err) => {
-  el.textContent = err.message;
+const showInlineError = (form, err) => {
+  const el = form.querySelector('[data-error]');
+  if (!el) return;
+  el.textContent = err?.message ?? 'The request was refused';
   el.hidden = false;
 };
 
-const bindCreateDialog = () => {
-  const dlg = document.getElementById('dept-create-dialog');
-  const form = document.getElementById('dept-create-form');
-  const errEl = document.getElementById('dept-create-error');
-  const open = () => {
-    errEl.hidden = true;
-    form.reset();
-    dlg.showModal();
-  };
-  document.getElementById('btn-new-department')?.addEventListener('click', open);
-  document.getElementById('btn-new-department-empty')?.addEventListener('click', open);
-  document.getElementById('dept-create-cancel')?.addEventListener('click', () => dlg.close());
-  form?.addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    const fd = new FormData(form);
-    try {
-      await rawFetch(DEPARTMENTS_URL, {
-        method: 'POST',
-        body: JSON.stringify({ name: fd.get('name'), description: fd.get('description') || '' }),
-      });
-      location.reload();
-    } catch (err) {
-      showInlineError(errEl, err);
-    }
-  });
+const openCreateDialog = () => {
+  const dlg = document.querySelector('[data-dialog="dept-create"]');
+  const form = dlg?.querySelector('form');
+  if (!dlg || !form) return;
+  form.reset();
+  const err = form.querySelector('[data-error]');
+  if (err) err.hidden = true;
+  dlg.showModal();
 };
 
-const bindDeleteButtons = () => {
-  for (const btn of document.querySelectorAll('[data-delete-dept]')) {
-    btn.addEventListener('click', (ev) => {
-      ev.stopPropagation();
-      const id = btn.dataset.deleteDept;
-      const name = btn.dataset.deptName;
-      showConfirmDialog(
-        `Delete department "${name}"?`,
-        'Members will be reassigned to "Default" and department-level access rules removed.',
-        'Delete',
-        async () => {
-          await rawFetch(`${DEPARTMENTS_URL}/${id}`, { method: 'DELETE' });
-          location.reload();
-        },
-      );
+const createDepartment = async (form) => {
+  const fd = new FormData(form);
+  try {
+    await rawFetch(DEPARTMENTS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ name: fd.get('name'), description: fd.get('description') || '' }),
     });
+    window.location.reload();
+  } catch (err) {
+    showInlineError(form, err);
   }
 };
 
-const bindSearch = () => {
-  document.getElementById('dept-search')?.addEventListener('input', (ev) => {
-    const q = ev.target.value.toLowerCase();
-    for (const row of document.querySelectorAll('[data-dept-name]')) {
-      row.hidden = Boolean(q) && !row.dataset.deptName.includes(q);
-    }
+const deleteDepartment = (button) => {
+  const { deleteDept: id, deptName: name } = button.dataset;
+  showConfirmDialog(
+    `Delete department "${name}"?`,
+    'Members are moved to Default and the department-level access rules are removed.',
+    'Delete',
+    async () => {
+      try {
+        await rawFetch(`${DEPARTMENTS_URL}/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        window.location.reload();
+      } catch (err) {
+        showToast(err?.message ?? 'Failed to delete the department', 'error');
+      }
+    },
+  );
+};
+
+const init = () => {
+  initDelegation();
+  on('click', '[data-action="new-department"]', openCreateDialog);
+  on('click', '[data-action="dialog-close"]', (_ev, button) => button.closest('dialog')?.close());
+  on('click', '[data-delete-dept]', (_ev, button) => deleteDepartment(button));
+  document.querySelector('form[data-form="dept-create"]')?.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    createDepartment(ev.target);
   });
 };
 
-bindCreateDialog();
-bindDeleteButtons();
-bindSearch();
+init();

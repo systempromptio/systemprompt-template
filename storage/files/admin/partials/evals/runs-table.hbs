@@ -1,0 +1,32 @@
+{{!--
+  One row per eval run. Invoke as {{> evals/runs-table runs=runs}} — the rows
+  are passed explicitly so the Golden set tab can hand over only its replays.
+--}}
+{{#> components/table caption="Evaluation runs, newest first" modifier="sp-p-evals__runs"}}
+    <thead><tr>
+        <th scope="col">Run</th>
+        <th scope="col">Kind</th>
+        <th scope="col">Status</th>
+        <th scope="col">Judge</th>
+        <th scope="col" class="sp-table__cell--num">Scored</th>
+        <th scope="col" class="sp-table__cell--num">Failed</th>
+        <th scope="col" class="sp-table__cell--num">Mean</th>
+        <th scope="col" class="sp-table__cell--num">Judge cost</th>
+        <th scope="col" class="sp-table__cell--date">Started</th>
+    </tr></thead>
+    <tbody>
+    {{#each runs}}
+    <tr>
+        <td class="sp-table__cell--primary sp-u-mono"><a href="{{this.detail_url}}" title="{{this.id}}">{{this.short_id}}</a></td>
+        <td>{{this.kind_label}}</td>
+        <td>{{> components/badge tone=this.status_tone text=this.status}}</td>
+        <td class="sp-table__cell--mono sp-p-evals__clip" title="{{this.judge_model}}">{{this.judge_model}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.scored_count}} <span class="sp-table__cell--muted">/ {{this.sample_size}}</span></td>
+        <td class="sp-table__cell--num sp-u-num">{{#if this.failed_count}}{{this.failed_count}}{{else}}<span class="sp-table__cell--muted">—</span>{{/if}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.mean_score_display}}</td>
+        <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+        <td class="sp-table__cell--date">{{this.created_at_local}}</td>
+    </tr>
+    {{/each}}
+    </tbody>
+{{/components/table}}

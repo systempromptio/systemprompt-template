@@ -1,14 +1,26 @@
 @layer tokens {
+
+/* Compact is the default because this is an operations console: the target is
+   roughly 24 table rows on a 900px viewport with the page header, KPI row and
+   toolbar all still above the fold. html[data-density="comfortable"] is
+   reserved for a future per-user preference and changes nothing else. */
+
 :root {
-    --sp-radius-card: 1rem;
-    --sp-radius-card-inner: 0.625rem;
-    --sp-radius-widget: 1.25rem;
-    --sp-radius-button: 0.5rem;
-    --sp-radius-badge: 0.375rem;
-    --sp-radius-brand-tr: 0.375rem;
-    --sp-radius-card-brand: var(--sp-corners-md);
-    --sp-radius-card-inner-brand: var(--sp-corners-inner-md);
-    --sp-radius-widget-brand: 1.25rem 0.375rem 1.25rem 1.25rem;
+    --sp-gutter: var(--sp-space-6);
+
+    --sp-density-row: 2rem;
+    --sp-density-cell-y: 0.375rem;
+    /* The line box inside a data cell. Every inline control in a row is sized
+       to it, so a row is padding plus one line and nothing else. */
+    --sp-density-cell-line: 1.25rem;
+    --sp-density-cell-x: 0.75rem;
+    --sp-density-tile: 0.75rem;
+    --sp-density-tile-h: 4.75rem;
+    /* The ceiling on a text cell. Wide enough that a name or a description is
+       usually whole, narrow enough that one long value cannot take the table. */
+    --sp-table-cell-max: 22ch;
+    --sp-density-gap: 0.75rem;
+    --sp-density-section: 1.25rem;
 
     --sp-z-sticky: 1;
     --sp-z-sticky-header: 3;
@@ -16,13 +28,34 @@
     --sp-z-sidebar-drawer: 950;
     --sp-z-dropdown: 1000;
     --sp-z-panel: 1100;
-    --sp-z-modal: 1500;
     --sp-z-modal-backdrop: 1400;
+    --sp-z-modal: 1500;
     --sp-z-lightbox: 2000;
     --sp-z-toast: 2500;
 
-    --sp-overlay-light:  light-dark(oklch(0.20 0.01 50 / 0.3), oklch(0 0 0 / 0.5));
-    --sp-overlay-medium: light-dark(oklch(0.20 0.01 50 / 0.5), oklch(0 0 0 / 0.65));
-    --sp-overlay-heavy:  light-dark(oklch(0.20 0.01 50 / 0.7), oklch(0 0 0 / 0.8));
+    --sp-overlay-light:  color-mix(in oklch, var(--sp-shadow-color) 30%, transparent);
+    --sp-overlay-medium: color-mix(in oklch, var(--sp-shadow-color) 50%, transparent);
+    --sp-overlay-heavy:  color-mix(in oklch, var(--sp-shadow-color) 70%, transparent);
 }
+
+html[data-density="comfortable"] {
+    --sp-density-row: 2.5rem;
+    --sp-density-cell-y: 0.625rem;
+    --sp-density-cell-line: 1.5rem;
+    --sp-density-cell-x: 1rem;
+    --sp-density-tile: 1rem;
+    --sp-density-tile-h: 5.5rem;
+    --sp-table-cell-max: 28ch;
+    --sp-density-gap: 1rem;
+    --sp-density-section: 1.75rem;
+}
+
+@media (max-width: 64rem) {
+    :root { --sp-gutter: var(--sp-space-4); }
+}
+
+@media (max-width: 48rem) {
+    :root { --sp-gutter: var(--sp-space-3); }
+}
+
 }

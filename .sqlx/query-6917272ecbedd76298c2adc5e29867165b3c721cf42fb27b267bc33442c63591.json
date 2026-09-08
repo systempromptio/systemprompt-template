@@ -1,0 +1,37 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            DATE_TRUNC('month', r.created_at) AS \"month_start!\",\n            COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS \"cost!\",\n            COUNT(*)::BIGINT AS \"requests!\"\n        FROM ai_requests r\n        WHERE r.created_at >= DATE_TRUNC('month', NOW()) - ($1::INT * INTERVAL '1 month')\n        GROUP BY 1\n        ORDER BY 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "month_start!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "6917272ecbedd76298c2adc5e29867165b3c721cf42fb27b267bc33442c63591"
+}

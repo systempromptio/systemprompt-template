@@ -1,0 +1,10 @@
+{{#if is_public}}
+<span class="sp-visibility-badge sp-badge sp-badge--ok" title="Reachable by every signed-in user">All users</span>
+{{else if has_scope}}
+<span class="sp-visibility-badge sp-visibility-badge--scoped" title="{{label}}">
+    {{#each groups}}<span class="sp-badge sp-badge--info">{{this}}</span>{{/each}}
+    {{#each projects}}<span class="sp-badge sp-badge--warn">{{this}}</span>{{/each}}
+</span>
+{{else}}
+<span class="sp-visibility-badge sp-badge sp-badge--muted" title="No audience declared — nothing reaches this yet">{{label}}</span>
+{{/if}}

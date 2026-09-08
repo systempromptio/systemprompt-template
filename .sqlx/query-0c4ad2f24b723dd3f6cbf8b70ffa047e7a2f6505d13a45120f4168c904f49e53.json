@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE requirements_workflows SET state=$1,revision=revision+1,updated_at=NOW() WHERE id=$2 AND revision=$3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Jsonb",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0c4ad2f24b723dd3f6cbf8b70ffa047e7a2f6505d13a45120f4168c904f49e53"
+}

@@ -18,4 +18,5 @@ pub(crate) struct SettingsPageData {
     pub user_email: String,
     pub user_id: UserId,
     pub username: String,
+    pub breadcrumbs: Vec<super::BreadcrumbView>,
 }

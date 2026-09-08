@@ -1,128 +1,83 @@
 {{!--
-  Scored answers tab: the judge run form and the answers it produced, in that
-  order, so the button and the table it fills sit together.
+  Judge tab: the scored answers first, worst verdicts on top, then the judge
+  runs that produced them, then the form that launches the next one. The
+  table leads so it sits above the fold under the tab strip and time range;
+  the scores themselves are in the page header's meta line.
 --}}
-<h2 class="eval-section-title">Judge live traffic</h2>
-<p class="text-muted text-xs eval-hint">
-    Judge calls go out through this gateway under your own session, so they are
-    scope-checked, audited and costed like any other client's traffic — and are
-    excluded from future sampling. Suggested judge: <code class="code-inline">{{judge_model}}</code>,
-    the least-used model in this window, which is least likely to be grading its own output.
-</p>
-
-<form method="post" action="{{base_url}}/run" class="toolbar eval-run-form">
-    <input type="hidden" name="kind" value="judge">
-    <input type="hidden" name="tab" value="{{tab}}">
-    <input type="hidden" name="from" value="{{time_range.from}}">
-    <input type="hidden" name="to" value="{{time_range.to}}">
-    <label class="filter-field">
-        <span class="filter-field__label">Sample size</span>
-        <input type="number" name="sample_size" class="search-input eval-run-form__number"
-               value="{{default_sample_size}}" min="1" max="{{max_sample_size}}">
-    </label>
-    <label class="filter-field">
-        <span class="filter-field__label">Judge model</span>
-        <select name="judge_model" class="filter-select">
-            {{#each model_options}}
-            <option value="{{this.value}}">{{this.label}}</option>
-            {{/each}}
-        </select>
-    </label>
-    <button type="submit" class="btn btn-sm">Run judge</button>
-</form>
-
-<h2 class="eval-section-title">Scored answers</h2>
-
-<form method="get" action="{{base_url}}" class="toolbar eval-filter-form">
+<form class="sp-toolbar" method="get" action="{{base_url}}" role="search" aria-label="Filter scored answers">
     <input type="hidden" name="tab" value="{{tab}}">
     <input type="hidden" name="preset" value="{{time_range.preset}}">
     <input type="hidden" name="from" value="{{time_range.from}}">
     <input type="hidden" name="to" value="{{time_range.to}}">
-    <label class="filter-field">
-        <span class="filter-field__label">Verdict</span>
-        <select name="verdict" class="filter-select">
+    <span class="sp-toolbar__count">{{scores.scored_count}} judged</span>
+    <div class="sp-toolbar__field">
+        <label class="sp-toolbar__field-label" for="evals-filter-verdict">Verdict</label>
+        <select class="sp-select" id="evals-filter-verdict" name="verdict">
             {{#each filter.verdict_options}}
             <option value="{{this.value}}"{{#if this.is_selected}} selected{{/if}}>{{this.label}}</option>
             {{/each}}
         </select>
-    </label>
-    <label class="filter-field">
-        <span class="filter-field__label">Model</span>
-        <select name="model" class="filter-select">
+    </div>
+    <div class="sp-toolbar__field">
+        <label class="sp-toolbar__field-label" for="evals-filter-model">Model</label>
+        <select class="sp-select" id="evals-filter-model" name="model">
             {{#each filter.model_options}}
             <option value="{{this.value}}"{{#if this.is_selected}} selected{{/if}}>{{this.label}}</option>
             {{/each}}
         </select>
-    </label>
-    <button type="submit" class="btn btn-sm btn-outline">Filter</button>
-    {{#if filter.is_filtered}}
-    <a class="btn btn-sm btn-outline" href="{{base_url}}?tab={{tab}}&preset={{time_range.preset}}">Clear</a>
-    {{/if}}
+    </div>
+    <div class="sp-toolbar__actions">
+        {{#if filter.is_filtered}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{base_url}}?tab={{tab}}&preset={{time_range.preset}}">Clear</a>
+        {{/if}}
+        <button type="submit" class="sp-btn sp-btn--sm sp-btn--secondary">Apply</button>
+    </div>
 </form>
 
 {{#if results}}
-<p class="text-muted text-xs eval-hint">Worst verdicts first — a passing answer needs no attention.</p>
-<div class="eval-results">
-    {{#each results}}
-    <article class="eval-result{{#if this.is_fail}} eval-result--fail{{/if}}{{#if this.is_partial}} eval-result--partial{{/if}}">
-        <header class="eval-result__head">
-            <span class="eval-result__score">{{this.score_display}}</span>
-            <span class="mcp-badge {{#if this.is_pass}}mcp-badge-success{{/if}}{{#if this.is_partial}}mcp-badge-warning{{/if}}{{#if this.is_fail}}mcp-badge-danger{{/if}}">
-                {{this.verdict}}
-            </span>
-            <code class="code-inline">{{this.model}}</code>
-            {{#each this.flags}}
-            <span class="eval-flag">{{this}}</span>
-            {{/each}}
-            <span class="gf-panel__spacer"></span>
-            {{#if this.ai_request_id}}
-            <a class="eval-result__link" href="/admin/entities/requests/{{this.ai_request_id}}">
-                full chain &rarr;
-            </a>
-            {{/if}}
-            <span class="text-muted text-xs">{{this.created_at_local}}</span>
-        </header>
-
-        {{#if this.dimensions}}
-        <div class="eval-dims">
-            {{#each this.dimensions}}
-            <div class="eval-dim" title="{{this.label}}: {{this.score}}/5">
-                <span class="eval-dim__label">{{this.label}}</span>
-                <span class="eval-dim__bar" style="--v:{{this.pct}}%"></span>
-                <span class="eval-dim__score">{{this.score}}</span>
-            </div>
-            {{/each}}
-        </div>
-        {{/if}}
-
-        <p class="eval-result__rationale">{{this.rationale}}</p>
-
-        <details class="eval-result__detail">
-            <summary>Prompt and answer</summary>
-            <p class="eval-result__excerpt"><strong>Prompt:</strong> {{this.prompt_excerpt}}</p>
-            <p class="eval-result__excerpt"><strong>Answer:</strong> {{this.response_excerpt}}</p>
-        </details>
-
-        {{#if this.promote_id}}
-        <form method="post" action="{{@root.base_url}}/cases" class="eval-result__promote">
-            <input type="hidden" name="ai_request_id" value="{{this.promote_id}}">
-            <input type="hidden" name="tab" value="{{@root.tab}}">
-            <input type="hidden" name="from" value="{{@root.time_range.from}}">
-            <input type="hidden" name="to" value="{{@root.time_range.to}}">
-            <input type="text" name="expectation" class="search-input"
-                   placeholder="What a good answer must do (optional)">
-            <button type="submit" class="btn btn-sm btn-outline">Add to golden set</button>
-        </form>
-        {{/if}}
-    </article>
-    {{/each}}
-</div>
+{{> evals/results-table results=results}}
 {{else}}
 {{#if filter.is_filtered}}
-{{> components/empty-state
-    message="No scored answers match this filter. Widen the verdict or model above."}}
+{{> components/empty-state title="No match" message="No scored answers match this filter. Widen the verdict or model above."}}
 {{else}}
-{{> components/empty-state
-    message="Nothing judged in this window yet. Run a judge evaluation above to score recent traffic."}}
+{{> components/empty-state title="Nothing judged yet" message="Nothing judged in this window yet. Run a judge evaluation below to score recent traffic."}}
 {{/if}}
 {{/if}}
+
+{{> components/section title="Judge runs" note="Every judge evaluation launched in this window. Open a run to see the answers it scored."}}
+{{#if runs}}
+{{> evals/runs-table runs=runs}}
+{{else}}
+{{> components/empty-state title="No judge runs yet" message="No judge evaluation has run in this window. Launch one below."}}
+{{/if}}
+
+{{#> components/section title="Judge live traffic" note="Judge calls go out through this gateway under your own session, so they are scope-checked, audited and costed like any other client's traffic, and are excluded from future sampling."}}
+    {{#*inline "section_actions"}}
+    <span class="sp-u-text-xs sp-u-text-tertiary">Suggested judge: <code class="sp-code-inline">{{judge_model}}</code>, the least-used model in this window</span>
+    {{/inline}}
+{{/components/section}}
+
+<div class="sp-card">
+    <form method="post" action="{{base_url}}/run" class="sp-card__body sp-p-evals__run-form">
+        <input type="hidden" name="kind" value="judge">
+        <input type="hidden" name="tab" value="{{tab}}">
+        <input type="hidden" name="from" value="{{time_range.from}}">
+        <input type="hidden" name="to" value="{{time_range.to}}">
+        <div class="sp-form-group">
+            <label for="evals-sample-size">Sample size</label>
+            <input type="number" id="evals-sample-size" name="sample_size" class="sp-field-input"
+                   value="{{default_sample_size}}" min="1" max="{{max_sample_size}}">
+        </div>
+        <div class="sp-form-group">
+            <label for="evals-judge-model">Judge model</label>
+            <select id="evals-judge-model" name="judge_model" class="sp-select">
+                {{#each model_options}}
+                <option value="{{this.value}}">{{this.label}}</option>
+                {{/each}}
+            </select>
+        </div>
+        <div class="sp-form-actions">
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary"{{#unless model_options}} disabled{{/unless}}>Run judge</button>
+        </div>
+    </form>
+</div>

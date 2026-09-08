@@ -1,0 +1,211 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+
+    {{> components/page-header
+        title="Devices & enrolments"
+        subtitle="Every credential this platform has handed out, and whether anything is still using it."}}
+
+    <section class="sp-kpi-grid" aria-label="Fleet summary">
+      {{> components/kpi label="Active devices" value=stats.bridges_active tone="ok"
+          note=stats.bridges_total_sub
+          hint="Bridge sessions with a heartbeat inside the last seven days"}}
+      {{> components/kpi label="Stale over 7d" value=stats.bridges_stale tone=stats.stale_tone
+          note="no heartbeat in 7 days"
+          href=stats.stale_url active=stats.stale_active
+          hint="Click to list only the bridges that have gone quiet"}}
+      {{> components/kpi label="Versions" value=stats.versions
+          note=stats.versions_sub
+          hint="Distinct bridge builds reporting; more than two means a rollout is unfinished"}}
+      {{> components/kpi label="Active tokens" value=stats.pats_active
+          note=stats.pats_sub
+          hint="Personal access tokens not yet revoked"}}
+      {{> components/kpi label="Device certs" value=stats.certs_active
+          note=stats.certs_sub
+          hint="Certificates that would still let a machine enrol"}}
+      {{> components/kpi label="Pending links" value=stats.links_pending tone=stats.links_tone
+          note=stats.links_sub
+          hint="Connect codes issued and not yet claimed"}}
+    </section>
+
+    {{> components/tabs tabs=tabs nav_label="Device credential views"}}
+
+    {{#> components/toolbar toolbar_count=count_label}}
+      {{#*inline "toolbar_filters"}}
+        {{#each filters}}
+        <a class="sp-btn sp-btn--sm{{#if this.is_active}} sp-btn--primary{{else}} sp-btn--outline{{/if}}"
+           href="{{this.href}}"{{#if this.is_active}} aria-current="true"{{/if}}>{{this.label}}<span class="sp-tab-count">{{this.count}}</span></a>
+        {{/each}}
+      {{/inline}}
+      {{#*inline "toolbar_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/bridge-auth/setup">Enrol a device</a>
+      {{/inline}}
+    {{/components/toolbar}}
+
+    {{#if has_rows}}
+    {{#> components/table caption="Device credentials by person" pagination=pagination}}
+      <thead><tr>
+        <th class="sp-col-user">User</th>
+        <th class="sp-col-items">{{items_label}}</th>
+        {{#each sort_headers}}{{> components/sort-header this}}{{/each}}
+        <th class="sp-col-status">Status</th>
+        <th class="sp-table__cell--actions"><span class="sp-u-sr-only">Open</span></th>
+      </tr></thead>
+      <tbody>
+        {{#each groups}}
+        <tr class="sp-table__row--expand">
+          <td class="sp-col-user">
+            <a class="sp-user-cell" href="{{this.user_url}}">
+              <span class="sp-avatar sp-avatar-sm">{{initials this.user_name}}</span>
+              <span>{{this.user_name}}</span>
+            </a>
+          </td>
+          <td class="sp-col-items">{{this.count_label}}
+            <span class="sp-p-devices__summary">{{this.summary}}</span></td>
+          {{#each this.cells}}<td class="{{this.class}}">{{this.value}}</td>{{/each}}
+          <td class="sp-col-status">{{> components/badge tone=this.status_tone text=this.status_label}}</td>
+          <td class="sp-table__cell--actions">
+            <button class="sp-btn--actions sp-table__row-toggle" type="button"
+                    aria-expanded="false" aria-controls="{{this.detail_id}}"
+                    aria-label="Show {{this.count_label}} for {{this.user_name}}">&#9662;</button>
+          </td>
+        </tr>
+        <tr class="sp-table__row-detail" id="{{this.detail_id}}" hidden>
+          <td colspan="9">
+            <table class="sp-table__el sp-table__el--nested">
+              {{#if (eq ../tab "bridges")}}
+              <thead><tr>
+                <th class="sp-col-host">Host</th>
+                <th class="sp-col-version">Version</th>
+                <th class="sp-table__cell--date">Started</th>
+                <th class="sp-table__cell--date">Last heartbeat</th>
+                <th class="sp-table__cell--num">Forwarded</th>
+                <th class="sp-table__cell--num">Tokens</th>
+                <th class="sp-col-status">Status</th>
+              </tr></thead>
+              {{/if}}
+              {{#if (eq ../tab "pats")}}
+              <thead><tr>
+                <th class="sp-col-token">Token</th>
+                <th class="sp-table__cell--date">Issued</th>
+                <th class="sp-table__cell--date">Last used</th>
+                <th class="sp-table__cell--date">Expires</th>
+                <th class="sp-col-status">Status</th>
+                {{#if ../has_row_actions}}<th class="sp-table__cell--actions">Actions</th>{{/if}}
+              </tr></thead>
+              {{/if}}
+              {{#if (eq ../tab "certs")}}
+              <thead><tr>
+                <th class="sp-col-host">Device</th>
+                <th class="sp-table__cell--date">Enrolled</th>
+                <th class="sp-col-fingerprint">Fingerprint</th>
+                <th class="sp-col-status">Status</th>
+                {{#if ../has_row_actions}}<th class="sp-table__cell--actions">Actions</th>{{/if}}
+              </tr></thead>
+              {{/if}}
+              {{#if (eq ../tab "links")}}
+              <thead><tr>
+                <th class="sp-table__cell--date">Issued</th>
+                <th class="sp-table__cell--date">Expires</th>
+                <th class="sp-col-status">Status</th>
+              </tr></thead>
+              {{/if}}
+              <tbody>
+                {{#each sessions}}
+                <tr>
+                  <td class="sp-col-host">{{this.hostname}}
+                    <span class="sp-p-devices__os">{{this.os}}</span>{{#if this.sessions_display}}
+                    <span class="sp-p-devices__sessions">{{this.sessions_display}}</span>{{/if}}</td>
+                  <td class="sp-col-version sp-u-mono">{{this.version}}</td>
+                  <td class="sp-table__cell--date">{{this.started_display}}</td>
+                  <td class="sp-table__cell--date">{{this.heartbeat_display}}</td>
+                  <td class="sp-table__cell--num sp-u-num">{{this.forwarded_display}}</td>
+                  <td class="sp-table__cell--num sp-u-num">{{this.tokens_display}}</td>
+                  <td class="sp-col-status">{{> components/badge tone=this.status_tone text=this.status_label}}</td>
+                </tr>
+                {{/each}}
+
+                {{#each pats}}
+                <tr>
+                  <td class="sp-col-token">{{this.name}}
+                    <span class="sp-p-devices__os sp-u-mono">{{this.key_prefix}}</span></td>
+                  <td class="sp-table__cell--date">{{this.created_display}}</td>
+                  <td class="sp-table__cell--date">{{this.used_display}}</td>
+                  <td class="sp-table__cell--date">{{this.expires_display}}</td>
+                  <td class="sp-col-status">{{> components/badge tone=this.status_tone text=this.status_label}}</td>
+                  {{#if ../../has_row_actions}}
+                  <td class="sp-table__cell--actions">
+                    {{#if ../../can_manage}}{{#if this.can_revoke}}
+                    <button type="button" class="sp-btn sp-btn--sm sp-btn--danger"
+                            data-revoke-kind="pats" data-revoke-id="{{this.id}}"
+                            data-revoke-name="{{this.name}}">Revoke</button>
+                    {{/if}}{{/if}}
+                  </td>
+                  {{/if}}
+                </tr>
+                {{/each}}
+
+                {{#each certs}}
+                <tr>
+                  <td class="sp-col-host">{{this.label}}</td>
+                  <td class="sp-table__cell--date">{{this.enrolled_display}}</td>
+                  <td class="sp-col-fingerprint sp-u-mono">{{this.fingerprint}}</td>
+                  <td class="sp-col-status">{{> components/badge tone=this.status_tone text=this.status_label}}</td>
+                  {{#if ../../has_row_actions}}
+                  <td class="sp-table__cell--actions">
+                    {{#if ../../can_manage}}{{#if this.can_revoke}}
+                    <button type="button" class="sp-btn sp-btn--sm sp-btn--danger"
+                            data-revoke-kind="certs" data-revoke-id="{{this.id}}"
+                            data-revoke-name="{{this.label}}">Revoke</button>
+                    {{/if}}{{/if}}
+                  </td>
+                  {{/if}}
+                </tr>
+                {{/each}}
+
+                {{#each links}}
+                <tr>
+                  <td class="sp-table__cell--date">{{this.created_display}}</td>
+                  <td class="sp-table__cell--date">{{this.expires_display}}</td>
+                  <td class="sp-col-status">{{> components/badge tone=this.status_tone text=this.status_label}}</td>
+                </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    {{/components/table}}
+    {{else}}
+      {{> components/empty-state title="Nothing here" message=empty_message}}
+    {{/if}}
+
+    {{#if has_versions}}
+    <section class="sp-section sp-p-devices__estate" aria-label="Bridge versions in the estate">
+    {{#> components/section title="Bridge versions in the estate" count=stats.versions
+        note="One bar per build, longest first. The newest build is marked; everything shorter than it is a machine still to upgrade."}}
+    {{/components/section}}
+    <ul class="sp-p-devices__versions">
+      {{#each versions}}
+      <li class="sp-p-devices__version{{#if this.is_latest}} is-latest{{/if}}">
+        <span class="sp-p-devices__version-label sp-u-mono">{{this.label}}{{#if this.is_latest}}
+          {{> components/badge tone="ok" text="latest"}}{{/if}}</span>
+        <svg class="sp-p-devices__bar" viewBox="0 0 100 8" preserveAspectRatio="none"
+             role="img" aria-label="{{this.devices}} devices on {{this.label}}">
+          <rect class="sp-p-devices__bar-track" x="0" y="0" width="100" height="8"></rect>
+          <rect class="sp-p-devices__bar-fill" x="0" y="0" width="{{this.pct}}" height="8"></rect>
+        </svg>
+        <span class="sp-p-devices__version-count sp-u-num">{{this.devices}}</span>
+      </li>
+      {{/each}}
+    </ul>
+    </section>
+    {{/if}}
+
+    {{/inline}}
+
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-devices.js?v={{css_version}}"></script>
+    {{/inline}}
+{{/layout}}

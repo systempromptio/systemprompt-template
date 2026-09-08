@@ -1,0 +1,82 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+
+    {{#> components/page-header title=title subtitle=subtitle}}
+        {{#*inline "header_meta"}}
+        <nav class="sp-time-range__presets" role="group" aria-label="Time range">
+            {{#each ranges}}
+            <a class="sp-time-range__btn{{#if this.is_active}} sp-time-range__btn--active{{/if}}" href="{{this.href}}"{{#if this.is_active}} aria-current="page"{{/if}}>{{this.label}}</a>
+            {{/each}}
+        </nav>
+        {{/inline}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/requests">Request log</a>
+        <a class="sp-btn sp-btn--sm sp-btn--primary" href="/admin/analytics">Analytics</a>
+        {{/inline}}
+    {{/components/page-header}}
+
+    <section aria-label="Headline figures">
+        {{#if kpis.error}}{{> components/notice tone="err" title="Headline figures unavailable" message=kpis.error}}{{/if}}
+        {{#if kpis.comparison_note}}<p class="sp-p-overview__note">{{kpis.comparison_note}}</p>{{/if}}
+        <div class="sp-kpi-grid">
+            {{#each kpis.tiles}}
+            {{> components/kpi label=this.label value=this.value note=this.sub href=this.href
+                hint=this.hint tone=this.tone delta=this.delta delta_dir=this.delta_dir}}
+            {{/each}}
+        </div>
+    </section>
+
+    <section class="sp-p-overview__chart" aria-label="Request volume">
+        {{> components/svg-line-chart volume_chart}}
+    </section>
+
+    <div class="sp-p-overview__two-up">
+        {{> overview/scope-board board=projects}}
+        {{> overview/scope-board board=groups}}
+    </div>
+
+    <div class="sp-p-overview__two-up">
+        {{> overview/models-board}}
+
+        <section aria-label="Waiting on a person">
+            {{#> components/section title="Waiting on a person" note="Held for approval, and flagged usage."}}
+                {{#*inline "section_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance">Governance</a>{{/inline}}
+            {{/components/section}}
+            {{#if queues.approvals_error}}{{> components/notice tone="err" title="Approval queue unavailable" message=queues.approvals_error}}{{/if}}
+            <div class="sp-kpi-grid">
+                {{> components/kpi label="Pending approvals" value=queues.approvals tone=queues.approvals_tone
+                    note="calls held by require_approval" href="/admin/governance/approvals"}}
+                {{> components/kpi label="Open anomalies" value=queues.anomaly_count tone=queues.anomalies_tone
+                    note="detected in the last 24 hours" href="/admin/analytics?tab=spend"}}
+            </div>
+            {{#if queues.anomalies_error}}{{> components/notice tone="err" title="Anomalies unavailable" message=queues.anomalies_error}}{{/if}}
+            {{#if queues.has_anomalies}}
+            {{#> components/table caption="Usage anomalies detected in the last 24 hours"}}
+                <thead><tr>
+                    <th scope="col">Metric</th>
+                    <th scope="col">Window</th>
+                    <th scope="col" class="sp-table__cell--num">Observed</th>
+                    <th scope="col" class="sp-table__cell--num">Baseline</th>
+                    <th scope="col">Severity</th>
+                </tr></thead>
+                <tbody>
+                {{#each queues.anomalies}}
+                <tr>
+                    <td>{{this.metric}}</td>
+                    <td class="sp-table__cell--date">{{this.window_display}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{this.observed_display}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{this.baseline_display}}</td>
+                    <td>{{> components/badge tone=this.severity_tone text=this.severity_display}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            {{/components/table}}
+            {{else}}
+            {{> components/empty-state title="Nothing flagged" message="No usage anomaly has been detected in the last 24 hours."}}
+            {{/if}}
+        </section>
+    </div>
+
+    {{/inline}}
+{{/layout}}

@@ -56,6 +56,8 @@ fn daily_params<'a>(
         date,
         event_type,
         tool_name: Some("Bash"),
+        loc_added: 0,
+        loc_removed: 0,
         content_input_bytes: 100,
         content_output_bytes: 40,
         is_error: false,

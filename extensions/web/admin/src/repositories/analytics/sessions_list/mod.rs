@@ -1,4 +1,4 @@
-//! Sessions-list repository — drives `/admin/entities/sessions`.
+//! Sessions-list repository — drives `/admin/sessions`.
 //!
 //! A session id is written by two producers that never meet: the gateway
 //! stamps it on every `ai_requests` row, and the hook pipeline rolls its
@@ -24,8 +24,83 @@ pub struct SessionListFilter {
     pub error_only: bool,
 }
 
+/// The five columns the list can be ordered by, each in both directions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SessionSortColumn {
+    StartedAt,
+    Duration,
+    Requests,
+    Tokens,
+    Cost,
+}
+
+impl SessionSortColumn {
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::StartedAt => "started_at",
+            Self::Duration => "duration",
+            Self::Requests => "requests",
+            Self::Tokens => "tokens",
+            Self::Cost => "cost",
+        }
+    }
+
+    #[must_use]
+    pub fn parse_session_column(value: Option<&str>) -> Self {
+        match value {
+            Some("duration") => Self::Duration,
+            Some("requests") => Self::Requests,
+            Some("tokens") => Self::Tokens,
+            Some("cost") => Self::Cost,
+            _ => Self::StartedAt,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SessionSortDir {
+    Asc,
+    Desc,
+}
+
+impl SessionSortDir {
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Asc => "asc",
+            Self::Desc => "desc",
+        }
+    }
+
+    #[must_use]
+    pub fn parse_session_dir(value: Option<&str>) -> Self {
+        if value == Some("asc") {
+            Self::Asc
+        } else {
+            Self::Desc
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct SessionSort {
+    pub column: SessionSortColumn,
+    pub dir: SessionSortDir,
+}
+
+impl Default for SessionSort {
+    fn default() -> Self {
+        Self {
+            column: SessionSortColumn::StartedAt,
+            dir: SessionSortDir::Desc,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct SessionPage {
+    pub sort: SessionSort,
     pub limit: i64,
     pub offset: i64,
 }

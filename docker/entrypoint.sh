@@ -17,6 +17,10 @@ set -eu
 # other catalog template sets EXTERNAL_URL explicitly.
 EXTERNAL_URL="${EXTERNAL_URL:-${RENDER_EXTERNAL_URL:-}}"
 
+if [ -n "${SYSTEMPROMPT_DATA_DIR:-}" ]; then
+    python3 /app/container-state.py attach
+fi
+
 PROFILE_DIR="${SYSTEMPROMPT_PROFILE_DIR:-/app/.systemprompt/profiles/docker}"
 PROFILE_FILE="$PROFILE_DIR/profile.yaml"
 SECRETS_FILE="$PROFILE_DIR/secrets.json"
@@ -88,6 +92,11 @@ else
     fi
 fi
 
+python3 /app/migrate-profile.py "$PROFILE_FILE"
+if [ -z "${SYSTEMPROMPT_PROFILE_DIR:-}" ]; then
+    python3 /app/container-state.py "$PROFILE_FILE"
+fi
+
 export SYSTEMPROMPT_PROFILE="$PROFILE_FILE"
 
 # Probe DATABASE_URL directly when provided (managed Postgres, e.g. Render);
@@ -112,11 +121,6 @@ until pg_probe >/dev/null 2>&1; do
     sleep 1
 done
 echo "Postgres is ready."
-
-if [ ! -f /app/signing_key.pem ]; then
-    echo "Generating signing key..."
-    /app/bin/systemprompt admin keys generate --output /app/signing_key.pem
-fi
 
 echo "Running database migrations..."
 # A managed volume/database outlives the image, so a database seeded by an older

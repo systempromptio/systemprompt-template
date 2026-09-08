@@ -7,7 +7,10 @@
       "title": "systemprompt",
       "name": "systemprompt",
       "description": "Self-owned AI control plane: governance gateway for Claude, OpenAI, and Gemini with policy checks, audit, rate limits, and MCP orchestration. Bundles Postgres.",
-      "categories": ["AI", "Tools"],
+      "categories": [
+        "AI",
+        "Tools"
+      ],
       "platform": "linux",
       "logo": "https://raw.githubusercontent.com/systempromptio/systemprompt-template/main/storage/files/images/icon-256.png",
       "note": "Set at least one AI provider key or the gateway will not boot. First boot runs migrations and a publish pipeline; allow several minutes before the healthcheck passes. Optionally set EXTERNAL_URL to the public URL you will serve it on.",
@@ -16,6 +19,11 @@
         "stackfile": "deploy/compose/one-click.docker-compose.yml"
       },
       "env": [
+        {
+          "name": "ADMIN_EMAIL",
+          "label": "Administrator email",
+          "description": "Required email address you control."
+        },
         {
           "name": "POSTGRES_PASSWORD",
           "label": "Postgres password",

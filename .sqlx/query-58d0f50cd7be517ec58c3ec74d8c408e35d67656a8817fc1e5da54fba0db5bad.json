@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE requirements_publication_attempts SET status='confirmed',page_id=$3 WHERE workflow_id=$1 AND title=$2 AND content_hash=$4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "58d0f50cd7be517ec58c3ec74d8c408e35d67656a8817fc1e5da54fba0db5bad"
+}

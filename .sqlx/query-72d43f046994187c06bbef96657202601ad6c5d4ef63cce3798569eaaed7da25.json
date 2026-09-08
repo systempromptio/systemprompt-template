@@ -1,0 +1,86 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            r.context_id            AS \"context_id!: ContextId\",\n            uc.name                 AS \"context_name?\",\n            conversation_title(r.context_id, r.client_session_id) AS \"title!\",\n            r.last_at               AS \"last_at!\",\n            (r.turn_count + r.side_call_count)::bigint AS \"ai_requests!\",\n            r.turn_count            AS \"turn_count!\",\n            r.side_call_count       AS \"side_call_count!\",\n            r.total_cost_microdollars AS \"cost_microdollars!\",\n            r.model                 AS \"model?\"\n          FROM conversation_metrics_for(ARRAY(\n              SELECT DISTINCT context_id::text FROM ai_requests WHERE user_id = $1\n          )) r\n          LEFT JOIN user_contexts uc ON uc.context_id = r.context_id\n          WHERE r.user_id = $1\n            AND r.turn_count > 0\n            AND r.last_at >= NOW() - make_interval(days => $2)\n          ORDER BY r.last_at DESC\n          LIMIT $3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id!: ContextId",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "context_name?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_contexts",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "title!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "ai_requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "turn_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "side_call_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "model?",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "72d43f046994187c06bbef96657202601ad6c5d4ef63cce3798569eaaed7da25"
+}

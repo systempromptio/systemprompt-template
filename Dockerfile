@@ -19,11 +19,12 @@ COPY . /src
 
 ENV SQLX_OFFLINE=true \
     CC=clang \
-    CXX=clang++
+    CXX=clang++ \
+    RUSTFLAGS="-D warnings"
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/src/target \
-    cargo build --release --workspace \
+    cargo build --release --workspace --locked \
     && mkdir -p /out/bin \
     && cp target/release/systemprompt /out/bin/ \
     && cp target/release/systemprompt-mcp-agent /out/bin/
@@ -55,12 +56,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     lsof \
     jq \
     python3 \
+    python3-yaml \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -u 1000 app
 WORKDIR /app
 
-RUN mkdir -p /app/bin /app/logs /app/storage /app/web /app/.systemprompt/profiles/docker
+RUN mkdir -p /app/bin /app/logs /app/data /app/storage /app/web /app/.systemprompt/profiles/docker
 
 COPY --from=builder /out/bin/ /app/bin/
 COPY --from=heybuilder /go/bin/hey /app/bin/hey
@@ -76,6 +78,8 @@ COPY demo /app/demo
 COPY extensions/mcp /app/extensions/mcp
 
 COPY docker/entrypoint.sh /app/entrypoint.sh
+COPY docker/migrate-profile.py /app/migrate-profile.py
+COPY docker/container-state.py /app/container-state.py
 RUN chmod +x /app/entrypoint.sh /app/bin/* \
     && chown -R app:app /app
 

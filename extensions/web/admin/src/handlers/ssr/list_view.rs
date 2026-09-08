@@ -11,14 +11,8 @@
 pub(crate) use systemprompt_web_shared::pagination::PageWindow;
 
 use serde::Serialize;
-use urlencoding::encode as urlencode;
 
-use crate::repositories::governance::filter_options::FilterOption;
 use crate::util::time_range::{TimeRange, TimeRangePreset, TimeRangeQuery};
-
-// Why: A page's query parameters, in the order they should appear in a rebuilt
-// URL.
-pub(crate) type QueryPairs<'a> = [(&'a str, Option<&'a str>)];
 
 #[derive(Debug, Serialize)]
 pub(crate) struct TimeRangeContext {
@@ -27,6 +21,18 @@ pub(crate) struct TimeRangeContext {
     pub(crate) to: String,
     pub(crate) base_url: &'static str,
     pub(crate) query: &'static str,
+    // Why: carried from `TimeRange::rejected_bounds` so the partial can say
+    // the window is the default rather than the one the URL asked for. A
+    // listing that answers for a different window without saying so is read as
+    // the answer to the question that was asked.
+    pub(crate) rejected: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct SelectOptionView {
+    pub value: String,
+    pub label: String,
+    pub selected: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -105,121 +111,114 @@ pub(crate) fn time_range_context(
         to: range.to.to_rfc3339(),
         base_url,
         query: "",
+        rejected: range.rejected_bounds,
     }
 }
 
-// Why: Hidden inputs the filter-ribbon form must resubmit so that choosing a
-// facet does not silently reset the time window.
-pub(crate) fn build_preserved(
-    range: TimeRange,
-    preset: &str,
-    extra: &[(&'static str, Option<&str>)],
-) -> Vec<Preserved> {
-    let mut out = vec![
-        Preserved {
-            name: "preset",
-            value: preset.to_owned(),
-        },
-        Preserved {
-            name: "from",
-            value: range.from.to_rfc3339(),
-        },
-        Preserved {
-            name: "to",
-            value: range.to.to_rfc3339(),
-        },
-    ];
-    out.extend(extra.iter().filter_map(|(name, value)| {
-        empty_to_none(*value).map(|v| Preserved {
-            name,
-            value: v.to_owned(),
-        })
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct HiddenFieldView {
+    pub name: String,
+    pub value: String,
+}
+
+// Why: The `components/scope-filter` partial's context: the two selects an
+// admin narrows a listing with, `group` and `project`. Hidden for everyone
+// else — a non-console caller's scope is their own groups and nothing on the
+// page can widen it.
+#[derive(Debug, Clone, Default, Serialize)]
+pub(crate) struct ScopeFilterView {
+    pub show: bool,
+    pub base_url: String,
+    pub groups: Vec<SelectOptionView>,
+    pub projects: Vec<SelectOptionView>,
+    pub hidden: Vec<HiddenFieldView>,
+}
+
+// Why: Why: the option lists are read here rather than passed in so that every
+// list page inherits the same filter by calling one function, and a group
+// created in the dashboard appears on all of them at once. A failed read
+// degrades to the "all" option alone rather than failing the page.
+pub(crate) async fn scope_filter_view(
+    pool: &PgPool,
+    user_ctx: &UserContext,
+    scope: &ScopeRequest,
+    base_url: &str,
+    hidden: Vec<(String, String)>,
+) -> ScopeFilterView {
+    if !user_ctx.is_console {
+        return ScopeFilterView::default();
+    }
+    let (group_rows, project_rows) = tokio::join!(
+        groups::crud::list_groups(pool),
+        projects::crud::list_projects(pool)
+    );
+    let groups = group_rows
+        .unwrap_or_default()
+        .into_iter()
+        .map(|g| (g.id, g.name))
+        .collect();
+    let projects = project_rows
+        .unwrap_or_default()
+        .into_iter()
+        .map(|p| (p.id, p.name))
+        .collect();
+    scope_filter_from_names(user_ctx, scope, base_url, hidden, &groups, &projects)
+}
+
+#[expect(
+    clippy::too_many_arguments,
+    reason = "one view built from the scope request plus the three name sources it renders"
+)]
+pub(crate) fn scope_filter_from_names(
+    user_ctx: &UserContext,
+    scope: &ScopeRequest,
+    base_url: &str,
+    hidden: Vec<(String, String)>,
+    groups: &BTreeMap<String, String>,
+    projects: &BTreeMap<String, String>,
+) -> ScopeFilterView {
+    ScopeFilterView {
+        show: user_ctx.is_console,
+        base_url: base_url.to_owned(),
+        groups: options(
+            "All groups",
+            scope.group.as_deref(),
+            groups.iter().map(|(id, name)| (id.clone(), name.clone())),
+        ),
+        projects: options(
+            "All projects",
+            scope.project.as_deref(),
+            projects.iter().map(|(id, name)| (id.clone(), name.clone())),
+        ),
+        hidden: hidden
+            .into_iter()
+            .filter(|(_, v)| !v.is_empty())
+            .map(|(name, value)| HiddenFieldView { name, value })
+            .collect(),
+    }
+}
+
+fn options(
+    all_label: &str,
+    selected: Option<&str>,
+    rows: impl Iterator<Item = (String, String)>,
+) -> Vec<SelectOptionView> {
+    let mut out = vec![SelectOptionView {
+        value: String::new(),
+        label: all_label.to_owned(),
+        selected: selected.is_none(),
+    }];
+    out.extend(rows.map(|(value, label)| SelectOptionView {
+        selected: selected == Some(value.as_str()),
+        value,
+        label,
     }));
     out
 }
 
-pub(crate) fn query_string(pairs: &QueryPairs<'_>, drop: &[&str]) -> String {
-    pairs
-        .iter()
-        .filter(|(name, _)| !drop.contains(name))
-        .filter_map(|(name, val)| empty_to_none(*val).map(|v| format!("{}={}", name, urlencode(v))))
-        .collect::<Vec<_>>()
-        .join("&")
-}
 
-fn url_without(base_url: &str, pairs: &QueryPairs<'_>, drop: &[&str]) -> String {
-    let qs = query_string(pairs, drop);
-    if qs.is_empty() {
-        base_url.to_owned()
-    } else {
-        format!("{base_url}?{qs}")
-    }
-}
-
-// Why: One removable chip per active facet, in the order the groups are listed.
-pub(crate) fn build_chips(
-    base_url: &str,
-    pairs: &QueryPairs<'_>,
-    groups: &[(&str, &'static str)],
-) -> Vec<Chip> {
-    groups
-        .iter()
-        .filter_map(|(param, group_label)| {
-            let value = pairs
-                .iter()
-                .find(|(name, _)| name == param)
-                .and_then(|(_, v)| empty_to_none(*v))?;
-            Some(Chip {
-                group_label,
-                label: value.to_owned(),
-                value: value.to_owned(),
-                remove_url: url_without(base_url, pairs, &[param]),
-            })
-        })
-        .collect()
-}
-
-pub(crate) fn annotate_group(
-    items: &[FilterOption],
-    selected: Option<&str>,
-) -> Vec<AnnotatedOption> {
-    items
-        .iter()
-        .map(|o| AnnotatedOption {
-            id: o.id.clone(),
-            label: o.label.clone(),
-            count: o.count,
-            selected: selected.is_some_and(|s| s == o.id),
-        })
-        .collect()
-}
-
-// Why: `page` is the zero-based index; the rendered `current_page` is 1-based.
-pub(crate) fn build_pagination(
-    base_url: &str,
-    pairs: &QueryPairs<'_>,
-    window: PageWindow,
-) -> Pagination {
-    let page = window.index;
-    let qs = query_string(pairs, &["page"]);
-    let prefix = if qs.is_empty() {
-        format!("{base_url}?")
-    } else {
-        format!("{base_url}?{qs}&")
-    };
-    let prev_url = (page > 0).then(|| format!("{prefix}page={}", page - 1));
-    let next_url = (page + 1 < window.total_pages).then(|| format!("{prefix}page={}", page + 1));
-    let (first_row, last_row) = window.bounds();
-    Pagination {
-        current_page: page + 1,
-        total_pages: window.total_pages,
-        first_row,
-        last_row,
-        total_rows: window.total_rows,
-        noun: window.noun,
-        has_prev: prev_url.is_some(),
-        has_next: next_url.is_some(),
-        prev_url,
-        next_url,
-    }
-}
+use crate::repositories::scope::ScopeRequest;
+use crate::repositories::{groups, projects};
+use crate::types::UserContext;
+use sqlx::PgPool;
+use std::collections::BTreeMap;

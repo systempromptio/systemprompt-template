@@ -52,6 +52,9 @@ pub async fn load_from_yaml(
     load_departments_file(pool, services_path, &mut report).await?;
     load_roles_file(pool, services_path, registered, &mut report).await?;
 
+    super::member_grants_yaml_loader::load_member_grants_from_yaml(pool, services_path).await?;
+    super::linked_yaml_loader::load_link_gates_from_yaml(pool, services_path).await?;
+
     let slack_workspaces = load_slack_apps(pool).await?;
 
     tracing::info!(

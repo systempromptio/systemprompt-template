@@ -15,7 +15,8 @@
 
 use chrono::{DateTime, Duration, Utc};
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{ContextId, UserId};
+use systemprompt_web_admin::repositories::scope::SubjectScope;
 use systemprompt_web_admin::util::time_range::{TimeRange, TimeRangePreset};
 
 // A window that starts 30 seconds ago and runs into the future, so a windowed
@@ -26,6 +27,7 @@ pub fn narrow_window() -> TimeRange {
         from: now - Duration::seconds(30),
         to: now + Duration::hours(1),
         preset: TimeRangePreset::Custom,
+        rejected_bounds: false,
     }
 }
 
@@ -36,6 +38,7 @@ pub fn wide_window() -> TimeRange {
         from: now - Duration::hours(1),
         to: now + Duration::hours(1),
         preset: TimeRangePreset::Custom,
+        rejected_bounds: false,
     }
 }
 
@@ -455,4 +458,100 @@ pub async fn insert_acl_rule(pool: &PgPool, spec: &AclRuleSpec<'_>) {
     .execute(pool)
     .await
     .expect("insert access control rule");
+}
+
+
+pub fn new_context_id() -> String {
+    ContextId::generate().to_string()
+}
+
+
+pub async fn set_project(pool: &PgPool, user_id: &UserId, project: Option<&str>) {
+    sqlx::query("DELETE FROM project_members WHERE user_id = $1")
+        .bind(user_id.as_str())
+        .execute(pool)
+        .await
+        .expect("clear project members");
+    sqlx::query("DELETE FROM group_members WHERE user_id = $1")
+        .bind(user_id.as_str())
+        .execute(pool)
+        .await
+        .expect("clear group members");
+    let Some(project) = project else {
+        return;
+    };
+    insert_project(pool, project, project).await;
+    insert_project_member(pool, project, user_id, "manual").await;
+    insert_group(pool, project, project).await;
+    insert_group_member(pool, project, user_id, "manual").await;
+}
+
+
+pub async fn project_scope(pool: &PgPool, project: &str) -> SubjectScope {
+    let ids: Vec<String> =
+        sqlx::query_scalar("SELECT user_id FROM project_members WHERE project_id = $1")
+            .bind(project)
+            .fetch_all(pool)
+            .await
+            .expect("project scope");
+    SubjectScope::Users(ids)
+}
+
+
+pub async fn insert_group(pool: &PgPool, id: &str, name: &str) {
+    sqlx::query(
+        "INSERT INTO groups (id, name, source) VALUES ($1, $2, 'dashboard')
+         ON CONFLICT (id) DO NOTHING",
+    )
+    .bind(id)
+    .bind(name)
+    .execute(pool)
+    .await
+    .expect("insert group");
+}
+
+
+pub async fn insert_group_member(pool: &PgPool, group_id: &str, user_id: &UserId, source: &str) {
+    sqlx::query(
+        "INSERT INTO group_members (group_id, user_id, source) VALUES ($1, $2, $3)
+         ON CONFLICT DO NOTHING",
+    )
+    .bind(group_id)
+    .bind(user_id.as_str())
+    .bind(source)
+    .execute(pool)
+    .await
+    .expect("insert group member");
+}
+
+
+pub async fn insert_project(pool: &PgPool, id: &str, name: &str) {
+    sqlx::query(
+        "INSERT INTO projects (id, name, source) VALUES ($1, $2, 'dashboard')
+         ON CONFLICT (id) DO NOTHING",
+    )
+    .bind(id)
+    .bind(name)
+    .execute(pool)
+    .await
+    .expect("insert project");
+}
+
+
+pub async fn insert_project_member(
+    pool: &PgPool,
+    project_id: &str,
+    user_id: &UserId,
+    source: &str,
+) {
+    sqlx::query(
+        "INSERT INTO project_members (project_id, user_id, source) VALUES ($1, $2, $3)
+         ON CONFLICT DO NOTHING",
+    )
+    .bind(project_id)
+    .bind(user_id.as_str())
+    .bind(source)
+    .execute(pool)
+    .await
+    .expect("insert project member");
 }

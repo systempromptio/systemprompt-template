@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_drive_files SET status=$3,error=$4,\n        attempts=CASE WHEN $3='failed' THEN attempts+1 ELSE attempts END,\n        retry_at=NOW()+ CASE WHEN $3='failed' THEN INTERVAL '15 minutes' ELSE INTERVAL '30 seconds' END WHERE source_type=$1 AND file_id=$2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "91e32544ae829945e6a5efb686c22724bc5ff9f8a9365aa34b72eca294938813"
+}

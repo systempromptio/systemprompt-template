@@ -2,11 +2,17 @@
 //!
 //! Models routinely append flags the CLI does not accept; those are stripped
 //! before exec rather than surfaced as a usage error the model cannot act on.
+//!
+//! Both halves of the location are validated up front. A bare `Command::spawn`
+//! reports a missing binary and a missing working directory as the same
+//! `ENOENT`, so neither could be told from the other at the call site.
 
 use crate::tools::CliOutput;
 use rmcp::ErrorData as McpError;
 use std::path::PathBuf;
 use systemprompt::config::ProfileBootstrap;
+use systemprompt::models::paths::BuildPaths;
+use systemprompt::models::profile::PathsConfig;
 use tokio::process::Command;
 
 /// Where the CLI lives and what directory it runs in.
@@ -27,10 +33,39 @@ impl CliLocation {
             // Why: lint-ok: error-adapt — rmcp's ErrorData is a variant-less wire type
             .map_err(|e| McpError::internal_error(format!("Failed to get profile: {e}"), None))?;
 
-        Ok(Self {
-            bin: PathBuf::from(&profile.paths.bin).join("systemprompt"),
-            workdir: PathBuf::from(&profile.paths.system),
-        })
+        Self::from_paths(&profile.paths)
+    }
+
+    // Why: split from `from_profile` so the resolution is reachable without the
+    // process-global profile bootstrap, which no test process has.
+    #[doc(hidden)]
+    pub fn from_paths(paths: &PathsConfig) -> Result<Self, McpError> {
+        // Why: the profile pins exactly one of target/{debug,release}, but the CLI is
+        // routinely built into only the other one. resolve_binary falls back to the
+        // sibling directory and prefers the newer build, and names every path it tried
+        // when neither holds the binary.
+        let bin = BuildPaths::from_profile(paths)
+            .resolve_binary("systemprompt")
+            // Why: lint-ok: error-adapt — rmcp's ErrorData is a variant-less wire type
+            .map_err(|e| {
+                McpError::internal_error(
+                    format!("Failed to locate the systemprompt CLI: {e}"),
+                    None,
+                )
+            })?;
+
+        let workdir = PathBuf::from(&paths.system);
+        if !workdir.is_dir() {
+            return Err(McpError::internal_error(
+                format!(
+                    "The profile's system directory does not exist, so the CLI has nowhere to run: {}",
+                    workdir.display()
+                ),
+                None,
+            ));
+        }
+
+        Ok(Self { bin, workdir })
     }
 }
 
@@ -79,7 +114,14 @@ pub(crate) async fn execute(
         .await
         // Why: lint-ok: error-adapt — rmcp's ErrorData is a variant-less wire type
         .map_err(|e| {
-            McpError::internal_error(format!("Failed to execute CLI command: {e}"), None)
+            McpError::internal_error(
+                format!(
+                    "Failed to execute CLI command: {e} (binary {}, workdir {})",
+                    cli_path.display(),
+                    workdir.display()
+                ),
+                None,
+            )
         })?;
 
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();

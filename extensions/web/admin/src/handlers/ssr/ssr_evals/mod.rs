@@ -24,6 +24,7 @@ use sqlx::PgPool;
 
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::handlers::ssr::types as charts;
+use crate::handlers::ssr::types::BreadcrumbView;
 use crate::repositories::evals::results::ResultFilter;
 use crate::repositories::evals::{EvalRunKind, results, runs};
 use crate::services::evals::MAX_SAMPLE_SIZE;
@@ -94,10 +95,11 @@ pub(crate) async fn evals_page(
     let traffic = view::traffic_stats(&fetched.stats, &fetched.models, &fetched.users);
     let total = fetched.stats.total;
 
-    // Why: The Golden set tab lists only the runs that exercise it; every other run
-    // kind belongs to the tab that launched it.
+    // Why: The Golden set and Judge tabs list only the runs that exercise them;
+    // every other tab shows every kind.
     let run_views = match tab {
         EvalsTab::GoldenSet => view_runs::run_rows_of_kind(&fetched.runs, EvalRunKind::Replay),
+        EvalsTab::Judge => view_runs::run_rows_of_kind(&fetched.runs, EvalRunKind::Judge),
         _ => view_runs::run_rows(&fetched.runs),
     };
     let model_options = view::model_options(&fetched.models);
@@ -105,6 +107,7 @@ pub(crate) async fn evals_page(
     let ctx = EvalsPageContext {
         page: "evals",
         title: "Evals",
+        breadcrumbs: breadcrumbs(None),
         tab: tab.as_str(),
         is_overview: tab == EvalsTab::Overview,
         is_traffic: tab == EvalsTab::Traffic,
@@ -112,7 +115,10 @@ pub(crate) async fn evals_page(
         is_head_to_head: tab == EvalsTab::HeadToHead,
         is_golden_set: tab == EvalsTab::GoldenSet,
         show_traffic_kpis: matches!(tab, EvalsTab::Overview | EvalsTab::Traffic),
-        show_quality_kpis: matches!(tab, EvalsTab::Judge | EvalsTab::HeadToHead),
+        // Why: the Judge tab carries its scores in the header meta line instead;
+        // under a tab strip and a time range, a KPI band would push the
+        // scored answers below the fold.
+        show_quality_kpis: tab == EvalsTab::HeadToHead,
         tabs: urls::tab_links(tab, &range, &query),
         time_range: urls::time_range_context(&query, &range, auto_widened, tab),
         traffic,
@@ -161,13 +167,15 @@ pub(crate) async fn eval_run_detail_page(
         .await
         .map_err(AdminError::from)?;
     let result_views = view_runs::result_rows(&rows);
+    let title = format!("Eval run · {}", run_id.chars().take(14).collect::<String>());
 
     let ctx = RunDetailContext {
         page: "eval-run-detail",
-        title: format!("Eval run · {}", run_id.chars().take(14).collect::<String>()),
+        breadcrumbs: breadcrumbs(Some(&title)),
+        title,
         run: view_runs::run_row(&run),
+        result_count: result_views.len(),
         results: result_views,
-        back_url: BASE_URL,
     };
 
     Ok(super::render_typed_page(
@@ -179,11 +187,29 @@ pub(crate) async fn eval_run_detail_page(
     ))
 }
 
+// Why: the trail ends on Evals for the listing and one level deeper for a run,
+// so the run page can walk back to the listing without a separate back link.
+fn breadcrumbs(run_title: Option<&str>) -> Vec<BreadcrumbView> {
+    let mut crumbs = vec![
+        BreadcrumbView::link("Admin", "/admin"),
+        BreadcrumbView::link("AI activity", "/admin/requests"),
+    ];
+    match run_title {
+        Some(title) => {
+            crumbs.push(BreadcrumbView::link("Evals", BASE_URL));
+            crumbs.push(BreadcrumbView::current(title));
+        },
+        None => crumbs.push(BreadcrumbView::current("Evals")),
+    }
+    crumbs
+}
 
 fn notice_from_query(query: &EvalsQuery) -> Option<NoticeView> {
     let message = query.notice.clone().filter(|n| !n.is_empty())?;
+    let is_error = query.notice_error.as_deref() == Some("1");
     Some(NoticeView {
-        is_error: query.notice_error.as_deref() == Some("1"),
+        is_error,
+        tone: if is_error { "err" } else { "ok" },
         message,
     })
 }

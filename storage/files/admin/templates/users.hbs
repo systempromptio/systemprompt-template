@@ -1,88 +1,97 @@
 {{#> layout title=title page=page}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title=title}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title}}
+        {{#*inline "header_actions"}}
+        {{#if can_write}}
+        <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="create-user">New user</button>
+        <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="bulk-roles" disabled>Change roles</button>
+        {{/if}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/groups">Groups</a>
+        {{/inline}}
+    {{/components/page-header}}
 
-    <div class="toolbar" role="toolbar" aria-label="Actions">
-        <div class="search-group">
-            <input type="text" class="search-input" placeholder="Search users..." id="user-search" aria-label="Search users...">
-        </div>
-        <button type="button" class="btn btn-primary" id="btn-add-user" data-action="create-user">+ Add User</button>
+    <div class="sp-kpi-grid">
+        {{> components/kpi label="Accounts" value=kpis.total note="on this instance" href=kpis.all_url active=(not kpis.filter_active)}}
+        {{> components/kpi label="Active" value=kpis.active note="may sign in" tone="ok"}}
+        {{> components/kpi label="Unassigned" value=kpis.unassigned note="no group" tone="warn" href=kpis.unassigned_url active=kpis.unassigned_active}}
+        {{> components/kpi label="No role" value=kpis.no_role note="no grant beyond user" tone="warn" href=kpis.no_role_url active=kpis.no_role_active}}
+        {{> components/kpi label="Idle 30d" value=kpis.inactive note="no traffic" tone="err" href=kpis.inactive_url active=kpis.inactive_active}}
+        {{> components/kpi label="30d cost" value=kpis.cost_display delta=kpis.cost_delta delta_dir=kpis.cost_delta_dir note="gateway spend"}}
+        {{> components/kpi label="30d requests" value=kpis.requests_display delta=kpis.requests_delta delta_dir=kpis.requests_delta_dir note="through /v1/messages"}}
     </div>
-    {{> components/create-user-panel}}
 
-    <section aria-label="Users list" data-page="users">
-    {{#if groups}}
-    {{#> components/data-table}}
-        <thead><tr>
-            <th>User</th>
-            <th>Roles</th>
-            <th title="Marketplaces granted by YAML default plus any DB overrides">Marketplaces</th>
-            <th class="col-status" title="Active access tokens, coloured by last-used">Tokens</th>
-            <th class="numeric col-numeric" title="Lifetime model tokens consumed via the gateway">Model tokens</th>
-            <th class="numeric col-numeric">Sessions</th>
-            <th class="col-status">Status</th>
-            <th class="col-date">Joined</th>
-            <th class="col-date">Last Active</th>
-            <th class="col-actions"></th>
-        </tr></thead>
-        {{#each groups}}
-        <tbody class="table-group" data-department="{{department}}">
-            <tr class="table-group-header">
-                <th colspan="10">
-                    <a href="/admin/access-control?department={{department}}" class="table-group-title">
-                        <span class="table-group-name">{{department}}</span>
-                        <span class="table-group-count">{{user_count}} user{{#unless (eq user_count 1)}}s{{/unless}}</span>
-                    </a>
-                    <span class="table-group-stats">
-                        {{#if total_tokens}}<span title="Lifetime tokens">{{formatNumber total_tokens}} tokens</span>{{/if}}
-                        {{#if total_sessions}}<span title="Total sessions">&middot; {{total_sessions}} sessions</span>{{/if}}
-                    </span>
-                </th>
-            </tr>
-            {{#each users}}
-            <tr data-user-name="{{toLowerCase (default display_name user_id)}}" data-user-email="{{toLowerCase (default email "")}}">
-                <td>
-                    <a href="/admin/user/?id={{user_id}}" class="user-cell">
-                        <span class="avatar avatar-sm">{{initials (default display_name user_id)}}</span>
-                        <span class="user-cell-text">
-                            <span class="user-cell-name">{{default display_name user_id}}</span>
-                            {{#if email}}<span class="user-cell-email">{{email}}</span>{{/if}}
-                        </span>
-                    </a>
-                </td>
-                <td>
-                    {{#if roles}}{{#each roles}}<span class="badge badge-gray">{{this}}</span> {{/each}}{{else}}<span class="text-tertiary">—</span>{{/if}}
-                </td>
-                <td>
-                    {{#if marketplaces}}{{#each marketplaces}}<span class="badge {{#if (eq source "override")}}badge-blue{{else}}badge-orange{{/if}}" title="{{#if (eq source "override")}}DB override{{else}}YAML default{{/if}}">{{name}}</span> {{/each}}{{else}}<span class="text-tertiary">None</span>{{/if}}
-                </td>
-                <td class="col-status">
-                    {{#if tokens_count}}
-                        <span class="token-pill token-pill--{{token_freshness}}" title="{{tokens_count}} token{{#unless (eq tokens_count 1)}}s{{/unless}} ({{token_freshness}})">
-                            <span class="agent-dot"></span>{{tokens_count}}
-                        </span>
-                    {{else}}
-                        <span class="text-tertiary">0</span>
-                    {{/if}}
-                </td>
-                <td class="numeric" title="{{lifetime_tokens}} tokens">{{#if lifetime_tokens}}{{formatNumber lifetime_tokens}}{{else}}<span class="text-tertiary">0</span>{{/if}}</td>
-                <td class="numeric">{{sessions}}</td>
-                <td class="col-status">{{#if is_active}}<span class="badge badge-success">Active</span>{{else}}<span class="badge badge-secondary">Inactive</span>{{/if}}</td>
-                <td class="col-date">{{#if created_at}}<span title="{{formatDate created_at}}">{{relativeTime created_at}}</span>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
-                <td class="col-date">{{#if last_active}}<span title="{{formatDate last_active}}">{{relativeTime last_active}}</span>{{else}}Never{{/if}}</td>
-                <td class="col-actions"><button class="btn-actions-trigger" data-user-id="{{user_id}}" aria-label="Actions for {{default display_name user_id}}" aria-haspopup="true" aria-expanded="false" type="button">&#8943;</button></td>
-            </tr>
+    {{!-- The row count is rendered inside the slot rather than passed as the
+          toolbar's `count=`: a partial hash argument shadows a same-named field
+          on every object iterated inside that partial's slots, and each filter
+          chip carries its own `count`. --}}
+    {{#> components/toolbar}}
+        {{#*inline "toolbar_filters"}}
+        <nav class="sp-p-users__chips" aria-label="Roster filters">
+            {{#each chips}}
+            <a class="sp-badge {{#if this.is_active}}sp-badge--accent{{else}}sp-badge--muted{{/if}}"
+               href="{{this.href}}"{{#if this.is_active}} aria-current="true"{{/if}}>{{this.label}} <span class="sp-u-num">{{this.count}}</span></a>
             {{/each}}
-        </tbody>
+        </nav>
+        <form method="get" action="/admin/users" class="sp-toolbar__search sp-p-users__search" role="search">
+            <label class="sp-u-sr-only" for="user-search">Search users</label>
+            <input type="search" id="user-search" name="q" value="{{search}}" class="sp-search-input" placeholder="Name, email or id">
+            <label class="sp-u-sr-only" for="user-role">Role</label>
+            <select id="user-role" name="role" class="sp-search-input">
+                {{#each role_options}}<option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>{{/each}}
+            </select>
+            <button type="submit" class="sp-btn sp-btn--sm">Search</button>
+        </form>
+        {{/inline}}
+        {{#*inline "toolbar_actions"}}
+        {{> components/scope-filter scope_filter}}
+        {{/inline}}
+    {{/components/toolbar}}
+
+    {{#if has_rows}}
+    {{#> components/table caption="Every account with its membership, activity and thirty-day gateway spend" pagination=pagination modifier="sp-p-users__table"}}
+        <thead>
+            <tr>
+                {{#if can_write}}<th class="sp-p-users__select"><span class="sp-u-sr-only">Select</span></th>{{/if}}
+                {{#each sort_headers}}{{> components/sort-header this}}{{/each}}
+                <th class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
+            </tr>
+        </thead>
+        <tbody>
+        {{#each rows}}
+            <tr data-user-id="{{this.user_id}}">
+                {{#if ../can_write}}
+                <td class="sp-p-users__select">
+                    <input type="checkbox" data-select-user="{{this.user_id}}" aria-label="Select {{this.name}}">
+                </td>
+                {{/if}}
+                <td class="sp-p-users__cell sp-col-user">
+                    <a class="sp-p-users__identity" href="{{this.detail_url}}" title="{{this.name}}">
+                        <span class="sp-avatar sp-avatar-sm" aria-hidden="true">{{this.initials}}</span>
+                        <span class="sp-p-users__name">{{this.name}}</span>
+                    </a>
+                </td>
+                <td class="sp-p-users__cell sp-u-mono sp-col-email" title="{{this.email}}">{{#if this.email}}{{this.email}}{{else}}&mdash;{{/if}}</td>
+                <td class="sp-p-users__cell sp-p-users__chips-cell sp-col-roles" title="{{this.roles_title}}">{{#if this.has_roles}}{{#each this.roles}}{{> components/badge tone="muted" text=this}}{{/each}}{{else}}<span class="sp-badge sp-badge--warn">none</span>{{/if}}</td>
+                <td class="sp-p-users__cell sp-p-users__chips-cell sp-col-scope">{{#if this.has_scope}}{{#each this.scope}}<a class="sp-badge sp-badge--{{this.tone}}" href="{{this.href}}" title="{{this.label}}">{{this.label}}</a>{{/each}}{{else}}&mdash;{{/if}}</td>
+                <td class="sp-table__cell--date" title="{{this.last_active_title}}">{{#if this.last_active}}{{#if this.last_active_url}}<a href="{{this.last_active_url}}">{{this.last_active}}</a>{{else}}{{this.last_active}}{{/if}}{{else}}Never{{/if}}</td>
+                <td class="sp-table__cell--num sp-u-num sp-u-mono">{{this.cost_display}}</td>
+                <td class="sp-table__cell--num sp-u-num">{{this.requests_display}}</td>
+                <td class="sp-col-status">{{> components/badge tone=this.status_tone text=this.status_label}}</td>
+                <td class="sp-table__cell--actions">
+                    <a class="sp-p-users__action" href="{{this.detail_url}}?tab=usage">Usage</a>
+                </td>
+            </tr>
         {{/each}}
-    {{/components/data-table}}
+        </tbody>
+    {{/components/table}}
     {{else}}
-    {{> components/empty-state message="No users found."}}
+    {{> components/empty-state title="No users match" message="No account matches this filter, role and search. Clear one of them to widen the roster."}}
     {{/if}}
-    </section>
+
+    {{#if can_write}}{{> components/create-user-panel}}{{/if}}
     {{/inline}}
     {{#*inline "scripts"}}
-    <script data-cfasync="false" type="module" src="/js/pages/admin-users.js"></script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-users.js?v={{css_version}}"></script>
     {{/inline}}
 {{/layout}}

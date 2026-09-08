@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_drive_files SET status='pending',attempts=0,retry_at=NOW() WHERE source_type=$1 AND status IN ('failed','indexed')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f041b0f2615652a891bf19d53feafd7860f300ccc58f1dfef6718875b28b0702"
+}

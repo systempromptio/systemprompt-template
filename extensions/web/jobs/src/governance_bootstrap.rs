@@ -90,6 +90,12 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     let pool = db_pool.write_pool().ok_or(MarketplaceError::Internal(
         "PgPool not available from database".to_owned(),
     ))?;
+    systemprompt_web_admin::repositories::config::groups_yaml_loader::load_groups_from_yaml(
+        &pool,
+        &services_path,
+    )
+    .await?;
+
     acl_yaml_loader::load_from_yaml(&pool, &services_path, &catalog.registered)
         .await
         .map_err(JobError::from)?;

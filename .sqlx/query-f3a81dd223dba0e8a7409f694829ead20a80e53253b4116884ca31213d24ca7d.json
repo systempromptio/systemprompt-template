@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT challenge, session_state FROM webauthn_challenges\n             WHERE user_id = $1 AND challenge_type = $2\n               AND session_state->>'token_id' = $3 AND expires_at > $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "challenge",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "webauthn_challenges",
+            "name": "challenge"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "session_state",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "webauthn_challenges",
+            "name": "session_state"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "f3a81dd223dba0e8a7409f694829ead20a80e53253b4116884ca31213d24ca7d"
+}

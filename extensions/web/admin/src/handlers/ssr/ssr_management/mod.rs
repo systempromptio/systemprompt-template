@@ -3,32 +3,48 @@
 //! Three admin-only page handlers: the department roster, a single department
 //! detail (members + token/cost rollup + top tools), and the access-token
 //! console. View-model assembly lives in the `departments` / `access_tokens`
-//! children.
+//! children; every filter on the two listings narrows rows in memory, so a
+//! view is one URL an operator can send to someone else.
 
 use std::sync::Arc;
 
-use axum::extract::{Extension, Path, State};
+use axum::extract::{Extension, Path, Query, State};
 use axum::response::Response;
 use sqlx::PgPool;
 
 use crate::error::{AdminError, AdminHtmlError, AdminHtmlResult};
+use crate::handlers::ssr::types::BreadcrumbView;
 use crate::repositories;
 use crate::templates::AdminTemplateEngine;
+use crate::types::departments::DEFAULT_DEPARTMENT;
 use crate::types::{MarketplaceContext, UserContext};
 
 use super::ssr_helpers::render_typed_page;
 
 mod access_tokens;
 mod departments;
+mod departments_sort;
 
-use access_tokens::{
-    ManagementAccessTokensPageData, build_token_rows, compute_owner_rowspans, load_access_tokens,
-    load_token_user_options,
-};
-use departments::{DepartmentDetailPageData, DepartmentsPageData, sum_member_totals, url_escape};
+use access_tokens::{AccessTokensQuery, ManagementAccessTokensPageData};
+use departments::{DepartmentDetailPageData, DepartmentsPageData, DepartmentsQuery};
+
+const DEPARTMENTS_URL: &str = "/admin/departments";
+const ACCESS_TOKENS_URL: &str = "/admin/access-tokens";
 
 fn forbidden() -> AdminHtmlError {
     AdminError::Forbidden("Admin access required.".to_owned()).into()
+}
+
+fn crumbs(current: impl Into<String>, parent: Option<(&str, &str)>) -> Vec<BreadcrumbView> {
+    let mut out = vec![
+        BreadcrumbView::link("Admin", "/admin"),
+        BreadcrumbView::link("People & access", "/admin/users"),
+    ];
+    if let Some((label, href)) = parent {
+        out.push(BreadcrumbView::link(label, href));
+    }
+    out.push(BreadcrumbView::current(current));
+    out
 }
 
 pub(crate) async fn management_departments_page(
@@ -36,67 +52,36 @@ pub(crate) async fn management_departments_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
+    Query(query): Query<DepartmentsQuery>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_admin {
         return Err(forbidden());
     }
 
-    let departments = repositories::departments::list_departments(&pool)
+    let all = repositories::departments::list_departments(&pool)
         .await
+        .inspect_err(|e| tracing::warn!(error = %e, "departments: listing failed"))
         .unwrap_or_default();
+    let rows = departments::rows(&all, &query);
 
     let data = DepartmentsPageData {
-        page: "management-departments",
+        page: "departments",
         title: "Departments",
-        departments,
+        breadcrumbs: crumbs("Departments", None),
+        kpis: departments::kpis(&all),
+        sort_headers: departments_sort::sort_headers(&query),
+        search: query.search().unwrap_or_default().to_owned(),
+        filters_applied: query.search().is_some(),
+        clear_url: DEPARTMENTS_URL,
+        total: all.len(),
+        has_rows: !rows.is_empty(),
+        rows,
+        can_write: user_ctx.is_admin,
     };
 
     Ok(render_typed_page(
         &engine,
         "management-departments",
-        &data,
-        &user_ctx,
-        &mkt_ctx,
-    ))
-}
-
-pub(crate) async fn management_access_tokens_page(
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
-    State(pool): State<Arc<PgPool>>,
-) -> AdminHtmlResult<Response> {
-    if !user_ctx.is_admin {
-        return Err(forbidden());
-    }
-
-    let rows = load_access_tokens(&pool).await;
-
-    let (mut tokens, counts) = build_token_rows(rows);
-    compute_owner_rowspans(&mut tokens);
-
-    let user_options = load_token_user_options(&pool).await;
-
-    let department_options: Vec<String> = repositories::departments::list_departments(&pool)
-        .await
-        .unwrap_or_default()
-        .into_iter()
-        .map(|d| d.name)
-        .collect();
-
-    let data = ManagementAccessTokensPageData {
-        page: "tokens",
-        title: "Access tokens",
-        tokens,
-        total: counts.total,
-        active: counts.active,
-        expiring_soon: counts.expiring_soon,
-        user_options,
-        department_options,
-    };
-    Ok(render_typed_page(
-        &engine,
-        "management-access-tokens",
         &data,
         &user_ctx,
         &mkt_ctx,
@@ -120,39 +105,90 @@ pub(crate) async fn management_department_detail_page(
 
     let members = repositories::departments::list_department_members(&pool, &department.name)
         .await
+        .inspect_err(|e| tracing::warn!(error = %e, "department detail: member listing failed"))
         .unwrap_or_default();
-    let member_count = members.len() as i64;
-
     let top_tools =
         repositories::departments::list_department_top_tools(&pool, &department.name, 10)
             .await
+            .inspect_err(|e| tracing::warn!(error = %e, "department detail: top tools failed"))
             .unwrap_or_default();
 
-    let totals = sum_member_totals(&members);
-
-    let assignments_url = format!(
-        "/admin/access/matrix?department={}",
-        url_escape(&department.name)
-    );
-
-    let title = format!("Department · {}", department.name);
+    let rows = departments::member_rows(&members);
     let data = DepartmentDetailPageData {
-        page: "management-department-detail",
-        title,
-        department,
-        members,
-        member_count,
-        assignments_url,
+        page: "department-detail",
+        title: department.name.clone(),
+        breadcrumbs: crumbs(
+            department.name.clone(),
+            Some(("Departments", DEPARTMENTS_URL)),
+        ),
+        kpis: departments::detail_kpis(&members),
+        matrix_url: format!(
+            "/admin/access-control?department={}",
+            urlencoding::encode(&department.name)
+        ),
+        users_url: format!(
+            "/admin/users?department={}",
+            urlencoding::encode(&department.name)
+        ),
+        is_default: department.name == DEFAULT_DEPARTMENT,
+        has_tools: !top_tools.is_empty(),
         top_tools,
-        total_input_tokens: totals.input_tokens,
-        total_output_tokens: totals.output_tokens,
-        total_requests: totals.requests,
-        total_cost_microdollars: totals.cost_microdollars,
+        member_count: rows.len(),
+        has_members: !rows.is_empty(),
+        members: rows,
+        department,
+        can_write: user_ctx.is_admin,
     };
 
     Ok(render_typed_page(
         &engine,
         "management-department-detail",
+        &data,
+        &user_ctx,
+        &mkt_ctx,
+    ))
+}
+
+pub(crate) async fn management_access_tokens_page(
+    Extension(user_ctx): Extension<UserContext>,
+    Extension(mkt_ctx): Extension<MarketplaceContext>,
+    Extension(engine): Extension<AdminTemplateEngine>,
+    State(pool): State<Arc<PgPool>>,
+    Query(query): Query<AccessTokensQuery>,
+) -> AdminHtmlResult<Response> {
+    if !user_ctx.is_admin {
+        return Err(forbidden());
+    }
+
+    let rows = access_tokens::load_access_tokens(&pool).await;
+    let all = access_tokens::build_token_rows(rows);
+    let counts = access_tokens::counts(&all);
+    let departments = access_tokens::department_names(&all);
+    let matching = access_tokens::filtered(&all, &query);
+    let user_options = access_tokens::load_token_user_options(&pool).await;
+
+    let data = ManagementAccessTokensPageData {
+        page: "access-tokens",
+        title: "Access tokens",
+        breadcrumbs: crumbs("Access tokens", None),
+        total: counts.total,
+        active: counts.active,
+        expiring_soon: counts.expiring_soon,
+        revoked: counts.revoked,
+        status_options: access_tokens::status_options(&query),
+        department_options: access_tokens::department_options(&departments, &query),
+        search: query.search().unwrap_or_default().to_owned(),
+        filters_applied: query.any_applied(),
+        clear_url: ACCESS_TOKENS_URL,
+        shown: matching.len(),
+        has_rows: !matching.is_empty(),
+        tokens: matching,
+        user_options,
+        can_write: user_ctx.is_admin,
+    };
+    Ok(render_typed_page(
+        &engine,
+        "management-access-tokens",
         &data,
         &user_ctx,
         &mkt_ctx,

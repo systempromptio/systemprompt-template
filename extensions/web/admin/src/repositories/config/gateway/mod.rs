@@ -22,3 +22,8 @@ pub use path::gateway_config_path;
 pub use routes::{
     create_route, delete_route, ensure_route_ids, reorder_routes, update_route, validate_route,
 };
+
+pub use catalog::{
+    client_facing_routes, client_facing_routes_from_services, dispatchable_routes,
+    dispatchable_routes_from_services, retain_client_facing,
+};

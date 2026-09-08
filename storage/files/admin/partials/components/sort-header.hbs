@@ -4,6 +4,6 @@
   Inputs: label, class (column class), url, active, aria_sort, indicator, hint.
   `hint` explains the column on the header, where no row overlay can cover it.
 --}}
-<th class="{{class}}{{#if active}} sorted{{/if}}" aria-sort="{{aria_sort}}"{{#if hint}} title="{{hint}}"{{/if}}>
-  <a class="th-sort" href="{{url}}">{{label}}<span class="sort-icon" aria-hidden="true">{{indicator}}</span></a>
+<th class="{{class}}{{#if active}} is-sorted{{/if}}" aria-sort="{{aria_sort}}"{{#if hint}} title="{{hint}}"{{/if}}>
+  <a class="sp-table__sort" href="{{url}}">{{label}}<span class="sp-table__sort-icon" aria-hidden="true">{{indicator}}</span></a>
 </th>

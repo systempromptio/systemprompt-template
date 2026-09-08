@@ -1,100 +1,161 @@
-<aside class="admin-sidebar" id="admin-sidebar">
-    <button class="sidebar-close-btn" type="button" aria-label="Close menu">&times;</button>
-    <a href="/admin/profile" class="admin-sidebar-brand" aria-label="{{default branding.domain "systemprompt"}} - Go to admin">
-        <img src="{{default branding.logo_light "/files/images/logo.svg"}}" alt="{{default branding.domain "systemprompt"}}" class="admin-logo admin-logo--light" />
-        <img src="{{default branding.logo_dark "/files/images/logo-white.svg"}}" alt="{{default branding.domain "systemprompt"}}" class="admin-logo admin-logo--dark" />
-    </a>
-    <nav aria-label="Admin navigation">
+{{!--
+  Admin navigation: six groups, in the order an operator moves through them —
+  what happened (Overview), who it happened to (People & access), what the AI
+  did (AI activity), what the policy said (Governance), what is installed
+  (Platform), and the signed-in person themselves (Account).
 
-        {{!-- ACCESS — who can do what --}}
-        <h2 class="nav-label">Access</h2>
-        <a href="/admin/profile"{{#if (eq page "profile")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
-            Profile
+  Active state: `{{navActive page "id"}}` marks a plain link; a link that owns
+  record pages goes through the `nav-item` partial, which draws the expanded
+  ancestor and the open record beneath it. `/admin` and `/admin/analytics`
+  render the same page id, so `services/sidebar.js` corrects the pair from the
+  exact pathname once JS is up.
+--}}
+<aside class="sp-admin-sidebar" id="sp-admin-sidebar">
+    <button class="sp-sidebar-close-btn" type="button" aria-label="Close menu">&times;</button>
+    <a href="/admin" class="sp-admin-sidebar-brand" aria-label="{{default branding.domain "systemprompt"}} - Go to admin">
+        <img src="{{default branding.logo_light "/files/images/logo.svg"}}" alt="{{default branding.domain "systemprompt"}}" class="sp-admin-logo sp-admin-logo--light" />
+        <img src="{{default branding.logo_dark "/files/images/logo-white.svg"}}" alt="{{default branding.domain "systemprompt"}}" class="sp-admin-logo sp-admin-logo--dark" />
+    </a>
+    <nav aria-label="Admin navigation" data-nav>
+
+        {{#if current_user.is_console}}
+        <h2 class="sp-nav-label">Overview</h2>
+        <a href="/admin"{{navActive page "overview"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+            Overview
         </a>
-        {{#if current_user.is_admin}}
-        <a href="/admin/access/users"{{#if (eq page "users")}} class="active" aria-current="page"{{else}}{{#if (eq page "user-detail")}} class="active" aria-current="page"{{/if}}{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
-            Users
+
+        {{!-- PEOPLE & ACCESS — the accounts, the groups that carry their
+             entitlement, and the rules that bind the two together. --}}
+        <h2 class="sp-nav-label">People &amp; access</h2>
+        {{#> nav-item href="/admin/users" text="Users" leaf="users" child="user-detail" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><path d="M1.5 13.5c0-2.5 2-4.5 4.5-4.5s4.5 2 4.5 4.5"/><path d="M11 3.2a2.5 2.5 0 010 4.6M12.5 13.5c0-1.6-.5-3-1.4-4" stroke-linecap="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/groups" text="Groups" leaf="groups" child="group-detail" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="6" r="2"/><circle cx="11" cy="6" r="2"/><path d="M1.5 13c0-2 1.6-3.5 3.5-3.5S8.5 11 8.5 13M7.5 13c0-2 1.6-3.5 3.5-3.5s3.5 1.5 3.5 3.5"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/projects" text="Projects" leaf="projects" child="project-detail" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4.5h4l1.2 1.5H14v6.5H2z" stroke-linejoin="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/roles" text="Roles & permissions" leaf="roles" child="role-detail" page=page}}
+            {{#*inline "nav_text"}}Roles &amp; permissions{{/inline}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5l5 2v4c0 3-2 5.4-5 7-3-1.6-5-4-5-7v-4z" stroke-linejoin="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        <a href="/admin/access-control"{{navActive page "access-control"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5.5 7V4.5a2.5 2.5 0 015 0V7" stroke-linecap="round"/></svg>
+            Access control
         </a>
-        <a href="/admin/access/departments"{{#if (eq page "departments")}} class="active" aria-current="page"{{else}}{{#if (eq page "department-detail")}} class="active" aria-current="page"{{/if}}{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V6l3-2 3 2v8M8 14V8l3-2 3 2v6M2 14h12"/></svg>
+        {{#> nav-item href="/admin/devices" text="Devices & enrolments" leaf="devices" child="device-detail" page=page}}
+            {{#*inline "nav_text"}}Devices &amp; enrolments{{/inline}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="8" rx="1"/><path d="M5.5 13.5h5" stroke-linecap="round"/></svg>{{/inline}}
+        {{/nav-item}}
+
+        {{!-- AI ACTIVITY — what the models actually did. Every page in this
+             group honours the same `?scope=`/`?range=` contract, which is why
+             they are one group rather than filed by entity. --}}
+        <h2 class="sp-nav-label">AI activity</h2>
+        {{#> nav-item href="/admin/analytics" text="Analytics" leaf="analytics-dashboard" child="analytics-user" page=page scope_nav=true}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M3.5 13V8.5M7 13V4.5M10.5 13V6.5M14 13V3" stroke-linecap="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/requests" text="Requests" leaf="requests" child="request-detail" page=page scope_nav=true}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8a6 6 0 0112 0M14 8a6 6 0 01-12 0M5 8l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/sessions" text="Sessions" leaf="sessions" child="session-detail" page=page scope_nav=true}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.5 1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/traces" text="Traces" leaf="traces" child="trace-detail" page=page scope_nav=true}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h6M2 8h10M2 12h4" stroke-linecap="round"/><circle cx="13" cy="4" r="1.5" fill="currentColor"/><circle cx="13" cy="12" r="1.5" fill="currentColor"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/contexts" text="Contexts" leaf="contexts" child="context-detail" page=page scope_nav=true}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v1H2zm0 3h10v1H2zm0 3h12v1H2zm0 3h8v1H2z"/></svg>{{/inline}}
+        {{/nav-item}}
+
+        {{!-- GOVERNANCE — what the policy chain decided, and what it is still
+             waiting on a human for. --}}
+        <h2 class="sp-nav-label">Governance</h2>
+        {{#> nav-item href="/admin/governance" text="Governance" leaf="governance-warnings" child="governance-decisions" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l6 11H2z" stroke-linejoin="round"/><path d="M8 6.5v3M8 11.5v.01" stroke-linecap="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        <a href="/admin/governance/approvals"{{navActive page "governance-approvals"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M5.2 8.2l2 2 3.6-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Approvals
+        </a>
+        <a href="/admin/governance/secrets"{{navActive page "governance-secrets"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="3"/><path d="M8 9v4M6.5 11.5h3" stroke-linecap="round"/></svg>
+            Secrets audit
+        </a>
+
+        {{!-- PLATFORM — the installable units declared in services/*.yaml, and
+             the gateway that routes to them. --}}
+        <h2 class="sp-nav-label">Platform</h2>
+        {{#> nav-item href="/admin/mcp" text="MCP servers" leaf="mcp" child="mcp-detail" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="4" rx="1"/><rect x="2" y="9" width="12" height="4" rx="1"/><path d="M5 5h.01M5 11h.01" stroke-linecap="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/marketplaces" text="Marketplaces" leaf="marketplaces" child="marketplace-detail" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5.5h12L13 13H3z" stroke-linejoin="round"/><path d="M5.5 5.5V4a2.5 2.5 0 015 0v1.5" stroke-linecap="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/plugins" text="Plugins" leaf="plugins" child="plugin-detail" child2="catalog" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M3 3h4v4H3zM9 3h4v4H9zM3 9h4v4H3zM9 9h4v4H9z"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/skills" text="Skills" leaf="skills" child="skill-detail" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.3 4.2 13.3l.7-4.3-3.1-3 4.3-.6z" stroke-linejoin="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        <a href="/admin/gateway"{{navActive page "gateway"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12" stroke-linecap="round"/><circle cx="5" cy="8" r="2"/><circle cx="11" cy="8" r="2"/></svg>
+            Gateway
+        </a>
+
+        <a href="/admin/departments"{{navActive page "departments" "department-detail"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="6" r="2"/><circle cx="11" cy="6" r="2"/><path d="M1.5 13c0-2 1.6-3.5 3.5-3.5S8.5 11 8.5 13M7.5 13c0-2 1.6-3.5 3.5-3.5s3.5 1.5 3.5 3.5"/></svg>
             Departments
         </a>
-        <a href="/admin/access/tokens"{{#if (eq page "tokens")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="8" rx="1"/><path d="M5 14h6M8 11v3"/></svg>
+        <a href="/admin/access-tokens"{{navActive page "access-tokens"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="8" r="3.5"/><path d="M9.5 8H14M12 8v2.5" stroke-linecap="round"/></svg>
             Access tokens
         </a>
-        <a href="/admin/access/matrix"{{#if (eq page "access-control")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V4a3 3 0 016 0v3"/></svg>
-            Access matrix
+        <a href="/admin/evals"{{navActive page "evals" "eval-run-detail"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M3.5 13V8.5M7 13V4.5M10.5 13V6.5M14 13V3" stroke-linecap="round"/></svg>
+            Evals
         </a>
-
-        {{!-- GOVERNANCE — rules, not telemetry --}}
-        <h2 class="nav-label">Governance</h2>
-        <a href="/admin/governance/policies"{{#if (eq page "governance")}} class="active" aria-current="page"{{else}}{{#if (eq page "governance-policy-edit")}} class="active" aria-current="page"{{/if}}{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L2 4v4c0 3.3 2.6 6.4 6 7 3.4-.6 6-3.7 6-7V4L8 1zm0 2.2L12 5.5v2.8c0 2.4-1.7 4.6-4 5.2-2.3-.6-4-2.8-4-5.2V5.5L8 3.2z"/></svg>
-            Policies
+        <a href="/admin/governance/decisions"{{navActive page "governance-decisions"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M5.2 8.2l2 2 3.6-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Decisions
         </a>
-        <a href="/admin/governance/hooks"{{#if (eq page "governance-hooks")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v6a3 3 0 003 3h7M10 9l3 3-3 3"/></svg>
+        <a href="/admin/governance/hooks"{{navActive page "governance-hooks"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12" stroke-linecap="round"/><circle cx="5" cy="8" r="2"/><circle cx="11" cy="8" r="2"/></svg>
             Hooks
         </a>
-        <a href="/admin/demo/trace"{{#if (eq page "demo-trace")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h3l2-4 2 8 2-4h3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Demo Trace
+        <a href="/admin/demo/trace"{{navActive page "demo-trace"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 5-10 5z" stroke-linejoin="round"/></svg>
+            Trace demo
         </a>
-        <a href="/admin/models"{{#if (eq page "models")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12M11 2.5L12.5 4 11 5.5M11 6.5L12.5 8 11 9.5M5 10.5L3.5 12 5 13.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Model Selection
-        </a>
-
-        {{!-- OBSERVABILITY — read-only state inspection --}}
-        <h2 class="nav-label">Observability</h2>
-        <a href="/admin/entities/requests"{{#if (eq page "requests")}} class="active" aria-current="page"{{else}}{{#if (eq page "request-detail")}} class="active" aria-current="page"{{/if}}{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8a6 6 0 0112 0M14 8a6 6 0 01-12 0M5 8l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Requests
-        </a>
-        <a href="/admin/entities/sessions"{{#if (eq page "sessions")}} class="active" aria-current="page"{{else}}{{#if (eq page "session-detail")}} class="active" aria-current="page"{{/if}}{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.5 1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Sessions
-        </a>
-        <a href="/admin/entities/traces"{{#if (eq page "traces")}} class="active" aria-current="page"{{else}}{{#if (eq page "trace-detail")}} class="active" aria-current="page"{{/if}}{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h6M2 8h10M2 12h4" stroke-linecap="round"/><circle cx="13" cy="4" r="1.5" fill="currentColor"/><circle cx="13" cy="12" r="1.5" fill="currentColor"/></svg>
-            Traces
-        </a>
-        <a href="/admin/entities/contexts"{{#if (eq page "contexts")}} class="active" aria-current="page"{{else}}{{#if (eq page "context-detail")}} class="active" aria-current="page"{{/if}}{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v1H2zm0 3h10v1H2zm0 3h12v1H2zm0 3h8v1H2z"/></svg>
-            Contexts
-        </a>
-        <a href="/admin/evals"{{#if (eq page "evals")}} class="active" aria-current="page"{{else}}{{#if (eq page "eval-run-detail")}} class="active" aria-current="page"{{/if}}{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 13V9M8 13V4M13 13v-6M2 13h12" stroke-linecap="round"/><path d="M11.5 3.5l1.5 1.5 2.5-2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Evals
+        <a href="/admin/models"{{navActive page "models"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="4" rx="1"/><rect x="2" y="9" width="12" height="4" rx="1"/><path d="M5 5h.01M5 11h.01" stroke-linecap="round"/></svg>
+            Models
         </a>
         {{/if}}
 
-        {{!-- ACCOUNT — small footer group --}}
-        <h2 class="nav-label nav-label--account">Account</h2>
-        <a href="/admin/settings"{{#if (eq page "settings")}} class="active" aria-current="page"{{/if}}>
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 100 6.492 3.246 3.246 0 000-6.492zM5.754 8a2.246 2.246 0 114.492 0 2.246 2.246 0 01-4.492 0z"/></svg>
-            Settings
+        {{!-- ACCOUNT — the signed-in person, not the business --}}
+        <h2 class="sp-nav-label sp-nav-label--account">Account</h2>
+        <a href="/admin/profile"{{navActive page "profile"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+            Profile
         </a>
+        {{#> nav-item href="/admin/history" text="My conversations" leaf="history" child="history-conversation" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 3.5h11v8h-6l-2.5 2v-2h-2.5z" stroke-linejoin="round"/><path d="M5 6.5h6M5 9h4" stroke-linecap="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/settings" text="Settings" leaf="settings" child="setup" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 100 6.492 3.246 3.246 0 000-6.492zM5.754 8a2.246 2.246 0 114.492 0 2.246 2.246 0 01-4.492 0z"/></svg>{{/inline}}
+        {{/nav-item}}
         <a href="/documentation" target="_blank" rel="noopener noreferrer">
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M6 6a2 2 0 113.5 1.8c-.5.3-.5.5-.5 1.2M8 12v.5" stroke-linecap="round"/></svg>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M6 6a2 2 0 113.5 1.8c-.5.3-.5.5-.5 1.2M8 12v.5" stroke-linecap="round"/></svg>
             Help &amp; docs
-            <span class="nav-external" aria-hidden="true">↗</span>
+            <span class="sp-nav-external" aria-hidden="true">↗</span>
         </a>
         <a href="https://discord.gg/wkAbSuPWpr" target="_blank" rel="noopener noreferrer">
-            <svg class="icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M13.5 3.4A13 13 0 0010.3 2.5a.05.05 0 00-.05.02c-.14.25-.3.57-.4.83a12 12 0 00-3.7 0 8 8 0 00-.42-.83.05.05 0 00-.05-.02A13 13 0 002.5 3.4a.04.04 0 00-.02.02C.9 6.1.5 8.7.7 11.3a.05.05 0 00.02.04 13.2 13.2 0 004 2 .05.05 0 00.06-.02c.3-.43.58-.88.82-1.35a.05.05 0 00-.03-.07 8.7 8.7 0 01-1.25-.6.05.05 0 01-.004-.08c.08-.06.17-.13.25-.19a.05.05 0 01.05-.01c2.6 1.2 5.4 1.2 8 0a.05.05 0 01.05 0c.08.07.17.13.25.2a.05.05 0 01-.003.08c-.4.23-.82.43-1.25.6a.05.05 0 00-.03.07c.24.47.52.92.82 1.35a.05.05 0 00.05.02 13.2 13.2 0 004-2 .05.05 0 00.02-.03c.24-2.56-.4-5.14-1.78-7.87a.04.04 0 00-.02-.02zM5.7 9.7c-.7 0-1.26-.63-1.26-1.4s.55-1.4 1.26-1.4c.7 0 1.27.64 1.26 1.4 0 .78-.56 1.4-1.26 1.4zm4.6 0c-.7 0-1.26-.63-1.26-1.4s.55-1.4 1.26-1.4c.7 0 1.27.64 1.26 1.4 0 .78-.55 1.4-1.26 1.4z"/></svg>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M13.5 3.4A13 13 0 0010.3 2.5a.05.05 0 00-.05.02c-.14.25-.3.57-.4.83a12 12 0 00-3.7 0 8 8 0 00-.42-.83.05.05 0 00-.05-.02A13 13 0 002.5 3.4a.04.04 0 00-.02.02C.9 6.1.5 8.7.7 11.3a.05.05 0 00.02.04 13.2 13.2 0 004 2 .05.05 0 00.06-.02c.3-.43.58-.88.82-1.35a.05.05 0 00-.03-.07 8.7 8.7 0 01-1.25-.6.05.05 0 01-.004-.08c.08-.06.17-.13.25-.19a.05.05 0 01.05-.01c2.6 1.2 5.4 1.2 8 0a.05.05 0 01.05 0c.08.07.17.13.25.2a.05.05 0 01-.003.08c-.4.23-.82.43-1.25.6a.05.05 0 00-.03.07c.24.47.52.92.82 1.35a.05.05 0 00.05.02 13.2 13.2 0 004-2 .05.05 0 00.02-.03c.24-2.56-.4-5.14-1.78-7.87a.04.04 0 00-.02-.02zM5.7 9.7c-.7 0-1.26-.63-1.26-1.4s.55-1.4 1.26-1.4c.7 0 1.27.64 1.26 1.4 0 .78-.56 1.4-1.26 1.4zm4.6 0c-.7 0-1.26-.63-1.26-1.4s.55-1.4 1.26-1.4c.7 0 1.27.64 1.26 1.4 0 .78-.55 1.4-1.26 1.4z"/></svg>
             Discord
-            <span class="nav-external" aria-hidden="true">↗</span>
+            <span class="sp-nav-external" aria-hidden="true">↗</span>
         </a>
     </nav>
-    <div class="sidebar-footer">
-        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Toggle dark mode">
-            <svg class="theme-icon theme-icon--light" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5a.5.5 0 01.5.5v1a.5.5 0 01-1 0V2a.5.5 0 01.5-.5zm0 11a.5.5 0 01.5.5v1a.5.5 0 01-1 0v-1a.5.5 0 01.5-.5zm6.5-5.5a.5.5 0 010 1h-1a.5.5 0 010-1h1zm-12 0a.5.5 0 010 1H1.5a.5.5 0 010-1h1zm10.45-3.95a.5.5 0 010 .7l-.7.7a.5.5 0 11-.7-.7l.7-.7a.5.5 0 01.7 0zM4.45 11.55a.5.5 0 010 .7l-.7.7a.5.5 0 01-.7-.7l.7-.7a.5.5 0 01.7 0zm7.8.7a.5.5 0 01-.7 0l-.7-.7a.5.5 0 01.7-.7l.7.7a.5.5 0 010 .7zM4.45 4.45a.5.5 0 01-.7 0l-.7-.7a.5.5 0 01.7-.7l.7.7a.5.5 0 010 .7z"/></svg>
-            <svg class="theme-icon theme-icon--dark" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6 1a7 7 0 009.37 9.32A7 7 0 116 1z"/></svg>
-            <span class="theme-label">Dark mode</span>
-        </button>
-    </div>
 </aside>

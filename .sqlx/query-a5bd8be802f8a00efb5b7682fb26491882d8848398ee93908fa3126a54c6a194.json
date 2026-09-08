@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO mcp_connector_accounts (user_id, provider) VALUES ($1, $2)\n        ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a5bd8be802f8a00efb5b7682fb26491882d8848398ee93908fa3126a54c6a194"
+}

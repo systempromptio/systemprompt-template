@@ -23,6 +23,7 @@ pub(crate) fn render_typed_page<T: Serialize>(
 ) -> Response {
     // Why: lint-ok: http-error — renders the page directly; the failure arm is
     // already the typed AdminHtmlError response.
+    let started = std::time::Instant::now();
     // JSON: the shell reads the page's own `page` key to pick its help text,
     // which needs the page context as data rather than as a type. This is the
     // only Value conversion on the SSR render path.
@@ -33,8 +34,14 @@ pub(crate) fn render_typed_page<T: Serialize>(
     let page_id = value.get("page").and_then(serde_json::Value::as_str);
     let shell = PageShell::new(engine.branding(), user_ctx, mkt_ctx, page_id, &value);
 
-    match engine.render(template, &shell) {
+    let response = match engine.render(template, &shell) {
         Ok(html) => Html(html).into_response(),
         Err(e) => AdminHtmlError::from(e).into_response(),
-    }
+    };
+    tracing::debug!(
+        template,
+        render_ms = started.elapsed().as_secs_f64() * 1000.0,
+        "SSR rendered"
+    );
+    response
 }

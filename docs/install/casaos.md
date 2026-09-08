@@ -1,5 +1,7 @@
 # Deploy the gateway on CasaOS
 
+Set `ADMIN_EMAIL` to an email address you control before first boot, alongside at least one AI provider key. The gateway requires this administrator identity.
+
 Deploys the `systemprompt-gateway` server on [CasaOS](https://casaos.zimaspace.com) (gateway + bundled Postgres).
 
 ## Install

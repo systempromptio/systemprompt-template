@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM access_control_entities\n            WHERE entity_type = $1\n              AND entity_id <> ALL($2::text[])\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cf8a89db5002911fab2086ec48df3af81f2350cc006d144f24ec84799730fd3c"
+}

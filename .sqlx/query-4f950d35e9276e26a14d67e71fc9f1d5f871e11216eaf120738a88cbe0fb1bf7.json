@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM requirements_workflow_review_nonces WHERE nonce=$1 AND workflow_id=$2 AND revision=$3 AND user_id=$4 AND session_id=$5 AND expires_at>NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4f950d35e9276e26a14d67e71fc9f1d5f871e11216eaf120738a88cbe0fb1bf7"
+}

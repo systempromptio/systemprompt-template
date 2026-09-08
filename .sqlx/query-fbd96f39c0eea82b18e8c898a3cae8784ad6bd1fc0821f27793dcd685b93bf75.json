@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id AS \"id: UserId\" FROM users\n           WHERE (LOWER(email) = LOWER($1) OR name = $1) AND status = 'active'\n           ORDER BY (LOWER(email) = LOWER($1)) DESC\n           LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "fbd96f39c0eea82b18e8c898a3cae8784ad6bd1fc0821f27793dcd685b93bf75"
+}

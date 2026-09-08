@@ -2,120 +2,100 @@
   Traffic tab: what actually went through the gateway in this window, sliced
   three ways. Straight from `ai_requests` — no judge involved.
 --}}
-<h2 class="eval-section-title">By model</h2>
+{{> components/section title="By model" count=traffic.model_count note="Requests, cost and latency per model, with the judge's mean where one has scored it."}}
 {{#if models}}
-{{#> components/data-table}}
+{{#> components/table caption="Gateway traffic by model" modifier="sp-p-evals__models"}}
     <thead><tr>
-        <th>Model</th>
-        <th class="col-num">Requests</th>
-        <th class="col-num">Users</th>
-        <th class="col-num">Tokens</th>
-        <th class="col-num">Cost</th>
-        <th class="col-num">Cost / req</th>
-        <th class="col-num">p50 / p95</th>
-        <th class="col-num">Errors</th>
-        <th class="col-num">Mean score</th>
+        <th scope="col">Model</th>
+        <th scope="col">Provider</th>
+        <th scope="col" class="sp-table__cell--num">Requests</th>
+        <th scope="col" class="sp-table__cell--num">Share</th>
+        <th scope="col" class="sp-table__cell--num">Users</th>
+        <th scope="col" class="sp-table__cell--num">Tokens</th>
+        <th scope="col" class="sp-table__cell--num">Cost</th>
+        <th scope="col" class="sp-table__cell--num">Cost / req</th>
+        <th scope="col" class="sp-table__cell--num" title="Median over 95th percentile latency">Latency</th>
+        <th scope="col" class="sp-table__cell--num">Errors</th>
+        <th scope="col" class="sp-table__cell--num">Mean score</th>
     </tr></thead>
     <tbody>
     {{#each models}}
     <tr>
-        <td>
-            <code class="code-inline">{{this.model}}</code>
-            <span class="text-muted text-xs">{{this.provider}}</span>
-        </td>
-        <td class="col-num">
-            <div class="eval-share" title="{{this.share_pct}}% of requests">
-                <span class="eval-share__count">{{this.request_count}}</span>
-                <span class="eval-share__bar" style="--v:{{this.share_pct}}%"></span>
-            </div>
-        </td>
-        <td class="col-num">{{this.user_count}}</td>
-        <td class="col-num">{{this.tokens_total}}</td>
-        <td class="col-num">{{this.cost_display}}</td>
-        <td class="col-num">{{this.cost_per_request_display}}</td>
-        <td class="col-num">{{this.p50_latency_ms}} / {{this.p95_latency_ms}} ms</td>
-        <td class="col-num">
-            {{#if this.error_count}}
-              <span class="mcp-badge mcp-badge-danger">{{this.error_count}}</span>
-            {{else}}—{{/if}}
-        </td>
-        <td class="col-num">
-            {{#if this.has_score}}
-              <span class="eval-score" title="{{this.scored_count}} judged, {{this.fail_count}} failing">
-                {{this.mean_score_display}}
-              </span>
-            {{else}}<span class="text-muted">not judged</span>{{/if}}
-        </td>
+        <td class="sp-table__cell--primary sp-table__cell--mono sp-p-evals__clip" title="{{this.model}}">{{this.model}}</td>
+        <td class="sp-table__cell--muted">{{this.provider}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.request_count}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.share_pct}}%</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.user_count}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{formatNumber this.tokens_total}}</td>
+        <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+        <td class="sp-table__cell--num sp-u-mono">{{this.cost_per_request_display}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.p50_latency_ms}} <span class="sp-table__cell--muted">/ {{this.p95_latency_ms}} ms</span></td>
+        <td class="sp-table__cell--num sp-u-num">{{#if this.error_count}}{{> components/badge tone="err" text=this.error_count}}{{else}}<span class="sp-table__cell--muted">—</span>{{/if}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{#if this.has_score}}<span title="{{this.scored_count}} judged, {{this.fail_count}} failing">{{this.mean_score_display}}</span>{{else}}<span class="sp-table__cell--muted">not judged</span>{{/if}}</td>
     </tr>
     {{/each}}
     </tbody>
-{{/components/data-table}}
+{{/components/table}}
 {{else}}
-{{> components/empty-state message="No requests in this window."}}
+{{> components/empty-state title="No requests" message="Nothing went through the gateway in this window. Widen the time range above."}}
 {{/if}}
 
+{{> components/section title="By user" count=traffic.user_count note="Who sent the traffic."}}
 {{#if users}}
-<h2 class="eval-section-title">By user</h2>
-{{#> components/data-table}}
+{{#> components/table caption="Gateway traffic by user" modifier="sp-p-evals__users"}}
     <thead><tr>
-        <th>User</th>
-        <th class="col-num">Requests</th>
-        <th class="col-num">Sessions</th>
-        <th class="col-num">Models</th>
-        <th class="col-num">Errors</th>
-        <th class="col-num">Cost</th>
-        <th class="col-date">Last seen</th>
+        <th scope="col">User</th>
+        <th scope="col" class="sp-table__cell--num">Requests</th>
+        <th scope="col" class="sp-table__cell--num">Share</th>
+        <th scope="col" class="sp-table__cell--num">Sessions</th>
+        <th scope="col" class="sp-table__cell--num">Models</th>
+        <th scope="col" class="sp-table__cell--num">Errors</th>
+        <th scope="col" class="sp-table__cell--num">Cost</th>
+        <th scope="col" class="sp-table__cell--date">Last seen</th>
     </tr></thead>
     <tbody>
     {{#each users}}
     <tr>
-        <td><a href="/admin/user?id={{this.user_id}}">{{truncate this.user_label 24}}</a></td>
-        <td class="col-num">
-            <div class="eval-share" title="{{this.share_pct}}% of requests">
-                <span class="eval-share__count">{{this.request_count}}</span>
-                <span class="eval-share__bar" style="--v:{{this.share_pct}}%"></span>
-            </div>
-        </td>
-        <td class="col-num">{{this.session_count}}</td>
-        <td class="col-num">{{this.model_count}}</td>
-        <td class="col-num">{{#if this.error_count}}{{this.error_count}}{{else}}—{{/if}}</td>
-        <td class="col-num">{{this.cost_display}}</td>
-        <td class="col-date">{{this.last_seen_local}}</td>
+        <td class="sp-table__cell--primary sp-p-evals__clip" title="{{this.user_id}}"><a href="/admin/user?id={{this.user_id}}">{{this.user_label}}</a></td>
+        <td class="sp-table__cell--num sp-u-num">{{this.request_count}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.share_pct}}%</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.session_count}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.model_count}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{#if this.error_count}}{{this.error_count}}{{else}}<span class="sp-table__cell--muted">—</span>{{/if}}</td>
+        <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+        <td class="sp-table__cell--date">{{this.last_seen_local}}</td>
     </tr>
     {{/each}}
     </tbody>
-{{/components/data-table}}
+{{/components/table}}
+{{else}}
+{{> components/empty-state message="No user sent a request in this window."}}
 {{/if}}
 
+{{> components/section title="Prompt shapes" note="Grouped on the opening words of each stored prompt. A distribution hint, not a classifier."}}
 {{#if topics}}
-<h2 class="eval-section-title">Prompt shapes</h2>
-<p class="text-muted text-xs eval-hint">
-    Grouped on the opening words of each stored prompt. A distribution hint, not a classifier.
-</p>
-{{#> components/data-table}}
+{{#> components/table caption="Prompt openings by frequency" modifier="sp-p-evals__topics"}}
     <thead><tr>
-        <th>Opening</th>
-        <th class="col-num">Requests</th>
-        <th class="col-num">Models</th>
-        <th class="col-num">Cost</th>
+        <th scope="col">Opening</th>
+        <th scope="col">Sample</th>
+        <th scope="col" class="sp-table__cell--num">Requests</th>
+        <th scope="col" class="sp-table__cell--num">Share</th>
+        <th scope="col" class="sp-table__cell--num">Models</th>
+        <th scope="col" class="sp-table__cell--num">Cost</th>
     </tr></thead>
     <tbody>
     {{#each topics}}
     <tr>
-        <td>
-            <span class="eval-topic">{{this.topic}}</span>
-            <span class="text-muted text-xs eval-topic__sample">{{this.sample_excerpt}}</span>
-        </td>
-        <td class="col-num">
-            <div class="eval-share" title="{{this.share_pct}}% of requests">
-                <span class="eval-share__count">{{this.request_count}}</span>
-                <span class="eval-share__bar" style="--v:{{this.share_pct}}%"></span>
-            </div>
-        </td>
-        <td class="col-num">{{this.distinct_models}}</td>
-        <td class="col-num">{{this.cost_display}}</td>
+        <td class="sp-table__cell--primary sp-p-evals__clip" title="{{this.topic}}">{{this.topic}}</td>
+        <td class="sp-table__cell--muted sp-p-evals__clip" title="{{this.sample_excerpt}}">{{this.sample_excerpt}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.request_count}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.share_pct}}%</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.distinct_models}}</td>
+        <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
     </tr>
     {{/each}}
     </tbody>
-{{/components/data-table}}
+{{/components/table}}
+{{else}}
+{{> components/empty-state message="No stored prompt in this window to group."}}
 {{/if}}

@@ -1,0 +1,29 @@
+{{!--
+  Group and project selectors. Rendered only for console roles: everyone else
+  is pinned to their own groups server-side and gets no control to widen it.
+  Invoke as: {{> components/scope-filter scope_filter}}
+--}}
+{{#if show}}
+<form method="get" action="{{base_url}}" class="sp-analytics-filters">
+    {{#each hidden}}
+    <input type="hidden" name="{{this.name}}" value="{{this.value}}">
+    {{/each}}
+    <label class="sp-analytics-filters__group">
+        Group
+        <select name="group" class="sp-search-input">
+            {{#each groups}}
+            <option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>
+            {{/each}}
+        </select>
+    </label>
+    <label class="sp-analytics-filters__group">
+        Project
+        <select name="project" class="sp-search-input">
+            {{#each projects}}
+            <option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>
+            {{/each}}
+        </select>
+    </label>
+    <button type="submit" class="sp-btn sp-btn--sm">Apply</button>
+</form>
+{{/if}}

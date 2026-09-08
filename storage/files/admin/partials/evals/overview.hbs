@@ -1,60 +1,26 @@
 {{!--
-  Overview tab: the shape of the window, and every eval run in it regardless of
-  kind. The per-kind detail lives on the other tabs.
+  Overview tab: every eval run in the window regardless of kind, then the
+  shape of the traffic. The table leads because it is what the tab is about;
+  the charts sit below it where they cannot push it under the fold.
 --}}
-<div class="requests-charts">
-    <section class="requests-charts__panel">
-        <h3 class="requests-charts__title">Latency distribution</h3>
-        {{> components/latency-histogram histogram}}
-    </section>
+{{> components/section title="Recent runs" note="Every evaluation launched in this window. Open a run to see the items it scored."}}
+{{#if runs}}
+{{> evals/runs-table runs=runs}}
+{{else}}
+{{> components/empty-state title="No evaluations yet"
+    message="No evaluation has run in this window. Start one from the Judge, Head-to-head, or Golden set tab."}}
+{{/if}}
 
-    <section class="requests-charts__panel">
-        {{> components/timeseries-chart cost_chart}}
+<div class="sp-p-evals__charts">
+    <section class="sp-card sp-p-evals__chart" aria-label="Latency distribution">
+        <div class="sp-card__body">
+            <h2 class="sp-section__title">Latency distribution</h2>
+            {{> components/latency-histogram histogram}}
+        </div>
+    </section>
+    <section class="sp-card sp-p-evals__chart" aria-label="Cost over time">
+        <div class="sp-card__body">
+            {{> components/timeseries-chart cost_chart}}
+        </div>
     </section>
 </div>
-
-<h2 class="eval-section-title">Recent runs</h2>
-{{#if runs}}
-<p class="text-muted text-xs eval-hint">
-    Every evaluation launched in this window. Open a run to see the items it scored.
-</p>
-{{#> components/data-table}}
-    <thead><tr>
-        <th>Run</th>
-        <th>Kind</th>
-        <th class="col-status">Status</th>
-        <th>Judge</th>
-        <th class="col-num">Scored</th>
-        <th class="col-num">Failed</th>
-        <th class="col-num">Mean</th>
-        <th class="col-num">Judge cost</th>
-        <th class="col-date">Started</th>
-    </tr></thead>
-    <tbody>
-    {{#each runs}}
-    <tr>
-        <td><a href="{{this.detail_url}}"><code class="code-inline">{{this.short_id}}</code></a></td>
-        <td>{{this.kind}}</td>
-        <td class="col-status">
-            {{#if this.is_failed}}
-              <span class="mcp-badge mcp-badge-danger">{{this.status}}</span>
-            {{else}}{{#if this.is_running}}
-              <span class="mcp-badge mcp-badge-warning">{{this.status}}</span>
-            {{else}}
-              <span class="mcp-badge mcp-badge-success">{{this.status}}</span>
-            {{/if}}{{/if}}
-        </td>
-        <td><code class="code-inline">{{truncate this.judge_model 22}}</code></td>
-        <td class="col-num">{{this.scored_count}} / {{this.sample_size}}</td>
-        <td class="col-num">{{#if this.failed_count}}{{this.failed_count}}{{else}}—{{/if}}</td>
-        <td class="col-num">{{this.mean_score_display}}</td>
-        <td class="col-num">{{this.cost_display}}</td>
-        <td class="col-date">{{this.created_at_local}}</td>
-    </tr>
-    {{/each}}
-    </tbody>
-{{/components/data-table}}
-{{else}}
-{{> components/empty-state
-    message="No evaluations run in this window. Start one from the Scored answers, Head-to-head, or Golden set tab."}}
-{{/if}}

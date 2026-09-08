@@ -1,0 +1,119 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n                r.id AS \"id!\",\n                r.entity_type AS \"entity_type!\",\n                r.entity_id AS \"entity_id!\",\n                r.rule_type AS \"rule_type!\",\n                r.rule_value AS \"rule_value!\",\n                r.access AS \"access!: AccessDecision\",\n                r.justification,\n                COALESCE(e.default_included, false) AS \"default_included!\",\n                e.source AS \"entity_source?\"\n           FROM access_control_rules r\n           LEFT JOIN access_control_entities e\n                  ON e.entity_type = r.entity_type AND e.entity_id = r.entity_id\n           ORDER BY r.entity_type, r.entity_id, r.rule_type, r.rule_value\n           LIMIT $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "entity_type!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "entity_type"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "entity_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "entity_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "rule_type!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "rule_type"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "rule_value!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "rule_value"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "access!: AccessDecision",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "access"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "justification",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "justification"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "default_included!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "entity_source?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_entities",
+            "name": "source"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      null,
+      false
+    ]
+  },
+  "hash": "951e5d8b02a07794301dd430c45826f698241f5c1872757a108c105fc1804e7a"
+}

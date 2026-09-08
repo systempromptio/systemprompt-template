@@ -142,7 +142,7 @@ pub(crate) async fn user_matrix_handler(
     Ok(Json(matrix).into_response())
 }
 
-fn build_matrix_sections(
+pub(crate) fn build_matrix_sections(
     services_path: &std::path::Path,
 ) -> Vec<repositories::users::access_control::SectionInput> {
     // Why: each source is best-effort — a config that fails to load is skipped

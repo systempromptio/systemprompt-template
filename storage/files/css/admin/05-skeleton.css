@@ -1,0 +1,42 @@
+@layer components {
+
+.sp-skeleton {
+    background: linear-gradient(90deg, var(--sp-shimmer-from) 25%, var(--sp-shimmer-via) 50%, var(--sp-shimmer-to) 75%);
+    background-size: 200% 100%;
+    animation: sp-shimmer var(--sp-duration-slower) linear infinite;
+    border-radius: var(--sp-radius-sm);
+}
+
+.sp-skeleton__text {
+    height: var(--sp-space-3);
+    margin-block: var(--sp-space-1);
+}
+
+
+@keyframes sp-shimmer {
+    to { background-position: -200% 0; }
+}
+
+.sp-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid var(--sp-border-default);
+    border-top-color: var(--sp-accent);
+    border-radius: var(--sp-radius-full);
+    animation: sp-spin var(--sp-duration-slow) linear infinite;
+}
+
+@keyframes sp-spin {
+    to { transform: rotate(360deg); }
+}
+
+.sp-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-space-8);
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-sm);
+}
+
+}

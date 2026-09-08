@@ -1,0 +1,27 @@
+@layer components {
+
+/* Why: fixed layout keeps the ledger inside the viewport. A long reason
+   would otherwise widen its column until the card scrolls sideways, and the
+   reason is the one cell allowed to clip: the full text stays on its title. */
+.sp-p-decisions__table { table-layout: fixed; width: 100%; }
+.sp-p-decisions__table th:nth-child(1) { width: 14%; }
+.sp-p-decisions__table th:nth-child(2) { width: 8%; }
+.sp-p-decisions__table th:nth-child(3) { width: 14%; }
+.sp-p-decisions__table th:nth-child(4) { width: 16%; }
+.sp-p-decisions__table th:nth-child(5) { width: 12%; }
+.sp-p-decisions__table th:nth-child(6) { width: 10%; }
+.sp-p-decisions__table th:nth-child(7) { width: 26%; }
+
+.sp-p-decisions__reason {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-xs);
+}
+
+/* The window picker and the facet toolbar are two control rows; the shared
+   picker carries a bottom margin sized for standing alone. */
+[data-section="governance-decisions"] .sp-time-range { margin-bottom: var(--sp-space-2); }
+
+}

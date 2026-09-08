@@ -12,6 +12,21 @@
 scheduler:
   enabled: true
   jobs:
+    - name: usage_anomaly
+      extension: web
+      owner: admin
+      enabled: true
+
+    - name: usage_daily_rollup
+      extension: web
+      owner: admin
+      enabled: true
+
+    - name: scope_defaults_recompute
+      extension: web
+      owner: admin
+      enabled: true
+
     # Core jobs (defined in systemprompt-core)
     - name: cleanup_anonymous_users
       extension: core

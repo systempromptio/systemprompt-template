@@ -10,6 +10,7 @@ homepage.workspace = true
 publish = false
 
 [dependencies]
+systemprompt-web-admin = { workspace = true }
 inventory = { workspace = true }
 systemprompt-web-shared = { workspace = true }
 # Audit: uses config (profile paths), database, extension, models, template_provider.

@@ -1,0 +1,66 @@
+@layer components {
+
+/* The fold budget. The log is the page, so the bands above it are held tight
+   enough that twelve rows clear 900px: header, tabs, tiles, one toolbar. */
+.sp-p-requests__band + .sp-p-requests__band {
+    margin-top: var(--sp-space-3);
+}
+
+.sp-p-requests__band.sp-kpi-grid {
+    margin-bottom: 0;
+}
+
+/* The log is the page, so its chrome is budgeted: the five facets are one
+   inline row rather than five stacked full-width controls, which is what put
+   the table below the fold. */
+.sp-p-requests__filters {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+    min-width: 0;
+}
+
+.sp-p-requests__filters .sp-search-input {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 0;
+    max-width: 11rem;
+}
+
+.sp-p-requests__filters .sp-toolbar__search {
+    flex: 2 1 0;
+    min-width: 0;
+}
+
+.sp-p-requests-table .sp-col-project,
+.sp-p-requests-table .sp-col-group {
+    width: 8rem;
+    min-width: 5.5rem;
+}
+
+.sp-p-requests-table .sp-col-model {
+    width: 10rem;
+    min-width: 7rem;
+}
+
+.sp-table__row[data-href] {
+    cursor: pointer;
+}
+
+.sp-pagination__current {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-pagination__current:first-child {
+    margin-right: auto;
+}
+
+@media (max-width: 80rem) {
+    .sp-p-requests-table .sp-col-group { display: none; }
+}
+
+}

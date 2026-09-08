@@ -5,21 +5,29 @@
 //! `governance_decisions` row, and exposes both a redacted (default) and an
 //! optional raw text body.
 //!
-//! Free-text search relies on the `idx_session_transcripts_jsonb` GIN index
-//! (`jsonb_path_ops`). Pure substring searches use `ILIKE` against the JSONB
-//! cast to text — that is unindexed and capped at 200 rows by the SQL filter
-//! upstream so the cost is bounded.
+//! The `/admin/history` listing lives in `unified`, which reads both places a
+//! conversation is recorded: these transcripts, and the gateway's own
+//! `ai_requests` rows grouped by context. It replaced a transcript-only query
+//! that showed nothing at all to a user who never runs Claude Code.
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use systemprompt::identifiers::{PluginId, SessionId, TraceId, UserId};
 
 mod detail;
+mod gateway_text;
 mod redact;
+pub mod scope;
+mod store;
 mod transcript;
+mod unified;
 
 pub use detail::find_raw_turns;
+pub use gateway_text::strip_gateway_markers;
 pub use redact::redact_text;
+pub use scope::{HistoryScope, has_full_history_view, history_scope_for, resolve_history_scope};
+pub use store::upsert_session_transcript;
+pub use unified::{HistoryItem, HistorySource, list_history_items};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ConversationListItem {

@@ -5,7 +5,18 @@ use sqlx::PgPool;
 use super::TraceStats;
 use crate::util::time_range::TimeRange;
 
-pub async fn get_trace_stats(pool: &PgPool, range: TimeRange) -> Result<TraceStats, sqlx::Error> {
+// Why: `subject_ids` is the caller's `SubjectScope::as_sql()`; every source of
+// a session (tool events, governance decisions, requests) carries a user id, so
+// the same predicate scopes all three.
+#[expect(
+    clippy::too_many_lines,
+    reason = "body is one compile-time-checked query! SQL literal"
+)]
+pub async fn get_trace_stats(
+    pool: &PgPool,
+    range: TimeRange,
+    subject_ids: Option<&[String]>,
+) -> Result<TraceStats, sqlx::Error> {
     let row = sqlx::query!(
         r#"WITH trace_to_session AS (
             SELECT DISTINCT trace_id, session_id
@@ -17,17 +28,20 @@ pub async fn get_trace_stats(pool: &PgPool, range: TimeRange) -> Result<TraceSta
             SELECT session_id, created_at, NULL::text AS decision, NULL::text AS status
             FROM plugin_usage_events
             WHERE created_at >= $1 AND created_at < $2 AND session_id IS NOT NULL
+              AND ($3::TEXT[] IS NULL OR plugin_usage_events.user_id = ANY($3))
             UNION ALL
-            SELECT COALESCE(NULLIF(g.session_id, ''), t.session_id) AS session_id,
+            SELECT COALESCE(t.session_id, NULLIF(g.session_id, ''), g.trace_id) AS session_id,
                    g.created_at, g.decision, NULL::text
             FROM governance_decisions g
             LEFT JOIN trace_to_session t ON t.trace_id = g.trace_id
             WHERE g.created_at >= $1 AND g.created_at < $2
-              AND (NULLIF(g.session_id, '') IS NOT NULL OR t.session_id IS NOT NULL)
+              AND (NULLIF(g.session_id, '') IS NOT NULL OR g.trace_id IS NOT NULL)
+              AND ($3::TEXT[] IS NULL OR g.user_id = ANY($3))
             UNION ALL
             SELECT session_id, created_at, NULL::text, status::text
             FROM ai_requests
             WHERE created_at >= $1 AND created_at < $2 AND session_id IS NOT NULL
+              AND ($3::TEXT[] IS NULL OR ai_requests.user_id = ANY($3))
         ),
         per_session AS (
             SELECT
@@ -49,6 +63,7 @@ pub async fn get_trace_stats(pool: &PgPool, range: TimeRange) -> Result<TraceSta
                 COALESCE(SUM(tokens_used), 0)::bigint       AS tokens
             FROM ai_requests
             WHERE created_at >= $1 AND created_at < $2 AND session_id IS NOT NULL
+              AND ($3::TEXT[] IS NULL OR ai_requests.user_id = ANY($3))
             GROUP BY session_id
         )
         SELECT
@@ -66,6 +81,7 @@ pub async fn get_trace_stats(pool: &PgPool, range: TimeRange) -> Result<TraceSta
         FROM active"#,
         range.from,
         range.to,
+        subject_ids,
     )
     .fetch_one(pool)
     .await?;

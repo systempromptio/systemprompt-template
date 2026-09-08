@@ -58,3 +58,21 @@ mod status_contract;
 mod tempdb;
 #[cfg(test)]
 mod webhook_contract;
+
+#[cfg(test)]
+mod approvals_contract;
+
+#[cfg(test)]
+mod self_service_contract;
+
+#[cfg(test)]
+mod groups_contract;
+
+#[cfg(test)]
+mod roles_contract;
+
+#[cfg(test)]
+mod dev_login_contract;
+
+#[cfg(test)]
+mod write_boundaries;

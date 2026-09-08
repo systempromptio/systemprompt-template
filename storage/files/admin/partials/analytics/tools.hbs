@@ -1,0 +1,78 @@
+{{!--
+  Tools tab. Every figure is measured from mcp_tool_executions — one row per
+  real call, with its own status and duration.
+--}}
+<section aria-label="MCP tool usage">
+    {{> analytics/kpi-row tiles=tools.kpis}}
+
+    {{#> components/section title="Servers" count=tools.server_count}}
+      {{#*inline "section_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/mcp">MCP servers</a>
+      {{/inline}}
+    {{/components/section}}
+    {{#if tools.has_servers}}
+    {{#> components/table caption="Tool executions by MCP server"}}
+        <thead><tr>
+            <th scope="col">Server</th>
+            <th scope="col" class="sp-table__cell--num" aria-sort="descending">Executions</th>
+            <th scope="col" class="sp-table__cell--spark">Share</th>
+            <th scope="col" class="sp-table__cell--num">Success</th>
+            <th scope="col" class="sp-table__cell--num">Tools</th>
+            <th scope="col" class="sp-table__cell--num">Users</th>
+        </tr></thead>
+        <tbody>
+        {{#each tools.servers}}
+        <tr>
+            <td><a href="{{this.drill_url}}">{{this.server_name}}</a></td>
+            <td class="sp-table__cell--num sp-u-num">{{this.executions}}</td>
+            <td class="sp-table__cell--spark"><span class="sp-p-analytics__bar" style="--v:{{this.share_pct}}%"></span></td>
+            <td class="sp-table__cell--num sp-u-num">{{this.success_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.tools}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.users}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state message="No MCP server ran a tool in this window."}}
+    {{/if}}
+
+    {{#> components/section title="Tools" count=tools.tool_count}}{{/components/section}}
+    {{#if tools.has_rows}}
+    {{#> components/table caption="Executions, success rate and latency by tool"
+         pagination=tools.pagination}}
+        <thead><tr>
+            <th scope="col">Tool</th>
+            <th scope="col" class="sp-table__cell--num" aria-sort="descending">Executions</th>
+            <th scope="col" class="sp-table__cell--spark">Share</th>
+            <th scope="col" class="sp-table__cell--num" title="Of the calls that have settled; pending calls are counted separately">Success</th>
+            <th scope="col" class="sp-table__cell--num">Failed</th>
+            <th scope="col" class="sp-table__cell--num">Pending</th>
+            <th scope="col" class="sp-table__cell--num">p50</th>
+            <th scope="col" class="sp-table__cell--num">p95</th>
+            <th scope="col" class="sp-table__cell--num">Users</th>
+        </tr></thead>
+        <tbody>
+        {{#each tools.rows}}
+        <tr>
+            <td class="sp-table__cell--mono sp-table__cell--primary sp-p-analytics__name">
+                <a href="{{this.drill_url}}"
+                   title="{{this.tool_name}} on {{this.server_name}}">{{this.tool_name}}</a>
+            </td>
+            <td class="sp-table__cell--num sp-u-num">{{this.executions}}</td>
+            <td class="sp-table__cell--spark"><span class="sp-p-analytics__bar" style="--v:{{this.share_pct}}%"></span></td>
+            <td class="sp-table__cell--num sp-u-num">{{> components/badge tone=this.success_tone text=this.success_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.failed}}</td>
+            <td class="sp-table__cell--num sp-u-num sp-table__cell--muted">{{this.pending_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.p50_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.p95_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.users}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No tool calls"
+        message="No MCP tool ran in this window. Widen the time range or clear the scope."}}
+    {{/if}}
+</section>

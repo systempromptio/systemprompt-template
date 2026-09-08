@@ -10,6 +10,7 @@
 
 use systemprompt_security::policy::GovernanceEngine;
 
-pub(crate) fn engine() -> &'static GovernanceEngine {
+pub(crate) fn engine()
+-> Result<&'static GovernanceEngine, systemprompt_security::policy::GovernanceEngineError> {
     GovernanceEngine::global()
 }

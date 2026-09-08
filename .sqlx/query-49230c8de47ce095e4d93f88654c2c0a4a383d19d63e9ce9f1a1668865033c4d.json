@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM access_control_rules\n         WHERE rule_type = $1\n           AND (entity_type, entity_id) IN (\n                 SELECT t, i FROM UNNEST($5::TEXT[], $6::TEXT[]) AS declared(t, i)\n               )\n           AND (entity_type, entity_id, rule_value) NOT IN (\n                 SELECT t, i, g FROM UNNEST($2::TEXT[], $3::TEXT[], $4::TEXT[]) AS kept(t, i, g)\n               )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "49230c8de47ce095e4d93f88654c2c0a4a383d19d63e9ce9f1a1668865033c4d"
+}

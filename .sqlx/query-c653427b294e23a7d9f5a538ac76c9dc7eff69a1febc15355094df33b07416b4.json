@@ -1,0 +1,135 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            s.session_id AS \"session_id!: SessionId\",\n            s.user_id AS \"user_id!: UserId\",\n            s.model,\n            COALESCE(s.total_cost_microdollars, 0)::BIGINT AS \"cost!\",\n            COALESCE(s.context_window_size, 0)::BIGINT AS \"context!\",\n            COALESCE(s.input_tokens, 0)::BIGINT AS \"input_tokens!\",\n            COALESCE(s.output_tokens, 0)::BIGINT AS \"output_tokens!\",\n            COALESCE(s.cache_read_input_tokens, 0)::BIGINT AS \"cache_read!\",\n            r.rating AS \"rating?\",\n            r.outcome AS \"outcome?\",\n            s.updated_at AS \"updated_at!\",\n            COUNT(*) OVER ()::BIGINT AS \"total!\"\n        FROM session_cost_snapshots s\n        LEFT JOIN session_ratings r ON r.session_id = s.session_id\n        WHERE s.updated_at >= $1 AND s.updated_at < $2\n          AND ($3::TEXT[] IS NULL OR s.user_id = ANY($3))\n          AND ($4::TEXT IS NULL OR s.user_id = $4)\n        ORDER BY COALESCE(s.total_cost_microdollars, 0) DESC, s.updated_at DESC\n        LIMIT $5 OFFSET $6\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id!: SessionId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_cost_snapshots",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_cost_snapshots",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_cost_snapshots",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "context!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "cache_read!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "rating?",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "session_ratings",
+            "name": "rating"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "outcome?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_ratings",
+            "name": "outcome"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "session_cost_snapshots",
+            "name": "updated_at"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "c653427b294e23a7d9f5a538ac76c9dc7eff69a1febc15355094df33b07416b4"
+}

@@ -147,8 +147,8 @@ fi
 echo
 say "Evidence — open these as an admin:"
 echo "    governed timeline $TRACE_URL"
-echo "    this session      $DASHBOARD_URL/admin/entities/sessions/$SESSION_ID"
-echo "    all requests      $DASHBOARD_URL/admin/entities/requests"
+echo "    this session      $DASHBOARD_URL/admin/sessions/$SESSION_ID"
+echo "    all requests      $DASHBOARD_URL/admin/requests"
 echo "    policy decisions  $DASHBOARD_URL/admin/governance/decisions"
 echo
 echo "    Same view from the CLI:"

@@ -1,0 +1,123 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT source_type,file_id AS \"file_id: FileId\",project_id,project_name,folder_path,status,\n        COALESCE(metadata->>'name','') AS \"file_name!\",COALESCE(metadata->>'mimeType','') AS \"mime_type!\",\n        COALESCE(metadata->>'webViewLink','https://drive.google.com/file/d/' || file_id || '/view') AS \"uri!\",error FROM knowledge_drive_files WHERE source_type=$1 AND file_id>$2 ORDER BY file_id LIMIT $3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "source_type",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_files",
+            "name": "source_type"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "file_id: FileId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_files",
+            "name": "file_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "project_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_files",
+            "name": "project_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "project_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_files",
+            "name": "project_name"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "folder_path",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_files",
+            "name": "folder_path"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_files",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "file_name!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "mime_type!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "uri!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "error",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_files",
+            "name": "error"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      true
+    ]
+  },
+  "hash": "e256cb6aee4b0dc50a27846bbb3960c78f378f33d1da05987961123fe31cc840"
+}

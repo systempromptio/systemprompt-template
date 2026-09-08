@@ -1,0 +1,47 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COUNT(*)::BIGINT AS \"rated!\",\n            AVG(r.rating::DOUBLE PRECISION) AS avg_rating,\n            COUNT(*) FILTER (WHERE r.rating >= 4)::BIGINT AS \"good!\",\n            COUNT(*) FILTER (WHERE r.rating <= 2)::BIGINT AS \"poor!\"\n        FROM session_ratings r\n        WHERE r.created_at >= $1 AND r.created_at < $2\n          AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))\n          AND ($4::TEXT IS NULL OR r.user_id = $4)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "rated!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "avg_rating",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "good!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "poor!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "25865eea6e94e8d0bccf7bba08ec5f2bfdd576b847293343d2ae868225f96c5f"
+}

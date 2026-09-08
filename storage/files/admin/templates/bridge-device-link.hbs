@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>{{branding.domain}} — Authorise device</title>
+    <link rel="stylesheet" href="/css/core/fonts.css?v={{css_version}}">
+    <link rel="stylesheet" href="/css/admin-bundle.css?v={{css_version}}">
+</head>
+<body class="sp-device-page">
+    <main class="sp-card sp-device-card">
+        <div class="sp-device-card__brand">
+            <img class="sp-device-card__logo" src="/files/images/logo.svg" alt="{{branding.domain}}">
+            <span class="sp-device-card__eyebrow">Device authorisation</span>
+        </div>
+
+        <h1 class="sp-device-card__title">Authorise a device</h1>
+        <p class="sp-device-card__lede">
+            {{#if redirect_host}}A local helper is asking to sign in as you.{{else}}A command-line helper on another machine is asking to sign in as you.{{/if}}
+            Approving issues a personal access token that stays valid until you revoke it.
+        </p>
+
+        <dl class="sp-device-facts">
+            <dt class="sp-device-facts__key">Account</dt>
+            <dd class="sp-device-facts__value">{{user_email}}</dd>
+            {{#if redirect_host}}
+            <dt class="sp-device-facts__key">Helper</dt>
+            <dd class="sp-device-facts__value">{{redirect_host}}</dd>
+            {{/if}}
+            <dt class="sp-device-facts__key">Code valid for</dt>
+            <dd class="sp-device-facts__value">{{code_ttl_seconds}}&nbsp;seconds</dd>
+        </dl>
+
+        <p class="sp-device-note">
+            Only approve if you started <code>{{#if redirect_host}}sp-bridge-auth{{else}}systemprompt-bridge login{{/if}}</code> yourself.
+        </p>
+
+        <div class="sp-device-actions">
+            <form method="POST" action="/bridge-auth/device-link/approve" class="sp-device-actions__form">
+                {{#if redirect}}<input type="hidden" name="redirect" value="{{redirect}}">{{/if}}
+                <button type="submit" class="sp-btn sp-btn--primary">Allow</button>
+            </form>
+            <form method="POST" action="/bridge-auth/device-link/deny" class="sp-device-actions__form">
+                {{#if redirect}}<input type="hidden" name="redirect" value="{{redirect}}">{{/if}}
+                <button type="submit" class="sp-btn sp-btn--secondary">Deny</button>
+            </form>
+        </div>
+
+        <p class="sp-device-footnote">
+            Didn't start this? Click Deny and review your active tokens on
+            <a href="/admin/profile">your profile</a>.
+        </p>
+    </main>
+</body>
+</html>

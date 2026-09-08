@@ -60,3 +60,10 @@ impl WebExtension {
 }
 
 register_extension!(WebExtension);
+
+impl WebExtension {
+    #[must_use]
+    pub fn salesforce_config() -> Option<Arc<systemprompt_web_admin::SalesforceConfig>> {
+        config_loader::salesforce_config()
+    }
+}

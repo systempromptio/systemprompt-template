@@ -7,6 +7,8 @@
   time_range.field. Strict-mode-friendly.
 
   Inputs (fields on the passed context):
+    rejected    true when the URL asked for a window that could not be
+                resolved, so the controls below show the default instead
     preset      one of: 15m, 1h, 24h, 7d, 30d, custom
     from        ISO datetime string (used when preset=custom)
     to          ISO datetime string (used when preset=custom)
@@ -14,42 +16,46 @@
     query       optional query-string suffix to preserve other params
                 (must be url-encoded by caller and start with "&")
 --}}
-<form class="time-range" method="get" action="{{base_url}}" data-time-range
+{{#if rejected}}
+{{> components/notice tone="warn"
+    message="That range could not be read, so this page is showing the default window."}}
+{{/if}}
+<form class="sp-time-range" method="get" action="{{base_url}}" data-time-range
       aria-label="Time range">
-  <div class="time-range__presets" role="group" aria-label="Time presets">
+  <div class="sp-time-range__presets" role="group" aria-label="Time presets">
     <a href="{{base_url}}?preset=15m{{query}}"
-       class="time-range__btn{{#if (eq preset "15m")}} time-range__btn--active{{/if}}"
+       class="sp-time-range__btn{{#if (eq preset "15m")}} sp-time-range__btn--active{{/if}}"
        data-preset="15m"{{#if (eq preset "15m")}} aria-current="true"{{/if}}>15m</a>
     <a href="{{base_url}}?preset=1h{{query}}"
-       class="time-range__btn{{#if (eq preset "1h")}} time-range__btn--active{{/if}}"
+       class="sp-time-range__btn{{#if (eq preset "1h")}} sp-time-range__btn--active{{/if}}"
        data-preset="1h"{{#if (eq preset "1h")}} aria-current="true"{{/if}}>1h</a>
     <a href="{{base_url}}?preset=24h{{query}}"
-       class="time-range__btn{{#if (eq preset "24h")}} time-range__btn--active{{/if}}"
+       class="sp-time-range__btn{{#if (eq preset "24h")}} sp-time-range__btn--active{{/if}}"
        data-preset="24h"{{#if (eq preset "24h")}} aria-current="true"{{/if}}>24h</a>
     <a href="{{base_url}}?preset=7d{{query}}"
-       class="time-range__btn{{#if (eq preset "7d")}} time-range__btn--active{{/if}}"
+       class="sp-time-range__btn{{#if (eq preset "7d")}} sp-time-range__btn--active{{/if}}"
        data-preset="7d"{{#if (eq preset "7d")}} aria-current="true"{{/if}}>7d</a>
     <a href="{{base_url}}?preset=30d{{query}}"
-       class="time-range__btn{{#if (eq preset "30d")}} time-range__btn--active{{/if}}"
+       class="sp-time-range__btn{{#if (eq preset "30d")}} sp-time-range__btn--active{{/if}}"
        data-preset="30d"{{#if (eq preset "30d")}} aria-current="true"{{/if}}>30d</a>
     <a href="{{base_url}}?preset=custom{{#if from}}&from={{from}}{{/if}}{{#if to}}&to={{to}}{{/if}}{{query}}"
-       class="time-range__btn{{#if (eq preset "custom")}} time-range__btn--active{{/if}}"
+       class="sp-time-range__btn{{#if (eq preset "custom")}} sp-time-range__btn--active{{/if}}"
        data-preset="custom"{{#if (eq preset "custom")}} aria-current="true"{{/if}}>Custom</a>
   </div>
 
-  <div class="time-range__custom"{{#unless (eq preset "custom")}} hidden{{/unless}}
+  <div class="sp-time-range__custom"{{#unless (eq preset "custom")}} hidden{{/unless}}
        data-time-range-custom>
     <input type="hidden" name="preset" value="custom">
-    <label class="time-range__label">
-      <span class="time-range__label-text">From</span>
-      <input type="datetime-local" name="from" class="time-range__input"
+    <label class="sp-time-range__label">
+      <span class="sp-time-range__label-text">From</span>
+      <input type="datetime-local" name="from" class="sp-time-range__input"
              value="{{from}}" data-time-range-from>
     </label>
-    <label class="time-range__label">
-      <span class="time-range__label-text">To</span>
-      <input type="datetime-local" name="to" class="time-range__input"
+    <label class="sp-time-range__label">
+      <span class="sp-time-range__label-text">To</span>
+      <input type="datetime-local" name="to" class="sp-time-range__input"
              value="{{to}}" data-time-range-to>
     </label>
-    <button type="submit" class="time-range__apply">Apply</button>
+    <button type="submit" class="sp-time-range__apply">Apply</button>
   </div>
 </form>

@@ -62,6 +62,11 @@ pub async fn list_context_list(
 ) -> Result<Vec<ContextListItem>, sqlx::Error> {
     let limit = resolved_limit(filter.limit);
     let pattern = free_text_pattern(filter);
+    // Why: the sort is a closed `(column, dir)` pair bound as two text
+    // parameters and selected by a `CASE` in the `ORDER BY`, so the statement
+    // stays one compile-time-checked literal rather than an interpolated string.
+    let sort_col = filter.sort.column.as_str();
+    let sort_dir = filter.sort.dir.as_str();
 
     let legacy = ContextId::legacy();
     let rows = sqlx::query_as!(
@@ -145,7 +150,30 @@ pub async fn list_context_list(
                OR COALESCE(c.context_id, req.context_id) ILIKE $4
                OR COALESCE(c.user_id, req.user_id) ILIKE $4
                OR preview.summary ILIKE $4)
-        ORDER BY COALESCE(req.last_request_at, c.updated_at) DESC NULLS LAST
+        ORDER BY
+            CASE WHEN $7 = 'activity' AND $8 = 'desc'
+                 THEN COALESCE(req.last_request_at, c.updated_at) END DESC NULLS LAST,
+            CASE WHEN $7 = 'activity' AND $8 = 'asc'
+                 THEN COALESCE(req.last_request_at, c.updated_at) END ASC NULLS LAST,
+            CASE WHEN $7 = 'requests' AND $8 = 'desc'
+                 THEN COALESCE(req.request_count, 0) END DESC NULLS LAST,
+            CASE WHEN $7 = 'requests' AND $8 = 'asc'
+                 THEN COALESCE(req.request_count, 0) END ASC NULLS LAST,
+            CASE WHEN $7 = 'messages' AND $8 = 'desc'
+                 THEN COALESCE(msgs.message_count, 0) END DESC NULLS LAST,
+            CASE WHEN $7 = 'messages' AND $8 = 'asc'
+                 THEN COALESCE(msgs.message_count, 0) END ASC NULLS LAST,
+            CASE WHEN $7 = 'tokens' AND $8 = 'desc'
+                 THEN COALESCE(req.total_input_tokens, 0)
+                    + COALESCE(req.total_output_tokens, 0) END DESC NULLS LAST,
+            CASE WHEN $7 = 'tokens' AND $8 = 'asc'
+                 THEN COALESCE(req.total_input_tokens, 0)
+                    + COALESCE(req.total_output_tokens, 0) END ASC NULLS LAST,
+            CASE WHEN $7 = 'cost' AND $8 = 'desc'
+                 THEN COALESCE(req.total_cost_microdollars, 0) END DESC NULLS LAST,
+            CASE WHEN $7 = 'cost' AND $8 = 'asc'
+                 THEN COALESCE(req.total_cost_microdollars, 0) END ASC NULLS LAST,
+            COALESCE(c.context_id, req.context_id)
         LIMIT $5
         "#,
         filter.user_id.as_ref().map(UserId::as_str),
@@ -154,6 +182,8 @@ pub async fn list_context_list(
         pattern,
         limit,
         legacy.as_str(),
+        sort_col,
+        sort_dir,
     )
     .fetch_all(pool)
     .await?;

@@ -25,6 +25,14 @@ pub struct TimeRange {
     pub from: DateTime<Utc>,
     pub to: DateTime<Utc>,
     pub preset: TimeRangePreset,
+    // Why: The query asked for a window and did not get it.
+    //
+    // Set when `?preset=`, `?from=` or `?to=` was supplied and could not be
+    // resolved, so the range below is the default rather than the one the URL
+    // names. The page must say so: a listing that quietly answers for a
+    // different window than the one in the address bar is read as the answer
+    // to the question that was asked.
+    pub rejected_bounds: bool,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -74,6 +82,7 @@ pub fn parse_time_range(query: &TimeRangeQuery) -> TimeRange {
             from: now - d,
             to: now,
             preset,
+            rejected_bounds: false,
         };
     }
 
@@ -87,7 +96,26 @@ pub fn parse_time_range(query: &TimeRangeQuery) -> TimeRange {
         from: now - Duration::hours(24),
         to: now,
         preset: TimeRangePreset::Hours24,
+        rejected_bounds: asked_for_a_window(query),
     }
+}
+
+// Why: the fallback is not a refusal — a listing is still the right answer to
+// "show me this page" — but it is only honest if the reader is told the
+// window is not theirs. So the default window stands and this decides whether
+// the page owes them a notice.
+//
+// Three ways to land here having asked for something: a preset that is not one
+// of ours, a bound that is not a timestamp, and a lone bound, which needs the
+// other end before it means a range at all. A query naming none of the three
+// asked for nothing and gets the default silently, which is correct.
+fn asked_for_a_window(query: &TimeRangeQuery) -> bool {
+    let preset_rejected = query
+        .preset
+        .as_deref()
+        .is_some_and(|p| TimeRangePreset::parse(p).is_none());
+    let bound_supplied = query.from.is_some() || query.to.is_some();
+    preset_rejected || bound_supplied
 }
 
 // Why: The widest window any query may scan. Matches the widest preset (30d).
@@ -111,6 +139,7 @@ fn clamp_custom(from: DateTime<Utc>, to: DateTime<Utc>) -> TimeRange {
         from,
         to,
         preset: TimeRangePreset::Custom,
+        rejected_bounds: false,
     }
 }
 
@@ -132,6 +161,7 @@ pub fn preset_to_range(preset: TimeRangePreset) -> TimeRange {
         from: now - d,
         to: now,
         preset,
+        rejected_bounds: false,
     }
 }
 

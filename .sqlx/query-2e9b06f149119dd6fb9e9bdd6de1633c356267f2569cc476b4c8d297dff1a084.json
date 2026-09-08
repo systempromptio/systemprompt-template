@@ -1,0 +1,80 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH base AS (\n               SELECT u.id, u.roles, (u.status = 'active') AS is_active\n                 FROM users u\n                WHERE NOT ('anonymous' = ANY(u.roles))\n                  AND u.email NOT LIKE '%@anonymous.local'\n                  AND ($1::TEXT[] IS NULL OR u.id = ANY($1))\n           ), marked AS (\n               SELECT b.id, b.is_active,\n                      cardinality(array_remove(array_remove(b.roles, 'user'), 'anonymous')) = 0 AS no_role,\n                      NOT EXISTS (SELECT 1 FROM group_members gm WHERE gm.user_id = b.id) AS unassigned,\n                      GREATEST(\n                        (SELECT MAX(ar.created_at) FROM ai_requests ar WHERE ar.user_id = b.id),\n                        (SELECT MAX(us.last_activity_at) FROM user_sessions us WHERE us.user_id = b.id),\n                        (SELECT MAX(ua.created_at) FROM user_activity ua WHERE ua.user_id = b.id)\n                      ) AS last_active\n                 FROM base b\n           ), spend AS (\n               SELECT\n                 COALESCE(SUM(ar.cost_microdollars) FILTER (\n                     WHERE ar.created_at >= NOW() - make_interval(days => $2::INT)), 0)::BIGINT AS cost,\n                 COUNT(*) FILTER (\n                     WHERE ar.created_at >= NOW() - make_interval(days => $2::INT))::BIGINT AS requests,\n                 COALESCE(SUM(ar.cost_microdollars) FILTER (\n                     WHERE ar.created_at >= NOW() - make_interval(days => $2::INT * 2)\n                       AND ar.created_at <  NOW() - make_interval(days => $2::INT)), 0)::BIGINT AS prior_cost,\n                 COUNT(*) FILTER (\n                     WHERE ar.created_at >= NOW() - make_interval(days => $2::INT * 2)\n                       AND ar.created_at <  NOW() - make_interval(days => $2::INT))::BIGINT AS prior_requests\n               FROM ai_requests ar\n               JOIN base b ON b.id = ar.user_id\n               WHERE ar.created_at >= NOW() - make_interval(days => $2::INT * 2)\n           )\n           SELECT COUNT(*)::BIGINT AS \"total!\",\n                  COUNT(*) FILTER (WHERE m.is_active)::BIGINT AS \"active!\",\n                  COUNT(*) FILTER (WHERE m.unassigned)::BIGINT AS \"unassigned!\",\n                  COUNT(*) FILTER (WHERE m.no_role)::BIGINT AS \"no_role!\",\n                  COUNT(*) FILTER (\n                      WHERE m.last_active IS NULL\n                         OR m.last_active < NOW() - INTERVAL '30 days'\n                  )::BIGINT AS \"inactive_30d!\",\n                  (SELECT cost FROM spend) AS \"cost!\",\n                  (SELECT requests FROM spend) AS \"requests!\",\n                  (SELECT prior_cost FROM spend) AS \"prior_cost!\",\n                  (SELECT prior_requests FROM spend) AS \"prior_requests!\"\n             FROM marked m",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "active!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "unassigned!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "no_role!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "inactive_30d!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "prior_cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "prior_requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "2e9b06f149119dd6fb9e9bdd6de1633c356267f2569cc476b4c8d297dff1a084"
+}

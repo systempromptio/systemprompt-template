@@ -1,0 +1,60 @@
+@layer components {
+
+.sp-skill-file-category {
+    font-size: var(--sp-text-xs);
+    font-weight: 700;
+    color: var(--sp-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    margin-top: var(--sp-space-2);
+}
+
+.sp-code-inline {
+    background: var(--sp-bg-surface-raised);
+    padding: 0.125rem var(--sp-space-2);
+    border-radius: var(--sp-radius-xs);
+    font-size: var(--sp-text-xs);
+}
+
+.sp-code-block {
+    margin: 0;
+    padding: var(--sp-space-3);
+    background: var(--sp-bg-surface-raised);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-md);
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-xs);
+    line-height: 1.5;
+    color: var(--sp-text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: auto;
+}
+
+.sp-section__foot {
+    text-align: center;
+    margin-top: var(--sp-space-3);
+}
+
+.sp-section__foot a {
+    color: var(--sp-info-strong);
+}
+
+.is-clickable {
+    cursor: pointer;
+}
+
+}
+
+@layer components {
+
+.sp-table__cell--flush {
+    padding: 0;
+}
+
+.sp-col-chevron {
+    width: 32px;
+}
+
+}

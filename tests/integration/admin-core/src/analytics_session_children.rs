@@ -11,8 +11,8 @@ use systemprompt::identifiers::{ContextId, SessionId};
 use systemprompt_web_admin::repositories::analytics::session_detail as repo;
 
 use crate::fixtures::{
-    RequestSpec, insert_context, insert_request, insert_session, insert_user, unclaimed_email,
-    unique,
+    RequestSpec, insert_context, insert_request, insert_session, insert_user, new_context_id,
+    unclaimed_email, unique,
 };
 use crate::tempdb::TempDb;
 
@@ -44,7 +44,7 @@ async fn list_session_contexts_rolls_up_per_context_and_joins_the_name() {
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("ctxroll")).await;
     let session = unique("session");
     insert_session(&db.pool, &session, &user).await;
-    let context = unique("ctx");
+    let context = new_context_id();
     insert_context(&db.pool, &context, &user, Some(&session), "Planning").await;
     for status in ["completed", "failed"] {
         let mut spec = RequestSpec::completed(&unique("req"), &user);
@@ -76,8 +76,8 @@ async fn list_session_contexts_orders_the_most_recent_context_first() {
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("ctxorder")).await;
     let session = unique("session");
     insert_session(&db.pool, &session, &user).await;
-    let older = unique("ctx-old");
-    let newer = unique("ctx-new");
+    let older = new_context_id();
+    let newer = new_context_id();
     let mut first = RequestSpec::completed(&unique("req"), &user);
     first.session_id = Some(&session);
     first.context_id = Some(&older);
@@ -137,7 +137,7 @@ async fn list_session_requests_returns_the_newest_request_first() {
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("reqorder")).await;
     let session = unique("session");
     insert_session(&db.pool, &session, &user).await;
-    let context = unique("ctx");
+    let context = new_context_id();
     let old_id = unique("req-old");
     let new_id = unique("req-new");
     let mut old = RequestSpec::completed(&old_id, &user);

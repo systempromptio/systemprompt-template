@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM plugin_usage_events\n             WHERE created_at < NOW() - make_interval(days => $1::INT)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "632661b4879124f640f942c4d1221db578d9b288d6cdf37a19c6cf6a479c97fe"
+}

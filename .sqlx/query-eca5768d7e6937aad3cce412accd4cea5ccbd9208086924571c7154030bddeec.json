@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n             (SELECT COUNT(*) FROM user_api_keys) AS \"pats_total!\",\n             (SELECT COUNT(*) FROM user_api_keys WHERE revoked_at IS NULL)\n                 AS \"pats_active!\",\n             (SELECT COUNT(*) FROM user_device_certs) AS \"certs_total!\",\n             (SELECT COUNT(*) FROM user_device_certs WHERE revoked_at IS NULL)\n                 AS \"certs_active!\",\n             (SELECT COUNT(*) FROM bridge_exchange_codes WHERE consumed_at IS NULL)\n                 AS \"links_pending!\",\n             (SELECT COUNT(*) FROM bridge_exchange_codes\n               WHERE consumed_at IS NULL AND expires_at < NOW())\n                 AS \"links_expired!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "pats_total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "pats_active!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "certs_total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "certs_active!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "links_pending!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "links_expired!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "eca5768d7e6937aad3cce412accd4cea5ccbd9208086924571c7154030bddeec"
+}

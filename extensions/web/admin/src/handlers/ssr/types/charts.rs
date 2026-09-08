@@ -20,7 +20,10 @@ use crate::util::time_range::TimeRange;
 // never derives a scale and the axis cannot disagree with the bars.
 #[derive(Debug, Serialize)]
 pub(crate) struct ChartView {
-    pub heading: &'static str,
+    // Why: serialized as chart_title — the layout partial's `title=` hash
+    // param shadows a context field named `title` inside nested partials.
+    #[serde(rename = "chart_title")]
+    pub title: &'static str,
     pub subtitle: String,
     pub tone: &'static str,
     pub series: Vec<ChartBarView>,
@@ -86,7 +89,7 @@ pub(crate) fn traffic_chart(buckets: &[TimeBucket], range: &TimeRange) -> ChartV
     let total: i64 = buckets.iter().map(|b| b.requests).sum();
     let errors: i64 = buckets.iter().map(|b| b.errors).sum();
     ChartView {
-        heading: "Requests over time",
+        title: "Requests over time",
         subtitle: format!("{total} calls · {errors} failed · peak {max} per bucket"),
         tone: "accent",
         series: buckets
@@ -119,7 +122,7 @@ pub(crate) fn cost_chart(buckets: &[TimeBucket], range: &TimeRange) -> ChartView
         .unwrap_or(0);
     let total: i64 = buckets.iter().map(|b| b.cost_microdollars).sum();
     ChartView {
-        heading: "Cost over time",
+        title: "Cost over time",
         subtitle: format!(
             "{} across the window · peak {} per bucket",
             format_cost(total),

@@ -15,6 +15,9 @@ publish = false
 ignored = ["inventory"]
 
 [dependencies]
+semver = "1"
+jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+url = { workspace = true }
 # Foundation
 systemprompt-web-shared = { workspace = true }
 # Audit: uses ai, identifiers, models, oauth, security — requires `full`.

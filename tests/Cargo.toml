@@ -50,11 +50,12 @@ systemprompt-web-site = { path = "../extensions/web/site" }
 # The contract crate additionally enables `full`, which links the core
 # extension crates whose `register_extension!` registrations carry the
 # migrations the admin schema needs.
-systemprompt = { version = "0.44.0", default-features = false, features = ["core", "database"] }
-systemprompt-security = { version = "0.44.0" }
+systemprompt = { version = "0.48.0", default-features = false, features = ["core", "database"] }
+systemprompt-security = { version = "0.48.0" }
 
 # HTTP contract harness — drives the real admin router in-process.
 axum = "0.8"
+handlebars = "6"
 tower = { version = "0.5", features = ["util"] }
 http-body-util = "0.1"
 
@@ -82,7 +83,7 @@ jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 # the manifest of the workspace being built, and tests/ is a separate
 # workspace, so without this the test crates resolve core from crates.io
 # while the extensions under test resolve it from the local checkout.
-# Commented in lockstep with the root patch block: core 0.41.0 is published,
+# Commented in lockstep with the root patch block: core 0.48.0 is published,
 # so both workspaces build against the crate.
 # [patch.crates-io]
 # systemprompt = { path = "../../systemprompt-core/systemprompt" }
@@ -118,3 +119,7 @@ jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 # systemprompt-slack = { path = "../../systemprompt-core/crates/domain/slack" }
 # systemprompt-teams = { path = "../../systemprompt-core/crates/domain/teams" }
 # systemprompt-evaluation = { path = "../../systemprompt-core/crates/domain/evaluation" }
+
+# Published macro dependency compatibility fix; see vendor/README.md.
+[patch.crates-io.proc-macro-error2]
+path = "../vendor/proc-macro-error2"

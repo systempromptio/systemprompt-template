@@ -1,0 +1,14 @@
+@layer components {
+
+/* The title column carries the whole first prompt when nothing better was
+   recorded; the stacked cell keeps it to one line with the id or snippet
+   under it. */
+.sp-p-history__table .sp-col-conversation {
+    min-inline-size: 16rem;
+    max-inline-size: 30rem;
+}
+
+.sp-p-history__table th.sp-table__cell--num,
+.sp-p-history__table td.sp-table__cell--num { min-inline-size: 4.5rem; }
+
+}

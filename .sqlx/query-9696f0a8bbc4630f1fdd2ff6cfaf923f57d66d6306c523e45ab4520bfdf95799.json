@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM access_control_rules\n         WHERE entity_type = 'marketplace' AND rule_type = $1 AND rule_value = $2\n           AND NOT (entity_id = ANY($3))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9696f0a8bbc4630f1fdd2ff6cfaf923f57d66d6306c523e45ab4520bfdf95799"
+}
