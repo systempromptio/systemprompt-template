@@ -133,7 +133,10 @@ async fn list_user_management_aggregates_counts_the_grants_a_user_receives() {
     )
     .await;
 
-    let rows = departments::list_user_management_aggregates(&db.pool)
+    let rows =
+        systemprompt_web_admin::repositories::users::aggregates::list_user_management_aggregates(
+            &db.pool,
+        )
         .await
         .expect("listing succeeds");
 
@@ -141,16 +144,16 @@ async fn list_user_management_aggregates_counts_the_grants_a_user_receives() {
         .iter()
         .find(|r| r.user_id == user)
         .expect("the user is aggregated");
-    assert_eq!(row.department, name);
+    assert!(row.group_ids.iter().any(|id| id == "unassigned"));
     assert_eq!(
-        row.assigned_skills_count, 2,
-        "only 'allow' grants count, from either the user or their department"
+        row.assigned_skills_count, 1,
+        "the roster counts direct user grants; inherited access is resolved separately"
     );
     db.cleanup().await;
 }
 
 #[tokio::test]
-async fn list_user_marketplace_overrides_reports_both_scopes() {
+async fn list_user_marketplace_overrides_reports_only_direct_user_rules() {
     let Some(db) = TempDb::create().await else {
         return;
     };
@@ -170,16 +173,20 @@ async fn list_user_marketplace_overrides_reports_both_scopes() {
     )
     .await;
 
-    let rows = departments::list_user_marketplace_overrides(&db.pool)
+    let rows =
+        systemprompt_web_admin::repositories::users::aggregates::list_user_marketplace_overrides(
+            &db.pool,
+        )
         .await
         .expect("listing succeeds");
 
     let mine: Vec<_> = rows.iter().filter(|r| r.user_id == user).collect();
-    assert_eq!(mine.len(), 2, "the same user picks up both rule scopes");
-    assert!(
-        mine.iter()
-            .any(|r| r.entity_id == by_department && r.access == "allow")
+    assert_eq!(
+        mine.len(),
+        1,
+        "the override roster excludes inherited rules"
     );
+    assert!(!mine.iter().any(|r| r.entity_id == by_department));
     assert!(
         mine.iter()
             .any(|r| r.entity_id == by_user && r.access == "deny")
