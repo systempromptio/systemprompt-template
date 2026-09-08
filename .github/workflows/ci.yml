@@ -158,10 +158,8 @@ jobs:
           SQLX_OFFLINE: "true"
         run: cargo nextest run --locked -p systemprompt-web-admin --tests
 
-      - name: Front-end asset manifest and standards gate
-        env:
-          SQLX_OFFLINE: "true"
-        run: cargo nextest run --locked -p systemprompt-web-extension --tests
+      # Asset manifests, CSS reachability, and frontend standards live in
+      # web-unit-tests and run in the tests workspace above.
 
   e2e:
     name: E2E (Playwright, admin console)
