@@ -149,27 +149,27 @@ const UNPROCESSABLE: StatusCode = StatusCode::UNPROCESSABLE_ENTITY;
 // with a blank page is worse, because it asserts the record was deleted.
 const UNKNOWN_ID: [Case; 8] = [
     get(
-        "/admin/entities/contexts/no-such-context",
+        "/admin/contexts/no-such-context",
         Expect::Status(NOT_FOUND),
-        Some("No context, AI request, or message rows match that context id."),
+        Some("No conversation, AI request, or message rows match that context id."),
     ),
     get(
-        "/admin/entities/requests/no-such-request",
+        "/admin/requests/no-such-request",
         Expect::Status(NOT_FOUND),
         Some("No audit chain found for that id."),
     ),
     get(
-        "/admin/entities/sessions/no-such-session",
+        "/admin/sessions/no-such-session",
         Expect::Status(NOT_FOUND),
         Some("No AI requests, contexts, or transcript rows match that session id."),
     ),
     get(
-        "/admin/entities/traces/no-such-trace",
+        "/admin/traces/no-such-trace",
         Expect::Status(NOT_FOUND),
         Some("No spans found for that session or trace id."),
     ),
     get(
-        "/admin/access/departments/no-such-department",
+        "/admin/departments/no-such-department",
         Expect::Status(NOT_FOUND),
         Some("Department not found"),
     ),
@@ -281,7 +281,7 @@ const MALFORMED: [Case; 17] = [
     json(
         "post",
         "/api/public/admin/access-control/entity/skill/some-skill/rules",
-        r#"{"rule_type": "department", "rule_value": "eng", "access": "allow"}"#,
+        r#"{"rule_type": "not-a-rule-kind", "rule_value": "eng", "access": "allow"}"#,
         Expect::Status(BAD_REQUEST),
         Some("invalid rule_type"),
     ),
@@ -310,7 +310,7 @@ const MALFORMED: [Case; 17] = [
     json(
         "post",
         "/api/public/admin/access-control/bulk-template",
-        r#"{"entity_type": "skill", "subject_type": "department",
+        r#"{"entity_type": "skill", "subject_type": "not-a-subject-kind",
             "subject_value": "eng", "action": "allow"}"#,
         Expect::Status(BAD_REQUEST),
         Some("invalid subject_type"),
@@ -431,22 +431,22 @@ const NO_CONTENT_TYPE: [Case; 3] = [
 // query builder with something it did not expect.
 const BAD_QUERY: [Case; 12] = [
     get(
-        "/admin/entities/requests?page=not-a-number",
+        "/admin/requests?page=not-a-number",
         Expect::Status(BAD_REQUEST),
         None,
     ),
     get(
-        "/admin/entities/requests?page=99999999999999999999",
+        "/admin/requests?page=99999999999999999999",
         Expect::Status(BAD_REQUEST),
         None,
     ),
     get(
-        "/admin/entities/traces?page=not-a-number",
+        "/admin/traces?page=not-a-number",
         Expect::Status(BAD_REQUEST),
         None,
     ),
     get(
-        "/admin/entities/contexts?limit=not-a-number",
+        "/admin/contexts?page=not-a-number",
         Expect::Status(BAD_REQUEST),
         None,
     ),
@@ -482,7 +482,7 @@ const BAD_QUERY: [Case; 12] = [
         Some(r#""limit":500,"offset":0"#),
     ),
     get(
-        "/admin/entities/requests?from=not-a-date&to=also-not-a-date",
+        "/admin/requests?from=not-a-date&to=also-not-a-date",
         Expect::NotServerError,
         None,
     ),
@@ -493,7 +493,7 @@ const BAD_QUERY: [Case; 12] = [
 // A search term far longer than any box would submit, spelled out so the
 // cases above stay readable.
 const LONG_SEARCH_REQUESTS: &str = concat!(
-    "/admin/entities/requests?tab=log&q=",
+    "/admin/requests?tab=log&q=",
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -501,7 +501,7 @@ const LONG_SEARCH_REQUESTS: &str = concat!(
 );
 
 const LONG_SEARCH_CONTEXTS: &str = concat!(
-    "/admin/entities/contexts?q=",
+    "/admin/contexts?q=",
     "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
     "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
     "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",

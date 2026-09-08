@@ -39,6 +39,10 @@ pub fn repo_root() -> PathBuf {
 // self-skips the same way it does without a database.
 pub fn init() -> bool {
     INIT.call_once(|| {
+        let _ = tracing_subscriber::fmt()
+            .with_max_level(tracing_subscriber::filter::LevelFilter::ERROR)
+            .with_test_writer()
+            .try_init();
         let ready = try_init();
         let _ = READY.set(ready);
     });

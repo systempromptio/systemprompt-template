@@ -1,7 +1,7 @@
 //! Records plugin usage events emitted over the webhook path.
 
 use sqlx::PgPool;
-use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt::identifiers::{PluginId, SessionId, UserId};
 
 use systemprompt_web_shared::error::MarketplaceError;
 
@@ -9,6 +9,7 @@ use systemprompt_web_shared::error::MarketplaceError;
 pub struct UsageEventParams<'a> {
     pub user_id: &'a UserId,
     pub session_id: &'a SessionId,
+    pub plugin_id: Option<&'a PluginId>,
     pub event_type: &'a str,
     pub tool_name: Option<&'a str>,
     // JSON: arbitrary per-event metadata posted by the plugin hook.
@@ -31,16 +32,17 @@ pub async fn insert_plugin_usage_event(
 
     let result = sqlx::query!(
         "INSERT INTO plugin_usage_events
-            (id, user_id, session_id, event_type, tool_name, metadata,
+            (id, user_id, session_id, event_type, tool_name, plugin_id, metadata,
              description, prompt_preview, cwd, dedup_key,
              content_input_bytes, content_output_bytes, loc_added, loc_removed)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
          ON CONFLICT (dedup_key) WHERE dedup_key IS NOT NULL DO NOTHING",
         &id,
         params.user_id.as_str(),
         params.session_id.as_str(),
         params.event_type,
         params.tool_name,
+        params.plugin_id.map(PluginId::as_str),
         params.metadata,
         params.description,
         params.prompt_preview,

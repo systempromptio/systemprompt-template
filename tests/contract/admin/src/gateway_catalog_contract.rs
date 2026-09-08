@@ -166,7 +166,7 @@ async fn a_grant_to_one_user_does_not_reach_another() {
 }
 
 #[tokio::test]
-async fn the_catalog_and_the_detector_are_both_behind_the_admin_gate() {
+async fn catalog_reads_and_detector_writes_reject_unprivileged_users() {
     if !globals::init() {
         return;
     }
@@ -176,17 +176,18 @@ async fn the_catalog_and_the_detector_are_both_behind_the_admin_gate() {
     let credentials = principal::provision(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
-    // Both routes are mounted behind the admin middleware, so a non-admin is
-    // stopped before either handler runs. Note this means the catalog
-    // handler's own "or the subject themselves" carve-out is unreachable over
-    // HTTP: a user cannot read their own catalog through this endpoint.
-    for path in [
-        catalog_path(&seed::unique("someone-else")),
-        DETECT.to_owned(),
+    // Catalog reads require console access; detection writes audit events and
+    // requires a management role. An ordinary user cannot invoke either.
+    for (path, message) in [
+        (
+            catalog_path(&seed::unique("someone-else")),
+            "Role required: platform_admin, admin, project_manager",
+        ),
+        (DETECT.to_owned(), "Role required: platform_admin, admin"),
     ] {
         let (status, body) = app.call(Call::get(&path, Principal::NonAdmin)).await;
         assert_eq!(status, StatusCode::FORBIDDEN, "non-admin {path}: {body}");
-        assert_eq!(parse(&body)["error"], "Admin access required");
+        assert_eq!(parse(&body)["error"], message);
     }
 
     // An admin asking about a user who does not exist gets the honest answer.

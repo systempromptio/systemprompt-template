@@ -51,7 +51,7 @@ pub(crate) async fn handle_hook_track(
     let (payload, warnings) = HookEventPayload::from_value(raw);
     log_payload_warnings(&payload, &warnings);
 
-    let was_inserted = insert_hook_event(&pool, &user_id, &payload).await;
+    let was_inserted = insert_hook_event(&pool, &user_id, &plugin_id, &payload).await;
     if !was_inserted {
         tracing::trace!(
             plugin_id = %plugin_id,
@@ -113,7 +113,12 @@ async fn dispatch_inserted_event(ctx: &DispatchContext<'_>) {
     .await;
 }
 
-async fn insert_hook_event(pool: &PgPool, user_id: &UserId, payload: &HookEventPayload) -> bool {
+async fn insert_hook_event(
+    pool: &PgPool,
+    user_id: &UserId,
+    plugin_id: &PluginId,
+    payload: &HookEventPayload,
+) -> bool {
     let session_id = SessionId::new(payload.session_id());
     let description = description::generate_description(payload);
     let prompt_preview = helpers::generate_prompt_preview(payload);
@@ -125,6 +130,7 @@ async fn insert_hook_event(pool: &PgPool, user_id: &UserId, payload: &HookEventP
     let usage_params = webhook::UsageEventParams {
         user_id,
         session_id: &session_id,
+        plugin_id: Some(plugin_id),
         event_type: payload.event_name(),
         tool_name: payload.tool_name(),
         metadata: &sanitized_metadata,

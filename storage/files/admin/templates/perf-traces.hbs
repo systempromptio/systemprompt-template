@@ -10,6 +10,9 @@
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/contexts">Contexts</a>
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/requests">Requests</a>
       {{/inline}}
+      {{#*inline "header_meta"}}
+        <span data-window="{{time_range.preset}}">Window {{time_range.preset}}</span>
+      {{/inline}}
     {{/components/page-header}}
 
     <section class="sp-kpi-grid" aria-label="Trace summary">

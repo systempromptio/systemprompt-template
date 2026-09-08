@@ -5,14 +5,14 @@
 
 use crate::error::{AdminError, AdminResult};
 use axum::http::HeaderMap;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{PluginId, UserId};
 use systemprompt::models::Config;
 use systemprompt_security::HookTokenValidator;
 
 pub(super) fn extract_and_validate_jwt(
     headers: &HeaderMap,
     request_plugin_id: Option<&str>,
-) -> AdminResult<(UserId, String, String)> {
+) -> AdminResult<(UserId, PluginId, String)> {
     let token = headers
         .get("authorization")
         .and_then(|v| v.to_str().ok())
@@ -22,9 +22,5 @@ pub(super) fn extract_and_validate_jwt(
     let claims = HookTokenValidator::new(jwt_issuer)
         .validate_track(token, request_plugin_id)
         .map_err(AdminError::unauthenticated)?;
-    Ok((
-        claims.subject,
-        claims.plugin_id.as_str().to_owned(),
-        token.to_owned(),
-    ))
+    Ok((claims.subject, claims.plugin_id, token.to_owned()))
 }

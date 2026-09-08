@@ -25,3 +25,6 @@ base64 = { workspace = true }
 serde_json = { workspace = true }
 jsonwebtoken = { workspace = true }
 url = { workspace = true }
+
+# Surface handler errors in failing HTTP contract tests.
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt"] }

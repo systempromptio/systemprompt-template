@@ -100,6 +100,7 @@ fn prerenderers_and_seeds_survive_an_unconfigured_profile() {
     assert_eq!(
         seed_ids,
         [
+            "dashboard_unassigned_group",
             "admin_oauth_client",
             "marketplace_plans",
             "default_department"

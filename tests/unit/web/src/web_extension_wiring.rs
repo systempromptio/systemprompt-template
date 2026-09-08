@@ -53,7 +53,7 @@ fn it_declares_the_extensions_whose_tables_it_reads() {
 
     let mut dependencies = extension.dependencies();
     dependencies.sort_unstable();
-    assert_eq!(dependencies, vec!["authz", "content", "users"]);
+    assert_eq!(dependencies, vec!["ai", "authz", "content", "users"]);
 
     let mut shared = extension.cross_extension_tables();
     shared.sort_unstable();
