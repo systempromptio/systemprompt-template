@@ -41,10 +41,6 @@ fn build_admin_read_routes_inner(read_pool: &Arc<PgPool>) -> Router {
             "/gateway/catalog/for-user/{user_id}",
             get(handlers::gateway_catalog::for_user_handler),
         )
-        .route(
-            "/gateway/acl/detect",
-            get(handlers::gateway_catalog::detect_handler),
-        )
         .route("/users", get(handlers::list_users_handler))
         .route(
             "/users/{user_id}/detail",
@@ -112,6 +108,11 @@ fn build_gateway_write_routes() -> Router<Arc<PgPool>> {
 
 fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
     Router::new()
+        // Why: This GET emits audit rows: write_boundaries pins its admin gate and primary pool.
+        .route(
+            "/gateway/acl/detect",
+            get(handlers::gateway_catalog::detect_handler),
+        )
         .merge(build_gateway_write_routes())
         .route("/users", post(handlers::create_user_handler))
         .route(

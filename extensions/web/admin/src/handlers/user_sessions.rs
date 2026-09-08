@@ -33,7 +33,11 @@ pub(crate) async fn list_user_sessions_handler(
     Path(user_id_raw): Path<String>,
 ) -> AdminResult<Response> {
     let user_id = UserId::new(user_id_raw);
-    guard(&user_ctx)?;
+    // Why: Read-only console pages inspect sessions; only the revoke handlers below
+    // Why: use the admin mutation guard. See the write_boundaries contract test.
+    if !user_ctx.is_console {
+        return Err(AdminError::Forbidden("Console access required".to_owned()));
+    }
     let sessions = sessions::list_signin_sessions(&pool, &user_id).await?;
     Ok(Json(SessionsListResponse { sessions }).into_response())
 }
