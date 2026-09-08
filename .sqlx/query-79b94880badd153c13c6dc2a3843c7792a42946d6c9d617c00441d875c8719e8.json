@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT tool_name AS \"tool_name!\", sequence_number AS \"sequence_number!\",\n                  mcp_execution_id,\n                  (tool_result_payload IS NOT NULL) AS \"has_result!\",\n                  created_at AS \"created_at!\"\n           FROM ai_request_tool_calls\n           WHERE request_id = ANY($1)\n           ORDER BY created_at ASC, sequence_number ASC\n           LIMIT 200",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tool_name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_request_tool_calls",
+            "name": "tool_name"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "sequence_number!",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_request_tool_calls",
+            "name": "sequence_number"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "mcp_execution_id",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_request_tool_calls",
+            "name": "mcp_execution_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "has_result!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_request_tool_calls",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      null,
+      false
+    ]
+  },
+  "hash": "79b94880badd153c13c6dc2a3843c7792a42946d6c9d617c00441d875c8719e8"
+}

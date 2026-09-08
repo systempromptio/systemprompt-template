@@ -1,0 +1,17 @@
+# Air-gap gateway routes. Replaces services/ai/gateway.yaml via the bind mount
+# in docker-compose.airgap.yml; every pattern dispatches to the single mock
+# provider, so no route can name a public endpoint.
+#
+# Route ids match services/access-control/roles.yaml, which marks them
+# default_included — without that RBAC assignment the gateway authz hook denies
+# every call with "authz denied: not assigned". Per-route endpoint and
+# api_key_secret resolve from the matching entry in providers.yaml.
+gateway:
+  enabled: true
+  routes:
+  - id: claude-star-3cbb7d
+    model_pattern: claude-*
+    provider: anthropic
+  - id: gpt-star-e2e01
+    model_pattern: gpt-*
+    provider: anthropic

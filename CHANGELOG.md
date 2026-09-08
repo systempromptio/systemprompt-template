@@ -1,5 +1,162 @@
 # Changelog
 
+## [0.48.0] - 2026-09-08
+
+### Changed
+
+- Align both workspaces and release artifacts with published core 0.48.0.
+- Use persistent paid Render hosting and document Railway template configuration.
+- Preserve container profiles, signing identity and uploaded files across redeploys.
+
+### Security
+
+- Public registration cannot grant administrator roles and respects registration policy. Container deployments disable self-registration by default; administrators issue passkey setup links through the CLI.
+
+
+## [0.47.0] - never released (included in 0.48.0)
+
+Tracks systemprompt-core **0.47.0**. The workspace moves from 0.42.1, so this
+entry also covers core 0.43.0 through 0.46.0: the template was out of scope
+for those releases, no `v0.43.0`–`v0.46.0` tag or image was ever published,
+and there are no entries missing from this file. The 0.44.0 configuration move
+below was written for a release that never shipped and lands here instead.
+
+### Release reliability
+
+- Builds and Clippy use locked dependencies and the offline SQLx cache, without updating dependencies or migrating an operator database during compilation.
+- Fix marketplace authorization test fixtures for core 0.47.0 and the proc-macro-error2 compiler compatibility warning.
+- Release archives and images are built from the validated release commit and include runtime templates, static assets, and MCP manifests.
+- Require candidate container boot, exact-version multi-architecture smoke tests, upgrade/restart persistence, and Helm installation before chart publication.
+- Fix first-boot admin email in browser CI, native installer signature identity and resource installation, and cleanup credential diagnostics.
+
+### Admin console redesign
+
+The admin console is rebuilt on the `sp-` design system backported from the
+astound fork: OKLCH tokens, a filename-ordered CSS cascade under
+`storage/files/css/admin/`, namespaced component partials (breadcrumbs,
+page-header, section, toolbar, table, sort-header, pagination, tabs, kpi,
+badge, notice, empty-state, time-range, charts) and typed page view models
+(`BreadcrumbView`, `SortHeaderView`, `TabLinkView`, `Pagination`,
+`TimeRangeContext` with a rejected-bounds flag). Every page now renders one
+breadcrumb trail, one header, at most one KPI band, one toolbar and one-line
+table rows; the density bar is rows ≤36px, KPI band ≤110px, no horizontal
+scroll.
+
+- **Breaking:** admin routes are flat. `/admin/access/users` → `/admin/users`,
+  `/admin/access/departments` → `/admin/departments`, `/admin/access/tokens`
+  → `/admin/access-tokens`, `/admin/access/matrix` → `/admin/access-control`,
+  `/admin/governance/policies` → `/admin/governance`, and
+  `/admin/entities/{requests,sessions,traces,contexts}` →
+  `/admin/{requests,sessions,traces,contexts}`. Every old path answers `308`
+  to its new home for one release (`routes/ssr_redirects.rs`); `/admin` lands
+  on Evals.
+- The sidebar is five groups in operator order: People & access, AI activity,
+  Governance, Platform, Account. The dark-mode toggle is retired with the old
+  stylesheet; the design system is light-only.
+- Every page is converted, template-only ones included: users and user detail
+  (three tabs), departments, access tokens, access control, requests and the
+  request audit trail, sessions, traces, contexts and their detail pages,
+  evals and run detail, governance policies / decisions / hooks / policy edit,
+  the trace demo, models, profile, settings, setup, and the shell-less login,
+  register, passkey and verify pages.
+- New gates: every admin template must register with the Handlebars engine
+  (`template_parse`), every field a template reads must be defined somewhere
+  (`scripts/check-template-fields.sh`), helper-name shadowing is refused
+  (`template_helper_names`), and the admin CSS-class and front-end-standards
+  gates moved from `extensions/web/tests/` to the `tests/` workspace. The
+  fork-drift gate is gone: the template no longer tracks a sibling tree.
+- A Playwright suite under `playwright/` walks every admin page as admin, user
+  and anonymous with a four-block spec per page and a measured density bar;
+  `just e2e-install`, `just e2e-seed`, `just e2e`, `just e2e-gate`, and an
+  `e2e` job in CI.
+- Core 0.47.0: `Decision::Warn` (warn mode) is handled everywhere the chain's
+  decision is matched — audited as `warn`, returned to the caller as allow.
+
+### 0.44.0 configuration move (never shipped on its own)
+
+The headline is a configuration move. Core 0.44 reads the provider catalog and
+the gateway routes from the services tree instead of the profile, and a profile
+that still carries either key does not boot. **Every existing deployment needs
+the migration below before it will start on this image.**
+
+### Breaking
+
+- **Breaking:** `providers:` and `gateway:` are no longer profile sections. Core
+  0.44 fails boot with `ProfileError::MovedToServices` on a profile carrying
+  either key, naming the key and the file it belongs in. The catalog now ships
+  with the image alongside the agent and MCP trees, so every environment boots
+  the same models and pricing and only the credentials named by `api_key_secret`
+  differ. Migrate by moving the `providers:` block from
+  `.systemprompt/profiles/<name>/profile.yaml` into `services/ai/providers.yaml`
+  and the `gateway:` block into `services/ai/gateway.yaml`, each keeping its
+  top-level key, then adding both to `includes:` in `services/config/config.yaml`
+  as `../ai/providers.yaml` and `../ai/gateway.yaml` — with the `../`, because an
+  include resolves relative to the directory of the file that lists it, and that
+  file is `services/config/config.yaml`.
+
+- **Breaking (from core):** `Config` gained `metrics_port`. `/metrics` is no
+  longer mounted on the public router. Migrate by setting `server.metrics_port`
+  in the profile to expose metrics on their own listener; code constructing
+  `Config` literally must set the field, and `None` preserves current behaviour.
+
+### Added
+
+- `deploy/scenarios/airgap/services-ai/` — the air-gap scenario's own catalog,
+  bind-mounted over `/app/services/ai`. The shipped catalog names public
+  provider endpoints that the sealed `internal: true` network has no route to,
+  and providers merge by concatenation with duplicate-name-is-an-error, so one
+  file cannot carry both a real and a mock `anthropic`. Every model resolves to
+  the in-network mock-inference container and both route ids are unchanged, so
+  `01-egress-assert.sh` proves what it proved.
+
+### Changed
+
+- The provider catalog ships as `services/ai/providers.yaml` (3 providers, 45
+  models) and the routes as `services/ai/gateway.yaml`. Distinct from
+  `services/ai/config.yaml`, which remains the AI domain's own configuration —
+  per-provider toggles and defaults, not a priced catalog.
+
+- The `scaled` scenario now serves the full shipped model list. Its previous
+  inline catalog was a strict subset of local's — the same three providers and
+  endpoints with fewer models — and a single shipped catalog is 0.44's stated
+  intent, so the extra models are exposed there too. Nothing errors on upgrade;
+  the surface simply widens.
+
+- The admin gateway editor writes `services/ai/gateway.yaml` and never the
+  profile. A route edited through the UI previously wrote a `gateway:` key back
+  into `profile.yaml`, producing a profile core 0.44 refuses to boot.
+
+- `docs/profile.schema.json` is regenerated against the 0.44 profile type. It
+  had been stale since 0.42.0: `SecurityConfig.login_page_url` and
+  `SystemAdminConfig.email` are 0.43 additions it never carried, and only
+  `ServerConfig.metrics_port` comes from this release.
+
+- `docs/RELEASING.md` Step A described committing directly to `main`. `main` is
+  release-only and reached by pull request; the step now ends on `next` and names
+  the `just gate` / `just promote` / merge sequence the repository already uses.
+
+### Fixed
+
+- **Security:** the admin gateway catalog is read from the loaded services tree,
+  and an absent catalog is an error rather than an empty list. The repository
+  read `gateway:` from the profile and ended in `.unwrap_or_default()`, so
+  against a migrated profile it returned zero routes with no error at all: the
+  per-user gateway catalog was empty for every user, the admin pages showed no
+  routes, and the after-the-fact ACL detector — which iterates that same list —
+  reported no violations while checking nothing. A governance surface may not
+  fail open and quiet.
+
+- **Security:** the access-control entity catalogue lists gateway routes again.
+  **This was broken before the 0.44 migration, not by it.**
+  `build_gateway_routes` guessed at a profile path, trying
+  `<services>/../profile.yaml` and then a hardcoded
+  `<services>/../.systemprompt/profiles/local/profile.yaml`, and fell through to
+  an empty list. `.systemprompt/profiles/` is gitignored, so in any deployed
+  image neither candidate can exist, and the catalogue rendered "No entities of
+  this type configured" for gateway routes regardless of configuration. It reads
+  the loaded services tree now, and an unreadable catalog is logged rather than
+  rendering as an absence of routes.
+
 ## [0.42.1] - 2026-08-31
 
 Tracks systemprompt-core **0.42.0** — a template-only patch. No core change.

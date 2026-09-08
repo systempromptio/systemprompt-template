@@ -54,9 +54,7 @@ fn hook_call<'a>(token: &'a str, body: &'a str) -> (Call<'a>, &'a str) {
 struct EventCase {
     label: &'static str,
     body: String,
-    // `None` where the event is expected to persist nothing (an empty session
-    // id still inserts; a `PreToolUse` returns before the insert).
-    recorded_as: Option<&'static str>,
+    recorded_as: &'static str,
 }
 
 fn common(session: &str, event: &str) -> String {
@@ -66,13 +64,12 @@ fn common(session: &str, event: &str) -> String {
 }
 
 fn cases(session: &str) -> Vec<EventCase> {
-    let ev = |label: &'static str,
-              name: &'static str,
-              rest: &str,
-              recorded_as: Option<&'static str>| EventCase {
-        label,
-        body: format!("{{{},{rest}}}", common(session, name)),
-        recorded_as,
+    let ev = |label: &'static str, name: &'static str, rest: &str, recorded_as: &'static str| {
+        EventCase {
+            label,
+            body: format!("{{{},{rest}}}", common(session, name)),
+            recorded_as,
+        }
     };
 
     vec![
@@ -80,112 +77,111 @@ fn cases(session: &str) -> Vec<EventCase> {
             "session start",
             "SessionStart",
             r#""source":"startup","model":"claude-contract-model""#,
-            Some("SessionStart"),
+            "SessionStart",
         ),
         ev(
             "session end",
             "SessionEnd",
             r#""reason":"clear""#,
-            Some("SessionEnd"),
+            "SessionEnd",
         ),
         ev(
             "user prompt",
             "UserPromptSubmit",
             r#""prompt":"Explain the governance chain in one paragraph.""#,
-            Some("UserPromptSubmit"),
+            "UserPromptSubmit",
         ),
-        // The one event the handler answers before persisting: the governance
-        // decision for a `PreToolUse` belongs to `/hooks/govern`, and tracking
-        // it here would double-count every tool call.
+        // Tracking records the pre-tool lifecycle event. Authorization remains
+        // a separate decision at /hooks/govern.
         ev(
-            "pre tool use is dropped",
+            "pre tool use is tracked",
             "PreToolUse",
             r#""tool_name":"Bash","tool_input":{"command":"ls"},"tool_use_id":"tu-1""#,
-            None,
+            "PreToolUse",
         ),
         ev(
             "post tool use",
             "PostToolUse",
             r#""tool_name":"Read","tool_input":{"file_path":"/tmp/x.rs"},"tool_response":{"ok":true},"tool_use_id":"tu-2""#,
-            Some("PostToolUse"),
+            "PostToolUse",
         ),
         ev(
             "post tool use failure",
             "PostToolUseFailure",
             r#""tool_name":"Bash","tool_input":{"command":"false"},"tool_use_id":"tu-3","error":"exit status 1","is_interrupt":false"#,
-            Some("PostToolUseFailure"),
+            "PostToolUseFailure",
         ),
         ev(
             "permission request",
             "PermissionRequest",
             r#""tool_name":"Write","tool_input":{"file_path":"/etc/hosts"},"permission_suggestions":[{"mode":"allow"}]"#,
-            Some("PermissionRequest"),
+            "PermissionRequest",
         ),
         ev(
             "stop",
             "Stop",
             r#""stop_hook_active":false,"last_assistant_message":"Done.""#,
-            Some("Stop"),
+            "Stop",
         ),
         ev(
             "subagent start",
             "SubagentStart",
             r#""agent_id":"agent-1","agent_type":"Explore""#,
-            Some("SubagentStart"),
+            "SubagentStart",
         ),
         ev(
             "subagent stop",
             "SubagentStop",
             r#""agent_id":"agent-1","agent_type":"Explore","stop_hook_active":false,"agent_transcript_path":"/tmp/a.jsonl","last_assistant_message":"Found it.""#,
-            Some("SubagentStop"),
+            "SubagentStop",
         ),
         ev(
             "task completed",
             "TaskCompleted",
             r#""task_id":"task-1","task_subject":"Ship the contract suite","teammate_name":"claude","team_name":"contract""#,
-            Some("TaskCompleted"),
+            "TaskCompleted",
         ),
         ev(
             "teammate idle",
             "TeammateIdle",
             r#""teammate_name":"claude","team_name":"contract""#,
-            Some("TeammateIdle"),
+            "TeammateIdle",
         ),
         ev(
             "notification",
             "Notification",
             r#""message":"Permission needed","title":"Claude Code","notification_type":"permission""#,
-            Some("Notification"),
+            "Notification",
         ),
         ev(
             "config change",
             "ConfigChange",
             r#""source":"settings","file_path":"/tmp/settings.json""#,
-            Some("ConfigChange"),
+            "ConfigChange",
         ),
         ev(
             "worktree create",
             "WorktreeCreate",
             r#""name":"feature-x""#,
-            Some("WorktreeCreate"),
+            "WorktreeCreate",
         ),
         ev(
             "worktree remove",
             "WorktreeRemove",
             r#""worktree_path":"/tmp/wt/feature-x""#,
-            Some("WorktreeRemove"),
+            "WorktreeRemove",
         ),
         ev(
             "pre compact",
             "PreCompact",
             r#""trigger":"auto","custom_instructions":"keep the plan""#,
-            Some("PreCompact"),
+            "PreCompact",
         ),
         ev(
             "instructions loaded",
             "InstructionsLoaded",
             r#""file_path":"/tmp/CLAUDE.md","memory_type":"project","load_reason":"startup","globs":["**/*.rs"],"trigger_file_path":null,"parent_file_path":null"#,
-            Some("InstructionsLoaded"),
+            "InstructionsLoaded",
         ),
         // An event name no version of Claude Code has emitted yet is recorded
         // under its own name rather than rejected: the schema is the client's,
@@ -194,7 +190,7 @@ fn cases(session: &str) -> Vec<EventCase> {
             "unrecognised event name",
             "SomeFutureEvent",
             r#""whatever":true"#,
-            Some("SomeFutureEvent"),
+            "SomeFutureEvent",
         ),
         // A recognised name whose body does not match its shape degrades to
         // `Unknown(name)` with a warning rather than failing the request.
@@ -204,7 +200,7 @@ fn cases(session: &str) -> Vec<EventCase> {
                 "{{{},\"stop_hook_active\":\"not-a-bool\"}}",
                 common(session, "Stop")
             ),
-            recorded_as: Some("Stop"),
+            recorded_as: "Stop",
         },
     ]
 }
@@ -251,22 +247,7 @@ async fn hook_track_accepts_and_records_every_event_kind() {
             ));
             continue;
         }
-        let Some(event_type) = case.recorded_as else {
-            let total: i64 =
-                sqlx::query_scalar("SELECT COUNT(*) FROM plugin_usage_events WHERE session_id = $1 AND event_type = 'PreToolUse'")
-                    .bind(&session)
-                    .fetch_one(&*db.pool)
-                    .await
-                    .expect("count PreToolUse rows");
-            if total != 0 {
-                failures.push(format!(
-                    "  {} -> recorded {total} row(s); PreToolUse is governed at /hooks/govern \
-                     and must not be tracked here",
-                    case.label
-                ));
-            }
-            continue;
-        };
+        let event_type = case.recorded_as;
         if count_events(&db.pool, &session, event_type).await == 0 {
             failures.push(format!(
                 "  {} -> 200 but no plugin_usage_events row with event_type {event_type:?}",

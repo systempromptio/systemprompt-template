@@ -1,0 +1,81 @@
+@layer components {
+    /* The figure grows to its panel so four charts in one grid row share a
+       baseline instead of each sitting at the top of a card sized by the
+       tallest neighbour. */
+    .sp-svgchart {
+        display: flex;
+        flex-direction: column;
+        gap: var(--sp-space-2);
+        flex: 1;
+        min-height: 0;
+        margin: 0;
+    }
+
+    .sp-svgchart__plot {
+        width: 100%;
+        height: 100%;
+        min-height: 10rem;
+        max-height: 14rem;
+        display: block;
+        border-bottom: 1px solid var(--sp-border-default);
+        background: linear-gradient(var(--sp-border-subtle), var(--sp-border-subtle))
+            0 50% / 100% 1px no-repeat;
+    }
+
+    .sp-svgchart__line {
+        stroke-width: 2px;
+    }
+
+    .sp-svgchart__area {
+        opacity: 0.12;
+    }
+
+    .sp-svgchart__ref {
+        stroke-dasharray: 4 3;
+        stroke-width: 1.5px;
+        stroke: var(--sp-chart-amber);
+    }
+
+    .sp-svgchart__refs {
+        display: flex;
+        gap: var(--sp-space-3);
+        list-style: none;
+        margin: var(--sp-space-1) 0 0;
+        padding: 0;
+        font-size: var(--sp-text-xs);
+        color: var(--sp-text-secondary);
+    }
+
+    .sp-svgchart__ref-label::before {
+        content: "";
+        display: inline-block;
+        width: 14px;
+        border-top: 2px dashed var(--sp-chart-amber);
+        margin-right: 0.35em;
+        vertical-align: middle;
+    }
+
+
+        .sp-kpi__delta {
+        display: inline-block;
+        font-size: var(--sp-text-xs);
+        color: var(--sp-text-secondary);
+    }
+
+    .sp-kpi__delta[data-tone="good"] {
+        color: var(--sp-success-strong);
+    }
+
+    .sp-kpi__delta[data-tone="bad"] {
+        color: var(--sp-danger-strong);
+    }
+
+    .sp-kpi__delta[data-direction="up"]::before {
+        content: "\2191\00a0";
+    }
+
+    .sp-kpi__delta[data-direction="down"]::before {
+        content: "\2193\00a0";
+    }
+
+}

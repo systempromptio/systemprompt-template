@@ -1,0 +1,19 @@
+@layer components {
+
+/* The share bar is a proportion of the busiest entity on the context, so the
+   dominant one reads at a glance rather than being inferred from the counts. */
+.sp-col-share {
+    width: 8rem;
+    min-width: 6rem;
+}
+
+.sp-p-context-detail__bar {
+    display: block;
+    block-size: var(--sp-space-2);
+    inline-size: var(--sp-share);
+    min-inline-size: 2px;
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-accent-fill);
+}
+
+}

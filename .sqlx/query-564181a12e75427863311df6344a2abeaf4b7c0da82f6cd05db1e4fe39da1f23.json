@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO requirements_workflow_keys(key_id,public_key) VALUES($1,$2) ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "564181a12e75427863311df6344a2abeaf4b7c0da82f6cd05db1e4fe39da1f23"
+}

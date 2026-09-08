@@ -45,43 +45,20 @@ spec:
             - name: http
               containerPort: 8080
           env:
-            - name: DATABASE_URL
-              value: "postgres://systemprompt:$(POSTGRES_PASSWORD)@postgres-primary:5432/systemprompt"
+            - name: SYSTEMPROMPT_PROFILE_DIR
+              value: /app/.systemprompt/profiles/docker
             - name: PG_HOST
-              value: "postgres-primary"
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: systemprompt-secrets
-                  key: POSTGRES_PASSWORD
-            - name: ANTHROPIC_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: systemprompt-secrets
-                  key: ANTHROPIC_API_KEY
-            - name: OPENAI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: systemprompt-secrets
-                  key: OPENAI_API_KEY
-            - name: GEMINI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: systemprompt-secrets
-                  key: GEMINI_API_KEY
-            - name: JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: systemprompt-secrets
-                  key: JWT_SECRET
+              value: postgres-primary
           volumeMounts:
-            # The entrypoint forces SYSTEMPROMPT_PROFILE to this exact path and
-            # skips generation when the file exists — mounting the profile here is
-            # the only reliable injection point.
             - name: profile
-              mountPath: /app/services/profiles/docker/profile.yaml
-              subPath: profile-scaled.yaml
+              mountPath: /app/.systemprompt/profiles/docker
               readOnly: true
+          startupProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 120
           livenessProbe:
             httpGet:
               path: /api/v1/health
@@ -105,7 +82,20 @@ spec:
             limits:
               cpu: "1"
               memory: "768Mi"
+      securityContext:
+        fsGroup: 1000
       volumes:
         - name: profile
-          configMap:
-            name: systemprompt-profiles
+          projected:
+            defaultMode: 0440
+            sources:
+              - configMap:
+                  name: systemprompt-profiles
+                  items:
+                    - key: profile-scaled.yaml
+                      path: profile.yaml
+              - secret:
+                  name: systemprompt-profile-secrets
+                  items:
+                    - key: secrets.json
+                      path: secrets.json

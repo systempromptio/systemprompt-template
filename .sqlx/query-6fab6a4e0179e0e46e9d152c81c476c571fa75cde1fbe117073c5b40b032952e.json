@@ -1,0 +1,72 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT k.id AS \"id!\", k.kind AS \"kind!\", k.label AS \"label!\",\n                  k.detail, k.created_at, k.last_seen_at, k.revoked_at, k.revocable AS \"revocable!\"\n             FROM (\n               SELECT b.session_id AS id,\n                      'bridge' AS kind,\n                      COALESCE(b.hostname, b.session_id) AS label,\n                      NULLIF(CONCAT_WS(' · ', b.os, b.bridge_version), '') AS detail,\n                      b.started_at AS created_at,\n                      GREATEST(b.last_heartbeat_at, b.last_activity_at) AS last_seen_at,\n                      NULL::TIMESTAMPTZ AS revoked_at,\n                      FALSE AS revocable\n                 FROM bridge_sessions b\n                WHERE b.user_id = $1\n               UNION ALL\n               SELECT c.id,\n                      'cert',\n                      COALESCE(c.label, c.fingerprint),\n                      c.fingerprint,\n                      c.enrolled_at,\n                      NULL::TIMESTAMPTZ,\n                      c.revoked_at,\n                      TRUE\n                 FROM user_device_certs c\n                WHERE c.user_id = $1\n               UNION ALL\n               SELECT a.id,\n                      'pat',\n                      COALESCE(a.name, a.key_prefix),\n                      a.key_prefix,\n                      a.created_at,\n                      a.last_used_at,\n                      a.revoked_at,\n                      TRUE\n                 FROM user_api_keys a\n                WHERE a.user_id = $1\n             ) k\n            ORDER BY (k.revoked_at IS NOT NULL), k.last_seen_at DESC NULLS LAST, k.created_at DESC NULLS LAST\n            LIMIT 200",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "kind!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "label!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "detail",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "last_seen_at",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "revoked_at",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "revocable!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "6fab6a4e0179e0e46e9d152c81c476c571fa75cde1fbe117073c5b40b032952e"
+}

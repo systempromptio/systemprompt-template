@@ -1,112 +1,127 @@
 {{#> layout title=title page=page}}
     {{#*inline "content"}}
-    <a href="{{back_url}}" class="back-link">&larr; All traces</a>
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
 
-    {{> components/page-header
-        title=title
+    {{#> components/page-header title=title
         subtitle="Span-by-span waterfall of one trace. Each bar is colored by its kind; click for the chain envelope."}}
+      {{#*inline "header_meta"}}
+        <code class="sp-code-inline" title="{{summary.session_id}}">{{summary.session_id}}</code>
+        · {{summary.identity}}
+        {{#if summary.started_at_local}} · <span title="{{summary.started_at}}">{{summary.started_at_local}}</span>{{/if}}
+      {{/inline}}
+      {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{summary.session_url}}">Session</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{back_url}}">All traces</a>
+      {{/inline}}
+    {{/components/page-header}}
 
-    <section class="trace-detail__summary" aria-label="Trace summary">
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Session</span>
-        <code class="code-inline" title="{{summary.session_id}}">{{summary.session_id_short}}</code>
-      </div>
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Started</span>
-        <span title="{{summary.started_at}}">{{summary.started_at_local}}</span>
-      </div>
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Duration</span>
-        <span>{{summary.duration_display}}</span>
-      </div>
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Identity</span>
-        <span>{{summary.identity}}</span>
-      </div>
-      <div class="trace-detail__field">
-        <span class="trace-detail__label">Spans</span>
-        <span>{{summary.span_count}}</span>
-      </div>
-      {{#if summary.deny_count}}
-        <div class="trace-detail__field">
-          <span class="trace-detail__label">Denies</span>
-          <span class="text-danger">{{summary.deny_count}}</span>
-        </div>
-      {{/if}}
-      {{#if summary.error_count}}
-        <div class="trace-detail__field">
-          <span class="trace-detail__label">Errors</span>
-          <span class="text-warning">{{summary.error_count}}</span>
-        </div>
-      {{/if}}
+    <section class="sp-kpi-grid" aria-label="Trace summary">
+      {{> components/kpi label="Spans" value=summary.span_count note="all recorded events"}}
+      {{> components/kpi label="Duration" value=summary.duration_display note="first to last event"}}
+      {{> components/kpi label="Requests" value=summary.request_count note="gateway calls in this trace"}}
+      {{> components/kpi label="Cost" value=summary.cost_display note="billed across the trace"}}
+      {{> components/kpi label="Denied" value=summary.deny_count tone="err" note="governance denies"}}
+      {{> components/kpi label="Errors" value=summary.error_count tone="warn" note="failed requests"}}
+      {{> components/kpi label="Rejected" value=summary.rejected_count tone="err"
+          note="refused before any provider"
+          hint="A rejected request never reached a provider, so it has no model and no cost"}}
     </section>
 
-    <section class="waterfall" aria-labelledby="waterfall-title">
-      <div class="portfolio-section__header">
-        <h2 class="portfolio-section__title" id="waterfall-title">Waterfall</h2>
-        <ul class="waterfall__legend" aria-hidden="true">
-          <li><span class="waterfall__swatch waterfall__swatch--gateway"></span> Gateway</li>
-          <li><span class="waterfall__swatch waterfall__swatch--governance"></span> Governance</li>
-          <li><span class="waterfall__swatch waterfall__swatch--tool"></span> Tool</li>
-          <li><span class="waterfall__swatch waterfall__swatch--model"></span> Model</li>
-          <li><span class="waterfall__swatch waterfall__swatch--spawn"></span> Spawn</li>
-        </ul>
-      </div>
-      <div class="waterfall__root">
-        {{#each spans}}
-        <div class="waterfall__row">
-          <span class="waterfall__name" title="{{this.name}}">
-            <code class="code-inline">{{truncate this.name 32}}</code>
-          </span>
-          <div class="waterfall__track">
-            <span class="waterfall__bar waterfall__bar--{{this.kind}}"
+    <section class="sp-waterfall" aria-labelledby="waterfall-title">
+      {{#> components/section title="Waterfall" count=span_count
+          note="Bars are drawn against this trace's own first-to-last window."}}
+        {{#*inline "section_actions"}}
+          <ul class="sp-waterfall__legend">
+            <li><span class="sp-waterfall__swatch sp-waterfall__swatch--gateway"></span> Gateway</li>
+            <li><span class="sp-waterfall__swatch sp-waterfall__swatch--governance"></span> Governance</li>
+            <li><span class="sp-waterfall__swatch sp-waterfall__swatch--tool"></span> Tool</li>
+            <li><span class="sp-waterfall__swatch sp-waterfall__swatch--model"></span> Model</li>
+            <li><span class="sp-waterfall__swatch sp-waterfall__swatch--spawn"></span> Spawn</li>
+          </ul>
+        {{/inline}}
+      {{/components/section}}
+      {{#if waterfall.has_rows}}
+      <div class="sp-waterfall__root sp-p-trace-detail__chart">
+        <ol class="sp-p-trace-detail__names">
+          {{#each waterfall.rows}}
+            <li class="sp-waterfall__name" title="{{this.label}}">{{this.name}}</li>
+          {{/each}}
+        </ol>
+        <svg class="sp-p-trace-detail__svg" role="img"
+             aria-label="Span waterfall for this trace, {{span_count}} spans over {{summary.duration_display}}"
+             viewBox="0 0 {{waterfall.view_width}} {{waterfall.view_height}}" preserveAspectRatio="none"
+             height="{{waterfall.view_height}}">
+          <g class="sp-p-trace-detail__grid">
+            {{#each waterfall.ticks}}
+              <line x1="{{this.x}}" y1="0" x2="{{this.x}}" y2="{{../waterfall.view_height}}"></line>
+            {{/each}}
+          </g>
+          {{#each waterfall.rows}}
+            <rect class="sp-p-trace-detail__bar sp-p-trace-detail__bar--{{this.kind}} is-{{this.status}}"
                   data-chain-id="{{this.id}}"
-                  style="--start:{{this.offset_pct}}%;--w:{{this.width_pct}}%"
-                  title="{{this.name}} · {{this.offset_label}} · {{this.duration_ms}} ms"></span>
-          </div>
-          <span class="waterfall__dur">{{this.offset_label}} · {{this.duration_ms}} ms</span>
-        </div>
-        {{/each}}
+                  x="{{this.x}}" y="{{this.y}}" width="{{this.width}}" height="{{this.height}}"
+                  rx="2"><title>{{this.label}}</title></rect>
+          {{/each}}
+        </svg>
+        <ol class="sp-p-trace-detail__axis">
+          {{#each waterfall.ticks}}<li>{{this.label}}</li>{{/each}}
+        </ol>
       </div>
+      {{else}}
+      {{> components/empty-state title="Nothing to draw" message="This trace recorded no spans with a start time."}}
+      {{/if}}
     </section>
 
     <section aria-labelledby="span-list-title">
-      <div class="portfolio-section__header">
-        <h2 class="portfolio-section__title" id="span-list-title">Span list</h2>
-      </div>
-      {{#> components/data-table}}
+      {{> components/section title="Spans" count=span_count
+          note="Every span in order, with the provider, model, cost and latency it reported."}}
+      {{#> components/table caption="Spans in this trace" modifier="sp-p-trace-detail__spans"}}
         <thead><tr>
-          <th class="col-date">Started</th>
-          <th>Kind</th>
+          <th class="sp-col-date">Started</th>
+          <th class="sp-col-status">Offset</th>
+          <th class="sp-col-status">Kind</th>
           <th>Name</th>
-          <th class="col-num">Duration</th>
-          <th class="col-status">Status</th>
-          <th class="col-actions"></th>
+          <th class="sp-col-status">Provider</th>
+          <th class="sp-col-model">Model</th>
+          <th class="sp-table__cell--num">Latency</th>
+          <th class="sp-table__cell--num">Duration</th>
+          <th class="sp-table__cell--num">Cost</th>
+          <th class="sp-col-status">Status</th>
+          <th class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
         </tr></thead>
         <tbody>
         {{#each spans}}
           <tr>
-            <td class="col-date">{{this.started_at_local}}</td>
-            <td>
-              <span class="waterfall__swatch waterfall__swatch--{{this.kind}}"></span>
+            <td class="sp-col-date sp-table__cell--date">{{this.started_at_local}}</td>
+            <td class="sp-col-status sp-table__cell--num">{{this.offset_label}}</td>
+            <td class="sp-col-status">
+              <span class="sp-waterfall__swatch sp-waterfall__swatch--{{this.kind}}"></span>
               {{this.kind}}
             </td>
-            <td><code class="code-inline">{{this.name}}</code></td>
-            <td class="col-num">{{this.duration_ms}} ms</td>
-            <td class="col-status">
-              {{#if (eq this.status "deny")}}<span class="mcp-badge mcp-badge-danger">DENY</span>{{/if}}
-              {{#if (eq this.status "error")}}<span class="mcp-badge mcp-badge-warning">ERROR</span>{{/if}}
-              {{#if (eq this.status "ok")}}<span class="mcp-badge mcp-badge-success">OK</span>{{/if}}
-              {{#if (eq this.status "pending")}}<span class="mcp-badge">PENDING</span>{{/if}}
+            <td class="sp-u-truncate sp-table__cell--mono" title="{{this.name}}">{{this.name}}</td>
+            <td class="sp-col-status sp-table__cell--muted">{{this.provider}}</td>
+            <td class="sp-col-model sp-table__cell--mono" title="{{this.model}}">{{this.model}}</td>
+            <td class="sp-table__cell--num">{{this.latency_display}}</td>
+            <td class="sp-table__cell--num">{{this.duration_display}}</td>
+            <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+            <td class="sp-col-status">
+              {{#if (eq this.status "deny")}}<span class="sp-badge sp-badge--err">DENY</span>{{/if}}
+              {{#if (eq this.status "error")}}<span class="sp-badge sp-badge--warn">ERROR</span>{{/if}}
+              {{#if (eq this.status "ok")}}<span class="sp-badge sp-badge--ok">OK</span>{{/if}}
+              {{#if (eq this.status "pending")}}<span class="sp-badge">PENDING</span>{{/if}}
+              {{#if (eq this.status "rejected")}}<span class="sp-badge sp-badge--err">REJECTED</span>{{/if}}
             </td>
-            <td class="col-actions">
-              <button type="button" class="btn btn-sm btn-outline"
+            <td class="sp-table__cell--actions">
+              <button type="button" class="sp-btn sp-btn--sm sp-btn--outline"
                       data-chain-id="{{this.id}}">Chain</button>
             </td>
           </tr>
         {{/each}}
         </tbody>
-      {{/components/data-table}}
+      {{/components/table}}
     </section>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-entities.js"></script>
     {{/inline}}
 {{/layout}}

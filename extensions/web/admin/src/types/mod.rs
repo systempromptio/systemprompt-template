@@ -106,3 +106,20 @@ pub use webhook::{
     GovernQuery, HookEventPayload, StatusLinePayload, StatusLineQuery, TrackQuery,
     TranscriptPayload, TranscriptQuery,
 };
+
+pub mod groups;
+pub mod projects;
+pub mod role;
+pub use role::{
+    ROLES_CONSOLE, ROLES_MANAGE, ROLES_PLATFORM, Role, RoleChangeRefusal, authorize_role_change,
+    has_any, parse_roles,
+};
+pub use user_context::{
+    roles_grant_console, roles_grant_developer, roles_grant_manage, roles_grant_platform,
+};
+
+pub use users::{SetUserRolesRequest, UserRolesResponse};
+
+pub use constants::{
+    ROLE_DEVELOPER, ROLE_KNOWLEDGE_WORKER, ROLE_PLATFORM_ADMIN, ROLE_PROJECT_MANAGER, ROLE_USER,
+};

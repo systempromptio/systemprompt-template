@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_rate_limit_buckets (user_id, scope, window_start, hits)\n            VALUES ($1, $2, $3, 1)\n            ON CONFLICT (user_id, scope, window_start)\n            DO UPDATE SET hits = user_rate_limit_buckets.hits + 1\n            RETURNING hits\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "hits",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "user_rate_limit_buckets",
+            "name": "hits"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "76f141407c9eb9ac32235343d0cf256e71acd64fa7a6f0d38f2e3380cab73de9"
+}

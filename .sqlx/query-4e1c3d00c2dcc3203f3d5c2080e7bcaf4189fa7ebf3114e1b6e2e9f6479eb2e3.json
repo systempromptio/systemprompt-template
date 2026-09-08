@@ -1,0 +1,33 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            width_bucket(latency_ms::float8, $1::float8[]) AS \"bucket!\",\n            COUNT(*)::bigint AS \"count!\"\n          FROM ai_requests\n          WHERE created_at >= $2 AND created_at < $3\n            AND latency_ms IS NOT NULL\n             AND ($4::TEXT[] IS NULL OR ai_requests.user_id = ANY($4))\n          GROUP BY 1\n          ORDER BY 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "bucket!",
+        "type_info": "Int4",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Float8Array",
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "4e1c3d00c2dcc3203f3d5c2080e7bcaf4189fa7ebf3114e1b6e2e9f6479eb2e3"
+}

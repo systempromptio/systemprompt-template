@@ -1,66 +1,84 @@
 {{#> layout title=title page=page}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title=title subtitle="Org units that group users and roll up skill, marketplace, and access assignments."}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="Org units that group accounts. A department carries access rules its members inherit, and its usage rolls up from theirs."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/access-control">Access control</a>
+        {{#if can_write}}
+        <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="new-department">New department</button>
+        {{/if}}
+        {{/inline}}
+    {{/components/page-header}}
 
-    <div class="toolbar" role="toolbar" aria-label="Actions">
-        <div class="search-group">
-            <input type="text" class="search-input" placeholder="Search departments..." id="dept-search" aria-label="Search departments...">
+    <section class="sp-kpi-grid" aria-label="Department totals">
+        {{> components/kpi label="Departments" value=kpis.departments note="including Default"}}
+        {{> components/kpi label="Members" value=kpis.members note="accounts placed"}}
+        {{> components/kpi label="Requests" value=kpis.requests_display note="last 30 days"}}
+        {{> components/kpi label="Tokens" value=kpis.tokens_display note="in + out, 30 days"}}
+        {{> components/kpi label="Cost" value=kpis.cost_display note="last 30 days"}}
+    </section>
+
+    {{#> components/section title="Departments" count=total note="Usage columns cover the last 30 days."}}
+        {{#*inline "section_actions"}}
+        {{#if filters_applied}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{clear_url}}">Clear search</a>{{/if}}
+        {{/inline}}
+    {{/components/section}}
+
+    <form class="sp-toolbar" method="get" action="/admin/departments" role="search" aria-label="Search departments">
+        <span class="sp-toolbar__count">{{total}} departments</span>
+        <label class="sp-u-sr-only" for="departments-filter-q">Search departments</label>
+        <div class="sp-toolbar__search">
+            <input class="sp-search-input" id="departments-filter-q" type="search" name="q" value="{{search}}" placeholder="Name or description">
         </div>
-        <button type="button" class="btn btn-primary" id="btn-new-department">+ New department</button>
-    </div>
+        <div class="sp-toolbar__actions">
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--secondary">Apply</button>
+        </div>
+    </form>
 
-    <section aria-label="Departments list" data-page="management-departments">
-    {{#if departments}}
-    {{#> components/data-table}}
+    {{#if has_rows}}
+    {{#> components/table caption="Every department with its membership and thirty-day usage" modifier="sp-p-departments__table"}}
         <thead><tr>
-            <th>Name</th>
-            <th class="numeric col-numeric">Members</th>
-            <th class="numeric col-numeric">Assignments</th>
-            <th class="numeric col-numeric">Requests (30d)</th>
-            <th class="numeric col-numeric">Tokens (30d)</th>
-            <th>Description</th>
-            <th class="col-actions"></th>
+            {{#each sort_headers}}{{> components/sort-header this}}{{/each}}
+            <th scope="col" class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
         </tr></thead>
         <tbody>
-        {{#each departments}}
-        <tr data-dept-id="{{id}}" data-dept-name="{{toLowerCase name}}">
-            <td><a href="/admin/access/departments/{{id}}"><strong>{{name}}</strong></a></td>
-            <td class="numeric col-numeric">{{member_count}}</td>
-            <td class="numeric col-numeric">{{assignment_count}}</td>
-            <td class="numeric col-numeric">{{requests}}</td>
-            <td class="numeric col-numeric">{{add input_tokens output_tokens}}</td>
-            <td>{{description}}</td>
-            <td class="col-actions">
-                <a class="btn btn-sm btn-outline" href="/admin/access/departments/{{id}}">Open →</a>
-                {{#unless (eq name "Default")}}<button type="button" class="btn btn-sm btn-danger" data-delete-dept="{{id}}" data-dept-name="{{name}}">Delete</button>{{/unless}}
+        {{#each rows}}
+        <tr data-dept-id="{{this.id}}">
+            <td><a href="{{this.detail_url}}">{{this.name}}</a></td>
+            <td class="sp-u-truncate sp-table__cell--muted" title="{{this.description}}">{{#if this.description}}{{this.description}}{{else}}&mdash;{{/if}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.member_count}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.assignment_count}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.requests_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.tokens_display}}</td>
+            <td class="sp-table__cell--num sp-u-num sp-u-mono">{{this.cost_display}}</td>
+            <td class="sp-table__cell--actions">
+                <a class="sp-p-departments__action" href="{{this.detail_url}}">Open</a>
+                {{#if ../can_write}}{{#if this.deletable}}<button type="button" class="sp-p-departments__action sp-p-departments__action--danger" data-delete-dept="{{this.id}}" data-dept-name="{{this.name}}">Delete</button>{{/if}}{{/if}}
             </td>
         </tr>
         {{/each}}
         </tbody>
-    {{/components/data-table}}
+    {{/components/table}}
     {{else}}
-    <div class="empty-state empty-state--pad-lg">
-        <h3>No departments yet</h3>
-        <p class="text-muted">Departments group users and let you bulk-assign skills, marketplaces, and access rules.</p>
-        <button type="button" class="btn btn-primary" id="btn-new-department-empty">+ Create your first department</button>
-    </div>
+    {{> components/empty-state title="No departments match" message="No department matches that search. Clear it to see every department, or create one."}}
     {{/if}}
-    </section>
 
-    <dialog id="dept-create-dialog" class="dialog">
-        <form id="dept-create-form" class="dialog-form">
-            <h3>New department</h3>
+    {{#if can_write}}
+    <dialog class="sp-dialog" data-dialog="dept-create" aria-labelledby="dept-create-title">
+        <form class="sp-dialog-form" data-form="dept-create">
+            <h3 id="dept-create-title">New department</h3>
             <label>Name<input type="text" name="name" required maxlength="64" autocomplete="off" placeholder="e.g. Engineering"></label>
             <label>Description<textarea name="description" rows="2" placeholder="Optional"></textarea></label>
+            <p class="sp-u-text-danger" data-error hidden></p>
             <menu>
-                <button type="button" class="btn btn-sm btn-outline" id="dept-create-cancel">Cancel</button>
-                <button type="submit" class="btn btn-sm btn-primary">Create</button>
+                <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="dialog-close">Cancel</button>
+                <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Create</button>
             </menu>
-            <p id="dept-create-error" class="text-danger" hidden></p>
         </form>
     </dialog>
-
-    <script data-cfasync="false" type="module" src="/js/pages/management-departments.js"></script>
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/management-departments.js?v={{css_version}}"></script>
     {{/inline}}
 {{/layout}}

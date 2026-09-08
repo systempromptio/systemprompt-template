@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE services SET status = 'running', updated_at = CURRENT_TIMESTAMP WHERE instance_id = $2 AND name = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "230e0585a5fc766ce019f1c472850a68214ba388cc11562e57833b86e0a8ae63"
+}

@@ -1,0 +1,116 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COALESCE(c.context_id, r.context_id)  AS \"context_id!: ContextId\",\n            COALESCE(c.user_id, r.user_id)        AS \"user_id?: UserId\",\n            u.display_name                        AS \"display_name?\",\n            COALESCE(c.session_id, r.session_id)  AS \"session_id?: SessionId\",\n            c.name                                AS \"name?\",\n            c.created_at                          AS \"created_at?\",\n            c.updated_at                          AS \"updated_at?\",\n            r.client_session_id                   AS \"client_session_id?\",\n            s.ai_title                            AS \"ai_title?\",\n            s.status                              AS \"hook_status?\"\n        FROM (\n            SELECT\n                context_id,\n                MAX(user_id) AS user_id,\n                MAX(session_id) AS session_id,\n                MAX(client_session_id) AS client_session_id\n            FROM ai_requests\n            WHERE context_id = $1\n            GROUP BY context_id\n        ) r\n        FULL OUTER JOIN user_contexts c\n          ON c.context_id = r.context_id\n        LEFT JOIN plugin_session_summaries s ON s.session_id = r.client_session_id\n        LEFT JOIN users u ON u.id = COALESCE(c.user_id, r.user_id)\n        WHERE COALESCE(c.context_id, r.context_id) = $1\n        LIMIT 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id!: ContextId",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id?: UserId",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name?",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "display_name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "session_id?: SessionId",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "name?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_contexts",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at?",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_contexts",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at?",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_contexts",
+            "name": "updated_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "client_session_id?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "ai_title?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "ai_title"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "hook_status?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "plugin_session_summaries",
+            "name": "status"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      true,
+      null,
+      false,
+      false,
+      false,
+      null,
+      true,
+      true
+    ]
+  },
+  "hash": "b0133b75621a9442725ed95379e6dfa48a51efee7e39ef5749fc69e4afaac438"
+}

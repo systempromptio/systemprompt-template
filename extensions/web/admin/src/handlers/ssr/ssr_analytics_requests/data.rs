@@ -14,8 +14,9 @@ use crate::repositories::analytics::request_stats::{
     list_request_timeseries,
 };
 use crate::repositories::analytics::requests::{
-    BreakdownRow, RequestFilter, RequestPage, RequestRow, RequestSortSpec, list_requests_by_model,
-    list_requests_by_provider, list_requests_by_status, list_requests_paged,
+    BreakdownRow, FacetValue, RequestFilter, RequestKpis, RequestPage, RequestRow, RequestSortSpec,
+    get_request_kpis, list_request_facets, list_requests_by_model, list_requests_by_provider,
+    list_requests_by_status, list_requests_paged,
 };
 use crate::util::time_range::{
     TimeRange, TimeRangePreset, TimeRangeQuery, count_requests_in_range, parse_time_range,
@@ -62,6 +63,12 @@ pub(super) async fn resolve_range(
 pub(super) struct RequestsData {
     pub rows: Vec<RequestRow>,
     pub total_count: i64,
+    // Why: an empty list and a list that could not be read look identical on
+    // the page, and the second one spent a day being read as the first. The
+    // view needs to be able to tell them apart.
+    pub rows_unavailable: bool,
+    pub kpis: RequestKpis,
+    pub facets: Vec<FacetValue>,
     pub stats: RequestStats,
     pub hist: Vec<LatencyBucket>,
     pub series: Vec<TimeBucket>,
@@ -77,9 +84,9 @@ pub(super) struct RequestsPageQuery<'a> {
     pub offset: i64,
 }
 
-// Why: the KPI strip and the Log tab's count render on every tab, so the paged
-// list and the stats always run; the charts and the rollups only run for the
-// tab that shows them.
+// Why: the KPI strip and the tab bar's count render on every tab, so the paged
+// list, the tiles and the filter facets always run; the charts and the rollups
+// only run for the tab that shows them.
 pub(super) async fn load_requests_data(
     pool: &Arc<PgPool>,
     query: RequestsPageQuery<'_>,
@@ -98,11 +105,14 @@ pub(super) async fn load_requests_data(
         offset,
     };
 
-    let (paged, stats_res) = tokio::join!(
+    let (paged, stats_res, kpis_res, facets_res) = tokio::join!(
         list_requests_paged(pool, filter, range, page),
-        get_request_stats(pool, range),
+        get_request_stats(pool, range, &filter.scope),
+        get_request_kpis(pool, filter, range),
+        list_request_facets(pool, range, &filter.scope),
     );
 
+    let rows_unavailable = paged.is_err();
     let (rows, total_count) = paged.unwrap_or_else(|e| {
         tracing::warn!(error = %e, "list_requests_paged failed");
         (Vec::new(), 0)
@@ -111,10 +121,17 @@ pub(super) async fn load_requests_data(
         tracing::warn!(error = %e, "get_request_stats failed");
         RequestStats::default()
     });
+    let kpis = kpis_res.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "get_request_kpis failed");
+        RequestKpis::default()
+    });
 
     let mut data = RequestsData {
         rows,
         total_count,
+        rows_unavailable,
+        kpis,
+        facets: unwrap_or_empty(facets_res, "list_request_facets"),
         stats,
         ..RequestsData::default()
     };
@@ -122,27 +139,27 @@ pub(super) async fn load_requests_data(
     match tab {
         RequestsTab::Overview => {
             let (hist_res, series_res) = tokio::join!(
-                list_latency_histogram(pool, range),
-                list_request_timeseries(pool, range),
+                list_latency_histogram(pool, range, &filter.scope),
+                list_request_timeseries(pool, range, &filter.scope),
             );
             data.hist = unwrap_or_empty(hist_res, "list_latency_histogram");
             data.series = unwrap_or_empty(series_res, "list_request_timeseries");
         },
         RequestsTab::Models => {
             data.breakdown = unwrap_or_empty(
-                list_requests_by_model(pool, range).await,
+                list_requests_by_model(pool, range, &filter.scope).await,
                 "list_requests_by_model",
             );
         },
         RequestsTab::Providers => {
             data.breakdown = unwrap_or_empty(
-                list_requests_by_provider(pool, range).await,
+                list_requests_by_provider(pool, range, &filter.scope).await,
                 "list_requests_by_provider",
             );
         },
         RequestsTab::Status => {
             data.breakdown = unwrap_or_empty(
-                list_requests_by_status(pool, range).await,
+                list_requests_by_status(pool, range, &filter.scope).await,
                 "list_requests_by_status",
             );
         },

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM knowledge_document_grants WHERE doc_id = $1 AND subject_kind <> $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5c642330be126d8490e2e1ac9cd7a20cfe4f3ab99409331db23d1acb39b03be2"
+}

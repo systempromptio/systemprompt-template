@@ -18,12 +18,15 @@ pub async fn find_user_detail(
             u.email as "email?: Email",
             u.roles as "roles!: Vec<String>",
             (u.status = 'active') AS "is_active!",
+            -- Same rule as the listing query: never active is NULL, not the
+            -- join date. GREATEST ignores NULLs and returns NULL only when
+            -- every input is NULL.
             GREATEST(
-                COALESCE(MAX(a.created_at), u.created_at),
-                COALESCE(pe.last_pe, u.created_at),
-                COALESCE(mcp.last_mcp, u.created_at),
-                COALESCE(air.last_request, u.created_at)
-            ) AS "last_active!",
+                MAX(a.created_at),
+                pe.last_pe,
+                mcp.last_mcp,
+                air.last_request
+            ) AS "last_active?",
             (COALESCE(COUNT(DISTINCT a.id), 0) + COALESCE(air.request_count, 0))::BIGINT AS "total_events!",
             (SELECT a2.entity_name FROM user_activity a2
              WHERE a2.user_id = u.id AND a2.entity_name IS NOT NULL
@@ -108,13 +111,19 @@ async fn build_user_detail(
             Vec::new()
         });
 
-    let created_at: chrono::DateTime<chrono::Utc> = sqlx::query_scalar!(
+    // Why: Ok(None) rather than a fallback date. The summary above proves the
+    // row existed a moment ago, so its absence here means the account was
+    // deleted mid-request; inventing a join date would render a detail page
+    // for an account that is gone.
+    let Some(created_at) = sqlx::query_scalar!(
         "SELECT created_at FROM users WHERE id = $1",
         user_id.as_str()
     )
     .fetch_optional(pool)
     .await?
-    .unwrap_or(summary.last_active);
+    else {
+        return Ok(None);
+    };
 
     Ok(Some(crate::types::UserDetail {
         user_id: summary.user_id,

@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.user_id AS \"user_id!: UserId\", c.created_at AS \"created_at!\",\n                  c.expires_at AS \"expires_at!\",\n                  (c.expires_at < NOW()) AS \"is_expired!\"\n             FROM bridge_exchange_codes c\n            WHERE c.consumed_at IS NULL\n              AND c.user_id = ANY($1::TEXT[])\n            ORDER BY c.user_id, c.created_at DESC, c.code_hash",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "bridge_exchange_codes",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "bridge_exchange_codes",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "expires_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "bridge_exchange_codes",
+            "name": "expires_at"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "is_expired!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "5f043162bc795fe79489a2c138db53a345fb824bd7623869319a9fbefcaacc7d"
+}

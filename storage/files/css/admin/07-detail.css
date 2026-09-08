@@ -1,0 +1,151 @@
+@layer components {
+
+.sp-notice {
+    padding: var(--sp-space-3) var(--sp-space-4);
+    margin-bottom: var(--sp-space-5);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-subtle);
+    border-left: 4px solid var(--sp-text-tertiary);
+    border-radius: 0 var(--sp-radius-sm) var(--sp-radius-sm) 0;
+    color: var(--sp-text-secondary);
+}
+.sp-notice p { margin: var(--sp-space-1) 0 0; }
+
+.sp-notice--err {
+    border-left-color: var(--sp-danger);
+    background: var(--sp-danger-dim);
+}
+.sp-notice--warn {
+    border-left-color: var(--sp-warning);
+    background: color-mix(in oklch, var(--sp-warning) 10%, var(--sp-bg-surface));
+}
+
+.sp-notice__title {
+    margin: 0;
+    font-size: var(--sp-text-base);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+}
+.sp-notice--err .sp-notice__title { color: var(--sp-danger-strong); }
+
+/* The trace table kept its own fixed layout and its own header nowrap after the
+   shared table gave both up, which is why it stayed the last page with clipped
+   labels and headers while every other listing went to zero. It follows the
+   component now; what it still owns is its column widths. */
+.sp-trace-table {
+    width: 100%;
+}
+
+.sp-trace-table td {
+    padding: var(--sp-density-cell-y) var(--sp-density-cell-x);
+    vertical-align: middle;
+}
+
+.sp-trace-table td {
+    white-space: nowrap;
+}
+
+.sp-trace-table .sp-table__cell--stacked > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-trace-table .sp-col-started   { width: 8.5rem; }
+
+.sp-trace-table .sp-col-trace     { min-width: 11rem; }
+.sp-trace-table .sp-col-identity  { width: 13rem; }
+.sp-trace-table .sp-col-model     { width: 11.5rem; }
+.sp-trace-table .sp-col-spans     { width: 8rem; }
+.sp-trace-table .sp-col-tokens,
+.sp-trace-table .sp-col-cost,
+.sp-trace-table .sp-col-duration {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.sp-trace-table .sp-col-tokens    { width: 8.5rem; }
+.sp-trace-table .sp-col-cost      { width: 7rem; }
+.sp-trace-table .sp-col-duration  { width: 8.5rem; }
+.sp-trace-table .sp-col-status    { width: 8.5rem; }
+
+.sp-trace-table .sp-col-tokens .sp-table__cell--stacked,
+.sp-trace-table .sp-col-duration .sp-table__cell--stacked {
+    align-items: flex-end;
+}
+
+.sp-trace-table tbody tr {
+    position: relative;
+}
+
+.sp-trace-row__id {
+    text-decoration: none;
+    color: var(--sp-text-primary);
+}
+.sp-trace-row__id:hover { color: var(--sp-accent-text); }
+
+.sp-trace-row__id::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+.sp-trace-row__id:focus-visible::after {
+    outline: 2px solid var(--sp-accent);
+    outline-offset: -2px;
+    border-radius: var(--sp-radius-sm);
+}
+
+.sp-trace-table .sp-col-identity [title],
+.sp-trace-table .sp-col-model [title],
+.sp-trace-row__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1);
+    justify-content: flex-end;
+}
+
+.sp-trace-table .sp-table__cell--muted { color: var(--sp-text-tertiary); }
+
+@media (max-width: 1400px) {
+    .sp-trace-table .sp-col-model { display: none; }
+
+    .sp-trace-table .sp-col-identity { width: 11rem; }
+    .sp-trace-table .sp-col-spans    { width: 7rem; }
+    .sp-trace-table .sp-col-tokens   { width: 7.5rem; }
+    .sp-trace-table .sp-col-cost     { width: 5.5rem; }
+    .sp-trace-table .sp-col-duration { width: 8rem; }
+    .sp-trace-table .sp-col-status   { width: 7.5rem; }
+}
+
+@media (max-width: 1150px) {
+    .sp-trace-table .sp-col-identity { display: none; }
+}
+
+.sp-table__el th .sp-table__sort {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    color: inherit;
+    text-decoration: none;
+}
+
+.sp-table__el th .sp-table__sort:hover { color: var(--sp-text-primary); }
+
+.sp-table__el th:not(.is-sorted) .sp-table__sort .sp-table__sort-icon { opacity: 0.35; }
+
+.sp-table__el th:not(:has(.sp-table__sort)) { cursor: default; }
+
+.sp-code-collapsible summary {
+    cursor: pointer;
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-accent-text);
+    padding: var(--sp-space-1) 0;
+}
+.sp-code-collapsible .sp-code-block {
+    margin-top: var(--sp-space-2);
+    max-height: 480px;
+    overflow: auto;
+}
+
+}

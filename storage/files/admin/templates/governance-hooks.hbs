@@ -1,85 +1,77 @@
 {{#> layout title=title page=page}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="Hooks fire around every tool call. Each one is declared by the plugin that owns it; the events below are what they sent to the governance endpoints."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance">Policies</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/decisions">Decisions</a>
+        {{/inline}}
+    {{/components/page-header}}
 
-    {{> components/page-header title=hero_title subtitle=hero_subtitle}}
-
-    <section class="stats-grid-3col">
-        {{> components/stat-card label="Configured" value=configured}}
-        {{> components/stat-card label="PreToolUse fired (24h)" value=pretool_fired}}
-        {{> components/stat-card label="PostToolUse fired (24h)" value=posttool_fired variant="success"}}
+    <section class="sp-kpi-grid" aria-label="Hook activity">
+        {{#each kpis}}
+        {{> components/kpi label=this.label value=this.value note=this.note tone=this.tone}}
+        {{/each}}
     </section>
 
-    <h2 class="section-title">Configured hooks</h2>
-    <p class="text-secondary">Hooks fire around every tool call. Each one is declared by the plugin that owns it.</p>
+    {{#> components/section title="Settings export" note="Paste into .claude/settings.json to point a Claude Code session at this instance."}}{{/components/section}}
+    <pre class="sp-code-block sp-p-hooks__export" tabindex="0"><code>{{export_json}}</code></pre>
 
+    {{#> components/section title="Configured hooks" count=configured note="Declared in plugin YAMLs under services/."}}{{/components/section}}
     {{#if has_configured}}
-    {{#> components/data-table}}
+    {{#> components/table caption="Hooks declared by plugins" modifier="sp-p-hooks__configured"}}
         <thead><tr>
-            <th>Plugin</th>
-            <th class="col-status">Event</th>
-            <th>Matcher</th>
-            <th>Command</th>
-            <th class="col-status">Async</th>
-            <th class="col-status">Timeout</th>
+            <th scope="col">Plugin</th>
+            <th scope="col" class="sp-col-status">Event</th>
+            <th scope="col">Matcher</th>
+            <th scope="col">Command</th>
+            <th scope="col" class="sp-col-status">Mode</th>
+            <th scope="col" class="sp-table__cell--num">Timeout</th>
         </tr></thead>
         <tbody>
         {{#each configured_hooks}}
         <tr>
-            <td>{{plugin_id}}</td>
-            <td class="col-status"><span class="badge badge-info">{{event}}</span></td>
-            <td><code class="code-inline">{{matcher}}</code></td>
-            <td><code class="code-inline">{{command}}</code></td>
-            <td class="col-status">{{#if is_async}}yes{{else}}no{{/if}}</td>
-            <td class="col-status">{{#if timeout_ms}}{{timeout_ms}}ms{{else}}—{{/if}}</td>
+            <td class="sp-u-truncate" title="{{plugin_id}}">{{plugin_id}}</td>
+            <td>{{> components/badge tone="info" text=event}}</td>
+            <td class="sp-u-mono sp-u-truncate" title="{{matcher}}">{{matcher}}</td>
+            <td class="sp-u-mono sp-u-truncate" title="{{command}}">{{command}}</td>
+            <td>{{#if is_async}}{{> components/badge tone="accent" text=async_label}}{{else}}{{> components/badge tone="muted" text=async_label}}{{/if}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{timeout_label}}</td>
         </tr>
         {{/each}}
         </tbody>
-    {{/components/data-table}}
+    {{/components/table}}
     {{else}}
-    {{> components/empty-state message="No hooks declared in any plugin YAML."}}
+    {{> components/empty-state title="No hooks declared" message="No plugin YAML under services/ declares a hook."}}
     {{/if}}
 
-    <h2 class="section-title">Recent activity</h2>
-    <p class="text-secondary">Snapshot of the last 50 hook events ingested by <code class="code-inline">/api/public/hooks/govern</code> and <code class="code-inline">/api/public/hooks/track</code>.</p>
-
+    {{#> components/section title="Recent events" count=recent_count note="The newest hook events ingested by /api/public/hooks/govern and /api/public/hooks/track."}}{{/components/section}}
     {{#if has_recent}}
-    {{#> components/data-table}}
+    {{#> components/table caption="Recent hook events" modifier="sp-p-hooks__events"}}
         <thead><tr>
-            <th>Time</th>
-            <th class="col-status">Kind</th>
-            <th>Plugin</th>
-            <th>Tool</th>
-            <th>User</th>
-            <th class="col-status">Status</th>
+            <th scope="col" class="sp-col-date">Time</th>
+            <th scope="col" class="sp-col-status">Kind</th>
+            <th scope="col">Plugin</th>
+            <th scope="col">Tool</th>
+            <th scope="col">User</th>
+            <th scope="col" class="sp-col-status">Status</th>
         </tr></thead>
         <tbody>
         {{#each recent_events}}
         <tr>
-            <td><code class="code-inline">{{created_at}}</code></td>
-            <td class="col-status"><span class="badge badge-info">{{kind}}</span></td>
-            <td>{{plugin_id}}</td>
-            <td>{{tool_name}}</td>
-            <td>{{user_id}}</td>
-            <td class="col-status">
-                {{#if status}}
-                    {{#if (eq status "allow")}}
-                        <span class="mcp-badge mcp-badge-success">ALLOW</span>
-                    {{else}}{{#if (eq status "deny")}}
-                        <span class="mcp-badge mcp-badge-danger">DENY</span>
-                    {{else}}
-                        <span class="mcp-badge">{{status}}</span>
-                    {{/if}}{{/if}}
-                {{else}}—{{/if}}
-            </td>
+            <td class="sp-table__cell--date">{{created_at}}</td>
+            <td>{{> components/badge tone="info" text=kind}}</td>
+            <td class="sp-u-truncate" title="{{plugin_id}}">{{#if plugin_id}}{{plugin_id}}{{else}}—{{/if}}</td>
+            <td class="sp-u-mono sp-u-truncate" title="{{tool_name}}">{{#if tool_name}}{{tool_name}}{{else}}—{{/if}}</td>
+            <td class="sp-u-mono sp-u-truncate" title="{{user_id}}"><a href="{{user_url}}">{{shortId user_id}}</a></td>
+            <td>{{#if status}}{{> components/badge tone=status_tone text=status}}{{else}}—{{/if}}</td>
         </tr>
         {{/each}}
         </tbody>
-    {{/components/data-table}}
+    {{/components/table}}
     {{else}}
-    {{> components/empty-state message="No hook events ingested yet."}}
+    {{> components/empty-state title="No hook events" message="Nothing has fired a governance hook yet. Drive a tool call through a plugin that declares one and it appears here."}}
     {{/if}}
-
     {{/inline}}
     {{#*inline "scripts"}}{{/inline}}
 {{/layout}}

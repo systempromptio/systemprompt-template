@@ -36,8 +36,8 @@ pub(super) fn compute_content_bytes(payload: &HookEventPayload) -> crate::types:
         HookEvent::UserPromptSubmit(d) => {
             input_bytes += i64::try_from(d.prompt.len()).unwrap_or(0);
         },
-        HookEvent::PreToolUse(_) => {
-            unreachable!("PreToolUse events are dropped before this point")
+        HookEvent::PreToolUse(d) => {
+            input_bytes += i64::try_from(d.input.to_string().len()).unwrap_or(0);
         },
         HookEvent::PostToolUse(d) => {
             input_bytes += i64::try_from(d.input.to_string().len()).unwrap_or(0);

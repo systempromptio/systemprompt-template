@@ -7,7 +7,7 @@ const initTypeahead = (group) => {
   const list = group.querySelector('[data-filter-list]');
   if (!search || !list) return;
 
-  const items = [...list.querySelectorAll('.filter-ribbon__group-item')];
+  const items = [...list.querySelectorAll('.sp-filter-ribbon__group-item')];
   if (items.length <= TYPEAHEAD_THRESHOLD) {
     search.hidden = true;
     return;
@@ -38,7 +38,7 @@ const closeAll = (groups) => {
 };
 
 const initRibbon = (ribbon) => {
-  const groups = [...ribbon.querySelectorAll('details.filter-ribbon__group')];
+  const groups = [...ribbon.querySelectorAll('details.sp-filter-ribbon__group')];
   for (const group of groups) {
     initTypeahead(group);
     initExclusiveOpen(group, groups);

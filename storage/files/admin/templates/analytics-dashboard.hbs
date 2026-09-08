@@ -1,0 +1,78 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+
+    {{#> components/page-header
+        title="Analytics"
+        subtitle="What the AI did, by model, skill, tool, session and cost."}}
+      {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/requests">Request log</a>
+        <a class="sp-btn sp-btn--sm sp-btn--primary" href="{{cost.csv_url}}">Export cost CSV</a>
+      {{/inline}}
+    {{/components/page-header}}
+
+    {{> components/tabs tabs=tabs nav_label="Analytics views"}}
+
+    {{!-- The window this page answers for is not the one the URL asked for.
+         Said here rather than in the scope bar because the bar shows the
+         window that is in force, and this is about the one that was not. --}}
+    {{#if time_range.rejected}}
+    {{> components/notice tone="warn"
+        message="That range could not be read, so this page is showing the default window."}}
+    {{/if}}
+
+    {{!--
+      One toolbar, deliberately. The density gate counts .sp-toolbar,
+      .sp-scope-filter, .sp-filter-ribbon and form.sp-filters together and
+      allows two; the shell's scope bar is already one of them, so everything
+      this page adds has to fit in this single row or the tables lose their
+      space to chrome. The window lives in the shell's scope bar too — this
+      page used to draw a second range picker beside it, which cost a row to
+      say the same thing twice.
+    --}}
+    {{#> components/toolbar toolbar_count=toolbar_count}}
+      {{#*inline "toolbar_filters"}}
+        {{> components/scope-filter filters.scope}}
+        <span class="sp-p-analytics__toggle" role="group" aria-label="Attribution">
+            {{#each attribution_links}}
+            <a class="sp-btn sp-btn--sm{{#unless this.is_active}} sp-btn--outline{{/unless}}"
+               href="{{this.href}}" title="{{this.hint}}"
+               {{#if this.is_active}}aria-current="true"{{/if}}>{{this.label}}</a>
+            {{/each}}
+        </span>
+        <span class="sp-p-analytics__toggle" role="group" aria-label="Bucket size">
+            {{#each filters.bucket_links}}
+            <a class="sp-btn sp-btn--sm{{#unless this.is_active}} sp-btn--outline{{/unless}}"
+               href="{{this.href}}">{{this.label}}</a>
+            {{/each}}
+        </span>
+        {{#if is_cost}}
+        <span class="sp-p-analytics__toggle" role="group" aria-label="Report audience">
+            <span class="sp-p-analytics__toggle-label" id="sp-cost-audience">Audience</span>
+            {{#each cost.audience_links}}
+            <a class="sp-btn sp-btn--sm{{#unless this.is_active}} sp-btn--outline{{/unless}}"
+               href="{{this.href}}" title="{{this.hint}}"
+               aria-describedby="sp-cost-audience"
+               {{#if this.is_active}}aria-current="true"{{/if}}>{{this.label}}</a>
+            {{/each}}
+        </span>
+        {{/if}}
+      {{/inline}}
+    {{/components/toolbar}}
+
+    {{#if is_member_view}}
+    {{> components/notice tone="warn" title="Member view — overlaps"
+        message="Each person is counted in every group and project they belong to, so these rows deliberately do not sum to the instance total. Switch to Exclusive for figures that partition."}}
+    {{/if}}
+
+    {{#if is_overview}}{{> analytics/overview}}{{/if}}
+    {{#if is_models}}{{> analytics/models}}{{/if}}
+    {{#if is_skills}}{{> analytics/skills}}{{/if}}
+    {{#if is_tools}}{{> analytics/tools}}{{/if}}
+    {{#if is_sessions}}{{> analytics/sessions}}{{/if}}
+    {{#if is_cost}}{{> analytics/cost}}{{/if}}
+
+    {{/inline}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

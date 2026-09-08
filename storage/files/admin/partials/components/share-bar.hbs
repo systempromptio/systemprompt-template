@@ -1,0 +1,8 @@
+{{!--
+  A proportion rendered as a bar. The percentage is computed server-side and
+  arrives as a custom property, so the template does no arithmetic and the bar
+  cannot disagree with the number printed beside it.
+
+  Invoke as: {{> components/share-bar share_pct=share_pct label="42% of requests"}}
+--}}
+<span class="sp-share-bar" role="img" aria-label="{{label}}" style="--sp-share-pct:{{share_pct}}%"><span class="sp-share-bar__fill"></span></span>

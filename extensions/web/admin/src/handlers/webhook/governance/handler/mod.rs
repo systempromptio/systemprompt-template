@@ -42,6 +42,14 @@ fn build_response(decision: &Decision, hook_event_name: &'static str) -> Respons
     let permission_decision = GovernanceDecision::from_decision(decision);
     let permission_decision_reason = match decision {
         Decision::Allow { .. } => None,
+        // Why: the reason is deliberately not returned to the caller. Claude
+        // Code renders `permissionDecisionReason` to the user, and a warning
+        // rendered as a refusal reads as one; the finding's home is the audit
+        // row and `infra logs governance report`.
+        Decision::Warn { reason } => {
+            tracing::warn!(%reason, "governance warn-mode finding; allowing the tool call");
+            None
+        },
         Decision::Deny { reason } => Some(format!("[GOVERNANCE] {reason}")),
         Decision::Pending { reason } => Some(format!("[GOVERNANCE] {reason}")),
     };
@@ -133,7 +141,11 @@ pub(crate) async fn govern_tool_use(
     // Why: one POST is one call, and this hook is the only point that sees it —
     // an out-of-process agent has no second enforcement point to inherit from.
     let call_id = CallId::generate();
-    let evaluation = engine().evaluate(&PolicyContext {
+    let policy_engine = match engine() {
+        Ok(engine) => engine,
+        Err(error) => return error.into_response(),
+    };
+    let evaluation = policy_engine.evaluate(&PolicyContext {
         target: target.clone(),
         agent_scope: AgentScope::User {
             user_id: user_id.clone(),

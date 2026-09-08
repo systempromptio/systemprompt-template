@@ -1,0 +1,112 @@
+@layer components {
+.sp-visibility-badge {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1);
+    align-items: center;
+}
+
+.sp-visibility-badge--scoped {
+    font-size: var(--sp-text-xs);
+}
+
+.sp-mkt-card__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1);
+}
+
+.sp-mkt-audience {
+    margin-top: var(--sp-space-8);
+}
+
+.sp-mkt-audience__heading {
+    margin-bottom: var(--sp-space-1);
+}
+
+.sp-mkt-audience__split {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--sp-space-5);
+}
+
+.sp-audience-matrix-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+}
+
+.sp-audience-matrix {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--sp-text-sm);
+}
+
+.sp-audience-matrix__caption {
+    padding: var(--sp-space-2) var(--sp-space-3);
+    text-align: left;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-audience-matrix__col {
+    padding: var(--sp-space-2) var(--sp-space-3);
+    text-align: left;
+    white-space: nowrap;
+    color: var(--sp-text-secondary);
+}
+
+.sp-audience-matrix__subject {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-05);
+    padding: var(--sp-space-2) var(--sp-space-3);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.sp-audience-matrix__label {
+    color: var(--sp-text-primary);
+    font-weight: 600;
+}
+
+.sp-audience-matrix__kind {
+    font-size: var(--sp-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sp-text-tertiary);
+}
+
+.sp-audience-matrix__row:hover {
+    background: var(--sp-bg-surface-raised);
+}
+
+.sp-audience-matrix__cell {
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border-top: 1px solid var(--sp-border-subtle);
+    text-align: center;
+}
+
+.sp-audience-matrix__cell.is-allow {
+    background: var(--sp-badge-accent-bg);
+}
+
+.sp-audience-matrix__cell.is-deny {
+    background: var(--sp-bg-surface-raised);
+}
+
+.sp-audience-matrix__layer {
+    font-size: var(--sp-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.sp-audience-matrix__cell.is-allow .sp-audience-matrix__layer {
+    color: var(--sp-success-strong);
+}
+
+.sp-audience-matrix__cell.is-deny .sp-audience-matrix__layer {
+    color: var(--sp-text-tertiary);
+}
+
+}

@@ -1,0 +1,132 @@
+@layer components {
+
+/* One row per provider inside a single card. The row is a fixed grid so the
+   status column and the action column line up across providers; a reader
+   scans the badge column to learn the state of every account at once. */
+
+.sp-connection-list {
+    container-type: inline-size;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sp-connection {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "mark body status actions" "form form form form";
+    align-items: center;
+    column-gap: var(--sp-space-3);
+    row-gap: var(--sp-space-3);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    border-top: 1px solid var(--sp-border-subtle);
+}
+
+.sp-connection:first-child { border-top: 0; }
+
+.sp-connection__mark {
+    grid-area: mark;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-tertiary);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-xs);
+    font-weight: var(--sp-font-semibold);
+    text-transform: uppercase;
+}
+
+.sp-connection[data-status="connected"] .sp-connection__mark {
+    background: var(--sp-success-dim);
+    color: var(--sp-success-strong);
+}
+
+.sp-connection__body {
+    grid-area: body;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+    min-width: 0;
+}
+
+.sp-connection__name {
+    margin: 0;
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+    line-height: var(--sp-leading-snug);
+    color: var(--sp-text-primary);
+}
+
+.sp-connection__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-space-1) var(--sp-space-2);
+    min-width: 0;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-connection__meta > span + span::before {
+    content: "·";
+    margin-right: var(--sp-space-2);
+}
+
+.sp-connection__meta .sp-u-mono {
+    max-width: 22ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-connection__status { grid-area: status; }
+
+.sp-connection__actions {
+    grid-area: actions;
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: var(--sp-space-2);
+}
+
+.sp-connection__form {
+    grid-area: form;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: var(--sp-space-3);
+    align-items: end;
+    padding: var(--sp-space-3) var(--sp-space-4);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-base);
+}
+
+.sp-connection__form label {
+    display: grid;
+    gap: var(--sp-space-1);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.sp-connection__form .sp-connection__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+}
+
+.sp-connection__message { margin-block: 0 var(--sp-space-3); }
+.sp-connection__message[hidden] { display: none; }
+
+/* Under the bridge-sized widths the badge and the buttons drop to a second
+   line under the name rather than squeezing the name to an ellipsis. */
+@container (max-width: 40rem) {
+    .sp-connection {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas: "mark body status" "mark actions actions" "form form form";
+        row-gap: var(--sp-space-2);
+    }
+    .sp-connection__actions { justify-content: flex-start; }
+}
+
+}

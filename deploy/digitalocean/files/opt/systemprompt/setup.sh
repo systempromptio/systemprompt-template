@@ -14,6 +14,8 @@ if [ -f "$MARKER" ]; then
 fi
 
 echo "systemprompt setup — at least one AI provider API key is required."
+read -rp "Administrator email (an address you control): " ADMIN_EMAIL
+[[ "$ADMIN_EMAIL" =~ ^[^[:space:]]+@[^[:space:]]+\.[^[:space:]]+$ ]] || { echo "A valid administrator email is required"; exit 1; }
 read -rp "Anthropic API key (blank to skip): " ANTHROPIC
 read -rp "OpenAI API key (blank to skip): " OPENAI
 read -rp "Gemini API key (blank to skip): " GEMINI
@@ -23,9 +25,19 @@ if [ -z "$ANTHROPIC$OPENAI$GEMINI" ]; then
     exit 1
 fi
 
-sed -i "s|^ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=${ANTHROPIC}|" "$ENV_FILE"
-sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=${OPENAI}|" "$ENV_FILE"
-sed -i "s|^GEMINI_API_KEY=.*|GEMINI_API_KEY=${GEMINI}|" "$ENV_FILE"
+export ADMIN_EMAIL ANTHROPIC OPENAI GEMINI
+python3 - "$ENV_FILE" <<'PYTHON'
+import os,sys
+path=sys.argv[1]
+values={k:os.environ[v] for k,v in [('ADMIN_EMAIL','ADMIN_EMAIL'),('ANTHROPIC_API_KEY','ANTHROPIC'),('OPENAI_API_KEY','OPENAI'),('GEMINI_API_KEY','GEMINI')]}
+lines=open(path).read().splitlines()
+lines=[line for line in lines if line.split('=',1)[0] not in values]
+for key,value in values.items():
+    if any(c in value for c in "\n\r'"):
+        raise SystemExit('Unsupported character in '+key)
+    lines.append(key+"='"+value+"'")
+open(path,'w').write('\n'.join(lines)+'\n')
+PYTHON
 
 touch "$MARKER"
 systemctl enable systemprompt >/dev/null 2>&1

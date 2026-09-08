@@ -33,6 +33,7 @@ pub(super) struct TraceListRow {
     pub(super) cache_hit_any: bool,
     pub(super) top_tool: Option<String>,
     pub(super) has_error: bool,
+    pub(super) error_count: i64,
     pub(super) has_deny: bool,
     pub(super) total_count: i64,
 }
@@ -65,6 +66,7 @@ impl From<TraceListRow> for TraceSummary {
             cache_hit_any: r.cache_hit_any,
             top_tool: r.top_tool,
             has_error: r.has_error,
+            error_count: r.error_count,
             has_deny: r.has_deny,
         }
     }

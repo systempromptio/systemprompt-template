@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO knowledge_embedding_cache (embed_model, text_hash, embedding)\n           VALUES ($1, $2, ($3::text)::vector)\n           ON CONFLICT (embed_model, text_hash) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7c1b0b1464ac61b5350cb7bfef36d0788c2992a7c54dab11bb293b558b025903"
+}

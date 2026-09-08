@@ -6,443 +6,91 @@
   <img src="https://systemprompt.io/files/images/logo-dark.svg" alt="systemprompt.io" width="380">
 </picture>
 
-# The self-owned AI control plane.
+# Your AI control plane. Clone, configure, run.
 
-**The only AI infrastructure you actually own.** Most teams rent this layer: someone else's dashboard holds their prompts, their keys, and their audit trail. This is the version you compile and keep. One Rust binary, one PostgreSQL, four commands from `git clone` to governed inference. 45 scripted demos prove every claim on your own laptop.
+**Govern your AI. Build your own capabilities. Run it on your infrastructure.**
 
-[![Built on systemprompt-core](https://img.shields.io/badge/built%20on-systemprompt--core-2b6cb0?style=flat-square)](https://github.com/systempromptio/systemprompt-core)
-[![Template · MIT](https://img.shields.io/badge/template-MIT-16a34a?style=flat-square)](LICENSE)
-[![Core · BSL--1.1](https://img.shields.io/badge/core-BSL--1.1-2b6cb0?style=flat-square)](https://github.com/systempromptio/systemprompt-core/blob/main/LICENSE)
-[![Rust 1.75+](https://img.shields.io/badge/rust-1.75+-f97316?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![PostgreSQL 18+](https://img.shields.io/badge/postgres-18+-336791?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+Identity, model access, MCP tool execution, policy and audit in a Rust runtime you operate. Start with a working governance system, then compile your company's capabilities into it.
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/systempromptio-the-self-owned-ai-control?referralCode=AQ_ePp&utm_medium=integration&utm_source=template&utm_campaign=generic) &nbsp; [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/systempromptio/systemprompt-template) &nbsp; [![Deploy on Northflank](https://assets.northflank.com/deploy_to_northflank_smm_36700fb050.svg)](https://app.northflank.com/s/account/templates/new?data=6a58eb70982d53bd314abce3) &nbsp; [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/OSPC37) &nbsp; <sub>[all install paths →](docs/README.md)</sub>
-
-[**systemprompt.io**](https://systemprompt.io) · [**Documentation**](https://systemprompt.io/documentation/) · [**Guides**](https://systemprompt.io/guides) · [**Enterprise factsheet (PDF)**](https://systemprompt.io/files/documents/systemprompt-io-enterprise-factsheet.pdf) · [**Discord**](https://discord.gg/wkAbSuPWpr)
-
-<img src="docs/images/pi-demo-model-selection.png" alt="The Model Selection dashboard page: gateway models from four providers listed per user, gemini-2.5-flash toggled to Disabled for the demo user, with that user's live request, token, and cost totals below." width="900">
-
-<sub>Not a mockup. A live capture of the dashboard mid-demo: a third-party coding agent (<a href="https://pi.dev">Pi</a>) is driving Claude, GPT, Gemini, and Cerebras models through the governed gateway as user <code>pi-demo@demo.local</code>. An operator has just disabled Gemini for that user. The agent's next Gemini call was refused with a 403 before any provider was contacted. One audit row, one deny reason, zero restarts.</sub>
+[Quick start](#quick-start) · [Run the proof](#run-the-proof) · [Core](https://github.com/systempromptio/systemprompt-core) · [Documentation](https://systemprompt.io/documentation/)
 
 </div>
 
----
+## Start with control
 
-This project uses [systemprompt.io](https://systemprompt.io), self-hosted AI governance infrastructure. It is the evaluation template for [systemprompt-core](https://github.com/systempromptio/systemprompt-core), published on crates.io as [`systemprompt`](https://crates.io/crates/systemprompt).
+SystemPrompt puts a policy boundary between your AI clients and the models and tools you connect. Permissions follow the authenticated user; audit records connect identity, policy decisions, tool activity and inference cost.
+
+| What you control | How |
+|---|---|
+| Model access | Route supported clients through the gateway and grant or deny access per user. |
+| Tool execution | Check scope, credential patterns, blocklists and rate limits on governed MCP calls before execution. |
+| Audit data | Keep request records and correlated tool traces in your PostgreSQL database. |
+| Deployment | Run the compiled runtime on your infrastructure, with PostgreSQL as its required database. |
+| Domain capabilities | Add Rust extensions for your integrations, policies and application behavior. |
+
+This repository is the **evaluation template**: Core plus configuration, an admin UI, extensions and executable demos. Use it to evaluate enforcement and as the starting point for your own deployment.
 
 ## Quick start
+
+Install Docker, [just](https://just.systems/) and Rust through rustup. The repo pins its toolchain in [rust-toolchain.toml](rust-toolchain.toml); the workspace requires Rust 1.96+. Local setup provisions PostgreSQL 18 and asks for an AI provider key.
 
 ```bash
 git clone https://github.com/systempromptio/systemprompt-template
 cd systemprompt-template
-just setup-local            # prompts: pick a provider (Gemini/Anthropic/OpenAI), enter its key
-just start                  # serves governance + agents + MCP + admin on :8080
+just setup-local
+just start
 ```
 
-`setup-local` prompts for a provider key, or takes keys non-interactively (`just setup-local <anthropic_key> [openai_key] [gemini_key]`; the first becomes the default provider). Discover the CLI with `systemprompt --help`. All other install paths, including running a second clone on different ports, are in [docs/README.md](docs/README.md).
+Open **http://localhost:8080**. Setup builds the binary, provisions the local profile and database, runs migrations and publishes assets. Inference uses your chosen provider account.
 
----
+For non-interactive setup, pass provider keys as documented in the [installation guide](docs/README.md). That guide also covers containers, deployment platforms and alternate ports.
 
-## Bring an agent we have never seen. Watch it get governed.
+## Run the proof
 
-Every AI gateway vendor shows you their own client talking to their own dashboard. That proves nothing. The honest test is a third-party agent, unmodified, pointed at your infrastructure, and the screenshot above is that test running.
-
-[Pi](https://pi.dev) is an open-source coding agent from a different company. We did not fork it, patch it, or wrap it. We gave it one provider entry in `~/.pi/agent/models.json` pointing at the gateway's Anthropic-compatible `/v1/messages` endpoint. From that single config block, everything below works out of the box.
-
-**One endpoint, four upstream providers.** The gateway routes by model id: `claude-*` to Anthropic, `gpt-*` to OpenAI, `gemini-*` to Google, `gpt-oss-120b` to Cerebras. Pi's `/model` picker hops between them mid-session. The agent speaks one protocol; the gateway owns the provider sprawl, the keys, and the bill.
-
-**Every request is somebody's.** The demo registers a fresh non-admin user, issues them an API key from the admin API, and hands that identity to Pi. From then on every call the agent makes is attributed: user, session, model, provider, tokens in and out, cost in microdollars, latency, and the policy decisions that ran before dispatch. One 18-column Postgres table. One query answers "what did the agent do."
-
-**Models are permissions, not config.** Open **Model Selection** in the dashboard, pick the user, click Disable on a model. That writes a user-scoped deny rule which the gateway evaluates live on the next request. The agent's next call to that model gets a 403 with a structured reason. No restart, no token rotation, no redeploy. Click Enable and it works again. This is the difference between a router and a control plane: a router forwards what it is given, a control plane decides.
-
-**The prompt and the tools are governed too.** A Pi extension wires the same four-policy pipeline (scope check, secret scan, blocklist, rate limit) into the agent's `input` and `tool_call` events. Paste a live AWS key into a prompt and the turn is denied before any provider sees it. Ask the agent to write a credential to disk and the tool call is blocked before execution, with the reason handed back to the model.
-
-**The evidence is not a claim, it is a page.** Everything above lands in the dashboard while it happens: **Model Selection** (`/admin/models`) shows the per-user toggles next to that user's usage; the request audit trail (`/admin/entities/requests`) holds the full chain of custody for every call, including the denied ones.
-
-<div align="center">
-<img src="docs/images/pi-demo-request-audit.png" alt="The Inference Requests dashboard: KPI cards for request count, p50 latency, total cost, errors, and pre-flight denies, with a latency distribution histogram, captured immediately after the Pi demo run." width="900">
-
-<sub>The same demo run from the audit side: 27 requests across four providers, $0.0341 total spend, and 5 errors, which are the deliberate governance denials. Captured from <code>/admin/entities/requests</code> seconds after the run.</sub>
-</div>
-
-Run it yourself, from a fresh clone, in about ten minutes:
+Start with an allowed tool call, then a denied one:
 
 ```bash
-examples/pi/setup.sh          # install Pi, wire the gateway provider, branded theme
-examples/pi/routes.sh         # split demo models into individually governable routes
-examples/pi/new-user.sh       # register a demo user, issue their key, hand Pi the identity
-
-pi -p --provider systemprompt --model gpt-oss-120b "hello"    # Cerebras, governed
-pi -p --provider systemprompt --model claude-sonnet-4-6 "hi"  # Anthropic, same endpoint
+./demo/00-preflight.sh
+./demo/01-seed-data.sh
+./demo/governance/01-happy-path.sh
+./demo/governance/05-governance-denied.sh
+./demo/governance/06-secret-breach.sh
 ```
 
-Then open `/admin/models`, disable a model for the user, and run the prompt again. The full scripted walkthrough, including the deny-and-recover loop and the tool-gate demos, is in [examples/pi/WALKTHROUGH.md](examples/pi/WALKTHROUGH.md).
+Inspect the resulting decisions and traces in the admin UI. The [demo index](demo/README.md) explains prerequisites and which scripts invoke paid models.
 
-The point is not Pi. The point is that Pi needed nothing special. Any client that speaks the Anthropic Messages protocol (Claude Code included, see [docker/claude-code-clean-room](docker/claude-code-clean-room)) inherits the same identity binding, the same per-user model permissions, and the same audit spine, because governance lives at the transport layer instead of inside any one tool.
+For a third-party client, follow the [Pi walkthrough](examples/pi/WALKTHROUGH.md). Connect Pi to the gateway, make a request, disable that user's model in **Model Selection** (`/admin/models`), then retry. The denied request appears in the audit view (`/admin/requests`). Access tokens are managed at `/admin/access-tokens`.
 
----
+<img src="docs/images/pi-demo-model-selection.png" alt="Model Selection dashboard showing per-user model permissions and usage during the Pi demo" width="900">
 
-<details>
-<summary><strong>For the CISO: one SQL query answers any AI audit</strong></summary>
+Gateway routing governs inference sent through that endpoint. The Pi integration also installs hooks for prompt and local tool checks; connecting a model endpoint alone does not govern arbitrary local commands.
 
-<br>
+## Build your capabilities into the runtime
 
-Five properties, each one demonstrable on your laptop before any procurement call.
-
-- **A single query answers every AI audit.** Every request, scope decision, tool call, model output, and cost lands in one 18-column Postgres table. Six correlation columns (UserId, SessionId, TaskId, TraceId, ContextId, ClientId) bind identity at construction time, so a row without a trace is a programming error.
-- **Credentials physically cannot enter the context window.** The governance process is the parent of every MCP tool subprocess. Keys are decrypted from a ChaCha20-Poly1305 store and injected into the child's environment by `Command::spawn()`. The parent, which owns the LLM context, never writes the value. 35+ regex patterns deny any tool call that tries to pass a secret through arguments.
-- **Self-hosted, air-gap capable, single artifact.** One Rust binary. One PostgreSQL. No Redis, no Kafka, no Kubernetes, no SaaS handoff. The same binary runs on a laptop, a VM, and an air-gapped appliance without modification. Zero outbound telemetry by default.
-- **Policy-as-code on PreToolUse hooks.** Destructive operations, blocklists, department scoping, six-tier RBAC (Admin, User, Service, A2A, MCP, Anonymous). Rate limiting at 300 req/min per session with role multipliers. Every deny reason is structured and auditable.
-- **Certifications-ready, not certification-marketing.** Tiered log retention from debug (1 day) through error (90 days). 10 identity lifecycle event variants. SIEM-ready JSON events for Splunk, ELK, Datadog, Sumo. Built for **SOC 2 Type II**, **ISO 27001**, **HIPAA**, and the **OWASP Agentic Top 10**.
-
-</details>
-
-<details>
-<summary><strong>Run the proof: 45 scripted demos, 43 cost nothing</strong></summary>
-
-<br>
-
-Every claim in this README has a script that executes it against the live binary.
-
-```bash
-./demo/00-preflight.sh                    # acquire token, verify services, create admin
-./demo/01-seed-data.sh                    # populate analytics + trace data
-
-# Governance: the audit line
-./demo/governance/01-happy-path.sh        # allowed tool call, full trace chain
-./demo/governance/05-governance-denied.sh # scope check rejects out-of-role call
-./demo/governance/06-secret-breach.sh     # secret-detection blocks exfiltration
-./demo/governance/07-rate-limiting.sh     # 300 req/min per session enforced
-./demo/governance/08-hooks.sh             # PreToolUse policy-as-code
-
-# Observability: the audit table
-./demo/analytics/01-overview.sh           # conversations, costs, anomalies
-./demo/infrastructure/04-logs.sh          # structured JSON events, SIEM-ready
-
-# Scale: the overhead budget
-./demo/performance/02-load-test.sh        # 3,308 req/s burst, p99 22.7 ms
+```text
+SystemPrompt Core + your Rust extensions + your configuration
+                            ↓
+                  Your compiled deployment
+                            ↓
+                       PostgreSQL
 ```
 
-Full index: [`demo/README.md`](demo/README.md). 43 of 45 scripts are free; two cost a real model call (~$0.01 and ~$0.001).
+Core supplies shared identity, gateway, MCP, policy and audit capabilities. You supply the domain behavior. Configure agents, providers, MCP servers and scheduled work under `services/`; implement application capabilities in `extensions/`.
 
-</details>
+Extensions register at compile/link time and are discovered and dependency-validated at startup. They can contribute routes, tools, jobs, schemas and migrations. Compiled extensions are trusted code sharing the runtime process; external MCP servers can run as separate processes.
 
-<details>
-<summary><strong>The governance pipeline: synchronous checks before any tool process spawns</strong></summary>
+The host entry point stays thin because it delegates to Core. Explore the [Core API](https://docs.rs/systemprompt) and this repo's [web extension](extensions/web/README.md) to see the composition model.
 
-<br>
+## Deployment and security boundaries
 
-Every tool call passes a chain of in-process checks, synchronously, in under 5 ms. The chain is extensible; these ship built in. Every decision lands in an 18-column audit row.
+Keep governance and audit storage inside your perimeter. Air-gapped operation requires locally available models, tools and dependencies; cloud inference still sends requests to the selected provider.
 
-```
-  LLM Agent
-      │
-      ▼
-  Governance pipeline  (in-process, synchronous, <5 ms p99)
-      │
-      ├─ 1. JWT validation       (HS256, verified locally, offline-capable)
-      ├─ 2. RBAC scope check     (Admin · User · Service · A2A · MCP · Anonymous)
-      ├─ 3. Secret detection     (35+ regex: API keys, PATs, PEM, AWS prefixes)
-      ├─ 4. Blocklist            (destructive operation categories)
-      └─ 5. Rate limiting        (300 req/min per session, role multipliers)
-      │
-      ▼
-  ALLOW or DENY   →  18-column audit row, always
-      │
-      ▼ (ALLOW)
-  spawn_server()
-      │
-      ├─ decrypt secrets from ChaCha20-Poly1305 store
-      └─ inject into subprocess env vars only (never parent)
-      │
-      ▼
-  MCP tool process     credentials live here, never in the LLM context path
-```
+Tool credentials can be supplied to subprocess environments without requiring their inclusion in model context. Pattern scanning checks for recognizable credentials in governed arguments. Tool code, its outputs and its network access remain part of your security boundary.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-governance.svg">
-  <source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-governance.svg">
-  <img src="demo/recording/svg/output/dark/cap-governance.svg" alt="Governance pipeline: terminal recording" width="820">
-</picture>
+See the [deployment guides](docs/README.md) and [reproducible performance demos](demo/performance/README.md) for evaluation details.
 
-<sub>Run it: <code>./demo/governance/05-governance-denied.sh</code> · <a href="https://systemprompt.io/features/governance-pipeline">Feature detail</a></sub>
+## License and next steps
 
-</details>
+This template is [MIT licensed](LICENSE). Core is [BSL-1.1](https://github.com/systempromptio/systemprompt-core/blob/main/LICENSE), available for evaluation, testing and non-production use under its license terms. Production use requires a commercial license; each Core version converts to Apache-2.0 four years after publication.
 
-<details>
-<summary><strong>Why agents cannot leak your keys: the code, twelve lines</strong></summary>
-
-<br>
-
-Not a policy that asks agents nicely. A process boundary: the parent that owns the LLM context never writes the credential value.
-
-When a tool call passes the pipeline, `spawn_server()` decrypts credentials from the ChaCha20-Poly1305 store and injects them into the child process environment. Source: [`systemprompt-core/crates/domain/mcp/src/services/process/spawner.rs`](https://github.com/systempromptio/systemprompt-core/blob/main/crates/domain/mcp/src/services/process/spawner.rs).
-
-```rust
-let secrets = SecretsBootstrap::get()?;
-
-let mut child_command = Command::new(&binary_path);
-
-// Child env only. The parent (LLM context path) never touches the value.
-if let Some(key) = &secrets.anthropic {
-    child_command.env("ANTHROPIC_API_KEY", key);
-}
-if let Some(key) = &secrets.github {
-    child_command.env("GITHUB_TOKEN", key);
-}
-
-// Detach; parent forgets the child after spawn.
-let child = child_command.spawn()?;
-std::mem::forget(child);
-```
-
-Before spawn, secret detection scans tool arguments for 35+ credential patterns. A tool call that tries to pass a secret through the context window is blocked even if the agent has scope to run the tool. The hero recording above is the scripted proof: `./demo/governance/06-secret-breach.sh`.
-
-</details>
-
-<details>
-<summary><strong>Performance: 3,308 req/s burst, p99 22.7 ms</strong></summary>
-
-<br>
-
-Governance that adds more than 1% latency gets bypassed. This one doesn't. Each request performs JWT validation, scope resolution, three rule evaluations, and an async audit write.
-
-| Metric | Result |
-|---|---|
-| Throughput | 3,308 req/s burst, sustained under 100 concurrent workers |
-| p50 latency | 13.5 ms |
-| p99 latency | 22.7 ms |
-| Added to AI response time | <1% |
-| GC pauses | Zero |
-
-Reproduce: `just benchmark`. Numbers measured on the author's laptop.
-
-</details>
-
-<details>
-<summary><strong>Your first five minutes: admin UI, audit trace, live denial</strong></summary>
-
-<br>
-
-- **http://localhost:8080**: admin UI, live audit table, session viewer.
-- **`systemprompt analytics overview`**: conversations, tool calls, costs in microdollars, anomalies flagged above 2x/3x of rolling average.
-- **`systemprompt infra logs audit <request-id> --full`**: the full trace for any request: identity, scope, rule evaluations, tool call, model output, cost. One query, one row, one answer.
-- **Point Claude Code, Claude Desktop, or any MCP client at it.** Permissions follow the user, not the client. Try to exfiltrate a key through a tool argument and watch the secret-detection layer deny it before the tool process spawns.
-- **`./demo/governance/06-secret-breach.sh`**: the scripted version of that denial, recorded above.
-
-</details>
-
-<details>
-<summary><strong>Configuration & CLI: everything is a YAML diff, every task has a verb</strong></summary>
-
-<br>
-
-Runtime configuration is flat YAML under `services/`, loaded through `services/config/config.yaml`. Unknown keys fail loudly (`#[serde(deny_unknown_fields)]`). No database-stored config, no admin UI required. Every change is a diff.
-
-```
-services/
-  config/config.yaml        Root aggregator
-  agents/<id>.yaml          Agent: scope, model, tool access
-  mcp/<name>.yaml           MCP server: OAuth2 config, scopes
-  skills/<id>.yaml          Skill: config + markdown instruction body
-  plugins/<name>.yaml       Plugin bindings (references agents, skills, MCP)
-  ai/config.yaml            AI provider config (Anthropic, OpenAI, Gemini)
-  scheduler/config.yaml     Background job schedule
-  web/config.yaml           Web frontend, navigation, theme
-  content/config.yaml       Content sources and indexing
-```
-
-Eight CLI domains cover every operational surface. No dashboard required for any task.
-
-| Domain | Purpose |
-|---|---|
-| `core` | Skills, content, files, contexts, plugins, hooks, artifacts |
-| `infra` | Services, database, jobs, logs |
-| `admin` | Users, agents, config, setup, session, rate limits |
-| `cloud` | Auth, deploy, sync, secrets, tenant, domain |
-| `analytics` | Overview, conversations, agents, tools, requests, sessions, content, traffic, costs |
-| `web` | Content types, templates, assets, sitemap, validate |
-| `plugins` | Extensions, MCP servers, capabilities |
-| `build` | Build core workspace and MCP extensions |
-
-</details>
-
-<details>
-<summary><strong>More recordings: infrastructure, integrations, analytics, agents, compliance</strong></summary>
-
-<br>
-
-Each recording is a live capture of the named script running against the binary.
-
-**Infrastructure**: one binary, one process, one database. Same artifact runs laptop to air-gap.
-
-<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/infra-self-hosted.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/infra-self-hosted.svg"><img src="demo/recording/svg/output/dark/infra-self-hosted.svg" alt="Self-hosted deployment" width="820"></picture>
-
-<sub>All data on your infrastructure, zero outbound telemetry · <code>./demo/infrastructure/01-services.sh</code> · <a href="https://systemprompt.io/features/self-hosted-ai-platform">Feature</a></sub>
-
-<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/infra-deploy-anywhere.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/infra-deploy-anywhere.svg"><img src="demo/recording/svg/output/dark/infra-deploy-anywhere.svg" alt="Deploy anywhere" width="820"></picture>
-
-<sub>Profile YAML promotes environments without rebuilding · <code>./demo/cloud/01-cloud-overview.sh</code> · <a href="https://systemprompt.io/features/deploy-anywhere">Feature</a></sub>
-
-<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/infra-control-plane.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/infra-control-plane.svg"><img src="demo/recording/svg/output/dark/infra-control-plane.svg" alt="Unified control plane" width="820"></picture>
-
-<sub>Every operational surface has a CLI verb · <code>./demo/infrastructure/03-jobs.sh</code> · <a href="https://systemprompt.io/features/unified-control-plane">Feature</a></sub>
-
-<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/infra-open-standards.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/infra-open-standards.svg"><img src="demo/recording/svg/output/dark/infra-open-standards.svg" alt="Open standards" width="820"></picture>
-
-<sub>MCP, OAuth 2.0, PostgreSQL, Git · zero proprietary protocols · <code>./demo/mcp/01-mcp-servers.sh</code> · <a href="https://systemprompt.io/features/no-vendor-lock-in">Feature</a></sub>
-
----
-
-**MCP governance, analytics, closed-loop agents, compliance.**
-
-<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-mcp.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-mcp.svg"><img src="demo/recording/svg/output/dark/cap-mcp.svg" alt="MCP governance" width="820"></picture>
-
-<sub>Each MCP server is an isolated OAuth2 resource server with per-server scope validation · <code>./demo/mcp/02-mcp-access-tracking.sh</code> · <a href="https://systemprompt.io/features/mcp-governance">Feature</a></sub>
-
-<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-analytics.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-analytics.svg"><img src="demo/recording/svg/output/dark/cap-analytics.svg" alt="Analytics and observability" width="820"></picture>
-
-<sub>Nine analytics subcommands, anomaly detection, SIEM-ready JSON · <code>./demo/analytics/01-overview.sh</code> · <a href="https://systemprompt.io/features/analytics-and-observability">Feature</a></sub>
-
-<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-agents.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-agents.svg"><img src="demo/recording/svg/output/dark/cap-agents.svg" alt="Closed-loop agents" width="820"></picture>
-
-<sub>Agents query their own error rate, cost, and latency via MCP tools and adjust · <code>./demo/agents/04-agent-tracing.sh</code> · <a href="https://systemprompt.io/features/closed-loop-agents">Feature</a></sub>
-
-<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/cap-compliance.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/cap-compliance.svg"><img src="demo/recording/svg/output/dark/cap-compliance.svg" alt="Compliance" width="820"></picture>
-
-<sub>Tiered retention, 10 identity lifecycle events, SOC 2 / ISO 27001 / HIPAA / OWASP Agentic Top 10 · <code>./demo/users/03-session-management.sh</code> · <a href="https://systemprompt.io/features/compliance">Feature</a></sub>
-
----
-
-**Integrations**: any provider, web publisher, extensions.
-
-<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-any-agent.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-any-agent.svg"><img src="demo/recording/svg/output/dark/int-any-agent.svg" alt="Any AI agent" width="820"></picture>
-
-<sub>Anthropic, OpenAI, Gemini swap at the profile level · cost attribution in integer microdollars · <code>./demo/agents/01-list-agents.sh</code> · <a href="https://systemprompt.io/features/any-ai-agent">Feature</a></sub>
-
-<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-web-publisher.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-web-publisher.svg"><img src="demo/recording/svg/output/dark/int-web-publisher.svg" alt="Web server & publisher" width="820"></picture>
-
-<sub>Same binary serves your website, blog, and docs · systemprompt.io runs on this binary · <code>./demo/web/01-web-config.sh</code> · <a href="https://systemprompt.io/features/web-publisher">Feature</a></sub>
-
-<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-extensions.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-extensions.svg"><img src="demo/recording/svg/output/dark/int-extensions.svg" alt="Extensible architecture" width="820"></picture>
-
-<sub>Your code compiles into your binary via the <code>Extension</code> trait · no runtime reflection · <code>./demo/skills/04-plugin-management.sh</code> · <a href="https://systemprompt.io/features/extensible-architecture">Feature</a></sub>
-
-<picture><source media="(prefers-color-scheme: dark)" srcset="demo/recording/svg/output/dark/int-benchmark.svg"><source media="(prefers-color-scheme: light)" srcset="demo/recording/svg/output/light/int-benchmark.svg"><img src="demo/recording/svg/output/dark/int-benchmark.svg" alt="Governance benchmark" width="820"></picture>
-
-<sub>3,308 req/s burst, p99 22.7 ms · <code>just benchmark</code></sub>
-
-</details>
-
-<details>
-<summary><strong>Claude for Work, on your infrastructure</strong></summary>
-
-<br>
-
-Claude for Work ships with extension points for inference, identity, and audit. Point them at this binary and every prompt, tool call, and cost line lands in a Postgres row you own.
-
-```
-  Developer Machine              Enterprise Gateway              Upstream Inference
-  (Pi, Claude Code, curl)        (this binary, your VPC)         (pluggable)
-  ───────────────── ──────────▶  ─────────────────────  ──────▶  ─────────────────
-  Access token                   /v1/messages                    Anthropic direct
-  Managed MCP list               Governance pipeline             Bedrock / Vertex
-  Signed plugins                 Audit to Postgres               OpenAI / Groq
-                                                                 On-prem vLLM / Qwen
-                                                                 Air-gap capable
-```
-
-The same governance pipeline described above enforces scope, secrets, policy, and quota before a byte leaves your network, in-process against a cached entitlement table: p99 **22.7 ms**, <1% of AI response time.
-
-### How it compares
-
-| Dimension | Claude Enterprise | Cloud Custom | + systemprompt.io |
-|---|---|---|---|
-| **Data residency** | Anthropic infra | Cloud region | Your datacenter or air-gap |
-| **Audit trail** | Anthropic-held | OTLP only | Prompt → tool → MCP → cost in your Postgres |
-| **User revocation** | SSO / seat removal | Cloud IAM | IDP disable; next TTL fails closed |
-| **Inference provider** | Anthropic only | Bedrock / Vertex (Claude) | Any `/v1/messages`, per-call routing |
-| **MCP allowlist** | Anthropic-curated | Device-local config | One registry, per-principal policy |
-| **Plugin catalogue** | Anthropic-hosted | Files on disk | Signed, scoped, versioned distribution |
-
-Any client that speaks the Anthropic Messages API points at this gateway with an access token issued on `/admin/access/tokens`. Full walkthrough: [examples/pi/](examples/pi/).
-
-</details>
-
-<details>
-<summary><strong>Route any model anywhere: the `/v1/messages` gateway</strong></summary>
-
-<br>
-
-`POST /v1/messages` at the Anthropic wire format. Every inference request flows through the same governance pipeline as every tool call. A route maps a requested model pattern to a provider you declared:
-
-```yaml
-gateway:
-  enabled: true
-  default_provider: anthropic
-  routes:
-    - model_pattern: "claude-*"
-      provider: anthropic
-    - model_pattern: "MiniMax-*"
-      provider: minimax
-```
-
-Routes evaluate in order; first match wins. Anthropic is a transparent byte proxy; OpenAI-compatible providers get full request/response/SSE conversion. Provider declarations, CLI route configuration, route access control, and the extensible provider registry: [docs/gateway-routes.md](docs/gateway-routes.md).
-
-</details>
-
-<details>
-<summary><strong>Prerequisites</strong></summary>
-
-<br>
-
-| Requirement | Purpose | Install |
-|---|---|---|
-| **Docker** | PostgreSQL runs in a container; `just setup-local` starts it | [docker.com](https://docs.docker.com/get-docker/) |
-| **Rust 1.75+** | Compiles the workspace binary | [rustup.rs](https://rustup.rs/) |
-| **`just`** | Task runner | [just.systems](https://just.systems/) |
-| **`jq`, `yq`** | JSON and YAML processing in the scripts | `brew install jq yq` / `apt install jq yq` |
-| **AI API keys** | At least one of Anthropic, OpenAI, or Gemini; the first key you supply becomes the default provider | Provider dashboards |
-| **Ports 8080 + 5432** | HTTP + PostgreSQL | Free on localhost |
-
-</details>
-
----
-
-## Upgrading core
-
-Two ways to depend on `systemprompt-core`, chosen by the `[patch.crates-io]`
-blocks in `Cargo.toml` and `tests/Cargo.toml`:
-
-```bash
-# Published release from crates.io — patch blocks commented out (the default).
-just core-bump X.Y.Z
-
-# Local sibling checkout, for a core change that is not released yet —
-# patch blocks uncommented in BOTH manifests, pins set to the core version.
-just build
-```
-
-Either way the core version pin in both manifests must match the version you
-are building against: with a stale pin the patch is dropped **silently** and
-you keep building the published crates while believing you are testing local
-core. Core ships its own migrations, so run the new binary once against your
-database after a bump.
-
----
-
-## License
-
-**This template** is [MIT](LICENSE). Fork it, modify it, use it however you like.
-
-**[systemprompt-core](https://github.com/systempromptio/systemprompt-core)** is [BSL-1.1](https://github.com/systempromptio/systemprompt-core/blob/main/LICENSE): free for evaluation, testing, and non-production use. Production use requires a commercial license. Each version converts to Apache 2.0 four years after publication. Licensing enquiries: [ed@systemprompt.io](mailto:ed@systemprompt.io).
-
----
-
-<div align="center">
-
-[![systemprompt.io](https://img.shields.io/badge/systemprompt.io-2b6cb0?style=for-the-badge)](https://systemprompt.io) &nbsp; [![Core](https://img.shields.io/badge/systemprompt--core-2b6cb0?style=for-the-badge)](https://github.com/systempromptio/systemprompt-core) &nbsp; [![Documentation](https://img.shields.io/badge/documentation-16a34a?style=for-the-badge)](https://systemprompt.io/documentation/) &nbsp; [![Guides](https://img.shields.io/badge/guides-f97316?style=for-the-badge)](https://systemprompt.io/guides) &nbsp; [![Discord](https://img.shields.io/badge/discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/wkAbSuPWpr)
-
-<sub>You can rent your AI control plane, or you can compile it. Clone, build, run the 45 demos. Then decide.</sub>
-
-</div>
+[Evaluate the hosted demo](https://demo.systemprompt.io) · [Inspect Core](https://github.com/systempromptio/systemprompt-core) · [Discuss production licensing](mailto:ed@systemprompt.io)

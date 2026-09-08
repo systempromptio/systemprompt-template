@@ -2,13 +2,14 @@
 //!
 //! Three helpers:
 //! - [`get_request_stats`] — overall KPI strip (rate / latency percentiles /
-//!   cost / error rate / pre-flight deny rate over a [`TimeRange`]).
+//!   cost / error rate / pre-flight deny rate over a `TimeRange`).
 //! - [`list_latency_histogram`] — bucketed at fixed bin edges.
 //! - [`list_request_timeseries`] — 24-bucket traffic / error / cost series.
 
 use serde::Serialize;
 use sqlx::PgPool;
 
+use crate::repositories::scope::SubjectScope;
 use crate::util::time_range::TimeRange;
 
 pub const LATENCY_BIN_EDGES_MS: [f64; 8] =
@@ -31,6 +32,7 @@ pub struct RequestStats {
 pub async fn get_request_stats(
     pool: &PgPool,
     range: TimeRange,
+    scope: &SubjectScope,
 ) -> Result<RequestStats, sqlx::Error> {
     let row = sqlx::query!(
         r#"WITH
@@ -38,6 +40,7 @@ pub async fn get_request_stats(
                 SELECT id, status, latency_ms, cost_microdollars, session_id, created_at
                 FROM ai_requests
                 WHERE created_at >= $1 AND created_at < $2
+             AND ($3::TEXT[] IS NULL OR ai_requests.user_id = ANY($3))
             ),
             with_deny AS (
                 SELECT DISTINCT r.session_id
@@ -64,6 +67,7 @@ pub async fn get_request_stats(
         FROM requests"#,
         range.from,
         range.to,
+        scope.as_sql(),
     )
     .fetch_one(pool)
     .await?;
@@ -109,6 +113,7 @@ pub struct LatencyBucket {
 pub async fn list_latency_histogram(
     pool: &PgPool,
     range: TimeRange,
+    scope: &SubjectScope,
 ) -> Result<Vec<LatencyBucket>, sqlx::Error> {
     let edges = &LATENCY_BIN_EDGES_MS;
     let edges_pg: Vec<f64> = edges.to_vec();
@@ -120,11 +125,13 @@ pub async fn list_latency_histogram(
           FROM ai_requests
           WHERE created_at >= $2 AND created_at < $3
             AND latency_ms IS NOT NULL
+             AND ($4::TEXT[] IS NULL OR ai_requests.user_id = ANY($4))
           GROUP BY 1
           ORDER BY 1"#,
         &edges_pg,
         range.from,
         range.to,
+        scope.as_sql(),
     )
     .fetch_all(pool)
     .await?;
@@ -176,6 +183,7 @@ const TIME_BUCKETS: i32 = 24;
 pub async fn list_request_timeseries(
     pool: &PgPool,
     range: TimeRange,
+    scope: &SubjectScope,
 ) -> Result<Vec<TimeBucket>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"WITH params AS (
@@ -205,6 +213,7 @@ pub async fn list_request_timeseries(
             FROM ai_requests
             WHERE created_at >= (SELECT lo FROM params)
               AND created_at <  (SELECT hi FROM params)
+              AND ($4::TEXT[] IS NULL OR ai_requests.user_id = ANY($4))
           ),
           summed AS (
             SELECT
@@ -229,6 +238,7 @@ pub async fn list_request_timeseries(
         range.from,
         range.to,
         TIME_BUCKETS,
+        scope.as_sql(),
     )
     .fetch_all(pool)
     .await?;

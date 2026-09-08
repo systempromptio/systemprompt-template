@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE bridge_exchange_codes SET consumed_at = NOW()\n         WHERE user_id = $1 AND consumed_at IS NULL AND expires_at > NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "404bdbe32a9b9c708f2b3712d1378db54a424f3856788a28b0b272ac1311184f"
+}

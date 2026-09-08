@@ -6,7 +6,6 @@ use std::sync::Arc;
 use sqlx::PgPool;
 use systemprompt_security::authz::{Access, AccessControlRepository, EntityKind, RuleType};
 
-use crate::handlers::shared;
 use crate::repositories;
 use crate::repositories::analytics::requests::{
     RequestFilter, RequestPage, RequestSortSpec, list_requests_paged,
@@ -14,7 +13,7 @@ use crate::repositories::analytics::requests::{
 use crate::util::time_range::{TimeRangeQuery, parse_time_range};
 
 use super::view::{ModelRowView, UsageRowView, UsageTotalsView};
-use crate::handlers::ssr::format::format_cost;
+use crate::handlers::ssr::format::{format_cost, local_time};
 
 const USAGE_ROWS: i64 = 25;
 
@@ -22,8 +21,7 @@ pub(super) async fn load_model_rows(
     pool: &PgPool,
     selected_user: Option<&str>,
 ) -> Result<Vec<ModelRowView>, crate::error::AdminHtmlError> {
-    let profile_path = shared::get_profile_path().map_err(crate::error::AdminHtmlError::from)?;
-    let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
+    let cfg = repositories::config::gateway::get_gateway_config()
         .map_err(|e| crate::error::AdminHtmlError::internal(e.to_string()))?;
 
     let repo = AccessControlRepository::from_pool(Arc::new(pool.clone()));
@@ -54,6 +52,7 @@ pub(super) async fn load_model_rows(
             deny_rule_id: deny_rule.map(|r| r.id.to_string()).unwrap_or_default(),
             denied,
             status_label: if denied { "Disabled" } else { "Enabled" },
+            status_tone: if denied { "err" } else { "ok" },
             route_id: route.id,
         });
     }
@@ -106,12 +105,14 @@ pub(super) async fn load_usage(
             if r.status != "completed" {
                 denied_requests += 1;
             }
+            let is_completed = r.status == "completed";
             UsageRowView {
                 request_id: r.request_id.to_string(),
-                created_at: r.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+                created_at: local_time(r.created_at),
                 model: r.model,
                 provider: r.provider,
-                is_completed: r.status == "completed",
+                is_completed,
+                status_tone: if is_completed { "ok" } else { "err" },
                 status: r.status,
                 tokens: format!(
                     "{}/{}",

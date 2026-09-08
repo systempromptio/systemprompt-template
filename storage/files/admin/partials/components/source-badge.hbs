@@ -1,0 +1,7 @@
+{{!--
+  Where a membership row came from. Directory rows are replaced wholesale at
+  every sign-in, so this badge is what explains a missing Remove control.
+
+  Invoke as: {{> components/source-badge this}}
+--}}
+<span class="sp-badge sp-badge-{{color}} sp-source-badge" title="{{title}}" data-source="{{source}}">{{label}}</span>

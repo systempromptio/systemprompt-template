@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT embedding::text AS \"embedding!\" FROM knowledge_embedding_cache\n           WHERE embed_model = $1 AND text_hash = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "embedding!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "4b9b85ebfdea396b81eb5c621732005c0bc686a004d89d0608dcba1958cdbbed"
+}

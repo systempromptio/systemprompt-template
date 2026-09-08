@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_drive_sources SET requested=requested+1,force_requested=TRUE WHERE source_type=$1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6041707eaedd1fb67bcaf8c7bec4944de3fbe20de1b03baac618b508fe3be27c"
+}

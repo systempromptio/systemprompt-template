@@ -8,6 +8,7 @@ PUBLIC_IP=$(curl -sf http://169.254.169.254/metadata/v1/interfaces/public/0/ipv4
 cat > "$ENV_FILE" <<ENV
 POSTGRES_PASSWORD=$(openssl rand -hex 24)
 EXTERNAL_URL=http://${PUBLIC_IP}:8080
+ADMIN_EMAIL=
 ANTHROPIC_API_KEY=
 OPENAI_API_KEY=
 GEMINI_API_KEY=

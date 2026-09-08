@@ -1,0 +1,85 @@
+@layer components {
+
+.sp-topbar__nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--sp-text-secondary);
+    cursor: pointer;
+    padding: var(--sp-space-2);
+    border-radius: var(--sp-radius-sm);
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--sp-duration-fast), background var(--sp-duration-fast);
+    flex-shrink: 0;
+}
+
+.sp-topbar__nav-toggle:hover {
+    background: var(--sp-accent-dim);
+    color: var(--sp-text-primary);
+}
+
+.sp-topbar__nav-toggle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--sp-bg-canvas), 0 0 0 4px var(--sp-accent);
+}
+
+.sp-sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: transparent;
+    z-index: var(--sp-z-sidebar);
+    transition: background var(--sp-duration-slow) var(--sp-ease-in-out);
+}
+
+.sp-sidebar-overlay.is-open {
+    display: block;
+    background: var(--sp-overlay-light);
+    backdrop-filter: blur(2px);
+}
+
+.sp-sidebar-close-btn {
+    display: none;
+    position: absolute;
+    top: var(--sp-space-3);
+    right: var(--sp-space-3);
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: var(--sp-sidebar-control-bg);
+    color: var(--sp-sidebar-text);
+    border-radius: var(--sp-radius-sm);
+    cursor: pointer;
+    font-size: var(--sp-text-md);
+    line-height: 1;
+    z-index: var(--sp-z-sticky);
+    align-items: center;
+    justify-content: center;
+    transition: background var(--sp-duration-fast), color var(--sp-duration-fast);
+}
+
+.sp-sidebar-close-btn:hover {
+    background: var(--sp-sidebar-control-bg-hover);
+    color: var(--sp-sidebar-text-hover);
+}
+
+.sp-sidebar-close-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--sp-sidebar-bg), 0 0 0 4px var(--sp-sidebar-active-color);
+}
+
+.sp-admin-sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--sp-sidebar-scrollbar-thumb) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sp-sidebar-overlay {
+        transition: none;
+    }
+}
+
+}

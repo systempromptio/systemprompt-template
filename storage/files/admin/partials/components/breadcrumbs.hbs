@@ -2,9 +2,9 @@
   Breadcrumb trail. Invoke as: {{> components/breadcrumbs crumbs=breadcrumbs}}
   crumbs: array of {label, href?} — last item is the current page (no href).
 --}}
-<nav class="breadcrumbs" aria-label="Breadcrumb">
+<nav class="sp-breadcrumbs" aria-label="Breadcrumb">
     {{#each crumbs}}
-        {{#if @first}}{{else}}<span class="breadcrumbs__sep" aria-hidden="true">›</span>{{/if}}
+        {{#if @first}}{{else}}<span class="sp-breadcrumbs__sep" aria-hidden="true">›</span>{{/if}}
         {{#if this.href}}
             <a href="{{this.href}}">{{this.label}}</a>
         {{else}}

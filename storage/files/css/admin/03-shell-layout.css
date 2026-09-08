@@ -1,0 +1,70 @@
+@layer base {
+
+/* No containment on the main column. `contain: layout` makes an element the
+   containing block for its position:fixed descendants, so a drawer parked
+   off-canvas at translateX(100%) kept counting toward the column's scroll
+   width — and the page then reported a sideways scroll pointing at a table that
+   fitted exactly. A fixed panel belongs to the viewport, which is what it was
+   written against.
+
+   The gutter is padding on .sp-shell__main itself, not on each child. Putting it on
+   the children made every card paint its border and shadow at the full page
+   width while its content started a gutter inside, which is what produced the
+   mid-block shadow on the governance pages, and it needed a hand-written
+   exemption for every child that wanted to bleed. */
+
+.sp-shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--sp-bg-base);
+    color: var(--sp-text-primary);
+    font-family: var(--sp-font-family);
+    font-size: var(--sp-text-base);
+    line-height: var(--sp-leading-normal);
+}
+
+.sp-shell__main {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--sp-bg-main-gradient);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding-inline: var(--sp-gutter);
+}
+
+.sp-shell__main > * {
+    flex: 0 0 auto;
+    position: relative;
+    min-width: 0;
+    z-index: var(--sp-z-sticky);
+}
+
+.sp-shell__main > .sp-admin-footer {
+    margin-top: auto;
+}
+
+.sp-u-bleed {
+    margin-inline: calc(-1 * var(--sp-gutter));
+}
+
+}
+
+@layer responsive {
+
+@media (max-width: 48rem) {
+    .sp-shell {
+        display: block;
+        height: auto;
+        overflow-y: auto;
+    }
+    .sp-shell__main {
+        overflow-x: hidden;
+        max-width: 100vw;
+    }
+}
+
+}

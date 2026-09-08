@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE approval_requests\n            SET status = $2, approver_id = $3, approver_username = $4,\n                decided_at = NOW(), decision_note = $5\n          WHERE call_id = $1 AND status = 'pending'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f32ae6a2178ad086e3d84720093e9194721dc746f07713de2aeea96b6fc43b86"
+}

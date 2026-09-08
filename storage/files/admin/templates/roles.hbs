@@ -1,0 +1,163 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="What each role opens, and who holds it. A grant from the directory is withdrawn in the directory; only a grant made by hand can be revoked here."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/access-control">Access control</a>
+        {{#if can_write}}
+        <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="grant-role">Grant a role</button>
+        {{/if}}
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        {{#each facts}}<span><strong>{{this.value}}</strong> {{this.label}}</span>{{/each}}
+        {{/inline}}
+    {{/components/page-header}}
+
+    <section class="sp-kpi-grid" aria-label="Roles">
+        {{#each cards}}
+        {{> components/kpi label=this.label value=this.member_count note=this.note tone=this.tone href=this.href active=this.active}}
+        {{/each}}
+    </section>
+
+    {{#> components/section title="Who holds what" count=member_total note="One row per person. A coloured role was granted by hand and can be revoked here; a grey one comes from the directory."}}
+        {{#*inline "section_actions"}}
+        {{#if filters_applied}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{clear_url}}">Clear filters</a>{{/if}}
+        {{/inline}}
+    {{/components/section}}
+
+    <form class="sp-toolbar sp-toolbar--fields" method="get" action="/admin/roles" role="search" aria-label="Filter people by role">
+        <div class="sp-toolbar__field">
+            <label class="sp-toolbar__field-label" for="roles-filter-role">Role</label>
+            <select class="sp-select" id="roles-filter-role" name="role">
+            {{#each role_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+            </select>
+        </div>
+        <div class="sp-toolbar__field">
+            <label class="sp-toolbar__field-label" for="roles-filter-source">Grant source</label>
+            <select class="sp-select" id="roles-filter-source" name="source">
+            {{#each source_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+            </select>
+        </div>
+        <div class="sp-toolbar__field">
+            <label class="sp-toolbar__field-label" for="roles-filter-status">Account status</label>
+            <select class="sp-select" id="roles-filter-status" name="status">
+            {{#each status_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+            </select>
+        </div>
+        <label class="sp-u-sr-only" for="roles-filter-q">Search people</label>
+        <div class="sp-toolbar__search">
+            <input class="sp-search-input" id="roles-filter-q" type="search" name="q" value="{{search}}" placeholder="Name or email">
+        </div>
+        <div class="sp-toolbar__actions">
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--secondary">Apply</button>
+        </div>
+    </form>
+
+    {{#if members}}
+    {{#> components/table caption="Who holds which roles, one row per person" pagination=pagination modifier="sp-p-roles__table"}}
+        <thead><tr>
+            {{#each sort_headers}}{{> components/sort-header this}}{{/each}}
+            <th class="sp-col-status">Status</th>
+            <th class="sp-table__cell--actions sp-col-rowactions"><span class="sp-u-sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody>
+        {{#each members}}
+        <tr data-user-id="{{user_id}}">
+            <td>
+                <a class="sp-user-cell" href="{{href}}">
+                    <span class="sp-avatar sp-avatar-sm" aria-hidden="true">{{this.initials}}</span>
+                    <span class="sp-user-cell-text">
+                        <span class="sp-user-cell-name">{{display_name}}</span>
+                        <span class="sp-user-cell-email">{{#if email}}{{email}}{{else}}{{user_id}}{{/if}}</span>
+                    </span>
+                </a>
+            </td>
+            <td>
+                <span class="sp-p-roles__pills">
+                {{#each roles}}<span class="sp-badge sp-badge--{{this.tone}}{{#if this.active}} is-active{{/if}}" data-role="{{this.role}}">{{this.label}}</span>{{/each}}
+                </span>
+            </td>
+            <td class="sp-table__cell--num sp-u-num">{{formatNumber requests_30d}}</td>
+            <td class="sp-table__cell--num sp-u-num sp-u-mono">{{formatUsd cost_30d_microdollars}}</td>
+            <td>{{> components/badge tone=status_tone text=status}}</td>
+            <td class="sp-table__cell--actions">
+                {{#if ../can_write}}
+                {{#if has_manual}}
+                <span class="sp-p-roles__revokes">
+                {{#each manual_roles}}
+                <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="revoke-role" data-user-id="{{../user_id}}" data-role="{{this.role}}" data-person="{{../display_name}}">Revoke {{this.label}}</button>
+                {{/each}}
+                </span>
+                {{else}}
+                <span class="sp-u-text-muted">Directory</span>
+                {{/if}}
+                {{/if}}
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No one matches" message="No one holds a role matching these filters. Clear them to see the whole estate."}}
+    {{/if}}
+
+    {{#> components/section title="Role entitlements" count=entitlement_total note="Every access-control rule written at the role band. Edit them in Access control."}}
+        {{#*inline "section_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/access-control?subject_kind=role">Open in Access control</a>
+        {{/inline}}
+    {{/components/section}}
+
+    {{#if entitlements}}
+    {{#> components/table caption="Entities each role reaches" modifier="sp-p-roles__grants"}}
+        <thead><tr>
+            <th class="sp-col-role">Role</th>
+            <th class="sp-col-kind">Entity kind</th>
+            <th>Entity</th>
+            <th class="sp-col-access">Access</th>
+            <th class="sp-col-default">Entity default</th>
+        </tr></thead>
+        <tbody>
+        {{#each entitlements}}
+        <tr>
+            <td>{{> components/badge tone="info" text=role_label}}</td>
+            <td>{{entity_type_label}}</td>
+            <td class="sp-u-mono"><a href="{{href}}">{{entity_id}}</a></td>
+            <td>{{> components/badge tone=access_tone text=access}}</td>
+            <td class="sp-u-text-muted">{{default_label}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No role entitlements" message="Nothing is granted at the role band. Entitlement here comes from the group and project bands instead."}}
+    {{/if}}
+
+    {{#if can_write}}
+    <dialog class="sp-dialog" data-dialog="grant" aria-labelledby="roles-grant-title">
+        <h2 id="roles-grant-title">Grant a role</h2>
+        <label class="sp-p-roles__field">
+            <span>Person</span>
+            <input class="sp-search-input" type="search" data-roles="grant-search" placeholder="Search by name or email" autocomplete="off">
+        </label>
+        <ul class="sp-p-roles__results" role="listbox" aria-label="Matching people" data-roles="grant-results"></ul>
+        <label class="sp-p-roles__field">
+            <span>Role</span>
+            <select class="sp-select" data-roles="grant-role">
+                {{#each known_roles}}{{#if value}}<option value="{{value}}">{{label}}</option>{{/if}}{{/each}}
+            </select>
+        </label>
+        <p class="sp-p-roles__error" data-roles="grant-error" hidden></p>
+        <div class="sp-p-roles__dialog-actions">
+            <button type="button" class="sp-btn sp-btn--primary" data-action="grant-confirm">Grant</button>
+            <button type="button" class="sp-btn sp-btn--outline" data-action="dialog-close">Cancel</button>
+        </div>
+    </dialog>
+
+    {{/if}}
+
+    <p role="status" class="sp-p-roles__toast" data-roles="toast" hidden></p>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-roles.js?v={{css_version}}"></script>
+    {{/inline}}
+{{/layout}}

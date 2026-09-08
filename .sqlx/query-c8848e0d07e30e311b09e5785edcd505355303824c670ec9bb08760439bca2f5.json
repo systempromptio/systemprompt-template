@@ -1,0 +1,116 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COUNT(*) FILTER (WHERE r.created_at >= $1 AND r.created_at < $2)::BIGINT\n                AS \"requests!\",\n            COUNT(*) FILTER (WHERE r.created_at >= $3 AND r.created_at < $1)::BIGINT\n                AS \"prev_requests!\",\n            COALESCE(SUM(r.cost_microdollars)\n                FILTER (WHERE r.created_at >= $1 AND r.created_at < $2), 0)::BIGINT\n                AS \"cost!\",\n            COALESCE(SUM(r.cost_microdollars)\n                FILTER (WHERE r.created_at >= $3 AND r.created_at < $1), 0)::BIGINT\n                AS \"prev_cost!\",\n            COUNT(DISTINCT r.user_id) FILTER (WHERE r.created_at >= $1 AND r.created_at < $2)::BIGINT\n                AS \"active_users!\",\n            COUNT(DISTINCT r.user_id) FILTER (WHERE r.created_at >= $3 AND r.created_at < $1)::BIGINT\n                AS \"prev_active_users!\",\n            COALESCE(percentile_cont(0.5) WITHIN GROUP (ORDER BY r.latency_ms)\n                FILTER (WHERE r.created_at >= $1 AND r.created_at < $2\n                          AND r.latency_ms IS NOT NULL), 0)::BIGINT\n                AS \"p50!\",\n            COALESCE(percentile_cont(0.5) WITHIN GROUP (ORDER BY r.latency_ms)\n                FILTER (WHERE r.created_at >= $3 AND r.created_at < $1\n                          AND r.latency_ms IS NOT NULL), 0)::BIGINT\n                AS \"prev_p50!\",\n            COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY r.latency_ms)\n                FILTER (WHERE r.created_at >= $1 AND r.created_at < $2\n                          AND r.latency_ms IS NOT NULL), 0)::BIGINT\n                AS \"p95!\",\n            COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY r.latency_ms)\n                FILTER (WHERE r.created_at >= $3 AND r.created_at < $1\n                          AND r.latency_ms IS NOT NULL), 0)::BIGINT\n                AS \"prev_p95!\",\n            COUNT(*) FILTER (WHERE r.created_at >= $1 AND r.created_at < $2\n                AND r.status = 'failed')::BIGINT\n                AS \"errors!\",\n            COUNT(*) FILTER (WHERE r.created_at >= $3 AND r.created_at < $1\n                AND r.status = 'failed')::BIGINT\n                AS \"prev_errors!\",\n            COUNT(*) FILTER (WHERE r.created_at >= $1 AND r.created_at < $2\n                AND r.status = 'rejected')::BIGINT\n                AS \"denied!\",\n            COUNT(*) FILTER (WHERE r.created_at >= $3 AND r.created_at < $1\n                AND r.status = 'rejected')::BIGINT\n                AS \"prev_denied!\"\n        FROM ai_requests r\n        WHERE NOT r.synthetic\n          AND r.created_at >= $3\n          AND r.created_at < $2\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "prev_requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "prev_cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "active_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "prev_active_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "p50!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "prev_p50!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "p95!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "prev_p95!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "prev_errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "denied!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "prev_denied!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "c8848e0d07e30e311b09e5785edcd505355303824c670ec9bb08760439bca2f5"
+}

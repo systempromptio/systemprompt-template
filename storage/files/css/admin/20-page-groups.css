@@ -1,0 +1,187 @@
+@layer components {
+
+.sp-group-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    color: var(--sp-text-primary);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.sp-group-cell:hover .sp-group-cell__name {
+    text-decoration: underline;
+}
+
+.sp-group-cell__name {
+    font-weight: 600;
+}
+
+.sp-group-member-count {
+    display: block;
+    font-variant-numeric: tabular-nums;
+}
+
+.is-unassigned {
+    box-shadow: inset 3px 0 0 0 var(--sp-warning);
+}
+
+.sp-group-chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1);
+}
+
+.sp-group-chips__chip {
+    padding: 0.1rem var(--sp-space-2);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-tertiary);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-xs);
+    white-space: nowrap;
+}
+
+.sp-share-bar {
+    display: inline-block;
+    inline-size: 5rem;
+    block-size: 0.5rem;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-tertiary);
+    overflow: hidden;
+    vertical-align: middle;
+}
+
+.sp-share-bar__fill {
+    --sp-share-pct: 0%;
+    display: block;
+    block-size: 100%;
+    inline-size: var(--sp-share-pct);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-accent-fill);
+}
+
+.sp-source-badge {
+    margin-inline-end: var(--sp-space-1);
+}
+
+.sp-member-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    justify-content: flex-end;
+}
+
+.sp-member-actions__label {
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    white-space: nowrap;
+}
+
+.sp-unassigned-callout {
+    margin-block-end: var(--sp-space-6);
+    padding: var(--sp-space-4) var(--sp-space-5);
+    border-inline-start: 4px solid var(--sp-warning);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-warning);
+}
+
+.sp-unassigned-callout__title {
+    margin: 0 0 var(--sp-space-2);
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-primary);
+}
+
+.sp-unassigned-callout__body {
+    margin: 0;
+    max-inline-size: 80ch;
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+    line-height: 1.6;
+}
+
+.sp-group-panel {
+    min-inline-size: 0;
+    margin-block-end: var(--sp-space-8);
+}
+
+.sp-group-panel__note {
+    margin-block: 0 var(--sp-space-4);
+    max-inline-size: 90ch;
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    line-height: 1.6;
+}
+
+.sp-rank-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--sp-space-2);
+}
+
+.sp-group-rankings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr));
+    gap: var(--sp-space-5);
+    margin-block-end: var(--sp-space-8);
+}
+
+.sp-group-rankings .sp-group-panel {
+    margin: 0;
+    padding: var(--sp-space-5);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+}
+
+.sp-group-rankings .sp-section__title {
+    margin-block-end: var(--sp-space-4);
+}
+
+.sp-rank-list__item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 5rem 3ch;
+    align-items: center;
+    gap: var(--sp-space-3);
+    font-size: var(--sp-text-sm);
+    padding-block: var(--sp-space-2);
+    border-block-end: 1px solid var(--sp-border-subtle);
+}
+
+.sp-rank-list__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sp-text-secondary);
+}
+
+.sp-rank-list__count {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+    color: var(--sp-text-primary);
+}
+
+.sp-access-layer {
+    color: var(--sp-text-primary);
+    font-size: var(--sp-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+}
+
+@layer responsive {
+
+@media (max-width: 40rem) {
+    .sp-rank-list__item {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .sp-rank-list__item .sp-share-bar {
+        display: none;
+    }
+}
+
+}

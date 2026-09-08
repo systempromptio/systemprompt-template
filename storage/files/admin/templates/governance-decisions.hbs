@@ -1,72 +1,79 @@
 {{#> layout title=title page=page}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="Every verdict the policy chain issued in the window, newest first; a deny names the stage that stopped it."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance">Policies</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/hooks">Hooks</a>
+        {{/inline}}
+    {{/components/page-header}}
 
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="/admin/governance/policies">Policies</a>
-        <span aria-hidden="true">›</span>
-        <span aria-current="page">Decisions</span>
-    </nav>
-
-    {{> components/page-header title=hero_title subtitle=hero_subtitle}}
-
-    <section class="stats-grid-3col">
-        {{> components/stat-card label="Decisions shown" value=total}}
-        {{> components/stat-card label="Allowed" value=allowed variant="success"}}
-        {{> components/stat-card label="Denied" value=denied variant="danger"}}
+    <section class="sp-kpi-grid" aria-label="Decisions in window">
+        {{#each kpis}}
+        {{> components/kpi label=this.label value=this.value note=this.note tone=this.tone}}
+        {{/each}}
     </section>
 
-    {{#if has_chips}}
-    <div class="filter-ribbon__chips" role="list" aria-label="Active filters">
-        {{#each chips}}
-        <span class="filter-ribbon__chip" role="listitem">
-            <span class="filter-ribbon__chip-group">{{label}}</span>
-            <span class="filter-ribbon__chip-value">{{value}}</span>
-            <a class="filter-ribbon__chip-remove" href="{{remove_url}}" aria-label="Remove {{label}} filter">×</a>
-        </span>
-        {{/each}}
-        <a class="filter-ribbon__clear" href="/admin/governance/decisions">Clear all</a>
-    </div>
-    {{/if}}
+    {{> components/time-range time_range}}
+
+    <form class="sp-toolbar" method="get" action="{{base_url}}" role="search" aria-label="Filter decisions">
+        <input type="hidden" name="preset" value="{{time_range.preset}}">
+        <input type="hidden" name="from" value="{{time_range.from}}">
+        <input type="hidden" name="to" value="{{time_range.to}}">
+        <span class="sp-toolbar__count">{{total}} decisions</span>
+        <div class="sp-toolbar__field">
+            <label class="sp-toolbar__field-label" for="decisions-filter-policy">Policy</label>
+            <select class="sp-select" id="decisions-filter-policy" name="policy">
+            {{#each policy_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+            </select>
+        </div>
+        <div class="sp-toolbar__field">
+            <label class="sp-toolbar__field-label" for="decisions-filter-outcome">Outcome</label>
+            <select class="sp-select" id="decisions-filter-outcome" name="outcome">
+            {{#each outcome_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+            </select>
+        </div>
+        <label class="sp-u-sr-only" for="decisions-filter-user">User id</label>
+        <div class="sp-toolbar__search">
+            <input class="sp-search-input" id="decisions-filter-user" type="search" name="user_id" value="{{user_filter}}" placeholder="Exact user id">
+        </div>
+        <div class="sp-toolbar__actions">
+            {{#if filters_applied}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{clear_url}}">Clear</a>{{/if}}
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--secondary">Apply</button>
+        </div>
+    </form>
 
     {{#if has_rows}}
-    {{#> components/data-table}}
+    {{#> components/table caption="Governance decisions in the window" modifier="sp-p-decisions__table"}}
         <thead><tr>
-            <th class="col-date">Time</th>
-            <th class="col-status">Policy</th>
-            <th class="col-status">Decision</th>
-            <th>Tool</th>
-            <th>User</th>
-            <th>Scope</th>
-            <th>Reason</th>
+            <th scope="col" class="sp-col-date">Time</th>
+            <th scope="col" class="sp-col-status">Decision</th>
+            <th scope="col">Policy</th>
+            <th scope="col">Tool</th>
+            <th scope="col">User</th>
+            <th scope="col">Scope</th>
+            <th scope="col">Reason</th>
         </tr></thead>
         <tbody>
         {{#each rows}}
         <tr>
-            <td class="col-date"><code class="code-inline">{{created_at}}</code></td>
-            <td class="col-status"><span class="badge badge-blue">{{policy}}</span></td>
-            <td class="col-status">
-                {{#if is_deny}}
-                <span class="badge badge-red">DENY</span>
-                {{else}}
-                <span class="badge badge-green">ALLOW</span>
-                {{/if}}
-            </td>
-            <td>{{#if tool_name}}<code class="code-inline">{{tool_name}}</code>{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
-            <td><a href="{{user_url}}" title="{{user_id}}">{{truncate user_id 12}}</a></td>
-            <td>{{#if agent_scope}}{{agent_scope}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
-            <td>{{#if reason}}{{reason}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
+            <td class="sp-table__cell--date">{{created_at}}</td>
+            <td>{{> components/badge tone=decision_tone text=decision}}</td>
+            <td class="sp-u-truncate"><a href="{{policy_url}}"><code class="sp-code-inline">{{policy}}</code></a></td>
+            <td class="sp-u-mono sp-u-truncate" title="{{tool_name}}">{{#if tool_name}}{{tool_name}}{{else}}—{{/if}}</td>
+            <td class="sp-u-mono sp-u-truncate" title="{{user_id}}"><a href="{{user_url}}">{{shortId user_id}}</a></td>
+            <td class="sp-u-truncate sp-u-text-muted" title="{{agent_scope}}">{{#if agent_scope}}{{agent_scope}}{{else}}—{{/if}}</td>
+            <td class="sp-p-decisions__reason" title="{{reason}}">{{#if reason}}{{reason}}{{else}}—{{/if}}</td>
         </tr>
         {{/each}}
         </tbody>
-    {{/components/data-table}}
+    {{/components/table}}
     {{#if at_limit}}
-    <p class="text-secondary">Showing the {{limit}} most recent decisions. Narrow with a policy or outcome filter to see further back.</p>
+    {{> components/notice tone="info" title="Listing is capped" message="Only the newest matching decisions are loaded before the window is applied, so an older part of this window may be missing. Narrow with a policy, outcome or user filter to see further back."}}
     {{/if}}
     {{else}}
-    {{> components/empty-state message="No decisions match these filters yet. Decisions appear here as soon as the policy pipeline evaluates a tool call."}}
+    {{> components/empty-state title="No decisions in this window" message="Either nothing called a governed tool, or the filters above exclude everything that did."}}
     {{/if}}
-
     {{/inline}}
     {{#*inline "scripts"}}{{/inline}}
 {{/layout}}

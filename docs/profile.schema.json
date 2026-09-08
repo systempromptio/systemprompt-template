@@ -72,24 +72,6 @@
         "disabled": []
       }
     },
-    "providers": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/ProviderEntry"
-      },
-      "default": []
-    },
-    "gateway": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/GatewayConfigSpec"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
     "governance": {
       "anyOf": [
         {
@@ -105,6 +87,13 @@
       "$ref": "#/$defs/ServicesProfileConfig",
       "default": {
         "port_offset": 0
+      }
+    },
+    "storage": {
+      "$ref": "#/$defs/StorageConfig",
+      "default": {
+        "backend": "local",
+        "shared": false
       }
     }
   },
@@ -264,22 +253,29 @@
           }
         },
         "instance_id": {
-          "description": "Stable identifier for this replica. Empty/unset resolves to the\nOS hostname (or a generated short id) at config build time.",
           "type": [
             "string",
             "null"
           ],
           "default": null
         },
+        "metrics_port": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 0,
+          "maximum": 65535,
+          "default": null
+        },
         "max_concurrent_streams": {
-          "description": "Global cap on concurrent A2A SSE streams for this replica.",
           "type": "integer",
           "format": "uint",
           "minimum": 0,
           "default": 256
         },
         "trusted_proxies": {
-          "description": "CIDR ranges whose immediate-peer requests are allowed to set\n`X-Forwarded-For`, `X-Real-IP`, and `CF-Connecting-IP`. Empty\nmeans the platform treats every connection as direct and ignores\nthose headers — the only safe default behind no proxy. Each entry\nis a CIDR string (e.g. `10.0.0.0/8`, `192.168.1.0/24`,\n`2001:db8::/32`). Single addresses without a `/` are accepted as\n`/32` (IPv4) or `/128` (IPv6). Invalid entries fail profile load —\na silently-dropped proxy would demote a trusted hop to hostile and\nbreak client-IP resolution with no boot-time signal.",
           "type": "array",
           "items": {
             "type": "string"
@@ -433,6 +429,12 @@
           "type": "boolean",
           "default": true
         },
+        "login_page_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "signing_key_path": {
           "type": "string",
           "default": "signing_key.pem"
@@ -490,21 +492,18 @@
           "type": "string"
         },
         "typ_allowlist": {
-          "description": "Accepted JOSE `typ` header values; empty accepts any.",
           "type": "array",
           "items": {
             "type": "string"
           }
         },
         "allowed_client_ids": {
-          "description": "`client_id`/`azp` values accepted on the EMA consume path; empty accepts\nany.",
           "type": "array",
           "items": {
             "type": "string"
           }
         },
         "can_issue_id_jag": {
-          "description": "Whether this issuer's `id_token` may seed the EMA ID-JAG issuance path.",
           "type": "boolean",
           "default": false
         }
@@ -604,6 +603,13 @@
       "properties": {
         "username": {
           "type": "string"
+        },
+        "email": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
         }
       },
       "additionalProperties": false,
@@ -735,492 +741,6 @@
       },
       "additionalProperties": false
     },
-    "ProviderEntry": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "wire": {
-          "description": "The wire codec the gateway speaks to reach this provider. Selects the\noutbound adapter only — never which client API advertises these models.",
-          "$ref": "#/$defs/WireProtocol"
-        },
-        "surface": {
-          "description": "The client API family these models are advertised under. Required and\nwithout a default: advertising a backend vendor as Anthropic must mean\nliterally writing `surface: anthropic`, not falling through a default.",
-          "$ref": "#/$defs/ApiSurface"
-        },
-        "endpoint": {
-          "type": "string"
-        },
-        "api_key_secret": {
-          "type": "string"
-        },
-        "extra_headers": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "models": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ProviderModel"
-          }
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "wire",
-        "surface",
-        "endpoint",
-        "api_key_secret"
-      ]
-    },
-    "WireProtocol": {
-      "type": "string",
-      "enum": [
-        "anthropic",
-        "openai-chat",
-        "openai-responses",
-        "gemini"
-      ]
-    },
-    "ApiSurface": {
-      "type": "string",
-      "enum": [
-        "anthropic",
-        "openai",
-        "gemini",
-        "backend"
-      ]
-    },
-    "ProviderModel": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "aliases": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "upstream_model": {
-          "description": "Vendor-side model name to send upstream when it differs from\n[`Self::id`] (the external-facing name). `None` forwards `id`\nunchanged.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "pricing": {
-          "$ref": "#/$defs/ModelPricing",
-          "default": {
-            "input_per_million": 0.0,
-            "output_per_million": 0.0,
-            "cache_read_per_million": 0.0,
-            "cache_write_per_million": 0.0,
-            "per_image_cents": null
-          }
-        },
-        "capabilities": {
-          "$ref": "#/$defs/ModelCapabilities",
-          "default": {
-            "vision": false,
-            "audio_input": false,
-            "video_input": false,
-            "image_generation": false,
-            "audio_generation": false,
-            "streaming": false,
-            "tools": false,
-            "structured_output": false,
-            "system_prompts": false,
-            "image_resolution_config": false
-          }
-        },
-        "limits": {
-          "$ref": "#/$defs/ModelLimits",
-          "default": {
-            "context_window": 0,
-            "max_output_tokens": 0
-          }
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ]
-    },
-    "ModelPricing": {
-      "type": "object",
-      "properties": {
-        "input_per_million": {
-          "type": "number",
-          "format": "double",
-          "default": 0.0
-        },
-        "output_per_million": {
-          "type": "number",
-          "format": "double",
-          "default": 0.0
-        },
-        "cache_read_per_million": {
-          "description": "Rate for tokens served from an existing prompt cache. Typically a\nfraction of [`Self::input_per_million`] (0.1x on Anthropic). Left at\n`0.0` a cache-heavy agent loop — where nearly every input token is a\ncache read — bills as free.",
-          "type": "number",
-          "format": "double",
-          "default": 0.0
-        },
-        "cache_write_per_million": {
-          "description": "Rate for tokens written into the prompt cache (Anthropic's 5-minute\ntier, 1.25x input). The 1-hour 2x tier is not modelled separately.",
-          "type": "number",
-          "format": "double",
-          "default": 0.0
-        },
-        "per_image_cents": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double",
-          "default": null
-        }
-      }
-    },
-    "ModelCapabilities": {
-      "type": "object",
-      "properties": {
-        "vision": {
-          "type": "boolean",
-          "default": false
-        },
-        "audio_input": {
-          "type": "boolean",
-          "default": false
-        },
-        "video_input": {
-          "type": "boolean",
-          "default": false
-        },
-        "image_generation": {
-          "type": "boolean",
-          "default": false
-        },
-        "audio_generation": {
-          "type": "boolean",
-          "default": false
-        },
-        "streaming": {
-          "type": "boolean",
-          "default": false
-        },
-        "tools": {
-          "type": "boolean",
-          "default": false
-        },
-        "structured_output": {
-          "type": "boolean",
-          "default": false
-        },
-        "system_prompts": {
-          "type": "boolean",
-          "default": false
-        },
-        "image_resolution_config": {
-          "type": "boolean",
-          "default": false
-        }
-      }
-    },
-    "ModelLimits": {
-      "type": "object",
-      "properties": {
-        "context_window": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0,
-          "default": 0
-        },
-        "max_output_tokens": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0,
-          "default": 0
-        },
-        "max_thinking_budget": {
-          "description": "Maximum extended-thinking / reasoning budget (in tokens) the upstream\naccepts for this model. `None` means the provider validates the budget\nitself (Anthropic) or maps it to an effort bucket (`OpenAI`); set it for\nproviders that reject an out-of-range numeric budget (Gemini: 24576 for\nflash, 32768 for pro). The gateway clamps the requested budget to this.",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0
-        }
-      }
-    },
-    "GatewayConfigSpec": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "default": false
-        },
-        "routes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/GatewayRoute"
-          },
-          "default": []
-        },
-        "default_provider": {
-          "description": "Authorizes the synthetic catch-all route, but a model is only\n*dispatched* to it when [`Self::allow_unlisted_models`] is also set; see\n[`GatewayConfig::is_model_exposed`].",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "allow_unlisted_models": {
-          "description": "Closed allowlist when `false` (the default): a model matching no route\nand absent from the registry is denied (`403`) rather than silently\nbilled against `default_provider`. Set `true` only to let the default\nprovider absorb arbitrary model strings.",
-          "type": "boolean",
-          "default": false
-        },
-        "auth_scheme": {
-          "type": "string",
-          "default": "bearer"
-        },
-        "inference_path_prefix": {
-          "type": "string",
-          "default": "/v1"
-        },
-        "system_prompt_overrides": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/SystemPromptRule"
-          }
-        },
-        "bridge_releases": {
-          "description": "Where the desktop bridge's self-updater is served from. Absent means the\nupdate endpoints report \"not configured\" and bridges simply never see an\nupdate — never an error the user has to act on.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/BridgeReleasesSpec"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "GatewayRoute": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "default": ""
-        },
-        "model_pattern": {
-          "type": "string"
-        },
-        "provider": {
-          "type": "string"
-        },
-        "upstream_model": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "extra_headers": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "pricing": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ModelPricing"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "when": {
-          "description": "Optional request-shape predicates. Absent (`None`) preserves the\nmodel-only matching behaviour; present narrows the route to requests\nwhose attributes satisfy every set predicate.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/RouteMatch"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "model_pattern",
-        "provider"
-      ]
-    },
-    "RouteMatch": {
-      "description": "Request-shape predicates a route can require beyond the model glob.\n\nEvery field is optional; an absent predicate is a wildcard, so an empty\nblock matches all requests. The trustworthy discriminators in real agent\nloops are `thinking` / `min_reasoning_effort` / `stream` and the model name\nitself — the full tool catalogue is typically resent on every step, so\n`requires_tools` / `min_tools` are weak signals retained for completeness.",
-      "type": "object",
-      "properties": {
-        "requires_tools": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "min_tools": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "thinking": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "min_reasoning_effort": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ReasoningEffort"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "stream": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "min_input_tokens": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0
-        },
-        "response_format": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ResponseFormatKind"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "ReasoningEffort": {
-      "type": "string",
-      "enum": [
-        "low",
-        "medium",
-        "high"
-      ]
-    },
-    "ResponseFormatKind": {
-      "description": "Profile-side, serializable mirror of the wire [`ResponseFormat`], with an\nexplicit `Text` variant standing in for the wire type's absence (`None`).",
-      "type": "string",
-      "enum": [
-        "text",
-        "json_object",
-        "json_schema"
-      ]
-    },
-    "SystemPromptRule": {
-      "type": "object",
-      "properties": {
-        "provider": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "model_pattern": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "action": {
-          "$ref": "#/$defs/OverrideRuleAction"
-        },
-        "prompt": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "action"
-      ]
-    },
-    "OverrideRuleAction": {
-      "type": "string",
-      "enum": [
-        "replace",
-        "strip"
-      ]
-    },
-    "BridgeReleasesSpec": {
-      "description": "Release feed for the desktop bridge self-updater.\n\nThe bridge cannot reach these assets itself — the repository is private —\nso the gateway resolves and proxies them. Keeping the resolution here is\nalso what makes staged rollouts a config change rather than a client\nrelease.",
-      "type": "object",
-      "properties": {
-        "repo": {
-          "description": "Source repository as `owner/name`.",
-          "type": "string"
-        },
-        "token_env": {
-          "description": "Environment variable holding the GitHub token used to read releases and\ndownload assets. Named rather than inlined so the token never lands in\na config file or a profile dump.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "tag_prefix": {
-          "description": "Release tags to consider. Bridge releases are tagged separately from the\nserver's, so an unfiltered \"latest release\" would pick the wrong one.",
-          "type": "string",
-          "default": "bridge-v"
-        },
-        "pinned_version": {
-          "description": "Pins every bridge to one version instead of tracking the newest release.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "assets": {
-          "description": "Platform slug (`macos`, `windows`, `linux-x86_64`, `linux-aarch64`) to\nrelease asset filename. A platform absent here has no published build.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "default": {}
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "repo"
-      ]
-    },
     "GovernanceConfig": {
       "type": "object",
       "properties": {
@@ -1303,6 +823,27 @@
         }
       },
       "additionalProperties": false
+    },
+    "StorageConfig": {
+      "description": "Where user-visible files are written and whether the root is shared\nbetween replicas.\n\n`shared: true` declares that `paths.storage` is a mount every replica can\nsee; boot warns when the declaration and the observed mount disagree.",
+      "type": "object",
+      "properties": {
+        "backend": {
+          "$ref": "#/$defs/StorageBackend",
+          "default": "local"
+        },
+        "shared": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "StorageBackend": {
+      "type": "string",
+      "enum": [
+        "local"
+      ]
     }
   }
 }

@@ -1,5 +1,7 @@
 # Deploy the gateway on Portainer
 
+Set `ADMIN_EMAIL` to an email address you control before first boot, alongside at least one AI provider key. The gateway requires this administrator identity.
+
 Deploys the `systemprompt-gateway` server as a Portainer stack (app template). The template provisions the gateway + Postgres from the GHCR image.
 
 ## Install (app template feed)

@@ -14,13 +14,13 @@
                   arrays of {id, label, count, selected}
     chips         array of {label, value, group_label, remove_url}
 --}}
-<form class="filter-ribbon" method="get" action="{{base_url}}"
+<form class="sp-filter-ribbon" method="get" action="{{base_url}}"
       data-filter-ribbon aria-label="Identity filters">
   {{#each preserved}}
     <input type="hidden" name="{{this.name}}" value="{{this.value}}">
   {{/each}}
 
-  <div class="filter-ribbon__groups">
+  <div class="sp-filter-ribbon__groups">
     {{#if options.users}}
       {{> components/filter-ribbon-group
           param="user_id"
@@ -59,20 +59,20 @@
     {{/if}}
   </div>
 
-  <div class="filter-ribbon__actions">
-    <button type="submit" class="filter-ribbon__apply">Apply filters</button>
+  <div class="sp-filter-ribbon__actions">
+    <button type="submit" class="sp-filter-ribbon__apply">Apply filters</button>
     {{#if chips}}
-      <a href="{{base_url}}" class="filter-ribbon__clear">Clear all</a>
+      <a href="{{base_url}}" class="sp-filter-ribbon__clear">Clear all</a>
     {{/if}}
   </div>
 
   {{#if chips}}
-    <ul class="filter-ribbon__chips" aria-label="Active filters">
+    <ul class="sp-filter-ribbon__chips" aria-label="Active filters">
       {{#each chips}}
-        <li class="filter-ribbon__chip">
-          <span class="filter-ribbon__chip-group">{{this.group_label}}:</span>
-          <span class="filter-ribbon__chip-value">{{this.label}}</span>
-          <a class="filter-ribbon__chip-remove" href="{{this.remove_url}}"
+        <li class="sp-filter-ribbon__chip">
+          <span class="sp-filter-ribbon__chip-group">{{this.group_label}}:</span>
+          <span class="sp-filter-ribbon__chip-value">{{this.label}}</span>
+          <a class="sp-filter-ribbon__chip-remove" href="{{this.remove_url}}"
              aria-label="Remove {{this.group_label}} filter {{this.label}}">&times;</a>
         </li>
       {{/each}}

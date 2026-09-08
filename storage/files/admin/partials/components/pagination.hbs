@@ -1,31 +1,31 @@
 {{!--
-  Table footer pagination — rendered inside .table-container, after the table,
-  so it reads as the table's own footer rather than a stray pair of links.
+  Table footer pagination, rendered inside .sp-table after the table.
 
-  Invoke as: {{> components/pagination pagination}}
-  The partial's root context is the pagination object itself.
+    {{> components/pagination pagination}}
 
-  Inputs (fields on the passed context):
-    current_page / total_pages   1-based page position
-    first_row / last_row / total_rows / noun   "Showing 1–50 of 54 traces"
-    has_prev / has_next          whether each control is live
-    prev_url / next_url          hrefs for the live controls
+  Fields on the passed context: current_page, total_pages, first_row, last_row,
+  total_rows, noun, has_prev, has_next, prev_url, next_url, and optionally
+  page_sizes (25/50/100, default 50) with size_url_template.
 --}}
-<nav class="pagination" aria-label="Pagination">
-  <div class="pagination-info">
-    <span>Showing {{first_row}}&ndash;{{last_row}} of {{total_rows}} {{noun}}</span>
-  </div>
-  <div class="pagination-controls">
-    {{#if has_prev}}
-      <a class="btn btn-sm btn-outline" href="{{prev_url}}" rel="prev">&larr; Prev</a>
-    {{else}}
-      <span class="btn btn-sm btn-outline is-disabled" aria-disabled="true">&larr; Prev</span>
+<nav class="sp-pagination" aria-label="Pagination">
+  <span class="sp-pagination__info">Showing {{first_row}}&ndash;{{last_row}} of {{total_rows}} {{noun}}</span>
+  <div class="sp-pagination__controls">
+    {{#if page_sizes}}
+      <label class="sp-u-sr-only" for="sp-page-size">Rows per page</label>
+      <select class="sp-pagination__size" id="sp-page-size" data-page-size>
+        {{#each page_sizes}}<option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.value}}</option>{{/each}}
+      </select>
     {{/if}}
-    <span class="current-page">Page {{current_page}} of {{total_pages}}</span>
-    {{#if has_next}}
-      <a class="btn btn-sm btn-outline" href="{{next_url}}" rel="next">Next &rarr;</a>
+    {{#if has_prev}}
+      <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{prev_url}}" rel="prev">&larr; Prev</a>
     {{else}}
-      <span class="btn btn-sm btn-outline is-disabled" aria-disabled="true">Next &rarr;</span>
+      <span class="sp-btn sp-btn--sm sp-btn--outline is-disabled" aria-disabled="true">&larr; Prev</span>
+    {{/if}}
+    <span class="sp-pagination__current">Page {{current_page}} of {{total_pages}}</span>
+    {{#if has_next}}
+      <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{next_url}}" rel="next">Next &rarr;</a>
+    {{else}}
+      <span class="sp-btn sp-btn--sm sp-btn--outline is-disabled" aria-disabled="true">Next &rarr;</span>
     {{/if}}
   </div>
 </nav>

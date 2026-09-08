@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_drive_files SET status='indexed',rebuild=FALSE,error=NULL,attempts=0,indexed_at=NOW() WHERE source_type=$1 AND file_id=$2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2058c338400008411349e4a2a83336773f9a4a5eb190769db3eb4cf5657e045d"
+}

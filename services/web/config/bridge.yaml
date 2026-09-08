@@ -1,0 +1,3 @@
+# Optional directory containing generic systemprompt-bridge artifacts and install.sh.
+# Use an absolute HTTPS URL or a local path such as /files/downloads.
+download_base: null

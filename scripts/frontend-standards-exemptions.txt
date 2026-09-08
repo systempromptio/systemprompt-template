@@ -1,3 +1,12 @@
 # path:rule pairs exempt from extensions/web/tests/frontend_standards.rs.
 # Reserve for cases with a documented reason, never to mute a fixable violation.
 storage/files/js/components/sp-confirm-dialog.js:alert-confirm-prompt
+# Cross-origin, unauthenticated reachability probe against the gateway host —
+# not an admin API call. Routing it through services/api.js would attach a
+# Content-Type header, turning a simple GET into a preflighted request.
+storage/files/js/pages/admin-bridge-setup.js:raw-fetch
+# 10-print.css is a print stylesheet: @media print has to override screen
+# rules that are more specific, and the printed PDF is what the customer
+# receives.
+storage/files/css/admin/10-print.css:important
+

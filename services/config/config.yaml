@@ -15,6 +15,12 @@ includes:
   # reads it directly as WebConfigRaw (branding at top level). Including it
   # via the aggregator would require a `web:` wrapper, which is incompatible.
   - ../ai/config.yaml
+  # Provider catalog and gateway routes. Core 0.44 reads both from the
+  # services tree; a profile still carrying `providers:` or `gateway:`
+  # fails to boot. The `../` is load-bearing: an include resolves relative
+  # to the directory of the file that lists it, which is services/config/.
+  - ../ai/providers.yaml
+  - ../ai/gateway.yaml
   - ../scheduler/config.yaml
 
   # Agents (flat, wrapped in `agents:` map)

@@ -18,6 +18,8 @@ pub(crate) fn get_services_path() -> AdminResult<PathBuf> {
     Ok(PathBuf::from(&ProfileBootstrap::get()?.paths.services))
 }
 
-pub(crate) fn get_profile_path() -> AdminResult<PathBuf> {
-    Ok(PathBuf::from(ProfileBootstrap::get_path()?))
+// Why: the gateway editor writes the services file the loader reads, never the
+// profile — the routes are implementation configuration shipped with the image.
+pub(crate) fn get_gateway_file_path() -> AdminResult<PathBuf> {
+    Ok(get_services_path()?.join("ai").join("gateway.yaml"))
 }

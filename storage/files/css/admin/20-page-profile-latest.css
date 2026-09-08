@@ -1,0 +1,43 @@
+@layer components {
+
+/* The latest-conversation card: title and facts on the left, one action on
+   the right, so the thing a person opens their profile for is one click away. */
+.sp-p-profile__latest-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-space-4);
+}
+
+.sp-p-profile__latest-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+    min-width: 0;
+}
+
+.sp-p-profile__latest-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--sp-text-md);
+}
+
+.sp-p-profile__latest-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-3);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+}
+
+.sp-p-profile__latest { margin-block: 0 var(--sp-space-4); }
+
+.sp-p-profile__side-note {
+    margin-block: var(--sp-space-2) 0;
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+}
+
+}

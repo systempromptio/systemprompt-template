@@ -1,129 +1,108 @@
 {{#> layout title=title page=page}}
     {{#*inline "content"}}
-    {{> components/page-header
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+
+    {{#> components/page-header
         title="Sessions"
-        subtitle="Every interactive run, grouped by session id — gateway calls and hook events side by side. Open one to see its contexts, traces, and requests."}}
+        subtitle="Every conversation in the window — one row per Claude Code run or gateway context, with its turns, tool calls and cost. Open one to read it."}}
+      {{#*inline "header_meta"}}
+        <span class="sp-session-current">{{#if current.session_url}}This browser: <a href="{{current.session_url}}"><code class="sp-code-inline" title="{{current.session_id}}">{{current.session_id_short}}</code></a>{{else}}This browser's token carries no session id{{/if}}</span>
+      {{/inline}}
+      {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/contexts">Conversations</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/traces">Traces</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/requests">Requests</a>
+      {{/inline}}
+    {{/components/page-header}}
 
-    {{!-- You are here: the identity this browser holds, and a way into its own session. --}}
-    <p class="text-secondary session-current">
-        Signed in as <strong>{{current.username}}</strong>.
-        {{#if current.session_url}}
-            This browser's session is
-            <a href="{{current.session_url}}"><code class="code-inline" title="{{current.session_id}}">{{current.session_id_short}}</code></a>.
-        {{else}}
-            This browser's token carries no session id.
-        {{/if}}
-    </p>
-
-    {{> components/time-range time_range}}
-    {{> components/identity-filter-ribbon filter_ribbon}}
-
-    <section class="stat-grid" aria-label="Session summary">
-      {{> components/stat-card label="Sessions" value=stats.total_sessions}}
-      {{> components/stat-card label="With errors" value=stats.error_sessions variant="danger"
+    <section class="sp-kpi-grid" aria-label="Conversation summary">
+      {{> components/kpi label="Conversations" value=(formatNumber stats.conversations)
+          note="in window" delta=stats.conversations_delta delta_dir=stats.conversations_delta_dir}}
+      {{> components/kpi label="With errors" value=(formatNumber stats.error_conversations) tone="err"
           href=error_toggle_url active=error_only
-          hint="Show only sessions with a failed request or a hook error"}}
-      {{> components/stat-card label="Requests" value=stats.total_requests}}
-      {{> components/stat-card label="Tool calls" value=stats.total_tool_uses}}
-      {{> components/stat-card label="Tokens" value=stats.tokens_display}}
-      {{> components/stat-card label="Cost" value=stats.cost_display}}
+          note="failed request or hook error"
+          hint="Show only conversations with a failed request or a hook error"}}
+      {{> components/kpi label="Turns" value=(formatNumber stats.turns)
+          note="human prompts answered" delta=stats.turns_delta delta_dir=stats.turns_delta_dir}}
+      {{> components/kpi label="Side calls" value=(formatNumber stats.side_calls)
+          note=(concat "probes and utility · " stats.side_call_cost_display)
+          hint="Cache-warm probes and utility calls such as title generation"}}
+      {{> components/kpi label="Tokens" value=stats.tokens_display
+          note="in + out" delta=stats.tokens_delta delta_dir=stats.tokens_delta_dir}}
+      {{> components/kpi label="Cost" value=stats.cost_display
+          note="billed in window" delta=stats.cost_delta delta_dir=stats.cost_delta_dir}}
     </section>
 
+    {{#> components/toolbar toolbar_count=count_label}}
+      {{#*inline "toolbar_filters"}}
+        <form method="get" action="{{filter_ribbon.base_url}}" class="sp-toolbar__filter">
+          {{#each filter_ribbon.preserved}}<input type="hidden" name="{{this.name}}" value="{{this.value}}">{{/each}}
+          <label class="sp-u-sr-only" for="sessions-user">User</label>
+          <select id="sessions-user" name="user_id" class="sp-search-input">
+            <option value="">All users</option>
+            {{#each filter_ribbon.options.users}}
+              <option value="{{this.id}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>
+            {{/each}}
+          </select>
+          <button type="submit" class="sp-btn sp-btn--sm">Apply</button>
+        </form>
+      {{/inline}}
+      {{#*inline "toolbar_actions"}}
+        {{#if error_only}}
+          <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{error_toggle_url}}">Clear errors filter</a>
+        {{else}}
+          <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{error_toggle_url}}">Errors only</a>
+        {{/if}}
+        {{#if show_side}}
+          <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{side_toggle_url}}">Hide side calls</a>
+        {{else}}
+          <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{side_toggle_url}}">Show side calls</a>
+        {{/if}}
+      {{/inline}}
+    {{/components/toolbar}}
+
     {{#if has_sessions}}
-      {{#> components/data-table}}
+      {{#> components/table caption="Conversations in the selected window" pagination=pagination modifier="sp-p-sessions__table"}}
         <thead><tr>
-          {{!-- Status earns an early column: it is the reason an operator scans
-                this table, and parking it past the fold hid it behind a
-                horizontal scroll. Duration rides along with Started, which is
-                the only other thing it means anything next to. --}}
-          <th class="col-date">Started</th>
-          <th>Session</th>
-          <th>Identity</th>
-          <th class="col-status">Source</th>
-          <th class="col-status">Status</th>
-          <th>Model</th>
-          <th class="col-num">Reqs</th>
-          <th class="col-num">Contexts</th>
-          <th class="col-num">Traces</th>
-          <th class="col-num">Tools</th>
-          <th class="col-num">Tokens</th>
-          <th class="col-num">Cost</th>
-          <th class="col-actions"></th>
+          {{> components/sort-header sort_headers.started}}
+          <th class="sp-col-conversation">Conversation</th>
+          <th class="sp-col-owner">Group</th>
+          <th class="sp-col-owner">Project</th>
+          {{> components/sort-header sort_headers.turns}}
+          <th class="sp-table__cell--num" title="Tool calls made across the conversation's turns">Tools</th>
+          {{> components/sort-header sort_headers.tokens}}
+          {{> components/sort-header sort_headers.cost}}
+          <th class="sp-col-status">Status</th>
         </tr></thead>
         <tbody>
         {{#each sessions}}
         <tr>
-          {{!-- Guarded: strict mode rejects a null inside an attribute, and a
-                hook session can arrive with no timestamp at all. --}}
-          <td class="col-date" {{#if this.started_at}}title="{{this.started_at}}"{{/if}}>
-            <div class="cell-stacked">
-              <div class="cell-primary">{{#if this.started_at_local}}{{this.started_at_local}}{{else}}&mdash;{{/if}}</div>
-              <div class="cell-secondary" title="First to last recorded activity">{{this.duration_display}}</div>
-            </div>
+          <td class="sp-col-date sp-table__cell--date" title="{{this.started_at}} · ran {{this.duration_display}}">{{#if this.started_relative}}{{this.started_relative}}{{else}}&mdash;{{/if}} <span class="sp-table__cell--muted">{{this.duration_display}}</span></td>
+          <td class="sp-col-conversation sp-table__cell--stacked" title="{{this.context_id}}{{#if this.model}} · {{this.model}}{{/if}}{{#if this.side_call_count}} · {{this.side_call_count}} side call(s){{/if}}">
+            <a href="{{this.detail_url}}" class="sp-u-link-strong">{{this.conversation_title}}</a>
+            <span class="sp-table__cell--muted">{{#if this.user_url}}<a href="{{this.user_url}}" title="{{this.user_id}}">{{this.user_label}}</a>{{else}}{{this.user_label}}{{/if}}{{#if this.model}} · {{this.model}}{{/if}}</span>
           </td>
-          <td>
-            <div class="cell-stacked">
-              <div class="cell-primary">
-                <a href="{{this.detail_url}}" title="{{this.session_id}}">
-                  <code class="code-inline">{{this.session_id_short}}</code>
-                </a>
-              </div>
-              {{#if this.ai_title}}<div class="cell-secondary">{{this.ai_title}}</div>{{/if}}
-            </div>
-          </td>
-          <td>
-            <div class="cell-stacked">
-              <div class="cell-primary">
-                {{#if this.user_url}}
-                  <a href="{{this.user_url}}" title="{{this.user_id}}">{{this.user_label}}</a>
-                {{else}}{{this.user_label}}{{/if}}
-              </div>
-              {{#if this.department}}<div class="cell-secondary">{{this.department}}</div>{{/if}}
-            </div>
-          </td>
-          <td class="col-status">
-            {{> components/badge color=this.source_variant text=this.source_label}}
-          </td>
-          <td class="col-status">
+          <td class="sp-col-owner sp-table__cell--muted" title="{{this.group_label}}">{{this.group_label}}</td>
+          <td class="sp-col-owner sp-table__cell--muted" title="{{this.project_label}}">{{this.project_label}}</td>
+          <td class="sp-table__cell--num">{{formatNumber this.turn_count}}</td>
+          <td class="sp-table__cell--num">{{formatNumber this.tool_call_count}}</td>
+          <td class="sp-table__cell--num" title="{{this.tokens_title}}">{{this.tokens_display}}</td>
+          <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+          <td class="sp-col-status">
             {{#if this.has_error}}
-              <span class="mcp-badge mcp-badge-danger">{{this.status_label}}</span>
+              <span class="sp-badge sp-badge--err">{{this.status_label}}</span>
             {{else}}
-              <span class="mcp-badge mcp-badge-success">{{this.status_label}}</span>
+              <span class="sp-badge sp-badge--ok">{{this.status_label}}</span>
             {{/if}}
-          </td>
-          <td class="col-model">
-            <div class="cell-stacked">
-              <div class="cell-primary">{{#if this.model}}<code class="code-inline">{{this.model}}</code>{{else}}&mdash;{{/if}}</div>
-              {{#if this.client_source}}<div class="cell-secondary">{{this.client_source}}</div>{{/if}}
-            </div>
-          </td>
-          <td class="col-num">{{this.request_count}}</td>
-          <td class="col-num">{{this.context_count}}</td>
-          <td class="col-num">{{this.trace_count}}</td>
-          <td class="col-num">{{this.tool_uses}}</td>
-          <td class="col-num">{{this.tokens_display}}</td>
-          <td class="col-num">{{this.cost_display}}</td>
-          <td class="col-actions">
-            <a href="{{this.detail_url}}" class="btn btn-sm btn-outline">Open</a>
           </td>
         </tr>
         {{/each}}
         </tbody>
-      {{/components/data-table}}
-
-      <nav class="table-paginate" aria-label="Sessions pagination">
-        {{#if pagination.has_prev}}
-          <a href="{{pagination.prev_url}}" class="btn btn-sm">&larr; Prev</a>
-        {{/if}}
-        <span class="table-paginate__info">
-          Page {{pagination.current_page}} of {{pagination.total_pages}} &middot; {{total_count}} sessions
-        </span>
-        {{#if pagination.has_next}}
-          <a href="{{pagination.next_url}}" class="btn btn-sm">Next &rarr;</a>
-        {{/if}}
-      </nav>
+      {{/components/table}}
     {{else}}
-      {{> components/empty-state message="No sessions in the selected window. Widen the time range or clear the filters."}}
+      {{> components/empty-state
+          title="No conversations in this window"
+          message="Nothing ran under the selected scope and time range. Widen the range, clear the filters, show side calls, or pick a different group or project."}}
     {{/if}}
     {{/inline}}
 {{/layout}}

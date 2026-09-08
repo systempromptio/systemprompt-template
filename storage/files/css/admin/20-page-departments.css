@@ -1,0 +1,58 @@
+@layer components {
+
+/* The departments listing and the department detail. The table, KPIs, notice
+   and dialog are shared components; what the two pages add is column widths,
+   the row-action link, the tool chip row and the settings form's shape. */
+
+/* Columns: name, description, members, rules, requests, tokens, cost, actions.
+   Description is the one cell that can afford to clip. */
+.sp-p-departments__table { table-layout: fixed; width: 100%; }
+.sp-p-departments__table th:nth-child(1) { width: 16%; }
+.sp-p-departments__table th:nth-child(2) { width: 30%; }
+.sp-p-departments__table th:nth-child(3) { width: 8%; }
+.sp-p-departments__table th:nth-child(4) { width: 7%; }
+.sp-p-departments__table th:nth-child(5) { width: 9%; }
+.sp-p-departments__table th:nth-child(6) { width: 9%; }
+.sp-p-departments__table th:nth-child(7) { width: 9%; }
+.sp-p-departments__table th:nth-child(8) { width: 12%; }
+
+/* A row action is a link-styled control, not a button: `sp-btn--sm` is 30px
+   tall, and with the cell's own padding that alone made a 43px row. */
+.sp-p-departments__action {
+  display: inline-block;
+  margin-inline-end: var(--sp-space-3);
+  padding: 0;
+  border: 0;
+  background: none;
+  line-height: var(--sp-space-5);
+  font: inherit;
+  font-size: var(--sp-text-xs);
+  font-weight: 600;
+  color: var(--sp-accent-text);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sp-p-departments__action--danger { color: var(--sp-danger-strong); }
+
+.sp-p-department-detail__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-space-2);
+  margin: 0;
+}
+
+/* Columns: email, name, status, requests, tokens, cost, last active, actions. */
+.sp-p-department-detail__members { table-layout: fixed; width: 100%; }
+.sp-p-department-detail__members th:nth-child(1) { width: 22%; }
+.sp-p-department-detail__members th:nth-child(2) { width: 16%; }
+.sp-p-department-detail__members th:nth-child(3) { width: 8%; }
+.sp-p-department-detail__members th:nth-child(4) { width: 9%; }
+.sp-p-department-detail__members th:nth-child(5) { width: 9%; }
+.sp-p-department-detail__members th:nth-child(6) { width: 9%; }
+.sp-p-department-detail__members th:nth-child(7) { width: 13%; }
+.sp-p-department-detail__members th:nth-child(8) { width: 14%; }
+
+.sp-p-department-detail__settings { max-width: 40rem; }
+
+}

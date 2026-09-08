@@ -1,0 +1,97 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT d.source_ref,d.source_type,d.title,d.uri,t.body,d.content_hash,COALESCE(d.mtime,d.indexed_at)::text AS \"version!\" FROM knowledge_documents d JOIN knowledge_source_text t ON t.doc_id=d.doc_id AND t.content_hash=d.content_hash WHERE d.doc_id>$2 AND d.source_type IN ('jira','confluence') AND EXISTS(SELECT 1 FROM knowledge_document_grants g WHERE g.doc_id=d.doc_id AND g.subject_kind='user' AND g.subject_value=$1) ORDER BY d.doc_id LIMIT $3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "source_ref",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_documents",
+            "name": "source_ref"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "source_type",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_documents",
+            "name": "source_type"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_documents",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "uri",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_documents",
+            "name": "uri"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "body",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_source_text",
+            "name": "body"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "content_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_documents",
+            "name": "content_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "version!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "bab59f833920bb290f8d1fff22b63a047b109f98ba3705e75f7dbbf858c8cb94"
+}

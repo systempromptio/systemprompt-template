@@ -1,0 +1,183 @@
+@layer components {
+
+/* Long assistant text and long prompts are clamped to twelve lines by a
+   sibling <details>: while it is closed the text beside it is clamped, opening
+   it removes the clamp. The details sits after the text via flex order, so it
+   reads as a "Show more" at the foot of the block. */
+
+.sp-conversation__step {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+}
+
+.sp-conversation__step--assistant {
+    padding: var(--sp-space-3) var(--sp-space-4);
+    background: var(--sp-bg-surface-alt);
+    border-inline-start: 3px solid var(--sp-section-users);
+    border-radius: var(--sp-radius-sm);
+}
+
+.sp-conversation__text {
+    order: 1;
+    margin: 0;
+    font-size: var(--sp-text-base);
+    line-height: var(--sp-leading-relaxed);
+    color: var(--sp-text-primary);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.sp-conversation__more {
+    order: 2;
+}
+
+.sp-conversation__more:not([open]) + .sp-conversation__text,
+.sp-conversation__more:not([open]) + .sp-conversation__prompt-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 12;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.sp-conversation__more-toggle {
+    cursor: pointer;
+    list-style: none;
+    display: inline-block;
+    font-size: var(--sp-text-xs);
+    font-weight: var(--sp-font-medium);
+    color: var(--sp-accent-text);
+}
+
+.sp-conversation__more-toggle::-webkit-details-marker { display: none; }
+
+.sp-conversation__more-toggle:hover { text-decoration: underline; }
+
+.sp-conversation__more[open] .sp-conversation__more-label,
+.sp-conversation__more:not([open]) .sp-conversation__less-label {
+    display: none;
+}
+
+.sp-conversation__prompt-text {
+    order: 1;
+    margin: 0;
+}
+
+.sp-conversation__tool {
+    background: var(--sp-bg-surface-raised);
+    border: 1px solid var(--sp-border-subtle);
+    border-inline-start: 3px solid var(--sp-warning);
+    border-radius: var(--sp-radius-sm);
+    overflow: hidden;
+}
+
+.sp-conversation__tool-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+    cursor: pointer;
+    list-style: none;
+    padding: var(--sp-space-15) var(--sp-space-3);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    transition: background var(--sp-duration-fast);
+}
+
+.sp-conversation__tool-summary:hover { background: var(--sp-bg-surface-overlay); }
+
+.sp-conversation__tool-summary::-webkit-details-marker { display: none; }
+
+.sp-conversation__tool-chevron {
+    display: inline-block;
+    color: var(--sp-warning-strong);
+    font-size: var(--sp-text-sm);
+    line-height: 1;
+    transition: transform var(--sp-duration-fast);
+}
+
+.sp-conversation__tool[open] .sp-conversation__tool-chevron { transform: rotate(90deg); }
+
+.sp-conversation__tool[open] .sp-conversation__tool-summary {
+    border-bottom: 1px solid var(--sp-border-subtle);
+}
+
+.sp-conversation__tool-name {
+    font-family: var(--sp-font-mono);
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-primary);
+}
+
+
+.sp-conversation__tool-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-3);
+}
+
+.sp-conversation__tool-part > summary {
+    cursor: pointer;
+    margin-bottom: var(--sp-space-1);
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-conversation__tool-part .sp-code-block { max-height: 20rem; }
+
+.sp-conversation__meta {
+    order: 3;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-space-2);
+    font-size: var(--sp-text-2xs);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-conversation__meta-model {
+    font-family: var(--sp-font-mono);
+    color: var(--sp-text-secondary);
+}
+
+.sp-conversation__meta-sep { color: var(--sp-border-default); }
+
+.sp-conversation__meta-status--error {
+    color: var(--sp-danger-strong);
+    font-weight: var(--sp-font-semibold);
+}
+
+.sp-conversation__meta-link {
+    color: var(--sp-text-tertiary);
+    text-decoration: none;
+    border: 1px solid var(--sp-border-subtle);
+}
+
+.sp-conversation__meta-link:hover {
+    color: var(--sp-accent-text);
+    border-color: var(--sp-accent);
+}
+
+.sp-conversation__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1) var(--sp-space-3);
+    font-size: var(--sp-text-2xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-conversation__chip {
+    font-family: var(--sp-font-mono);
+    color: var(--sp-text-secondary);
+}
+
+.sp-conversation__chip-count {
+    margin-inline-start: var(--sp-space-1);
+    color: var(--sp-text-tertiary);
+}
+
+}

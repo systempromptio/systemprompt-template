@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO knowledge_drive_sources(source_type,drive_id,requested_by,requested,force_requested,rebuild_requested)\n        VALUES($1,$2,$3,1,$4,$5) ON CONFLICT(source_type) DO UPDATE SET\n        requested=knowledge_drive_sources.requested+1,requested_by=$3,requested_at=NOW(),\n        force_requested=knowledge_drive_sources.force_requested OR $4,\n        rebuild_requested=knowledge_drive_sources.rebuild_requested OR $5\n        WHERE knowledge_drive_sources.drive_id=EXCLUDED.drive_id",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "afab2e217f55b1ea423143fa9eab40a86a503fb34fff32687db0c49bcb0038bd"
+}

@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT policy AS \"policy!\"\n           FROM governance_decisions\n           WHERE created_at >= $1 AND created_at < $2\n             AND ($3::TEXT[] IS NULL OR user_id = ANY($3))\n           GROUP BY policy\n           ORDER BY COUNT(*) DESC, policy",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "policy!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "policy"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c254125d0b9013ec51383e97843ce4cd4ca708ff7b3a7c9b4b78bf94517a48a2"
+}

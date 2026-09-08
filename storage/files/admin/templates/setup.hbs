@@ -1,65 +1,54 @@
 {{#> layout title=title page=page}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title=title}}
-    <div class="setup-page">
-        <div class="setup-hero">
-            <h2>Get started with {{marketplace.site_url}}</h2>
-            <p>Follow these four phases to connect Claude, build your skill library, and start getting value from the platform. Phase 1 is required &mdash; without it, nothing else works.</p>
-        </div>
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
 
-        <div class="setup-stepper" role="list" aria-label="Setup phases">
+    {{#> components/page-header title=title subtitle="Four phases from a fresh account to a governed skill library. Phase 1 is required — without it nothing else does anything."}}
+        {{#*inline "header_meta"}}
+            <span>{{marketplace.site_url}}</span>
+            <span><span class="sp-u-num">{{complete_count}}</span> of <span class="sp-u-num">{{phase_count}}</span> phases complete</span>
+        {{/inline}}
+        {{#*inline "header_actions"}}
+            <a class="sp-btn sp-btn--sm sp-btn--primary" href="/admin/access-tokens">Issue an access token</a>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/documentation/connect-claude-code">Read the guide</a>
+        {{/inline}}
+    {{/components/page-header}}
+
+    <section class="sp-kpi-grid" aria-label="Setup progress">
+        {{> components/kpi label="Phases complete" value=complete_count note=(concat "of " phase_count) tone="ok"}}
+        {{> components/kpi label="Plugins reaching you" value=total_plugins note="phase 1 and 2 signal"}}
+        {{> components/kpi label="Skills in your library" value=total_skills note="phase 3 signal" href="/admin/contexts"}}
+    </section>
+
+    {{#if just_verified}}
+    {{> components/notice tone="ok" title="Connected" message="This machine is signed in to the gateway. Phase 1 is done."}}
+    {{/if}}
+
+    <section aria-label="Setup phases">
+        {{> components/section title="Phases" count=phase_count note="Completion is derived from what actually reaches this account — plugin and skill counts — not from a checkbox you tick."}}
+        {{#> components/table caption="The four setup phases, in order"}}
+            <thead><tr>
+                <th scope="col" class="sp-table__cell--num">#</th>
+                <th scope="col">Phase</th>
+                <th scope="col">Why it matters</th>
+                <th scope="col">Status</th>
+                <th scope="col" class="sp-table__cell--actions">Go</th>
+            </tr></thead>
+            <tbody>
             {{#each phases}}
-            <div class="setup-phase {{#if complete}}setup-phase--complete{{else}}{{#if current}}setup-phase--current{{else}}setup-phase--upcoming{{/if}}{{/if}}" role="listitem">
-                <div class="setup-phase-indicator" aria-hidden="true">
-                    <div class="setup-phase-number">
-                        {{#if complete}}
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                            <path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/>
-                        </svg>
-                        {{else}}
-                        {{number}}
-                        {{/if}}
-                    </div>
-                    {{#unless @last}}
-                    <div class="setup-phase-connector"></div>
-                    {{/unless}}
-                </div>
-                <div class="setup-phase-content">
-                    <div class="setup-phase-header">
-                        <h3>Phase {{number}}: {{title}}</h3>
-                        {{#if complete}}
-                        <span class="setup-badge setup-badge--complete">Complete</span>
-                        {{else}}
-                        {{#if current}}
-                        <span class="setup-badge setup-badge--current">Current</span>
-                        {{else}}
-                        <span class="sr-only">Upcoming</span>
-                        {{/if}}
-                        {{/if}}
-                    </div>
-                    <p>{{description}}</p>
-                    <div class="setup-phase-actions">
-                        <a href="{{guide_url}}" class="setup-phase-link" target="_blank" rel="noopener noreferrer">
-                            Read the guide
-                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M5 3l5 5-5 5"/>
-                            </svg>
-                        </a>
-                        {{#if action_url}}
-                        <a href="{{action_url}}" class="setup-phase-action">
-                            {{action_label}}
-                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M5 3l5 5-5 5"/>
-                            </svg>
-                        </a>
-                        {{/if}}
-                    </div>
-                </div>
-            </div>
+            <tr{{#if current}} class="is-active"{{/if}}>
+                <td class="sp-table__cell--num sp-u-num">{{number}}</td>
+                <td>{{this.phase_title}}</td>
+                <td>{{description}}</td>
+                <td>{{> components/badge tone=status_tone text=status_label}}</td>
+                <td class="sp-table__cell--actions">
+                    <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{guide_url}}" target="_blank" rel="noopener noreferrer">Guide</a>
+                    {{#if action_url}}<a class="sp-btn sp-btn--sm sp-btn--primary" href="{{action_url}}">{{action_label}}</a>{{/if}}
+                </td>
+            </tr>
             {{/each}}
-        </div>
-    </div>
+            </tbody>
+        {{/components/table}}
+    </section>
     {{/inline}}
     {{#*inline "scripts"}}
     {{#if just_verified}}

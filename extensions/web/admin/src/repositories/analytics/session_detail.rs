@@ -1,9 +1,16 @@
-//! Session-detail repository — drives `/admin/entities/sessions/{id}`.
+//! Session-detail repository — drives `/admin/sessions/{id}`.
 //!
 //! A session groups every AI request, context, and trace produced by a single
 //! interactive run. This module assembles the header row from
 //! `plugin_session_summaries` (when present) plus an `ai_requests` rollup, and
 //! returns the contexts/traces/requests that belong to the session.
+//!
+//! Three id shapes reach `/admin/sessions/{id}` and all resolve here: the
+//! gateway's own `sess_…` id (`ai_requests.session_id`), the Claude Code
+//! session uuid (`ai_requests.client_session_id`, which is also
+//! `plugin_session_summaries.session_id`), and a hook-only session that never
+//! produced gateway traffic. Every read matches `session_id OR
+//! client_session_id`, so one page answers whichever id the link carried.
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
@@ -14,7 +21,7 @@ pub struct SessionHeader {
     pub session_id: SessionId,
     pub user_id: Option<UserId>,
     pub display_name: Option<String>,
-    pub department: Option<String>,
+    pub groups: Vec<String>,
     pub started_at: Option<DateTime<Utc>>,
     pub last_activity_at: Option<DateTime<Utc>>,
     pub status: Option<String>,
@@ -38,6 +45,10 @@ pub struct SessionKpis {
 pub struct SessionContextRow {
     pub context_id: ContextId,
     pub name: Option<String>,
+    // Why: the resolved conversation title from `conversation_rollups`, so the
+    // row never has to show a bare id.
+    pub title: String,
+    pub turn_count: i64,
     pub request_count: i64,
     pub last_request_at: Option<DateTime<Utc>>,
     pub model: Option<String>,
@@ -61,7 +72,8 @@ pub struct SessionRequestRow {
     pub id: AiRequestId,
     pub context_id: Option<ContextId>,
     pub trace_id: Option<TraceId>,
-    pub model: String,
+    // Why: NULL for a gateway-rejected request, which never reached a provider.
+    pub model: Option<String>,
     pub status: String,
     pub latency_ms: Option<i32>,
     pub cost_microdollars: i64,
@@ -76,15 +88,16 @@ pub async fn find_session_header(
         SessionHeader,
         r#"
         SELECT
-            COALESCE(s.session_id, r.session_id) AS "session_id!: SessionId",
+            $1::text                             AS "session_id!: SessionId",
             COALESCE(s.user_id, r.user_id)       AS "user_id?: UserId",
             u.display_name                       AS "display_name?",
-            upe.department                       AS "department?",
+            ARRAY(SELECT ug.group_id FROM user_groups ug
+                   WHERE ug.user_id = u.id)          AS "groups!: Vec<String>",
             COALESCE(s.started_at, r.first_seen) AS "started_at?",
             -- A hook session that never wrote an `ended_at` still has a last
             -- activity: the moment it started. Falling through to NULL made
             -- the field, and the duration derived from it, read as unknown.
-            COALESCE(s.ended_at, r.last_seen, s.started_at)
+            GREATEST(r.last_seen, COALESCE(s.ended_at, s.started_at))
                                                  AS "last_activity_at?",
             s.status                             AS "status?",
             COALESCE(s.model, r.model)           AS "model?",
@@ -92,20 +105,18 @@ pub async fn find_session_header(
             s.ai_title                           AS "ai_title?"
         FROM (
             SELECT
-                session_id,
+                COUNT(*)::bigint AS request_count,
                 MAX(user_id) AS user_id,
                 MIN(created_at) AS first_seen,
                 MAX(created_at) AS last_seen,
-                MAX(model) AS model
+                (ARRAY_AGG(model ORDER BY created_at DESC)
+                    FILTER (WHERE model IS NOT NULL))[1] AS model
             FROM ai_requests
-            WHERE session_id = $1
-            GROUP BY session_id
+            WHERE session_id = $1 OR client_session_id = $1
         ) r
-        FULL OUTER JOIN plugin_session_summaries s
-          ON s.session_id = r.session_id
+        LEFT JOIN plugin_session_summaries s ON s.session_id = $1
         LEFT JOIN users u ON u.id = COALESCE(s.user_id, r.user_id)
-        LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
-        WHERE COALESCE(s.session_id, r.session_id) = $1
+        WHERE r.request_count > 0 OR s.session_id IS NOT NULL
         LIMIT 1
         "#,
         session_id.as_str()
@@ -129,7 +140,7 @@ pub async fn get_session_kpis(
             COALESCE(SUM(output_tokens), 0)::bigint            AS "total_output_tokens!",
             COALESCE(SUM(cost_microdollars), 0)::bigint        AS "total_cost_microdollars!"
         FROM ai_requests
-        WHERE session_id = $1
+        WHERE session_id = $1 OR client_session_id = $1
         "#,
         session_id.as_str()
     )
@@ -157,6 +168,9 @@ pub async fn list_session_contexts(
         SELECT
             r.context_id                         AS "context_id!: ContextId",
             c.name                               AS "name?",
+            conversation_title(r.context_id, cr.client_session_id)
+                                                 AS "title!",
+            COALESCE(cr.turn_count, 0)::bigint   AS "turn_count!",
             COUNT(*)::bigint                     AS "request_count!",
             MAX(r.created_at)                    AS "last_request_at?",
             MAX(r.model)                         AS "model?",
@@ -166,8 +180,12 @@ pub async fn list_session_contexts(
             COUNT(*) FILTER (WHERE r.status = 'failed')::bigint AS "error_count!"
         FROM ai_requests r
         LEFT JOIN user_contexts c ON c.context_id = r.context_id
-        WHERE r.session_id = $1 AND r.context_id <> $2
-        GROUP BY r.context_id, c.name
+        LEFT JOIN conversation_metrics_for(ARRAY(
+            SELECT DISTINCT context_id::text FROM ai_requests
+            WHERE session_id = $1 OR client_session_id = $1
+        )) cr ON cr.context_id = r.context_id
+        WHERE (r.session_id = $1 OR r.client_session_id = $1) AND r.context_id <> $2
+        GROUP BY r.context_id, c.name, cr.client_session_id, cr.turn_count
         ORDER BY MAX(r.created_at) DESC
         LIMIT 200
         "#,
@@ -192,7 +210,7 @@ pub async fn list_session_traces(
             MAX(COALESCE(completed_at, created_at))             AS "ended_at?",
             COUNT(*) FILTER (WHERE status = 'failed')::bigint   AS "error_count!"
         FROM ai_requests
-        WHERE session_id = $1 AND trace_id IS NOT NULL
+        WHERE (session_id = $1 OR client_session_id = $1) AND trace_id IS NOT NULL
         GROUP BY trace_id
         ORDER BY MIN(created_at) DESC
         LIMIT 200
@@ -215,13 +233,13 @@ pub async fn list_session_requests(
             id                                  AS "id!: AiRequestId",
             NULLIF(context_id, $2)              AS "context_id?: ContextId",
             trace_id                            AS "trace_id?: TraceId",
-            model                               AS "model!",
+            model                               AS "model?",
             status                              AS "status!",
             latency_ms                          AS "latency_ms?",
             cost_microdollars                   AS "cost_microdollars!",
             created_at                          AS "created_at!"
         FROM ai_requests
-        WHERE session_id = $1
+        WHERE session_id = $1 OR client_session_id = $1
         ORDER BY created_at DESC
         LIMIT 200
         "#,

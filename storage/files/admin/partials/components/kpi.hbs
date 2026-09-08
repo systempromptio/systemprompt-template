@@ -1,0 +1,25 @@
+{{!--
+  One KPI tile. Pass `href` to make the tile the filter its number describes;
+  `active` marks that filter as applied. `tone` is ok | warn | err | accent and
+  paints the inline-start bar only.
+
+  The supporting line is `note`, not `sub` and not `subtitle`: `sub` is a
+  registered helper, so a bare `sub` mustache called it with no arguments and
+  printed 0 on every tile, and `subtitle` resolved to the page's own subtitle.
+  A field genuinely named `sub` must be read as `this.sub`, which is a path and
+  cannot be mistaken for a helper.
+
+    {{> components/kpi label="Denied" value=denied tone="err"
+        unit="calls" note="of 1,204 in window" href=denied_url}}
+--}}
+{{#if href}}
+<a class="sp-kpi sp-kpi--link{{#if tone}} sp-kpi--{{tone}}{{/if}}{{#if active}} is-active{{/if}}"
+   href="{{href}}"{{#if hint}} title="{{hint}}"{{/if}}>
+{{else}}
+<div class="sp-kpi{{#if tone}} sp-kpi--{{tone}}{{/if}}"{{#if hint}} title="{{hint}}"{{/if}}>
+{{/if}}
+    <span class="sp-kpi__label">{{label}}</span>
+    <span class="sp-kpi__value">{{value}}{{#if unit}}<span class="sp-kpi__unit">{{unit}}</span>{{/if}}</span>
+    {{#if note}}<span class="sp-kpi__sub">{{note}}</span>{{/if}}
+    {{#if delta}}<span class="sp-delta{{#if delta_dir}} sp-delta--{{delta_dir}}{{/if}}">{{delta}}</span>{{/if}}
+{{#if href}}</a>{{else}}</div>{{/if}}

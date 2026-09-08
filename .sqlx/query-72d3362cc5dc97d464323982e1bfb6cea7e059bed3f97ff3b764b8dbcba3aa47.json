@@ -1,0 +1,114 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COUNT(*)::bigint                                   AS \"request_count!\",\n            COUNT(DISTINCT trace_id)::bigint                   AS \"trace_count!\",\n            COUNT(*) FILTER (WHERE status = 'failed')::bigint  AS \"error_count!\",\n            COALESCE(SUM(input_tokens), 0)::bigint             AS \"total_input_tokens!\",\n            COALESCE(SUM(output_tokens), 0)::bigint            AS \"total_output_tokens!\",\n            COALESCE(SUM(cost_microdollars), 0)::bigint        AS \"total_cost_microdollars!\",\n            MIN(created_at)                                    AS \"first_request_at?\",\n            MAX(created_at)                                    AS \"last_request_at?\",\n            (ARRAY_AGG(model ORDER BY created_at DESC)\n                FILTER (WHERE effective_kind = 'turn' AND model IS NOT NULL))[1]\n                                                               AS \"model?\",\n            COUNT(*) FILTER (WHERE effective_kind = 'turn')::bigint  AS \"turn_count!\",\n            COUNT(*) FILTER (WHERE effective_kind <> 'turn')::bigint AS \"side_call_count!\",\n            COALESCE(SUM(cost_microdollars) FILTER (WHERE effective_kind <> 'turn'), 0)::bigint\n                                                               AS \"side_call_cost_microdollars!\",\n            (SELECT COUNT(*)::bigint FROM ai_request_tool_calls t\n              JOIN conversation_requests tr ON tr.id = t.request_id\n             WHERE tr.context_id = $1 AND tr.effective_kind = 'turn')\n                                                               AS \"tool_call_count!\",\n            COALESCE(ARRAY_AGG(DISTINCT model) FILTER (WHERE model IS NOT NULL),\n                     ARRAY[]::text[])                          AS \"models!: Vec<String>\"\n        FROM conversation_requests\n        WHERE context_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "request_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "trace_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "error_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "total_output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "total_cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "first_request_at?",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "last_request_at?",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "model?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "turn_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "side_call_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "side_call_cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "tool_call_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "models!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "72d3362cc5dc97d464323982e1bfb6cea7e059bed3f97ff3b764b8dbcba3aa47"
+}

@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH membership AS (\n                 SELECT ug.user_id, ug.group_id AS scope_id\n                   FROM user_groups ug\n                  WHERE $1::TEXT = 'group' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT pm.user_id, pm.project_id AS scope_id\n                   FROM project_members pm\n                  WHERE $1::TEXT = 'project' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT d.user_id, d.primary_group_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'group' AND $2::BOOLEAN\n                    AND d.primary_group_id IS NOT NULL\n                 UNION\n                 SELECT d.user_id, d.primary_project_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'project' AND $2::BOOLEAN\n                    AND d.primary_project_id IS NOT NULL\n             ) SELECT COALESCE(m.scope_id, $3) AS \"scope_id!\",\n                  COALESCE(g.name, p.name, m.scope_id, $3) AS \"label!\",\n                  COUNT(*)::BIGINT AS \"requests!\",\n                  COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS \"cost_microdollars!\"\n           FROM ai_requests r\n           LEFT JOIN membership m\n             ON m.user_id = r.user_id AND r.actor_kind = 'user'\n           LEFT JOIN groups g ON g.id = m.scope_id AND $1 = 'group'\n           LEFT JOIN projects p ON p.id = m.scope_id AND $1 = 'project'\n           WHERE NOT r.synthetic\n             AND r.created_at >= $4\n             AND r.created_at < $5\n           GROUP BY 1, 2\n           ORDER BY 4 DESC, 3 DESC, 1\n           LIMIT $6",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "scope_id!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "label!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "dcbeba2b3af92ced36729d92b7f444982b4e8fdf9fa9c4b24283e372cfc99eaf"
+}

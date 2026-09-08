@@ -1,0 +1,134 @@
+@layer tokens {
+
+:root {
+    color-scheme: light;
+
+    --sp-font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --sp-font-body: var(--sp-font-family);
+    --sp-font-heading: var(--sp-font-family);
+    --sp-font-brand: var(--sp-font-family);
+    --sp-font-mono: "Roboto Mono", "SF Mono", "Cascadia Code", "Fira Code", monospace;
+
+    --sp-primary-50:  var(--sp-primitive-brand-50);
+    --sp-primary-100: var(--sp-primitive-brand-100);
+    --sp-primary-200: var(--sp-primitive-brand-200);
+    --sp-primary-300: var(--sp-primitive-brand-300);
+    --sp-primary-400: var(--sp-primitive-brand-400);
+    --sp-primary-500: var(--sp-primitive-brand-500);
+    --sp-primary-600: var(--sp-primitive-brand-600);
+    --sp-primary-700: var(--sp-primitive-brand-700);
+    --sp-primary-800: var(--sp-primitive-brand-800);
+    --sp-primary-900: var(--sp-primitive-brand-900);
+    --sp-primary-950: var(--sp-primitive-brand-950);
+
+    --sp-warm-50:  var(--sp-primitive-warm-50);
+    --sp-warm-100: var(--sp-primitive-warm-100);
+    --sp-warm-200: var(--sp-primitive-warm-200);
+    --sp-warm-300: var(--sp-primitive-warm-300);
+    --sp-warm-400: var(--sp-primitive-warm-400);
+    --sp-warm-500: var(--sp-primitive-warm-500);
+    --sp-warm-600: var(--sp-primitive-warm-600);
+    --sp-warm-700: var(--sp-primitive-warm-700);
+    --sp-warm-800: var(--sp-primitive-warm-800);
+    --sp-warm-900: var(--sp-primitive-warm-900);
+    --sp-warm-950: var(--sp-primitive-warm-950);
+
+    --sp-bg-base:            var(--sp-primitive-brand-100);
+    --sp-bg-canvas:          var(--sp-primitive-brand-50);
+    --sp-bg-surface:         var(--sp-primitive-white);
+    --sp-bg-surface-raised:  var(--sp-primitive-white);
+    --sp-bg-surface-overlay: var(--sp-primitive-white);
+    --sp-bg-surface-alt:     var(--sp-primitive-brand-50);
+    --sp-bg-input:           var(--sp-primitive-white);
+    --sp-bg-tertiary:        var(--sp-primitive-brand-100);
+    --sp-bg-main:            var(--sp-primitive-brand-100);
+
+    --sp-border-subtle:  color-mix(in oklch, var(--sp-primitive-brand-700) 8%, transparent);
+    --sp-border-default: var(--sp-primitive-brand-200);
+    --sp-border-strong:  var(--sp-primitive-brand-300);
+
+    /* 4.5:1 body minimum, measured against --sp-bg-base rather than the white
+       card: the footer and the muted badge sit on the page ground, and a value
+       that clears 4.5 only on white fails everywhere else. On --sp-bg-base
+       --sp-text-primary measures 14.5:1, --sp-text-secondary 8.2:1 and
+       --sp-text-tertiary 4.8:1. --sp-text-disabled is 2.4:1 and therefore never
+       carries meaning on its own.
+
+       The tone text values below are measured the same way: each against its
+       own 12-14% tint composited over --sp-bg-base, the darkest ground a badge
+       lands on. The lowest in the family is 4.8:1. They are separate from the
+       tone fills because a fill that reads well as a 2px bar is far too light
+       to be 11px text on a tint of itself. */
+    --sp-text-primary:   var(--sp-primitive-brand-700);
+    --sp-text-secondary: var(--sp-primitive-brand-500);
+    --sp-text-tertiary:  oklch(0.520 0 0);
+    --sp-text-disabled:  var(--sp-primitive-brand-300);
+    --sp-text-on-accent: var(--sp-primitive-brand-50);
+    --sp-text-on-dark:   var(--sp-primitive-brand-50);
+
+    --sp-interactive:   var(--sp-primitive-accent-red);
+    --sp-accent:        var(--sp-primitive-accent-red);
+    --sp-accent-hover:  color-mix(in oklch, var(--sp-accent) 88%, var(--sp-primitive-black));
+    /* The brand red is a decoration colour: as a border, a bar or a focus ring
+       it only owes 3:1 and it clears that. It cannot be text and it cannot sit
+       behind text — as text on white it measures 4.2:1 and behind
+       --sp-text-on-accent it measures 3.9:1. So the family splits three ways and
+       the brand value itself is left alone: --sp-accent decorates,
+       --sp-accent-text is accent-coloured text, --sp-accent-fill is a filled
+       surface that carries text. Measured: accent-text 6.7:1 on white, 5.8:1
+       on --sp-bg-base and 5.0:1 on an accent tint over the page ground, which is
+       the worst ground it lands on; --sp-text-on-accent on accent-fill 5.3:1. */
+    --sp-accent-text:   oklch(0.495 0.180 29);
+    --sp-accent-fill:   oklch(0.535 0.200 29);
+    --sp-accent-dim:    color-mix(in oklch, var(--sp-accent) 10%, transparent);
+    --sp-accent-strong: color-mix(in oklch, var(--sp-accent) 18%, transparent);
+    --sp-accent-surface: color-mix(in oklch, var(--sp-accent) 6%, var(--sp-bg-surface));
+
+    --sp-success: var(--sp-primitive-green-500);
+    --sp-success-dim: color-mix(in oklch, var(--sp-success) 14%, transparent);
+    --sp-success-strong: oklch(0.480 0.120 149);
+
+    --sp-warning: var(--sp-primitive-amber-500);
+    --sp-warning-dim: color-mix(in oklch, var(--sp-warning) 14%, transparent);
+    --sp-warning-strong: oklch(0.500 0.100 82);
+    --sp-bg-warning: color-mix(in oklch, var(--sp-warning) 10%, var(--sp-bg-surface));
+
+    --sp-info: var(--sp-primitive-blue-500);
+    --sp-info-strong: oklch(0.500 0.140 259);
+    --sp-danger: var(--sp-primitive-red-500);
+    --sp-danger-dim: color-mix(in oklch, var(--sp-danger) 12%, transparent);
+    --sp-danger-strong: oklch(0.505 0.140 25);
+    --sp-border-primary: color-mix(in oklch, var(--sp-accent) 30%, var(--sp-border-default));
+
+    --sp-focus-ring: color-mix(in oklch, var(--sp-accent) 55%, transparent);
+
+    --sp-sidebar-bg: var(--sp-primitive-brand-50);
+    --sp-sidebar-border: var(--sp-primitive-brand-200);
+    --sp-sidebar-text: var(--sp-primitive-brand-500);
+    --sp-sidebar-text-muted: var(--sp-primitive-brand-400);
+    --sp-sidebar-text-hover: var(--sp-primitive-brand-700);
+    --sp-sidebar-hover-bg: var(--sp-primitive-brand-100);
+    --sp-sidebar-active-bg: color-mix(in oklch, var(--sp-accent) 8%, transparent);
+    --sp-sidebar-active-color: var(--sp-accent-text);
+
+    --sp-section-dashboard: var(--sp-accent);
+    --sp-section-users:     oklch(0.55 0.22 295);
+    --sp-section-plugins:   var(--sp-info);
+    --sp-section-skills:    var(--sp-success);
+    --sp-section-export:    var(--sp-warning);
+    --sp-section-audit:     var(--sp-danger);
+    --sp-section-dashboard-dim: color-mix(in oklch, var(--sp-section-dashboard) 14%, transparent);
+    --sp-section-users-dim: color-mix(in oklch, var(--sp-section-users) 14%, transparent);
+    --sp-section-plugins-dim: color-mix(in oklch, var(--sp-section-plugins) 14%, transparent);
+    --sp-section-skills-dim: color-mix(in oklch, var(--sp-section-skills) 14%, transparent);
+    --sp-section-export-dim: color-mix(in oklch, var(--sp-section-export) 14%, transparent);
+    --sp-section-audit-dim: color-mix(in oklch, var(--sp-section-audit) 14%, transparent);
+    --sp-section-color: var(--sp-accent);
+
+    /* The federated-identity button must carry the provider's own brand blue;
+       it is the one colour in the product we do not get to choose. */
+    --sp-sso-brand: oklch(0.663 0.147 235);
+    --sp-sso-brand-hover: color-mix(in oklch, var(--sp-sso-brand) 88%, var(--sp-primitive-black));
+}
+
+}

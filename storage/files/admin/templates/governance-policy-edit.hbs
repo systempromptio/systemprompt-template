@@ -1,77 +1,59 @@
 {{#> layout title=title page=page}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="/admin/governance/policies">Policies</a>
-        <span class="breadcrumbs__sep" aria-hidden="true">›</span>
-        <span aria-current="page">Policy</span>
-    </nav>
-    {{> components/page-header title=policy.name subtitle=policy.description}}
-
-    <p><a href="/admin/governance/policies">&larr; All policies</a></p>
-
-    <div class="card mb-6">
-        <h2>State</h2>
-        <p>
-            <strong>Id:</strong> <code class="code-inline">{{policy.id}}</code><br>
-            <strong>Status:</strong>
-            {{#if policy.enabled}}
-            <span class="mcp-badge mcp-badge-success">ENABLED</span>
-            {{else}}
-            <span class="mcp-badge">DISABLED</span>
-            {{/if}}
-        </p>
-        <form method="post" action="/admin/governance/{{policy.id}}/toggle" class="inline">
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=policy.name subtitle=policy.description}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{decisions_url}}">All decisions</a>
+        <form method="post" action="{{toggle_url}}" class="sp-p-policy__toggle">
             {{#if policy.enabled}}
             <input type="hidden" name="enabled" value="false">
-            <button type="submit" class="btn btn-sm btn-outline">Disable this policy</button>
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--danger">Disable policy</button>
             {{else}}
             <input type="hidden" name="enabled" value="true">
-            <button type="submit" class="btn btn-sm">Enable this policy</button>
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Enable policy</button>
             {{/if}}
-            <span class="text-muted ml-3">Writes <code>{{config_path}}</code>. The running engine keeps its current chain until the server restarts.</span>
         </form>
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        <span><code class="sp-code-inline">{{policy.id}}</code></span>
+        <span>{{> components/badge tone=policy.state_tone text=policy.state}}</span>
+        <span>Toggling writes <code class="sp-code-inline">{{config_path}}</code>; the running engine keeps its chain until restart.</span>
+        {{/inline}}
+    {{/components/page-header}}
+
+    <div class="sp-p-policy__grid">
+        <div>
+            {{#> components/section title="Configuration" note="Parameters as loaded from the YAML. Edit the file on disk to change values; the toggle above is the only field the UI writes."}}{{/components/section}}
+            <pre class="sp-code-block sp-p-policy__yaml"><code>{{params_yaml}}</code></pre>
+        </div>
+        <div>
+            {{#> components/section title="Recent decisions" count=recent_count note="Newest first, this policy only."}}{{/components/section}}
+            {{#if has_recent}}
+            {{#> components/table caption="Recent decisions for this policy" modifier="sp-p-policy__table"}}
+                <thead><tr>
+                    <th scope="col" class="sp-col-date">Time</th>
+                    <th scope="col" class="sp-col-status">Decision</th>
+                    <th scope="col">Tool</th>
+                    <th scope="col">User</th>
+                    <th scope="col">Reason</th>
+                </tr></thead>
+                <tbody>
+                {{#each recent}}
+                <tr>
+                    <td class="sp-table__cell--date">{{created_at}}</td>
+                    <td>{{> components/badge tone=decision_tone text=decision}}</td>
+                    <td class="sp-u-mono sp-u-truncate" title="{{tool_name}}">{{tool_name}}</td>
+                    <td class="sp-u-mono sp-u-truncate" title="{{user_id}}"><a href="{{user_url}}">{{shortId user_id}}</a></td>
+                    <td class="sp-p-policy__reason" title="{{reason}}">{{reason}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            {{/components/table}}
+            {{else}}
+            {{> components/empty-state title="No decisions yet" message="This policy has not evaluated a tool call. Decisions appear here as soon as it does."}}
+            {{/if}}
+        </div>
     </div>
-
-    <div class="card mb-6">
-        <h2>Configuration</h2>
-        <p class="text-muted">Parameters as loaded from <code>{{config_path}}</code>. Edit the file on disk to change values; the toggle above is the only field the UI writes.</p>
-        <pre class="code-block"><code>{{params_yaml}}</code></pre>
-    </div>
-
-    <h2>Recent decisions for this policy</h2>
-    {{#if has_recent}}
-    {{#> components/data-table}}
-        <thead><tr>
-            <th class="col-date">Time</th>
-            <th>User</th>
-            <th>Tool</th>
-            <th class="col-status">Decision</th>
-            <th class="col-multiline">Reason</th>
-        </tr></thead>
-        <tbody>
-        {{#each recent}}
-        <tr>
-            <td class="col-date">{{created_at}}</td>
-            <td>{{truncate user_id 12}}</td>
-            <td><code class="code-inline">{{tool_name}}</code></td>
-            <td class="col-status">
-                {{#if is_denied}}
-                <span class="mcp-badge mcp-badge-danger">DENIED</span>
-                {{else}}
-                <span class="mcp-badge mcp-badge-success">ALLOWED</span>
-                {{/if}}
-            </td>
-            <td class="col-multiline">{{truncate reason 80}}</td>
-        </tr>
-        {{/each}}
-        </tbody>
-    {{/components/data-table}}
-    {{else}}
-    {{> components/empty-state message="No decisions recorded for this policy yet."}}
-    {{/if}}
-
     {{/inline}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "scripts"}}{{/inline}}
 {{/layout}}

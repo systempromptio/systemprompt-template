@@ -20,6 +20,9 @@ use crate::util::time_range::TimeRange;
 // never derives a scale and the axis cannot disagree with the bars.
 #[derive(Debug, Serialize)]
 pub(crate) struct ChartView {
+    // Why: serialized as chart_title — the layout partial's `title=` hash
+    // param shadows a context field named `title` inside nested partials.
+    #[serde(rename = "chart_title")]
     pub title: &'static str,
     pub subtitle: String,
     pub tone: &'static str,

@@ -9,7 +9,7 @@ User-facing docs for the gateway published out of this repository.
 | **systemprompt-gateway** (server) | AI governance gateway — Rust HTTP server + Postgres + MCP extensions | Kubernetes / Docker / Linux VM / PaaS | `v*` |
 
 Clients authenticate with a personal access token issued on
-`/admin/access/tokens`; see [`examples/pi/`](../examples/pi/) for a worked
+`/admin/access-tokens`; see [`examples/pi/`](../examples/pi/) for a worked
 client setup.
 
 ---

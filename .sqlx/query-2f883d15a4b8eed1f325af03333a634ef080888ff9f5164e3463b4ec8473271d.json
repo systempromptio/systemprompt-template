@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO plugin_usage_events\n            (id, user_id, session_id, event_type, tool_name, plugin_id, metadata,\n             description, prompt_preview, cwd, dedup_key)\n         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n         ON CONFLICT (dedup_key) WHERE dedup_key IS NOT NULL DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2f883d15a4b8eed1f325af03333a634ef080888ff9f5164e3463b4ec8473271d"
+}

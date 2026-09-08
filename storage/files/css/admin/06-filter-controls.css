@@ -1,0 +1,126 @@
+@layer components {
+
+.sp-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-space-4);
+}
+
+.sp-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-2) var(--sp-space-4);
+}
+
+.sp-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    font-size: var(--sp-text-sm);
+    cursor: pointer;
+}
+
+.sp-search-input {
+    width: 100%;
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+    padding: var(--sp-space-2) var(--sp-space-4);
+    color: var(--sp-text-primary);
+    font-size: var(--sp-text-base);
+    font-family: inherit;
+    outline: none;
+    transition: border-color var(--sp-duration-fast), box-shadow var(--sp-duration-fast);
+}
+
+.sp-search-input:focus-visible {
+    border-color: var(--sp-accent);
+    outline: 2px solid var(--sp-accent-dim);
+    outline-offset: -1px;
+}
+
+.sp-search-input::placeholder {
+    color: var(--sp-text-disabled);
+}
+
+/* Why: the labelled select every toolbar field uses. It lives with the other
+   filter controls because the roles, access-control and contexts pages all
+   share it; a page file is the wrong home for a shared control. */
+.sp-toolbar__field .sp-select {
+    appearance: auto;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+    color: var(--sp-text-primary);
+    font-size: var(--sp-text-sm);
+    font-family: inherit;
+    min-width: 140px;
+    cursor: pointer;
+}
+
+.sp-toolbar__field .sp-select:hover {
+    border-color: var(--sp-accent);
+}
+
+.sp-toolbar__field .sp-select:focus-visible {
+    outline: none;
+    border-color: var(--sp-accent);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--sp-accent) 25%, transparent);
+}
+
+.sp-filter-select {
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+    padding: var(--sp-space-2) var(--sp-space-4);
+    color: var(--sp-text-primary);
+    font-size: var(--sp-text-sm);
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    transition: border-color var(--sp-duration-fast);
+}
+
+.sp-filter-select:focus-visible {
+    border-color: var(--sp-accent);
+    outline: 2px solid var(--sp-accent-dim);
+    outline-offset: -1px;
+}
+
+.sp-filter-select option {
+    background: var(--sp-bg-surface-overlay);
+    color: var(--sp-text-primary);
+}
+
+.sp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    padding: var(--sp-space-1) var(--sp-space-3);
+    border-radius: var(--sp-radius-full);
+    border: 1px solid var(--sp-border-default);
+    background: var(--sp-bg-surface-raised);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+    cursor: pointer;
+                border-color var(--sp-duration-fast);
+}
+
+.sp-chip:hover {
+    color: var(--sp-text-primary);
+    border-color: var(--sp-border-strong);
+}
+
+.sp-chip.is-active {
+    background: var(--sp-accent-fill);
+    border-color: var(--sp-accent);
+    color: var(--sp-text-on-accent);
+    font-weight: 600;
+}
+
+}

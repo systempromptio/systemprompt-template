@@ -1,0 +1,35 @@
+{{!--
+  One spend leaderboard — projects or groups. Both boards are the same table,
+  so they are one partial: two copies would let the columns drift apart, and
+  the whole point of showing them side by side is that they are comparable.
+
+  Invoke as: {{> overview/scope-board board=projects}}
+--}}
+<section class="sp-p-overview__board" aria-label="{{board.title}}">
+    {{#> components/section title=board.title note=board.caption}}
+        {{#*inline "section_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{board.all_href}}">All</a>{{/inline}}
+    {{/components/section}}
+    {{#if board.error}}{{> components/notice tone="err" title="Leaderboard unavailable" message=board.error}}{{/if}}
+    {{#if board.has_rows}}
+    {{#> components/table caption=board.title}}
+        <thead><tr>
+            <th scope="col">Container</th>
+            <th scope="col" class="sp-table__cell--num">Requests</th>
+            <th scope="col" class="sp-table__cell--num" aria-sort="descending">Spend</th>
+            <th scope="col" class="sp-table__cell--num">Share</th>
+        </tr></thead>
+        <tbody>
+        {{#each board.rows}}
+        <tr>
+            <td>{{#if this.href}}<a href="{{this.href}}">{{this.label}}</a>{{else}}<span class="sp-p-overview__unattributed">{{this.label}}</span>{{/if}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.requests_display}}</td>
+            <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.share_display}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No spend in this window" message="Nothing was billed to a container over the range selected."}}
+    {{/if}}
+</section>

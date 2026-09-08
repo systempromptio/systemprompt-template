@@ -1,0 +1,10 @@
+@layer components {
+
+@media (max-width: 700px) {
+    
+    .sp-trace-detail__summary {
+        gap: var(--sp-space-2);
+        padding: var(--sp-space-2) var(--sp-space-3);
+    }
+}
+}

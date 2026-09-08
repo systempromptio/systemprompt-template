@@ -1,0 +1,99 @@
+@layer components {
+
+/* Tone is a 2px bar on the inline start, not a tinted background: a grid of
+   washed tiles turns the fold into a colour chart and the numbers stop being
+   the thing you read first.
+
+   The tile is a fixed band and its supporting line is one clamped line. A KPI
+   row is read by scanning the numbers across it, and that only works if the
+   numbers sit on one baseline; a tile whose note wrapped to four lines pushed
+   its whole row to 150px and broke the scan. A note that does not fit is a note
+   that belongs in the tile's title attribute, not in the band. */
+
+.sp-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: var(--sp-density-gap);
+    margin-bottom: var(--sp-density-section);
+}
+
+.sp-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+    padding: var(--sp-density-tile);
+    background: var(--sp-bg-surface);
+    border-radius: var(--sp-corners-sm);
+    box-shadow: var(--sp-shadow-card);
+    min-width: 0;
+    min-height: var(--sp-density-tile-h);
+    overflow: hidden;
+}
+
+.sp-kpi__label,
+.sp-kpi__sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.sp-kpi__label {
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-kpi__value {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-space-1);
+    font-size: var(--sp-text-kpi);
+    font-weight: var(--sp-font-semibold);
+    line-height: var(--sp-leading-tight);
+    letter-spacing: var(--sp-tracking-tight);
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-kpi__unit {
+    font-size: var(--sp-text-xs);
+    font-weight: var(--sp-font-medium);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-kpi__sub {
+    font-size: var(--sp-text-2xs);
+    color: var(--sp-text-tertiary);
+    margin-top: auto;
+}
+
+.sp-kpi--ok      { box-shadow: var(--sp-shadow-card), inset 2px 0 0 var(--sp-success); }
+.sp-kpi--warn,
+.sp-kpi--warning { box-shadow: var(--sp-shadow-card), inset 2px 0 0 var(--sp-warning); }
+.sp-kpi--err,
+.sp-kpi--danger  { box-shadow: var(--sp-shadow-card), inset 2px 0 0 var(--sp-danger); }
+.sp-kpi--accent  { box-shadow: var(--sp-shadow-card), inset 2px 0 0 var(--sp-accent); }
+
+.sp-kpi--link {
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow var(--sp-duration-fast) var(--sp-ease-out);
+}
+
+.sp-kpi--link:hover {
+    box-shadow: var(--sp-shadow-card-hover);
+}
+
+.sp-kpi--link:focus-visible {
+    outline: none;
+    box-shadow: var(--sp-shadow-card), 0 0 0 2px var(--sp-bg-surface), 0 0 0 4px var(--sp-accent);
+}
+
+.sp-kpi--link.is-active {
+    box-shadow: var(--sp-shadow-focus-inset);
+}
+
+}

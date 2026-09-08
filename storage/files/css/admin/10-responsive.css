@@ -1,0 +1,77 @@
+@layer components {
+
+@media (max-width: 768px) {
+
+    .sp-user-widget {
+        width: 38px;
+        height: 38px;
+    }
+
+    .sp-user-widget .sp-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 0.6rem;
+    }
+
+    .sp-user-meta {
+        display: none;
+    }
+
+    .sp-toolbar .sp-search-input,
+    .sp-search-input {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .sp-toolbar .sp-filter-select,
+    .sp-btn {
+        min-height: 44px;
+        font-weight: 500;
+    }
+
+    .sp-btn--sm {
+        min-height: 36px;
+    }
+
+    .sp-btn--actions {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .sp-install-trigger {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .sp-install-dropdown {
+        width: calc(100vw - var(--sp-space-6));
+        right: calc(-1 * var(--sp-space-3));
+    }
+}
+
+@media (max-width: 480px) {
+
+    .sp-toolbar .sp-filter-select,
+    .sp-user-widget {
+        width: 34px;
+        height: 34px;
+    }
+
+    .sp-user-widget .sp-avatar {
+        width: 26px;
+        height: 26px;
+        font-size: 0.55rem;
+    }
+
+    .sp-install-dropdown {
+        width: calc(100vw - var(--sp-space-4));
+        right: calc(-1 * var(--sp-space-2));
+    }
+
+    .sp-install-dropdown .sp-install-widget-stats {
+        flex-wrap: wrap;
+        gap: var(--sp-space-2) var(--sp-space-3);
+    }
+}
+
+}

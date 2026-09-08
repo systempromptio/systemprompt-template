@@ -1,0 +1,33 @@
+@layer components {
+
+.sp-breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-1);
+    margin-top: var(--sp-space-4);
+    font-size: var(--sp-text-2xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-breadcrumbs a {
+    color: var(--sp-text-secondary);
+    text-decoration: none;
+}
+
+.sp-breadcrumbs a:hover {
+    color: var(--sp-accent-text);
+    text-decoration: underline;
+}
+
+.sp-breadcrumbs__sep {
+    color: var(--sp-text-tertiary);
+    user-select: none;
+}
+
+.sp-breadcrumbs [aria-current="page"] {
+    color: var(--sp-text-primary);
+    font-weight: var(--sp-font-medium);
+}
+
+}

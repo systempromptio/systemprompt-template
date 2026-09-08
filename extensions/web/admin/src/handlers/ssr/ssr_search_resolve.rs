@@ -39,7 +39,7 @@ pub(crate) async fn search_resolve(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<SearchQuery>,
 ) -> AdminResult<Response> {
-    if !user_ctx.is_admin {
+    if !user_ctx.is_console {
         return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
 

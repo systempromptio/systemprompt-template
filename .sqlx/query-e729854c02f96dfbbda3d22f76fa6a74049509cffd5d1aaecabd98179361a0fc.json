@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_drive_files SET invocation_arn=NULL,output_uri=NULL,extracted_text=NULL,extraction_attempt=extraction_attempt+1 WHERE source_type=$1 AND file_id=$2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e729854c02f96dfbbda3d22f76fa6a74049509cffd5d1aaecabd98179361a0fc"
+}

@@ -37,7 +37,7 @@ them. It never changes the roles of a user it did not create.
 
 Browser equivalent: `/admin/register` is the self-signup page
 (magic-link + passkey); a logged-in user then issues their own API key
-under `/admin/access/devices`. The script automates that path so the demo
+under `/admin/access-tokens`. The script automates that path so the demo
 is repeatable.
 
 ## 2. Log in / credentials
@@ -129,7 +129,7 @@ the user you selected in step 1:
   is enabled for this user.
 - The usage panel shows every request the user made: model, provider,
   status, tokens in/out, cost, latency, and per-session denial counts.
-- "Open request traces" jumps to `/admin/entities/requests` filtered to
+- "Open request traces" jumps to `/admin/requests` filtered to
   the user for the full per-request drill-down (identity → policy → cost).
 
 CLI equivalents:

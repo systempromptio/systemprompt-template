@@ -1,0 +1,41 @@
+@layer components {
+
+/* A record's facts as a definition list: one row per fact, label left, value
+   right, an optional action beside the value. A table for six fixed rows spent
+   a header and an empty actions column on what is a list. */
+
+.sp-kv-list {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+}
+
+.sp-kv-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--sp-space-3);
+    font-size: var(--sp-text-sm);
+}
+
+.sp-kv-row dt {
+    color: var(--sp-text-tertiary);
+    flex-shrink: 0;
+}
+
+.sp-kv-row dd {
+    margin: 0;
+    color: var(--sp-text-primary);
+    text-align: right;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.sp-kv-row__value {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+}
+
+}

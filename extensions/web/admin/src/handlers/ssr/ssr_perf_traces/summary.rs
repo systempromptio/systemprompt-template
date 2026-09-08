@@ -7,9 +7,10 @@
 use crate::handlers::ssr::format::{format_cost, format_duration_ms, format_token_total};
 use crate::repositories::traces::TraceStats;
 
-use super::context::{SortHeader, SortHeaders, TraceStatsView};
+use super::context::{TraceStatsView, TracesSortHeaders};
 use super::view::preserved_query_string;
 use super::{BASE_URL, TraceListQuery};
+use crate::handlers::ssr::types::SortHeaderView;
 
 pub(super) fn serde_stats(query: &TraceListQuery, s: &TraceStats) -> TraceStatsView {
     TraceStatsView {
@@ -55,7 +56,7 @@ pub(super) fn build_sort_headers(
     query: &TraceListQuery,
     active_col: &str,
     active_dir: &str,
-) -> SortHeaders {
+) -> TracesSortHeaders {
     // Why: Every sort link carries the current filters and time range, minus the
     // sort state it is replacing and the page it would invalidate.
     let qs = preserved_query_string(query, &["sort", "dir", "page"]);
@@ -73,7 +74,7 @@ pub(super) fn build_sort_headers(
         } else {
             "desc"
         };
-        SortHeader {
+        SortHeaderView {
             label,
             class,
             hint,
@@ -95,30 +96,38 @@ pub(super) fn build_sort_headers(
             },
         }
     };
-    SortHeaders {
+    TracesSortHeaders {
         started: header(
             "started_at",
             "Started",
-            "col-started",
+            "sp-col-started",
             "First event on the trace, in local time",
         ),
         activity: header(
             "spans",
             "Activity",
-            "col-spans",
+            "sp-col-spans",
             "Gateway requests, then governance decisions and tool calls",
         ),
         tokens: header(
             "tokens",
             "Tokens",
-            "col-tokens",
+            "sp-col-tokens",
             "Total tokens, split input / output",
         ),
-        cost: header("cost", "Cost", "col-cost", "Billed cost across the trace"),
+        // Why: most traces route to a model with no price in the catalog, so the
+        // column is empty for them while the KPI still totals what was measured.
+        // Naming it plainly "Cost" reads as "this trace was free".
+        cost: header(
+            "cost",
+            "Cost (measured)",
+            "sp-col-cost",
+            "Billed cost across the trace, where the route carries a price",
+        ),
         duration: header(
             "duration",
             "Duration",
-            "col-duration",
+            "sp-col-duration",
             "Summed request latency, over the first-to-last event window",
         ),
     }

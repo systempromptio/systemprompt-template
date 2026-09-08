@@ -1,126 +1,76 @@
 {{#> layout title=title page=page}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="Every gate one agent session passed through, in order. A blocked prompt has no model call after it; a blocked tool call has no tool fire. Select any row for its chain of custody."}}
+        {{#*inline "header_actions"}}
+        {{#if has_rows}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{session_detail_url}}">Open full session</a>{{/if}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/decisions">Decisions</a>
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        {{#if has_rows}}<span>Session <code class="sp-code-inline">{{session_id}}</code></span><span>{{turn_count}} turns</span>{{/if}}
+        {{/inline}}
+    {{/components/page-header}}
 
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="/admin/governance/policies">Policies</a>
-        <span aria-hidden="true">›</span>
-        <span aria-current="page">Demo Trace</span>
-    </nav>
-
-    {{> components/page-header title=hero_title subtitle=hero_subtitle}}
-
-    <section class="stats-grid-3col">
-        {{> components/stat-card label="Prompts blocked" value=prompts_blocked variant="danger"
-             subtitle="secret scan caught the credential before it left the machine"}}
-        {{> components/stat-card label="Tool calls blocked" value=tools_blocked variant="danger"
-             subtitle="scope, blocklist, or route policy refused the call"}}
-        {{> components/stat-card label="Model calls made" value=model_calls
-             subtitle="what actually reached a provider"}}
+    <section class="sp-kpi-grid" aria-label="Session outcome">
+        {{#each kpis}}
+        {{> components/kpi label=this.label value=this.value note=this.note tone=this.tone}}
+        {{/each}}
     </section>
 
     {{#if has_sessions}}
-    <div class="trace-sessions" role="list" aria-label="Agent sessions">
-        {{#each sessions}}
-        <a class="trace-session{{#if is_active}} is-active{{/if}}" role="listitem"
-           href="{{url}}" title="{{session_id}} · {{started_at}} → {{last_at}}">
-            <span class="trace-session__when">{{label}}</span>
-            <span class="trace-session__model">{{#if has_model}}{{model}}{{else}}no model call{{/if}}</span>
-            <span class="trace-session__counts">
-                <span class="trace-session__allow">{{allowed}} allow</span>
-                <span class="trace-session__deny">{{denied}} deny</span>
-                <span class="trace-session__calls">{{requests}} calls</span>
-            </span>
-        </a>
-        {{/each}}
-    </div>
+    <form class="sp-toolbar" method="get" action="{{base_url}}" role="search" aria-label="Choose a session" data-demo-trace="form">
+        <span class="sp-toolbar__count">{{session_count}} sessions</span>
+        <div class="sp-toolbar__field">
+            <label class="sp-toolbar__field-label" for="demo-trace-session">Agent session</label>
+            <select class="sp-select sp-p-demo-trace__select" id="demo-trace-session" name="session" data-demo-trace="session">
+            {{#each sessions}}<option value="{{session_id}}"{{#if is_active}} selected{{/if}}>{{option_label}}</option>{{/each}}
+            </select>
+        </div>
+        <div class="sp-toolbar__actions">
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--secondary">Show</button>
+        </div>
+    </form>
     {{/if}}
 
     {{#if has_rows}}
-    <div class="trace-legend">
-        <p>
-            Read each turn top to bottom. A blocked prompt has no
-            <em>Model call</em> row after it — the credential never left the machine.
-            A blocked tool call has no <em>Tool fire</em> row — it never executed.
-            Select any row to open its chain of custody.
-        </p>
-        <a class="btn btn-sm btn-outline" href="{{session_detail_url}}">Open full session →</a>
-    </div>
-
     {{#each turns}}
-    <section class="trace-turn{{#if blocked}} trace-turn--blocked{{/if}}">
-        <header class="trace-turn__header">
-            <span class="trace-turn__ordinal">Turn {{ordinal}}</span>
-            <span class="trace-turn__prompt">{{prompt}}</span>
-            <span class="trace-turn__spacer"></span>
-            {{#if denied}}{{> components/badge color="red" text=(concat denied " blocked")}}{{/if}}
-            {{#if model_calls}}
-                {{> components/badge color="blue" text=(concat model_calls " model calls")}}
-            {{else}}
-                {{> components/badge color="gray" text="no model call"}}
-            {{/if}}
-            <span class="trace-turn__count">{{row_count}} events</span>
-        </header>
-
-        {{#> components/data-table}}
-            <thead><tr>
-                <th class="col-date">Time</th>
-                <th class="col-status">Stage</th>
-                <th>Subject</th>
-                <th class="col-status">Outcome</th>
-                <th>Policy chain</th>
-                <th>Detail</th>
-            </tr></thead>
-            <tbody>
-            {{#each rows}}
-            <tr class="trace-row{{#if is_deny}} trace-row--deny{{/if}}"
-                data-chain-id="{{chain_id}}" tabindex="0"
-                title="Open chain of custody for {{subject}}">
-                <td class="col-date">
-                    {{#> components/table-cell-stacked secondary=offset}}
-                        <code class="code-inline" title="{{at_full}}">{{at}}</code>
-                    {{/components/table-cell-stacked}}
-                </td>
-                <td class="col-status"><span class="badge badge-blue">{{kind_label}}</span></td>
-                <td><code class="code-inline">{{subject}}</code></td>
-                <td class="col-status">
-                    {{#if is_deny}}
-                    <span class="badge badge-red">BLOCKED</span>
-                    {{else if is_request}}
-                    <span class="badge badge-blue">{{outcome}}</span>
-                    {{else}}
-                    <span class="badge badge-green">{{outcome}}</span>
-                    {{/if}}
-                </td>
-                <td>
-                    {{#if has_stages}}
-                    <ol class="trace-stages">
-                        {{#each stages}}
-                        <li class="trace-stage trace-stage--{{result}}" title="{{policy}}: {{detail}}">
-                            <span class="trace-stage__name">{{policy}}</span>
-                        </li>
-                        {{/each}}
-                    </ol>
-                    {{else if has_policy}}
-                    <span class="badge badge-blue">{{policy}}</span>
-                    {{else}}
-                    <span class="text-tertiary">—</span>
-                    {{/if}}
-                </td>
-                <td class="trace-detail">
-                    {{#if has_detail}}{{detail}}{{else}}<span class="text-tertiary">—</span>{{/if}}
-                </td>
-            </tr>
-            {{/each}}
-            </tbody>
-        {{/components/data-table}}
-    </section>
+    {{#> components/section title=heading count=row_count note=summary}}{{/components/section}}
+    {{#> components/table caption=heading modifier="sp-p-demo-trace__table"}}
+        <thead><tr>
+            <th scope="col" class="sp-col-date">Time</th>
+            <th scope="col" class="sp-col-status">Stage</th>
+            <th scope="col">Subject</th>
+            <th scope="col" class="sp-col-status">Outcome</th>
+            <th scope="col">Policy chain</th>
+            <th scope="col">Detail</th>
+        </tr></thead>
+        <tbody>
+        {{#each rows}}
+        <tr class="sp-table__row--click{{#if is_deny}} sp-p-demo-trace__row--deny{{/if}}" data-chain-id="{{chain_id}}" tabindex="0" title="Open chain of custody for {{subject}}">
+            <td class="sp-table__cell--date" title="{{at_full}}">{{at}} <span class="sp-u-text-muted-inline">{{offset}}</span></td>
+            <td>{{> components/badge tone="info" text=kind_label}}</td>
+            <td class="sp-u-mono sp-u-truncate" title="{{subject}}">{{subject}}</td>
+            <td>{{> components/badge tone=outcome_tone text=outcome_label}}</td>
+            <td class="sp-p-demo-trace__chain">
+                {{#if has_stages}}
+                {{#each stages}}<span class="sp-badge sp-badge--sm sp-badge--nodot sp-badge--{{tone}}" title="{{policy}}: {{detail}}">{{policy}}</span>{{/each}}
+                {{else if has_policy}}
+                <code class="sp-code-inline">{{policy}}</code>
+                {{else}}
+                <span class="sp-u-text-muted">—</span>
+                {{/if}}
+            </td>
+            <td class="sp-p-demo-trace__detail" title="{{detail}}">{{#if has_detail}}{{detail}}{{else}}<span class="sp-u-text-muted">—</span>{{/if}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
     {{/each}}
-
     {{else}}
-    {{> components/empty-state message="No governed agent session yet. Run examples/pi/setup.sh and examples/pi/new-user.sh, drive Pi, and the trace appears here."}}
+    {{> components/empty-state title="No governed agent session yet" message="Run examples/pi/setup.sh and examples/pi/new-user.sh, drive Pi, and the trace appears here."}}
     {{/if}}
-
     {{/inline}}
-    {{#*inline "scripts"}}{{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-demo-trace.js?v={{css_version}}"></script>
+    {{/inline}}
 {{/layout}}

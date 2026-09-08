@@ -1,0 +1,36 @@
+@layer components {
+
+.sp-btn--actions,
+.sp-btn--actions:hover,
+.sp-btn--actions.is-active,
+.sp-btn--actions:focus-visible,
+.sp-actions-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.sp-actions-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: var(--sp-space-1);
+    background: var(--sp-bg-surface-overlay);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-inner-md);
+    box-shadow: var(--sp-shadow-float);
+    z-index: var(--sp-z-dropdown);
+    min-width: 140px;
+    padding: var(--sp-space-1) 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+                transform var(--sp-duration-fast) var(--sp-ease-in-out);
+}
+
+.sp-actions-menu.is-open .sp-actions-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+}

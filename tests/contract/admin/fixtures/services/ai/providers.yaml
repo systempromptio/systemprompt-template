@@ -1,0 +1,18 @@
+# One provider, because a gateway route naming a provider outside this list is
+# refused at load. Nothing here is reachable: the suite issues no inference,
+# and `gateway.enabled` is false.
+
+providers:
+- name: anthropic
+  wire: anthropic
+  surface: anthropic
+  endpoint: https://api.anthropic.com/v1
+  api_key_secret: anthropic
+  models:
+  - id: claude-contract-model
+    pricing:
+      input_per_million: 1.0
+      output_per_million: 1.0
+      cache_read_per_million: 0.1
+      cache_write_per_million: 1.0
+      per_image_cents: null

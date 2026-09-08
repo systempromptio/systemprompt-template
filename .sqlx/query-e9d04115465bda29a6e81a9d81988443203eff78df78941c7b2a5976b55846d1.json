@@ -1,0 +1,116 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH membership AS (\n                 SELECT ug.user_id, ug.group_id AS scope_id\n                   FROM user_groups ug\n                  WHERE $1::TEXT = 'group' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT pm.user_id, pm.project_id AS scope_id\n                   FROM project_members pm\n                  WHERE $1::TEXT = 'project' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT d.user_id, d.primary_group_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'group' AND $2::BOOLEAN\n                    AND d.primary_group_id IS NOT NULL\n                 UNION\n                 SELECT d.user_id, d.primary_project_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'project' AND $2::BOOLEAN\n                    AND d.primary_project_id IS NOT NULL\n             ) SELECT c.commit_hash AS \"commit_hash!\",\n                  c.user_id AS \"user_id!: UserId\",\n                  c.branch AS \"branch?\",\n                  c.message AS \"message!\",\n                  c.files_changed AS \"files_changed?\",\n                  c.insertions AS \"insertions?\",\n                  c.deletions AS \"deletions?\",\n                  c.committed_at AS \"committed_at!\"\n           FROM membership m\n           JOIN user_commits c ON c.user_id = m.user_id\n           WHERE m.scope_id = $3\n             AND c.committed_at >= NOW() - make_interval(days => $4)\n           ORDER BY c.committed_at DESC\n           LIMIT $5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "commit_hash!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_commits",
+            "name": "commit_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_commits",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "branch?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_commits",
+            "name": "branch"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "message!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_commits",
+            "name": "message"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "files_changed?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "user_commits",
+            "name": "files_changed"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "insertions?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "user_commits",
+            "name": "insertions"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "deletions?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "user_commits",
+            "name": "deletions"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "committed_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_commits",
+            "name": "committed_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Text",
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "e9d04115465bda29a6e81a9d81988443203eff78df78941c7b2a5976b55846d1"
+}

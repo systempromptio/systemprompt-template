@@ -1,0 +1,184 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle=subtitle}}
+        {{#*inline "header_meta"}}
+            {{> components/badge tone=status_tone text=status_label}}
+            <span>{{window_label}}</span>
+            {{#unless configured}}<span class="sp-u-text-warning">No declaration under services/mcp</span>{{/unless}}
+        {{/inline}}
+        {{#*inline "header_actions"}}
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{matrix_url}}">Edit access</a>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/traces">Traces</a>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/mcp">All servers</a>
+        {{/inline}}
+    {{/components/page-header}}
+
+    <section class="sp-kpi-grid" aria-label="Server totals">
+        {{#each kpis}}
+        {{> components/kpi label=this.label value=this.value note=this.sub tone=this.tone unit=this.unit}}
+        {{/each}}
+    </section>
+
+    <section aria-label="Tools">
+    {{> components/section title="Tools served" count=tools_count note="What this server actually executed in the window, busiest first."}}
+    {{#if tools_count}}
+    {{#> components/table caption="Tools this server served, with call volume and latency"}}
+        <thead><tr>
+            <th aria-sort="none">Tool</th>
+            <th class="sp-table__cell--num" aria-sort="none">Calls</th>
+            <th class="sp-table__cell--num" aria-sort="none">Errors</th>
+            <th class="sp-table__cell--num" aria-sort="none">Error rate</th>
+            <th class="sp-table__cell--num" aria-sort="none">Users</th>
+            <th class="sp-table__cell--num" aria-sort="none">Avg</th>
+            <th class="sp-table__cell--num" aria-sort="none">Max</th>
+            <th class="sp-table__cell--date" aria-sort="none">Last call</th>
+        </tr></thead>
+        <tbody>
+        {{#each tools}}
+        <tr>
+            <td class="sp-table__cell--mono">{{tool_name}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{formatNumber calls}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{failures}}</td>
+            <td class="sp-table__cell--num sp-u-num"><span class="sp-p-mcp__rate sp-p-mcp__rate--{{error_tone}}">{{error_rate_display}}</span></td>
+            <td class="sp-table__cell--num sp-u-num">{{distinct_users}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{avg_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{max_display}}</td>
+            <td class="sp-table__cell--date">{{last_call_display}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No tool calls" message="This server has executed nothing in the window. It may be declared but never reached."}}
+    {{/if}}
+    </section>
+
+    <section aria-label="Call log">
+    {{> components/section title="Call log" count=executions_count note="Every execution recorded against this server, newest first."}}
+    {{#if executions}}
+    {{#> components/table caption="Recent tool executions on this server" pagination=pagination}}
+        <thead><tr>
+            <th aria-sort="none">When</th>
+            <th aria-sort="none">Tool</th>
+            <th aria-sort="none">Status</th>
+            <th class="sp-table__cell--num" aria-sort="none">Duration</th>
+            <th aria-sort="none">User</th>
+            <th aria-sort="none">Session</th>
+            <th aria-sort="none">Trace</th>
+        </tr></thead>
+        <tbody>
+        {{#each executions}}
+        <tr data-execution-id="{{execution_id}}">
+            <td class="sp-table__cell--date">{{started_display}}</td>
+            <td class="sp-table__cell--mono">{{tool_name}}</td>
+            <td title="{{error_message}}">{{> components/badge tone=status_tone text=status}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{duration_display}}</td>
+            <td><a class="sp-table__link" href="{{user_url}}">{{caller}}</a></td>
+            <td class="sp-table__cell--mono">{{#if session_url}}<a class="sp-table__link" href="{{session_url}}">{{short_id}}</a>{{else}}—{{/if}}</td>
+            <td class="sp-table__cell--mono">{{#if trace_url}}<a class="sp-table__link" href="{{trace_url}}">trace</a>{{else}}—{{/if}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No calls recorded" message="Nothing has executed against this server."}}
+    {{/if}}
+    </section>
+
+    <div class="sp-p-mcp__split">
+    <section aria-label="Sessions">
+    {{> components/section title="Sessions" count=sessions_count note="Clients attached to this server, most recently active first."}}
+    {{#if sessions_count}}
+    {{#> components/table caption="MCP sessions attached to this server"}}
+        <thead><tr>
+            <th aria-sort="none">Session</th>
+            <th aria-sort="none">User</th>
+            <th aria-sort="none">State</th>
+            <th aria-sort="none">Identity</th>
+            <th class="sp-table__cell--date" aria-sort="none">Last beat</th>
+            <th class="sp-table__cell--date" aria-sort="none">Expires</th>
+        </tr></thead>
+        <tbody>
+        {{#each sessions}}
+        <tr data-session-id="{{session}}">
+            <td class="sp-table__cell--mono">{{short_id}}</td>
+            <td>{{#if user_url}}<a class="sp-table__link" href="{{user_url}}">{{caller}}</a>{{else}}—{{/if}}</td>
+            <td>{{> components/badge tone=status_tone text=status}}</td>
+            <td class="sp-table__cell--mono">{{identity_label}}</td>
+            <td class="sp-table__cell--date">{{last_activity_display}}</td>
+            <td class="sp-table__cell--date">{{expires_display}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No sessions" message="No client has ever attached to this server."}}
+    {{/if}}
+    </section>
+
+    <section aria-label="Access">
+    {{#> components/section title="Who can reach it" count=grants_count note="Access-control rules naming this server."}}
+        {{#*inline "section_actions"}}
+            <a class="sp-btn sp-btn--xs sp-btn--outline" href="{{matrix_url}}">Edit</a>
+        {{/inline}}
+    {{/components/section}}
+    <p class="sp-u-text-sm sp-u-text-secondary">
+        Default for everyone else:
+        {{#if default_included}}{{> components/badge tone="warn" text="included"}}{{else}}{{> components/badge tone="muted" text="excluded"}}{{/if}}
+    </p>
+    {{#if grants_count}}
+    {{#> components/table caption="Access-control rules on this MCP server"}}
+        <thead><tr>
+            <th aria-sort="none">Subject kind</th>
+            <th aria-sort="none">Subject</th>
+            <th aria-sort="none">Access</th>
+            <th class="sp-table__cell--date" aria-sort="none">Updated</th>
+        </tr></thead>
+        <tbody>
+        {{#each grants}}
+        <tr>
+            <td>{{subject_kind}}</td>
+            <td class="sp-table__cell--mono">{{subject}}</td>
+            <td>{{#if is_allow}}{{> components/badge tone="ok" text="allow"}}{{else}}{{> components/badge tone="err" text="deny"}}{{/if}}</td>
+            <td class="sp-table__cell--date">{{updated_display}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No rules" message="Nothing names this server directly. Reach is whatever the default above says."}}
+    {{/if}}
+    </section>
+    </div>
+
+    <div class="sp-catalog-detail-grid">
+        <section class="sp-catalog-rel-section" aria-label="Configuration">
+            <h2 class="sp-catalog-rel-section__title">Declaration</h2>
+            <dl class="sp-kv-list">
+                {{#each config_facts}}
+                <div class="sp-kv-row"><dt>{{label}}</dt><dd{{#if mono}} class="sp-u-mono"{{/if}}>{{value}}</dd></div>
+                {{/each}}
+            </dl>
+            {{#if oauth_scopes}}
+            <div class="sp-mkt-card__chips">
+                {{#each oauth_scopes}}<span class="sp-chip sp-chip--tag">{{this}}</span>{{/each}}
+            </div>
+            {{/if}}
+        </section>
+
+        <section class="sp-catalog-rel-section" aria-label="Plugins">
+            <h2 class="sp-catalog-rel-section__title">Shipped by <span class="sp-count-pill">{{included_by_count}}</span></h2>
+            {{#if included_by_count}}
+            <ul class="sp-rel-list">
+                {{#each included_by}}
+                <li><a class="sp-rel-link" href="{{url}}"><span class="sp-rel-link__name">{{name}}</span></a></li>
+                {{/each}}
+            </ul>
+            {{else}}
+            {{> components/empty-state message="No plugin carries this server, so nobody reaches it through a marketplace."}}
+            {{/if}}
+        </section>
+    </div>
+    {{/inline}}
+{{/layout}}

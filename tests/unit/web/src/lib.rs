@@ -106,3 +106,50 @@ mod web_extension_providers;
 mod web_extension_wiring;
 #[cfg(test)]
 mod web_schemas;
+
+// Migrated from the former in-crate `extensions/web/tests/` directory: the
+// tests workspace is the only home. The two front-end gates that used to be
+// shell scripts (admin template/CSS agreement and the textual front-end
+// standards), the asset-manifest check, and the Handlebars engine gates —
+// every template registers, every helper name is safe, every helper behaves —
+// all sharing `support`.
+#[cfg(test)]
+mod admin_css_classes;
+#[cfg(test)]
+mod asset_manifest;
+#[cfg(test)]
+mod frontend_standards;
+#[cfg(test)]
+mod support;
+#[cfg(test)]
+mod template_engine;
+#[cfg(test)]
+mod template_helper_names;
+#[cfg(test)]
+mod template_helpers;
+#[cfg(test)]
+mod template_parse;
+
+#[cfg(test)]
+mod conversation_sort;
+
+#[cfg(test)]
+mod conversation_view;
+
+#[cfg(test)]
+mod governance_warnings_rollup;
+
+#[cfg(test)]
+mod governance_pages;
+
+#[cfg(test)]
+mod hooks_track_commits_pure;
+
+#[cfg(test)]
+mod dashboard_people;
+
+#[cfg(test)]
+mod dev_login_pure;
+
+#[cfg(test)]
+mod governance_gateway;

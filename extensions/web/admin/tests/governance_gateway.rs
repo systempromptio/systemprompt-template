@@ -8,8 +8,8 @@
 
 use systemprompt_web_admin::repositories::config::gateway::{
     create_route, ensure_route_ids, find_matching_route, find_matching_route_index,
-    find_route_index_by_id, get_gateway_config, glob_match, reorder_routes, slugify_pattern,
-    synthesize_route_id, validate_route,
+    find_route_index_by_id, get_gateway_config_from_file, glob_match, reorder_routes,
+    slugify_pattern, synthesize_route_id, validate_route,
 };
 use systemprompt_web_admin::types::GatewayRouteView;
 use systemprompt_web_shared::error::MarketplaceError;
@@ -95,13 +95,13 @@ fn synthesized_id_is_stable() {
 #[test]
 fn ensure_route_ids_backfills_missing_then_idempotent() -> anyhow::Result<()> {
     let dir = tempfile::tempdir()?;
-    let path = dir.path().join("profile.yaml");
+    let path = dir.path().join("gateway.yaml");
     std::fs::write(&path, TWO_ROUTE_PROFILE)?;
 
     let changed = ensure_route_ids(&path)?;
     assert!(changed, "first call should backfill ids");
 
-    let cfg = get_gateway_config(&path)?;
+    let cfg = get_gateway_config_from_file(&path)?;
     assert_eq!(cfg.routes.len(), 2);
     assert!(!cfg.routes[0].id.is_empty());
     assert!(!cfg.routes[1].id.is_empty());
@@ -113,7 +113,7 @@ fn ensure_route_ids_backfills_missing_then_idempotent() -> anyhow::Result<()> {
     let changed_again = ensure_route_ids(&path)?;
     assert!(!changed_again, "second call should be a no-op");
 
-    let cfg2 = get_gateway_config(&path)?;
+    let cfg2 = get_gateway_config_from_file(&path)?;
     assert_eq!(cfg2.routes[0].id, id0_before);
     assert_eq!(cfg2.routes[1].id, id1_before);
     Ok(())
@@ -122,14 +122,14 @@ fn ensure_route_ids_backfills_missing_then_idempotent() -> anyhow::Result<()> {
 #[test]
 fn ids_stable_across_reorder() -> anyhow::Result<()> {
     let dir = tempfile::tempdir()?;
-    let path = dir.path().join("profile.yaml");
+    let path = dir.path().join("gateway.yaml");
     std::fs::write(&path, TWO_ROUTE_PROFILE)?;
-    let cfg = get_gateway_config(&path)?;
+    let cfg = get_gateway_config_from_file(&path)?;
     let id0 = cfg.routes[0].id.clone();
     let id1 = cfg.routes[1].id.clone();
 
     reorder_routes(&path, &[1, 0])?;
-    let cfg2 = get_gateway_config(&path)?;
+    let cfg2 = get_gateway_config_from_file(&path)?;
     assert_eq!(cfg2.routes[0].id, id1);
     assert_eq!(cfg2.routes[1].id, id0);
     Ok(())
@@ -138,7 +138,7 @@ fn ids_stable_across_reorder() -> anyhow::Result<()> {
 #[test]
 fn create_route_rejects_duplicate_id() -> anyhow::Result<()> {
     let dir = tempfile::tempdir()?;
-    let path = dir.path().join("profile.yaml");
+    let path = dir.path().join("gateway.yaml");
     std::fs::write(
         &path,
         r"gateway:

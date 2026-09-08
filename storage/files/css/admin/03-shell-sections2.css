@@ -1,0 +1,94 @@
+
+
+@layer responsive {
+
+@media (max-width: 768px) {
+    .sp-topbar__actions {
+        position: relative;
+        flex-shrink: 0;
+    }
+    .sp-topbar__actions-toggle {
+        display: flex;
+    }
+    .sp-topbar__actions-menu {
+        display: none;
+        position: absolute;
+        top: calc(100% + var(--sp-space-2));
+        right: 0;
+        background: var(--sp-bg-surface);
+        border: 1px solid var(--sp-border-default);
+        border-radius: var(--sp-radius-md);
+        box-shadow: var(--sp-shadow-lg);
+        padding: var(--sp-space-2);
+        min-width: 200px;
+        z-index: var(--sp-z-sticky-header);
+        flex-direction: column;
+        gap: var(--sp-space-2);
+    }
+    .sp-topbar__actions.is-open .sp-topbar__actions-menu {
+        display: flex;
+    }
+    .sp-topbar__actions-menu .sp-topbar__help {
+        width: 100%;
+        height: auto;
+        border-radius: var(--sp-radius-sm);
+        padding: var(--sp-space-2) var(--sp-space-3);
+        justify-content: flex-start;
+        gap: var(--sp-space-2);
+    }
+    .sp-topbar__actions-menu .sp-topbar__help::after {
+        content: 'Help';
+        font-size: var(--sp-text-sm);
+        color: var(--sp-text-secondary);
+    }
+    .sp-topbar__actions-menu .sp-install-menu {
+        width: 100%;
+    }
+    .sp-topbar__actions-menu .sp-install-trigger {
+        width: 100%;
+        justify-content: flex-start;
+        padding: var(--sp-space-2) var(--sp-space-3);
+        gap: var(--sp-space-2);
+        border-radius: var(--sp-radius-sm);
+        min-height: 40px;
+    }
+    .sp-topbar__actions-menu .sp-install-trigger::after {
+        content: 'Share & Install';
+        font-size: var(--sp-text-sm);
+        color: var(--sp-text-secondary);
+    }
+    .sp-topbar__actions-menu .sp-user-widget-row {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-space-2);
+        padding: var(--sp-space-2) var(--sp-space-3);
+    }
+    .sp-topbar__actions-menu .sp-user-widget {
+        width: 38px;
+        height: 38px;
+    }
+
+    .sp-topbar__actions-menu .sp-install-dropdown {
+        position: fixed;
+        top: auto;
+        right: var(--sp-space-3);
+        left: var(--sp-space-3);
+        width: auto;
+    }
+}
+
+@media print {
+    .sp-shell .sp-admin-sidebar,
+    .sp-shell .sp-topbar__nav-toggle,
+    .sp-shell .sp-sidebar-overlay,
+    .sp-shell .sp-toolbar .sp-btn--primary,
+    .sp-shell .sp-pagination,
+    .sp-shell .sp-table__cell--actions {
+        display: none;
+    }
+    .sp-shell .sp-shell__main {
+        padding: 0;
+    }
+
+}
+}

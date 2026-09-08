@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n             s.mcp_server_id AS \"server_id!\",\n             COUNT(p.session_id) FILTER (WHERE p.expires_at > NOW())::BIGINT AS \"identities!\",\n             COUNT(DISTINCT s.user_id)::BIGINT AS \"distinct_users!\"\n           FROM mcp_sessions s\n           LEFT JOIN mcp_proxy_identities p ON p.session_id = s.session_id\n          WHERE s.mcp_server_id IS NOT NULL\n          GROUP BY s.mcp_server_id\n          ORDER BY s.mcp_server_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "server_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "mcp_server_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "identities!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "distinct_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "5424598b1ff53b407cbc86877f0ab4fcbb7bc78e6ee78c38a2c89bf4e6796895"
+}

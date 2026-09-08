@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT source_type,last_run_at::text AS last_run,last_error AS error,documents_seen,documents_failed FROM knowledge_user_sync_state WHERE user_id=$1 ORDER BY source_type",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "source_type",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_user_sync_state",
+            "name": "source_type"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "last_run",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "error",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_user_sync_state",
+            "name": "last_error"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "documents_seen",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "knowledge_user_sync_state",
+            "name": "documents_seen"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "documents_failed",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "knowledge_user_sync_state",
+            "name": "documents_failed"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "a588b8050c0f9c9af70caa3e491433ba69c1e08374e1415516771a2ba93ebe6a"
+}

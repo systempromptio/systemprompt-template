@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO admin_usage_daily_rollups (user_id, date, sessions_count)\n        SELECT\n            user_id,\n            (started_at AT TIME ZONE 'UTC')::DATE,\n            COUNT(*)::INT\n        FROM plugin_session_summaries\n        WHERE started_at IS NOT NULL\n          AND (started_at AT TIME ZONE 'UTC')::DATE >= (NOW() AT TIME ZONE 'UTC')::DATE - ($1::INT)\n        GROUP BY user_id, (started_at AT TIME ZONE 'UTC')::DATE\n        ON CONFLICT (user_id, date) DO UPDATE SET\n            sessions_count = EXCLUDED.sessions_count,\n            updated_at = NOW()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "048d3d2bb7fd2d811374f13405760b6923ef967dc5e4f825acd036901d2fb745"
+}

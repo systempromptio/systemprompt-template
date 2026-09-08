@@ -7,10 +7,10 @@
 //! collapsible sections under an "Effective Permissions" tab.
 //!
 //! Every subject dimension this extension declares participates, not just user
-//! and role: the department a user belongs to is looked up once per page via
+//! and role: the AD groups a user holds are looked up once per page via
 //! [`crate::authz::subject_attributes_for`] and handed to the resolver with
-//! the rest, so a grant a department rule alone confers shows up here exactly
-//! as it does at the enforcement point.
+//! the rest, so a grant a group rule alone confers shows up here exactly as it
+//! does at the enforcement point.
 
 use std::sync::Arc;
 
@@ -43,6 +43,7 @@ pub struct EffectivePermissions {
     pub mcp_servers: Vec<EntityDecision>,
 }
 
+// Why: lint-ok: unused-pub — the internal fork still calls this.
 pub async fn compute_effective_permissions(
     pool: &PgPool,
     user_id: &UserId,
@@ -148,7 +149,10 @@ fn decide(args: DecideArgs<'_>) -> EntityDecision {
     });
     let (decision, reason) = match dec {
         Decision::Allow { matched_by } => ("allow".to_owned(), allow_reason(&uid, &matched_by)),
+        Decision::Warn { reason } => ("warn".to_owned(), reason.to_string()),
         Decision::Deny { reason } => ("deny".to_owned(), reason.to_string()),
+        // Why: a hold is neither reach nor refusal, and flattening it into
+        // either would misreport effective access. The view names it.
         Decision::Pending { reason } => ("pending".to_owned(), reason.to_string()),
     };
     let tab = if entity.kind() == EntityKind::GatewayRoute {
@@ -175,10 +179,11 @@ fn allow_reason(user_id: &UserId, matched_by: &MatchedBy) -> String {
 }
 
 fn collect_gateway_ids() -> Result<Vec<String>, AdminError> {
-    let profile_path = shared::get_profile_path()?;
-    let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
+    let services = systemprompt::loader::ServicesBootstrap::get()
         .map_err(|e| AdminError::internal(e.to_string()))?;
-    Ok(cfg.routes.into_iter().map(|r| r.id).collect())
+    Ok(repositories::config::gateway::dispatchable_route_ids(
+        services,
+    ))
 }
 
 fn collect_mcp_ids() -> Result<Vec<String>, AdminError> {

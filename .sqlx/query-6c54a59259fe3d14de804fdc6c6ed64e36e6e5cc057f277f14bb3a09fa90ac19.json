@@ -1,0 +1,79 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT k.user_id AS \"user_id!: UserId\", u.name AS \"user_name!\",\n                  COUNT(*) AS \"total!\",\n                  COUNT(*) FILTER (WHERE k.revoked_at IS NULL\n                                     AND (k.expires_at IS NULL OR k.expires_at > NOW()))\n                      AS \"active!\",\n                  MAX(k.created_at) AS \"newest_created_at!\",\n                  MAX(k.last_used_at) AS \"last_used_at\",\n                  MIN(k.expires_at) FILTER (WHERE k.revoked_at IS NULL AND k.expires_at > NOW())\n                      AS \"next_expires_at\"\n             FROM user_api_keys k\n             JOIN users u ON u.id = k.user_id\n            WHERE ($1::TEXT = 'all')\n               OR ($1::TEXT = 'active' AND k.revoked_at IS NULL)\n               OR ($1::TEXT = 'revoked' AND k.revoked_at IS NOT NULL)\n            GROUP BY k.user_id, u.name\n            ORDER BY\n              CASE WHEN $3::TEXT = 'desc' THEN\n                CASE $2::TEXT WHEN 'used' THEN EXTRACT(EPOCH FROM MAX(k.last_used_at))\n                        WHEN 'expires' THEN EXTRACT(EPOCH FROM MIN(k.expires_at))\n                        ELSE EXTRACT(EPOCH FROM MAX(k.created_at)) END\n              END DESC NULLS LAST,\n              CASE WHEN $3::TEXT = 'asc' THEN\n                CASE $2::TEXT WHEN 'used' THEN EXTRACT(EPOCH FROM MAX(k.last_used_at))\n                        WHEN 'expires' THEN EXTRACT(EPOCH FROM MIN(k.expires_at))\n                        ELSE EXTRACT(EPOCH FROM MAX(k.created_at)) END\n              END ASC NULLS LAST,\n              k.user_id\n            LIMIT $4 OFFSET $5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_api_keys",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "active!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "newest_created_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "last_used_at",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "next_expires_at",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "6c54a59259fe3d14de804fdc6c6ed64e36e6e5cc057f277f14bb3a09fa90ac19"
+}

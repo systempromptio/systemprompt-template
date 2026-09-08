@@ -1,0 +1,169 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            u.id AS \"id!\",\n            u.name AS \"username!\",\n            u.email AS \"email!\",\n            COALESCE(u.display_name, u.full_name) AS display_name,\n            u.status AS \"status!\",\n            u.email_verified AS \"email_verified!\",\n            u.roles AS \"roles!: Vec<String>\",\n            COALESCE(ARRAY(SELECT ug.group_id FROM user_groups ug\n                           WHERE ug.user_id = u.id ORDER BY ug.group_id),\n                     ARRAY[]::TEXT[]) AS \"group_ids!: Vec<String>\",\n            COALESCE(ARRAY(SELECT DISTINCT pm.project_id FROM project_members pm\n                           WHERE pm.user_id = u.id ORDER BY pm.project_id),\n                     ARRAY[]::TEXT[]) AS \"project_ids!: Vec<String>\",\n            u.created_at AS \"created_at!\",\n            fed.issuer AS idp_issuer,\n            fed.external_sub,\n            fed.created_at AS linked_at,\n            fed.last_seen_at\n        FROM users u\n        LEFT JOIN LATERAL (\n            SELECT f.issuer, f.external_sub, f.created_at, f.last_seen_at\n            FROM federated_identities f\n            WHERE f.user_id = u.id\n            ORDER BY f.last_seen_at DESC\n            LIMIT 1\n        ) fed ON TRUE\n        WHERE u.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "username!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "email!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "display_name",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "status!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "email_verified!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email_verified"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "roles!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "roles"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "group_ids!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "project_ids!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "idp_issuer",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "federated_identities",
+            "name": "issuer"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "external_sub",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "federated_identities",
+            "name": "external_sub"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "linked_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "federated_identities",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "last_seen_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "federated_identities",
+            "name": "last_seen_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      false,
+      false,
+      false,
+      null,
+      null,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "44f5bb2dd7085684ae49727dabc0ac63d443c504d4b1a93fa3b628eddd67fed3"
+}

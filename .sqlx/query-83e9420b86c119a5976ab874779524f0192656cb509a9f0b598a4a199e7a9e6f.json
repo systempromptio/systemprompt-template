@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id FROM requirements_validation_jobs WHERE workflow_id=$1 AND phase=$2 AND revision=$3 AND status='running' AND started_at>NOW()-INTERVAL '16 minutes' ORDER BY started_at DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "requirements_validation_jobs",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "83e9420b86c119a5976ab874779524f0192656cb509a9f0b598a4a199e7a9e6f"
+}

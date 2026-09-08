@@ -96,3 +96,9 @@ mod users_identity;
 mod users_lookups;
 #[cfg(test)]
 mod users_registration;
+
+#[cfg(test)]
+mod usage_conversation_summary;
+
+#[cfg(test)]
+mod usage_conversation_summary_schema;

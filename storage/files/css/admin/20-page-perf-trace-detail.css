@@ -1,0 +1,32 @@
+@layer components {
+
+.sp-kpi-grid[aria-label="Trace summary"] {
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+}
+
+
+.sp-p-trace-detail__spans { table-layout: fixed; inline-size: 100%; }
+.sp-p-trace-detail__spans th,
+.sp-p-trace-detail__spans td { min-inline-size: 0; }
+.sp-p-trace-detail__spans td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.sp-p-trace-detail__spans th:nth-child(1) { inline-size: 16%; }
+.sp-p-trace-detail__spans th:nth-child(2) { inline-size: 7%; }
+.sp-p-trace-detail__spans th:nth-child(3) { inline-size: 7%; }
+.sp-p-trace-detail__spans th:nth-child(4) { inline-size: 14%; }
+.sp-p-trace-detail__spans th:nth-child(5) { inline-size: 8%; }
+.sp-p-trace-detail__spans th:nth-child(6) { inline-size: 10%; }
+.sp-p-trace-detail__spans th:nth-child(7) { inline-size: 8%; }
+.sp-p-trace-detail__spans th:nth-child(8) { inline-size: 9%; }
+.sp-p-trace-detail__spans th:nth-child(9) { inline-size: 8%; }
+.sp-p-trace-detail__spans th:nth-child(10) { inline-size: 7%; }
+.sp-p-trace-detail__spans th:nth-child(11) { inline-size: 6%; }
+
+.sp-trace-row {
+    cursor: pointer;
+}
+
+}

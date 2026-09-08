@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            r.requested_model AS \"requested_model!\",\n            r.model AS \"served_model!\",\n            COUNT(*)::BIGINT AS \"requests!\"\n        FROM ai_requests r\n        WHERE r.created_at >= $1 AND r.created_at < $2\n          AND NOT r.synthetic\n          AND r.requested_model IS NOT NULL\n          AND r.model IS NOT NULL\n          AND r.requested_model <> r.model\n          AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))\n          AND ($4::TEXT IS NULL OR r.user_id = $4)\n        GROUP BY r.requested_model, r.model\n        ORDER BY COUNT(*) DESC\n        LIMIT 50\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "requested_model!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "requested_model"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "served_model!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "702fa0ece195906abb4ea95934b31effedd2b0296d6c1da4bcc9d3b2a743decc"
+}

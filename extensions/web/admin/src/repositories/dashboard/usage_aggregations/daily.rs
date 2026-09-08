@@ -14,6 +14,8 @@ pub struct DailyAggregationParams<'a> {
     pub tool_name: Option<&'a str>,
     pub content_input_bytes: i64,
     pub content_output_bytes: i64,
+    pub loc_added: i64,
+    pub loc_removed: i64,
     pub is_error: bool,
 }
 
@@ -29,14 +31,16 @@ pub async fn upsert_daily_aggregation(params: &DailyAggregationParams<'_>) {
 
     let result = sqlx::query!(
         r"INSERT INTO plugin_usage_daily
-            (id, date, user_id, event_type, tool_name, event_count, content_input_bytes, content_output_bytes, error_count)
-           VALUES ($1, $2, $3, $4, $5, 1, $6, $7, $8)
+            (id, date, user_id, event_type, tool_name, event_count, content_input_bytes, content_output_bytes, error_count, loc_added, loc_removed)
+           VALUES ($1, $2, $3, $4, $5, 1, $6, $7, $8, $9, $10)
            ON CONFLICT (date, user_id, event_type, COALESCE(tool_name, ''))
            DO UPDATE SET
              event_count = plugin_usage_daily.event_count + 1,
              content_input_bytes = plugin_usage_daily.content_input_bytes + $6,
              content_output_bytes = plugin_usage_daily.content_output_bytes + $7,
              error_count = plugin_usage_daily.error_count + $8,
+             loc_added = plugin_usage_daily.loc_added + $9,
+             loc_removed = plugin_usage_daily.loc_removed + $10,
              updated_at = NOW()",
         id,
         params.date,
@@ -46,6 +50,8 @@ pub async fn upsert_daily_aggregation(params: &DailyAggregationParams<'_>) {
         params.content_input_bytes,
         params.content_output_bytes,
         error_inc,
+        params.loc_added,
+        params.loc_removed,
     )
     .execute(params.pool)
     .await;
@@ -63,6 +69,8 @@ pub struct SessionSummaryParams<'a> {
     pub event_type: &'a str,
     pub content_input_bytes: i64,
     pub content_output_bytes: i64,
+    pub loc_added: i64,
+    pub loc_removed: i64,
     pub is_subagent_stop: bool,
     pub file_path: Option<&'a str>,
     pub is_from_subagent: bool,
@@ -85,8 +93,8 @@ pub async fn increment_session_summary(params: &SessionSummaryParams<'_>) {
         r"INSERT INTO plugin_session_summaries
             (id, session_id, user_id, total_events, tool_uses, prompts, errors,
              content_input_bytes, content_output_bytes, subagent_spawns,
-             user_prompts, automated_actions, started_at)
-           VALUES ($1, $2, $3, 1, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
+             user_prompts, automated_actions, loc_added, loc_removed, started_at)
+           VALUES ($1, $2, $3, 1, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
            ON CONFLICT (session_id) DO UPDATE SET
              total_events = plugin_session_summaries.total_events + 1,
              tool_uses = plugin_session_summaries.tool_uses + $4,
@@ -97,6 +105,8 @@ pub async fn increment_session_summary(params: &SessionSummaryParams<'_>) {
              subagent_spawns = plugin_session_summaries.subagent_spawns + $9,
              user_prompts = plugin_session_summaries.user_prompts + $10,
              automated_actions = plugin_session_summaries.automated_actions + $11,
+             loc_added = plugin_session_summaries.loc_added + $12,
+             loc_removed = plugin_session_summaries.loc_removed + $13,
              updated_at = NOW()",
         id,
         params.session_id.as_str(),
@@ -109,6 +119,8 @@ pub async fn increment_session_summary(params: &SessionSummaryParams<'_>) {
         subagent_inc,
         user_prompt_inc,
         automated_inc,
+        params.loc_added,
+        params.loc_removed,
     )
     .execute(params.pool)
     .await;

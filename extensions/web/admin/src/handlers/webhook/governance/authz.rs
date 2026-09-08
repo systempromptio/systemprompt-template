@@ -131,6 +131,7 @@ async fn audit_decision(
     let (decision_tag, reason_str, justification_opt): (DecisionTag, String, Option<String>) =
         match decision {
             Decision::Allow { .. } => (DecisionTag::Allow, String::new(), None),
+            Decision::Warn { reason } => (DecisionTag::Warn, reason.to_string(), None),
             Decision::Deny { reason } => (DecisionTag::Deny, reason.to_string(), None),
             Decision::Pending { reason } => (DecisionTag::Pending, reason.to_string(), None),
         };
@@ -238,7 +239,7 @@ pub(crate) async fn govern_authz(
     audit_decision(&pool, &req, &rules, entity.as_ref(), &decision).await;
 
     let resp = match decision {
-        Decision::Allow { .. } => AuthzDecision::Allow,
+        Decision::Allow { .. } | Decision::Warn { .. } => AuthzDecision::Allow,
         Decision::Deny { reason } => AuthzDecision::Deny {
             reason,
             policy: POLICY_NAME.to_owned(),

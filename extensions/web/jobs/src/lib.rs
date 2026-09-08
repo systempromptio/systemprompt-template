@@ -59,3 +59,11 @@ pub mod internals {
     pub use crate::publish::PipelineStats;
     pub use crate::robots::build_robots_txt_content;
 }
+
+mod scope_defaults;
+pub use scope_defaults::ScopeDefaultsJob;
+
+mod usage_rollup;
+pub use usage_rollup::UsageDailyRollupJob;
+
+mod usage_anomaly;

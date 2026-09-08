@@ -1,85 +1,82 @@
 {{#> layout title=title page=page}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title=title}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
 
+    {{#> components/page-header title=title subtitle="How you appear in this console and how timestamps are rendered for you. Sign-in identity is set by the directory and cannot be changed here."}}
+        {{#*inline "header_meta"}}
+            <span class="sp-u-mono">{{user_email}}</span>
+            <span>user id <code class="sp-u-mono">{{user_id}}</code></span>
+            <span>timezone {{settings.timezone}}</span>
+        {{/inline}}
+        {{#*inline "header_actions"}}
+            <button type="submit" form="settings-form" class="sp-btn sp-btn--sm sp-btn--primary" id="save-settings-btn">Save settings</button>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/profile">Profile</a>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/setup">Setup guide</a>
+        {{/inline}}
+    {{/components/page-header}}
 
-    <section aria-label="Profile settings">
-    <div class="card mb-6">
-        <div class="card-header">
-            <h2 class="card-title">Identity</h2>
-        </div>
-        <div class="card-body">
-            <form id="settings-form" class="settings-form">
-                <div class="settings-form-grid">
-                    <div class="settings-field">
-                        <label class="settings-label" for="settings-username">Username</label>
-                        <input type="text" id="settings-username" class="form-input form-input--readonly" value="{{username}}" readonly disabled />
-                        <span class="settings-hint">Username cannot be changed</span>
-                    </div>
-                    <div class="settings-field">
-                        <label class="settings-label" for="settings-email">Email</label>
-                        <input type="email" id="settings-email" class="form-input form-input--readonly" value="{{user_email}}" readonly disabled />
-                        <span class="settings-hint">Contact support to change email</span>
-                    </div>
-                    <div class="settings-field">
-                        <label class="settings-label" for="settings-display-name">Display Name</label>
-                        <input type="text" id="settings-display-name" class="form-input" value="{{settings.display_name}}" placeholder="Enter a display name" />
-                    </div>
-                    <div class="settings-field">
-                        <label class="settings-label" for="settings-avatar-url">Avatar URL</label>
-                        <div class="settings-avatar-row">
-                            <input type="url" id="settings-avatar-url" class="form-input" value="{{settings.avatar_url}}" placeholder="https://example.com/avatar.png" />
-                            <div class="settings-avatar-preview" id="avatar-preview">
-                                {{#if settings.avatar_url}}
-                                <img src="{{settings.avatar_url}}" alt="Avatar preview" />
-                                {{else}}
-                                <span class="settings-avatar-placeholder">?</span>
-                                {{/if}}
-                            </div>
-                        </div>
+    <form id="settings-form" class="sp-p-settings">
+    <section aria-label="Identity">
+        {{> components/section title="Identity" note="Username and email come from the directory that signed you in. Display name and avatar are yours."}}
+        <div class="sp-card">
+            <div class="sp-card__body sp-p-settings__grid">
+                <div class="sp-form-group">
+                    <label for="settings-username">Username</label>
+                    <input type="text" id="settings-username" value="{{username}}" readonly disabled>
+                    <span class="sp-u-text-xs sp-u-text-tertiary">Set by the directory; cannot be changed.</span>
+                </div>
+                <div class="sp-form-group">
+                    <label for="settings-email">Email</label>
+                    <input type="email" id="settings-email" value="{{user_email}}" readonly disabled>
+                    <span class="sp-u-text-xs sp-u-text-tertiary">Contact an administrator to change this.</span>
+                </div>
+                <div class="sp-form-group">
+                    <label for="settings-display-name">Display name</label>
+                    <input type="text" id="settings-display-name" value="{{settings.display_name}}" placeholder="Enter a display name">
+                    <span class="sp-u-text-xs sp-u-text-tertiary">Shown wherever this console names you.</span>
+                </div>
+                <div class="sp-form-group">
+                    <label for="settings-avatar-url">Avatar URL</label>
+                    <div class="sp-p-settings__avatar-row">
+                        <input type="url" id="settings-avatar-url" value="{{settings.avatar_url}}" placeholder="https://example.com/avatar.png">
+                        <span class="sp-p-settings__avatar" id="avatar-preview">
+                            {{#if settings.avatar_url}}<img src="{{settings.avatar_url}}" alt="Avatar preview">{{else}}<span class="sp-p-settings__avatar-fallback">?</span>{{/if}}
+                        </span>
                     </div>
                 </div>
-
-                <div class="settings-divider"></div>
-
-                <h3 class="settings-section-title">Preferences</h3>
-
-                <div class="settings-field mt-4">
-                    <label class="settings-label" for="settings-timezone">Timezone</label>
-                    <select id="settings-timezone" class="form-input">
-                        <option value="UTC">UTC</option>
-                    </select>
-                    <span class="settings-hint">Used to render timestamps in your local time</span>
-                    <input type="hidden" id="settings-timezone-saved" value="{{settings.timezone}}" />
-                </div>
-
-                <div class="settings-actions">
-                    <button type="submit" class="btn btn-primary" id="save-settings-btn">Save Settings</button>
-                    <span class="settings-save-status" id="save-status" role="status" aria-live="polite"></span>
-                </div>
-            </form>
-        </div>
-    </div>
-    </section>
-
-    <section aria-label="Danger zone">
-    <div class="card mb-6 card--danger">
-        <div class="card-header">
-            <h2 class="card-title">Danger Zone</h2>
-        </div>
-        <div class="card-body">
-            <div class="danger-zone-item">
-                <div>
-                    <strong>Delete Account</strong>
-                    <p class="text-secondary text-sm">Permanently delete your account and all associated data. This action cannot be undone.</p>
-                </div>
-                <button type="button" class="btn btn-danger" id="delete-account-btn">Delete Account</button>
             </div>
         </div>
-    </div>
     </section>
 
+    <section aria-label="Preferences">
+        {{> components/section title="Preferences" note="Applied to every timestamp this console renders for you."}}
+        <div class="sp-card">
+            <div class="sp-card__body sp-p-settings__grid">
+                <div class="sp-form-group">
+                    <label for="settings-timezone">Timezone</label>
+                    <select id="settings-timezone"><option value="UTC">UTC</option></select>
+                    <span class="sp-u-text-xs sp-u-text-tertiary">Used to render timestamps in your local time.</span>
+                    <input type="hidden" id="settings-timezone-saved" value="{{settings.timezone}}">
+                </div>
+            </div>
+        </div>
+        <p class="sp-u-text-sm" id="save-status" role="status" aria-live="polite"></p>
+    </section>
+    </form>
+
+    <section class="sp-p-settings__danger" aria-label="Danger zone">
+        {{> components/section title="Danger zone" note="Irreversible. Everything below removes data that cannot be recovered."}}
+        <div class="sp-card sp-card--danger">
+            <div class="sp-card__body">
+                <p class="sp-u-text-semibold">Delete account</p>
+                <p class="sp-u-text-sm sp-u-text-secondary">
+                    Permanently deletes this account and all data associated with it. Conversations,
+                    keys and group memberships go with it. This cannot be undone.
+                </p>
+                <button type="button" class="sp-btn sp-btn--sm sp-btn--danger sp-u-mt-4" id="delete-account-btn">Delete account</button>
+            </div>
+        </div>
+    </section>
     {{/inline}}
     {{#*inline "scripts"}}
     <script data-cfasync="false" src="/js/pages/admin-settings.js" type="module" defer></script>

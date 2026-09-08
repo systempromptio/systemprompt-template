@@ -1,0 +1,50 @@
+@layer components {
+
+/* The row of link-groups that change how the page reads its own numbers:
+   attribution, bucket size, cost audience and container axis. They sit on one
+   line so the reader sees every claim-changing control at once. */
+.sp-p-analytics__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-3);
+    margin-block: var(--sp-space-4);
+}
+
+.sp-p-analytics__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+}
+
+.sp-p-analytics__toggle-label {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    margin-inline-end: var(--sp-space-1);
+}
+
+/* The share cell's bar. The fill is drawn to --v, which the handler floors at
+   a visible width for any non-zero share: a model with real traffic must not
+   render identically to one with none. A true zero draws the track only. */
+.sp-p-analytics__bar {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: var(--sp-space-8);
+    block-size: var(--sp-space-2);
+    border-radius: var(--sp-radius-sm);
+    background:
+        linear-gradient(to right, var(--sp-accent) var(--v, 0%), transparent var(--v, 0%)),
+        color-mix(in oklch, var(--sp-text-primary) 8%, transparent);
+}
+
+/* The name cell is one line and does not clip. Two bars pull against each
+   other here: an ellipsized name is a defect, because that is the value
+   telling you which row you are reading, and a row over 36px is a defect too.
+   Neither is bought from the other — the width comes from dropping columns and
+   from showing the half of the id that differs, and the qualifier that used to
+   sit on a second line is on the title instead. */
+.sp-p-analytics__name {
+    white-space: nowrap;
+}
+
+}

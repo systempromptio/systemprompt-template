@@ -40,7 +40,7 @@ export class SpConfirmDialog extends HTMLElement {
   #settle(accepted) {
     const resolver = this.#resolver;
     this.#resolver = null;
-    this.removeAttribute('open');
+    this.removeAttribute('is-open');
     if (resolver) {
       if (this.#mode === 'prompt') {
         resolver(accepted ? this.#refs.input.value : null);
@@ -54,7 +54,7 @@ export class SpConfirmDialog extends HTMLElement {
     this.connectedCallback();
     this.#refs.title.textContent = title;
     this.#refs.message.textContent = message || '';
-    this.setAttribute('open', '');
+    this.setAttribute('is-open', '');
     return new Promise((resolve) => {
       this.#resolver = resolve;
     });

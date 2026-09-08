@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH membership AS (\n                 SELECT ug.user_id, ug.group_id AS scope_id\n                   FROM user_groups ug\n                  WHERE $1::TEXT = 'group' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT pm.user_id, pm.project_id AS scope_id\n                   FROM project_members pm\n                  WHERE $1::TEXT = 'project' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT d.user_id, d.primary_group_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'group' AND $2::BOOLEAN\n                    AND d.primary_group_id IS NOT NULL\n                 UNION\n                 SELECT d.user_id, d.primary_project_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'project' AND $2::BOOLEAN\n                    AND d.primary_project_id IS NOT NULL\n             ) , linked AS (\n               SELECT ug.user_id, g.id, g.name, g.description\n               FROM user_groups ug JOIN groups g ON g.id = ug.group_id\n               WHERE $1::TEXT = 'project'\n               UNION\n               SELECT pm.user_id, p.id, p.name, p.description\n               FROM project_members pm JOIN projects p ON p.id = pm.project_id\n               WHERE $1::TEXT = 'group'\n           )\n           SELECT linked.id AS \"id!\",\n                  linked.name AS \"name!\",\n                  linked.description AS \"description?\",\n                  COUNT(DISTINCT linked.user_id)::BIGINT AS \"member_count!\"\n           FROM linked\n           WHERE linked.user_id IN (SELECT m.user_id FROM membership m WHERE m.scope_id = $3)\n           GROUP BY 1, 2, 3\n           ORDER BY 4 DESC, 2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "description?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "member_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "c13bd2d2c87e87655611aa0c90a9e63c2dbbe2f914e41b0bcabcc799618d5013"
+}

@@ -4,6 +4,7 @@
   "name": "systemprompt-io",
   "description": "systemprompt.io self-owned AI control plane: governance gateway for Claude, OpenAI, and Gemini with audit, policy, and MCP. https://systemprompt.io",
   "arguments": {
+    "ADMIN_EMAIL": "",
     "ANTHROPIC_API_KEY": "",
     "OPENAI_API_KEY": "",
     "GEMINI_API_KEY": ""
@@ -113,6 +114,7 @@
                   ],
                   "secrets": {
                     "variables": {
+                      "ADMIN_EMAIL": "${args.ADMIN_EMAIL}",
                       "ANTHROPIC_API_KEY": "${args.ANTHROPIC_API_KEY}",
                       "OPENAI_API_KEY": "${args.OPENAI_API_KEY}",
                       "GEMINI_API_KEY": "${args.GEMINI_API_KEY}",

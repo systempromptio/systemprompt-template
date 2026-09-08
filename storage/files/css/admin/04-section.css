@@ -1,0 +1,65 @@
+@layer components {
+
+/* One heading treatment for the whole console. The count sits with the title
+   because "Requests 1,204" is a single fact, and a reader who has to look in two
+   places to learn how much of a thing there is reads the page twice. */
+
+.sp-section {
+    margin-top: var(--sp-density-section);
+}
+
+/* The partial emits only the head, so the rhythm between one section and the
+   next lives on the head itself rather than on a wrapper no template renders. */
+.sp-section__head:not(:first-child) {
+    margin-top: var(--sp-density-section);
+}
+
+.sp-section__head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--sp-space-2) var(--sp-space-3);
+    margin-bottom: var(--sp-space-3);
+}
+
+.sp-section__title {
+    margin: 0;
+    font-size: var(--sp-text-md);
+    font-weight: var(--sp-font-semibold);
+    line-height: var(--sp-leading-snug);
+    color: var(--sp-text-primary);
+}
+
+.sp-section__count {
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    letter-spacing: var(--sp-tracking-wide);
+    text-transform: uppercase;
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-section__sub {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+    max-width: 90ch;
+}
+
+.sp-section__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin-left: auto;
+}
+
+.sp-section__actions:empty { display: none; }
+
+.sp-section__foot {
+    margin-top: var(--sp-space-2);
+    font-size: var(--sp-text-2xs);
+    color: var(--sp-text-tertiary);
+}
+
+}

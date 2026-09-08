@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_sessions SET revoked_at = NOW(), ended_at = COALESCE(ended_at, NOW())\n         WHERE user_id = $1 AND revoked_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ecfba6faaa7d06bb1061bfdb396951136aa1337bf4594b2683969311908f0a36"
+}

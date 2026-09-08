@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO mcp_external_sessions (server_name, session_id, user_id, credential_hash)\n               VALUES ($1, $2, $3, $4)\n               ON CONFLICT (server_name, session_id) DO UPDATE\n               SET expires_at = NOW() + INTERVAL '1 hour',\n                   user_id = EXCLUDED.user_id, credential_hash = EXCLUDED.credential_hash\n               WHERE mcp_external_sessions.expires_at <= NOW()\n                  OR (mcp_external_sessions.user_id = EXCLUDED.user_id\n                      AND mcp_external_sessions.credential_hash = EXCLUDED.credential_hash)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0b2409a0a9d544c80669afcfab0fc03e584efc07ef41e8461a413fe931cadd7e"
+}

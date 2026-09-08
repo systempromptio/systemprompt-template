@@ -17,6 +17,7 @@ pub(crate) const SCHEMA_AUDIT_EVENT_NOTIFY: &str =
 
 pub fn schema_definitions() -> Vec<SchemaDefinition> {
     vec![
+        SchemaDefinition::new("", include_str!("../schema/22_dev_login_codes.sql")),
         SchemaDefinition::new("", SCHEMA_PLUGIN_USAGE),
         SchemaDefinition::new("", SCHEMA_ANALYTICS),
         SchemaDefinition::new("", SCHEMA_SECRETS),
@@ -24,9 +25,17 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::new("", SCHEMA_MANAGEMENT),
         SchemaDefinition::new("", SCHEMA_WEB_SIDE_TABLES),
         SchemaDefinition::new("", SCHEMA_AUDIT_EVENT_NOTIFY),
+        SchemaDefinition::new("", include_str!("../schema/17_usage_metrics.sql")),
+        SchemaDefinition::new("", include_str!("../schema/23_groups_projects.sql")),
+        SchemaDefinition::new("", include_str!("../schema/24_scope_defaults.sql")),
+        SchemaDefinition::new("", include_str!("../schema/25_connector_credentials.sql")),
+        SchemaDefinition::new("", include_str!("../schema/26_connector_accounts.sql")),
+        SchemaDefinition::new("", include_str!("../schema/27_conversation_requests.sql")),
+        SchemaDefinition::new("", include_str!("../schema/28_skill_invocation_events.sql")),
+        SchemaDefinition::new("", include_str!("../schema/21_salesforce_identity.sql")),
     ]
 }
 
-pub const fn migrations() -> Vec<Migration> {
+pub fn migrations() -> Vec<Migration> {
     extension_migrations!()
 }

@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n             COUNT(*) FILTER (WHERE status = 'pending' AND expires_at > NOW())::BIGINT\n               AS \"pending!\",\n             COUNT(*) FILTER (WHERE status = 'approved')::BIGINT AS \"approved!\",\n             COUNT(*) FILTER (WHERE status = 'denied')::BIGINT AS \"denied!\",\n             COUNT(*) FILTER (WHERE status = 'expired'\n                              OR (status = 'pending' AND expires_at <= NOW()))::BIGINT\n               AS \"expired!\",\n             COALESCE(\n               EXTRACT(EPOCH FROM (NOW() - MIN(created_at)\n                 FILTER (WHERE status = 'pending' AND expires_at > NOW()))) / 60,\n               0)::BIGINT AS \"oldest_pending_minutes!\"\n           FROM approval_requests",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "pending!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "approved!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "denied!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "expired!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "oldest_pending_minutes!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "632e7e91c0d042a12b5bbc91cbe780b8b52e40fcb46dcb41e41183329ed115ad"
+}

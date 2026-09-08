@@ -233,3 +233,16 @@ fn load_config_section(filename: &str) -> Result<Option<serde_yaml::Value>, Conf
             message: e.to_string(),
         })
 }
+
+mod downstream;
+static SALESFORCE_CONFIG: OnceLock<
+    Result<Option<Arc<systemprompt_web_admin::SalesforceConfig>>, String>,
+> = OnceLock::new();
+#[must_use]
+pub fn salesforce_config() -> Option<Arc<systemprompt_web_admin::SalesforceConfig>> {
+    log_and_discard_err(
+        &SALESFORCE_CONFIG,
+        downstream::load_salesforce_config,
+        "Salesforce config error",
+    )
+}

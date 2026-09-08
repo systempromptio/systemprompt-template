@@ -1,5 +1,7 @@
 # Install the gateway via GitHub Container Registry
 
+Set `ADMIN_EMAIL` to an email address you control before first boot, alongside at least one AI provider key. The gateway requires this administrator identity.
+
 `systemprompt` is published to GHCR as [`ghcr.io/systempromptio/systemprompt-template`](https://github.com/systempromptio/systemprompt-template/pkgs/container/systemprompt-template). The image is a single compiled Rust binary plus the `services/` config tree: same binary that ships via Helm and Render.
 
 Pick GHCR when:
@@ -28,6 +30,7 @@ You must provide `DATABASE_URL` pointing at a Postgres the container can reach, 
 ```bash
 docker run --rm -p 8080:8080 \
   -e DATABASE_URL=postgres://user:pw@host.docker.internal:5432/systemprompt \
+  -e ADMIN_EMAIL=you@example.com \
   -e ANTHROPIC_API_KEY=sk-ant-... \
   ghcr.io/systempromptio/systemprompt-template:latest
 ```

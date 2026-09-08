@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT DISTINCT model AS \"model!\"\n        FROM ai_requests\n        WHERE model IS NOT NULL\n          AND context_id <> '00000000-0000-0000-0000-4c4547414359'\n        ORDER BY model\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "model!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "model"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "df28cce9a0caa128155df9db946d5d9c5d724079fafa5edd2d52f07e15abf412"
+}

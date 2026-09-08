@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT source_type,last_sync_at,last_error FROM knowledge_drive_sources",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "source_type",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_sources",
+            "name": "source_type"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "last_sync_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_sources",
+            "name": "last_sync_at"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "last_error",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_sources",
+            "name": "last_error"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "56b102faec8ab47574456ed76a6afd8fcbd31ccb0d993e53dac3e89aecf04a17"
+}

@@ -1,0 +1,59 @@
+@layer components {
+
+.sp-p-projects__col-name {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-space-2);
+    min-inline-size: 16rem;
+}
+
+.sp-p-projects__sub {
+    min-inline-size: 0;
+    margin-inline-start: var(--sp-space-2);
+    overflow: hidden;
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-p-project {
+    margin-block-end: var(--sp-space-6);
+}
+.sp-p-project__note {
+    margin: 0;
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+}
+.sp-p-project__usage {
+    display: grid;
+    gap: var(--sp-space-6);
+}
+.sp-p-project__split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-space-6);
+}
+.sp-p-project__form {
+    display: grid;
+    gap: var(--sp-space-2);
+    max-inline-size: 40rem;
+    margin-block-end: var(--sp-space-6);
+}
+.sp-p-project__form-actions {
+    display: flex;
+    gap: var(--sp-space-2);
+    margin-block-start: var(--sp-space-2);
+}
+
+}
+
+@layer responsive {
+
+@media (max-width: 64rem) {
+    .sp-p-project__split {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+}

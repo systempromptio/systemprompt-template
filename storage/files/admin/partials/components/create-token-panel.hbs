@@ -1,66 +1,63 @@
-<div class="panel-overlay" id="create-token-overlay"></div>
-<div class="side-panel create-token-panel" id="create-token-panel" role="dialog" aria-modal="true" aria-labelledby="create-token-title">
-    <div class="panel-header">
+{{!--
+  The Issue token side panel. Rendered by the access-tokens page for admins
+  only, with `user_options` (the selectable owners). The `admin-access-tokens.js`
+  page module opens it, posts to `POST /api/public/admin/users/{id}/pats`, and
+  swaps the body to the success state that shows the secret once.
+--}}
+<div class="sp-panel-overlay" id="create-token-overlay"></div>
+<div class="sp-side-panel" id="create-token-panel" role="dialog" aria-modal="true" aria-labelledby="create-token-title">
+    <div class="sp-panel-header">
         <h2 id="create-token-title">Issue access token</h2>
-        <button type="button" class="panel-close" aria-label="Close panel">&times;</button>
+        <button type="button" class="sp-panel-close" aria-label="Close panel">&times;</button>
     </div>
-    <div class="panel-body">
-        <div id="new-token-form-state">
-            <div class="form-group">
+    <div class="sp-panel-body">
+        <div data-panel-state="form">
+            <div class="sp-form-group">
                 <label for="new-token-name">Token name</label>
-                <input class="field-input" type="text" id="new-token-name" placeholder="Ed's laptop — Pi" autocomplete="off">
-                <p class="field-hint">A friendly label so you can identify this token in the dashboard.</p>
+                <input class="sp-field-input" type="text" id="new-token-name" placeholder="Ed's laptop" autocomplete="off">
+                <p class="sp-field-hint">A label so the token can be told apart in this list.</p>
             </div>
-            <div class="form-group">
+            <div class="sp-form-group">
                 <label for="new-token-user">Owner</label>
-                <select class="field-input" id="new-token-user">
-                    <option value="">-- Select user --</option>
+                <select class="sp-field-input" id="new-token-user">
+                    <option value="">Select an account</option>
                     {{#each user_options}}
-                    <option value="{{user_id}}">{{label}}</option>
+                    <option value="{{this.user_id}}">{{this.label}}</option>
                     {{/each}}
                 </select>
-                <p class="field-hint">Governance resolves the caller's scope from this user's live role on every request.</p>
+                <p class="sp-field-hint">Governance resolves the caller's scope from this account's live role on every request.</p>
             </div>
-            <div class="form-group">
-                <label for="new-token-expires">Expires at (optional)</label>
-                <input class="field-input" type="text" id="new-token-expires" placeholder="2026-12-31T23:59:59Z" autocomplete="off">
-                <p class="field-hint">ISO-8601 timestamp. Leave blank for a token that never expires.</p>
+            <div class="sp-form-group">
+                <label for="new-token-expires">Expires at</label>
+                <input class="sp-field-input" type="text" id="new-token-expires" placeholder="2026-12-31T23:59:59Z" autocomplete="off">
+                <p class="sp-field-hint">ISO-8601 timestamp. Leave blank for a token that never expires.</p>
             </div>
         </div>
 
-        <div id="new-token-success-state" hidden>
-            <div class="form-group">
+        <div data-panel-state="success" hidden>
+            <div class="sp-form-group">
                 <label for="new-token-secret">Personal access token</label>
-                <textarea class="field-input" id="new-token-secret" rows="2" readonly></textarea>
-                <p class="field-hint"><strong>Copy this token now &mdash; it will not be shown again.</strong></p>
+                <textarea class="sp-field-input" id="new-token-secret" rows="2" readonly></textarea>
+                <p class="sp-field-hint"><strong>Copy this token now. It is not shown again.</strong></p>
             </div>
-            <div class="setup-block" id="new-token-setup-block">
-                <h3>Connect Pi</h3>
-                <p class="setup-intro">
-                    Run this on the machine that will use the token. Tool-level governance needs a
-                    separate hook token &mdash; <code>examples/pi/new-user.sh</code> provisions both
-                    in one pass.
-                </p>
-                <div class="snippet-wrap">
-                    <pre><code id="new-token-setup-snippet"></code></pre>
-                    <button type="button" class="btn btn-tertiary btn-copy-snippet" data-action="copy-snippet" aria-label="Copy setup snippet">Copy</button>
+            <div class="sp-form-group">
+                <label for="new-token-setup-snippet">Connect a client</label>
+                <div class="sp-p-access-tokens__snippet">
+                    <pre class="sp-code-block"><code id="new-token-setup-snippet"></code></pre>
+                    <button type="button" class="sp-btn sp-btn--sm sp-btn--outline sp-btn--copy" data-action="copy-snippet" aria-label="Copy setup snippet">Copy</button>
                 </div>
-                <p>
-                    <a class="setup-guide-link" href="https://github.com/systempromptio/systemprompt-template/blob/main/examples/pi/README.md" target="_blank" rel="noopener">
-                        Full Pi setup guide &rarr;
-                    </a>
-                </p>
+                <p class="sp-field-hint">Run this on the machine that will use the token. It stores the token for the gateway client and checks it reaches the gateway.</p>
             </div>
         </div>
     </div>
-    <div class="panel-footer">
-        <div class="panel-footer-state" data-state="form">
-            <button type="button" class="btn btn-secondary" data-action="cancel">Cancel</button>
-            <button type="button" class="btn btn-primary" data-action="save">Issue token</button>
+    <div class="sp-panel-footer">
+        <div data-panel-state="form">
+            <button type="button" class="sp-btn sp-btn--secondary" data-action="cancel">Cancel</button>
+            <button type="button" class="sp-btn sp-btn--primary" data-action="save">Issue token</button>
         </div>
-        <div class="panel-footer-state" data-state="success" hidden>
-            <button type="button" class="btn btn-secondary" data-action="copy-snippet">Copy setup snippet</button>
-            <button type="button" class="btn btn-primary" data-action="done">Done</button>
+        <div data-panel-state="success" hidden>
+            <button type="button" class="sp-btn sp-btn--secondary" data-action="copy-snippet">Copy setup snippet</button>
+            <button type="button" class="sp-btn sp-btn--primary" data-action="done">Done</button>
         </div>
     </div>
 </div>

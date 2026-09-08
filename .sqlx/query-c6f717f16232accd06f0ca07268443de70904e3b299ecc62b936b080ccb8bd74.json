@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM project_members WHERE user_id = $1 AND source = 'adfs'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c6f717f16232accd06f0ca07268443de70904e3b299ecc62b936b080ccb8bd74"
+}

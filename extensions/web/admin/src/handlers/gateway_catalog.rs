@@ -23,7 +23,6 @@ use systemprompt_security::authz::resolver::ResolveInput;
 
 use crate::authz::{dimensions, subject_attributes_for};
 use crate::error::{AdminError, AdminResult};
-use crate::handlers::shared;
 use crate::repositories;
 use crate::repositories::config::acl_detect;
 use crate::repositories::config::gateway_acl::{self, Decision};
@@ -50,11 +49,10 @@ pub(crate) async fn for_user_handler(
     Path(user_id): Path<String>,
 ) -> AdminResult<Response> {
     let user_id = UserId::new(user_id);
-    if !user_ctx.is_admin && user_ctx.user_id != user_id {
+    if !user_ctx.is_console && user_ctx.user_id != user_id {
         return Err(AdminError::Forbidden("Forbidden".to_owned()));
     }
-    let profile_path = shared::get_profile_path()?;
-    let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
+    let routes = repositories::config::gateway::client_facing_routes_from_services()
         .map_err(AdminError::internal)?;
 
     let (user_roles, _department) =
@@ -62,7 +60,7 @@ pub(crate) async fn for_user_handler(
             .await?
             .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
 
-    let routes = collect_allowed_routes(&pool, &cfg.routes, &user_id, &user_roles).await?;
+    let routes = collect_allowed_routes(&pool, &routes, &user_id, &user_roles).await?;
     Ok(Json(CatalogResponse { user_id, routes }).into_response())
 }
 
@@ -134,10 +132,9 @@ pub(crate) async fn detect_handler(
     if !user_ctx.is_admin {
         return Err(AdminError::Forbidden("Admin only".to_owned()));
     }
-    let profile_path = shared::get_profile_path()?;
-    let cfg = repositories::config::gateway::get_gateway_config(&profile_path)
+    let routes = repositories::config::gateway::dispatchable_routes_from_services()
         .map_err(AdminError::internal)?;
-    let emitted = detect_after_the_fact(&pool, &cfg.routes, query.since_minutes).await?;
+    let emitted = detect_after_the_fact(&pool, &routes, query.since_minutes).await?;
     Ok(Json(DetectResponse {
         emitted,
         since_minutes: query.since_minutes,

@@ -1,18 +1,18 @@
-//! `/admin/entities/contexts` — list of conversation contexts with per-user
-//! drill-down. Filters by user, model, free text, and time range; supports a
-//! flat "Contexts" view and a grouped "By user" summary view.
+//! `/admin/contexts` — every conversation on this instance, newest first.
+//!
+//! Two views of the same rows: "By user" (one row per person, their
+//! conversations nested under it) and "All" (one conversation per row).
+//! Filters by user, model, free text, time range and the shared
+//! `?group=&project=` scope; `?side=1` includes conversations made of side
+//! calls alone, which are hidden by default.
 
 mod context;
-mod data;
+mod load;
+mod view;
 
-use crate::error::AdminError;
+use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::error::AdminHtmlResult;
-use crate::repositories;
-use crate::repositories::analytics::contexts_list;
-use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
 use axum::extract::{Extension, Query, State};
 use axum::response::Response;
 use chrono::{DateTime, Duration, Utc};
@@ -20,10 +20,20 @@ use serde::Deserialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
-use context::{ContextsPageContext, FilterView, PageKpisView, PageStat, UserForFilterView};
-use data::{
-    build_contexts_json, build_user_summaries_json, group_contexts_by_user, microdollars_to_usd,
+use crate::error::{AdminError, AdminHtmlResult};
+use crate::handlers::ssr::format::{format_cost, format_token_total};
+use crate::handlers::ssr::list_view::PageWindow;
+use crate::handlers::ssr::types::BreadcrumbView;
+use crate::repositories;
+use crate::repositories::analytics::conversation_rows::{
+    ConversationFilter, ConversationSort, ConversationTotals,
 };
+use crate::repositories::scope::{ScopeRequest, SubjectScope};
+use crate::templates::AdminTemplateEngine;
+use crate::types::{MarketplaceContext, UserContext};
+
+use context::{ContextsPageContext, FilterView, ModelOptionView, PageKpisView, UserForFilterView};
+use load::{ContextsPageData, load_page_data};
 
 #[derive(Debug, Deserialize, Default)]
 pub(crate) struct ContextsListQuery {
@@ -32,8 +42,20 @@ pub(crate) struct ContextsListQuery {
     pub q: Option<String>,
     pub since: Option<String>,
     pub view: Option<String>,
-    pub limit: Option<i64>,
+    pub side: Option<String>,
+    pub group: Option<String>,
+    pub project: Option<String>,
+    pub sort: Option<String>,
+    pub dir: Option<String>,
+    pub page: Option<i64>,
+    // Why: the shell's scope bar is the one window control on every AI-activity
+    // page and it emits `?preset=`. This page's own parameter is `since`, so
+    // the preset is read as a fallback rather than silently ignored.
+    pub preset: Option<String>,
 }
+
+const BASE_URL: &str = "/admin/contexts";
+const PAGE_SIZE: i64 = 50;
 
 fn since_to_datetime(value: &str) -> Option<DateTime<Utc>> {
     let now = Utc::now();
@@ -47,166 +69,192 @@ fn since_to_datetime(value: &str) -> Option<DateTime<Utc>> {
     Some(now - dur)
 }
 
-struct ContextsPageInputs {
+pub(super) struct ContextsPageInputs {
     user_id: Option<UserId>,
     model: Option<String>,
     q: Option<String>,
     since_label: Option<String>,
     view: String,
-    filter: contexts_list::ContextListFilter,
+    pub(super) view_is_users: bool,
+    pub(super) show_side: bool,
+    pub(super) filter: ConversationFilter,
+    pub(super) sort: ConversationSort,
+    pub(super) descending: bool,
+    pub(super) page: i64,
 }
 
-fn parse_inputs(params: ContextsListQuery) -> ContextsPageInputs {
+fn parse_inputs(params: &ContextsListQuery, scope: &SubjectScope) -> ContextsPageInputs {
     let trim_opt = |s: Option<String>| -> Option<String> {
         s.map(|v| v.trim().to_owned()).filter(|v| !v.is_empty())
     };
-    let user_id = params.user_id.filter(|u| !u.as_str().trim().is_empty());
-    let model = trim_opt(params.model);
-    let q = trim_opt(params.q);
-    let since_label = trim_opt(params.since);
+    let user_id = params
+        .user_id
+        .clone()
+        .filter(|u| !u.as_str().trim().is_empty());
+    let model = trim_opt(params.model.clone());
+    let q = trim_opt(params.q.clone());
+    let raw_since = trim_opt(params.since.clone()).or_else(|| trim_opt(params.preset.clone()));
+    let since_label = Some(match raw_since.as_deref() {
+        Some("1d") => "24h".to_owned(),
+        Some(v @ ("24h" | "7d" | "30d" | "90d" | "all")) => v.to_owned(),
+        _ => "30d".to_owned(),
+    });
     let since_dt = since_label.as_deref().and_then(since_to_datetime);
     let view = params
         .view
         .as_deref()
         .map(str::to_lowercase)
-        .filter(|v| v == "users" || v == "contexts")
-        .unwrap_or_else(|| "contexts".to_owned());
-    let filter = contexts_list::ContextListFilter {
+        .filter(|v| v == "users" || v == "all")
+        .unwrap_or_else(|| "users".to_owned());
+    let show_side = params.side.as_deref() == Some("1");
+    let filter = ConversationFilter {
         user_id: user_id.clone(),
+        subject_ids: scope.as_sql().map(<[String]>::to_vec),
         model: model.clone(),
         free_text: q.clone(),
         since: since_dt,
-        limit: params.limit.unwrap_or(0),
+        until: None,
+        include_side_calls: show_side,
+        error_only: false,
     };
     ContextsPageInputs {
         user_id,
         model,
         q,
         since_label,
+        view_is_users: view == "users",
         view,
+        show_side,
         filter,
+        sort: ConversationSort::parse_conversation_sort(params.sort.as_deref()),
+        descending: params.dir.as_deref() != Some("asc"),
+        page: params.page.unwrap_or(0).max(0),
     }
 }
 
-struct ContextsPageData {
-    contexts: Vec<contexts_list::ContextListItem>,
-    user_summaries: Vec<contexts_list::ContextUserSummary>,
-    kpis: contexts_list::ContextListKpis,
-    models: Vec<String>,
-    users_for_filter: Vec<crate::types::UserSummary>,
-}
-
-async fn load_page_data(
+#[expect(
+    clippy::too_many_arguments,
+    reason = "one call site; splitting the six inputs into a struct would only rename them"
+)]
+#[expect(
+    clippy::too_many_lines,
+    reason = "one page assembly per handler; splitting is tracked in docs/tech-debt.md"
+)]
+async fn build_page_context(
     pool: &PgPool,
-    filter: &contexts_list::ContextListFilter,
-) -> ContextsPageData {
-    let contexts = contexts_list::list_context_list(pool, filter)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "list_context_list failed");
-            Vec::new()
-        });
-    let user_summaries = contexts_list::list_context_user_summary(pool, filter)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "list_context_user_summary failed");
-            Vec::new()
-        });
-    let kpis = contexts_list::get_context_list_kpis(pool, filter)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "get_context_list_kpis failed");
-            contexts_list::ContextListKpis {
-                total_contexts: 0,
-                active_users: 0,
-                total_requests: 0,
-                total_messages: 0,
-                total_input_tokens: 0,
-                total_output_tokens: 0,
-                total_cost_microdollars: 0,
-            }
-        });
-    let models = contexts_list::list_distinct_models(pool)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "list_distinct_models failed");
-            Vec::new()
-        });
-    let users_for_filter = repositories::users::queries::list_users(pool)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "list_users failed in contexts page");
-            Vec::new()
-        });
-    ContextsPageData {
-        contexts,
-        user_summaries,
-        kpis,
-        models,
-        users_for_filter,
-    }
-}
-
-fn build_page_json(inputs: &ContextsPageInputs, data: &ContextsPageData) -> ContextsPageContext {
-    let contexts_by_user = group_contexts_by_user(&data.contexts);
-    let contexts_json = build_contexts_json(&data.contexts);
-    let user_summaries_json = build_user_summaries_json(&data.user_summaries, &contexts_by_user);
-    let users_for_filter_json: Vec<UserForFilterView> = data
+    user_ctx: &UserContext,
+    request: &ScopeRequest,
+    inputs: &ContextsPageInputs,
+    data: &ContextsPageData,
+    params: &ContextsListQuery,
+) -> ContextsPageContext {
+    let by_user = if inputs.view_is_users {
+        view::group_by_user(&data.conversations)
+    } else {
+        HashMap::new()
+    };
+    let conversations: Vec<_> = if inputs.view_is_users {
+        Vec::new()
+    } else {
+        data.conversations
+            .iter()
+            .map(view::conversation_item)
+            .collect()
+    };
+    let user_summaries: Vec<_> = data
+        .user_summaries
+        .iter()
+        .map(|s| view::user_summary(s, &by_user, params))
+        .collect();
+    let users_for_filter: Vec<UserForFilterView> = data
         .users_for_filter
         .iter()
         .map(|u| UserForFilterView {
+            selected: inputs.user_id.as_ref() == Some(&u.user_id),
             user_id: u.user_id.clone(),
             display_name: u.display_name.clone(),
         })
         .collect();
-    let kpis = data.kpis;
-    let total_tokens = kpis.total_input_tokens + kpis.total_output_tokens;
-    let total_cost_usd = microdollars_to_usd(kpis.total_cost_microdollars);
+    let models: Vec<ModelOptionView> = data
+        .models
+        .iter()
+        .map(|m| ModelOptionView {
+            selected: inputs.model.as_deref() == Some(m.as_str()),
+            model: m.clone(),
+        })
+        .collect();
+    let (count, shown, noun) = if inputs.view_is_users {
+        (data.totals.users, data.user_summaries.len(), "users")
+    } else {
+        (
+            data.total_conversations,
+            data.conversations.len(),
+            "conversations",
+        )
+    };
+    let shown = i64::try_from(shown).unwrap_or(PAGE_SIZE);
     ContextsPageContext {
         page: "contexts",
-        title: "Conversation Contexts",
-        contexts: contexts_json,
-        user_summaries: user_summaries_json,
-        users_for_filter: users_for_filter_json,
-        models: data.models.clone(),
-        kpis: PageKpisView {
-            total_contexts: kpis.total_contexts,
-            active_users: kpis.active_users,
-            total_requests: kpis.total_requests,
-            total_messages: kpis.total_messages,
-            total_tokens,
-            total_cost_usd,
-        },
+        title: "Conversations",
+        breadcrumbs: vec![
+            BreadcrumbView::link("AI activity", "/admin/analytics"),
+            BreadcrumbView::current("Conversations"),
+        ],
+        has_conversations: !conversations.is_empty(),
+        has_user_summaries: !user_summaries.is_empty(),
+        conversations,
+        user_summaries,
+        users_for_filter,
+        models,
+        kpis: page_kpis(&data.totals),
         filter: FilterView {
-            user_id: inputs
-                .user_id
-                .clone()
-                .unwrap_or_else(|| UserId::new(String::new())),
-            model: inputs.model.clone().unwrap_or_default(),
             q: inputs.q.clone().unwrap_or_default(),
             since: inputs.since_label.clone().unwrap_or_default(),
             view: inputs.view.clone(),
+            group: request.group.clone().unwrap_or_default(),
+            project: request.project.clone().unwrap_or_default(),
+            side: if inputs.show_side { "1" } else { "" }.to_owned(),
         },
-        view_is_users: inputs.view == "users",
-        view_is_contexts: inputs.view == "contexts",
-        page_stats: vec![
-            PageStat {
-                value: kpis.total_contexts,
-                label: "Contexts",
-            },
-            PageStat {
-                value: kpis.active_users,
-                label: "Users",
-            },
-            PageStat {
-                value: kpis.total_requests,
-                label: "Requests",
-            },
-            PageStat {
-                value: kpis.total_messages,
-                label: "Messages",
-            },
-        ],
+        scope_filter: crate::handlers::ssr::list_view::scope_filter_view(
+            pool,
+            user_ctx,
+            request,
+            BASE_URL,
+            vec![
+                ("q".to_owned(), inputs.q.clone().unwrap_or_default()),
+                ("model".to_owned(), inputs.model.clone().unwrap_or_default()),
+                (
+                    "user_id".to_owned(),
+                    inputs
+                        .user_id
+                        .as_ref()
+                        .map(|u| u.as_str().to_owned())
+                        .unwrap_or_default(),
+                ),
+                (
+                    "since".to_owned(),
+                    inputs.since_label.clone().unwrap_or_default(),
+                ),
+                ("view".to_owned(), inputs.view.clone()),
+                (
+                    "side".to_owned(),
+                    if inputs.show_side { "1" } else { "" }.to_owned(),
+                ),
+            ],
+        )
+        .await,
+        view_tabs: view::view_tabs(params, &inputs.view),
+        view_is_users: inputs.view_is_users,
+        view_is_all: !inputs.view_is_users,
+        pagination: view::build_pagination(
+            params,
+            PageWindow::new(inputs.page, PAGE_SIZE, count, shown, noun),
+        ),
+        sort_headers: view::build_sort_headers(params, inputs.sort, inputs.descending),
+        total_count: data.total_conversations,
+        count_label: format!("{count} {noun}"),
+        show_side: inputs.show_side,
+        side_toggle_url: view::side_toggle_url(params, inputs.show_side),
     }
 }
 
@@ -217,12 +265,18 @@ pub(crate) async fn skills_contexts_page(
     State(pool): State<Arc<PgPool>>,
     Query(params): Query<ContextsListQuery>,
 ) -> AdminHtmlResult<Response> {
-    if !user_ctx.is_admin {
+    if !user_ctx.is_console {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
-    let inputs = parse_inputs(params);
-    let data = load_page_data(&pool, &inputs.filter).await;
-    let payload = build_page_json(&inputs, &data);
+    let request = ScopeRequest::from_query(
+        &user_ctx,
+        params.group.as_deref(),
+        params.project.as_deref(),
+    );
+    let scope = repositories::scope::membership::get_subject_scope(&pool, &request).await?;
+    let inputs = parse_inputs(&params, &scope);
+    let data = load_page_data(&pool, &inputs, &scope).await?;
+    let payload = build_page_context(&pool, &user_ctx, &request, &inputs, &data, &params).await;
     Ok(super::render_typed_page(
         &engine,
         "skills-contexts",
@@ -230,4 +284,17 @@ pub(crate) async fn skills_contexts_page(
         &user_ctx,
         &mkt_ctx,
     ))
+}
+
+fn page_kpis(t: &ConversationTotals) -> PageKpisView {
+    PageKpisView {
+        conversations: t.conversations,
+        users: t.users,
+        turns: t.turns,
+        tool_calls: t.tool_calls,
+        side_calls: t.side_calls,
+        side_call_cost_display: format_cost(t.side_call_cost_microdollars),
+        tokens_display: format_token_total(t.total_tokens),
+        cost_display: format_cost(t.total_cost_microdollars),
+    }
 }

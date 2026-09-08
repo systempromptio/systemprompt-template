@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT (SELECT COUNT(*) FROM knowledge_documents) AS \"documents!\",\n               (SELECT COUNT(*) FROM knowledge_chunks) AS \"chunks!\",\n               (SELECT COUNT(*) FROM knowledge_document_grants) AS \"grants!\",\n               (SELECT COUNT(DISTINCT user_id) FROM knowledge_user_sync_state) AS \"syncing_users!\",\n               (SELECT COUNT(*) FROM knowledge_embedding_cache) AS \"embedding_cache_rows!\",\n               pg_database_size(current_database()) AS \"database_bytes!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "documents!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "chunks!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "grants!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "syncing_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "embedding_cache_rows!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "database_bytes!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "6194840790bcd0d0ee921fd09b8cc0abc85c507f79ff7db89fb3063779831336"
+}

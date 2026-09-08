@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_drive_sources SET last_error=$2 WHERE source_type=$1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fef8c010bbd6d341d5d396d79c50e1675bca378392830387b1f2f9c2b9c39758"
+}

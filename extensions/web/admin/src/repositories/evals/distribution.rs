@@ -13,7 +13,7 @@ use crate::util::time_range::TimeRange;
 
 /// One model's share of traffic over the window.
 #[derive(Debug, Clone, Serialize)]
-pub struct ModelDistributionRow {
+pub struct EvalModelDistributionRow {
     pub provider: String,
     pub model: String,
     pub request_count: i64,
@@ -26,10 +26,10 @@ pub struct ModelDistributionRow {
     pub p95_latency_ms: f64,
 }
 
-pub async fn list_model_distribution(
+pub async fn list_eval_model_distribution(
     pool: &PgPool,
     range: TimeRange,
-) -> Result<Vec<ModelDistributionRow>, sqlx::Error> {
+) -> Result<Vec<EvalModelDistributionRow>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT
             provider AS "provider!",
@@ -55,7 +55,7 @@ pub async fn list_model_distribution(
 
     Ok(rows
         .into_iter()
-        .map(|r| ModelDistributionRow {
+        .map(|r| EvalModelDistributionRow {
             provider: r.provider,
             model: r.model,
             request_count: r.request_count,

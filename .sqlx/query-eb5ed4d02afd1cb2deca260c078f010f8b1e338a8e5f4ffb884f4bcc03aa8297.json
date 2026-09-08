@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_manual_roles (user_id, role, granted_by)\n         SELECT $1, r, $3 FROM UNNEST($2::TEXT[]) AS r ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "eb5ed4d02afd1cb2deca260c078f010f8b1e338a8e5f4ffb884f4bcc03aa8297"
+}

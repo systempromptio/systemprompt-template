@@ -1,0 +1,86 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT category AS \"category!\", scanner AS \"scanner!\", severity AS \"severity!\",\n                   phase AS \"phase!\", COUNT(*) AS \"count!\",\n                   COUNT(*) FILTER (WHERE blocked) AS \"blocked_count!\",\n                   MAX(created_at) AS \"last_seen!\"\n            FROM ai_safety_findings\n            WHERE ($1::timestamptz IS NULL OR created_at >= $1)\n            GROUP BY category, scanner, severity, phase\n            ORDER BY COUNT(*) DESC, MAX(created_at) DESC\n            LIMIT $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "category!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "category"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "scanner!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "scanner"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "severity!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "severity"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "phase!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "phase"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "blocked_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_seen!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "2c246d70d7856ab6370b899a66f387e3c785f61e3e98162eccceb275fe8bedd5"
+}

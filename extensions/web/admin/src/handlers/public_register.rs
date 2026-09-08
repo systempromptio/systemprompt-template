@@ -24,7 +24,6 @@ const TOKEN_PREFIX: &str = "sp_wst_";
 pub(crate) struct PublicRegisterRequest {
     pub name: String,
     pub email: String,
-    pub role: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -40,6 +39,11 @@ pub(crate) async fn public_register_handler(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<PublicRegisterRequest>,
 ) -> AdminResult<Response> {
+    if !systemprompt::models::Config::get()?.allow_registration {
+        return Err(AdminError::Forbidden(
+            "Public registration is disabled".to_owned(),
+        ));
+    }
     let email_str = body.email.trim().to_lowercase();
     let name = body.name.trim().to_owned();
 
@@ -51,7 +55,7 @@ pub(crate) async fn public_register_handler(
 
     check_rate_limit(&pool, &email_str).await?;
 
-    let user = create_registration_user(&pool, &name, email, &body.role).await?;
+    let user = create_registration_user(&pool, &name, email).await?;
 
     let (raw_token, token_hash) = generate_setup_token();
     let token_id = uuid::Uuid::new_v4().to_string();
@@ -103,13 +107,9 @@ async fn create_registration_user(
     pool: &PgPool,
     name: &str,
     email: Email,
-    role: &str,
 ) -> AdminResult<crate::types::UserSummary> {
     let user_id = UserId::new(uuid::Uuid::new_v4().to_string());
-    let roles = match role {
-        "admin" => vec!["user".to_owned(), "admin".to_owned()],
-        _ => vec!["user".to_owned()],
-    };
+    let roles = vec!["user".to_owned()];
 
     let create_req = CreateUserRequest {
         user_id,

@@ -1,7 +1,7 @@
 export const sheet = new CSSStyleSheet();
 sheet.replaceSync(`
   :host { display: none; }
-  :host([open]) { display: block; }
+  :host([is-open]) { display: block; }
   .overlay {
     position: fixed;
     inset: 0;
@@ -77,7 +77,7 @@ template.innerHTML = `
       <p></p>
       <input type="text" hidden>
       <div class="actions">
-        <button type="button" class="btn btn-secondary" data-role="cancel">Cancel</button>
+        <button type="button" class="btn" data-role="cancel">Cancel</button>
         <button type="button" class="btn btn-danger" data-role="confirm">Confirm</button>
       </div>
     </div>

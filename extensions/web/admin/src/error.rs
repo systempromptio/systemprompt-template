@@ -263,3 +263,22 @@ pub type AdminResult<T> = Result<T, AdminError>;
 
 /// The SSR counterpart to [`AdminResult`].
 pub type AdminHtmlResult<T> = Result<T, AdminHtmlError>;
+
+impl From<crate::repositories::bridge::BridgeRepoError> for AdminError {
+    fn from(error: crate::repositories::bridge::BridgeRepoError) -> Self {
+        match error {
+            crate::repositories::bridge::BridgeRepoError::Validation(message) => {
+                Self::BadRequest(message)
+            },
+            other @ crate::repositories::bridge::BridgeRepoError::Database(_) => {
+                Self::internal(other)
+            },
+        }
+    }
+}
+
+impl From<systemprompt::loader::ConfigLoadError> for AdminError {
+    fn from(value: systemprompt::loader::ConfigLoadError) -> Self {
+        Self::Internal(Box::new(value))
+    }
+}

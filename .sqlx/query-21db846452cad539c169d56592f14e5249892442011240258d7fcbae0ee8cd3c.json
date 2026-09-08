@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE mcp_connector_accounts SET status = 'not_connected', auth_method = NULL,\n        error_code = 'user_revoked', generation = generation + 1,\n        revision = nextval('mcp_connector_revision') WHERE user_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "21db846452cad539c169d56592f14e5249892442011240258d7fcbae0ee8cd3c"
+}

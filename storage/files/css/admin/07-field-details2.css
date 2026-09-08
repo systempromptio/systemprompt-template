@@ -1,0 +1,16 @@
+@layer components {
+
+.sp-field-hint {
+    margin: var(--sp-space-1) 0 0;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    line-height: var(--sp-leading-normal);
+}
+
+.sp-btn--copy {
+    position: absolute;
+    top: var(--sp-space-2);
+    right: var(--sp-space-2);
+}
+
+}

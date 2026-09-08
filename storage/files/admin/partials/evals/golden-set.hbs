@@ -2,99 +2,63 @@
   Golden set tab: the fixed cases, the replay that re-runs them against a model,
   and the replay runs already done.
 --}}
-<h2 class="eval-section-title">Replay the golden set</h2>
-<p class="text-muted text-xs eval-hint">
-    A replay sends every case to the target model and scores the fresh answers
-    against the same rubric. Judge calls go out through this gateway under your
-    own session, so they are scope-checked, audited and costed like any other
-    client's traffic.
-</p>
+{{> components/section title="Replay the golden set" note="A replay sends every case to the target model and scores the fresh answers against the same rubric. Judge calls go out through this gateway under your own session, so they are scope-checked, audited and costed like any other client's traffic."}}
 
-<form method="post" action="{{base_url}}/run" class="toolbar eval-run-form">
-    <input type="hidden" name="kind" value="replay">
-    <input type="hidden" name="tab" value="{{tab}}">
-    <input type="hidden" name="from" value="{{time_range.from}}">
-    <input type="hidden" name="to" value="{{time_range.to}}">
-    <label class="filter-field">
-        <span class="filter-field__label">Target model</span>
-        <select name="model" class="filter-select">
-            {{#each model_options}}
-            <option value="{{this.value}}">{{this.label}}</option>
-            {{/each}}
-        </select>
-    </label>
-    <label class="filter-field">
-        <span class="filter-field__label">Judge model</span>
-        <select name="judge_model" class="filter-select">
-            {{#each model_options}}
-            <option value="{{this.value}}">{{this.label}}</option>
-            {{/each}}
-        </select>
-    </label>
-    <button type="submit" class="btn btn-sm"{{#unless cases}} disabled{{/unless}}>
-        Run replay
-    </button>
-</form>
+<div class="sp-card">
+    <form method="post" action="{{base_url}}/run" class="sp-card__body sp-p-evals__run-form">
+        <input type="hidden" name="kind" value="replay">
+        <input type="hidden" name="tab" value="{{tab}}">
+        <input type="hidden" name="from" value="{{time_range.from}}">
+        <input type="hidden" name="to" value="{{time_range.to}}">
+        <div class="sp-form-group">
+            <label for="evals-replay-model">Target model</label>
+            <select id="evals-replay-model" name="model" class="sp-select">
+                {{#each model_options}}
+                <option value="{{this.value}}">{{this.label}}</option>
+                {{/each}}
+            </select>
+        </div>
+        <div class="sp-form-group">
+            <label for="evals-replay-judge">Judge model</label>
+            <select id="evals-replay-judge" name="judge_model" class="sp-select">
+                {{#each model_options}}
+                <option value="{{this.value}}">{{this.label}}</option>
+                {{/each}}
+            </select>
+        </div>
+        <div class="sp-form-actions">
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary"{{#unless cases}} disabled{{/unless}}>Run replay</button>
+        </div>
+    </form>
+</div>
 
-<h2 class="eval-section-title">Cases</h2>
+{{> components/section title="Cases" note="Every prompt promoted from a judged answer, with the model that answered it at the time."}}
 {{#if cases}}
-{{#> components/data-table}}
+{{#> components/table caption="Golden-set cases" modifier="sp-p-evals__cases"}}
     <thead><tr>
-        <th>Case</th>
-        <th>Baseline model</th>
-        <th>Expectation</th>
-        <th class="col-date">Added</th>
+        <th scope="col">Case</th>
+        <th scope="col">Baseline model</th>
+        <th scope="col">Expectation</th>
+        <th scope="col" class="sp-table__cell--date">Added</th>
     </tr></thead>
     <tbody>
     {{#each cases}}
     <tr>
-        <td>{{this.name}}</td>
-        <td><code class="code-inline">{{this.baseline_model}}</code></td>
-        <td>{{#if this.has_expectation}}{{this.expectation}}{{else}}<span class="text-muted">—</span>{{/if}}</td>
-        <td class="col-date">{{this.created_at_local}}</td>
+        <td class="sp-table__cell--primary sp-p-evals__clip" title="{{this.name}}">{{this.name}}</td>
+        <td class="sp-table__cell--mono sp-p-evals__clip" title="{{this.baseline_model}}">{{this.baseline_model}}</td>
+        <td class="sp-p-evals__clip" title="{{this.expectation}}">{{#if this.has_expectation}}{{this.expectation}}{{else}}<span class="sp-table__cell--muted">—</span>{{/if}}</td>
+        <td class="sp-table__cell--date">{{this.created_at_local}}</td>
     </tr>
     {{/each}}
     </tbody>
-{{/components/data-table}}
+{{/components/table}}
 {{else}}
-{{> components/empty-state
-    message="The golden set is empty. Add a case from any judged answer on the Scored answers tab."}}
+{{> components/empty-state title="The golden set is empty" message="Add a case from any judged answer on the Judge tab."}}
 {{/if}}
 
+{{> components/section title="Replay runs" note="Replays launched in this window. Open one to see every case it scored."}}
 {{#if runs}}
-<h2 class="eval-section-title">Replay runs</h2>
-{{#> components/data-table}}
-    <thead><tr>
-        <th>Run</th>
-        <th class="col-status">Status</th>
-        <th>Judge</th>
-        <th class="col-num">Scored</th>
-        <th class="col-num">Failed</th>
-        <th class="col-num">Mean</th>
-        <th class="col-num">Judge cost</th>
-        <th class="col-date">Started</th>
-    </tr></thead>
-    <tbody>
-    {{#each runs}}
-    <tr>
-        <td><a href="{{this.detail_url}}"><code class="code-inline">{{this.short_id}}</code></a></td>
-        <td class="col-status">
-            {{#if this.is_failed}}
-              <span class="mcp-badge mcp-badge-danger">{{this.status}}</span>
-            {{else}}{{#if this.is_running}}
-              <span class="mcp-badge mcp-badge-warning">{{this.status}}</span>
-            {{else}}
-              <span class="mcp-badge mcp-badge-success">{{this.status}}</span>
-            {{/if}}{{/if}}
-        </td>
-        <td><code class="code-inline">{{truncate this.judge_model 22}}</code></td>
-        <td class="col-num">{{this.scored_count}} / {{this.sample_size}}</td>
-        <td class="col-num">{{#if this.failed_count}}{{this.failed_count}}{{else}}—{{/if}}</td>
-        <td class="col-num">{{this.mean_score_display}}</td>
-        <td class="col-num">{{this.cost_display}}</td>
-        <td class="col-date">{{this.created_at_local}}</td>
-    </tr>
-    {{/each}}
-    </tbody>
-{{/components/data-table}}
+{{> evals/runs-table runs=runs}}
+{{else}}
+{{> components/empty-state message="No replay has run in this window."}}
 {{/if}}

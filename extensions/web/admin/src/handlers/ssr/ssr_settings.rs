@@ -10,7 +10,7 @@ use axum::extract::{Extension, State};
 use axum::response::Response;
 use sqlx::PgPool;
 
-use super::types::{SettingsPageData, SettingsView};
+use super::types::{BreadcrumbView, SettingsPageData, SettingsView};
 
 pub(crate) async fn settings_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -43,11 +43,15 @@ pub(crate) async fn settings_page(
 
     let data = SettingsPageData {
         page: "settings",
-        title: "Account Settings",
+        title: "Account settings",
         settings: settings_view,
         user_email: user_ctx.email.to_string(),
         user_id: user_ctx.user_id.clone(),
         username: user_ctx.username.clone(),
+        breadcrumbs: vec![
+            BreadcrumbView::link("Account", "/admin/profile"),
+            BreadcrumbView::current("Settings"),
+        ],
     };
 
     Ok(super::render_typed_page(

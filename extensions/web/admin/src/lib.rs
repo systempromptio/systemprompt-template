@@ -43,6 +43,18 @@ pub use routes::admin_ssr_router;
 pub use types::{CreateUserRequest, MarketplaceContext, UserContext, UserSummary, UserUsageEvent};
 
 pub mod test_support {
+    pub use crate::handlers::dev_login_session::permissions_for_roles as dev_login_permissions_for_roles;
+    pub use crate::handlers::hooks_track::commits::{
+        ParsedCommit, is_commit_command, parse_commit_stdout, response_stdout,
+    };
+    pub use crate::handlers::hooks_track::loc::{LocDelta, compute_loc_delta};
+    pub use crate::handlers::ssr::transcript_view::{
+        ConversationView, ParsedAssistant, SideCallRowView, SideCallsView, StepView, ThreadView,
+        ToolChipView, ToolUseMarker, TranscriptMetaView, TranscriptOptions, TurnView,
+        build_conversation, meta_view, parse_assistant, preview, short_id, strip_system_reminders,
+        tidy_lines,
+    };
+
     pub use crate::handlers::hooks_track::ai_context::build_full_context;
     pub use crate::handlers::hooks_track::ai_summary::build_request_context;
     pub use crate::handlers::hooks_track::ai_summary_types::{
@@ -101,12 +113,18 @@ pub fn secrets_router(pool: Arc<PgPool>) -> Router {
         .with_state(pool)
 }
 
-pub fn admin_router(read_pool: Arc<PgPool>) -> Router {
-    let admin_only = routes::build_admin_only_routes(&read_pool, &read_pool);
+pub fn admin_router(pool: Arc<PgPool>) -> Router {
+    let write_pool = Arc::clone(&pool);
+    admin_router_with_pools(pool, &write_pool)
+}
+
+pub fn admin_router_with_pools(read_pool: Arc<PgPool>, write_pool: &Arc<PgPool>) -> Router {
+    let admin_only = routes::build_admin_only_routes(&read_pool, write_pool);
     let auth_reads = routes::build_auth_read_routes(&read_pool);
 
     admin_only
         .merge(auth_reads)
+        .merge(routes::build_self_service_routes(write_pool))
         .layer(axum_middleware::from_fn(
             middleware::require_auth_middleware,
         ))
@@ -115,3 +133,40 @@ pub fn admin_router(read_pool: Arc<PgPool>) -> Router {
             middleware::user_context_middleware,
         ))
 }
+
+pub use handlers::connector_auth::router as connector_api_router;
+pub use services::connector_oauth;
+
+// Why: the desktop bridge's identity endpoint. Mounted under `/api/public` and
+// authenticated by the caller's own bridge token, not by the admin session
+// cookie — the bridge has no cookie jar.
+pub fn bridge_identity_router(pool: Arc<PgPool>) -> Router {
+    Router::new()
+        .route(
+            "/bridge/whoami",
+            get(handlers::bridge_whoami::bridge_whoami_handler),
+        )
+        .with_state(pool)
+}
+
+// Why: the per-user Salesforce bearer accessor core's external-MCP client GETs
+// at tool-call time. Mounted under `/api/public` and deliberately NOT behind
+// `require_auth_middleware`: the caller is core carrying the user's own bridge
+// token, which has no session cookie, so the handler authenticates it itself.
+pub fn salesforce_api_router(deps: SalesforceDeps) -> Router {
+    Router::new()
+        .route(
+            "/salesforce/token",
+            get(handlers::salesforce_auth::salesforce_token_handler),
+        )
+        .layer(Extension(deps))
+}
+
+
+pub use handlers::salesforce_auth::{SalesforceConfig, SalesforceDeps, SalesforceError};
+
+pub use routes::bridge_auth_ssr_router;
+
+pub use handlers::dev_login::{
+    DEV_LOGIN_PATH, dev_login_allowed, dev_login_enabled, dev_login_url,
+};

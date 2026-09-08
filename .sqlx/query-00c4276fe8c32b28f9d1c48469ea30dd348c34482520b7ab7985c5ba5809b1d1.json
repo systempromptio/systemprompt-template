@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT u.id AS \"id!\"\n           FROM users u\n           WHERE ($1::TEXT[] IS NULL OR EXISTS (\n                     SELECT 1 FROM user_groups ug\n                     WHERE ug.user_id = u.id AND ug.group_id = ANY($1)))\n             AND ($2::TEXT IS NULL OR EXISTS (\n                     SELECT 1 FROM project_members pm\n                     WHERE pm.user_id = u.id AND pm.project_id = $2))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "00c4276fe8c32b28f9d1c48469ea30dd348c34482520b7ab7985c5ba5809b1d1"
+}

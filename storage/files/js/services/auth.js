@@ -22,7 +22,7 @@ export const getUserContext = async () => {
     const resp = await rawResponse('/admin/auth/me');
     if (!resp.ok) return null;
     const me = await resp.json();
-    const meta = document.getElementById('user-meta');
+    const meta = document.getElementById('sp-user-meta');
     if (meta) {
       const parts = (me.roles || [])
         .filter((role) => role !== 'user')
@@ -62,11 +62,11 @@ export const initUserDisplay = async () => {
     const img = document.createElement('img');
     img.src = me.avatar_url;
     img.alt = name || 'User avatar';
-    img.className = 'user-widget__avatar-img';
+    img.className = 'sp-avatar__img';
     av.append(img);
   } else {
     av.append(initials);
   }
-  const nm = document.getElementById('user-name');
+  const nm = document.getElementById('sp-user-name');
   if (nm && name) nm.textContent = name;
 };

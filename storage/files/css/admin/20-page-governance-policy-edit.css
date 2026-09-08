@@ -1,0 +1,43 @@
+@layer components {
+
+/* Why: the parameters and the decision log answer different questions about
+   the same policy, so they sit side by side rather than stacking the log
+   under a YAML block whose height depends on how many tunables there are. */
+.sp-p-policy__grid {
+    display: grid;
+    grid-template-columns: minmax(16rem, 2fr) minmax(0, 3fr);
+    gap: var(--sp-density-gap);
+    align-items: start;
+}
+
+.sp-p-policy__toggle { display: inline-flex; margin: 0; }
+
+.sp-p-policy__yaml {
+    max-height: 60vh;
+    overflow: auto;
+}
+
+.sp-p-policy__table { table-layout: fixed; width: 100%; }
+.sp-p-policy__table th:nth-child(1) { width: 20%; }
+.sp-p-policy__table th:nth-child(2) { width: 13%; }
+.sp-p-policy__table th:nth-child(3) { width: 20%; }
+.sp-p-policy__table th:nth-child(4) { width: 15%; }
+.sp-p-policy__table th:nth-child(5) { width: 32%; }
+
+.sp-p-policy__reason {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-xs);
+}
+
+}
+
+@layer responsive {
+
+@media (max-width: 64rem) {
+    .sp-p-policy__grid { grid-template-columns: 1fr; }
+}
+
+}

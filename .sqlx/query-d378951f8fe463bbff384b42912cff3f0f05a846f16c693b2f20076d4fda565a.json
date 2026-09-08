@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_drive_document_projects SET project_id=$3,project_name=$4,folder_path=$5 WHERE source_type=$1 AND file_id=$2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d378951f8fe463bbff384b42912cff3f0f05a846f16c693b2f20076d4fda565a"
+}

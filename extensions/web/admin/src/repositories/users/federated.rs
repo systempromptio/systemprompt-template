@@ -77,3 +77,39 @@ pub async fn delete_federated_identities_for_issuer(
     .rows_affected();
     Ok(deleted)
 }
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct LinkedIdentityRow {
+    pub issuer: String,
+    pub external_sub: String,
+    pub linked_at: chrono::DateTime<chrono::Utc>,
+    pub last_seen_at: chrono::DateTime<chrono::Utc>,
+}
+
+// Why: the Identity tab lists every provider that vouches for this account, not
+// just the most recent one `find_identity_envelope` returns — an admin
+// unlinking Slack needs to see that Slack is linked while ADFS also is.
+pub async fn list_linked_identities(
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Result<Vec<LinkedIdentityRow>, sqlx::Error> {
+    let rows = sqlx::query!(
+        r#"SELECT issuer AS "issuer!", external_sub AS "external_sub!",
+                  created_at, last_seen_at
+             FROM federated_identities
+            WHERE user_id = $1
+            ORDER BY last_seen_at DESC NULLS LAST, issuer"#,
+        user_id.as_str(),
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|row| LinkedIdentityRow {
+            issuer: row.issuer,
+            external_sub: row.external_sub,
+            linked_at: row.created_at,
+            last_seen_at: row.last_seen_at,
+        })
+        .collect())
+}

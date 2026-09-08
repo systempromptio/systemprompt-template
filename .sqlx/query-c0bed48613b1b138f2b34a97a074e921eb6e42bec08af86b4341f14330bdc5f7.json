@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT r AS \"r!\" FROM users u, UNNEST(u.roles) AS r\n        WHERE u.id = $1\n          AND NOT EXISTS (\n              SELECT 1 FROM user_manual_roles m\n              WHERE m.user_id = u.id AND m.role = r)\n        ORDER BY r\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "r!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c0bed48613b1b138f2b34a97a074e921eb6e42bec08af86b4341f14330bdc5f7"
+}

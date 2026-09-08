@@ -1,0 +1,30 @@
+@layer components {
+
+.sp-p-mcp__split {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: var(--sp-space-5);
+    align-items: start;
+}
+
+.sp-p-mcp__rate {
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-p-mcp__rate--ok {
+    color: var(--sp-success-strong);
+}
+
+.sp-p-mcp__rate--warn {
+    color: var(--sp-warning-strong);
+}
+
+.sp-p-mcp__rate--err {
+    color: var(--sp-danger-strong);
+}
+
+.sp-p-mcp__rate--muted {
+    color: var(--sp-text-tertiary);
+}
+
+}

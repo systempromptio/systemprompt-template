@@ -1,87 +1,112 @@
-//! Typed template-context structs for the contexts list page
+//! Typed template-context structs for the conversations list page
 //! (`skills-contexts.hbs`).
 //!
-//! `ContextItemView` is shared by the flat `contexts` list and the nested
-//! `contexts` field inside each `UserSummaryView` — the nested table renders
-//! a subset of the same fields, so the unused ones are simply left `None`/`0`.
+//! `ConversationItemView` is shared by the flat "All" tab and the nested rows
+//! inside each `UserSummaryView` on the "By user" tab.
 
 use serde::Serialize;
-use systemprompt::identifiers::{ContextId, SessionId, UserId};
+use systemprompt::identifiers::{ContextId, UserId};
+
+use crate::handlers::ssr::list_view::{Pagination, ScopeFilterView};
+use crate::handlers::ssr::types::{BreadcrumbView, SortHeaderView, TabLinkView};
 
 #[derive(Debug, Serialize)]
 pub(super) struct ContextsPageContext {
     pub(super) page: &'static str,
     pub(super) title: &'static str,
-    pub(super) contexts: Vec<ContextItemView>,
+    pub(super) breadcrumbs: Vec<BreadcrumbView>,
+    pub(super) conversations: Vec<ConversationItemView>,
     pub(super) user_summaries: Vec<UserSummaryView>,
     pub(super) users_for_filter: Vec<UserForFilterView>,
-    pub(super) models: Vec<String>,
+    pub(super) models: Vec<ModelOptionView>,
     pub(super) kpis: PageKpisView,
     pub(super) filter: FilterView,
+    pub(super) scope_filter: ScopeFilterView,
+    pub(super) view_tabs: Vec<TabLinkView>,
     pub(super) view_is_users: bool,
-    pub(super) view_is_contexts: bool,
-    pub(super) page_stats: Vec<PageStat>,
+    pub(super) view_is_all: bool,
+    pub(super) pagination: Pagination,
+    pub(super) sort_headers: ContextsSortHeaders,
+    pub(super) total_count: i64,
+    pub(super) count_label: String,
+    pub(super) has_conversations: bool,
+    pub(super) has_user_summaries: bool,
+    pub(super) show_side: bool,
+    pub(super) side_toggle_url: String,
+}
+
+#[derive(Debug, Serialize)]
+pub(super) struct ContextsSortHeaders {
+    pub(super) activity: SortHeaderView,
+    pub(super) turns: SortHeaderView,
+    pub(super) tokens: SortHeaderView,
+    pub(super) cost: SortHeaderView,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(super) struct ContextItemView {
+pub(super) struct ConversationItemView {
     pub(super) context_id: ContextId,
-    pub(super) name: Option<String>,
-    pub(super) is_cli_session: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) detail_url: String,
+    // Why: not `title` — the layout's `title=` hash parameter shadows a field
+    // of that name at every depth of the template.
+    pub(super) conversation_title: String,
     pub(super) user_id: Option<UserId>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) display_name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) session_id: Option<SessionId>,
+    pub(super) user_label: String,
+    pub(super) user_url: Option<String>,
     pub(super) model: Option<String>,
-    // Why: Opening user turn, truncated — rendered as the table's Conversation column.
-    pub(super) summary: Option<String>,
-    pub(super) request_count: i64,
-    pub(super) message_count: i64,
+    pub(super) turn_count: i64,
+    pub(super) side_call_count: i64,
+    pub(super) tool_call_count: i64,
     pub(super) error_count: i64,
-    pub(super) input_tokens: i64,
-    pub(super) output_tokens: i64,
-    pub(super) total_tokens: i64,
-    pub(super) cost_usd: f64,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) first_request_at: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) last_request_at: Option<String>,
-    pub(super) last_activity: Option<String>,
+    pub(super) tokens_display: String,
+    pub(super) tokens_title: String,
+    pub(super) cost_display: String,
+    pub(super) last_at: Option<String>,
+    pub(super) last_relative: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
 pub(super) struct UserSummaryView {
     pub(super) user_id: UserId,
-    pub(super) display_name: Option<String>,
-    pub(super) context_count: i64,
-    pub(super) request_count: i64,
-    pub(super) message_count: i64,
-    pub(super) input_tokens: i64,
-    pub(super) output_tokens: i64,
-    pub(super) total_tokens: i64,
-    pub(super) cost_usd: f64,
-    pub(super) error_count: i64,
-    pub(super) last_activity: Option<String>,
+    pub(super) user_label: String,
+    pub(super) user_url: String,
+    pub(super) conversation_count: i64,
+    pub(super) tokens_display: String,
+    pub(super) all_conversations_url: String,
+    pub(super) turn_count: i64,
+    pub(super) side_call_count: i64,
+    pub(super) cost_display: String,
+    pub(super) last_at: Option<String>,
+    pub(super) last_relative: Option<String>,
+    pub(super) latest: Option<ConversationItemView>,
     pub(super) models: Vec<String>,
-    pub(super) contexts: Vec<ContextItemView>,
+    pub(super) conversations: Vec<ConversationItemView>,
+    pub(super) has_conversations: bool,
 }
 
 #[derive(Debug, Serialize)]
 pub(super) struct UserForFilterView {
     pub(super) user_id: UserId,
     pub(super) display_name: Option<String>,
+    pub(super) selected: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub(super) struct ModelOptionView {
+    pub(super) model: String,
+    pub(super) selected: bool,
 }
 
 #[derive(Debug, Serialize)]
 pub(super) struct PageKpisView {
-    pub(super) total_contexts: i64,
-    pub(super) active_users: i64,
-    pub(super) total_requests: i64,
-    pub(super) total_messages: i64,
-    pub(super) total_tokens: i64,
-    pub(super) total_cost_usd: f64,
+    pub(super) conversations: i64,
+    pub(super) users: i64,
+    pub(super) turns: i64,
+    pub(super) tool_calls: i64,
+    pub(super) side_calls: i64,
+    pub(super) side_call_cost_display: String,
+    pub(super) tokens_display: String,
+    pub(super) cost_display: String,
 }
 
 // Why: every field must serialize (empty string when unset) — the template
@@ -89,15 +114,10 @@ pub(super) struct PageKpisView {
 // errors on an absent key.
 #[derive(Debug, Serialize)]
 pub(super) struct FilterView {
-    pub(super) user_id: UserId,
-    pub(super) model: String,
     pub(super) q: String,
     pub(super) since: String,
     pub(super) view: String,
-}
-
-#[derive(Debug, Serialize)]
-pub(super) struct PageStat {
-    pub(super) value: i64,
-    pub(super) label: &'static str,
+    pub(super) group: String,
+    pub(super) project: String,
+    pub(super) side: String,
 }

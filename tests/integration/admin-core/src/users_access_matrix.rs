@@ -70,7 +70,7 @@ async fn resolve_user_matrix_returns_none_for_an_unknown_user() {
 }
 
 #[tokio::test]
-async fn resolve_user_matrix_reports_the_users_identity_and_department() {
+async fn resolve_user_matrix_reports_identity_and_membership() {
     let Some(db) = TempDb::create().await else {
         return;
     };
@@ -85,7 +85,8 @@ async fn resolve_user_matrix_reports_the_users_identity_and_department() {
 
     assert_eq!(matrix.user.id, user.as_str());
     assert_eq!(matrix.user.email.as_deref(), Some(email.as_str()));
-    assert_eq!(matrix.user.department.as_deref(), Some("Platform"));
+    assert!(matrix.user.group_ids.iter().any(|id| id == "unassigned"));
+    assert!(matrix.user.project_ids.is_empty());
     assert_eq!(matrix.user.roles, ["user"]);
     assert!(
         matrix.sections.is_empty(),
@@ -95,7 +96,7 @@ async fn resolve_user_matrix_reports_the_users_identity_and_department() {
 }
 
 #[tokio::test]
-async fn resolve_user_matrix_defaults_a_user_with_no_profile_row_to_the_default_department() {
+async fn resolve_user_matrix_reports_unassigned_membership_without_a_profile() {
     let Some(db) = TempDb::create().await else {
         return;
     };
@@ -106,7 +107,8 @@ async fn resolve_user_matrix_defaults_a_user_with_no_profile_row_to_the_default_
         .expect("resolve matrix")
         .expect("user found");
 
-    assert_eq!(matrix.user.department.as_deref(), Some("Default"));
+    assert!(matrix.user.group_ids.iter().any(|id| id == "unassigned"));
+    assert!(matrix.user.project_ids.is_empty());
     db.cleanup().await;
 }
 

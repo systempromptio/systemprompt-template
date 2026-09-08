@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE plugin_session_summaries SET\n            total_input_tokens = COALESCE($2, total_input_tokens),\n            total_output_tokens = COALESCE($3, total_output_tokens),\n            model = COALESCE(NULLIF($4, ''), model),\n            updated_at = NOW()\n         WHERE session_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "32e7e09520ae5cc2f1f3f6addce27b91604ba56887c09fc32dd8a6143eda00dd"
+}

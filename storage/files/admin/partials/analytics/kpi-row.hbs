@@ -1,0 +1,9 @@
+{{!--
+  The KPI strip a tab builds itself: a flat list of {label, value, sub, tone}
+  tiles the handler formatted. Invoke as {{> analytics/kpi-row tiles=models.kpis}}.
+--}}
+<div class="sp-kpi-grid">
+    {{#each tiles}}
+    {{> components/kpi label=this.label value=this.value note=this.sub tone=this.tone}}
+    {{/each}}
+</div>

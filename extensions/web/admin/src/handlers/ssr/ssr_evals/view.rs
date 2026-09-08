@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 use crate::repositories::analytics::request_stats::RequestStats;
 use crate::repositories::evals::distribution::{
-    ModelDistributionRow, PromptTopicRow, UserDistributionRow,
+    EvalModelDistributionRow, PromptTopicRow, UserDistributionRow,
 };
 use crate::repositories::evals::results::{EvalPairRow, ResultFilter};
 use crate::repositories::evals::scores::{EvalScoreSummary, ModelScoreRow, ModelWinRateRow};
@@ -18,13 +18,13 @@ use crate::repositories::evals::scores::{EvalScoreSummary, ModelScoreRow, ModelW
 use super::format::{format_cost, local_time, score_pct, share_pct, truncate};
 
 use super::context::{
-    FilterOptionView, ModelMixRowView, ModelOptionView, PairRowView, ResultFilterView,
+    EvalModelMixRowView, EvalModelOptionView, FilterOptionView, PairRowView, ResultFilterView,
     ScoreSummaryView, TopicRowView, TrafficStatsView, UserRowView, WinRateView,
 };
 
 pub(super) fn traffic_stats(
     s: &RequestStats,
-    models: &[ModelDistributionRow],
+    models: &[EvalModelDistributionRow],
     users: &[UserDistributionRow],
 ) -> TrafficStatsView {
     TrafficStatsView {
@@ -70,10 +70,10 @@ pub(super) fn score_summary(s: &EvalScoreSummary, traffic_total: i64) -> ScoreSu
 
 
 pub(super) fn model_rows(
-    models: &[ModelDistributionRow],
+    models: &[EvalModelDistributionRow],
     scores: &[ModelScoreRow],
     total_requests: i64,
-) -> Vec<ModelMixRowView> {
+) -> Vec<EvalModelMixRowView> {
     let by_model: HashMap<&str, &ModelScoreRow> =
         scores.iter().map(|s| (s.model.as_str(), s)).collect();
 
@@ -86,7 +86,7 @@ pub(super) fn model_rows(
             } else {
                 0
             };
-            ModelMixRowView {
+            EvalModelMixRowView {
                 provider: m.provider.clone(),
                 model: m.model.clone(),
                 request_count: m.request_count,
@@ -164,10 +164,10 @@ pub(super) fn win_rate_rows(rows: &[ModelWinRateRow]) -> Vec<WinRateView> {
 }
 
 
-pub(super) fn model_options(models: &[ModelDistributionRow]) -> Vec<ModelOptionView> {
+pub(super) fn model_options(models: &[EvalModelDistributionRow]) -> Vec<EvalModelOptionView> {
     models
         .iter()
-        .map(|m| ModelOptionView {
+        .map(|m| EvalModelOptionView {
             value: format!("{}/{}", m.provider, m.model),
             label: format!("{} ({})", m.model, m.provider),
         })
@@ -200,7 +200,7 @@ pub(super) fn pair_rows(pairs: &[EvalPairRow]) -> Vec<PairRowView> {
 // the controls still describe what is on screen after the round trip.
 pub(super) fn result_filter_view(
     filter: &ResultFilter,
-    models: &[ModelOptionView],
+    models: &[EvalModelOptionView],
 ) -> ResultFilterView {
     const VERDICTS: [(&str, &str); 4] = [
         ("", "Any verdict"),

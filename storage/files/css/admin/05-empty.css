@@ -1,0 +1,33 @@
+@layer components {
+
+.sp-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-space-1);
+    padding: var(--sp-space-8) var(--sp-space-4);
+    text-align: center;
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-sm);
+}
+
+.sp-empty p { margin: 0; }
+
+.sp-empty__title {
+    font-size: var(--sp-text-base);
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-secondary);
+}
+
+/* Inside a form or card the empty state is a line of text, not a centred void. */
+.sp-empty--inline {
+    align-items: flex-start;
+    padding: var(--sp-space-2) 0;
+    text-align: left;
+}
+
+.sp-empty--pad { padding-block: var(--sp-space-10); }
+.sp-empty--pad-lg { padding-block: var(--sp-space-16); }
+
+}

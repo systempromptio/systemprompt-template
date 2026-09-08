@@ -17,28 +17,28 @@
     p95_display   optional caption
 --}}
 {{#if has_data}}
-<div class="latency-histogram" role="img"
+<div class="sp-latency-histogram" role="img"
      aria-label="Latency distribution, busiest bin {{max_display}} requests">
     {{#each bars}}
-    <div class="latency-histogram__row{{#if this.is_peak}} latency-histogram__row--peak{{/if}}"
+    <div class="sp-latency-histogram__row{{#if this.is_peak}} sp-latency-histogram__row--peak{{/if}}"
          style="--v:{{this.pct}}%"
          title="{{this.label}}: {{this.count}} requests">
-        <span class="latency-histogram__label">{{this.label}}</span>
-        <span class="latency-histogram__track"><span class="latency-histogram__fill"></span></span>
-        <span class="latency-histogram__count">{{this.count}}</span>
+        <span class="sp-latency-histogram__label">{{this.label}}</span>
+        <span class="sp-latency-histogram__track"><span class="sp-latency-histogram__fill"></span></span>
+        <span class="sp-latency-histogram__count">{{this.count}}</span>
     </div>
     {{/each}}
-    <div class="latency-histogram__axis">
+    <div class="sp-latency-histogram__axis">
         <span>0</span>
         <span>{{max_display}} requests</span>
     </div>
 </div>
 {{#if p50_display}}
-<p class="chart-caption">
+<p class="sp-chart-caption">
     Half of all calls finish inside <strong>{{p50_display}}</strong>;
     95% finish inside <strong>{{p95_display}}</strong>.
 </p>
 {{/if}}
 {{else}}
-<p class="chart-empty">No timed requests in this window.</p>
+<p class="sp-empty">No timed requests in this window.</p>
 {{/if}}

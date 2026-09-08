@@ -1,0 +1,45 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id AS \"id!\",\n                  COALESCE(display_name, full_name, name) AS \"name?\",\n                  email AS \"email!\"\n           FROM users\n           WHERE NOT ('anonymous' = ANY(roles))\n           ORDER BY COALESCE(display_name, full_name, name, id)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name?",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "email!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null,
+      false
+    ]
+  },
+  "hash": "39769574ad5254f0d85adaab3e7aae42a0c27f2f8fff082a3a9c2ab0ee3fb5a0"
+}

@@ -27,6 +27,8 @@ fn summary_params<'a>(
         session_id,
         user_id,
         event_type,
+        loc_added: 0,
+        loc_removed: 0,
         content_input_bytes: 10,
         content_output_bytes: 5,
         is_subagent_stop: false,

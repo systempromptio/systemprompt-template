@@ -22,7 +22,9 @@ pub(crate) async fn chain_envelope(
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
 ) -> AdminResult<Response> {
-    if !user_ctx.is_admin {
+    // Why: Raw evidence requires admin/auditor. The write_boundaries contract
+    // covers rejection of console readers.
+    if !crate::repositories::analytics::conversations::has_full_history_view(&user_ctx) {
         return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
 

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT source_ad_group AS \"source_ad_group!\" FROM group_members\n           WHERE user_id = $1 AND source = 'adfs' AND source_ad_group IS NOT NULL\n           ORDER BY 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "source_ad_group!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "source_ad_group"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "b1626ad269375d32a44d0c1689a4eb231e4210850659f32eeee264c2d339a464"
+}

@@ -1,0 +1,29 @@
+@layer components {
+
+.sp-shell__main:has(.sp-trace-table) .sp-page-header { margin-block: var(--sp-space-2); }
+
+/* Floors, never ceilings: a header must never be narrower than its own label,
+   which is what took this table to eleven clipped headings. The Started cell
+   was ellipsizing the timestamp that says which trace a row is, and the status
+   cell wrapped its badges onto a second line — that was the 57px row. */
+.sp-trace-table .sp-col-started  { inline-size: auto; min-inline-size: 10rem; }
+.sp-trace-table .sp-col-trace    { inline-size: auto; min-inline-size: 8rem; }
+.sp-trace-table .sp-col-identity { inline-size: auto; min-inline-size: 7rem; }
+.sp-trace-table .sp-col-model    { inline-size: auto; min-inline-size: 7rem; }
+.sp-trace-table .sp-col-spans    { inline-size: auto; min-inline-size: 5rem; }
+.sp-trace-table .sp-col-tokens   { inline-size: auto; min-inline-size: 6rem; }
+.sp-trace-table .sp-col-cost     { inline-size: auto; min-inline-size: 5rem; }
+.sp-trace-table .sp-col-duration { inline-size: auto; min-inline-size: 6rem; }
+.sp-trace-table .sp-col-status   { inline-size: auto; min-inline-size: 8rem; }
+
+.sp-trace-row__badges { flex-wrap: nowrap; }
+.sp-trace-table { --sp-density-cell-x: var(--sp-space-2); }
+
+.sp-trace-row__badges,
+.sp-trace-table td { white-space: nowrap; }
+
+@media (max-width: 90rem) {
+    .sp-trace-table .sp-col-trace > span { display: none; }
+}
+
+}

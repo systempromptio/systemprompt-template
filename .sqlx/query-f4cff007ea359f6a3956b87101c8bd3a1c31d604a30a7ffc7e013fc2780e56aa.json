@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_drive_files SET status='pending',rebuild=TRUE,attempts=0,retry_at=NOW() WHERE source_type=$1 AND NOT removed AND metadata->>'mimeType' NOT IN ('application/vnd.google-apps.folder','application/vnd.google-apps.shortcut')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f4cff007ea359f6a3956b87101c8bd3a1c31d604a30a7ffc7e013fc2780e56aa"
+}

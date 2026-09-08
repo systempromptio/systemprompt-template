@@ -1,0 +1,167 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            id                                  AS \"id!: AiRequestId\",\n            trace_id                            AS \"trace_id?: TraceId\",\n            model                               AS \"model?\",\n            status                              AS \"status!\",\n            latency_ms                          AS \"latency_ms?\",\n            input_tokens                        AS \"input_tokens?\",\n            output_tokens                       AS \"output_tokens?\",\n            cost_microdollars                   AS \"cost_microdollars!\",\n            created_at                          AS \"created_at!\",\n            effective_kind                      AS \"effective_kind!\",\n            gateway_conversation_id             AS \"gateway_conversation_id?: GatewayConversationId\",\n            max_tokens                          AS \"max_tokens?\",\n            (SELECT COUNT(*)::bigint FROM ai_request_messages m\n              WHERE m.request_id = cr.id)       AS \"message_count!\"\n        FROM conversation_requests cr\n        WHERE context_id = $1\n        ORDER BY created_at ASC\n        LIMIT 500\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: AiRequestId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "trace_id?: TraceId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "trace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "model?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "status!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "latency_ms?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "input_tokens?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "input_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "output_tokens?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "output_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "effective_kind!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "effective_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "gateway_conversation_id?: GatewayConversationId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "gateway_conversation_id"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "max_tokens?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "conversation_requests",
+            "name": "max_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "message_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "f65a739110ad16562fb236a3276642de99126345fe92a70df46de24b62239f63"
+}

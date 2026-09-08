@@ -1,0 +1,58 @@
+@layer components {
+
+/* Why: the person's name is what says which row this is, so it takes the
+   slack. Every other column is sized to its own content and no wider; the
+   roles column gets enough for four pills so a platform admin's row does not
+   wrap the pills into a second line. */
+.sp-p-roles__grants .sp-col-role { width: 9rem; }
+.sp-p-roles__table .sp-col-roles { width: 22rem; }
+.sp-p-roles__table .sp-col-status { width: 6rem; }
+.sp-p-roles__table .sp-col-rowactions { width: 14rem; }
+
+.sp-p-roles__pills,
+.sp-p-roles__revokes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1);
+}
+
+.sp-p-roles__revokes {
+    justify-content: flex-end;
+}
+
+/* Why: the role card an operator clicked is the one filter the table is
+   under, so the matching pill on every row is the one that reads as pressed. */
+.sp-p-roles__pills .sp-badge.is-active {
+    outline: 1px solid var(--sp-accent);
+    outline-offset: 1px;
+}
+.sp-p-roles__grants .sp-col-kind { width: 9rem; }
+.sp-p-roles__grants .sp-col-access { width: 6rem; }
+.sp-p-roles__grants .sp-col-default { width: 10rem; }
+
+.sp-p-roles__error,
+.sp-p-roles__toast {
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+}
+.sp-p-roles__field {
+    display: grid;
+    gap: var(--sp-space-1);
+    margin-block: var(--sp-space-3);
+}
+.sp-p-roles__results {
+    display: grid;
+    gap: var(--sp-space-1);
+    max-block-size: 12rem;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+.sp-p-roles__dialog-actions {
+    display: flex;
+    gap: var(--sp-space-2);
+    justify-content: flex-end;
+}
+
+}

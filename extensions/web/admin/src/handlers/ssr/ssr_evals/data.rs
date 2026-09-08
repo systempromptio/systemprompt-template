@@ -22,7 +22,7 @@ use crate::repositories::analytics::request_stats::{
 };
 use crate::repositories::evals::cases::{EvalCaseRow, list_cases};
 use crate::repositories::evals::distribution::{
-    ModelDistributionRow, PromptTopicRow, UserDistributionRow, list_model_distribution,
+    EvalModelDistributionRow, PromptTopicRow, UserDistributionRow, list_eval_model_distribution,
     list_prompt_topics, list_user_distribution,
 };
 use crate::repositories::evals::results::{
@@ -93,7 +93,7 @@ pub(super) struct EvalsData {
     pub stats: RequestStats,
     pub hist: Vec<LatencyBucket>,
     pub series: Vec<TimeBucket>,
-    pub models: Vec<ModelDistributionRow>,
+    pub models: Vec<EvalModelDistributionRow>,
     pub model_scores: Vec<ModelScoreRow>,
     pub users: Vec<UserDistributionRow>,
     pub topics: Vec<PromptTopicRow>,
@@ -112,7 +112,7 @@ pub(super) async fn fetch_evals_data(
     filter: &ResultFilter,
 ) -> EvalsData {
     let (stats, scores) = tokio::join!(
-        get_request_stats(pool, range),
+        get_request_stats(pool, range, &crate::repositories::scope::SubjectScope::All),
         get_eval_score_summary(pool, range),
     );
 
@@ -125,8 +125,12 @@ pub(super) async fn fetch_evals_data(
     match tab {
         EvalsTab::Overview => {
             let (hist, series, runs) = tokio::join!(
-                list_latency_histogram(pool, range),
-                list_request_timeseries(pool, range),
+                list_latency_histogram(pool, range, &crate::repositories::scope::SubjectScope::All),
+                list_request_timeseries(
+                    pool,
+                    range,
+                    &crate::repositories::scope::SubjectScope::All
+                ),
                 list_recent_runs(pool, range, RUN_LIMIT),
             );
             data.hist = unwrap_or_empty(hist, "list_latency_histogram");
@@ -135,43 +139,45 @@ pub(super) async fn fetch_evals_data(
         },
         EvalsTab::Traffic => {
             let (models, model_scores, users, topics) = tokio::join!(
-                list_model_distribution(pool, range),
+                list_eval_model_distribution(pool, range),
                 list_model_scores(pool, range),
                 list_user_distribution(pool, range, USER_LIMIT),
                 list_prompt_topics(pool, range, TOPIC_LIMIT),
             );
-            data.models = unwrap_or_empty(models, "list_model_distribution");
+            data.models = unwrap_or_empty(models, "list_eval_model_distribution");
             data.model_scores = unwrap_or_empty(model_scores, "list_model_scores");
             data.users = unwrap_or_empty(users, "list_user_distribution");
             data.topics = unwrap_or_empty(topics, "list_prompt_topics");
         },
         EvalsTab::Judge => {
-            let (models, results) = tokio::join!(
-                list_model_distribution(pool, range),
+            let (models, results, runs) = tokio::join!(
+                list_eval_model_distribution(pool, range),
                 list_recent_results(pool, range, RESULT_LIMIT, filter),
+                list_recent_runs(pool, range, RUN_LIMIT),
             );
-            data.models = unwrap_or_empty(models, "list_model_distribution");
+            data.models = unwrap_or_empty(models, "list_eval_model_distribution");
             data.results = unwrap_or_empty(results, "list_recent_results");
+            data.runs = unwrap_or_empty(runs, "list_recent_runs");
         },
         EvalsTab::HeadToHead => {
             let (models, win_rates, pairs, cases) = tokio::join!(
-                list_model_distribution(pool, range),
+                list_eval_model_distribution(pool, range),
                 list_model_win_rates(pool, range),
                 list_recent_pairs(pool, range, PAIR_LIMIT),
                 list_cases(pool, false),
             );
-            data.models = unwrap_or_empty(models, "list_model_distribution");
+            data.models = unwrap_or_empty(models, "list_eval_model_distribution");
             data.win_rates = unwrap_or_empty(win_rates, "list_model_win_rates");
             data.pairs = unwrap_or_empty(pairs, "list_recent_pairs");
             data.cases = unwrap_or_empty(cases, "list_cases");
         },
         EvalsTab::GoldenSet => {
             let (models, cases, runs) = tokio::join!(
-                list_model_distribution(pool, range),
+                list_eval_model_distribution(pool, range),
                 list_cases(pool, false),
                 list_recent_runs(pool, range, RUN_LIMIT),
             );
-            data.models = unwrap_or_empty(models, "list_model_distribution");
+            data.models = unwrap_or_empty(models, "list_eval_model_distribution");
             data.cases = unwrap_or_empty(cases, "list_cases");
             data.runs = unwrap_or_empty(runs, "list_recent_runs");
         },

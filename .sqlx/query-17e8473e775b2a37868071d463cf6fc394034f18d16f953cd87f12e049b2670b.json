@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM services WHERE instance_id = $2 AND name = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "17e8473e775b2a37868071d463cf6fc394034f18d16f953cd87f12e049b2670b"
+}

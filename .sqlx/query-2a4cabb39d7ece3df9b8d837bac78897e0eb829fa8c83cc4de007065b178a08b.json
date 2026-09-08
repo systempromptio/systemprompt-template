@@ -1,0 +1,33 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT bridge_version AS \"bridge_version!\", COUNT(*) AS \"devices!\"\n             FROM (SELECT DISTINCT ON (user_id, hostname) bridge_version\n                     FROM bridge_sessions\n                    ORDER BY user_id, hostname, last_heartbeat_at DESC) latest\n            GROUP BY bridge_version\n            ORDER BY COUNT(*) DESC, bridge_version DESC\n            LIMIT 12",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "bridge_version!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "bridge_sessions",
+            "name": "bridge_version"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "devices!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "2a4cabb39d7ece3df9b8d837bac78897e0eb829fa8c83cc4de007065b178a08b"
+}

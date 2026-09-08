@@ -1,0 +1,15 @@
+@layer components {
+
+.sp-scope-chips {
+    max-width: 220px;
+}
+
+.sp-source-badge {
+    padding: 0 var(--sp-space-15);
+    border-radius: var(--sp-corners-sm);
+    font-size: var(--sp-text-xs);
+    background: var(--sp-bg-surface-raised);
+    color: var(--sp-text-tertiary);
+}
+
+}

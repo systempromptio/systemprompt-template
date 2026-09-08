@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT user_id FROM knowledge_user_sync_state\n               GROUP BY user_id\n               HAVING MAX(last_run_at) < $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "knowledge_user_sync_state",
+            "name": "user_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e588cdc02f98c55a92e385a4e0b7e47f03416ab900c5a96886bebd2a8f4557a6"
+}

@@ -1,0 +1,22 @@
+# Air-gap provider catalog. Replaces services/ai/providers.yaml wholesale via
+# the bind mount in docker-compose.airgap.yml: the shipped catalog names public
+# provider endpoints, and the sealed `airgap-internal` network has no route to
+# them. Every model resolves to the in-network mock-inference container, which
+# is what makes 01-egress-assert.sh a proof rather than a hope.
+#
+# `mock-inference` must also be named in SYSTEMPROMPT_TRUSTED_HTTP_HOSTS —
+# validate_outbound_url blocks non-loopback http by default.
+providers:
+  - name: anthropic
+    wire: anthropic
+    surface: anthropic
+    endpoint: http://mock-inference:8080
+    api_key_secret: internal_api_key
+    models:
+      - id: claude-haiku-4-5
+      - id: claude-sonnet-4-20250514
+      - id: claude-opus-4-7
+        aliases:
+          - claude-opus-4-7[1m]
+      - id: gpt-4-turbo
+      - id: gemini-2.5-flash

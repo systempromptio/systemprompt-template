@@ -24,6 +24,10 @@ name: Docker
 on:
   workflow_call:
     inputs:
+      ref:
+        description: "Validated release commit"
+        required: true
+        type: string
       version:
         description: "Semver (X.Y.Z) to tag this build with — set by release-gateway.yml"
         required: true
@@ -43,6 +47,9 @@ on:
       - "web/**"
       - "Cargo.toml"
       - "Cargo.lock"
+      - "vendor/**"
+      - "rust-toolchain.toml"
+      - ".cargo/**"
       - ".sqlx/**"
       - ".github/workflows/docker.yml"
   workflow_dispatch:
@@ -53,7 +60,7 @@ on:
 
 concurrency:
   group: docker-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   IMAGE: ghcr.io/systempromptio/systemprompt-template
@@ -74,7 +81,16 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 0
+      - name: Validate release source
+        if: inputs.version != ''
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: bash scripts/validate-release.sh "v$RELEASE_VERSION"
+
 
       - uses: docker/setup-buildx-action@v3
 
@@ -99,13 +115,19 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
 
+      - name: Smoke candidate image before tagging
+        env:
+          SMOKE_IMAGE: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
+          EXPECTED_VERSION: ${{ inputs.version }}
+        run: bash scripts/smoke-image.sh "$SMOKE_IMAGE" "$EXPECTED_VERSION"
+
       - name: Export digest
         run: |
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: digests-${{ matrix.arch }}
           path: /tmp/digests/*
@@ -121,7 +143,7 @@ jobs:
       packages: write
       id-token: write # cosign keyless
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: /tmp/digests
           pattern: digests-*

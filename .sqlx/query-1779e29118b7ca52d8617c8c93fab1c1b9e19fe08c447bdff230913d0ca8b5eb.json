@@ -1,0 +1,111 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COALESCE(r.model, 'unrouted') AS \"model!\",\n            MIN(r.provider) AS provider,\n            COUNT(*)::BIGINT AS \"requests!\",\n            COALESCE(SUM(r.input_tokens), 0)::BIGINT AS \"input_tokens!\",\n            COALESCE(SUM(r.output_tokens), 0)::BIGINT AS \"output_tokens!\",\n            COALESCE(SUM(COALESCE(r.cache_read_tokens, 0)\n                       + COALESCE(r.cache_creation_tokens, 0)), 0)::BIGINT AS \"cache_tokens!\",\n            COALESCE(SUM(r.reasoning_tokens), 0)::BIGINT AS \"reasoning_tokens!\",\n            COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS \"cost!\",\n            percentile_cont(0.5) WITHIN GROUP (ORDER BY r.latency_ms) AS p50,\n            percentile_cont(0.95) WITHIN GROUP (ORDER BY r.latency_ms) AS p95,\n            COUNT(*) FILTER (WHERE r.status = ANY($5::TEXT[]))::BIGINT AS \"errors!\",\n            COUNT(*) FILTER (\n                WHERE r.requested_model IS NOT NULL\n                  AND r.model IS NOT NULL\n                  AND r.requested_model <> r.model\n            )::BIGINT AS \"redirected!\",\n            bool_and(r.model IS NULL) AS \"is_unrouted!\"\n        FROM ai_requests r\n        WHERE r.created_at >= $1 AND r.created_at < $2\n          AND NOT r.synthetic\n          AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))\n          AND ($4::TEXT IS NULL OR r.user_id = $4)\n        GROUP BY COALESCE(r.model, 'unrouted')\n        ORDER BY COUNT(*) DESC\n        LIMIT 200\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "model!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "provider",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "cache_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "reasoning_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "p50",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "p95",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "redirected!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "is_unrouted!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "1779e29118b7ca52d8617c8c93fab1c1b9e19fe08c447bdff230913d0ca8b5eb"
+}

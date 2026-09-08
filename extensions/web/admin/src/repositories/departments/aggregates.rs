@@ -2,38 +2,37 @@
 //! overrides and per-user skill / device counts keyed by department.
 
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{MarketplaceId, UserId};
 
 #[derive(Debug, Clone, sqlx::FromRow)]
-pub struct UserManagementAggregate {
+pub struct DepartmentUserManagementAggregate {
     pub user_id: UserId,
     pub department: String,
     pub assigned_skills_count: i64,
-    pub tokens_count: i64,
+    pub devices_count: i64,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]
-pub struct UserMarketplaceOverride {
+pub struct DepartmentUserMarketplaceOverride {
     pub user_id: UserId,
     pub department: String,
-    // Why: polymorphic entity reference (gateway_route/mcp_server), no single typed-ID equivalent
-    pub entity_id: String,
+    pub entity_id: MarketplaceId,
     pub access: String,
 }
 
-// Why: A user receives overrides from rules matching either their own id or
-// their department, so the same entity can appear under both scopes.
-pub async fn list_user_marketplace_overrides(
+// Why: lint-ok: unused-pub — the internal user roster displays inherited
+// marketplace grants.
+pub async fn list_department_user_marketplace_overrides(
     pool: &PgPool,
-) -> Result<Vec<UserMarketplaceOverride>, sqlx::Error> {
+) -> Result<Vec<DepartmentUserMarketplaceOverride>, sqlx::Error> {
     sqlx::query_as!(
-        UserMarketplaceOverride,
+        DepartmentUserMarketplaceOverride,
         r#"
         SELECT
             u.id AS "user_id!: UserId",
             COALESCE(upe.department, '') AS "department!",
-            acr.entity_id AS "entity_id!",
+            acr.entity_id AS "entity_id!: MarketplaceId",
             acr.access AS "access!"
         FROM users u
         LEFT JOIN user_profile_ext upe ON upe.user_id = u.id
@@ -48,11 +47,13 @@ pub async fn list_user_marketplace_overrides(
     .await
 }
 
-pub async fn list_user_management_aggregates(
+// Why: lint-ok: unused-pub — the internal user roster includes department
+// aggregates.
+pub async fn list_department_user_management_aggregates(
     pool: &PgPool,
-) -> Result<Vec<UserManagementAggregate>, sqlx::Error> {
+) -> Result<Vec<DepartmentUserManagementAggregate>, sqlx::Error> {
     sqlx::query_as!(
-        UserManagementAggregate,
+        DepartmentUserManagementAggregate,
         r#"
         SELECT
             u.id AS "user_id!: UserId",
@@ -68,7 +69,7 @@ pub async fn list_user_management_aggregates(
             COALESCE((
                 SELECT COUNT(*) FROM user_api_keys
                 WHERE user_id = u.id AND revoked_at IS NULL
-            ), 0)::BIGINT AS "tokens_count!",
+            ), 0)::BIGINT AS "devices_count!",
             u.created_at AS "created_at!"
         FROM users u
         LEFT JOIN user_profile_ext upe ON upe.user_id = u.id

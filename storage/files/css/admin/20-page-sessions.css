@@ -1,0 +1,14 @@
+@layer components {
+
+/* Floors, never ceilings: a header must be able to draw its own label, which
+   is what took this table to eleven clipped headings. Nine columns at these
+   widths fit 1440 without the table scrolling sideways. */
+.sp-p-sessions__table .sp-col-date         { min-inline-size: 11rem; }
+.sp-p-sessions__table .sp-col-conversation { min-inline-size: 16rem; max-inline-size: 28rem; }
+.sp-p-sessions__table .sp-col-owner        { min-inline-size: 7rem; }
+.sp-p-sessions__table .sp-col-status       { min-inline-size: 6rem; }
+
+.sp-p-sessions__table th.sp-table__cell--num,
+.sp-p-sessions__table td.sp-table__cell--num { min-inline-size: 4.5rem; }
+
+}

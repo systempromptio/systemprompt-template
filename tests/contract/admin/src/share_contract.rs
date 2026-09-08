@@ -76,7 +76,10 @@ async fn issuing_a_share_token_is_admin_only() {
         .call(Call::json("post", &path, Principal::NonAdmin, "{}"))
         .await;
     assert_eq!(status, StatusCode::FORBIDDEN, "non-admin: {body}");
-    assert_eq!(parse(&body)["error"], "Admin access required");
+    assert_eq!(
+        parse(&body)["error"],
+        "Role required: platform_admin, admin"
+    );
 
     let (status, _) = app
         .call(Call::json("post", &path, Principal::Anonymous, "{}"))

@@ -1,0 +1,12 @@
+{{!--
+  A list of named pills — marketplaces on a group row, groups on a project.
+
+  Invoke as: {{> components/group-chips chips=marketplaces empty="None"}}
+--}}
+{{#if chips}}
+<span class="sp-group-chips">
+    {{#each chips}}<span class="sp-group-chips__chip" data-chip-id="{{this.id}}">{{this.label}}</span>{{/each}}
+</span>
+{{else}}
+<span class="sp-u-text-tertiary">{{default empty "None"}}</span>
+{{/if}}

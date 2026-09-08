@@ -1,24 +1,27 @@
 {{#> layout title=title page=page}}
     {{#*inline "content"}}
-    {{> components/page-header
-        title="Evals"
-        subtitle="What went through the gateway, and whether the answers were any good."}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+
+    {{#> components/page-header title=title subtitle="What went through the gateway, and whether the answers were any good."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/requests">Request log</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/models">Models</a>
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        <span><strong>{{traffic.total}}</strong> requests in window</span>
+        <span><strong>{{scores.scored_count}}</strong> judged</span>
+        {{#if is_judge}}<span>mean <strong>{{scores.mean_score_display}}</strong> / 5 · <strong>{{scores.pass_count}}</strong> pass · <strong>{{scores.partial_count}}</strong> partial · <strong>{{scores.fail_count}}</strong> fail · <strong>{{scores.coverage_pct}}%</strong> coverage</span>{{/if}}
+        {{#if time_range.auto_widened}}<span>no requests in the last 24h, widened to {{time_range.auto_widened}}</span>{{/if}}
+        {{/inline}}
+    {{/components/page-header}}
+
+    {{> components/tabs tabs=tabs nav_label="Evals sections"}}
 
     {{> components/time-range time_range}}
 
-    {{#if time_range.auto_widened}}
-    <p class="audit-toolbar__notice text-muted text-xs">
-        No inference requests in the last 24h — auto-widened to last {{time_range.auto_widened}}.
-    </p>
-    {{/if}}
-
     {{#if notice}}
-    <p class="eval-notice{{#if notice.is_error}} eval-notice--error{{/if}}" role="status">
-        {{notice.message}}
-    </p>
+    {{> components/notice tone=notice.tone message=notice.message}}
     {{/if}}
-
-    {{> evals/tabs}}
 
     {{#if show_traffic_kpis}}{{> evals/kpi-traffic}}{{/if}}
     {{#if show_quality_kpis}}{{> evals/kpi-quality}}{{/if}}
@@ -28,8 +31,6 @@
     {{#if is_judge}}{{> evals/judge}}{{/if}}
     {{#if is_head_to_head}}{{> evals/head-to-head}}{{/if}}
     {{#if is_golden_set}}{{> evals/golden-set}}{{/if}}
-
     {{/inline}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "scripts"}}{{/inline}}
 {{/layout}}

@@ -20,8 +20,11 @@ fn all_jobs_registered() {
         "llms_txt_generation",
         "publish_pipeline",
         "robots_txt_generation",
+        "scope_defaults_recompute",
         "secret_migration",
         "sitemap_generation",
+        "usage_anomaly",
+        "usage_daily_rollup",
     ]
     .into();
     assert_eq!(names, expected);

@@ -21,20 +21,24 @@ export function initMobileMenu() {
 
   const navLinks = document.querySelector('.nav-links');
   const docsSidebar = document.querySelector('.docs-sidebar');
+  const overlay = document.querySelector('.mobile-menu-overlay');
   const panel = docsSidebar ?? navLinks;
 
-  const closeMenu = () => {
-    panel?.classList.remove('is-open');
-    menuToggle.setAttribute('aria-expanded', 'false');
-    document.body.classList.remove('menu-open');
+  const setOpen = (open) => {
+    panel?.classList.toggle('is-open', open);
+    overlay?.classList.toggle('is-open', open);
+    overlay?.setAttribute('aria-hidden', String(!open));
+    menuToggle.setAttribute('aria-expanded', String(open));
+    document.body.classList.toggle('menu-open', open);
   };
 
+  const closeMenu = () => setOpen(false);
+
   menuToggle.addEventListener('click', () => {
-    const expanded = menuToggle.getAttribute('aria-expanded') === 'true';
-    menuToggle.setAttribute('aria-expanded', String(!expanded));
-    panel?.classList.toggle('is-open');
-    document.body.classList.toggle('menu-open');
+    setOpen(menuToggle.getAttribute('aria-expanded') !== 'true');
   });
+
+  overlay?.addEventListener('click', closeMenu);
 
   if (panel) {
     for (const link of panel.querySelectorAll('a')) {

@@ -1,0 +1,67 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COALESCE(pm.project_id, 'unassigned') AS \"project!\",\n            COUNT(DISTINCT r.user_id)::BIGINT AS \"members!\",\n            COUNT(*)::BIGINT AS \"requests!\",\n            COALESCE(SUM(r.input_tokens), 0)::BIGINT AS \"input_tokens!\",\n            COALESCE(SUM(r.output_tokens), 0)::BIGINT AS \"output_tokens!\",\n            COALESCE(SUM(r.reasoning_tokens), 0)::BIGINT AS \"reasoning_tokens!\",\n            COALESCE(SUM(r.tokens_used), 0)::BIGINT AS \"total_tokens!\"\n        FROM ai_requests r\n        LEFT JOIN LATERAL (\n            SELECT DISTINCT project_id FROM project_members\n            WHERE user_id = r.user_id\n        ) pm ON true\n        WHERE NOT r.synthetic\n          AND r.created_at >= $1 AND r.created_at < $2\n          AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))\n        GROUP BY 1\n        ORDER BY COALESCE(SUM(r.tokens_used), 0) DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "project!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "members!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "reasoning_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "total_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "b7079f176f0cb22b3ae96b266827cc88b56b858626a8594cdbe4cc349b053f5e"
+}

@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- One snapshot and one numeric aggregation for rows, KPIs and pagination.\n-- Date/identity predicates select candidate contexts, never truncate their turns.\nWITH candidate_ids AS (\n    SELECT ar.context_id::text FROM ai_requests ar\n    WHERE ar.context_id <> '00000000-0000-0000-0000-4c4547414359'\n      AND ($1::text IS NULL OR ar.user_id = $1)\n      AND ($2::text[] IS NULL OR ar.user_id = ANY($2))\n      AND ($5::timestamptz IS NULL OR ar.created_at >= $5)\n    GROUP BY ar.context_id\n    UNION\n    SELECT c.context_id FROM user_contexts c\n    WHERE $5::timestamptz IS NOT NULL AND c.updated_at >= $5\n      AND c.context_id <> '00000000-0000-0000-0000-4c4547414359'\n      AND EXISTS (SELECT 1 FROM ai_requests ar WHERE ar.context_id = c.context_id\n          AND ($1::text IS NULL OR ar.user_id = $1)\n          AND ($2::text[] IS NULL OR ar.user_id = ANY($2)))\n), candidates AS MATERIALIZED (\n    SELECT COALESCE(array_agg(context_id), ARRAY[]::text[]) AS ids FROM candidate_ids\n), f AS MATERIALIZED (\n    SELECT r.*, r.total_input_tokens + r.total_output_tokens AS total_tokens\n    FROM candidates c CROSS JOIN LATERAL conversation_metrics_for(c.ids) r\n    WHERE ($1::text IS NULL OR r.user_id = $1)\n      AND ($2::text[] IS NULL OR r.user_id = ANY($2))\n      AND ($3::text IS NULL OR r.model = $3)\n      AND ($4::text IS NULL OR r.display_name ILIKE $4 OR r.context_id ILIKE $4\n           OR r.user_id ILIKE $4 OR conversation_title(r.context_id, r.client_session_id) ILIKE $4)\n      AND ($5::timestamptz IS NULL OR r.last_at >= $5)\n      AND ($6::timestamptz IS NULL OR r.last_at < $6)\n      AND ($7::boolean OR r.turn_count > 0)\n      AND (NOT $8::boolean OR r.error_count > 0)\n), totals AS (\n    SELECT COUNT(*)::bigint AS conversations, COUNT(DISTINCT user_id)::bigint AS users,\n           COALESCE(SUM(turn_count), 0)::bigint AS turns,\n           COALESCE(SUM(side_call_count), 0)::bigint AS side_calls,\n           COALESCE(SUM(tool_call_count), 0)::bigint AS tool_calls,\n           COUNT(*) FILTER (WHERE error_count > 0)::bigint AS error_conversations,\n           COALESCE(SUM(total_tokens), 0)::bigint AS total_tokens,\n           COALESCE(SUM(total_cost_microdollars), 0)::bigint AS total_cost_microdollars,\n           COALESCE(SUM(side_call_cost_microdollars), 0)::bigint AS side_call_cost_microdollars\n    FROM f\n), user_page AS MATERIALIZED (\n    SELECT r.*, ROW_NUMBER() OVER (ORDER BY CASE WHEN $9 = 'activity' AND $10::boolean THEN r.last_at END DESC NULLS LAST,\n        CASE WHEN $9 = 'activity' AND NOT $10::boolean THEN r.last_at END ASC NULLS LAST,\n        CASE WHEN $9 = 'turns' AND $10::boolean THEN r.turn_count END DESC,\n        CASE WHEN $9 = 'turns' AND NOT $10::boolean THEN r.turn_count END ASC,\n        CASE WHEN $9 = 'tokens' AND $10::boolean THEN r.total_tokens END DESC,\n        CASE WHEN $9 = 'tokens' AND NOT $10::boolean THEN r.total_tokens END ASC,\n        CASE WHEN $9 = 'cost' AND $10::boolean THEN r.total_cost_microdollars END DESC,\n        CASE WHEN $9 = 'cost' AND NOT $10::boolean THEN r.total_cost_microdollars END ASC, r.user_id) AS position\n    FROM (\n        SELECT user_id, MAX(display_name) AS display_name,\n               COUNT(*)::bigint AS conversation_count, SUM(turn_count)::bigint AS turn_count,\n               SUM(side_call_count)::bigint AS side_call_count,\n               SUM(total_tokens)::bigint AS total_tokens,\n               SUM(total_cost_microdollars)::bigint AS total_cost_microdollars, MAX(last_at) AS last_at\n        FROM f WHERE $13::boolean AND NOT $14::boolean AND user_id IS NOT NULL GROUP BY user_id\n    ) r\n    ORDER BY CASE WHEN $9 = 'activity' AND $10::boolean THEN r.last_at END DESC NULLS LAST,\n        CASE WHEN $9 = 'activity' AND NOT $10::boolean THEN r.last_at END ASC NULLS LAST,\n        CASE WHEN $9 = 'turns' AND $10::boolean THEN r.turn_count END DESC,\n        CASE WHEN $9 = 'turns' AND NOT $10::boolean THEN r.turn_count END ASC,\n        CASE WHEN $9 = 'tokens' AND $10::boolean THEN r.total_tokens END DESC,\n        CASE WHEN $9 = 'tokens' AND NOT $10::boolean THEN r.total_tokens END ASC,\n        CASE WHEN $9 = 'cost' AND $10::boolean THEN r.total_cost_microdollars END DESC,\n        CASE WHEN $9 = 'cost' AND NOT $10::boolean THEN r.total_cost_microdollars END ASC, r.user_id LIMIT $11 OFFSET $12\n), selected AS MATERIALIZED (\n    (SELECT r.*, ROW_NUMBER() OVER (ORDER BY CASE WHEN $9 = 'activity' AND $10::boolean THEN r.last_at END DESC NULLS LAST,\n        CASE WHEN $9 = 'activity' AND NOT $10::boolean THEN r.last_at END ASC NULLS LAST,\n        CASE WHEN $9 = 'turns' AND $10::boolean THEN r.turn_count END DESC,\n        CASE WHEN $9 = 'turns' AND NOT $10::boolean THEN r.turn_count END ASC,\n        CASE WHEN $9 = 'tokens' AND $10::boolean THEN r.total_tokens END DESC,\n        CASE WHEN $9 = 'tokens' AND NOT $10::boolean THEN r.total_tokens END ASC,\n        CASE WHEN $9 = 'cost' AND $10::boolean THEN r.total_cost_microdollars END DESC,\n        CASE WHEN $9 = 'cost' AND NOT $10::boolean THEN r.total_cost_microdollars END ASC, r.context_id) AS position\n     FROM f r WHERE NOT $13::boolean AND NOT $14::boolean\n     ORDER BY CASE WHEN $9 = 'activity' AND $10::boolean THEN r.last_at END DESC NULLS LAST,\n        CASE WHEN $9 = 'activity' AND NOT $10::boolean THEN r.last_at END ASC NULLS LAST,\n        CASE WHEN $9 = 'turns' AND $10::boolean THEN r.turn_count END DESC,\n        CASE WHEN $9 = 'turns' AND NOT $10::boolean THEN r.turn_count END ASC,\n        CASE WHEN $9 = 'tokens' AND $10::boolean THEN r.total_tokens END DESC,\n        CASE WHEN $9 = 'tokens' AND NOT $10::boolean THEN r.total_tokens END ASC,\n        CASE WHEN $9 = 'cost' AND $10::boolean THEN r.total_cost_microdollars END DESC,\n        CASE WHEN $9 = 'cost' AND NOT $10::boolean THEN r.total_cost_microdollars END ASC, r.context_id LIMIT $11 OFFSET $12)\n    UNION ALL\n    SELECT preview.*, u.position FROM user_page u\n    CROSS JOIN LATERAL (\n        SELECT r.* FROM f r WHERE r.user_id = u.user_id\n        ORDER BY r.last_at DESC NULLS LAST, r.context_id LIMIT 3\n    ) preview\n), enriched AS MATERIALIZED (\n    SELECT s.*, conversation_title(s.context_id, s.client_session_id) AS title FROM selected s\n), model_requests AS MATERIALIZED (\n    SELECT ar.user_id, ar.context_id, ar.model FROM ai_requests ar\n    WHERE ar.user_id IN (SELECT user_id FROM user_page) AND ar.model IS NOT NULL\n), user_models AS MATERIALIZED (\n    SELECT ar.user_id, jsonb_agg(DISTINCT ar.model ORDER BY ar.model) AS models\n    FROM model_requests ar JOIN f ON f.context_id = ar.context_id\n    GROUP BY ar.user_id\n), summaries AS (\n    SELECT u.*, COALESCE(m.models, '[]'::jsonb) AS models,\n    (SELECT to_jsonb(e) FROM enriched e WHERE e.user_id = u.user_id\n     ORDER BY e.last_at DESC NULLS LAST, e.context_id LIMIT 1) AS latest\n    FROM user_page u LEFT JOIN user_models m ON m.user_id = u.user_id\n)\nSELECT jsonb_build_object(\n    'conversations', COALESCE((SELECT jsonb_agg(to_jsonb(e) ORDER BY e.position, e.last_at DESC NULLS LAST, e.context_id) FROM enriched e), '[]'::jsonb),\n    'user_summaries', COALESCE((SELECT jsonb_agg(to_jsonb(s) ORDER BY s.position) FROM summaries s), '[]'::jsonb),\n    'totals', (SELECT to_jsonb(t) FROM totals t)\n) AS \"payload!: Json<ConversationPageWire>\",\n    ARRAY(SELECT context_id FROM enriched) AS \"context_ids!: Vec<ContextId>\"\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "payload!: Json<ConversationPageWire>",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "context_ids!: Vec<ContextId>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "ba7323f4af5f0f7f0900cc7d511424ba19898cf17277e74b856bc79fd06f2fb0"
+}

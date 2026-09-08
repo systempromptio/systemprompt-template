@@ -114,7 +114,11 @@ services:
       # 0.11.2 moved the file from services/ai/gateway-policies.yaml to
       # services/gateway/policies.yaml (see systemprompt::ai::GATEWAY_POLICIES_FILE).
       - ../../../services/gateway:/app/services/gateway:ro
-      - ../../../services/ai:/app/services/ai:ro
+      # Read-only: the air-gap catalog. The shipped services/ai names public
+      # provider endpoints that the sealed network cannot reach, so the whole
+      # directory is replaced by the scenario's own — every model resolves to
+      # the in-network mock-inference container.
+      - ../../../deploy/scenarios/airgap/services-ai:/app/services/ai:ro
     # NOTE: no `ports:` — the app is reachable only from inside airgap-internal.
     # Operator access is via the `ingress` proxy below.
     healthcheck:

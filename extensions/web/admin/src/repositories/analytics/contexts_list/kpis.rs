@@ -94,7 +94,7 @@ pub async fn list_distinct_models(pool: &PgPool) -> Result<Vec<String>, sqlx::Er
         r#"
         SELECT DISTINCT model AS "model!"
         FROM ai_requests
-        WHERE context_id <> $1
+        WHERE context_id <> $1 AND model IS NOT NULL
         ORDER BY model
         "#,
         legacy.as_str()

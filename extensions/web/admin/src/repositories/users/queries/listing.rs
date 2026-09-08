@@ -3,9 +3,16 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::{Email, UserId};
 
+use crate::repositories::scope::SubjectScope;
 use crate::types::UserSummary;
 
-pub async fn list_users(pool: &PgPool) -> Result<Vec<UserSummary>, sqlx::Error> {
+// Why: The scope is a parameter rather than a filter the caller applies
+// afterwards, so a non-console caller can never be handed the every-user
+// listing.
+pub async fn list_users(
+    pool: &PgPool,
+    scope: &SubjectScope,
+) -> Result<Vec<UserSummary>, sqlx::Error> {
     sqlx::query_as!(
         UserSummary,
         r#"SELECT
@@ -14,12 +21,19 @@ pub async fn list_users(pool: &PgPool) -> Result<Vec<UserSummary>, sqlx::Error> 
                 u.email AS "email?: Email",
                 u.roles AS "roles!: Vec<String>",
                 (u.status = 'active') AS "is_active!",
+                -- Why no COALESCE to u.created_at: it made a user who has
+                -- never done anything report their join date as their last
+                -- activity, so "provisioned but never used" was indistinguishable
+                -- from "used on the day they joined" -- which is exactly the
+                -- population REQ-005's wasted-seat reporting is about. Postgres
+                -- GREATEST ignores NULLs and yields NULL only when every input
+                -- is NULL, which is precisely "never active".
                 GREATEST(
-                    COALESCE(MAX(p.created_at), u.created_at),
-                    COALESCE(ua.last_ua, u.created_at),
-                    COALESCE(mcp.last_mcp, u.created_at),
-                    COALESCE(air.last_request, u.created_at)
-                ) AS "last_active!",
+                    MAX(p.created_at),
+                    ua.last_ua,
+                    mcp.last_mcp,
+                    air.last_request
+                ) AS "last_active?",
                 (COALESCE(COUNT(DISTINCT p.id), 0) + COALESCE(air.request_count, 0))::BIGINT AS "total_events!",
                 (SELECT tool_name FROM plugin_usage_events p2
                  WHERE p2.user_id = u.id
@@ -54,11 +68,13 @@ pub async fn list_users(pool: &PgPool) -> Result<Vec<UserSummary>, sqlx::Error> 
             ) air ON air.user_id = u.id
             WHERE NOT ('anonymous' = ANY(u.roles))
               AND u.email NOT LIKE '%@anonymous.local'
+              AND ($1::TEXT[] IS NULL OR u.id = ANY($1))
             GROUP BY u.id, u.created_at, u.name, u.display_name, u.full_name, u.email,
                      u.roles, u.status, bytes.total_bytes,
                      ua.logins, ua.last_ua, mcp.last_mcp, air.last_request,
                      air.request_count
-            ORDER BY 6 DESC"#,
+            ORDER BY 5 DESC NULLS LAST"#,
+        scope.as_sql(),
     )
     .fetch_all(pool)
     .await
@@ -72,9 +88,24 @@ pub async fn list_distinct_roles(pool: &PgPool) -> Result<Vec<String>, sqlx::Err
     )
     .fetch_all(pool)
     .await?;
-    Ok(rows
+    let mut roles: Vec<String> = rows
         .into_iter()
         .map(|r| r.role)
         .filter(|r| !["anonymous", "a2a", "mcp", "service"].contains(&r.as_str()))
-        .collect())
+        .collect();
+    // Why: the user-detail role picker is built from this list, so a role
+    // nobody holds yet would be unassignable — which is exactly the state a
+    // fresh instance is in for `project_manager`. The three roles this
+    // installation defines are always offered.
+    for known in [
+        crate::types::ROLE_ADMIN,
+        crate::types::ROLE_USER,
+        crate::types::ROLE_PROJECT_MANAGER,
+    ] {
+        if !roles.iter().any(|r| r == known) {
+            roles.push(known.to_owned());
+        }
+    }
+    roles.sort();
+    Ok(roles)
 }

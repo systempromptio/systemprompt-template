@@ -1,0 +1,136 @@
+
+
+@layer components {
+
+.sp-auth-info p {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+    line-height: 1.6;
+    margin: 0 0 0.5rem;
+}
+
+.sp-auth-info .sp-u-text-muted { color: var(--sp-text-tertiary); }
+
+.sp-auth-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--sp-accent-dim);
+    color: var(--sp-accent-hover);
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--sp-radius-full);
+    margin-bottom: 1rem;
+}
+
+.sp-auth-divider {
+    border: none;
+    border-top: 1px solid var(--sp-border-default);
+    margin: 1.25rem 0;
+}
+
+.sp-auth-flow-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0.5rem 0;
+}
+
+.sp-auth-flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+    line-height: 1.5;
+}
+
+.sp-auth-flow-step .sp-step-num,
+.sp-auth-page .sp-step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.4rem;
+    height: 1.4rem;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-accent-fill);
+    color: var(--sp-text-on-accent);
+    font-size: var(--sp-text-xs);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+@media (max-width: 900px) {
+    .sp-auth-page { flex-direction: column; }
+    .sp-auth-info { max-width: 100%; padding: 2rem 1.5rem 1rem; }
+    .sp-auth-form-col { min-width: 0; padding: 1rem 1.5rem 2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sp-login-spinner {
+        animation: none;
+    }
+}
+
+.sp-auth-more > summary {
+    cursor: pointer;
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-text-secondary);
+    padding: var(--sp-space-2) 0;
+    user-select: none;
+}
+
+.sp-auth-more > summary:hover {
+    color: var(--sp-accent-text);
+}
+}
+
+@layer components {
+
+.sp-auth-light {
+    margin: 0;
+    background: var(--sp-bg-base);
+    color: var(--sp-text-primary);
+    font-family: var(--sp-font-family);
+}
+
+.sp-auth-light .sp-login-logo .sp-logo-light {
+    display: block;
+}
+
+.sp-auth-light .sp-login-logo .sp-logo-dark {
+    display: none;
+}
+
+.sp-login-container--bare {
+    min-height: auto;
+    padding: 0;
+    background: none;
+}
+
+body.sp-auth-light {
+    margin: 0;
+    background: var(--sp-bg-base);
+    color: var(--sp-text-primary);
+    font-family: var(--sp-font-body);
+}
+
+.sp-login-switch {
+    margin: 0.85rem 0 0;
+    text-align: center;
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+}
+
+.sp-login-switch a {
+    color: var(--sp-accent-text);
+    text-decoration: underline;
+}
+
+.sp-login-switch a:hover {
+    text-decoration: underline;
+}
+}

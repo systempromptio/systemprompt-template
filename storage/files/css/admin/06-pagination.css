@@ -1,0 +1,42 @@
+@layer components {
+
+.sp-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--sp-space-2) var(--sp-density-gap);
+    padding: var(--sp-space-2) var(--sp-density-cell-x);
+    border-top: 1px solid var(--sp-border-subtle);
+    background: var(--sp-bg-card-header);
+    font-size: var(--sp-text-2xs);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-pagination__info { min-width: 0; }
+
+.sp-pagination__controls {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin-left: auto;
+}
+
+.sp-pagination__current { color: var(--sp-text-secondary); }
+
+.sp-pagination__size {
+    font-size: var(--sp-text-2xs);
+    padding: 0 var(--sp-space-1);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-input);
+    color: var(--sp-text-secondary);
+}
+
+.sp-pagination .is-disabled {
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+}

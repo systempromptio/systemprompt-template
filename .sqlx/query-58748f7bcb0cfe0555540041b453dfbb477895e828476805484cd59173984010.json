@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO project_members (project_id, user_id, source, source_ad_group)\n         SELECT m.project_id, $1, 'adfs', m.ad_group FROM project_ad_mappings m\n         WHERE m.ad_group = ANY($2) ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "58748f7bcb0cfe0555540041b453dfbb477895e828476805484cd59173984010"
+}

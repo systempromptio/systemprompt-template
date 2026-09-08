@@ -1,0 +1,53 @@
+@layer components {
+
+.sp-p-settings__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: var(--sp-space-5);
+}
+
+.sp-p-settings__avatar-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+}
+
+.sp-p-settings__avatar-row input {
+    flex: 1;
+}
+
+.sp-p-settings__avatar {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    overflow: hidden;
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-surface-raised);
+}
+
+.sp-p-settings__avatar img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+}
+
+.sp-p-settings__avatar-fallback {
+    color: var(--sp-text-tertiary);
+    font-weight: 600;
+}
+
+.sp-p-settings__danger {
+    margin-block-start: var(--sp-space-8);
+}
+
+.sp-p-settings input:disabled {
+    border-style: dashed;
+    color: var(--sp-text-tertiary);
+    cursor: not-allowed;
+}
+
+}

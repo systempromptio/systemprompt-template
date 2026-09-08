@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["setup/**/*.ts", "tests/**/*.ts", "playwright.config.ts"],
+  // Scratch is marked, not tidied away by hand. A leading underscore already
+  // means "not part of the suite" for templates (_template.spec.ts), and a
+  // tmp- prefix means the same for a probe someone is using to answer one
+  // question. Neither is type-checked or run: a probe imports browser URLs that
+  // resolve at runtime and never to a type, and leaving one in the graph
+  // reddens the harness for twelve people over a scratch file.
+  "exclude": ["node_modules", "**/_*.ts", "**/tmp-*/**"]
+}

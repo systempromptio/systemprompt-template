@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO plugin_usage_daily\n            (id, date, user_id, event_type, tool_name, event_count, content_input_bytes, content_output_bytes, error_count, loc_added, loc_removed)\n           VALUES ($1, $2, $3, $4, $5, 1, $6, $7, $8, $9, $10)\n           ON CONFLICT (date, user_id, event_type, COALESCE(tool_name, ''))\n           DO UPDATE SET\n             event_count = plugin_usage_daily.event_count + 1,\n             content_input_bytes = plugin_usage_daily.content_input_bytes + $6,\n             content_output_bytes = plugin_usage_daily.content_output_bytes + $7,\n             error_count = plugin_usage_daily.error_count + $8,\n             loc_added = plugin_usage_daily.loc_added + $9,\n             loc_removed = plugin_usage_daily.loc_removed + $10,\n             updated_at = NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Date",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2f5e61c9e7a8a5b11e0f32bfe616a4294bf1f7ded334d09154cc2d9bbb03fba0"
+}

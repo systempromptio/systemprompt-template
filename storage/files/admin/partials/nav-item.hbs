@@ -1,0 +1,27 @@
+{{!--
+  One sidebar link that owns sub-pages. `leaf` is the page id of the link's
+  own page, `child` the id of the record pages beneath it. On a child page the
+  link takes the expanded ancestor state and the open record is drawn under it,
+  named from the last breadcrumb, so the reader sees where they are and the
+  way back in one glance.
+
+    {{#> nav-item href="/admin/users" text="Users" leaf="users" child="user-detail" page=page}}
+      {{#*inline "nav_icon"}}<svg …></svg>{{/inline}}
+    {{/nav-item}}
+
+  `text`, not `label`: a partial hash parameter shadows the same name on every
+  breadcrumb iterated inside the child branch. Static labels containing HTML
+  entities use the nav_text inline partial to avoid escaping hash literals twice.
+--}}
+<a href="{{href}}"{{#if child2}}{{navState page leaf child child2}}{{else}}{{navState page leaf child}}{{/if}}{{#if scope_nav}} data-scope-nav{{/if}}>
+    {{#> nav_icon}}{{/nav_icon}}
+    {{#> nav_text}}{{text}}{{/nav_text}}
+</a>
+{{#*inline "nav_child"}}
+<div class="sp-nav-branch">
+    <a class="sp-nav-child is-active" href="" aria-current="page" title="{{#each breadcrumbs}}{{#if @last}}{{this.label}}{{/if}}{{/each}}">
+        <span class="sp-nav-child__text">{{#each breadcrumbs}}{{#if @last}}{{this.label}}{{/if}}{{/each}}</span>
+    </a>
+</div>
+{{/inline}}
+{{#if (eq page child)}}{{> nav_child}}{{else}}{{#if child2}}{{#if (eq page child2)}}{{> nav_child}}{{/if}}{{/if}}{{/if}}

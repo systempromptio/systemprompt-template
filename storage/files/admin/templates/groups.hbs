@@ -1,0 +1,160 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+
+    {{#> components/page-header title=title subtitle="People containers. A group carries membership, the marketplace entitlement its members inherit, and the spend attributed to it."}}
+        {{#*inline "header_meta"}}
+        <span>Spend is attributed exclusively, so the rows and the unattributed total add up to the instance.</span>
+        {{/inline}}
+        {{#*inline "header_actions"}}
+        {{#if can_manage}}
+        <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="create-group">New group</button>
+        {{/if}}
+        {{#if can_map}}
+        <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="map-directory">Map a directory group</button>
+        {{/if}}
+        {{#if can_manage}}
+        <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="recompute-defaults">Recompute attribution</button>
+        {{/if}}
+        {{/inline}}
+    {{/components/page-header}}
+
+    <section class="sp-kpi-grid" aria-label="Group totals">
+        {{#each kpis}}
+        {{> components/kpi label=this.label value=this.value note=this.note tone=this.tone}}
+        {{/each}}
+    </section>
+
+    {{#if unkeyed_people}}
+    {{> components/notice tone="warn" title="Some accounts have no primary group" message="Exclusive attribution files their spend under Unattributed. Recompute attribution rebuilds every automatic key from current membership and leaves manual overrides alone."}}
+    {{/if}}
+
+    <section aria-label="Groups">
+    {{> components/section title="Groups" count=total_groups note="One row per group. Unfiltered, the last row is the traffic no group accounts for, and the rows sum to the instance."}}
+
+    {{#> components/toolbar toolbar_count=toolbar_count}}
+        {{#*inline "toolbar_filters"}}
+        <div class="sp-toolbar__filter sp-p-groups__ranges" role="group" aria-label="Source">
+            {{#each sources}}
+            <a class="sp-btn sp-btn--sm sp-btn--outline{{#if active}} is-active{{/if}}"
+               href="{{url}}" data-source-filter="{{value}}"{{#if active}} aria-current="true"{{/if}}>{{label}}</a>
+            {{/each}}
+        </div>
+        {{/inline}}
+        {{#*inline "toolbar_actions"}}
+        <div class="sp-p-groups__ranges" role="group" aria-label="Time window">
+            {{#each ranges}}
+            <a class="sp-btn sp-btn--sm sp-btn--outline{{#if active}} is-active{{/if}}"
+               href="{{url}}" data-scope-range="{{value}}"{{#if active}} aria-current="true"{{/if}}>{{label}}</a>
+            {{/each}}
+        </div>
+        {{/inline}}
+    {{/components/toolbar}}
+
+    {{#if groups}}
+    {{#> components/table caption="Groups with their membership, entitlement and exclusively attributed spend" pagination=pagination modifier="sp-t-groups"}}
+        <thead><tr>
+            {{> components/sort-header sort_headers.name}}
+            {{> components/sort-header sort_headers.source}}
+            {{> components/sort-header sort_headers.members}}
+            {{> components/sort-header sort_headers.active}}
+            {{> components/sort-header sort_headers.projects}}
+            <th class="sp-table__cell--num">Markets</th>
+            {{> components/sort-header sort_headers.model}}
+            {{> components/sort-header sort_headers.requests}}
+            {{> components/sort-header sort_headers.tokens}}
+            {{> components/sort-header sort_headers.cost}}
+        </tr></thead>
+        <tbody>
+        {{#each groups}}
+        <tr data-group-id="{{id}}"{{#if is_unassigned}} class="is-unassigned"{{/if}}>
+            <td>
+                <a href="{{href}}" class="sp-group-cell"{{#if description}} title="{{description}}"{{/if}}>
+                    <span class="sp-group-cell__name">{{name}}</span>
+                    {{#if is_unassigned}}{{> components/badge tone="warn" text="Needs assignment"}}{{/if}}
+                </a>
+            </td>
+            <td><span class="sp-badge sp-badge--muted" title="{{source_label}}">{{source_abbrev}}</span></td>
+            <td class="sp-table__cell--num sp-u-num"><span class="sp-group-member-count">{{member_count}}</span></td>
+            <td class="sp-table__cell--num sp-u-num">{{active_members_30d}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{project_count}}</td>
+            <td class="sp-table__cell--num sp-u-num"{{#if marketplaces_title}} title="{{marketplaces_title}}"{{/if}}>{{marketplace_count}}</td>
+            <td>
+                {{#if top_model}}
+                <code class="sp-u-mono" title="{{top_model}} · {{formatNumber top_model_requests}} requests">{{top_model_short}}</code>
+                {{else}}
+                <span class="sp-u-text-tertiary">&mdash;</span>
+                {{/if}}
+            </td>
+            <td class="sp-table__cell--num sp-u-num">{{formatNumber requests}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{formatNumber tokens}}</td>
+            <td class="sp-table__cell--num sp-u-num sp-u-mono">{{formatUsd cost_microdollars}}</td>
+        </tr>
+        {{/each}}
+        {{#unless source_filter}}
+        <tr data-group-id="unattributed" class="sp-p-groups__remainder">
+            <td title="Requests with no user, a non-user actor, or a person holding no primary group.">
+                <span class="sp-group-cell__name">Unattributed</span>
+                {{> components/badge tone="muted" text="Remainder"}}
+            </td>
+            <td><span class="sp-u-text-tertiary">&mdash;</span></td>
+            <td class="sp-table__cell--num sp-u-num">{{unattributed.people}}</td>
+            <td class="sp-table__cell--num sp-u-num">&mdash;</td>
+            <td class="sp-table__cell--num sp-u-num">&mdash;</td>
+            <td class="sp-table__cell--num sp-u-num">&mdash;</td>
+            <td><span class="sp-u-text-tertiary">&mdash;</span></td>
+            <td class="sp-table__cell--num sp-u-num">{{formatNumber unattributed.requests}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{formatNumber unattributed.tokens}}</td>
+            <td class="sp-table__cell--num sp-u-num sp-u-mono">{{formatUsd unattributed.cost_microdollars}}</td>
+        </tr>
+        {{/unless}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No groups yet" message="The directory creates them as sign-ins map onto them, or create one here."}}
+    {{/if}}
+    </section>
+
+    {{#if can_manage}}
+    <dialog class="sp-dialog" data-dialog="create-group" aria-label="New group">
+        <form class="sp-dialog-form" method="dialog">
+            <h2 class="sp-section__title">New group</h2>
+            <label for="new-group-id">Identifier</label>
+            <input type="text" id="new-group-id" class="sp-search-input" data-field="new-group-id" placeholder="commerce-devs" autocomplete="off">
+            <label for="new-group-name">Name</label>
+            <input type="text" id="new-group-name" class="sp-search-input" data-field="new-group-name" placeholder="Engineering" autocomplete="off">
+            <label for="new-group-description">Description</label>
+            <input type="text" id="new-group-description" class="sp-search-input" data-field="new-group-description" autocomplete="off">
+            <menu>
+                <button type="button" class="sp-btn sp-btn--outline" data-action="close-create-group">Cancel</button>
+                <button type="button" class="sp-btn sp-btn--primary" data-action="confirm-create-group">Create</button>
+            </menu>
+        </form>
+    </dialog>
+    {{/if}}
+
+    {{#if can_map}}
+    <dialog class="sp-dialog" data-dialog="map-directory" aria-label="Map a directory group">
+        <form class="sp-dialog-form" method="dialog">
+            <h2 class="sp-section__title">Map a directory group</h2>
+            <p class="sp-p-groups__note">Membership written by the directory is replaced at every sign-in, so a mapping is what places people and removing it is what removes them.</p>
+            <label for="map-ad-group">Directory group</label>
+            <input type="text" id="map-ad-group" class="sp-search-input" data-field="map-ad-group" placeholder="Example-Team" autocomplete="off">
+            <label for="map-target-group">Places members into</label>
+            <select id="map-target-group" class="sp-filter-select" data-field="map-target-group">
+                {{#each group_options}}
+                <option value="{{id}}">{{label}}</option>
+                {{/each}}
+            </select>
+            <menu>
+                <button type="button" class="sp-btn sp-btn--outline" data-action="close-map-directory">Cancel</button>
+                <button type="button" class="sp-btn sp-btn--primary" data-action="confirm-map-directory">Add mapping</button>
+            </menu>
+        </form>
+    </dialog>
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-groups.js"></script>
+    {{/inline}}
+{{/layout}}
