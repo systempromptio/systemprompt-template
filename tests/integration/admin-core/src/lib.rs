@@ -99,3 +99,6 @@ mod users_registration;
 
 #[cfg(test)]
 mod usage_conversation_summary;
+
+#[cfg(test)]
+mod usage_conversation_summary_schema;

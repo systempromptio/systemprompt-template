@@ -208,7 +208,21 @@ The optional `unit`, `contract`, `integration`, and `registry` stages allow a fa
 stage to be resumed without repeating passing stages. Tests use disposable databases.
 
 Template: 42 unit tests, 28 contract tests (including the hook rollup regression),
-and 79 scoped database integration tests passed. Coverage includes department ACL
+and 80 scoped database integration tests passed, including the populated
+transcript upgrade lifecycle regression (46.6 seconds for the integration stage). Coverage includes department ACL
 compatibility, custom roles, account closure/audit retention, read-only mutation and
 raw-evidence denial, developer-login redemption, project-scoped traces, conversation
 classification and session/daily counters.
+
+Internal: 50 unit tests and 28 contract tests passed, including its eight legacy
+session-registry tests and a real-handler regression verifying workspace/activity,
+legacy live cost/context utilization, and new token/cost snapshots together.
+
+The full-text-search schema follows the published core 0.48 installer phases:
+structural tables, pending migrations, then dependent indexes. The generated
+`search_tsv` column and GIN index therefore remain declarative; migration 059
+adds the column to existing tables before the index phase. Fresh installs stamp
+migrations without executing them, so moving the index exclusively to migration
+059 would omit it. `usage_conversation_summary_schema` exercises this production
+lifecycle against a populated transcript after removing the search column and
+only its migration-ledger entry; it never pre-applies migration SQL.
