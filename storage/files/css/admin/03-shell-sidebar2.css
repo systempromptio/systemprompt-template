@@ -1,19 +1,6 @@
-
-
 @layer components {
 
 /* The open record sits on an inset branch; only the record is selected. */
-.sp-admin-sidebar nav a.is-ancestor {
-    background: transparent;
-    color: var(--sp-sidebar-text-hover);
-    font-weight: 600;
-}
-
-.sp-admin-sidebar nav a.is-ancestor:hover {
-    background: var(--sp-sidebar-hover-bg);
-}
-
-.sp-admin-sidebar nav a.is-ancestor .sp-icon { opacity: 0.9; }
 
 .sp-nav-branch {
     margin: var(--sp-space-1) var(--sp-space-2) var(--sp-space-2)

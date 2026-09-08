@@ -1,6 +1,5 @@
-// The access-token console's two write actions: issuing a token, then showing
-// the secret once, and revoking one from its row. Filtering is a link the
-// server answers.
+// Why: token creation shows the secret once; row actions revoke tokens.
+// Filtering navigates to a server-rendered result.
 
 import { apiFetch } from '../services/api.js';
 import { showToast } from '../services/toast.js';
