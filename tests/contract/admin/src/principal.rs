@@ -39,7 +39,9 @@ pub enum Principal {
 }
 
 impl Principal {
-    pub const ALL: [Self; 7] = [
+    pub const ALL: [Self; 3] = [Self::Anonymous, Self::NonAdmin, Self::Admin];
+
+    pub const ALL_DASHBOARD: [Self; 7] = [
         Self::Anonymous,
         Self::NonAdmin,
         Self::Developer,
@@ -74,9 +76,6 @@ pub struct Credentials {
     // The non-admin's own user id, so a case can seed a row that principal
     // genuinely owns and drive an owner-facing route as its owner.
     pub non_admin_user_id: UserId,
-    // The knowledge worker's id, for the matrix case that resolves the Cowork
-    // marketplace for exactly that user.
-    pub knowledge_worker_user_id: UserId,
 }
 
 impl Credentials {
@@ -93,6 +92,23 @@ impl Credentials {
     }
 }
 
+// Why: preserve the original route corpus's two-account fixtures. The new
+// dashboard contracts explicitly opt into the broader privilege matrix.
+pub async fn provision(pool: &PgPool) -> Credentials {
+    let (non_admin, non_admin_user_id) =
+        provision_one(pool, "contract-user", &["user"], false).await;
+    let (admin, _) = provision_one(pool, "contract-admin", &["admin", "user"], false).await;
+    Credentials {
+        non_admin,
+        admin,
+        non_admin_user_id,
+        developer: String::new(),
+        platform_admin: String::new(),
+        project_manager: String::new(),
+        knowledge_worker: String::new(),
+    }
+}
+
 // The group the non-console principals are placed in.
 //
 // Why a real group rather than none: a caller in no group is derived into
@@ -106,7 +122,7 @@ const CONTRACT_GROUP: &str = "contract-group";
 // The admin carries no group, as an operator account that never came through
 // AD FS would; everyone else is placed in `contract-group` as an
 // SSO-provisioned account is. Roles alone decide what a principal reaches.
-pub async fn provision(pool: &PgPool) -> Credentials {
+pub async fn provision_dashboard(pool: &PgPool) -> Credentials {
     sqlx::query(
         "INSERT INTO groups (id, name, source) VALUES ($1, 'Contract group', 'dashboard')
          ON CONFLICT (id) DO NOTHING",
@@ -150,7 +166,6 @@ pub async fn provision(pool: &PgPool) -> Credentials {
         project_manager,
         knowledge_worker,
         non_admin_user_id,
-        knowledge_worker_user_id,
     }
 }
 

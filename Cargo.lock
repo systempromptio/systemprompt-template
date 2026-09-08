@@ -4849,6 +4849,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "systemprompt-dev-login"
+version = "0.48.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "systemprompt",
+ "systemprompt-web-admin",
+ "tokio",
+]
+
+[[package]]
 name = "systemprompt-evaluation"
 version = "0.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

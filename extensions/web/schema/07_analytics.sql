@@ -32,7 +32,9 @@ CREATE TABLE IF NOT EXISTS plugin_usage_daily (
     content_input_bytes BIGINT DEFAULT 0,
     content_output_bytes BIGINT DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    loc_added BIGINT NOT NULL DEFAULT 0,
+    loc_removed BIGINT NOT NULL DEFAULT 0
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_usage_daily_unique ON plugin_usage_daily(date, user_id, event_type, COALESCE(tool_name, ''));
 CREATE INDEX IF NOT EXISTS idx_usage_daily_date ON plugin_usage_daily(date DESC);
@@ -67,7 +69,9 @@ CREATE TABLE IF NOT EXISTS plugin_session_summaries (
     user_prompts INT,
     automated_actions INT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    loc_added BIGINT NOT NULL DEFAULT 0,
+    loc_removed BIGINT NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_session_summary_user ON plugin_session_summaries(user_id, started_at DESC);
 CREATE INDEX IF NOT EXISTS idx_session_summary_session ON plugin_session_summaries(session_id);
@@ -80,6 +84,8 @@ CREATE TABLE IF NOT EXISTS session_transcripts (
     session_id TEXT NOT NULL,
     plugin_id TEXT,
     transcript JSONB NOT NULL DEFAULT '[]',
+    search_tsv tsvector GENERATED ALWAYS AS
+        (to_tsvector('english', left(transcript::text, 262144))) STORED,
     total_input_tokens BIGINT DEFAULT 0,
     total_output_tokens BIGINT DEFAULT 0,
     model TEXT,
@@ -88,12 +94,7 @@ CREATE TABLE IF NOT EXISTS session_transcripts (
 );
 CREATE INDEX IF NOT EXISTS idx_session_transcripts_user ON session_transcripts(user_id, captured_at DESC);
 CREATE INDEX IF NOT EXISTS idx_session_transcripts_session ON session_transcripts(session_id, captured_at DESC);
--- jsonb_path_ops over to_tsvector: we filter transcripts by structural containment
--- (`transcript @> '[{"role":"user"}]'`-style) and substring search against textual
--- content, not by linguistic relevance. jsonb_path_ops gives ~30% smaller indexes
--- than the default jsonb_ops and is sufficient for @>; full-text ranking is not
--- a requirement for the conversations page, so we skip the generated tsvector
--- column and the trigger maintenance it would imply.
+-- Structural containment and ranked text search use separate indexes.
 CREATE INDEX IF NOT EXISTS idx_session_transcripts_jsonb ON session_transcripts USING GIN (transcript jsonb_path_ops);
 
 -- `governance_decisions` schema is owned by core's authz extension
@@ -101,3 +102,5 @@ CREATE INDEX IF NOT EXISTS idx_session_transcripts_jsonb ON session_transcripts 
 -- are created from `crates/infra/security/src/authz/schema/governance_decisions.sql`
 -- before this analytics extension runs (migration_weight 110 vs analytics ~200).
 -- Triggers that depend on the table live in 14_audit_event_notify.sql.
+
+-- The FTS index is installed by migration 059 after existing tables gain search_tsv.

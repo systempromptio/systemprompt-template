@@ -35,7 +35,7 @@ pub async fn get_dashboard_data(
         active_users_24h,
         tool_success_rates,
     ) = tokio::try_join!(
-        list_timeline(pool, None),
+        list_timeline(pool, &crate::repositories::scope::SubjectScope::All),
         list_top_users(pool),
         list_popular_skills(pool),
         list_hourly_activity(pool),

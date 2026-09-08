@@ -5,7 +5,7 @@ const hasStoredTab = (key) => {
 };
 
 const ARTIFACTS = {
-  macos: { label: 'macOS build coming soon \u2014 see other platforms' },
+  macos: { label: 'Download for macOS', file: 'systemprompt-bridge-macos.dmg' },
   windows: { label: 'Download for Windows', file: 'systemprompt-bridge-windows.exe' },
   'linux-x86_64': { label: 'Download for Linux (x86_64)', file: 'systemprompt-bridge-linux-x86_64.tar.gz' },
   'linux-aarch64': { label: 'Download for Linux (aarch64)', file: 'systemprompt-bridge-linux-aarch64.tar.gz' }
@@ -24,12 +24,14 @@ const pill = document.getElementById('gateway-pill');
 const gateway = pill?.dataset.gatewayUrl || '';
 const downloadBase = pill?.dataset.downloadBase || '';
 
-const cta = document.getElementById('sp-download-cta');
-if (cta) {
+const cta = document.getElementById('download-cta');
+if (cta && downloadBase) {
   const artifact = ARTIFACTS[detectPlatform(navigator.userAgent)];
   cta.textContent = artifact.label;
   if (artifact.file) {
     cta.href = `${downloadBase}/${artifact.file}`;
+    const checksum = document.getElementById('download-checksum');
+    if (checksum) checksum.href = `${downloadBase}/${artifact.file}.sha256`;
   } else {
     const other = document.querySelector('.sp-download-other');
     if (other) other.open = true;

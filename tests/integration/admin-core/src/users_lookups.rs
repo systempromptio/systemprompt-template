@@ -13,9 +13,12 @@ async fn list_users_includes_a_freshly_created_user() {
     };
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("listed")).await;
 
-    let listed = users::queries::list_users(&db.pool)
-        .await
-        .expect("listing succeeds");
+    let listed = users::queries::list_users(
+        &db.pool,
+        &systemprompt_web_admin::repositories::scope::SubjectScope::All,
+    )
+    .await
+    .expect("listing succeeds");
 
     let row = listed
         .iter()
@@ -40,9 +43,12 @@ async fn list_users_excludes_anonymous_identities() {
     )
     .await;
 
-    let listed = users::queries::list_users(&db.pool)
-        .await
-        .expect("listing succeeds");
+    let listed = users::queries::list_users(
+        &db.pool,
+        &systemprompt_web_admin::repositories::scope::SubjectScope::All,
+    )
+    .await
+    .expect("listing succeeds");
 
     assert!(
         !listed.iter().any(|u| u.user_id == anon),

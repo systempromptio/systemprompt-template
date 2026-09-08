@@ -276,3 +276,9 @@ impl From<crate::repositories::bridge::BridgeRepoError> for AdminError {
         }
     }
 }
+
+impl From<systemprompt::loader::ConfigLoadError> for AdminError {
+    fn from(value: systemprompt::loader::ConfigLoadError) -> Self {
+        Self::Internal(Box::new(value))
+    }
+}

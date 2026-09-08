@@ -17,6 +17,7 @@ pub(crate) const SCHEMA_AUDIT_EVENT_NOTIFY: &str =
 
 pub fn schema_definitions() -> Vec<SchemaDefinition> {
     vec![
+        SchemaDefinition::new("", include_str!("../schema/22_dev_login_codes.sql")),
         SchemaDefinition::new("", SCHEMA_PLUGIN_USAGE),
         SchemaDefinition::new("", SCHEMA_ANALYTICS),
         SchemaDefinition::new("", SCHEMA_SECRETS),

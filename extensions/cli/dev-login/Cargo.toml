@@ -1,0 +1,25 @@
+[package]
+name = "systemprompt-dev-login"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Development-only CLI extension for local development: prints a single-use admin-console login link."
+repository.workspace = true
+homepage.workspace = true
+publish = false
+
+[[bin]]
+name = "systemprompt-dev-login"
+path = "src/main.rs"
+
+[dependencies]
+# Audit: uses config (ProfileBootstrap, SecretsBootstrap), logging, models, system (AppContext) — requires `full`.
+systemprompt = { workspace = true, features = ["full"] }
+systemprompt-web-admin = { workspace = true }
+
+anyhow.workspace = true
+clap = { version = "4", features = ["derive"] }
+tokio.workspace = true
+
+[lints]
+workspace = true

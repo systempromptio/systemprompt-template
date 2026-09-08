@@ -13,10 +13,7 @@ mod routes;
 mod yaml_io;
 
 pub use catalog::{dispatchable_route_ids, registered_routes, registered_routes_from_services};
-pub use config::{
-    dispatchable_routes_from_services, get_gateway_config, get_gateway_config_from_file,
-    update_gateway_settings,
-};
+pub use config::{get_gateway_config, get_gateway_config_from_file, update_gateway_settings};
 pub use matching::{
     find_matching_route, find_matching_route_index, find_route_index_by_id, glob_match,
     slugify_pattern, synthesize_route_id,
@@ -24,4 +21,9 @@ pub use matching::{
 pub use path::gateway_config_path;
 pub use routes::{
     create_route, delete_route, ensure_route_ids, reorder_routes, update_route, validate_route,
+};
+
+pub use catalog::{
+    client_facing_routes, client_facing_routes_from_services, dispatchable_routes,
+    dispatchable_routes_from_services, retain_client_facing,
 };

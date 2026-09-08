@@ -42,10 +42,13 @@ async fn every_signed_in_principal_saves_their_own_settings() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
-    for principal in [Principal::NonAdmin, Principal::Admin] {
+    for principal in Principal::ALL_DASHBOARD
+        .into_iter()
+        .filter(|p| *p != Principal::Anonymous)
+    {
         let (status, body) = app.call(Call::json("put", SETTINGS, principal, BODY)).await;
         assert_eq!(status, StatusCode::OK, "{principal:?} body: {body}");
         let json: serde_json::Value = serde_json::from_str(&body).expect("json");
@@ -62,7 +65,7 @@ async fn the_saved_row_belongs_to_the_caller_and_nobody_else() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     let (status, body) = app
@@ -93,7 +96,7 @@ async fn anonymous_is_refused_both_writes() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     let (status, _) = app
@@ -116,7 +119,7 @@ async fn a_timezone_that_cannot_be_a_zone_name_is_refused() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     for bad in [
@@ -143,7 +146,7 @@ async fn deleting_an_account_removes_it_and_leaves_the_audit_trail() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     let (status, body) = app
@@ -152,6 +155,21 @@ async fn deleting_an_account_removes_it_and_leaves_the_audit_trail() {
     assert_eq!(status, StatusCode::OK, "body: {body}");
     let json: serde_json::Value = serde_json::from_str(&body).expect("json");
     let owner = json["user_id"].as_str().expect("user_id").to_owned();
+
+    let request_id = crate::seed::unique("self-service-audit");
+    let owner_id = systemprompt::identifiers::UserId::new(owner.clone());
+    crate::seed::insert_request(
+        &db.pool,
+        &crate::seed::RequestSpec {
+            id: request_id.clone(),
+            user_id: &owner_id,
+            session_id: None,
+            trace_id: None,
+            context_id: None,
+            status: "completed",
+        },
+    )
+    .await;
 
     let email: String = sqlx::query_scalar("SELECT email FROM users WHERE id = $1")
         .bind(&owner)
@@ -203,4 +221,13 @@ async fn deleting_an_account_removes_it_and_leaves_the_audit_trail() {
         .await
         .expect("count settings");
     assert_eq!(settings, 0, "the settings row went with it, not orphaned");
+    let audit_rows: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM ai_requests WHERE id = $1")
+        .bind(request_id)
+        .fetch_one(&*db.pool)
+        .await
+        .expect("audit row survives");
+    assert_eq!(
+        audit_rows, 1,
+        "closing an account preserves its audit trail"
+    );
 }

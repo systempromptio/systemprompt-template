@@ -58,7 +58,7 @@ impl MarketplaceFilter for TemplateMarketplaceFilter {
     ) -> Result<MarketplaceCandidate, MarketplaceFilterError> {
         let roles = self.user_roles(user_id).await?;
         let attributes = subject_attributes_for(self.pool.as_ref(), user_id).await;
-        let keep = keep_sets(
+        let mut keep = keep_sets(
             &self.repo,
             &candidate,
             KeepSetsSubject {
@@ -69,6 +69,23 @@ impl MarketplaceFilter for TemplateMarketplaceFilter {
             },
         )
         .await?;
+        // Why: Authorization and connection readiness are independent gates. A
+        // grant can never make an otherwise denied marketplace visible.
+        let connections = crate::services::connector_accounts::get_connections(&self.pool, user_id)
+            .await
+            .map_err(|e| MarketplaceFilterError::Backend(e.to_string()))?;
+        keep.mcp_servers.retain(|id| {
+            connections
+                .connections
+                .iter()
+                .find(|c| c.provider == id.as_str())
+                .is_none_or(|c| {
+                    c.configured
+                        && c.entitled
+                        && c.verified_at.is_some()
+                        && matches!(c.status.as_str(), "connected" | "temporarily_unavailable")
+                })
+        });
         candidate.retain_entries(&keep);
         Ok(candidate)
     }

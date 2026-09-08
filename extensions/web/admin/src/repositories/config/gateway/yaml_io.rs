@@ -1,9 +1,14 @@
-//! Gateway services-file read/write and route <-> YAML conversion.
+//! Gateway YAML read/write and route <-> YAML conversion.
 //!
 //! All mutation paths funnel through [`read_gateway_file`] /
 //! [`write_gateway_file`] so the `gateway` block stays well-formed, and through
 //! [`ensure_gateway_mut`] / [`routes_seq_mut`] which lazily create the block
 //! and `routes` sequence.
+//!
+//! `serde_yaml` round-trips values, not text, so a naive write drops every
+//! comment in the file. [`write_gateway_file`] carries the operator's header
+//! comment across, and [`route_to_yaml`] omits an `id` it could synthesize, so
+//! an admin edit changes the field it edited and nothing else.
 
 use std::path::Path;
 
@@ -14,17 +19,36 @@ use crate::types::GatewayRouteView;
 
 use super::matching::synthesize_route_id;
 
-pub(super) fn read_gateway_file(path: &Path) -> Result<Value, MarketplaceError> {
-    let content = std::fs::read_to_string(path)?;
+pub(super) fn read_gateway_file(gateway_path: &Path) -> Result<Value, MarketplaceError> {
+    let content = std::fs::read_to_string(gateway_path)?;
     let doc: Value = serde_yaml::from_str(&content)?;
     Ok(doc)
 }
 
-pub(super) fn write_gateway_file(path: &Path, doc: &Value) -> Result<(), MarketplaceError> {
-    let yaml_str = serde_yaml::to_string(doc)?;
-    std::fs::write(path, yaml_str)
-        .map_err(|e| MarketplaceError::config_file(path.display().to_string(), e))?;
+pub(super) fn write_gateway_file(gateway_path: &Path, doc: &Value) -> Result<(), MarketplaceError> {
+    let header = leading_comment_header(gateway_path);
+    let yaml_str = format!("{header}{}", serde_yaml::to_string(doc)?);
+    std::fs::write(gateway_path, yaml_str)
+        .map_err(|e| MarketplaceError::config_file(gateway_path.display().to_string(), e))?;
     Ok(())
+}
+
+// Why: the header names the file's purpose and the CLI that edits it. It is
+// the only comment block whose position survives a value round-trip, because
+// nothing above it can move; inline comments cannot be anchored to a `Value`
+// and are lost, which is why the editor writes as little as it can.
+fn leading_comment_header(gateway_path: &Path) -> String {
+    let Ok(content) = std::fs::read_to_string(gateway_path) else {
+        return String::new();
+    };
+    content
+        .lines()
+        .take_while(|line| line.trim_start().starts_with('#'))
+        .fold(String::new(), |mut acc, line| {
+            acc.push_str(line);
+            acc.push('\n');
+            acc
+        })
 }
 
 pub(super) fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
@@ -63,14 +87,17 @@ pub(super) fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
     })
 }
 
+// Why: `id` is written only when it is not derivable. Synthesis is
+// deterministic in `(model_pattern, provider)`, so a synthesized id in the file
+// is noise the operator did not write and `route_from_yaml` recreates it on
+// every read. A hand-chosen id is data and is always kept.
 pub(super) fn route_to_yaml(route: &GatewayRouteView) -> Value {
     let mut map = Mapping::new();
-    let id = if route.id.trim().is_empty() {
-        synthesize_route_id(&route.model_pattern, &route.provider)
-    } else {
-        route.id.clone()
-    };
-    map.insert(Value::from("id"), Value::from(id));
+    let derived = synthesize_route_id(&route.model_pattern, &route.provider);
+    let id = route.id.trim();
+    if !id.is_empty() && id != derived {
+        map.insert(Value::from("id"), Value::from(id.to_owned()));
+    }
     map.insert(
         Value::from("model_pattern"),
         Value::from(route.model_pattern.clone()),
@@ -101,7 +128,7 @@ pub(super) fn route_to_yaml(route: &GatewayRouteView) -> Value {
 pub(super) fn ensure_gateway_mut(doc: &mut Value) -> Result<&mut Mapping, MarketplaceError> {
     let root = doc
         .as_mapping_mut()
-        .ok_or_else(|| MarketplaceError::Internal("profile YAML root is not a mapping".into()))?;
+        .ok_or_else(|| MarketplaceError::Internal("gateway YAML root is not a mapping".into()))?;
     if !root.contains_key(Value::from("gateway")) {
         root.insert(Value::from("gateway"), Value::Mapping(Mapping::new()));
     }

@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "extensions/cli/dev-login",
     "extensions/web",
     "extensions/web/shared",
     "extensions/web/admin",

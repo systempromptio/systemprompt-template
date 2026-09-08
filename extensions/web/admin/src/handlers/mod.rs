@@ -24,11 +24,7 @@ pub(crate) mod share;
 pub(crate) mod shared;
 pub(crate) mod slack_identity;
 pub(crate) mod ssr;
-mod user_sessions;
 mod users;
-pub(crate) use user_sessions::{
-    list_user_sessions_handler, revoke_all_user_sessions_handler, revoke_user_session_handler,
-};
 pub(crate) mod webhook;
 
 pub(crate) mod approvals;
@@ -71,4 +67,12 @@ pub(crate) use users::{
 };
 pub(crate) use webhook::{
     govern_authz, govern_tool_use, track_statusline_event, track_transcript_event,
+};
+
+pub(crate) mod dev_login;
+pub(crate) mod dev_login_session;
+
+mod user_sessions;
+pub(crate) use user_sessions::{
+    list_user_sessions_handler, revoke_all_user_sessions_handler, revoke_user_session_handler,
 };

@@ -1,0 +1,10 @@
+extension:
+  type: cli
+  name: dev-login
+  binary: systemprompt-dev-login
+  description: Print a single-use, ten-minute /admin login link for a user (development, non-cloud profiles only)
+  build_type: workspace
+  enabled: true
+  commands:
+    - name: dev-login
+      description: "dev-login <user> — print a single-use /admin login link for that user"

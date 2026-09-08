@@ -12,18 +12,22 @@
                 <div class="sp-step-num">1</div>
                 <div>
                     <h2 class="sp-section__title">Download the bridge</h2>
+                    {{#if download_base_url}}
                     <p class="sp-u-text-tertiary">Double-click to launch. A tray icon appears in your menu bar.</p>
                     <p>
-                        <a id="download-cta" class="sp-download-cta" href="#" rel="noopener">Download&hellip;</a>
+                        <a id="download-cta" class="sp-download-cta" href="{{download_base_url}}/systemprompt-bridge-windows.exe" rel="noopener">Download for Windows</a>
+                        <a id="download-checksum" href="{{download_base_url}}/systemprompt-bridge-windows.exe.sha256">sha256</a>
                     </p>
                     <details class="sp-download-other">
                         <summary>Other platforms</summary>
                         <ul>
+                            <li><a href="{{download_base_url}}/systemprompt-bridge-macos.dmg">macOS (.dmg)</a></li>
                             <li><a href="{{download_base_url}}/systemprompt-bridge-windows.exe">Windows (.exe)</a></li>
                             <li><a href="{{download_base_url}}/systemprompt-bridge-linux-x86_64.tar.gz">Linux (.tar.gz, x86_64)</a></li>
                             <li><a href="{{download_base_url}}/systemprompt-bridge-linux-aarch64.tar.gz">Linux (.tar.gz, aarch64)</a></li>
                         </ul>
                     </details>
+                    {{else}}<p>Desktop client downloads are not configured. An already-installed bridge can still sign in with the steps below.</p>{{/if}}
                 </div>
             </div>
 
@@ -61,11 +65,13 @@
                     </div>
                     <div class="sp-tab-panel" id="tab-linux" role="tabpanel" aria-labelledby="tab-btn-linux" hidden>
                         <p>One command &mdash; downloads, verifies the checksum, installs to <code>~/.local/bin</code>, and writes the environment.</p>
+                        {{#if download_base_url}}
                         <div class="sp-snippet">
                             <button type="button" class="sp-btn sp-btn--sm sp-btn--copy" id="linux-copy-btn">Copy</button>
-                            <pre><code id="linux-snippet">curl -fsSL {{download_base_url}}/install.sh | sh -s -- --download-base {{download_base_url}} --gateway {{gateway_url}} --host claude-code</code></pre>
+                            <pre><code id="linux-snippet">{{install_command}}</code></pre>
                         </div>
                         <p class="sp-u-text-tertiary sp-u-text-sm">Then run <code>claude</code> — no new shell and nothing to source. The installer merges the gateway settings into <code>~/.claude/settings.json</code>, which Claude Code reads on every run, and registers the systemd user units for sync and the loopback proxy. It also writes <code>~/.config/systemprompt/env.sh</code> for other Anthropic-API clients.</p>
+                        {{else}}<p>Desktop client downloads are not configured.</p>{{/if}}
                     </div>
                 </div>
             </div>

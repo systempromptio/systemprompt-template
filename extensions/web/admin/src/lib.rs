@@ -43,9 +43,11 @@ pub use routes::admin_ssr_router;
 pub use types::{CreateUserRequest, MarketplaceContext, UserContext, UserSummary, UserUsageEvent};
 
 pub mod test_support {
+    pub use crate::handlers::dev_login_session::permissions_for_roles as dev_login_permissions_for_roles;
     pub use crate::handlers::hooks_track::commits::{
         ParsedCommit, is_commit_command, parse_commit_stdout, response_stdout,
     };
+    pub use crate::handlers::hooks_track::loc::{LocDelta, compute_loc_delta};
     pub use crate::handlers::ssr::transcript_view::{
         ConversationView, ParsedAssistant, SideCallRowView, SideCallsView, StepView, ThreadView,
         ToolChipView, ToolUseMarker, TranscriptMetaView, TranscriptOptions, TurnView,
@@ -164,3 +166,7 @@ pub fn salesforce_api_router(deps: SalesforceDeps) -> Router {
 pub use handlers::salesforce_auth::{SalesforceConfig, SalesforceDeps, SalesforceError};
 
 pub use routes::bridge_auth_ssr_router;
+
+pub use handlers::dev_login::{
+    DEV_LOGIN_PATH, dev_login_allowed, dev_login_enabled, dev_login_url,
+};

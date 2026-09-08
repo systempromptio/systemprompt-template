@@ -65,7 +65,7 @@
                 <div class="sp-choice-group">
                     {{#each identity.role_choices}}
                     {{#if this.platform_only}}
-                    {{#if ../current_user.is_platform_admin}}
+                    {{#if ../can_write}}
                     <label class="sp-choice">
                         <input type="checkbox" name="roles" value="{{this.id}}"{{#if this.held}} checked{{/if}}{{#if ../is_self}} disabled title="You cannot change your own platform-admin role"{{/if}}>
                         <span>{{this.label}}</span>

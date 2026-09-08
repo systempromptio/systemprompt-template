@@ -72,4 +72,9 @@ mod groups_contract;
 mod roles_contract;
 
 #[cfg(test)]
+mod dev_login_contract;
+
+#[cfg(test)]
+mod write_boundaries;
+
 mod registration_security_contract;

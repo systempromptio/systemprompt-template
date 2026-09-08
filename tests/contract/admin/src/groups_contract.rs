@@ -18,7 +18,7 @@ async fn an_admin_creates_reads_and_deletes_a_group() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     let (created, body) = app
@@ -73,7 +73,7 @@ async fn a_malformed_group_id_is_a_bad_request() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     let (status, body) = app
@@ -99,7 +99,7 @@ async fn the_system_group_refuses_every_write() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     let (members, body) = app
@@ -139,14 +139,14 @@ async fn the_system_group_refuses_every_write() {
 // Why: a mapping decides what the directory grants everyone holding that AD
 // group, so it sits a tier above an ordinary admin write.
 #[tokio::test]
-async fn only_the_platform_tier_moves_an_ad_mapping() {
+async fn an_admin_retains_authority_to_manage_ad_mappings() {
     if !globals::init() {
         return;
     }
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
     app.call(Call::json(
         "post",
@@ -174,8 +174,8 @@ async fn only_the_platform_tier_moves_an_ad_mapping() {
     assert_eq!(read, StatusCode::OK, "reading is a console act");
     assert_eq!(
         write,
-        StatusCode::FORBIDDEN,
-        "an admin may not move a mapping: {body}"
+        StatusCode::CREATED,
+        "an admin can configure a mapping: {body}"
     );
     db.cleanup().await;
 }
@@ -188,7 +188,7 @@ async fn a_project_manager_reads_groups_and_writes_none() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     let (list, body) = app
@@ -219,7 +219,7 @@ async fn a_non_admin_reaches_no_group_route() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     let (list, _) = app
@@ -242,7 +242,7 @@ async fn group_usage_answers_with_an_empty_rollup_for_a_fresh_group() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
     app.call(Call::json(
         "post",
@@ -281,7 +281,7 @@ async fn recomputing_attribution_keys_reports_its_writes_and_repeats_cleanly() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
 
     let (status, body) = app
@@ -324,5 +324,64 @@ async fn recomputing_attribution_keys_reports_its_writes_and_repeats_cleanly() {
         assert_eq!(status, StatusCode::FORBIDDEN, "{principal:?}: {body}");
     }
 
+    db.cleanup().await;
+}
+
+// Why: upgrades must introduce groups alongside departments, without copying
+// memberships or deleting the old authorization rules.
+#[tokio::test]
+async fn group_schema_reapplication_preserves_department_membership_and_denials() {
+    if !globals::init() {
+        return;
+    }
+    let Some(db) = TempDb::create().await else {
+        return;
+    };
+    let user =
+        crate::seed::insert_user(&db.pool, "legacy-dept-user", "legacy-dept@contract.test").await;
+    sqlx::query("INSERT INTO departments (id, name) VALUES ('legacy-dept', 'Legacy department')")
+        .execute(&*db.pool)
+        .await
+        .expect("legacy department");
+    sqlx::query(
+        "INSERT INTO user_profile_ext (user_id, department) VALUES ($1, 'Legacy department')",
+    )
+    .bind(user.as_str())
+    .execute(&*db.pool)
+    .await
+    .expect("legacy assignment");
+    crate::seed::insert_acl_rule(
+        &db.pool,
+        &crate::seed::AclRule {
+            entity_type: "mcp_server",
+            entity_id: "legacy-mcp",
+            rule_type: "department",
+            rule_value: "Legacy department",
+            access: "deny",
+        },
+    )
+    .await;
+    sqlx::raw_sql(include_str!(
+        "../../../../extensions/web/schema/migrations/052_dashboard_groups_projects.sql"
+    ))
+    .execute(&*db.pool)
+    .await
+    .expect("reapply additive migration");
+    let department: String =
+        sqlx::query_scalar("SELECT department FROM user_profile_ext WHERE user_id = $1")
+            .bind(user.as_str())
+            .fetch_one(&*db.pool)
+            .await
+            .expect("department retained");
+    assert_eq!(department, "Legacy department");
+    let denials: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM access_control_rules WHERE rule_type = 'department' AND rule_value = 'Legacy department' AND access = 'deny'")
+        .fetch_one(&*db.pool).await.expect("legacy ACL retained");
+    assert_eq!(denials, 1);
+    let mapped: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM group_members WHERE user_id = $1")
+        .bind(user.as_str())
+        .fetch_one(&*db.pool)
+        .await
+        .expect("no inferred mapping");
+    assert_eq!(mapped, 0);
     db.cleanup().await;
 }

@@ -12,12 +12,12 @@
 use crate::types::webhook::{HookEvent, HookEventPayload};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub(crate) struct LocDelta {
+pub struct LocDelta {
     pub added: i64,
     pub removed: i64,
 }
 
-pub(crate) fn compute_loc_delta(payload: &HookEventPayload) -> LocDelta {
+pub fn compute_loc_delta(payload: &HookEventPayload) -> LocDelta {
     match &payload.event {
         HookEvent::PostToolUse(d) => delta_for_tool(&d.name, &d.input),
         _ => LocDelta::default(),

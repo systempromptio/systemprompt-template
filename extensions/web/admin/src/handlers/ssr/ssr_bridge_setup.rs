@@ -11,19 +11,12 @@ use crate::types::{MarketplaceContext, UserContext};
 
 use super::ssr_helpers::render_typed_page;
 
-// Why: `/files/**` serves straight out of `storage/files/`, so dropping an
-// artifact there publishes it. `/downloads` is not viable —
-// `RoutingDecision::is_static_asset_path` gates on an extension list with no
-// archive entry while whitelisting the `/files` prefix wholesale. Asset names
-// stay in lockstep with `scripts/package-bridge-linux.sh`, `bridge-setup.hbs`,
-// and `ARTIFACTS` in `storage/files/js/pages/admin-bridge-setup.js`.
-const DOWNLOAD_BASE_URL: &str = "/files/downloads";
-
 #[derive(Debug, Serialize)]
 struct SetupPageData {
     gateway_url: String,
     user_email: String,
-    download_base_url: &'static str,
+    download_base_url: Option<String>,
+    install_command: Option<String>,
 }
 
 pub(crate) async fn bridge_setup_page(
@@ -32,10 +25,15 @@ pub(crate) async fn bridge_setup_page(
     Extension(engine): Extension<AdminTemplateEngine>,
     headers: HeaderMap,
 ) -> AdminHtmlResult<Response> {
+    let gateway_url = derive_gateway_url(&headers);
+    let download_base_url = crate::services::bridge_downloads::download_base(&gateway_url);
+    let install_command =
+        crate::services::bridge_downloads::install_command(&gateway_url, None, "claude-code");
     let data = SetupPageData {
-        gateway_url: derive_gateway_url(&headers),
+        install_command,
+        gateway_url,
         user_email: user_ctx.email.to_string(),
-        download_base_url: DOWNLOAD_BASE_URL,
+        download_base_url,
     };
     Ok(render_typed_page(
         &engine,

@@ -61,7 +61,7 @@ async fn a_held_call_is_decided_once_and_the_second_decision_conflicts() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
     seed_pending(&db.pool, CALL_ID).await;
 
@@ -95,7 +95,7 @@ async fn a_project_manager_may_not_decide_a_held_call() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
     let call_id = "contract-approval-pm";
     seed_pending(&db.pool, call_id).await;

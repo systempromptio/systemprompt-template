@@ -52,27 +52,20 @@
 
                 </div>
                 <div class="sp-p-profile__step-heading"><span>3</span><h3>Install and connect</h3></div>
+                {{#unless download_base_url}}<p class="sp-p-profile__lede">Desktop client downloads are not configured. If the bridge is already installed, generate a code and use the sign-in commands below.</p>{{/unless}}
                 <div class="sp-tab-panel" id="connect-panel-claude-code" role="tabpanel" aria-labelledby="connect-tab-claude-code">
                     <div class="sp-p-profile__guide">
                         <p class="sp-p-profile__lede">Installs the bridge and points Claude Code at this gateway. Every prompt is then governed, priced and audited under your account.</p>
                         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/documentation/connect-claude-code">Read the guide</a>
                     </div>
-                    <p class="sp-p-profile__pending" data-connect-pending>Your install command will appear here after you create a connection code.</p>
+                    <p class="sp-p-profile__pending" data-connect-pending>Your sign-in command will appear here after you create a connection code.</p>
                     <p class="sp-p-profile__label">Linux, WSL and macOS terminal</p>
-                    <pre class="sp-connect__cmd"><code data-connect-field="install_command"></code></pre>
+                    {{#if download_base_url}}<pre class="sp-connect__cmd"><code data-connect-field="install_command"></code></pre>{{/if}}
                     <p class="sp-p-profile__lede">Open a new terminal and run <code class="sp-u-mono">claude</code>. Send your first message, then <a href="/admin/history">view your conversation</a> to check that it reached this gateway.</p>
                     <details class="sp-p-profile__advanced"><summary>Already have the bridge? Sign in again</summary>
                     <pre class="sp-connect__cmd"><code data-connect-field="login_command"></code></pre>
                     </details>
-                    <details class="sp-p-profile__advanced">
-                        <summary>Advanced — from a checkout of this repository</summary>
-                        <p class="sp-p-profile__label">Claude Code in a container scoped to this gateway</p>
-                        <pre class="sp-connect__cmd"><code data-connect-field="just_install_command"></code></pre>
-                        <p class="sp-p-profile__label">Configure this host</p>
-                        <pre class="sp-connect__cmd"><code data-connect-field="just_login_command"></code></pre>
-                        <p class="sp-p-profile__label">Bare code</p>
-                        <pre class="sp-connect__cmd"><code data-connect-field="code"></code></pre>
-                    </details>
+
                 </div>
 
                 <div class="sp-tab-panel" id="connect-panel-claude-desktop" role="tabpanel" aria-labelledby="connect-tab-claude-desktop" hidden>
@@ -80,25 +73,25 @@
                         <p class="sp-p-profile__lede">The desktop bridge signs Claude Desktop and Cowork in to this gateway and keeps your skills, plugins and MCP servers in sync.</p>
                         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/documentation/bridge-install">Read the guide</a>
                     </div>
-                    <p class="sp-p-profile__pending" data-connect-pending>Your install command will appear here after you create a connection code.</p>
+                    <p class="sp-p-profile__pending" data-connect-pending>Your sign-in command will appear here after you create a connection code.</p>
                     <p class="sp-p-profile__label">Windows</p>
-                    <ul class="sp-p-profile__downloads">
-                        <li><a href="/files/downloads/systemprompt-bridge-windows.exe">systemprompt-bridge-windows.exe</a><a href="/files/downloads/systemprompt-bridge-windows.exe.sha256">sha256</a></li>
-                    </ul>
+                    {{#if download_base_url}}<ul class="sp-p-profile__downloads">
+                        <li><a href="{{download_base_url}}/systemprompt-bridge-windows.exe">systemprompt-bridge-windows.exe</a><a href="{{download_base_url}}/systemprompt-bridge-windows.exe.sha256">sha256</a></li>
+                    </ul>{{/if}}
                     <p class="sp-p-profile__lede">Run it and paste the code when asked, or from PowerShell in the download folder. SmartScreen may warn on first run; the binary is unsigned.</p>
                     <pre class="sp-connect__cmd"><code data-connect-field="desktop_windows_login_command"></code></pre>
                     <p class="sp-p-profile__label">macOS</p>
-                    <ul class="sp-p-profile__downloads">
-                        <li><a href="/files/downloads/systemprompt-bridge-macos.dmg">systemprompt-bridge-macos.dmg</a><a href="/files/downloads/systemprompt-bridge-macos.dmg.sha256">sha256</a></li>
-                    </ul>
+                    {{#if download_base_url}}<ul class="sp-p-profile__downloads">
+                        <li><a href="{{download_base_url}}/systemprompt-bridge-macos.dmg">systemprompt-bridge-macos.dmg</a><a href="{{download_base_url}}/systemprompt-bridge-macos.dmg.sha256">sha256</a></li>
+                    </ul>{{/if}}
                     <p class="sp-p-profile__lede">Drag Systemprompt Bridge to Applications, launch it and paste the code, or sign in from the terminal.</p>
                     <pre class="sp-connect__cmd"><code data-connect-field="login_command"></code></pre>
                     <p class="sp-p-profile__label">Linux and WSL</p>
-                    <ul class="sp-p-profile__downloads">
-                        <li><a href="/files/downloads/systemprompt-bridge-linux-x86_64.tar.gz">linux x86_64</a><a href="/files/downloads/systemprompt-bridge-linux-x86_64.tar.gz.sha256">sha256</a></li>
-                        <li><a href="/files/downloads/systemprompt-bridge-linux-aarch64.tar.gz">linux aarch64</a><a href="/files/downloads/systemprompt-bridge-linux-aarch64.tar.gz.sha256">sha256</a></li>
-                    </ul>
-                    <pre class="sp-connect__cmd"><code data-connect-field="install_command"></code></pre>
+                    {{#if download_base_url}}<ul class="sp-p-profile__downloads">
+                        <li><a href="{{download_base_url}}/systemprompt-bridge-linux-x86_64.tar.gz">linux x86_64</a><a href="{{download_base_url}}/systemprompt-bridge-linux-x86_64.tar.gz.sha256">sha256</a></li>
+                        <li><a href="{{download_base_url}}/systemprompt-bridge-linux-aarch64.tar.gz">linux aarch64</a><a href="{{download_base_url}}/systemprompt-bridge-linux-aarch64.tar.gz.sha256">sha256</a></li>
+                    </ul>{{/if}}
+                    {{#if download_base_url}}<pre class="sp-connect__cmd"><code data-connect-field="install_command"></code></pre>{{/if}}
                 </div>
 
                 <div class="sp-tab-panel" id="connect-panel-opencode" role="tabpanel" aria-labelledby="connect-tab-opencode" hidden>
@@ -106,9 +99,9 @@
                         <p class="sp-p-profile__lede">Registers a <code class="sp-u-mono">systemprompt</code> provider in OpenCode against the gateway's OpenAI-compatible endpoint, so OpenCode never holds a vendor key.</p>
                         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/documentation/connect-opencode">Read the guide</a>
                     </div>
-                    <p class="sp-p-profile__pending" data-connect-pending>Your install command will appear here after you create a connection code.</p>
+                    <p class="sp-p-profile__pending" data-connect-pending>Your sign-in command will appear here after you create a connection code.</p>
                     <p class="sp-p-profile__label">Fresh install</p>
-                    <pre class="sp-connect__cmd"><code data-connect-field="opencode_install_command"></code></pre>
+                    {{#if download_base_url}}<pre class="sp-connect__cmd"><code data-connect-field="opencode_install_command"></code></pre>{{/if}}
                     <details class="sp-p-profile__advanced"><summary>Already have the bridge? Sign in again</summary>
                     <pre class="sp-connect__cmd"><code data-connect-field="opencode_login_command"></code></pre>
                     </details>
@@ -191,7 +184,7 @@
                         <div class="sp-connection__meta">
                             {{#if account_name}}<span class="sp-u-mono">{{account_name}}</span>{{/if}}
                             {{#if resource_name}}<span>{{resource_name}}</span>{{/if}}
-                            {{#unless entitled}}<span>India Development marketplace access required</span>{{/unless}}
+                            {{#unless entitled}}<span>Connector access must be granted by an administrator</span>{{/unless}}
                         </div>
                     </div>
                     <span class="sp-badge sp-badge--muted sp-connection__status">{{status}}</span>

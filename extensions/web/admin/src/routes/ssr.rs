@@ -52,7 +52,7 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
 }
 
 fn public_routes() -> Router<Arc<PgPool>> {
-    Router::new()
+    let public = Router::new()
         .route("/login", get(handlers::ssr::login_page))
         .route("/register", get(handlers::ssr::register_page))
         .route("/add-passkey", get(handlers::ssr::add_passkey_page))
@@ -68,7 +68,15 @@ fn public_routes() -> Router<Arc<PgPool>> {
         .route(
             "/api/register",
             post(handlers::public_register::public_register_handler),
+        );
+    if handlers::dev_login::dev_login_enabled() {
+        public.route(
+            "/auth/dev/login",
+            get(handlers::dev_login::dev_login_redeem),
         )
+    } else {
+        public
+    }
 }
 
 fn root_routes() -> Router<Arc<PgPool>> {
@@ -77,7 +85,6 @@ fn root_routes() -> Router<Arc<PgPool>> {
 
 fn access_routes() -> Router<Arc<PgPool>> {
     Router::new()
-        .route("/users", get(handlers::ssr::users_page))
         .route("/user", get(handlers::ssr::user_detail_page))
         .route(
             "/departments",
@@ -91,7 +98,6 @@ fn access_routes() -> Router<Arc<PgPool>> {
             "/access-tokens",
             get(handlers::ssr::management_access_tokens_page),
         )
-        .route("/access-control", get(handlers::ssr::access_control_page))
         .route("/tokens/pats", post(handlers::access_tokens::issue_pat))
         .route(
             "/tokens/pats/{id}",
@@ -124,21 +130,6 @@ fn governance_routes() -> Router<Arc<PgPool>> {
 
 fn entity_routes() -> Router<Arc<PgPool>> {
     Router::new()
-        .route("/requests", get(handlers::ssr::analytics_requests_page))
-        .route(
-            "/requests/{request_id}",
-            get(handlers::ssr::governance_audit_detail_page),
-        )
-        .route("/sessions", get(handlers::ssr::sessions_list_page))
-        .route(
-            "/sessions/{session_id}",
-            get(handlers::ssr::session_detail_page),
-        )
-        .route("/traces", get(handlers::ssr::perf_traces_page))
-        .route(
-            "/traces/{trace_id}",
-            get(handlers::ssr::perf_trace_detail_page),
-        )
         .route("/evals", get(handlers::ssr::evals_page))
         .route("/evals/run", post(handlers::ssr::eval_run_action))
         .route(
@@ -148,11 +139,6 @@ fn entity_routes() -> Router<Arc<PgPool>> {
         .route(
             "/evals/runs/{run_id}",
             get(handlers::ssr::eval_run_detail_page),
-        )
-        .route("/contexts", get(handlers::ssr::skills_contexts_page))
-        .route(
-            "/contexts/{context_id}",
-            get(handlers::ssr::context_detail_page),
         )
 }
 

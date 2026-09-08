@@ -62,7 +62,7 @@ wait_health() {
 }
 users() {
     "${compose[@]}" exec -T postgres psql -U systemprompt -d systemprompt -Atc \
-        "SELECT id FROM users ORDER BY id"
+        "SELECT id FROM users WHERE NOT ('anonymous' = ANY(roles)) ORDER BY id"
 }
 set_image "${upgrade_from:-$image}"
 "${compose[@]}" up -d
@@ -76,7 +76,7 @@ INSERT INTO ai_requests
      input_tokens, output_tokens, tokens_used, cost_microdollars, actor_kind, actor_id)
 SELECT 'release-smoke-audit', 'release-smoke-audit', id, 'release-smoke-context', 'release-smoke-trace',
        'anthropic', 'smoke-model', 'completed', 12, 8, 20, 100, 'user', id
-FROM users ORDER BY id LIMIT 1;
+FROM users WHERE NOT ('anonymous' = ANY(roles)) ORDER BY id LIMIT 1;
 SQL
 audit() {
     "${compose[@]}" exec -T postgres psql -U systemprompt -d systemprompt -Atc \
@@ -106,7 +106,7 @@ test -s "$work/index.html"
 "${compose[@]}" exec -T "$app_service" test -s /app/storage/files/admin/templates/layout.hbs || \
     "${compose[@]}" exec -T "$app_service" sh -c 'test -n "$(find /app/storage/files/admin -name "*.hbs" -print -quit)"'
 "${compose[@]}" exec -T "$app_service" test -x /app/bin/systemprompt-mcp-agent
-"${compose[@]}" exec -T "$app_service" test -f /app/extensions/mcp/systemprompt/manifest.yaml
+"${compose[@]}" exec -T "$app_service" sh -c 'test -f /app/extensions/mcp/systemprompt/manifest.yaml'
 "${compose[@]}" up -d --force-recreate --no-deps "$app_service"
 wait_health
 test "$(users)" = "$before_users"

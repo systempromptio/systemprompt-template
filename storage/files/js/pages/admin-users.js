@@ -32,6 +32,11 @@ const createUser = async () => {
     showToast('User ID is required', 'error');
     return;
   }
+  const email = document.getElementById('new-user-email')?.value.trim();
+  if (!email || !document.getElementById('new-user-email').checkValidity()) {
+    showToast('A valid email address is required', 'error');
+    return;
+  }
   const roles = Array.from(
     document.querySelectorAll('#create-user-panel input[name="roles"]:checked'),
     (cb) => cb.value,
@@ -39,7 +44,7 @@ const createUser = async () => {
   const body = {
     user_id: userId,
     display_name: document.getElementById('new-user-name')?.value.trim() || userId,
-    email: document.getElementById('new-user-email')?.value.trim() ?? '',
+    email,
     roles,
   };
   try {

@@ -147,3 +147,9 @@ mod hooks_track_commits_pure;
 
 #[cfg(test)]
 mod dashboard_people;
+
+#[cfg(test)]
+mod dev_login_pure;
+
+#[cfg(test)]
+mod governance_gateway;

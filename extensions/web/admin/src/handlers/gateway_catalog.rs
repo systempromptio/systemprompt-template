@@ -49,17 +49,18 @@ pub(crate) async fn for_user_handler(
     Path(user_id): Path<String>,
 ) -> AdminResult<Response> {
     let user_id = UserId::new(user_id);
-    if !user_ctx.is_admin && user_ctx.user_id != user_id {
+    if !user_ctx.is_console && user_ctx.user_id != user_id {
         return Err(AdminError::Forbidden("Forbidden".to_owned()));
     }
-    let cfg = repositories::config::gateway::get_gateway_config().map_err(AdminError::internal)?;
+    let routes = repositories::config::gateway::client_facing_routes_from_services()
+        .map_err(AdminError::internal)?;
 
     let (user_roles, _department) =
         repositories::users::queries::find_user_roles_department(&pool, &user_id)
             .await?
             .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
 
-    let routes = collect_allowed_routes(&pool, &cfg.routes, &user_id, &user_roles).await?;
+    let routes = collect_allowed_routes(&pool, &routes, &user_id, &user_roles).await?;
     Ok(Json(CatalogResponse { user_id, routes }).into_response())
 }
 
@@ -131,8 +132,9 @@ pub(crate) async fn detect_handler(
     if !user_ctx.is_admin {
         return Err(AdminError::Forbidden("Admin only".to_owned()));
     }
-    let cfg = repositories::config::gateway::get_gateway_config().map_err(AdminError::internal)?;
-    let emitted = detect_after_the_fact(&pool, &cfg.routes, query.since_minutes).await?;
+    let routes = repositories::config::gateway::dispatchable_routes_from_services()
+        .map_err(AdminError::internal)?;
+    let emitted = detect_after_the_fact(&pool, &routes, query.since_minutes).await?;
     Ok(Json(DetectResponse {
         emitted,
         since_minutes: query.since_minutes,

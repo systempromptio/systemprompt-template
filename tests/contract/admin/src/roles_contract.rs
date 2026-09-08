@@ -38,7 +38,7 @@ async fn an_admin_reads_the_two_halves_of_a_role_set() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
     let target = seed_user(&db.pool, "reader", &["user"]).await;
 
@@ -59,8 +59,8 @@ async fn an_admin_reads_the_two_halves_of_a_role_set() {
     );
     assert_eq!(
         json["directory_roles"],
-        serde_json::json!(["user"]),
-        "what is held but not manual is the directory's"
+        serde_json::json!([]),
+        "local roles are not inferred to belong to a directory"
     );
     db.cleanup().await;
 }
@@ -73,7 +73,7 @@ async fn an_admin_may_grant_an_ordinary_role() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
     let target = seed_user(&db.pool, "grantee", &["user"]).await;
 
@@ -91,23 +91,23 @@ async fn an_admin_may_grant_an_ordinary_role() {
     assert_eq!(json["roles"], serde_json::json!(["developer", "user"]));
     assert_eq!(
         json["manual_roles"],
-        serde_json::json!(["developer"]),
-        "only the half that is not the directory's is stored"
+        serde_json::json!(["developer", "user"]),
+        "local grants are recorded as manual roles"
     );
     db.cleanup().await;
 }
 
-// Why: the platform tier exists for exactly this. An `admin` may run the
-// estate; deciding who else may decide is a narrower act.
+// Why: the template admin role retains its existing account-management
+// authority.
 #[tokio::test]
-async fn an_admin_may_not_grant_platform_admin() {
+async fn an_admin_retains_authority_to_grant_platform_admin() {
     if !globals::init() {
         return;
     }
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
     let target = seed_user(&db.pool, "escalating", &["user"]).await;
 
@@ -120,27 +120,31 @@ async fn an_admin_may_not_grant_platform_admin() {
         ))
         .await;
 
-    assert_eq!(status, StatusCode::FORBIDDEN, "body: {body}");
+    assert_eq!(status, StatusCode::OK, "body: {body}");
     let roles: Vec<String> = sqlx::query_scalar("SELECT roles FROM users WHERE id = $1")
         .bind(&target)
         .fetch_one(&*db.pool)
         .await
         .expect("read back");
-    assert_eq!(roles, vec!["user".to_owned()], "the refusal wrote nothing");
+    assert_eq!(
+        roles,
+        vec!["platform_admin".to_owned(), "user".to_owned()],
+        "the grant persisted"
+    );
     db.cleanup().await;
 }
 
-// Why: an unknown role would sit in `users.roles` matching no rule and
-// looking granted.
+// Why: configured entitlements use free-text roles beyond the built-in console
+// tiers.
 #[tokio::test]
-async fn an_unknown_role_is_refused() {
+async fn a_custom_role_is_persisted() {
     if !globals::init() {
         return;
     }
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
     let target = seed_user(&db.pool, "typo", &["user"]).await;
 
@@ -153,8 +157,11 @@ async fn an_unknown_role_is_refused() {
         ))
         .await;
 
-    assert_eq!(status, StatusCode::FORBIDDEN, "body: {body}");
-    assert!(body.contains("supervisor"), "the refusal names it: {body}");
+    assert_eq!(status, StatusCode::OK, "body: {body}");
+    assert!(
+        body.contains("supervisor"),
+        "the saved account retains the custom role: {body}"
+    );
     db.cleanup().await;
 }
 
@@ -168,7 +175,7 @@ async fn a_project_manager_may_read_roles_but_not_set_them() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
     let target = seed_user(&db.pool, "watched", &["user"]).await;
     let path = format!("/api/public/admin/users/{target}/roles");
@@ -196,7 +203,7 @@ async fn an_anonymous_caller_reaches_neither_verb() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let credentials = principal::provision(&db.pool).await;
+    let credentials = principal::provision_dashboard(&db.pool).await;
     let app = App::new(&db.pool, credentials);
     let path = "/api/public/admin/users/anyone/roles";
 
