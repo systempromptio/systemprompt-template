@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH membership AS (\n                 SELECT ug.user_id, ug.group_id AS scope_id\n                   FROM user_groups ug\n                  WHERE $1::TEXT = 'group' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT pm.user_id, pm.project_id AS scope_id\n                   FROM project_members pm\n                  WHERE $1::TEXT = 'project' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT d.user_id, d.primary_group_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'group' AND $2::BOOLEAN\n                    AND d.primary_group_id IS NOT NULL\n                 UNION\n                 SELECT d.user_id, d.primary_project_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'project' AND $2::BOOLEAN\n                    AND d.primary_project_id IS NOT NULL\n             ) SELECT x.server_name AS \"server_name!\",\n                  x.tool_name AS \"tool_name!\",\n                  COUNT(*)::BIGINT AS \"invocations!\",\n                  COUNT(DISTINCT x.user_id)::BIGINT AS \"users!\"\n           FROM membership m\n           JOIN mcp_tool_executions x ON x.user_id = m.user_id\n           WHERE m.scope_id = $3\n             AND x.started_at >= NOW() - make_interval(days => $4)\n           GROUP BY 1, 2\n           ORDER BY 3 DESC, 2\n           LIMIT $5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "server_name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "server_name"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "tool_name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "tool_name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Text",
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "9b702dd2dabb536b43c0a530c82f360bdc8a61bd5d0348cb285038454c3efe57"
+}

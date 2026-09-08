@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            u.id AS \"user_id!: UserId\",\n            acr.entity_id AS \"entity_id!\",\n            acr.access AS \"access!\"\n        FROM users u\n        JOIN access_control_rules acr\n          ON acr.entity_type = 'marketplace'\n         AND acr.rule_type = 'user' AND acr.rule_value = u.id\n        WHERE NOT ('anonymous' = ANY(u.roles))\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "entity_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "entity_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "access!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "access"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "4547682fd64d9bef8f3c64df194615dd69a7565b04124089779aced042e0dde8"
+}

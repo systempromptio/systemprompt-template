@@ -1,0 +1,33 @@
+@layer tokens {
+
+:root {
+    --sp-bg-surface-gradient: var(--sp-bg-surface);
+    --sp-bg-surface-raised-gradient: var(--sp-bg-surface);
+    --sp-bg-card-header: var(--sp-primitive-brand-50);
+    --sp-bg-accent-wash: linear-gradient(135deg, color-mix(in oklch, var(--sp-accent) 6%, var(--sp-primitive-brand-50)) 0%, var(--sp-primitive-brand-50) 100%);
+    --sp-bg-main-gradient: var(--sp-bg-main);
+    --sp-bg-main-accent-tl: none;
+    --sp-bg-main-accent-br: none;
+    --sp-bg-glass: color-mix(in oklch, var(--sp-primitive-white) 78%, transparent);
+    --sp-bg-glass-border: var(--sp-border-subtle);
+    --sp-bg-hero-gradient: var(--sp-bg-surface);
+
+    --sp-scrollbar-width: 6px;
+    --sp-scrollbar-track: transparent;
+    --sp-scrollbar-thumb: var(--sp-warm-300);
+    --sp-scrollbar-thumb-hover: var(--sp-warm-400);
+    --sp-sidebar-control-bg: var(--sp-primitive-brand-200);
+    --sp-sidebar-control-bg-hover: var(--sp-primitive-brand-300);
+    --sp-sidebar-scrollbar-thumb: var(--sp-primitive-brand-300);
+    --sp-sidebar-edge-line: var(--sp-shadow-a04);
+    --sp-sidebar-brand-glow: var(--sp-shadow-a04);
+    --sp-drawer-overlay: color-mix(in oklch, var(--sp-shadow-color) 32%, transparent);
+    --sp-login-glow: var(--sp-accent);
+    --sp-toggle-knob: var(--sp-primitive-white);
+    --sp-shimmer-from: var(--sp-warm-100);
+    --sp-shimmer-via:  var(--sp-warm-50);
+    --sp-shimmer-to:   var(--sp-warm-100);
+
+}
+
+}

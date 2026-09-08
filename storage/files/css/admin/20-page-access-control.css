@@ -1,0 +1,97 @@
+@layer components {
+
+/* Why: the entity id and the subject are what say which rule this is, so the
+   two of them take the slack and every other column is sized to its label. */
+.sp-p-ac__ledger .sp-col-kind { width: 9rem; }
+.sp-p-ac__ledger .sp-col-access { width: 6.5rem; }
+.sp-p-ac__ledger .sp-col-default { width: 7.5rem; }
+.sp-p-ac__ledger .sp-col-why { width: 10rem; }
+
+.sp-ac-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+    margin-bottom: var(--sp-space-3);
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+}
+
+.sp-ac-form-error {
+    margin: 0 0 var(--sp-space-2);
+    color: var(--sp-danger-strong);
+    font-size: var(--sp-text-sm);
+}
+
+.sp-ac-modal-hint {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-ac-dialog {
+    max-width: min(720px, 94vw);
+}
+
+.sp-ac-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-4) var(--sp-space-5);
+    border-bottom: 1px solid var(--sp-border-subtle);
+}
+
+.sp-ac-dialog__header h2 {
+    margin: 0;
+    font-size: var(--sp-text-lg);
+}
+
+.sp-ac-dialog__close {
+    background: none;
+    border: none;
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-lg);
+    line-height: 1;
+    cursor: pointer;
+}
+
+.sp-ac-dialog__body {
+    padding: var(--sp-space-5);
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.sp-ac-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-4) var(--sp-space-5);
+    border-top: 1px solid var(--sp-border-subtle);
+}
+
+/* Why: the layer name is a fixed vocabulary next to free text, so it takes a
+   monospace pill to read as a category rather than part of the sentence. */
+.sp-ac-layer-tag {
+    display: inline-block;
+    padding: 0 var(--sp-space-2);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-surface-raised);
+    color: var(--sp-text-secondary);
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-xs);
+    line-height: var(--sp-leading-normal);
+    white-space: nowrap;
+}
+
+.sp-ac-yaml-pre {
+    margin: 0;
+    padding: var(--sp-space-3);
+    background: var(--sp-bg-surface-raised);
+    border-radius: var(--sp-corners-sm);
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-xs);
+    white-space: pre-wrap;
+    overflow-x: auto;
+}
+
+}

@@ -8,17 +8,19 @@ pub(crate) mod ai_context;
 pub(crate) mod ai_summary;
 pub(crate) mod ai_summary_types;
 mod auth;
+pub(crate) mod commits;
 mod dedup;
 mod description;
 mod entity;
 mod helpers;
+pub(crate) mod loc;
 mod processing;
 pub(crate) mod session_summary;
 
 use crate::error::AdminResult;
 use crate::event_hub::EventHub;
 use crate::repositories::marketplace::webhook;
-use crate::types::webhook::{HookEvent, HookEventPayload, TrackQuery};
+use crate::types::webhook::{HookEventPayload, TrackQuery};
 use auth::extract_and_validate_jwt;
 use axum::Json;
 use axum::extract::{Extension, Query, State};
@@ -47,12 +49,9 @@ pub(crate) async fn handle_hook_track(
         extract_and_validate_jwt(&headers, query.plugin_id.as_ref().map(PluginId::as_str))?;
     tracing::trace!(payload = %helpers::sanitize_metadata(&raw), "Hook track received payload");
     let (payload, warnings) = HookEventPayload::from_value(raw);
-    if matches!(&payload.event, HookEvent::PreToolUse(_)) {
-        return Ok(StatusCode::OK.into_response());
-    }
     log_payload_warnings(&payload, &warnings);
 
-    let was_inserted = insert_hook_event(&pool, &user_id, &plugin_id, &payload).await;
+    let was_inserted = insert_hook_event(&pool, &user_id, &payload).await;
     if !was_inserted {
         tracing::trace!(
             plugin_id = %plugin_id,
@@ -95,6 +94,7 @@ struct DispatchContext<'a> {
 
 async fn dispatch_inserted_event(ctx: &DispatchContext<'_>) {
     let content_bytes = helpers::compute_content_bytes(ctx.payload);
+    let loc_delta = loc::compute_loc_delta(ctx.payload);
     processing::process_inserted_event(&processing::ProcessInsertedEventParams {
         pool: ctx.pool,
         user_id: ctx.user_id,
@@ -103,6 +103,8 @@ async fn dispatch_inserted_event(ctx: &DispatchContext<'_>) {
         tool_name: ctx.payload.tool_name(),
         content_input_bytes: content_bytes.input,
         content_output_bytes: content_bytes.output,
+        loc_added: loc_delta.added,
+        loc_removed: loc_delta.removed,
         payload: ctx.payload,
         event_hub: ctx.event_hub,
         ai_service: ctx.ai_service,
@@ -111,23 +113,18 @@ async fn dispatch_inserted_event(ctx: &DispatchContext<'_>) {
     .await;
 }
 
-async fn insert_hook_event(
-    pool: &PgPool,
-    user_id: &UserId,
-    plugin_id: &str,
-    payload: &HookEventPayload,
-) -> bool {
+async fn insert_hook_event(pool: &PgPool, user_id: &UserId, payload: &HookEventPayload) -> bool {
     let session_id = SessionId::new(payload.session_id());
     let description = description::generate_description(payload);
     let prompt_preview = helpers::generate_prompt_preview(payload);
     let dedup_key = dedup::compute_dedup_key(user_id, &session_id, payload);
     let content_bytes = helpers::compute_content_bytes(payload);
+    let loc_delta = loc::compute_loc_delta(payload);
     let sanitized_metadata = helpers::sanitize_metadata(&payload.raw);
 
     let usage_params = webhook::UsageEventParams {
         user_id,
         session_id: &session_id,
-        plugin_id: Some(plugin_id),
         event_type: payload.event_name(),
         tool_name: payload.tool_name(),
         metadata: &sanitized_metadata,
@@ -137,6 +134,8 @@ async fn insert_hook_event(
         dedup_key: &dedup_key,
         content_input_bytes: content_bytes.input,
         content_output_bytes: content_bytes.output,
+        loc_added: loc_delta.added,
+        loc_removed: loc_delta.removed,
     };
 
     match webhook::insert_plugin_usage_event(pool, &usage_params).await {

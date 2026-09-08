@@ -1,0 +1,46 @@
+@layer components {
+
+.sp-kpi-grid + .sp-toolbar,
+[data-page="contexts"] {
+    margin-bottom: var(--sp-space-4);
+}
+
+[data-page="contexts"] .sp-table__row-detail[hidden] { display: none; }
+
+[data-page="contexts"] .sp-table__row-detail > td {
+    background: var(--sp-bg-surface-raised);
+    padding: 0;
+}
+
+[data-page="contexts"] .sp-table__el--nested {
+    width: 100%;
+    margin: 0;
+    background: transparent;
+    border: none;
+}
+
+[data-page="contexts"] .sp-table__el--nested th {
+    background: transparent;
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--sp-space-2) var(--sp-space-4);
+    border-bottom: 1px solid var(--sp-border-subtle);
+}
+
+[data-page="contexts"] .sp-table__el--nested td {
+    padding: var(--sp-space-2) var(--sp-space-4);
+    border-bottom: 1px dashed var(--sp-border-subtle);
+}
+
+[data-page="contexts"] .sp-table__row-toggle {
+    transition: transform var(--sp-duration-fast);
+}
+
+[data-page="contexts"] .sp-table__row-toggle[aria-expanded="true"] {
+    transform: rotate(180deg);
+}
+
+}

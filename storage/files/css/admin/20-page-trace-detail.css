@@ -1,0 +1,58 @@
+@layer components {
+
+/* Names on the left, one SVG for every bar on the right. The row heights are
+   the SVG's own 22 units, so the label list is spaced to match rather than
+   each row carrying its own track element. */
+.sp-p-trace-detail__chart {
+    display: grid;
+    grid-template-columns: minmax(8rem, 16rem) 1fr;
+    gap: var(--sp-space-3);
+    align-items: start;
+    margin-top: var(--sp-space-3);
+}
+
+.sp-p-trace-detail__names {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sp-p-trace-detail__names .sp-waterfall__name {
+    block-size: 22px;
+    line-height: 22px;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.sp-p-trace-detail__svg {
+    inline-size: 100%;
+    /* Height comes from the markup, one viewBox unit per pixel, so the bars
+       line up with the label list beside them at any width. */
+    display: block;
+}
+
+.sp-p-trace-detail__grid line {
+    stroke: var(--sp-border-subtle);
+    stroke-width: 1;
+}
+
+.sp-p-trace-detail__bar { cursor: pointer; fill: var(--sp-warm-500); }
+.sp-p-trace-detail__bar--gateway    { fill: var(--sp-chart-blue); }
+.sp-p-trace-detail__bar--governance { fill: var(--sp-chart-amber); }
+.sp-p-trace-detail__bar--tool       { fill: var(--sp-chart-green); }
+.sp-p-trace-detail__bar--model      { fill: var(--sp-chart-purple); }
+.sp-p-trace-detail__bar--spawn      { fill: var(--sp-chart-indigo); }
+.sp-p-trace-detail__bar.is-deny { fill: var(--sp-danger); }
+
+.sp-p-trace-detail__axis {
+    display: flex;
+    justify-content: space-between;
+    list-style: none;
+    margin: var(--sp-space-1) 0 0;
+    padding: 0;
+    grid-column: 2;
+    font-size: var(--sp-text-2xs);
+    color: var(--sp-text-tertiary);
+}
+
+}

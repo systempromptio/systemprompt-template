@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COALESCE(r.provider, 'unrouted') AS \"provider!\",\n            COALESCE(r.model, 'unrouted') AS \"model!\",\n            COUNT(*)::BIGINT AS \"requests!\",\n            COALESCE(SUM(r.input_tokens), 0)::BIGINT AS \"input_tokens!\",\n            COALESCE(SUM(r.output_tokens), 0)::BIGINT AS \"output_tokens!\",\n            COALESCE(SUM(r.cache_read_tokens), 0)::BIGINT AS \"cache_read_tokens!\",\n            COALESCE(SUM(r.reasoning_tokens), 0)::BIGINT AS \"reasoning_tokens!\",\n            COALESCE(SUM(r.tokens_used), 0)::BIGINT AS \"total_tokens!\"\n        FROM ai_requests r\n        WHERE NOT r.synthetic\n          AND r.created_at >= $1 AND r.created_at < $2\n          AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))\n        GROUP BY 1, 2\n        ORDER BY COALESCE(SUM(r.tokens_used), 0) DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "provider!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "model!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "cache_read_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "reasoning_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "total_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "541ef8be59e837cc6929c1eb9b88f28e8d54b51cf993e7273b0ebd3aee01f205"
+}

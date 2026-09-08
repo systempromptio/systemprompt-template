@@ -1,0 +1,88 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+
+    {{#> components/page-header title=title subtitle=subtitle}}
+      {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance">Decisions</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/secrets">Secrets audit</a>
+      {{/inline}}
+    {{/components/page-header}}
+
+    <section class="sp-kpi-grid" aria-label="Approval queue summary">
+      {{#each kpis}}
+        {{> components/kpi label=this.label value=this.value note=this.sub
+            tone=this.tone href=this.href active=this.active hint=this.hint}}
+      {{/each}}
+    </section>
+
+    {{> components/tabs tabs=tabs nav_label="Approval statuses"}}
+
+    {{#> components/section title="Queue" count=row_count}}{{/components/section}}
+
+    <form class="sp-toolbar" method="get" action="{{base_url}}">
+      <label class="sp-toolbar__filter">
+        <span class="sp-toolbar__filter-label">Status</span>
+        <select class="sp-filter-select" name="status">
+          {{#each statuses}}<option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>{{/each}}
+        </select>
+      </label>
+      <div class="sp-toolbar__actions">
+        <button type="submit" class="sp-btn sp-btn--sm sp-btn--outline">Apply</button>
+      </div>
+    </form>
+
+    {{#unless can_decide}}
+      {{> components/notice tone="info" title="Read only"
+          message="Deciding a held call needs the admin role. You can read the queue and see who decided what."}}
+    {{/unless}}
+
+    {{#> components/table caption="Held tool calls" pagination=pagination modifier="sp-t-approvals"}}
+      <thead><tr>
+        <th class="sp-col-date">Requested</th>
+        <th class="sp-col-duration">Waiting</th>
+        <th class="sp-col-status">Status</th>
+        <th class="sp-col-text">Tool</th>
+        <th class="sp-col-text">Rule</th>
+        <th class="sp-col-identity">Requested by</th>
+        <th class="sp-col-multiline">Arguments</th>
+        <th class="sp-col-text">Decided by</th>
+        <th class="sp-table__cell--actions">Decision</th>
+      </tr></thead>
+      <tbody>
+      {{#each rows}}
+        <tr data-call-id="{{this.call_id}}">
+          <td class="sp-table__cell--date">{{this.created_at}}</td>
+          <td class="sp-table__cell--num">{{this.age}}</td>
+          <td>{{> components/badge tone=this.tone text=this.status}}</td>
+          <td>{{this.tool_name}}</td>
+          <td class="sp-table__cell--muted" title="{{this.server_name}} · {{this.rule}}"><code class="sp-code-inline">{{this.rule}}</code></td>
+          <td class="sp-table__cell--mono sp-p-approvals__who"><a class="sp-table__link" href="{{this.user_url}}">{{this.requested_by}}</a></td>
+          <td class="sp-p-approvals__args" title="{{this.arguments_full}}"><code class="sp-code-inline">{{this.arguments}}</code></td>
+          <td class="sp-table__cell--muted">{{this.decided_by}}</td>
+          <td class="sp-table__cell--actions">
+            {{#if this.actionable}}{{#if ../can_decide}}
+              <button type="button" class="sp-btn sp-btn--xs sp-btn--primary"
+                      data-action="approve" data-call-id="{{this.call_id}}"
+                      data-tool="{{this.tool_name}}">Approve</button>
+              <button type="button" class="sp-btn sp-btn--xs sp-btn--outline-danger"
+                      data-action="deny" data-call-id="{{this.call_id}}"
+                      data-tool="{{this.tool_name}}">Deny</button>
+            {{/if}}{{/if}}
+            {{#if this.trace_url}}<a class="sp-btn sp-btn--xs sp-btn--outline" href="{{this.trace_url}}">Trace</a>{{/if}}
+          </td>
+        </tr>
+      {{/each}}
+      {{#unless has_rows}}
+        <tr class="sp-table__empty"><td colspan="9">
+          {{> components/empty-state title="Nothing is waiting"
+              message="No tool call is currently held for a human decision under this filter."}}
+        </td></tr>
+      {{/unless}}
+      </tbody>
+    {{/components/table}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-approvals.js"></script>
+    {{/inline}}
+{{/layout}}

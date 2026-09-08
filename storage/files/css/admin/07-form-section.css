@@ -1,0 +1,90 @@
+@layer components {
+
+/* An edit form as one surface: heading, fields, and the button that saves them
+   inside the same card. The footer carries no divider and no extra margin, so
+   the CTA sits with the fields it acts on rather than a screen-height below. */
+
+.sp-form-section {
+    padding: var(--sp-space-4);
+    background: var(--sp-bg-surface);
+    border-radius: var(--sp-corners-md);
+    box-shadow: var(--sp-shadow-card);
+}
+
+.sp-form-section > .sp-section__head { margin-top: 0; }
+
+.sp-form-section__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-4);
+}
+
+.sp-form-section__body .sp-notice { margin-bottom: 0; }
+
+.sp-form-section__foot {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--sp-space-3);
+    margin-top: var(--sp-space-4);
+}
+
+.sp-form-section__group-label {
+    margin: 0;
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    color: var(--sp-text-secondary);
+}
+
+/* A choice is a checkbox wearing a chip. The state is read from the input, so
+   there is no JavaScript to keep in step with it and the keyboard path is the
+   native one. */
+.sp-choice-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-2);
+}
+
+.sp-choice {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-1) var(--sp-space-3);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-surface-raised);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: border-color var(--sp-duration-fast), background var(--sp-duration-fast);
+}
+
+.sp-choice input { margin: 0; }
+
+.sp-choice:hover {
+    color: var(--sp-text-primary);
+    border-color: var(--sp-border-strong);
+}
+
+.sp-choice:has(input:checked) {
+    background: var(--sp-accent-dim);
+    border-color: var(--sp-accent);
+    color: var(--sp-accent-text);
+    font-weight: 600;
+}
+
+.sp-choice:has(input:disabled) {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.sp-choice:has(input:focus-visible) {
+    box-shadow: 0 0 0 2px var(--sp-bg-canvas), 0 0 0 4px color-mix(in oklch, var(--sp-accent) 50%, transparent);
+}
+
+.sp-choice .sp-badge { margin-left: var(--sp-space-1); }
+
+}

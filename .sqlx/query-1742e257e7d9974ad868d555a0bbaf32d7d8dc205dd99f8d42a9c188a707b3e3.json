@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT MAX(indexed_at) AS \"latest?\" FROM knowledge_documents",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "latest?",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "1742e257e7d9974ad868d555a0bbaf32d7d8dc205dd99f8d42a9c188a707b3e3"
+}

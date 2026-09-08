@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO project_members (project_id, user_id, source, granted_by)\n         VALUES ($1, $2, 'manual', $3) ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ef7b67fe88280732cbbd9681ca16bca1e42dca12e89efda5646a29763fac2a32"
+}

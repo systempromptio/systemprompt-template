@@ -19,12 +19,13 @@ services:
       retries: 10
 
   app:
-    image: ghcr.io/systempromptio/systemprompt-template:0.42.1
+    image: ghcr.io/systempromptio/systemprompt-template:0.48.0
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     environment:
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?set ADMIN_EMAIL to an address you control}
       DATABASE_URL: postgres://systemprompt:${POSTGRES_PASSWORD}@postgres:5432/systemprompt
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}

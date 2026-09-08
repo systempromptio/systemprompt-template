@@ -1,0 +1,55 @@
+@layer components {
+
+.sp-p-groups__ranges {
+    display: inline-flex;
+    gap: var(--sp-space-1);
+}
+
+.sp-p-groups__ranges .sp-btn.is-active {
+    border-color: var(--sp-accent);
+    background: var(--sp-bg-tertiary);
+    color: var(--sp-text-primary);
+    font-weight: 600;
+}
+
+.sp-p-groups__remainder {
+    border-block-start: 2px solid var(--sp-border-strong);
+    background: var(--sp-bg-tertiary);
+}
+
+.sp-p-groups__note {
+    margin-block: 0 var(--sp-space-3);
+    max-inline-size: 70ch;
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    line-height: 1.6;
+}
+
+.sp-group-panel__label {
+    margin-inline-start: var(--sp-space-2);
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+}
+
+@layer components {
+
+/* Why: the group name is the label every row is found by, so it gets the width
+   first and the numeric columns take what they need and no more. Without this
+   the browser shared the width evenly across ten columns and truncated every
+   primary label to fit two-digit counts. */
+.sp-t-groups th:first-child,
+.sp-t-groups td:first-child {
+    inline-size: 24%;
+}
+
+.sp-t-groups .sp-table__cell--num {
+    inline-size: 1%;
+    white-space: nowrap;
+}
+
+}

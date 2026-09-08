@@ -1,0 +1,35 @@
+@layer components {
+
+/* A title is a whole first prompt when nothing better was recorded: one
+   line, with the rest readable on hover, or it takes the row to 157px. */
+.sp-p-contexts__title {
+    display: inline-block;
+    max-inline-size: 26rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+
+.sp-p-contexts__models {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1);
+    max-inline-size: 16rem;
+}
+
+.sp-p-contexts__table td { white-space: nowrap; }
+
+.sp-p-contexts__table .sp-col-identity     { min-inline-size: 8rem; }
+.sp-p-contexts__table .sp-col-conversation { min-inline-size: 14rem; }
+.sp-p-contexts__table .sp-col-model        { min-inline-size: 8rem; }
+.sp-p-contexts__table .sp-col-date         { min-inline-size: 7rem; }
+
+.sp-p-contexts__table th.sp-table__cell--num,
+.sp-p-contexts__table td.sp-table__cell--num { min-inline-size: 4.5rem; }
+
+@media (max-width: 1200px) {
+    .sp-p-contexts__title { max-inline-size: 16rem; }
+}
+
+}

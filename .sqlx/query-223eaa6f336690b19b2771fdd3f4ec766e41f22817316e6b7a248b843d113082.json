@@ -1,0 +1,118 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH membership AS (\n                 SELECT ug.user_id, ug.group_id AS scope_id\n                   FROM user_groups ug\n                  WHERE $1::TEXT = 'group' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT pm.user_id, pm.project_id AS scope_id\n                   FROM project_members pm\n                  WHERE $1::TEXT = 'project' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT d.user_id, d.primary_group_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'group' AND $2::BOOLEAN\n                    AND d.primary_group_id IS NOT NULL\n                 UNION\n                 SELECT d.user_id, d.primary_project_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'project' AND $2::BOOLEAN\n                    AND d.primary_project_id IS NOT NULL\n             ) SELECT p.id AS \"id!\",\n                  p.name AS \"name!\",\n                  p.description AS \"description?\",\n                  (SELECT COUNT(DISTINCT pm.user_id) FROM project_members pm\n                    WHERE pm.project_id = p.id)::BIGINT AS \"member_count!\",\n                  (SELECT COUNT(DISTINCT ug.group_id)\n                     FROM project_members pm\n                     JOIN user_groups ug ON ug.user_id = pm.user_id\n                    WHERE pm.project_id = p.id)::BIGINT AS \"group_count!\",\n                  (SELECT COUNT(DISTINCT m.user_id) FROM membership m\n                    WHERE m.scope_id = p.id)::BIGINT AS \"attributed_members!\",\n                  COALESCE(r.requests, 0)::BIGINT AS \"requests!\",\n                  COALESCE(r.active_members, 0)::BIGINT AS \"active_members!\",\n                  COALESCE(r.cost_microdollars, 0)::BIGINT AS \"cost_microdollars!\",\n                  COALESCE(t.calls, 0)::BIGINT AS \"tool_calls!\",\n                  COALESCE(t.ok, 0)::BIGINT AS \"tool_success!\",\n                  COALESCE(s.skills, 0)::BIGINT AS \"skills_used!\"\n           FROM projects p\n           LEFT JOIN (\n               SELECT m.scope_id, COUNT(x.id) AS requests,\n                      COUNT(DISTINCT x.user_id) AS active_members,\n                      COALESCE(SUM(x.cost_microdollars), 0) AS cost_microdollars\n               FROM membership m\n               JOIN ai_requests x ON x.user_id = m.user_id\n                AND x.created_at >= NOW() - make_interval(days => $3)\n               GROUP BY m.scope_id\n           ) r ON r.scope_id = p.id\n           LEFT JOIN (\n               SELECT m.scope_id, COUNT(*) AS calls,\n                      COUNT(*) FILTER (WHERE x.status = 'success') AS ok\n               FROM membership m\n               JOIN mcp_tool_executions x ON x.user_id = m.user_id\n                AND x.started_at >= NOW() - make_interval(days => $3)\n               GROUP BY m.scope_id\n           ) t ON t.scope_id = p.id\n           LEFT JOIN (\n               SELECT m.scope_id, COUNT(DISTINCT e.skill) AS skills\n               FROM membership m\n               JOIN skill_invocation_events e ON e.user_id = m.user_id\n                AND e.invoked_at >= NOW() - make_interval(days => $3)\n               WHERE e.skill IS NOT NULL GROUP BY m.scope_id\n           ) s ON s.scope_id = p.id\n           ORDER BY p.name\n           LIMIT $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "projects",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "projects",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "description?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "projects",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "member_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "group_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "attributed_members!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "active_members!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "tool_calls!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "tool_success!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "skills_used!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "223eaa6f336690b19b2771fdd3f4ec766e41f22817316e6b7a248b843d113082"
+}

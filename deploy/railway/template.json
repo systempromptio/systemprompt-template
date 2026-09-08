@@ -1,0 +1,217 @@
+{
+  "buckets": {},
+  "services": {
+    "2a70f96b-701e-48d9-bf2d-46c3572e3282": {
+      "deploy": {
+        "healthcheckPath": "/api/v1/health",
+        "restartPolicyMaxRetries": 10,
+        "restartPolicyType": "ON_FAILURE",
+        "startCommand": null,
+        "healthcheckTimeout": 900
+      },
+      "icon": "https://raw.githubusercontent.com/systempromptio/systemprompt-template/main/storage/files/images/template-icon.svg",
+      "name": "systemprompt.io",
+      "networking": {
+        "serviceDomains": {
+          "<hasDomain>": {}
+        }
+      },
+      "source": {
+        "image": "ghcr.io/systempromptio/systemprompt-template:0.48.0"
+      },
+      "variables": {
+        "ANTHROPIC_API_KEY": {
+          "defaultValue": "",
+          "description": "Your provider API key. Supply at least one of the three provider keys.",
+          "isOptional": true
+        },
+        "DATABASE_URL": {
+          "defaultValue": "${{PostgreSQL.DATABASE_URL}}",
+          "description": "Private PostgreSQL connection; credentials come from the database service.",
+          "isOptional": false
+        },
+        "GEMINI_API_KEY": {
+          "defaultValue": "",
+          "description": "Your provider API key. Supply at least one of the three provider keys.",
+          "isOptional": true
+        },
+        "HOST": {
+          "defaultValue": "::",
+          "description": "IPv6 wildcard listener for Railway networking.",
+          "isOptional": false
+        },
+        "OPENAI_API_KEY": {
+          "defaultValue": "",
+          "description": "Your provider API key. Supply at least one of the three provider keys.",
+          "isOptional": true
+        },
+        "PORT": {
+          "defaultValue": "8080",
+          "description": "Gateway HTTP port used by the public proxy and health check.",
+          "isOptional": false
+        },
+        "RUST_LOG": {
+          "defaultValue": "info",
+          "description": "Server log verbosity; info is recommended.",
+          "isOptional": false
+        },
+        "ADMIN_EMAIL": {
+          "defaultValue": "",
+          "description": "Required: email address you control for the bootstrap administrator.",
+          "isOptional": false
+        },
+        "EXTERNAL_URL": {
+          "defaultValue": "https://${{RAILWAY_PUBLIC_DOMAIN}}",
+          "description": "Public HTTPS origin for sign-in and OAuth callbacks, not database traffic.",
+          "isOptional": false
+        },
+        "SYSTEMPROMPT_DATA_DIR": {
+          "defaultValue": "/app/data",
+          "description": "Persistent profile, signing identity, and uploaded files.",
+          "isOptional": false
+        },
+        "ALLOW_REGISTRATION": {
+          "defaultValue": "false",
+          "description": "Disable public signup; administrators issue passkey enrollment links.",
+          "isOptional": false
+        },
+        "OAUTH_AT_REST_PEPPER": {
+          "defaultValue": "${{secret(64)}}",
+          "description": "Generated secret protecting stored OAuth credentials; retained with the profile.",
+          "isOptional": false
+        },
+        "RAILWAY_RUN_UID": {
+          "defaultValue": "0",
+          "description": "Prepare root-mounted volume ownership; entrypoint then drops to the app user.",
+          "isOptional": false
+        }
+      },
+      "volumeMounts": {
+        "systemprompt-state": {
+          "mountPath": "/app/data"
+        }
+      }
+    },
+    "57718833-4ee8-465b-8642-ffb78a281cbe": {
+      "deploy": {
+        "healthcheckPath": null,
+        "restartPolicyMaxRetries": 10,
+        "restartPolicyType": "ON_FAILURE",
+        "startCommand": null
+      },
+      "haConversionConfig": {
+        "description": "This will convert your Postgres database to an HA cluster with Patroni failover and etcd consensus.",
+        "edge": {
+          "defaultValue": 3,
+          "description": "Routes traffic to the primary",
+          "label": "Reverse Proxy",
+          "nodeLabel": "HAProxy",
+          "options": [
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        "internal": {
+          "defaultValue": 3,
+          "label": "Coordinator Nodes",
+          "nodeLabel": "etcd",
+          "options": [
+            3,
+            5,
+            7,
+            9
+          ]
+        },
+        "replica": {
+          "defaultValue": 2,
+          "description": "Streaming replicas for automatic failover",
+          "label": "Replicas",
+          "nodeLabel": "Postgres",
+          "options": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      },
+      "haTemplateCode": "postgres-ha",
+      "icon": "https://devicons.railway.app/i/postgresql.svg",
+      "name": "PostgreSQL",
+      "source": {
+        "image": "ghcr.io/railwayapp-templates/postgres-ssl:18"
+      },
+      "variables": {
+        "DATABASE_URL": {
+          "defaultValue": "postgresql://${{PGUSER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:5432/${{PGDATABASE}}",
+          "isOptional": false,
+          "description": "Private database connection string for the gateway."
+        },
+        "PGDATA": {
+          "defaultValue": "/var/lib/postgresql/data/pgdata",
+          "description": "PostgreSQL data directory inside the persistent volume.",
+          "isOptional": false
+        },
+        "PGDATABASE": {
+          "defaultValue": "${{POSTGRES_DB}}",
+          "isOptional": false,
+          "description": "PostgreSQL pgdatabase configuration."
+        },
+        "PGHOST": {
+          "defaultValue": "${{RAILWAY_PRIVATE_DOMAIN}}",
+          "isOptional": false,
+          "description": "PostgreSQL pghost configuration."
+        },
+        "PGPASSWORD": {
+          "defaultValue": "${{POSTGRES_PASSWORD}}",
+          "isOptional": false,
+          "description": "PostgreSQL pgpassword configuration."
+        },
+        "PGPORT": {
+          "defaultValue": "5432",
+          "description": "PostgreSQL pgport configuration.",
+          "isOptional": false
+        },
+        "PGUSER": {
+          "defaultValue": "${{POSTGRES_USER}}",
+          "isOptional": false,
+          "description": "PostgreSQL pguser configuration."
+        },
+        "POSTGRES_DB": {
+          "defaultValue": "systemprompt",
+          "description": "PostgreSQL postgres db configuration.",
+          "isOptional": false
+        },
+        "POSTGRES_PASSWORD": {
+          "defaultValue": "${{ secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\") }}",
+          "isOptional": false,
+          "description": "Unique database password generated for each deployment."
+        },
+        "POSTGRES_USER": {
+          "defaultValue": "systemprompt",
+          "description": "PostgreSQL postgres user configuration.",
+          "isOptional": false
+        },
+        "RAILWAY_DEPLOYMENT_DRAINING_SECONDS": {
+          "defaultValue": "60",
+          "description": "PostgreSQL railway deployment draining seconds configuration.",
+          "isOptional": false
+        },
+        "SSL_CERT_DAYS": {
+          "defaultValue": "820",
+          "description": "PostgreSQL ssl cert days configuration.",
+          "isOptional": false
+        }
+      },
+      "volumeMounts": {
+        "57718833-4ee8-465b-8642-ffb78a281cbe": {
+          "mountPath": "/var/lib/postgresql/data"
+        }
+      }
+    }
+  }
+}

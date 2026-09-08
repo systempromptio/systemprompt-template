@@ -1,0 +1,36 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+
+    <header class="sp-page-header">
+        <div class="sp-page-header__title-group">
+            <h1 class="sp-page-header__title">{{name}}
+                {{#if enabled}}<span class="sp-badge sp-badge--ok">enabled</span>{{else}}<span class="sp-badge sp-badge--muted">disabled</span>{{/if}}
+            </h1>
+            {{#if description}}<p class="sp-page-header__subtitle">{{description}}</p>{{/if}}
+        </div>
+        <div class="sp-page-header__actions">
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{activity_url}}">Who runs this</a>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{matrix_url}}">Access matrix</a>
+        </div>
+    </header>
+
+    <div class="sp-catalog-meta-bar">
+        <code class="sp-code-inline">{{id}}</code>
+        <span class="sp-chip sp-chip--muted">{{assignment_count}} assignment{{#unless (eq assignment_count 1)}}s{{/unless}}</span>
+        <code class="sp-code-inline">{{source_path}}</code>
+    </div>
+
+    <section class="sp-catalog-rel-section">
+        <h2 class="sp-catalog-rel-section__title">Included by plugins <span class="sp-count-pill">{{included_by_count}}</span></h2>
+        {{#if included_by_count}}
+        <ul class="sp-rel-list">
+            {{#each included_by}}
+            <li><a class="sp-rel-link" href="{{url}}"><span class="sp-rel-link__name">{{name}}</span><code class="sp-code-inline">{{id}}</code></a></li>
+            {{/each}}
+        </ul>
+        {{else}}<p class="sp-u-text-tertiary">Not bundled in any plugin. Assign directly through the access matrix.</p>{{/if}}
+    </section>
+    {{/inline}}
+{{/layout}}

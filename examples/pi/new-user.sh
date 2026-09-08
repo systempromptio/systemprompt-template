@@ -163,9 +163,9 @@ echo
 say "Evidence — open these as an admin:"
 echo "    profile + usage   $DASHBOARD_URL/admin/user?id=$NEW_USER_ID"
 echo "    model access      $DASHBOARD_URL/admin/models?user_id=$NEW_USER_ID"
-echo "    this session      $DASHBOARD_URL/admin/entities/sessions/$SESSION_ID"
+echo "    this session      $DASHBOARD_URL/admin/sessions/$SESSION_ID"
 echo "    governed timeline $DASHBOARD_URL/admin/demo/trace?session=$SESSION_ID"
-echo "    all requests      $DASHBOARD_URL/admin/entities/requests"
+echo "    all requests      $DASHBOARD_URL/admin/requests"
 echo
 echo "    Send a prompt of your own and watch it land:"
 echo "      examples/pi/trace.sh \"your prompt here\""

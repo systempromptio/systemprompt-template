@@ -99,7 +99,7 @@ impl Extension for WebExtension {
     }
 
     fn dependencies(&self) -> Vec<&'static str> {
-        vec!["content", "users", "authz"]
+        vec!["content", "users", "authz", "ai"]
     }
 
     fn cross_extension_tables(&self) -> Vec<&'static str> {

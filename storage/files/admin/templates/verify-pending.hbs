@@ -7,47 +7,45 @@
     <title>{{branding.domain}} - Verify Your Email</title>
     <link rel="stylesheet" href="/css/core/fonts.css?v={{css_version}}">
     <link rel="stylesheet" href="/css/admin-bundle.css?v={{css_version}}">
-    <script>(function(){document.documentElement.style.colorScheme='light';})();</script>
 </head>
-<body class="auth-light">
-    <div class="login-container">
-        <div class="card">
-            <div class="login-logo">
-                <img src="/files/images/logo.svg" alt="{{branding.domain}}" height="40" class="logo-light">
-                <img src="/files/images/logo-white.svg" alt="{{branding.domain}}" height="40" class="logo-dark">
+<body class="sp-auth-light">
+    <main class="sp-login-container">
+        <div class="sp-card sp-auth-card">
+            <div class="sp-card__body">
+            <div class="sp-login-logo">
+                <img src="/files/images/logo.svg" alt="{{branding.domain}}" height="40" class="sp-logo-light">
+                <img src="/files/images/logo-white.svg" alt="{{branding.domain}}" height="40" class="sp-logo-dark">
             </div>
-            <p class="login-subtitle">Verify your email</p>
+            <p class="sp-login-subtitle">Verify your email</p>
 
-            <div id="verify-message" class="text-center p-4">
-                <p class="text-base text-primary mb-2">Check your inbox</p>
-                <p class="text-sm text-tertiary mb-4">
+            <div id="verify-message" class="sp-auth-sent">
+                <p class="sp-auth-sent__title">Check your inbox</p>
+                <p class="sp-login-switch">
                     We've sent a verification link to your email address.
-                    Click the link to activate your account.
-                </p>
-                <p class="text-sm text-tertiary mb-4">
-                    The link expires in 24 hours.
+                    Click the link to activate your account. The link expires in 24 hours.
                 </p>
 
-                <div id="resend-success" class="login-error login-error--success" hidden>
+                <div id="resend-success" class="sp-login-error sp-login-error--success" role="status" hidden>
                     Verification email sent!
                 </div>
-                <div id="resend-error" class="login-error" hidden></div>
+                <div id="resend-error" class="sp-login-error" role="alert" hidden></div>
 
-                <div class="form-group">
+                <div class="sp-form-group">
                     <label for="resend-email">Email</label>
-                    <input class="form-input" type="email" id="resend-email" placeholder="you@company.com" required>
+                    <input class="sp-field-input" type="email" id="resend-email" placeholder="you@company.com" required autocomplete="email">
                 </div>
-                <div class="form-actions">
-                    <button type="button" id="resend-btn" class="btn btn-primary w-full">Resend Verification Email</button>
+                <div class="sp-form-actions">
+                    <button type="button" id="resend-btn" class="sp-btn sp-btn--primary sp-u-w-full">Resend verification email</button>
                 </div>
             </div>
 
-            <p class="text-center mt-4 text-tertiary text-sm">
+            <p class="sp-login-switch">
                 <a href="/api/public/auth/session" data-action="resend-verification">Sign out</a>
             </p>
+            </div>
         </div>
-    </div>
+    </main>
 
-    <script data-cfasync="false" type="module" src="/js/pages/admin-verify-pending.js"></script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-verify-pending.js?v={{css_version}}"></script>
 </body>
 </html>

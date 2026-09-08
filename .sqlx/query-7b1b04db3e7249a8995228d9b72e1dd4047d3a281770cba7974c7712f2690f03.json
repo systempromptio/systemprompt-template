@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO services (instance_id, name, module_name, pid, port, status, updated_at)\n             VALUES ($4, $1, 'agent', $2, $3, 'running', CURRENT_TIMESTAMP)\n             ON CONFLICT (instance_id, name) DO UPDATE SET pid = $2, port = $3, status = 'running', heartbeat_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7b1b04db3e7249a8995228d9b72e1dd4047d3a281770cba7974c7712f2690f03"
+}

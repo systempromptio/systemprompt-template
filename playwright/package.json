@@ -1,0 +1,20 @@
+{
+  "name": "enterprise-demo-e2e",
+  "private": true,
+  "description": "Playwright e2e suite for the admin console. Needs a running stack: `just start`, then `just e2e`.",
+  "scripts": {
+    "test": "playwright test",
+    "seed": "tsx setup/seed.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
+    "jose": "^5.9.6",
+    "pg": "^8.13.1",
+    "tsx": "^4.19.2",
+    "typescript": "^7.0.2"
+  }
+}

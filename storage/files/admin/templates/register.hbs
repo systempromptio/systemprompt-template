@@ -7,14 +7,13 @@
     <title>{{branding.domain}} Admin - Create Account</title>
     <link rel="stylesheet" href="/css/core/fonts.css?v={{css_version}}">
     <link rel="stylesheet" href="/css/admin-bundle.css?v={{css_version}}">
-    <script>(function(){document.documentElement.style.colorScheme='light';})();</script>
 </head>
-<body class="auth-light">
-    <main class="auth-page">
-        <div class="auth-info">
+<body class="sp-auth-light">
+    <main class="sp-auth-page">
+        <div class="sp-auth-info">
             <div>
-                <div class="auth-badge">Demo Environment</div>
-                <h2>User Registration</h2>
+                <div class="sp-auth-badge">Demo Environment</div>
+                <h2 class="sp-section__title">User registration</h2>
                 <p>
                     This is an open demo environment. Registration creates a real account with a WebAuthn passkey
                     bound to your device. WebAuthn passkeys are the default authentication mechanism &mdash; the library
@@ -22,40 +21,40 @@
                     during implementation. <strong>Emails are not enabled in this demo environment.</strong>
                 </p>
 
-                <details class="auth-more">
+                <details class="sp-auth-more">
                 <summary>How registration works, enterprise SSO, and MCP integration</summary>
-                <hr class="auth-divider">
+                <hr class="sp-auth-divider">
 
-                <h2>How Registration Works</h2>
+                <h2 class="sp-section__title">How registration works</h2>
                 <p>This platform uses <strong>WebAuthn passkeys</strong> for passwordless authentication &mdash; the same
                     standard used by Apple, Google, and Microsoft for phishing-resistant sign-in.</p>
-                <div class="auth-flow-steps">
-                    <div class="auth-flow-step"><span class="step-num">1</span><span>You provide your name, email, and role below</span></div>
-                    <div class="auth-flow-step"><span class="step-num">2</span><span>Your browser generates a public/private key pair bound to this domain. The private key stays on your device (or in your password manager). No passwords are created or stored.</span></div>
-                    <div class="auth-flow-step"><span class="step-num">3</span><span>The server stores only the public key and issues an OAuth 2.0 session token via PKCE</span></div>
-                    <div class="auth-flow-step"><span class="step-num">4</span><span>You are signed in automatically</span></div>
+                <div class="sp-auth-flow-steps">
+                    <div class="sp-auth-flow-step"><span class="sp-step-num">1</span><span>You provide your name, email, and role below</span></div>
+                    <div class="sp-auth-flow-step"><span class="sp-step-num">2</span><span>Your browser generates a public/private key pair bound to this domain. The private key stays on your device (or in your password manager). No passwords are created or stored.</span></div>
+                    <div class="sp-auth-flow-step"><span class="sp-step-num">3</span><span>The server stores only the public key and issues an OAuth 2.0 session token via PKCE</span></div>
+                    <div class="sp-auth-flow-step"><span class="sp-step-num">4</span><span>You are signed in automatically</span></div>
                 </div>
 
-                <hr class="auth-divider">
+                <hr class="sp-auth-divider">
 
-                <h2>Enterprise Integration Options</h2>
-                <p>The library can act as the identity provider using WebAuthn passkeys, or optionally integrate with enterprise identity infrastructure during implementation. There are many options available:</p>
+                <h2 class="sp-section__title">Enterprise integration options</h2>
+                <p>The library can act as the identity provider using WebAuthn passkeys, or optionally integrate with enterprise identity infrastructure during implementation:</p>
 
                 <h3>SAML 2.0 / OpenID Connect</h3>
                 <p>Optionally redirect authentication to your IdP (Okta, Azure AD, Google Workspace). The platform receives a signed assertion with the user's identity and roles.</p>
 
-                <h3>SCIM Directory Sync</h3>
+                <h3>SCIM directory sync</h3>
                 <p>Users and groups can be automatically provisioned and deprovisioned from your corporate directory. When someone joins, they appear here. When they leave, access is revoked immediately.</p>
 
-                <h3>Just-in-Time (JIT) Provisioning</h3>
+                <h3>Just-in-time (JIT) provisioning</h3>
                 <p>On first SSO login, accounts are created automatically with roles derived from IdP group memberships. No pre-provisioning required.</p>
 
                 <h3>Passkeys + SSO</h3>
                 <p>WebAuthn passkeys complement SSO as a device-binding factor, adding phishing-resistant MFA on top of your IdP authentication.</p>
 
-                <hr class="auth-divider">
+                <hr class="sp-auth-divider">
 
-                <h2>MCP Server Integration</h2>
+                <h2 class="sp-section__title">MCP server integration</h2>
                 <p>
                     After registration, users can connect MCP (Model Context Protocol) servers that extend Claude's capabilities
                     with external tools and data sources. MCP servers authenticate via API keys stored in encrypted per-user secrets.
@@ -67,57 +66,59 @@
             </div>
         </div>
 
-        <div class="auth-form-col">
-            <div class="login-container login-container--bare">
-                <div class="card">
-                    <div class="login-logo">
-                        <img src="/files/images/logo.svg" alt="{{branding.domain}}" height="40" class="logo-light">
-                        <img src="/files/images/logo-white.svg" alt="{{branding.domain}}" height="40" class="logo-dark">
+        <div class="sp-auth-form-col">
+            <div class="sp-login-container sp-login-container--bare">
+                <div class="sp-card">
+                    <div class="sp-card__body">
+                    <div class="sp-login-logo">
+                        <img src="/files/images/logo.svg" alt="{{branding.domain}}" height="40" class="sp-logo-light">
+                        <img src="/files/images/logo-white.svg" alt="{{branding.domain}}" height="40" class="sp-logo-dark">
                     </div>
-                    <p class="login-subtitle">Create your account</p>
+                    <p class="sp-login-subtitle">Create your account</p>
 
-                    <div id="error" class="login-error" role="alert" aria-live="polite" hidden></div>
+                    <div id="error" class="sp-login-error" role="alert" aria-live="polite" hidden></div>
 
                     <form id="register-form">
-                        <div class="form-group">
+                        <div class="sp-form-group">
                             <label for="reg-email">Email</label>
-                            <input class="form-input" type="email" id="reg-email" placeholder="you@company.com" required autocomplete="email" aria-describedby="error">
+                            <input class="sp-field-input" type="email" id="reg-email" placeholder="you@company.com" required autocomplete="email" aria-describedby="error">
                         </div>
-                        <div class="form-group">
-                            <label for="reg-name">Full Name</label>
-                            <input class="form-input" type="text" id="reg-name" placeholder="Jane Smith" required autocomplete="name">
+                        <div class="sp-form-group">
+                            <label for="reg-name">Full name</label>
+                            <input class="sp-field-input" type="text" id="reg-name" placeholder="Jane Smith" required autocomplete="name">
                         </div>
-                        <div class="form-group">
+                        <div class="sp-form-group">
                             <label for="reg-role">Role</label>
-                            <select class="form-input" id="reg-role" aria-describedby="reg-role-hint">
+                            <select class="sp-select" id="reg-role" aria-describedby="reg-role-hint">
                                 <option value="user">User</option>
                                 <option value="admin">Admin</option>
                             </select>
-                            <span class="form-hint" id="reg-role-hint">Demo only: pick a role to explore how governance treats it.</span>
+                            <span class="sp-field-hint" id="reg-role-hint">Demo only: pick a role to explore how governance treats it.</span>
                         </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary w-full">Create Account</button>
+                        <div class="sp-form-actions">
+                            <button type="submit" class="sp-btn sp-btn--primary sp-u-w-full">Create account</button>
                         </div>
-                        <p class="form-hint text-center">Your browser will prompt for a passkey (Face ID, fingerprint, or security key).</p>
+                        <p class="sp-login-switch">Your browser will prompt for a passkey (Face ID, fingerprint, or security key).</p>
                     </form>
 
-                    <div id="loading" class="login-loading" hidden aria-live="polite">
-                        <div class="login-spinner" role="status" aria-label="Loading"></div>
+                    <div id="loading" class="sp-login-loading" hidden aria-live="polite">
+                        <div class="sp-login-spinner" role="status" aria-label="Loading"></div>
                         <p id="loading-text">Setting up your account...</p>
                     </div>
 
-                    <div id="retry" class="login-retry" hidden>
+                    <div id="retry" class="sp-login-retry" hidden>
                         <a href="/admin/register">Try again</a>
                     </div>
 
-                    <p class="text-center mt-4 text-tertiary text-sm">
-                        Already have an account? <a href="/admin/login" class="text-accent">Sign in</a>
+                    <p class="sp-login-switch">
+                        Already have an account? <a href="/admin/login">Sign in</a>
                     </p>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <script data-cfasync="false" type="module" src="/js/pages/admin-register.js"></script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-register.js?v={{css_version}}"></script>
 </body>
 </html>

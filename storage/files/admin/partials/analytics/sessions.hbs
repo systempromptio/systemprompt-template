@@ -1,0 +1,53 @@
+{{!--
+  Sessions tab. Every number is the client's own statusline total, not a
+  gateway measurement, and the header says so rather than hiding it in a note.
+--}}
+<section aria-label="Session cost and quality">
+    {{> analytics/kpi-row tiles=sessions.kpis}}
+
+    {{#> components/section title="Sessions" count=sessions.session_count
+        note="Client-reported cost and context-window totals, most expensive first."}}
+      {{#*inline "section_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/sessions">Session log</a>
+      {{/inline}}
+    {{/components/section}}
+
+    {{#if sessions.has_rows}}
+    {{#> components/table caption="Client-reported session cost, tokens and rating"
+         pagination=sessions.pagination}}
+        <thead><tr>
+            <th scope="col">Session</th>
+            <th scope="col">User</th>
+            <th scope="col">Model</th>
+            <th scope="col" class="sp-table__cell--num" aria-sort="descending">Cost</th>
+            <th scope="col" class="sp-table__cell--spark">Share</th>
+            <th scope="col" class="sp-table__cell--num">Context</th>
+            <th scope="col" class="sp-table__cell--num" title="Prompt tokens over completion tokens">Tokens</th>
+            <th scope="col" class="sp-table__cell--num">Rating</th>
+            <th scope="col" class="sp-table__cell--date">Updated</th>
+        </tr></thead>
+        <tbody>
+        {{#each sessions.rows}}
+        <tr>
+            <td class="sp-table__cell--mono sp-table__cell--primary sp-p-analytics__name">
+                <a href="{{this.detail_url}}" title="{{this.session_id}}">{{this.session_short}}</a>
+            </td>
+            <td class="sp-p-analytics__name"><a href="{{this.user_url}}">{{this.user_id}}</a></td>
+            <td class="sp-table__cell--mono">{{this.model_display}}</td>
+            <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+            <td class="sp-table__cell--spark"><span class="sp-p-analytics__bar" style="--v:{{this.share_pct}}%"></span></td>
+            <td class="sp-table__cell--num sp-u-num">{{this.context_display}}</td>
+            <td class="sp-table__cell--num sp-u-num"
+                title="{{this.cache_display}} tokens served from cache">{{this.input_display}} <span class="sp-table__cell--muted">/ {{this.output_display}}</span></td>
+            <td class="sp-table__cell--num sp-u-num"
+                title="{{this.outcome_display}}">{{this.rating_display}}</td>
+            <td class="sp-table__cell--date">{{this.updated_display}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No session snapshots"
+        message="No client reported a session cost in this window. The statusline hook writes these, so an instance with no Claude Code clients attached has none."}}
+    {{/if}}
+</section>

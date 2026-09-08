@@ -5,7 +5,7 @@ name: GHCR prune
 #   - keep the 5 newest release versions (X.Y.Z) — alias tags (:X, :X.Y,
 #     :latest, :edge) point at kept digests and are unaffected
 #   - delete sha-* development tags older than 30 days
-#   - delete untagged manifests older than 30 days (snok v3 protects child
+#   - delete untagged manifests older than 30 days (snok v3.1 protects child
 #     manifests of kept multi-arch tags — do not swap for a naive
 #     delete-package-versions loop, that corrupts manifest lists)
 
@@ -13,7 +13,7 @@ on:
   schedule:
     - cron: "17 4 * * 1" # weekly, Monday 04:17 UTC
   workflow_run:
-    workflows: [Docker]
+    workflows: ["Release (gateway server)"]
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -33,21 +33,18 @@ jobs:
     permissions:
       packages: write
     steps:
-      # snok/container-retention-policy cannot delete org-owned package
-      # versions with the Actions GITHUB_TOKEN — it needs a classic PAT
-      # (read:packages + delete:packages) stored as GHCR_PRUNE_TOKEN.
-      - name: Require GHCR_PRUNE_TOKEN
-        run: |
-          if [ -z "${{ secrets.GHCR_PRUNE_TOKEN }}" ]; then
-            echo "::error::secrets.GHCR_PRUNE_TOKEN is not set (classic PAT with read:packages + delete:packages). See docs/RELEASING.md."
-            exit 1
-          fi
+      # The publishing repository has package admin access. Its short-lived
+      # Actions token avoids an expiring personal cleanup credential.
+      - name: Validate package cleanup access
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api orgs/systempromptio/packages/container/systemprompt-template --silent
 
       - name: Prune old release versions (keep newest 5)
-        uses: snok/container-retention-policy@v3.0.0
+        uses: snok/container-retention-policy@v3.1.0
         with:
           account: systempromptio
-          token: ${{ secrets.GHCR_PRUNE_TOKEN }}
+          token: ${{ github.token }}
           image-names: systemprompt-template
           image-tags: "[0-9]*.[0-9]*.[0-9]*"
           tag-selection: tagged
@@ -56,10 +53,10 @@ jobs:
           dry-run: ${{ inputs.dry_run || false }}
 
       - name: Prune stale sha-* development tags
-        uses: snok/container-retention-policy@v3.0.0
+        uses: snok/container-retention-policy@v3.1.0
         with:
           account: systempromptio
-          token: ${{ secrets.GHCR_PRUNE_TOKEN }}
+          token: ${{ github.token }}
           image-names: systemprompt-template
           image-tags: "sha-*"
           tag-selection: tagged
@@ -67,10 +64,10 @@ jobs:
           dry-run: ${{ inputs.dry_run || false }}
 
       - name: Prune untagged manifests
-        uses: snok/container-retention-policy@v3.0.0
+        uses: snok/container-retention-policy@v3.1.0
         with:
           account: systempromptio
-          token: ${{ secrets.GHCR_PRUNE_TOKEN }}
+          token: ${{ github.token }}
           image-names: systemprompt-template
           tag-selection: untagged
           cut-off: 4w

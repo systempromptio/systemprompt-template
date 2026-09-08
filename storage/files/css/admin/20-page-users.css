@@ -1,0 +1,126 @@
+@layer components {
+
+/* The roster. The table, KPIs and toolbar are shared components; what the page
+   adds is the filter chip row, the search form, and the column discipline that
+   holds every row to one line so a screenful is people rather than padding. */
+
+.sp-p-users__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-space-2);
+}
+
+.sp-p-users__search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-space-2);
+}
+
+/* Every data cell is one line. A wrapped name or a second row of badges is
+   what turns a 32px row into an 80px one, and the full value stays reachable
+   on the cell's title. */
+.sp-p-users__cell {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sp-p-users__identity {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-2);
+  max-width: 100%;
+  color: inherit;
+}
+
+/* 28px of avatar plus the cell's own padding is already past the 36px row
+   the density bar allows, so the roster draws a smaller one. */
+.sp-p-users__identity .sp-avatar {
+  width: var(--sp-space-5);
+  height: var(--sp-space-5);
+  flex-shrink: 0;
+  font-size: var(--sp-text-xs);
+}
+
+.sp-p-users__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Badges sit inline and are clipped by the cell rather than wrapping it. */
+.sp-p-users__chips-cell .sp-badge {
+  margin-inline-end: var(--sp-space-1);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.sp-p-users__chips-cell .sp-badge:last-child { margin-inline-end: 0; }
+
+/* The shell's main element carries `contain: layout style`, which makes it the
+   containing block for fixed descendants. The create-user panel is
+   `position: fixed` and parks itself off-canvas with `translateX(100%)`, so
+   while it is closed it extends the shell's scroll width by its full 640px and
+   the page reports a sideways scroll it does not have. `visibility: hidden`
+   does not remove that; only taking it out of layout does. This page is the
+   only one that renders a side panel, so the rule lives here — the general fix
+   is to stop main containing fixed positioning at all. */
+.sp-side-panel:not(.is-open) { display: none; }
+
+/* A row action is a link, not a button: `sp-btn--sm` is 30px tall, and with
+   the cell's own padding that alone made a 43px row out of 20px content. */
+.sp-p-users__action {
+  display: inline-block;
+  line-height: var(--sp-space-5);
+  font-size: var(--sp-text-xs);
+  font-weight: 600;
+  color: var(--sp-accent-text);
+  white-space: nowrap;
+}
+
+.sp-p-users__select {
+  width: var(--sp-space-8);
+  text-align: center;
+}
+
+/* Percentages summing to 100, so the table fits any width without an inner
+   scrollbar and no column is squeezed to nothing. Widths hang off the column
+   classes the header builder emits, not off nth-child: the select column is
+   only rendered for writers, and an index-based width shifts every column by
+   one the moment it is absent. Roles gets the room a second and third badge
+   need; the name column gave it up, since it was sized past its longest value. */
+.sp-p-users__table { table-layout: fixed; width: 100%; }
+.sp-p-users__table th.sp-p-users__select { width: 3%; }
+.sp-p-users__table th.sp-col-user { width: 17%; }
+.sp-p-users__table th.sp-col-email { width: 14%; }
+.sp-p-users__table th.sp-col-roles { width: 15%; }
+.sp-p-users__table th.sp-col-scope { width: 15%; }
+.sp-p-users__table th.sp-table__cell--date { width: 8%; }
+.sp-p-users__table th.sp-table__cell--num { width: 7%; }
+.sp-p-users__table th.sp-col-status { width: 8%; }
+.sp-p-users__table th.sp-table__cell--actions { width: 6%; }
+
+/* Status and the row action share one inline padding so the last two columns
+   read as a pair rather than a badge adrift from a link. */
+.sp-p-users__table td.sp-col-status,
+.sp-p-users__table td.sp-table__cell--actions {
+  padding-inline: var(--sp-density-cell-x);
+  max-width: none;
+}
+
+.sp-p-users__table td.sp-col-status .sp-badge { overflow: visible; }
+
+}
+
+@layer responsive {
+
+@media (max-width: 768px) {
+  .sp-p-users__search { width: 100%; }
+}
+
+}

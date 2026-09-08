@@ -1,0 +1,119 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH membership AS (\n                 SELECT ug.user_id, ug.group_id AS scope_id\n                   FROM user_groups ug\n                  WHERE $1::TEXT = 'group' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT pm.user_id, pm.project_id AS scope_id\n                   FROM project_members pm\n                  WHERE $1::TEXT = 'project' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT d.user_id, d.primary_group_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'group' AND $2::BOOLEAN\n                    AND d.primary_group_id IS NOT NULL\n                 UNION\n                 SELECT d.user_id, d.primary_project_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'project' AND $2::BOOLEAN\n                    AND d.primary_project_id IS NOT NULL\n             ) , win AS (\n               SELECT w.user_id, w.model\n               FROM ai_requests w\n               WHERE w.created_at >= NOW() - make_interval(days => $3)\n                 AND w.actor_kind = 'user'\n           ), act AS (\n               SELECT m.scope_id, COUNT(DISTINCT w.user_id) AS active_members\n               FROM membership m JOIN win w ON w.user_id = m.user_id\n               GROUP BY 1\n           ), model_rank AS (\n               SELECT t.scope_id, t.model, t.requests,\n                      ROW_NUMBER() OVER (\n                          PARTITION BY t.scope_id ORDER BY t.requests DESC, t.model\n                      ) AS rn\n               FROM (\n                   SELECT m.scope_id, w.model, COUNT(*) AS requests\n                   FROM membership m JOIN win w ON w.user_id = m.user_id\n                   WHERE w.model IS NOT NULL\n                   GROUP BY 1, 2\n               ) t\n           )\n           SELECT g.id AS \"id!\",\n                  g.name AS \"name!\",\n                  g.description,\n                  g.is_system AS \"is_system!\",\n                  g.source AS \"source!\",\n                  COALESCE(mc.member_count, 0)::BIGINT AS \"member_count!\",\n                  COALESCE(pc.project_count, 0)::BIGINT AS \"project_count!\",\n                  COALESCE(act.active_members, 0)::BIGINT AS \"active_members!\",\n                  model_rank.model AS \"top_model?\",\n                  COALESCE(model_rank.requests, 0)::BIGINT AS \"top_model_requests!\"\n           FROM groups g\n           LEFT JOIN (\n               SELECT ug.group_id, COUNT(DISTINCT ug.user_id) AS member_count\n               FROM user_groups ug GROUP BY 1\n           ) mc ON mc.group_id = g.id\n           LEFT JOIN (\n               SELECT ug.group_id, COUNT(DISTINCT pm.project_id) AS project_count\n               FROM user_groups ug\n               JOIN project_members pm ON pm.user_id = ug.user_id\n               GROUP BY 1\n           ) pc ON pc.group_id = g.id\n           LEFT JOIN act ON act.scope_id = g.id\n           LEFT JOIN model_rank ON model_rank.scope_id = g.id AND model_rank.rn = 1\n           ORDER BY g.is_system, g.name\n           LIMIT $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "is_system!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "is_system"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "source!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "source"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "member_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "project_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "active_members!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "top_model?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "top_model_requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      null,
+      null,
+      null,
+      true,
+      null
+    ]
+  },
+  "hash": "c80fc54c326b7bd4d5e40faeef48238821647f19280698ecbcc907fd729e7541"
+}

@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ai_safety_findings (\n                id, ai_request_id, phase, severity, category, scanner, excerpt, blocked, created_at\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "12b6403e2add48c6ce0c4e1680fb6bd70fcef8c9582cf1f70963703bf89ec3ef"
+}

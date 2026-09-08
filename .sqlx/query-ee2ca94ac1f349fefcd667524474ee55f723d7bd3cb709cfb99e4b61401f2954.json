@@ -1,0 +1,60 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH membership AS (\n                 SELECT ug.user_id, ug.group_id AS scope_id\n                   FROM user_groups ug\n                  WHERE $1::TEXT = 'group' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT pm.user_id, pm.project_id AS scope_id\n                   FROM project_members pm\n                  WHERE $1::TEXT = 'project' AND NOT $2::BOOLEAN\n                 UNION\n                 SELECT d.user_id, d.primary_group_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'group' AND $2::BOOLEAN\n                    AND d.primary_group_id IS NOT NULL\n                 UNION\n                 SELECT d.user_id, d.primary_project_id AS scope_id\n                   FROM user_scope_defaults d\n                  WHERE $1::TEXT = 'project' AND $2::BOOLEAN\n                    AND d.primary_project_id IS NOT NULL\n             ) SELECT e.skill AS \"skill!\",\n                  COUNT(*)::BIGINT AS \"invocations!\",\n                  COUNT(DISTINCT e.user_id)::BIGINT AS \"users!\",\n                  (SELECT COUNT(*) FROM skill_ratings sr\n                    JOIN membership m2 ON m2.user_id = sr.user_id\n                   WHERE m2.scope_id = $3 AND sr.skill_name = e.skill)::BIGINT AS \"rating_count!\",\n                  (SELECT AVG(sr.rating)::FLOAT8 FROM skill_ratings sr\n                    JOIN membership m2 ON m2.user_id = sr.user_id\n                   WHERE m2.scope_id = $3 AND sr.skill_name = e.skill) AS \"rating_avg?\"\n           FROM membership m\n           JOIN skill_invocation_events e ON e.user_id = m.user_id\n           WHERE m.scope_id = $3\n             AND e.skill IS NOT NULL\n             AND e.invoked_at >= NOW() - make_interval(days => $4)\n           GROUP BY 1\n           ORDER BY 2 DESC, 1\n           LIMIT $5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "skill!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "skill_invocation_events",
+            "name": "skill"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "rating_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "rating_avg?",
+        "type_info": "Float8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Text",
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "ee2ca94ac1f349fefcd667524474ee55f723d7bd3cb709cfb99e4b61401f2954"
+}

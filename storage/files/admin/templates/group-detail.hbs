@@ -1,0 +1,361 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{> components/page-header title=group_name subtitle=description}}
+
+    {{#if not_found}}
+    {{> components/empty-state message="No group with that identifier."}}
+    {{else}}
+
+    {{#if is_unassigned}}
+    <aside class="sp-unassigned-callout" role="note">
+        <h2 class="sp-unassigned-callout__title">Everyone the directory placed nowhere</h2>
+        <p class="sp-unassigned-callout__body">
+            These accounts hold no group row at all, so they inherit no marketplace and reach
+            only what every user reaches. Assign each one to a group, or add a directory
+            mapping so the next sign-in places them automatically.
+        </p>
+    </aside>
+    {{else}}
+    <section class="sp-kpi-grid" aria-label="Group totals">
+        {{#each stats}}
+        {{> components/kpi label=label value=value note="exclusive attribution"}}
+        {{/each}}
+    </section>
+    {{/if}}
+
+    {{> components/tabs tabs=tabs nav_label="Group views"}}
+
+    {{#if overview}}
+    <section class="sp-group-panel" aria-label="Spend by member">
+        <h2 class="sp-section__title">Spend by member <span class="sp-group-panel__label">member view &mdash; overlaps</span></h2>
+        {{#if overview.leaderboard}}
+        {{#> components/table caption="Members of this group ranked by spend"}}
+            <thead><tr>
+                <th>Member</th>
+                <th>Share of the top spender</th>
+                <th class="sp-table__cell--num">Requests</th>
+                <th class="sp-table__cell--num">Tokens</th>
+                <th class="sp-table__cell--num">Cost</th>
+            </tr></thead>
+            <tbody>
+            {{#each overview.leaderboard}}
+            <tr data-user-id="{{user_id}}">
+                <td><a href="{{href}}" class="sp-u-mono">{{user_id}}</a></td>
+                <td>{{> components/share-bar share_pct=share_pct label=(concat share_pct "% of the top spender")}}</td>
+                <td class="sp-table__cell--num sp-u-num">{{formatNumber requests}}</td>
+                <td class="sp-table__cell--num sp-u-num">{{formatNumber tokens}}</td>
+                <td class="sp-table__cell--num sp-u-num sp-u-mono">{{formatUsd cost_microdollars}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/table}}
+        {{else}}
+        {{> components/empty-state message="No member of this group made a request in the last 30 days."}}
+        {{/if}}
+    </section>
+
+    <section class="sp-group-panel" aria-label="Daily request volume">
+        <h2 class="sp-section__title">Requests, last 30 days <span class="sp-group-panel__label">member view &mdash; overlaps</span></h2>
+        {{> components/svg-line-chart overview.daily_requests}}
+    </section>
+
+    <section class="sp-group-panel" aria-label="Model usage">
+        <h2 class="sp-section__title">Model mix, last 30 days <span class="sp-group-panel__label">member view &mdash; overlaps</span></h2>
+        {{#if overview.models}}
+        {{#> components/table}}
+            <thead><tr>
+                <th>Model</th>
+                <th>Provider</th>
+                <th>Share</th>
+                <th class="sp-u-numeric sp-table__cell--num">Requests</th>
+                <th class="sp-u-numeric sp-table__cell--num">Tokens in</th>
+                <th class="sp-u-numeric sp-table__cell--num">Tokens out</th>
+                <th class="sp-u-numeric sp-table__cell--num">Cost</th>
+            </tr></thead>
+            <tbody>
+            {{#each overview.models}}
+            <tr>
+                <td><code class="sp-code-inline">{{model}}</code></td>
+                <td><span class="sp-badge sp-badge--muted">{{provider}}</span></td>
+                <td>{{> components/share-bar share_pct=share_pct label=(concat share_pct "% of requests")}}</td>
+                <td class="sp-u-numeric">{{formatNumber requests}}</td>
+                <td class="sp-u-numeric">{{formatNumber tokens_in}}</td>
+                <td class="sp-u-numeric">{{formatNumber tokens_out}}</td>
+                <td class="sp-u-numeric">{{formatUsd cost_microdollars}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/table}}
+        {{else}}
+        {{> components/empty-state message="No gateway traffic from this group in the last 30 days."}}
+        {{/if}}
+    </section>
+
+    <div class="sp-group-rankings">
+    <section class="sp-group-panel" aria-label="Top skills">
+        <h2 class="sp-section__title">Top skills <span class="sp-group-panel__label">member view &mdash; overlaps</span></h2>
+        {{#if overview.skills}}
+        <ul class="sp-rank-list">
+            {{#each overview.skills}}
+            <li class="sp-rank-list__item">
+                <span class="sp-rank-list__name">{{name}}</span>
+                {{> components/share-bar share_pct=share_pct label=(concat name " share")}}
+                <span class="sp-rank-list__count">{{formatNumber count}}</span>
+            </li>
+            {{/each}}
+        </ul>
+        {{else}}
+        {{> components/empty-state message="No skill invocations recorded for this group."}}
+        {{/if}}
+    </section>
+
+    <section class="sp-group-panel" aria-label="Top MCP tools">
+        <h2 class="sp-section__title">Top MCP tools <span class="sp-group-panel__label">member view &mdash; overlaps</span></h2>
+        {{#if overview.tools}}
+        <ul class="sp-rank-list">
+            {{#each overview.tools}}
+            <li class="sp-rank-list__item">
+                <span class="sp-rank-list__name">{{name}}</span>
+                {{> components/share-bar share_pct=share_pct label=(concat name " share")}}
+                <span class="sp-rank-list__count">{{formatNumber count}}</span>
+            </li>
+            {{/each}}
+        </ul>
+        {{else}}
+        {{> components/empty-state message="No MCP tool calls recorded for this group."}}
+        {{/if}}
+    </section>
+    </div>
+    {{/if}}
+
+    {{#if members}}
+    <section class="sp-group-panel" aria-label="Members" data-group-id="{{group_id}}">
+        {{#if can_manage}}
+        {{#unless is_unassigned}}
+        <div class="sp-toolbar" role="toolbar" aria-label="Membership actions">
+            <button type="button" class="sp-btn sp-btn--primary" data-action="add-member">+ Add member</button>
+        </div>
+        {{/unless}}
+        {{/if}}
+
+        {{#if members.rows}}
+        {{#> components/table}}
+            <thead><tr>
+                <th>Member</th>
+                <th>Source</th>
+                <th class="sp-col-status">Status</th>
+                <th class="sp-u-numeric sp-table__cell--num">Requests 30d</th>
+                <th class="sp-u-numeric sp-table__cell--num">Tokens 30d</th>
+                <th class="sp-u-numeric sp-table__cell--num">Cost 30d</th>
+                <th class="sp-col-date">Last active</th>
+                <th class="sp-table__cell--actions"></th>
+            </tr></thead>
+            <tbody>
+            {{#each members.rows}}
+            <tr data-user-id="{{user_id}}">
+                <td>
+                    <a href="{{detail_href}}" class="sp-user-cell">
+                        <span class="sp-avatar sp-avatar-sm">{{initials display_name}}</span>
+                        <span class="sp-user-cell-text">
+                            <span class="sp-user-cell-name">{{display_name}}</span>
+                            {{#if email}}<span class="sp-user-cell-email">{{email}}</span>{{/if}}
+                        </span>
+                    </a>
+                </td>
+                <td>
+                    {{#each sources}}{{> components/source-badge this}}{{/each}}
+                    {{#if source_ad_groups}}<span class="sp-u-text-tertiary sp-u-text-xs">{{#each source_ad_groups}}{{this}} {{/each}}</span>{{/if}}
+                </td>
+                <td class="sp-col-status">{{#if is_active}}{{#if (gt requests_30d 0)}}{{> components/badge tone="ok" text="Active"}}{{else}}{{> components/badge tone="muted" text="Idle"}}{{/if}}{{else}}{{> components/badge tone="muted" text="Disabled"}}{{/if}}</td>
+                <td class="sp-u-numeric">{{formatNumber requests_30d}}</td>
+                <td class="sp-u-numeric">{{formatNumber tokens_30d}}</td>
+                <td class="sp-u-numeric">{{formatUsd cost_30d_microdollars}}</td>
+                <td class="sp-col-date">{{#if last_active}}<span title="{{formatDate last_active}}">{{relativeTime last_active}}</span>{{else}}<span class="sp-u-text-tertiary">Never</span>{{/if}}</td>
+                <td class="sp-table__cell--actions sp-member-actions">
+                    {{#if @root.can_manage}}
+                    {{#if @root.is_unassigned}}
+                    <label class="sp-member-actions__label" for="assign-{{user_id}}">Assign to</label>
+                    <select id="assign-{{user_id}}" class="sp-filter-select" data-action="assign-group" data-user-id="{{user_id}}">
+                        {{#each @root.members.assign_targets}}
+                        <option value="{{id}}">{{label}}</option>
+                        {{/each}}
+                    </select>
+                    <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" data-action="assign-submit" data-user-id="{{user_id}}">Assign</button>
+                    {{else}}
+                    {{#if can_remove}}
+                    <button type="button" class="sp-btn sp-btn--outline sp-btn--sm" data-action="remove-member" data-user-id="{{user_id}}">Remove</button>
+                    {{/if}}
+                    {{/if}}
+                    {{/if}}
+                </td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/table}}
+        {{else}}
+        {{> components/empty-state message="No members."}}
+        {{/if}}
+    </section>
+
+    {{#if can_manage}}
+    {{#unless is_unassigned}}
+    <dialog class="sp-dialog" data-dialog="add-member" aria-label="Add member">
+        <form class="sp-dialog-form" method="dialog">
+            <h3 class="sp-section__title">Add member</h3>
+            <label for="add-member-user">Account</label>
+            <select id="add-member-user" class="sp-filter-select" data-field="add-member-user">
+                {{#each members.addable_users}}
+                <option value="{{user_id}}">{{label}}</option>
+                {{/each}}
+            </select>
+            <menu>
+                <button type="button" class="sp-btn sp-btn--outline" data-action="close-add-member">Cancel</button>
+                <button type="button" class="sp-btn sp-btn--primary" data-action="confirm-add-member">Add</button>
+            </menu>
+        </form>
+    </dialog>
+    {{/unless}}
+    {{/if}}
+    {{/if}}
+
+    {{#if marketplaces}}
+    <section class="sp-group-panel" aria-label="Marketplaces" data-group-id="{{group_id}}">
+        <p class="sp-group-panel__note">
+            A marketplace a group reaches is an access-control rule on the marketplace entity keyed by
+            this group, not a membership. Assigning one here writes that rule; unassigning deletes it and
+            leaves the marketplace's own default for the rest of the estate untouched.
+        </p>
+        {{#if can_manage}}
+        <div class="sp-toolbar" role="toolbar" aria-label="Marketplace actions">
+            <span class="sp-toolbar__count">Tick a marketplace to entitle this group to it</span>
+            <div class="sp-toolbar__actions">
+                <button type="button" class="sp-btn sp-btn--primary sp-btn--sm" data-action="save-marketplaces">Save entitlement</button>
+            </div>
+        </div>
+        {{/if}}
+        {{#> components/table caption="Marketplaces this group is entitled to"}}
+            <thead><tr>
+                <th class="sp-table__cell--actions">Assigned</th>
+                <th>Marketplace</th>
+                <th>Description</th>
+            </tr></thead>
+            <tbody>
+            {{#each marketplaces}}
+            <tr data-marketplace-id="{{id}}">
+                <td class="sp-table__cell--actions">
+                    <input type="checkbox" id="mkt-{{id}}" data-field="marketplace" value="{{id}}"
+                           {{#if assigned}}checked{{/if}}{{#unless @root.can_manage}} disabled{{/unless}}>
+                    <label class="sp-u-sr-only" for="mkt-{{id}}">Assign {{name}} to this group</label>
+                </td>
+                <td><a href="/admin/marketplaces/{{id}}">{{name}}</a> <code class="sp-u-mono">{{id}}</code></td>
+                <td>{{truncate description 120}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/table}}
+    </section>
+    {{/if}}
+
+    {{#if (eq active_tab "access")}}
+    <section class="sp-group-panel" aria-label="Effective access" data-group-id="{{group_id}}">
+        <p class="sp-group-panel__note">
+            Every entity resolved for a subject holding only this group's membership, through the
+            same resolver the enforcement point calls. <strong>Inherit</strong> means this group
+            holds no rule of its own and the cell is whatever the wider bands decided.
+        </p>
+        {{#each access}}
+        <h2 class="sp-section__title">{{label}}</h2>
+        {{#> components/table}}
+            <thead><tr>
+                <th>Entity</th>
+                <th class="sp-col-status">Effective</th>
+                <th>Decided by</th>
+                <th class="sp-table__cell--actions">This group</th>
+            </tr></thead>
+            <tbody>
+            {{#each rows}}
+            <tr data-entity-type="{{entity_type}}" data-entity-id="{{entity_id}}">
+                <td>{{entity_name}}</td>
+                <td class="sp-col-status"><span class="sp-badge sp-badge-{{#if (eq effective "allow")}}is-success{{else}}is-danger{{/if}}">{{effective}}</span></td>
+                <td><span class="sp-access-layer">{{layer}}</span> <span class="sp-u-text-tertiary sp-u-text-xs">{{detail}}</span></td>
+                <td class="sp-table__cell--actions">
+                    <select class="sp-filter-select" data-action="set-group-rule" data-entity-type="{{entity_type}}" data-entity-id="{{entity_id}}" aria-label="Rule for {{entity_name}}"{{#unless @root.can_manage}} disabled{{/unless}}>
+                        <option value="inherit"{{#if (eq state "inherit")}} selected{{/if}}>Inherit</option>
+                        <option value="allow"{{#if (eq state "allow")}} selected{{/if}}>Allow</option>
+                        <option value="deny"{{#if (eq state "deny")}} selected{{/if}}>Deny</option>
+                    </select>
+                </td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/table}}
+        {{/each}}
+    </section>
+    {{/if}}
+
+    {{#if (eq active_tab "projects")}}
+    <section class="sp-group-panel" aria-label="Projects">
+        {{#if projects}}
+        {{#> components/table}}
+            <thead><tr><th>Project</th><th class="sp-u-numeric sp-table__cell--num">Members from this group</th></tr></thead>
+            <tbody>
+            {{#each projects}}
+            <tr data-project-id="{{id}}">
+                <td><a href="{{href}}">{{name}}</a></td>
+                <td class="sp-u-numeric">{{member_count}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/table}}
+        {{else}}
+        {{> components/empty-state message="No members of this group are on a project."}}
+        {{/if}}
+    </section>
+    {{/if}}
+
+    {{#if (eq active_tab "mappings")}}
+    <section class="sp-group-panel" aria-label="Directory mappings" data-group-id="{{group_id}}">
+        <p class="sp-group-panel__note">
+            Directory groups that place a signer-in into this group. Membership written this way is
+            replaced at every sign-in, so removing a mapping is what removes the people it brought.
+        </p>
+        {{#if can_map}}
+        <div class="sp-toolbar" role="toolbar" aria-label="Mapping actions">
+            <label class="sp-member-actions__label" for="new-ad-group">Directory group</label>
+            <input type="text" id="new-ad-group" class="sp-search-input" data-field="new-ad-group" placeholder="Example-Team" autocomplete="off">
+            <button type="button" class="sp-btn sp-btn--primary" data-action="add-mapping">Add mapping</button>
+        </div>
+        {{/if}}
+        {{#if mappings}}
+        {{#> components/table}}
+            <thead><tr><th>Directory group</th><th>Source</th><th class="sp-table__cell--actions"></th></tr></thead>
+            <tbody>
+            {{#each mappings}}
+            <tr data-ad-group="{{ad_group}}">
+                <td><code class="sp-code-inline">{{ad_group}}</code></td>
+                <td><span class="sp-badge sp-badge--muted">{{source}}</span></td>
+                <td class="sp-table__cell--actions">
+                    {{#if can_remove}}
+                    <button type="button" class="sp-btn sp-btn--outline sp-btn--sm" data-action="remove-mapping" data-ad-group="{{ad_group}}">Remove</button>
+                    {{/if}}
+                </td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/table}}
+        {{else}}
+        {{> components/empty-state message="No directory group maps into this group."}}
+        {{/if}}
+    </section>
+    {{/if}}
+
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-group-detail.js"></script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-group-access.js"></script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-group-assign.js"></script>
+    <script data-cfasync="false" type="module" src="/js/pages/admin-group-marketplaces.js"></script>
+    {{/inline}}
+{{/layout}}

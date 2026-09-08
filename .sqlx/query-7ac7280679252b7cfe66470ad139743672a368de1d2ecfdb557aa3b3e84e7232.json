@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_drive_files SET extractor_version=$2,extracted_text=NULL,invocation_arn=NULL,output_uri=NULL,status='pending',attempts=0,retry_at=NOW() WHERE source_type=$1 AND extractor_version<>$2 AND NOT removed AND status NOT IN ('folder','shortcut')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7ac7280679252b7cfe66470ad139743672a368de1d2ecfdb557aa3b3e84e7232"
+}

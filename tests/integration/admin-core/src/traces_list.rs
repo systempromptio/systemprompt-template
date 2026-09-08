@@ -8,7 +8,8 @@ use systemprompt_web_admin::repositories::traces::{
 
 use crate::fixtures::{
     DecisionSpec, EventSpec, RequestSpec, insert_decision, insert_event, insert_request,
-    insert_session, insert_user, narrow_window, unclaimed_email, unique,
+    insert_session, insert_user, narrow_window, project_scope, set_project, unclaimed_email,
+    unique,
 };
 use crate::tempdb::TempDb;
 
@@ -378,5 +379,42 @@ async fn list_traces_reports_the_unpaged_total() {
 
     assert_eq!(traces.len(), 1);
     assert_eq!(total, 3);
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn list_traces_filters_by_project() {
+    let Some(db) = TempDb::create().await else {
+        return;
+    };
+    let commerce = insert_user(&db.pool, &unique("user"), &unclaimed_email("commerce")).await;
+    let core = insert_user(&db.pool, &unique("user"), &unclaimed_email("core")).await;
+    set_project(&db.pool, &commerce, Some("commerce")).await;
+    set_project(&db.pool, &core, Some("core")).await;
+    insert_decision(
+        &db.pool,
+        &DecisionSpec::allow(&unique("dec"), &commerce, &unique("session")),
+    )
+    .await;
+    insert_decision(
+        &db.pool,
+        &DecisionSpec::allow(&unique("dec"), &core, &unique("session")),
+    )
+    .await;
+    let scope = project_scope(&db.pool, "commerce").await;
+    let filter = TraceFilter {
+        subject_ids: scope.as_sql(),
+        ..TraceFilter::default()
+    };
+
+    let (traces, total) = list_traces(&db.pool, filter, narrow_window(), page())
+        .await
+        .expect("query succeeds");
+
+    assert_eq!(total, 1);
+    assert_eq!(
+        traces[0].user_id.as_ref().map(|u| u.as_str()),
+        Some(commerce.as_str())
+    );
     db.cleanup().await;
 }

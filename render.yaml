@@ -2,14 +2,26 @@ services:
   - type: web
     name: systemprompt-gateway
     runtime: image
-    plan: free
+    plan: starter
     autoDeploy: false  # button-deployed instances shouldn't redeploy on every push to this repo
     image:
-      # :edge tracks main. Render pulls this once at deploy time, so an instance
+      # :0 tracks published releases. Render pulls once at deploy time, so an instance
       # stays pinned to whatever digest it booted with until it is redeployed.
-      url: ghcr.io/systempromptio/systemprompt-template:edge
+      url: ghcr.io/systempromptio/systemprompt-template:0
     healthCheckPath: /api/v1/health
+    disk:
+      name: systemprompt-state
+      mountPath: /app/data
+      sizeGB: 1
     envVars:
+      - key: SYSTEMPROMPT_DATA_DIR
+        value: /app/data
+      - key: ALLOW_REGISTRATION
+        value: "false"
+      - key: OAUTH_AT_REST_PEPPER
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
       - key: HOST
         value: 0.0.0.0
       - key: PORT
@@ -27,5 +39,7 @@ services:
 
 databases:
   - name: systemprompt-postgres
-    plan: free               # Render's free Postgres tier — 90-day lifespan, auto-deletes after
+    plan: basic-256mb
+    diskSizeGB: 5
+    ipAllowList: []
     postgresMajorVersion: "17"

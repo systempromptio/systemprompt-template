@@ -1,0 +1,21 @@
+{{!--
+  Table shell. The card IS the table, so nothing else wraps it.
+
+    {{#> components/table caption="Governance warnings by policy"}}
+      <thead><tr><th scope="col" aria-sort="none">Policy</th>…</tr></thead>
+      <tbody>…</tbody>
+    {{/components/table}}
+
+  `pagination` on the context (or passed explicitly) renders the footer inside
+  the same card. `modifier` adds one page-specific class to the <table> for
+  column widths.
+--}}
+<div class="sp-table">
+  <div class="sp-table__scroll">
+    <table class="sp-table__el{{#if modifier}} {{modifier}}{{/if}}">
+      {{#if caption}}<caption class="sp-u-sr-only">{{caption}}</caption>{{/if}}
+      {{> @partial-block}}
+    </table>
+  </div>
+  {{#if pagination}}{{> components/pagination pagination}}{{/if}}
+</div>

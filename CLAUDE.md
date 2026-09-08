@@ -105,11 +105,11 @@ per-crate cache regenerated in the core checkout instead.
 just setup-local                                                          # interactive provider pick
 just setup-local <anthropic_key> [openai_key] [gemini_key] [http_port=8080] [pg_port=5432]
 
-# Build (auto-uses live DB if reachable, else SQLX_OFFLINE=true)
+# Build (locked dependencies, SQLX_OFFLINE=true; no database changes)
 just build            # debug
 just build --release  # release
 
-# Lint (workspace, -D warnings, same offline fallback as build)
+# Lint (all workspace targets, locked dependencies, SQLX_OFFLINE=true, -D warnings)
 just clippy
 
 # Regenerate .sqlx/ offline query cache (needs live DB)

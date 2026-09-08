@@ -1,0 +1,41 @@
+{{!--
+  The most-used models board. One row per model the gateway served in the
+  window, ordered by requests, with the share of the window's traffic each one
+  carried. It reads the same rows as the analytics Models tab, so the "All
+  models" button lands on the same figures one click deeper.
+
+  Invoke as: {{> overview/models-board}} (reads `models` from the page context)
+--}}
+<section class="sp-p-overview__board" aria-label="Most used models">
+    {{#> components/section title="Most used models" note=models.summary}}
+        {{#*inline "section_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{models.all_href}}">All models</a>{{/inline}}
+    {{/components/section}}
+    {{#if models.error}}{{> components/notice tone="err" title="Model usage unavailable" message=models.error}}{{/if}}
+    {{#if models.has_rows}}
+    {{#> components/table caption="Most used models"}}
+        <thead><tr>
+            <th scope="col">Model</th>
+            <th scope="col" class="sp-table__cell--num" aria-sort="descending">Requests</th>
+            <th scope="col" class="sp-table__cell--num">Share</th>
+            <th scope="col" class="sp-table__cell--num">Spend</th>
+            <th scope="col" class="sp-table__cell--num" title="Median latency">p50</th>
+        </tr></thead>
+        <tbody>
+        {{#each models.rows}}
+        <tr>
+            <td class="sp-table__cell--primary">
+                <a href="{{this.href}}" title="{{this.model}} · {{this.qualifier_display}}">{{this.name_display}}</a>
+                {{#if this.is_unrouted}} {{> components/badge tone="err" text="REJECTED"}}{{/if}}
+            </td>
+            <td class="sp-table__cell--num sp-u-num">{{this.requests_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.share_display}}</td>
+            <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.p50_display}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No model traffic" message="No gateway request was served in this window."}}
+    {{/if}}
+</section>

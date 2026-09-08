@@ -1,0 +1,118 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT h.user_id AS \"user_id!: UserId\", h.hostname AS \"hostname!\",\n                  l.os AS \"os!\", l.bridge_version AS \"bridge_version!\",\n                  l.started_at AS \"started_at!\",\n                  l.last_heartbeat_at AS \"last_heartbeat_at!\",\n                  h.forwarded_total AS \"forwarded_total!\",\n                  h.tokens_total AS \"tokens_total!\",\n                  h.session_count AS \"session_count!\",\n                  (l.last_heartbeat_at < NOW() - make_interval(days => $1))\n                      AS \"is_stale!\"\n             FROM (SELECT user_id, hostname,\n                          SUM(forwarded_total)::BIGINT AS forwarded_total,\n                          SUM(tokens_in_total + tokens_out_total)::BIGINT AS tokens_total,\n                          COUNT(*) AS session_count\n                     FROM bridge_sessions\n                    WHERE user_id = ANY($2::TEXT[])\n                      AND (NOT $3::BOOLEAN\n                           OR last_heartbeat_at < NOW() - make_interval(days => $1))\n                    GROUP BY user_id, hostname) h\n             JOIN LATERAL (SELECT b.os, b.bridge_version, b.started_at, b.last_heartbeat_at\n                             FROM bridge_sessions b\n                            WHERE b.user_id = h.user_id AND b.hostname = h.hostname\n                            ORDER BY b.last_heartbeat_at DESC\n                            LIMIT 1) l ON TRUE\n            ORDER BY h.user_id, l.last_heartbeat_at DESC, h.hostname",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "bridge_sessions",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "hostname!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "bridge_sessions",
+            "name": "hostname"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "os!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "bridge_sessions",
+            "name": "os"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "bridge_version!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "bridge_sessions",
+            "name": "bridge_version"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "started_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "bridge_sessions",
+            "name": "started_at"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "last_heartbeat_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "bridge_sessions",
+            "name": "last_heartbeat_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "forwarded_total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "tokens_total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "session_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "is_stale!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "TextArray",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "f662a8763dddddf5b9d5d6e0a01f458e122d12c62f6281d5fff92806312fca56"
+}

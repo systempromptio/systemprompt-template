@@ -1,238 +1,196 @@
 {{#> layout title=title page=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
-    {{> components/page-header title=title subtitle="Stateful AI conversations — search by user, drill into the transcript."}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
 
-    <section class="contexts-kpis" aria-label="Context KPIs">
-      {{> components/stat-card label="Contexts" value=(formatNumber kpis.total_contexts)}}
-      {{> components/stat-card label="Users"    value=(formatNumber kpis.active_users)}}
-      {{> components/stat-card label="Requests" value=(formatNumber kpis.total_requests)}}
-      {{> components/stat-card label="Messages" value=(formatNumber kpis.total_messages) subtitle="user prompts + AI responses"}}
-      {{> components/stat-card label="Tokens"   value=(formatNumber kpis.total_tokens)}}
-      {{> components/stat-card label="Cost"     value=(concat "$" kpis.total_cost_usd)}}
+    {{#> components/page-header title=title
+        subtitle="Every conversation on this instance, newest first. Open one to read it."}}
+      {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/sessions">Sessions</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/traces">Traces</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/requests">Requests</a>
+      {{/inline}}
+    {{/components/page-header}}
+
+    <section class="sp-kpi-grid" aria-label="Conversation KPIs">
+      {{> components/kpi label="Conversations" value=(formatNumber kpis.conversations)}}
+      {{> components/kpi label="Users"         value=(formatNumber kpis.users)}}
+      {{> components/kpi label="Turns"         value=(formatNumber kpis.turns) note="human prompts answered"}}
+      {{> components/kpi label="Tool calls"    value=(formatNumber kpis.tool_calls)}}
+      {{> components/kpi label="Tokens"        value=kpis.tokens_display note="in + out"}}
+      {{> components/kpi label="Cost"          value=kpis.cost_display note=(concat "side calls " kpis.side_call_cost_display)}}
     </section>
 
-    <form class="toolbar" role="search" aria-label="Filter contexts" method="get" id="contexts-filter-form">
-        <div class="search-group">
-            <input type="search" class="search-input" name="q"
-                   placeholder="Search contexts, users, IDs..."
-                   value="{{filter.q}}" aria-label="Search contexts">
-        </div>
-
-        <label class="toolbar__field" aria-label="Filter by user">
-            <span class="toolbar__field-label">User</span>
-            <select name="user_id" class="select" data-autosubmit>
+    {{#> components/toolbar toolbar_count=count_label}}
+      {{#*inline "toolbar_filters"}}
+        <form method="get" action="/admin/contexts" role="search" class="sp-toolbar__filter" id="contexts-filter-form">
+            <input type="hidden" name="group" value="{{filter.group}}">
+            <input type="hidden" name="project" value="{{filter.project}}">
+            <input type="hidden" name="view" value="{{filter.view}}" id="contexts-view-input">
+            <label class="sp-u-sr-only" for="contexts-since">Time range</label>
+            <select id="contexts-since" name="since" class="sp-search-input">
+                <option value="24h"{{#if (eq filter.since "24h")}} selected{{/if}}>Last 24 hours</option>
+                <option value="7d"{{#if (eq filter.since "7d")}} selected{{/if}}>Last 7 days</option>
+                <option value="30d"{{#if (eq filter.since "30d")}} selected{{/if}}>Last 30 days</option>
+                <option value="90d"{{#if (eq filter.since "90d")}} selected{{/if}}>Last 90 days</option>
+                <option value="all"{{#if (eq filter.since "all")}} selected{{/if}}>All time</option>
+            </select>
+            <input type="hidden" name="side" value="{{filter.side}}">
+            <label class="sp-u-sr-only" for="contexts-q">Search conversations</label>
+            <input type="search" id="contexts-q" class="sp-search-input" name="q"
+                   placeholder="title, user or id" value="{{filter.q}}">
+            <label class="sp-u-sr-only" for="contexts-user">User</label>
+            <select id="contexts-user" name="user_id" class="sp-search-input">
                 <option value="">All users</option>
                 {{#each users_for_filter}}
-                <option value="{{user_id}}" {{#if (eq user_id ../filter.user_id)}}selected{{/if}}>
-                    {{default display_name user_id}}
-                </option>
+                <option value="{{this.user_id}}"{{#if this.selected}} selected{{/if}}>{{default this.display_name this.user_id}}</option>
                 {{/each}}
             </select>
-        </label>
-
-        <label class="toolbar__field" aria-label="Filter by model">
-            <span class="toolbar__field-label">Model</span>
-            <select name="model" class="select" data-autosubmit>
+            <label class="sp-u-sr-only" for="contexts-model">Model</label>
+            <select id="contexts-model" name="model" class="sp-search-input">
                 <option value="">All models</option>
                 {{#each models}}
-                <option value="{{this}}" {{#if (eq this ../filter.model)}}selected{{/if}}>{{this}}</option>
+                <option value="{{this.model}}"{{#if this.selected}} selected{{/if}}>{{this.model}}</option>
                 {{/each}}
             </select>
-        </label>
+            <button type="submit" class="sp-btn sp-btn--sm">Apply</button>
+        </form>
+      {{/inline}}
+      {{#*inline "toolbar_actions"}}
+        {{#if show_side}}
+          <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{side_toggle_url}}">Hide side calls</a>
+        {{else}}
+          <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{side_toggle_url}}">Show side calls</a>
+        {{/if}}
+        {{> components/scope-filter scope_filter}}
+      {{/inline}}
+    {{/components/toolbar}}
 
-        <div class="time-range-pills" role="radiogroup" aria-label="Time range">
-            <label class="pill {{#unless filter.since}}pill--active{{/unless}}">
-                <input type="radio" name="since" value="" {{#unless filter.since}}checked{{/unless}} data-autosubmit>
-                <span>All time</span>
-            </label>
-            <label class="pill {{#if (eq filter.since '24h')}}pill--active{{/if}}">
-                <input type="radio" name="since" value="24h" {{#if (eq filter.since '24h')}}checked{{/if}} data-autosubmit>
-                <span>24h</span>
-            </label>
-            <label class="pill {{#if (eq filter.since '7d')}}pill--active{{/if}}">
-                <input type="radio" name="since" value="7d" {{#if (eq filter.since '7d')}}checked{{/if}} data-autosubmit>
-                <span>7d</span>
-            </label>
-            <label class="pill {{#if (eq filter.since '30d')}}pill--active{{/if}}">
-                <input type="radio" name="since" value="30d" {{#if (eq filter.since '30d')}}checked{{/if}} data-autosubmit>
-                <span>30d</span>
-            </label>
-        </div>
-
-        <input type="hidden" name="view" value="{{filter.view}}" id="contexts-view-input">
-        <noscript><button type="submit" class="btn btn-primary">Apply</button></noscript>
-    </form>
-
-    <nav class="sp-tabs" role="tablist" aria-label="Context views">
-        <button type="button" role="tab"
-                class="sp-tab {{#if view_is_contexts}}sp-tab--active{{/if}}"
-                data-view="contexts"
-                aria-selected="{{#if view_is_contexts}}true{{else}}false{{/if}}">
-            Contexts
-        </button>
-        <button type="button" role="tab"
-                class="sp-tab {{#if view_is_users}}sp-tab--active{{/if}}"
-                data-view="users"
-                aria-selected="{{#if view_is_users}}true{{else}}false{{/if}}">
-            By user
-        </button>
-    </nav>
+    {{> components/tabs tabs=view_tabs nav_label="Conversation views"}}
 
     {{#if view_is_users}}
-    <section aria-label="Contexts grouped by user" data-page="contexts" data-view="users">
-        {{#if user_summaries}}
-        {{#> components/data-table}}
+    <section aria-label="Conversations grouped by user" data-page="contexts" data-view="users">
+        {{#if has_user_summaries}}
+        {{#> components/table caption="Conversations grouped by user" pagination=pagination modifier="sp-p-contexts__table"}}
             <thead><tr>
-                <th>User</th>
-                <th class="numeric col-numeric">Contexts</th>
-                <th class="numeric col-numeric">Requests</th>
-                <th class="numeric col-numeric">Messages</th>
-                <th class="numeric col-numeric">Tokens</th>
-                <th class="numeric col-numeric">Cost</th>
-                <th>Models</th>
-                <th class="col-date">Last activity</th>
-                <th class="col-actions"></th>
+                <th class="sp-col-identity">User</th>
+                {{> components/sort-header sort_headers.activity}}
+                <th class="sp-col-conversation">Latest conversation</th>
+                <th class="sp-table__cell--num">Conversations</th>
+                {{> components/sort-header sort_headers.turns}}
+                <th class="sp-table__cell--num" title="Cache-warm probes and utility calls">Side calls</th>
+                {{> components/sort-header sort_headers.tokens}}
+                {{> components/sort-header sort_headers.cost}}
+                <th class="sp-col-model">Models</th>
+                <th class="sp-table__cell--actions"><span class="sp-u-sr-only">Expand</span></th>
             </tr></thead>
             <tbody>
             {{#each user_summaries}}
-            <tr class="row-expandable" data-user-id="{{user_id}}">
-                <td>
-                    <a href="/admin/user/?id={{user_id}}" class="user-cell">
-                        <span class="avatar avatar-sm">{{initials (default display_name user_id)}}</span>
-                        <span>{{default display_name user_id}}</span>
+            <tr class="sp-table__row--expand" data-user-id="{{this.user_id}}">
+                <td class="sp-col-identity">
+                    <a href="{{this.user_url}}" class="sp-user-cell" title="{{this.user_id}}">
+                        <span class="sp-avatar sp-avatar-sm" aria-hidden="true">{{initials this.user_label}}</span>
+                        <span>{{this.user_label}}</span>
                     </a>
                 </td>
-                <td class="numeric">{{formatNumber context_count}}</td>
-                <td class="numeric">{{formatNumber request_count}}</td>
-                <td class="numeric">{{formatNumber message_count}}</td>
-                <td class="numeric">{{formatNumber total_tokens}}</td>
-                <td class="numeric">${{cost_usd}}</td>
-                <td>
-                    {{#each models}}<span class="badge badge-blue">{{this}}</span> {{/each}}
+                <td class="sp-col-date sp-table__cell--date" title="{{this.last_at}}">{{#if this.last_relative}}{{this.last_relative}}{{else}}<span class="sp-u-text-tertiary">Never</span>{{/if}}</td>
+                <td class="sp-col-conversation">
+                    {{#if this.latest}}<a href="{{this.latest.detail_url}}" class="sp-u-link-strong sp-p-contexts__title" title="{{this.latest.context_id}}">{{this.latest.conversation_title}}</a>{{else}}<span class="sp-u-text-tertiary">&mdash;</span>{{/if}}
                 </td>
-                <td class="col-date">
-                    {{#if last_activity}}<span title="{{formatDate last_activity}}">{{relativeTime last_activity}}</span>
-                    {{else}}<span class="text-tertiary">Never</span>{{/if}}
-                </td>
-                <td class="col-actions">
-                    <button class="btn-actions-trigger row-expand-toggle"
+                <td class="sp-table__cell--num">{{formatNumber this.conversation_count}}</td>
+                <td class="sp-table__cell--num">{{formatNumber this.turn_count}}</td>
+                <td class="sp-table__cell--num sp-table__cell--muted">{{formatNumber this.side_call_count}}</td>
+                <td class="sp-table__cell--num">{{this.tokens_display}}</td>
+                <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+                <td class="sp-col-model sp-p-contexts__models">{{#each this.models}}<span class="sp-badge sp-badge--info">{{this}}</span> {{/each}}</td>
+                <td class="sp-table__cell--actions">
+                    <button class="sp-btn--actions sp-table__row-toggle"
                             type="button"
                             aria-expanded="false"
-                            aria-controls="user-contexts-{{user_id}}"
-                            aria-label="Show contexts for {{default display_name user_id}}">&#9662;</button>
+                            aria-controls="user-contexts-{{this.user_id}}"
+                            aria-label="Show conversations for {{this.user_label}}">&#9662;</button>
                 </td>
             </tr>
-            <tr class="row-expansion" id="user-contexts-{{user_id}}" hidden>
-                <td colspan="9">
-                    {{#if contexts}}
-                    <table class="data-table data-table--nested">
-                        <thead><tr>
-                            <th>Context</th>
-                            <th class="col-conversation">Conversation</th>
-                            <th>Model</th>
-                            <th class="numeric">Requests</th>
-                            <th class="numeric">Messages</th>
-                            <th class="numeric">Tokens</th>
-                            <th class="numeric">Cost</th>
-                            <th class="col-date">Last activity</th>
-                        </tr></thead>
-                        <tbody>
-                        {{#each contexts}}
-                        <tr>
-                            <td>
-                                <a href="/admin/entities/contexts/{{context_id}}" class="link-strong">
-                                    {{default name context_id}}
-                                </a>
-                            </td>
-                            <td class="col-conversation">
-                                {{#if summary}}<span class="conversation-preview" title="{{summary}}">{{summary}}</span>
-                                {{else}}<span class="text-tertiary">&mdash;</span>{{/if}}
-                            </td>
-                            <td>{{#if model}}<span class="badge badge-blue">{{model}}</span>{{else}}<span class="text-tertiary">&mdash;</span>{{/if}}</td>
-                            <td class="numeric">{{formatNumber request_count}}</td>
-                            <td class="numeric">{{formatNumber message_count}}</td>
-                            <td class="numeric">{{formatNumber total_tokens}}</td>
-                            <td class="numeric">${{cost_usd}}</td>
-                            <td class="col-date">
-                                {{#if last_activity}}<span title="{{formatDate last_activity}}">{{relativeTime last_activity}}</span>
-                                {{else}}<span class="text-tertiary">&mdash;</span>{{/if}}
-                            </td>
-                        </tr>
-                        {{/each}}
-                        </tbody>
-                    </table>
+            <tr class="sp-table__row-detail" id="user-contexts-{{this.user_id}}" hidden>
+                <td colspan="10">
+                    {{#if this.has_conversations}}
+                    <div class="sp-table"><div class="sp-table__scroll">
+                      <table class="sp-table__el sp-table__el--nested">
+                          <thead><tr>
+                              <th class="sp-col-conversation">Conversation</th>
+                              <th class="sp-col-model">Model</th>
+                              <th class="sp-table__cell--num">Turns</th>
+                              <th class="sp-table__cell--num">Tools</th>
+                              <th class="sp-table__cell--num">Cost</th>
+                              <th class="sp-col-date">Last activity</th>
+                          </tr></thead>
+                          <tbody>
+                          {{#each this.conversations}}
+                          <tr>
+                              <td class="sp-col-conversation" title="{{this.context_id}}">
+                                  <a href="{{this.detail_url}}" class="sp-u-link-strong sp-p-contexts__title">{{this.conversation_title}}</a>
+                                  {{#if this.error_count}}<span class="sp-badge sp-badge--err" title="{{this.error_count}} failed request(s)">{{this.error_count}}</span>{{/if}}
+                              </td>
+                              <td class="sp-col-model">{{#if this.model}}<span class="sp-badge sp-badge--info">{{this.model}}</span>{{else}}<span class="sp-u-text-tertiary">&mdash;</span>{{/if}}</td>
+                              <td class="sp-table__cell--num">{{formatNumber this.turn_count}}</td>
+                              <td class="sp-table__cell--num">{{formatNumber this.tool_call_count}}</td>
+                              <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+                              <td class="sp-col-date sp-table__cell--date" title="{{this.last_at}}">{{#if this.last_relative}}{{this.last_relative}}{{else}}&mdash;{{/if}}</td>
+                          </tr>
+                          {{/each}}
+                          </tbody>
+                      </table>
+                    </div></div>
                     {{else}}
-                    <p class="text-tertiary p-3">No contexts in the current filter.</p>
+                    <p class="sp-u-text-tertiary sp-u-p-3">No matching conversation previews.</p>
                     {{/if}}
+                    <p class="sp-u-p-3"><a href="{{this.all_conversations_url}}">View all matching conversations ({{this.conversation_count}})</a></p>
                 </td>
             </tr>
             {{/each}}
             </tbody>
-        {{/components/data-table}}
+        {{/components/table}}
         {{else}}
-        {{> components/empty-state message="No users with conversation contexts match your filters."}}
+        {{> components/empty-state title="No users in scope" message="Nobody under the selected group, project and time range has a conversation. Widen the scope, show side calls, or clear the filters."}}
         {{/if}}
     </section>
-    {{else}}
-    <section aria-label="Contexts list" data-page="contexts" data-view="contexts">
-        {{#if contexts}}
-        {{#> components/data-table}}
+    {{/if}}
+    {{#if view_is_all}}
+    <section aria-label="All conversations" data-page="contexts" data-view="all">
+        {{#if has_conversations}}
+        {{#> components/table caption="Conversations in the current filter" pagination=pagination modifier="sp-p-contexts__table"}}
             <thead><tr>
-                <th>User</th>
-                <th>Context</th>
-                <th class="col-conversation">Conversation</th>
-                <th>Model</th>
-                <th class="numeric col-numeric">Requests</th>
-                <th class="numeric col-numeric">Messages</th>
-                <th class="numeric col-numeric">Tokens</th>
-                <th class="numeric col-numeric">Cost</th>
-                <th class="col-status">Errors</th>
-                <th class="col-date">Last activity</th>
+                <th class="sp-col-conversation">Conversation</th>
+                <th class="sp-col-identity">User</th>
+                <th class="sp-col-model">Model</th>
+                {{> components/sort-header sort_headers.turns}}
+                <th class="sp-table__cell--num" title="Tool calls made across the conversation's turns">Tools</th>
+                {{> components/sort-header sort_headers.tokens}}
+                {{> components/sort-header sort_headers.cost}}
+                {{> components/sort-header sort_headers.activity}}
             </tr></thead>
             <tbody>
-            {{#each contexts}}
-            <tr data-context-id="{{context_id}}"
-                data-user-id="{{user_id}}"
-                data-search-blob="{{toLowerCase (default display_name user_id)}} {{toLowerCase (default name context_id)}}">
-                <td>
-                    {{#if user_id}}
-                    <a href="/admin/user/?id={{user_id}}" class="user-cell">
-                        <span class="avatar avatar-sm">{{initials (default display_name user_id)}}</span>
-                        <span>{{default display_name user_id}}</span>
-                    </a>
-                    {{else}}<span class="text-tertiary">&mdash;</span>{{/if}}
+            {{#each conversations}}
+            <tr data-context-id="{{this.context_id}}" data-user-id="{{this.user_id}}">
+                <td class="sp-col-conversation" title="{{this.context_id}}{{#if this.side_call_count}} · {{this.side_call_count}} side call(s){{/if}}">
+                    <a href="{{this.detail_url}}" class="sp-u-link-strong sp-p-contexts__title">{{this.conversation_title}}</a>
+                    {{#if this.error_count}}<span class="sp-badge sp-badge--err" title="{{this.error_count}} failed request(s)">{{this.error_count}}</span>{{/if}}
                 </td>
-                <td>
-                    <a href="/admin/entities/contexts/{{context_id}}" class="link-strong">
-                        {{default name context_id}}
-                    </a>
-                    {{#unless name}}<div class="text-tertiary text-xs">{{context_id}}</div>{{/unless}}
-                    {{#if is_cli_session}}<span class="badge badge-gray">CLI session</span>{{/if}}
+                <td class="sp-col-identity" title="{{this.user_id}}">
+                    {{#if this.user_url}}<a href="{{this.user_url}}">{{this.user_label}}</a>{{else}}<span class="sp-u-text-tertiary">&mdash;</span>{{/if}}
                 </td>
-                <td class="col-conversation">
-                    {{#if summary}}<span class="conversation-preview" title="{{summary}}">{{summary}}</span>
-                    {{else}}<span class="text-tertiary">&mdash;</span>{{/if}}
-                </td>
-                <td>{{#if model}}<span class="badge badge-blue">{{model}}</span>{{else}}<span class="text-tertiary">&mdash;</span>{{/if}}</td>
-                <td class="numeric">{{formatNumber request_count}}</td>
-                <td class="numeric">{{formatNumber message_count}}</td>
-                <td class="numeric" title="{{formatNumber input_tokens}} in / {{formatNumber output_tokens}} out">{{formatNumber total_tokens}}</td>
-                <td class="numeric">${{cost_usd}}</td>
-                <td class="col-status">
-                    {{#if error_count}}<span class="badge badge-danger">{{error_count}}</span>
-                    {{else}}<span class="text-tertiary">0</span>{{/if}}
-                </td>
-                <td class="col-date">
-                    {{#if last_activity}}<span title="{{formatDate last_activity}}">{{relativeTime last_activity}}</span>
-                    {{else}}<span class="text-tertiary">Never</span>{{/if}}
-                </td>
+                <td class="sp-col-model">{{#if this.model}}<span class="sp-badge sp-badge--info">{{this.model}}</span>{{else}}<span class="sp-u-text-tertiary">&mdash;</span>{{/if}}</td>
+                <td class="sp-table__cell--num">{{formatNumber this.turn_count}}</td>
+                <td class="sp-table__cell--num">{{formatNumber this.tool_call_count}}</td>
+                <td class="sp-table__cell--num" title="{{this.tokens_title}}">{{this.tokens_display}}</td>
+                <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+                <td class="sp-col-date sp-table__cell--date" title="{{this.last_at}}">{{#if this.last_relative}}{{this.last_relative}}{{else}}<span class="sp-u-text-tertiary">Never</span>{{/if}}</td>
             </tr>
             {{/each}}
             </tbody>
-        {{/components/data-table}}
+        {{/components/table}}
         {{else}}
-        {{> components/empty-state message="No conversation contexts match your filters."}}
+        {{> components/empty-state title="No conversations" message="No conversation matches the selected scope and filters. Widen the scope, clear the search, show side calls, or pick a longer time range."}}
         {{/if}}
     </section>
     {{/if}}

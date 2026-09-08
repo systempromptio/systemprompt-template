@@ -1,0 +1,171 @@
+{{!--
+  One conversation, rendered from a `ConversationView`
+  (`handlers::ssr::transcript_view::build_conversation`). Invoke with the
+  view as the context so no partial parameter shadows a field:
+
+    {{> components/conversation conversation}}
+
+  Anchors and <details> only — no JS. The turn rail is a <details> shipped
+  open; the stylesheet hides its summary on wide viewports.
+--}}
+{{#if has_content}}
+{{#if redaction_count}}
+<p class="sp-conversation__redaction" role="status">{{redaction_count}} credential-shaped value(s) masked in this transcript.</p>
+{{/if}}
+<div class="sp-conversation">
+  <details class="sp-conversation__nav" open>
+    <summary class="sp-conversation__nav-summary">Turns ({{turn_count}})</summary>
+    <div class="sp-conversation__nav-heading">Conversation <span>{{turn_count}} turns</span></div>
+    <ol class="sp-conversation__nav-list" aria-label="Turns">
+      {{#each threads}}
+        {{#unless this.is_main}}
+        <li class="sp-conversation__nav-group"><a href="#{{this.anchor}}">Thread {{this.index}}</a></li>
+        {{/unless}}
+        {{#each this.turns}}
+        <li>
+          <a class="sp-conversation__nav-link" href="#{{this.anchor}}">
+            <span class="sp-conversation__nav-num">{{this.number}}</span>
+            <span class="sp-conversation__nav-text">{{this.prompt_short}}</span>
+          </a>
+        </li>
+        {{/each}}
+      {{/each}}
+    </ol>
+  </details>
+
+  <div class="sp-conversation__body">
+    {{#each threads}}
+      {{#unless this.is_main}}
+      <div class="sp-conversation__thread" id="{{this.anchor}}">
+        <span class="sp-conversation__thread-name">Thread {{this.index}}</span>
+        <span>started {{this.started_local}}</span>
+        <span class="sp-conversation__meta-sep" aria-hidden="true">·</span>
+        <span>{{this.request_count}} requests</span>
+        {{#if this.model}}
+        <span class="sp-conversation__meta-sep" aria-hidden="true">·</span>
+        <span class="sp-conversation__meta-model">{{this.model}}</span>
+        {{/if}}
+        <span class="sp-conversation__thread-label" title="{{this.label}}">{{this.label}}</span>
+      </div>
+      {{/unless}}
+
+      {{#if this.system_prompt}}
+      <details class="sp-conversation__system">
+        <summary class="sp-conversation__system-summary">System prompt · {{formatNumber this.system_prompt_chars}} chars</summary>
+        <pre class="sp-code-block">{{this.system_prompt}}</pre>
+      </details>
+      {{/if}}
+
+      {{#each this.turns}}
+      <article class="sp-conversation__turn" id="{{this.anchor}}">
+        <header class="sp-conversation__turn-head">
+          <span class="sp-conversation__turn-num">Turn {{this.number}}</span>
+          <time title="{{this.ts_full}}" datetime="{{this.ts_full}}">{{this.ts_local}}</time>
+          {{#if this.tool_names}}
+          <details class="sp-conversation__activity"><summary>Tools used in this turn</summary><span class="sp-conversation__chips">
+            {{#each this.tool_names}}
+            <span class="sp-conversation__chip">{{this.name}}<span class="sp-conversation__chip-count">{{this.count}}</span></span>
+            {{/each}}
+          </span></details>
+          {{/if}}
+        </header>
+
+        <div class="sp-conversation__prompt sp-conversation__step">
+          <span class="sp-conversation__speaker">You</span>
+          {{#if this.prompt_is_long}}
+          <details class="sp-conversation__more">
+            <summary class="sp-conversation__more-toggle"><span class="sp-conversation__more-label">Show more</span><span class="sp-conversation__less-label">Show less</span></summary>
+          </details>
+          {{/if}}
+          <p class="sp-conversation__prompt-text">{{this.prompt}}</p>
+        </div>
+
+        {{#each this.steps}}
+          {{#if this.is_tool}}
+          <details class="sp-conversation__tool">
+            <summary class="sp-conversation__tool-summary">
+              <span class="sp-conversation__tool-chevron" aria-hidden="true">&rsaquo;</span>
+              <span class="sp-conversation__tool-kind">Tool</span><code class="sp-conversation__tool-name">{{this.tool_name}}</code>
+            </summary>
+            <div class="sp-conversation__tool-body">
+              {{#if this.tool_input_pretty}}
+              <details class="sp-conversation__tool-part" open>
+                <summary>Input</summary>
+                <pre class="sp-code-block">{{this.tool_input_pretty}}</pre>
+              </details>
+              {{/if}}
+              {{#if this.tool_result_pretty}}
+              <details class="sp-conversation__tool-part" open>
+                <summary>Result</summary>
+                <pre class="sp-code-block">{{this.tool_result_pretty}}</pre>
+              </details>
+              {{/if}}
+            </div>
+          </details>
+          {{else}}
+          <div class="sp-conversation__step sp-conversation__step--assistant">
+            <span class="sp-conversation__speaker">Assistant</span>
+            {{#if this.text_is_long}}
+            <details class="sp-conversation__more">
+              <summary class="sp-conversation__more-toggle"><span class="sp-conversation__more-label">Show more</span><span class="sp-conversation__less-label">Show less</span></summary>
+            </details>
+            {{/if}}
+            {{#if this.text}}
+            <p class="sp-conversation__text">{{this.text}}</p>
+            {{/if}}
+            {{#if this.meta}}
+            <details class="sp-conversation__request"><summary>Request details{{#if this.meta.is_error}} · {{this.meta.status}}{{/if}}</summary><div class="sp-conversation__meta">
+              <span class="sp-conversation__meta-model">{{this.meta.model}}</span>
+              <span class="sp-conversation__meta-sep" aria-hidden="true">·</span>
+              <span>{{this.meta.latency_display}}</span>
+              {{#if this.meta.token_display}}
+              <span class="sp-conversation__meta-sep" aria-hidden="true">·</span>
+              <span>{{this.meta.token_display}}</span>
+              {{/if}}
+              <span class="sp-conversation__meta-sep" aria-hidden="true">·</span>
+              <span>{{this.meta.cost_display}}</span>
+              <span class="sp-conversation__meta-sep" aria-hidden="true">·</span>
+              <span{{#if this.meta.is_error}} class="sp-conversation__meta-status--error"{{/if}}>{{this.meta.status}}</span>
+              {{#if this.request_url}}
+              <span class="sp-conversation__meta-sep" aria-hidden="true">·</span>
+              <a class="sp-conversation__meta-link sp-code-inline" href="{{this.request_url}}">{{this.request_id_short}}</a>
+              {{/if}}
+            </div></details>
+            {{/if}}
+          </div>
+          {{/if}}
+        {{/each}}
+      </article>
+      {{/each}}
+    {{/each}}
+
+    {{#if side_calls.count}}
+    <details class="sp-conversation__side" id="side-calls">
+      <summary class="sp-conversation__side-summary">{{side_calls.count}} side calls<span class="sp-conversation__side-note">{{side_calls.cost_display}} · probes and utility calls that are not part of the transcript</span></summary>
+      {{#> components/table caption="Side calls in this conversation"}}
+        <thead><tr>
+          <th scope="col" class="sp-col-status">Kind</th><th scope="col">Time</th><th scope="col">Model</th>
+          <th scope="col" class="sp-table__cell--num">Tokens</th><th scope="col" class="sp-table__cell--num">Cost</th>
+          <th scope="col">Status</th><th scope="col">Request</th>
+        </tr></thead>
+        <tbody>
+        {{#each side_calls.rows}}
+          <tr>
+            <td class="sp-col-status">{{#if (eq this.kind "probe")}}{{> components/badge tone="muted" text=this.kind}}{{else}}{{> components/badge tone="info" text=this.kind}}{{/if}}</td>
+            <td class="sp-u-num">{{this.ts_local}}</td>
+            <td class="sp-table__cell--mono">{{this.model}}</td>
+            <td class="sp-table__cell--num">{{#if this.token_display}}{{this.token_display}}{{else}}—{{/if}}</td>
+            <td class="sp-table__cell--num">{{this.cost_display}}</td>
+            <td>{{#if (eq this.status "failed")}}<span class="sp-u-text-danger">{{this.status}}</span>{{else}}{{this.status}}{{/if}}</td>
+            <td><a href="{{this.request_url}}" class="sp-code-inline">{{this.request_id_short}}</a></td>
+          </tr>
+        {{/each}}
+        </tbody>
+      {{/components/table}}
+    </details>
+    {{/if}}
+  </div>
+</div>
+{{else}}
+{{> components/empty-state title="Nothing to show" message="No turns were recorded for this conversation."}}
+{{/if}}

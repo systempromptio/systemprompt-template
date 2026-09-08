@@ -154,6 +154,11 @@ extensions/mcp/*/.env
 Screenshot*.png
 *.zip
 
+# Core 0.44's shared-storage probe writes a per-boot marker here (one file
+# per instance_id). Local runs get a random id each start, so these
+# accumulate; they are runtime state, never source.
+storage/.systemprompt/
+
 # Storage - generated/uploaded files only
 storage/files/uploads/
 storage/files/images/generated/

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM group_members WHERE group_id = $1 AND user_id = $2 AND source = 'manual'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "23e466746423339c0f25f993bdd0830460243d60e904fb35059fdba29e09cfc7"
+}

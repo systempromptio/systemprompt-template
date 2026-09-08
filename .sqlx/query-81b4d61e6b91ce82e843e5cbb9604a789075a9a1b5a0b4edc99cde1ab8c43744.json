@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE ai_gateway_thought_signatures\n            SET expires_at = NOW() + make_interval(secs => $3)\n            WHERE conversation_id = $1\n              AND tool_use_id = $2\n              AND expires_at > NOW()\n            RETURNING signature\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "signature",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_gateway_thought_signatures",
+            "name": "signature"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "81b4d61e6b91ce82e843e5cbb9604a789075a9a1b5a0b4edc99cde1ab8c43744"
+}

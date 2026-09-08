@@ -60,23 +60,21 @@ pub(crate) async fn upsert_entity_rule_handler(
     Json(body): Json<UpsertRuleBody>,
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&entity_type)?;
+    // Why: the emptiness check precedes subject parsing — a blank value would
+    // fail the parse too, and "invalid rule_type" for a missing value points
+    // the caller at the wrong field.
     if body.rule_value.trim().is_empty() {
         return Err(AdminError::BadRequest("rule_value required".to_owned()));
     }
+    let (rule_type, rule_value) = parse_subject(&pool, &body.rule_type, &body.rule_value).await?;
     let access = parse_access(&body.access)
         .ok_or_else(|| AdminError::BadRequest("invalid access".to_owned()))?;
-    // Why: parse_subject rejects both an unknown rule_type and a rule_value
-    // that does not parse for it, so it runs last — otherwise a malformed
-    // value reports the type as invalid and hides the real fault.
-    let subject = parse_subject(&body.rule_type, &body.rule_value).ok_or_else(|| {
-        AdminError::BadRequest("invalid rule_type or rule_value for it".to_owned())
-    })?;
     let rule = repo(&pool)
         .upsert_rule(UpsertRuleParams {
             entity_type: kind,
             entity_id: &entity_id,
-            rule_type: subject.rule_type(),
-            rule_value: subject.value(),
+            rule_type,
+            rule_value: &rule_value,
             access,
             justification: body.justification.as_deref(),
         })
@@ -169,11 +167,11 @@ pub(crate) async fn apply_template_handler(
     Json(body): Json<ApplyTemplateBody>,
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&body.entity_type)?;
-    let subject = parse_subject(&body.subject_type, &body.subject_value)
-        .ok_or_else(|| AdminError::BadRequest("invalid subject_type".to_owned()))?;
     if body.subject_value.trim().is_empty() {
         return Err(AdminError::BadRequest("subject_value required".to_owned()));
     }
+    let (rule_type, rule_value) =
+        parse_subject(&pool, &body.subject_type, &body.subject_value).await?;
     if !["allow", "deny", "clear"].contains(&body.action.as_str()) {
         return Err(AdminError::BadRequest(
             "action must be allow|deny|clear".to_owned(),
@@ -189,7 +187,7 @@ pub(crate) async fn apply_template_handler(
         if body.action == "clear" {
             let existing = r.list_rules_for_entity(kind, eid).await.unwrap_or_default();
             for rule in existing {
-                if rule.rule_type == subject.rule_type() && rule.rule_value == subject.value() {
+                if rule.rule_type == rule_type && rule.rule_value == rule_value {
                     if r.delete_rule(&rule.id).await.is_ok() {
                         applied += 1;
                     } else {
@@ -207,8 +205,8 @@ pub(crate) async fn apply_template_handler(
                 .upsert_rule(UpsertRuleParams {
                     entity_type: kind,
                     entity_id: eid,
-                    rule_type: subject.rule_type(),
-                    rule_value: subject.value(),
+                    rule_type: rule_type.clone(),
+                    rule_value: &rule_value,
                     access,
                     justification: None,
                 })

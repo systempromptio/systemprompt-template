@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_scope_defaults\n               (user_id, primary_group_id, primary_project_id, source, updated_at)\n           VALUES ($1, $2, $3, 'manual', NOW())\n           ON CONFLICT (user_id) DO UPDATE SET\n               primary_group_id = EXCLUDED.primary_group_id,\n               primary_project_id = EXCLUDED.primary_project_id,\n               source = 'manual',\n               updated_at = NOW()\n           RETURNING primary_group_id, primary_project_id, source",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "primary_group_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_scope_defaults",
+            "name": "primary_group_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "primary_project_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_scope_defaults",
+            "name": "primary_project_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "source",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_scope_defaults",
+            "name": "source"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "3dbde8b6b9408e2dca46475afbac8b91616ba8d25537c04f57a4177e6f5e146c"
+}

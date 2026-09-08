@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE mcp_connector_accounts SET status = $3, auth_method = $4,\n        account_id = $5, account_name = $6, resource_id = $7, resource_name = $8,\n        error_code = $9, verified_at = $10, generation = $11,\n        revision = nextval('mcp_connector_revision') WHERE user_id = $1 AND provider = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "187343e4ff06dbdb5a07f8fcc0c517de5290c1a2a854987ff561872c2b025a17"
+}

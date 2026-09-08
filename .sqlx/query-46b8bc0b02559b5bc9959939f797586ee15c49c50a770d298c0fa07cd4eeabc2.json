@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_drive_sources SET page_token=$2 WHERE source_type=$1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "46b8bc0b02559b5bc9959939f797586ee15c49c50a770d298c0fa07cd4eeabc2"
+}

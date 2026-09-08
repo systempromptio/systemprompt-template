@@ -32,29 +32,15 @@ jobs:
     name: Clippy (-D warnings)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
-      # The root workspace builds against the sibling core checkout via
-      # [patch.crates-io] on `next`, and bridge/ depends on systemprompt-bridge
-      # by path. Materialise the sibling at the ref bridge/CORE_REF pins: the
-      # checkout must land inside the workspace, so link it into place.
-      - name: Read pinned core ref
-        id: core
-        run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
-        with:
-          repository: systempromptio/systemprompt-core
-          ref: ${{ steps.core.outputs.ref }}
-          path: .core-sibling
-      - name: Link sibling core beside the workspace
-        run: ln -sfn "$GITHUB_WORKSPACE/.core-sibling" "$GITHUB_WORKSPACE/../systemprompt-core"
       # Clippy runs on the pinned nightly (channel + clippy component) declared
       # in rust-toolchain.toml, which `rustup show` installs — so lint results
       # match local `just clippy` with no channel duplicated here.
       - run: rustup show
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
   docs:
     name: Rustdoc (warnings as errors)
@@ -62,32 +48,18 @@ jobs:
     env:
       RUSTDOCFLAGS: "-D warnings"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
-      # The root workspace builds against the sibling core checkout via
-      # [patch.crates-io] on `next`, and bridge/ depends on systemprompt-bridge
-      # by path. Materialise the sibling at the ref bridge/CORE_REF pins: the
-      # checkout must land inside the workspace, so link it into place.
-      - name: Read pinned core ref
-        id: core
-        run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
-        with:
-          repository: systempromptio/systemprompt-core
-          ref: ${{ steps.core.outputs.ref }}
-          path: .core-sibling
-      - name: Link sibling core beside the workspace
-        run: ln -sfn "$GITHUB_WORKSPACE/.core-sibling" "$GITHUB_WORKSPACE/../systemprompt-core"
-      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup show
       - uses: Swatinem/rust-cache@v2
-      - run: cargo doc --workspace --no-deps
+      - run: cargo doc --workspace --no-deps --locked
 
   source-gates:
     name: Schema / SQL / error-boundary linters
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
       - name: Install ripgrep
@@ -95,6 +67,10 @@ jobs:
       # The five structural gate scripts ported from systemprompt-core, plus the
       # inlined no-synthesis guard (kept inline so this job does not depend on
       # `just` being installed).
+      - run: python3 -m pip install PyYAML
+      - run: python3 scripts/check-deploy-config.py
+      - run: python3 docker/test_migrate_profile.py
+      - run: python3 docker/test_container_state.py
       - run: bash scripts/lint-schema.sh
       - run: bash scripts/lint-extensions.sh
       - run: bash scripts/check-sqlx.sh
@@ -139,7 +115,7 @@ jobs:
     name: Source file size guard
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
       # No extension source file (excluding tests) may exceed 300 lines. Same
@@ -151,23 +127,9 @@ jobs:
     name: MSRV check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
-      # The root workspace builds against the sibling core checkout via
-      # [patch.crates-io] on `next`, and bridge/ depends on systemprompt-bridge
-      # by path. Materialise the sibling at the ref bridge/CORE_REF pins: the
-      # checkout must land inside the workspace, so link it into place.
-      - name: Read pinned core ref
-        id: core
-        run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
-        with:
-          repository: systempromptio/systemprompt-core
-          ref: ${{ steps.core.outputs.ref }}
-          path: .core-sibling
-      - name: Link sibling core beside the workspace
-        run: ln -sfn "$GITHUB_WORKSPACE/.core-sibling" "$GITHUB_WORKSPACE/../systemprompt-core"
       - uses: dtolnay/rust-toolchain@1.96.0
       - uses: Swatinem/rust-cache@v2
       # The MSRV is read from the manifest, never named here — a number in this
@@ -186,7 +148,7 @@ jobs:
       contents: read
       checks: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
       - uses: rustsec/audit-check@v2.0.0
@@ -197,23 +159,9 @@ jobs:
     name: cargo-deny (licenses, bans, advisories, sources)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
-      # The root workspace builds against the sibling core checkout via
-      # [patch.crates-io] on `next`, and bridge/ depends on systemprompt-bridge
-      # by path. Materialise the sibling at the ref bridge/CORE_REF pins: the
-      # checkout must land inside the workspace, so link it into place.
-      - name: Read pinned core ref
-        id: core
-        run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
-        with:
-          repository: systempromptio/systemprompt-core
-          ref: ${{ steps.core.outputs.ref }}
-          path: .core-sibling
-      - name: Link sibling core beside the workspace
-        run: ln -sfn "$GITHUB_WORKSPACE/.core-sibling" "$GITHUB_WORKSPACE/../systemprompt-core"
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
           command: check
@@ -222,7 +170,7 @@ jobs:
     name: Unused dependency check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
       - uses: taiki-e/install-action@v2

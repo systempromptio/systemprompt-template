@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO requirements_workflow_events(workflow_id,revision,actor_id,event,state) VALUES ($1,$2,$3,$4,$5)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ab4ec035aa0d029c1f7bb2a8823fa0f0c17704457395236be15424482e1fec0e"
+}

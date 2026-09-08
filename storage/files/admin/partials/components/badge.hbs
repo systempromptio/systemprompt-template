@@ -1,1 +1,2 @@
-<span class="badge badge-{{color}}">{{text}}</span>
+{{!-- {{> components/badge tone="ok" text="Allowed"}} — tone: ok|warn|err|info|accent|muted --}}
+<span class="sp-badge sp-badge--{{#if tone}}{{tone}}{{else}}{{color}}{{/if}}">{{text}}</span>

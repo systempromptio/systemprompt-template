@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT project_id FROM project_members WHERE user_id = $1 ORDER BY project_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "project_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "project_members",
+            "name": "project_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4e8652115264497736d6b5514602feb08e2fe8a6ddc6d582be6bbe8697cf9664"
+}

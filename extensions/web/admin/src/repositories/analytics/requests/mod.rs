@@ -1,30 +1,72 @@
 //! Gateway-request read models for the analytics requests page.
 //!
 //! [`list_requests_paged`] (in `paged`) pages `ai_requests` with optional
-//! filters and per-row governance / tool-call counts; the per-model /
-//! per-provider / per-status rollups behind the breakdown tabs live in
-//! `breakdown`.
+//! filters and per-row governance / tool-call counts; [`get_request_kpis`]
+//! (in `kpis`) totals the same predicate for the tiles above the table; the
+//! per-model / per-provider / per-status rollups behind the breakdown tabs
+//! live in `breakdown`, and the per-request safety findings and tool calls the
+//! detail page shows live in `detail`.
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use systemprompt::identifiers::{AgentId, AiRequestId, SessionId, TraceId, UserId};
 
+use crate::repositories::scope::SubjectScope;
+
 mod breakdown;
+mod detail;
+mod facets;
+mod kpis;
 mod paged;
 
 pub use breakdown::{
     BreakdownRow, list_requests_by_model, list_requests_by_provider, list_requests_by_status,
 };
+pub use detail::{
+    RequestToolCallRow, SafetyFindingRow, list_request_safety_findings, list_request_tool_calls,
+};
+pub use facets::{FacetValue, list_request_facets};
+pub use kpis::{RequestKpis, get_request_kpis};
 pub use paged::{RequestPage, list_requests_paged};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct RequestFilter {
+    // Why: Resolved by the caller from their identity and the page query,
+    // exactly as the analytics dashboard scopes.
+    pub scope: SubjectScope,
     pub user_id: Option<UserId>,
     pub agent_id: Option<AgentId>,
     pub model: Option<String>,
     pub provider: Option<String>,
     pub status: Option<String>,
     pub search: Option<String>,
+    // Why: one tool name the request itself asked for.
+    pub tool: Option<String>,
+    // Why: exclusive attribution — the person's primary group from
+    // `user_scope_defaults`, narrower than the `scope` id list above, which is
+    // only the visibility floor.
+    pub group: Option<String>,
+    // Why: exclusive attribution, the person's primary project.
+    pub project: Option<String>,
+}
+
+// Why: Written out because `SubjectScope` deliberately has no default — the
+// every-user view must be named, never reached by naming nothing.
+impl Default for RequestFilter {
+    fn default() -> Self {
+        Self {
+            scope: SubjectScope::All,
+            user_id: None,
+            agent_id: None,
+            model: None,
+            provider: None,
+            status: None,
+            search: None,
+            tool: None,
+            group: None,
+            project: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -96,4 +138,8 @@ pub struct RequestRow {
     pub decision_count: i64,
     pub deny_count: i64,
     pub tool_call_count: i64,
+    pub group_id: Option<String>,
+    pub group_name: Option<String>,
+    pub project_id: Option<String>,
+    pub project_name: Option<String>,
 }

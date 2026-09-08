@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ai_gateway_thought_signatures\n                (conversation_id, tool_use_id, signature, expires_at)\n            VALUES ($1, $2, $3, NOW() + make_interval(secs => $4))\n            ON CONFLICT (conversation_id, tool_use_id) DO UPDATE SET\n                signature = EXCLUDED.signature,\n                expires_at = EXCLUDED.expires_at\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "99993fe535d994f61e9ab22874f6ba42c49eb1faa99f793116ec442552ced5fe"
+}

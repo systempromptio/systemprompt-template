@@ -67,7 +67,7 @@ everything is automatic:
 | `release-gateway.yml` | tag push | binary tarballs + SHA256SUMS + cosign sig on a GH Release; Homebrew formula bump |
 | `docker.yml` | called by `release-gateway.yml` | multi-arch (amd64+arm64) image, tags `X.Y.Z`/`X.Y`/`X`/`latest`, cosign-signed |
 | `smoke-tests.yml` | called by `release-gateway.yml`, after the image | install-channel smokes + `release-tags` (all tags one digest, both arches, signature verifies) + `helm-release` (chart serves the new appVersion) |
-| `helm.yml` | push to main touching `helm/**` — every release commit bumps Chart.yaml | chart packaged and pushed to charts.systemprompt.io |
+| `helm.yml` | called after image publication | required kind install/test, then chart publication |
 | `ghcr-prune.yml` | after Docker succeeds on a tag + weekly | retention (below) |
 
 Image and smoke tests are `workflow_call` jobs inside the `release-gateway.yml`
@@ -97,9 +97,11 @@ update per release (see docs-internal/testing/digitalocean.md).
 
 ## Retention
 
-`ghcr-prune.yml` (needs the `GHCR_PRUNE_TOKEN` secret — classic PAT with read:packages + delete:packages; the Actions token cannot delete org-owned packages): keep the 5 newest release versions; delete `sha-*` tags and
-untagged manifests older than 4 weeks. Alias tags always point at kept
-digests. Dry-run available via workflow dispatch.
+`ghcr-prune.yml` uses the publishing repository's short-lived `GITHUB_TOKEN`
+with package admin access. Keep the 5 newest release versions; remove stale
+sha tags and untagged manifests after four weeks. Retention action v3.1.0
+protects children of retained multi-architecture manifests. Use workflow
+`dry_run=true` to review candidates before applying a changed retention policy.
 
 Nuance: a version still carrying an alias tag (`X.Y` or `X`) is not matched
 by the three-part filter and therefore never pruned — by design, since
@@ -127,3 +129,15 @@ with the `GHCR_PRUNE_TOKEN`.
 - [ ] rebuild + resubmit the DigitalOcean marketplace image (when listed)
 - [ ] release notes deploy matrix matches [docs/README.md](README.md) channel table (templates live in `.github/workflows/release-gateway.yml` and `release.yml`)
 - [ ] update docs-internal/STATE.md release row
+
+## 0.48 release validation
+
+Builds use the committed lockfiles and SQLx offline caches; migrations and dependency updates are explicit setup/maintenance steps. Both workspaces consume published core 0.48.0. The in-repository proc-macro-error2 compatibility patch is documented in `vendor/README.md`.
+
+Release dispatch resolves its tag to a commit on main, validates version pins, and uses that commit for archives, containers and deployment tests. Candidate images must boot before receiving release aliases. Post-publication smoke tests check both architectures, fresh setup, restart and upgrade from 0.42.1 with retained users. Helm is installed against disposable Postgres before chart publication; Homebrew publication completes before install-channel smoke tests.
+
+If cleanup cannot read the package, verify the repository's Actions access in
+the GHCR package settings. Deletion requires the Admin role; never suppress
+an authorization failure or replace it with an unconditional successful step.
+
+Existing container profiles with pre-0.44 `providers` or `gateway` sections are migrated before CLI startup. The original profile is backed up as `profile.pre-0.47.yaml`; customized provider catalogs and routes are retained under `legacy-services/` in the same persistent profile volume and reapplied to the services tree at each boot. Read-only externally managed profiles must be migrated before mounting.

@@ -1,0 +1,267 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH joined AS (\n            SELECT\n                ar.id, ar.request_id, ar.created_at, ar.user_id,\n                ar.session_id, ar.trace_id,\n                -- Why: a request rejected before route resolution has no\n                -- provider or model. Both columns are nullable, and the outer\n                -- SELECT asserts them non-null, so one such row anywhere in a\n                -- page used to fail the decode and blank the whole page.\n                COALESCE(ar.provider, '') AS provider,\n                COALESCE(ar.model, '') AS model,\n                ar.status,\n                ar.input_tokens, ar.output_tokens,\n                COALESCE(ar.cost_microdollars, 0)::bigint AS cost_microdollars,\n                ar.cost_microdollars AS cost_raw,\n                ar.latency_ms, ar.error_message,\n                COALESCE(u.display_name, u.full_name, u.name, u.email) AS user_label,\n                sd.primary_group_id AS group_id,\n                g.name AS group_name,\n                sd.primary_project_id AS project_id,\n                p.name AS project_name,\n                COALESCE((\n                    SELECT COUNT(*)::bigint FROM governance_decisions gd\n                    WHERE gd.session_id = ar.session_id\n                ), 0) AS decision_count,\n                COALESCE((\n                    SELECT COUNT(*)::bigint FROM governance_decisions gd\n                    WHERE gd.session_id = ar.session_id AND gd.decision = 'deny'\n                ), 0) AS deny_count,\n                COALESCE((\n                    SELECT COUNT(*)::bigint FROM ai_request_tool_calls tc\n                    WHERE tc.request_id = ar.id\n                ), 0) AS tool_call_count\n            FROM ai_requests ar\n            LEFT JOIN users u ON u.id = ar.user_id\n            -- Why: exclusive attribution. A person counts once, against the\n            -- one group and the one project `user_scope_defaults` names, so\n            -- the log's totals cannot double-count a multi-group member.\n            LEFT JOIN user_scope_defaults sd ON sd.user_id = ar.user_id\n            LEFT JOIN groups g ON g.id = sd.primary_group_id\n            LEFT JOIN projects p ON p.id = sd.primary_project_id\n            WHERE ar.created_at >= $1 AND ar.created_at < $2\n              AND ($13::TEXT[] IS NULL OR ar.user_id = ANY($13))\n              AND ($3::text IS NULL OR ar.user_id = $3)\n              AND ($4::text IS NULL OR EXISTS (\n                  SELECT 1 FROM governance_decisions gd\n                  WHERE gd.session_id = ar.session_id AND gd.agent_id = $4\n              ))\n              -- Why: a call the gateway rejected before it resolved a route has\n              -- no model and no provider. `unrouted` is the sentinel the\n              -- analytics drill-downs send for exactly those rows, so it has\n              -- to mean IS NULL rather than a model literally named that.\n              AND ($5::text IS NULL\n                   OR ($5 = 'unrouted' AND ar.model IS NULL)\n                   OR ar.model = $5)\n              AND ($6::text IS NULL\n                   OR ($6 = 'unrouted' AND ar.provider IS NULL)\n                   OR ar.provider = $6)\n              AND ($7::text IS NULL OR ar.status = $7)\n              AND ($14::text IS NULL OR EXISTS (\n                  SELECT 1 FROM ai_request_tool_calls tc\n                  WHERE tc.request_id = ar.id AND tc.tool_name = $14\n              ))\n              AND ($15::text IS NULL OR sd.primary_group_id = $15)\n              AND ($16::text IS NULL OR sd.primary_project_id = $16)\n              AND ($8::text IS NULL\n                   OR ar.user_id ILIKE $8\n                   OR ar.model ILIKE $8\n                   OR ar.provider ILIKE $8\n                   OR COALESCE(ar.error_message, '') ILIKE $8\n                   OR COALESCE(ar.trace_id, '') ILIKE $8)\n        )\n        SELECT\n            id AS \"id!\",\n            request_id AS \"request_id!: AiRequestId\",\n            created_at AS \"created_at!\",\n            user_id AS \"user_id!: UserId\",\n            user_label,\n            session_id AS \"session_id: SessionId\",\n            trace_id AS \"trace_id: TraceId\",\n            provider AS \"provider!\",\n            model AS \"model!\",\n            status AS \"status!\",\n            input_tokens, output_tokens,\n            cost_microdollars AS \"cost_microdollars!\",\n            latency_ms, error_message,\n            decision_count AS \"decision_count!\",\n            deny_count AS \"deny_count!\",\n            tool_call_count AS \"tool_call_count!\",\n            -- Why: these four reach the row through LEFT JOINs, so every one of\n            -- them is null for a person the directory placed nowhere. sqlx\n            -- infers nullability from the source column, and `groups.name` and\n            -- `projects.name` are NOT NULL in their own tables, so without the\n            -- `?` override the macro generates a non-Option decode and one\n            -- unattributed row anywhere in the page fails the whole query.\n            group_id AS \"group_id?\", group_name AS \"group_name?\",\n            project_id AS \"project_id?\", project_name AS \"project_name?\",\n            (SELECT COUNT(*) FROM joined)::bigint AS \"total_count!\"\n        FROM joined\n        ORDER BY\n            (CASE WHEN $11 = 'created_at' AND $12 = 'asc'  THEN created_at END) ASC  NULLS LAST,\n            (CASE WHEN $11 = 'created_at' AND $12 = 'desc' THEN created_at END) DESC NULLS LAST,\n            (CASE WHEN $11 = 'cost'    AND $12 = 'asc'  THEN cost_raw END) ASC  NULLS LAST,\n            (CASE WHEN $11 = 'cost'    AND $12 = 'desc' THEN cost_raw END) DESC NULLS LAST,\n            (CASE WHEN $11 = 'latency' AND $12 = 'asc'  THEN latency_ms END) ASC  NULLS LAST,\n            (CASE WHEN $11 = 'latency' AND $12 = 'desc' THEN latency_ms END) DESC NULLS LAST,\n            (CASE WHEN $11 = 'tokens'  AND $12 = 'asc'  THEN (COALESCE(input_tokens,0) + COALESCE(output_tokens,0)) END) ASC  NULLS LAST,\n            (CASE WHEN $11 = 'tokens'  AND $12 = 'desc' THEN (COALESCE(input_tokens,0) + COALESCE(output_tokens,0)) END) DESC NULLS LAST\n        LIMIT $9 OFFSET $10",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "request_id!: AiRequestId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "request_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "user_id!: UserId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "user_label",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "session_id: SessionId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "trace_id: TraceId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "trace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "provider!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "model!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "status!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "input_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "input_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "output_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "output_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "error_message",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "error_message"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "decision_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 16,
+        "name": "deny_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 17,
+        "name": "tool_call_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 18,
+        "name": "group_id?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_scope_defaults",
+            "name": "primary_group_id"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "group_name?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 20,
+        "name": "project_id?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_scope_defaults",
+            "name": "primary_project_id"
+          }
+        }
+      },
+      {
+        "ordinal": 21,
+        "name": "project_name?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "projects",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 22,
+        "name": "total_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Text",
+        "Text",
+        "TextArray",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null,
+      true,
+      true,
+      null,
+      null,
+      false,
+      true,
+      true,
+      null,
+      true,
+      true,
+      null,
+      null,
+      null,
+      true,
+      false,
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "dca7208815a0af2a90a69cef3ff10e3d12f56c84979c9dc86f5945c7b09e3c2f"
+}

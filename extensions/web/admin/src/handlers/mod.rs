@@ -24,12 +24,36 @@ pub(crate) mod share;
 pub(crate) mod shared;
 pub(crate) mod slack_identity;
 pub(crate) mod ssr;
+mod user_sessions;
 mod users;
+pub(crate) use user_sessions::{
+    list_user_sessions_handler, revoke_all_user_sessions_handler, revoke_user_session_handler,
+};
 pub(crate) mod webhook;
 
-pub(crate) use webhook::{
-    govern_authz, govern_tool_use, track_statusline_event, track_transcript_event,
-};
+pub(crate) mod approvals;
+
+pub(crate) mod catalog;
+
+pub(crate) mod devices;
+
+pub(crate) mod groups;
+
+pub(crate) mod projects;
+
+pub(crate) mod roles;
+
+pub(crate) mod salesforce_auth;
+
+pub(crate) mod salesforce_identity;
+
+pub(crate) mod scope_defaults;
+
+pub(crate) mod self_service;
+
+pub(crate) mod connector_auth;
+
+pub(crate) mod bridge_whoami;
 
 pub(crate) use gateway::{
     create_gateway_route_handler, delete_gateway_route_handler, get_gateway_handler,
@@ -44,4 +68,7 @@ pub(crate) use users::{
     create_user_handler, dashboard_handler, delete_user_handler, extract_token_from_headers,
     extract_user_from_cookie, list_events_handler, list_users_handler, update_user_handler,
     user_detail_handler, user_usage_handler,
+};
+pub(crate) use webhook::{
+    govern_authz, govern_tool_use, track_statusline_event, track_transcript_event,
 };

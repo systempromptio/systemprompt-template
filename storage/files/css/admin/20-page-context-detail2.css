@@ -1,0 +1,181 @@
+
+
+@layer components {
+
+.sp-transcript__role {
+    font-size: var(--sp-text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: var(--sp-text-secondary);
+}
+
+.sp-transcript__entry--user .sp-transcript__role      { color: var(--sp-accent-text); }
+
+.sp-transcript__entry--assistant .sp-transcript__role { color: var(--sp-section-users); }
+
+.sp-transcript__entry--tool .sp-transcript__role      { color: var(--sp-warning-strong); }
+
+.sp-transcript__time {
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-transcript__req {
+    color: var(--sp-text-tertiary);
+    border: 1px solid var(--sp-border-subtle);
+    text-decoration: none;
+    transition: color var(--sp-duration-fast), border-color var(--sp-duration-fast);
+}
+
+.sp-transcript__req:hover {
+    color: var(--sp-accent-text);
+    border-color: var(--sp-accent);
+}
+
+.sp-transcript__body {
+    margin: var(--sp-space-2) 0 0;
+    font-size: var(--sp-text-base);
+    line-height: 1.65;
+    color: var(--sp-text-primary);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.sp-transcript__tool {
+    margin: 0;
+    background: var(--sp-bg-surface-raised);
+    border: 1px solid var(--sp-border-subtle);
+    border-inline-start: 3px solid var(--sp-warning);
+    border-radius: var(--sp-radius-sm);
+    overflow: hidden;
+}
+
+.sp-transcript__tool-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+    cursor: pointer;
+    list-style: none;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    padding: var(--sp-space-2) var(--sp-space-3);
+    transition: background var(--sp-duration-fast);
+}
+
+.sp-transcript__tool-summary:hover {
+    background: var(--sp-bg-surface-overlay);
+}
+
+.sp-transcript__tool-summary::-webkit-details-marker { display: none; }
+
+.sp-transcript__tool-chevron {
+    display: inline-block;
+    transition: transform var(--sp-duration-fast);
+    color: var(--sp-warning-strong);
+    font-size: var(--sp-text-sm);
+    line-height: 1;
+}
+
+.sp-transcript__tool[open] .sp-transcript__tool-chevron {
+    transform: rotate(90deg);
+}
+
+.sp-transcript__tool[open] .sp-transcript__tool-summary {
+    border-bottom: 1px solid var(--sp-border-subtle);
+}
+
+.sp-transcript__tool-name {
+    color: var(--sp-text-primary);
+    font-family: var(--sp-font-mono);
+    font-weight: 600;
+}
+
+.sp-transcript__tool-detail {
+    padding: var(--sp-space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-3);
+}
+
+.sp-transcript__tool-detail .sp-code-block {
+    max-height: 20rem;
+}
+
+.sp-transcript__tool-detail details > summary {
+    cursor: pointer;
+    font-size: var(--sp-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sp-text-tertiary);
+    font-weight: 600;
+    margin-bottom: var(--sp-space-2);
+}
+
+.sp-transcript__entry--system {
+    padding: 0;
+    background: none;
+    border: none;
+}
+
+.sp-transcript__system {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-1) 0;
+    background: none;
+    border: none;
+    margin-inline: 0;
+}
+
+.sp-transcript__system-rule {
+    flex: 1;
+    height: 0;
+    border: none;
+    border-top: 1px dashed var(--sp-border-default);
+    margin: 0;
+}
+
+.sp-transcript__system-label {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--sp-space-2);
+    font-size: var(--sp-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sp-text-tertiary);
+    flex-shrink: 0;
+}
+}
+
+@layer components {
+
+@media (max-width: 700px) {
+    .sp-overview-pane > .sp-transcript,
+    .sp-transcript__meta {
+        margin-inline-start: 0;
+        flex-basis: 100%;
+    }
+    .sp-trace-detail__summary {
+        gap: var(--sp-space-2);
+        padding: var(--sp-space-2) var(--sp-space-3);
+    }
+}
+}
+
+@layer components {
+
+@media print {
+    .sp-overview-pane { box-shadow: none; }
+    .sp-transcript__entry { break-inside: avoid; }
+    .sp-transcript__tool[open] .sp-code-block { max-height: none; overflow: visible; }
+}
+}
+
+@layer responsive {
+
+@media (max-width: 768px) {
+
+}
+}

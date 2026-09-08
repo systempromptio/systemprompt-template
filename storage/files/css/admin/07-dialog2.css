@@ -1,0 +1,81 @@
+
+
+@layer components {
+
+.sp-dialog {
+    padding: 0;
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-lg);
+    background: var(--sp-bg-surface-overlay);
+    color: var(--sp-text-primary);
+    box-shadow: var(--sp-shadow-float);
+    max-width: min(480px, 92vw);
+    width: 100%;
+}
+
+.sp-dialog::backdrop {
+    background: var(--sp-overlay-medium);
+    backdrop-filter: blur(4px);
+}
+
+.sp-dialog-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-6);
+}
+
+.sp-dialog-form h3 {
+    margin: 0;
+    font-size: var(--sp-text-lg);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+}
+
+.sp-dialog-form label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-text-secondary);
+}
+
+.sp-dialog-form input,
+.sp-dialog-form textarea {
+    font: inherit;
+    font-weight: 400;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+    color: var(--sp-text-primary);
+}
+
+.sp-dialog-form input:focus,
+.sp-dialog-form textarea:focus {
+    outline: none;
+    border-color: var(--sp-accent);
+    box-shadow: 0 0 0 2px var(--sp-accent-dim);
+}
+
+.sp-dialog-form menu {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--sp-space-2);
+    margin: var(--sp-space-2) 0 0;
+    padding: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sp-actions-dropdown {
+        transition: none;
+    }
+}
+}
+
+@layer responsive {
+
+@media (hover: none) {
+}
+}

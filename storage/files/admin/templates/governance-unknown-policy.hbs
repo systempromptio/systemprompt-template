@@ -1,9 +1,15 @@
 {{#> layout title=title page=page}}
     {{#*inline "content"}}
-    {{> components/page-header title="Unknown policy"}}
-    <p>No policy is registered with id <code class="code-inline">{{policy_id}}</code>.</p>
-    <p><a href="/admin/governance/policies">&larr; Back to all policies</a></p>
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="The chain has no policy registered under this id."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance">All policies</a>
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        <span><code class="sp-code-inline">{{policy_id}}</code></span>
+        {{/inline}}
+    {{/components/page-header}}
+    {{> components/empty-state title="Unknown policy" message="No Rust impl submits a PolicyRegistration with this id. It may have been renamed or removed; the policies list shows historical ids that still have decisions on record."}}
     {{/inline}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "scripts"}}{{/inline}}
 {{/layout}}

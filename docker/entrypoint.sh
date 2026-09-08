@@ -3,6 +3,16 @@
 # Authors a profile via `systemprompt admin setup` on first boot,
 # waits for Postgres, runs migrations, starts the server.
 set -eu
+umask 077
+profile_created=false
+
+# Railway mounts volumes as root. Prepare ownership, then run the gateway
+# under the same unprivileged account used on other container hosts.
+if [ "$(id -u)" = 0 ] && [ -n "${SYSTEMPROMPT_DATA_DIR:-}" ]; then
+    mkdir -p "$SYSTEMPROMPT_DATA_DIR"
+    chown -R app:app "$SYSTEMPROMPT_DATA_DIR"
+    exec gosu app "$0" "$@"
+fi
 
 # One-click platforms (Railway et al.) export unfilled template variables as
 # empty strings; admin setup would record "" as a configured provider key.
@@ -16,6 +26,10 @@ set -eu
 # Platform-neutral external URL. Render injects RENDER_EXTERNAL_URL; every
 # other catalog template sets EXTERNAL_URL explicitly.
 EXTERNAL_URL="${EXTERNAL_URL:-${RENDER_EXTERNAL_URL:-}}"
+
+if [ -n "${SYSTEMPROMPT_DATA_DIR:-}" ]; then
+    python3 /app/container-state.py attach
+fi
 
 PROFILE_DIR="${SYSTEMPROMPT_PROFILE_DIR:-/app/.systemprompt/profiles/docker}"
 PROFILE_FILE="$PROFILE_DIR/profile.yaml"
@@ -66,6 +80,8 @@ else
             --admin-email "$ADMIN_EMAIL" \
             --default-provider "$DEFAULT_PROVIDER" --yes --no-migrate
 
+        profile_created=true
+
         # Setup authors a localhost dev profile; patch the parts the
         # container environment dictates.
         # 1. Bind publicly (Render/compose port detection needs 0.0.0.0).
@@ -86,6 +102,11 @@ else
             sed -i "/^  cors_allowed_origins:/a\\  - ${EXTERNAL_URL}" "$PROFILE_FILE"
         fi
     fi
+fi
+
+python3 /app/migrate-profile.py "$PROFILE_FILE"
+if [ -z "${SYSTEMPROMPT_PROFILE_DIR:-}" ]; then
+    PROFILE_CREATED="$profile_created" python3 /app/container-state.py "$PROFILE_FILE"
 fi
 
 export SYSTEMPROMPT_PROFILE="$PROFILE_FILE"
@@ -112,11 +133,6 @@ until pg_probe >/dev/null 2>&1; do
     sleep 1
 done
 echo "Postgres is ready."
-
-if [ ! -f /app/signing_key.pem ]; then
-    echo "Generating signing key..."
-    /app/bin/systemprompt admin keys generate --output /app/signing_key.pem
-fi
 
 echo "Running database migrations..."
 # A managed volume/database outlives the image, so a database seeded by an older

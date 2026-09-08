@@ -64,8 +64,10 @@ fn try_init() -> bool {
     // — which the rest of this suite still reads — and a contract row that
     // PATCHes the gateway rewrites a tracked config file.
     unsafe { std::env::set_var("SYSTEMPROMPT_SERVICES_PATH", &services_root) };
-    systemprompt::loader::ServicesBootstrap::init_from_path(&services_root.join("config/config.yaml"))
-        .expect("initialise the contract fixture services tree");
+    systemprompt::loader::ServicesBootstrap::init_from_path(
+        &services_root.join("config/config.yaml"),
+    )
+    .expect("initialise the contract fixture services tree");
 
     systemprompt::config::SecretsBootstrap::try_init().expect("load the fixture profile's secrets");
     systemprompt::config::try_init_config().expect("build config from the fixture profile");

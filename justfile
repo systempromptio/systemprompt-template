@@ -86,78 +86,10 @@ build-force *FLAGS:
 _build-uncoordinated *FLAGS:
     #!/usr/bin/env bash
     set -euo pipefail
-    # Default to the `local` profile when one is set up but no SYSTEMPROMPT_PROFILE
-    # is explicitly exported — keeps the in-build migrate step from failing
-    # with "Profile '' not found" on a fresh clone where setup-local writes
-    # secrets.json before invoking `just build`.
-    SECRETS_FILE_DEFAULT_PROFILE="{{justfile_directory()}}/.systemprompt/profiles/local/secrets.json"
-    if [ -z "${SYSTEMPROMPT_PROFILE:-}" ] && [ -f "$SECRETS_FILE_DEFAULT_PROFILE" ]; then
-        export SYSTEMPROMPT_PROFILE="local"
-    else
-        export SYSTEMPROMPT_PROFILE="${SYSTEMPROMPT_PROFILE:-}"
-    fi
-    # aws-lc-sys refuses to build with GCC <10 due to bug #95189.
-    # Force clang if available so release (LTO) builds succeed.
-    if command -v clang >/dev/null 2>&1; then
-        export CC="${CC:-clang}"
-        export CXX="${CXX:-clang++}"
-    fi
-    SECRETS_FILE="{{justfile_directory()}}/.systemprompt/profiles/local/secrets.json"
-    USE_OFFLINE=false
-    db_reachable() {
-        local url="$1"
-        local pgcmd=""
-        if command -v pg_isready >/dev/null 2>&1; then pgcmd="pg_isready"
-        elif [ -x /opt/homebrew/opt/libpq/bin/pg_isready ]; then pgcmd="/opt/homebrew/opt/libpq/bin/pg_isready"
-        elif [ -x /usr/local/opt/libpq/bin/pg_isready ]; then pgcmd="/usr/local/opt/libpq/bin/pg_isready"
-        fi
-        if [ -n "$pgcmd" ]; then
-            "$pgcmd" -d "$url" -t 2 >/dev/null 2>&1 && return 0 || return 1
-        fi
-        local hostport="${url#*@}"; hostport="${hostport%%/*}"
-        local host="${hostport%:*}"; local port="${hostport##*:}"
-        [ "$port" = "$host" ] && port=5432
-        (exec 3<>/dev/tcp/"$host"/"$port") >/dev/null 2>&1 && { exec 3<&-; exec 3>&-; return 0; } || return 1
-    }
-    if [ -f "$SECRETS_FILE" ]; then
-        DB_URL=$(sed -n 's/.*"database_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$SECRETS_FILE" 2>/dev/null | head -1)
-        if [ -n "$DB_URL" ] && [ "$DB_URL" != "null" ]; then
-            if db_reachable "$DB_URL"; then
-                export DATABASE_URL="$DB_URL"
-                echo "Using database: $DB_URL"
-            else
-                echo "Database not reachable, using offline mode"
-                USE_OFFLINE=true
-            fi
-        else
-            echo "No database_url in secrets, using offline mode"
-            USE_OFFLINE=true
-        fi
-    else
-        echo "No local profile secrets found, using offline mode"
-        USE_OFFLINE=true
-    fi
-    # Sync DATABASE_URL to MCP extension directories for sqlx compile-time checks
-    if [ "$USE_OFFLINE" = "false" ]; then
-        for dir in extensions/mcp/*/; do
-            if [ -f "$dir/Cargo.toml" ]; then
-                echo "DATABASE_URL=$DATABASE_URL" > "$dir/.env"
-            fi
-        done
-    fi
-    cargo update systemprompt --quiet 2>/dev/null || true
-    if [ "$USE_OFFLINE" = "true" ]; then
-        SQLX_OFFLINE=true cargo build --workspace {{FLAGS}}
-    else
-        # Apply pending schema migrations before the online sqlx compile-time
-        # check sees the live DB. Build the CLI in offline mode first so
-        # drift between checked-in `.sqlx/` and the unmigrated live schema
-        # can't deadlock the bootstrap.
-        echo "Applying pending migrations before online build..."
-        SQLX_OFFLINE=true cargo build --bin systemprompt --quiet
-        target/debug/systemprompt infra db migrate
-        SQLX_OFFLINE=false cargo build --workspace {{FLAGS}}
-    fi
+    export CC="${CC:-clang}"
+    export CXX="${CXX:-clang++}"
+    export RUSTFLAGS="${RUSTFLAGS:--D warnings}"
+    SQLX_OFFLINE=true cargo build --workspace --locked {{FLAGS}}
 
 # Clippy (Windows) - always uses offline mode
 [windows]
@@ -174,42 +106,9 @@ clippy *FLAGS:
 _clippy-uncoordinated *FLAGS: lint-no-synthesis lint-gates
     #!/usr/bin/env bash
     set -euo pipefail
-    SECRETS_FILE="{{justfile_directory()}}/.systemprompt/profiles/local/secrets.json"
-    USE_OFFLINE=false
-    db_reachable() {
-        local url="$1"
-        local pgcmd=""
-        if command -v pg_isready >/dev/null 2>&1; then pgcmd="pg_isready"
-        elif [ -x /opt/homebrew/opt/libpq/bin/pg_isready ]; then pgcmd="/opt/homebrew/opt/libpq/bin/pg_isready"
-        elif [ -x /usr/local/opt/libpq/bin/pg_isready ]; then pgcmd="/usr/local/opt/libpq/bin/pg_isready"
-        fi
-        if [ -n "$pgcmd" ]; then
-            "$pgcmd" -d "$url" -t 2 >/dev/null 2>&1 && return 0 || return 1
-        fi
-        local hostport="${url#*@}"; hostport="${hostport%%/*}"
-        local host="${hostport%:*}"; local port="${hostport##*:}"
-        [ "$port" = "$host" ] && port=5432
-        (exec 3<>/dev/tcp/"$host"/"$port") >/dev/null 2>&1 && { exec 3<&-; exec 3>&-; return 0; } || return 1
-    }
-    if [ -f "$SECRETS_FILE" ]; then
-        DB_URL=$(sed -n 's/.*"database_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$SECRETS_FILE" 2>/dev/null | head -1)
-        if [ -n "$DB_URL" ] && [ "$DB_URL" != "null" ]; then
-            if db_reachable "$DB_URL"; then
-                export DATABASE_URL="$DB_URL"
-            else
-                USE_OFFLINE=true
-            fi
-        else
-            USE_OFFLINE=true
-        fi
-    else
-        USE_OFFLINE=true
-    fi
-    if [ "$USE_OFFLINE" = "true" ]; then
-        SQLX_OFFLINE=true cargo clippy --workspace {{FLAGS}} -- -D warnings
-    else
-        SQLX_OFFLINE=false cargo clippy --workspace {{FLAGS}} -- -D warnings
-    fi
+    export CC="${CC:-clang}"
+    export CXX="${CXX:-clang++}"
+    SQLX_OFFLINE=true cargo clippy --workspace --all-targets --locked {{FLAGS}} -- -D warnings
 
 # Unit tests: extensions/web/admin (main workspace) + the tests/ workspace.
 # If sqlx offline errors appear, run `just prepare` first to refresh .sqlx.
@@ -217,9 +116,9 @@ test-unit:
     @scripts/build-coordinator.sh run test-unit "" -- {{just_executable()}} _test-unit-uncoordinated
 
 _test-unit-uncoordinated:
-    cargo nextest run -p systemprompt-web-admin --tests
-    cargo nextest run -p systemprompt-web-extension --tests
-    cargo nextest run --manifest-path tests/Cargo.toml -p mcp-unit-tests -p web-unit-tests
+    cargo nextest run --locked -p systemprompt-web-admin --tests
+    cargo nextest run --locked -p systemprompt-web-extension --tests
+    cargo nextest run --locked --manifest-path tests/Cargo.toml -p mcp-unit-tests -p web-unit-tests
 
 # DB-backed integration tests. Creates/drops throwaway mcp_ext_test_*
 # databases on the maintenance DB; the harness guard refuses any database
@@ -238,7 +137,7 @@ _test-integration-uncoordinated:
     print(up.urlunsplit((u.scheme, u.netloc, '/postgres', '', '')))")
         export SYSTEMPROMPT_TEST_DATABASE_URL
     fi
-    cargo nextest run --manifest-path tests/Cargo.toml -p mcp-integration-tests -p web-integration-tests -p admin-db-core-tests -p admin-db-config-tests
+    cargo nextest run --locked --manifest-path tests/Cargo.toml -p mcp-integration-tests -p web-integration-tests -p admin-db-core-tests -p admin-db-config-tests
 
 # HTTP contract suite: drives every admin route under three principals and
 # diffs the result against tests/contract/admin/baseline.txt. Same throwaway-
@@ -258,7 +157,7 @@ _test-contract-uncoordinated:
     print(up.urlunsplit((u.scheme, u.netloc, '/postgres', '', '')))")
         export SYSTEMPROMPT_TEST_DATABASE_URL
     fi
-    cargo nextest run --manifest-path tests/Cargo.toml -p admin-contract-tests
+    cargo nextest run --locked --manifest-path tests/Cargo.toml -p admin-contract-tests
 
 # All tests
 test: test-unit test-integration test-contract
@@ -293,8 +192,9 @@ _lint-gates-uncoordinated:
         check-admin-template-links.sh
         check-admin-template-assets.sh
         # admin-css-classes + frontend-standards now run as cargo tests in
-        # extensions/web/tests/ (admin_css_classes.rs, frontend_standards.rs).
-        check-fork-drift.sh
+        # tests/unit/web/src/ (admin_css_classes.rs, frontend_standards.rs).
+        check-spec-shape.sh
+        check-template-fields.sh
         check-dead-repository-code.sh
         check-file-headers.sh
         check-file-size.sh
@@ -331,11 +231,6 @@ _lint-gates-uncoordinated:
 # Cross-file referential integrity for services/ (ACL entity ids, MCP ports)
 validate:
     bash scripts/validate-services.sh
-
-# Shared sources that differ from the sibling fork must be recorded in
-# .fork-divergence. Needs SIBLING_REPO; skips cleanly without it.
-check-fork-drift:
-    bash scripts/check-fork-drift.sh
 
 # Verify every production extension source has a `//!` module head
 check-headers:
@@ -1289,3 +1184,40 @@ promote SHA="":
     echo
     echo "Opened https://github.com/$REPO/pull/$NUM"
     echo "Review it, then merge when you are ready:  gh pr merge $NUM --merge"
+
+# ---------------------------------------------------------------------------
+# Browser e2e (Playwright, playwright/). Runs against an ALREADY-RUNNING stack:
+# `just start` first. Global setup pings /health and fails fast rather than
+# booting a server, because this clone's server may be shared with other agents.
+# ---------------------------------------------------------------------------
+
+# Install the Playwright e2e suite's dependencies (playwright/ directory)
+e2e-install:
+    cd playwright && npm ci && npx playwright install chromium
+
+# Run the Playwright e2e suite against a running gateway (GATEWAY_URL env
+# overrides the default http://localhost:8080). Not part of `just gate` —
+# it needs a live stack: `just start` first.
+e2e *ARGS:
+    bash scripts/check-spec-shape.sh
+    cd playwright && npx playwright test {{ARGS}}
+
+# Seed deterministic e2e principals + traffic (idempotent; touches only
+# e2e-*/@e2e.local rows). `--reset` deletes and re-creates exactly those rows.
+e2e-seed *ARGS:
+    cd playwright && npx tsx setup/seed.ts {{ARGS}}
+
+# The browser tier as a gate. It needs a live stack, which nothing here can
+# start for you (the server on this clone may be shared), so this fails
+# loudly with the command to run rather than skipping quietly — a gate that
+# silently omits the e2e suite is worse than one that stops.
+e2e-gate:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    URL="${GATEWAY_URL:-http://localhost:8080}"
+    if ! curl -fsS -o /dev/null "$URL/health"; then
+        echo "e2e-gate: the e2e tier needs a running stack at $URL." >&2
+        echo "          Run 'just start' (or set GATEWAY_URL) and re-run." >&2
+        exit 1
+    fi
+    {{just_executable()}} e2e --project chromium

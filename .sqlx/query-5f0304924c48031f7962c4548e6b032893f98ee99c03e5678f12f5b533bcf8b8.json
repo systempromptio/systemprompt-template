@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT key_id,public_key FROM requirements_workflow_keys WHERE key_id=ANY($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "key_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "requirements_workflow_keys",
+            "name": "key_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "public_key",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "requirements_workflow_keys",
+            "name": "public_key"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "5f0304924c48031f7962c4548e6b032893f98ee99c03e5678f12f5b533bcf8b8"
+}

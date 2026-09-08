@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(SELECT 1 FROM user_sessions s JOIN users u ON u.id = s.user_id\n        WHERE s.session_id = $1 AND s.user_id = $2 AND s.revoked_at IS NULL\n        AND s.expires_at > NOW() AND u.status = 'active') AS \"live!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "live!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "0048222f775147576320dee18e622f5a54f317208bde046c42cedc4e34c65b2a"
+}

@@ -1,0 +1,40 @@
+@layer components {
+
+/* Why: one session is one option; the label carries the model and the
+   allow/deny split so the picker is the summary, without a card per session
+   pushing the timeline below the fold. */
+.sp-p-demo-trace__select { min-width: 24rem; max-width: 40rem; }
+
+.sp-p-demo-trace__table { table-layout: fixed; width: 100%; }
+.sp-p-demo-trace__table th:nth-child(1) { width: 12%; }
+.sp-p-demo-trace__table th:nth-child(2) { width: 11%; }
+.sp-p-demo-trace__table th:nth-child(3) { width: 19%; }
+.sp-p-demo-trace__table th:nth-child(4) { width: 9%; }
+.sp-p-demo-trace__table th:nth-child(5) { width: 25%; }
+.sp-p-demo-trace__table th:nth-child(6) { width: 24%; }
+
+/* A denied row is marked on its leading edge, the way the drawer marks a
+   failed stage, so a blocked turn reads as one before its badge does. */
+.sp-p-demo-trace__row--deny > td:first-child {
+    box-shadow: inset 3px 0 0 var(--sp-danger);
+}
+
+/* The four chain stages as one line of small badges: a wrapped list of four
+   chips doubled the row, and the stage detail sits on each badge's title. */
+.sp-p-demo-trace__chain {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.sp-p-demo-trace__chain .sp-badge { margin-inline-end: var(--sp-space-1); }
+
+.sp-p-demo-trace__detail {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-xs);
+}
+
+}

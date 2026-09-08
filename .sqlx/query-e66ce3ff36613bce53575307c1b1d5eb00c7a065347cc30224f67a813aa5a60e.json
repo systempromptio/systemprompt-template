@@ -1,0 +1,66 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            COUNT(*)::bigint AS \"requests!\",\n            COUNT(DISTINCT context_id) FILTER (WHERE context_id <> $2)::bigint\n              AS \"conversations!\",\n            COUNT(*) FILTER (WHERE status = 'failed')::bigint AS \"failed!\",\n            COALESCE(SUM(tokens_used), 0)::bigint AS \"tokens!\",\n            COALESCE(SUM(cost_microdollars), 0)::bigint AS \"cost!\",\n            MIN(created_at) AS \"first_request_at?\",\n            MAX(created_at) AS \"last_request_at?\"\n          FROM ai_requests\n          WHERE user_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "conversations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "failed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "first_request_at?",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_request_at?",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "e66ce3ff36613bce53575307c1b1d5eb00c7a065347cc30224f67a813aa5a60e"
+}

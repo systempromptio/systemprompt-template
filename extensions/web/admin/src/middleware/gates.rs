@@ -5,13 +5,13 @@
 //! they answer a different question: context decides what a page renders,
 //! these decide whether the request is allowed to reach one at all.
 
-use axum::extract::Request;
+use axum::extract::{Request, State};
 use axum::http::StatusCode;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 
 use crate::handlers::shared::ErrorBody;
-use crate::types::UserContext;
+use crate::types::{Role, UserContext, has_any};
 
 // Why: `nest_service` strips its prefix from `request.uri()`, so a layer
 // inside the admin SSR router sees `/profile` for a request to
@@ -26,13 +26,24 @@ fn original_path(request: &Request) -> String {
         )
 }
 
+fn original_target(request: &Request) -> String {
+    fn render(uri: &axum::http::Uri) -> String {
+        uri.path_and_query()
+            .map_or_else(|| uri.path().to_owned(), ToString::to_string)
+    }
+    request
+        .extensions()
+        .get::<axum::extract::OriginalUri>()
+        .map_or_else(|| render(request.uri()), |o| render(&o.0))
+}
+
 pub(crate) async fn require_user_middleware(request: Request, next: Next) -> Response {
     let user_ctx = request.extensions().get::<UserContext>().cloned();
     match user_ctx {
         Some(ctx) if !ctx.user_id.as_str().is_empty() => next.run(request).await,
         _ => {
-            let uri = original_path(&request);
-            let redirect_url = format!("/admin/login?redirect={uri}");
+            let target = urlencoding::encode(&original_target(&request)).into_owned();
+            let redirect_url = format!("/admin/login?redirect={target}");
             axum::response::Redirect::temporary(&redirect_url).into_response()
         },
     }
@@ -52,19 +63,6 @@ pub(crate) async fn require_auth_middleware(request: Request, next: Next) -> Res
     }
 }
 
-pub(crate) async fn require_admin_middleware(request: Request, next: Next) -> Response {
-    let user_ctx = request.extensions().get::<UserContext>().cloned();
-    match user_ctx {
-        Some(ctx) if ctx.is_admin => next.run(request).await,
-        _ => (
-            StatusCode::FORBIDDEN,
-            axum::Json(ErrorBody {
-                error: "Admin access required".to_owned(),
-            }),
-        )
-            .into_response(),
-    }
-}
 
 // Why: anonymous users are deliberately not handled here —
 // `require_user_middleware` runs after this layer and owns that case. The path
@@ -79,7 +77,7 @@ pub(crate) async fn non_admin_gate_middleware(request: Request, next: Next) -> R
     let Some(ctx) = user_ctx else {
         return next.run(request).await;
     };
-    if ctx.is_admin || ctx.user_id.as_str().is_empty() {
+    if ctx.is_console || ctx.user_id.as_str().is_empty() {
         return next.run(request).await;
     }
 
@@ -92,6 +90,7 @@ pub(crate) async fn non_admin_gate_middleware(request: Request, next: Next) -> R
 
 fn is_non_admin_allowed_path(path: &str) -> bool {
     path.starts_with("/admin/profile")
+        || path.starts_with("/admin/history")
         || path.starts_with("/admin/settings")
         || path.starts_with("/admin/auth/")
         || path.starts_with("/admin/api/")
@@ -104,4 +103,28 @@ fn is_non_admin_allowed_path(path: &str) -> bool {
         || path == "/admin/demo-register"
         || path == "/admin/"
         || path == "/admin"
+}
+
+pub(crate) async fn require_roles_middleware(
+    State(accepted): State<&'static [Role]>,
+    request: Request,
+    next: Next,
+) -> Response {
+    let user_ctx = request.extensions().get::<UserContext>().cloned();
+    let allowed = user_ctx.is_some_and(|ctx| has_any(&ctx.roles, accepted));
+    if allowed {
+        return next.run(request).await;
+    }
+    let names = accepted
+        .iter()
+        .map(|r| r.as_str())
+        .collect::<Vec<_>>()
+        .join(", ");
+    (
+        StatusCode::FORBIDDEN,
+        axum::Json(ErrorBody {
+            error: format!("Role required: {names}"),
+        }),
+    )
+        .into_response()
 }

@@ -1,0 +1,117 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH events AS (\n            SELECT e.skill, e.plugin_id, e.user_id, e.session_id, e.source, e.tool_use_id\n            FROM skill_invocation_events e\n            WHERE e.invoked_at >= $1 AND e.invoked_at < $2\n              AND e.skill IS NOT NULL\n              AND ($3::TEXT[] IS NULL OR e.user_id = ANY($3))\n              AND ($4::TEXT IS NULL OR e.user_id = $4)\n        ),\n        measured AS (\n            SELECT ev.skill,\n                   COUNT(*)::BIGINT AS invocations,\n                   COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS cost,\n                   COALESCE(SUM(COALESCE(r.input_tokens, 0)\n                              + COALESCE(r.output_tokens, 0)), 0)::BIGINT AS tokens\n            FROM events ev\n            JOIN ai_request_tool_calls tc ON tc.ai_tool_call_id = ev.tool_use_id\n            JOIN ai_requests r ON r.id = tc.request_id AND NOT r.synthetic\n            GROUP BY ev.skill\n        ),\n        rated AS (\n            SELECT lower(replace(sr.skill_name, '_', '-')) AS skill_id,\n                   AVG(sr.rating::DOUBLE PRECISION) AS avg_rating,\n                   COUNT(*)::BIGINT AS ratings\n            FROM skill_ratings sr\n            GROUP BY 1\n        )\n        SELECT\n            ev.skill AS \"skill!\",\n            MIN(ev.plugin_id) AS plugin_id,\n            COUNT(*)::BIGINT AS \"invocations!\",\n            COUNT(*) FILTER (WHERE ev.source = 'slash')::BIGINT AS \"slash!\",\n            COUNT(*) FILTER (WHERE ev.source = 'tool')::BIGINT AS \"tool!\",\n            COUNT(DISTINCT ev.user_id)::BIGINT AS \"distinct_users!\",\n            COUNT(DISTINCT ev.session_id)::BIGINT AS \"distinct_sessions!\",\n            COALESCE(MAX(m.invocations), 0)::BIGINT AS \"measured!\",\n            COALESCE(MAX(m.cost), 0)::BIGINT AS \"measured_cost!\",\n            COALESCE(MAX(m.tokens), 0)::BIGINT AS \"measured_tokens!\",\n            MAX(rt.avg_rating) AS avg_rating,\n            COALESCE(MAX(rt.ratings), 0)::BIGINT AS \"ratings!\",\n            COUNT(*) OVER ()::BIGINT AS \"total!\"\n        FROM events ev\n        LEFT JOIN measured m ON m.skill = ev.skill\n        LEFT JOIN rated rt\n               ON rt.skill_id = lower(replace(split_part(ev.skill, ':', 2), '_', '-'))\n        GROUP BY ev.skill\n        ORDER BY COUNT(*) DESC, ev.skill\n        LIMIT $5 OFFSET $6\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "skill!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "skill_invocation_events",
+            "name": "skill"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "plugin_id",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "slash!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "tool!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "distinct_users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "distinct_sessions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "measured!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "measured_cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "measured_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "avg_rating",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "ratings!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "33277c097d2ccf590cfb80a9a575ca6f7499ea0d6ab15526914a5406a017bc7d"
+}

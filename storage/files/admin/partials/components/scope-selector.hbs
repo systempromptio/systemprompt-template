@@ -1,0 +1,28 @@
+{{!--
+  The AI-activity scope bar: what the rows are narrowed to, and over what
+  window.
+
+  Rendered by `layout.hbs` wherever the shell sets `scope_selector`, which it
+  derives from the page id (see `handlers/ssr/context.rs`) — so a page opts in
+  by being an AI-activity listing rather than by setting a field.
+
+  It reads nothing from the page's own context on purpose. The shell renders on
+  every page in the group, including the two that build no filter context of
+  their own, and a missing path is a render error under strict mode.
+
+  The window links are plain `?preset=` hrefs and work with no JS, losing only
+  the other query parameters; `js/services/scope.js` puts those back, draws the
+  active scope as chips, and carries the choice on to the rest of the group.
+--}}
+<div class="sp-scope-filter" data-scope-selector>
+    <div class="sp-scope-filter__scope" data-scope-chips hidden>
+        <span class="sp-scope-filter__label">Scope</span>
+        <span class="sp-scope-filter__chips" data-scope-chip-list></span>
+        <a class="sp-scope-filter__clear" data-scope-clear href="?">Clear</a>
+    </div>
+    <div class="sp-scope-filter__ranges" role="group" aria-label="Time range">
+        <a class="sp-scope-filter__range" data-scope-range="24h" href="?preset=24h">24h</a>
+        <a class="sp-scope-filter__range" data-scope-range="7d" href="?preset=7d">7d</a>
+        <a class="sp-scope-filter__range" data-scope-range="30d" href="?preset=30d">30d</a>
+    </div>
+</div>

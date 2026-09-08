@@ -6,4 +6,13 @@ pub(crate) mod evals;
 pub(crate) mod jobs_service;
 pub(crate) mod marketplaces;
 pub(crate) mod secret_service;
-pub(crate) mod user_profile;
+
+pub(crate) mod bridge_profile;
+
+pub(crate) mod device_service;
+
+pub(crate) mod salesforce_jwt_bearer;
+
+pub mod connector_oauth;
+
+pub(crate) mod connector_accounts;

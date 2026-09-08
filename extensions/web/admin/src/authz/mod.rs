@@ -51,7 +51,7 @@ struct Registry {
 static REGISTRIES: LazyLock<Mutex<HashMap<String, &'static Registry>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
-fn database_key(pool: &PgPool) -> String {
+pub(crate) fn database_key(pool: &PgPool) -> String {
     let opts = pool.connect_options();
     format!(
         "{}:{}/{}",
@@ -93,3 +93,26 @@ pub fn dimensions(pool: &PgPool) -> &'static [SubjectDimension] {
 pub async fn subject_attributes_for(pool: &PgPool, user_id: &UserId) -> SubjectAttributes {
     gather_subject_attributes(&registry(pool).providers, user_id).await
 }
+
+pub mod group;
+systemprompt_security::register_subject_attribute_provider!(|ctx| {
+    let provider: SharedSubjectAttributeProvider =
+        Arc::new(group::GroupAttributeProvider::new(Arc::clone(&ctx.pool)));
+    provider
+});
+
+pub mod project;
+systemprompt_security::register_subject_attribute_provider!(|ctx| {
+    let provider: SharedSubjectAttributeProvider = Arc::new(
+        project::ProjectAttributeProvider::new(Arc::clone(&ctx.pool)),
+    );
+    provider
+});
+
+pub mod salesforce;
+systemprompt_security::register_subject_attribute_provider!(|ctx| {
+    let provider: SharedSubjectAttributeProvider = Arc::new(
+        salesforce::SalesforceAttributeProvider::new(Arc::clone(&ctx.pool)),
+    );
+    provider
+});

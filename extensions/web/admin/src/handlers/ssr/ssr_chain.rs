@@ -22,7 +22,7 @@ pub(crate) async fn chain_envelope(
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
 ) -> AdminResult<Response> {
-    if !user_ctx.is_admin {
+    if !user_ctx.is_console {
         return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
 

@@ -1,0 +1,178 @@
+@layer components {
+
+.sp-p-devices__estate {
+    min-inline-size: 0;
+    padding: var(--sp-space-5);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+}
+
+/* Why: the bars are neutral. Brand red is for branding and interactive
+   things, and a rollout chart has nothing to click; the one build worth
+   noticing is the newest, and it is the only one drawn in colour. */
+.sp-p-devices__versions {
+    display: grid;
+    gap: var(--sp-space-3);
+    margin: var(--sp-space-4) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sp-p-devices__version {
+    display: grid;
+    grid-template-columns: 8rem minmax(0, 1fr) 3rem;
+    align-items: center;
+    gap: var(--sp-space-3);
+    padding-block: var(--sp-space-2);
+    border-block-end: 1px solid var(--sp-border-subtle);
+}
+
+.sp-p-devices__version-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-xs);
+    flex-wrap: wrap;
+    overflow-wrap: anywhere;
+    min-inline-size: 0;
+}
+
+.sp-p-devices__version-count {
+    text-align: end;
+    color: var(--sp-text-primary);
+    font-size: var(--sp-text-sm);
+}
+
+/* Why: the SVG stretches to the column, so a corner radius on the rect
+   stretches with it. Rounding the viewport instead keeps the ends crisp. */
+.sp-p-devices__bar {
+    display: block;
+    inline-size: 100%;
+    block-size: var(--sp-space-3);
+    clip-path: inset(0 round var(--sp-radius-sm));
+}
+
+.sp-p-devices__bar-track {
+    fill: var(--sp-bg-tertiary);
+}
+
+.sp-p-devices__bar-fill {
+    fill: var(--sp-text-tertiary);
+}
+
+.sp-p-devices__version.is-latest .sp-p-devices__bar-fill {
+    fill: var(--sp-success);
+}
+
+.sp-p-devices__summary,
+.sp-p-devices__sessions {
+    display: block;
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    white-space: normal;
+}
+
+.sp-col-items {
+    min-inline-size: 12rem;
+    max-inline-size: 22rem;
+}
+
+[data-section="devices"] .sp-table__row-detail[hidden] { display: none; }
+
+[data-section="devices"] .sp-table__row-detail > td {
+    background: var(--sp-bg-surface-raised);
+    padding: 0 0 0 var(--sp-space-8);
+}
+
+[data-section="devices"] .sp-table__el--nested {
+    width: 100%;
+    margin: 0;
+    background: transparent;
+    border: none;
+}
+
+[data-section="devices"] .sp-table__el--nested th {
+    background: transparent;
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--sp-space-2) var(--sp-space-4);
+    border-bottom: 1px solid var(--sp-border-subtle);
+}
+
+[data-section="devices"] .sp-table__el--nested td {
+    padding: var(--sp-space-2) var(--sp-space-4);
+    border-bottom: 1px dashed var(--sp-border-subtle);
+}
+
+[data-section="devices"] .sp-table__row-toggle {
+    transition: transform var(--sp-duration-fast);
+}
+
+[data-section="devices"] .sp-table__row-toggle[aria-expanded="true"] {
+    transform: rotate(180deg);
+}
+
+.sp-p-devices__os {
+    margin-inline-start: var(--sp-space-2);
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+}
+
+.sp-col-host,
+.sp-col-token,
+.sp-col-user {
+    min-inline-size: 11rem;
+    white-space: nowrap;
+}
+
+.sp-col-fingerprint {
+    max-inline-size: 14rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-col-status,
+.sp-col-version {
+    inline-size: 1%;
+    white-space: nowrap;
+}
+
+/* Why: scoped to this page rather than changed in the shared cell. Three of
+   the four tabs carry two date columns, and the shared 11rem gives a quarter
+   of the table to timestamps that are sixteen characters wide. */
+[data-section="devices"] .sp-table__cell--date {
+    inline-size: 8.5rem;
+}
+
+/* Why: the sort link is inline, so on a wide column it occupies the left of
+   its header and a click at the header's centre lands on padding and does
+   nothing. Filling the header makes the whole cell the control it looks like. */
+[data-section="devices"] .sp-table__sort {
+    display: block;
+}
+
+}
+
+@layer responsive {
+    @media (max-width: 40rem) {
+        .sp-p-devices__version {
+            grid-template-columns: minmax(0, 1fr) 3rem;
+        }
+
+        .sp-p-devices__version-count {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .sp-p-devices__bar {
+            grid-column: 1 / -1;
+            grid-row: 2;
+        }
+    }
+}

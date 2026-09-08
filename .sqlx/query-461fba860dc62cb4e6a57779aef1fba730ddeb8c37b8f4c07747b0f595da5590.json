@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_drive_files SET removed=TRUE,status='pending',retry_at=NOW() WHERE source_type=$1 AND seen_generation IS DISTINCT FROM $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "461fba860dc62cb4e6a57779aef1fba730ddeb8c37b8f4c07747b0f595da5590"
+}

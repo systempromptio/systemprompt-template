@@ -10,6 +10,6 @@
 
 use systemprompt_security::policy::GovernanceEngine;
 
-pub(crate) fn engine() -> &'static GovernanceEngine {
-    GovernanceEngine::global()
+pub(crate) fn engine() -> crate::error::AdminResult<&'static GovernanceEngine> {
+    GovernanceEngine::global().map_err(crate::error::AdminError::internal)
 }

@@ -1,0 +1,101 @@
+# Classes the reverse gate (every_admin_css_class_has_a_consumer) may not see a
+# consumer for, with the reason. Nothing else belongs here: a rule no page uses
+# and that is not one of these is dead, and the fix is to delete it.
+#
+# 1. Documented component API. These modifiers and utilities are the vocabulary
+#    page agents build with; the first page to need one must find it defined,
+#    not have to re-derive it.
+sp-btn--files
+sp-btn--ghost
+sp-btn--icon
+sp-btn--outline-danger
+sp-btn--outline-primary
+sp-btn--tertiary
+sp-btn--view
+sp-btn--xs
+sp-badge--accent
+sp-badge--nodot
+sp-badge--sm
+sp-card--flush
+sp-card__body--flush
+sp-empty--pad
+sp-empty--pad-lg
+sp-notice__list
+sp-section__foot
+sp-skeleton__text
+sp-spinner
+sp-loading
+sp-table__cell--flush
+sp-table__cell--mono
+sp-table__cell--spark
+sp-table__empty
+sp-table__row--click
+sp-toolbar__filter
+sp-toolbar__filter-label
+sp-toolbar__spacer
+sp-toolbar--compact
+sp-table__cell--id
+sp-kpi__delta
+sp-dashboard-grid
+sp-u-bleed
+sp-u-block
+sp-u-border-bottom
+sp-u-border-top
+sp-u-d-grid
+sp-u-flex
+sp-u-flex-1
+sp-u-flex-col
+sp-u-flex-wrap
+sp-u-font-mono
+sp-u-gap-4
+sp-u-gap-6
+sp-u-grid
+sp-u-grid-2
+sp-u-grid-2col
+sp-u-grid-3
+sp-u-grid-3col
+sp-u-grid-auto-fill
+sp-u-h-full
+sp-u-hidden
+sp-u-inline
+sp-u-inline-block
+sp-u-items-center
+sp-u-items-start
+sp-u-justify-between
+sp-u-link-accent
+sp-u-mono
+sp-u-mt-2
+sp-u-mt-8
+sp-u-overflow-auto
+sp-u-overflow-x-auto
+sp-u-p-4
+sp-u-p-5
+sp-u-text-2xs
+sp-u-text-bold
+sp-u-text-error
+sp-u-text-lg
+sp-u-text-muted-inline
+sp-u-text-semibold
+sp-u-truncate
+#
+# 2. State classes toggled by JS against elements whose base class is rendered
+#    server-side.
+is-clickable
+is-hidden
+is-selected
+is-sorted
+#
+# 3. Column-width helpers chosen per content-type field kind at render time.
+sp-col-badge_count
+sp-col-boolean
+sp-col-checkbox
+sp-col-chevron
+sp-col-currency
+sp-col-tags
+sp-col-text
+sp-col-thumbnail
+#
+# 4. Sidebar navigation grouping, rendered by the sidebar rewrite that lands
+#    alongside this change set.
+sp-nav-group
+sp-nav-group-chevron

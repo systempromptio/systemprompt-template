@@ -1,0 +1,153 @@
+@layer components {
+
+/* The card IS the table: .sp-table is the surface, so the border and shadow can
+   never paint at a different width from the rows inside it. The edge fades live
+   on .sp-table__scroll, which is the element that actually scrolls, so they
+   cannot float in the middle of the page when the table does not overflow. */
+
+.sp-table {
+    background: var(--sp-bg-surface);
+    border-radius: var(--sp-corners-md);
+    box-shadow: var(--sp-shadow-card);
+    margin-bottom: var(--sp-density-section);
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.sp-table__scroll {
+    overflow-x: auto;
+    max-width: 100%;
+    background-image:
+        linear-gradient(to right, var(--sp-bg-surface), transparent),
+        linear-gradient(to left, var(--sp-bg-surface), transparent),
+        linear-gradient(to right, var(--sp-shadow-a10), transparent),
+        linear-gradient(to left, var(--sp-shadow-a10), transparent);
+    background-position: left center, right center, left center, right center;
+    background-repeat: no-repeat;
+    background-size: 2rem 100%, 2rem 100%, 0.75rem 100%, 0.75rem 100%;
+    background-attachment: local, local, scroll, scroll;
+}
+
+.sp-table__el {
+    width: 100%;
+    border-collapse: collapse;
+    /* Auto, with every cell clamped. Fixed layout was the wrong instrument: it
+       divides the table equally among the columns that have no width, so a name
+       column and a two-character count column got the same share and the names
+       clipped on twenty-one pages. What had actually caused the overlap it was
+       brought in to fix was unclamped flex children in stacked cells, and that
+       is fixed at the cell. Auto layout sizes a column to its content, so the
+       primary label gets the room it needs and a header can never truncate,
+       while --sp-table-cell-max stops one long description taking the table. */
+    table-layout: auto;
+    font-size: var(--sp-text-sm);
+}
+
+.sp-table__el th {
+    position: sticky;
+    top: 0;
+    z-index: var(--sp-z-sticky);
+    background: var(--sp-bg-card-header);
+    padding: var(--sp-density-cell-y) var(--sp-density-cell-x);
+    text-align: left;
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-tertiary);
+    border-bottom: 1px solid var(--sp-border-default);
+    /* Headers wrap rather than refusing to. A nowrap header sets a floor under
+       its whole column, and "Most recent reason" alone was forcing a table past
+       the viewport; wrapping costs one line once, at the top, and still never
+       truncates. */
+    white-space: normal;
+    overflow-wrap: break-word;
+    /* A header is never clipped. The typed cell rules set nowrap and a ceiling
+       for data, and applied to a th as well they cut the column's own name in
+       half — "Requests" came back as 72px of an 85px word. These three undo any
+       of that which reaches a header. */
+    overflow: visible;
+    text-overflow: clip;
+    max-width: none;
+    vertical-align: bottom;
+    user-select: none;
+}
+
+.sp-table__el td {
+    /* No explicit height. Padding and line-height give the 2rem row on their
+       own, and a fixed height here combined with the overflow clipping below
+       cut two-line cells off mid-glyph on the plugin and marketplace listings.
+       --sp-density-row remains the number those two are tuned to. */
+    padding: var(--sp-density-cell-y) var(--sp-density-cell-x);
+    border-bottom: 1px solid var(--sp-border-subtle);
+    line-height: var(--sp-density-cell-line);
+    color: var(--sp-text-secondary);
+    vertical-align: middle;
+    min-width: 0;
+    /* Clipping needs all three: without nowrap the text wraps inside the fixed
+       column instead of ellipsing, which is what turned a 32px row into 54px on
+       the users listing. A cell whose text must wrap opts in with --wrap. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: var(--sp-table-cell-max);
+}
+
+/* A row is padding plus one line box. An inline control sitting on the text
+   baseline adds the descender gap below itself, so a 20px badge in a 20px line
+   made a 25px line box and a 37px row on seven pages. Sizing the controls to the
+   line and centring them on it removes both the gap and the guesswork. */
+.sp-table__el td .sp-badge,
+.sp-table__el td .sp-btn,
+.sp-table__el td code,
+.sp-table__el td .sp-table__sort-icon {
+    height: var(--sp-density-cell-line);
+    vertical-align: middle;
+}
+
+/* The first column that is not a checkbox carries the row's identity, so it is
+   the one that absorbs the slack rather than the one that pays for it. Named as
+   a class too, for a table whose identity column is not first. */
+.sp-table__el td:first-child:not(:has(input)),
+.sp-table__el td:has(input) + td,
+.sp-table__el td.sp-table__cell--primary {
+    max-width: none;
+    min-width: 22ch;
+}
+
+.sp-table__el tbody tr:last-child td { border-bottom: none; }
+
+.sp-table__el td:first-child {
+    color: var(--sp-text-primary);
+    font-weight: var(--sp-font-medium);
+}
+
+.sp-table__el tbody tr:nth-child(even) td {
+    background: color-mix(in oklch, var(--sp-shadow-color) 2%, transparent);
+}
+
+.sp-table__el tbody tr:hover td {
+    background: color-mix(in oklch, var(--sp-shadow-color) 4%, transparent);
+}
+
+.sp-table__el tr.is-selected td {
+    background: var(--sp-accent-dim);
+}
+
+.sp-table__link {
+    color: var(--sp-text-primary);
+    text-decoration: none;
+}
+
+.sp-table__link:hover { color: var(--sp-accent-text); text-decoration: underline; }
+
+.sp-table__row--click,
+.sp-table__row--expand { cursor: pointer; }
+
+.sp-table__empty td {
+    padding: var(--sp-space-8) var(--sp-space-4);
+    text-align: center;
+    color: var(--sp-text-tertiary);
+}
+
+}

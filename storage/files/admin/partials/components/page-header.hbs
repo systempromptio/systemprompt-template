@@ -1,6 +1,22 @@
-<header class="page-header">
-    <div class="page-header__title-group">
-        <h1 class="page-header__title">{{title}}</h1>
-        {{#if subtitle}}<p class="page-header__subtitle">{{subtitle}}</p>{{/if}}
+{{!--
+  Page header. Invoke plainly for title/subtitle only:
+
+    {{> components/page-header title="Users" subtitle="Everyone with an account."}}
+
+  Or as a partial block to fill the actions and meta slots:
+
+    {{#> components/page-header title="Users" subtitle="…"}}
+      {{#*inline "header_actions"}}<a class="sp-btn sp-btn--sm sp-btn--primary" href="/x">New user</a>{{/inline}}
+      {{#*inline "header_meta"}}<span>Updated {{updated_at}}</span>{{/inline}}
+    {{/components/page-header}}
+
+  Both slots are optional; an unfilled slot renders nothing.
+--}}
+<header class="sp-page-header">
+    <div class="sp-page-header__title-group">
+        <h1 class="sp-page-header__title">{{title}}</h1>
+        {{#if subtitle}}<p class="sp-page-header__subtitle">{{subtitle}}</p>{{/if}}
+        <div class="sp-page-header__meta">{{#> header_meta}}{{/header_meta}}</div>
     </div>
+    <div class="sp-page-header__actions">{{#> header_actions}}{{/header_actions}}</div>
 </header>

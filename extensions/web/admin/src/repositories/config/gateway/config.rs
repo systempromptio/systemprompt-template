@@ -148,3 +148,21 @@ pub fn update_gateway_settings(
     write_gateway_file(config_path, &doc)?;
     get_gateway_config_from_file(config_path)
 }
+
+
+pub fn dispatchable_routes_from_services() -> Result<Vec<GatewayRouteView>, MarketplaceError> {
+    let services = ServicesBootstrap::get()
+        // Why: lint-ok: error-adapt — preserve loader failure in the catalog error.
+        .map_err(|e| MarketplaceError::Internal(format!("services tree is not loaded: {e}")))?;
+    let gateway = services
+        .gateway_config()
+        .ok_or_else(|| MarketplaceError::Internal("gateway configuration is missing".to_owned()))?;
+    Ok(gateway
+        .candidate_routes(&services.providers)
+        .map(|route| {
+            let mut route = route.into_owned();
+            route.ensure_id();
+            route_view(&route)
+        })
+        .collect())
+}

@@ -24,3 +24,17 @@ logs/
 .env.*
 !.env.example
 Screenshot*.png
+
+# Local build state and browser credentials must never enter an image context.
+.build/
+playwright/node_modules/
+playwright/.auth/
+playwright/test-results/
+playwright/playwright-report/
+.core-sibling/
+signing_key.pem
+
+**/target/
+**/.env
+**/.env.*
+**/signing_key.pem

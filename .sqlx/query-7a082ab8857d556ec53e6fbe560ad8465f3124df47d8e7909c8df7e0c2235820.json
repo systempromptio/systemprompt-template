@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM knowledge_embedding_cache c\n               WHERE c.created_at < $1\n                 AND NOT EXISTS (\n                     SELECT 1 FROM knowledge_chunks k\n                     WHERE encode(sha256(convert_to(k.text, 'UTF8')), 'hex') = c.text_hash\n                 )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7a082ab8857d556ec53e6fbe560ad8465f3124df47d8e7909c8df7e0c2235820"
+}

@@ -1,8 +1,8 @@
-//! `/admin/entities/traces` — Trace Explorer list page.
+//! `/admin/traces` — Trace Explorer list page.
 //!
 //! Replaces the old plugin-events recap with a true trace list bound to the
 //! shared time-range + identity-filter-ribbon URL contract. Each row links to
-//! the per-trace waterfall at `/admin/entities/traces/{session_id}`.
+//! the per-trace waterfall at `/admin/traces/{session_id}`.
 
 use crate::error::AdminError;
 use std::sync::Arc;
@@ -16,6 +16,7 @@ use systemprompt::identifiers::{AgentId, UserId};
 use crate::error::AdminHtmlResult;
 use crate::handlers::ssr::list_view;
 use crate::repositories::governance::filter_options::get_filter_options;
+use crate::repositories::scope::{ScopeRequest, SubjectScope};
 use crate::repositories::traces::{
     TraceFilter, TracePage, TraceSort, TraceSortColumn, TraceSortDir, TraceStats, get_trace_stats,
     list_traces,
@@ -32,7 +33,7 @@ mod view;
 
 use context::PerfTracesPageContext;
 
-const BASE_URL: &str = "/admin/entities/traces";
+const BASE_URL: &str = "/admin/traces";
 const PAGE_SIZE: i64 = 50;
 
 #[derive(Debug, Deserialize)]
@@ -50,6 +51,8 @@ pub(crate) struct TraceListQuery {
     pub sort: Option<String>,
     pub dir: Option<String>,
     pub page: Option<i64>,
+    pub group: Option<String>,
+    pub project: Option<String>,
 }
 
 pub(crate) async fn perf_traces_page(
@@ -59,7 +62,7 @@ pub(crate) async fn perf_traces_page(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<TraceListQuery>,
 ) -> AdminHtmlResult<Response> {
-    if !user_ctx.is_admin {
+    if !user_ctx.is_console {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
@@ -70,7 +73,20 @@ pub(crate) async fn perf_traces_page(
     });
     let page = query.page.unwrap_or(0).max(0);
 
-    let ctx = load_traces_data(&pool, &query, range, page).await;
+    let request =
+        ScopeRequest::from_query(&user_ctx, query.group.as_deref(), query.project.as_deref());
+    let scope = crate::repositories::scope::membership::get_subject_scope(&pool, &request).await?;
+    let ctx = load_traces_data(
+        &pool,
+        &user_ctx,
+        TraceScope {
+            request: &request,
+            subjects: scope,
+        },
+        &query,
+        TraceWindow { range, page },
+    )
+    .await;
     Ok(super::render_typed_page(
         &engine,
         "perf-traces",
@@ -80,22 +96,34 @@ pub(crate) async fn perf_traces_page(
     ))
 }
 
-async fn load_traces_data(
-    pool: &PgPool,
-    query: &TraceListQuery,
+// Why: the resolved window and page travel together — clippy's argument cap
+// is the only reason they are not two parameters.
+struct TraceWindow {
     range: TimeRange,
     page: i64,
+}
+
+// Why: the resolved user set and the request that produced it travel together —
+// the queries bind the first, the filter form re-renders the second.
+struct TraceScope<'a> {
+    request: &'a ScopeRequest,
+    subjects: SubjectScope,
+}
+
+#[expect(
+    clippy::too_many_lines,
+    reason = "one page assembly per handler; splitting is tracked in docs/tech-debt.md"
+)]
+async fn load_traces_data(
+    pool: &PgPool,
+    user_ctx: &UserContext,
+    scope: TraceScope<'_>,
+    query: &TraceListQuery,
+    window: TraceWindow,
 ) -> PerfTracesPageContext {
+    let TraceWindow { range, page } = window;
     let preset = preset_str(query, range);
-    let filter = TraceFilter {
-        user_id: empty_to_none(query.user_id.as_ref().map(UserId::as_str)),
-        agent_id: empty_to_none(query.agent_id.as_ref().map(AgentId::as_str)),
-        agent_scope: empty_to_none(query.agent_scope.as_deref()),
-        policy: empty_to_none(query.policy.as_deref()),
-        decision: empty_to_none(query.decision.as_deref()),
-        error_only: query.error_only.as_deref() == Some("true"),
-        deny_only: query.deny_only.as_deref() == Some("true"),
-    };
+    let filter = build_filter(query, scope.subjects.as_sql());
     let sort = sort_from_query(query);
     let offset = page * PAGE_SIZE;
     let trace_page = TracePage {
@@ -105,7 +133,7 @@ async fn load_traces_data(
     };
     let (list_res, stats_res, options_res) = tokio::join!(
         list_traces(pool, filter, range, trace_page),
-        get_trace_stats(pool, range),
+        get_trace_stats(pool, range, scope.subjects.as_sql()),
         get_filter_options(pool, range),
     );
 
@@ -135,6 +163,10 @@ async fn load_traces_data(
     PerfTracesPageContext {
         page: "traces",
         title: "Trace Explorer",
+        breadcrumbs: vec![
+            crate::handlers::ssr::types::BreadcrumbView::link("AI activity", "/admin/analytics"),
+            crate::handlers::ssr::types::BreadcrumbView::current("Traces"),
+        ],
         time_range: view::time_range_context(range, &preset),
         filter_ribbon: context::TraceFilterRibbon {
             base_url: BASE_URL,
@@ -155,6 +187,35 @@ async fn load_traces_data(
         dir: sort_dir,
         error_only: filter.error_only,
         deny_only: filter.deny_only,
+        scope_filter: view::scope_filter(
+            pool,
+            user_ctx,
+            &view::TraceScopeFilterArgs {
+                request: scope.request,
+                query,
+                range,
+                preset: &preset,
+            },
+        )
+        .await,
+    }
+}
+
+// Why: the query string is the only source of every filter column, so the
+// mapping lives in one place rather than inline in the page assembly.
+fn build_filter<'a>(
+    query: &'a TraceListQuery,
+    subject_ids: Option<&'a [String]>,
+) -> TraceFilter<'a> {
+    TraceFilter {
+        subject_ids,
+        user_id: empty_to_none(query.user_id.as_ref().map(UserId::as_str)),
+        agent_id: empty_to_none(query.agent_id.as_ref().map(AgentId::as_str)),
+        agent_scope: empty_to_none(query.agent_scope.as_deref()),
+        policy: empty_to_none(query.policy.as_deref()),
+        decision: empty_to_none(query.decision.as_deref()),
+        error_only: query.error_only.as_deref() == Some("true"),
+        deny_only: query.deny_only.as_deref() == Some("true"),
     }
 }
 

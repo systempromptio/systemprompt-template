@@ -15,7 +15,7 @@ async fn get_trace_stats_is_zero_in_an_empty_window() {
         return;
     };
 
-    let stats = get_trace_stats(&db.pool, narrow_window())
+    let stats = get_trace_stats(&db.pool, narrow_window(), None)
         .await
         .expect("query succeeds");
 
@@ -43,7 +43,7 @@ async fn get_trace_stats_takes_percentiles_from_request_bearing_traces_only() {
     )
     .await;
 
-    let stats = get_trace_stats(&db.pool, narrow_window())
+    let stats = get_trace_stats(&db.pool, narrow_window(), None)
         .await
         .expect("query succeeds");
 
@@ -74,7 +74,7 @@ async fn get_trace_stats_counts_errors_and_denials_per_session() {
     denial.decision = "deny";
     insert_decision(&db.pool, &denial).await;
 
-    let stats = get_trace_stats(&db.pool, narrow_window())
+    let stats = get_trace_stats(&db.pool, narrow_window(), None)
         .await
         .expect("query succeeds");
 

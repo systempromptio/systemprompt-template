@@ -17,50 +17,50 @@
                         cost_display, p50_display, p95_display, error_count,
                         error_rate_display, has_errors, filter_url}]
 --}}
-<p class="section-caption">{{caption}}</p>
+<p class="sp-section__sub">{{caption}}</p>
 
 {{#if has_rows}}
-{{#> components/data-table}}
+{{#> components/table}}
     <thead><tr>
         <th>{{dimension_label}}</th>
-        <th class="col-share">Share</th>
-        <th class="col-num">Requests</th>
-        <th class="col-num">Tokens in / out</th>
-        <th class="col-num">Cost</th>
-        <th class="col-num">p50</th>
-        <th class="col-num">p95</th>
-        <th class="col-num">Errors</th>
+        <th class="sp-col-share">Share</th>
+        <th class="sp-table__cell--num">Requests</th>
+        <th class="sp-table__cell--num">Tokens in / out</th>
+        <th class="sp-table__cell--num">Cost</th>
+        <th class="sp-table__cell--num">p50</th>
+        <th class="sp-table__cell--num">p95</th>
+        <th class="sp-table__cell--num">Errors</th>
     </tr></thead>
     <tbody>
     {{#each rows}}
-    <tr class="breakdown-row{{#if this.has_errors}} breakdown-row--errors{{/if}}">
+    <tr class="sp-breakdown-row{{#if this.has_errors}} sp-breakdown-row--errors{{/if}}">
         <td>
-            <a class="breakdown-row__key" href="{{this.filter_url}}"
+            <a class="sp-breakdown-row__key" href="{{this.filter_url}}"
                title="Show these calls in the log">
-                <code class="code-inline">{{this.key}}</code>
+                <code class="sp-code-inline">{{this.key}}</code>
             </a>
         </td>
-        <td class="col-share">
-            <span class="share-bar" style="--v:{{this.share_pct}}%"
+        <td class="sp-col-share">
+            <span class="sp-share-bar" style="--v:{{this.share_pct}}%"
                   aria-hidden="true"></span>
-            <span class="share-bar__value">{{this.share_display}}</span>
+            <span class="sp-share-bar__value">{{this.share_display}}</span>
         </td>
-        <td class="col-num">{{this.requests}}</td>
-        <td class="col-num">{{this.tokens_display}}</td>
-        <td class="col-num">{{this.cost_display}}</td>
-        <td class="col-num">{{this.p50_display}}</td>
-        <td class="col-num">{{this.p95_display}}</td>
-        <td class="col-num">
+        <td class="sp-table__cell--num">{{this.requests}}</td>
+        <td class="sp-table__cell--num">{{this.tokens_display}}</td>
+        <td class="sp-table__cell--num">{{this.cost_display}}</td>
+        <td class="sp-table__cell--num">{{this.p50_display}}</td>
+        <td class="sp-table__cell--num">{{this.p95_display}}</td>
+        <td class="sp-table__cell--num">
             {{#if this.has_errors}}
-              <span class="mcp-badge mcp-badge-danger">{{this.error_count}} · {{this.error_rate_display}}</span>
+              <span class="sp-badge sp-badge--err">{{this.error_count}} · {{this.error_rate_display}}</span>
             {{else}}
-              <span class="text-muted">none</span>
+              <span class="sp-u-text-muted">none</span>
             {{/if}}
         </td>
     </tr>
     {{/each}}
     </tbody>
-{{/components/data-table}}
+{{/components/table}}
 {{else}}
 {{> components/empty-state
     message="Nothing to group in this window. Widen the time range or run a demo to populate data."}}

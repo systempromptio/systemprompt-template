@@ -1,0 +1,120 @@
+@layer components {
+
+.sp-trace-stats__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: var(--sp-space-3);
+}
+
+.sp-trace-row__id {
+    text-decoration: none;
+    color: var(--sp-accent-text);
+}
+
+.sp-pagination__info {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-tertiary);
+    margin: 0 var(--sp-space-3);
+}
+
+.sp-waterfall {
+    margin: var(--sp-space-4) 0;
+}
+
+.sp-waterfall__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-3);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-waterfall__legend li {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+}
+
+.sp-waterfall__root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-05);
+    margin-top: var(--sp-space-3);
+}
+
+.sp-waterfall__row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    align-items: center;
+    gap: var(--sp-space-3);
+}
+
+.sp-waterfall__label {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sp-waterfall__track {
+    position: relative;
+    height: 20px;
+    background: var(--sp-bg-surface-alt);
+    border-radius: var(--sp-radius-xs);
+}
+
+.sp-waterfall__bar {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    min-width: 2px;
+    border-radius: var(--sp-radius-xs);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--sp-space-1);
+    overflow: hidden;
+}
+
+.sp-waterfall__dur {
+    font-size: 10px;
+    color: var(--sp-text-on-accent);
+    white-space: nowrap;
+}
+
+.sp-waterfall__swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--sp-text-tertiary);
+    flex-shrink: 0;
+}
+
+.sp-waterfall__swatch--gateway { background: var(--sp-info); }
+.sp-waterfall__swatch--governance { background: var(--sp-warning); }
+.sp-waterfall__swatch--tool { background: var(--sp-success); }
+.sp-waterfall__swatch--model { background: var(--sp-accent-fill); }
+.sp-waterfall__swatch--spawn { background: var(--sp-chart-purple); }
+
+.sp-notice__title {
+    font-weight: var(--sp-font-semibold);
+    margin: 0 0 var(--sp-space-1);
+}
+
+}
+
+@layer components {
+
+.sp-code-collapsible {
+    max-height: 320px;
+    overflow: auto;
+}
+
+.sp-table__row--expand {
+    cursor: pointer;
+}
+}

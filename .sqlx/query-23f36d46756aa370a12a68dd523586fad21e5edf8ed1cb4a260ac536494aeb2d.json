@@ -1,0 +1,101 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT b.user_id AS \"user_id!: UserId\", u.name AS \"user_name!\",\n                  COUNT(DISTINCT b.hostname) AS \"hosts!\",\n                  COUNT(*) AS \"sessions!\",\n                  MAX(b.bridge_version) AS \"latest_version!\",\n                  MIN(b.started_at) AS \"first_started_at!\",\n                  MAX(b.last_heartbeat_at) AS \"last_heartbeat_at!\",\n                  SUM(b.forwarded_total)::BIGINT AS \"forwarded_total!\",\n                  SUM(b.tokens_in_total + b.tokens_out_total)::BIGINT AS \"tokens_total!\",\n                  BOOL_OR(b.last_heartbeat_at >= NOW() - make_interval(days => $1))\n                      AS \"any_active!\"\n             FROM bridge_sessions b\n             JOIN users u ON u.id = b.user_id\n            WHERE NOT $2::BOOLEAN\n               OR b.last_heartbeat_at < NOW() - make_interval(days => $1)\n            GROUP BY b.user_id, u.name\n            ORDER BY\n              CASE WHEN $4::TEXT = 'desc' THEN\n                CASE $3::TEXT WHEN 'started' THEN EXTRACT(EPOCH FROM MIN(b.started_at))\n                        WHEN 'forwarded' THEN SUM(b.forwarded_total)::FLOAT8\n                        WHEN 'tokens' THEN\n                             SUM(b.tokens_in_total + b.tokens_out_total)::FLOAT8\n                        ELSE EXTRACT(EPOCH FROM MAX(b.last_heartbeat_at)) END\n              END DESC NULLS LAST,\n              CASE WHEN $4::TEXT = 'asc' THEN\n                CASE $3::TEXT WHEN 'started' THEN EXTRACT(EPOCH FROM MIN(b.started_at))\n                        WHEN 'forwarded' THEN SUM(b.forwarded_total)::FLOAT8\n                        WHEN 'tokens' THEN\n                             SUM(b.tokens_in_total + b.tokens_out_total)::FLOAT8\n                        ELSE EXTRACT(EPOCH FROM MAX(b.last_heartbeat_at)) END\n              END ASC NULLS LAST,\n              CASE WHEN $3::TEXT = 'version' AND $4::TEXT = 'desc'\n                   THEN MAX(b.bridge_version) END DESC,\n              CASE WHEN $3::TEXT = 'version' AND $4::TEXT = 'asc'\n                   THEN MAX(b.bridge_version) END ASC,\n              b.user_id\n            LIMIT $5 OFFSET $6",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "bridge_sessions",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "hosts!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "sessions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "latest_version!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "first_started_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_heartbeat_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "forwarded_total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "tokens_total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "any_active!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "23f36d46756aa370a12a68dd523586fad21e5edf8ed1cb4a260ac536494aeb2d"
+}

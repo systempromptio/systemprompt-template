@@ -1,0 +1,168 @@
+@layer components {
+
+/* Why: fixed layout is what keeps these tables inside the viewport. With auto
+   layout a single long reason or JSON argument widens its column until the
+   card scrolls sideways, and the row grows to two lines. Percentages here are
+   a budget: every column has a share and none can take another's. */
+.sp-t-decisions,
+.sp-t-findings,
+.sp-t-hooks,
+.sp-t-approvals,
+.sp-t-secrets {
+    table-layout: fixed;
+    inline-size: 100%;
+}
+
+.sp-t-decisions td,
+.sp-t-findings td,
+.sp-t-hooks td,
+.sp-t-approvals td,
+.sp-t-secrets td {
+    block-size: var(--sp-density-row);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-t-decisions th:nth-child(1) { inline-size: 15%; }
+.sp-t-decisions th:nth-child(2) { inline-size: 7%; }
+.sp-t-decisions th:nth-child(3) { inline-size: 15%; }
+.sp-t-decisions th:nth-child(4) { inline-size: 8%; }
+.sp-t-decisions th:nth-child(5) { inline-size: 11%; }
+.sp-t-decisions th:nth-child(6) { inline-size: 14%; }
+.sp-t-decisions th:nth-child(7) { inline-size: 8%; }
+.sp-t-decisions th:nth-child(8) { inline-size: 16%; }
+.sp-t-decisions th:nth-child(9) { inline-size: 6%; }
+
+.sp-t-findings th:nth-child(1) { inline-size: 15%; }
+.sp-t-findings th:nth-child(2) { inline-size: 13%; }
+.sp-t-findings th:nth-child(3) { inline-size: 11%; }
+.sp-t-findings th:nth-child(4) { inline-size: 8%; }
+.sp-t-findings th:nth-child(5) { inline-size: 9%; }
+.sp-t-findings th:nth-child(6) { inline-size: 8%; }
+.sp-t-findings th:nth-child(7) { inline-size: 12%; }
+.sp-t-findings th:nth-child(8) { inline-size: 15%; }
+.sp-t-findings th:nth-child(9) { inline-size: 9%; }
+
+.sp-t-approvals th:nth-child(1) { inline-size: 15%; }
+.sp-t-approvals th:nth-child(2) { inline-size: 6%; }
+.sp-t-approvals th:nth-child(3) { inline-size: 8%; }
+.sp-t-approvals th:nth-child(4) { inline-size: 11%; }
+.sp-t-approvals th:nth-child(5) { inline-size: 9%; }
+.sp-t-approvals th:nth-child(6) { inline-size: 13%; }
+.sp-t-approvals th:nth-child(7) { inline-size: 14%; }
+.sp-t-approvals th:nth-child(8) { inline-size: 9%; }
+.sp-t-approvals th:nth-child(9) { inline-size: 15%; }
+
+.sp-t-hooks th:nth-child(1) { inline-size: 15%; }
+.sp-t-hooks th:nth-child(2) { inline-size: 14%; }
+.sp-t-hooks th:nth-child(3) { inline-size: 20%; }
+.sp-t-hooks th:nth-child(4) { inline-size: 16%; }
+.sp-t-hooks th:nth-child(5) { inline-size: 20%; }
+.sp-t-hooks th:nth-child(6) { inline-size: 15%; }
+
+.sp-t-secrets th:nth-child(1) { inline-size: 14%; }
+.sp-t-secrets th:nth-child(3) { inline-size: 14%; }
+.sp-t-secrets th:nth-child(7) { inline-size: 10%; }
+
+/* Why: the decision buttons must stay reachable, so this one cell keeps its
+   overflow visible rather than clipping. Its column is sized to hold all three
+   controls; if it ever cannot, that shows up as a measured overflow rather
+   than as a button nobody can click. */
+.sp-t-approvals .sp-table__cell--actions {
+    overflow: visible;
+    white-space: nowrap;
+}
+
+.sp-p-governance__reason,
+.sp-p-approvals__args,
+.sp-p-approvals__who {
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-xs);
+}
+
+/* Why: the tab strip, the stage counts and the window share one row. Each was
+   its own band and the three together pushed the table 130px down the page,
+   which is four rows of the log — and the log is what the page is for. */
+.sp-p-governance__controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--sp-space-4);
+}
+
+/* Why: both children carry a bottom margin sized for standing alone. Side by
+   side in one row that margin is measured twice and buys nothing. */
+.sp-p-governance__controls > * {
+    margin-block: 0;
+}
+
+/* Why: the shared band leaves a section-sized gap under itself, which is the
+   right default for a page whose next element is a heading. The next element
+   here is a control row, so it takes the gap spacing instead. */
+[data-section="governance-warnings"] .sp-kpi-grid {
+    margin-block-end: var(--sp-density-gap);
+}
+
+/* Why: the toolbar's five controls have to share one row with the export
+   links, so the selects take their width from the budget rather than from
+   their widest option, and the search box stops flexing into the space the
+   others need. */
+[data-section="governance-warnings"] .sp-toolbar__filter {
+    max-inline-size: 11rem;
+}
+
+[data-section="governance-warnings"] .sp-toolbar .sp-filter-select {
+    min-inline-size: 0;
+    max-inline-size: 7rem;
+}
+
+[data-section="governance-warnings"] .sp-toolbar__search {
+    max-inline-size: 16rem;
+}
+
+/* Why: the four chain stages as one line rather than four tiles. The band has
+   a height budget and four more tiles broke it; these numbers still have to be
+   readable without a click, because "which stage is doing the work" is the
+   first question the page answers. */
+.sp-p-governance__stages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-2);
+    margin-block: var(--sp-space-1) var(--sp-space-2);
+}
+
+.sp-p-governance__stage {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-05) var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-xs);
+    text-decoration: none;
+}
+
+.sp-p-governance__stage:hover,
+.sp-p-governance__stage.is-active {
+    border-color: var(--sp-accent);
+    color: var(--sp-text-primary);
+}
+
+.sp-p-governance__stage-label {
+    white-space: nowrap;
+}
+
+.sp-p-governance__stage-count {
+    color: var(--sp-text-primary);
+    font-weight: 600;
+}
+
+.sp-p-governance__ranks {
+    margin-block-start: var(--sp-space-8);
+}
+
+}

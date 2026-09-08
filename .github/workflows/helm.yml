@@ -1,76 +1,66 @@
 name: Helm — lint, test, release
 
-# The chart publishes off the push to main, not off the release: every release
-# commit bumps helm/gateway/Chart.yaml (sync-release-version.sh moves both
-# `version` and `appVersion`), so the paths filter below always matches. There
-# used to be a `release: published` trigger as well; it never fired, because
-# release-gateway.yml creates the release with the default GITHUB_TOKEN and
-# events from that token do not start workflow runs.
-
+# Release publication is called after the image is available.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "helm/**"
-      - ".github/workflows/helm.yml"
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+      publish:
+        type: boolean
+        default: false
   pull_request:
-    paths:
-      - "helm/**"
+    paths: ["helm/**", ".github/workflows/helm.yml"]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit or release tag to test"
+        type: string
+        required: true
+      publish:
+        type: boolean
+        default: false
 
 permissions:
-  contents: write
-  pages: write
+  contents: read
 
 jobs:
   lint-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ inputs.ref || github.ref }}
 
       - uses: azure/setup-helm@v4
         with:
           version: v3.14.0
 
-      - uses: helm/chart-testing-action@v2.6.1
-
-      - name: Run chart-testing (lint)
-        run: ct lint --charts helm/gateway --validate-maintainers=false
-
+      - name: Lint chart with required deployment values
+        run: helm lint helm/gateway --set externalDatabase.url=postgres://test:test@postgres:5432/test --set adminEmail=smoke@example.invalid
       - uses: helm/kind-action@v1.10.0
-
-      - name: Install chart into kind
-        # continue-on-error: the install step pulls the gateway image; if
-        # that image doesn't exist yet (chicken-and-egg on a fresh release
-        # before Docker finishes its multi-arch buildx), we want chart-releaser
-        # to still publish the chart. Lint passes synchronously above and is
-        # the real gate.
-        continue-on-error: true
+        if: github.event_name != 'pull_request'
+      - name: Install and test the release image
+        if: github.event_name != 'pull_request'
+        run: bash scripts/smoke-helm.sh
+      - name: Collect Kubernetes diagnostics
+        if: failure() && github.event_name != 'pull_request'
         run: |
-          helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm dependency build helm/gateway || helm dependency update helm/gateway
-          ls -la helm/gateway/charts/
-          helm install gateway helm/gateway \
-            --dependency-update \
-            --set postgresql.auth.password=testpw \
-            --set secrets.anthropicApiKey=dummy \
-            --wait --timeout 300s
-          kubectl wait --for=condition=Available deployment/gateway-gateway --timeout=180s
-          helm test gateway
+          kubectl get pods -o wide
+          kubectl describe pods
+          kubectl logs -l app.kubernetes.io/instance=gateway --all-containers --tail=100
 
   release:
-    # Publish on any push to main that touches helm/ — which every release
-    # commit does. Don't gate on install-test: that soft-fails above when the
-    # release image is not published yet.
-    if: github.event_name == 'push'
+    if: inputs.publish == true
     needs: lint-test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Configure git
         run: |

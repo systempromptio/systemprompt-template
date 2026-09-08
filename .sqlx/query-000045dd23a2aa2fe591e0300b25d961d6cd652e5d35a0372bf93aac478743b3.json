@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.id AS \"id!\", c.user_id AS \"user_id!: UserId\", c.label AS \"label!\",\n                  c.fingerprint AS \"fingerprint!\", c.enrolled_at AS \"enrolled_at!\",\n                  c.revoked_at\n             FROM user_device_certs c\n            WHERE c.user_id = ANY($1::TEXT[])\n              AND (($2::TEXT = 'all')\n                   OR ($2::TEXT = 'active' AND c.revoked_at IS NULL)\n                   OR ($2::TEXT = 'revoked' AND c.revoked_at IS NOT NULL))\n            ORDER BY c.user_id, c.enrolled_at DESC, c.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_device_certs",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_device_certs",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "label!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_device_certs",
+            "name": "label"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "fingerprint!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "user_device_certs",
+            "name": "fingerprint"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "enrolled_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_device_certs",
+            "name": "enrolled_at"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "revoked_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_device_certs",
+            "name": "revoked_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "000045dd23a2aa2fe591e0300b25d961d6cd652e5d35a0372bf93aac478743b3"
+}

@@ -1,0 +1,15 @@
+{{- if and .Values.persistence.enabled (not .Values.profile.existingSecret) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "gateway.fullname" . }}-profile
+  labels: {{- include "gateway.labels" . | nindent 4 }}
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- if ne .Values.persistence.storageClass nil }}
+  storageClassName: {{ .Values.persistence.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}
+{{- end }}

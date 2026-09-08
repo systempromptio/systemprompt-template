@@ -1,0 +1,100 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT phase AS \"phase!\", severity AS \"severity!\", category AS \"category!\",\n                  scanner AS \"scanner!\", excerpt, blocked AS \"blocked!\",\n                  created_at AS \"created_at!\"\n           FROM ai_safety_findings\n           WHERE ai_request_id = ANY($1)\n           ORDER BY created_at ASC\n           LIMIT 200",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "phase!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "phase"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "severity!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "severity"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "category!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "category"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "scanner!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "scanner"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "excerpt",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "excerpt"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "blocked!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "blocked"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_safety_findings",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "8b68c088a48dfd398a7c15d442a30363a6eb64499dcc1c0d9fabf273fabc2791"
+}

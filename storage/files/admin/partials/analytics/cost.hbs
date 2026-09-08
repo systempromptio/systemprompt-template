@@ -1,0 +1,116 @@
+{{!--
+  Cost tab, in two audiences. Internal is the supplier bill; customer is what
+  a container consumed and carries no cost column at all — the query selects
+  none, so this partial has none to print.
+--}}
+<section aria-label="Cost and consumption">
+    {{> analytics/kpi-row tiles=cost.kpis}}
+
+
+    {{#if cost.is_internal}}
+    <div class="sp-analytics-grid">
+        <section class="sp-analytics-grid__panel">
+            {{> components/svg-stacked-chart cost.day_chart}}
+        </section>
+    </div>
+
+    {{#> components/section title="Providers" count=cost.provider_count
+        note="What inference cost us at each supplier in this window."}}{{/components/section}}
+    {{#if cost.has_providers}}
+    {{#> components/table caption="Provider cost, requests and tokens"}}
+        <thead><tr>
+            <th scope="col">Provider</th>
+            <th scope="col" class="sp-table__cell--num">Requests</th>
+            <th scope="col" class="sp-table__cell--spark">Share</th>
+            <th scope="col" class="sp-table__cell--num">Tokens</th>
+            <th scope="col" class="sp-table__cell--num" aria-sort="descending">Cost</th>
+        </tr></thead>
+        <tbody>
+        {{#each cost.providers}}
+        <tr>
+            <td><a href="{{this.drill_url}}">{{this.label}}</a></td>
+            <td class="sp-table__cell--num sp-u-num">{{this.requests}}</td>
+            <td class="sp-table__cell--spark"><span class="sp-p-analytics__bar" style="--v:{{this.share_pct}}%"></span></td>
+            <td class="sp-table__cell--num sp-u-num">{{this.tokens_display}}</td>
+            <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state message="No billed requests in this window."}}
+    {{/if}}
+
+    {{#> components/section title="Models" count=cost.model_count
+        note="The same spend, split by the model that earned it."}}{{/components/section}}
+    {{#if cost.has_models}}
+    {{#> components/table caption="Model cost, requests and tokens"}}
+        <thead><tr>
+            <th scope="col">Model</th>
+            <th scope="col" class="sp-table__cell--num">Requests</th>
+            <th scope="col" class="sp-table__cell--spark">Share</th>
+            <th scope="col" class="sp-table__cell--num">Tokens</th>
+            <th scope="col" class="sp-table__cell--num" aria-sort="descending">Cost</th>
+        </tr></thead>
+        <tbody>
+        {{#each cost.models}}
+        <tr>
+            <td class="sp-table__cell--mono"><a href="{{this.drill_url}}">{{this.label}}</a></td>
+            <td class="sp-table__cell--num sp-u-num">{{this.requests}}</td>
+            <td class="sp-table__cell--spark"><span class="sp-p-analytics__bar" style="--v:{{this.share_pct}}%"></span></td>
+            <td class="sp-table__cell--num sp-u-num">{{this.tokens_display}}</td>
+            <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state message="No model was billed in this window."}}
+    {{/if}}
+    {{/if}}
+
+    {{#> components/section title="Consumption by container" count=cost.container_count
+        note="Read from the daily rollups, which keep the group and project a person held when the row was written."}}
+      {{#*inline "section_actions"}}
+        <span class="sp-p-analytics__toggle" role="group" aria-label="Container axis">
+        <span class="sp-p-analytics__toggle-label" id="sp-cost-axis">Group by</span>
+        {{#each cost.axis_links}}
+        <a class="sp-btn sp-btn--sm{{#unless this.is_active}} sp-btn--outline{{/unless}}"
+           href="{{this.href}}"{{#if this.is_active}} aria-current="true"{{/if}}>{{this.label}}</a>
+        {{/each}}
+        </span>
+      {{/inline}}
+    {{/components/section}}
+    {{#if cost.has_containers}}
+    {{#> components/table caption="What each container consumed — no supplier cost"}}
+        <thead><tr>
+            <th scope="col">{{cost.axis_label}}</th>
+            <th scope="col" class="sp-table__cell--num">Users</th>
+            <th scope="col" class="sp-table__cell--num">Sessions</th>
+            <th scope="col" class="sp-table__cell--num" aria-sort="descending">Requests</th>
+            <th scope="col" class="sp-table__cell--spark">Share</th>
+            <th scope="col" class="sp-table__cell--num">In</th>
+            <th scope="col" class="sp-table__cell--num">Out</th>
+        </tr></thead>
+        <tbody>
+        {{#each cost.containers}}
+        <tr>
+            <td>
+                <a href="{{this.drill_url}}">{{this.container_id}}</a>
+                {{#if this.is_unattributed}} {{> components/badge tone="muted" text="no primary container"}}{{/if}}
+            </td>
+            <td class="sp-table__cell--num sp-u-num">{{this.users}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.sessions}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.requests}}</td>
+            <td class="sp-table__cell--spark"><span class="sp-p-analytics__bar" style="--v:{{this.share_pct}}%"></span></td>
+            <td class="sp-table__cell--num sp-u-num">{{this.input_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.output_display}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No rollups yet"
+        message="The usage_daily_rollup job writes these once a day, so a freshly deployed instance has none until its first run."}}
+    {{/if}}
+</section>

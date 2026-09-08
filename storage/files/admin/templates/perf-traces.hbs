@@ -1,123 +1,114 @@
 {{#> layout title=title page=page}}
     {{#*inline "content"}}
-    {{> components/page-header
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+
+    {{#> components/page-header
         title="Trace Explorer"
-        subtitle="Every gateway call, governance decision, and tool invocation grouped into a trace. Click any row to see the full waterfall."}}
+        subtitle="Every gateway call, governance decision, and tool invocation grouped into a trace. Open one to see its full waterfall."}}
+      {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/sessions">Sessions</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/contexts">Contexts</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/requests">Requests</a>
+      {{/inline}}
+    {{/components/page-header}}
 
-
-    {{> components/time-range time_range}}
-    {{> components/identity-filter-ribbon filter_ribbon}}
-
-    <section class="stat-grid" aria-label="Trace summary">
-      {{> components/stat-card label="Traces" value=stats.total_traces
-          subtitle="in window"}}
-      {{> components/stat-card label="Denied" value=stats.deny_count variant="danger"
+    <section class="sp-kpi-grid" aria-label="Trace summary">
+      {{> components/kpi label="Traces" value=stats.total_traces note="in window"}}
+      {{> components/kpi label="Denied" value=stats.deny_count tone="err"
           href=stats.deny_url active=stats.deny_active
-          subtitle="traces with a deny"
+          note="traces with a deny"
           hint="Show only traces containing a denied decision"}}
-      {{> components/stat-card label="Errors" value=stats.error_count variant="warning"
+      {{> components/kpi label="Errors" value=stats.error_count tone="warn"
           href=stats.error_url active=stats.error_active
-          subtitle="traces with a failure"
+          note="traces with a failure"
           hint="Show only traces containing a failed request"}}
-      {{> components/stat-card label="Cost" value=stats.cost_display
-          subtitle="billed in window"}}
-      {{> components/stat-card label="Tokens" value=stats.tokens_display
-          subtitle="total in / out"}}
-      {{> components/stat-card label="p95 active" value=stats.p95_display
-          subtitle=(concat "p50 " stats.p50_display " · p99 " stats.p99_display)
+      {{> components/kpi label="Cost" value=stats.cost_display note="billed in window"}}
+      {{> components/kpi label="Tokens" value=stats.tokens_display note="total in / out"}}
+      {{> components/kpi label="p95 active" value=stats.p95_display
+          note=(concat "p50 " stats.p50_display " · p99 " stats.p99_display)
           hint="Percentiles over request latency, across traces that issued at least one request"}}
     </section>
 
+    {{#> components/toolbar toolbar_count=(concat total_count " traces")}}
+      {{#*inline "toolbar_filters"}}
+        <form method="get" action="{{filter_ribbon.base_url}}" class="sp-toolbar__filter">
+          {{#each filter_ribbon.preserved}}<input type="hidden" name="{{this.name}}" value="{{this.value}}">{{/each}}
+          <label class="sp-u-sr-only" for="traces-user">User</label>
+          <select id="traces-user" name="user_id" class="sp-search-input">
+            <option value="">All users</option>
+            {{#each filter_ribbon.options.users}}
+              <option value="{{this.id}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>
+            {{/each}}
+          </select>
+          <label class="sp-u-sr-only" for="traces-policy">Policy</label>
+          <select id="traces-policy" name="policy" class="sp-search-input">
+            <option value="">All policies</option>
+            {{#each filter_ribbon.options.policies}}
+              <option value="{{this.id}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>
+            {{/each}}
+          </select>
+          <button type="submit" class="sp-btn sp-btn--sm">Apply</button>
+        </form>
+      {{/inline}}
+      {{#*inline "toolbar_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{stats.error_url}}">{{#if stats.error_active}}Clear errors filter{{else}}Errors only{{/if}}</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{stats.deny_url}}">{{#if stats.deny_active}}Clear deny filter{{else}}Denies only{{/if}}</a>
+      {{/inline}}
+    {{/components/toolbar}}
+
     {{#if has_traces}}
-      <div class="table-container">
-        <div class="table-scroll">
-          <table class="data-table trace-table">
+      {{#> components/table caption="Traces in the selected window" pagination=pagination modifier="sp-trace-table"}}
             <thead><tr>
               {{> components/sort-header sort_headers.started}}
-              <th class="col-trace">Trace</th>
-              <th class="col-identity">Identity</th>
-              <th class="col-model">Model</th>
+              <th class="sp-col-trace">Trace</th>
+              <th class="sp-col-identity">Identity</th>
+              <th class="sp-col-model">Model</th>
               {{> components/sort-header sort_headers.activity}}
               {{> components/sort-header sort_headers.tokens}}
               {{> components/sort-header sort_headers.cost}}
               {{> components/sort-header sort_headers.duration}}
-              <th class="col-status">Status</th>
+              <th class="sp-col-status">Status</th>
             </tr></thead>
             <tbody>
             {{#each traces}}
-            <tr class="trace-row">
-              <td class="col-started">
-                <div class="cell-stacked">
-                  <span class="cell-primary">{{this.started_at_time}}</span>
-                  <span class="cell-secondary">{{this.started_at_day}}</span>
-                </div>
+            <tr class="sp-trace-row">
+              <td class="sp-col-started sp-table__cell--date" title="{{this.started_at}}">{{this.started_at_day}} {{this.started_at_time}}</td>
+              <td class="sp-col-trace">
+                <a href="{{this.detail_url}}" class="sp-trace-row__id" title="{{this.session_id}}">
+                  <code class="sp-code-inline">{{this.session_id_short}}</code>
+                </a>
+                {{#if this.trace_id_short}}<span class="sp-table__cell--muted" title="{{this.trace_id}}"> {{this.trace_id_short}}</span>{{/if}}
               </td>
-              <td class="col-trace">
-                <div class="cell-stacked">
-                  <a href="{{this.detail_url}}" class="trace-row__id" title="{{this.session_id}}">
-                    <code class="code-inline">{{this.session_id_short}}</code>
-                  </a>
-                  {{#if this.trace_id_short}}
-                    <span class="cell-secondary" title="{{this.trace_id}}">trace {{this.trace_id_short}}</span>
-                  {{/if}}
-                </div>
+              <td class="sp-col-identity" title="{{this.user_id}}">
+                {{this.user_label}}{{#if this.agent_id}}<span class="sp-table__cell--muted"> · {{this.agent_id}}</span>{{/if}}
               </td>
-              <td class="col-identity">
-                <div class="cell-stacked">
-                  <span class="cell-primary" title="{{this.user_id}}">{{this.user_label}}</span>
-                  {{#if this.agent_id}}
-                    <span class="cell-secondary">{{this.agent_id}}{{#if this.agent_scope}} · {{this.agent_scope}}{{/if}}</span>
-                  {{/if}}
-                </div>
+              <td class="sp-col-model" title="{{this.model}}">
+                {{#if this.model_short}}<span title="{{this.model}}">{{this.model_short}}</span>{{else}}<span class="sp-table__cell--muted">&mdash;</span>{{/if}}
               </td>
-              <td class="col-model">
-                {{#if this.model_short}}
-                  <div class="cell-stacked">
-                    <span class="cell-primary" title="{{this.model}}">{{this.model_short}}</span>
-                    {{#if this.provider}}<span class="cell-secondary">{{this.provider}}</span>{{/if}}
-                  </div>
-                {{else}}<span class="cell-muted">—</span>{{/if}}
-              </td>
-              <td class="col-spans">
-                <div class="cell-stacked">
-                  <span class="cell-primary">{{this.activity_display}}</span>
-                  {{#if this.governance_display}}
-                    <span class="cell-secondary">{{this.governance_display}}</span>
-                  {{/if}}
-                </div>
-              </td>
-              <td class="col-tokens">
-                <div class="cell-stacked">
-                  <span class="cell-primary">{{this.tokens_display}}</span>
-                  {{#if this.tokens_split_display}}
-                    <span class="cell-secondary">{{this.tokens_split_display}}</span>
-                  {{/if}}
-                </div>
-              </td>
-              <td class="col-cost">{{this.cost_display}}</td>
-              <td class="col-duration">
-                <div class="cell-stacked">
-                  <span class="cell-primary">{{this.active_display}}</span>
-                  <span class="cell-secondary">{{this.window_display}} window</span>
-                </div>
-              </td>
-              <td class="col-status">
-                <div class="trace-row__badges">
-                  {{#if this.has_deny}}<span class="mcp-badge mcp-badge-danger" title="{{this.deny_count}} denied decision(s)">DENY {{this.deny_count}}</span>{{/if}}
-                  {{#if this.has_error}}<span class="mcp-badge mcp-badge-warning">ERROR</span>{{/if}}
-                  {{#unless this.has_deny}}{{#unless this.has_error}}<span class="mcp-badge mcp-badge-success">OK</span>{{/unless}}{{/unless}}
-                  {{#if this.cache_hit_any}}<span class="mcp-badge" title="Served partly from prompt cache">CACHE</span>{{/if}}
+              {{!-- One cell for the trace's size. The split — requests,
+                    governance decisions, tool calls — is on the title, because
+                    four numeric columns for one fact is four columns of chrome
+                    for a reader who wants "how big was this". --}}
+              <td class="sp-col-spans sp-table__cell--num" title="{{this.spans_breakdown}}">{{this.span_count}}</td>
+              <td class="sp-col-tokens sp-table__cell--num" title="{{this.tokens_split_display}}">{{this.tokens_display}}</td>
+              <td class="sp-col-cost sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+              <td class="sp-col-duration sp-table__cell--num" title="{{this.window_display}} window">{{this.active_display}}</td>
+              <td class="sp-col-status">
+                <div class="sp-trace-row__badges">
+                  {{#if this.has_deny}}<span class="sp-badge sp-badge--err" title="{{this.deny_count}} denied decision(s)">DENY {{this.deny_count}}</span>{{/if}}
+                  {{#if this.has_error}}<span class="sp-badge sp-badge--warn" title="{{this.error_count}} failed request(s)">ERROR {{this.error_count}}</span>{{/if}}
+                  {{#unless this.has_deny}}{{#unless this.has_error}}<span class="sp-badge sp-badge--ok">OK</span>{{/unless}}{{/unless}}
+                  {{#if this.cache_hit_any}}<span class="sp-badge" title="Served partly from prompt cache">CACHE</span>{{/if}}
                 </div>
               </td>
             </tr>
             {{/each}}
             </tbody>
-          </table>
-        </div>
-        {{> components/pagination pagination}}
-      </div>
+      {{/components/table}}
     {{else}}
-      {{> components/empty-state message="No traces in the selected window. Adjust the time range or filters."}}
+      {{> components/empty-state
+          title="No traces in this window"
+          message="Nothing ran under the selected scope and time range. Widen the range, clear the filters, or pick a different group or project."}}
     {{/if}}
     {{/inline}}
 {{/layout}}

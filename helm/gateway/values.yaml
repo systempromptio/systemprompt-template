@@ -8,6 +8,17 @@ image:
 imagePullSecrets: []
 
 replicaCount: 1
+adminEmail: "" # Required on first boot when no profile Secret is supplied.
+
+# A Secret containing profile.yaml and secrets.json, shared by every HA replica.
+profile:
+  existingSecret: ""
+
+# Preserve generated identity and configuration when a single replica is replaced.
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: null
 
 service:
   type: ClusterIP

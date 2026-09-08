@@ -1,0 +1,35 @@
+@layer components {
+
+/* One surface, one elevation. No inset glow and no hover lift: a card that
+   moves under the pointer is a card the reader has to re-find, and in a console
+   where a page carries a dozen of them the movement reads as noise. Cards are
+   never nested — an inner region is a .sp-section, not another card. */
+
+.sp-card {
+    background: var(--sp-bg-surface);
+    border-radius: var(--sp-corners-md);
+    padding: var(--sp-space-4);
+    box-shadow: var(--sp-shadow-card);
+}
+
+.sp-card__body {
+    color: var(--sp-text-secondary);
+    min-width: 0;
+}
+
+.sp-card__body > :first-child { margin-top: 0; }
+.sp-card__body > :last-child { margin-bottom: 0; }
+
+.sp-card__body--flush {
+    margin: 0 calc(-1 * var(--sp-space-4)) calc(-1 * var(--sp-space-4));
+}
+
+.sp-card--danger {
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--sp-danger) 35%, transparent);
+}
+
+.sp-card--flush {
+    padding: 0;
+}
+
+}

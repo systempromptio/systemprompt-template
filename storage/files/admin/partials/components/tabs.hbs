@@ -1,0 +1,20 @@
+{{!--
+  The sp-tabs strip. Every tab is a link, so a view is bookmarkable and the
+  server renders only the active tab's body.
+
+  Invoke as: {{> components/tabs tabs=tabs nav_label="Request views"}}
+
+  Inputs:
+    tabs        [{label, href, is_active, count?}] — built by the handler
+    nav_label   the strip's accessible name. NOT `label`: a partial parameter
+                shadows the same name on each item inside {{#each}}, so every
+                tab rendered the strip's name instead of its own.
+--}}
+<nav class="sp-tabs" role="tablist" aria-label="{{nav_label}}">
+    {{#each tabs}}
+    <a class="sp-tab{{#if this.is_active}} sp-tab--active{{/if}}" role="tab"
+       aria-selected="{{#if this.is_active}}true{{else}}false{{/if}}"
+       href="{{this.href}}">{{this.label}}{{#if this.count}}
+        <span class="sp-tab-count">{{this.count}}</span>{{/if}}</a>
+    {{/each}}
+</nav>

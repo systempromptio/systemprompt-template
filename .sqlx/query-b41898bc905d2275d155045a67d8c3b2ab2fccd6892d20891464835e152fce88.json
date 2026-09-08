@@ -1,0 +1,73 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT u.id,\n                  u.email,\n                  COALESCE(u.display_name, u.full_name, u.name) AS display_name,\n                  u.roles AS \"roles!: Vec<String>\",\n                  ARRAY(SELECT ug.group_id FROM user_groups ug\n                        WHERE ug.user_id = u.id) AS \"group_ids!: Vec<String>\",\n                  ARRAY(SELECT DISTINCT pm.project_id FROM project_members pm\n                        WHERE pm.user_id = u.id) AS \"project_ids!: Vec<String>\"\n           FROM users u\n           WHERE u.id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "email",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "roles!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "roles"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "group_ids!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "project_ids!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "b41898bc905d2275d155045a67d8c3b2ab2fccd6892d20891464835e152fce88"
+}

@@ -1,0 +1,141 @@
+{{!--
+  Overview tab: the whole instance on one screen. It pays for every site
+  aggregate at once, which is why the five entity tabs beside it each load
+  only their own.
+--}}
+<section aria-label="Site health">
+    <div class="sp-kpi-grid">
+        {{> components/kpi label="Requests" value=kpis.requests tone="accent"
+            note=kpis.error_display delta=kpis.requests_delta.display
+            delta_dir=kpis.requests_delta.tone}}
+        {{> components/kpi label="Total spend" value=kpis.cost_display tone="ok"
+            note=kpis.cost_per_request_display delta=kpis.cost_delta.display
+            delta_dir=kpis.cost_delta.tone}}
+        {{> components/kpi label="Weekly active users" value=kpis.weekly_active_users tone="accent"
+            note=kpis.requests_per_user_day_display delta=kpis.wau_delta.display
+            delta_dir=kpis.wau_delta.tone}}
+        {{> components/kpi label="Tokens" value=kpis.tokens_display tone="ok"
+            note="across the window" delta=kpis.tokens_delta.display
+            delta_dir=kpis.tokens_delta.tone}}
+        {{> components/kpi label=fast_slow.within_label value=fast_slow.fast tone="ok"
+            note=fast_slow.p50_display}}
+        {{> components/kpi label=fast_slow.breach_label value=fast_slow.slow tone="warn"
+            note=fast_slow.breach_pct_display}}
+    </div>
+
+    <div class="sp-p-analytics__controls" role="group" aria-label="Latency SLO threshold">
+        <span class="sp-section__sub">Latency SLO</span>
+        {{#each slo_options}}
+        <a class="sp-btn sp-btn--sm{{#unless this.selected}} sp-btn--outline{{/unless}}"
+           href="{{this.href}}"{{#if this.selected}} aria-current="true"{{/if}}>{{this.label}}</a>
+        {{/each}}
+    </div>
+
+    <div class="sp-analytics-grid">
+        <section class="sp-analytics-grid__panel">{{> components/svg-line-chart volume_chart}}</section>
+        <section class="sp-analytics-grid__panel">{{> components/svg-line-chart cost_chart}}</section>
+        <section class="sp-analytics-grid__panel">{{> components/pie-chart model_pie}}</section>
+        <section class="sp-analytics-grid__panel">{{> components/svg-stacked-chart model_cost_chart}}</section>
+    </div>
+
+    {{#> components/section title="Top users" count=leaderboard.pagination.total_rows
+        note="Exclusive attribution — each person counts once, in their primary container."}}
+      {{#*inline "section_actions"}}
+        {{#each leaderboard.sort_links}}
+        <a class="sp-btn sp-btn--sm{{#unless this.is_active}} sp-btn--outline{{/unless}}"
+           href="{{this.href}}"{{#if this.is_active}} aria-current="true"{{/if}}>{{this.label}}</a>
+        {{/each}}
+      {{/inline}}
+    {{/components/section}}
+
+    {{#if leaderboard.has_rows}}
+    {{#> components/table caption="Requests, tokens and cost by person"
+         pagination=leaderboard.pagination}}
+        <thead><tr>
+            <th scope="col">User</th>
+            <th scope="col">Groups</th>
+            <th scope="col" class="sp-table__cell--num"{{#if (eq leaderboard.sorted_key "requests")}} aria-sort="descending"{{/if}}>Requests</th>
+            <th scope="col" class="sp-table__cell--spark">Share</th>
+            <th scope="col" class="sp-table__cell--num">Req/day</th>
+            <th scope="col" class="sp-table__cell--num"{{#if (eq leaderboard.sorted_key "tokens")}} aria-sort="descending"{{/if}}>Tokens</th>
+            <th scope="col" class="sp-table__cell--num"{{#if (eq leaderboard.sorted_key "cost")}} aria-sort="descending"{{/if}}>Cost</th>
+            <th scope="col" class="sp-table__cell--date"{{#if (eq leaderboard.sorted_key "last_active")}} aria-sort="descending"{{/if}}>Last active</th>
+            <th scope="col" class="sp-table__cell--actions">Actions</th>
+        </tr></thead>
+        <tbody>
+        {{#each leaderboard.rows}}
+        <tr>
+            <td><a href="{{this.detail_url}}">{{this.label}}</a></td>
+            <td>{{this.groups_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.requests}}</td>
+            <td class="sp-table__cell--spark"><span class="sp-p-analytics__bar" style="--v:{{this.share_pct}}%"></span></td>
+            <td class="sp-table__cell--num sp-u-num">{{this.requests_per_day_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.tokens_display}}</td>
+            <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+            <td class="sp-table__cell--date">{{this.last_active_display}}</td>
+            <td class="sp-table__cell--actions">
+                <a href="{{this.scope_url}}" title="Scope this page to one person">Focus</a>
+                <a href="{{this.log_url}}" title="Raw request log for this person">Log</a>
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No activity"
+        message="Nobody used the gateway in this window. Widen the time range or clear the scope."}}
+    {{/if}}
+
+    {{#> components/section title="Client-reported signals" note="Statusline data from Claude Code clients — it complements the gateway's own counts and never replaces them."}}{{/components/section}}
+    <div class="sp-kpi-grid">
+        {{> components/kpi label="Permission grant rate" value=permissions.rate_display
+            note="permission requests followed by the tool running" tone="ok"}}
+        {{> components/kpi label="Prompt cache hit rate" value=session_costs.cache_hit_display
+            note=session_costs.cache_read_display tone="ok"}}
+        {{> components/kpi label="Thinking share" value=thinking.share_display
+            note=thinking.reasoning_display tone="accent"}}
+        {{> components/kpi label="Context window" value=session_costs.avg_context_display
+            note=session_costs.max_context_display tone="warn"}}
+    </div>
+
+    {{#> components/section title="Usage anomalies"
+        note="Hours where requests, cost or errors spiked past the trailing-week hourly baseline."}}{{/components/section}}
+    {{#if has_anomalies}}
+    {{#> components/table caption="Detected usage anomalies"}}
+        <thead><tr>
+            <th scope="col">Metric</th>
+            <th scope="col" class="sp-table__cell--date">Hour</th>
+            <th scope="col" class="sp-table__cell--num">Observed</th>
+            <th scope="col" class="sp-table__cell--num">Baseline</th>
+        </tr></thead>
+        <tbody>
+        {{#each anomalies}}
+        <tr>
+            <td>{{this.metric}}</td>
+            <td class="sp-table__cell--date">{{this.window_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.observed_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.baseline_display}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state message="No usage anomalies detected in this window."}}
+    {{/if}}
+
+    {{#> components/section title="Code impact"
+        note="AI lines and committed lines are different measurement frames — hook-observed tool edits versus git diff totals — shown side by side, never subtracted."}}{{/components/section}}
+    <div class="sp-analytics-grid">
+        <section class="sp-analytics-grid__panel">{{> components/svg-line-chart commit_chart}}</section>
+        <section class="sp-analytics-grid__panel">{{> components/svg-line-chart loc_chart}}</section>
+    </div>
+    <div class="sp-code-frames">
+        {{#each code_frames}}
+        <div class="sp-code-frame">
+            <span class="sp-code-frame__title">{{this.frame_title}}</span>
+            <span class="sp-code-frame__value">{{this.value_display}}</span>
+            <p class="sp-code-frame__caption">{{this.caption}}</p>
+        </div>
+        {{/each}}
+    </div>
+</section>

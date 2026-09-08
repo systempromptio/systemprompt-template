@@ -1,0 +1,51 @@
+@layer components {
+
+/* The landing page adds no card of its own: everything on it is a KPI tile, a
+   section head, a chart or a table from the system. The window control is
+   the shared time-range pill, so the active window reads the same here as on
+   every analytics page. What is left is the chart row, the two-up leaderboard
+   row and two one-line notes. */
+
+.sp-p-overview__chart {
+    padding: var(--sp-density-tile);
+    background: var(--sp-bg-surface);
+    border-radius: var(--sp-corners-sm);
+    box-shadow: var(--sp-shadow-card);
+    margin-block-end: var(--sp-density-section);
+}
+
+/* Unattributed is a real row with no page behind it, so it reads as a value
+   rather than as a link that lost its href. */
+.sp-p-overview__unattributed {
+    color: var(--sp-text-tertiary);
+    font-style: italic;
+}
+
+/* Two panels to a row. A dashboard read in one column spends its fold on
+   headings; side by side, twice the rows clear it. */
+
+.sp-p-overview__two-up {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(28rem, 1fr));
+    gap: var(--sp-density-gap);
+    margin-block-end: var(--sp-density-section);
+}
+
+.sp-p-overview__two-up > * {
+    min-inline-size: 0;
+}
+
+.sp-p-overview__board {
+    min-inline-size: 0;
+}
+
+/* One line, not a bordered notice: the reason a percentage is missing is worth
+   a sentence, not a box that costs the fold three table rows. */
+
+.sp-p-overview__note {
+    margin-block: 0 var(--sp-space-2);
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+}
+
+}

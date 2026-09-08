@@ -12,9 +12,15 @@ pub mod session_detail;
 pub mod sessions_list;
 pub mod tools;
 
+pub mod conversation_rows;
+
+pub mod session_quality;
+
+pub mod site;
+
 pub use agents::{AgentRow, list_agents};
 pub use conversations::{
-    ConversationDetail, ConversationListFilter, ConversationListItem, RawTurnBody, TranscriptTurn,
-    find_raw_turns,
+    ConversationDetail, ConversationListFilter, ConversationListItem, HistoryScope, RawTurnBody,
+    TranscriptTurn, find_raw_turns, history_scope_for,
 };
 pub use tools::{ToolRow, list_tools};

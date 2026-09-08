@@ -1,5 +1,7 @@
 # Deploy the gateway on DigitalOcean (1-Click droplet)
 
+Set `ADMIN_EMAIL` to an email address you control before first boot, alongside at least one AI provider key. The gateway requires this administrator identity.
+
 Runs the `systemprompt-gateway` server on a single DigitalOcean droplet with a bundled Postgres: one self-contained VM.
 
 ## Install

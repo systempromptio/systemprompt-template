@@ -1,0 +1,23 @@
+@layer components {
+
+/* The verdict strip is a wrap of badges, not a grid: the number of facts the
+   analysis produced varies per session, and a fixed grid would leave holes. */
+.sp-p-session-detail__verdict {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-2);
+    margin-bottom: var(--sp-space-3);
+}
+
+.sp-p-session-detail__summary {
+    color: var(--sp-text-secondary);
+    line-height: 1.5;
+    max-width: 68ch;
+    margin-bottom: var(--sp-space-3);
+}
+
+.sp-p-session-detail__analysis {
+    margin-bottom: var(--sp-space-6);
+}
+
+}

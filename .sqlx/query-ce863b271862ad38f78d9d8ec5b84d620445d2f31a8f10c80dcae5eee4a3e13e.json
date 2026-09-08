@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO project_ad_mappings (ad_group, project_id, source)\n         SELECT a, i, 'yaml' FROM UNNEST($1::TEXT[], $2::TEXT[]) AS m(a, i)\n         ON CONFLICT (ad_group, project_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ce863b271862ad38f78d9d8ec5b84d620445d2f31a8f10c80dcae5eee4a3e13e"
+}

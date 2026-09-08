@@ -1,0 +1,93 @@
+@layer components {
+
+/* The scope selector the AI-activity pages share. It sits above the page header
+   because the scope decides what the page is about, not how it is filtered. */
+
+.sp-scope-filter {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: var(--sp-density-gap);
+    padding: var(--sp-space-3) 0;
+}
+
+.sp-scope-filter__scope {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    min-width: 0;
+}
+
+/* The reset layer's [hidden] loses to this block's display: flex, so the
+   attribute the script toggles needs restating at the same layer. */
+.sp-scope-filter__scope[hidden] { display: none; }
+
+.sp-scope-filter__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1);
+}
+
+/* A chip is a link that removes the filter it names, so it reads as a value and
+   behaves as a control. */
+.sp-scope-filter__chip {
+    padding: var(--sp-space-05) var(--sp-space-2);
+    font-size: var(--sp-text-2xs);
+    color: var(--sp-text-primary);
+    text-decoration: none;
+    background: var(--sp-bg-tertiary);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+}
+
+.sp-scope-filter__chip:hover { border-color: var(--sp-border-strong); }
+
+.sp-scope-filter__label {
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    letter-spacing: var(--sp-tracking-wide);
+    text-transform: uppercase;
+    color: var(--sp-text-tertiary);
+}
+
+.sp-scope-filter__clear {
+    padding: var(--sp-space-05) var(--sp-space-2);
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-medium);
+    color: var(--sp-text-secondary);
+    text-decoration: none;
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+}
+
+.sp-scope-filter__clear:hover {
+    color: var(--sp-text-primary);
+    border-color: var(--sp-border-strong);
+    background: var(--sp-bg-tertiary);
+}
+
+.sp-scope-filter__ranges {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-05);
+    margin-left: auto;
+}
+
+.sp-scope-filter__range {
+    padding: var(--sp-space-1) var(--sp-space-2);
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-medium);
+    color: var(--sp-text-secondary);
+    text-decoration: none;
+    border-radius: var(--sp-corners-sm);
+}
+
+.sp-scope-filter__range:hover { background: var(--sp-bg-tertiary); }
+
+.sp-scope-filter__range--active,
+.sp-scope-filter__range.is-active {
+    color: var(--sp-text-on-accent);
+    background: var(--sp-accent-fill);
+}
+
+}

@@ -1,0 +1,133 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT g.id, g.created_at, g.decision, g.policy, g.tool_name,\n                  g.user_id AS \"user_id!: UserId\", g.agent_scope, g.reason, g.trace_id\n           FROM governance_decisions g\n           WHERE g.created_at >= $1 AND g.created_at < $2\n             AND ($3::TEXT[] IS NULL OR g.user_id = ANY($3))\n             AND ($4::TEXT IS NULL OR g.policy = $4)\n             AND ($5::TEXT IS NULL OR g.decision = $5)\n             AND ($6::TEXT IS NULL\n                  OR g.tool_name ILIKE '%' || $6 || '%'\n                  OR g.user_id ILIKE '%' || $6 || '%'\n                  OR g.reason ILIKE '%' || $6 || '%')\n           ORDER BY\n             CASE WHEN $7 = 'policy'   AND $8 THEN g.policy END ASC,\n             CASE WHEN $7 = 'policy'   AND NOT $8 THEN g.policy END DESC,\n             CASE WHEN $7 = 'decision' AND $8 THEN g.decision END ASC,\n             CASE WHEN $7 = 'decision' AND NOT $8 THEN g.decision END DESC,\n             CASE WHEN $7 = 'tool'     AND $8 THEN g.tool_name END ASC,\n             CASE WHEN $7 = 'tool'     AND NOT $8 THEN g.tool_name END DESC,\n             CASE WHEN $7 = 'user'     AND $8 THEN g.user_id END ASC,\n             CASE WHEN $7 = 'user'     AND NOT $8 THEN g.user_id END DESC,\n             CASE WHEN $8 THEN g.created_at END ASC,\n             g.created_at DESC\n           LIMIT $9 OFFSET $10",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "decision",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "decision"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "policy",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "policy"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "tool_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "tool_name"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "agent_scope",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "agent_scope"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "reason",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "reason"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "trace_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "trace_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "2b086d5f7efae808c60be4cee1e1b0861de65be509d7037b5ef169c64380619b"
+}

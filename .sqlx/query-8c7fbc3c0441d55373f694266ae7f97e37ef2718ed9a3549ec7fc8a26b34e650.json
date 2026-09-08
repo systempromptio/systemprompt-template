@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            COALESCE(model, 'unrouted') AS \"model!\",\n            COUNT(*)::bigint AS \"requests!\",\n            COALESCE(SUM(tokens_used), 0)::bigint AS \"tokens!\",\n            COALESCE(SUM(cost_microdollars), 0)::bigint AS \"cost!\"\n          FROM ai_requests\n          WHERE user_id = $1\n            AND ($2::int IS NULL\n                 OR created_at >= NOW() - make_interval(days => $2))\n          GROUP BY COALESCE(model, 'unrouted')\n          ORDER BY SUM(tokens_used) DESC NULLS LAST\n          LIMIT $3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "model!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "8c7fbc3c0441d55373f694266ae7f97e37ef2718ed9a3549ec7fc8a26b34e650"
+}

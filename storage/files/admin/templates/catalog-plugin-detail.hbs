@@ -1,0 +1,90 @@
+{{#> layout title=title page=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+
+    <header class="sp-page-header">
+        <div class="sp-page-header__title-group">
+            <h1 class="sp-page-header__title">{{name}}
+                {{#if enabled}}<span class="sp-badge sp-badge--ok">enabled</span>{{else}}<span class="sp-badge sp-badge--muted">disabled</span>{{/if}}
+            </h1>
+            {{#if description}}<p class="sp-page-header__subtitle">{{description}}</p>{{/if}}
+        </div>
+        <div class="sp-page-header__actions">
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{matrix_url}}">Access matrix →</a>
+        </div>
+    </header>
+
+    <div class="sp-catalog-meta-bar">
+        {{#if category}}<span class="sp-chip sp-chip--tag">{{category}}</span>{{/if}}
+        <span class="sp-chip sp-chip--muted">v{{version}}</span>
+        {{#if author_name}}<span class="sp-chip sp-chip--muted">by {{author_name}}</span>{{/if}}
+        <span class="sp-chip sp-chip--muted">{{assignment_count}} assignment{{#unless (eq assignment_count 1)}}s{{/unless}}</span>
+        <code class="sp-code-inline">{{source_path}}</code>
+    </div>
+
+    <div class="sp-catalog-detail-grid">
+        <section class="sp-catalog-rel-section">
+            <h2 class="sp-catalog-rel-section__title">Skills <span class="sp-count-pill">{{skills_count}}</span></h2>
+            {{#if skills_count}}
+            <ul class="sp-rel-list">
+                {{#each skills}}
+                <li><a class="sp-rel-link" href="{{url}}"><span class="sp-rel-link__name">{{name}}</span><code class="sp-code-inline">{{id}}</code></a></li>
+                {{/each}}
+            </ul>
+            {{else}}<p class="sp-u-text-tertiary">None</p>{{/if}}
+        </section>
+
+        <section class="sp-catalog-rel-section">
+            <h2 class="sp-catalog-rel-section__title">MCP servers <span class="sp-count-pill">{{mcp_count}}</span></h2>
+            {{#if mcp_count}}
+            <ul class="sp-rel-list">
+                {{#each mcp_servers}}
+                <li><a class="sp-rel-link" href="{{url}}"><span class="sp-rel-link__name">{{name}}</span></a></li>
+                {{/each}}
+            </ul>
+            {{else}}<p class="sp-u-text-tertiary">None</p>{{/if}}
+        </section>
+
+        <section class="sp-catalog-rel-section">
+            <h2 class="sp-catalog-rel-section__title">Agents <span class="sp-count-pill">{{agents_count}}</span></h2>
+            {{#if agents_count}}
+            <ul class="sp-rel-list">
+                {{#each agents}}
+                <li><span class="sp-rel-link sp-rel-link--static"><span class="sp-rel-link__name">{{name}}</span><code class="sp-code-inline">{{id}}</code></span></li>
+                {{/each}}
+            </ul>
+            {{else}}<p class="sp-u-text-tertiary">None</p>{{/if}}
+        </section>
+
+        <section class="sp-catalog-rel-section">
+            <h2 class="sp-catalog-rel-section__title">Hooks <span class="sp-count-pill">{{hooks_count}}</span></h2>
+            {{#if hooks_count}}
+            <ul class="sp-rel-list">
+                {{#each hooks}}
+                <li class="sp-rel-hook">
+                    <span class="sp-rel-link__name">{{event}}</span>
+                    <code class="sp-code-inline">{{matcher}}</code>
+                    <span class="sp-u-text-muted sp-u-text-xs">{{command}}</span>
+                    {{#if is_async}}<span class="sp-badge sp-badge--muted">async</span>{{/if}}
+                </li>
+                {{/each}}
+            </ul>
+            {{else}}<p class="sp-u-text-tertiary">None</p>{{/if}}
+        </section>
+    </div>
+
+    {{#if roles}}
+    <div class="sp-catalog-meta-bar">
+        <span class="sp-u-text-muted sp-u-text-xs">Roles:</span>
+        {{#each roles}}<span class="sp-chip sp-chip--muted">{{this}}</span>{{/each}}
+    </div>
+    {{/if}}
+    {{#if keywords}}
+    <div class="sp-catalog-meta-bar">
+        <span class="sp-u-text-muted sp-u-text-xs">Keywords:</span>
+        {{#each keywords}}<span class="sp-chip sp-chip--tag">{{this}}</span>{{/each}}
+    </div>
+    {{/if}}
+    {{/inline}}
+{{/layout}}

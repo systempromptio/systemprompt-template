@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE knowledge_drive_files SET removed=TRUE,status='pending',retry_at=NOW() WHERE source_type=$1 AND file_id=$2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f1ff92d643eec9b1914c04a7d91d8b8814d204e60f5ddbd608cfa21be7232e23"
+}

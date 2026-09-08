@@ -1,0 +1,86 @@
+@layer components {
+
+/* Two charts side by side above the runs table; on a narrow shell they stack. */
+.sp-p-evals__charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+    gap: var(--sp-density-gap);
+    margin-block-end: var(--sp-density-section);
+}
+
+.sp-p-evals__chart .sp-section__title {
+    margin-block-end: var(--sp-space-3);
+}
+
+/* The launch form is one row of controls, not a stacked form: the button and
+   the table it fills must sit together on one screen. */
+.sp-p-evals__run-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--sp-space-4);
+}
+
+.sp-p-evals__run-form .sp-form-group {
+    flex: 1 1 14rem;
+    margin: 0;
+}
+
+.sp-p-evals__run-form .sp-form-actions {
+    margin: 0;
+}
+
+/* Every free-text cell is one line: rationale, prompt sample and model name
+   clip at the cell and carry the full value on their title. */
+.sp-p-evals__clip {
+    max-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-p-evals__actions {
+    white-space: nowrap;
+}
+
+.sp-p-evals__inline-form {
+    display: inline;
+    margin-inline-start: var(--sp-space-2);
+}
+
+.sp-p-evals__runs,
+.sp-p-evals__results,
+.sp-p-evals__models,
+.sp-p-evals__users,
+.sp-p-evals__topics,
+.sp-p-evals__winrates,
+.sp-p-evals__pairs,
+.sp-p-evals__cases {
+    table-layout: fixed;
+    inline-size: 100%;
+}
+
+.sp-p-evals__runs th:nth-child(1)    { inline-size: 10%; }
+.sp-p-evals__runs th:nth-child(4)    { inline-size: 22%; }
+.sp-p-evals__runs th:nth-child(9)    { inline-size: 14%; }
+
+.sp-p-evals__results th:nth-child(1) { inline-size: 6%; }
+.sp-p-evals__results th:nth-child(2) { inline-size: 8%; }
+.sp-p-evals__results th:nth-child(3) { inline-size: 14%; }
+.sp-p-evals__results th:nth-child(4) { inline-size: 18%; }
+.sp-p-evals__results th:nth-child(6) { inline-size: 10%; }
+.sp-p-evals__results th:nth-child(7) { inline-size: 11%; }
+.sp-p-evals__results th:nth-child(8) { inline-size: 10%; }
+
+.sp-p-evals__models th:nth-child(1)  { inline-size: 20%; }
+.sp-p-evals__users th:nth-child(1)   { inline-size: 24%; }
+.sp-p-evals__topics th:nth-child(1)  { inline-size: 24%; }
+.sp-p-evals__winrates th:nth-child(1){ inline-size: 40%; }
+.sp-p-evals__pairs th:nth-child(1),
+.sp-p-evals__pairs th:nth-child(2),
+.sp-p-evals__pairs th:nth-child(3)   { inline-size: 15%; }
+.sp-p-evals__pairs th:nth-child(4)   { inline-size: 8%; }
+.sp-p-evals__cases th:nth-child(1)   { inline-size: 30%; }
+.sp-p-evals__cases th:nth-child(2)   { inline-size: 20%; }
+
+}

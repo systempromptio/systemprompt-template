@@ -1,26 +1,15 @@
 # Deploy the gateway to Render
 
-One-click deploy of the `systemprompt-gateway` server on [Render](https://render.com) via Blueprint.
+Deploy [the Blueprint](https://render.com/deploy?repo=https://github.com/systempromptio/systemprompt-template) to provision the published gateway image, a paid web service with a 1 GB persistent disk, and paid PostgreSQL. Hosting and provider usage are billed separately.
 
-## Deploy
+Before deploying, supply `ADMIN_EMAIL` (an address you control) and at least one of `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GEMINI_API_KEY`. Blank provider inputs are ignored. Render generates the OAuth pepper and provides the private database connection. The gateway derives its HTTPS origin from `RENDER_EXTERNAL_URL`.
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/systempromptio/systemprompt-template)
+State is mounted at `/app/data`, selected by `SYSTEMPROMPT_DATA_DIR`. Profiles, signing identity, and uploaded files survive replacement; packaged assets remain supplied by the image. Public registration is disabled. In the service shell, run:
 
-Render reads [`render.yaml`](https://github.com/systempromptio/systemprompt-template/blob/main/render.yaml) at the repo root and provisions:
-- A `systemprompt-gateway` web service from the GHCR image
-- A `systemprompt-postgres` database (Render Postgres, free plan)
-- `DATABASE_URL` wired in automatically
+```sh
+systemprompt admin users webauthn generate-setup-token --email "$ADMIN_EMAIL"
+```
 
-## Required env vars
+Open the returned private link to enroll your administrator passkey. API clients require access tokens. Health is checked at `/api/v1/health`; first boot runs migrations and prepares web assets.
 
-In the Blueprint dialog, set at least one (they're declared with `sync: false` so Render prompts you):
-
-- `ANTHROPIC_API_KEY`
-- `OPENAI_API_KEY`
-- `GEMINI_API_KEY`
-
-## Scaling
-
-Defaults to the `free` database plan and a single web instance. Edit `render.yaml` (fork → modify → reconnect Blueprint) to bump plans or add replicas.
-
-Docs: https://systemprompt.io/documentation/?utm_source=render&utm_medium=install_doc
+The image uses release alias `:0`; explicitly redeploy to pull a new release. Back up PostgreSQL and application state before upgrading. Keep one gateway instance when using a local persistent disk. Existing free deployments need a paid plan and disk before they can retain filesystem state; back up their current profile before replacing the instance.

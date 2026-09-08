@@ -5,7 +5,7 @@
 use serde::Serialize;
 
 use super::context_runs::{CaseRowView, ResultRowView, RunRowView};
-use crate::handlers::ssr::types::{ChartView, HistogramView};
+use crate::handlers::ssr::types::{BreadcrumbView, ChartView, HistogramView, TabLinkView};
 use systemprompt::identifiers::UserId;
 
 // Why: Which section of the page is being looked at. The page is split by *kind
@@ -52,6 +52,7 @@ impl EvalsTab {
 pub(super) struct EvalsPageContext {
     pub page: &'static str,
     pub title: &'static str,
+    pub breadcrumbs: Vec<BreadcrumbView>,
     pub tab: &'static str,
     pub is_overview: bool,
     pub is_traffic: bool,
@@ -60,13 +61,13 @@ pub(super) struct EvalsPageContext {
     pub is_golden_set: bool,
     pub show_traffic_kpis: bool,
     pub show_quality_kpis: bool,
-    pub tabs: Vec<EvalTabLinkView>,
+    pub tabs: Vec<TabLinkView>,
     pub time_range: EvalTimeRangeView,
     pub traffic: TrafficStatsView,
     pub scores: ScoreSummaryView,
     pub histogram: HistogramView,
     pub cost_chart: ChartView,
-    pub models: Vec<ModelMixRowView>,
+    pub models: Vec<EvalModelMixRowView>,
     pub users: Vec<UserRowView>,
     pub topics: Vec<TopicRowView>,
     pub win_rates: Vec<WinRateView>,
@@ -75,21 +76,13 @@ pub(super) struct EvalsPageContext {
     pub results: Vec<ResultRowView>,
     pub cases: Vec<CaseRowView>,
     pub filter: ResultFilterView,
-    pub model_options: Vec<ModelOptionView>,
+    pub model_options: Vec<EvalModelOptionView>,
     pub judge_model: String,
     pub default_sample_size: i64,
     pub max_sample_size: i64,
     pub base_url: &'static str,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notice: Option<NoticeView>,
-}
-
-#[derive(Debug, Serialize)]
-pub(super) struct EvalTabLinkView {
-    pub slug: &'static str,
-    pub label: &'static str,
-    pub href: String,
-    pub is_active: bool,
 }
 
 // Why: State of the Judge tab's verdict and model filters, echoed back so the
@@ -124,6 +117,7 @@ pub(super) struct PairRowView {
 #[derive(Debug, Serialize)]
 pub(super) struct NoticeView {
     pub is_error: bool,
+    pub tone: &'static str,
     pub message: String,
 }
 
@@ -155,7 +149,7 @@ pub(super) struct ScoreSummaryView {
 }
 
 #[derive(Debug, Serialize)]
-pub(super) struct ModelMixRowView {
+pub(super) struct EvalModelMixRowView {
     pub provider: String,
     pub model: String,
     pub request_count: i64,
@@ -207,7 +201,7 @@ pub(super) struct WinRateView {
 }
 
 #[derive(Debug, Serialize)]
-pub(super) struct ModelOptionView {
+pub(super) struct EvalModelOptionView {
     pub value: String,
     pub label: String,
 }
@@ -219,6 +213,9 @@ pub(super) struct EvalTimeRangeView {
     pub to: String,
     pub base_url: &'static str,
     pub query: String,
+    // Why: the shared time-range partial reads `rejected` to say the window
+    // shown is the default rather than the one the URL asked for.
+    pub rejected: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auto_widened: Option<&'static str>,
 }
@@ -227,7 +224,8 @@ pub(super) struct EvalTimeRangeView {
 pub(super) struct RunDetailContext {
     pub page: &'static str,
     pub title: String,
+    pub breadcrumbs: Vec<BreadcrumbView>,
     pub run: RunRowView,
     pub results: Vec<ResultRowView>,
-    pub back_url: &'static str,
+    pub result_count: usize,
 }

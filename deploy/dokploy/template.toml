@@ -9,6 +9,7 @@ port = 8080
 host = "${main_domain}"
 
 [config.env]
+ADMIN_EMAIL = "" # Required administrator email address you control.
 POSTGRES_PASSWORD = "${postgres_password}"
 EXTERNAL_URL = "https://${main_domain}"
 ANTHROPIC_API_KEY = ""

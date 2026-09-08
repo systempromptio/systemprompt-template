@@ -1,0 +1,210 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT a.call_id, a.tool_name, a.server_name, a.arguments, a.args_digest,\n                  a.requested_by AS \"requested_by!: UserId\",\n                  a.session_id AS \"session_id: SessionId\", a.trace_id,\n                  a.rule, a.status, a.approver_id, a.approver_username, a.decided_at,\n                  a.decision_note, a.expires_at, a.created_at\n           FROM approval_requests a\n           WHERE ($1::TEXT IS NULL\n                  OR ($1 = 'pending' AND a.status = 'pending' AND a.expires_at > NOW())\n                  OR ($1 = 'expired'\n                      AND (a.status = 'expired'\n                           OR (a.status = 'pending' AND a.expires_at <= NOW())))\n                  OR ($1 NOT IN ('pending', 'expired') AND a.status = $1))\n           ORDER BY (a.status = 'pending' AND a.expires_at > NOW()) DESC,\n                    a.created_at DESC\n           LIMIT $2 OFFSET $3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "call_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "call_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "tool_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "tool_name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "server_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "server_name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "arguments",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "arguments"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "args_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "args_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "requested_by!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "requested_by"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "session_id: SessionId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "trace_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "trace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "rule",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "rule"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "approver_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "approver_id"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "approver_username",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "approver_username"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "decided_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "decided_at"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "decision_note",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "decision_note"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "expires_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "expires_at"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "approval_requests",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "0199bbb624f56789bd68ee1f98a35dde74f34b823171028728edbe213390ddf1"
+}

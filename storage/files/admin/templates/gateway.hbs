@@ -1,0 +1,201 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle=subtitle}}
+        {{#*inline "header_meta"}}
+            <span class="sp-u-mono">{{source_path}}</span>
+            <span>{{inference_path_prefix}} · {{auth_scheme}}</span>
+        {{/inline}}
+        {{#*inline "header_actions"}}
+            <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="route-new">New route</button>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/access-control?entity_kind=gateway_route">Route access</a>
+        {{/inline}}
+    {{/components/page-header}}
+
+    {{#if load_error}}
+    {{> components/notice tone="err" title="The gateway file could not be read" message=load_error}}
+    {{/if}}
+    {{#if catalog_error}}
+    {{> components/notice tone="warn" title="The resolved route set is unavailable" message=catalog_error}}
+    {{/if}}
+
+    <section class="sp-kpi-grid" aria-label="Gateway totals">
+        {{#each kpis}}
+        {{> components/kpi label=this.label value=this.value note=this.sub tone=this.tone}}
+        {{/each}}
+    </section>
+
+    {{> components/tabs tabs=tabs nav_label="Gateway views"}}
+
+    {{#unless show_resolved}}
+    <section aria-label="Routes">
+    {{#> components/section title="Routes" count=routes_count note="Tried top to bottom. The first pattern that matches a requested model wins."}}
+        {{#*inline "section_actions"}}
+            <button type="button" class="sp-btn sp-btn--xs sp-btn--outline" data-action="route-new">Add route</button>
+        {{/inline}}
+    {{/components/section}}
+
+    {{#if routes_count}}
+    {{#> components/table caption="Gateway routes in dispatch order" modifier="sp-p-gateway__routes"}}
+        <thead><tr>
+            <th class="sp-table__cell--num" aria-sort="none">#</th>
+            <th aria-sort="none">Route id</th>
+            <th aria-sort="none">Model pattern</th>
+            <th aria-sort="none">Provider</th>
+            <th aria-sort="none">Upstream</th>
+            <th aria-sort="none">Surface</th>
+            <th aria-sort="none">Requires</th>
+            <th class="sp-table__cell--num" aria-sort="none">Grants</th>
+            <th class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody>
+        {{#each routes}}
+        <tr data-route-index="{{index}}" data-route-id="{{id}}">
+            <td class="sp-table__cell--num sp-u-num">{{add index 1}}</td>
+            <td class="sp-table__cell--mono"><a class="sp-table__link" href="{{matrix_url}}"{{#unless dispatchable}} title="not dispatched"{{/unless}}>{{id}}</a></td>
+            <td class="sp-table__cell--mono">{{model_pattern}}</td>
+            <td>{{provider}}</td>
+            <td class="sp-table__cell--mono">{{#if upstream_model}}{{upstream_model}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td>{{> components/badge tone=surface_tone text=surface}}</td>
+            <td class="sp-table__cell--muted" title="when: {{default when "any"}}{{#if has_pricing}} · pricing set{{/if}}">{{#if requires}}{{requires}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{#if grants}}<a class="sp-table__link" href="{{matrix_url}}">{{grants}}</a>{{else}}<span class="sp-u-text-tertiary">0</span>{{/if}}</td>
+            <td class="sp-table__cell--actions"><span class="sp-p-gateway__row-actions">
+                <button type="button" class="sp-btn sp-btn--xs sp-btn--ghost" data-action="route-up" data-index="{{index}}" aria-label="Move {{id}} earlier"{{#if is_first}} disabled{{/if}}>&uarr;</button>
+                <button type="button" class="sp-btn sp-btn--xs sp-btn--ghost" data-action="route-down" data-index="{{index}}" aria-label="Move {{id}} later"{{#if is_last}} disabled{{/if}}>&darr;</button>
+                <button type="button" class="sp-btn sp-btn--xs sp-btn--ghost" data-action="route-edit" data-index="{{index}}" aria-label="Edit {{id}}">Edit</button>
+                <button type="button" class="sp-btn sp-btn--xs sp-btn--ghost" data-action="route-delete" data-index="{{index}}" data-route-id="{{id}}" aria-label="Delete {{id}}">Delete</button>
+            </span></td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No routes" message="The gateway declares no routes, so every model falls through to the catch-all."}}
+    {{/if}}
+    </section>
+    {{else}}
+    <section aria-label="Resolved routes">
+    {{> components/section title="Resolved but not declared" count=resolved_only_count note="Routes the dispatcher will match that the file does not list, such as the synthesized catch-all."}}
+    {{#if resolved_only_count}}
+    {{#> components/table caption="Routes present in the resolved set but absent from the gateway file"}}
+        <thead><tr>
+            <th aria-sort="none">Route id</th>
+            <th aria-sort="none">Model pattern</th>
+            <th aria-sort="none">Provider</th>
+            <th aria-sort="none">Upstream</th>
+            <th class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody>
+        {{#each resolved_only}}
+        <tr data-route-id="{{id}}">
+            <td class="sp-table__cell--mono">{{id}}</td>
+            <td class="sp-table__cell--mono">{{model_pattern}}</td>
+            <td>{{provider}}</td>
+            <td class="sp-table__cell--mono">{{#if upstream_model}}{{upstream_model}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td class="sp-table__cell--actions"><a class="sp-btn sp-btn--xs sp-btn--outline" href="{{matrix_url}}">Access</a></td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state message="Every route the dispatcher matches is declared in the file."}}
+    {{/if}}
+    </section>
+    {{/unless}}
+
+    <section aria-label="Settings">
+    {{> components/section title="Settings" note="Applied to every inference request the gateway accepts."}}
+    <form class="sp-form-grid" id="gateway-settings" novalidate>
+        <div class="sp-form-field">
+            <label class="sp-form-label" for="gw-enabled">Gateway</label>
+            <select class="sp-filter-select" id="gw-enabled" name="enabled">
+                <option value="true"{{#if enabled}} selected{{/if}}>On</option>
+                <option value="false"{{#unless enabled}} selected{{/unless}}>Off</option>
+            </select>
+            <span class="sp-field-hint">Off refuses every request on the inference path.</span>
+        </div>
+        <div class="sp-form-field">
+            <label class="sp-form-label" for="gw-auth">Auth scheme</label>
+            <input class="sp-field-input" id="gw-auth" name="auth_scheme" value="{{auth_scheme}}">
+            <span class="sp-field-hint">The Authorization scheme clients present.</span>
+        </div>
+        <div class="sp-form-field">
+            <label class="sp-form-label" for="gw-prefix">Inference path prefix</label>
+            <input class="sp-field-input" id="gw-prefix" name="inference_path_prefix" value="{{inference_path_prefix}}">
+            <span class="sp-field-hint">Must start with a slash.</span>
+        </div>
+        <div class="sp-form-actions">
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Save settings</button>
+            <span class="sp-form-status" data-settings-status role="status"></span>
+        </div>
+    </form>
+    </section>
+
+    <div class="sp-catalog-detail-grid">
+        <section class="sp-catalog-rel-section" aria-label="Providers">
+            <h2 class="sp-catalog-rel-section__title">Providers <span class="sp-count-pill">{{providers_count}}</span></h2>
+            {{#if providers_count}}
+            <ul class="sp-rel-list">
+                {{#each providers}}
+                <li class="sp-rel-link sp-rel-link--static">
+                    <span class="sp-rel-link__name sp-u-mono">{{name}}</span>
+                    <span class="sp-u-text-tertiary sp-u-text-xs">{{surface}} · {{model_count}} models{{#unless advertised}} · backend only{{/unless}}</span>
+                </li>
+                {{/each}}
+            </ul>
+            {{else}}
+            {{> components/empty-state message="No provider registry is loaded, so no route can be checked against one."}}
+            {{/if}}
+        </section>
+
+        <section class="sp-catalog-rel-section" aria-label="Catalog probe">
+            <h2 class="sp-catalog-rel-section__title">What one person sees</h2>
+            <p class="sp-u-text-sm sp-u-text-secondary">The routes the gateway would advertise to a chosen account, resolved through the same rules the dispatcher uses.</p>
+            <form class="sp-form-field sp-form-field--inline" id="gateway-probe" novalidate>
+                <label class="sp-form-label" for="gw-probe-user">Account</label>
+                <select class="sp-filter-select" id="gw-probe-user" name="user_id">
+                    {{#each probe_users}}<option value="{{id}}">{{label}}</option>{{/each}}
+                </select>
+                <button type="submit" class="sp-btn sp-btn--sm sp-btn--outline">Probe</button>
+            </form>
+            <div data-probe-result role="status" class="sp-u-mt-3"></div>
+        </section>
+    </div>
+
+    <dialog class="sp-dialog" id="gateway-route-dialog" aria-labelledby="gw-dialog-title">
+        <form method="dialog" class="sp-dialog-form" id="gateway-route-form" novalidate>
+            <h2 class="sp-ac-dialog__header" id="gw-dialog-title">Route</h2>
+            <div class="sp-ac-dialog__body">
+                <div class="sp-form-field">
+                    <label class="sp-form-label" for="gw-route-id">Route id</label>
+                    <input class="sp-field-input" id="gw-route-id" name="id" placeholder="left blank, derived from pattern and provider">
+                </div>
+                <div class="sp-form-field">
+                    <label class="sp-form-label" for="gw-route-pattern">Model pattern</label>
+                    <input class="sp-field-input" id="gw-route-pattern" name="model_pattern" required placeholder="claude-*">
+                </div>
+                <div class="sp-form-field">
+                    <label class="sp-form-label" for="gw-route-provider">Provider</label>
+                    <input class="sp-field-input" id="gw-route-provider" name="provider" required list="gw-provider-list">
+                    <datalist id="gw-provider-list">
+                        {{#each providers}}<option value="{{name}}"></option>{{/each}}
+                    </datalist>
+                </div>
+                <div class="sp-form-field">
+                    <label class="sp-form-label" for="gw-route-upstream">Upstream model</label>
+                    <input class="sp-field-input" id="gw-route-upstream" name="upstream_model" placeholder="optional rewrite">
+                </div>
+                <p class="sp-ac-form-error" data-route-error role="alert"></p>
+                <p class="sp-ac-modal-hint">Pricing, when and requires blocks stay as written in the file; this form never rewrites them.</p>
+            </div>
+            <div class="sp-ac-dialog__actions">
+                <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="route-cancel">Cancel</button>
+                <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Save route</button>
+            </div>
+        </form>
+    </dialog>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script type="module" src="/js/pages/admin-gateway.js?v={{css_version}}"></script>
+    {{/inline}}
+{{/layout}}

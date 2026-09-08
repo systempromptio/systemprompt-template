@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM mcp_connector_oauth_states WHERE state = $1 AND user_id = $2 AND provider = $3 AND expires_at > NOW() RETURNING ciphertext, nonce",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ciphertext",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "mcp_connector_oauth_states",
+            "name": "ciphertext"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "nonce",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "mcp_connector_oauth_states",
+            "name": "nonce"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "e9d6e363283eec53ba36d3def0bf8fa6a9a1013737a80ee99adf36fb55c6091a"
+}

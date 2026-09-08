@@ -1,0 +1,47 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COUNT(*)::BIGINT AS \"invocations!\",\n            COUNT(*) FILTER (WHERE EXISTS (\n                SELECT 1 FROM ai_request_tool_calls tc\n                WHERE tc.ai_tool_call_id = e.tool_use_id\n            ))::BIGINT AS \"measured!\",\n            COUNT(DISTINCT e.skill)::BIGINT AS \"skills!\",\n            COUNT(DISTINCT e.user_id)::BIGINT AS \"users!\"\n        FROM skill_invocation_events e\n        WHERE e.invoked_at >= $1 AND e.invoked_at < $2\n          AND e.skill IS NOT NULL\n          AND ($3::TEXT[] IS NULL OR e.user_id = ANY($3))\n          AND ($4::TEXT IS NULL OR e.user_id = $4)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "measured!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "skills!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "c0f7fa9ed9b572b9e6932124eec31f3f44260c3371f75822830d177c7268c653"
+}

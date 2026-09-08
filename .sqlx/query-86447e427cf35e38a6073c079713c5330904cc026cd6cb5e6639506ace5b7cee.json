@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM group_ad_mappings WHERE group_id = $1 AND ad_group = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "86447e427cf35e38a6073c079713c5330904cc026cd6cb5e6639506ace5b7cee"
+}

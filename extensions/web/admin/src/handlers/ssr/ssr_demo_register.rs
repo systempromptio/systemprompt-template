@@ -1,6 +1,7 @@
 //! SSR page for demo account registration.
 
 use crate::error::{AdminError, AdminHtmlResult};
+use crate::handlers::ssr::types::BreadcrumbView;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 use axum::Extension;
@@ -13,6 +14,7 @@ use super::render_typed_page;
 struct DemoRegisterContext {
     title: &'static str,
     page: &'static str,
+    breadcrumbs: Vec<BreadcrumbView>,
 }
 
 pub(crate) async fn demo_register_page(
@@ -25,8 +27,13 @@ pub(crate) async fn demo_register_page(
     }
 
     let ctx = DemoRegisterContext {
-        title: "Demo User Registration",
+        title: "Demo user registration",
         page: "demo-register",
+        breadcrumbs: vec![
+            BreadcrumbView::link("Admin", "/admin"),
+            BreadcrumbView::link("People & access", "/admin/users"),
+            BreadcrumbView::current("Demo user registration"),
+        ],
     };
 
     Ok(render_typed_page(

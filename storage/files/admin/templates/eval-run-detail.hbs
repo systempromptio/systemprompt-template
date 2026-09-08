@@ -1,86 +1,30 @@
 {{#> layout title=title page=page}}
     {{#*inline "content"}}
-    {{> components/back-button href=back_url label="Back to Evals"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
 
-    {{> components/page-header
-        title=title
-        subtitle="Every item this run scored, worst first."}}
+    {{#> components/page-header title=title subtitle="Every item this run scored, worst first."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/evals">All evals</a>
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        <span class="sp-u-mono">{{run.id}}</span>
+        <span>started {{run.created_at_local}} by {{run.created_by}}</span>
+        {{/inline}}
+    {{/components/page-header}}
 
-    <section class="kpi-strip" aria-label="Run summary">
-        <div class="kpi-card">
-            <span class="kpi-card__label">Kind</span>
-            <span class="kpi-card__value">{{run.kind}}</span>
-            <span class="kpi-card__sub">{{run.status}}</span>
-        </div>
-        <div class="kpi-card">
-            <span class="kpi-card__label">Scored</span>
-            <span class="kpi-card__value">{{run.scored_count}} / {{run.sample_size}}</span>
-            <span class="kpi-card__sub">{{run.failed_count}} failed</span>
-        </div>
-        <div class="kpi-card">
-            <span class="kpi-card__label">Mean score</span>
-            <span class="kpi-card__value">{{run.mean_score_display}}</span>
-        </div>
-        <div class="kpi-card">
-            <span class="kpi-card__label">Judge cost</span>
-            <span class="kpi-card__value">{{run.cost_display}}</span>
-            <span class="kpi-card__sub">{{run.judge_model}}</span>
-        </div>
-        <div class="kpi-card">
-            <span class="kpi-card__label">Started</span>
-            <span class="kpi-card__value kpi-card__value--sm">{{run.created_at_local}}</span>
-            <span class="kpi-card__sub">by {{run.created_by}}</span>
-        </div>
+    <section class="sp-kpi-grid" aria-label="Run summary">
+        {{> components/kpi label="Kind" value=run.kind_label note=run.status tone=run.status_tone}}
+        {{> components/kpi label="Scored" value=run.scored_count unit=(concat "of " run.sample_size) note=(concat run.failed_count " failed")}}
+        {{> components/kpi label="Mean score" value=run.mean_score_display unit="/ 5" note="across scored items"}}
+        {{> components/kpi label="Judge cost" value=run.cost_display note=run.judge_model}}
     </section>
 
+    {{> components/section title="Results" count=result_count note="Score, verdict and the judge's reason for every item. Hover a cell for the full text."}}
     {{#if results}}
-    <div class="eval-results">
-        {{#each results}}
-        <article class="eval-result{{#if this.is_fail}} eval-result--fail{{/if}}{{#if this.is_partial}} eval-result--partial{{/if}}">
-            <header class="eval-result__head">
-                <span class="eval-result__score">{{this.score_display}}</span>
-                <span class="mcp-badge {{#if this.is_pass}}mcp-badge-success{{/if}}{{#if this.is_partial}}mcp-badge-warning{{/if}}{{#if this.is_fail}}mcp-badge-danger{{/if}}">
-                    {{this.verdict}}
-                </span>
-                <code class="code-inline">{{this.model}}</code>
-                {{#each this.flags}}
-                <span class="eval-flag">{{this}}</span>
-                {{/each}}
-                <span class="gf-panel__spacer"></span>
-                {{#if this.ai_request_id}}
-                <a class="eval-result__link" href="/admin/entities/requests/{{this.ai_request_id}}">
-                    full chain &rarr;
-                </a>
-                {{/if}}
-            </header>
-
-            {{#if this.dimensions}}
-            <div class="eval-dims">
-                {{#each this.dimensions}}
-                <div class="eval-dim" title="{{this.label}}: {{this.score}}/5">
-                    <span class="eval-dim__label">{{this.label}}</span>
-                    <span class="eval-dim__bar" style="--v:{{this.pct}}%"></span>
-                    <span class="eval-dim__score">{{this.score}}</span>
-                </div>
-                {{/each}}
-            </div>
-            {{/if}}
-
-            <p class="eval-result__rationale">{{this.rationale}}</p>
-
-            <details class="eval-result__detail">
-                <summary>Prompt and answer</summary>
-                <p class="eval-result__excerpt"><strong>Prompt:</strong> {{this.prompt_excerpt}}</p>
-                <p class="eval-result__excerpt"><strong>Answer:</strong> {{this.response_excerpt}}</p>
-            </details>
-        </article>
-        {{/each}}
-    </div>
+    {{> evals/results-table results=results}}
     {{else}}
-    {{> components/empty-state message="This run scored nothing."}}
+    {{> components/empty-state title="Nothing scored" message="This run scored nothing. A failed run records its error on the Evals page notice; a running one fills in as it goes."}}
     {{/if}}
-
     {{/inline}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "scripts"}}{{/inline}}
 {{/layout}}

@@ -1,0 +1,63 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            DATE_TRUNC('hour', NOW()) - INTERVAL '1 hour' AS \"window_start!\",\n            COUNT(*) FILTER (WHERE r.created_at >= DATE_TRUNC('hour', NOW()) - INTERVAL '1 hour'\n                AND r.created_at < DATE_TRUNC('hour', NOW()))::BIGINT AS \"requests!\",\n            COALESCE(SUM(r.cost_microdollars) FILTER (\n                WHERE r.created_at >= DATE_TRUNC('hour', NOW()) - INTERVAL '1 hour'\n                AND r.created_at < DATE_TRUNC('hour', NOW())), 0)::BIGINT AS \"cost!\",\n            COUNT(*) FILTER (WHERE r.created_at >= DATE_TRUNC('hour', NOW()) - INTERVAL '1 hour'\n                AND r.created_at < DATE_TRUNC('hour', NOW())\n                AND r.status NOT IN ('completed', 'pending', 'streaming'))::BIGINT AS \"errors!\",\n            (COUNT(*) FILTER (WHERE r.created_at < DATE_TRUNC('hour', NOW()) - INTERVAL '1 hour')\n                / 168)::BIGINT AS \"baseline_requests!\",\n            (COALESCE(SUM(r.cost_microdollars) FILTER (\n                WHERE r.created_at < DATE_TRUNC('hour', NOW()) - INTERVAL '1 hour'), 0)\n                / 168)::BIGINT AS \"baseline_cost!\",\n            (COUNT(*) FILTER (WHERE r.created_at < DATE_TRUNC('hour', NOW()) - INTERVAL '1 hour'\n                AND r.status NOT IN ('completed', 'pending', 'streaming'))\n                / 168)::BIGINT AS \"baseline_errors!\"\n        FROM ai_requests r\n        WHERE r.created_at >= DATE_TRUNC('hour', NOW()) - INTERVAL '169 hours'\n          AND r.created_at < DATE_TRUNC('hour', NOW())\n          AND NOT r.synthetic\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "window_start!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "baseline_requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "baseline_cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "baseline_errors!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "bc5221c7b8c1311a2e4cbceca4b658ed6a0029d45ac67f693cfab65dd969f2e6"
+}

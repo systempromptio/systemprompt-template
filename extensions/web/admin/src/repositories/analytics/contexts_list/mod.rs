@@ -1,4 +1,4 @@
-//! Contexts-list repository — drives `/admin/entities/contexts`.
+//! Contexts-list repository — drives `/admin/contexts`.
 //!
 //! Aggregates every `ai_requests` row by `context_id` and `FULL OUTER JOIN`s
 //! against `user_contexts` so we surface contexts that exist only in one side
@@ -11,11 +11,9 @@ use systemprompt::identifiers::{ContextId, SessionId, UserId};
 
 mod kpis;
 mod list;
-mod users;
 
 pub use kpis::{ContextListKpis, get_context_list_kpis, list_distinct_models};
 pub use list::list_context_list;
-pub use users::list_context_user_summary;
 
 #[derive(Debug, Clone, Default)]
 pub struct ContextListFilter {
@@ -24,6 +22,61 @@ pub struct ContextListFilter {
     pub free_text: Option<String>,
     pub since: Option<DateTime<Utc>>,
     pub limit: i64,
+    pub sort: ContextSort,
+}
+
+/// The five columns the contexts list can be ordered by, in both directions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ContextSortColumn {
+    Activity,
+    Requests,
+    Messages,
+    Tokens,
+    Cost,
+}
+
+impl ContextSortColumn {
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Activity => "activity",
+            Self::Requests => "requests",
+            Self::Messages => "messages",
+            Self::Tokens => "tokens",
+            Self::Cost => "cost",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ContextSortDir {
+    Asc,
+    Desc,
+}
+
+impl ContextSortDir {
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Asc => "asc",
+            Self::Desc => "desc",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ContextSort {
+    pub column: ContextSortColumn,
+    pub dir: ContextSortDir,
+}
+
+impl Default for ContextSort {
+    fn default() -> Self {
+        Self {
+            column: ContextSortColumn::Activity,
+            dir: ContextSortDir::Desc,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

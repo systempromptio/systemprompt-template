@@ -138,7 +138,7 @@ if missing_source or unpublished:
     print("", file=sys.stderr)
     total = len(missing_source) + len(unpublished)
     print(f"{total} broken asset reference(s).", file=sys.stderr)
-    print(f"Register the asset in {asset_dir}/, fix the URL, or if it is served by", file=sys.stderr)
+    print(f"Register the asset in {asset_dirs}/, fix the URL, or if it is served by", file=sys.stderr)
     print(f"other means list it in {exempt_file}.", file=sys.stderr)
     sys.exit(1)
 

@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            r.model AS \"key!\",\n            COUNT(*)::BIGINT AS \"requests!\",\n            COALESCE(SUM(r.input_tokens + r.output_tokens), 0)::BIGINT AS \"tokens!\",\n            COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS \"cost!\"\n        FROM ai_requests r\n        WHERE r.created_at >= $1 AND r.created_at < $2\n          AND r.model IS NOT NULL\n        GROUP BY r.model\n        ORDER BY 4 DESC\n        LIMIT 20\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "key!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "1ca2a8e310a5289eece308cdd4dfd8e193b608838bfa60e9d0c99918e6a4b07a"
+}

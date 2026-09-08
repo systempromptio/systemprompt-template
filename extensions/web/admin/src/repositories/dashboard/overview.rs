@@ -12,6 +12,7 @@ use crate::repositories::dashboard::queries::{
     list_top_users,
 };
 use crate::repositories::dashboard::traffic;
+
 use crate::types::{
     ContentPerformanceRow, DashboardData, EventFeedRow, EventsQuery, EventsResponse, RealtimePulse,
     RecentMcpError, TrafficData, TrafficTopPage,
@@ -168,7 +169,7 @@ pub async fn list_events(
             p.event_type AS "event_type!",
             p.tool_name,
             p.plugin_id AS "plugin_id?: PluginId",
-            p.metadata AS "metadata!",
+            COALESCE(p.metadata, '{}'::jsonb) AS "metadata!",
             p.created_at AS "created_at!"
         FROM plugin_usage_events p
         JOIN users u ON u.id = p.user_id

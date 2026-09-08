@@ -27,10 +27,36 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.release.outputs.sha }}
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+          fetch-depth: 0
+      - id: release
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          bash scripts/validate-release.sh "$RELEASE_TAG"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
+
   build-gateway:
     name: Build gateway (${{ matrix.name }})
+    needs: resolve
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -60,11 +86,11 @@ jobs:
           # gateway needs a core port first. Windows runs the gateway via
           # Docker until then.
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v5
         with:
-          targets: ${{ matrix.target }}
+          ref: ${{ needs.resolve.outputs.sha }}
+      - run: rustup show
+      - run: rustup target add ${{ matrix.target }}
 
       - name: Install build deps (linux)
         if: runner.os == 'Linux'
@@ -83,7 +109,7 @@ jobs:
           # everywhere this repo compiles C, mirroring the justfile build recipe.
           CC: clang
           CXX: clang++
-        run: cargo build --release --workspace --target ${{ matrix.target }}
+        run: cargo build --release --workspace --locked --target ${{ matrix.target }}
 
       - name: Stage artefacts
         shell: bash
@@ -109,12 +135,7 @@ jobs:
               cp "${ext_dir}/manifest.yaml" "dist/${stage}/extensions/mcp/${name}/"
             fi
           done
-          # Runtime data dir (empty but required to exist on first boot)
-          mkdir -p "dist/${stage}/storage"
-          # Web assets — copy if pre-built, otherwise leave dir empty so the
-          # binary can write SSR templates at runtime
-          mkdir -p "dist/${stage}/web"
-          [ -d web/dist ] && cp -r web/dist/* "dist/${stage}/web/" || true
+          cp -r storage web demo "dist/${stage}/"
           cp LICENSE README.md "dist/${stage}/"
           echo "STAGE=${stage}" >> "$GITHUB_ENV"
 
@@ -125,7 +146,7 @@ jobs:
           cd dist
           tar -czf "${STAGE}.tar.gz" "${STAGE}"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: gateway-${{ matrix.name }}
           path: dist/${{ env.STAGE }}.${{ matrix.archive }}
@@ -134,12 +155,14 @@ jobs:
   sign-and-release:
     name: Sign + Release (gateway)
     runs-on: ubuntu-latest
-    needs: [build-gateway]
+    needs: [resolve, build-gateway]
     outputs:
       tag: ${{ steps.tags.outputs.template_tag }}
       version: ${{ steps.tags.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.resolve.outputs.sha }}
 
       - name: Resolve tag
         id: tags
@@ -153,7 +176,7 @@ jobs:
           tag="${tag:-${GITHUB_REF_NAME}}"
           echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: dist
           merge-multiple: true
@@ -214,6 +237,7 @@ jobs:
           ```
           docker run -d -p 8080:8080 \
             -e DATABASE_URL=postgres://... \
+            -e ADMIN_EMAIL=you@example.com \
             -e ANTHROPIC_API_KEY=sk-ant-... \
             ghcr.io/systempromptio/systemprompt-template:${{ steps.tags.outputs.version }}
           ```
@@ -295,7 +319,7 @@ jobs:
   # by hand. Calling them keeps the whole release in one run.
   publish-image:
     name: Publish image
-    needs: [sign-and-release]
+    needs: [resolve, sign-and-release]
     if: ${{ !inputs.dry_run }}
     permissions:
       contents: read
@@ -304,10 +328,20 @@ jobs:
     uses: ./.github/workflows/docker.yml
     with:
       version: ${{ needs.sign-and-release.outputs.version }}
+      ref: ${{ needs.resolve.outputs.sha }}
+
+  publish-chart:
+    needs: [resolve, publish-image]
+    if: ${{ !inputs.dry_run }}
+    uses: ./.github/workflows/helm.yml
+    with:
+      ref: ${{ needs.resolve.outputs.sha }}
+      publish: true
+    secrets: inherit
 
   smoke:
     name: Smoke tests
-    needs: [publish-image, sign-and-release]
+    needs: [publish-image, sign-and-release, publish-chart, bump-packagers]
     if: ${{ !inputs.dry_run }}
     uses: ./.github/workflows/smoke-tests.yml
     with:
@@ -337,8 +371,8 @@ jobs:
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           if [ -z "$TAP_TOKEN" ]; then
-            echo "::warning::HOMEBREW_TAP_TOKEN not set — skipping tap bump"
-            exit 0
+            echo "::error::HOMEBREW_TAP_TOKEN is required to publish the tap"
+            exit 1
           fi
           version="${{ steps.ver.outputs.version }}"
           sha() { grep "systemprompt-gateway-${version}-$1" SHA256SUMS.gateway | cut -d' ' -f1; }
@@ -372,6 +406,8 @@ jobs:
               bin.install "systemprompt-mcp-agent"
               libexec.install "services"
               libexec.install "web" if File.exist?("web")
+              libexec.install "storage"
+              libexec.install "demo"
               libexec.install "extensions" if File.exist?("extensions")
             end
 

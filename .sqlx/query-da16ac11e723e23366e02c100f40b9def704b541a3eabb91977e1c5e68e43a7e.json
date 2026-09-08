@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            e.skill AS \"skill!\",\n            COALESCE(r.model, 'unrouted') AS \"model!\",\n            COUNT(*)::BIGINT AS \"requests!\",\n            COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS \"cost!\"\n        FROM skill_invocation_events e\n        JOIN ai_request_tool_calls tc ON tc.ai_tool_call_id = e.tool_use_id\n        JOIN ai_requests r ON r.id = tc.request_id AND NOT r.synthetic\n        WHERE e.invoked_at >= $1 AND e.invoked_at < $2\n          AND e.skill IS NOT NULL\n          AND ($3::TEXT[] IS NULL OR e.user_id = ANY($3))\n          AND ($4::TEXT IS NULL OR e.user_id = $4)\n        GROUP BY e.skill, COALESCE(r.model, 'unrouted')\n        ORDER BY COUNT(*) DESC\n        LIMIT 100\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "skill!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "skill_invocation_events",
+            "name": "skill"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "model!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "da16ac11e723e23366e02c100f40b9def704b541a3eabb91977e1c5e68e43a7e"
+}

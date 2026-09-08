@@ -1,0 +1,7 @@
+/* Visual-suite stabilizer: no motion, no blinking caret, no scrollbars. */
+*, *::before, *::after {
+  animation: none !important;
+  transition: none !important;
+  caret-color: transparent !important;
+}
+::-webkit-scrollbar { display: none !important; }

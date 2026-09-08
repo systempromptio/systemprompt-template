@@ -5,6 +5,12 @@ import { on } from '../services/events.js';
 const pageSection = () => document.querySelector('[data-page="models"]');
 const selectedUser = () => pageSection()?.dataset.userId || '';
 
+const form = document.querySelector('[data-models="form"]');
+const userSelect = document.querySelector('[data-models="user"]');
+if (form && userSelect) {
+  userSelect.addEventListener('change', () => form.requestSubmit());
+}
+
 on('click', '[data-action="disable-model"]', async (e, btn) => {
   const userId = selectedUser();
   const routeId = btn.dataset.routeId;
@@ -17,10 +23,10 @@ on('click', '[data-action="disable-model"]', async (e, btn) => {
         rule_type: 'user',
         rule_value: userId,
         access: 'deny',
-        justification: 'Disabled from the Model Selection page'
+        justification: 'Disabled from the Models page'
       })
     });
-    showToast(`Model disabled for this user — next request is denied`, 'success');
+    showToast('Model disabled for this user — the next request is denied', 'success');
     window.location.reload();
   } catch {
     btn.disabled = false;

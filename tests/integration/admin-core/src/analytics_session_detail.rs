@@ -14,7 +14,7 @@ use systemprompt_web_admin::repositories::analytics::session_detail as repo;
 
 use crate::fixtures::{
     RequestSpec, SummarySpec, insert_request, insert_session, insert_summary, insert_user,
-    set_department, unclaimed_email, unique,
+    new_context_id, set_project, unclaimed_email, unique,
 };
 use crate::tempdb::TempDb;
 
@@ -141,12 +141,12 @@ async fn find_session_header_prefers_the_summary_over_the_request_rollup() {
 }
 
 #[tokio::test]
-async fn find_session_header_joins_the_display_name_and_department() {
+async fn find_session_header_joins_the_display_name_and_groups() {
     let Some(db) = TempDb::create().await else {
         return;
     };
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("profile")).await;
-    set_department(&db.pool, &user, "Platform").await;
+    set_project(&db.pool, &user, Some("commerce")).await;
     let session = unique("session");
     insert_summary(&db.pool, &SummarySpec::open(&session, &user)).await;
 
@@ -159,7 +159,7 @@ async fn find_session_header_joins_the_display_name_and_department() {
         header.display_name.is_some(),
         "insert_user sets display_name"
     );
-    assert_eq!(header.department.as_deref(), Some("Platform"));
+    assert_eq!(header.groups, vec!["commerce".to_owned()]);
     db.cleanup().await;
 }
 
@@ -187,7 +187,7 @@ async fn get_session_kpis_sums_tokens_cost_and_counts_distinct_children() {
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("kpis")).await;
     let session = unique("session");
     insert_session(&db.pool, &session, &user).await;
-    let context = unique("ctx");
+    let context = new_context_id();
     let trace = unique("trace");
     for (id, status) in [("a", "completed"), ("b", "completed"), ("c", "failed")] {
         let mut spec = RequestSpec::completed(&unique(id), &user);

@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT ad_group, project_id, source FROM project_ad_mappings\n         WHERE project_id = $1 ORDER BY ad_group",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ad_group",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "project_ad_mappings",
+            "name": "ad_group"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "project_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "project_ad_mappings",
+            "name": "project_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "source",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "project_ad_mappings",
+            "name": "source"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "bb43f84efb2cdfeaf78e8045f9897d3e719d11fda55cde37d6a434cd70bdd307"
+}

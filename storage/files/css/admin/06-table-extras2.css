@@ -1,0 +1,90 @@
+
+
+@layer components {
+
+.sp-user-cell-text {
+    display: inline-flex;
+    flex-direction: column;
+    line-height: 1.2;
+    min-width: 0;
+}
+
+.sp-user-cell-name {
+    color: var(--sp-text-primary);
+    font-weight: 500;
+}
+
+.sp-user-cell-email {
+    font-size: 0.78em;
+    color: var(--sp-text-tertiary);
+    margin-top: 0.1rem;
+}
+
+.sp-table__el td.sp-col-model {
+    white-space: nowrap;
+}
+
+.sp-pagination__info {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-session-current {
+    margin-bottom: var(--sp-space-4);
+}
+
+@media (max-width: 768px) {
+
+    .sp-table__el th {
+        padding: var(--sp-space-2) var(--sp-space-3);
+        font-size: var(--sp-text-xs);
+    }
+
+    .sp-table__el td {
+        padding: var(--sp-space-2) var(--sp-space-3);
+        font-size: var(--sp-text-sm);
+    }
+
+    .sp-table__el td.sp-table__cell--actions {
+        padding: var(--sp-space-1) var(--sp-space-2);
+    }
+
+    .sp-col-checkbox input[type="checkbox"] {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .sp-pagination__controls button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+}
+
+@layer components {
+
+@media (max-width: 767px) {
+    .sp-table__el th:first-child,
+    .sp-table__el td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: var(--sp-z-sticky);
+        background: var(--sp-bg-surface);
+    }
+
+    .sp-table__el th:first-child {
+        background: var(--sp-bg-card-header);
+    }
+}
+
+}
+
+@layer responsive {
+
+@media (hover: none) {
+    .sp-table__el tr:hover td {
+        background: inherit;
+    }
+}
+}

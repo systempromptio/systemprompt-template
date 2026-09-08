@@ -1,30 +1,18 @@
 {{!--
-  What the gateway did in this window. Kept separate from the quality strip so
+  What the gateway did in this window. Kept separate from the quality band so
   a tab never mixes "how much traffic" with "how good were the answers".
 --}}
-<section class="kpi-strip" aria-label="Traffic KPIs">
-    <div class="kpi-card">
-        <span class="kpi-card__label">Requests</span>
-        <span class="kpi-card__value">{{traffic.total}}</span>
-        {{#if traffic.has_distribution}}
-        <span class="kpi-card__sub">{{traffic.user_count}} users · {{traffic.model_count}} models</span>
-        {{else}}
-        <span class="kpi-card__sub">through the gateway in this window</span>
-        {{/if}}
-    </div>
-    <div class="kpi-card">
-        <span class="kpi-card__label">p50 latency</span>
-        <span class="kpi-card__value">{{traffic.p50_latency_ms}} ms</span>
-        <span class="kpi-card__sub">p95 {{traffic.p95_latency_ms}} ms</span>
-    </div>
-    <div class="kpi-card">
-        <span class="kpi-card__label">Traffic cost</span>
-        <span class="kpi-card__value">{{traffic.total_cost_display}}</span>
-        <span class="kpi-card__sub">judging {{scores.judge_cost_display}}</span>
-    </div>
-    <div class="kpi-card{{#if traffic.error_count}} kpi-card--danger{{/if}}">
-        <span class="kpi-card__label">Errors</span>
-        <span class="kpi-card__value">{{traffic.error_count}}</span>
-        <span class="kpi-card__sub">{{traffic.error_rate_pct}}%</span>
-    </div>
+<section class="sp-kpi-grid" aria-label="Traffic KPIs">
+    {{#if traffic.has_distribution}}
+    {{> components/kpi label="Requests" value=traffic.total tone="accent" note=(concat traffic.user_count " users · " traffic.model_count " models")}}
+    {{else}}
+    {{> components/kpi label="Requests" value=traffic.total tone="accent" note="through the gateway in this window"}}
+    {{/if}}
+    {{> components/kpi label="p50 latency" value=traffic.p50_latency_ms unit="ms" note=(concat "p95 " traffic.p95_latency_ms " ms")}}
+    {{> components/kpi label="Traffic cost" value=traffic.total_cost_display note=(concat "judging " scores.judge_cost_display)}}
+    {{#if traffic.error_count}}
+    {{> components/kpi label="Errors" value=traffic.error_count tone="err" note=(concat traffic.error_rate_pct "% of requests")}}
+    {{else}}
+    {{> components/kpi label="Errors" value=traffic.error_count tone="ok" note="none in this window"}}
+    {{/if}}
 </section>

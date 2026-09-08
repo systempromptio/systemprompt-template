@@ -1,119 +1,108 @@
 {{#> layout title=title page=page}}
-    {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=department.name subtitle=department.description}}
+        {{#*inline "header_meta"}}
+        <span class="sp-u-mono">{{department.id}}</span>
+        <span>Created {{formatDate department.created_at}}</span>
+        {{/inline}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{users_url}}">Roster</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{matrix_url}}">Access control</a>
+        {{#if can_write}}
+        <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="add-member">Add member</button>
+        {{/if}}
+        {{/inline}}
+    {{/components/page-header}}
 
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="/admin/access/departments">Departments</a>
-        <span aria-hidden="true">›</span>
-        <span aria-current="page">{{department.name}}</span>
-    </nav>
-
-    {{> components/page-header title=department.name subtitle=department.description}}
-
-    <section aria-label="Department usage" class="card dept-section">
-        <div class="dept-stat-grid">
-            <div><div class="text-muted dept-stat-label">Members</div><div class="dept-stat-value">{{member_count}}</div></div>
-            <div><div class="text-muted dept-stat-label">Requests (30d)</div><div class="dept-stat-value">{{total_requests}}</div></div>
-            <div><div class="text-muted dept-stat-label">Tokens in (30d)</div><div class="dept-stat-value">{{total_input_tokens}}</div></div>
-            <div><div class="text-muted dept-stat-label">Tokens out (30d)</div><div class="dept-stat-value">{{total_output_tokens}}</div></div>
-            <div><div class="text-muted dept-stat-label">Cost (30d)</div><div class="dept-stat-value">{{formatUsd total_cost_microdollars}}</div></div>
-        </div>
+    <section class="sp-kpi-grid" aria-label="Department usage">
+        {{> components/kpi label="Members" value=kpis.members note="accounts placed here"}}
+        {{> components/kpi label="Requests" value=kpis.requests_display note="last 30 days"}}
+        {{> components/kpi label="Tokens in" value=kpis.tokens_in_display note="last 30 days"}}
+        {{> components/kpi label="Tokens out" value=kpis.tokens_out_display note="last 30 days"}}
+        {{> components/kpi label="Cost" value=kpis.cost_display note="last 30 days"}}
     </section>
 
-    <section aria-label="Permission matrix" class="card dept-section">
-        <h2>Permission matrix</h2>
-        <p>Skills, marketplaces, plugins, MCP servers, and gateway routes assigned to <strong>{{department.name}}</strong>. Members inherit everything assigned here. Direct user-level overrides take precedence.</p>
-        <p>
-            <a class="btn btn-primary" href="{{assignments_url}}">Open access matrix filtered to this department →</a>
-        </p>
-        <p class="text-muted dept-note">
-            Renaming this department updates its access rules automatically.
-        </p>
-    </section>
+    {{> components/notice tone="info" title="Rules are inherited" message="Skills, marketplaces, plugins, MCP servers and gateway routes assigned to this department reach every member. A rule written on the account itself takes precedence. Renaming the department carries its rules with it."}}
 
-    {{#if top_tools}}
-    <section aria-label="Top tools" class="card dept-section">
-        <h2>Top tools (30d)</h2>
-        <div class="dept-tool-list">
-            {{#each top_tools}}
-            <span class="badge badge-blue">{{tool_name}} · {{invocations}}</span>
-            {{/each}}
-        </div>
-    </section>
+    {{#if has_tools}}
+    {{> components/section title="Top tools" note="The tools members called most in the last 30 days."}}
+    <p class="sp-p-department-detail__tools">
+        {{#each top_tools}}{{> components/badge tone="info" text=(concat this.tool_name " · " this.invocations)}}{{/each}}
+    </p>
     {{/if}}
 
-    <section aria-label="Department members" data-dept-id="{{department.id}}" data-dept-name="{{department.name}}">
-        <div class="toolbar">
-            <div class="search-group">
-                <input type="text" class="search-input" placeholder="Search members..." id="member-search">
-            </div>
-            <button type="button" class="btn btn-primary" id="btn-add-member">+ Add member</button>
-        </div>
-        {{#if members}}
-        {{#> components/data-table}}
-            <thead><tr>
-                <th>Email</th>
-                <th>Display name</th>
-                <th>Status</th>
-                <th class="numeric col-numeric">Requests (30d)</th>
-                <th class="numeric col-numeric">Tokens (30d)</th>
-                <th class="numeric col-numeric">Cost (30d)</th>
-                <th>Last active</th>
-                <th class="col-actions"></th>
-            </tr></thead>
-            <tbody>
-            {{#each members}}
-            <tr data-member-email="{{toLowerCase email}}">
-                <td><a href="/admin/access/user?id={{id}}">{{email}}</a></td>
-                <td>{{#if display_name}}{{display_name}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
-                <td><span class="badge {{#if (eq status "active")}}badge-green{{else}}badge-gray{{/if}}">{{status}}</span></td>
-                <td class="numeric col-numeric">{{requests}}</td>
-                <td class="numeric col-numeric">{{add input_tokens output_tokens}}</td>
-                <td class="numeric col-numeric">{{formatUsd cost_microdollars}}</td>
-                <td>{{#if last_active}}{{relativeTime last_active}}{{else}}<span class="text-tertiary">—</span>{{/if}}</td>
-                <td class="col-actions">
-                    <button type="button" class="btn btn-sm btn-outline" data-unassign-user="{{id}}">Move to Default</button>
-                </td>
-            </tr>
-            {{/each}}
-            </tbody>
-        {{/components/data-table}}
-        {{else}}
-        <div class="empty-state empty-state--pad">
-            <p class="text-muted">No members in this department yet.</p>
-            <button type="button" class="btn btn-primary" id="btn-add-member-empty">+ Add member</button>
-        </div>
-        {{/if}}
-    </section>
+    {{> components/section title="Members" count=member_count note="Moving a member out returns them to Default."}}
+    <div data-dept-id="{{department.id}}" data-dept-name="{{department.name}}">
+    {{#if has_members}}
+    {{#> components/table caption="Members of this department with their thirty-day usage" modifier="sp-p-department-detail__members"}}
+        <thead><tr>
+            <th scope="col">Email</th>
+            <th scope="col">Name</th>
+            <th scope="col" class="sp-col-status">Status</th>
+            <th scope="col" class="sp-table__cell--num">Requests</th>
+            <th scope="col" class="sp-table__cell--num">Tokens</th>
+            <th scope="col" class="sp-table__cell--num">Cost</th>
+            <th scope="col" class="sp-table__cell--date">Last active</th>
+            <th scope="col" class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
+        </tr></thead>
+        <tbody>
+        {{#each members}}
+        <tr data-member-id="{{this.id}}">
+            <td class="sp-u-truncate sp-u-mono" title="{{this.email}}"><a href="{{this.detail_url}}">{{this.email}}</a></td>
+            <td class="sp-u-truncate" title="{{this.display_name}}">{{#if this.display_name}}{{this.display_name}}{{else}}&mdash;{{/if}}</td>
+            <td class="sp-col-status">{{> components/badge tone=this.status_tone text=this.status}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.requests_display}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{this.tokens_display}}</td>
+            <td class="sp-table__cell--num sp-u-num sp-u-mono">{{this.cost_display}}</td>
+            <td class="sp-table__cell--date" title="{{this.last_active_title}}">{{this.last_active}}</td>
+            <td class="sp-table__cell--actions">
+                {{#if ../can_write}}{{#unless ../is_default}}<button type="button" class="sp-p-departments__action" data-unassign-user="{{this.id}}">Move to Default</button>{{/unless}}{{/if}}
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state title="No members" message="No account is placed in this department yet. Add one by id, or move accounts here from their detail pages."}}
+    {{/if}}
+    </div>
 
-    <dialog id="member-add-dialog" class="dialog">
-        <form id="member-add-form" class="dialog-form">
-            <h3>Add member to {{department.name}}</h3>
-            <label>User ID<input type="text" name="user_id" required placeholder="usr_…"></label>
-            <p class="text-muted dept-note">The user will be moved into <strong>{{department.name}}</strong>.</p>
+    {{#if can_write}}
+    <dialog class="sp-dialog" data-dialog="member-add" aria-labelledby="member-add-title">
+        <form class="sp-dialog-form" data-form="member-add">
+            <h3 id="member-add-title">Add member to {{department.name}}</h3>
+            <label>User ID<input type="text" name="user_id" required placeholder="The account id" autocomplete="off"></label>
+            <p class="sp-u-text-muted">The account moves into {{department.name}} and leaves the department it is in now.</p>
+            <p class="sp-u-text-danger" data-error hidden></p>
             <menu>
-                <button type="button" class="btn btn-sm btn-outline" id="member-add-cancel">Cancel</button>
-                <button type="submit" class="btn btn-sm btn-primary">Add</button>
+                <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="dialog-close">Cancel</button>
+                <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Add</button>
             </menu>
-            <p id="member-add-error" class="text-danger" hidden></p>
         </form>
     </dialog>
 
-    {{#unless (eq department.name "Default")}}
-    <section aria-label="Department settings" class="mt-8">
-        <form id="dept-settings-form" class="card dept-settings-form">
-            <h2>Settings</h2>
-            <label>Name<input type="text" name="name" value="{{department.name}}" required></label>
-            <label>Description<textarea name="description" rows="3">{{department.description}}</textarea></label>
-            <div class="dept-form-actions">
-                <button type="submit" class="btn btn-primary">Save</button>
-                <button type="button" class="btn btn-danger" id="dept-delete-btn">Delete department</button>
-            </div>
-            <p id="dept-settings-msg" class="text-muted" hidden></p>
-        </form>
-    </section>
+    {{#unless is_default}}
+    {{> components/section title="Settings" note="Rename or describe the department. Deleting it moves every member to Default and removes its rules."}}
+    <form class="sp-p-department-detail__settings" data-form="dept-settings" data-dept-id="{{department.id}}" data-dept-name="{{department.name}}">
+        <div class="sp-form-group">
+            <label for="dept-settings-name">Name</label>
+            <input class="sp-field-input" id="dept-settings-name" type="text" name="name" value="{{department.name}}" required maxlength="64">
+        </div>
+        <div class="sp-form-group">
+            <label for="dept-settings-description">Description</label>
+            <textarea class="sp-field-input" id="dept-settings-description" name="description" rows="3">{{department.description}}</textarea>
+        </div>
+        <div class="sp-form-actions">
+            <button type="submit" class="sp-btn sp-btn--primary">Save</button>
+            <button type="button" class="sp-btn sp-btn--danger" data-action="delete-department">Delete department</button>
+            <span class="sp-form-status" data-status role="status"></span>
+        </div>
+    </form>
     {{/unless}}
-
-    <script data-cfasync="false" type="module" src="/js/pages/management-department-detail.js"></script>
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/management-department-detail.js?v={{css_version}}"></script>
     {{/inline}}
 {{/layout}}

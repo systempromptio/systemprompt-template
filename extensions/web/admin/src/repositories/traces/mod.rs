@@ -48,12 +48,16 @@ pub struct TraceSummary {
     pub cache_hit_any: bool,
     pub top_tool: Option<String>,
     pub has_error: bool,
+    // Why: Failed gateway requests on the trace — the count behind `has_error`.
+    pub error_count: i64,
     pub has_deny: bool,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct TraceFilter<'a> {
     pub user_id: Option<&'a str>,
+    // Why: the caller's resolved `SubjectScope::as_sql()`; NULL = every user.
+    pub subject_ids: Option<&'a [String]>,
     pub agent_id: Option<&'a str>,
     pub agent_scope: Option<&'a str>,
     pub policy: Option<&'a str>,
@@ -139,6 +143,13 @@ pub struct Span {
     pub duration_ms: i64,
     pub status: SpanStatus,
     pub identity_label: Option<String>,
+    // Why: only a model span carries these; a governance or tool span has no
+    // provider to name and no cost of its own, so the waterfall table renders
+    // an em dash rather than a zero that reads as "free".
+    pub provider: Option<String>,
+    pub model: Option<String>,
+    pub cost_microdollars: Option<i64>,
+    pub latency_ms: Option<i64>,
     // JSON: source row rendered for the span inspector; the four span sources have no common
     // shape.
     pub raw: serde_json::Value,
@@ -173,6 +184,10 @@ pub enum SpanStatus {
     Deny,
     Error,
     Pending,
+    // Why: a gateway-rejected request never reached a provider, so it has no
+    // provider or model to name; conflating it with Error would report a
+    // policy refusal as a fault the operator should chase upstream.
+    Rejected,
 }
 
 impl SpanStatus {
@@ -182,6 +197,7 @@ impl SpanStatus {
             Self::Deny => "deny",
             Self::Error => "error",
             Self::Pending => "pending",
+            Self::Rejected => "rejected",
         }
     }
 }

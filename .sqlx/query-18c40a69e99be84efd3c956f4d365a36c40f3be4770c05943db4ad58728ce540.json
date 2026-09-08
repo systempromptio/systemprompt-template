@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT ad_group, group_id, source FROM group_ad_mappings\n         WHERE group_id = $1 ORDER BY ad_group",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ad_group",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_ad_mappings",
+            "name": "ad_group"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "group_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_ad_mappings",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "source",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_ad_mappings",
+            "name": "source"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "18c40a69e99be84efd3c956f4d365a36c40f3be4770c05943db4ad58728ce540"
+}

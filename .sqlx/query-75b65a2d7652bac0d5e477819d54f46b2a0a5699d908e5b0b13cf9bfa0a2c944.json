@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT metadata FROM knowledge_drive_files WHERE source_type=$1 AND NOT removed",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "metadata",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "knowledge_drive_files",
+            "name": "metadata"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "75b65a2d7652bac0d5e477819d54f46b2a0a5699d908e5b0b13cf9bfa0a2c944"
+}

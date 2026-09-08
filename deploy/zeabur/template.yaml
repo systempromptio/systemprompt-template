@@ -24,6 +24,10 @@ spec:
 
     Docs: https://systemprompt.io/documentation/?utm_source=zeabur&utm_medium=template
   variables:
+    - key: ADMIN_EMAIL
+      type: STRING
+      name: Administrator email
+      description: Required email address you control.
     - key: PUBLIC_DOMAIN
       type: DOMAIN
       name: Domain
@@ -85,6 +89,8 @@ spec:
             port: 8080
             type: HTTP
         env:
+          ADMIN_EMAIL:
+            default: ${ADMIN_EMAIL}
           DATABASE_URL:
             default: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres.zeabur.internal:5432/${POSTGRES_DB}
           ANTHROPIC_API_KEY:

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_scope_defaults\n              (user_id, primary_group_id, primary_project_id, source, updated_at)\n          SELECT u.id,\n                 (SELECT ug.group_id\n                    FROM user_groups ug\n                   WHERE ug.user_id = u.id\n                   ORDER BY EXISTS (\n                                SELECT 1 FROM group_members gm\n                                WHERE gm.group_id = ug.group_id\n                                  AND gm.user_id = ug.user_id\n                                  AND gm.source = 'adfs') DESC,\n                            (SELECT COUNT(DISTINCT x.user_id)\n                               FROM user_groups x\n                              WHERE x.group_id = ug.group_id) DESC,\n                            ug.group_id\n                   LIMIT 1),\n                 (SELECT pm.project_id\n                    FROM project_members pm\n                   WHERE pm.user_id = u.id\n                   ORDER BY (pm.source = 'adfs') DESC,\n                            (SELECT COUNT(DISTINCT y.user_id)\n                               FROM project_members y\n                              WHERE y.project_id = pm.project_id) DESC,\n                            pm.project_id\n                   LIMIT 1),\n                 'auto', NOW()\n          FROM users u\n          WHERE NOT ('anonymous' = ANY(u.roles))\n            AND ($1::TEXT IS NULL OR u.id = $1)\n          ON CONFLICT (user_id) DO UPDATE SET\n              primary_group_id = EXCLUDED.primary_group_id,\n              primary_project_id = EXCLUDED.primary_project_id,\n              updated_at = NOW()\n          WHERE user_scope_defaults.source = 'auto'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7b1c2a27dead675e1931ea3641254664e187da4fef39e324e118a41ff148d1ec"
+}

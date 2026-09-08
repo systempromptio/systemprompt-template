@@ -1,0 +1,148 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT provider, status, auth_method, account_id, account_name,\n        resource_id, resource_name, error_code, verified_at, generation, revision\n        FROM mcp_connector_accounts WHERE user_id = $1 ORDER BY provider",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "provider",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_connector_accounts",
+            "name": "provider"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_connector_accounts",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "auth_method",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_connector_accounts",
+            "name": "auth_method"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "account_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_connector_accounts",
+            "name": "account_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "account_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_connector_accounts",
+            "name": "account_name"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "resource_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_connector_accounts",
+            "name": "resource_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "resource_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_connector_accounts",
+            "name": "resource_name"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "error_code",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_connector_accounts",
+            "name": "error_code"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "verified_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_connector_accounts",
+            "name": "verified_at"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "mcp_connector_accounts",
+            "name": "generation"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "revision",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "mcp_connector_accounts",
+            "name": "revision"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "cfa5542133e685b538325192ce2591f36b18278972bec8c81d5cf758b35d229f"
+}

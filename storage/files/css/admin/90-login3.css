@@ -1,0 +1,53 @@
+@layer components {
+
+/* The shell-less auth pages share one card; it is the only element on the
+   page, so it carries its own width rather than borrowing a grid's. */
+.sp-auth-card {
+    inline-size: min(100%, 26rem);
+}
+
+.sp-login-error--success {
+    background: var(--sp-success-dim);
+    color: var(--sp-success-strong);
+}
+
+.sp-auth-sent {
+    text-align: center;
+    padding-block: var(--sp-space-3);
+}
+
+.sp-auth-sent__title {
+    margin: 0 0 var(--sp-space-2);
+    color: var(--sp-text-primary);
+    font-weight: var(--sp-font-semibold);
+}
+
+/* The demo registration form is one row of three fields and a button; the
+   generated link sits beside its copy button on the row below. */
+.sp-auth-inline-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--sp-space-4);
+}
+
+.sp-auth-inline-form .sp-form-group {
+    flex: 1 1 14rem;
+    margin: 0;
+}
+
+.sp-auth-inline-form .sp-form-actions {
+    margin: 0;
+}
+
+.sp-auth-link-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+}
+
+.sp-auth-link-row input {
+    flex: 1;
+}
+
+}

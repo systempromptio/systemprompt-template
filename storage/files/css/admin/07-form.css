@@ -1,0 +1,43 @@
+@layer base {
+
+input[type="checkbox"] {
+    accent-color: var(--sp-accent-text);
+    cursor: pointer;
+}
+
+select {
+    background: var(--sp-bg-surface);
+    color: var(--sp-text-primary);
+}
+
+select option {
+    background: var(--sp-bg-surface-overlay);
+    color: var(--sp-text-primary);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--sp-bg-canvas), 0 0 0 4px color-mix(in oklch, var(--sp-accent) 50%, transparent);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.sp-skeleton__text { color: var(--sp-text-secondary); padding: var(--sp-space-4); }
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.sp-shell {
+    scrollbar-width: thin;
+    scrollbar-color: var(--sp-scrollbar-thumb) var(--sp-scrollbar-track);
+}
+
+}

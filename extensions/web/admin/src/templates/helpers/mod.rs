@@ -9,7 +9,9 @@ use helpers_format::{
     PercentHelper, RelativeTimeHelper, ShortIdHelper, ToLowerCaseHelper, ToUpperCaseHelper,
     TruncateHelper,
 };
-use helpers_logic::{AddHelper, EqHelper, GtHelper, NotHelper, SubHelper};
+use helpers_logic::{
+    AddHelper, EqHelper, GtHelper, NavActiveHelper, NavStateHelper, NotHelper, SubHelper,
+};
 
 pub fn register_helpers(hbs: &mut handlebars::Handlebars<'static>) {
     hbs.register_helper("formatDate", Box::new(FormatDateHelper));
@@ -24,6 +26,7 @@ pub fn register_helpers(hbs: &mut handlebars::Handlebars<'static>) {
     hbs.register_helper("default", Box::new(DefaultHelper));
     hbs.register_helper("governanceColor", Box::new(GovernanceColorHelper));
     hbs.register_helper("css_version", Box::new(CssVersionHelper));
+    hbs.register_helper("navState", Box::new(NavStateHelper));
     hbs.register_helper("eq", Box::new(EqHelper));
     hbs.register_helper("gt", Box::new(GtHelper));
     hbs.register_helper("not", Box::new(NotHelper));
@@ -33,4 +36,5 @@ pub fn register_helpers(hbs: &mut handlebars::Handlebars<'static>) {
     hbs.register_helper("percent", Box::new(PercentHelper));
     hbs.register_helper("deltaPct", Box::new(DeltaPctHelper));
     hbs.register_helper("shortId", Box::new(ShortIdHelper));
+    hbs.register_helper("navActive", Box::new(NavActiveHelper));
 }

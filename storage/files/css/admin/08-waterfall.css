@@ -1,0 +1,89 @@
+@layer components {
+.sp-table__cell--num,
+.sp-table__cell--num {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.is-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.sp-badge--ok {
+    border-color: color-mix(in oklab, var(--sp-success) 40%, transparent);
+    background: color-mix(in oklab, var(--sp-success) 14%, transparent);
+    color: var(--sp-success-strong);
+}
+
+.sp-badge--err {
+    border-color: color-mix(in oklab, var(--sp-danger) 45%, transparent);
+    background: color-mix(in oklab, var(--sp-danger) 14%, transparent);
+    color: var(--sp-danger-strong);
+}
+
+.sp-badge--warn {
+    border-color: color-mix(in oklab, var(--sp-warning) 45%, transparent);
+    background: color-mix(in oklab, var(--sp-warning) 16%, transparent);
+    color: var(--sp-warning-strong);
+}
+
+.sp-requests-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--sp-space-4);
+    margin: var(--sp-space-4) 0;
+}
+
+.sp-requests-charts__panel {
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+    padding: var(--sp-space-4);
+}
+
+.sp-requests-charts__title {
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sp-text-tertiary);
+    margin: 0 0 var(--sp-space-3);
+}
+
+.sp-latency-histogram {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--sp-space-1);
+    height: 140px;
+}
+
+.sp-latency-histogram__count {
+    position: absolute;
+    top: -1.2em;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-latency-histogram__label {
+    position: absolute;
+    bottom: -1.4em;
+    font-size: 10px;
+    color: var(--sp-text-tertiary);
+    white-space: nowrap;
+}
+
+.sp-cost-spark {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--sp-space-05);
+    height: 140px;
+}
+
+.sp-pagination__current {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-tertiary);
+}
+
+}

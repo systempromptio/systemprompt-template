@@ -26,25 +26,42 @@ on:
 jobs:
   version:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(inputs.tag, 'v') }}
     outputs:
       tag: ${{ steps.t.outputs.tag }}
       version: ${{ steps.t.outputs.version }}
     steps:
       - id: t
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          tag="${{ inputs.tag }}"
+          tag="$RELEASE_TAG"
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
           echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
 
   ghcr:
     needs: version
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
     steps:
-      - run: |
-          docker pull ghcr.io/systempromptio/systemprompt-template:latest
-          docker run --rm --entrypoint /app/bin/systemprompt \
-            ghcr.io/systempromptio/systemprompt-template:latest --version
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag }}
+      - name: Boot exact published image and test upgrade
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          image="ghcr.io/systempromptio/systemprompt-template:$VERSION"
+          digest=$(docker buildx imagetools inspect "$image" --format '{{.Manifest.Digest}}')
+          bash scripts/smoke-image.sh "ghcr.io/systempromptio/systemprompt-template@$digest" "$VERSION"
+          bash scripts/smoke-image.sh "ghcr.io/systempromptio/systemprompt-template@$digest" "$VERSION" ghcr.io/systempromptio/systemprompt-template:0.42.1
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: image-smoke-${{ matrix.runner }}
+          path: .build/smoke/
 
   release-tags:
     name: Release tag set + signature
@@ -106,9 +123,11 @@ jobs:
         os: [ubuntu-latest, macos-14]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag }}
       - run: |
-          bash scripts/install.sh --version ${{ needs.version.outputs.tag }} --prefix "$HOME/.local"
+          bash scripts/install-gateway.sh --version ${{ needs.version.outputs.tag }} --prefix "$HOME/.local"
           "$HOME/.local/bin/systemprompt" --version
 
   homebrew:
@@ -128,11 +147,23 @@ jobs:
     needs: version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag }}
       - name: Boot the Coolify compose and wait for health
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
         run: |
           python3 -c "import json; print(json.load(open('deploy/coolify/service-template.json'))['compose'])" > compose-test.yml
           export POSTGRES_PASSWORD=smoketest ANTHROPIC_API_KEY=sk-ant-dummy SERVICE_PORT_GATEWAY=18080 ADMIN_EMAIL=smoke@example.invalid
+          python3 - <<'PYTHON'
+          import os, yaml
+          p='compose-test.yml'
+          d=yaml.safe_load(open(p))
+          d['services']['gateway']['image']='ghcr.io/systempromptio/systemprompt-template:'+os.environ['VERSION']
+          yaml.safe_dump(d,open(p,'w'))
+          PYTHON
+          trap 'docker compose -f compose-test.yml -p smoke logs --tail 100; docker compose -f compose-test.yml -p smoke down -v' EXIT
           docker compose -f compose-test.yml -p smoke up -d
           for i in $(seq 1 60); do
             curl -sf http://localhost:18080/api/v1/health && exit 0
@@ -147,25 +178,22 @@ jobs:
     needs: version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Boot the canonical catalog compose and wait for health
-        run: |
-          export POSTGRES_PASSWORD=smoketest ANTHROPIC_API_KEY=sk-ant-dummy HTTP_PORT=18081 ADMIN_EMAIL=smoke@example.invalid
-          docker compose -f deploy/compose/one-click.docker-compose.yml -p oneclick up -d
-          for i in $(seq 1 60); do
-            curl -sf http://localhost:18081/api/v1/health && exit 0
-            sleep 5
-          done
-          echo "gateway never became healthy"
-          docker compose -f deploy/compose/one-click.docker-compose.yml -p oneclick logs --tail 50
-          exit 1
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag }}
+      - name: Boot canonical compose at the release digest
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: bash scripts/smoke-image.sh "ghcr.io/systempromptio/systemprompt-template:$VERSION" "$VERSION"
 
   compose-drift:
     name: catalog compose matches root topology
     needs: version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag }}
       - name: Compare service/volume topology with root docker-compose.yml
         run: |
           topo() {
@@ -192,3 +220,18 @@ jobs:
             | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['template']['status'])")
           echo "template status: ${status}"
           test "${status}" = "PUBLISHED"
+
+  dokploy:
+    name: Dokploy compose boot and persistence
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag }}
+      - name: Boot the Dokploy template at the release version
+        env:
+          SMOKE_COMPOSE_FILE: deploy/dokploy/docker-compose.yml
+          SMOKE_APP_SERVICE: systemprompt
+          VERSION: ${{ needs.version.outputs.version }}
+        run: bash scripts/smoke-image.sh "ghcr.io/systempromptio/systemprompt-template:$VERSION" "$VERSION"

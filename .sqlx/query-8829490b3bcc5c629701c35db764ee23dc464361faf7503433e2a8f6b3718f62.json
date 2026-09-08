@@ -1,0 +1,66 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            pm.user_id AS \"user_id!: UserId\",\n            u.display_name AS \"display_name?\",\n            u.email AS \"email?\",\n            ARRAY_AGG(DISTINCT pm.source) AS \"sources!\",\n            COALESCE(\n                ARRAY_AGG(DISTINCT pm.source_ad_group)\n                    FILTER (WHERE pm.source_ad_group IS NOT NULL),\n                ARRAY[]::TEXT[]\n            ) AS \"source_ad_groups!\"\n        FROM project_members pm\n        JOIN users u ON u.id = pm.user_id\n        WHERE pm.project_id = $1\n        GROUP BY pm.user_id, u.display_name, u.email\n        ORDER BY u.display_name NULLS LAST, pm.user_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "project_members",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name?",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "display_name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "email?",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "sources!",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "source_ad_groups!",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "8829490b3bcc5c629701c35db764ee23dc464361faf7503433e2a8f6b3718f62"
+}

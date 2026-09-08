@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.user_id AS \"user_id!: UserId\", u.name AS \"user_name!\",\n                  COUNT(*) AS \"total!\",\n                  COUNT(*) FILTER (WHERE c.expires_at >= NOW()) AS \"pending!\",\n                  MAX(c.created_at) AS \"newest_created_at!\",\n                  MAX(c.expires_at) AS \"latest_expires_at!\"\n             FROM bridge_exchange_codes c\n             JOIN users u ON u.id = c.user_id\n            WHERE c.consumed_at IS NULL\n            GROUP BY c.user_id, u.name\n            ORDER BY\n              CASE WHEN $2::TEXT = 'desc' THEN\n                CASE $1::TEXT WHEN 'expires' THEN EXTRACT(EPOCH FROM MAX(c.expires_at))\n                        ELSE EXTRACT(EPOCH FROM MAX(c.created_at)) END\n              END DESC NULLS LAST,\n              CASE WHEN $2::TEXT = 'asc' THEN\n                CASE $1::TEXT WHEN 'expires' THEN EXTRACT(EPOCH FROM MAX(c.expires_at))\n                        ELSE EXTRACT(EPOCH FROM MAX(c.created_at)) END\n              END ASC NULLS LAST,\n              c.user_id\n            LIMIT $3 OFFSET $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "bridge_exchange_codes",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "pending!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "newest_created_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "latest_expires_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "a48af1e5a3b37c4250211f0316a80a3446bbe04b448cdf34811bdec70b4f4a93"
+}

@@ -1,0 +1,51 @@
+/* Print rules for the whole console, not for one page. The end-of-month report
+   pages they were written for are gone; what survives is the general behaviour
+   of an admin page sent to a printer: drop the chrome, unclip the tables. */
+
+@media print {
+    @page {
+        size: A4;
+        margin: 14mm;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .sp-admin-sidebar,
+    .sp-sidebar-close-btn,
+    .sp-admin-footer,
+    .sp-toolbar,
+    [data-print-hide],
+    [data-print-report] {
+        display: none !important;
+    }
+
+    .sp-shell__main,
+    .sp-shell__main {
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: none !important;
+    }
+
+    .sp-kpi,
+    .sp-table__el {
+        width: 100% !important;
+        font-size: 8.5pt;
+    }
+
+    .sp-table__el thead {
+        display: table-header-group;
+    }
+
+    .sp-table__el tr {
+        break-inside: avoid;
+    }
+
+    a {
+        color: #000 !important;
+        text-decoration: none !important;
+    }
+}

@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT last_sync FROM knowledge_user_sync_state\n           WHERE source_type = $1 AND user_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "last_sync",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "knowledge_user_sync_state",
+            "name": "last_sync"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "e0a3c1f0f1e1f28b205d878ca9884856cf4cf9a5726477140169a51be32bddb3"
+}

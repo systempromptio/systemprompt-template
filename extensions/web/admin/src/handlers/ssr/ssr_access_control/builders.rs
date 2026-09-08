@@ -30,6 +30,7 @@ pub(super) struct EntityCatalogue {
     pub(super) plugins: Vec<EntityOption>,
     pub(super) agents: Vec<EntityOption>,
     pub(super) marketplaces: Vec<EntityOption>,
+    pub(super) skills: Vec<EntityOption>,
 }
 
 pub(super) fn build_entity_catalogue(services_path: &Path) -> EntityCatalogue {
@@ -39,7 +40,21 @@ pub(super) fn build_entity_catalogue(services_path: &Path) -> EntityCatalogue {
         plugins: build_plugins(services_path),
         agents: build_agents(services_path),
         marketplaces: build_marketplaces(),
+        skills: build_skills(services_path),
     }
+}
+
+fn build_skills(services_path: &Path) -> Vec<EntityOption> {
+    repositories::marketplace::plugins::list_skill_catalog(services_path)
+        .inspect_err(|e| tracing::warn!(error = %e, "skill catalog unreadable; omitted from the access-control catalogue"))
+        .unwrap_or_default()
+        .into_iter()
+        .map(|s| EntityOption {
+            id: s.id.as_str().to_owned(),
+            label: s.name,
+            description: s.description,
+        })
+        .collect()
 }
 
 fn build_gateway_routes() -> Vec<RouteRef> {

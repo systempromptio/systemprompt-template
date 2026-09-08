@@ -1,4 +1,8 @@
 //! Hook event counts and recent-event listings for the governance pages.
+//!
+//! Not gated behind `governance-ssr` like its neighbours: that feature compiles
+//! out queries this fork serves no page for, and the governance page's hooks
+//! tab is a page for exactly these.
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;

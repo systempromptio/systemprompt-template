@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_api_keys SET revoked_at = CURRENT_TIMESTAMP\n         WHERE user_id = $1 AND revoked_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "71e1abf86911d426c76aa37e1c080f690dd511fe93a91b165cebae6be1abafa0"
+}

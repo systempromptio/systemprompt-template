@@ -1,0 +1,41 @@
+{{!--
+  One row per judged answer, worst first. Invoke as
+  {{> evals/results-table results=results}}. The rationale and the prompt and
+  answer excerpts are clipped to the row and carried in full on the cell's
+  title, which is what keeps a scored answer to one 36px line.
+--}}
+{{#> components/table caption="Judged answers, worst verdict first" modifier="sp-p-evals__results"}}
+    <thead><tr>
+        <th scope="col" class="sp-table__cell--num">Score</th>
+        <th scope="col">Verdict</th>
+        <th scope="col">Model</th>
+        <th scope="col" title="Instructions, Correctness and the other dimensions, out of 5">Dimensions</th>
+        <th scope="col">Rationale</th>
+        <th scope="col">Flags</th>
+        <th scope="col" class="sp-table__cell--date">Judged</th>
+        <th scope="col" class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
+    </tr></thead>
+    <tbody>
+    {{#each results}}
+    <tr>
+        <td class="sp-table__cell--num sp-u-num">{{this.score_display}}</td>
+        <td>{{> components/badge tone=this.verdict_tone text=this.verdict}}</td>
+        <td class="sp-table__cell--mono sp-p-evals__clip" title="{{this.provider}}/{{this.model}}">{{this.model}}</td>
+        <td class="sp-p-evals__clip sp-u-num" title="{{this.dimensions_display}}">{{this.dimensions_display}}</td>
+        <td class="sp-table__cell--primary sp-p-evals__clip" title="{{this.rationale}}&#10;&#10;Prompt: {{this.prompt_excerpt}}&#10;&#10;Answer: {{this.response_excerpt}}">{{this.rationale_short}}</td>
+        <td class="sp-p-evals__clip sp-table__cell--muted" title="{{this.flags_display}}">{{#if this.has_flags}}{{this.flags_display}}{{else}}—{{/if}}</td>
+        <td class="sp-table__cell--date">{{this.created_at_local}}</td>
+        <td class="sp-table__cell--actions sp-p-evals__actions">
+            {{#if this.ai_request_id}}<a href="/admin/requests/{{this.ai_request_id}}" title="The full request chain">Chain</a>{{/if}}
+            {{#if this.promote_id}}
+            <form method="post" action="/admin/evals/cases" class="sp-p-evals__inline-form">
+                <input type="hidden" name="ai_request_id" value="{{this.promote_id}}">
+                <input type="hidden" name="tab" value="golden-set">
+                <button type="submit" class="sp-btn sp-btn--xs sp-btn--outline" title="Add this prompt and answer to the golden set">Golden</button>
+            </form>
+            {{/if}}
+        </td>
+    </tr>
+    {{/each}}
+    </tbody>
+{{/components/table}}

@@ -1,0 +1,78 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            p.id AS \"id!\",\n            p.name AS \"name!\",\n            p.description,\n            COALESCE(m.member_count, 0)::BIGINT AS \"member_count!\",\n            COALESCE(u.active_members, 0)::BIGINT AS \"active_members_30d!\",\n            COALESCE(u.requests, 0)::BIGINT AS \"requests_30d!\",\n            COALESCE(u.cost_microdollars, 0)::BIGINT AS \"cost_30d_microdollars!\"\n        FROM projects p\n        LEFT JOIN (\n            SELECT project_id, COUNT(DISTINCT user_id) AS member_count\n            FROM project_members GROUP BY project_id\n        ) m ON m.project_id = p.id\n        LEFT JOIN (\n            SELECT pm.project_id,\n                   COUNT(DISTINCT r.user_id) AS active_members,\n                   COUNT(r.id) AS requests,\n                   COALESCE(SUM(r.cost_microdollars), 0) AS cost_microdollars\n            FROM (SELECT DISTINCT project_id, user_id FROM project_members) pm\n            JOIN ai_requests r\n              ON r.user_id = pm.user_id\n             AND r.created_at >= NOW() - INTERVAL '30 days'\n            GROUP BY pm.project_id\n        ) u ON u.project_id = p.id\n        ORDER BY p.name\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "projects",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "projects",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "projects",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "member_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "active_members_30d!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "requests_30d!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "cost_30d_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "5d0c3ab29f90ad8fd43c66f29a9bda09b681ffee88278a9fabf908eab4399e5c"
+}

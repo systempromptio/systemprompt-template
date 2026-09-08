@@ -1,0 +1,156 @@
+@layer components {
+
+.sp-kpi__label {
+    font-size: var(--sp-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sp-text-tertiary);
+}
+
+.sp-kpi__value {
+    font-size: var(--sp-text-xl);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-kpi__sub {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.sp-kpi--danger .sp-kpi__value { color: var(--sp-danger-strong); }
+
+.sp-kpi--warning .sp-kpi__value { color: var(--sp-warning-strong); }
+
+.sp-requests-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--sp-space-4);
+    margin-block: var(--sp-space-6);
+}
+
+.sp-requests-charts__panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-3);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+    padding: var(--sp-space-5);
+    min-width: 0;
+}
+
+.sp-requests-charts__panel--wide {
+    margin-block: var(--sp-space-6);
+}
+
+.sp-requests-charts__title {
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-text-secondary);
+    margin: 0 0 var(--sp-space-3);
+}
+
+.sp-latency-histogram {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+}
+
+.sp-latency-histogram__label {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sp-latency-histogram__track {
+    grid-column: 2;
+    grid-row: 1;
+    height: 0.75rem;
+    border-radius: var(--sp-radius-sm);
+    background: color-mix(in oklch, var(--sp-warm-900) 6%, transparent);
+}
+
+.sp-latency-histogram__fill {
+    display: block;
+    width: var(--v, 0%);
+    height: 100%;
+    border-radius: var(--sp-radius-sm);
+    background: var(--sp-chart-blue);
+}
+
+.sp-latency-histogram__row--peak .sp-latency-histogram__fill {
+    background: var(--sp-accent-fill);
+}
+
+.sp-latency-histogram__count {
+    grid-column: 3;
+    grid-row: 1;
+    text-align: right;
+    font-size: var(--sp-text-xs);
+    font-variant-numeric: tabular-nums;
+    color: var(--sp-text-tertiary);
+}
+
+.sp-latency-histogram__axis {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--sp-space-2);
+    padding-top: var(--sp-space-1);
+    padding-left: calc(5.5rem + var(--sp-space-3));
+    border-top: 1px solid var(--sp-border-subtle);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-timeseries {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-3);
+    flex: 1;
+    margin: 0;
+    min-width: 0;
+}
+
+.sp-timeseries__head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-05);
+}
+
+.sp-timeseries__title {
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+}
+}
+
+@layer components {
+
+.sp-timeseries__subtitle {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-latency-histogram__row {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr 3rem;
+    align-items: center;
+    gap: var(--sp-space-3);
+    min-height: 1.5rem;
+    border-radius: var(--sp-radius-sm);
+    transition: background var(--sp-duration-fast);
+}
+.sp-latency-histogram__row:hover {
+    background: color-mix(in oklch, var(--sp-accent) 5%, transparent);
+}
+
+}

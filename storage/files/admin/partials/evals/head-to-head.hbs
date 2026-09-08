@@ -2,114 +2,100 @@
   Head-to-head tab: run a comparison, then the win-rate aggregate and the
   individual verdicts behind it.
 --}}
-<h2 class="eval-section-title">Compare two models</h2>
-<p class="text-muted text-xs eval-hint">
-    Both models answer the same golden-set case, and the judge picks a winner.
-    Every comparison is judged in both orders: only an agreeing pair counts as a
-    win, and order-dependent verdicts are recorded as ties.
-</p>
+{{> components/section title="Compare two models" note="Both models answer the same golden-set case and the judge picks a winner. Every comparison is judged in both orders: only an agreeing pair counts as a win, and order-dependent verdicts are recorded as ties."}}
 
-<form method="post" action="{{base_url}}/run" class="toolbar eval-run-form">
-    <input type="hidden" name="kind" value="pairwise">
-    <input type="hidden" name="tab" value="{{tab}}">
-    <input type="hidden" name="from" value="{{time_range.from}}">
-    <input type="hidden" name="to" value="{{time_range.to}}">
-    <label class="filter-field">
-        <span class="filter-field__label">Model A</span>
-        <select name="model_a" class="filter-select">
-            {{#each model_options}}
-            <option value="{{this.value}}">{{this.label}}</option>
-            {{/each}}
-        </select>
-    </label>
-    <label class="filter-field">
-        <span class="filter-field__label">Model B</span>
-        <select name="model_b" class="filter-select">
-            {{#each model_options}}
-            <option value="{{this.value}}">{{this.label}}</option>
-            {{/each}}
-        </select>
-    </label>
-    <label class="filter-field">
-        <span class="filter-field__label">Judge model</span>
-        <select name="judge_model" class="filter-select">
-            {{#each model_options}}
-            <option value="{{this.value}}">{{this.label}}</option>
-            {{/each}}
-        </select>
-    </label>
-    <button type="submit" class="btn btn-sm"{{#unless cases}} disabled{{/unless}}>
-        Run comparison
-    </button>
-</form>
+<div class="sp-card">
+    <form method="post" action="{{base_url}}/run" class="sp-card__body sp-p-evals__run-form">
+        <input type="hidden" name="kind" value="pairwise">
+        <input type="hidden" name="tab" value="{{tab}}">
+        <input type="hidden" name="from" value="{{time_range.from}}">
+        <input type="hidden" name="to" value="{{time_range.to}}">
+        <div class="sp-form-group">
+            <label for="evals-model-a">Model A</label>
+            <select id="evals-model-a" name="model_a" class="sp-select">
+                {{#each model_options}}
+                <option value="{{this.value}}">{{this.label}}</option>
+                {{/each}}
+            </select>
+        </div>
+        <div class="sp-form-group">
+            <label for="evals-model-b">Model B</label>
+            <select id="evals-model-b" name="model_b" class="sp-select">
+                {{#each model_options}}
+                <option value="{{this.value}}">{{this.label}}</option>
+                {{/each}}
+            </select>
+        </div>
+        <div class="sp-form-group">
+            <label for="evals-pair-judge">Judge model</label>
+            <select id="evals-pair-judge" name="judge_model" class="sp-select">
+                {{#each model_options}}
+                <option value="{{this.value}}">{{this.label}}</option>
+                {{/each}}
+            </select>
+        </div>
+        <div class="sp-form-actions">
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary"{{#unless cases}} disabled{{/unless}}>Run comparison</button>
+        </div>
+    </form>
+</div>
 
 {{#unless cases}}
-<p class="text-muted text-xs eval-hint">
-    A comparison needs a golden set to compare on. Add a case from a judged
-    answer on the Scored answers tab.
-</p>
+{{> components/notice tone="info" message="A comparison needs a golden set to compare on. Add a case from a judged answer on the Judge tab."}}
 {{/unless}}
 
-<h2 class="eval-section-title">Win rates</h2>
+{{> components/section title="Win rates" note="Wins over decisive comparisons; ties are counted but do not decide."}}
 {{#if win_rates}}
-{{#> components/data-table}}
+{{#> components/table caption="Win rate per model" modifier="sp-p-evals__winrates"}}
     <thead><tr>
-        <th>Model</th>
-        <th class="col-num">Comparisons</th>
-        <th class="col-num">Wins</th>
-        <th class="col-num">Losses</th>
-        <th class="col-num">Ties</th>
-        <th class="col-num">Win rate</th>
+        <th scope="col">Model</th>
+        <th scope="col" class="sp-table__cell--num">Comparisons</th>
+        <th scope="col" class="sp-table__cell--num">Wins</th>
+        <th scope="col" class="sp-table__cell--num">Losses</th>
+        <th scope="col" class="sp-table__cell--num">Ties</th>
+        <th scope="col" class="sp-table__cell--num">Win rate</th>
     </tr></thead>
     <tbody>
     {{#each win_rates}}
     <tr>
-        <td><code class="code-inline">{{this.model}}</code></td>
-        <td class="col-num">{{this.comparisons}}</td>
-        <td class="col-num">{{this.wins}}</td>
-        <td class="col-num">{{this.losses}}</td>
-        <td class="col-num">{{this.ties}}</td>
-        <td class="col-num">{{this.win_rate_pct}}%</td>
+        <td class="sp-table__cell--primary sp-table__cell--mono sp-p-evals__clip" title="{{this.model}}">{{this.model}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.comparisons}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.wins}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.losses}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.ties}}</td>
+        <td class="sp-table__cell--num sp-u-num">{{this.win_rate_pct}}%</td>
     </tr>
     {{/each}}
     </tbody>
-{{/components/data-table}}
+{{/components/table}}
 {{else}}
-{{> components/empty-state message="No comparisons run in this window."}}
+{{> components/empty-state title="No comparisons" message="No comparison has run in this window. Pick two models above."}}
 {{/if}}
 
+{{> components/section title="Individual verdicts" note="The rows the win rates are built from. Each case appears twice, once in each presentation order."}}
 {{#if pairs}}
-<h2 class="eval-section-title">Individual verdicts</h2>
-<p class="text-muted text-xs eval-hint">
-    The rows the win rates are built from. Each case appears twice, once in each
-    presentation order.
-</p>
-{{#> components/data-table}}
+{{#> components/table caption="Every pairwise verdict" modifier="sp-p-evals__pairs"}}
     <thead><tr>
-        <th>Comparison</th>
-        <th>Winner</th>
-        <th>Rationale</th>
-        <th class="col-date">Judged</th>
+        <th scope="col">Model A</th>
+        <th scope="col">Model B</th>
+        <th scope="col">Winner</th>
+        <th scope="col">Order</th>
+        <th scope="col">Rationale</th>
+        <th scope="col" class="sp-table__cell--date">Judged</th>
     </tr></thead>
     <tbody>
     {{#each pairs}}
     <tr>
-        <td>
-            <code class="code-inline">{{this.model_a}}</code>
-            vs <code class="code-inline">{{this.model_b}}</code>
-            {{#if this.order_swapped}}<span class="text-muted text-xs">order swapped</span>{{/if}}
-        </td>
-        <td>
-            {{#if this.is_tie}}
-              <span class="mcp-badge mcp-badge-warning">tie</span>
-            {{else}}
-              <code class="code-inline">{{this.winner_label}}</code>
-            {{/if}}
-        </td>
-        <td class="text-muted text-xs">{{truncate this.rationale 180}}</td>
-        <td class="col-date">{{this.created_at_local}}</td>
+        <td class="sp-table__cell--mono sp-p-evals__clip" title="{{this.model_a}}">{{this.model_a}}</td>
+        <td class="sp-table__cell--mono sp-p-evals__clip" title="{{this.model_b}}">{{this.model_b}}</td>
+        <td class="sp-table__cell--mono sp-p-evals__clip" title="{{this.winner_label}}">{{#if this.is_tie}}{{> components/badge tone="warn" text="tie"}}{{else}}{{this.winner_label}}{{/if}}</td>
+        <td class="sp-table__cell--muted">{{#if this.order_swapped}}swapped{{else}}as listed{{/if}}</td>
+        <td class="sp-table__cell--primary sp-p-evals__clip" title="{{this.rationale}}">{{this.rationale}}</td>
+        <td class="sp-table__cell--date">{{this.created_at_local}}</td>
     </tr>
     {{/each}}
     </tbody>
-{{/components/data-table}}
+{{/components/table}}
+{{else}}
+{{> components/empty-state message="No pairwise verdict recorded in this window."}}
 {{/if}}

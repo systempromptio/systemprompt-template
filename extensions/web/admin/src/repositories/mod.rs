@@ -17,3 +17,25 @@ pub mod mcp;
 pub mod secrets;
 pub mod traces;
 pub mod users;
+
+pub mod bridge;
+
+pub mod devices;
+
+pub mod groups;
+
+pub mod overview;
+
+pub mod people_usage;
+
+pub mod projects;
+
+pub mod roles;
+
+pub mod scope;
+
+pub mod access_control;
+
+pub mod reports;
+
+pub mod dashboard_read;

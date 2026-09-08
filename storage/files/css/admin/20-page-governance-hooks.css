@@ -1,0 +1,27 @@
+@layer components {
+
+/* Why: fixed layout keeps both tables inside the viewport. A hook command is
+   a shell line of any length, so it is the cell that clips, with the full
+   text on its title. */
+/* Why: the export is a few lines a developer copies whole; it must never
+   compete with the tables for the fold. */
+.sp-p-hooks__export { max-height: 12rem; margin-bottom: var(--sp-space-4); }
+
+.sp-p-hooks__configured,
+.sp-p-hooks__events { table-layout: fixed; width: 100%; }
+
+.sp-p-hooks__configured th:nth-child(1) { width: 16%; }
+.sp-p-hooks__configured th:nth-child(2) { width: 12%; }
+.sp-p-hooks__configured th:nth-child(3) { width: 14%; }
+.sp-p-hooks__configured th:nth-child(4) { width: 40%; }
+.sp-p-hooks__configured th:nth-child(5) { width: 9%; }
+.sp-p-hooks__configured th:nth-child(6) { width: 9%; }
+
+.sp-p-hooks__events th:nth-child(1) { width: 16%; }
+.sp-p-hooks__events th:nth-child(2) { width: 12%; }
+.sp-p-hooks__events th:nth-child(3) { width: 20%; }
+.sp-p-hooks__events th:nth-child(4) { width: 22%; }
+.sp-p-hooks__events th:nth-child(5) { width: 18%; }
+.sp-p-hooks__events th:nth-child(6) { width: 12%; }
+
+}
