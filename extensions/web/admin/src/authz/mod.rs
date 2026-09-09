@@ -22,7 +22,7 @@ use std::sync::{Arc, LazyLock, Mutex};
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt_security::authz::{
-    AuthzHookContext, NullAuditSink, SharedSubjectAttributeProvider, SubjectAttributes,
+    AuthzError, AuthzHookContext, NullAuditSink, SharedSubjectAttributeProvider, SubjectAttributes,
     SubjectDimension, dimensions_of, discover_subject_providers, gather_subject_attributes,
 };
 
@@ -90,7 +90,10 @@ pub fn dimensions(pool: &PgPool) -> &'static [SubjectDimension] {
 // Why: The subject's values for every registered dimension. The one async step
 // in the authorization path; call it once per request and reuse the result
 // across entities.
-pub async fn subject_attributes_for(pool: &PgPool, user_id: &UserId) -> SubjectAttributes {
+pub async fn subject_attributes_for(
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Result<SubjectAttributes, AuthzError> {
     gather_subject_attributes(&registry(pool).providers, user_id).await
 }
 

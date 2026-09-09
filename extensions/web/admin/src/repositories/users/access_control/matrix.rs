@@ -22,6 +22,8 @@ use systemprompt_security::authz::{
 use super::matrix_source::{allow_source, deny_source};
 use super::matrix_subject::{MatrixSubject, user_subject};
 use super::rules::list_all_rules;
+use systemprompt_security::authz::AuthzError;
+
 use crate::authz::dimensions;
 use crate::types::access_control::{AccessControlRule, AccessDecision};
 
@@ -33,7 +35,7 @@ pub async fn filter_catalog_for_user(
     pool: &PgPool,
     user_id: &UserId,
     sections_in: Vec<SectionInput>,
-) -> Result<Option<UserMatrix>, sqlx::Error> {
+) -> Result<Option<UserMatrix>, AuthzError> {
     resolve_user_matrix(pool, user_id, sections_in).await
 }
 
@@ -41,13 +43,13 @@ pub async fn resolve_user_matrix(
     pool: &PgPool,
     user_id: &UserId,
     sections_in: Vec<SectionInput>,
-) -> Result<Option<UserMatrix>, sqlx::Error> {
+) -> Result<Option<UserMatrix>, AuthzError> {
     let Some(user) = find_user_for_matrix(pool, user_id).await? else {
         return Ok(None);
     };
     // Why: the same lookup the enforcement webhook performs, so the matrix and
     // the decision see identical subject values.
-    let subject = user_subject(pool, user_id, user.roles.clone()).await;
+    let subject = user_subject(pool, user_id, user.roles.clone()).await?;
     let sections = resolve_sections_for(pool, &subject, sections_in).await?;
     Ok(Some(UserMatrix { user, sections }))
 }

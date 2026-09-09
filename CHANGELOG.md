@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.49.0] - 2026-09-09
+
+### Security
+
+- An entitlement lookup that fails now denies the request instead of resolving
+  as empty. The four subject-attribute providers behind the access matrix —
+  department, group, project and Salesforce — used to swallow a database error
+  into "this user holds no values for that dimension". Every deny rule keyed on
+  that dimension then failed to match, and the request was allowed on the
+  strength of the error. Core 0.49.0 makes
+  `SubjectAttributeProvider::values_for` fallible to remove exactly that, and
+  the callers propagate: the governance authz webhook answers 200 with an
+  explicit deny, and the gateway catalogue, marketplace filter,
+  effective-permissions view and access matrix surface the error rather than
+  rendering a permissive view of it.
+
+### Changed
+
+- Adopt published systemprompt core 0.49.0 across both workspaces, the Helm
+  chart, the CasaOS and DigitalOcean deployment artifacts and `bridge/CORE_REF`;
+  both lockfiles are re-resolved.
+- Correct the demo index: 45 category scripts, two of which make live model
+  calls (`governance/09-pi-agent.sh` and `governance/10-safety-scanner.sh`).
+  Both counts and the free/paid split were a release behind.
+
 ## [0.48.0] - 2026-09-08
 
 ### Changed

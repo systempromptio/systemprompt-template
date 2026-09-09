@@ -22,7 +22,7 @@ build and runtime results are recorded below.
   Groups/projects are independent additions; no department conversion is inferred.
 - New migration numbers start at 051, above either destination's historical chain.
   Astound migration 046 and tenant seed/backfill migrations are not imported.
-- Core facade dependencies use 0.48.0 in both Rust workspaces. Local path patches
+- Core facade dependencies use 0.49.0 in both Rust workspaces. Local path patches
   are development-only and must not be committed.
 - The template retains passkeys, registration, magic links, evaluations and demos.
   Internal additionally retains Odoo/operator login, enterprise reporting and bridge consent.

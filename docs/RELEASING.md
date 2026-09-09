@@ -132,7 +132,7 @@ with the `GHCR_PRUNE_TOKEN`.
 
 ## 0.48 release validation
 
-Builds use the committed lockfiles and SQLx offline caches; migrations and dependency updates are explicit setup/maintenance steps. Both workspaces consume published core 0.48.0. The in-repository proc-macro-error2 compatibility patch is documented in `vendor/README.md`.
+Builds use the committed lockfiles and SQLx offline caches; migrations and dependency updates are explicit setup/maintenance steps. Both workspaces consume published core 0.49.0. The in-repository proc-macro-error2 compatibility patch is documented in `vendor/README.md`.
 
 Release dispatch resolves its tag to a commit on main, validates version pins, and uses that commit for archives, containers and deployment tests. Candidate images must boot before receiving release aliases. Post-publication smoke tests check both architectures, fresh setup, restart and upgrade from 0.42.1 with retained users. Helm is installed against disposable Postgres before chart publication; Homebrew publication completes before install-channel smoke tests.
 

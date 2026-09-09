@@ -23,6 +23,8 @@ use systemprompt_security::authz::{
     SubjectAttributes, SubjectDimension,
 };
 
+use systemprompt_security::authz::AuthzError;
+
 use crate::authz::{dimensions, subject_attributes_for};
 use crate::error::AdminError;
 use crate::handlers::shared;
@@ -48,11 +50,11 @@ pub async fn compute_effective_permissions(
     pool: &PgPool,
     user_id: &UserId,
     user_roles: &[String],
-) -> EffectivePermissions {
+) -> Result<EffectivePermissions, AuthzError> {
     let gateway_ids = collect_gateway_ids().unwrap_or_default();
     let mcp_ids = collect_mcp_ids().unwrap_or_default();
     let repo = AccessControlRepository::from_pool(Arc::new(pool.clone()));
-    let attributes = subject_attributes_for(pool, user_id).await;
+    let attributes = subject_attributes_for(pool, user_id).await?;
     let dimensions = dimensions(pool);
 
     let gateway_rules = repo
@@ -110,10 +112,10 @@ pub async fn compute_effective_permissions(
         }));
     }
 
-    EffectivePermissions {
+    Ok(EffectivePermissions {
         gateway_routes,
         mcp_servers,
-    }
+    })
 }
 
 struct DecideArgs<'a> {

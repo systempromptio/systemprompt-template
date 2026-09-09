@@ -72,7 +72,7 @@ Organised by the three pillars of [systemprompt.io](https://systemprompt.io): **
 | Pillar | Category | Scripts | What it covers | Cost |
 |--------|----------|---------|----------------|------|
 | Infrastructure | [infrastructure/](infrastructure/) | 5 | Services, database, jobs, logs, configuration | Free |
-| Capabilities | [governance/](governance/) | 10 | Audit smoke, scope, secrets, blocklist, rate limit, hooks, Pi agent | 1 × ~$0.01 |
+| Capabilities | [governance/](governance/) | 11 | Audit smoke, scope, secrets, blocklist, rate limit, hooks, Pi agent, safety scanner | 2 × ~$0.01 |
 | Capabilities | [mcp/](mcp/) | 3 | MCP server management, access tracking, tool execution | Free |
 | Capabilities | [analytics/](analytics/) | 8 | Overview, agents, costs, requests, sessions, content/traffic, conversations, tools | Free |
 | Capabilities | [agents/](agents/) | 5 | Agent discovery, config, messaging, tracing, A2A registry | Free |
@@ -81,7 +81,7 @@ Organised by the three pillars of [systemprompt.io](https://systemprompt.io): **
 | Integrations | [web/](web/) | 2 | Content types, templates, sitemaps, validation | Free |
 | Integrations | [performance/](performance/) | 2 | Request tracing, 2000-request load test | Free |
 
-**Total: 44 category scripts + 3 setup scripts. 43 free, 1 costs ~$0.01.** Plus two multi-container scenarios — see [Scenarios](#scenarios--factsheet-proofs).
+**Total: 45 category scripts + 3 setup scripts. 43 free, 2 make live model calls (~$0.01 and ~$0.001).** Plus two multi-container scenarios — see [Scenarios](#scenarios--factsheet-proofs).
 
 ---
 
@@ -348,7 +348,7 @@ Every demo below is a single fenced command. Run them in any order once prefligh
 
 ## Run them all at once
 
-Replay the entire free suite in one shot. Skips the paid `governance/09-pi-agent.sh` — paste that one separately if you want a live model call.
+Replay the entire free suite in one shot. Skips the two paid demos, `governance/09-pi-agent.sh` and `governance/10-safety-scanner.sh` — paste those separately if you want live model calls.
 
 ```bash
 ./demo/00-preflight.sh && ./demo/01-seed-data.sh && ./demo/02-seed-usage-events.sh && \
@@ -359,10 +359,11 @@ for f in demo/infrastructure/*.sh demo/governance/0[0-8]*.sh \
 done
 ```
 
-The paid demo:
+The paid demos:
 
 ```bash
 ./demo/governance/09-pi-agent.sh
+./demo/governance/10-safety-scanner.sh
 ```
 
 ---

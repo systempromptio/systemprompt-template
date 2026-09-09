@@ -223,7 +223,30 @@ pub(crate) async fn govern_authz(
     // Why: resolved by lookup rather than read off the request, so a department
     // change or a revocation binds on the next call instead of waiting for the
     // caller's token to refresh.
-    let attributes = subject_attributes_for(&pool, &req.user_id).await;
+    // Why: an error status here reads as "hook unavailable" and lets the call
+    // through, so an unresolved subject answers 200 with a deny instead.
+    let attributes = match subject_attributes_for(&pool, &req.user_id).await {
+        Ok(attributes) => attributes,
+        Err(e) => {
+            tracing::error!(
+                error = %e, user_id = %req.user_id,
+                "authz webhook: subject attribute lookup failed; refusing the request",
+            );
+            return (
+                StatusCode::OK,
+                Json(AuthzDecision::Deny {
+                    reason: DenyReason::PolicyViolation {
+                        policy: POLICY_NAME.to_owned(),
+                        detail: std::borrow::Cow::Borrowed(
+                            "subject attributes could not be resolved",
+                        ),
+                    },
+                    policy: POLICY_NAME.to_owned(),
+                }),
+            )
+                .into_response();
+        },
+    };
 
     let decision = resolve(ResolveInput {
         entity: &req.entity,
