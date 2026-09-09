@@ -20,7 +20,8 @@ use async_trait::async_trait;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt_security::authz::{
-    ROLE_PRECEDENCE, RuleType, SubjectAttributeProvider, SubjectDimension, USER_PRECEDENCE,
+    AuthzError, ROLE_PRECEDENCE, RuleType, SubjectAttributeProvider, SubjectDimension,
+    USER_PRECEDENCE,
 };
 use tokio::sync::RwLock;
 
@@ -84,9 +85,9 @@ impl SubjectAttributeProvider for DepartmentAttributeProvider {
         department_dimension()
     }
 
-    async fn values_for(&self, user_id: &UserId) -> Vec<String> {
+    async fn values_for(&self, user_id: &UserId) -> Result<Vec<String>, AuthzError> {
         if let Some(values) = Self::cached(user_id).await {
-            return values;
+            return Ok(values);
         }
         let looked_up = sqlx::query_scalar!(
             r#"SELECT department FROM user_profile_ext WHERE user_id = $1"#,
@@ -95,20 +96,11 @@ impl SubjectAttributeProvider for DepartmentAttributeProvider {
         .fetch_optional(self.pool.as_ref())
         .await;
 
-        let values = match looked_up {
-            Ok(row) => row
-                .map(|d| d.trim().to_owned())
-                .filter(|d| !d.is_empty())
-                .map_or_else(Vec::new, |d| vec![d]),
-            Err(e) => {
-                tracing::warn!(
-                    error = %e, user_id = %user_id,
-                    "department lookup failed; resolving with no department attribute",
-                );
-                Vec::new()
-            },
-        };
+        let values = looked_up?
+            .map(|d| d.trim().to_owned())
+            .filter(|d| !d.is_empty())
+            .map_or_else(Vec::new, |d| vec![d]);
         Self::store(user_id, &values).await;
-        values
+        Ok(values)
     }
 }

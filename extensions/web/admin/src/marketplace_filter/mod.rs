@@ -57,7 +57,9 @@ impl MarketplaceFilter for TemplateMarketplaceFilter {
         mut candidate: MarketplaceCandidate,
     ) -> Result<MarketplaceCandidate, MarketplaceFilterError> {
         let roles = self.user_roles(user_id).await?;
-        let attributes = subject_attributes_for(self.pool.as_ref(), user_id).await;
+        let attributes = subject_attributes_for(self.pool.as_ref(), user_id)
+            .await
+            .map_err(|e| MarketplaceFilterError::Backend(e.to_string()))?;
         let mut keep = keep_sets(
             &self.repo,
             &candidate,

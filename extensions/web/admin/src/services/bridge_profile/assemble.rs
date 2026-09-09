@@ -233,8 +233,13 @@ pub(super) async fn build_marketplaces(
         .collect();
     let sections = vec![("marketplace".to_owned(), "Marketplaces".to_owned(), rows)];
 
-    let subject =
-        crate::repositories::users::access_control::user_subject(pool, user_id, roles).await;
+    let Ok(subject) =
+        crate::repositories::users::access_control::user_subject(pool, user_id, roles)
+            .await
+            .inspect_err(|e| tracing::warn!(error = %e, "profile: subject attributes failed"))
+    else {
+        return Vec::new();
+    };
     let resolved = crate::repositories::users::access_control::resolve_subject_matrix(
         pool, &subject, sections,
     )

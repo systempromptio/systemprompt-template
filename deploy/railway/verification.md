@@ -15,7 +15,7 @@ This checklist covers Railway template verification. Railway makes the final ver
 
 ## Release procedure
 
-1. Complete the repository release gates and publish the 0.48.0 image.
+1. Complete the repository release gates and publish the 0.49.0 image.
 2. Deploy `template.json` in an isolated Railway project and verify boot, private networking, authentication, and persistence.
 3. Apply the tested configuration and overview to the existing published template. Updating listing metadata alone does not update its service configuration.
 4. Compare the published template's serialized configuration with the checked-in configuration.
@@ -28,10 +28,10 @@ References: [Railway template best practices](https://docs.railway.com/templates
 1. Open [Workspace Templates](https://railway.com/workspace/templates), select the workspace that owns the listing, and edit `systempromptio-the-self-owned-ai-control`. The [public deploy page](https://railway.com/deploy/systempromptio-the-self-owned-ai-control) deploys the saved listing; it does not import repository changes.
 2. Open the [configuration JSON](https://raw.githubusercontent.com/systempromptio/systemprompt-template/next/deploy/railway/template.json). In the template composer, configure each service from its `source`, `deploy`, `networking`, `variables`, and `volumeMounts` fields. Copy each variable's `defaultValue`, description, and optional setting. This JSON is a configuration reference, not a `railway.json` file; do not paste it into a service's config-as-code setting.
 3. Set the template name and gateway service name to `systemprompt.io`, and the database service name to `PostgreSQL`. Use the [square transparent icon](https://raw.githubusercontent.com/systempromptio/systemprompt-template/main/storage/files/images/template-icon.svg) for the template and gateway; use `https://devicons.railway.app/i/postgresql.svg` for PostgreSQL. Paste the [overview Markdown](https://raw.githubusercontent.com/systempromptio/systemprompt-template/next/deploy/railway/overview.md) into the listing overview.
-4. In gateway Settings, set the image to `ghcr.io/systempromptio/systemprompt-template:0.48.0`, readiness path to `/api/v1/health`, timeout to `900`, and public HTTP target port to `8080`. Leave the start command unset. Right-click the gateway, select **Attach Volume**, and mount it at `/app/data`. PostgreSQL uses `ghcr.io/railwayapp-templates/postgres-ssl:18` with a volume at `/var/lib/postgresql/data` and `PGDATA=/var/lib/postgresql/data/pgdata`. Keep PostgreSQL private, with no public domain or TCP proxy.
+4. In gateway Settings, set the image to `ghcr.io/systempromptio/systemprompt-template:0.49.0`, readiness path to `/api/v1/health`, timeout to `900`, and public HTTP target port to `8080`. Leave the start command unset. Right-click the gateway, select **Attach Volume**, and mount it at `/app/data`. PostgreSQL uses `ghcr.io/railwayapp-templates/postgres-ssl:18` with a volume at `/var/lib/postgresql/data` and `PGDATA=/var/lib/postgresql/data/pgdata`. Keep PostgreSQL private, with no public domain or TCP proxy.
 5. Check the template variable expressions before saving: gateway `DATABASE_URL=${{PostgreSQL.DATABASE_URL}}`, `OAUTH_AT_REST_PEPPER=${{secret(64)}}`, `ALLOW_REGISTRATION=false`, `SYSTEMPROMPT_DATA_DIR=/app/data`, `RAILWAY_RUN_UID=0`, `HOST=::`, and `EXTERNAL_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}`. PostgreSQL's password must use the `secret()` expression in the JSON, and its database URL must use `RAILWAY_PRIVATE_DOMAIN`. Leave the administrator email and provider keys for the deployer to supply.
 6. Save the template changes. Open the public deploy page above and deploy into a **new project**. Enter an administrator email you control and at least one provider API key. Confirm the preview contains both volumes before deploying. Wait for both services to start; gateway readiness can take up to 15 minutes.
-7. Open gateway **Settings → Networking**, copy the generated HTTPS domain, and substitute it below. Both requests must return HTTP 200, and health must report `healthy` and version `0.48.0`:
+7. Open gateway **Settings → Networking**, copy the generated HTTPS domain, and substitute it below. Both requests must return HTTP 200, and health must report `healthy` and version `0.49.0`:
 
    ```sh
    GATEWAY_URL='https://YOUR-GENERATED-DOMAIN'

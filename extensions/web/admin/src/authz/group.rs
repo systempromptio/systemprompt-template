@@ -18,7 +18,9 @@ use std::time::{Duration, Instant};
 use async_trait::async_trait;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
-use systemprompt_security::authz::{RuleType, SubjectAttributeProvider, SubjectDimension};
+use systemprompt_security::authz::{
+    AuthzError, RuleType, SubjectAttributeProvider, SubjectDimension,
+};
 use tokio::sync::RwLock;
 
 const GROUP_SLUG: &str = "group";
@@ -89,26 +91,16 @@ impl SubjectAttributeProvider for GroupAttributeProvider {
         group_dimension()
     }
 
-    async fn values_for(&self, user_id: &UserId) -> Vec<String> {
+    async fn values_for(&self, user_id: &UserId) -> Result<Vec<String>, AuthzError> {
         if let Some(values) = Self::cached(user_id).await {
-            return values;
+            return Ok(values);
         }
-        let values = match crate::repositories::groups::members::list_group_ids_for_user(
+        let values = crate::repositories::groups::members::list_group_ids_for_user(
             self.pool.as_ref(),
             user_id,
         )
-        .await
-        {
-            Ok(groups) => groups,
-            Err(e) => {
-                tracing::warn!(
-                    error = %e, user_id = %user_id,
-                    "group lookup failed; resolving with no group attribute",
-                );
-                Vec::new()
-            },
-        };
+        .await?;
         Self::store(user_id, &values).await;
-        values
+        Ok(values)
     }
 }

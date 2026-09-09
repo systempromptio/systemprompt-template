@@ -17,7 +17,9 @@ use std::time::{Duration, Instant};
 use async_trait::async_trait;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
-use systemprompt_security::authz::{RuleType, SubjectAttributeProvider, SubjectDimension};
+use systemprompt_security::authz::{
+    AuthzError, RuleType, SubjectAttributeProvider, SubjectDimension,
+};
 use tokio::sync::RwLock;
 
 const SALESFORCE_SLUG: &str = "salesforce";
@@ -91,33 +93,21 @@ impl SubjectAttributeProvider for SalesforceAttributeProvider {
         salesforce_dimension()
     }
 
-    async fn values_for(&self, user_id: &UserId) -> Vec<String> {
+    async fn values_for(&self, user_id: &UserId) -> Result<Vec<String>, AuthzError> {
         if let Some(values) = Self::cached(user_id).await {
-            return values;
+            return Ok(values);
         }
-        // Why: a lookup failure resolves to no value, which closes the gate.
-        // Failing open would expose a server that cannot work anyway.
-        let linked = match crate::repositories::users::salesforce_identity::is_salesforce_linked(
+        let linked = crate::repositories::users::salesforce_identity::is_salesforce_linked(
             self.pool.as_ref(),
             user_id,
         )
-        .await
-        {
-            Ok(linked) => linked,
-            Err(e) => {
-                tracing::warn!(
-                    error = %e, user_id = %user_id,
-                    "salesforce link lookup failed; resolving with no link attribute",
-                );
-                false
-            },
-        };
+        .await?;
         let values = if linked {
             vec![SALESFORCE_LINKED_VALUE.to_owned()]
         } else {
             Vec::new()
         };
         Self::store(user_id, &values).await;
-        values
+        Ok(values)
     }
 }

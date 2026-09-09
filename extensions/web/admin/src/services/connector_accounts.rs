@@ -42,7 +42,7 @@ pub(crate) async fn entitled(
     if identity.status != "active" {
         return Ok(false);
     }
-    let subject = access_control::user_subject(pool, user, identity.roles).await;
+    let subject = access_control::user_subject(pool, user, identity.roles).await?;
     // Why: connector access follows the configured MCP server policy; a
     // tenant-specific marketplace or group must never grant access implicitly.
     let sections = vec![(

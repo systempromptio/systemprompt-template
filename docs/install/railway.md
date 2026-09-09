@@ -10,7 +10,7 @@ One-click deploy of the `systemprompt-gateway` server on [Railway](https://railw
 
 The checked-in template configuration provisions the following. Before requesting partner review, update the published template and follow the [manual verification steps](../../deploy/railway/verification.md#load-and-check-the-template):
 
-- A `systemprompt.io` service from `ghcr.io/systempromptio/systemprompt-template:0.48.0`
+- A `systemprompt.io` service from `ghcr.io/systempromptio/systemprompt-template:0.49.0`
 - A PostgreSQL service, with private `DATABASE_URL` references and generated credentials
 - A gateway state volume at `/app/data`, retaining profiles, signing identity and uploads
 - `HOST=::` on the gateway: the gateway listens on the IPv6 wildcard for private networking and proxied traffic

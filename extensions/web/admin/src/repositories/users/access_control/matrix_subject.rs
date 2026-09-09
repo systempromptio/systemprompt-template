@@ -19,6 +19,8 @@ use systemprompt_security::authz::{RuleType, SubjectAttributes};
 use super::matrix::{
     MatrixSection, SectionInput, resolution_inputs, resolve_sections_for, sections_with,
 };
+use systemprompt_security::authz::AuthzError;
+
 use crate::authz::subject_attributes_for;
 
 #[derive(Debug, Clone)]
@@ -58,12 +60,16 @@ pub fn role_subject(role: &str) -> MatrixSubject {
 
 // Why: The real subject behind a signed-in account: its own id, roles, and
 // every registered dimension's values gathered from the database.
-pub async fn user_subject(pool: &PgPool, user_id: &UserId, roles: Vec<String>) -> MatrixSubject {
-    MatrixSubject {
+pub async fn user_subject(
+    pool: &PgPool,
+    user_id: &UserId,
+    roles: Vec<String>,
+) -> Result<MatrixSubject, AuthzError> {
+    Ok(MatrixSubject {
         id: user_id.clone(),
         roles,
-        attributes: subject_attributes_for(pool, user_id).await,
-    }
+        attributes: subject_attributes_for(pool, user_id).await?,
+    })
 }
 
 // Why: Resolve one subject against the supplied entity sections.

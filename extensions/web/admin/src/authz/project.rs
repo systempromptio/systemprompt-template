@@ -16,7 +16,9 @@ use std::time::{Duration, Instant};
 use async_trait::async_trait;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
-use systemprompt_security::authz::{RuleType, SubjectAttributeProvider, SubjectDimension};
+use systemprompt_security::authz::{
+    AuthzError, RuleType, SubjectAttributeProvider, SubjectDimension,
+};
 use tokio::sync::RwLock;
 
 const PROJECT_SLUG: &str = "project";
@@ -88,26 +90,16 @@ impl SubjectAttributeProvider for ProjectAttributeProvider {
         project_dimension()
     }
 
-    async fn values_for(&self, user_id: &UserId) -> Vec<String> {
+    async fn values_for(&self, user_id: &UserId) -> Result<Vec<String>, AuthzError> {
         if let Some(values) = Self::cached(user_id).await {
-            return values;
+            return Ok(values);
         }
-        let values = match crate::repositories::projects::members::list_project_ids_for_user(
+        let values = crate::repositories::projects::members::list_project_ids_for_user(
             self.pool.as_ref(),
             user_id,
         )
-        .await
-        {
-            Ok(projects) => projects,
-            Err(e) => {
-                tracing::warn!(
-                    error = %e, user_id = %user_id,
-                    "project lookup failed; resolving with no project attribute",
-                );
-                Vec::new()
-            },
-        };
+        .await?;
         Self::store(user_id, &values).await;
-        values
+        Ok(values)
     }
 }
