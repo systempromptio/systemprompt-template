@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE eval_execution_approvals SET status='consumed' WHERE id=$1 AND status='approved'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6270618216d09ff020dbadc4b388f66cba25c155777b59eaa918198dce580e32"
+}

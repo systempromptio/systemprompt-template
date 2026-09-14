@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "test_user": {
+      "id": "eval-target",
+      "display_name": "Before Evaluation",
+      "version": 1
+    },
+    "requested_patch": {
+      "display_name": "Eval Pilot"
+    },
+    "approval": {
+      "state": "required",
+      "target": "eval-target",
+      "precondition_version": 1
+    },
+    "readback": "available"
+  }
+}

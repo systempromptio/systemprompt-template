@@ -10,16 +10,21 @@
 
 use crate::app::{ADMIN_API_PREFIX, SSR_PREFIX};
 
-const ADMIN_API_SRC: &str = include_str!("../../../../extensions/web/admin/src/routes/admin.rs");
-const SSR_SRC: &str = include_str!("../../../../extensions/web/admin/src/routes/ssr.rs");
-
+const ADMIN_API_SRC: &str =
+    include_str!("../../../../extensions/web/admin/src/routes/admin/mod.rs");
+const ADMIN_API_READ_SRC: &str =
+    include_str!("../../../../extensions/web/admin/src/routes/admin/read.rs");
 const ADMIN_GROUPS_SRC: &str =
     include_str!("../../../../extensions/web/admin/src/routes/admin_groups.rs");
-const SSR_DASHBOARD_SRC: &str =
-    include_str!("../../../../extensions/web/admin/src/routes/ssr_dashboard.rs");
-const DASHBOARD_REDIRECTS_SRC: &str =
-    include_str!("../../../../extensions/web/admin/src/routes/dashboard_redirects.rs");
-const SSR_REDIRECTS_SRC: &str =
+const MANAGED_SRC: &str =
+    include_str!("../../../../extensions/web/admin/src/routes/managed_resources.rs");
+const ANALYSIS_SRC: &str =
+    include_str!("../../../../extensions/web/admin/src/routes/ssr_analysis.rs");
+const SSR_SRC: &str = include_str!("../../../../extensions/web/admin/src/routes/ssr.rs");
+// The legacy paths, which answer 308 rather than HTML. They are a route table
+// like any other and are exercised like one: a redirect that stops redirecting
+// is exactly as much a contract change as a page that stops rendering.
+const SSR_REDIRECT_SRC: &str =
     include_str!("../../../../extensions/web/admin/src/routes/ssr_redirects.rs");
 
 const METHODS: [&str; 5] = ["get", "post", "put", "patch", "delete"];
@@ -65,11 +70,12 @@ pub fn mounted_routes() -> Vec<MountedRoute> {
     let mut routes = Vec::new();
     for (src, prefix) in [
         (ADMIN_API_SRC, ADMIN_API_PREFIX),
-        (SSR_SRC, SSR_PREFIX),
+        (ADMIN_API_READ_SRC, ADMIN_API_PREFIX),
         (ADMIN_GROUPS_SRC, ADMIN_API_PREFIX),
-        (SSR_DASHBOARD_SRC, SSR_PREFIX),
-        (DASHBOARD_REDIRECTS_SRC, SSR_PREFIX),
-        (SSR_REDIRECTS_SRC, SSR_PREFIX),
+        (MANAGED_SRC, ADMIN_API_PREFIX),
+        (SSR_SRC, SSR_PREFIX),
+        (ANALYSIS_SRC, SSR_PREFIX),
+        (SSR_REDIRECT_SRC, SSR_PREFIX),
     ] {
         parse(src, prefix, &mut routes);
     }

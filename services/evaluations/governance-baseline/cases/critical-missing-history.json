@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "critical-missing-history",
+  "skill_id": "inspect_ai_requests",
+  "partition": "development",
+  "prompt": "Has this project improved in the last seven days?",
+  "expected_behavior": [
+    "State that direction cannot be established without history or dated comparisons.",
+    "Do not infer improvement from current issue counts."
+  ],
+  "fixture": "no-history",
+  "assertions": [
+    "unsupported_trend_absent"
+  ]
+}

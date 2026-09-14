@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "command_help": {
+      "analytics costs --help": [
+        "summary",
+        "breakdown"
+      ],
+      "analytics costs breakdown --help": [
+        "--by provider",
+        "--by model"
+      ]
+    },
+    "model_costs": [
+      {
+        "model": "fixture-model",
+        "usd": 1.25
+      }
+    ]
+  }
+}

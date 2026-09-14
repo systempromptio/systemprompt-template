@@ -59,7 +59,7 @@ pub(super) struct StatsView {
     pub(super) error_conversations: i64,
     pub(super) turns: i64,
     pub(super) side_calls: i64,
-    pub(super) side_call_cost_display: String,
+    pub(super) side_call_note: String,
     pub(super) tokens_display: String,
     pub(super) cost_display: String,
     pub(super) conversations_delta: Option<String>,

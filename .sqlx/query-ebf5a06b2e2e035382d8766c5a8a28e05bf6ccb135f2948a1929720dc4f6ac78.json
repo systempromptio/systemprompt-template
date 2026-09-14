@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT revision_id AS \"revision_id!\",bundle_digest AS \"bundle_digest!\" FROM managed_publications WHERE owner_id=$1 AND resource_id=$2 AND generation=$3 AND revision_id IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "revision_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "revision_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "bundle_digest!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "bundle_digest"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "ebf5a06b2e2e035382d8766c5a8a28e05bf6ccb135f2948a1929720dc4f6ac78"
+}

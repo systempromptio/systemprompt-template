@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "usage-repeat",
+  "skill_id": "analytics_dashboards",
+  "partition": "development",
+  "prompt": "Give a report, then refresh it after the continuation.",
+  "expected_behavior": [
+    "Call admin_report at the start of each invocation.",
+    "Do not reuse the first report payload."
+  ],
+  "fixture": "repeat",
+  "assertions": [
+    "second_turn_fresh_reads"
+  ]
+}

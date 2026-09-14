@@ -1,0 +1,15 @@
+id: admin-ai-usage
+name: AI Usage
+description: "Systemprompt Admin — AI Usage. Spend, models, trends and sessions from this\
+  \ platform's own audit tables, read as your signed-in account."
+version: 1.0.0
+enabled: true
+starred: true
+category: admin
+tags:
+- admin
+- reporting
+- governance
+mcp_tools:
+- mcp__systemprompt__admin_report
+file: view.html

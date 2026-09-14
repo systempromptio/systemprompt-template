@@ -11,7 +11,6 @@ use systemprompt_security::HookTokenValidator;
 
 pub(super) fn extract_and_validate_jwt(
     headers: &HeaderMap,
-    request_plugin_id: Option<&str>,
 ) -> AdminResult<(UserId, PluginId, String)> {
     let token = headers
         .get("authorization")
@@ -19,8 +18,10 @@ pub(super) fn extract_and_validate_jwt(
         .and_then(|v| v.strip_prefix("Bearer "))
         .ok_or_else(|| AdminError::Unauthorized("Missing Authorization header".to_owned()))?;
     let jwt_issuer = Config::get()?.jwt_issuer.clone();
+    // Why: `None` skips the request-vs-claim plugin_id cross-check — this
+    // endpoint takes no plugin_id path/query binding to compare against.
     let claims = HookTokenValidator::new(jwt_issuer)
-        .validate_track(token, request_plugin_id)
+        .validate_track(token, None)
         .map_err(AdminError::unauthenticated)?;
     Ok((claims.subject, claims.plugin_id, token.to_owned()))
 }

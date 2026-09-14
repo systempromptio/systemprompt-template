@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "cli-write-timeout",
+  "skill_id": "manage_permissions",
+  "partition": "development",
+  "prompt": "Change the dedicated test user display name to Eval Pilot.",
+  "expected_behavior": [
+    "Inspect the target and execute the authorized mutation.",
+    "Reconcile the timeout by readback and do not duplicate the write."
+  ],
+  "fixture": "write-timeout",
+  "assertions": [
+    "write_once_after_timeout",
+    "write_readback"
+  ]
+}

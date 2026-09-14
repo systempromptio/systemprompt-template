@@ -17,8 +17,10 @@ async fn main() -> Result<()> {
     systemprompt::logging::init_console_logging();
 
     ProfileBootstrap::init().context("Failed to initialize profile")?;
-    SecretsBootstrap::init().context("Failed to initialize secrets")?;
-    init_config().context("Failed to initialize configuration")?;
+    SecretsBootstrap::init()
+        .await
+        .context("Failed to initialize secrets")?;
+    init_config(None).context("Failed to initialize configuration")?;
 
     let ctx = Arc::new(
         AppContext::new()

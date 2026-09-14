@@ -3,6 +3,14 @@
 //! Self always; the `admin` and `auditor` roles keep the unrestricted view.
 //! Resolution is a pure function over the request context, so the rule is
 //! pinned by unit tests without a database.
+//!
+//! Which of the two a page asks for is a product decision, not a permission
+//! one. `/admin/history` is titled "My conversations" and takes
+//! [`own_history_scope`] whoever is looking, because a page named "my" that
+//! silently widens to the whole company for an admin is a surprise in the
+//! wrong direction. The org-wide listing lives at `/admin/conversations` and
+//! takes [`history_scope_for`], which is also what the readers use to decide
+//! whether a viewer may open one conversation.
 
 use systemprompt::identifiers::UserId;
 
@@ -55,11 +63,17 @@ pub fn resolve_history_scope(
 
 #[must_use]
 pub fn has_full_history_view(ctx: &UserContext) -> bool {
-    ctx.is_admin || ctx.roles.iter().any(|r| r.eq_ignore_ascii_case("auditor"))
+    ctx.is_console || ctx.roles.iter().any(|r| r.eq_ignore_ascii_case("auditor"))
 }
 
 // Why: no manager edge exists any more — a non-admin sees exactly themselves.
 #[must_use]
 pub fn history_scope_for(ctx: &UserContext) -> HistoryScope {
     resolve_history_scope(&ctx.user_id, has_full_history_view(ctx), Vec::new())
+}
+
+// Why: the viewer and nobody else, whatever roles they hold.
+#[must_use]
+pub fn own_history_scope(ctx: &UserContext) -> HistoryScope {
+    HistoryScope::Users(vec![ctx.user_id.clone()])
 }

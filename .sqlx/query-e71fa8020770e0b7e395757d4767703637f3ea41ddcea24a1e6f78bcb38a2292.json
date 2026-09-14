@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE eval_execution_approvals SET status=CASE WHEN expires_at<=NOW() THEN 'expired' ELSE $4 END,decided_by=$2,decided_at=NOW() WHERE id=$1 AND owner_id=$3 AND status='pending' AND precondition_digest=$5 RETURNING execution_id,status",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "execution_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_execution_approvals",
+            "name": "execution_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_execution_approvals",
+            "name": "status"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "e71fa8020770e0b7e395757d4767703637f3ea41ddcea24a1e6f78bcb38a2292"
+}

@@ -8,6 +8,7 @@
 
 use serde::Serialize;
 use systemprompt::identifiers::UserId;
+use systemprompt_web_shared::GroupId;
 
 use super::super::types::SvgLineChartView;
 use super::{BreadcrumbView, TabLinkView};
@@ -151,7 +152,7 @@ pub(crate) struct MappingRowView {
 pub(crate) struct GroupDetailPageData {
     pub page: &'static str,
     pub title: String,
-    pub group_id: String,
+    pub group_id: GroupId,
     pub group_name: String,
     pub description: Option<String>,
     pub is_unassigned: bool,

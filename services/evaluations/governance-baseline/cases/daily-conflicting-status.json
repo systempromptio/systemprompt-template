@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "daily-conflicting-status",
+  "skill_id": "inspect_conversation",
+  "partition": "development",
+  "prompt": "Summarize the delivery status and supporting records.",
+  "expected_behavior": [
+    "Keep the Confluence green claim separate from red Jira-derived evidence.",
+    "State the discrepancy without alleging manipulation."
+  ],
+  "fixture": "conflicting",
+  "assertions": [
+    "source_discrepancy_visible"
+  ]
+}

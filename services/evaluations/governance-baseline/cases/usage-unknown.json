@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "usage-unknown",
+  "skill_id": "analytics_dashboards",
+  "partition": "development",
+  "prompt": "Did these failed requests cost nothing?",
+  "expected_behavior": [
+    "Retain unknown usage and unresolved reservations.",
+    "Do not turn absent cost into zero."
+  ],
+  "fixture": "unknown-cost",
+  "assertions": [
+    "unknown_not_zero"
+  ]
+}

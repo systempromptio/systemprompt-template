@@ -7,7 +7,10 @@
 //! the per-user matrix uses, so a cell here and a decision at the enforcement
 //! point cannot disagree.
 
+use std::collections::HashMap;
 use std::path::Path;
+use systemprompt::identifiers::MarketplaceId;
+use systemprompt_web_shared::GroupId;
 
 use sqlx::PgPool;
 
@@ -37,7 +40,7 @@ fn section_input(
 ) -> Vec<repositories::users::access_control::SectionInput> {
     let rows = manifests
         .iter()
-        .map(|m| (m.id.clone(), m.name.clone(), None))
+        .map(|m| (m.id.as_str().to_owned(), m.name.clone(), None))
         .collect();
     vec![(
         MARKETPLACE_ENTITY.to_owned(),
@@ -55,7 +58,7 @@ fn cells_of(sections: Vec<MatrixSection>) -> Vec<AudienceCellView> {
                 .rows
                 .into_iter()
                 .map(|row| AudienceCellView {
-                    marketplace_id: row.entity_id,
+                    marketplace_id: MarketplaceId::new(row.entity_id),
                     is_allow: row.effective == "allow",
                     effective: row.effective,
                     layer: row.source.layer,
@@ -82,7 +85,7 @@ pub(super) async fn audience_matrix(
     let mut subjects: Vec<MatrixSubject> = Vec::with_capacity(groups.len() + roles.len());
     let mut labels: Vec<(String, &'static str)> = Vec::with_capacity(subjects.capacity());
     for group in &groups {
-        subjects.push(group_subject(&group.id));
+        subjects.push(group_subject(group.id.as_str()));
         labels.push((group.name.clone(), "group"));
     }
     for role in roles {
@@ -120,11 +123,11 @@ pub(super) async fn audience_matrix(
     }
 }
 
-fn subject_view(row: AudienceRowView, marketplace_id: &str) -> AudienceSubjectView {
+fn subject_view(row: AudienceRowView, marketplace_id: &MarketplaceId) -> AudienceSubjectView {
     let cell = row
         .cells
         .into_iter()
-        .find(|c| c.marketplace_id == marketplace_id);
+        .find(|c| &c.marketplace_id == marketplace_id);
     AudienceSubjectView {
         subject: row.subject,
         label: row.label,
@@ -144,7 +147,7 @@ fn subject_view(row: AudienceRowView, marketplace_id: &str) -> AudienceSubjectVi
 pub(super) async fn audience_for(
     pool: &PgPool,
     manifests: &[MarketplaceConfigSummary],
-    marketplace_id: &str,
+    marketplace_id: &MarketplaceId,
     roles: &[String],
 ) -> (Vec<AudienceSubjectView>, Vec<AudienceSubjectView>) {
     let matrix = audience_matrix(pool, manifests, roles).await;
@@ -169,18 +172,20 @@ pub(super) async fn audience_for(
 // (what the policy chain actually decides) is [`audience_for`], and the two
 // are shown side by side because a deny written elsewhere can close a
 // marketplace this map says is open.
-pub(super) async fn group_grants(pool: &PgPool) -> std::collections::HashMap<String, Vec<String>> {
+pub(super) async fn group_grants(pool: &PgPool) -> HashMap<MarketplaceId, Vec<GroupId>> {
     let rules = repositories::users::access_control::list_all_rules(pool)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "marketplaces: rule listing failed"))
         .unwrap_or_default();
-    let mut out: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
+    let mut out: HashMap<MarketplaceId, Vec<GroupId>> = HashMap::new();
     for rule in rules {
         if rule.entity_type == MARKETPLACE_ENTITY
             && rule.rule_type.as_str() == "group"
             && rule.access.to_string() == "allow"
         {
-            out.entry(rule.entity_id).or_default().push(rule.rule_value);
+            out.entry(MarketplaceId::new(rule.entity_id))
+                .or_default()
+                .push(GroupId::new(rule.rule_value));
         }
     }
     for ids in out.values_mut() {
@@ -192,7 +197,7 @@ pub(super) async fn group_grants(pool: &PgPool) -> std::collections::HashMap<Str
 // Why: Every group, paired with the grant it declares and the verdict it gets.
 pub(super) async fn group_assignments(
     pool: &PgPool,
-    marketplace_id: &str,
+    marketplace_id: &MarketplaceId,
     resolved: &[AudienceSubjectView],
 ) -> Vec<super::view::GroupAssignmentView> {
     let granted = group_grants(pool)

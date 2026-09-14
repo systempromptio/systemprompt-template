@@ -10,6 +10,7 @@
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use systemprompt::identifiers::{AgentId, AiRequestId, SessionId, TraceId, UserId};
+use systemprompt_web_shared::{GroupId, ProjectId};
 
 use crate::repositories::scope::SubjectScope;
 
@@ -138,8 +139,8 @@ pub struct RequestRow {
     pub decision_count: i64,
     pub deny_count: i64,
     pub tool_call_count: i64,
-    pub group_id: Option<String>,
+    pub group_id: Option<GroupId>,
     pub group_name: Option<String>,
-    pub project_id: Option<String>,
+    pub project_id: Option<ProjectId>,
     pub project_name: Option<String>,
 }

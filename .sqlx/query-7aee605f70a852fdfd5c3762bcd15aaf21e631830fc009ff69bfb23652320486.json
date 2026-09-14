@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.id FROM managed_publications p JOIN managed_distribution_outbox o ON o.publication_id=p.id AND o.owner_id=p.owner_id JOIN managed_distribution_deliveries d ON d.outbox_id=o.id AND d.owner_id=p.owner_id AND d.status='distributed' WHERE p.owner_id=$1 AND p.resource_id=$2 AND p.generation=$3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7aee605f70a852fdfd5c3762bcd15aaf21e631830fc009ff69bfb23652320486"
+}

@@ -11,11 +11,11 @@
 //! it with the heartbeat that module reads. One rule, one interval, two pages.
 
 use sqlx::PgPool;
-use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt::identifiers::{McpServerId, SessionId, UserId};
 
 #[derive(Debug, Clone)]
 pub struct McpProxyIdentityCount {
-    pub server_id: String,
+    pub server_id: McpServerId,
     pub identities: i64,
     pub distinct_users: i64,
 }
@@ -30,7 +30,7 @@ pub async fn list_mcp_proxy_identity_counts(
 ) -> Result<Vec<McpProxyIdentityCount>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"SELECT
-             s.mcp_server_id AS "server_id!",
+             s.mcp_server_id AS "server_id!: McpServerId",
              COUNT(p.session_id) FILTER (WHERE p.expires_at > NOW())::BIGINT AS "identities!",
              COUNT(DISTINCT s.user_id)::BIGINT AS "distinct_users!"
            FROM mcp_sessions s
@@ -67,7 +67,7 @@ pub struct McpSessionRow {
 // Why: The most recently active sessions attached to one server.
 pub async fn list_mcp_sessions_for_server(
     pool: &PgPool,
-    server_id: &str,
+    server_id: &McpServerId,
     limit: i64,
 ) -> Result<Vec<McpSessionRow>, sqlx::Error> {
     sqlx::query_as!(
@@ -86,7 +86,7 @@ pub async fn list_mcp_sessions_for_server(
           WHERE s.mcp_server_id = $1
           ORDER BY s.last_activity_at DESC
           LIMIT $2"#,
-        server_id,
+        server_id.as_str(),
         limit
     )
     .fetch_all(pool)

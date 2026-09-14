@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT s.mcp_server_id AS \"server_id!: McpServerId\",\n               MAX(s.last_activity_at) AS \"last_heartbeat?\",\n               COUNT(*) FILTER (WHERE s.status = 'active')::BIGINT AS \"active_sessions!\"\n        FROM mcp_sessions s\n        WHERE s.mcp_server_id IS NOT NULL\n        GROUP BY s.mcp_server_id\n        ORDER BY s.mcp_server_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "server_id!: McpServerId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_sessions",
+            "name": "mcp_server_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "last_heartbeat?",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "active_sessions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "ad50dd6d3d4ab6246b4bf8bc74439e3dcd7b3ba4a882712c78174352b1bb99ef"
+}

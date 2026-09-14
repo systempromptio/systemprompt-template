@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT m.manifest AS \"manifest!: Json<ExecutionEvidence>\" FROM eval_execution_evidence m JOIN eval_executions x ON x.id=m.execution_id JOIN eval_experiments e ON e.id=x.experiment_id WHERE e.owner_id=$1 AND x.id=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "manifest!: Json<ExecutionEvidence>",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "eval_execution_evidence",
+            "name": "manifest"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3f17e492ec9599c5160c117efdb67d16de0ff158fc23076d7120cfc883dda989"
+}

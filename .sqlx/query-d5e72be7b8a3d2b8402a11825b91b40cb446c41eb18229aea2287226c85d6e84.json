@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO eval_budget_accounts(id,owner_id,cap,operation_key) VALUES($1,$2,$3,$4) ON CONFLICT(owner_id,operation_key) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d5e72be7b8a3d2b8402a11825b91b40cb446c41eb18229aea2287226c85d6e84"
+}

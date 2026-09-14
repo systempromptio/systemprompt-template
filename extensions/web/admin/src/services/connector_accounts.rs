@@ -2,7 +2,8 @@
 
 use super::connector_oauth::Provider;
 use crate::error::{AdminError, AdminResult};
-use crate::repositories::users::{access_control, connector_accounts as repo, queries};
+use crate::repositories::groups::members;
+use crate::repositories::users::{connector_accounts as repo, queries};
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -10,6 +11,8 @@ use systemprompt::identifiers::UserId;
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct Connection {
     pub provider: String,
+    pub display_name: String,
+    pub requires_auth: bool,
     pub configured: bool,
     pub entitled: bool,
     pub status: String,
@@ -31,30 +34,38 @@ pub(crate) struct ConnectionSnapshot {
     pub connections: Vec<Connection>,
 }
 
-pub(crate) async fn entitled(
-    pool: &PgPool,
-    user: &UserId,
-    provider: Provider,
-) -> AdminResult<bool> {
+struct Entitlement {
+    active: bool,
+    groups: Vec<String>,
+}
+
+async fn load_entitlement(pool: &PgPool, user: &UserId) -> AdminResult<Entitlement> {
     let identity = queries::find_identity_envelope(pool, user)
         .await?
         .ok_or_else(|| AdminError::Unauthorized("Account unavailable".into()))?;
-    if identity.status != "active" {
-        return Ok(false);
+    let groups = members::list_group_ids_for_user(pool, user)
+        .await?
+        .into_iter()
+        .map(|id| id.as_str().to_owned())
+        .collect();
+    Ok(Entitlement {
+        active: identity.status == "active",
+        groups,
+    })
+}
+
+impl Entitlement {
+    // Why: a Salesforce org lists the groups allowed to connect to it; every
+    // other provider is open to any active account.
+    fn permits(&self, provider: &Provider) -> bool {
+        self.active
+            && match provider {
+                Provider::Salesforce(_) => provider
+                    .salesforce_org()
+                    .is_ok_and(|org| org.is_entitled(&self.groups)),
+                _ => true,
+            }
     }
-    let subject = access_control::user_subject(pool, user, identity.roles).await?;
-    // Why: connector access follows the configured MCP server policy; a
-    // tenant-specific marketplace or group must never grant access implicitly.
-    let sections = vec![(
-        "mcp_server".into(),
-        "Connectors".into(),
-        vec![(provider.slug().into(), provider.slug().into(), None)],
-    )];
-    let result = access_control::resolve_subject_matrix(pool, &subject, sections).await?;
-    Ok(result.len() == 1
-        && result
-            .iter()
-            .all(|s| s.rows.len() == 1 && s.rows[0].effective == "allow"))
 }
 
 pub(crate) async fn require_entitlement(
@@ -62,9 +73,15 @@ pub(crate) async fn require_entitlement(
     user: &UserId,
     provider: Provider,
 ) -> AdminResult<()> {
-    if !entitled(pool, user, provider).await? {
+    let entitlement = load_entitlement(pool, user).await?;
+    if !entitlement.active {
         return Err(AdminError::Forbidden(
-            "Connector MCP access required".into(),
+            "An active account is required to connect providers".into(),
+        ));
+    }
+    if !entitlement.permits(&provider) {
+        return Err(AdminError::Forbidden(
+            "Your account is not entitled to this Salesforce org".into(),
         ));
     }
     Ok(())
@@ -75,18 +92,36 @@ pub(crate) async fn get_connections(
     user: &UserId,
 ) -> AdminResult<ConnectionSnapshot> {
     let rows = repo::list_accounts(pool, user).await?;
+    let entitlement = load_entitlement(pool, user).await?;
     let mut connections = Vec::new();
-    for provider in Provider::ALL {
+    let services = systemprompt::loader::ServicesBootstrap::get().map_err(AdminError::internal)?;
+    let mut ids = services
+        .mcp_servers
+        .iter()
+        .filter(|(_, s)| s.enabled)
+        .map(|(id, _)| id.clone())
+        .collect::<std::collections::BTreeSet<_>>();
+    ids.extend(
+        rows.iter()
+            .filter(|r| r.auth_method.is_some())
+            .map(|r| r.provider.clone()),
+    );
+    for id in ids {
+        let provider = Provider::try_from(id).map_err(AdminError::BadRequest)?;
         let row = rows.iter().find(|r| r.provider == provider.slug());
         let configured = provider.configured();
-        let entitled = entitled(pool, user, provider).await?;
-        let status = if configured {
+        let entitled = entitlement.permits(&provider);
+        let status = if configured && !provider.requires_auth() {
+            "no_auth_required"
+        } else if configured && !provider.provisioned() {
+            "not_provisioned"
+        } else if configured {
             row.map_or("not_connected", |r| r.status.as_str())
         } else {
             "not_configured"
         };
         let mut actions = Vec::new();
-        if configured && entitled {
+        if configured && entitled && provider.requires_auth() && status != "not_provisioned" {
             actions.push(
                 if status == "connected" {
                     "reconnect"
@@ -95,10 +130,10 @@ pub(crate) async fn get_connections(
                 }
                 .into(),
             );
-            if row.is_some_and(|r| r.auth_method.is_some()) || provider == Provider::Salesforce {
+            if row.is_some_and(|r| r.auth_method.is_some()) || provider.is_salesforce() {
                 actions.push("test".into());
             }
-            if provider != Provider::Salesforce {
+            if matches!(provider, Provider::Atlassian | Provider::Github) {
                 actions.push("manual_token".into());
             }
         }
@@ -107,6 +142,8 @@ pub(crate) async fn get_connections(
         }
         connections.push(Connection {
             provider: provider.slug().into(),
+            display_name: provider.display_name(),
+            requires_auth: provider.requires_auth(),
             configured,
             entitled,
             status: status.into(),

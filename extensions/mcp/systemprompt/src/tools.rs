@@ -4,21 +4,18 @@ use rmcp::model::{MetaObject, Tool};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use systemprompt::mcp::{McpOutputSchema, WEBSITE_URL, default_tool_visibility, tool_ui_meta};
+use systemprompt::mcp::{
+    McpOutputSchema, McpToolHandler, WEBSITE_URL, default_tool_visibility, tool_ui_meta,
+};
 use systemprompt::models::artifacts::CliArtifact;
 
 pub const SERVER_NAME: &str = "systemprompt";
 
-// Why: a const rather than a literal at the call site so the wire name is
-// extractable from source. `scripts/check-mcp-tool-names.sh` builds its
-// catalog from these declarations — a tool that only names itself inline is
-// a tool the gate cannot vouch for.
-pub const TOOL_SYSTEMPROMPT: &str = "systemprompt";
-
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CliInput {
-    /// The CLI command to execute (without 'systemprompt' prefix). Examples:
-    /// 'plugins run discord send "message"', 'core skills list'
+    #[schemars(
+        description = "The CLI command to execute (without 'systemprompt' prefix). Examples: 'plugins run discord send \"message\"', 'core skills list'"
+    )]
     pub command: String,
 }
 
@@ -92,12 +89,29 @@ pub fn list_tools() -> Vec<Tool> {
         Example: {{\"command\": \"core skills list\"}}\n\n\
         Full documentation: {WEBSITE_URL}/docs"
     );
-    vec![create_tool(&ToolDef {
+    let mut tools = vec![create_tool(&ToolDef {
         server_name: SERVER_NAME,
-        name: TOOL_SYSTEMPROMPT,
+        name: "systemprompt",
         title: "SystemPrompt CLI",
         description: &desc,
         input_schema: &input_schema(),
         output_schema: &output_schema(),
-    })]
+    })];
+    let location = crate::CliLocation {
+        bin: std::path::PathBuf::default(),
+        workdir: std::path::PathBuf::default(),
+    };
+    tools.push(
+        crate::reports::ReportHandler {
+            cli: &location,
+            token: "",
+        }
+        .tool_definition(SERVER_NAME),
+    );
+    tools
+}
+
+#[must_use]
+pub fn fixture_tools(pool: &systemprompt::database::DbPool) -> Vec<Tool> {
+    vec![crate::fixtures::FixtureHandler { pool }.tool_definition("evaluation_fixture")]
 }

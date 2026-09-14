@@ -91,7 +91,7 @@ pub(super) fn stats_view(current: &ConversationTotals, previous: &ConversationTo
         error_conversations: current.error_conversations,
         turns: current.turns,
         side_calls: current.side_calls,
-        side_call_cost_display: format_cost(current.side_call_cost_microdollars),
+        side_call_note: side_call_note(current.side_call_cost_microdollars),
         tokens_display: format_token_total(current.total_tokens),
         cost_display: format_cost(current.total_cost_microdollars),
         conversations_delta,
@@ -105,6 +105,16 @@ pub(super) fn stats_view(current: &ConversationTotals, previous: &ConversationTo
     }
 }
 
+// Why: the tile's supporting line, built here rather than concatenated in the
+// template, because with nothing to report `format_cost` returns an em-dash and
+// the template's separator left "probes and utility · —" on the page.
+fn side_call_note(cost_microdollars: i64) -> String {
+    if cost_microdollars <= 0 {
+        return "probes and utility".to_owned();
+    }
+    format!("probes and utility · {}", format_cost(cost_microdollars))
+}
+
 // Why: more conversations is neither good nor bad, but more spend is. The
 // design system carries both readings, and picking the wrong one paints a
 // rising bill in the colour of a healthy trend.
@@ -113,6 +123,9 @@ enum Rising {
     Neutral,
     Bad,
 }
+
+// Why: the point past which a percentage stops being a comparison.
+const MAX_DELTA_PCT: f64 = 999.0;
 
 // Why: a previous window of zero has no percentage to report, so the KPI shows
 // no delta at all rather than an infinite rise.
@@ -135,5 +148,18 @@ fn delta(current: i64, previous: i64, rising: Rising) -> (Option<String>, Option
         (false, Rising::Neutral) => "down",
         (false, Rising::Bad) => "down-good",
     };
-    (Some(format!("{rounded:+.0}%")), Some(dir))
+    // Why: past this magnitude a percentage carries no information. A window
+    // that goes from three tokens to half a million reads "+18409%", and that
+    // is a number nobody can compare against anything; the sign and the fact
+    // that it is off the scale is the whole of what it says.
+    let text = if rounded.abs() > MAX_DELTA_PCT {
+        if rounded > 0.0 {
+            ">+999%".to_owned()
+        } else {
+            "<-999%".to_owned()
+        }
+    } else {
+        format!("{rounded:+.0}%")
+    };
+    (Some(text), Some(dir))
 }

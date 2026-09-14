@@ -25,11 +25,11 @@ use crate::handlers::ssr::conversation_header::{
 };
 use crate::handlers::ssr::entity_urls::context_detail_url;
 use crate::handlers::ssr::transcript_view::{
-    ConversationView, TranscriptOptions, build_conversation,
+    ConversationView, TranscriptOptions, build_conversation, transcript_request_ids,
 };
 use crate::repositories::analytics::context_detail::{
-    find_context_header, get_context_kpis, list_context_messages, list_context_requests,
-    list_context_tool_calls,
+    find_context_header, get_context_kpis, list_context_requests, list_messages_for_requests,
+    list_tool_calls_for_requests,
 };
 use crate::repositories::analytics::conversations::history_scope_for;
 use crate::templates::AdminTemplateEngine;
@@ -82,15 +82,22 @@ pub(crate) async fn history_conversation_page(
         return Err(not_found().into());
     }
 
-    let (kpis_res, requests_res, messages_res, tool_calls_res) = tokio::join!(
+    // Why: two phases, because the bodies are fetched by request id. The
+    // request list decides which handful of requests the transcript is built
+    // from; asking for a context's bodies wholesale needs a cap, and any cap
+    // on it drops the newest rows — which is exactly the transcript.
+    let (kpis_res, requests_res) = tokio::join!(
         get_context_kpis(&pool, &context_id),
         list_context_requests(&pool, &context_id),
-        list_context_messages(&pool, &context_id),
-        list_context_tool_calls(&pool, &context_id),
     );
-
     let kpis = kpis_res?;
     let requests = requests_res?;
+
+    let ids = transcript_request_ids(&requests);
+    let (messages_res, tool_calls_res) = tokio::join!(
+        list_messages_for_requests(&pool, &ids.messages),
+        list_tool_calls_for_requests(&pool, &ids.tool_calls),
+    );
     let messages = messages_res?;
     // Why: same reasoning as the admin reader — a transcript that silently
     // drops its tool calls reads as a complete conversation in which the

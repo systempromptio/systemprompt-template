@@ -14,6 +14,7 @@ use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
+use systemprompt_web_shared::GroupId;
 
 use crate::error::AdminResult;
 use crate::repositories::groups::members as repo;
@@ -25,13 +26,13 @@ use super::refuse_system_write;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct ListGroupMembersResponse {
-    pub group_id: String,
+    pub group_id: GroupId,
     pub members: Vec<GroupMemberRow>,
 }
 
 pub(crate) async fn list_group_members_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(group_id): Path<String>,
+    Path(group_id): Path<GroupId>,
 ) -> AdminResult<Response> {
     let members = repo::list_group_members(&pool, &group_id).await?;
     Ok(Json(ListGroupMembersResponse { group_id, members }).into_response())
@@ -40,7 +41,7 @@ pub(crate) async fn list_group_members_handler(
 pub(crate) async fn add_group_member_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
-    Path(group_id): Path<String>,
+    Path(group_id): Path<GroupId>,
     Json(body): Json<AddGroupMemberRequest>,
 ) -> AdminResult<Response> {
     refuse_system_write(&pool, &group_id).await?;
@@ -51,21 +52,10 @@ pub(crate) async fn add_group_member_handler(
 
 pub(crate) async fn remove_group_member_handler(
     State(pool): State<Arc<PgPool>>,
-    Path((group_id, user_id)): Path<(String, String)>,
+    Path((group_id, user_id)): Path<(GroupId, String)>,
 ) -> AdminResult<Response> {
     refuse_system_write(&pool, &group_id).await?;
     repo::delete_group_member(&pool, &group_id, &UserId::new(user_id)).await?;
     defaults::recompute_scope_defaults(&pool).await?;
     Ok((StatusCode::NO_CONTENT, ()).into_response())
-}
-
-pub(crate) async fn count_members(pool: &PgPool, group_id: &str) -> AdminResult<i64> {
-    let count = sqlx::query_scalar!(
-        r#"SELECT COUNT(DISTINCT user_id)::BIGINT AS "count!"
-           FROM user_groups WHERE group_id = $1"#,
-        group_id
-    )
-    .fetch_one(pool)
-    .await?;
-    Ok(count)
 }

@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n            SELECT 1 FROM eval_executions target\n            JOIN eval_experiments e ON e.id=target.experiment_id\n            JOIN eval_resource_revisions c ON c.id=target.case_revision_id AND c.owner_id=e.owner_id\n            WHERE e.owner_id=$1 AND target.id=$2 AND target.variant_index=1 AND target.repetition=0\n              AND c.content->'content'->>'partition'='development'\n              AND (SELECT count(*) FROM eval_executions ranked\n                   JOIN eval_resource_revisions rc ON rc.id=ranked.case_revision_id AND rc.owner_id=e.owner_id\n                   WHERE ranked.experiment_id=e.id AND ranked.variant_index=1 AND ranked.repetition=0\n                     AND rc.content->'content'->>'partition'='development'\n                     AND (ranked.case_revision_id,ranked.id)<=(target.case_revision_id,target.id)) <= $3\n              AND NOT EXISTS(SELECT 1 FROM eval_suggestions s WHERE s.owner_id=e.owner_id AND target.id=ANY(s.supporting_execution_ids))\n        )",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f0bea979129b2b99498f8cfaaa3c0945eb97d083619b63c2ac3b9b2218bcdf08"
+}

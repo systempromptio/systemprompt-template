@@ -64,9 +64,9 @@ pub enum MarketplaceError {
     NotFound(String),
 
     // Why: The request was well-formed but conflicts with the current state — a
-    // seat limit already reached, a slug already taken. Distinct from
+    // name already taken, a mapping already owned. Distinct from
     // [`Self::BadRequest`] because the caller has nothing to fix in the
-    // request itself, and a UI should say "your plan is full", not "invalid".
+    // request itself, and a UI should say "already exists", not "invalid".
     #[error("Conflict: {0}")]
     Conflict(String),
 
@@ -82,6 +82,9 @@ pub enum MarketplaceError {
 
     #[error("Profile error: {0}")]
     Profile(#[from] systemprompt::config::ProfileBootstrapError),
+
+    #[error("Services config error: {0}")]
+    Services(#[from] systemprompt::loader::ConfigLoadError),
 
     #[error(transparent)]
     Infra(#[from] InfraError),
@@ -111,6 +114,7 @@ impl ExtensionError for MarketplaceError {
             Self::Crypto(_) => "CRYPTO_ERROR",
             Self::ConfigFile { .. } => "CONFIG_FILE_ERROR",
             Self::Profile(_) => "PROFILE_ERROR",
+            Self::Services(_) => "SERVICES_CONFIG_ERROR",
             Self::Infra(e) => e.code(),
         }
     }
@@ -124,6 +128,7 @@ impl ExtensionError for MarketplaceError {
             | Self::Crypto(_)
             | Self::ConfigFile { .. }
             | Self::Profile(_)
+            | Self::Services(_)
             | Self::Infra(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

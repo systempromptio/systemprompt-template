@@ -6,31 +6,56 @@
 //! the precedence ladder, and a [`SubjectAttributeProvider`][p] that looks up
 //! the values a user holds for it.
 //!
-//! We currently declare one, [`department`]. Adding a second — cost centre,
-//! clearance, jurisdiction — means writing a provider beside it and one
+//! We declare three: [`project`], [`group`], and [`salesforce`]. They form a
+//! ladder with core's — user (0), `project` (140), `group` (150),
+//! `salesforce` (170), role (200) — where a lower number is
+//! the narrower, higher-priority scope. Groups carry people and marketplace
+//! entitlement; projects are work attribution. Both are DB rows an operator
+//! edits, and the directory's AD groups map into them rather than being a
+//! dimension of their own. Adding another — cost centre, clearance,
+//! jurisdiction — means writing a provider beside them and one
 //! `register_subject_attribute_provider!` call; no core change, and no edit to
 //! the resolve call sites, because they all read the registry through
 //! [`subject_attributes_for`] and [`dimensions`].
 //!
 //! [p]: systemprompt_security::authz::SubjectAttributeProvider
 
-pub mod department;
+mod account;
+pub use account::account_scope;
+pub(crate) mod catalog;
+pub mod group;
+pub mod project;
+pub mod salesforce;
 
 use std::collections::HashMap;
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt_security::authz::{
-    AuthzError, AuthzHookContext, NullAuditSink, SharedSubjectAttributeProvider, SubjectAttributes,
+    AuthzHookContext, NullAuditSink, SharedSubjectAttributeProvider, SubjectAttributes,
     SubjectDimension, dimensions_of, discover_subject_providers, gather_subject_attributes,
 };
 
-use crate::authz::department::DepartmentAttributeProvider;
+use crate::authz::group::GroupAttributeProvider;
+use crate::authz::project::ProjectAttributeProvider;
+use crate::authz::salesforce::SalesforceAttributeProvider;
 
 systemprompt_security::register_subject_attribute_provider!(|ctx| {
     let provider: SharedSubjectAttributeProvider =
-        Arc::new(DepartmentAttributeProvider::new(Arc::clone(&ctx.pool)));
+        Arc::new(GroupAttributeProvider::new(Arc::clone(&ctx.pool)));
+    provider
+});
+
+systemprompt_security::register_subject_attribute_provider!(|ctx| {
+    let provider: SharedSubjectAttributeProvider =
+        Arc::new(ProjectAttributeProvider::new(Arc::clone(&ctx.pool)));
+    provider
+});
+
+systemprompt_security::register_subject_attribute_provider!(|ctx| {
+    let provider: SharedSubjectAttributeProvider =
+        Arc::new(SalesforceAttributeProvider::new(Arc::clone(&ctx.pool)));
     provider
 });
 
@@ -39,48 +64,46 @@ struct Registry {
     dimensions: Vec<SubjectDimension>,
 }
 
-// Why: the providers close over the pool they were built with, so a single
-// process-wide registry answers every later caller from whichever database
-// asked first. One server has one database and never noticed; a test process
-// has one per test, and every test after the first silently resolved its
-// users against another test's database and saw no attributes at all.
-//
-// Keyed by the database the pool points at, and leaked so the borrow can stay
-// `'static` for the call sites: one entry per distinct database, which is one
-// in production.
-static REGISTRIES: LazyLock<Mutex<HashMap<String, &'static Registry>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
+static REGISTRIES: OnceLock<Mutex<HashMap<String, &'static Registry>>> = OnceLock::new();
 
+// Why: keyed per database, not once per process. The providers capture the
+// pool they are built with, so a single OnceLock would bind every later
+// caller to whichever pool arrived first — wrong in any process that talks
+// to more than one database, which is exactly what the integration suite's
+// per-test throwaway databases do. One registry per distinct database; the
+// leak is bounded by the number of distinct databases a process ever opens
+// (one in production).
+// Why: shared with the marketplace-parent cache in the authz webhook so the
+// two per-database keying schemes cannot drift apart.
 pub(crate) fn database_key(pool: &PgPool) -> String {
-    let opts = pool.connect_options();
+    let options = pool.connect_options();
     format!(
         "{}:{}/{}",
-        opts.get_host(),
-        opts.get_port(),
-        opts.get_database().unwrap_or_default()
+        options.get_host(),
+        options.get_port(),
+        options.get_database().unwrap_or_default()
     )
 }
 
 fn registry(pool: &PgPool) -> &'static Registry {
     let key = database_key(pool);
-    let mut registries = REGISTRIES
+    let map = REGISTRIES.get_or_init(|| Mutex::new(HashMap::new()));
+    let mut guard = map
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
-
-    if let Some(existing) = registries.get(&key) {
+    if let Some(existing) = guard.get(&key) {
         return existing;
     }
-
     let providers = discover_subject_providers(&AuthzHookContext {
         pool: Arc::new(pool.clone()),
         sink: Arc::new(NullAuditSink),
     });
-    let registry: &'static Registry = Box::leak(Box::new(Registry {
+    let built: &'static Registry = Box::leak(Box::new(Registry {
         dimensions: dimensions_of(&providers),
         providers,
     }));
-    registries.insert(key, registry);
-    registry
+    guard.insert(key, built);
+    built
 }
 
 pub fn dimensions(pool: &PgPool) -> &'static [SubjectDimension] {
@@ -93,29 +116,8 @@ pub fn dimensions(pool: &PgPool) -> &'static [SubjectDimension] {
 pub async fn subject_attributes_for(
     pool: &PgPool,
     user_id: &UserId,
-) -> Result<SubjectAttributes, AuthzError> {
-    gather_subject_attributes(&registry(pool).providers, user_id).await
+) -> Result<SubjectAttributes, sqlx::Error> {
+    gather_subject_attributes(&registry(pool).providers, user_id)
+        .await
+        .map_err(|e| sqlx::Error::Protocol(e.to_string()))
 }
-
-pub mod group;
-systemprompt_security::register_subject_attribute_provider!(|ctx| {
-    let provider: SharedSubjectAttributeProvider =
-        Arc::new(group::GroupAttributeProvider::new(Arc::clone(&ctx.pool)));
-    provider
-});
-
-pub mod project;
-systemprompt_security::register_subject_attribute_provider!(|ctx| {
-    let provider: SharedSubjectAttributeProvider = Arc::new(
-        project::ProjectAttributeProvider::new(Arc::clone(&ctx.pool)),
-    );
-    provider
-});
-
-pub mod salesforce;
-systemprompt_security::register_subject_attribute_provider!(|ctx| {
-    let provider: SharedSubjectAttributeProvider = Arc::new(
-        salesforce::SalesforceAttributeProvider::new(Arc::clone(&ctx.pool)),
-    );
-    provider
-});

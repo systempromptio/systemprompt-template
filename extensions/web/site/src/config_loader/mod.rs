@@ -8,25 +8,37 @@
 
 use std::sync::{Arc, OnceLock};
 
+mod adfs;
+mod downstream;
+
+use adfs::load_adfs_config;
+use downstream::load_salesforce_config;
+
 use systemprompt::config::ProfileBootstrap;
 use systemprompt::models::AppPaths;
 use thiserror::Error;
 
-mod features;
-use features::load_features_config;
+#[doc(hidden)]
+pub mod skills;
+
+pub(crate) use skills::load_skills_page_config;
 
 static BRANDING_CONFIG: OnceLock<Result<Option<BrandingConfig>, String>> = OnceLock::new();
 
 fn load_app_paths() -> Result<AppPaths, ConfigError> {
     let profile =
         ProfileBootstrap::get().map_err(|e| ConfigError::PathsUnavailable(e.to_string()))?;
-    AppPaths::from_profile(&profile.paths, profile.path_resolution())
-        .map_err(|e| ConfigError::PathsUnavailable(e.to_string()))
+    AppPaths::from_profile(
+        &profile.paths,
+        profile.path_resolution(),
+        systemprompt::loader::ServicesRootBootstrap::get().map(|root| root.path.as_path()),
+    )
+    .map_err(|e| ConfigError::PathsUnavailable(e.to_string()))
 }
 
-use crate::features::FeaturePagesConfig;
 use crate::homepage::HomepageConfig;
 use crate::navigation::{BrandingConfig, NavigationConfig};
+use crate::skills_page::SkillsPageConfig;
 
 #[derive(Debug, Clone, Error)]
 pub enum ConfigError {
@@ -61,51 +73,15 @@ fn load_homepage_config() -> Result<Option<Arc<HomepageConfig>>, ConfigError> {
         return Ok(None);
     };
 
-    let mut homepage_config: HomepageConfig =
+    let homepage_config: HomepageConfig =
         serde_yaml::from_value(homepage_value).map_err(|e| ConfigError::Parse {
             config_name: "homepage.yaml".to_owned(),
             message: e.to_string(),
         })?;
 
-    if let Ok(paths) = load_app_paths() {
-        populate_demo_showcase(
-            &mut homepage_config,
-            paths.system().root().join("demo").as_path(),
-        );
-    }
-
     tracing::info!("Loaded homepage config from config/homepage.yaml");
 
     Ok(Some(Arc::new(homepage_config)))
-}
-
-fn populate_demo_showcase(homepage_config: &mut HomepageConfig, demo_root: &std::path::Path) {
-    match crate::homepage::demo_scanner::scan_demos(demo_root) {
-        Ok(mut scanned) => {
-            if let Some(existing) = homepage_config.demos.as_ref() {
-                if existing.title.is_some() {
-                    scanned.title.clone_from(&existing.title);
-                }
-                if existing.subtitle.is_some() {
-                    scanned.subtitle.clone_from(&existing.subtitle);
-                }
-            }
-            let total_categories: usize = scanned.pillars.iter().map(|p| p.categories.len()).sum();
-            tracing::info!(
-                pillars = scanned.pillars.len(),
-                categories = total_categories,
-                "Scanned demo/ for homepage showcase"
-            );
-            homepage_config.demos = Some(scanned);
-        },
-        Err(e) => {
-            tracing::warn!(
-                error = %e,
-                path = %demo_root.display(),
-                "Failed to scan demo/ directory — homepage will render without demo cards"
-            );
-        },
-    }
 }
 
 fn load_branding_config() -> Result<Option<BrandingConfig>, ConfigError> {
@@ -128,12 +104,9 @@ fn load_branding_config() -> Result<Option<BrandingConfig>, ConfigError> {
     Ok(Some(branding_config))
 }
 
-// Why: Branding as the server resolves it, with a failure to load treated as
-// "no branding" rather than fatal.
-//
-// Both router builds and the HTTP contract suite need the engine configured
-// the same way; the templates read `branding.*` under strict mode, so an
-// engine built without it fails to render every page that has one.
+// Why: Both router builds and the HTTP contract suite need the engine
+// configured the same way; the templates read `branding.*` under strict mode,
+// so an engine built without it fails to render every page that has one.
 //
 // Cached: the router build and each prerender context ask for branding
 // independently, and re-reading theme.yaml per caller is pure waste.
@@ -148,7 +121,13 @@ pub fn branding_config() -> Option<BrandingConfig> {
 
 static NAVIGATION_CONFIG: OnceLock<Result<Option<Arc<NavigationConfig>>, String>> = OnceLock::new();
 static HOMEPAGE_CONFIG: OnceLock<Result<Option<Arc<HomepageConfig>>, String>> = OnceLock::new();
-static FEATURES_CONFIG: OnceLock<Result<Option<Arc<FeaturePagesConfig>>, String>> = OnceLock::new();
+static SKILLS_PAGE_CONFIG: OnceLock<Result<Option<Arc<SkillsPageConfig>>, String>> =
+    OnceLock::new();
+static ADFS_CONFIG: OnceLock<Result<Option<Arc<systemprompt_web_admin::AdfsConfig>>, String>> =
+    OnceLock::new();
+static SALESFORCE_CONFIG: OnceLock<
+    Result<Option<Arc<systemprompt_web_admin::SalesforceConfig>>, String>,
+> = OnceLock::new();
 
 #[must_use]
 pub fn navigation_config() -> Option<Arc<NavigationConfig>> {
@@ -169,11 +148,25 @@ pub fn homepage_config() -> Option<Arc<HomepageConfig>> {
 }
 
 #[must_use]
-pub fn features_config() -> Option<Arc<FeaturePagesConfig>> {
+pub fn skills_page_config() -> Option<Arc<SkillsPageConfig>> {
     log_and_discard_err(
-        &FEATURES_CONFIG,
-        load_features_config,
-        "Features config error",
+        &SKILLS_PAGE_CONFIG,
+        load_skills_page_config,
+        "Skills page config error",
+    )
+}
+
+#[must_use]
+pub fn adfs_config() -> Option<Arc<systemprompt_web_admin::AdfsConfig>> {
+    log_and_discard_err(&ADFS_CONFIG, load_adfs_config, "ADFS config error")
+}
+
+#[must_use]
+pub fn salesforce_config() -> Option<Arc<systemprompt_web_admin::SalesforceConfig>> {
+    log_and_discard_err(
+        &SALESFORCE_CONFIG,
+        load_salesforce_config,
+        "Salesforce config error",
     )
 }
 
@@ -188,14 +181,17 @@ pub fn log_and_discard_err<T: Clone>(
         Err(message) => {
             tracing::error!(
                 error = %message,
-                "{msg}: config failed to load; its pages and sections will not render"
+                config = msg,
+                "Config failed to load; its pages and sections will not render"
             );
             None
         },
     }
 }
 
-fn load_config_section(filename: &str) -> Result<Option<serde_yaml::Value>, ConfigError> {
+pub(super) fn load_config_section(
+    filename: &str,
+) -> Result<Option<serde_yaml::Value>, ConfigError> {
     let paths = match load_app_paths() {
         Ok(p) => p,
         Err(e) => {
@@ -232,17 +228,4 @@ fn load_config_section(filename: &str) -> Result<Option<serde_yaml::Value>, Conf
             config_name: filename.to_owned(),
             message: e.to_string(),
         })
-}
-
-mod downstream;
-static SALESFORCE_CONFIG: OnceLock<
-    Result<Option<Arc<systemprompt_web_admin::SalesforceConfig>>, String>,
-> = OnceLock::new();
-#[must_use]
-pub fn salesforce_config() -> Option<Arc<systemprompt_web_admin::SalesforceConfig>> {
-    log_and_discard_err(
-        &SALESFORCE_CONFIG,
-        downstream::load_salesforce_config,
-        "Salesforce config error",
-    )
 }

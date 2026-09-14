@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_assets(owner_id,digest,content) VALUES($1,$2,$3) ON CONFLICT(owner_id,digest) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "778b1491440e98e628503c2e957153fe903e9df8d853bd49c99fa57e66f5cb10"
+}

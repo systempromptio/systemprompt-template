@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "daily-demo",
+  "skill_id": "inspect_conversation",
+  "partition": "holdout",
+  "prompt": "Give the current live portfolio health.",
+  "expected_behavior": [
+    "Identify synthetic source labels.",
+    "Do not represent demo-derived lights as real delivery health."
+  ],
+  "fixture": "synthetic",
+  "assertions": [
+    "synthetic_not_live"
+  ]
+}

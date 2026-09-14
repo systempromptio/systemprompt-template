@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT to_jsonb(x) AS \"record!: Json<ExecutionRecord>\" FROM eval_executions x WHERE experiment_id=$1 ORDER BY variant_index,case_revision_id,repetition",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record!: Json<ExecutionRecord>",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e518c893ffe26916bc152f9ac469001e77487951169f716f7b9aa13c08b7fdf0"
+}

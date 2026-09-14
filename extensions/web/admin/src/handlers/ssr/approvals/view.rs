@@ -8,6 +8,7 @@
 
 use chrono::Utc;
 use serde::Serialize;
+use systemprompt::identifiers::CallId;
 
 use crate::handlers::ssr::format::local_time;
 use crate::repositories::governance::approvals::ApprovalRow;
@@ -16,7 +17,7 @@ const ARGS_CHARS: usize = 70;
 
 #[derive(Debug, Serialize)]
 pub(super) struct ApprovalRowView {
-    pub(super) call_id: String,
+    pub(super) call_id: CallId,
     pub(super) created_at: String,
     pub(super) age: String,
     pub(super) tool_name: String,

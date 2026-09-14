@@ -6,6 +6,7 @@
 //! anything that bypasses this path.
 
 use sqlx::PgPool;
+use systemprompt_web_shared::GroupId;
 
 use crate::error::{AdminError, AdminResult};
 use crate::types::groups::{CreateGroupRequest, GroupRecord, GroupSummary, UpdateGroupRequest};
@@ -13,17 +14,20 @@ use crate::types::groups::{CreateGroupRequest, GroupRecord, GroupSummary, Update
 pub async fn list_groups(pool: &PgPool) -> Result<Vec<GroupRecord>, sqlx::Error> {
     sqlx::query_as!(
         GroupRecord,
-        "SELECT id, name, description, is_system, source FROM groups ORDER BY is_system, name"
+        r#"SELECT id AS "id: GroupId", name, description, is_system, source FROM groups ORDER BY is_system, name"#
     )
     .fetch_all(pool)
     .await
 }
 
-pub async fn find_group(pool: &PgPool, group_id: &str) -> Result<Option<GroupRecord>, sqlx::Error> {
+pub async fn find_group(
+    pool: &PgPool,
+    group_id: &GroupId,
+) -> Result<Option<GroupRecord>, sqlx::Error> {
     sqlx::query_as!(
         GroupRecord,
-        "SELECT id, name, description, is_system, source FROM groups WHERE id = $1",
-        group_id
+        r#"SELECT id AS "id: GroupId", name, description, is_system, source FROM groups WHERE id = $1"#,
+        group_id.as_str()
     )
     .fetch_optional(pool)
     .await
@@ -41,7 +45,7 @@ pub async fn list_group_summaries(pool: &PgPool) -> Result<Vec<GroupSummary>, sq
         GroupSummary,
         r#"
         SELECT
-            g.id AS "id!",
+            g.id AS "id!: GroupId",
             g.name AS "name!",
             g.description,
             g.is_system AS "is_system!",
@@ -92,9 +96,9 @@ pub async fn insert_group(
     }
     sqlx::query_as!(
         GroupRecord,
-        "INSERT INTO groups (id, name, description, source) VALUES ($1, $2, $3, $4)
-         RETURNING id, name, description, is_system, source",
-        req.id,
+        r#"INSERT INTO groups (id, name, description, source) VALUES ($1, $2, $3, $4)
+         RETURNING id AS "id: GroupId", name, description, is_system, source"#,
+        req.id.as_str(),
         req.name,
         req.description.as_deref(),
         source
@@ -106,15 +110,15 @@ pub async fn insert_group(
 
 pub async fn update_group(
     pool: &PgPool,
-    group_id: &str,
+    group_id: &GroupId,
     req: &UpdateGroupRequest,
 ) -> AdminResult<GroupRecord> {
     sqlx::query_as!(
         GroupRecord,
-        "UPDATE groups SET name = COALESCE($2, name), description = COALESCE($3, description),
+        r#"UPDATE groups SET name = COALESCE($2, name), description = COALESCE($3, description),
          updated_at = CURRENT_TIMESTAMP WHERE id = $1
-         RETURNING id, name, description, is_system, source",
-        group_id,
+         RETURNING id AS "id: GroupId", name, description, is_system, source"#,
+        group_id.as_str(),
         req.name.as_deref(),
         req.description.as_deref()
     )
@@ -123,7 +127,7 @@ pub async fn update_group(
     .ok_or_else(|| AdminError::NotFound(format!("Group {group_id} not found")))
 }
 
-pub async fn delete_group(pool: &PgPool, group_id: &str) -> AdminResult<()> {
+pub async fn delete_group(pool: &PgPool, group_id: &GroupId) -> AdminResult<()> {
     let group = find_group(pool, group_id)
         .await?
         .ok_or_else(|| AdminError::NotFound(format!("Group {group_id} not found")))?;
@@ -132,7 +136,7 @@ pub async fn delete_group(pool: &PgPool, group_id: &str) -> AdminResult<()> {
             "Group {group_id} is a system group and cannot be deleted"
         )));
     }
-    sqlx::query!("DELETE FROM groups WHERE id = $1", group_id)
+    sqlx::query!("DELETE FROM groups WHERE id = $1", group_id.as_str())
         .execute(pool)
         .await?;
     Ok(())

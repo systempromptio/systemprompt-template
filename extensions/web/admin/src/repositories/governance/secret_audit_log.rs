@@ -12,7 +12,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{PluginId, UserId};
 
 use crate::util::time_range::TimeRange;
 
@@ -23,7 +23,7 @@ pub struct SecretAuditRow {
     pub created_at: DateTime<Utc>,
     pub action: String,
     pub var_name: String,
-    pub plugin_id: String,
+    pub plugin_id: PluginId,
     pub user_id: UserId,
     pub actor_id: UserId,
     pub ip_address: Option<String>,
@@ -56,7 +56,7 @@ pub async fn list_secret_audit_paged(
 ) -> Result<(Vec<SecretAuditRow>, i64), sqlx::Error> {
     let rows = sqlx::query_as!(
         SecretAuditRow,
-        r#"SELECT s.id, s.created_at, s.action, s.var_name, s.plugin_id,
+        r#"SELECT s.id, s.created_at, s.action, s.var_name, s.plugin_id AS "plugin_id: PluginId",
                   s.user_id AS "user_id!: UserId", s.actor_id AS "actor_id!: UserId",
                   NULLIF(s.ip_address, '') AS ip_address
            FROM secret_audit_log s

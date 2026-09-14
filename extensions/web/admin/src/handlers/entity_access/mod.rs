@@ -17,7 +17,9 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 use systemprompt::identifiers::RuleId;
-use systemprompt_security::authz::{Access, AccessRule, EntityRef, UpsertRuleParams};
+use systemprompt_security::authz::{
+    Access, AccessRule, DASHBOARD_SOURCE, EntityRef, UpsertRuleParams,
+};
 
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::config::gateway::registered_routes_from_services;
@@ -77,6 +79,7 @@ pub(crate) async fn upsert_entity_rule_handler(
             rule_value: &rule_value,
             access,
             justification: body.justification.as_deref(),
+            source: DASHBOARD_SOURCE,
         })
         .await
         .map_err(AdminError::internal)?;
@@ -185,7 +188,11 @@ pub(crate) async fn apply_template_handler(
 
     for eid in &entity_ids {
         if body.action == "clear" {
-            let existing = r.list_rules_for_entity(kind, eid).await.unwrap_or_default();
+            let existing = r
+                .list_rules_for_entity(kind, eid)
+                .await
+                .inspect_err(|e| tracing::warn!(error = %e, "entity access: rule listing failed"))
+                .unwrap_or_default();
             for rule in existing {
                 if rule.rule_type == rule_type && rule.rule_value == rule_value {
                     if r.delete_rule(&rule.id).await.is_ok() {
@@ -209,6 +216,7 @@ pub(crate) async fn apply_template_handler(
                     rule_value: &rule_value,
                     access,
                     justification: None,
+                    source: DASHBOARD_SOURCE,
                 })
                 .await
             {

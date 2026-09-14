@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH events AS (\n        SELECT * FROM analysis_skill_version_events WHERE invoked_at >= $1 AND invoked_at < $2\n          AND ($3::TEXT IS NULL OR revision_id=$3) AND ($4::TEXT IS NULL OR traffic_class=$4) AND ($5::TEXT IS NULL OR skill=$5)\n    ), linked_requests AS (\n        SELECT DISTINCT r.id,r.status,r.cost_microdollars,r.input_tokens,r.output_tokens\n          FROM events e JOIN ai_requests r ON r.user_id=e.user_id AND r.client_session_id=e.session_id\n          LEFT JOIN eval_request_reservations er ON er.request_id=r.id\n         WHERE r.created_at >= $1 AND r.created_at < $2 AND ($4::TEXT IS NULL OR COALESCE(er.traffic_class,e.traffic_class)=$4)\n    ) SELECT\n        (SELECT count(DISTINCT invocation_id) FROM events)::BIGINT AS \"invocations!\",\n        (SELECT count(DISTINCT invocation_id) FROM events WHERE attribution_status='verified')::BIGINT AS \"attributed!\",\n        (SELECT count(*) FROM linked_requests)::BIGINT AS \"distinct_requests!\",\n        (SELECT count(*) FROM linked_requests WHERE status='completed' AND input_tokens IS NOT NULL AND output_tokens IS NOT NULL)::BIGINT AS \"accounted_requests!\",\n        COALESCE((SELECT sum(cost_microdollars) FROM linked_requests),0)::BIGINT AS \"deduplicated_request_cost_microdollars!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "invocations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "attributed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "distinct_requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "accounted_requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "deduplicated_request_cost_microdollars!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "cf56dba205c60b70ff76f4e17c0f8510c4f48991853562af0bfd6ff032d3fab5"
+}

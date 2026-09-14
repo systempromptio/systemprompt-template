@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO eval_holdout_consumption(owner_id,case_revision_id,experiment_id) SELECT $1,c.id,$2 FROM eval_resource_revisions c WHERE c.owner_id=$1 AND c.id=ANY($3) AND c.content->'content'->>'partition'='holdout'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fc168ba1fd63089d5a6e3cb091a082201390d1f20de5756a3480fc5b86ceb575"
+}

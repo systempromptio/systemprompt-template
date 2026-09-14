@@ -5,6 +5,7 @@
 //! what the directory grants, not what one admin arranges.
 
 use std::sync::Arc;
+use systemprompt_web_shared::ProjectId;
 
 use axum::Json;
 use axum::extract::{Path, State};
@@ -22,13 +23,13 @@ use super::require_project;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct ListProjectAdMappingsResponse {
-    pub project_id: String,
+    pub project_id: ProjectId,
     pub mappings: Vec<ProjectAdMappingRow>,
 }
 
 pub(crate) async fn list_project_ad_mappings_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(project_id): Path<String>,
+    Path(project_id): Path<ProjectId>,
 ) -> AdminResult<Response> {
     let mappings = repo::list_project_ad_mappings(&pool, &project_id).await?;
     Ok(Json(ListProjectAdMappingsResponse {
@@ -40,7 +41,7 @@ pub(crate) async fn list_project_ad_mappings_handler(
 
 pub(crate) async fn add_project_ad_mapping_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(project_id): Path<String>,
+    Path(project_id): Path<ProjectId>,
     Json(body): Json<AddAdMappingRequest>,
 ) -> AdminResult<Response> {
     require_project(&pool, &project_id).await?;
@@ -56,7 +57,7 @@ pub(crate) async fn add_project_ad_mapping_handler(
 
 pub(crate) async fn delete_project_ad_mapping_handler(
     State(pool): State<Arc<PgPool>>,
-    Path((project_id, ad_group)): Path<(String, String)>,
+    Path((project_id, ad_group)): Path<(ProjectId, String)>,
 ) -> AdminResult<Response> {
     repo::delete_project_ad_mapping(&pool, &project_id, &ad_group).await?;
     Ok((StatusCode::NO_CONTENT, ()).into_response())

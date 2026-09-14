@@ -14,7 +14,7 @@
 //!   sitemap, llms.txt, secret migration, content analytics).
 //! - `shared` — config schemas, error types, branding, ID newtypes, HTML-escape
 //!   helpers.
-//! - `site` — public homepage / blog / docs / features content providers.
+//! - `site` — public homepage / docs content providers.
 
 // Why: The admin template engine needs the same branding the server builds it
 // with; the HTTP contract suite would otherwise render every page against a
@@ -34,10 +34,9 @@ pub use systemprompt_web_shared::{
     BrandingConfig, config, config_errors, error, html_escape, models,
 };
 pub use systemprompt_web_site::{
-    assets, blog, docs, extenders, features, homepage, navigation, partials,
+    assets, docs, extenders, homepage, navigation, partials, skills_page,
 };
 
-pub use blog::{BlogListPageDataProvider, BlogPostPageDataProvider};
 pub use config::{
     BlogConfigRaw, BlogConfigValidated, ContentSourceRaw, ContentSourceValidated,
     ExtensionConfigError, ExtensionConfigErrors,
@@ -45,10 +44,6 @@ pub use config::{
 pub use docs::{ChildDoc, DocsContentDataProvider, DocsPageDataProvider};
 pub use error::BlogError;
 pub use extension::WebExtension;
-pub use features::{
-    FeatureCta, FeaturePage, FeaturePagePrerenderer, FeaturePagesConfig, FeatureSection,
-    FeatureSectionItem,
-};
 pub use homepage::{
     ComparisonConfig, ComparisonItem, ComparisonSide, DifferentiatorConfig, DifferentiatorItem,
     ExtensionTrait, ExtensionsConfig, FaqConfig, FaqItem, Feature, FeatureCategory, FinalCtaConfig,
@@ -66,8 +61,9 @@ pub use models::{
 pub use navigation::{
     HeaderNavConfig, NavCta, NavItem, NavLink, NavSection, NavigationPageDataProvider,
 };
+pub use skills_page::{SkillEntry, SkillsPageConfig, SkillsPagePrerenderer};
 
-pub use extenders::OrgUrlExtender;
+pub use extenders::{OrgUrlExtender, ReleaseVersionExtender};
 pub use jobs::ContentIngestionJob;
 pub use repository::{
     ContentRepository, LinkAnalyticsRepository, LinkRepository, SearchRepository,

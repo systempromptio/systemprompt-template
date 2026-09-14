@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO eval_execution_measurements(execution_id,hard_failures,deterministic_checks,judgment,quality_milli,latency_ms,input_tokens,output_tokens,tool_calls,attempted_cost_microdollars,accounting_status,verified_success) SELECT x.id,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15 FROM eval_executions x JOIN eval_experiments e ON e.id=x.experiment_id WHERE x.id=$1 AND e.owner_id=$2 AND x.lease_owner=$3 AND x.fencing_token=$4 AND x.status='completed' ON CONFLICT(execution_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "TextArray",
+        "Jsonb",
+        "Jsonb",
+        "Int4",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "763af4a3d70ca303b958fb4fb9da1bc4ff0a8985c6ff0c7a95b0aa31a5d95f39"
+}

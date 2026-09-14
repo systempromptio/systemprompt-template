@@ -14,6 +14,7 @@
 
 use std::collections::HashMap;
 use std::sync::Arc;
+use systemprompt::identifiers::RouteId;
 
 use sqlx::PgPool;
 use systemprompt_security::authz::{
@@ -35,10 +36,10 @@ fn map_err(err: &AuthzError) -> sqlx::Error {
 
 pub async fn list_rules_for_route(
     pool: &PgPool,
-    route_id: &str,
+    route_id: &RouteId,
 ) -> Result<Vec<AccessRule>, sqlx::Error> {
     repo(pool)
-        .list_rules_for_entity(ENTITY_TYPE, route_id)
+        .list_rules_for_entity(ENTITY_TYPE, route_id.as_str())
         .await
         .map_err(|e| map_err(&e))
 }
@@ -55,7 +56,7 @@ pub async fn list_rules_bulk(
 
 pub async fn upsert_rule(
     pool: &PgPool,
-    route_id: &str,
+    route_id: &RouteId,
     rule_type: RuleType,
     rule_value: &str,
     access: Access,
@@ -63,11 +64,12 @@ pub async fn upsert_rule(
     repo(pool)
         .upsert_rule(UpsertRuleParams {
             entity_type: ENTITY_TYPE,
-            entity_id: route_id,
+            entity_id: route_id.as_str(),
             rule_type,
             rule_value,
             access,
             justification: None,
+            source: systemprompt_security::authz::DASHBOARD_SOURCE,
         })
         .await
         .map_err(|e| map_err(&e))
@@ -78,9 +80,12 @@ pub async fn delete_rule(pool: &PgPool, rule_id: &str) -> Result<bool, sqlx::Err
     repo(pool).delete_rule(&id).await.map_err(|e| map_err(&e))
 }
 
-pub async fn find_entity(pool: &PgPool, route_id: &str) -> Result<Option<EntityRow>, sqlx::Error> {
+pub async fn find_entity(
+    pool: &PgPool,
+    route_id: &RouteId,
+) -> Result<Option<EntityRow>, sqlx::Error> {
     repo(pool)
-        .get_entity(ENTITY_TYPE, route_id)
+        .get_entity(ENTITY_TYPE, route_id.as_str())
         .await
         .map_err(|e| map_err(&e))
 }

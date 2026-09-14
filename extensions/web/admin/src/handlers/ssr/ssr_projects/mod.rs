@@ -6,6 +6,7 @@
 //! who is on it, what it did, and how it is configured.
 
 use std::sync::Arc;
+use systemprompt_web_shared::ProjectId;
 
 use axum::extract::{Extension, Path, Query, State};
 use axum::response::Response;
@@ -60,7 +61,7 @@ pub(crate) async fn project_detail_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Path(project_id): Path<String>,
+    Path(project_id): Path<ProjectId>,
     Query(query): Query<ProjectTabQuery>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_console {
@@ -88,11 +89,13 @@ pub(crate) async fn project_detail_page(
     let data = detail::page_data(
         &project,
         &loaded,
-        usage.as_ref(),
-        tab,
         &user_ctx,
-        mappings,
-        &rules,
+        detail::TabReads {
+            tab,
+            usage: usage.as_ref(),
+            mappings,
+            rules: &rules,
+        },
     );
     Ok(super::render_typed_page(
         &engine,
@@ -117,7 +120,7 @@ fn active_tab(requested: Option<&str>) -> &'static str {
 // came from their group.
 async fn settings_reads(
     pool: &PgPool,
-    project_id: &str,
+    project_id: &ProjectId,
 ) -> (
     Vec<crate::types::projects::ProjectAdMappingRow>,
     Vec<crate::types::access_control::AccessControlRule>,
@@ -131,7 +134,7 @@ async fn settings_reads(
         .inspect_err(|e| tracing::warn!(error = %e, "access rules failed"))
         .unwrap_or_default()
         .into_iter()
-        .filter(|r| r.rule_type.as_str() == "project" && r.rule_value == project_id)
+        .filter(|r| r.rule_type.as_str() == "project" && r.rule_value == project_id.as_str())
         .collect();
     (mappings, rules)
 }
@@ -152,18 +155,21 @@ pub(super) fn pct(part: i64, whole: i64) -> i64 {
     (part * 100 / whole).clamp(0, 100)
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "page query plumbing; splitting the parameters is tracked in docs/tech-debt.md"
-)]
-pub(super) fn pagination(
-    page: i64,
-    total: i64,
-    offset: i64,
-    shown: i64,
-    noun: &'static str,
-    base: &str,
-) -> Pagination {
+#[derive(Clone, Copy)]
+pub(super) struct PageCounts {
+    pub(super) page: i64,
+    pub(super) total: i64,
+    pub(super) offset: i64,
+    pub(super) shown: i64,
+}
+
+pub(super) fn pagination(counts: PageCounts, noun: &'static str, base: &str) -> Pagination {
+    let PageCounts {
+        page,
+        total,
+        offset,
+        shown,
+    } = counts;
     let total_pages = ((total + PAGE_SIZE - 1) / PAGE_SIZE).max(1);
     Pagination {
         current_page: page.min(total_pages),

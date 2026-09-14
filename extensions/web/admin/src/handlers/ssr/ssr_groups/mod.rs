@@ -78,10 +78,12 @@ pub(crate) async fn groups_page(
     let (rows, pagination) = view::paginate(
         listing.rows,
         query.page.unwrap_or(1),
-        &range,
-        sort,
-        dir,
-        &source,
+        view::ListingFacets {
+            range: &range,
+            sort,
+            dir,
+            source: &source,
+        },
     );
 
     let data = GroupsPageData {
@@ -101,7 +103,7 @@ pub(crate) async fn groups_page(
         pagination,
         total_groups,
         can_manage: user_ctx.is_admin,
-        can_map: crate::types::roles_grant_platform(&user_ctx.roles),
+        can_map: user_ctx.is_platform_admin,
         group_options: group_options(&pool).await,
         unkeyed_people: listing.unkeyed_people,
     };
@@ -122,7 +124,7 @@ async fn group_options(pool: &PgPool) -> Vec<MemberSetChipView> {
         .into_iter()
         .filter(|g| g.id != UNASSIGNED_GROUP)
         .map(|g| MemberSetChipView {
-            id: g.id,
+            id: g.id.as_str().to_owned(),
             label: g.name,
         })
         .collect()

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT response_body_sha256 FROM ai_request_payloads WHERE ai_request_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "response_body_sha256",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_payloads",
+            "name": "response_body_sha256"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "f189d40b463137796b5672691fbfe4f8f633beb9cccf61793c13a67cbdab1271"
+}

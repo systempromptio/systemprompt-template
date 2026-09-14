@@ -4,6 +4,11 @@
 //! time and nothing else, because a finding read out of time order loses the
 //! sequence that makes it legible; a header that offered a sort those queries
 //! do not implement would be a lie in the markup.
+//!
+//! The decisions log no longer offers a sort by policy or by tool either. A row
+//! is a whole call now, and a call holds several policies and may touch several
+//! targets, so those sorts would order the table by an arbitrary member of each
+//! group — the same kind of lie, arrived at from the other direction.
 
 use super::urls::ColumnHeader;
 use super::{GovernanceQuery, GovernanceTab};
@@ -16,49 +21,12 @@ pub(super) fn columns(
 ) -> Vec<ColumnHeader> {
     match tab {
         GovernanceTab::Decisions => vec![
-            ColumnHeader::sortable(
-                "When",
-                "sp-col-date",
-                "when",
-                query,
-                sort.key,
-                sort.ascending,
-            ),
-            ColumnHeader::sortable(
-                "Outcome",
-                "sp-col-status",
-                "decision",
-                query,
-                sort.key,
-                sort.ascending,
-            ),
-            ColumnHeader::sortable(
-                "Policy",
-                "sp-col-text",
-                "policy",
-                query,
-                sort.key,
-                sort.ascending,
-            ),
-            ColumnHeader::plain("Stage", "sp-col-text"),
-            ColumnHeader::sortable(
-                "Tool",
-                "sp-col-text",
-                "tool",
-                query,
-                sort.key,
-                sort.ascending,
-            ),
-            ColumnHeader::sortable(
-                "User",
-                "sp-col-identity",
-                "user",
-                query,
-                sort.key,
-                sort.ascending,
-            ),
-            ColumnHeader::plain("Scope", "sp-col-text"),
+            ColumnHeader::sortable("When", "sp-col-date", "when", query, sort),
+            ColumnHeader::sortable("Outcome", "sp-col-status", "decision", query, sort),
+            ColumnHeader::plain("Target", "sp-col-text"),
+            ColumnHeader::sortable("User", "sp-col-identity", "user", query, sort),
             ColumnHeader::plain("Reason", "sp-col-multiline"),
+            ColumnHeader::plain("Chain", "sp-col-text"),
             ColumnHeader::plain("Trace", "sp-col-trace"),
         ],
         GovernanceTab::Safety => vec![

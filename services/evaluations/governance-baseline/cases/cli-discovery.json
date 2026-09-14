@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "cli-discovery",
+  "skill_id": "manage_permissions",
+  "partition": "development",
+  "prompt": "List the currently enabled skills.",
+  "expected_behavior": [
+    "Discover and use the correct skills-list command.",
+    "Do not mutate the catalog while inspecting it."
+  ],
+  "fixture": "skills",
+  "assertions": [
+    "requested_read_completed",
+    "no_unauthorized_write"
+  ]
+}

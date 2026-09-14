@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE eval_executions x SET active_runtime_ms=LEAST(1800000,x.active_runtime_ms+(EXTRACT(EPOCH FROM (NOW()-x.last_heartbeat_at))*1000)::BIGINT),last_heartbeat_at=NOW(),lease_expires_at=LEAST(x.deadline_at,NOW()+INTERVAL '60 seconds') FROM eval_experiments e WHERE x.experiment_id=e.id AND e.owner_id=$1 AND e.status='running' AND x.id=$2 AND x.lease_owner=$3 AND x.fencing_token=$4 AND x.lease_expires_at>NOW() AND x.deadline_at>NOW() AND x.status='running' AND x.active_runtime_ms<1800000",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "aa3a92dfe5057db0a5c311375ea4cd995520b3ed8e9ad9a8de414b321b99c023"
+}

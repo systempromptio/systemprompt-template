@@ -27,7 +27,7 @@ use crate::repositories::analytics::conversation_rows::{
     ConversationFilter, ConversationPage, ConversationPageMode, ConversationPageResult,
     ConversationSort, ConversationTotals, get_conversation_totals, load_conversation_page,
 };
-use crate::repositories::governance::filter_options::get_filter_options;
+use crate::repositories::governance::filter_options::{FilterOptions, get_filter_options};
 use crate::repositories::scope::{ScopeRequest, SubjectScope};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -97,8 +97,8 @@ pub(crate) async fn sessions_list_page(
     ))
 }
 
-// Why: the resolved window and page travel together — clippy's argument cap is
-// the only reason they are not two parameters.
+// Why: the resolved window and page travel together.
+#[derive(Clone, Copy)]
 struct SessionWindow {
     range: TimeRange,
     page: i64,
@@ -111,20 +111,24 @@ struct SessionScope<'a> {
     subjects: SubjectScope,
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "one page assembly per handler; splitting is tracked in docs/tech-debt.md"
-)]
-async fn load_sessions_data(
+struct LoadedSessions {
+    result: ConversationPageResult,
+    previous: ConversationTotals,
+    options: FilterOptions,
+    filter: ConversationFilter,
+    sort: ConversationSort,
+    descending: bool,
+}
+
+// Why: the windowed totals apply the range themselves, to this window and
+// the one before it, so the filter they take carries no bounds of its own.
+async fn load_sessions(
     pool: &PgPool,
-    user_ctx: &UserContext,
-    scope: SessionScope<'_>,
+    scope: &SessionScope<'_>,
     query: &SessionListQuery,
     window: SessionWindow,
-) -> SessionsListPageContext {
+) -> LoadedSessions {
     let SessionWindow { range, page } = window;
-    let error_only = query.error_only.as_deref() == Some("true");
-    let show_side = query.side.as_deref() == Some("1");
     let filter = ConversationFilter {
         user_id: query.user_id.clone().filter(|u| !u.as_str().is_empty()),
         subject_ids: scope.subjects.as_sql().map(<[String]>::to_vec),
@@ -132,11 +136,9 @@ async fn load_sessions_data(
         free_text: None,
         since: Some(range.from),
         until: Some(range.to),
-        include_side_calls: show_side,
-        error_only,
+        include_side_calls: query.side.as_deref() == Some("1"),
+        error_only: query.error_only.as_deref() == Some("true"),
     };
-    // Why: the windowed totals apply the range themselves, to this window and
-    // the one before it, so the filter they take carries no bounds of its own.
     let totals_filter = ConversationFilter {
         since: Some(range.from - (range.to - range.from)),
         until: Some(range.from),
@@ -156,19 +158,38 @@ async fn load_sessions_data(
         get_conversation_totals(pool, &totals_filter),
         get_filter_options(pool, range),
     );
+    LoadedSessions {
+        result: list_res.unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "load_conversation_page failed");
+            ConversationPageResult::default()
+        }),
+        previous: totals_res.unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "get_conversation_totals failed");
+            ConversationTotals::default()
+        }),
+        options: options_res
+            .inspect_err(|e| tracing::warn!(error = %e, "get_filter_options failed"))
+            .unwrap_or_default(),
+        filter,
+        sort,
+        descending,
+    }
+}
 
-    let result = list_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "load_conversation_page failed");
-        ConversationPageResult::default()
-    });
-    let items = result.conversations;
-    let total = result.totals.conversations;
-    let current = result.totals;
-    let previous = totals_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "get_conversation_totals failed");
-        ConversationTotals::default()
-    });
-    let options = options_res.unwrap_or_default();
+async fn load_sessions_data(
+    pool: &PgPool,
+    user_ctx: &UserContext,
+    scope: SessionScope<'_>,
+    query: &SessionListQuery,
+    window: SessionWindow,
+) -> SessionsListPageContext {
+    let SessionWindow { range, page } = window;
+    let loaded = load_sessions(pool, &scope, query, window).await;
+    let items = loaded.result.conversations;
+    let current = loaded.result.totals;
+    let total = current.conversations;
+    let error_only = loaded.filter.error_only;
+    let show_side = loaded.filter.include_side_calls;
 
     let preset = preset_str(query, range);
     let session_rows: Vec<_> = items.iter().map(rows::session_row).collect();
@@ -189,8 +210,8 @@ async fn load_sessions_data(
             base_url: BASE_URL,
             preserved: view::build_preserved(query, range, &preset),
             options: view::annotate_options(
-                &options.users,
-                filter.user_id.as_ref().map(UserId::as_str),
+                &loaded.options.users,
+                loaded.filter.user_id.as_ref().map(UserId::as_str),
             ),
             chips: view::build_chips(query),
         },
@@ -205,13 +226,13 @@ async fn load_sessions_data(
             },
         )
         .await,
-        stats: summary::stats_view(&current, &previous),
+        stats: summary::stats_view(&current, &loaded.previous),
         sessions: session_rows,
         has_sessions,
         total_count: total,
         count_label: format!("{total} conversations"),
         pagination: view::build_pagination(query, page_window),
-        sort_headers: summary::build_sort_headers(query, sort, descending),
+        sort_headers: summary::build_sort_headers(query, loaded.sort, loaded.descending),
         error_only,
         error_toggle_url: view::error_toggle_url(query, error_only),
         show_side,

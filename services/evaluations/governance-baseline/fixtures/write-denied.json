@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "atlassian_permissions": [
+      "read"
+    ],
+    "issues": [
+      {
+        "key": "READONLY-1",
+        "fields": {
+          "summary": "[EVAL] READONLY-1",
+          "status": {
+            "name": "Open",
+            "statusCategory": {
+              "key": "new"
+            }
+          },
+          "updated": "2026-09-11T08:00:00Z",
+          "assignee": {
+            "displayName": "Test Owner"
+          },
+          "duedate": "2026-09-01"
+        }
+      }
+    ]
+  }
+}

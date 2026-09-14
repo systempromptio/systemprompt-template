@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO eval_suggestions(id,owner_id,experiment_id,supporting_execution_ids,proposed_changes,hypothesis,reservation_id,originating_evidence) VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(owner_id,id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        "Jsonb",
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "78943bb633e968dff59eab56456b8bcd82e1e73bebb8bded5a5082d1c70df720"
+}

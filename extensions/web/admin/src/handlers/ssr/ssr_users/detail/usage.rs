@@ -1,16 +1,18 @@
 //! The Usage tab: gateway totals, the latest conversation, the ten most
-//! recent ones, the model split and the commits the bridge recorded.
+//! the latest one, the model split and the commits the bridge recorded.
+//!
+//! The conversation listing itself lives on its own tab; this one keeps the
+//! numbers and points at it.
 
 use systemprompt::identifiers::UserId;
 
-use super::context::{
-    CommitRowView, ConversationRowView, LatestConversationView, UsageTabView, UserModelRowView,
-};
+use crate::repositories::analytics::conversation_rows::ConversationRow;
+
+use super::context::{CommitRowView, LatestConversationView, UsageTabView, UserModelRowView};
 use super::load::UsageData;
 use super::view::stamp;
 use crate::handlers::ssr::entity_urls::context_detail_url;
 use crate::handlers::ssr::format::{format_cost, format_token_total, relative_time};
-use crate::repositories::analytics::conversation_rows::ConversationRow;
 use crate::repositories::users::enrolment::UserCommitRow;
 
 pub(super) fn usage_tab(data: UsageData, user_id: &UserId) -> UsageTabView {
@@ -40,9 +42,7 @@ pub(super) fn usage_tab(data: UsageData, user_id: &UserId) -> UsageTabView {
                 cost_display: format_cost(share.cost_microdollars),
             })
             .collect(),
-        has_conversations: !data.recent.is_empty(),
-        conversations_rows: data.recent.iter().map(conversation_row).collect(),
-        conversations_url: format!("/admin/contexts?view=all&user_id={encoded}"),
+        conversations_url: format!("/admin/users/{encoded}?tab=conversations"),
         log_url: format!("/admin/requests?user_id={encoded}"),
         has_commits: !data.commits.is_empty(),
         commits: data.commits.into_iter().map(commit_row).collect(),
@@ -63,22 +63,6 @@ fn latest_conversation(c: &ConversationRow) -> LatestConversationView {
     }
 }
 
-fn conversation_row(c: &ConversationRow) -> ConversationRowView {
-    ConversationRowView {
-        conversation_title: c.title.clone(),
-        url: context_detail_url(&c.context_id),
-        context_id: c.context_id.clone(),
-        model: c.model.clone().unwrap_or_else(|| "—".to_owned()),
-        turns: c.turn_count,
-        tool_calls: c.tool_call_count,
-        side_calls: c.side_call_count,
-        errors: c.error_count,
-        has_errors: c.error_count > 0,
-        cost_display: format_cost(c.total_cost_microdollars),
-        last_relative: c.last_at.map_or_else(|| "—".to_owned(), relative_time),
-        last_at: c.last_at.map(|t| t.to_rfc3339()).unwrap_or_default(),
-    }
-}
 
 fn commit_row(row: UserCommitRow) -> CommitRowView {
     CommitRowView {

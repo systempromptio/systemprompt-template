@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "usage-currency",
+  "skill_id": "analytics_dashboards",
+  "partition": "development",
+  "prompt": "Report AI spend over the last seven days.",
+  "expected_behavior": [
+    "Quote the supplied USD values without converting microdollars again.",
+    "State the report period."
+  ],
+  "fixture": "currency",
+  "assertions": [
+    "usd_units_exact",
+    "period_present"
+  ]
+}

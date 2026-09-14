@@ -3,38 +3,49 @@
 //! Each module owns one page: it builds a typed template context and renders a
 //! `.hbs` template from `storage/files/admin/templates/` at request time.
 
-use crate::error::{AdminHtmlError, AdminHtmlResult, AdminResult};
-use crate::handlers::extract_user_from_cookie;
+use crate::error::AdminHtmlResult;
 use crate::templates::AdminTemplateEngine;
+use crate::types::UserContext;
 use axum::Extension;
-use axum::http::HeaderMap;
+use axum::extract::Query;
 use axum::response::{Html, IntoResponse, Redirect, Response};
 
+
+mod approvals;
 mod context;
+pub(crate) mod conversation_header;
+pub(crate) mod csv;
+mod devices;
 pub(crate) mod entity_urls;
 pub(crate) mod format;
+mod gateway;
+mod governance;
 pub(crate) mod list_view;
+mod overview;
+pub(crate) mod people_chart;
+pub(crate) mod people_view;
+mod roles;
+mod secrets_audit;
 mod ssr_access_control;
-mod ssr_add_passkey;
+mod ssr_analytics_dashboard;
 pub(crate) mod ssr_analytics_requests;
+mod ssr_bridge_device_link;
+mod ssr_bridge_setup;
 mod ssr_chain;
 mod ssr_context_detail;
 mod ssr_conversations_raw;
 mod ssr_demo_help;
-mod ssr_demo_register;
-mod ssr_demo_trace;
-mod ssr_evals;
-
 mod ssr_governance_audit_detail;
-mod ssr_governance_decisions;
-mod ssr_governance_hooks;
-mod ssr_governance_policy_edit;
+mod ssr_group_detail;
+mod ssr_groups;
 pub(crate) mod ssr_helpers;
-mod ssr_management;
-mod ssr_models;
+pub(crate) mod ssr_history;
 mod ssr_perf_trace_detail;
 mod ssr_perf_traces;
 mod ssr_profile;
+mod ssr_projects;
+mod ssr_report_customer;
+mod ssr_report_internal;
 mod ssr_search_resolve;
 mod ssr_session_detail;
 mod ssr_sessions_list;
@@ -45,83 +56,6 @@ mod ssr_users;
 pub(crate) mod transcript_view;
 pub(crate) mod types;
 
-pub(crate) async fn login_page(
-    Extension(engine): Extension<AdminTemplateEngine>,
-) -> AdminHtmlResult<Response> {
-    render_unauthenticated(&engine, "login")
-}
-
-pub(crate) async fn verify_pending_page(
-    Extension(engine): Extension<AdminTemplateEngine>,
-) -> AdminHtmlResult<Response> {
-    render_unauthenticated(&engine, "verify-pending")
-}
-
-pub(crate) async fn register_page(
-    headers: HeaderMap,
-    Extension(engine): Extension<AdminTemplateEngine>,
-) -> AdminHtmlResult<Response> {
-    if extract_user_from_cookie(&headers).is_ok() {
-        return Ok(Redirect::to("/admin/access/users").into_response());
-    }
-    render_unauthenticated(&engine, "register")
-}
-
-fn render_unauthenticated(
-    engine: &AdminTemplateEngine,
-    template: &str,
-) -> AdminHtmlResult<Response> {
-    let html = engine
-        .render(template, &branding_context(engine))
-        // Why: lint-ok: error-adapt — render errors are Debug-formatted for the html error page
-        .map_err(|e| AdminHtmlError::internal(format!("{template} page render failed: {e:?}")))?;
-    Ok(Html(html).into_response())
-}
-
-pub(crate) fn get_services_path() -> AdminResult<std::path::PathBuf> {
-    super::shared::get_services_path()
-}
-
-mod approvals;
-
-pub(crate) mod conversation_header;
-
-pub(crate) mod csv;
-
-mod devices;
-
-mod governance;
-
-mod overview;
-
-pub(crate) mod people_chart;
-
-pub(crate) mod people_view;
-
-mod roles;
-
-mod secrets_audit;
-
-mod ssr_analytics_dashboard;
-
-mod ssr_bridge_device_link;
-
-mod ssr_bridge_setup;
-
-mod ssr_group_detail;
-
-mod ssr_groups;
-
-mod ssr_history;
-
-mod ssr_projects;
-
-mod gateway;
-
-mod ssr_report_customer;
-
-mod ssr_report_internal;
-
 pub(crate) use approvals::approvals_page;
 pub(crate) use devices::devices_page;
 pub(crate) use gateway::gateway_page;
@@ -130,7 +64,6 @@ pub(crate) use overview::overview_page;
 pub(crate) use roles::roles_page;
 pub(crate) use secrets_audit::{secrets_audit_csv, secrets_audit_page};
 pub(crate) use ssr_access_control::access_control_page;
-pub(crate) use ssr_add_passkey::add_passkey_page;
 pub(crate) use ssr_analytics_dashboard::analytics_dashboard_page;
 pub(crate) use ssr_analytics_dashboard::csv::cost_csv;
 pub(crate) use ssr_analytics_requests::{analytics_requests_csv, analytics_requests_page};
@@ -139,25 +72,13 @@ pub(crate) use ssr_bridge_setup::bridge_setup_page;
 pub(crate) use ssr_chain::chain_envelope;
 pub(crate) use ssr_context_detail::context_detail_page;
 pub(crate) use ssr_conversations_raw::conversations_raw;
-pub(crate) use ssr_demo_register::demo_register_page;
-pub(crate) use ssr_demo_trace::demo_trace_page;
-pub(crate) use ssr_evals::{
-    eval_promote_case_action, eval_run_action, eval_run_detail_page, evals_page,
-};
 pub(crate) use ssr_governance_audit_detail::governance_audit_detail_page;
-pub(crate) use ssr_governance_decisions::governance_decisions_page;
-pub(crate) use ssr_governance_hooks::governance_hooks_page;
-pub(crate) use ssr_governance_policy_edit::{
-    governance_policy_edit_page, governance_policy_toggle,
-};
 pub(crate) use ssr_group_detail::group_detail_page;
 pub(crate) use ssr_groups::groups_page;
 pub(crate) use ssr_helpers::{branding_context, render_typed_page};
-pub(crate) use ssr_history::{history_conversation_page, history_page, history_search};
-pub(crate) use ssr_management::{
-    management_access_tokens_page, management_department_detail_page, management_departments_page,
+pub(crate) use ssr_history::{
+    conversations_page, history_conversation_page, history_page, history_search,
 };
-pub(crate) use ssr_models::models_page;
 pub(crate) use ssr_perf_trace_detail::perf_trace_detail_page;
 pub(crate) use ssr_perf_traces::perf_traces_page;
 pub(crate) use ssr_profile::{issue_bridge_code, profile_page};
@@ -172,4 +93,58 @@ pub(crate) use ssr_setup::setup_page;
 pub(crate) use ssr_skills_contexts::skills_contexts_page;
 pub(crate) use ssr_users::{user_detail_by_id_page, user_detail_page, users_page};
 
-mod list_scope;
+#[derive(serde::Deserialize)]
+pub(crate) struct LoginParams {
+    redirect: Option<String>,
+}
+
+#[derive(serde::Serialize)]
+struct LoginContext<'a> {
+    #[serde(flatten)]
+    shell: context::BrandingShell<'a>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    redirect_encoded: Option<String>,
+    // Why: Whether the page offers "Sign in with Systemprompt SSO". Off when no
+    // usable ADFS config is loaded, so the UI never advertises a door that
+    // only redirects back with `?sso=unavailable`.
+    sso_enabled: bool,
+    // Why: tells a developer how to get in when SSO is off locally; the same
+    // predicate that mounts the redeem route, so the hint never points at a
+    // door that is not there.
+    dev_login_enabled: bool,
+}
+
+pub(crate) async fn login_page(
+    user_ctx: Option<Extension<UserContext>>,
+    Extension(engine): Extension<AdminTemplateEngine>,
+    Extension(sso_deps): Extension<crate::handlers::adfs_auth::AdfsDeps>,
+    Query(params): Query<LoginParams>,
+) -> AdminHtmlResult<Response> {
+    if let Some(Extension(user_ctx)) = user_ctx {
+        let target = if user_ctx.is_console {
+            "/admin/"
+        } else {
+            "/admin/profile"
+        };
+        return Ok(Redirect::to(target).into_response());
+    }
+
+    let redirect_encoded = sanitize_login_redirect(params.redirect.as_deref())
+        .map(|target| urlencoding::encode(&target).into_owned());
+
+    let ctx = LoginContext {
+        shell: branding_context(&engine),
+        redirect_encoded,
+        sso_enabled: sso_deps.config.is_usable(),
+        dev_login_enabled: crate::handlers::dev_login::dev_login_enabled(),
+    };
+    let html = engine.render("login", &ctx)?;
+    Ok(Html(html).into_response())
+}
+
+fn sanitize_login_redirect(raw: Option<&str>) -> Option<String> {
+    let raw = raw?.trim();
+    (raw.starts_with('/') && !raw.starts_with("//")).then(|| raw.to_owned())
+}
+
+pub(crate) mod analysis;

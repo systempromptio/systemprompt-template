@@ -7,7 +7,7 @@
 //! problems: a failing tool is a bug, a timing-out one is capacity.
 
 use sqlx::PgPool;
-use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt::identifiers::{McpExecutionId, SessionId, UserId};
 
 #[derive(Debug, Clone)]
 pub struct McpServerActivity {
@@ -136,7 +136,7 @@ pub async fn list_mcp_tool_stats(
 
 #[derive(Debug, Clone)]
 pub struct McpExecutionRow {
-    pub execution_id: String,
+    pub execution_id: McpExecutionId,
     pub tool_name: String,
     pub status: String,
     pub started_at: chrono::DateTime<chrono::Utc>,
@@ -163,7 +163,7 @@ pub async fn list_mcp_executions_paged(
 
     let rows = sqlx::query!(
         r#"SELECT
-             mcp_execution_id AS "execution_id!",
+             mcp_execution_id AS "execution_id!: McpExecutionId",
              tool_name AS "tool_name!",
              status AS "status!",
              started_at AS "started_at!",

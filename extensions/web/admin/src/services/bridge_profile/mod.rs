@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use serde::Serialize;
 use sqlx::PgPool;
-use systemprompt::identifiers::{TenantId, UserId};
+use systemprompt::identifiers::{MarketplaceId, TenantId, UserId};
 
 use crate::types::UserContext;
 
@@ -23,7 +23,7 @@ use assemble::{
 pub(crate) use assemble::read_config_strings;
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct BridgeProfileIdentity {
+pub(crate) struct ProfileIdentity {
     pub email: String,
     pub display_name: Option<String>,
     pub user_id: UserId,
@@ -38,7 +38,7 @@ pub(crate) struct BridgeProfileIdentity {
 pub(crate) use crate::repositories::users::usage::{ConversationSummary, ModelShare, UsageWindow};
 
 #[derive(Debug, Clone, Default, Serialize)]
-pub(crate) struct BridgeProfileUsage {
+pub(crate) struct ProfileUsage {
     pub d1: UsageWindow,
     pub d7: UsageWindow,
     pub d30: UsageWindow,
@@ -59,7 +59,7 @@ pub(crate) struct BridgeProfileBlock {
 // granted it — a person reading their own profile can see *why* they have it.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ProfileMarketplaceView {
-    pub id: String,
+    pub id: MarketplaceId,
     pub name: String,
     pub version: String,
     pub plugin_count: usize,
@@ -67,7 +67,7 @@ pub(crate) struct ProfileMarketplaceView {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct BridgeAgentItem {
+pub(crate) struct AgentItem {
     pub id: String,
     pub display_name: String,
     pub enabled: bool,
@@ -75,10 +75,10 @@ pub(crate) struct BridgeAgentItem {
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
-pub(crate) struct BridgeAgentsBlock {
+pub(crate) struct AgentsBlock {
     pub total: i64,
     pub enabled: i64,
-    pub items: Vec<BridgeAgentItem>,
+    pub items: Vec<AgentItem>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -117,13 +117,13 @@ pub(crate) struct BridgeProfilePageData {
     pub connections: Option<super::connector_accounts::ConnectionSnapshot>,
     pub page: &'static str,
     pub title: &'static str,
-    pub identity: BridgeProfileIdentity,
+    pub identity: ProfileIdentity,
     // Why: Whether a gateway is configured, and so whether the page may offer to
     // issue a connect code. The code itself is never part of page data.
     pub bridge_connect_available: bool,
     pub bridge_profile: Option<BridgeProfileBlock>,
-    pub usage: BridgeProfileUsage,
-    pub agents: BridgeAgentsBlock,
+    pub usage: ProfileUsage,
+    pub agents: AgentsBlock,
     pub marketplaces: Vec<ProfileMarketplaceView>,
     pub marketplaces_count: usize,
 }
@@ -205,7 +205,7 @@ pub(crate) async fn build_bridge_profile_data(
     // so no credential is assembled into page data.
     let bridge_connect_available = gateway_url.is_some();
 
-    let identity = BridgeProfileIdentity {
+    let identity = ProfileIdentity {
         email: user_ctx.email.as_str().to_owned(),
         display_name,
         user_id: user_ctx.user_id.clone(),
@@ -218,8 +218,23 @@ pub(crate) async fn build_bridge_profile_data(
     };
 
     let usage = build_usage(sections);
-    let agents = build_agents_block();
-    let marketplaces = build_marketplaces(&pool, &user_id, user_ctx.roles.clone()).await;
+    let mut agents = build_agents_block();
+    let access = crate::authz::catalog::CatalogAccess::load(&pool, &user_id).await?;
+    let ids = agents
+        .items
+        .iter()
+        .filter(|a| a.enabled)
+        .map(|a| a.id.clone())
+        .collect::<Vec<_>>();
+    let allowed = access
+        .allowed(systemprompt_security::authz::EntityKind::Agent, &ids)
+        .await?;
+    agents
+        .items
+        .retain(|a| a.enabled && allowed.contains(&a.id));
+    agents.total = agents.items.len() as i64;
+    agents.enabled = agents.total;
+    let marketplaces = build_marketplaces(&pool, &user_id, user_ctx.roles.clone()).await?;
 
     let connections = Some(super::connector_accounts::get_connections(&pool, &user_id).await?);
     Ok(BridgeProfilePageData {

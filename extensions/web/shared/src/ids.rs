@@ -1,116 +1,93 @@
 //! Typed identifier newtypes local to the web extension.
+//!
+//! Core's `define_id!` derives `schemars::JsonSchema` and gates its sqlx
+//! support on a feature of the invoking crate, so ids that only exist in this
+//! workspace are declared with `web_define_id!` instead. The generated type
+//! is `#[serde(transparent)]` and `#[sqlx(transparent)]`: the wire and
+//! column shape stay a bare string, and `query_as!` can bind and decode it
+//! with `AS "col!: GroupId"`.
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::ops::Deref;
 
-pub use systemprompt::identifiers::{PluginId, TraceId, UserId};
+pub use systemprompt::identifiers::{MarketplaceId, PluginId, TraceId, UserId};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct MarketplaceId(String);
+#[macro_export]
+macro_rules! web_define_id {
+    ($name:ident) => {
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            PartialOrd,
+            Ord,
+            Hash,
+            serde::Serialize,
+            serde::Deserialize,
+            sqlx::Type,
+        )]
+        #[serde(transparent)]
+        #[sqlx(transparent)]
+        pub struct $name(String);
 
-impl MarketplaceId {
-    #[must_use]
-    pub fn new(value: impl Into<String>) -> Self {
-        Self(value.into())
-    }
+        impl $name {
+            #[must_use]
+            pub fn new(value: impl Into<String>) -> Self {
+                Self(value.into())
+            }
 
-    #[must_use]
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
+            #[must_use]
+            pub fn as_str(&self) -> &str {
+                &self.0
+            }
 
-    #[must_use]
-    pub fn into_inner(self) -> String {
-        self.0
-    }
+            #[must_use]
+            pub fn into_inner(self) -> String {
+                self.0
+            }
+        }
+
+        impl ::std::fmt::Display for $name {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+                f.write_str(&self.0)
+            }
+        }
+
+        impl AsRef<str> for $name {
+            fn as_ref(&self) -> &str {
+                &self.0
+            }
+        }
+
+        impl From<String> for $name {
+            fn from(value: String) -> Self {
+                Self(value)
+            }
+        }
+
+        impl From<&str> for $name {
+            fn from(value: &str) -> Self {
+                Self(value.to_owned())
+            }
+        }
+
+        impl From<$name> for String {
+            fn from(value: $name) -> Self {
+                value.0
+            }
+        }
+
+        impl PartialEq<&str> for $name {
+            fn eq(&self, other: &&str) -> bool {
+                self.0 == *other
+            }
+        }
+    };
 }
 
-impl fmt::Display for MarketplaceId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
-    }
-}
-
-impl From<String> for MarketplaceId {
-    fn from(value: String) -> Self {
-        Self(value)
-    }
-}
-
-impl From<&str> for MarketplaceId {
-    fn from(value: &str) -> Self {
-        Self(value.to_owned())
-    }
-}
-
-impl AsRef<str> for MarketplaceId {
-    fn as_ref(&self) -> &str {
-        &self.0
-    }
-}
-
-impl Deref for MarketplaceId {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct RequestId(String);
-
-impl RequestId {
-    #[must_use]
-    pub fn new(value: impl Into<String>) -> Self {
-        Self(value.into())
-    }
-
-    #[must_use]
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    #[must_use]
-    pub fn into_inner(self) -> String {
-        self.0
-    }
-}
-
-impl fmt::Display for RequestId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
-    }
-}
-
-impl From<String> for RequestId {
-    fn from(value: String) -> Self {
-        Self(value)
-    }
-}
-
-impl From<&str> for RequestId {
-    fn from(value: &str) -> Self {
-        Self(value.to_owned())
-    }
-}
-
-impl AsRef<str> for RequestId {
-    fn as_ref(&self) -> &str {
-        &self.0
-    }
-}
-
-impl Deref for RequestId {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+web_define_id!(GroupId);
+web_define_id!(ProjectId);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]

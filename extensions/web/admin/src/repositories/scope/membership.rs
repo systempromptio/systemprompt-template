@@ -17,7 +17,7 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
-use super::{Attribution, ScopeKind};
+use super::{Attribution, ScopeTarget};
 
 // Why: the id every instance-wide breakdown files traffic under when it
 // attributes to nobody — a rejected request with no user, a non-user actor, or
@@ -54,15 +54,14 @@ macro_rules! scoped_query {
 
 pub async fn list_scope_user_ids(
     pool: &PgPool,
-    kind: ScopeKind,
+    target: ScopeTarget<'_>,
     attribution: Attribution,
-    id: &str,
 ) -> Result<Vec<UserId>, sqlx::Error> {
     let rows = scoped_query!(
         r#"SELECT m.user_id AS "user_id!: UserId" FROM membership m WHERE m.scope_id = $3"#,
-        kind.as_str(),
+        target.kind().as_str(),
         attribution.is_exclusive(),
-        id
+        target.id()
     )
     .fetch_all(pool)
     .await?;

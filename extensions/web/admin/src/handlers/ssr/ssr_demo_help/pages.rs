@@ -15,7 +15,7 @@ pub(super) fn demo_help_governance_pages(page: &str) -> Option<(&'static str, &'
             "tool-governance",
         )),
         "governance-rules" => Some((
-            "<strong>Governance Rules</strong> is the policy editor &mdash; define the allow/deny/modify rules that gate every tool call Claude makes. Rules are scoped by role, department, tool, and conditions; they run on the hot path of every request and are enforced at the MCP layer. Edit here to change what your team is allowed to do with Claude.",
+            "<strong>Governance Rules</strong> is the policy editor &mdash; define the allow/deny/modify rules that gate every tool call Claude makes. Rules are scoped by role, AD group, tool, and conditions; they run on the hot path of every request and are enforced at the MCP layer. Edit here to change what your team is allowed to do with Claude.",
             "tool-governance",
         )),
         "governance-hooks" => Some((
@@ -23,7 +23,7 @@ pub(super) fn demo_help_governance_pages(page: &str) -> Option<(&'static str, &'
             "hooks",
         )),
         "governance-rate-limits" => Some((
-            "<strong>Governance Rate Limits</strong> defines and monitors usage quotas per user, role, department, tool, and time window. Rate limits protect budgets, enforce fair-use across teams, and prevent runaway automation. This page shows current consumption against configured ceilings and lets you adjust limits as usage patterns evolve.",
+            "<strong>Governance Rate Limits</strong> defines and monitors usage quotas per user, role, tool, and time window. Rate limits protect budgets, enforce fair-use across teams, and prevent runaway automation. This page shows current consumption against configured ceilings and lets you adjust limits as usage patterns evolve.",
             "tool-governance",
         )),
         "models" => Some((
@@ -53,7 +53,7 @@ pub(super) fn demo_help_analytics_pages(page: &str) -> Option<(&'static str, &'s
             "events",
         )),
         "analytics-costs" => Some((
-            "<strong>Analytics &mdash; Costs</strong> breaks Claude spend down by user, department, plugin, model, and tool. See exactly where token spend lands, catch runaway agents early, and allocate costs back to the teams that incurred them. The same data feeds governance rate-limit decisions.",
+            "<strong>Analytics &mdash; Costs</strong> breaks Claude spend down by user, project, plugin, model, and tool. See exactly where token spend lands, catch runaway agents early, and allocate costs back to the teams that incurred them. The same data feeds governance rate-limit decisions.",
             "dashboard",
         )),
         "analytics-requests" => Some((
@@ -163,11 +163,11 @@ pub(super) fn demo_help_entity_edit_pages(page: &str) -> Option<(&'static str, &
 pub(super) fn demo_help_user_pages(page: &str) -> Option<(&'static str, &'static str)> {
     match page {
         "user-detail" => Some((
-            "<strong>User Detail</strong> is the per-user admin view &mdash; profile, roles, departments, session history, tool usage, governance violations, cost attribution, and activity timeline. The single place to investigate what any individual has been doing on the platform.",
+            "<strong>User Detail</strong> is the per-user admin view &mdash; profile, roles, project, session history, tool usage, governance violations, cost attribution, and activity timeline. The single place to investigate what any individual has been doing on the platform.",
             "users",
         )),
-        "users-sessions" => Some((
-            "<strong>User Sessions</strong> lists every active and recent authentication session across the platform &mdash; user, IP, device, issue time, last seen, and revoke controls. Use it to audit account access and force logouts when needed.",
+        "sessions" => Some((
+            "<strong>Sessions</strong> lists every interactive run on the platform &mdash; who drove it, which group and project it is attributed to, how long it lasted, and what it cost. Open one to see its contexts, traces, and requests side by side.",
             "users",
         )),
         "users-ip-bans" => Some((

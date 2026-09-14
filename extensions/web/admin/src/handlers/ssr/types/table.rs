@@ -14,9 +14,9 @@
 
 use serde::Serialize;
 
-// Why: One sortable column header, as `components/sort-header` reads it.
+/// One sortable column header, as `components/sort-header` reads it.
 #[derive(Debug, Clone, Serialize)]
-pub(crate) struct SortHeaderView {
+pub struct SortHeaderView {
     pub label: &'static str,
     pub class: &'static str,
     // Why: the column explanation lives on the `th` because the row-wide link

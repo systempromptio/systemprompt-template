@@ -12,18 +12,18 @@ pub(super) struct HistoryPageContext {
     pub title: &'static str,
     pub search_query: String,
     pub filter_user_id: Option<String>,
-    pub viewer_is_admin: bool,
     pub scope_label: String,
     pub has_rows: bool,
     pub rows: Vec<HistoryRowView>,
     pub show_side: bool,
     pub side_toggle_url: String,
+    pub base_url: &'static str,
     pub pagination: Pagination,
     pub breadcrumbs: Vec<BreadcrumbView>,
 }
 
 #[derive(Debug, Serialize)]
-pub(super) struct HistoryRowView {
+pub(crate) struct HistoryRowView {
     pub source: &'static str,
     pub is_gateway: bool,
     pub session_id: Option<SessionId>,
@@ -34,6 +34,7 @@ pub(super) struct HistoryRowView {
     // row instead of the conversation's.
     pub conversation_title: String,
     pub user_id: UserId,
+    pub user_label: String,
     pub is_own: bool,
     pub model: Option<String>,
     pub when_relative: String,

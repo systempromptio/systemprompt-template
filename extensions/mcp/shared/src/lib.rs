@@ -137,3 +137,5 @@ pub async fn record_mcp_access_rejected(pool: &DbPool, server: &str, tool: &str,
         tracing::warn!(error = %e, "Failed to record MCP access rejection (non-fatal)");
     }
 }
+
+pub mod access_policy;

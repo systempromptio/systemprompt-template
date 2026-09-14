@@ -1,8 +1,13 @@
 //! `GET /api/public/bridge/whoami` — the identity envelope the desktop bridge
 //! shows on its account card.
 //!
-//! Adds the account's configured group/project membership and connected
-//! provider state to core's identity response without changing login methods.
+//! The gateway's stock whoami answers only what core can prove from a JWT and
+//! a `users` row. Everything that makes an Systemprompt sign-in legible — which
+//! ADFS issuer minted the assertion, which AD groups came back on it, the
+//! groups and projects those resolved to — is written by this
+//! repo's ADFS callback and was visible nowhere on the desktop. The bridge is
+//! pointed here instead (`bridge/src/main.rs`), and core forwards the keys it
+//! has no name for verbatim.
 //!
 //! The response deliberately reuses core's own key names for the fields it
 //! knows (`user_id`, `email`, `display_name`, `provider`, `roles`) so they
@@ -112,7 +117,7 @@ pub(crate) async fn bridge_whoami_handler(
         .inspect_err(|e| tracing::warn!(error = %e, "bridge whoami: AD group lookup failed"))
         .unwrap_or_default();
 
-    let is_admin = envelope.roles.iter().any(|r| r == "admin");
+    let is_admin = crate::types::roles_grant_manage(&envelope.roles);
 
     let connections = crate::services::connector_accounts::get_connections(&pool, &user_id).await?;
     Ok(Json(BridgeWhoamiResponse {

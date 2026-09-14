@@ -6,6 +6,7 @@
 //! bookmark shape works on both screens, and so are the queries themselves.
 
 use std::sync::Arc;
+use systemprompt_web_shared::ProjectId;
 
 use axum::Json;
 use axum::extract::{Path, Query, State};
@@ -20,14 +21,14 @@ use crate::repositories::people_usage::breakdown::{
 use crate::repositories::people_usage::{
     DailyRequests, LEADERBOARD_LIMIT, get_scope_usage, list_daily_requests,
 };
-use crate::repositories::scope::{Attribution, ScopeKind, ScopeQuery};
+use crate::repositories::scope::{Attribution, ScopeQuery, ScopeTarget};
 use crate::types::groups::GroupUsageSummary;
 
 use super::super::groups::usage::{UsageQuery, window_days};
 
 #[derive(Debug, Serialize)]
 pub(crate) struct ProjectUsageResponse {
-    pub project_id: String,
+    pub project_id: ProjectId,
     pub range: String,
     pub summary: GroupUsageSummary,
     pub top_models: Vec<ModelUsageRow>,
@@ -37,30 +38,30 @@ pub(crate) struct ProjectUsageResponse {
 
 pub(crate) async fn get_project_usage_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(project_id): Path<String>,
+    Path(project_id): Path<ProjectId>,
     Query(query): Query<UsageQuery>,
 ) -> AdminResult<Response> {
     let (range, days) = window_days(query.range.as_deref());
     let usage = get_scope_usage(
         &pool,
-        &ScopeQuery::new(ScopeKind::Project, Attribution::Member, &project_id, days),
+        &ScopeQuery::new(ScopeTarget::Project(&project_id), Attribution::Member, days),
     )
     .await?;
     let top_models = list_scope_top_models(
         &pool,
-        &ScopeQuery::new(ScopeKind::Project, Attribution::Member, &project_id, days),
+        &ScopeQuery::new(ScopeTarget::Project(&project_id), Attribution::Member, days),
         LEADERBOARD_LIMIT,
     )
     .await?;
     let top_skills = list_scope_top_skills(
         &pool,
-        &ScopeQuery::new(ScopeKind::Project, Attribution::Member, &project_id, days),
+        &ScopeQuery::new(ScopeTarget::Project(&project_id), Attribution::Member, days),
         LEADERBOARD_LIMIT,
     )
     .await?;
     let daily = list_daily_requests(
         &pool,
-        &ScopeQuery::new(ScopeKind::Project, Attribution::Member, &project_id, days),
+        &ScopeQuery::new(ScopeTarget::Project(&project_id), Attribution::Member, days),
     )
     .await?;
     Ok(Json(ProjectUsageResponse {

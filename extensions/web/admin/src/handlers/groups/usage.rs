@@ -24,8 +24,9 @@ use crate::repositories::people_usage::breakdown::{
 use crate::repositories::people_usage::{
     DailyRequests, LEADERBOARD_LIMIT, get_scope_usage, list_daily_requests,
 };
-use crate::repositories::scope::{Attribution, ScopeKind, ScopeQuery};
+use crate::repositories::scope::{Attribution, ScopeQuery, ScopeTarget};
 use crate::types::groups::GroupUsageSummary;
+use systemprompt_web_shared::GroupId;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct UsageQuery {
@@ -34,7 +35,7 @@ pub(crate) struct UsageQuery {
 
 #[derive(Debug, Serialize)]
 pub(crate) struct GroupUsageResponse {
-    pub group_id: String,
+    pub group_id: GroupId,
     pub range: String,
     pub summary: GroupUsageSummary,
     pub top_models: Vec<ModelUsageRow>,
@@ -56,36 +57,36 @@ pub(crate) fn window_days(range: Option<&str>) -> (String, i32) {
 
 pub(crate) async fn get_group_usage_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(group_id): Path<String>,
+    Path(group_id): Path<GroupId>,
     Query(query): Query<UsageQuery>,
 ) -> AdminResult<Response> {
     let (range, days) = window_days(query.range.as_deref());
     let usage = get_scope_usage(
         &pool,
-        &ScopeQuery::new(ScopeKind::Group, Attribution::Member, &group_id, days),
+        &ScopeQuery::new(ScopeTarget::Group(&group_id), Attribution::Member, days),
     )
     .await?;
     let top_models = list_scope_top_models(
         &pool,
-        &ScopeQuery::new(ScopeKind::Group, Attribution::Member, &group_id, days),
+        &ScopeQuery::new(ScopeTarget::Group(&group_id), Attribution::Member, days),
         LEADERBOARD_LIMIT,
     )
     .await?;
     let top_skills = list_scope_top_skills(
         &pool,
-        &ScopeQuery::new(ScopeKind::Group, Attribution::Member, &group_id, days),
+        &ScopeQuery::new(ScopeTarget::Group(&group_id), Attribution::Member, days),
         LEADERBOARD_LIMIT,
     )
     .await?;
     let top_tools = list_scope_top_tools(
         &pool,
-        &ScopeQuery::new(ScopeKind::Group, Attribution::Member, &group_id, days),
+        &ScopeQuery::new(ScopeTarget::Group(&group_id), Attribution::Member, days),
         LEADERBOARD_LIMIT,
     )
     .await?;
     let daily = list_daily_requests(
         &pool,
-        &ScopeQuery::new(ScopeKind::Group, Attribution::Member, &group_id, days),
+        &ScopeQuery::new(ScopeTarget::Group(&group_id), Attribution::Member, days),
     )
     .await?;
     Ok(Json(GroupUsageResponse {

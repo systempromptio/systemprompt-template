@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(SELECT 1 FROM managed_evaluation_attestations WHERE owner_id=$1 AND resource_id=$2 AND revision_id=$3 AND experiment_id=$4 AND bundle_digest=$5 AND evidence_digest=$6 AND source_commit=$7 AND campaign_id=$8)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "cfbd3225f2c3be6741ffc197fd8568e5f90c53e66a1944d3d9998cc61bd3beb5"
+}

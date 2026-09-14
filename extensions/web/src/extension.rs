@@ -6,8 +6,8 @@
 
 use std::sync::Arc;
 
+use crate::SkillsPageConfig;
 use crate::config::BlogConfigValidated;
-use crate::features::FeaturePagesConfig;
 use crate::homepage::HomepageConfig;
 use crate::navigation::NavigationConfig;
 use systemprompt_web_site::config_loader;
@@ -25,9 +25,7 @@ impl WebExtension {
         Self
     }
 
-    // Why: The blog config shared by the link API and content ingestion.
-    //
-    // Backed by [`BlogConfigValidated::cached`], so every consumer sees the
+    // Why: Backed by [`BlogConfigValidated::cached`], so every consumer sees the
     // same load result; a load failure is logged and treated as "no config".
     #[must_use]
     pub fn blog_config() -> Option<Arc<BlogConfigValidated>> {
@@ -54,16 +52,19 @@ impl WebExtension {
     }
 
     #[must_use]
-    pub fn features_config() -> Option<Arc<FeaturePagesConfig>> {
-        config_loader::features_config()
+    pub fn skills_page_config() -> Option<Arc<SkillsPageConfig>> {
+        config_loader::skills_page_config()
     }
-}
 
-register_extension!(WebExtension);
+    #[must_use]
+    pub fn adfs_config() -> Option<Arc<systemprompt_web_admin::AdfsConfig>> {
+        config_loader::adfs_config()
+    }
 
-impl WebExtension {
     #[must_use]
     pub fn salesforce_config() -> Option<Arc<systemprompt_web_admin::SalesforceConfig>> {
         config_loader::salesforce_config()
     }
 }
+
+register_extension!(WebExtension);

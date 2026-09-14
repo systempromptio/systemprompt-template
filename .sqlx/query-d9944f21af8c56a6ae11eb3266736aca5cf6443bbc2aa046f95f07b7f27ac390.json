@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT generation,state,publication_id,revision_id,bundle_digest FROM managed_publication_selections WHERE owner_id=$1 AND resource_id=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_selections",
+            "name": "generation"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "state",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_selections",
+            "name": "state"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "publication_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_selections",
+            "name": "publication_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "revision_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_selections",
+            "name": "revision_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "bundle_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_selections",
+            "name": "bundle_digest"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "d9944f21af8c56a6ae11eb3266736aca5cf6443bbc2aa046f95f07b7f27ac390"
+}

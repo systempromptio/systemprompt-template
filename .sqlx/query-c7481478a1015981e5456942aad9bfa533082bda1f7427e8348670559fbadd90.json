@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT path,asset_digest,content,executable FROM eval_managed_workspace_assets WHERE owner_id=$1 AND workspace_digest=$2 ORDER BY path",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "path",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_managed_workspace_assets",
+            "name": "path"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "asset_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_managed_workspace_assets",
+            "name": "asset_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "content",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "eval_managed_workspace_assets",
+            "name": "content"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "executable",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "eval_managed_workspace_assets",
+            "name": "executable"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c7481478a1015981e5456942aad9bfa533082bda1f7427e8348670559fbadd90"
+}

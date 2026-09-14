@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT a.content AS \"content!: Json<EvidenceArchive>\" FROM eval_execution_artifacts a JOIN eval_executions x ON x.id=a.execution_id JOIN eval_experiments e ON e.id=x.experiment_id WHERE e.owner_id=$1 AND x.id=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "content!: Json<EvidenceArchive>",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "eval_execution_artifacts",
+            "name": "content"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f3db203894d1e352d0558f79d22c0f4761db1a5f629a191114bc2f3a6a43ee57"
+}

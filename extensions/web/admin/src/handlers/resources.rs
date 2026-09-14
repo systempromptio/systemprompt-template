@@ -1,8 +1,10 @@
 //! HTTP handlers for managed resource listings.
 
 use axum::Json;
-use axum::extract::{Extension, Path};
+use axum::extract::{Extension, Path, State};
 use axum::response::{IntoResponse, Response};
+use sqlx::PgPool;
+use std::sync::Arc;
 
 use systemprompt::identifiers::AgentId;
 
@@ -14,27 +16,30 @@ use crate::types::UserContext;
 use super::responses::AgentsListResponse;
 
 pub(crate) async fn list_agents_handler(
+    State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
 ) -> AdminResult<Response> {
     let services_path = shared::get_services_path()?;
     let agents = repositories::config::agents::list_configured_agents(&services_path)
         .map_err(AdminError::internal)?;
+    // Why: `admin`, not `is_console`. The unfiltered list includes
+    // `admin_console`, which a project manager is deliberately not granted;
+    // they get the plugin-filtered view like every other role.
     if user_ctx.is_admin {
         return Ok(Json(AgentsListResponse { agents }).into_response());
     }
-    let plugins =
-        repositories::marketplace::plugins::list_plugins_for_roles(&services_path, &user_ctx.roles)
-            .unwrap_or_else(|e| {
-                tracing::warn!(error = %e, "Failed to list plugins for role filtering");
-                Vec::new()
-            });
-    let visible_ids: std::collections::HashSet<AgentId> = plugins
+    let access = crate::authz::catalog::CatalogAccess::load(&pool, &user_ctx.user_id).await?;
+    let ids = agents
         .iter()
-        .flat_map(|p| p.agents.iter().map(|a| a.id.clone()))
-        .collect();
+        .filter(|a| a.enabled)
+        .map(|a| a.id.to_string())
+        .collect::<Vec<_>>();
+    let allowed = access
+        .allowed(systemprompt_security::authz::EntityKind::Agent, &ids)
+        .await?;
     let filtered: Vec<_> = agents
         .into_iter()
-        .filter(|a| visible_ids.contains(&a.id))
+        .filter(|a| a.enabled && allowed.contains(a.id.as_str()))
         .collect();
     Ok(Json(AgentsListResponse { agents: filtered }).into_response())
 }

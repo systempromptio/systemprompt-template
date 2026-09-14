@@ -2,9 +2,9 @@
 //!
 //! Roles moved off `PUT /users/{id}` onto their own pair of routes because
 //! they are the one field with a rule attached: only a platform admin may
-//! move `platform_admin`, the last one cannot be demoted, and a role the
-//! directory grants cannot be revoked here. A field on a general update
-//! request could not express any of that.
+//! move `platform_admin` or `super_admin`, the last platform admin cannot be
+//! demoted, and a directory role cannot be revoked here. A field on a general
+//! update request could not express any of that.
 //!
 //! What is written is the manual half alone. The effective set on
 //! `users.roles` is recomputed from it and the directory half, so a role AD
@@ -21,7 +21,7 @@ use systemprompt::identifiers::UserId;
 
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::users::{revocation, roles as repo};
-use crate::types::role::{ROLES_MANAGE, authorize_role_change, has_any};
+use crate::types::role::{ROLES_MANAGE, Role, authorize_role_change, has_any};
 use crate::types::{SetUserRolesRequest, UserContext, UserRolesResponse};
 
 pub(crate) async fn get_user_roles_handler(
@@ -74,11 +74,13 @@ pub(crate) async fn set_user_roles_handler(
     repo::set_manual_roles(&pool, &user_id, &manual, &user_ctx.user_id).await?;
     let roles = repo::recompute_roles(&pool, &user_id, None).await?;
 
-    // Why: losing a write-tier role has to take the live credentials with it.
+    // Why: losing admin or executive access must revoke live credentials too.
     // A session minted while they were an admin carries that claim until it
     // expires, so demotion without revocation is a demotion that does not
     // take effect until tomorrow.
-    if has_any(&before, ROLES_MANAGE) && !has_any(&roles, ROLES_MANAGE) {
+    let lost_executive =
+        has_any(&before, &[Role::SuperAdmin]) && !has_any(&roles, &[Role::SuperAdmin]);
+    if (has_any(&before, ROLES_MANAGE) && !has_any(&roles, ROLES_MANAGE)) || lost_executive {
         revocation::revoke_user_access(&pool, &user_id).await?;
     }
 
@@ -93,8 +95,8 @@ pub(crate) async fn set_user_roles_handler(
 }
 
 // Why: duplicates and surrounding space come from a form, not from a rule, so
-// they are cleaned here rather than refused. Role names remain free text;
-// permission changes are checked by `authorize_role_change`.
+// they are cleaned here rather than refused. An unknown role is a rule and is
+// refused by `authorize_role_change`.
 fn normalized(roles: &[String]) -> Vec<String> {
     let mut out: Vec<String> = roles
         .iter()

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE eval_executions SET status='queued',lease_owner=NULL WHERE id=$1 AND status='awaiting_approval'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b0e5058239cdbddb64f20e74b5c9cab57f3ed34f657037be6b02963ae05cd64c"
+}

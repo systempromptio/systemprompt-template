@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_revisions(id,owner_id,resource_id,source_id,snapshot_id,parent_id,digest,manifest,rationale) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(resource_id,digest) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "afad01a473e04950c9bff4011dd5d33c2e789e9300648da86254037af7a0043f"
+}

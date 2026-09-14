@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "sites": [
+      {
+        "cloudId": "eval-north",
+        "name": "[EVAL] North"
+      },
+      {
+        "cloudId": "eval-south",
+        "name": "[EVAL] South"
+      }
+    ],
+    "selected_site": null
+  }
+}

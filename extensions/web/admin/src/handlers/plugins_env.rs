@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt::config::ProfileBootstrap;
 
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{PluginId, UserId};
 
 use crate::error::{AdminError, AdminResult};
 use crate::repositories;
@@ -20,7 +20,7 @@ use super::responses::PluginEnvResponse;
 
 pub(crate) async fn list_plugin_env_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(plugin_id): Path<String>,
+    Path(plugin_id): Path<PluginId>,
     headers: HeaderMap,
     Query(query): Query<UserQuery>,
 ) -> AdminResult<Response> {
@@ -81,13 +81,13 @@ pub fn resolve_principal(
 }
 
 fn load_plugin_variable_defs(
-    plugin_id: &str,
+    plugin_id: &PluginId,
 ) -> Result<Vec<PluginVariableDef>, systemprompt_web_shared::error::MarketplaceError> {
     let services_path =
         ProfileBootstrap::get().map(|p| std::path::PathBuf::from(&p.paths.services))?;
     let config_path = services_path
         .join("plugins")
-        .join(plugin_id)
+        .join(plugin_id.as_str())
         .join("config.yaml");
     if !config_path.exists() {
         return Ok(vec![]);

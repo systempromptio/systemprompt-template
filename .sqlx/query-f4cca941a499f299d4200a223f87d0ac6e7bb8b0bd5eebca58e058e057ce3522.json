@@ -1,0 +1,150 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT m.id AS resource_id,m.resource_key,p.id AS publication_id,p.review_id,p.generation,p.action,p.revision_id,p.bundle_digest,r.reviewer_id,r.limitations,COALESCE(d.status,CASE WHEN o.delivered_at IS NOT NULL THEN 'distributed' ELSE 'approved' END) AS \"distribution_status!\",count(i.id)::BIGINT AS \"installation_receipts!\" FROM managed_publications p JOIN managed_resources m ON m.id=p.resource_id JOIN managed_publication_reviews r ON r.id=p.review_id LEFT JOIN managed_distribution_outbox o ON o.publication_id=p.id LEFT JOIN managed_distribution_deliveries d ON d.outbox_id=o.id LEFT JOIN managed_installation_receipts i ON i.publication_id=p.id WHERE p.owner_id=$1 GROUP BY m.id,m.resource_key,p.id,p.review_id,p.generation,p.action,p.revision_id,p.bundle_digest,r.reviewer_id,r.limitations,d.status,o.delivered_at ORDER BY p.created_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "resource_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_resources",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "resource_key",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_resources",
+            "name": "resource_key"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "publication_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "review_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "review_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "generation"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "action",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "action"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "revision_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "revision_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "bundle_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "bundle_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "reviewer_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_reviews",
+            "name": "reviewer_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "limitations",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_reviews",
+            "name": "limitations"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "distribution_status!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "installation_receipts!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "f4cca941a499f299d4200a223f87d0ac6e7bb8b0bd5eebca58e058e057ce3522"
+}

@@ -9,6 +9,7 @@
 
 use serde::Serialize;
 use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt_web_shared::ProjectId;
 
 use super::super::list_view::Pagination;
 use super::{
@@ -44,7 +45,7 @@ pub(crate) struct ProjectSortHeaderView {
 // Why: one project on the listing.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ProjectListRowView {
-    pub id: String,
+    pub id: ProjectId,
     pub name: String,
     pub href: String,
     pub description: Option<String>,
@@ -184,7 +185,7 @@ pub(crate) struct ProjectSettingsTabView {
 pub(crate) struct ProjectDetailPageData {
     pub page: &'static str,
     pub title: String,
-    pub project_id: String,
+    pub project_id: ProjectId,
     pub project_name: String,
     pub description: Option<String>,
     pub window_label: String,

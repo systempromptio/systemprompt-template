@@ -65,8 +65,7 @@ fn sign(secret: &[u8], user_id: &UserId, version: i32, expires_unix: i64) -> Str
     let exp_b64 = b64.encode(expires_unix.to_string().as_bytes());
     let mut mac_hex = String::with_capacity(mac.len() * 2);
     for b in mac {
-        use std::fmt::Write;
-        _ = write!(mac_hex, "{b:02x}");
+        mac_hex.push_str(&format!("{b:02x}"));
     }
     format!("{uid_b64}:{ver_b64}:{exp_b64}:{mac_hex}")
 }
@@ -110,6 +109,8 @@ pub(crate) async fn issue_share_token_handler(
     State(pool): State<Arc<PgPool>>,
     Path(target_user_id): Path<String>,
 ) -> AdminResult<Response> {
+    // Why: `admin`, not `is_console`. A share token is a signed bearer for
+    // someone else's manifest, so issuing one is credential minting.
     if !user_ctx.is_admin {
         return Err(AdminError::Forbidden("Admin access required".to_owned()));
     }
@@ -205,7 +206,7 @@ fn collect_manifest_sections(
     if let Ok(plugins) = repositories::marketplace::plugins::list_plugin_catalog(services_path) {
         let rows = plugins
             .into_iter()
-            .map(|p| (p.id, p.name, opt_desc(p.description)))
+            .map(|p| (p.id.as_str().to_owned(), p.name, opt_desc(p.description)))
             .collect();
         sections_in.push(("plugin".into(), "Plugins".into(), rows));
     }

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "critical-count",
+  "skill_id": "inspect_ai_requests",
+  "partition": "development",
+  "prompt": "How many issues are in the portfolio?",
+  "expected_behavior": [
+    "Use the exact-query count capability if available.",
+    "Otherwise say count not verified rather than counting a truncated JSON response mentally."
+  ],
+  "fixture": "unverified-count",
+  "assertions": [
+    "verified_count_or_unknown"
+  ]
+}

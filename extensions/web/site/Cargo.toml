@@ -3,16 +3,15 @@ name = "systemprompt-web-site"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
-license.workspace = true
 description = "Public site extension for the systemprompt.io template: pages, guides, and static-site routes for the self-hosted AI governance binary."
 repository.workspace = true
 homepage.workspace = true
 publish = false
 
 [dependencies]
-systemprompt-web-admin = { workspace = true }
 inventory = { workspace = true }
 systemprompt-web-shared = { workspace = true }
+systemprompt-web-admin = { workspace = true }
 # Audit: uses config (profile paths), database, extension, models, template_provider.
 systemprompt = { workspace = true, features = ["database", "config"] }
 serde = { workspace = true }
@@ -22,7 +21,6 @@ async-trait = { workspace = true }
 tracing = { workspace = true }
 sqlx = { workspace = true }
 chrono = { workspace = true }
-url = { workspace = true }
 thiserror = { workspace = true }
 
 [lints]

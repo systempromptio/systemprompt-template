@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "usage-people",
+  "skill_id": "analytics_dashboards",
+  "partition": "development",
+  "prompt": "How many people used AI?",
+  "expected_behavior": [
+    "Distinguish unique users from requests and sessions.",
+    "Use the source that actually measures people."
+  ],
+  "fixture": "adoption",
+  "assertions": [
+    "users_not_requests"
+  ]
+}

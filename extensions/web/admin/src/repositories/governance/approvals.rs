@@ -16,12 +16,12 @@ use chrono::{DateTime, Utc};
 // change what was authorised.
 use serde_json::Value;
 use sqlx::PgPool;
-use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt::identifiers::{CallId, SessionId, UserId};
 
 /// One held call, as the queue renders it.
 #[derive(Debug, Clone)]
 pub struct ApprovalRow {
-    pub call_id: String,
+    pub call_id: CallId,
     pub tool_name: String,
     pub server_name: String,
     pub arguments: Value,
@@ -74,7 +74,7 @@ pub async fn list_approvals_paged(
 ) -> Result<(Vec<ApprovalRow>, i64), sqlx::Error> {
     let rows = sqlx::query_as!(
         ApprovalRow,
-        r#"SELECT a.call_id, a.tool_name, a.server_name, a.arguments, a.args_digest,
+        r#"SELECT a.call_id AS "call_id: CallId", a.tool_name, a.server_name, a.arguments, a.args_digest,
                   a.requested_by AS "requested_by!: UserId",
                   a.session_id AS "session_id: SessionId", a.trace_id,
                   a.rule, a.status, a.approver_id, a.approver_username, a.decided_at,
@@ -115,18 +115,18 @@ pub async fn list_approvals_paged(
 
 pub async fn find_approval(
     pool: &PgPool,
-    call_id: &str,
+    call_id: &CallId,
 ) -> Result<Option<ApprovalRow>, sqlx::Error> {
     sqlx::query_as!(
         ApprovalRow,
-        r#"SELECT a.call_id, a.tool_name, a.server_name, a.arguments, a.args_digest,
+        r#"SELECT a.call_id AS "call_id: CallId", a.tool_name, a.server_name, a.arguments, a.args_digest,
                   a.requested_by AS "requested_by!: UserId",
                   a.session_id AS "session_id: SessionId", a.trace_id,
                   a.rule, a.status, a.approver_id, a.approver_username, a.decided_at,
                   a.decision_note, a.expires_at, a.created_at
            FROM approval_requests a
            WHERE a.call_id = $1"#,
-        call_id,
+        call_id.as_str(),
     )
     .fetch_optional(pool)
     .await
@@ -157,28 +157,30 @@ pub async fn get_approval_stats(pool: &PgPool) -> Result<ApprovalStats, sqlx::Er
 // approvers looking at the same queue is the normal case, and the second write
 // must lose rather than overwrite the first decision — an approval that
 // silently replaced a deny would be the one bug this table exists to prevent.
-#[expect(
-    clippy::too_many_arguments,
-    reason = "page query plumbing; splitting the parameters is tracked in docs/tech-debt.md"
-)]
+/// Who decided a held call, and what they said about it.
+#[derive(Debug, Clone, Copy)]
+pub struct ApprovalVerdict<'a> {
+    pub status: &'a str,
+    pub approver: &'a UserId,
+    pub approver_username: &'a str,
+    pub note: Option<&'a str>,
+}
+
 pub async fn update_approval_decision(
     pool: &PgPool,
-    call_id: &str,
-    status: &str,
-    approver: &UserId,
-    approver_username: &str,
-    note: Option<&str>,
+    call_id: &CallId,
+    verdict: ApprovalVerdict<'_>,
 ) -> Result<u64, sqlx::Error> {
     let result = sqlx::query!(
         "UPDATE approval_requests
             SET status = $2, approver_id = $3, approver_username = $4,
                 decided_at = NOW(), decision_note = $5
           WHERE call_id = $1 AND status = 'pending'",
-        call_id,
-        status,
-        approver.as_str(),
-        approver_username,
-        note,
+        call_id.as_str(),
+        verdict.status,
+        verdict.approver.as_str(),
+        verdict.approver_username,
+        verdict.note,
     )
     .execute(pool)
     .await?;

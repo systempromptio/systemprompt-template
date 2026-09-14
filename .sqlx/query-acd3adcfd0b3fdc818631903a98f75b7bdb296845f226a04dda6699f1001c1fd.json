@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO eval_execution_capabilities(token_hash,execution_id,worker_id,session_id,fencing_token,expires_at) SELECT $1,$2,$3,$4,$5,LEAST(x.deadline_at,NOW()+INTERVAL '31 minutes') FROM eval_executions x WHERE x.id=$2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "acd3adcfd0b3fdc818631903a98f75b7bdb296845f226a04dda6699f1001c1fd"
+}

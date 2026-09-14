@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT entity_id AS \"entity_id: MarketplaceId\" FROM access_control_rules\n         WHERE entity_type = 'marketplace' AND rule_type = $1 AND rule_value = $2\n           AND access = 'allow' ORDER BY entity_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "entity_id: MarketplaceId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "access_control_rules",
+            "name": "entity_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1e2d8ff86a3ba46f206656608c02a3683524fbd39a614995d5b00cf1ef837f9a"
+}

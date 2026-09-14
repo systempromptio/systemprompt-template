@@ -13,6 +13,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt_web_shared::GroupId;
 
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::groups::{crud, mappings as repo};
@@ -20,13 +21,13 @@ use crate::types::groups::{AddAdMappingRequest, GroupAdMappingRow};
 
 #[derive(Debug, Serialize)]
 pub(crate) struct ListAdMappingsResponse {
-    pub group_id: String,
+    pub group_id: GroupId,
     pub mappings: Vec<GroupAdMappingRow>,
 }
 
 pub(crate) async fn list_group_ad_mappings_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(group_id): Path<String>,
+    Path(group_id): Path<GroupId>,
 ) -> AdminResult<Response> {
     let mappings = repo::list_group_ad_mappings(&pool, &group_id).await?;
     Ok(Json(ListAdMappingsResponse { group_id, mappings }).into_response())
@@ -34,7 +35,7 @@ pub(crate) async fn list_group_ad_mappings_handler(
 
 pub(crate) async fn add_group_ad_mapping_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(group_id): Path<String>,
+    Path(group_id): Path<GroupId>,
     Json(body): Json<AddAdMappingRequest>,
 ) -> AdminResult<Response> {
     require_group(&pool, &group_id).await?;
@@ -50,13 +51,13 @@ pub(crate) async fn add_group_ad_mapping_handler(
 
 pub(crate) async fn delete_group_ad_mapping_handler(
     State(pool): State<Arc<PgPool>>,
-    Path((group_id, ad_group)): Path<(String, String)>,
+    Path((group_id, ad_group)): Path<(GroupId, String)>,
 ) -> AdminResult<Response> {
     repo::delete_group_ad_mapping(&pool, &group_id, &ad_group).await?;
     Ok((StatusCode::NO_CONTENT, ()).into_response())
 }
 
-async fn require_group(pool: &PgPool, group_id: &str) -> AdminResult<()> {
+async fn require_group(pool: &PgPool, group_id: &GroupId) -> AdminResult<()> {
     if crud::find_group(pool, group_id).await?.is_none() {
         return Err(AdminError::NotFound(format!("Group {group_id} not found")));
     }

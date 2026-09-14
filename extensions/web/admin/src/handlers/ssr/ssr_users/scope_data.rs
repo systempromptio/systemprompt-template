@@ -40,6 +40,9 @@ pub(super) async fn group_choices(pool: &PgPool, user_id: &UserId) -> Vec<Member
         let source = if is_held {
             let members = repositories::groups::members::list_group_members(pool, &group.id)
                 .await
+                .inspect_err(
+                    |e| tracing::warn!(error = %e, "user detail: group members unavailable"),
+                )
                 .unwrap_or_default();
             members
                 .iter()
@@ -49,7 +52,7 @@ pub(super) async fn group_choices(pool: &PgPool, user_id: &UserId) -> Vec<Member
             "manual"
         };
         out.push(MembershipChoiceView {
-            id: group.id,
+            id: group.id.as_str().to_owned(),
             name: group.name,
             held: is_held,
             source,
@@ -72,7 +75,7 @@ pub(super) async fn project_choices(pool: &PgPool, user_id: &UserId) -> Vec<Memb
         .map(|project| {
             let is_held = held.iter().any(|id| id == &project.id);
             MembershipChoiceView {
-                id: project.id,
+                id: project.id.as_str().to_owned(),
                 name: project.name,
                 held: is_held,
                 source: "manual",
@@ -86,22 +89,13 @@ pub(super) async fn project_choices(pool: &PgPool, user_id: &UserId) -> Vec<Memb
 // than filtered here so the template can decide whether to render it at all —
 // only a platform admin may see or grant it.
 pub(super) fn role_choices(held: &[String]) -> Vec<RoleChoiceView> {
-    let mut ids: Vec<String> = crate::types::Role::ALL
+    crate::types::Role::ALL
         .iter()
-        .map(|r| r.as_str().to_owned())
-        .chain(held.iter().cloned())
-        .collect();
-    ids.sort();
-    ids.dedup();
-    ids.into_iter()
-        .map(|id| {
-            let role = id.parse::<crate::types::Role>().ok();
-            RoleChoiceView {
-                label: role.map_or_else(|| id.clone(), |r| r.label().to_owned()),
-                held: held.contains(&id),
-                platform_only: id == "platform_admin",
-                id,
-            }
+        .map(|role| RoleChoiceView {
+            id: role.as_str().to_owned(),
+            label: role.label().to_owned(),
+            held: held.iter().any(|r| r == role.as_str()),
+            platform_only: matches!(role, crate::types::Role::PlatformAdmin),
         })
         .collect()
 }

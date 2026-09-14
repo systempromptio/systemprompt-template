@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT specification AS \"specification!: Json<SourceSpec>\" FROM managed_sources WHERE owner_id=$1 AND id=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "specification!: Json<SourceSpec>",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "managed_sources",
+            "name": "specification"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "246d9a30771878ef02435de6546cc426704bc08da0f522214f049f13a1968351"
+}

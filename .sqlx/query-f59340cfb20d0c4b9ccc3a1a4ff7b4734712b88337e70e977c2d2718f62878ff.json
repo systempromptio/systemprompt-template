@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO eval_execution_cleanup(execution_id,container_id,network_id,status,attempts,last_error) VALUES($1,$2,$3,$4,1,$5) ON CONFLICT(execution_id) DO UPDATE SET container_id=EXCLUDED.container_id,network_id=EXCLUDED.network_id,status=EXCLUDED.status,attempts=eval_execution_cleanup.attempts+1,last_error=EXCLUDED.last_error,updated_at=NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f59340cfb20d0c4b9ccc3a1a4ff7b4734712b88337e70e977c2d2718f62878ff"
+}

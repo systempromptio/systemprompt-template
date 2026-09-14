@@ -9,6 +9,7 @@ use serde::Serialize;
 
 use super::{BASE_URL, GovernanceQuery};
 use crate::handlers::ssr::list_view::{PageWindow, Pagination};
+use crate::repositories::governance::decision_log::DecisionSort;
 
 // Why: One `(name, value)` the page's URLs carry forward.
 type Param = (&'static str, String);
@@ -32,6 +33,7 @@ fn params(query: &GovernanceQuery) -> Vec<Param> {
     push("category", query.category.as_ref());
     push("blocked", query.blocked.as_ref());
     push("q", query.q.as_ref());
+    push("attention", query.attention.as_ref());
     push("sort", query.sort.as_ref());
     push("dir", query.dir.as_ref());
     if let Some(page) = query.page.filter(|p| *p > 0) {
@@ -102,19 +104,15 @@ impl ColumnHeader {
     // Why: clicking the active column flips the direction rather than
     // re-sorting the same way, which is the behaviour every table in the
     // console has and the only one a reader will guess.
-    #[expect(
-        clippy::too_many_arguments,
-        reason = "page query plumbing; splitting the parameters is tracked in docs/tech-debt.md"
-    )]
     pub(super) fn sortable(
         label: &'static str,
         class: &'static str,
         key: &'static str,
         query: &GovernanceQuery,
-        active_key: &str,
-        ascending: bool,
+        sort: DecisionSort,
     ) -> Self {
-        let active = active_key == key;
+        let ascending = sort.ascending;
+        let active = sort.key == key;
         let next = if active && ascending { "desc" } else { "asc" };
         Self {
             label,

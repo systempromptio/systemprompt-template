@@ -1,0 +1,53 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT skill,session_id,attribution_status FROM analysis_skill_version_events WHERE invocation_id=$1 AND user_id=$2 AND traffic_class='production'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "skill",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "skill"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "session_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "attribution_status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "attribution_status"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "20ce8ea4948fafa9b7840974e8078ea417068884c12383de6a93986f5b5f6c38"
+}

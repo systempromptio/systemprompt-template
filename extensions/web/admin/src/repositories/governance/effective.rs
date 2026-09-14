@@ -12,24 +12,13 @@
 //! the rest, so a grant a group rule alone confers shows up here exactly as it
 //! does at the enforcement point.
 
-use std::sync::Arc;
-
-use serde::Serialize;
-use sqlx::PgPool;
-use systemprompt::identifiers::{McpServerId, RouteId, UserId};
-use systemprompt_security::authz::resolver::{ResolveInput, resolve};
-use systemprompt_security::authz::{
-    AccessControlRepository, AccessRule, Decision, EntityKind, EntityRef, MatchedBy,
-    SubjectAttributes, SubjectDimension,
-};
-
-use systemprompt_security::authz::AuthzError;
-
-use crate::authz::{dimensions, subject_attributes_for};
 use crate::error::AdminError;
 use crate::handlers::shared;
 use crate::repositories;
 use crate::repositories::mcp::mcp_servers;
+use serde::Serialize;
+use sqlx::PgPool;
+use systemprompt::identifiers::UserId;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct EntityDecision {
@@ -49,135 +38,45 @@ pub struct EffectivePermissions {
 pub async fn compute_effective_permissions(
     pool: &PgPool,
     user_id: &UserId,
-    user_roles: &[String],
-) -> Result<EffectivePermissions, AuthzError> {
-    let gateway_ids = collect_gateway_ids().unwrap_or_default();
-    let mcp_ids = collect_mcp_ids().unwrap_or_default();
-    let repo = AccessControlRepository::from_pool(Arc::new(pool.clone()));
-    let attributes = subject_attributes_for(pool, user_id).await?;
-    let dimensions = dimensions(pool);
-
-    let gateway_rules = repo
-        .list_rules_bulk(EntityKind::GatewayRoute, &gateway_ids)
-        .await
-        .unwrap_or_default();
-    let mcp_rules = repo
-        .list_rules_bulk(EntityKind::McpServer, &mcp_ids)
-        .await
-        .unwrap_or_default();
-
-    let mut gateway_routes = Vec::with_capacity(gateway_ids.len());
-    for id in &gateway_ids {
-        let rules = gateway_rules.get(id).cloned().unwrap_or_default();
-        let default_included = repo
-            .get_entity(EntityKind::GatewayRoute, id)
-            .await
-            .inspect_err(
-                |e| tracing::warn!(error = %e, id = %id, "effective: gateway get_entity failed"),
-            )
-            .ok()
-            .flatten()
-            .map(|e| e.default_included);
-        gateway_routes.push(decide(DecideArgs {
-            entity: EntityRef::GatewayRoute(RouteId::new(id.clone())),
-            rules: &rules,
-            user_id: user_id.as_str(),
-            user_roles,
-            default_included,
-            attributes: &attributes,
-            dimensions,
-        }));
-    }
-
-    let mut mcp_servers = Vec::with_capacity(mcp_ids.len());
-    for id in &mcp_ids {
-        let rules = mcp_rules.get(id).cloned().unwrap_or_default();
-        let default_included = repo
-            .get_entity(EntityKind::McpServer, id)
-            .await
-            .inspect_err(
-                |e| tracing::warn!(error = %e, id = %id, "effective: mcp get_entity failed"),
-            )
-            .ok()
-            .flatten()
-            .map(|e| e.default_included);
-        mcp_servers.push(decide(DecideArgs {
-            entity: EntityRef::McpServer(McpServerId::new(id.clone())),
-            rules: &rules,
-            user_id: user_id.as_str(),
-            user_roles,
-            default_included,
-            attributes: &attributes,
-            dimensions,
-        }));
-    }
-
-    Ok(EffectivePermissions {
-        gateway_routes,
-        mcp_servers,
-    })
-}
-
-struct DecideArgs<'a> {
-    entity: EntityRef,
-    rules: &'a [AccessRule],
-    user_id: &'a str,
-    user_roles: &'a [String],
-    default_included: Option<bool>,
-    attributes: &'a SubjectAttributes,
-    dimensions: &'a [SubjectDimension],
-}
-
-fn decide(args: DecideArgs<'_>) -> EntityDecision {
-    let DecideArgs {
-        entity,
-        rules,
+    _user_roles: &[String],
+) -> Result<EffectivePermissions, sqlx::Error> {
+    let gateway_ids = collect_gateway_ids().map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
+    let mcp_ids = collect_mcp_ids().map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
+    let rows = |ids: Vec<String>| ids.into_iter().map(|id| (id.clone(), id, None)).collect();
+    let matrix = repositories::users::access_control::resolve_user_matrix(
+        pool,
         user_id,
-        user_roles,
-        default_included,
-        attributes,
-        dimensions,
-    } = args;
-    let uid = UserId::new(user_id);
-    let dec = resolve(ResolveInput {
-        entity: &entity,
-        rules,
-        user_id: &uid,
-        user_roles,
-        default_included,
-        parents: &[],
-        attributes,
-        dimensions,
-    });
-    let (decision, reason) = match dec {
-        Decision::Allow { matched_by } => ("allow".to_owned(), allow_reason(&uid, &matched_by)),
-        Decision::Warn { reason } => ("warn".to_owned(), reason.to_string()),
-        Decision::Deny { reason } => ("deny".to_owned(), reason.to_string()),
-        // Why: a hold is neither reach nor refusal, and flattening it into
-        // either would misreport effective access. The view names it.
-        Decision::Pending { reason } => ("pending".to_owned(), reason.to_string()),
-    };
-    let tab = if entity.kind() == EntityKind::GatewayRoute {
-        "gateway"
-    } else {
-        "mcp"
-    };
-    EntityDecision {
-        entity_id: entity.id_str().to_owned(),
-        decision,
-        reason,
-        matrix_url: format!("/admin/access?tab={tab}#{}", entity.id_str()),
+        vec![
+            ("gateway_route".into(), "Gateway".into(), rows(gateway_ids)),
+            ("mcp_server".into(), "MCP".into(), rows(mcp_ids)),
+        ],
+    )
+    .await?
+    .ok_or(sqlx::Error::RowNotFound)?;
+    let mut result = EffectivePermissions::default();
+    for section in matrix.sections {
+        let tab = if section.entity_type == "gateway_route" {
+            "gateway"
+        } else {
+            "mcp"
+        };
+        let entries = section
+            .rows
+            .into_iter()
+            .map(|row| EntityDecision {
+                matrix_url: format!("/admin/access?tab={tab}#{}", row.entity_id),
+                entity_id: row.entity_id,
+                decision: row.effective,
+                reason: row.source.detail,
+            })
+            .collect();
+        if tab == "gateway" {
+            result.gateway_routes = entries;
+        } else {
+            result.mcp_servers = entries;
+        }
     }
-}
-
-fn allow_reason(user_id: &UserId, matched_by: &MatchedBy) -> String {
-    match matched_by {
-        MatchedBy::UserAllow => format!("user-level allow: {user_id}"),
-        MatchedBy::RoleAllow { role } => format!("role allow: {role}"),
-        MatchedBy::AttributeAllow { rule_type, value } => format!("{rule_type} allow: {value}"),
-        MatchedBy::DefaultIncluded => "default included".to_owned(),
-        MatchedBy::PolicyAllow { policy_id, detail } => format!("policy {policy_id}: {detail}"),
-    }
+    Ok(result)
 }
 
 fn collect_gateway_ids() -> Result<Vec<String>, AdminError> {

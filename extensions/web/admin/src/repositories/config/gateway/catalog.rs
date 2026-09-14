@@ -1,7 +1,7 @@
 //! The set of gateway routes this deployment vouches for.
 //!
-//! Every path that writes a `gateway_route` catalog row — the governance
-//! bootstrap, the roles.yaml ingestion it feeds, and the dashboard handlers —
+//! Every path that writes a `gateway_route` catalog row â the governance
+//! bootstrap, the roles.yaml ingestion it feeds, and the dashboard handlers â
 //! derives the set here, from the same `dispatchable_route_ids` the gateway
 //! dispatches by, so no two of them can disagree about which ids are real. It
 //! includes the synthesized catch-all route, which the gateway YAML never
@@ -33,8 +33,8 @@ pub fn dispatchable_route_ids(services: &ServicesConfig) -> Vec<String> {
 // Why: the same routes as `dispatchable_route_ids`, carrying the metadata the
 // access-control views label and filter by. Read views that decide *access*
 // must use this rather than the gateway YAML `get_gateway_config` reads: that
-// YAML omits the synthesized catch-all, so a grant on it would be invisible —
-// and therefore unreachable — from any surface built on the file.
+// YAML omits the synthesized catch-all, so a grant on it would be invisible â
+// and therefore unreachable â from any surface built on the file.
 pub fn dispatchable_routes(
     services: &ServicesConfig,
 ) -> Result<Vec<GatewayRouteView>, MarketplaceError> {
@@ -49,7 +49,7 @@ pub fn dispatchable_routes(
                 provider: route.provider.as_str().to_owned(),
                 upstream_model: route.upstream_model,
                 extra_headers: route.extra_headers.into_iter().collect(),
-                // Why: read-only projection for the access-control views —
+                // Why: read-only projection for the access-control views â
                 // nothing here is ever written back to the file, so the
                 // editor's passthrough fields are dropped rather than
                 // round-tripped through a second representation.
@@ -64,7 +64,7 @@ pub fn dispatchable_routes(
 // Why: an absent catalog is an error, never an empty list. The per-user
 // catalog and the after-the-fact ACL detector both iterate these routes, so
 // returning nothing would let them report no violations while checking
-// nothing — a governance surface may not fail open and quiet.
+// nothing â a governance surface may not fail open and quiet.
 fn missing_gateway() -> MarketplaceError {
     MarketplaceError::Internal(
         "no gateway configuration in the services tree — expected a `gateway:` block in \
@@ -74,10 +74,7 @@ fn missing_gateway() -> MarketplaceError {
 }
 
 pub fn dispatchable_routes_from_services() -> Result<Vec<GatewayRouteView>, MarketplaceError> {
-    dispatchable_routes(
-        ServicesBootstrap::get()
-            .map_err(|e| MarketplaceError::config_file("services/config/config.yaml", e))?,
-    )
+    dispatchable_routes(ServicesBootstrap::get()?)
 }
 
 // Why: the routes a client may name directly. A provider declared
@@ -113,14 +110,11 @@ pub fn retain_client_facing(
 }
 
 pub fn client_facing_routes_from_services() -> Result<Vec<GatewayRouteView>, MarketplaceError> {
-    client_facing_routes(
-        ServicesBootstrap::get()
-            .map_err(|e| MarketplaceError::config_file("services/config/config.yaml", e))?,
-    )
+    client_facing_routes(ServicesBootstrap::get()?)
 }
 
 // Why: an empty set is a services tree without a gateway, not a declaration
-// that no route exists — enforcing it would reject every route grant in
+// that no route exists â enforcing it would reject every route grant in
 // roles.yaml. Such a tree enforces nothing, and the boot job likewise leaves
 // its catalog untouched.
 #[must_use]
@@ -133,7 +127,6 @@ pub fn registered_routes(route_ids: &[String]) -> RegisteredEntities {
 }
 
 pub fn registered_routes_from_services() -> Result<RegisteredEntities, MarketplaceError> {
-    let services = ServicesBootstrap::get()
-        .map_err(|e| MarketplaceError::config_file("services/config/config.yaml", e))?;
+    let services = ServicesBootstrap::get()?;
     Ok(registered_routes(&dispatchable_route_ids(services)))
 }

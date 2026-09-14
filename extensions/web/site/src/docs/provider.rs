@@ -1,6 +1,5 @@
 //! Runtime page data provider for documentation routes.
 
-use std::fmt::Write;
 
 use crate::format::format_date;
 use async_trait::async_trait;
@@ -111,10 +110,7 @@ impl DocsPageDataProvider {
             }
             first = false;
 
-            // Why: `fmt::Write` for `String` never returns `Err`; the result is
-            // genuinely discardable.
-            write!(
-                result,
+            result.push_str(&format!(
                 r#"<a href="{}" class="docs-card">
   <h3 class="docs-card-title">{}</h3>
   <p class="docs-card-description">{}</p>
@@ -122,8 +118,7 @@ impl DocsPageDataProvider {
                 html_escape(&child.url),
                 html_escape(&child.title),
                 html_escape(&child.description)
-            )
-            .ok();
+            ));
         }
 
         if result.is_empty() {

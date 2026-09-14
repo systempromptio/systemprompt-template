@@ -6,7 +6,7 @@ use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
 
-use super::{SalesforceDeps, SalesforceError};
+use super::{SalesforceDeps, SalesforceError, salesforce_private_key};
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::users::extract_mcp_accessor_user;
 use crate::repositories::users::salesforce_identity;
@@ -27,8 +27,6 @@ pub(crate) async fn post_token_request(
     token_url: &str,
     body: String,
 ) -> Result<SalesforceTokenResponse, SalesforceError> {
-    // Why: lint-ok: web-transport — exchanges an authorization code with
-    // Salesforce.
     let resp = reqwest::Client::new()
         .post(token_url)
         .header(
@@ -40,7 +38,11 @@ pub(crate) async fn post_token_request(
         .await?;
     if !resp.status().is_success() {
         let status = resp.status();
-        let body = resp.text().await.unwrap_or_default();
+        let body = resp
+            .text()
+            .await
+            .inspect_err(|e| tracing::warn!(error = %e, "salesforce token: error body unreadable"))
+            .unwrap_or_default();
         return Err(SalesforceError::TokenEndpoint { status, body });
     }
     Ok(resp.json().await?)
@@ -69,7 +71,8 @@ pub(crate) async fn salesforce_token_handler(
     // into "connect the provider account first", which is the actionable
     // message; a mint attempt with the wrong `sub` would fail opaquely instead.
     let Some(username) =
-        salesforce_identity::find_username(&deps.write_pool, &session.user_id).await?
+        salesforce_identity::find_username(&deps.write_pool, &session.user_id, "salesforce")
+            .await?
     else {
         return Err(AdminError::NotFound(
             "Salesforce account not linked".to_owned(),
@@ -78,7 +81,10 @@ pub(crate) async fn salesforce_token_handler(
 
     // Why: not `?` — a mint failure is an upstream fault. 502 says Salesforce
     // refused, where a 500 would blame this server for Salesforce being down.
-    let fresh = salesforce_jwt_bearer::get_token(&deps.config, &username)
+    let private_key = salesforce_private_key().ok_or_else(|| {
+        AdminError::Unavailable("Salesforce signing key not configured".to_owned())
+    })?;
+    let fresh = salesforce_jwt_bearer::get_token(&deps.config, &username, &private_key)
         .await
         // Why: lint-ok: error-adapt — deliberate 502 re-classification, see above
         .map_err(|e| AdminError::Upstream(format!("Salesforce token mint failed: {e}")))?;

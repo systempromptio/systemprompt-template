@@ -1,5 +1,10 @@
 //! Walks one thread's canonical history into turns and steps.
 //!
+//! The canonical history is the stored message array of the thread's latest
+//! request that has one — the gateway persists the whole array on every
+//! request, so the newest is the complete transcript and everything before it
+//! is a prefix.
+//!
 //! A `user` row starts a turn unless the assistant row before it carried a
 //! tool use — then it is that tool's result and folds into the pending tool
 //! step. An `assistant` row becomes a text step (when any text survives the
@@ -54,9 +59,14 @@ impl<'a, 'c> ThreadBuilder<'a, 'c> {
 
     pub(super) fn build(mut self, index: usize, reqs: &[&'a ContextRequestRow]) -> ThreadView {
         let empty: Vec<&ContextMessageRow> = Vec::new();
+        // Why: the latest request that actually retained a history, not simply
+        // the latest request. Message inserts are best-effort and warn-only, so
+        // a failed or half-written final request would otherwise blank a thread
+        // whose earlier requests hold the whole transcript.
         let canonical = reqs
-            .last()
-            .and_then(|last| self.messages.get(last.id.as_str()))
+            .iter()
+            .rev()
+            .find_map(|r| self.messages.get(r.id.as_str()))
             .unwrap_or(&empty);
         let attributed = self.attribute(reqs, canonical);
 

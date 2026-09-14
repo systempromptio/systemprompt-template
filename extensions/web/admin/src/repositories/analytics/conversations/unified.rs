@@ -56,6 +56,7 @@ pub struct HistoryItem<Id = ContextId> {
     pub session_id: Option<SessionId>,
     pub context_id: Option<Id>,
     pub user_id: UserId,
+    pub user_label: String,
     pub title: Option<String>,
     pub preview: Option<String>,
     pub model: Option<String>,
@@ -70,18 +71,26 @@ pub struct HistoryItem<Id = ContextId> {
     pub snippet: Option<String>,
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "every argument is one bound parameter of a compile-time-checked query"
-)]
+/// What narrows one history page: whose conversations, matching what text,
+/// and whether side calls count.
+#[derive(Debug, Clone, Copy)]
+pub struct HistoryFilter<'a> {
+    pub scope_user_ids: Option<&'a [String]>,
+    pub search: Option<&'a str>,
+    pub include_side_calls: bool,
+}
+
 pub async fn list_history_items(
     pool: &PgPool,
-    scope_user_ids: Option<&[String]>,
-    search: Option<&str>,
-    include_side_calls: bool,
+    filter: HistoryFilter<'_>,
     limit: i64,
     offset: i64,
 ) -> Result<(Vec<HistoryItem>, i64), sqlx::Error> {
+    let HistoryFilter {
+        scope_user_ids,
+        search,
+        include_side_calls,
+    } = filter;
     let query = search.map(str::trim).filter(|q| !q.is_empty());
     let pattern = query.map(|q| format!("%{}%", q.replace('\\', "\\\\").replace('%', "\\%")));
     let legacy = ContextId::legacy();
@@ -117,6 +126,7 @@ pub async fn list_history_items(
                     })
                     .transpose()?,
                 user_id: r.user_id,
+                user_label: r.user_label,
                 title: r.title,
                 preview: r.preview,
                 model: r.model,

@@ -21,6 +21,7 @@ mod view_models;
 mod visibility;
 
 use std::sync::Arc;
+use systemprompt::identifiers::PluginId;
 
 use axum::extract::{Extension, Path, State};
 use axum::response::Response;
@@ -94,7 +95,12 @@ pub(crate) async fn plugins_page(
         },
     );
     let search = query.q.unwrap_or_default();
-    plugins.retain(|p| matches(&[&p.id, &p.name, &p.description, &p.category], &search));
+    plugins.retain(|p| {
+        matches(
+            &[p.id.as_str(), &p.name, &p.description, &p.category],
+            &search,
+        )
+    });
     let sort_key = query.sort.unwrap_or_else(|| "name".to_owned());
     let dir = direction(query.dir.as_deref());
     match sort_key.as_str() {
@@ -146,14 +152,14 @@ pub(crate) async fn plugin_detail_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Path(plugin_id): Path<String>,
+    Path(plugin_id): Path<PluginId>,
 ) -> AdminHtmlResult<Response> {
     admin_only(&user_ctx)?;
     let path = shared::get_services_path()?;
 
     let catalog = data::load_catalog(&path, &user_ctx.roles);
     let counts = assignment_counts_by_type(&pool, ENTITY_PLUGIN).await;
-    let assignment_count = counts.get(&plugin_id).copied().unwrap_or(0);
+    let assignment_count = counts.get(plugin_id.as_str()).copied().unwrap_or(0);
     let page = view_models::plugin_detail(&catalog, &plugin_id, assignment_count)
         .ok_or_else(|| AdminError::NotFound("No such plugin.".to_owned()))?;
     Ok(render_typed_page(

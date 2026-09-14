@@ -2,7 +2,6 @@
 name = "systemprompt-mcp-shared"
 version.workspace = true
 edition.workspace = true
-license.workspace = true
 authors.workspace = true
 description = "Shared utilities for the systemprompt.io template's bundled Model Context Protocol (MCP) servers."
 repository.workspace = true
@@ -10,9 +9,17 @@ homepage.workspace = true
 publish = false
 
 [dependencies]
-systemprompt = { workspace = true }
+# Audit: uses database, identifiers, models (execution context), traits (ExtensionError) — requires `full`.
+systemprompt = { workspace = true, features = ["full"] }
 sqlx = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+glob = { workspace = true }
+chrono = { workspace = true }
+axum = { workspace = true }
+reqwest = { workspace = true }
+thiserror = { workspace = true }
 tracing = { workspace = true }
 
 [lints]

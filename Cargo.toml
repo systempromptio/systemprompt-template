@@ -9,6 +9,7 @@ members = [
     "extensions/web/jobs",
     "extensions/mcp/systemprompt",
     "extensions/mcp/shared",
+    "extensions/evaluator/relay",
 ]
 # The test workspace under tests/ is a separate workspace so it never compiles
 # when these extension crates are consumed as dependencies. Run it explicitly:
@@ -29,7 +30,7 @@ opt-level = "z"
 [workspace.package]
 edition = "2024"
 rust-version = "1.96"
-version = "0.49.0"
+version = "0.52.0"
 authors = ["systemprompt.io <ed@systemprompt.io>"]
 license = "MIT"
 repository = "https://github.com/systempromptio/systemprompt-template"
@@ -40,8 +41,9 @@ documentation = "https://systemprompt.io/documentation"
 # ============================================
 # CORE FACADE (single dependency for all systemprompt-core)
 # ============================================
-systemprompt = { version = "0.49.0", default-features = false, features = ["core", "database", "config"] }
-systemprompt-security = { version = "0.49.0" }
+systemprompt = { version = "0.52.0", default-features = false, features = ["core", "database", "config"] }
+systemprompt-security = { version = "0.52.0" }
+systemprompt-extension = { version = "0.52.0" }
 
 # ============================================
 # LOCAL EXTENSIONS
@@ -53,15 +55,18 @@ systemprompt-web-content = { path = "extensions/web/content" }
 systemprompt-web-site = { path = "extensions/web/site" }
 systemprompt-web-jobs = { path = "extensions/web/jobs" }
 systemprompt-mcp-shared = { path = "extensions/mcp/shared" }
+serde_jcs = "0.1"
 
 # Core runtime dependencies
 tokio = { version = "1.49", features = ["rt-multi-thread", "net", "io-util", "time", "sync", "macros", "fs", "process", "signal"] }
 anyhow = "1.0"
+clap = { version = "4.6", features = ["derive"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = "0.1"
 async-trait = "0.1"
 
 # Database
-sqlx = { version = "0.9", features = ["runtime-tokio", "tls-rustls-ring-webpki", "sqlite", "postgres", "migrate", "chrono", "rust_decimal"] }
+sqlx = { version = "0.9", features = ["runtime-tokio", "tls-rustls-ring-webpki", "macros", "sqlite", "postgres", "migrate", "chrono", "rust_decimal", "json"] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -76,15 +81,19 @@ shell-words = "1.1"
 axum = "0.8"
 tower = { version = "0.5", features = ["util"] }
 tower-http = { version = "0.6", features = ["cors", "trace", "fs", "normalize-path"] }
+reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "rustls"] }
 
 # Utilities
 chacha20poly1305 = "0.10"
 schemars = { version = "1.0", features = ["derive"] }
 inventory = "0.3"
 walkdir = "2.0"
+glob = "0.3"
 tempfile = "3.0"
 url = "2.5"
 urlencoding = "2.1"
+jsonwebtoken = "10"
+saml = { version = "0.0.1-alpha.2", default-features = false, features = ["rsa-sha", "xmlenc"] }
 
 # Security
 rand = "0.9"
@@ -242,43 +251,41 @@ workspace = true
 # sibling at bridge/CORE_REF. The version requirements above must track
 # whatever the patch points at: a patch whose version does not satisfy them is
 # silently ignored and the build falls back to the last published release.
-# COMMENTED: core 0.49.0 is published, so this builds against the crate.
-# Uncomment only for local cross-repo work against an unreleased core, and
-# bump the version requirements above to match it.
-# [patch.crates-io]
-# systemprompt = { path = "../systemprompt-core/systemprompt" }
-# systemprompt-models = { path = "../systemprompt-core/crates/shared/models" }
-# systemprompt-traits = { path = "../systemprompt-core/crates/shared/traits" }
-# systemprompt-identifiers = { path = "../systemprompt-core/crates/shared/identifiers" }
-# systemprompt-extension = { path = "../systemprompt-core/crates/shared/extension" }
-# systemprompt-provider-contracts = { path = "../systemprompt-core/crates/shared/provider-contracts" }
-# systemprompt-client = { path = "../systemprompt-core/crates/shared/client" }
-# systemprompt-template-provider = { path = "../systemprompt-core/crates/shared/template-provider" }
-# systemprompt-database = { path = "../systemprompt-core/crates/infra/database" }
-# systemprompt-events = { path = "../systemprompt-core/crates/infra/events" }
-# systemprompt-security = { path = "../systemprompt-core/crates/infra/security" }
-# systemprompt-config = { path = "../systemprompt-core/crates/infra/config" }
-# systemprompt-logging = { path = "../systemprompt-core/crates/infra/logging" }
-# systemprompt-loader = { path = "../systemprompt-core/crates/infra/loader" }
-# systemprompt-cloud = { path = "../systemprompt-core/crates/infra/cloud" }
-# systemprompt-users = { path = "../systemprompt-core/crates/domain/users" }
-# systemprompt-oauth = { path = "../systemprompt-core/crates/domain/oauth" }
-# systemprompt-files = { path = "../systemprompt-core/crates/domain/files" }
-# systemprompt-analytics = { path = "../systemprompt-core/crates/domain/analytics" }
-# systemprompt-content = { path = "../systemprompt-core/crates/domain/content" }
-# systemprompt-ai = { path = "../systemprompt-core/crates/domain/ai" }
-# systemprompt-mcp = { path = "../systemprompt-core/crates/domain/mcp" }
-# systemprompt-agent = { path = "../systemprompt-core/crates/domain/agent" }
-# systemprompt-marketplace = { path = "../systemprompt-core/crates/domain/marketplace" }
-# systemprompt-templates = { path = "../systemprompt-core/crates/domain/templates" }
-# systemprompt-runtime = { path = "../systemprompt-core/crates/app/runtime" }
-# systemprompt-scheduler = { path = "../systemprompt-core/crates/app/scheduler" }
-# systemprompt-generator = { path = "../systemprompt-core/crates/app/generator" }
-# systemprompt-api = { path = "../systemprompt-core/crates/entry/api" }
-# systemprompt-cli = { path = "../systemprompt-core/crates/entry/cli" }
-# systemprompt-slack = { path = "../systemprompt-core/crates/domain/slack" }
-# systemprompt-teams = { path = "../systemprompt-core/crates/domain/teams" }
-# systemprompt-evaluation = { path = "../systemprompt-core/crates/domain/evaluation" }
+# ACTIVE: core 0.51.0 is unreleased; `next` builds against the sibling checkout.
+[patch.crates-io]
+systemprompt = { path = "../systemprompt-core/systemprompt" }
+systemprompt-models = { path = "../systemprompt-core/crates/shared/models" }
+systemprompt-traits = { path = "../systemprompt-core/crates/shared/traits" }
+systemprompt-identifiers = { path = "../systemprompt-core/crates/shared/identifiers" }
+systemprompt-extension = { path = "../systemprompt-core/crates/shared/extension" }
+systemprompt-provider-contracts = { path = "../systemprompt-core/crates/shared/provider-contracts" }
+systemprompt-client = { path = "../systemprompt-core/crates/shared/client" }
+systemprompt-template-provider = { path = "../systemprompt-core/crates/shared/template-provider" }
+systemprompt-database = { path = "../systemprompt-core/crates/infra/database" }
+systemprompt-events = { path = "../systemprompt-core/crates/infra/events" }
+systemprompt-security = { path = "../systemprompt-core/crates/infra/security" }
+systemprompt-config = { path = "../systemprompt-core/crates/infra/config" }
+systemprompt-logging = { path = "../systemprompt-core/crates/infra/logging" }
+systemprompt-loader = { path = "../systemprompt-core/crates/infra/loader" }
+systemprompt-cloud = { path = "../systemprompt-core/crates/infra/cloud" }
+systemprompt-users = { path = "../systemprompt-core/crates/domain/users" }
+systemprompt-oauth = { path = "../systemprompt-core/crates/domain/oauth" }
+systemprompt-files = { path = "../systemprompt-core/crates/domain/files" }
+systemprompt-analytics = { path = "../systemprompt-core/crates/domain/analytics" }
+systemprompt-content = { path = "../systemprompt-core/crates/domain/content" }
+systemprompt-ai = { path = "../systemprompt-core/crates/domain/ai" }
+systemprompt-mcp = { path = "../systemprompt-core/crates/domain/mcp" }
+systemprompt-agent = { path = "../systemprompt-core/crates/domain/agent" }
+systemprompt-marketplace = { path = "../systemprompt-core/crates/domain/marketplace" }
+systemprompt-templates = { path = "../systemprompt-core/crates/domain/templates" }
+systemprompt-runtime = { path = "../systemprompt-core/crates/app/runtime" }
+systemprompt-scheduler = { path = "../systemprompt-core/crates/app/scheduler" }
+systemprompt-generator = { path = "../systemprompt-core/crates/app/generator" }
+systemprompt-api = { path = "../systemprompt-core/crates/entry/api" }
+systemprompt-cli = { path = "../systemprompt-core/crates/entry/cli" }
+systemprompt-slack = { path = "../systemprompt-core/crates/domain/slack" }
+systemprompt-teams = { path = "../systemprompt-core/crates/domain/teams" }
+systemprompt-evaluation = { path = "../systemprompt-core/crates/domain/evaluation" }
 
 # Published macro dependency compatibility fix; see vendor/README.md.
 [patch.crates-io.proc-macro-error2]

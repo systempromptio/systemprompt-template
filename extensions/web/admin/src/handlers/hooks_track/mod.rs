@@ -17,41 +17,49 @@ pub(crate) mod loc;
 mod processing;
 pub(crate) mod session_summary;
 
-use crate::error::AdminResult;
+use crate::error::{AdminError, AdminResult};
 use crate::event_hub::EventHub;
 use crate::repositories::marketplace::webhook;
-use crate::types::webhook::{HookEventPayload, TrackQuery};
+use crate::types::webhook::HookEventPayload;
 use auth::extract_and_validate_jwt;
 use axum::Json;
-use axum::extract::{Extension, Query, State};
+use axum::extract::{Extension, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
+use sha2::Digest;
 use sqlx::PgPool;
 use std::sync::Arc;
 use systemprompt::ai::AiService;
 use systemprompt::identifiers::{PluginId, SessionId, UserId};
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "axum requires one parameter per extractor; the sixth is the ?plugin_id= binding"
-)]
 pub(crate) async fn handle_hook_track(
     Extension(event_hub): Extension<EventHub>,
     Extension(ai_service): Extension<Option<Arc<AiService>>>,
     State(pool): State<Arc<PgPool>>,
-    Query(query): Query<TrackQuery>,
     headers: HeaderMap,
     // JSON: protocol boundary — the third-party hook envelope, parsed into typed
     // events by `HookEventPayload::from_value` after the raw copy is retained
-    Json(raw): Json<serde_json::Value>,
+    Json(mut raw): Json<serde_json::Value>,
 ) -> AdminResult<Response> {
-    let (user_id, plugin_id, jwt_token) =
-        extract_and_validate_jwt(&headers, query.plugin_id.as_ref().map(PluginId::as_str))?;
+    let (user_id, plugin_id, jwt_token) = extract_and_validate_jwt(&headers)?;
     tracing::trace!(payload = %helpers::sanitize_metadata(&raw), "Hook track received payload");
+    if let Some(event_id) = headers
+        .get("x-ingestion-event-id")
+        .and_then(|v| v.to_str().ok())
+        && let Some(object) = raw.as_object_mut()
+    {
+        object
+            .entry("event_id")
+            .or_insert_with(|| serde_json::Value::String(event_id.to_owned()));
+    }
     let (payload, warnings) = HookEventPayload::from_value(raw);
+    payload
+        .validate_ingestion()
+        .map_err(AdminError::BadRequest)?;
+    payload.delivery_id().map_err(AdminError::BadRequest)?;
     log_payload_warnings(&payload, &warnings);
 
-    let was_inserted = insert_hook_event(&pool, &user_id, &plugin_id, &payload).await;
+    let was_inserted = insert_hook_event(&pool, &user_id, &plugin_id, &payload).await?;
     if !was_inserted {
         tracing::trace!(
             plugin_id = %plugin_id,
@@ -70,6 +78,8 @@ pub(crate) async fn handle_hook_track(
         jwt_token: &jwt_token,
     })
     .await;
+    crate::repositories::dashboard::usage_aggregations::ingestion::drain_ingestion_outbox(&pool)
+        .await?;
     Ok(StatusCode::OK.into_response())
 }
 
@@ -118,19 +128,34 @@ async fn insert_hook_event(
     user_id: &UserId,
     plugin_id: &PluginId,
     payload: &HookEventPayload,
-) -> bool {
+) -> AdminResult<bool> {
     let session_id = SessionId::new(payload.session_id());
     let description = description::generate_description(payload);
     let prompt_preview = helpers::generate_prompt_preview(payload);
-    let dedup_key = dedup::compute_dedup_key(user_id, &session_id, payload);
+    let dedup_key =
+        dedup::compute_dedup_key(user_id, &session_id, payload).map_err(AdminError::BadRequest)?;
     let content_bytes = helpers::compute_content_bytes(payload);
     let loc_delta = loc::compute_loc_delta(payload);
-    let sanitized_metadata = helpers::sanitize_metadata(&payload.raw);
+    let mut sanitized_metadata = helpers::sanitize_metadata(&payload.raw);
+    let mut content = payload.raw.clone();
+    if let Some(object) = content.as_object_mut() {
+        object.remove("event_id");
+    }
+    let digest = hex::encode(sha2::Sha256::digest(
+        serde_json::to_vec(&content).map_err(AdminError::internal)?,
+    ));
+    if let Some(object) = sanitized_metadata.as_object_mut() {
+        // JSON: fixed-shape metadata added at the inbound hook protocol boundary.
+        object.insert(
+            "_ingestion_digest".to_owned(),
+            serde_json::Value::String(digest),
+        );
+    }
 
     let usage_params = webhook::UsageEventParams {
+        plugin_id,
         user_id,
         session_id: &session_id,
-        plugin_id: Some(plugin_id),
         event_type: payload.event_name(),
         tool_name: payload.tool_name(),
         metadata: &sanitized_metadata,
@@ -144,11 +169,5 @@ async fn insert_hook_event(
         loc_removed: loc_delta.removed,
     };
 
-    match webhook::insert_plugin_usage_event(pool, &usage_params).await {
-        Ok(inserted) => inserted,
-        Err(e) => {
-            tracing::warn!(error = %e, "Failed to insert hook tracking event");
-            false
-        },
-    }
+    webhook::insert_plugin_usage_event(pool, &usage_params).await
 }

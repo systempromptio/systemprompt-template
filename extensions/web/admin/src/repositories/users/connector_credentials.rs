@@ -104,3 +104,16 @@ pub async fn consume_state(
     .fetch_optional(pool)
     .await
 }
+
+pub async fn delete_all_for_provider(
+    tx: &mut Transaction<'_, Postgres>,
+    provider: &str,
+) -> Result<u64, sqlx::Error> {
+    let result = sqlx::query!(
+        "DELETE FROM mcp_connector_credentials WHERE provider = $1",
+        provider
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(result.rows_affected())
+}

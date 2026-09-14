@@ -1,0 +1,5 @@
+{{#> layout title=title page=page}}{{#*inline "content"}}
+{{> components/page-header title=title subtitle="No provider call or worker assignment has been dispatched."}}
+<dl><dt>Executions</dt><dd>{{estimate.execution_count}}</dd><dt>Conservative maximum</dt><dd>{{estimate.maximum_cost_microdollars}} microdollars</dd><dt>Available</dt><dd>{{estimate.available_microdollars}} microdollars</dd><dt>Matrix digest</dt><dd><code>{{estimate.matrix_digest}}</code></dd></dl>
+{{#if estimate.affordable}}<form method="post" action="/admin/analysis/evaluations/launch"><input type="hidden" name="budget_id" value="{{budget_id}}"><input type="hidden" name="idempotency_key" value="{{idempotency_key}}"><textarea hidden name="spec_json">{{spec_json}}</textarea><button class="sp-btn sp-btn--primary" type="submit">Launch exact frozen matrix</button></form>{{else}}{{> components/notice tone="warning" title="Budget blocked" message="The full matrix exceeds the shared account. The matrix has not been reduced."}}{{/if}}
+{{/inline}}{{/layout}}

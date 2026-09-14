@@ -122,7 +122,7 @@ pub(super) fn request_row_to_json(r: &RequestRow) -> RequestListRowView {
         project_label: r
             .project_name
             .clone()
-            .or_else(|| r.project_id.clone())
+            .or_else(|| r.project_id.as_ref().map(ToString::to_string))
             .unwrap_or_else(|| "Unattributed".to_owned()),
         project_url: r
             .project_id
@@ -132,7 +132,7 @@ pub(super) fn request_row_to_json(r: &RequestRow) -> RequestListRowView {
         group_label: r
             .group_name
             .clone()
-            .or_else(|| r.group_id.clone())
+            .or_else(|| r.group_id.as_ref().map(ToString::to_string))
             .unwrap_or_else(|| "Unattributed".to_owned()),
         group_url: r.group_id.as_ref().map(|id| format!("/admin/groups/{id}")),
         group_id: r.group_id.clone(),

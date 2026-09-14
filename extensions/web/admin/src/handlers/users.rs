@@ -16,7 +16,7 @@ use systemprompt::identifiers::{Email, UserId};
 use crate::activity::{self, ActivityEntity, NewActivity};
 use crate::error::{AdminError, AdminResult};
 use crate::repositories;
-use crate::types::{CreateUserRequest, EventsQuery, UpdateUserRequest, UserContext};
+use crate::types::{EventsQuery, UpdateUserRequest, UserContext, UsersQuery};
 
 use super::responses::{EventsListResponse, UsersListResponse};
 
@@ -76,8 +76,7 @@ pub(crate) fn extract_token_from_headers(headers: &HeaderMap) -> Result<String, 
         .get("cookie")
         .ok_or_else(|| AdminError::Unauthorized("No cookie or Authorization header".to_owned()))?
         .to_str()
-        // Why: lint-ok: error-adapt — header parse error is context only, no source to keep
-        .map_err(|e| AdminError::Unauthorized(format!("Invalid cookie header: {e}")))?;
+        .map_err(AdminError::unauthenticated)?;
 
     let token = cookie_header
         .split(';')
@@ -101,10 +100,18 @@ pub(crate) async fn dashboard_handler(State(pool): State<Arc<PgPool>>) -> AdminR
     Ok(Json(data).into_response())
 }
 
-pub(crate) async fn list_users_handler(State(pool): State<Arc<PgPool>>) -> AdminResult<Response> {
-    let users =
-        repositories::users::queries::list_users(&pool, &repositories::scope::SubjectScope::All)
-            .await?;
+pub(crate) async fn list_users_handler(
+    State(pool): State<Arc<PgPool>>,
+    Extension(user_ctx): Extension<UserContext>,
+    Query(query): Query<UsersQuery>,
+) -> AdminResult<Response> {
+    let request = repositories::scope::ScopeRequest::from_query(
+        &user_ctx,
+        query.group.as_deref(),
+        query.project.as_deref(),
+    );
+    let scope = repositories::scope::membership::get_subject_scope(&pool, &request).await?;
+    let users = repositories::users::queries::list_users(&pool, &scope).await?;
     Ok(Json(UsersListResponse { users }).into_response())
 }
 
@@ -126,32 +133,6 @@ pub(crate) async fn user_usage_handler(
     let user_id = UserId::new(user_id_raw);
     let events = repositories::users::queries::list_user_usage(&pool, &user_id).await?;
     Ok(Json(EventsListResponse { events }).into_response())
-}
-
-pub(crate) async fn create_user_handler(
-    State(pool): State<Arc<PgPool>>,
-    Extension(user_ctx): Extension<UserContext>,
-    Json(body): Json<CreateUserRequest>,
-) -> AdminResult<Response> {
-    if !user_ctx.is_admin {
-        return Err(AdminError::Forbidden("Admin access required".to_owned()));
-    }
-    let user = repositories::users::mutations::create_user(&pool, &body).await?;
-    let p = Arc::clone(&pool);
-    let uid = user_ctx.user_id.clone();
-    let new_user_id = user.user_id.clone();
-    let name = user
-        .display_name
-        .clone()
-        .unwrap_or_else(|| user.user_id.as_str().to_owned());
-    tokio::spawn(async move {
-        activity::record(
-            &p,
-            NewActivity::entity_created(&uid, ActivityEntity::User, new_user_id.as_str(), &name),
-        )
-        .await;
-    });
-    Ok((StatusCode::CREATED, Json(user)).into_response())
 }
 
 pub(crate) async fn update_user_handler(

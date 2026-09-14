@@ -24,9 +24,10 @@ use sqlx::PgPool;
 
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::handlers::ssr::list_view::PageWindow;
-use crate::handlers::ssr::types::BreadcrumbView;
+use crate::handlers::ssr::types::{BreadcrumbView, FilterChipView};
 use crate::repositories::devices::pats::CredentialQuery;
 use crate::repositories::devices::sessions::SessionQuery;
+use crate::repositories::devices::stats::FleetStats;
 use crate::repositories::devices::{sessions, stats};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -38,7 +39,7 @@ mod data;
 mod view;
 
 use columns::{BRIDGE_COLUMNS, CERT_COLUMNS, LINK_COLUMNS, PAT_COLUMNS};
-use context::DevicesPageContext;
+use context::{DevicesPageContext, UserGroupView};
 use view::ColumnSpec;
 
 pub(crate) const BASE_URL: &str = "/admin/devices";
@@ -149,10 +150,80 @@ fn resolve_state(raw: Option<&str>) -> &'static str {
     }
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "one page assembly per handler; splitting is tracked in docs/tech-debt.md"
-)]
+// Why: the listing columns are decided by the tab, so the page reads one tab's
+// rows and never pays for the other three.
+async fn load_tab_rows(
+    pool: &PgPool,
+    tab: Tab,
+    query: &DevicesQuery,
+    listing: Listing,
+) -> (Vec<UserGroupView>, i64) {
+    let Listing {
+        state,
+        sort,
+        dir,
+        offset,
+        can_manage,
+    } = listing;
+    match tab {
+        Tab::Bridges => {
+            data::load_sessions(
+                pool,
+                SessionQuery {
+                    stale_only: query.stale.as_deref() == Some("1"),
+                    sort,
+                    dir,
+                    limit: PAGE_SIZE,
+                    offset,
+                },
+            )
+            .await
+        },
+        Tab::Pats | Tab::Certs => {
+            let credentials = CredentialQuery {
+                state,
+                sort,
+                dir,
+                limit: PAGE_SIZE,
+                offset,
+            };
+            if tab == Tab::Pats {
+                credentials::load_pats(pool, credentials, can_manage).await
+            } else {
+                credentials::load_certs(pool, credentials, can_manage).await
+            }
+        },
+        Tab::Links => credentials::load_links(pool, sort, dir, PAGE_SIZE, offset).await,
+    }
+}
+
+// Why: a pending link has no state to filter on. It is waiting or it has
+// expired, and both are already listed.
+fn filter_chips(
+    query: &DevicesQuery,
+    tab: Tab,
+    state: &'static str,
+    fleet: &FleetStats,
+) -> Vec<FilterChipView> {
+    match tab {
+        Tab::Bridges => view::build_stale_chips(query, fleet),
+        Tab::Links => Vec::new(),
+        Tab::Pats => view::build_state_chips(query, state, (fleet.pats_total, fleet.pats_active)),
+        Tab::Certs => {
+            view::build_state_chips(query, state, (fleet.certs_total, fleet.certs_active))
+        },
+    }
+}
+
+#[derive(Clone, Copy)]
+struct Listing {
+    state: &'static str,
+    sort: &'static str,
+    dir: &'static str,
+    offset: i64,
+    can_manage: bool,
+}
+
 pub(crate) async fn devices_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
@@ -173,8 +244,13 @@ pub(crate) async fn devices_page(
     };
     let state = resolve_state(query.state.as_deref());
     let page = query.page.unwrap_or(0).max(0);
-    let offset = page * PAGE_SIZE;
-    let can_manage = user_ctx.is_admin;
+    let listing = Listing {
+        state,
+        sort,
+        dir,
+        offset: page * PAGE_SIZE,
+        can_manage: user_ctx.is_admin,
+    };
 
     let fleet = stats::get_fleet_stats(&pool)
         .await
@@ -184,32 +260,7 @@ pub(crate) async fn devices_page(
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "bridge version histogram failed"))
         .unwrap_or_default();
-
-    let credentials = CredentialQuery {
-        state,
-        sort,
-        dir,
-        limit: PAGE_SIZE,
-        offset,
-    };
-    let (groups, users_total) = match tab {
-        Tab::Bridges => {
-            data::load_sessions(
-                &pool,
-                SessionQuery {
-                    stale_only: query.stale.as_deref() == Some("1"),
-                    sort,
-                    dir,
-                    limit: PAGE_SIZE,
-                    offset,
-                },
-            )
-            .await
-        },
-        Tab::Pats => credentials::load_pats(&pool, credentials, can_manage).await,
-        Tab::Certs => credentials::load_certs(&pool, credentials, can_manage).await,
-        Tab::Links => credentials::load_links(&pool, sort, dir, PAGE_SIZE, offset).await,
-    };
+    let (groups, users_total) = load_tab_rows(&pool, tab, &query, listing).await;
 
     let shown = groups.len();
     let window = PageWindow::new(
@@ -233,18 +284,7 @@ pub(crate) async fn devices_page(
         stats: view::build_stats(&query, &fleet),
         has_versions: !version_bars.is_empty(),
         versions: version_bars,
-        filters: match tab {
-            Tab::Bridges => view::build_stale_chips(&query, &fleet),
-            // Why: a pending link has no state to filter on. It is waiting or
-            // it has expired, and both are already listed.
-            Tab::Links => Vec::new(),
-            Tab::Pats => {
-                view::build_state_chips(&query, state, (fleet.pats_total, fleet.pats_active))
-            },
-            Tab::Certs => {
-                view::build_state_chips(&query, state, (fleet.certs_total, fleet.certs_active))
-            },
-        },
+        filters: filter_chips(&query, tab, state, &fleet),
         sort_headers: view::build_sort_headers(&query, tab.columns(), sort, dir),
         items_label: tab.items_label(),
         count_label: format!("{users_total} people"),
@@ -252,8 +292,8 @@ pub(crate) async fn devices_page(
         empty_message: tab.empty_message(),
         groups,
         pagination: view::build_pagination(&query, window),
-        can_manage,
-        has_row_actions: can_manage && matches!(tab, Tab::Pats | Tab::Certs),
+        can_manage: listing.can_manage,
+        has_row_actions: listing.can_manage && matches!(tab, Tab::Pats | Tab::Certs),
     };
 
     Ok(super::render_typed_page(

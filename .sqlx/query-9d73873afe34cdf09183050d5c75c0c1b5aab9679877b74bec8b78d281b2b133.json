@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE eval_fixture_test_records SET value=original_value,updated_at=NOW() WHERE owner_id=$1 AND record_key=$2 RETURNING value",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "value",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "eval_fixture_test_records",
+            "name": "value"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9d73873afe34cdf09183050d5c75c0c1b5aab9679877b74bec8b78d281b2b133"
+}

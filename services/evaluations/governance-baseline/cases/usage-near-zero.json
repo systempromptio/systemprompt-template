@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "usage-near-zero",
+  "skill_id": "analytics_dashboards",
+  "partition": "development",
+  "prompt": "Explain this large week-on-week increase.",
+  "expected_behavior": [
+    "Compare absolute spend and matching windows.",
+    "Explain the near-zero baseline rather than presenting a dramatic percentage alone."
+  ],
+  "fixture": "near-zero",
+  "assertions": [
+    "absolute_change_present"
+  ]
+}

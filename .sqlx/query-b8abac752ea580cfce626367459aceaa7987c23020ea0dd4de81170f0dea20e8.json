@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT x.fencing_token FROM eval_executions x JOIN eval_experiments e ON e.id=x.experiment_id WHERE e.owner_id=$1 AND x.id=$2 AND e.status='running' AND x.status='running' AND x.lease_expires_at>NOW() AND x.deadline_at>NOW() FOR UPDATE OF x",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "fencing_token",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "eval_executions",
+            "name": "fencing_token"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b8abac752ea580cfce626367459aceaa7987c23020ea0dd4de81170f0dea20e8"
+}

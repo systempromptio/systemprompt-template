@@ -1,0 +1,51 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT policy AS \"policy!\",\n                  COUNT(*)::BIGINT AS \"total!\",\n                  COUNT(*) FILTER (WHERE decision = 'deny')::BIGINT AS \"denied!\",\n                  COUNT(*) FILTER (WHERE decision = 'warn')::BIGINT AS \"warned!\"\n           FROM governance_decisions\n           WHERE created_at >= $1 AND created_at < $2\n             AND ($3::TEXT[] IS NULL OR user_id = ANY($3))\n           GROUP BY policy\n           ORDER BY COUNT(*) FILTER (WHERE decision IN ('deny', 'warn')) DESC,\n                    COUNT(*) DESC, policy",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "policy!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "policy"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "denied!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "warned!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "4412500800dca63b9aecb0d15ba6488b45fafe71e48e1a8fcf3803ea611cf2cd"
+}

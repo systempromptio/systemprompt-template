@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "issues": [
+      {
+        "key": "COUNT-1",
+        "fields": {
+          "summary": "[EVAL] COUNT-1",
+          "status": {
+            "name": "Open",
+            "statusCategory": {
+              "key": "new"
+            }
+          },
+          "updated": "2026-09-11T08:00:00Z",
+          "assignee": {
+            "displayName": "Test Owner"
+          }
+        }
+      },
+      {
+        "key": "COUNT-2",
+        "fields": {
+          "summary": "[EVAL] COUNT-2",
+          "status": {
+            "name": "Open",
+            "statusCategory": {
+              "key": "new"
+            }
+          },
+          "updated": "2026-09-11T08:00:00Z",
+          "assignee": {
+            "displayName": "Test Owner"
+          }
+        }
+      },
+      {
+        "key": "COUNT-3",
+        "fields": {
+          "summary": "[EVAL] COUNT-3",
+          "status": {
+            "name": "Open",
+            "statusCategory": {
+              "key": "new"
+            }
+          },
+          "updated": "2026-09-11T08:00:00Z",
+          "assignee": {
+            "displayName": "Test Owner"
+          }
+        }
+      }
+    ],
+    "truncated": true,
+    "count_capability": false,
+    "total": null
+  }
+}

@@ -1,7 +1,8 @@
 //! Bootstrap loader: `services/access-control/salesforce.yaml` → DB.
 //!
 //! Projects a downstream-link gate into `access_control_rules`: one allow-row
-//! per listed entity at the dimension's rule type with `rule_value = 'linked'`,
+//! per listed entity at the dimension's rule type with `rule_value` equal to
+//! the entity id — the dimension reports the ids the user is linked for —
 //! and the catalog row forced to `default_included = false`. Runs after the
 //! roles pass so it owns the final word on those entities' defaults — an entity
 //! in one of these files is reachable by a linked user or not at all, whatever
@@ -24,7 +25,7 @@ use systemprompt_security::authz::{
 };
 use systemprompt_web_shared::error::MarketplaceError;
 
-use crate::authz::salesforce::{SALESFORCE_LINKED_VALUE, salesforce_rule_type};
+use crate::authz::salesforce::salesforce_rule_type;
 
 use super::linked_yaml_types::{LinkedGrant, LinkedGrantsDoc, LinkedGrantsLoadReport};
 
@@ -101,9 +102,10 @@ async fn project_grants(
             entity_type: kind,
             entity_id: &grant.entity_id,
             rule_type: rule_type.clone(),
-            rule_value: SALESFORCE_LINKED_VALUE,
+            rule_value: &grant.entity_id,
             access: Access::Allow,
             justification: Some("granted to users who linked the downstream account"),
+            source: systemprompt_security::authz::YAML_SOURCE,
         })
         .await
         .map_err(|e| MarketplaceError::Internal(e.to_string()))?;

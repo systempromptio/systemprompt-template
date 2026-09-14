@@ -1,4 +1,10 @@
-//! `/admin/history` — a user's own conversation history, searchable.
+//! `/admin/history` and `/admin/conversations` — the same searchable listing
+//! at two scopes.
+//!
+//! `/admin/history` is "My conversations" and shows the viewer's own, whoever
+//! is looking. `/admin/conversations` is the admin-gated org-wide listing, and
+//! carries the User column and the per-user filter. One set of rows, one
+//! search, one pagination; [`HistoryView`] is the whole of the difference.
 //!
 //! The one analytics surface a non-admin may reach: every viewer sees their
 //! own conversations, and admin/auditor keep the unrestricted view. Both ways
@@ -13,9 +19,14 @@
 
 mod context;
 mod conversation;
+mod kind;
 mod view;
 
+pub(crate) use context::HistoryRowView;
 pub(crate) use conversation::history_conversation_page;
+pub(crate) use kind::HistoryView;
+pub use view::command_name;
+pub(crate) use view::row_view;
 
 use std::sync::Arc;
 
@@ -28,15 +39,14 @@ use systemprompt::identifiers::{ContextId, SessionId, UserId};
 
 use crate::error::{AdminError, AdminHtmlResult, AdminResult};
 use crate::handlers::ssr::list_view::PageWindow;
-use crate::handlers::ssr::types::BreadcrumbView;
 use crate::repositories::analytics::conversations::{
-    HistoryItem, HistoryScope, history_scope_for, list_history_items, redact_text,
+    HistoryFilter, HistoryItem, HistoryScope, list_history_items, redact_text,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
-use context::{HistoryPageContext, HistoryRowView};
-use view::{build_pagination, detail_url, row_view, scope_label, side_toggle_url};
+use context::HistoryPageContext;
+use view::{build_pagination, detail_url, scope_label, side_toggle_url};
 
 const PAGE_SIZE: i64 = 50;
 
@@ -94,8 +104,9 @@ async fn fetch_history_slice(
     pool: &PgPool,
     user_ctx: &UserContext,
     query: &HistoryQuery,
+    view: HistoryView,
 ) -> Result<HistorySlice, AdminError> {
-    let scope = history_scope_for(user_ctx);
+    let scope = view.scope(user_ctx);
 
     let target = query
         .user_id
@@ -116,9 +127,11 @@ async fn fetch_history_slice(
     let page = query.page.unwrap_or(0).max(0);
     let (items, total) = list_history_items(
         pool,
-        scope_ids.as_deref(),
-        query.q.as_deref(),
-        query.show_side(),
+        HistoryFilter {
+            scope_user_ids: scope_ids.as_deref(),
+            search: query.q.as_deref(),
+            include_side_calls: query.show_side(),
+        },
         PAGE_SIZE,
         page * PAGE_SIZE,
     )
@@ -136,13 +149,13 @@ pub(crate) async fn history_search(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<HistoryQuery>,
 ) -> AdminResult<Response> {
-    let slice = fetch_history_slice(&pool, &user_ctx, &query).await?;
+    let slice = fetch_history_slice(&pool, &user_ctx, &query, HistoryView::Own).await?;
     let items = slice
         .items
         .into_iter()
         .map(|item| HistorySearchItem {
             source: item.source.label(),
-            detail_url: detail_url(&item, &user_ctx),
+            detail_url: detail_url(&item, &user_ctx, HistoryView::Own),
             session_id: item.session_id.clone(),
             context_id: item.context_id.clone(),
             user_id: item.user_id,
@@ -176,12 +189,65 @@ pub(crate) async fn history_page(
     State(pool): State<Arc<PgPool>>,
     Query(query): Query<HistoryQuery>,
 ) -> AdminHtmlResult<Response> {
-    let slice = fetch_history_slice(&pool, &user_ctx, &query).await?;
+    render_listing(
+        &ListingRequest {
+            user_ctx: &user_ctx,
+            mkt_ctx: &mkt_ctx,
+            engine: &engine,
+            pool: &pool,
+        },
+        &query,
+        HistoryView::Own,
+    )
+    .await
+}
+
+pub(crate) async fn conversations_page(
+    Extension(user_ctx): Extension<UserContext>,
+    Extension(mkt_ctx): Extension<MarketplaceContext>,
+    Extension(engine): Extension<AdminTemplateEngine>,
+    State(pool): State<Arc<PgPool>>,
+    Query(query): Query<HistoryQuery>,
+) -> AdminHtmlResult<Response> {
+    render_listing(
+        &ListingRequest {
+            user_ctx: &user_ctx,
+            mkt_ctx: &mkt_ctx,
+            engine: &engine,
+            pool: &pool,
+        },
+        &query,
+        HistoryView::Org,
+    )
+    .await
+}
+
+// Why: the four extensions every SSR handler is handed, gathered so the two
+// listing entry points can share one renderer inside clippy's argument cap.
+struct ListingRequest<'a> {
+    user_ctx: &'a UserContext,
+    mkt_ctx: &'a MarketplaceContext,
+    engine: &'a AdminTemplateEngine,
+    pool: &'a PgPool,
+}
+
+async fn render_listing(
+    req: &ListingRequest<'_>,
+    query: &HistoryQuery,
+    view: HistoryView,
+) -> AdminHtmlResult<Response> {
+    let ListingRequest {
+        user_ctx,
+        mkt_ctx,
+        engine,
+        pool,
+    } = *req;
+    let slice = fetch_history_slice(pool, user_ctx, query, view).await?;
 
     let rows: Vec<HistoryRowView> = slice
         .items
         .iter()
-        .map(|item| row_view(item, &user_ctx))
+        .map(|item| row_view(item, user_ctx, view))
         .collect();
 
     let window = PageWindow::new(
@@ -191,24 +257,26 @@ pub(crate) async fn history_page(
         i64::try_from(rows.len()).unwrap_or(PAGE_SIZE),
         "conversations",
     );
+    let base = view.base_url();
     let data = HistoryPageContext {
-        page: "history",
-        title: "My Conversations",
+        page: view.page_id(),
+        title: view.title(),
         search_query: query.q.clone().unwrap_or_default(),
         filter_user_id: query.user_id.as_ref().map(|u| u.as_str().to_owned()),
-        viewer_is_admin: user_ctx.is_admin,
         scope_label: scope_label(&slice.scope),
         has_rows: !rows.is_empty(),
         rows,
         show_side: query.show_side(),
-        side_toggle_url: side_toggle_url(&query),
-        pagination: build_pagination(&query, window),
-        breadcrumbs: vec![
-            BreadcrumbView::link("Account", "/admin/profile"),
-            BreadcrumbView::current("My conversations"),
-        ],
+        side_toggle_url: side_toggle_url(query, base),
+        base_url: base,
+        pagination: build_pagination(query, window, base),
+        breadcrumbs: view.breadcrumbs(),
     };
     Ok(super::render_typed_page(
-        &engine, "history", &data, &user_ctx, &mkt_ctx,
+        engine,
+        view.template(),
+        &data,
+        user_ctx,
+        mkt_ctx,
     ))
 }

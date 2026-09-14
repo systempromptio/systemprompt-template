@@ -5,17 +5,20 @@ pub mod constants;
 pub mod conversation_analytics;
 mod dashboard;
 mod dashboard_enterprise;
-pub mod departments;
+pub mod doc_links;
 pub mod gateway;
+pub mod governance_labels;
+pub mod groups;
 pub mod hooks_export;
 mod jobs;
 mod plugins;
 mod plugins_config;
 mod plugins_requests;
+pub mod projects;
+pub mod role;
 pub mod session_analysis;
 mod traffic;
 mod user_context;
-pub use departments::{Department, DepartmentInput, DepartmentMember, DepartmentSummary};
 mod users;
 pub mod webhook;
 
@@ -47,7 +50,14 @@ pub use plugins_requests::{
     UpdateMcpRequest, UpdatePluginEnvRequest, UpdatePluginRequest, UpdatePluginSkillsRequest,
     UpdateSkillFileRequest, UserQuery,
 };
-pub use user_context::UserContext;
+pub use role::{
+    ROLES_CONSOLE, ROLES_MANAGE, ROLES_PLATFORM, Role, RoleChangeRefusal, authorize_role_change,
+    has_any, parse_roles,
+};
+pub use user_context::{
+    UserContext, roles_grant_console, roles_grant_developer, roles_grant_manage,
+    roles_grant_platform,
+};
 
 #[derive(Debug, Default, Clone, serde::Deserialize)]
 pub struct IdQuery {
@@ -87,39 +97,23 @@ pub use constants::{
     EVENT_POST_TOOL_USE, EVENT_POST_TOOL_USE_FAILURE, EVENT_SESSION_END, EVENT_SESSION_START,
     EVENT_STOP, GIT_HEAD, GIT_INFO_REFS, GIT_UPLOAD_PACK, HOOK_TYPE_HTTP, IMPORT_TARGET_USER,
     LOG_CONTEXT_GITHUB, MCP_CONFIG_PATH, PERMISSION_MODE_PLAN, PLUGIN_ID_SYSTEMPROMPT,
-    PLUGIN_MANIFEST_PATH, RANGE_7D, RANGE_14D, RANGE_24H, ROLE_ADMIN, SCRIPT_SOURCE_TRACKING,
-    SERVER_TYPE_EXTERNAL, SERVER_TYPE_INTERNAL, SKILL_FILENAME, SOURCE_CUSTOM, SOURCE_USER,
-    STATUS_ACTIVE, STATUS_DELETED, TAB_GOVERNANCE, TAB_MCP, TAB_REPORT, TRAFFIC_RANGE_30D,
-    TRAFFIC_RANGE_TODAY, TRAFFIC_RANGE_YESTERDAY,
+    PLUGIN_MANIFEST_PATH, RANGE_7D, RANGE_14D, RANGE_24H, ROLE_ADMIN, ROLE_DEVELOPER,
+    ROLE_KNOWLEDGE_WORKER, ROLE_PLATFORM_ADMIN, ROLE_PROJECT_MANAGER, ROLE_USER,
+    SCRIPT_SOURCE_TRACKING, SERVER_TYPE_EXTERNAL, SERVER_TYPE_INTERNAL, SKILL_FILENAME,
+    SOURCE_CUSTOM, SOURCE_USER, STATUS_ACTIVE, STATUS_DELETED, TAB_GOVERNANCE, TAB_MCP, TAB_REPORT,
+    TRAFFIC_RANGE_30D, TRAFFIC_RANGE_TODAY, TRAFFIC_RANGE_YESTERDAY,
 };
 pub use conversation_analytics::{
     EntityEffectiveness, EntityUsageSummary, RateSessionRequest, RateSkillRequest,
     SessionEntityLink, SessionRating, SkillEffectiveness, SkillRating,
 };
 pub use users::{
-    ContentBytes, CookieSession, CreateUserRequest, DepartmentStats, DetectedEntity,
-    EventTypeCount, JwtIdentity, SkillSecret, ToolUsageCount, UpdateUserRequest,
-    UpsertSkillSecretRequest, UserBasicInfo, UserDetail, UserIdentityRow, UserSession, UserSummary,
+    ContentBytes, CookieSession, CreateUserRequest, DetectedEntity, EventTypeCount, JwtIdentity,
+    SetUserRolesRequest, SkillSecret, ToolUsageCount, UpdateUserRequest, UpsertSkillSecretRequest,
+    UserBasicInfo, UserDetail, UserIdentityRow, UserRolesResponse, UserSession, UserSummary,
     UserTier, UserUsageEvent, UsersQuery,
 };
 pub use webhook::{
     GovernQuery, HookEventPayload, StatusLinePayload, StatusLineQuery, TrackQuery,
     TranscriptPayload, TranscriptQuery,
-};
-
-pub mod groups;
-pub mod projects;
-pub mod role;
-pub use role::{
-    ROLES_CONSOLE, ROLES_MANAGE, ROLES_PLATFORM, Role, RoleChangeRefusal, authorize_role_change,
-    has_any, parse_roles,
-};
-pub use user_context::{
-    roles_grant_console, roles_grant_developer, roles_grant_manage, roles_grant_platform,
-};
-
-pub use users::{SetUserRolesRequest, UserRolesResponse};
-
-pub use constants::{
-    ROLE_DEVELOPER, ROLE_KNOWLEDGE_WORKER, ROLE_PLATFORM_ADMIN, ROLE_PROJECT_MANAGER, ROLE_USER,
 };

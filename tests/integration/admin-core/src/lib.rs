@@ -1,7 +1,7 @@
 //! Integration coverage for `systemprompt-web-admin`'s repositories against a
-//! live Postgres: user identity and provisioning, departments, access control,
-//! the analytics read models, the dashboard counters, the governance record,
-//! and the trace explorer.
+//! live Postgres: user identity and provisioning, the project split, the
+//! analytics read models, the dashboard counters, the
+//! governance record, and the trace explorer.
 //!
 //! Every test runs against its OWN throwaway database created on the server
 //! named by `DATABASE_URL`, with the real extension schema installed, so the
@@ -9,12 +9,9 @@
 //! database is dropped on completion, and each test self-skips when no test
 //! database URL is configured.
 //!
-//! Installing the real schema also runs the web extension's migrations, and
-//! several of those seed rows — the `Default` department, the marketplace
-//! plans, demonstration `plugin_usage_events`, and the synthetic `system` user
-//! that owns the admin OAuth client. The suite therefore asserts on rows it
-//! inserted and on deltas rather than on a table being empty; `fixtures`
-//! documents the baseline in detail.
+//! Installing the real schema also runs the web extension's seeds, so the
+//! suite asserts on rows it inserted and on deltas rather than on a table
+//! being empty; `fixtures` documents the baseline.
 
 
 #[cfg(test)]
@@ -36,6 +33,11 @@ mod analytics_session_children;
 #[cfg(test)]
 mod analytics_session_detail;
 #[cfg(test)]
+mod analytics_site;
+#[cfg(test)]
+mod analytics_site_code;
+#[cfg(test)]
+mod dashboard_apm;
 #[cfg(test)]
 mod dashboard_counters;
 #[cfg(test)]
@@ -57,21 +59,27 @@ mod dashboard_traffic_queries;
 #[cfg(test)]
 mod dashboard_usage_daily;
 #[cfg(test)]
-mod departments_repository;
-#[cfg(test)]
-mod departments_rollups;
-#[cfg(test)]
-mod evals_repositories;
-#[cfg(test)]
-mod evals_schema_ownership;
-#[cfg(test)]
 mod fixtures;
+#[cfg(test)]
+mod gateway_policy_warn_mode;
 #[cfg(test)]
 mod governance_counts;
 #[cfg(test)]
+mod governance_decision_calls;
+#[cfg(test)]
 mod governance_facets;
 #[cfg(test)]
+mod governance_warn_mode;
+#[cfg(test)]
+mod history_unified;
+#[cfg(test)]
 mod mcp_servers_yaml;
+#[cfg(test)]
+mod req_026_audit_completeness;
+#[cfg(test)]
+mod req_044_access_matrix;
+#[cfg(test)]
+mod scope_attribution;
 #[cfg(test)]
 mod tempdb;
 #[cfg(test)]
@@ -83,6 +91,12 @@ mod traces_spans_resolve;
 #[cfg(test)]
 mod traces_stats;
 #[cfg(test)]
+mod usage_conversation_summary;
+#[cfg(test)]
+mod usage_metrics;
+#[cfg(test)]
+mod usage_reconciliation;
+#[cfg(test)]
 mod users_access_matrix;
 #[cfg(test)]
 mod users_access_matrix_dimensions;
@@ -91,14 +105,51 @@ mod users_access_rules;
 #[cfg(test)]
 mod users_activity_record;
 #[cfg(test)]
+mod users_ai_request_summary;
+
+#[cfg(test)]
+mod authz_group_provider;
+#[cfg(test)]
+mod authz_project_provider;
+#[cfg(test)]
+mod groups_crud;
+#[cfg(test)]
+mod groups_mappings;
+#[cfg(test)]
+mod groups_marketplaces;
+#[cfg(test)]
+mod groups_members;
+#[cfg(test)]
+mod groups_usage;
+#[cfg(test)]
+mod projects_members;
+#[cfg(test)]
+mod users_federated_sso;
+#[cfg(test)]
 mod users_identity;
+#[cfg(test)]
+mod users_identity_envelope;
 #[cfg(test)]
 mod users_lookups;
 #[cfg(test)]
-mod users_registration;
+mod users_manual_roles;
+#[cfg(test)]
+mod users_revocation;
+#[cfg(test)]
+mod users_scope;
 
 #[cfg(test)]
-mod usage_conversation_summary;
+mod dashboard_query_scaling;
 
 #[cfg(test)]
-mod usage_conversation_summary_schema;
+mod gateway_accounting_recovery;
+
+#[cfg(test)]
+mod gateway_owner_isolation;
+
+#[cfg(test)]
+mod managed_attestation_fixture;
+#[cfg(test)]
+mod managed_revisions;
+#[cfg(test)]
+mod optimization_source_binding;

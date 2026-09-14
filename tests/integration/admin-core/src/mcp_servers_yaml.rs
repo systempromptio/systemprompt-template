@@ -136,7 +136,7 @@ fn list_mcp_servers_reads_every_declared_field() {
   salesforce:
     type: remote
     binary: sf-mcp
-    package: '@astound/sf-mcp'
+    package: '@systemprompt/sf-mcp'
     port: 7100
     endpoint: https://sf.example.test/mcp
     description: Salesforce accessor
@@ -154,7 +154,7 @@ fn list_mcp_servers_reads_every_declared_field() {
 
     let server = &servers[0];
     assert_eq!(server.server_type, "remote", "an explicit type wins");
-    assert_eq!(server.package_name, "@astound/sf-mcp");
+    assert_eq!(server.package_name, "@systemprompt/sf-mcp");
     assert_eq!(server.port, 7100);
     assert_eq!(server.description, "Salesforce accessor");
     assert!(!server.enabled);

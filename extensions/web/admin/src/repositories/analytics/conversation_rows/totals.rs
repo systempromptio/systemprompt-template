@@ -33,7 +33,7 @@ pub async fn get_conversation_totals(
     .totals)
 }
 
-pub async fn list_conversation_models(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
+pub async fn list_distinct_models(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"
         SELECT DISTINCT model AS "model!"

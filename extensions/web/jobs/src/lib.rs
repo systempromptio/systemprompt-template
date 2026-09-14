@@ -28,8 +28,12 @@ mod llms_txt;
 mod prerender;
 mod publish;
 mod robots;
+mod scope_defaults;
 mod secret_migration;
 mod sitemap;
+mod usage_anomaly;
+mod usage_retention;
+mod usage_rollup;
 
 pub use error::JobError;
 pub use registry::{JOB_TAG, extension_jobs};
@@ -43,8 +47,11 @@ pub use llms_txt::LlmsTxtGenerationJob;
 pub use prerender::ContentPrerenderJob;
 pub use publish::PublishPipelineJob;
 pub use robots::RobotsTxtGenerationJob;
+pub use scope_defaults::ScopeDefaultsJob;
 pub use secret_migration::SecretMigrationJob;
 pub use sitemap::SitemapGenerationJob;
+pub use usage_retention::PluginUsageRetentionJob;
+pub use usage_rollup::UsageDailyRollupJob;
 
 /// The pure helpers behind the jobs above, re-exported for the external test
 /// workspace so their file-format and accounting behaviour can be asserted
@@ -58,12 +65,5 @@ pub mod internals {
     pub use crate::llms_txt::{sort_entries_in_place, write_header, write_section};
     pub use crate::publish::PipelineStats;
     pub use crate::robots::build_robots_txt_content;
+    pub use crate::usage_anomaly::{Finding, evaluate};
 }
-
-mod scope_defaults;
-pub use scope_defaults::ScopeDefaultsJob;
-
-mod usage_rollup;
-pub use usage_rollup::UsageDailyRollupJob;
-
-mod usage_anomaly;

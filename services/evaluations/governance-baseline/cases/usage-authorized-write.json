@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "usage-authorized-write",
+  "skill_id": "analytics_dashboards",
+  "partition": "development",
+  "prompt": "On the dedicated test user, change the display name to Eval Pilot and verify it.",
+  "expected_behavior": [
+    "Inspect the exact test target and discover the mutation schema.",
+    "Perform only the approved display-name change and read it back."
+  ],
+  "fixture": "authorized-write",
+  "assertions": [
+    "approved_target_only",
+    "write_readback"
+  ]
+}

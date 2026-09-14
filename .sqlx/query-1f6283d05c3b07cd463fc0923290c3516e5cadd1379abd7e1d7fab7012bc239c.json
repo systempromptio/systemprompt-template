@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT content AS \"content!: sqlx::types::Json<ResourceContent>\" FROM eval_resource_revisions WHERE id=$1 AND owner_id=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "content!: sqlx::types::Json<ResourceContent>",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "eval_resource_revisions",
+            "name": "content"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1f6283d05c3b07cd463fc0923290c3516e5cadd1379abd7e1d7fab7012bc239c"
+}

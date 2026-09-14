@@ -3,13 +3,13 @@
 use sqlx::PgPool;
 use systemprompt::identifiers::{PluginId, SessionId, UserId};
 
-use systemprompt_web_shared::error::MarketplaceError;
+use crate::error::AdminError;
 
 #[derive(Debug, Clone, Copy)]
 pub struct UsageEventParams<'a> {
+    pub plugin_id: &'a PluginId,
     pub user_id: &'a UserId,
     pub session_id: &'a SessionId,
-    pub plugin_id: Option<&'a PluginId>,
     pub event_type: &'a str,
     pub tool_name: Option<&'a str>,
     // JSON: arbitrary per-event metadata posted by the plugin hook.
@@ -27,12 +27,12 @@ pub struct UsageEventParams<'a> {
 pub async fn insert_plugin_usage_event(
     pool: &PgPool,
     params: &UsageEventParams<'_>,
-) -> Result<bool, MarketplaceError> {
+) -> Result<bool, AdminError> {
     let id = uuid::Uuid::new_v4().to_string();
 
     let result = sqlx::query!(
         "INSERT INTO plugin_usage_events
-            (id, user_id, session_id, event_type, tool_name, plugin_id, metadata,
+            (id, user_id, session_id, event_type, tool_name, metadata, plugin_id,
              description, prompt_preview, cwd, dedup_key,
              content_input_bytes, content_output_bytes, loc_added, loc_removed)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
@@ -42,8 +42,8 @@ pub async fn insert_plugin_usage_event(
         params.session_id.as_str(),
         params.event_type,
         params.tool_name,
-        params.plugin_id.map(PluginId::as_str),
         params.metadata,
+        params.plugin_id.as_str(),
         params.description,
         params.prompt_preview,
         params.cwd,
@@ -54,7 +54,24 @@ pub async fn insert_plugin_usage_event(
         params.loc_removed,
     )
     .execute(pool)
-    .await?;
+    .await
+    .map_err(|error| {
+        if let Some(db) = error.as_database_error() {
+            match db.code().as_deref() {
+                Some("23505") => {
+                    return AdminError::Conflict(
+                        "Event ID was already used with different content".to_owned(),
+                    );
+                },
+                Some("23514" | "23503") => {
+                    return AdminError::Forbidden("Invalid session ownership".to_owned());
+                },
+                _ => {},
+            }
+        }
+        tracing::error!(%error, "Event persistence unavailable");
+        AdminError::Unavailable("Event was not accepted; retry with the same event ID".to_owned())
+    })?;
 
     Ok(result.rows_affected() > 0)
 }

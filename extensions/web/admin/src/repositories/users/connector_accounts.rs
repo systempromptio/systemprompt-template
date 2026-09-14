@@ -124,3 +124,36 @@ pub async fn is_live_session(
     .fetch_one(pool)
     .await
 }
+
+// Why: one statement for every user on the provider, not a per-user loop —
+// a sandbox refresh invalidates everyone at once and the profile page must
+// tell them all before any tool call discovers it.
+pub async fn reprovision_provider(
+    tx: &mut Transaction<'_, Postgres>,
+    provider: &str,
+    error_code: &str,
+) -> Result<u64, sqlx::Error> {
+    let result = sqlx::query!(
+        "UPDATE mcp_connector_accounts SET status = 'reconnect_required', error_code = $2,
+        verified_at = NULL, generation = generation + 1,
+        revision = nextval('mcp_connector_revision') WHERE provider = $1",
+        provider,
+        error_code
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(result.rows_affected())
+}
+
+pub async fn delete_all_pending(
+    tx: &mut Transaction<'_, Postgres>,
+    provider: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "DELETE FROM mcp_connector_oauth_states WHERE provider = $1",
+        provider
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}

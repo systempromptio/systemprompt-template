@@ -12,8 +12,10 @@ mod rows;
 mod sections;
 mod view;
 
+pub use rows::status_of;
 
 use std::sync::Arc;
+use systemprompt::identifiers::McpServerId;
 
 use axum::extract::{Extension, Path, Query, State};
 use axum::response::Response;
@@ -171,18 +173,18 @@ pub(crate) async fn mcp_detail_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Path(mcp_id): Path<String>,
+    Path(mcp_id): Path<McpServerId>,
     Query(query): Query<McpDetailQuery>,
 ) -> AdminHtmlResult<Response> {
     console_only(&user_ctx)?;
     let path = shared::get_services_path()?;
 
     let catalog = super::data::load_catalog(&path, &user_ctx.roles);
-    let server = catalog.mcp.iter().find(|s| s.id.as_str() == mcp_id);
+    let server = catalog.mcp.iter().find(|s| s.id == mcp_id);
     let rt = load_runtime(&pool).await;
-    let known_at_runtime = rt.heartbeat.contains_key(&mcp_id)
-        || rt.identities.contains_key(&mcp_id)
-        || rt.activity.contains_key(&mcp_id);
+    let known_at_runtime = rt.heartbeat.contains_key(mcp_id.as_str())
+        || rt.identities.contains_key(mcp_id.as_str())
+        || rt.activity.contains_key(mcp_id.as_str());
 
     // Why: a server the catalog does not declare but the runtime has served is
     // a real page, because the list links to it. Only a name neither half knows
@@ -193,22 +195,25 @@ pub(crate) async fn mcp_detail_page(
 
     let counts = assignment_counts_by_type(&pool, ENTITY_MCP_SERVER).await;
     let row = rows::build_row(&RowInputs {
-        id: &mcp_id,
+        id: mcp_id.as_str(),
         server,
         runtime: &rt,
-        plugin_count: catalog.plugins_by_mcp.get(&mcp_id).map_or(0, Vec::len),
-        assignment_count: counts.get(&mcp_id).copied().unwrap_or(0),
+        plugin_count: catalog
+            .plugins_by_mcp
+            .get(mcp_id.as_str())
+            .map_or(0, Vec::len),
+        assignment_count: counts.get(mcp_id.as_str()).copied().unwrap_or(0),
     });
 
     let sections = sections::detail_sections(&pool, &mcp_id, query.page.unwrap_or(0).max(0)).await;
 
     let page = McpDetailData {
         page: "mcp",
-        title: mcp_id.clone(),
+        title: mcp_id.as_str().to_owned(),
         subtitle: row.description.clone(),
         breadcrumbs: vec![
             BreadcrumbView::link("MCP servers", BASE_URL),
-            BreadcrumbView::current(mcp_id.clone()),
+            BreadcrumbView::current(mcp_id.as_str()),
         ],
         configured: row.configured,
         enabled: row.enabled,
@@ -228,10 +233,13 @@ pub(crate) async fn mcp_detail_page(
         default_included: sections.default_included,
         config_facts: detail::config_facts(server),
         oauth_scopes: server.map(|s| s.oauth_scopes.clone()).unwrap_or_default(),
-        included_by_count: catalog.plugins_by_mcp.get(&mcp_id).map_or(0, Vec::len),
+        included_by_count: catalog
+            .plugins_by_mcp
+            .get(mcp_id.as_str())
+            .map_or(0, Vec::len),
         included_by: catalog
             .plugins_by_mcp
-            .get(&mcp_id)
+            .get(mcp_id.as_str())
             .cloned()
             .unwrap_or_default(),
         matrix_url: row.matrix_url.clone(),

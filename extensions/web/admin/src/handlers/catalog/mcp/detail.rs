@@ -101,7 +101,7 @@ pub(super) fn execution_rows(rows: Vec<McpExecutionRow>) -> Vec<McpExecutionRowV
                 .map(|s| s.as_str().to_owned())
                 .unwrap_or_default();
             McpExecutionRowView {
-                short_id: short_id(&r.execution_id),
+                short_id: short_id(r.execution_id.as_str()),
                 status_tone: execution_tone(&r.status),
                 started_display: local_time(r.started_at),
                 duration_display: r.execution_time_ms.map_or_else(

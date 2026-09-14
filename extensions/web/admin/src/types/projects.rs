@@ -10,10 +10,11 @@
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use systemprompt::identifiers::UserId;
+use systemprompt_web_shared::ProjectId;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct ProjectRow {
-    pub id: String,
+    pub id: ProjectId,
     pub name: String,
     pub description: Option<String>,
     pub source: String,
@@ -21,7 +22,7 @@ pub struct ProjectRow {
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct ProjectSummary {
-    pub id: String,
+    pub id: ProjectId,
     pub name: String,
     pub description: Option<String>,
     pub member_count: i64,
@@ -42,13 +43,13 @@ pub struct ProjectMemberRow {
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct ProjectAdMappingRow {
     pub ad_group: String,
-    pub project_id: String,
+    pub project_id: ProjectId,
     pub source: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct CreateProjectRequest {
-    pub id: String,
+    pub id: ProjectId,
     pub name: String,
     pub description: Option<String>,
 }

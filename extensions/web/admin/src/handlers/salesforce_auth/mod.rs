@@ -29,11 +29,9 @@ pub enum SalesforceError {
         status: reqwest::StatusCode,
         body: String,
     },
-    #[error("SALESFORCE_PRIVATE_KEY is not set")]
-    MissingPrivateKey,
     #[error("system clock before epoch: {0}")]
     Clock(#[from] std::time::SystemTimeError),
-    #[error("SALESFORCE_PRIVATE_KEY is not a valid RSA private key: {0}")]
+    #[error("Salesforce signing key is not a valid RSA private key: {0}")]
     PrivateKey(#[source] jsonwebtoken::errors::Error),
     #[error("assertion signing failed: {0}")]
     Signing(#[source] jsonwebtoken::errors::Error),

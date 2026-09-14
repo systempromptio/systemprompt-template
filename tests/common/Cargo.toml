@@ -1,0 +1,23 @@
+[package]
+name = "template-test-common"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+# Why: the throwaway database is built by the same `install_extension_schemas`
+# path the server runs at boot, and that path only sees migrations from crates
+# actually linked into the test binary. Linking them here is what makes one
+# harness usable by every suite.
+systemprompt = { workspace = true, features = ["full"] }
+systemprompt-evaluation = { workspace = true }
+systemprompt-web-admin = { workspace = true }
+systemprompt-web-extension = { workspace = true }
+
+sqlx = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }
+uuid = { workspace = true }

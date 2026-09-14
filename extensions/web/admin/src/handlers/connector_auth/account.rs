@@ -66,8 +66,8 @@ pub(super) async fn test(
     headers: HeaderMap,
 ) -> AdminResult<Response> {
     let user = live_user(&pool, &headers, true).await?;
-    service::require_entitlement(&pool, &user.user_id, provider).await?;
-    oauth::verified_token(&pool, &user.user_id, provider, true).await?;
+    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
+    oauth::verified_token(&pool, &user.user_id, provider.clone(), true).await?;
     Ok((
         [(CACHE_CONTROL, "no-store")],
         Json(service::get_connections(&pool, &user.user_id).await?),
@@ -90,8 +90,8 @@ pub(super) async fn manual(
     Json(input): Json<ManualToken>,
 ) -> AdminResult<Response> {
     let user = live_user(&pool, &headers, true).await?;
-    service::require_entitlement(&pool, &user.user_id, provider).await?;
-    if !provider.configured() || provider == Provider::Salesforce {
+    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
+    if !provider.configured() || !matches!(provider, Provider::Atlassian | Provider::Github) {
         return Err(AdminError::BadRequest(
             "Use browser authorization for this connector".into(),
         ));
@@ -118,8 +118,11 @@ pub(super) async fn manual(
     let generation = row.generation;
     tx.commit().await?;
     let mut grant = oauth::Grant {
+        configuration_binding: String::new(),
+        authorization_issuer: String::new(),
+        token_auth_method: String::new(),
         user: user.user_id.to_string(),
-        provider,
+        provider: provider.clone(),
         client: String::new(),
         client_secret: String::new(),
         verifier: String::new(),

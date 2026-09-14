@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE eval_executions SET status='cancelled',finished_at=NOW(),lease_expires_at=NULL WHERE experiment_id=$1 AND status IN ('queued','running','awaiting_approval')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bf546184f90d0f42a6ea0ca7dd544e4747454ad35cce84f658b53f8872168d2f"
+}

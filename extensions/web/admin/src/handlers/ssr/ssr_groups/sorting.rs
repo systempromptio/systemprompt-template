@@ -163,26 +163,32 @@ pub(super) fn source_filter(raw: Option<&str>) -> String {
 // scanned for its largest values, and the name column is the only one anyone
 // reads upward — which is what `dir=asc` on a second click is for.
 pub(super) fn sort_headers(key: &str, dir: &str, range: &str, source: &str) -> GroupSortHeaders {
-    let mut built = COLUMNS
-        .iter()
+    // Why: destructuring the fixed-size array binds each column by position,
+    // so a column added to COLUMNS without a struct field (or vice versa) is a
+    // compile error rather than an empty `th`.
+    let [
+        name,
+        source,
+        members,
+        active,
+        projects,
+        model,
+        requests,
+        tokens,
+        cost,
+    ] = COLUMNS
+        .each_ref()
         .map(|col| header(col, key, dir, range, source));
-    // Why: drained in the order COLUMNS declares, so the struct and the array
-    // cannot drift apart silently — a column added to one without the other
-    // fails to compile here rather than rendering an empty `th`.
-    #[expect(
-        clippy::expect_used,
-        reason = "COLUMNS is a fixed array of exactly these nine entries; a miss is a compile-time drift, not runtime input"
-    )]
     GroupSortHeaders {
-        name: built.next().expect("name column"),
-        source: built.next().expect("source column"),
-        members: built.next().expect("members column"),
-        active: built.next().expect("active column"),
-        projects: built.next().expect("projects column"),
-        model: built.next().expect("model column"),
-        requests: built.next().expect("requests column"),
-        tokens: built.next().expect("tokens column"),
-        cost: built.next().expect("cost column"),
+        name,
+        source,
+        members,
+        active,
+        projects,
+        model,
+        requests,
+        tokens,
+        cost,
     }
 }
 

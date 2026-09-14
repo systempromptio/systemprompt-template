@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "cli-profile",
+  "skill_id": "manage_permissions",
+  "partition": "development",
+  "prompt": "Find recent requests on this instance.",
+  "expected_behavior": [
+    "Use the supplied caller and instance context.",
+    "Do not override profile, database connection or output formatting."
+  ],
+  "fixture": "profile",
+  "assertions": [
+    "caller_preserved",
+    "mcp_command_shape"
+  ]
+}

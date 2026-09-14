@@ -19,7 +19,9 @@ use crate::repositories::people_usage::{
     DEFAULT_WINDOW_DAYS, LEADERBOARD_LIMIT, MemberUsageRow, ScopeUsageRow, get_scope_usage,
     list_daily_requests, list_member_usage,
 };
-use crate::repositories::scope::{Attribution, ScopeKind, ScopeQuery};
+use crate::repositories::scope::{Attribution, ScopeQuery, ScopeTarget};
+use systemprompt::identifiers::MarketplaceId;
+use systemprompt_web_shared::GroupId;
 
 use super::super::people_view::or_default;
 use super::super::types::{AccessSectionView, UserOptionView};
@@ -48,7 +50,7 @@ pub(super) struct MarketplaceOption {
     pub assigned: bool,
 }
 
-pub(super) async fn load_counts(pool: &PgPool, group_id: &str) -> TabCounts {
+pub(super) async fn load_counts(pool: &PgPool, group_id: &GroupId) -> TabCounts {
     let q = member_query(group_id);
     let (members, projects, mappings, marketplaces) = tokio::join!(
         repositories::groups::members::list_group_members(pool, group_id),
@@ -67,11 +69,10 @@ pub(super) async fn load_counts(pool: &PgPool, group_id: &str) -> TabCounts {
 // Why: "who is in this group" is full membership — a person in two groups is
 // in both — so every listing and breakdown binds this. It deliberately
 // overlaps with the other groups, and the screens that use it say so.
-const fn member_query(group_id: &str) -> ScopeQuery<'_> {
+const fn member_query(group_id: &GroupId) -> ScopeQuery<'_> {
     ScopeQuery::new(
-        ScopeKind::Group,
+        ScopeTarget::Group(group_id),
         Attribution::Member,
-        group_id,
         DEFAULT_WINDOW_DAYS,
     )
 }
@@ -80,16 +81,15 @@ const fn member_query(group_id: &str) -> ScopeQuery<'_> {
 // slice of an instance the group totals partition. Reading a member-attributed
 // total beside the other groups' would double-count anyone in two of them and
 // leave a KPI row that adds up to more than the estate spent.
-const fn exclusive_query(group_id: &str) -> ScopeQuery<'_> {
+const fn exclusive_query(group_id: &GroupId) -> ScopeQuery<'_> {
     ScopeQuery::new(
-        ScopeKind::Group,
+        ScopeTarget::Group(group_id),
         Attribution::Exclusive,
-        group_id,
         DEFAULT_WINDOW_DAYS,
     )
 }
 
-pub(super) async fn load_usage(pool: &PgPool, group_id: &str) -> ScopeUsageRow {
+pub(super) async fn load_usage(pool: &PgPool, group_id: &GroupId) -> ScopeUsageRow {
     let q = exclusive_query(group_id);
     or_default("group usage", get_scope_usage(pool, &q).await)
 }
@@ -101,9 +101,9 @@ pub(super) async fn load_usage(pool: &PgPool, group_id: &str) -> ScopeUsageRow {
 // anything.
 pub(super) async fn load_marketplace_options(
     pool: &PgPool,
-    group_id: &str,
+    group_id: &GroupId,
 ) -> Vec<MarketplaceOption> {
-    let assigned: Vec<String> =
+    let assigned: Vec<MarketplaceId> =
         repositories::groups::marketplaces::list_group_marketplace_ids(pool, group_id)
             .await
             .inspect_err(|e| tracing::warn!(error = %e, "group marketplace ids failed"))
@@ -112,7 +112,7 @@ pub(super) async fn load_marketplace_options(
     load_marketplaces()
         .into_iter()
         .map(|m| MarketplaceOption {
-            assigned: assigned.iter().any(|id| id == m.id.as_str()),
+            assigned: assigned.contains(&m.id),
             id: m.id.to_string(),
             name: m.name,
             description: m.description,
@@ -120,7 +120,7 @@ pub(super) async fn load_marketplace_options(
         .collect()
 }
 
-pub(super) async fn load_usage_tab(pool: &PgPool, group_id: &str) -> UsageTabData {
+pub(super) async fn load_usage_tab(pool: &PgPool, group_id: &GroupId) -> UsageTabData {
     let q = member_query(group_id);
     let (models, daily, skills, tools, members) = tokio::join!(
         list_scope_top_models(pool, &q, LEADERBOARD_LIMIT),
@@ -165,7 +165,11 @@ pub(super) async fn load_usage_tab(pool: &PgPool, group_id: &str) -> UsageTabDat
     }
 }
 
-pub(super) async fn load_members(pool: &PgPool, group_id: &str, can_manage: bool) -> MembersData {
+pub(super) async fn load_members(
+    pool: &PgPool,
+    group_id: &GroupId,
+    can_manage: bool,
+) -> MembersData {
     let rows = repositories::groups::members::list_group_members(pool, group_id)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "group members failed"))
@@ -232,14 +236,14 @@ async fn load_addable_users(pool: &PgPool, members: &[GroupMemberRow]) -> Vec<Us
     .collect()
 }
 
-pub(super) async fn load_projects(pool: &PgPool, group_id: &str) -> Vec<LinkedScopeRow> {
+pub(super) async fn load_projects(pool: &PgPool, group_id: &GroupId) -> Vec<LinkedScopeRow> {
     or_default(
         "group projects",
         list_linked_scopes(pool, &member_query(group_id)).await,
     )
 }
 
-pub(super) async fn load_mappings(pool: &PgPool, group_id: &str) -> Vec<GroupAdMappingRow> {
+pub(super) async fn load_mappings(pool: &PgPool, group_id: &GroupId) -> Vec<GroupAdMappingRow> {
     repositories::groups::mappings::list_group_ad_mappings(pool, group_id)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "group AD mappings failed"))
@@ -249,7 +253,7 @@ pub(super) async fn load_mappings(pool: &PgPool, group_id: &str) -> Vec<GroupAdM
 // Why: The Access tab: every catalog entity resolved for a subject holding only
 // this group's membership, plus the group's own rules so the toggles can
 // show `inherit` where no rule of its own exists.
-pub(super) async fn load_access(pool: &PgPool, group_id: &str) -> Vec<AccessSectionView> {
+pub(super) async fn load_access(pool: &PgPool, group_id: &GroupId) -> Vec<AccessSectionView> {
     let Ok(services_path) = crate::handlers::shared::get_services_path() else {
         tracing::warn!("services path unavailable; group access matrix skipped");
         return Vec::new();
@@ -266,7 +270,7 @@ pub(super) async fn load_access(pool: &PgPool, group_id: &str) -> Vec<AccessSect
         );
     }
 
-    let subject = repositories::users::access_control::group_subject(group_id);
+    let subject = repositories::users::access_control::group_subject(group_id.as_str());
     let resolved =
         repositories::users::access_control::resolve_subject_matrix(pool, &subject, sections)
             .await

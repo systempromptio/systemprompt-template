@@ -21,7 +21,7 @@ use axum::response::Response;
 use serde::Deserialize;
 use sqlx::PgPool;
 
-use crate::error::{AdminError, AdminHtmlResult};
+use crate::error::{AdminError, AdminHtmlResult, AdminResult};
 use crate::handlers::ssr::list_view::PageWindow;
 use crate::handlers::ssr::types::BreadcrumbView;
 use crate::repositories;
@@ -97,10 +97,53 @@ pub(crate) struct RosterQueryParams {
     pub page: Option<i64>,
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "one page assembly per handler; splitting is tracked in docs/tech-debt.md"
-)]
+struct RosterRead {
+    rows: Vec<repositories::users::roster::RosterRow>,
+    total: i64,
+    totals: repositories::users::roster::RosterStats,
+    roles: Vec<String>,
+    group_names: BTreeMap<String, String>,
+    project_names: BTreeMap<String, String>,
+}
+
+// Why: the page, the headline numbers, the role facet and the two name maps
+// are independent reads; one round of latency rather than five.
+async fn load_roster(
+    pool: &PgPool,
+    scope: &repositories::scope::SubjectScope,
+    url: &RosterUrlState,
+) -> AdminResult<RosterRead> {
+    let query = RosterQuery {
+        filter: url.filter,
+        role: url.role.clone(),
+        search: url.search.clone(),
+        sort: url.sort,
+        limit: DEFAULT_PAGE_SIZE,
+        offset: url.page.saturating_mul(DEFAULT_PAGE_SIZE),
+    };
+    let (page_res, stats_res, roles_res, (group_names, project_names)) = tokio::join!(
+        repositories::users::roster::list_users_paged(pool, scope, &query),
+        repositories::users::roster::get_roster_stats(pool, scope),
+        repositories::users::queries::list_distinct_roles(pool),
+        load_scope_names(pool),
+    );
+    let (rows, total) =
+        page_res.inspect_err(|e| tracing::warn!(error = %e, "roster page query failed"))?;
+    Ok(RosterRead {
+        rows,
+        total,
+        totals: stats_res.unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "roster totals query failed");
+            repositories::users::roster::RosterStats::default()
+        }),
+        roles: roles_res
+            .inspect_err(|e| tracing::warn!(error = %e, "roster role facet failed"))
+            .unwrap_or_default(),
+        group_names,
+        project_names,
+    })
+}
+
 pub(crate) async fn users_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
@@ -124,62 +167,33 @@ pub(crate) async fn users_page(
 
     let request = ScopeRequest::from_query(&user_ctx, url.group.as_deref(), url.project.as_deref());
     let scope = repositories::scope::membership::get_subject_scope(&pool, &request).await?;
+    let read = load_roster(&pool, &scope, &url).await?;
 
-    let query = RosterQuery {
-        filter: url.filter,
-        role: url.role.clone(),
-        search: url.search.clone(),
-        sort: url.sort,
-        limit: DEFAULT_PAGE_SIZE,
-        offset: url.page.saturating_mul(DEFAULT_PAGE_SIZE),
-    };
-
-    // Why: the page, the headline numbers, the role facet and the two name maps
-    // are independent reads; one round of latency rather than five.
-    let (page_res, stats_res, roles_res, names) = tokio::join!(
-        repositories::users::roster::list_users_paged(&pool, &scope, &query),
-        repositories::users::roster::get_roster_stats(&pool, &scope),
-        repositories::users::queries::list_distinct_roles(&pool),
-        load_scope_names(&pool),
-    );
-
-    let (page_rows, total) =
-        page_res.inspect_err(|e| tracing::warn!(error = %e, "roster page query failed"))?;
-    let totals = stats_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "roster totals query failed");
-        repositories::users::roster::RosterStats::default()
-    });
-    let roles = roles_res.unwrap_or_default();
-    let (group_names, project_names) = names;
-
-    #[expect(
-        clippy::cast_possible_wrap,
-        reason = "a rendered row count; a page holds fifty rows"
-    )]
-    let shown = page_rows.len() as i64;
-    let window = PageWindow::new(url.page, DEFAULT_PAGE_SIZE, total, shown, "users");
-
+    let shown = i64::try_from(read.rows.len()).unwrap_or(DEFAULT_PAGE_SIZE);
+    let window = PageWindow::new(url.page, DEFAULT_PAGE_SIZE, read.total, shown, "users");
     let rows = view::build_rows(&view::RowInput {
-        rows: &page_rows,
-        group_names: &group_names,
-        project_names: &project_names,
+        rows: &read.rows,
+        group_names: &read.group_names,
+        project_names: &read.project_names,
     });
 
     let data = RosterContext {
         page: "users",
         title: "Users",
         breadcrumbs: vec![BreadcrumbView::current("Users")],
-        kpis: view::build_kpis(&url, &totals),
-        chips: view::build_chips(&url, &totals),
-        role_options: role_options(&roles, url.role.as_deref()),
+        kpis: view::build_kpis(&url, &read.totals),
+        chips: view::build_chips(&url, &read.totals),
+        role_options: role_options(&read.roles, url.role.as_deref()),
         search: url.search.clone().unwrap_or_default(),
         scope_filter: super::super::list_view::scope_filter_from_names(
             &user_ctx,
             &request,
             BASE_URL,
             preserved_hidden(&url),
-            &group_names,
-            &project_names,
+            super::super::list_view::ScopeNames {
+                groups: &read.group_names,
+                projects: &read.project_names,
+            },
         ),
         sort_headers: columns::build_sort_headers(&url, url.sort),
         has_rows: !rows.is_empty(),
@@ -187,7 +201,7 @@ pub(crate) async fn users_page(
         rows,
         pagination: view::build_pagination(&url, window),
         can_write: user_ctx.is_admin,
-        role_choices: roles,
+        role_choices: read.roles,
     };
 
     Ok(super::super::render_typed_page(
@@ -244,12 +258,12 @@ async fn load_scope_names(pool: &PgPool) -> (BTreeMap<String, String>, BTreeMap<
         groups
             .unwrap_or_default()
             .into_iter()
-            .map(|g| (g.id, g.name))
+            .map(|g| (g.id.as_str().to_owned(), g.name))
             .collect(),
         projects
             .unwrap_or_default()
             .into_iter()
-            .map(|p| (p.id, p.name))
+            .map(|p| (p.id.as_str().to_owned(), p.name))
             .collect(),
     )
 }

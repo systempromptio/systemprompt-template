@@ -158,7 +158,7 @@ pub fn list_plugin_catalog(
                 .map(SkillId::from)
                 .collect();
         out.push(PluginDetail {
-            id: plugin.base.id.to_string(),
+            id: plugin.base.id,
             name: plugin.base.name,
             description: plugin.base.description,
             version: plugin.base.version,

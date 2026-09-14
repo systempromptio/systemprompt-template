@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT cap,reserved,settled,frozen FROM eval_budget_accounts WHERE id=$1 AND owner_id=$2 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "cap",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "eval_budget_accounts",
+            "name": "cap"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "reserved",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "eval_budget_accounts",
+            "name": "reserved"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "settled",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "eval_budget_accounts",
+            "name": "settled"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "frozen",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "eval_budget_accounts",
+            "name": "frozen"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "1930678a7a1c4e6c713b096b858c9b0a30fd1b6d4b9e1fcdad17fe4434a71528"
+}

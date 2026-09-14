@@ -64,6 +64,7 @@ impl AdminTemplateEngine {
     pub fn new(admin_dir: &Path) -> Result<Self> {
         let mut hbs = Handlebars::new();
         hbs.set_strict_mode(true);
+        hbs.set_prevent_indent(true);
 
         let partials_dir = admin_dir.join("partials");
         let templates_dir = admin_dir.join("templates");

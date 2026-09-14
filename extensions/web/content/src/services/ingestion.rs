@@ -110,7 +110,8 @@ impl IngestionService {
         source_id: &SourceId,
         category_id: &CategoryId,
     ) -> Result<String, BlogError> {
-        let content = std::fs::read_to_string(path)?;
+        let content =
+            super::release_version::substitute_release_version(&std::fs::read_to_string(path)?);
         let version_hash = compute_hash(&content);
 
         let (metadata, body) = parse_markdown(&content)?;

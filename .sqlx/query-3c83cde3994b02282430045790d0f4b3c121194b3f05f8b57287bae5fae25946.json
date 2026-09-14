@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE mcp_connector_accounts SET status = 'reconnect_required', error_code = $2,\n        verified_at = NULL, generation = generation + 1,\n        revision = nextval('mcp_connector_revision') WHERE provider = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3c83cde3994b02282430045790d0f4b3c121194b3f05f8b57287bae5fae25946"
+}

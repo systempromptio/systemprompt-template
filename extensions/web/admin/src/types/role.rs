@@ -1,10 +1,10 @@
 //! The flat role set the admin plane authorises on.
 //!
-//! These known roles define console privileges. Other role strings remain
-//! valid entitlements and are preserved when an operator edits an account. The
-//! `ROLES_*` slices are the three tiers the router layers, and
-//! [`authorize_role_change`] is the pure rule the role editor applies before it
-//! writes.
+//! Roles are a closed set, not free text: the router names them, the role
+//! editor grants them, and the directory projects onto them, so all three
+//! agree only if one enum owns the spelling. The `ROLES_*` slices are the
+//! three tiers the router layers, and [`authorize_role_change`] is the pure
+//! rule the role editor applies before it writes.
 
 use std::fmt;
 use std::str::FromStr;
@@ -20,16 +20,18 @@ pub enum Role {
     User,
     ProjectManager,
     KnowledgeWorker,
+    SuperAdmin,
 }
 
 impl Role {
-    pub const ALL: [Self; 6] = [
+    pub const ALL: [Self; 7] = [
         Self::PlatformAdmin,
         Self::Admin,
         Self::Developer,
         Self::User,
         Self::ProjectManager,
         Self::KnowledgeWorker,
+        Self::SuperAdmin,
     ];
 
     #[must_use]
@@ -41,6 +43,7 @@ impl Role {
             Self::User => "user",
             Self::ProjectManager => "project_manager",
             Self::KnowledgeWorker => "knowledge_worker",
+            Self::SuperAdmin => "super_admin",
         }
     }
 
@@ -53,6 +56,7 @@ impl Role {
             Self::User => "User",
             Self::ProjectManager => "Project manager",
             Self::KnowledgeWorker => "Knowledge worker",
+            Self::SuperAdmin => "Super Admin",
         }
     }
 }
@@ -72,15 +76,15 @@ impl fmt::Display for Role {
 }
 
 // Why: the three tiers the admin router layers. `developer` and
-// `knowledge_worker` are entitlement roles — they decide which marketplace
-// and MCP servers a person reaches — and sit in none of them.
+// `knowledge_worker` and `super_admin` are entitlement roles — they decide
+// which marketplace and MCP servers a person reaches — and sit in none of them.
 // Reads open to anyone who may
 // see the console; writes to the two admin roles; the platform tier to
 // `platform_admin` alone, which is what holds the directory-shaped controls
 // (AD mappings, granting `platform_admin` itself).
 pub const ROLES_CONSOLE: &[Role] = &[Role::PlatformAdmin, Role::Admin, Role::ProjectManager];
 pub const ROLES_MANAGE: &[Role] = &[Role::PlatformAdmin, Role::Admin];
-pub const ROLES_PLATFORM: &[Role] = &[Role::PlatformAdmin, Role::Admin];
+pub const ROLES_PLATFORM: &[Role] = &[Role::PlatformAdmin];
 
 #[must_use]
 pub fn has_any(roles: &[String], accepted: &[Role]) -> bool {
@@ -90,9 +94,9 @@ pub fn has_any(roles: &[String], accepted: &[Role]) -> bool {
         .any(|r| accepted.contains(&r))
 }
 
-// Why: this helper returns only the built-in privilege tiers. Account storage
-// and role-edit payloads retain the original free-text strings; they must never
-// be reconstructed from this lossy privilege projection.
+// Why: unknown strings are dropped rather than rejected. `users.roles` is a
+// free-text array an older release may have written into, and a stale value
+// must not make a whole account unreadable.
 #[must_use]
 pub fn parse_roles(roles: &[String]) -> Vec<Role> {
     roles
@@ -117,14 +121,14 @@ pub enum RoleChangeRefusal {
 impl fmt::Display for RoleChangeRefusal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::PlatformAdminRequired => {
-                f.write_str("Only a platform admin may grant or revoke platform_admin")
-            },
+            Self::PlatformAdminRequired => f.write_str(
+                "Only a platform admin may grant or revoke platform_admin or super_admin",
+            ),
             Self::LastPlatformAdmin => f.write_str("The last platform admin cannot be demoted"),
             Self::UnknownRole(role) => write!(
                 f,
                 "Unknown role '{role}'; valid roles are platform_admin, admin, developer, user, \
-                 project_manager, knowledge_worker"
+                 project_manager, knowledge_worker, super_admin"
             ),
             Self::DirectoryRole(role) => write!(
                 f,
@@ -148,10 +152,21 @@ pub fn authorize_role_change(
     directory_roles: &[String],
     platform_admin_count: i64,
 ) -> Result<(), RoleChangeRefusal> {
+    for role in after {
+        if role.parse::<Role>().is_err() {
+            return Err(RoleChangeRefusal::UnknownRole(role.clone()));
+        }
+    }
+
     let platform = Role::PlatformAdmin.as_str();
     let was_platform_admin = before.iter().any(|r| r == platform);
     let will_be_platform_admin = after.iter().any(|r| r == platform);
-    if was_platform_admin != will_be_platform_admin && !has_any(caller_roles, ROLES_MANAGE) {
+    let executive = Role::SuperAdmin.as_str();
+    let executive_changed =
+        before.iter().any(|r| r == executive) != after.iter().any(|r| r == executive);
+    if (was_platform_admin != will_be_platform_admin || executive_changed)
+        && !caller_roles.iter().any(|r| r == platform)
+    {
         return Err(RoleChangeRefusal::PlatformAdminRequired);
     }
     if was_platform_admin && !will_be_platform_admin && platform_admin_count <= 1 {

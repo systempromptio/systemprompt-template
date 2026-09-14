@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_sources(id,owner_id,name,kind,specification) VALUES($1,$2,$3,$4,$5) ON CONFLICT(owner_id,name) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "eca653205f63de3e7010b5f0ddfa1dbddf210b370062253956df320b53986f7c"
+}

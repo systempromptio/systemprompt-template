@@ -13,9 +13,11 @@
 use std::sync::Arc;
 
 use sqlx::PgPool;
+use systemprompt::identifiers::MarketplaceId;
 use systemprompt_security::authz::{
     Access, AccessControlRepository, EntityKind, RuleType, UpsertRuleParams,
 };
+use systemprompt_web_shared::GroupId;
 
 use crate::error::{AdminError, AdminResult};
 
@@ -28,14 +30,14 @@ fn group_rule_type() -> AdminResult<RuleType> {
 
 pub async fn list_group_marketplace_ids(
     pool: &PgPool,
-    group_id: &str,
-) -> Result<Vec<String>, sqlx::Error> {
+    group_id: &GroupId,
+) -> Result<Vec<MarketplaceId>, sqlx::Error> {
     sqlx::query_scalar!(
-        "SELECT entity_id FROM access_control_rules
+        r#"SELECT entity_id AS "entity_id: MarketplaceId" FROM access_control_rules
          WHERE entity_type = 'marketplace' AND rule_type = $1 AND rule_value = $2
-           AND access = 'allow' ORDER BY entity_id",
+           AND access = 'allow' ORDER BY entity_id"#,
         GROUP_RULE_TYPE,
-        group_id
+        group_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -47,9 +49,9 @@ pub async fn list_group_marketplace_ids(
 // the screen shows as absent.
 pub async fn set_group_marketplaces(
     pool: &PgPool,
-    group_id: &str,
-    marketplace_ids: &[String],
-) -> AdminResult<Vec<String>> {
+    group_id: &GroupId,
+    marketplace_ids: &[MarketplaceId],
+) -> AdminResult<Vec<MarketplaceId>> {
     let rule_type = group_rule_type()?;
     let repo = AccessControlRepository::from_pool(Arc::new(pool.clone()));
 
@@ -58,16 +60,21 @@ pub async fn set_group_marketplaces(
         // has touched yet has no row to hang a grant on. `ensure_entity`
         // inserts one at `default_included = false` and never overwrites an
         // existing flag, so it anchors the grant without widening anything.
-        repo.ensure_entity(EntityKind::Marketplace, marketplace_id, JUSTIFICATION)
-            .await
-            .map_err(AdminError::internal)?;
+        repo.ensure_entity(
+            EntityKind::Marketplace,
+            marketplace_id.as_str(),
+            JUSTIFICATION,
+        )
+        .await
+        .map_err(AdminError::internal)?;
         repo.upsert_rule(UpsertRuleParams {
             entity_type: EntityKind::Marketplace,
-            entity_id: marketplace_id,
+            entity_id: marketplace_id.as_str(),
             rule_type: rule_type.clone(),
-            rule_value: group_id,
+            rule_value: group_id.as_str(),
             access: Access::Allow,
             justification: Some(JUSTIFICATION),
+            source: systemprompt_security::authz::DASHBOARD_SOURCE,
         })
         .await
         .map_err(AdminError::internal)?;
@@ -78,8 +85,11 @@ pub async fn set_group_marketplaces(
          WHERE entity_type = 'marketplace' AND rule_type = $1 AND rule_value = $2
            AND NOT (entity_id = ANY($3))",
         GROUP_RULE_TYPE,
-        group_id,
-        marketplace_ids
+        group_id.as_str(),
+        &marketplace_ids
+            .iter()
+            .map(|id| id.as_str().to_owned())
+            .collect::<Vec<_>>()
     )
     .execute(pool)
     .await?;

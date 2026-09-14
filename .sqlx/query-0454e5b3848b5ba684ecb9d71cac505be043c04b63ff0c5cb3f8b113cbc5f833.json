@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT x.id,x.experiment_id FROM eval_executions x JOIN eval_experiments e ON e.id=x.experiment_id WHERE e.owner_id=$1 AND e.status IN ('queued','running') AND x.status='queued' AND x.active_runtime_ms<1800000 ORDER BY x.created_at FOR UPDATE OF x SKIP LOCKED LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_executions",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "experiment_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_executions",
+            "name": "experiment_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "0454e5b3848b5ba684ecb9d71cac505be043c04b63ff0c5cb3f8b113cbc5f833"
+}

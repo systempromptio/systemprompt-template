@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE eval_session_bindings b SET traffic_class=$5 FROM eval_executions x,eval_experiments e WHERE b.execution_id=x.id AND x.experiment_id=e.id AND b.owner_id=$1 AND b.execution_id=$2 AND x.lease_owner=$3 AND b.fencing_token=$4 AND x.fencing_token=b.fencing_token AND x.status='running' AND e.status='running' AND x.lease_expires_at>NOW() AND x.deadline_at>NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c6205e568a106748d149064c10fa1d3e0685f50eb323866e55d73a4610f559b2"
+}

@@ -4,7 +4,6 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 description = "Web extension for the systemprompt.io template: content, navigation, and template rendering for the self-hosted AI governance binary."
-license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 publish = false
@@ -22,8 +21,6 @@ workspace = true
 # Audit: uses ai, database, extension, loader, models, traits — requires `full`
 # (ai + loader are gated by the `full` feature).
 systemprompt = { workspace = true, features = ["full"] }
-# Audit: uses ai, database, extension, loader, models, traits — requires `full`
-# (ai + loader are gated by full; database/extension/traits/models are lower).
 
 # Local sub-crates
 systemprompt-web-shared = { workspace = true }
@@ -34,28 +31,14 @@ systemprompt-web-jobs = { workspace = true }
 
 # Extension framework — direct dep so the `extension_migrations!()` macro
 # expansion (`::systemprompt_extension::Migration`) resolves.
-systemprompt-extension = "0.51.0"
+systemprompt-extension = { workspace = true }
 inventory = { workspace = true }
-
-# Database access
 
 # Web framework
 axum = { workspace = true }
 
-# Async
-
-# Serialization
-
-# Markdown processing
-
 # Utilities
 tracing = { workspace = true }
 
-# SSE streaming
-
-# Archive extraction
-
 [build-dependencies]
-systemprompt-extension = "0.51.0"
-
-[dev-dependencies]
+systemprompt-extension = { workspace = true }

@@ -13,6 +13,7 @@ use axum::{Extension, Json};
 use serde::Deserialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
+use systemprompt_web_shared::{GroupId, ProjectId};
 
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::scope::defaults::{self, ScopeDefaults};
@@ -20,8 +21,8 @@ use crate::types::UserContext;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct SetScopeDefaultsRequest {
-    pub primary_group_id: Option<String>,
-    pub primary_project_id: Option<String>,
+    pub primary_group_id: Option<GroupId>,
+    pub primary_project_id: Option<ProjectId>,
 }
 
 pub(crate) async fn get_user_scope_defaults_handler(
@@ -50,8 +51,8 @@ pub(crate) async fn set_user_scope_defaults_handler(
     let written = defaults::set_scope_defaults(
         &pool,
         &user_id,
-        body.primary_group_id.as_deref(),
-        body.primary_project_id.as_deref(),
+        body.primary_group_id.as_ref(),
+        body.primary_project_id.as_ref(),
     )
     .await?;
     tracing::info!(

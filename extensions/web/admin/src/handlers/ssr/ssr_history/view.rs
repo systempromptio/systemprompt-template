@@ -4,7 +4,7 @@
 
 use systemprompt::identifiers::UserId;
 
-use crate::handlers::ssr::entity_urls::session_detail_url;
+use crate::handlers::ssr::entity_urls::{context_detail_url, session_detail_url};
 use crate::handlers::ssr::format::{format_cost, format_token_total, relative_time};
 use crate::handlers::ssr::list_view::{PageWindow, Pagination};
 use crate::handlers::ssr::transcript_view::short_id;
@@ -13,8 +13,8 @@ use crate::repositories::analytics::conversations::{
 };
 use crate::types::UserContext;
 
-use super::HistoryQuery;
 use super::context::HistoryRowView;
+use super::{HistoryQuery, HistoryView};
 
 pub(super) fn scope_label(scope: &HistoryScope) -> String {
     match scope {
@@ -23,15 +23,28 @@ pub(super) fn scope_label(scope: &HistoryScope) -> String {
     }
 }
 
+// Why: the org-wide listing at `/admin/conversations` is this page with a
+// wider scope, so every query link takes the base url of whichever of the two
+// is rendering rather than assuming `/admin/history`.
+
 // Why: a gateway conversation has an owner-facing detail page, so every viewer
 // gets the link. A transcript's only detail page is the admin session view.
-pub(super) fn detail_url(item: &HistoryItem, viewer: &UserContext) -> Option<String> {
+//
+// The org-wide listing sends its rows to the admin context view instead: it is
+// already admin-gated, renders the same transcript unredacted, and carries the
+// operational identifiers an admin came to that page for.
+pub(crate) fn detail_url(
+    item: &HistoryItem,
+    viewer: &UserContext,
+    view: HistoryView,
+) -> Option<String> {
     match item.source {
-        HistorySource::Gateway => item.context_id.as_ref().map(|c| {
-            format!(
+        HistorySource::Gateway => item.context_id.as_ref().map(|c| match view {
+            HistoryView::Org => context_detail_url(c),
+            HistoryView::Own => format!(
                 "/admin/history/conversations/{}",
                 urlencoding::encode(c.as_str())
-            )
+            ),
         }),
         HistorySource::Transcript => viewer
             .is_admin
@@ -48,6 +61,19 @@ fn row_identity(item: &HistoryItem) -> String {
         .unwrap_or_default()
 }
 
+// Why: a slash command's opening prompt is the client's XML envelope, not
+// anything a person typed — whole screens of `<command-message>` wrappers that
+// tell a reader nothing and are identical across rows. Name such a row by the
+// command it ran instead.
+pub fn command_name(prompt: &str) -> Option<String> {
+    let open = "<command-name>";
+    let close = "</command-name>";
+    let start = prompt.find(open)? + open.len();
+    let end = prompt[start..].find(close)? + start;
+    let name = prompt[start..end].trim().trim_start_matches('/');
+    (!name.is_empty()).then(|| format!("/{name}"))
+}
+
 // Why: a gateway conversation without a recorded title is named by its
 // opening prompt, so a row never shows a bare id where words exist.
 fn conversation_title(item: &HistoryItem, is_gateway: bool, short: &str) -> String {
@@ -59,7 +85,7 @@ fn conversation_title(item: &HistoryItem, is_gateway: bool, short: &str) -> Stri
                 .as_deref()
                 .map(|p| redact_text(p).0)
                 .filter(|p| !p.trim().is_empty())
-                .map(|p| p.chars().take(160).collect())
+                .map(|p| command_name(&p).unwrap_or_else(|| p.chars().take(160).collect()))
         })
         .unwrap_or_else(|| {
             if is_gateway {
@@ -70,7 +96,11 @@ fn conversation_title(item: &HistoryItem, is_gateway: bool, short: &str) -> Stri
         })
 }
 
-pub(super) fn row_view(item: &HistoryItem, viewer: &UserContext) -> HistoryRowView {
+pub(crate) fn row_view(
+    item: &HistoryItem,
+    viewer: &UserContext,
+    view: HistoryView,
+) -> HistoryRowView {
     let when = item.last_at;
     let identity = row_identity(item);
     let short = short_id(&identity);
@@ -82,6 +112,7 @@ pub(super) fn row_view(item: &HistoryItem, viewer: &UserContext) -> HistoryRowVi
         conversation_title: conversation_title(item, is_gateway, &short),
         short_id: short,
         user_id: item.user_id.clone(),
+        user_label: item.user_label.clone(),
         is_own: item.user_id == viewer.user_id,
         model: item.model.clone(),
         when_relative: relative_time(when),
@@ -95,7 +126,7 @@ pub(super) fn row_view(item: &HistoryItem, viewer: &UserContext) -> HistoryRowVi
         ),
         cost_display: is_gateway.then(|| format_cost(item.cost_microdollars)),
         snippet: item.snippet.as_deref().map(|s| redact_text(s).0),
-        detail_url: detail_url(item, viewer),
+        detail_url: detail_url(item, viewer, view),
     }
 }
 
@@ -118,24 +149,24 @@ fn query_parts(query: &HistoryQuery, keep_side: bool) -> Vec<String> {
     parts
 }
 
-pub(super) fn side_toggle_url(query: &HistoryQuery) -> String {
+pub(super) fn side_toggle_url(query: &HistoryQuery, base: &str) -> String {
     let mut parts = query_parts(query, false);
     if !query.show_side() {
         parts.push("side=1".to_owned());
     }
     if parts.is_empty() {
-        "/admin/history".to_owned()
+        base.to_owned()
     } else {
-        format!("/admin/history?{}", parts.join("&"))
+        format!("{base}?{}", parts.join("&"))
     }
 }
 
-pub(super) fn build_pagination(query: &HistoryQuery, window: PageWindow) -> Pagination {
+pub(super) fn build_pagination(query: &HistoryQuery, window: PageWindow, base: &str) -> Pagination {
     let parts = query_parts(query, true);
     let prefix = if parts.is_empty() {
-        "/admin/history?".to_owned()
+        format!("{base}?")
     } else {
-        format!("/admin/history?{}&", parts.join("&"))
+        format!("{base}?{}&", parts.join("&"))
     };
     let page = window.index;
     let prev_url = (page > 0).then(|| format!("{prefix}page={}", page - 1));

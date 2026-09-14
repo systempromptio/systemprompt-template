@@ -30,7 +30,7 @@ pub struct SessionHeader {
     pub ai_title: Option<String>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct SessionKpis {
     pub request_count: i64,
     pub context_count: i64,

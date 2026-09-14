@@ -13,15 +13,17 @@
 use serde::Serialize;
 
 use super::GovernanceQuery;
-use super::data::DashboardGovernanceData;
+use super::data::GovernanceData;
 use super::urls::filter_url;
+use crate::repositories::governance::decision_log::DecisionStats;
+use crate::repositories::governance::findings::SafetyStats;
 
 // Why: One KPI tile, as `components/kpi` reads it. The supporting line is
 // `note` on the partial; the field keeps the name `sub` and the template reads
 // it as `this.sub`, because a bare `sub` mustache resolves to the registered
 // helper of that name rather than to a field.
 #[derive(Debug, Serialize)]
-pub(super) struct DashboardGovernanceKpiView {
+pub(super) struct GovernanceKpiView {
     label: &'static str,
     value: String,
     sub: String,
@@ -31,124 +33,145 @@ pub(super) struct DashboardGovernanceKpiView {
     hint: &'static str,
 }
 
-pub(super) fn kpis(
-    query: &GovernanceQuery,
-    data: &DashboardGovernanceData,
-) -> Vec<DashboardGovernanceKpiView> {
-    let s = data.stats;
-    let f = data.safety;
+pub(super) fn kpis(query: &GovernanceQuery, data: &GovernanceData) -> Vec<GovernanceKpiView> {
+    decision_tiles(data.stats)
+        .into_iter()
+        .chain(safety_tiles(data.safety))
+        .map(|t| tile(query, t))
+        .collect()
+}
+
+fn decision_tiles(s: DecisionStats) -> Vec<Tile> {
     vec![
-        tile(
-            "Evaluated",
-            s.evaluated,
-            format!("{} callers in window", s.distinct_users),
-            "",
-            query,
-            None,
-            "Tool calls the governance chain decided in this window",
-        ),
-        tile(
-            "Denied",
-            s.denied,
-            format!("{} of evaluated", percent(s.denied, s.evaluated)),
-            "err",
-            query,
-            Some(("decision", "deny")),
-            "Refused outright by one of the four chain stages",
-        ),
-        tile(
-            "Warned",
-            s.warned,
-            format!("{} of evaluated", percent(s.warned, s.evaluated)),
-            "warn",
-            query,
-            Some(("decision", "warn")),
-            "Warn mode absorbed these; enforcement would have refused them",
-        ),
-        tile(
-            "Allowed",
-            s.allowed,
-            format!("{} of evaluated", percent(s.allowed, s.evaluated)),
-            "ok",
-            query,
-            Some(("decision", "allow")),
-            "No rule matched, or every rule that matched permitted the call",
-        ),
-        tile(
-            "Safety findings",
-            f.findings,
-            format!("{} categories, both directions", f.categories),
-            "",
-            query,
-            Some(("tab", "safety")),
-            "Gateway scanner findings on requests and on responses",
-        ),
-        tile(
-            "Findings blocked",
-            f.blocked,
-            format!("{} audited only", f.audited),
-            "err",
-            query,
-            Some(("tab", "safety")),
-            "Findings with no blocks under them means the scanners are in warn mode",
-        ),
+        Tile {
+            label: "Calls",
+            value: s.calls,
+            sub: format!("{} evaluations · {} callers", s.evaluated, s.distinct_users),
+            tone: "",
+            filter: None,
+            hint: "Governed calls in this window. Each is one row in the log, folded \
+     from every policy evaluation that shared its trace",
+        },
+        Tile {
+            label: "Review groups",
+            value: s.attention_calls,
+            sub: "Repeated warnings grouped by caller and session".to_owned(),
+            tone: "err",
+            filter: Some(("attention", "1")),
+            hint: "Denials and actionable warnings grouped by session and evidence. Entropy-only observations remain in the audit log",
+        },
+        Tile {
+            label: "Denied",
+            value: s.denied,
+            sub: format!("{} of evaluated", percent(s.denied, s.evaluated)),
+            tone: "err",
+            filter: Some(("decision", "deny")),
+            hint: "Refused outright by one of the four chain stages",
+        },
+        Tile {
+            label: "Warned",
+            value: s.warned,
+            sub: format!("{} of evaluated", percent(s.warned, s.evaluated)),
+            tone: "warn",
+            filter: Some(("decision", "warn")),
+            hint: "Warnings recorded by policies; inspect the evidence to distinguish observation, sanitization and refusal",
+        },
+        Tile {
+            label: "Allowed",
+            value: s.allowed,
+            sub: format!("{} of evaluated", percent(s.allowed, s.evaluated)),
+            tone: "ok",
+            filter: Some(("decision", "allow")),
+            hint: "No rule matched, or every rule that matched permitted the call",
+        },
     ]
 }
 
-// Why: One stage of the chain, as a filter link. A separate strip rather than
-// four more tiles: the four numbers still read without a click and still lead
-// to their rows, and the KPI band stays one row deep.
+fn safety_tiles(f: SafetyStats) -> Vec<Tile> {
+    vec![
+        Tile {
+            label: "Safety findings",
+            value: f.findings,
+            sub: format!("{} categories, both directions", f.categories),
+            tone: "",
+            filter: Some(("tab", "safety")),
+            hint: "Gateway scanner findings on requests and on responses",
+        },
+        Tile {
+            label: "Findings blocked",
+            value: f.blocked,
+            sub: format!("{} audited only", f.audited),
+            tone: "err",
+            filter: Some(("tab", "safety")),
+            hint: "Actual recorded blocks. Informational findings and warn-mode findings do not imply a refusal",
+        },
+    ]
+}
+
+// Why: One policy's showing in the window, as a filter link.
 #[derive(Debug, Serialize)]
 pub(super) struct StageFilterView {
-    label: &'static str,
+    label: String,
     count: i64,
     href: String,
     active: bool,
+    tone: &'static str,
 }
 
-// Why: the four synchronous stages in evaluation order, named as the policies
-// write them. Reading the strip left to right is reading the chain.
+// Why: the strip used to name the four synchronous chain stages and count only
+// those. On an instance whose traffic is `authz`, `default_allow` and
+// `authentication` that is four zeroes sitting above a log of twenty thousand
+// rows, which reads as "nothing is happening" — the exact opposite of the
+// truth.
+//
+// It is built from what the window actually holds instead, ordered so the
+// policies that denied or warned come first. A chip exists because a policy
+// fired; its count is the attention it drew, and a policy that only ever allows
+// is muted rather than absent, because "this ran and objected to nothing" is
+// also worth reading.
 pub(super) fn stage_filters(
     query: &GovernanceQuery,
-    data: &DashboardGovernanceData,
+    data: &GovernanceData,
 ) -> Vec<StageFilterView> {
-    let s = data.stats;
-    [
-        ("Scope", "agent_scope", s.scope_denied),
-        ("Secret", "secret_scan", s.secret_denied),
-        ("Blocklist", "tool_blocklist", s.blocklist_denied),
-        ("Rate", "rate_limit", s.rate_denied),
-    ]
-    .into_iter()
-    .map(|(label, policy, count)| StageFilterView {
-        label,
-        count,
-        href: filter_url(
-            query,
-            &[
-                ("tab", "decisions"),
-                ("policy", policy),
-                ("decision", "deny"),
-            ],
-        ),
-        active: query.policy.as_deref() == Some(policy),
-    })
-    .collect()
+    data.policy_counts
+        .iter()
+        .map(|p| {
+            let attention = p.denied + p.warned;
+            StageFilterView {
+                label: p.policy.clone(),
+                count: if attention > 0 { attention } else { p.total },
+                href: filter_url(query, &[("tab", "decisions"), ("policy", &p.policy)]),
+                active: query.policy.as_deref() == Some(p.policy.as_str()),
+                tone: if p.denied > 0 {
+                    "err"
+                } else if p.warned > 0 {
+                    "warn"
+                } else {
+                    "muted"
+                },
+            }
+        })
+        .collect()
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "page query plumbing; splitting the parameters is tracked in docs/tech-debt.md"
-)]
-fn tile(
+struct Tile {
     label: &'static str,
     value: i64,
     sub: String,
     tone: &'static str,
-    query: &GovernanceQuery,
     filter: Option<(&'static str, &'static str)>,
     hint: &'static str,
-) -> DashboardGovernanceKpiView {
+}
+
+fn tile(query: &GovernanceQuery, tile: Tile) -> GovernanceKpiView {
+    let Tile {
+        label,
+        value,
+        sub,
+        tone,
+        filter,
+        hint,
+    } = tile;
     let (href, active) = filter.map_or_else(
         || (filter_url(query, &[]), false),
         |(name, value)| {
@@ -160,7 +183,7 @@ fn tile(
             (filter_url(query, &[(name, value)]), current == Some(value))
         },
     );
-    DashboardGovernanceKpiView {
+    GovernanceKpiView {
         label,
         value: value.to_string(),
         sub,

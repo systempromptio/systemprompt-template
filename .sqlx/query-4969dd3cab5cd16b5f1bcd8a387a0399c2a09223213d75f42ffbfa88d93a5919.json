@@ -1,0 +1,80 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) AS \"attempted!\",count(*) FILTER(WHERE x.status='completed') AS \"completed!\",count(*) FILTER(WHERE cardinality(COALESCE(m.hard_failures,ARRAY[]::TEXT[]))>0) AS \"hard_failures!\",count(*) FILTER(WHERE m.quality_milli IS NULL) AS \"unscored!\",count(*) FILTER(WHERE m.verified_success) AS \"successes!\",COALESCE(sum(m.attempted_cost_microdollars),0)::BIGINT AS \"cost!\",count(*) FILTER(WHERE m.accounting_status='complete') AS \"accounting_complete!\",count(m.execution_id) AS \"accounting_total!\",jsonb_agg(jsonb_build_object('execution_id',x.id,'variant',x.variant_index,'case_revision_id',x.case_revision_id,'repetition',x.repetition,'status',x.status,'measurement',to_jsonb(m)) ORDER BY x.variant_index,x.case_revision_id,x.repetition) AS \"variants!\" FROM eval_experiments e JOIN eval_executions x ON x.experiment_id=e.id LEFT JOIN eval_execution_measurements m ON m.execution_id=x.id WHERE e.owner_id=$1 AND e.id=$2 GROUP BY e.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "attempted!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "completed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "hard_failures!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "unscored!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "successes!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "accounting_complete!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "accounting_total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "variants!",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "4969dd3cab5cd16b5f1bcd8a387a0399c2a09223213d75f42ffbfa88d93a5919"
+}

@@ -24,7 +24,7 @@ use crate::repositories::analytics::session_detail::{
     list_session_traces,
 };
 use crate::repositories::analytics::session_quality::{
-    find_session_analysis, list_session_ratings,
+    SessionAnalysisSummary, SessionRatingRow, find_session_analysis, list_session_ratings,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -35,10 +35,48 @@ use context::{
 };
 
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "one page assembly per handler; splitting is tracked in docs/tech-debt.md"
-)]
+struct SessionRead {
+    kpis: SessionKpis,
+    contexts: Vec<SessionContextRow>,
+    traces: Vec<SessionTraceRow>,
+    requests: Vec<SessionRequestRow>,
+    analysis: Option<SessionAnalysisSummary>,
+    ratings: Vec<SessionRatingRow>,
+}
+
+// Why: every section is best-effort once the header has resolved — a panel
+// that cannot load renders empty rather than taking the page down.
+async fn load_session(pool: &PgPool, session_id: &SessionId) -> SessionRead {
+    let (kpis, contexts, traces, requests, analysis, ratings) = tokio::join!(
+        get_session_kpis(pool, session_id),
+        list_session_contexts(pool, session_id),
+        list_session_traces(pool, session_id),
+        list_session_requests(pool, session_id),
+        find_session_analysis(pool, session_id),
+        list_session_ratings(pool, session_id),
+    );
+    SessionRead {
+        kpis: kpis
+            .inspect_err(|e| tracing::warn!(error = %e, "get_session_kpis failed"))
+            .unwrap_or_default(),
+        contexts: contexts
+            .inspect_err(|e| tracing::warn!(error = %e, "list_session_contexts failed"))
+            .unwrap_or_default(),
+        traces: traces
+            .inspect_err(|e| tracing::warn!(error = %e, "list_session_traces failed"))
+            .unwrap_or_default(),
+        requests: requests
+            .inspect_err(|e| tracing::warn!(error = %e, "list_session_requests failed"))
+            .unwrap_or_default(),
+        analysis: analysis
+            .inspect_err(|e| tracing::warn!(error = %e, "find_session_analysis failed"))
+            .unwrap_or_default(),
+        ratings: ratings
+            .inspect_err(|e| tracing::warn!(error = %e, "list_session_ratings failed"))
+            .unwrap_or_default(),
+    }
+}
+
 pub(crate) async fn session_detail_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
@@ -51,78 +89,36 @@ pub(crate) async fn session_detail_page(
     }
 
     let session_id = SessionId::new(session_id.trim());
-    if session_id.as_str().is_empty() {
-        return Err(AdminError::NotFound(
-            "No AI requests, contexts, or transcript rows match that session id.".to_owned(),
-        )
-        .into());
-    }
-
-    let Some(header) = find_session_header(&pool, &session_id).await? else {
+    let header = if session_id.as_str().is_empty() {
+        None
+    } else {
+        find_session_header(&pool, &session_id).await?
+    };
+    let Some(header) = header else {
         return Err(AdminError::NotFound(
             "No AI requests, contexts, or transcript rows match that session id.".to_owned(),
         )
         .into());
     };
 
-    let (kpis_res, contexts_res, traces_res, requests_res, analysis_res, ratings_res) = tokio::join!(
-        get_session_kpis(&pool, &session_id),
-        list_session_contexts(&pool, &session_id),
-        list_session_traces(&pool, &session_id),
-        list_session_requests(&pool, &session_id),
-        find_session_analysis(&pool, &session_id),
-        list_session_ratings(&pool, &session_id),
-    );
-
-    let kpis = kpis_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "get_session_kpis failed");
-        SessionKpis {
-            request_count: 0,
-            context_count: 0,
-            trace_count: 0,
-            error_count: 0,
-            total_input_tokens: 0,
-            total_output_tokens: 0,
-            total_cost_microdollars: 0,
-        }
-    });
-    let contexts = contexts_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "list_session_contexts failed");
-        Vec::new()
-    });
-    let traces = traces_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "list_session_traces failed");
-        Vec::new()
-    });
-    let requests = requests_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "list_session_requests failed");
-        Vec::new()
-    });
-    let analysis = analysis_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "find_session_analysis failed");
-        None
-    });
-    let ratings = ratings_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "list_session_ratings failed");
-        Vec::new()
-    });
-    let rating_average = quality::rating_average(&ratings);
-    let rating_views: Vec<_> = ratings.iter().map(quality::rating_view).collect();
+    let read = load_session(&pool, &session_id).await;
+    let rating_average = quality::rating_average(&read.ratings);
+    let rating_views: Vec<_> = read.ratings.iter().map(quality::rating_view).collect();
 
     let data = SessionDetailPageContext {
         page: "session-detail",
         title: format!("Session · {}", short_id(header.session_id.as_str())),
         breadcrumbs: breadcrumbs(&header),
         header: header_view(&header),
-        kpis: kpis_view(&kpis),
-        has_contexts: !contexts.is_empty(),
-        contexts: contexts.iter().map(context_view).collect(),
-        has_traces: !traces.is_empty(),
-        traces: traces.iter().map(trace_view).collect(),
-        has_requests: !requests.is_empty(),
-        requests: requests.iter().map(request_view).collect(),
+        kpis: kpis_view(&read.kpis),
+        has_contexts: !read.contexts.is_empty(),
+        contexts: read.contexts.iter().map(context_view).collect(),
+        has_traces: !read.traces.is_empty(),
+        traces: read.traces.iter().map(trace_view).collect(),
+        has_requests: !read.requests.is_empty(),
+        requests: read.requests.iter().map(request_view).collect(),
         back_url: "/admin/sessions",
-        analysis: analysis.as_ref().map(quality::analysis_view),
+        analysis: read.analysis.as_ref().map(quality::analysis_view),
         has_ratings: !rating_views.is_empty(),
         rating_count: rating_views.len(),
         rating_average,

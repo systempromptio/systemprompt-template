@@ -12,8 +12,7 @@ pub fn list_configured_hooks(
     services_path: &Path,
     roles: &[String],
 ) -> Result<Vec<ConfiguredHook>, MarketplaceError> {
-    use crate::types::ROLE_ADMIN;
-    let is_admin = roles.iter().any(|r| r == ROLE_ADMIN);
+    let is_admin = crate::types::roles_grant_manage(roles);
 
     let hooks_dir = services_path.join("hooks");
     if !hooks_dir.is_dir() {

@@ -8,7 +8,9 @@
 use std::sync::Arc;
 
 use sqlx::PgPool;
+use systemprompt::identifiers::RoleId;
 use systemprompt_security::authz::{Access, AccessControlRepository, EntityKind, RuleType};
+use systemprompt_web_shared::{GroupId, ProjectId};
 
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared;
@@ -49,7 +51,7 @@ pub(super) async fn parse_subject(
     // pointed at their own field.
     let invalid = || {
         AdminError::BadRequest(
-            "invalid rule_type (invalid subject_type): must be user, role, department, group or project"
+            "invalid rule_type (invalid subject_type): must be user, role, group or project"
                 .to_owned(),
         )
     };
@@ -65,24 +67,15 @@ pub(super) async fn parse_subject(
             Ok((RuleType::USER, rule_value.to_owned()))
         },
         "role" => {
-            if rule_value.trim().is_empty() {
-                return Err(invalid());
-            }
-            Ok((RuleType::ROLE, rule_value.to_owned()))
-        },
-        "department" => {
-            if repositories::departments::find_department_by_name(pool, rule_value)
-                .await?
-                .is_none()
-            {
-                return Err(AdminError::BadRequest(format!(
-                    "No department {rule_value}"
-                )));
-            }
-            Ok((RuleType::extension("department")?, rule_value.to_owned()))
+            let role = RoleId::try_new(rule_value)
+                // Why: 400-boundary classification; the validator's reason is
+                // the only thing that tells the caller which rule the name
+                // broke. lint-ok: error-adapt
+                .map_err(|e| AdminError::BadRequest(format!("invalid rule_value: {e}")))?;
+            Ok((RuleType::ROLE, role.as_str().to_owned()))
         },
         "group" => {
-            if repositories::groups::crud::find_group(pool, rule_value)
+            if repositories::groups::crud::find_group(pool, &GroupId::new(rule_value))
                 .await?
                 .is_none()
             {
@@ -91,7 +84,7 @@ pub(super) async fn parse_subject(
             Ok((RuleType::extension("group")?, rule_value.to_owned()))
         },
         "project" => {
-            if repositories::projects::crud::find_project(pool, rule_value)
+            if repositories::projects::crud::find_project(pool, &ProjectId::new(rule_value))
                 .await?
                 .is_none()
             {

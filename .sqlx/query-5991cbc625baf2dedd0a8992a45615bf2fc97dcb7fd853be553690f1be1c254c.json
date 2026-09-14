@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE eval_campaigns SET generation=generation+1,updated_at=NOW() WHERE id=$1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5991cbc625baf2dedd0a8992a45615bf2fc97dcb7fd853be553690f1be1c254c"
+}

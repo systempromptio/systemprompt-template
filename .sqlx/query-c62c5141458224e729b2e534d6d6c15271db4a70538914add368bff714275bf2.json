@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT digest, manifest AS \"manifest!: Json<RevisionManifest>\" FROM managed_revisions WHERE id=$1 AND owner_id=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_revisions",
+            "name": "digest"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "manifest!: Json<RevisionManifest>",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "managed_revisions",
+            "name": "manifest"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "c62c5141458224e729b2e534d6d6c15271db4a70538914add368bff714275bf2"
+}

@@ -1,0 +1,140 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT b.owner_id,b.execution_id,b.fencing_token,b.traffic_class,x.fencing_token AS current_fence,x.status,(x.lease_expires_at>NOW() AND x.deadline_at>NOW()) AS live,e.status AS experiment_status,e.budget_id,e.spec->'variants'->x.variant_index->>'model' AS model,e.spec->'variants'->x.variant_index->>'provider' AS provider,EXISTS(SELECT 1 FROM eval_workers w WHERE w.id=x.lease_owner AND w.owner_id=e.owner_id AND w.enabled AND w.expires_at>NOW()) AS worker_live FROM eval_session_bindings b JOIN eval_executions x ON x.id=b.execution_id JOIN eval_experiments e ON e.id=x.experiment_id WHERE b.session_id=$1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "owner_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_session_bindings",
+            "name": "owner_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "execution_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_session_bindings",
+            "name": "execution_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "fencing_token",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "eval_session_bindings",
+            "name": "fencing_token"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "traffic_class",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_session_bindings",
+            "name": "traffic_class"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "current_fence",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "eval_executions",
+            "name": "fencing_token"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_executions",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "live",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "experiment_status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_experiments",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "budget_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_experiments",
+            "name": "budget_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "model",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "provider",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "worker_live",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      false,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "0b8fc1243ab062fef518248ea2de5193072101861b6934349a5670139be793ec"
+}

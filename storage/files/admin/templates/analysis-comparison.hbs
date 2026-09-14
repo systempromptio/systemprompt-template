@@ -1,0 +1,11 @@
+{{#> layout title=title page=page}}{{#*inline "content"}}
+{{> components/page-header title=title subtitle="Inspect exact file changes before measuring their effects."}}
+<p>This is a revision comparison, not an evaluation result. Publication is a separate reviewed action.</p>
+<p>Baseline: <a href="/admin/analysis/revisions/{{comparison.baseline}}">{{comparison.baseline}}</a><br>Candidate: <a href="/admin/analysis/revisions/{{comparison.candidate}}">{{comparison.candidate}}</a></p>
+{{#if comparison.dependencies_changed}}<p>Dependencies changed. Review those revisions before comparing outcomes.</p>{{/if}}
+{{#if comparison.source_snapshot_changed}}<p>The revisions refer to different source snapshots.</p>{{/if}}
+<div class="sp-table"><div class="sp-table__scroll"><table class="sp-table__el sp-analysis-table sp-analysis-diff-table"><thead><tr><th>File</th><th>Change</th><th>Before</th><th>After</th></tr></thead><tbody>
+{{#each comparison.changes}}<tr><td>{{path}}</td><td>{{kind}}</td><td>{{#if before}}{{before.bytes}} bytes<br><small>{{before.digest}}</small>{{else}}Absent{{/if}}</td><td>{{#if after}}{{after.bytes}} bytes<br><small>{{after.digest}}</small>{{else}}Absent{{/if}}</td></tr>{{else}}<tr><td colspan="4">No file content or metadata changes.</td></tr>{{/each}}
+</tbody></table></div></div>
+<div class="sp-analysis-comparison"><section><h2>Baseline instructions</h2><pre class="sp-analysis-file-preview"><code>{{before.text}}</code></pre>{{#if before.truncated}}<p>Preview truncated. Open revision evidence for the full download.</p>{{/if}}</section><section><h2>Candidate instructions</h2><pre class="sp-analysis-file-preview"><code>{{after.text}}</code></pre>{{#if after.truncated}}<p>Preview truncated. Open revision evidence for the full download.</p>{{/if}}</section></div>
+{{/inline}}{{/layout}}

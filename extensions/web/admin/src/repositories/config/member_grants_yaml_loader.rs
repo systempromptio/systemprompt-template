@@ -120,6 +120,7 @@ async fn project_grants(
                 rule_value: member,
                 access: grant.access,
                 justification: Some("configured access for members of a group or project"),
+                source: systemprompt_security::authz::YAML_SOURCE,
             })
             .await
             .map_err(|e| MarketplaceError::Internal(e.to_string()))?;

@@ -20,7 +20,8 @@ pub fn bridge_auth_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) ->
         )
         .route("/device-link/deny", post(handlers::ssr::device_link_deny))
         .layer(Extension(engine))
-        .layer(axum_middleware::from_fn(
+        .layer(axum_middleware::from_fn_with_state(
+            Arc::clone(&pool),
             middleware::marketplace_context_middleware,
         ))
         .layer(axum_middleware::from_fn(

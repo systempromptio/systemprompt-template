@@ -1,0 +1,14 @@
+[package]
+name = "evaluation-unit-tests"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+systemprompt = { workspace = true }
+systemprompt-api = { workspace = true }
+systemprompt-evaluation = { workspace = true }
+serde_json = { workspace = true }

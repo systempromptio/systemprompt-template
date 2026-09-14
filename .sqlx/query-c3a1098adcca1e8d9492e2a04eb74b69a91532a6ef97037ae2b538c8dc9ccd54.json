@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_distribution_deliveries(id,owner_id,outbox_id,publication_id,generation,status,claim_token) VALUES($1,$2,$3,$4,$5,'claimed',$6)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c3a1098adcca1e8d9492e2a04eb74b69a91532a6ef97037ae2b538c8dc9ccd54"
+}

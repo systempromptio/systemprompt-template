@@ -3,13 +3,14 @@
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
+use systemprompt_web_shared::ProjectId;
 
 use crate::error::{AdminError, AdminResult};
 use crate::types::projects::ProjectMemberRow;
 
 pub async fn list_project_members(
     pool: &PgPool,
-    project_id: &str,
+    project_id: &ProjectId,
 ) -> Result<Vec<ProjectMemberRow>, sqlx::Error> {
     sqlx::query_as!(
         ProjectMemberRow,
@@ -30,7 +31,7 @@ pub async fn list_project_members(
         GROUP BY pm.user_id, u.display_name, u.email
         ORDER BY u.display_name NULLS LAST, pm.user_id
         "#,
-        project_id
+        project_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -39,25 +40,38 @@ pub async fn list_project_members(
 pub async fn list_project_ids_for_user(
     pool: &PgPool,
     user_id: &UserId,
-) -> Result<Vec<String>, sqlx::Error> {
+) -> Result<Vec<ProjectId>, sqlx::Error> {
     sqlx::query_scalar!(
-        "SELECT DISTINCT project_id FROM project_members WHERE user_id = $1 ORDER BY project_id",
+        r#"SELECT DISTINCT project_id AS "project_id!: ProjectId" FROM project_members WHERE user_id = $1 ORDER BY project_id"#,
         user_id.as_str()
     )
     .fetch_all(pool)
     .await
 }
 
+pub async fn count_project_members(
+    pool: &PgPool,
+    project_id: &ProjectId,
+) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT COUNT(DISTINCT user_id)::BIGINT AS "count!"
+           FROM project_members WHERE project_id = $1"#,
+        project_id.as_str()
+    )
+    .fetch_one(pool)
+    .await
+}
+
 pub async fn insert_project_member(
     pool: &PgPool,
-    project_id: &str,
+    project_id: &ProjectId,
     user_id: &UserId,
     granted_by: &UserId,
 ) -> AdminResult<()> {
     let inserted = sqlx::query!(
         "INSERT INTO project_members (project_id, user_id, source, granted_by)
          VALUES ($1, $2, 'manual', $3) ON CONFLICT DO NOTHING",
-        project_id,
+        project_id.as_str(),
         user_id.as_str(),
         granted_by.as_str()
     )
@@ -73,13 +87,13 @@ pub async fn insert_project_member(
 
 pub async fn delete_project_member(
     pool: &PgPool,
-    project_id: &str,
+    project_id: &ProjectId,
     user_id: &UserId,
 ) -> AdminResult<()> {
     let sources = sqlx::query_scalar!(
         r#"SELECT source AS "source!" FROM project_members
            WHERE project_id = $1 AND user_id = $2"#,
-        project_id,
+        project_id.as_str(),
         user_id.as_str()
     )
     .fetch_all(pool)
@@ -97,7 +111,7 @@ pub async fn delete_project_member(
     }
     sqlx::query!(
         "DELETE FROM project_members WHERE project_id = $1 AND user_id = $2 AND source = 'manual'",
-        project_id,
+        project_id.as_str(),
         user_id.as_str()
     )
     .execute(pool)
@@ -105,7 +119,6 @@ pub async fn delete_project_member(
     Ok(())
 }
 
-// Why: lint-ok: unused-pub — called by the downstream ADFS sign-in integration.
 pub async fn replace_directory_project_memberships(
     pool: &PgPool,
     user_id: &UserId,

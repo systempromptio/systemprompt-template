@@ -1,0 +1,10 @@
+{{#> layout title=title page=page}}{{#*inline "content"}}
+{{> components/page-header title=title subtitle="Trace each skill from its source to immutable revisions."}}
+<p>These are imported and authored revisions. Importing a baseline does not change active skills or start an experiment.</p>
+{{#if can_manage}}<form method="post" action="/admin/analysis/versions/capture-baseline"><button class="sp-btn sp-btn--primary" type="submit">Capture Super Admin baseline</button></form>{{/if}}
+<div class="sp-table"><div class="sp-table__scroll"><table class="sp-table__el sp-analysis-table"><thead><tr><th>Resource</th><th>Source</th><th>Revisions</th><th>Evidence</th></tr></thead><tbody>
+{{#each resources}}<tr><td><a href="/admin/analysis/versions/{{id}}">{{resource_key}}</a><br><small>{{kind}}</small></td><td>{{source_name}}</td><td>{{revision_count}}</td><td>{{#if latest_revision}}<a href="/admin/analysis/revisions/{{latest_revision}}">Latest revision</a>{{else}}No revision captured{{/if}}</td></tr>
+{{else}}<tr><td colspan="4">No managed resources in your authoring scope. Capture the current four-skill baseline to begin.</td></tr>{{/each}}
+</tbody></table></div></div>
+<nav class="sp-analysis-pagination" aria-label="Version pages">{{#if previous}}<a href="{{previous}}">Previous</a>{{/if}}{{#if next}}<a href="{{next}}">Next</a>{{/if}}</nav>
+{{/inline}}{{/layout}}

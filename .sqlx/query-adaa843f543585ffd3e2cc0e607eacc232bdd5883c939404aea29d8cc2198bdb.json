@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(m.request_id) AS \"requests!\",count(*) FILTER(WHERE q.status='completed' AND q.completed_at IS NOT NULL AND q.input_tokens IS NOT NULL AND q.output_tokens IS NOT NULL AND r.actual IS NOT NULL) AS \"complete!\",COALESCE(sum(q.input_tokens),0)::BIGINT AS \"input_tokens!\",COALESCE(sum(q.output_tokens),0)::BIGINT AS \"output_tokens!\",COALESCE(sum(q.cost_microdollars),0)::BIGINT AS \"cost!\",(SELECT count(*) FROM ai_request_tool_calls t WHERE t.request_id IN (SELECT request_id FROM eval_request_reservations WHERE execution_id=$2)) AS \"tool_calls!\" FROM eval_executions x JOIN eval_experiments e ON e.id=x.experiment_id LEFT JOIN eval_request_reservations m ON m.execution_id=x.id LEFT JOIN ai_requests q ON q.id=m.request_id AND q.user_id=e.owner_id LEFT JOIN eval_budget_reservations r ON r.id=m.reservation_id WHERE e.owner_id=$1 AND x.id=$2 GROUP BY x.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "complete!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "input_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "output_tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "tool_calls!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "adaa843f543585ffd3e2cc0e607eacc232bdd5883c939404aea29d8cc2198bdb"
+}

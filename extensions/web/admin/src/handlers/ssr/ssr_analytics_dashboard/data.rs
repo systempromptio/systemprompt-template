@@ -88,7 +88,6 @@ pub(super) async fn load_dashboard_data(
     match plan.tab {
         DashboardTab::Overview => load_overview(pool, &plan, &mut data).await,
         DashboardTab::Models => data.tabs = data_tabs::load_models(pool, &tab_plan).await,
-        DashboardTab::Skills => data.tabs = data_tabs::load_skills(pool, &tab_plan).await,
         DashboardTab::Tools => data.tabs = data_tabs::load_tools(pool, &tab_plan).await,
         DashboardTab::Sessions => data.tabs = data_tabs::load_sessions(pool, &tab_plan).await,
         DashboardTab::Cost => data.tabs = data_tabs::load_cost(pool, &tab_plan).await,

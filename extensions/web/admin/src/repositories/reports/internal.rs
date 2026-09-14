@@ -99,3 +99,33 @@ pub struct PlatformMonthPoint {
     pub cost_microdollars: i64,
     pub requests: i64,
 }
+
+pub async fn list_platform_month_series(
+    pool: &PgPool,
+    months: i32,
+) -> Result<Vec<PlatformMonthPoint>, MarketplaceError> {
+    let rows = sqlx::query!(
+        r#"
+        SELECT
+            DATE_TRUNC('month', r.created_at) AS "month_start!",
+            COALESCE(SUM(r.cost_microdollars), 0)::BIGINT AS "cost!",
+            COUNT(*)::BIGINT AS "requests!"
+        FROM ai_requests r
+        WHERE r.created_at >= DATE_TRUNC('month', NOW()) - ($1::INT * INTERVAL '1 month')
+        GROUP BY 1
+        ORDER BY 1
+        "#,
+        months,
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|r| PlatformMonthPoint {
+            month_start: r.month_start,
+            cost_microdollars: r.cost,
+            requests: r.requests,
+        })
+        .collect())
+}

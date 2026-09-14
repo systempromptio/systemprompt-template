@@ -41,10 +41,7 @@ pub(crate) async fn roles_page(
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
 
-    let mut known: Vec<String> = Role::ALL.iter().map(|r| r.as_str().to_owned()).collect();
-    known.extend(crate::repositories::users::queries::list_distinct_roles(&pool).await?);
-    known.sort();
-    known.dedup();
+    let known: Vec<String> = Role::ALL.iter().map(|r| r.as_str().to_owned()).collect();
     let member_rows = members::list_role_holders(&pool, &known, data::MEMBER_CAP)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "roles: member listing failed"))
@@ -54,7 +51,7 @@ pub(crate) async fn roles_page(
         .inspect_err(|e| tracing::warn!(error = %e, "roles: entitlement listing failed"))
         .unwrap_or_default();
 
-    let cards = rows::cards(&member_rows, &entitlement_rows, &query, &known);
+    let cards = rows::cards(&member_rows, &entitlement_rows, &query);
     let matching = data::filtered_sorted(&member_rows, &query);
     let total = i64::try_from(matching.len()).unwrap_or(i64::MAX);
     let index = data::page_index(&query, total);
@@ -90,11 +87,11 @@ pub(crate) async fn roles_page(
         entitlements: rows::entitlement_views(&entitlement_rows),
         pagination: data::pagination(&query, window),
         sort_headers: rows::sort_headers(&query),
-        role_options: rows::role_options(&query, &known),
+        role_options: rows::role_options(&query),
         source_options: rows::source_options(&query),
         status_options: rows::status_options(&query),
         search: data::search(&query),
-        known_roles: rows::role_options(&RolesQuery::default(), &known),
+        known_roles: rows::role_options(&RolesQuery::default()),
         filters_applied: query.any_applied(),
         clear_url: data::BASE_URL,
         cards,

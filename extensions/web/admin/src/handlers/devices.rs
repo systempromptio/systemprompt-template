@@ -17,14 +17,14 @@ use crate::services::device_service;
 use crate::types::UserContext;
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct DeviceIssueApiKeyRequest {
+pub(crate) struct IssueApiKeyRequest {
     pub name: String,
     #[serde(default)]
     pub expires_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Serialize)]
-pub(crate) struct DeviceIssueApiKeyResponse {
+pub(crate) struct IssueApiKeyResponse {
     pub id: String,
     pub name: String,
     pub key_prefix: String,
@@ -36,11 +36,11 @@ pub(crate) struct DeviceIssueApiKeyResponse {
 pub(crate) async fn issue_pat(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
-    Json(body): Json<DeviceIssueApiKeyRequest>,
+    Json(body): Json<IssueApiKeyRequest>,
 ) -> AdminResult<Response> {
     let issued =
         device_service::issue_pat(&pool, &user_ctx.user_id, &body.name, body.expires_at).await?;
-    Ok(Json(DeviceIssueApiKeyResponse {
+    Ok(Json(IssueApiKeyResponse {
         id: issued.id,
         name: issued.name,
         key_prefix: issued.key_prefix,

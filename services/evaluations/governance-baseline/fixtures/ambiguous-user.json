@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "users": [
+      {
+        "id": "eval-alex-1",
+        "display_name": "Alex"
+      },
+      {
+        "id": "eval-alex-2",
+        "display_name": "Alex"
+      }
+    ],
+    "authorized_mutations": []
+  }
+}

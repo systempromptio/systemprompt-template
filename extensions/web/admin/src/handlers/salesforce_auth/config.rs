@@ -24,7 +24,7 @@ pub struct SalesforceConfig {
     #[serde(default)]
     pub enabled: bool,
     // Why: the org's My Domain base URL, e.g.
-    // `https://example.my.salesforce.com`. Doubles as the JWT-bearer audience.
+    // `https://systemprompt.my.salesforce.com`. Doubles as the JWT-bearer audience.
     pub my_domain: String,
     #[serde(alias = "client_id")]
     pub consumer_key: String,

@@ -25,7 +25,7 @@ fn load_downstream_config<T: serde::de::DeserializeOwned>(
         config_name: filename.to_owned(),
         message: e.to_string(),
     })?;
-    tracing::info!(file = %filename, "Loaded {label} config");
+    tracing::info!(file = %filename, label, "Loaded config");
     Ok(Some(Arc::new(config)))
 }
 

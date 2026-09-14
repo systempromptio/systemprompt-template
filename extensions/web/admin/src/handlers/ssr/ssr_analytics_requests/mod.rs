@@ -9,6 +9,7 @@
 
 use crate::error::AdminError;
 use std::sync::Arc;
+use systemprompt_web_shared::{GroupId, ProjectId};
 
 use axum::extract::{Extension, Query, State};
 use axum::response::Response;
@@ -177,6 +178,7 @@ pub(crate) async fn analytics_requests_csv(
     let (rows, _) =
         crate::repositories::analytics::requests::list_requests_paged(&pool, &filter, range, page)
             .await
+            .inspect_err(|e| tracing::warn!(error = %e, "requests export: listing failed"))
             .unwrap_or_default();
 
     let mut csv = CsvBuilder::new(&[
@@ -200,8 +202,10 @@ pub(crate) async fn analytics_requests_csv(
             &r.created_at.to_rfc3339(),
             r.request_id.as_str(),
             r.user_id.as_str(),
-            r.group_id.as_deref().unwrap_or("unattributed"),
-            r.project_id.as_deref().unwrap_or("unattributed"),
+            r.group_id.as_ref().map_or("unattributed", GroupId::as_str),
+            r.project_id
+                .as_ref()
+                .map_or("unattributed", ProjectId::as_str),
             &r.provider,
             &r.model,
             &r.status,

@@ -4,6 +4,7 @@
 
 use serde::Serialize;
 use systemprompt::identifiers::{AiRequestId, SessionId, TraceId, UserId};
+use systemprompt_web_shared::{GroupId, ProjectId};
 
 use crate::handlers::ssr::list_view::{Chip, Pagination, ScopeFilterView, SelectOptionView};
 use crate::handlers::ssr::types::{BreadcrumbView, ChartView, HistogramView, SortHeaderView};
@@ -180,10 +181,10 @@ pub(super) struct RequestListRowView {
     // Why: exclusive attribution, so a row belongs to exactly one project and
     // one group. A row with neither is shown as "Unattributed" rather than
     // blank — the bucket is a fact about the data, not a gap in the page.
-    pub project_id: Option<String>,
+    pub project_id: Option<ProjectId>,
     pub project_label: String,
     pub project_url: Option<String>,
-    pub group_id: Option<String>,
+    pub group_id: Option<GroupId>,
     pub group_label: String,
     pub group_url: Option<String>,
     pub is_unattributed: bool,

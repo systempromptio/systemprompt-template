@@ -9,6 +9,7 @@ use crate::repositories::projects::activity::{
     ProjectCommitRow, ProjectSessionRow, SkillEffectivenessRow, ToolHealthRow,
 };
 use crate::types::access_control::{AccessControlRule, AccessDecision};
+use systemprompt_web_shared::ProjectId;
 
 use super::super::format::short_num;
 use super::super::people_view::{format_usd, model_rows};
@@ -20,7 +21,7 @@ use super::super::types::{
 use super::detail::{DetailData, ProjectUsageData};
 use super::pct;
 
-pub(super) fn tabs(project_id: &str, active: &str) -> Vec<TabLinkView> {
+pub(super) fn tabs(project_id: &ProjectId, active: &str) -> Vec<TabLinkView> {
     [
         ("members", "Members"),
         ("usage", "Usage"),

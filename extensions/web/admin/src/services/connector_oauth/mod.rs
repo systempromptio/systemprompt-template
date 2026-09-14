@@ -3,9 +3,12 @@
 
 pub mod config;
 pub mod discovery;
+pub mod generic;
+mod generic_discovery;
 pub mod payload;
 mod salesforce;
 pub mod site;
+mod tokens;
 mod transport;
 pub mod verify;
 
@@ -14,16 +17,23 @@ use crate::repositories::secrets::secret_crypto;
 use crate::repositories::users::connector_credentials::{self as repo, EncryptedGrant};
 use chrono::Utc;
 pub use config::Provider;
+pub use generic::Consent;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
-pub use transport::{authorize, exchange};
+pub use transport::{authorize, exchange, exchange_with_client, refresh_with_client};
 
 // Why: Debug output must never reveal credentials; serialization is only for
 // the encrypted credential store, not HTTP responses.
 #[derive(Deserialize, Serialize)]
 pub struct Grant {
     pub user: String,
+    #[serde(default)]
+    pub configuration_binding: String,
+    #[serde(default)]
+    pub authorization_issuer: String,
+    #[serde(default)]
+    pub token_auth_method: String,
     pub provider: Provider,
     pub client: String,
     pub client_secret: String,
@@ -67,6 +77,10 @@ pub fn seal(grant: &Grant) -> AdminResult<EncryptedGrant> {
     })
 }
 
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "Preserves the public provider API for embedded callers"
+)]
 pub fn open(row: &EncryptedGrant, user: &UserId, provider: Provider) -> AdminResult<Grant> {
     let key = secret_crypto::load_master_key()?;
     let nonce = row
@@ -82,11 +96,69 @@ pub fn open(row: &EncryptedGrant, user: &UserId, provider: Provider) -> AdminRes
             "Connector credential owner mismatch".into(),
         ));
     }
+    generic::validate_grant(&grant)?;
     Ok(grant)
 }
 
+// Why: an outage or permission problem must not destroy a refresh grant; only
+// a rejected grant is deleted and the generation bumped.
+async fn record_grant_failure(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    user: &UserId,
+    account: &mut crate::repositories::users::connector_accounts::ProviderConnection,
+    grant: &Grant,
+    error: &AdminError,
+) -> AdminResult<()> {
+    let provider = &grant.provider;
+    if matches!(error, AdminError::Unauthorized(_)) {
+        account.status = "reconnect_required".into();
+        account.error_code = Some("grant_rejected".into());
+        account.generation += 1;
+        repo::delete(tx, user, provider.slug()).await?;
+    } else {
+        account.status = "temporarily_unavailable".into();
+        account.error_code = Some(
+            if matches!(error, AdminError::Forbidden(_)) {
+                "provider_permission_denied"
+            } else {
+                "provider_unavailable"
+            }
+            .into(),
+        );
+        // Why: A successful refresh followed by a failed probe still rotates the
+        // grant. Persist it before returning the probe error.
+        repo::store(tx, user, provider.slug(), &seal(grant)?).await?;
+    }
+    crate::repositories::users::connector_accounts::update_account(tx, user, account).await?;
+    Ok(())
+}
+
+// Why: A grant that cannot be opened under the current configuration flags the
+// account for reconnection before the error propagates.
+async fn open_or_flag(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    user: &UserId,
+    provider: &Provider,
+    row: &EncryptedGrant,
+    account: &mut crate::repositories::users::connector_accounts::ProviderConnection,
+) -> AdminResult<Grant> {
+    match open(row, user, provider.clone()) {
+        Ok(grant) => Ok(grant),
+        Err(error) => {
+            if matches!(error, AdminError::Unauthorized(_)) {
+                account.status = "reconnect_required".into();
+                account.error_code = Some("configuration_changed".into());
+                crate::repositories::users::connector_accounts::update_account(tx, user, account)
+                    .await?;
+            }
+            Err(error)
+        },
+    }
+}
+
 // Why: Resolve a server-only Authorization header, refreshing under the account
-// lock.
+// lock. One account-locked transaction keeps refresh, generation checks and
+// error-state commits together.
 pub async fn verified_token(
     pool: &PgPool,
     user: &UserId,
@@ -100,7 +172,7 @@ pub async fn verified_token(
     let mut tx = pool.begin().await?;
     let mut account = accounts::get_locked_account(&mut tx, user, provider.slug()).await?;
     let row = repo::lock(&mut tx, user, provider.slug()).await?;
-    let preauthorize = row.is_none() && provider == Provider::Salesforce && account.generation == 0;
+    let preauthorize = row.is_none() && provider.is_salesforce() && account.generation == 0;
     require_connection(&account.status, preauthorize)?;
     // Why: a saved OAuth grant is not usable until the MCP verification has
     // succeeded.
@@ -110,8 +182,14 @@ pub async fn verified_token(
         ));
     }
     let mut grant = match row {
-        Some(row) => open(&row, user, provider)?,
-        None if preauthorize => salesforce::mint(pool, user, account.generation).await?,
+        Some(row) => match open_or_flag(&mut tx, user, &provider, &row, &mut account).await {
+            Ok(grant) => grant,
+            Err(error) => {
+                tx.commit().await?;
+                return Err(error);
+            },
+        },
+        None if preauthorize => salesforce::mint(pool, user, &provider, account.generation).await?,
         None => {
             return Err(AdminError::NotFound(
                 "Connect your provider account in Systemprompt".into(),
@@ -120,7 +198,7 @@ pub async fn verified_token(
     };
     let remint = grant.auth_method == "jwt_bearer" && grant.expires_at <= Utc::now().timestamp();
     if remint {
-        grant = salesforce::mint(pool, user, account.generation).await?;
+        grant = salesforce::mint(pool, user, &provider, account.generation).await?;
     }
     let refresh = grant.auth_method == "oauth" && grant.expires_at <= Utc::now().timestamp() + 120;
     let result = async {
@@ -134,27 +212,7 @@ pub async fn verified_token(
     }
     .await;
     if let Err(error) = result {
-        if matches!(error, AdminError::Unauthorized(_)) {
-            account.status = "reconnect_required".into();
-            account.error_code = Some("grant_rejected".into());
-            account.generation += 1;
-            repo::delete(&mut tx, user, provider.slug()).await?;
-        } else {
-            // Why: An outage or permission problem must not destroy a refresh grant.
-            account.status = "temporarily_unavailable".into();
-            account.error_code = Some(
-                if matches!(error, AdminError::Forbidden(_)) {
-                    "provider_permission_denied"
-                } else {
-                    "provider_unavailable"
-                }
-                .into(),
-            );
-            // Why: A successful refresh followed by a failed probe still rotates the
-            // grant. Persist it before returning the probe error.
-            repo::store(&mut tx, user, provider.slug(), &seal(&grant)?).await?;
-        }
-        accounts::update_account(&mut tx, user, &account).await?;
+        record_grant_failure(&mut tx, user, &mut account, &grant, &error).await?;
         tx.commit().await?;
         return Err(error);
     }

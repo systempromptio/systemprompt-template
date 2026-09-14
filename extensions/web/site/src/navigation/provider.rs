@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use serde::Serialize;
+// JSON: page data crosses the provider trait as a Value.
 use serde_json::Value;
 use systemprompt::extension::prelude::*;
 
@@ -36,8 +37,6 @@ struct FooterNavigation<'a> {
 struct NavLinks {
     #[serde(rename = "app_url")]
     app: &'static str,
-    #[serde(rename = "blog_url")]
-    blog: &'static str,
     #[serde(rename = "docs_url")]
     docs: &'static str,
 }
@@ -91,7 +90,6 @@ impl PageDataProvider for NavigationPageDataProvider {
             },
             nav: NavLinks {
                 app: "/app",
-                blog: "/blog",
                 docs: "/documentation",
             },
         };

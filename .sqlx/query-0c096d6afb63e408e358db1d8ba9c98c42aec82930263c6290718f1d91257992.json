@@ -1,0 +1,175 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- One row per governed call: every evaluation that shared a trace, folded into\n-- one row with its chain carried as JSON.\n--\n-- The predicate in `keys` and the one in `count.sql` are ONE predicate expressed\n-- twice. `query_file!` verifies static text only, so a caller-supplied filter\n-- cannot be spliced in and the compiler cannot prove the two agree — edit both\n-- or the page and its total will disagree. `decision_calls_agree_with_their_count`\n-- in the integration suite is the guard.\n--\n-- $1 from, $2 to, $3 subject scope, $4 policy, $5 decision, $6 search,\n-- $7 sort key, $8 ascending, $9 limit, $10 offset, $11 attention only.\nWITH scoped AS (\n    SELECT g.id, g.created_at, g.decision, g.policy, g.reason, g.tool_name,\n           g.user_id, g.agent_scope, g.trace_id,\n           (g.decision = 'deny' OR (g.decision = 'warn' AND g.reason NOT LIKE 'secret detected: High-entropy token%')) AS actionable,\n           g.evaluated_rules ->> 'entity_type' AS entity_type,\n           CASE WHEN $11::BOOL AND (g.decision = 'deny' OR (g.decision = 'warn' AND g.reason NOT LIKE 'secret detected: High-entropy token%')) THEN 'review:' || md5(g.user_id || ':' || g.session_id || ':' || g.policy || ':' || COALESCE(substring(g.reason from 'fingerprint:([0-9a-f]{64})'), g.reason))\n                ELSE COALESCE(NULLIF(g.trace_id, ''), g.id) END AS call_key\n    FROM governance_decisions g\n    WHERE g.created_at >= $1 AND g.created_at < $2\n      AND ($3::TEXT[] IS NULL OR g.user_id = ANY($3))\n),\nkeys AS (\n    SELECT s.call_key\n    FROM scoped s\n    WHERE ($4::TEXT IS NULL OR s.policy = $4)\n      AND ($5::TEXT IS NULL OR s.decision = $5)\n      AND ($6::TEXT IS NULL\n           OR s.tool_name ILIKE '%' || $6 || '%'\n           OR s.user_id ILIKE '%' || $6 || '%'\n           OR s.reason ILIKE '%' || $6 || '%'\n           OR s.call_key ILIKE '%' || $6 || '%')\n    GROUP BY s.call_key\n    HAVING NOT $11::BOOL OR bool_or(s.actionable)\n),\nmember AS (\n    SELECT s.*,\n           CASE s.decision\n               WHEN 'deny' THEN 3\n               WHEN 'warn' THEN 2\n               WHEN 'allow' THEN 1\n               ELSE 0\n           END AS sev\n    FROM scoped s\n    JOIN keys k ON k.call_key = s.call_key\n),\nworst AS (\n    SELECT DISTINCT ON (m.call_key)\n           m.call_key, m.id, m.policy, m.decision, m.reason,\n           m.tool_name, m.entity_type, m.agent_scope, m.sev\n    FROM member m\n    ORDER BY m.call_key, m.sev DESC, m.created_at ASC, m.id ASC\n),\ngrouped AS (\n    SELECT m.call_key,\n           MIN(m.created_at) AS started_at,\n           MAX(m.created_at) AS ended_at,\n           COUNT(*)::BIGINT AS eval_count,\n           COUNT(*) FILTER (WHERE m.decision = 'deny')::BIGINT AS deny_count,\n           COUNT(*) FILTER (WHERE m.decision = 'warn')::BIGINT AS warn_count,\n           MIN(m.user_id) AS user_id,\n           MAX(m.trace_id) AS trace_id,\n           jsonb_agg(\n               jsonb_build_object(\n                   'id', m.id,\n                   'policy', m.policy,\n                   'decision', m.decision,\n                   'reason', m.reason,\n                   'tool_name', m.tool_name,\n                   'entity_type', m.entity_type\n               ) ORDER BY m.created_at, m.id\n           ) AS chain\n    FROM member m\n    GROUP BY m.call_key\n)\nSELECT gr.call_key AS \"call_key!\",\n       gr.started_at AS \"started_at!\",\n       gr.ended_at AS \"ended_at!\",\n       gr.eval_count AS \"eval_count!\",\n       gr.deny_count AS \"deny_count!\",\n       gr.warn_count AS \"warn_count!\",\n       gr.user_id AS \"user_id!: UserId\",\n       COALESCE(u.display_name, u.full_name, u.name, u.email, gr.user_id)\n           AS \"user_label!\",\n       gr.trace_id AS \"trace_id?\",\n       w.id AS \"worst_id!\",\n       w.decision AS \"worst_decision!\",\n       w.policy AS \"worst_policy!\",\n       w.reason AS \"worst_reason!\",\n       w.tool_name AS \"worst_tool!\",\n       w.entity_type AS \"worst_entity_type?\",\n       w.agent_scope AS \"agent_scope?\",\n       gr.chain AS \"chain!: Json<Vec<ChainEvaluation>>\"\nFROM grouped gr\nJOIN worst w ON w.call_key = gr.call_key\nLEFT JOIN LATERAL (\n    SELECT x.display_name, x.full_name, x.name, x.email\n    FROM users x WHERE x.id = gr.user_id\n) u ON true\nORDER BY\n  CASE WHEN $7 = 'policy'   AND $8 THEN w.policy END ASC,\n  CASE WHEN $7 = 'policy'   AND NOT $8 THEN w.policy END DESC,\n  CASE WHEN $7 = 'decision' AND $8 THEN w.sev END ASC,\n  CASE WHEN $7 = 'decision' AND NOT $8 THEN w.sev END DESC,\n  CASE WHEN $7 = 'tool'     AND $8 THEN w.tool_name END ASC,\n  CASE WHEN $7 = 'tool'     AND NOT $8 THEN w.tool_name END DESC,\n  CASE WHEN $7 = 'user'     AND $8 THEN gr.user_id END ASC,\n  CASE WHEN $7 = 'user'     AND NOT $8 THEN gr.user_id END DESC,\n  CASE WHEN $8 THEN gr.ended_at END ASC,\n  gr.ended_at DESC, gr.call_key DESC\nLIMIT $9 OFFSET $10\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "call_key!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "started_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "ended_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "eval_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "deny_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "warn_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "user_label!",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "trace_id?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "worst_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "worst_decision!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "decision"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "worst_policy!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "policy"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "worst_reason!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "reason"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "worst_tool!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "tool_name"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "worst_entity_type?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 15,
+        "name": "agent_scope?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "governance_decisions",
+            "name": "agent_scope"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "chain!: Json<Vec<ChainEvaluation>>",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      true,
+      null
+    ]
+  },
+  "hash": "0c096d6afb63e408e358db1d8ba9c98c42aec82930263c6290718f1d91257992"
+}

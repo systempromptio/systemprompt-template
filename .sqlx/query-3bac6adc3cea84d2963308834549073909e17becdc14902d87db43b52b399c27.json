@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE managed_reconciliations r SET status='resolved',resolved_revision_id=$3,resolved_by=$4,resolved_at=NOW() WHERE r.id=$1 AND r.owner_id=$2 AND r.status='open' AND NOT EXISTS(SELECT 1 FROM managed_reconciliation_conflicts c WHERE c.reconciliation_id=r.id AND c.resolution IS NULL)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3bac6adc3cea84d2963308834549073909e17becdc14902d87db43b52b399c27"
+}

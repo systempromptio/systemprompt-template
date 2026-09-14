@@ -5,6 +5,7 @@
 //! directory-sourced member is refused with a 409 pointing at AD.
 
 use std::sync::Arc;
+use systemprompt_web_shared::ProjectId;
 
 use axum::Json;
 use axum::extract::{Extension, Path, State};
@@ -24,13 +25,13 @@ use super::require_project;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct ListProjectMembersResponse {
-    pub project_id: String,
+    pub project_id: ProjectId,
     pub members: Vec<ProjectMemberRow>,
 }
 
 pub(crate) async fn list_project_members_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(project_id): Path<String>,
+    Path(project_id): Path<ProjectId>,
 ) -> AdminResult<Response> {
     let members = repo::list_project_members(&pool, &project_id).await?;
     Ok(Json(ListProjectMembersResponse {
@@ -43,7 +44,7 @@ pub(crate) async fn list_project_members_handler(
 pub(crate) async fn add_project_member_handler(
     State(pool): State<Arc<PgPool>>,
     Extension(user_ctx): Extension<UserContext>,
-    Path(project_id): Path<String>,
+    Path(project_id): Path<ProjectId>,
     Json(body): Json<AddProjectMemberRequest>,
 ) -> AdminResult<Response> {
     require_project(&pool, &project_id).await?;
@@ -54,20 +55,9 @@ pub(crate) async fn add_project_member_handler(
 
 pub(crate) async fn remove_project_member_handler(
     State(pool): State<Arc<PgPool>>,
-    Path((project_id, user_id)): Path<(String, String)>,
+    Path((project_id, user_id)): Path<(ProjectId, String)>,
 ) -> AdminResult<Response> {
     repo::delete_project_member(&pool, &project_id, &UserId::new(user_id)).await?;
     defaults::recompute_scope_defaults(&pool).await?;
     Ok((StatusCode::NO_CONTENT, ()).into_response())
-}
-
-pub(crate) async fn count_members(pool: &PgPool, project_id: &str) -> AdminResult<i64> {
-    let count = sqlx::query_scalar!(
-        r#"SELECT COUNT(DISTINCT user_id)::BIGINT AS "count!"
-           FROM project_members WHERE project_id = $1"#,
-        project_id
-    )
-    .fetch_one(pool)
-    .await?;
-    Ok(count)
 }

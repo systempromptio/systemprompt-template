@@ -23,9 +23,10 @@ use crate::repositories::projects::activity::{
     list_project_commits, list_project_sessions, list_project_skill_effectiveness,
     list_project_tool_health,
 };
-use crate::repositories::scope::{Attribution, ScopeKind, ScopeQuery};
+use crate::repositories::scope::{Attribution, ScopeQuery, ScopeTarget};
 use crate::types::UserContext;
 use crate::types::projects::{ProjectMemberRow, ProjectRow};
+use systemprompt_web_shared::ProjectId;
 
 use super::super::people_view::{
     MemberContext, MemberInput, chips, mapping_rows, member_rows, or_default,
@@ -62,25 +63,27 @@ pub(super) struct ProjectUsageData {
     pub(super) commits: Vec<ProjectCommitRow>,
 }
 
-const fn exclusive(project_id: &str) -> ScopeQuery<'_> {
+const fn exclusive(project_id: &ProjectId) -> ScopeQuery<'_> {
     ScopeQuery::new(
-        ScopeKind::Project,
+        ScopeTarget::Project(project_id),
         Attribution::Exclusive,
-        project_id,
         DEFAULT_WINDOW_DAYS,
     )
 }
 
-const fn member_view(project_id: &str) -> ScopeQuery<'_> {
+const fn member_view(project_id: &ProjectId) -> ScopeQuery<'_> {
     ScopeQuery::new(
-        ScopeKind::Project,
+        ScopeTarget::Project(project_id),
         Attribution::Member,
-        project_id,
         DEFAULT_WINDOW_DAYS,
     )
 }
 
-pub(super) async fn load(pool: &PgPool, project_id: &str, user_ctx: &UserContext) -> DetailData {
+pub(super) async fn load(
+    pool: &PgPool,
+    project_id: &ProjectId,
+    user_ctx: &UserContext,
+) -> DetailData {
     let q = exclusive(project_id);
     let members_q = member_view(project_id);
     let members = repositories::projects::members::list_project_members(pool, project_id)
@@ -114,7 +117,7 @@ pub(super) async fn load(pool: &PgPool, project_id: &str, user_ctx: &UserContext
     }
 }
 
-pub(super) async fn load_usage(pool: &PgPool, project_id: &str) -> ProjectUsageData {
+pub(super) async fn load_usage(pool: &PgPool, project_id: &ProjectId) -> ProjectUsageData {
     let q = exclusive(project_id);
     let (daily, models, tools, sessions, commits) = tokio::join!(
         list_daily_requests(pool, &q),
@@ -132,19 +135,27 @@ pub(super) async fn load_usage(pool: &PgPool, project_id: &str) -> ProjectUsageD
     }
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "page query plumbing; splitting the parameters is tracked in docs/tech-debt.md"
-)]
+// Why: only the active tab's reads are loaded — the usage tab's rollups and
+// the settings tab's mappings and rules are empty on every other tab.
+pub(super) struct TabReads<'a> {
+    pub(super) tab: &'a str,
+    pub(super) usage: Option<&'a ProjectUsageData>,
+    pub(super) mappings: Vec<crate::types::projects::ProjectAdMappingRow>,
+    pub(super) rules: &'a [crate::types::access_control::AccessControlRule],
+}
+
 pub(super) fn page_data(
     project: &ProjectRow,
     data: &DetailData,
-    usage: Option<&ProjectUsageData>,
-    tab: &str,
     user_ctx: &UserContext,
-    mappings: Vec<crate::types::projects::ProjectAdMappingRow>,
-    rules: &[crate::types::access_control::AccessControlRule],
+    reads: TabReads<'_>,
 ) -> ProjectDetailPageData {
+    let TabReads {
+        tab,
+        usage,
+        mappings,
+        rules,
+    } = reads;
     let inputs: Vec<MemberInput<'_>> = data.members.iter().map(as_member_input).collect();
     let rows = member_rows(
         &inputs,
@@ -178,11 +189,11 @@ pub(super) fn page_data(
             mapping_count: mappings.len() as i64,
             feeding_groups: mapping_rows(
                 mappings.into_iter().map(|m| (m.ad_group, m.source)),
-                crate::types::roles_grant_platform(&user_ctx.roles),
+                user_ctx.is_platform_admin,
             ),
             gated_count: rules.len() as i64,
             gated_entities: gated_rows(rules),
-            can_map: crate::types::roles_grant_platform(&user_ctx.roles),
+            can_map: user_ctx.is_platform_admin,
             can_delete: user_ctx.is_admin,
         }),
         project_id: project.id.clone(),

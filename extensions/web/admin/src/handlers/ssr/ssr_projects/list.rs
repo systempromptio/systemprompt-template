@@ -15,7 +15,7 @@ use crate::repositories::scope::{Attribution, ScopeKind};
 use super::super::people_view::{format_usd, or_default};
 use super::super::types::{BreadcrumbView, ProjectKpiView, ProjectListRowView, ProjectsPageData};
 use super::sort::{page_url, sort_headers, sort_key, sort_rows};
-use super::{PAGE_SIZE, WINDOW_LABEL, pagination, pct};
+use super::{PAGE_SIZE, PageCounts, WINDOW_LABEL, pagination, pct};
 
 // Why: what the query string may ask of the listing.
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -45,7 +45,7 @@ pub(super) async fn page_data(
         .filter(|p| {
             needle.is_empty()
                 || p.name.to_lowercase().contains(&needle)
-                || p.id.to_lowercase().contains(&needle)
+                || p.id.as_str().to_lowercase().contains(&needle)
         })
         .collect();
 
@@ -73,10 +73,12 @@ pub(super) async fn page_data(
         sort_headers: sort_headers(query, sort, descending),
         count_label: count_label(total, &needle),
         pagination: pagination(
-            page,
-            total,
-            offset,
-            rows.len() as i64,
+            PageCounts {
+                page,
+                total,
+                offset,
+                shown: rows.len() as i64,
+            },
             "projects",
             &page_url(query),
         ),

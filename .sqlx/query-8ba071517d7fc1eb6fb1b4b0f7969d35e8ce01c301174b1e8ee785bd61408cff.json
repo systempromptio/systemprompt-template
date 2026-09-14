@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT x.id FROM eval_executions x JOIN eval_experiments e ON e.id=x.experiment_id JOIN eval_workers w ON w.id=x.lease_owner WHERE x.id=$1 AND e.owner_id=$2 AND w.owner_id=$2 AND w.id=$3 AND w.enabled AND w.expires_at>NOW() AND x.fencing_token=$4 AND x.status='running' AND e.status='running' AND x.lease_expires_at>NOW() AND x.deadline_at>NOW()",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_executions",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8ba071517d7fc1eb6fb1b4b0f7969d35e8ce01c301174b1e8ee785bd61408cff"
+}

@@ -5,6 +5,13 @@
 //! the audit trail and the client cannot retry a 400.
 
 mod event_types;
+mod statusline;
+mod validation;
+pub use statusline::{
+    ContextWindow, ContextWindowUsage, StatusLineCost, StatusLineIngest, StatusLineModel,
+    StatusLinePayload, StatusLineQuery, StatusLineRejection, TokenUsage, usd_to_microdollars,
+};
+pub use validation::validate_session_key;
 
 pub use event_types::{
     ConfigChangeData, HookCommonFields, HookEvent, InstructionsLoadedData, NotificationData,
@@ -231,50 +238,6 @@ pub struct TrackQuery {
 #[derive(Debug, Deserialize)]
 pub struct GovernQuery {
     pub plugin_id: Option<systemprompt::identifiers::PluginId>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct StatusLinePayload {
-    pub model: Option<StatusLineModel>,
-    pub cost: Option<StatusLineCost>,
-    pub context_window: Option<ContextWindow>,
-    // JSON: protocol boundary — arbitrary third-party tool payload
-    #[serde(flatten)]
-    pub extra: serde_json::Value,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct StatusLineModel {
-    pub api_model_id: Option<String>,
-}
-
-#[derive(Debug, Deserialize, Clone, Copy)]
-pub struct StatusLineCost {
-    pub total_cost_usd: Option<f64>,
-}
-
-#[derive(Debug, Deserialize, Clone, Copy)]
-pub struct ContextWindow {
-    pub context_window_size: Option<i64>,
-    pub current_usage: Option<ContextWindowUsage>,
-}
-
-#[derive(Debug, Deserialize, Clone, Copy)]
-pub struct ContextWindowUsage {
-    #[serde(rename = "input_tokens")]
-    pub input: Option<i64>,
-    #[serde(rename = "output_tokens")]
-    pub output: Option<i64>,
-    #[serde(rename = "cache_creation_input_tokens")]
-    pub cache_creation_input: Option<i64>,
-    #[serde(rename = "cache_read_input_tokens")]
-    pub cache_read_input: Option<i64>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct StatusLineQuery {
-    pub plugin_id: Option<systemprompt::identifiers::PluginId>,
-    pub session_id: Option<systemprompt::identifiers::SessionId>,
 }
 
 #[derive(Debug, Deserialize)]

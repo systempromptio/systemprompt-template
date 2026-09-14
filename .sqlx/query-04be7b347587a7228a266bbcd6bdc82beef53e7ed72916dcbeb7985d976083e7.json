@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT drain_ingestion_outbox(10000)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "drain_ingestion_outbox",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "04be7b347587a7228a266bbcd6bdc82beef53e7ed72916dcbeb7985d976083e7"
+}

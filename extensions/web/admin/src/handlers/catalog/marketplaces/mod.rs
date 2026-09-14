@@ -12,6 +12,7 @@ mod kpis;
 mod view;
 
 use std::sync::Arc;
+use systemprompt::identifiers::MarketplaceId;
 
 use axum::extract::{Extension, Path, State};
 use axum::response::Response;
@@ -75,8 +76,9 @@ pub(crate) async fn marketplaces_page(
     let manifests = data::load_manifests(&path);
     let audience = data::audience_matrix(&pool, &manifests, &known_roles()).await;
     let grants = data::group_grants(&pool).await;
-    let plugin_catalog =
-        crate::repositories::marketplace::plugins::list_plugin_catalog(&path).unwrap_or_default();
+    let plugin_catalog = crate::repositories::marketplace::plugins::list_plugin_catalog(&path)
+        .inspect_err(|e| tracing::warn!(error = %e, "marketplaces: plugin catalog failed"))
+        .unwrap_or_default();
 
     let marketplaces: Vec<MarketplaceCardView> = manifests
         .iter()
@@ -101,7 +103,7 @@ pub(crate) async fn marketplaces_page(
                 version: m.version.clone(),
                 enabled: m.enabled,
                 visibility: m.visibility.clone(),
-                detail_url: marketplace_url(&m.id),
+                detail_url: marketplace_url(m.id.as_str()),
                 roles: m.access.roles.clone(),
                 groups: m.access.groups.clone(),
                 projects: m.access.projects.clone(),
@@ -125,7 +127,7 @@ pub(crate) async fn marketplaces_page(
     let kpis = list_kpis(&marketplaces, &audience);
     let marketplaces: Vec<MarketplaceCardView> = marketplaces
         .into_iter()
-        .filter(|m| super::sorting::matches(&[&m.id, &m.name, &m.description], &search))
+        .filter(|m| super::sorting::matches(&[m.id.as_str(), &m.name, &m.description], &search))
         .collect();
 
     let page = MarketplacesPageData {
@@ -170,7 +172,10 @@ fn member_links(ids: &[String], url: fn(&str) -> String) -> Vec<MemberLinkView> 
 // re-reading the plugin tree each time made one page render walk it four times.
 fn skills_of(catalog: &[crate::types::PluginDetail], plugin_ids: &[String]) -> Vec<MemberLinkView> {
     let mut out: Vec<MemberLinkView> = Vec::new();
-    for plugin in catalog.iter().filter(|p| plugin_ids.contains(&p.id)) {
+    for plugin in catalog
+        .iter()
+        .filter(|p| plugin_ids.iter().any(|id| id == p.id.as_str()))
+    {
         for skill in &plugin.skills {
             let id = skill.as_str().to_owned();
             if out.iter().any(|s| s.id == id) {
@@ -192,7 +197,7 @@ pub(crate) async fn marketplace_detail_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Path(marketplace_id): Path<String>,
+    Path(marketplace_id): Path<MarketplaceId>,
 ) -> AdminHtmlResult<Response> {
     console_only(&user_ctx)?;
     let path = shared::get_services_path()?;
@@ -209,8 +214,9 @@ pub(crate) async fn marketplace_detail_page(
 
     let plugins = member_links(&manifest.plugins, plugin_url);
     let mcp_servers = member_links(&manifest.mcp_servers, mcp_url);
-    let plugin_catalog =
-        crate::repositories::marketplace::plugins::list_plugin_catalog(&path).unwrap_or_default();
+    let plugin_catalog = crate::repositories::marketplace::plugins::list_plugin_catalog(&path)
+        .inspect_err(|e| tracing::warn!(error = %e, "marketplaces: plugin catalog failed"))
+        .unwrap_or_default();
     let skills = skills_of(&plugin_catalog, &manifest.plugins);
 
     let page = MarketplaceDetailData {

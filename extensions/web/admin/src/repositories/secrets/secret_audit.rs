@@ -1,7 +1,7 @@
 //! Append-only audit trail for secret access.
 
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{PluginId, UserId};
 
 #[derive(Debug)]
 pub struct AuditLogRow {
@@ -16,13 +16,13 @@ pub struct AuditLogRow {
 pub async fn list_audit_log(
     pool: &PgPool,
     user_id: &UserId,
-    plugin_id: &str,
+    plugin_id: &PluginId,
 ) -> Result<Vec<AuditLogRow>, sqlx::Error> {
     let rows = sqlx::query_as!(
         AuditLogRow,
         r#"SELECT id, var_name, action, actor_id AS "actor_id!: UserId", ip_address, created_at::text as "created_at!" FROM secret_audit_log WHERE user_id = $1 AND plugin_id = $2 ORDER BY created_at DESC LIMIT 100"#,
         user_id.as_str(),
-        plugin_id,
+        plugin_id.as_str(),
     )
     .fetch_all(pool)
     .await?;
@@ -32,7 +32,7 @@ pub async fn list_audit_log(
 pub async fn insert_audit_entry(
     pool: &PgPool,
     user_id: &UserId,
-    plugin_id: &str,
+    plugin_id: &PluginId,
     action: &str,
 ) -> Result<(), sqlx::Error> {
     let audit_id = uuid::Uuid::new_v4().to_string();
@@ -40,7 +40,7 @@ pub async fn insert_audit_entry(
         "INSERT INTO secret_audit_log (id, user_id, plugin_id, var_name, action, actor_id) VALUES ($1, $2, $3, '*', $4, $2)",
         &audit_id,
         user_id.as_str(),
-        plugin_id,
+        plugin_id.as_str(),
         action,
     )
     .execute(pool)

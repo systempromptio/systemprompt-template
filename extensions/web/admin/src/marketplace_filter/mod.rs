@@ -1,6 +1,6 @@
 //! [`MarketplaceFilter`] implementation for the systemprompt template.
 //!
-//! Resolves a user's `(roles, department)` from `users` joined to
+//! Resolves a user's `(roles, project)` from `users` joined to
 //! `user_profile_ext` and hands the subject to core's
 //! [`keep_sets`] resolver, which consults `access_control_rules` per entry
 //! kind with the owning marketplace cascaded as a parent: one marketplace
@@ -21,7 +21,7 @@ use systemprompt::marketplace::{
 use systemprompt_security::authz::AccessControlRepository;
 
 use crate::authz::{dimensions, subject_attributes_for};
-use crate::repositories::users::queries::find_user_roles_department;
+use crate::repositories::users::queries::find_user_access_profile;
 
 #[derive(Debug)]
 pub struct TemplateMarketplaceFilter {
@@ -34,15 +34,19 @@ impl TemplateMarketplaceFilter {
         let pool = db
             .pool_arc()
             .map_err(|e| MarketplaceFilterError::Backend(e.to_string()))?;
-        Ok(Arc::new(Self {
+        Ok(Arc::new(Self::from_pool(pool)))
+    }
+
+    pub(crate) fn from_pool(pool: Arc<PgPool>) -> Self {
+        Self {
             repo: AccessControlRepository::from_pool(Arc::clone(&pool)),
             pool,
-        }))
+        }
     }
 
     async fn user_roles(&self, user_id: &UserId) -> Result<Vec<String>, MarketplaceFilterError> {
-        match find_user_roles_department(self.pool.as_ref(), user_id).await {
-            Ok(Some((roles, _department))) => Ok(roles),
+        match find_user_access_profile(self.pool.as_ref(), user_id).await {
+            Ok(Some(profile)) => Ok(profile.roles),
             Ok(None) => Err(MarketplaceFilterError::UnknownUser(user_id.to_string())),
             Err(e) => Err(MarketplaceFilterError::Backend(e.to_string())),
         }
@@ -82,10 +86,11 @@ impl MarketplaceFilter for TemplateMarketplaceFilter {
                 .iter()
                 .find(|c| c.provider == id.as_str())
                 .is_none_or(|c| {
-                    c.configured
-                        && c.entitled
-                        && c.verified_at.is_some()
-                        && matches!(c.status.as_str(), "connected" | "temporarily_unavailable")
+                    c.status == "no_auth_required"
+                        || c.configured
+                            && c.entitled
+                            && c.verified_at.is_some()
+                            && matches!(c.status.as_str(), "connected" | "temporarily_unavailable")
                 })
         });
         candidate.retain_entries(&keep);

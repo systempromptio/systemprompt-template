@@ -79,9 +79,9 @@ pub async fn list_project_tool_health(
            GROUP BY 1, 2
            ORDER BY 4 DESC, 3 DESC, 2
            LIMIT $5"#,
-        q.kind.as_str(),
+        q.kind().as_str(),
         q.attribution.is_exclusive(),
-        q.id,
+        q.id(),
         q.window_days,
         limit
     )
@@ -123,9 +123,9 @@ pub async fn list_project_skill_effectiveness(
            GROUP BY 1
            ORDER BY 2 DESC, 1
            LIMIT $5"#,
-        q.kind.as_str(),
+        q.kind().as_str(),
         q.attribution.is_exclusive(),
-        q.id,
+        q.id(),
         q.window_days,
         limit
     )
@@ -164,9 +164,9 @@ pub async fn list_project_sessions(
            GROUP BY s.session_id, m.user_id, s.started_at, s.last_activity_at
            ORDER BY s.last_activity_at DESC
            LIMIT $5"#,
-        q.kind.as_str(),
+        q.kind().as_str(),
         q.attribution.is_exclusive(),
-        q.id,
+        q.id(),
         q.window_days,
         limit
     )
@@ -206,9 +206,9 @@ pub async fn list_project_commits(
              AND c.committed_at >= NOW() - make_interval(days => $4)
            ORDER BY c.committed_at DESC
            LIMIT $5"#,
-        q.kind.as_str(),
+        q.kind().as_str(),
         q.attribution.is_exclusive(),
-        q.id,
+        q.id(),
         q.window_days,
         limit
     )

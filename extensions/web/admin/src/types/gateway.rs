@@ -31,7 +31,7 @@ pub struct GatewayConfigView {
     pub auth_scheme: String,
     pub inference_path_prefix: String,
     pub routes: Vec<GatewayRouteView>,
-    pub config_path: String,
+    pub source_path: String,
 }
 
 #[derive(Debug, Deserialize)]

@@ -29,7 +29,7 @@ pub(crate) async fn conversations_raw(
     Path(session_id): Path<String>,
 ) -> AdminResult<Response> {
     let session_id = SessionId::new(session_id);
-    let allowed = user_ctx.is_admin
+    let allowed = user_ctx.is_console
         || user_ctx
             .roles
             .iter()

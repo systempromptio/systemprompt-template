@@ -8,11 +8,12 @@
 
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{MarketplaceId, UserId};
+use systemprompt_web_shared::GroupId;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct GroupRecord {
-    pub id: String,
+    pub id: GroupId,
     pub name: String,
     pub description: Option<String>,
     pub is_system: bool,
@@ -21,7 +22,7 @@ pub struct GroupRecord {
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct GroupSummary {
-    pub id: String,
+    pub id: GroupId,
     pub name: String,
     pub description: Option<String>,
     pub is_system: bool,
@@ -44,13 +45,13 @@ pub struct GroupMemberRow {
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct GroupAdMappingRow {
     pub ad_group: String,
-    pub group_id: String,
+    pub group_id: GroupId,
     pub source: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct CreateGroupRequest {
-    pub id: String,
+    pub id: GroupId,
     pub name: String,
     pub description: Option<String>,
 }
@@ -73,7 +74,7 @@ pub struct AddAdMappingRequest {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SetGroupMarketplacesRequest {
-    pub marketplace_ids: Vec<String>,
+    pub marketplace_ids: Vec<MarketplaceId>,
 }
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
@@ -87,7 +88,7 @@ pub struct GroupUsageSummary {
 /// Per-group user counts and activity, for the access-control overview.
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct GroupStats {
-    pub group_id: String,
+    pub group_id: GroupId,
     pub user_count: i64,
     pub active_count: i64,
     pub total_events: i64,

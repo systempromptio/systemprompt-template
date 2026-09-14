@@ -8,6 +8,7 @@ use serde::Serialize;
 use systemprompt::identifiers::{ContextId, SessionId, UserId};
 
 use crate::handlers::ssr::list_view::Pagination;
+use crate::handlers::ssr::ssr_history::HistoryRowView;
 use crate::handlers::ssr::types::{BreadcrumbView, MembershipChoiceView, RoleChoiceView};
 
 #[derive(Debug, Serialize)]
@@ -30,6 +31,7 @@ pub(crate) struct UserDetailContext {
     pub is_self: bool,
 
     pub identity: Option<IdentityTabView>,
+    pub conversations: Option<UserConversationsTabView>,
     pub membership: Option<MembershipTabView>,
     pub access: Option<AccessTabView>,
     pub devices: Option<DevicesTabView>,
@@ -86,8 +88,15 @@ pub(crate) struct IdentityTabView {
     pub external_sub: String,
     pub linked_at: String,
     pub slack_user_id: String,
-    pub salesforce_username: String,
+    pub salesforce_identities: Vec<SalesforceIdentityView>,
     pub share_token_version: i32,
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct SalesforceIdentityView {
+    pub provider: String,
+    pub label: String,
+    pub sf_username: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -116,6 +125,9 @@ pub(crate) struct ScopeDefaultOptionView {
 // deny rather than a checkbox.
 #[derive(Debug, Serialize)]
 pub(crate) struct AccessTabView {
+    pub available: bool,
+    pub rules_available: bool,
+    pub overview: super::access_overview::AccessOverview,
     pub has_groups: bool,
     pub sections: Vec<UserAccessSectionView>,
 }
@@ -187,6 +199,16 @@ pub(crate) struct UserSessionRowView {
     pub revocable: bool,
 }
 
+// Why: the same rows the conversation listings render, scoped to one account.
+// Reusing `HistoryRowView` keeps a conversation looking identical wherever it
+// is listed, rather than drifting into a third shape.
+#[derive(Debug, Serialize)]
+pub(crate) struct UserConversationsTabView {
+    pub rows: Vec<HistoryRowView>,
+    pub has_rows: bool,
+    pub pagination: Pagination,
+}
+
 #[derive(Debug, Serialize)]
 pub(crate) struct UsageTabView {
     pub window_label: String,
@@ -204,8 +226,6 @@ pub(crate) struct UsageTabView {
     pub latest: Option<LatestConversationView>,
     pub models: Vec<UserModelRowView>,
     pub has_models: bool,
-    pub conversations_rows: Vec<ConversationRowView>,
-    pub has_conversations: bool,
     pub conversations_url: String,
     pub log_url: String,
     pub commits: Vec<CommitRowView>,
@@ -235,21 +255,6 @@ pub(crate) struct LatestConversationView {
     pub cost_display: String,
 }
 
-#[derive(Debug, Serialize)]
-pub(crate) struct ConversationRowView {
-    pub conversation_title: String,
-    pub url: String,
-    pub context_id: ContextId,
-    pub model: String,
-    pub turns: i64,
-    pub tool_calls: i64,
-    pub side_calls: i64,
-    pub errors: i64,
-    pub has_errors: bool,
-    pub cost_display: String,
-    pub last_relative: String,
-    pub last_at: String,
-}
 
 #[derive(Debug, Serialize)]
 pub(crate) struct CommitRowView {

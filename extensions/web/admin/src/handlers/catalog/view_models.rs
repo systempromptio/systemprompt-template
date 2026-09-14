@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use systemprompt::identifiers::SkillId;
+use systemprompt::identifiers::{PluginId, SkillId};
 
 use crate::types::{ConfiguredHook, ENTITY_PLUGIN, ENTITY_SKILL};
 
@@ -22,9 +22,9 @@ pub(super) struct VisibilityInput<'a> {
 }
 
 impl VisibilityInput<'_> {
-    fn plugin(&self, plugin_id: &str) -> VisibilityView {
+    fn plugin(&self, plugin_id: &PluginId) -> VisibilityView {
         let carriers = carriers_of_plugin(self.manifests, plugin_id);
-        visibility_for(self.rules, ENTITY_PLUGIN, plugin_id, &carriers)
+        visibility_for(self.rules, ENTITY_PLUGIN, plugin_id.as_str(), &carriers)
     }
 
     fn skill(&self, skill_id: &SkillId, plugin_ids: &[String]) -> VisibilityView {
@@ -60,12 +60,12 @@ pub(super) fn plugin_rows(
         .into_iter()
         .map(|p| PluginListRow {
             visibility: visibility.plugin(&p.id),
-            detail_url: plugin_url(&p.id),
-            matrix_url: matrix_url(ENTITY_PLUGIN, &p.id),
+            detail_url: plugin_url(p.id.as_str()),
+            matrix_url: matrix_url(ENTITY_PLUGIN, p.id.as_str()),
             skills_count: p.skills.len(),
             mcp_count: p.mcp_servers.len(),
             agents_count: p.agents.len(),
-            assignment_count: counts.get(&p.id).copied().unwrap_or(0),
+            assignment_count: counts.get(p.id.as_str()).copied().unwrap_or(0),
             id: p.id,
             name: p.name,
             description: p.description,
@@ -102,10 +102,10 @@ fn plugin_skills(catalog: &Catalog, plugin: &crate::types::PluginDetail) -> Vec<
 
 pub(super) fn plugin_detail(
     catalog: &Catalog,
-    plugin_id: &str,
+    plugin_id: &PluginId,
     assignment_count: i64,
 ) -> Option<PluginDetailData> {
-    let plugin = catalog.plugins.iter().find(|p| p.id == plugin_id)?;
+    let plugin = catalog.plugins.iter().find(|p| &p.id == plugin_id)?;
     let skills = plugin_skills(catalog, plugin);
     let mcp_servers = plugin
         .mcp_servers
@@ -137,7 +137,7 @@ pub(super) fn plugin_detail(
         .collect::<Vec<_>>();
     let hooks: Vec<HookRef> = catalog
         .hooks_by_plugin
-        .get(&plugin.id)
+        .get(plugin.id.as_str())
         .map(|hs| hs.iter().map(hook_ref).collect())
         .unwrap_or_default();
 
@@ -145,7 +145,7 @@ pub(super) fn plugin_detail(
         breadcrumbs: trail("Plugins", "/admin/plugins", &plugin.name),
         page: "plugin-detail",
         title: plugin.name.clone(),
-        matrix_url: matrix_url(ENTITY_PLUGIN, &plugin.id),
+        matrix_url: matrix_url(ENTITY_PLUGIN, plugin.id.as_str()),
         assignment_count,
         skills_count: skills.len(),
         mcp_count: mcp_servers.len(),
@@ -225,7 +225,7 @@ pub(super) fn skill_detail(
         breadcrumbs: trail("Skills", "/admin/skills", &entry.name),
         // Why: the catalog page defines the skill; the analytics tab says who
         // actually runs it. They are different pages and this is the hop.
-        activity_url: format!("/admin/analytics?tab=skills&skill={id}"),
+        activity_url: "/admin/analysis/skills".to_owned(),
         page: "skill-detail",
         title: entry.name.clone(),
         matrix_url: matrix_url(ENTITY_SKILL, id),

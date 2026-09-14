@@ -1,0 +1,91 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.id,r.source_id,s.name AS source_name,r.kind,r.resource_key,\n            (SELECT count(*) FROM managed_revisions v WHERE v.resource_id=r.id) AS \"revision_count!\",\n            (SELECT v.id FROM managed_revisions v WHERE v.resource_id=r.id ORDER BY v.created_at DESC,v.id DESC LIMIT 1) AS \"latest_revision?\"\n            FROM managed_resources r JOIN managed_sources s ON s.id=r.source_id AND s.owner_id=r.owner_id\n            WHERE r.owner_id=$1 ORDER BY r.kind,r.resource_key,r.id LIMIT 51 OFFSET $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_resources",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "source_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_resources",
+            "name": "source_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "source_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_sources",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_resources",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "resource_key",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_resources",
+            "name": "resource_key"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "revision_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "latest_revision?",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "7b9e8cad24dcc071c09d8725fbda5e11d4bce4ddfde0254cc16998267b86899a"
+}

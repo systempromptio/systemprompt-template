@@ -5,16 +5,14 @@
 //! symbol has and collisions between domains cannot arise.
 
 pub mod access_control;
-pub mod access_tokens;
 pub mod analytics;
 pub mod bridge;
 pub mod config;
 pub mod dashboard;
-pub mod dashboard_read;
-pub mod departments;
+pub(crate) mod dashboard_read;
 pub mod dev_login;
 pub mod devices;
-pub mod evals;
+pub mod external_agents;
 pub mod governance;
 pub mod groups;
 pub mod jobs;
@@ -29,3 +27,5 @@ pub mod scope;
 pub mod secrets;
 pub mod traces;
 pub mod users;
+
+pub mod analysis;

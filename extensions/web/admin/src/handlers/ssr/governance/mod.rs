@@ -21,8 +21,7 @@ use axum::response::Response;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-use crate::error::{AdminError, AdminHtmlResult, AdminResult};
-use crate::handlers::ssr::csv::CsvBuilder;
+use crate::error::{AdminError, AdminHtmlResult};
 use crate::handlers::ssr::list_view::scope_filter_view;
 use crate::repositories::governance::decision_log::{DecisionFilter, DecisionSort};
 use crate::repositories::governance::findings::FindingFilter;
@@ -33,15 +32,17 @@ use crate::util::time_range::{TimeRange, TimeRangeQuery, parse_time_range};
 
 mod columns;
 mod context;
+mod csv_export;
 mod data;
 mod kpis;
 mod urls;
 mod view;
 
+pub(crate) use csv_export::governance_csv;
+
 
 pub(crate) const BASE_URL: &str = "/admin/governance";
 const PAGE_SIZE: i64 = 50;
-const CSV_LIMIT: i64 = 5_000;
 
 // Why: Which log the URL asked for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -90,6 +91,9 @@ pub(crate) struct GovernanceQuery {
     pub category: Option<String>,
     pub blocked: Option<String>,
     pub q: Option<String>,
+    // Why: a string, not a bool, so it round-trips through `params()` with
+    // every other filter and an absent value is simply absent from the URL.
+    pub attention: Option<String>,
     pub sort: Option<String>,
     pub dir: Option<String>,
     pub page: Option<i64>,
@@ -133,7 +137,15 @@ fn decision_filter(query: &GovernanceQuery) -> DecisionFilter {
         policy: non_empty(query.policy.as_deref()),
         decision: non_empty(query.decision.as_deref()),
         search: non_empty(query.q.as_deref()),
+        attention: attention_on(query),
     }
+}
+
+// Why: any non-empty value turns it on. The link the chip renders sets "1"; a
+// hand-edited "true" or "yes" ought to behave the same rather than silently
+// showing the unfiltered log.
+fn attention_on(query: &GovernanceQuery) -> bool {
+    non_empty(query.attention.as_deref()).is_some_and(|v| v != "0")
 }
 
 fn finding_filter(query: &GovernanceQuery) -> FindingFilter {
@@ -232,74 +244,3 @@ pub(crate) async fn governance_page(
 // the whole point of the export — a reviewer comparing what the chain refused
 // with what the scanners saw needs the two sets to be provably the same window,
 // and two files lose that.
-pub(crate) async fn governance_csv(
-    Extension(user_ctx): Extension<UserContext>,
-    State(pool): State<Arc<PgPool>>,
-    Query(query): Query<GovernanceQuery>,
-) -> AdminResult<Response> {
-    require_console(&user_ctx)?;
-
-    let range = range_of(&query);
-    let (_, scope) = resolve_scope(&pool, &user_ctx, &query).await?;
-
-    let (decisions, _) =
-        crate::repositories::governance::decision_log::list_governance_decisions_paged(
-            &pool,
-            range,
-            &scope,
-            &decision_filter(&query),
-            sort_from(&query),
-            CSV_LIMIT,
-            0,
-        )
-        .await?;
-    let (findings, _) = crate::repositories::governance::findings::list_safety_findings_paged(
-        &pool,
-        range,
-        &scope,
-        &finding_filter(&query),
-        CSV_LIMIT,
-        0,
-    )
-    .await?;
-
-    let mut csv = CsvBuilder::new(&[
-        "plane",
-        "at",
-        "outcome",
-        "policy_or_category",
-        "stage_or_scanner",
-        "tool_or_model",
-        "user",
-        "scope",
-        "reason",
-    ]);
-    for row in &decisions {
-        csv.row(&[
-            "chain",
-            &row.created_at.to_rfc3339(),
-            &row.decision,
-            &row.policy,
-            view::stage_of(&row.policy),
-            &row.tool_name,
-            row.user_id.as_str(),
-            row.agent_scope.as_deref().unwrap_or(""),
-            &row.reason,
-        ]);
-    }
-    for row in &findings {
-        csv.row(&[
-            "safety",
-            &row.created_at.to_rfc3339(),
-            if row.blocked { "blocked" } else { "audited" },
-            &row.category,
-            &row.scanner,
-            row.model.as_deref().unwrap_or(""),
-            row.user_id.as_ref().map_or("", |u| u.as_str()),
-            &row.phase,
-            row.excerpt.as_deref().unwrap_or(""),
-        ]);
-    }
-
-    Ok(csv.into_response(&format!("governance-{}.csv", range.from.format("%Y%m%d"))))
-}

@@ -13,7 +13,7 @@ pub(crate) use crate::handlers::ssr::types::SortHeaderView;
 
 // Why: One column an operator can order a platform list by.
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct SortColumn {
+pub struct SortColumn {
     pub key: &'static str,
     pub label: &'static str,
     pub class: &'static str,
@@ -27,7 +27,7 @@ pub(crate) struct SortColumn {
 // recent; an active one flips. `preserved` is the rest of the query string —
 // a sort link that dropped the active filter would silently widen the list
 // the operator is looking at.
-pub(crate) fn sort_headers(
+pub fn sort_headers(
     base_url: &str,
     columns: &[SortColumn],
     active_key: &str,
@@ -74,12 +74,12 @@ pub(crate) fn sort_headers(
 }
 
 // Why: Normalise `?dir=` to the two values the headers understand.
-pub(crate) fn direction(raw: Option<&str>) -> &'static str {
+pub fn direction(raw: Option<&str>) -> &'static str {
     if raw == Some("asc") { "asc" } else { "desc" }
 }
 
 // Why: The `q=` filter, url-encoded for a link, or an empty string.
-pub(crate) fn preserved_search(q: &str) -> String {
+pub fn preserved_search(q: &str) -> String {
     if q.is_empty() {
         return String::new();
     }
@@ -87,7 +87,7 @@ pub(crate) fn preserved_search(q: &str) -> String {
 }
 
 // Why: Case-insensitive substring match over a row's searchable text.
-pub(crate) fn matches(haystack: &[&str], needle: &str) -> bool {
+pub fn matches(haystack: &[&str], needle: &str) -> bool {
     if needle.is_empty() {
         return true;
     }

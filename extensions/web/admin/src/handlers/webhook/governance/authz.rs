@@ -10,83 +10,62 @@
 //!
 //! The resolver runs over core's `user` / `role` dimensions plus every subject
 //! dimension this extension declares in [`crate::authz`] — today that means a
-//! `department` rule binds here, not just in the access matrix.
+//! `group` rule binds here, not just in the access matrix.
 
-use std::sync::{Arc, LazyLock};
-use std::time::{Duration, Instant};
+use std::sync::Arc;
 
 use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
-use systemprompt::identifiers::{Actor, MarketplaceId, SessionId};
-use systemprompt_security::authz::resolver::{ResolveInput, ResolveParent, resolve};
+use std::borrow::Cow;
+use systemprompt::identifiers::{Actor, SessionId};
+
 use systemprompt_security::authz::{
-    AccessControlRepository, AccessRule, AuthzDecision, AuthzRequest, Decision, DecisionTag,
-    DenyReason, EntityKind, EntityRef, EntityRow,
+    AccessControlRepository, AccessRule, AuthzDecision, AuthzRequest, ChainSources, Decision,
+    DecisionTag, DenyReason, EntityRow, ParentChainIndex, ResolveBase,
 };
-use tokio::sync::RwLock;
 
 use crate::authz::{dimensions, subject_attributes_for};
 use systemprompt_security::authz::{GovernanceDecisionRecord, insert_governance_decision};
 
 const POLICY_NAME: &str = "authz";
 
-struct CachedMarketplaceParents {
-    entries: Vec<(EntityRef, Vec<AccessRule>, Option<bool>)>,
-    fetched_at: Instant,
+// Why: HTTP failures can bypass this hook; return a deny. lint-ok: http-error
+fn unavailable() -> Response {
+    Json(AuthzDecision::Deny {
+        reason: DenyReason::PolicyViolation {
+            policy: "authorization_unavailable".into(),
+            detail: Cow::Borrowed("Authorization temporarily unavailable; retry later"),
+        },
+        policy: POLICY_NAME.into(),
+    })
+    .into_response()
 }
 
-static MARKETPLACE_PARENT_CACHE: LazyLock<RwLock<Option<CachedMarketplaceParents>>> =
-    LazyLock::new(|| RwLock::new(None));
-const MARKETPLACE_PARENT_TTL: Duration = Duration::from_mins(5);
-
-async fn marketplace_parent_entries(
-    repo: &AccessControlRepository,
-) -> Vec<(EntityRef, Vec<AccessRule>, Option<bool>)> {
-    {
-        let cache = MARKETPLACE_PARENT_CACHE.read().await;
-        if let Some(ref cached) = *cache
-            && cached.fetched_at.elapsed() < MARKETPLACE_PARENT_TTL
-        {
-            return cached.entries.clone();
-        }
-    }
-
-    let entries = match repo.list_entities(EntityKind::Marketplace).await {
-        Ok(rows) => {
-            let mut out = Vec::with_capacity(rows.len());
-            for row in rows {
-                let rules = repo
-                    .list_rules_for_entity(EntityKind::Marketplace, &row.id)
-                    .await
-                    .unwrap_or_else(|e| {
-                        tracing::warn!(error = %e, marketplace_id = %row.id, "marketplace_parent_entries: rules lookup failed; treating marketplace as no-rules");
-                        Vec::new()
-                    });
-                out.push((
-                    EntityRef::Marketplace(MarketplaceId::new(&row.id)),
-                    rules,
-                    Some(row.default_included),
-                ));
-            }
-            out
-        },
-        Err(e) => {
-            tracing::warn!(error = %e, "marketplace_parent_entries: list_entities failed; resolving without cascade parent");
-            Vec::new()
+async fn audit_unavailable(pool: &PgPool, req: &AuthzRequest) {
+    tracing::error!(user_id = %req.user_id, trace_id = %req.trace_id, entity = %req.entity, "authorization_unavailable");
+    let decision = Decision::Deny {
+        reason: DenyReason::PolicyViolation {
+            policy: "authorization_unavailable".into(),
+            detail: Cow::Borrowed("Authorization temporarily unavailable; retry later"),
         },
     };
+    audit_decision(pool, req, &[], None, &decision).await;
+}
 
-    {
-        let mut cache = MARKETPLACE_PARENT_CACHE.write().await;
-        *cache = Some(CachedMarketplaceParents {
-            entries: entries.clone(),
-            fetched_at: Instant::now(),
-        });
-    }
-    entries
+async fn parent_index(repo: &AccessControlRepository) -> Result<ParentChainIndex, Response> {
+    let services = systemprompt::loader::ServicesBootstrap::get().map_err(|error| {
+        tracing::error!(%error, "authorization_unavailable: services");
+        unavailable()
+    })?;
+    ParentChainIndex::load(repo, Arc::new(ChainSources::from_services(services)))
+        .await
+        .map_err(|error| {
+            tracing::error!(%error, "authorization_unavailable: parent policies");
+            unavailable()
+        })
 }
 
 async fn load_rules(
@@ -98,25 +77,13 @@ async fn load_rules(
     let rules = repo
         .list_rules_for_entity(kind, id)
         .await
-        .map_err(|e| {
-            tracing::error!(error = %e, entity_type = %kind, entity_id = %id, "list_rules_for_entity failed");
-            // Why: the authz hook's own wire contract — core reads a non-decision
-            // status as "hook unavailable", so this must stay distinguishable from
-            // a deny body rather than become one. lint-ok: http-error
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "authz hook unavailable: could not load access rules for the entity; see the admin logs for the database error",
-            )
-                .into_response()
+        .map_err(|error| {
+            tracing::error!(%error, %id, "authorization_unavailable: entity rules");
+            unavailable()
         })?;
-    let entity = repo.get_entity(kind, id).await.map_err(|e| {
-        tracing::error!(error = %e, entity_type = %kind, entity_id = %id, "get_entity failed");
-        // Why: lint-ok: http-error — same wire contract as above.
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "authz hook unavailable: could not load the entity row; see the admin logs for the database error",
-        )
-            .into_response()
+    let entity = repo.get_entity(kind, id).await.map_err(|error| {
+        tracing::error!(%error, %id, "authorization_unavailable: entity");
+        unavailable()
     })?;
     Ok((rules, entity))
 }
@@ -133,7 +100,18 @@ async fn audit_decision(
             Decision::Allow { .. } => (DecisionTag::Allow, String::new(), None),
             Decision::Warn { reason } => (DecisionTag::Warn, reason.to_string(), None),
             Decision::Deny { reason } => (DecisionTag::Deny, reason.to_string(), None),
-            Decision::Pending { reason } => (DecisionTag::Pending, reason.to_string(), None),
+            // Why: `build_response` refuses a hold, so the audit records the
+            // deny that the caller actually received, carrying the hold's own
+            // reason so the mounted-where-it-cannot-be-honoured policy is
+            // identifiable from the audit row alone.
+            Decision::Pending { reason } => {
+                tracing::error!(
+                    %reason,
+                    "a governance hold reached the PreToolUse webhook, which answers \
+                     synchronously and cannot park a call; refusing it"
+                );
+                (DecisionTag::Deny, reason.to_string(), None)
+            },
         };
     let id = uuid::Uuid::new_v4().to_string();
     let entity_type_str = req.entity.kind().as_str();
@@ -167,8 +145,8 @@ async fn audit_decision(
         // Why: the attested session, so a gateway decision keys to the same
         // session row as the prompt gate and the `ai_requests` row it belongs
         // to. Enforcement sites without a session (server-attach RBAC, MCP)
-        // send none, and the trace join reads `trace_id` rather than this
-        // field.
+        // send none and store the empty string; `trace_id` below is what keeps
+        // those rows correlatable, so this column never carries a trace id.
         session_id: req.session_id.as_ref().map_or("", SessionId::as_str),
         tool_name: entity_id_str,
         agent_id: None,
@@ -185,12 +163,12 @@ async fn audit_decision(
             .map(systemprompt::identifiers::ClientId::as_str),
         plugin_id: None,
         act_chain: &req.act_chain,
+        trace_id: Some(req.trace_id.as_str()),
         context_id: context_id.as_str(),
         task_id: req
             .task_id
             .as_ref()
             .map(systemprompt::identifiers::TaskId::as_str),
-        trace_id: Some(req.trace_id.as_str()),
     };
     if let Err(e) = insert_governance_decision(pool, &record).await {
         tracing::error!(error = %e, "Failed to record authz decision");
@@ -199,7 +177,7 @@ async fn audit_decision(
 
 pub(crate) async fn govern_authz(
     State(pool): State<Arc<PgPool>>,
-    Json(req): Json<AuthzRequest>,
+    Json(mut req): Json<AuthzRequest>,
 ) -> Response {
     // Why: lint-ok: http-error — a hook answers 200 with a decision; an error
     // status reads as "hook unavailable" and lets the call through
@@ -207,86 +185,80 @@ pub(crate) async fn govern_authz(
 
     let (rules, entity) = match load_rules(&repo, &req).await {
         Ok(v) => v,
-        Err(resp) => return resp,
-    };
-
-    let mp_entries = marketplace_parent_entries(&repo).await;
-    let parents: Vec<ResolveParent<'_>> = mp_entries
-        .iter()
-        .map(|(entity, rules, default_included)| ResolveParent {
-            entity,
-            rules,
-            default_included: *default_included,
-        })
-        .collect();
-
-    // Why: resolved by lookup rather than read off the request, so a department
-    // change or a revocation binds on the next call instead of waiting for the
-    // caller's token to refresh.
-    // Why: an error status here reads as "hook unavailable" and lets the call
-    // through, so an unresolved subject answers 200 with a deny instead.
-    let attributes = match subject_attributes_for(&pool, &req.user_id).await {
-        Ok(attributes) => attributes,
-        Err(e) => {
-            tracing::error!(
-                error = %e, user_id = %req.user_id,
-                "authz webhook: subject attribute lookup failed; refusing the request",
-            );
-            return (
-                StatusCode::OK,
-                Json(AuthzDecision::Deny {
-                    reason: DenyReason::PolicyViolation {
-                        policy: POLICY_NAME.to_owned(),
-                        detail: std::borrow::Cow::Borrowed(
-                            "subject attributes could not be resolved",
-                        ),
-                    },
-                    policy: POLICY_NAME.to_owned(),
-                }),
-            )
-                .into_response();
+        Err(resp) => {
+            audit_unavailable(&pool, &req).await;
+            return resp;
         },
     };
 
-    let decision = resolve(ResolveInput {
-        entity: &req.entity,
-        rules: &rules,
-        user_id: &req.user_id,
-        user_roles: &req.roles,
-        default_included: entity.as_ref().map(|e| e.default_included),
-        parents: &parents,
-        attributes: &attributes,
-        dimensions: dimensions(&pool),
-    });
+    let chains = match parent_index(&repo).await {
+        Ok(chains) => chains,
+        Err(response) => {
+            audit_unavailable(&pool, &req).await;
+            return response;
+        },
+    };
+
+    // Why: resolved by lookup rather than read off the request, so a group
+    // change or a revocation binds on the next call instead of waiting for the
+    // caller's token to refresh.
+    let attributes = match subject_attributes_for(&pool, &req.user_id).await {
+        Ok(attributes) => attributes,
+        Err(error) => {
+            tracing::error!(%error, user_id = %req.user_id, trace_id = %req.trace_id, "authorization_unavailable: attributes");
+            audit_unavailable(&pool, &req).await;
+            return unavailable();
+        },
+    };
+    let identity = match crate::repositories::users::queries::find_identity_envelope(
+        &pool,
+        &req.user_id,
+    )
+    .await
+    {
+        Ok(Some(identity)) if identity.status == "active" => identity,
+        _ => {
+            audit_unavailable(&pool, &req).await;
+            return unavailable();
+        },
+    };
+
+    req.roles = identity.roles;
+    let decision = chains.resolve(
+        req.entity.kind(),
+        req.entity.id_str(),
+        ResolveBase {
+            rules: &rules,
+            user_id: &req.user_id,
+            user_roles: &req.roles,
+            default_included: entity.as_ref().map(|e| e.default_included),
+            attributes: &attributes,
+            dimensions: dimensions(&pool),
+        },
+    );
 
     audit_decision(&pool, &req, &rules, entity.as_ref(), &decision).await;
 
     let resp = match decision {
+        // Why: warn permits, so it joins the allow arm. This plane has no warn
+        // verdict of its own; the finding survives on the audit row written
+        // just above.
         Decision::Allow { .. } | Decision::Warn { .. } => AuthzDecision::Allow,
         Decision::Deny { reason } => AuthzDecision::Deny {
             reason,
             policy: POLICY_NAME.to_owned(),
         },
-        // Why: the rule resolver answers "may this subject reach this entity",
-        // which has no third answer — only the governance chain's
-        // `require_approval` returns `Pending`, and it never runs here. A hold
-        // reaching this webhook means a policy was mounted where it cannot be
-        // honoured, so it degrades to a deny rather than an allow.
-        Decision::Pending { reason } => {
-            tracing::error!(
-                %reason,
-                "a governance hold reached the admin authz webhook, which cannot park a request; \
-                 refusing it"
-            );
-            AuthzDecision::Deny {
-                reason: DenyReason::PolicyViolation {
-                    policy: "require_approval".to_owned(),
-                    detail: std::borrow::Cow::Borrowed(
-                        "approval required, but this enforcement point cannot hold a request",
-                    ),
-                },
-                policy: POLICY_NAME.to_owned(),
-            }
+        // Why: this endpoint answers synchronously and cannot park a call, so
+        // a hold degrades to a deny rather than an allow — same reasoning as
+        // core's `RuleBasedHook`.
+        Decision::Pending { .. } => AuthzDecision::Deny {
+            reason: DenyReason::PolicyViolation {
+                policy: "require_approval".to_owned(),
+                detail: Cow::Borrowed(
+                    "approval required, but this enforcement point cannot hold a request",
+                ),
+            },
+            policy: POLICY_NAME.to_owned(),
         },
     };
     (StatusCode::OK, Json(resp)).into_response()

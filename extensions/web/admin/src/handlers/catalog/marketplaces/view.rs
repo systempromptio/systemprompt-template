@@ -8,11 +8,13 @@
 //! Showing only one of the two is how an access surprise goes unnoticed.
 
 use serde::Serialize;
+use systemprompt::identifiers::MarketplaceId;
+use systemprompt_web_shared::GroupId;
 
 // Why: One group, and whether it currently holds this marketplace.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct GroupAssignmentView {
-    pub id: String,
+    pub id: GroupId,
     pub name: String,
     pub member_count: i64,
     pub assigned: bool,
@@ -26,7 +28,7 @@ pub(crate) struct GroupAssignmentView {
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct MarketplaceCardView {
-    pub id: String,
+    pub id: MarketplaceId,
     pub name: String,
     pub description: String,
     pub version: String,
@@ -40,14 +42,14 @@ pub(crate) struct MarketplaceCardView {
     pub skill_count: usize,
     pub mcp_count: usize,
     pub default_included: bool,
-    pub assigned_groups: Vec<String>,
+    pub assigned_groups: Vec<GroupId>,
     pub assigned_group_count: usize,
     pub allowed_subjects: usize,
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct AudienceCellView {
-    pub marketplace_id: String,
+    pub marketplace_id: MarketplaceId,
     pub effective: String,
     pub is_allow: bool,
     pub layer: String,
@@ -71,7 +73,7 @@ pub(crate) struct AudienceMatrixView {
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct AudienceColumnView {
-    pub id: String,
+    pub id: MarketplaceId,
     pub name: String,
 }
 
@@ -121,7 +123,7 @@ pub(crate) struct MarketplaceDetailData {
     pub page: &'static str,
     pub title: String,
     pub breadcrumbs: Vec<crate::handlers::ssr::types::BreadcrumbView>,
-    pub id: String,
+    pub id: MarketplaceId,
     pub name: String,
     pub description: String,
     pub version: String,

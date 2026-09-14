@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE eval_executions SET status='running',lease_owner=$2,lease_expires_at=NOW()+INTERVAL '60 seconds',deadline_at=NOW()+((1800000-active_runtime_ms)::TEXT || ' milliseconds')::INTERVAL,last_heartbeat_at=NOW(),fencing_token=fencing_token+1 WHERE id=$1 RETURNING to_jsonb(eval_executions) AS \"record!: Json<ExecutionRecord>\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record!: Json<ExecutionRecord>",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "03187258122e232abdf3c3716292810f867eb89d0a973b31ae2cb7dfbb3cc084"
+}

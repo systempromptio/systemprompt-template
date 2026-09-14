@@ -21,12 +21,14 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::MarketplaceId;
+use systemprompt_web_shared::GroupId;
 
 use crate::error::{AdminError, AdminResult};
-use crate::repositories::groups::{crud, marketplaces as marketplace_repo};
+use crate::repositories::groups::{crud, marketplaces as marketplace_repo, members as member_repo};
 use crate::repositories::people_usage::DEFAULT_WINDOW_DAYS;
 use crate::repositories::people_usage::breakdown::{LinkedScopeRow, list_linked_scopes};
-use crate::repositories::scope::{Attribution, ScopeKind, ScopeQuery};
+use crate::repositories::scope::{Attribution, ScopeQuery, ScopeTarget};
 use crate::types::groups::{CreateGroupRequest, GroupRecord, GroupSummary, UpdateGroupRequest};
 
 #[derive(Debug, Serialize)]
@@ -38,7 +40,7 @@ pub(crate) struct ListGroupsResponse {
 pub(crate) struct GroupDetailResponse {
     pub group: GroupRecord,
     pub member_count: i64,
-    pub marketplace_ids: Vec<String>,
+    pub marketplace_ids: Vec<MarketplaceId>,
     pub projects: Vec<LinkedScopeRow>,
 }
 
@@ -49,19 +51,18 @@ pub(crate) async fn list_groups_handler(State(pool): State<Arc<PgPool>>) -> Admi
 
 pub(crate) async fn get_group_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(group_id): Path<String>,
+    Path(group_id): Path<GroupId>,
 ) -> AdminResult<Response> {
     let group = crud::find_group(&pool, &group_id)
         .await?
         .ok_or_else(|| AdminError::NotFound(format!("Group {group_id} not found")))?;
-    let members = members::count_members(&pool, &group_id).await?;
+    let members = member_repo::count_group_members(&pool, &group_id).await?;
     let marketplace_ids = marketplace_repo::list_group_marketplace_ids(&pool, &group_id).await?;
     let projects = list_linked_scopes(
         &pool,
         &ScopeQuery::new(
-            ScopeKind::Group,
+            ScopeTarget::Group(&group_id),
             Attribution::Member,
-            &group_id,
             DEFAULT_WINDOW_DAYS,
         ),
     )
@@ -79,7 +80,7 @@ pub(crate) async fn create_group_handler(
     State(pool): State<Arc<PgPool>>,
     Json(body): Json<CreateGroupRequest>,
 ) -> AdminResult<Response> {
-    validated_id(&body.id)?;
+    validated_id(body.id.as_str())?;
     if body.name.trim().is_empty() {
         return Err(AdminError::BadRequest("name must not be empty".to_owned()));
     }
@@ -89,7 +90,7 @@ pub(crate) async fn create_group_handler(
 
 pub(crate) async fn update_group_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(group_id): Path<String>,
+    Path(group_id): Path<GroupId>,
     Json(body): Json<UpdateGroupRequest>,
 ) -> AdminResult<Response> {
     refuse_system_write(&pool, &group_id).await?;
@@ -99,7 +100,7 @@ pub(crate) async fn update_group_handler(
 
 pub(crate) async fn delete_group_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(group_id): Path<String>,
+    Path(group_id): Path<GroupId>,
 ) -> AdminResult<Response> {
     crud::delete_group(&pool, &group_id).await?;
     Ok((StatusCode::NO_CONTENT, ()).into_response())
@@ -130,14 +131,17 @@ pub(crate) fn validated_id(id: &str) -> AdminResult<()> {
 // Why: entitlement is meaningful for `unassigned` — a user the directory
 // placed nowhere still needs a catalogue — so this only asserts the group
 // exists, where [`refuse_system_write`] also refuses the derived one.
-pub(crate) async fn refuse_missing_group(pool: &PgPool, group_id: &str) -> AdminResult<()> {
+pub(crate) async fn refuse_missing_group(pool: &PgPool, group_id: &GroupId) -> AdminResult<()> {
     if crud::find_group(pool, group_id).await?.is_none() {
         return Err(AdminError::NotFound(format!("Group {group_id} not found")));
     }
     Ok(())
 }
 
-pub(crate) async fn refuse_system_write(pool: &PgPool, group_id: &str) -> AdminResult<GroupRecord> {
+pub(crate) async fn refuse_system_write(
+    pool: &PgPool,
+    group_id: &GroupId,
+) -> AdminResult<GroupRecord> {
     let group = crud::find_group(pool, group_id)
         .await?
         .ok_or_else(|| AdminError::NotFound(format!("Group {group_id} not found")))?;

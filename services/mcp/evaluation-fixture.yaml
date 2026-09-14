@@ -1,0 +1,16 @@
+mcp_servers:
+  evaluation_fixture:
+    type: internal
+    binary: systemprompt-mcp-agent
+    package: systemprompt
+    port: 5011
+    enabled: true
+    display_in_web: false
+    removable: false
+    description: Evaluation-only deterministic fixture adapter
+    oauth:
+      required: true
+      scopes:
+        - user
+      audience: mcp
+      client_id: null

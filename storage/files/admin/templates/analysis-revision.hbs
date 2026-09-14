@@ -1,0 +1,10 @@
+{{#> layout title=title page=page}}{{#*inline "content"}}
+{{> components/page-header title=title subtitle="Verified stored bytes and provenance for this revision."}}
+<p><a href="/admin/analysis/versions">All managed resources</a></p>
+{{#if can_manage}}<p><a class="sp-btn sp-btn--primary" href="/admin/analysis/revisions/{{id}}/edit">Draft a candidate</a></p>{{/if}}
+{{#if manifest.parent_id}}<p><a href="/admin/analysis/revisions/{{manifest.parent_id}}/compare/{{id}}">Compare with parent</a></p>{{/if}}
+<dl><dt>Revision</dt><dd>{{id}}</dd><dt>Source snapshot</dt><dd>{{manifest.snapshot_id}}</dd>{{#if manifest.parent_id}}<dt>Parent</dt><dd><a href="/admin/analysis/revisions/{{manifest.parent_id}}">{{manifest.parent_id}}</a></dd>{{/if}}</dl>
+<p><a href="/api/public/admin/managed/revisions/{{id}}/bundle" download>Download revision and dependency bundle (JSON)</a></p>
+<p><a href="/api/public/admin/managed/revisions/{{id}}/files" download>Download verified file data (JSON)</a></p>
+{{#each files}}<section class="sp-analysis-definitions"><h2>{{path}}</h2><p>{{bytes}} bytes · <code>{{digest}}</code></p>{{#if text}}<pre class="sp-analysis-file-preview"><code>{{text}}</code></pre>{{else}}<p>No text preview. Use the download to inspect the original bytes.</p>{{/if}}{{#if truncated}}<p>Preview truncated; the download retains the complete file.</p>{{/if}}</section>{{/each}}
+{{/inline}}{{/layout}}

@@ -32,9 +32,8 @@ pub(super) fn cards(
     rows: &[RoleHolderRow],
     entitlements: &[RoleEntitlementRow],
     query: &RolesQuery,
-    known: &[String],
 ) -> Vec<RoleCardView> {
-    known
+    Role::ALL
         .iter()
         .map(|role| {
             let id = role.as_str();
@@ -50,7 +49,7 @@ pub(super) fn cards(
             let active = query.field("role") == Some(id);
             RoleCardView {
                 id: id.to_owned(),
-                label: label_for(id),
+                label: role.label().to_owned(),
                 member_count,
                 manual_count,
                 directory_count: member_count - manual_count,
@@ -218,8 +217,8 @@ pub(super) fn options(
     out
 }
 
-pub(super) fn role_options(query: &RolesQuery, known: &[String]) -> Vec<SelectOption> {
-    let entries: Vec<(&str, &str)> = known.iter().map(|r| (r.as_str(), r.as_str())).collect();
+pub(super) fn role_options(query: &RolesQuery) -> Vec<SelectOption> {
+    let entries: Vec<(&str, &str)> = Role::ALL.iter().map(|r| (r.as_str(), r.label())).collect();
     options(&entries, "All roles", query.field("role"))
 }
 

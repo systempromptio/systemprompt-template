@@ -21,46 +21,50 @@ pub fn admin_assets(paths: &dyn AssetPaths) -> Vec<AssetDefinition> {
 
     let mut assets = page_js_assets(&storage_js);
     assets.push(admin_bundle_css(&storage_css));
+    assets.push(AssetDefinition::css(
+        storage_css.join("requirements-review.css"),
+        "css/requirements-review.css",
+    ));
+    assets.push(AssetDefinition::js(
+        storage_js.join("admin-report-bridge.js"),
+        "js/admin-report-bridge.js",
+    ));
+    assets.push(AssetDefinition::js(
+        storage_js.join("admin-report-shell.js"),
+        "js/admin-report-shell.js",
+    ));
     assets
 }
 
 fn page_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
     let pages = storage_js.join("pages");
     vec![
-        page_js!(&pages, "profile-connections.js"),
-        page_js!(&pages, "profile-connect-code.js"),
-        page_js!(&pages, "admin-user-access.js"),
-        page_js!(&pages, "admin-roles.js"),
-        page_js!(&pages, "admin-projects.js"),
-        page_js!(&pages, "admin-project-detail.js"),
-        page_js!(&pages, "admin-marketplace-groups.js"),
-        page_js!(&pages, "admin-groups.js"),
-        page_js!(&pages, "admin-group-marketplaces.js"),
-        page_js!(&pages, "admin-group-detail.js"),
-        page_js!(&pages, "admin-group-assign.js"),
-        page_js!(&pages, "admin-group-access.js"),
-        page_js!(&pages, "admin-governance.js"),
-        page_js!(&pages, "admin-gateway.js"),
-        page_js!(&pages, "admin-entities.js"),
-        page_js!(&pages, "admin-devices.js"),
-        page_js!(&pages, "admin-bridge-setup.js"),
-        page_js!(&pages, "admin-approvals.js"),
         page_js!(&pages, "admin-access-control.js"),
-        page_js!(&pages, "admin-access-tokens.js"),
+        page_js!(&pages, "admin-approvals.js"),
+        page_js!(&pages, "admin-bridge-setup.js"),
         page_js!(&pages, "admin-contexts.js"),
-        page_js!(&pages, "admin-demo-register.js"),
-        page_js!(&pages, "admin-demo-trace.js"),
-        page_js!(&pages, "admin-models.js"),
-        page_js!(&pages, "admin-register.js"),
+        page_js!(&pages, "admin-devices.js"),
+        page_js!(&pages, "admin-entities.js"),
+        page_js!(&pages, "admin-gateway.js"),
+        page_js!(&pages, "admin-governance.js"),
+        page_js!(&pages, "admin-group-access.js"),
+        page_js!(&pages, "admin-group-assign.js"),
+        page_js!(&pages, "admin-group-detail.js"),
+        page_js!(&pages, "admin-group-marketplaces.js"),
+        page_js!(&pages, "admin-groups.js"),
+        page_js!(&pages, "admin-login.js"),
+        page_js!(&pages, "admin-marketplace-groups.js"),
+        page_js!(&pages, "admin-project-detail.js"),
+        page_js!(&pages, "admin-projects.js"),
         page_js!(&pages, "admin-requests.js"),
-        page_js!(&pages, "admin-register-ui.js"),
+        page_js!(&pages, "admin-roles.js"),
         page_js!(&pages, "admin-settings.js"),
         page_js!(&pages, "admin-setup-verified.js"),
+        page_js!(&pages, "admin-user-access.js"),
         page_js!(&pages, "admin-user-detail.js"),
         page_js!(&pages, "admin-users.js"),
-        page_js!(&pages, "admin-verify-pending.js"),
-        page_js!(&pages, "management-department-detail.js"),
-        page_js!(&pages, "management-departments.js"),
+        page_js!(&pages, "profile-connect-code.js"),
+        page_js!(&pages, "profile-connections.js"),
     ]
 }
 

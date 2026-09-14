@@ -5,6 +5,7 @@
 //! a finished project means.
 
 use sqlx::PgPool;
+use systemprompt_web_shared::ProjectId;
 
 use crate::error::{AdminError, AdminResult};
 use crate::types::projects::{
@@ -14,7 +15,7 @@ use crate::types::projects::{
 pub async fn list_projects(pool: &PgPool) -> Result<Vec<ProjectRow>, sqlx::Error> {
     sqlx::query_as!(
         ProjectRow,
-        "SELECT id, name, description, source FROM projects ORDER BY name"
+        r#"SELECT id AS "id: ProjectId", name, description, source FROM projects ORDER BY name"#
     )
     .fetch_all(pool)
     .await
@@ -22,12 +23,12 @@ pub async fn list_projects(pool: &PgPool) -> Result<Vec<ProjectRow>, sqlx::Error
 
 pub async fn find_project(
     pool: &PgPool,
-    project_id: &str,
+    project_id: &ProjectId,
 ) -> Result<Option<ProjectRow>, sqlx::Error> {
     sqlx::query_as!(
         ProjectRow,
-        "SELECT id, name, description, source FROM projects WHERE id = $1",
-        project_id
+        r#"SELECT id AS "id: ProjectId", name, description, source FROM projects WHERE id = $1"#,
+        project_id.as_str()
     )
     .fetch_optional(pool)
     .await
@@ -38,7 +39,7 @@ pub async fn list_project_summaries(pool: &PgPool) -> Result<Vec<ProjectSummary>
         ProjectSummary,
         r#"
         SELECT
-            p.id AS "id!",
+            p.id AS "id!: ProjectId",
             p.name AS "name!",
             p.description,
             COALESCE(m.member_count, 0)::BIGINT AS "member_count!",
@@ -81,9 +82,9 @@ pub async fn insert_project(
     }
     sqlx::query_as!(
         ProjectRow,
-        "INSERT INTO projects (id, name, description, source) VALUES ($1, $2, $3, $4)
-         RETURNING id, name, description, source",
-        req.id,
+        r#"INSERT INTO projects (id, name, description, source) VALUES ($1, $2, $3, $4)
+         RETURNING id AS "id: ProjectId", name, description, source"#,
+        req.id.as_str(),
         req.name,
         req.description.as_deref(),
         source
@@ -95,15 +96,15 @@ pub async fn insert_project(
 
 pub async fn update_project(
     pool: &PgPool,
-    project_id: &str,
+    project_id: &ProjectId,
     req: &UpdateProjectRequest,
 ) -> AdminResult<ProjectRow> {
     sqlx::query_as!(
         ProjectRow,
-        "UPDATE projects SET name = COALESCE($2, name),
+        r#"UPDATE projects SET name = COALESCE($2, name),
          description = COALESCE($3, description), updated_at = CURRENT_TIMESTAMP
-         WHERE id = $1 RETURNING id, name, description, source",
-        project_id,
+         WHERE id = $1 RETURNING id AS "id: ProjectId", name, description, source"#,
+        project_id.as_str(),
         req.name.as_deref(),
         req.description.as_deref()
     )
@@ -112,8 +113,8 @@ pub async fn update_project(
     .ok_or_else(|| AdminError::NotFound(format!("Project {project_id} not found")))
 }
 
-pub async fn delete_project(pool: &PgPool, project_id: &str) -> AdminResult<()> {
-    let deleted = sqlx::query!("DELETE FROM projects WHERE id = $1", project_id)
+pub async fn delete_project(pool: &PgPool, project_id: &ProjectId) -> AdminResult<()> {
+    let deleted = sqlx::query!("DELETE FROM projects WHERE id = $1", project_id.as_str())
         .execute(pool)
         .await?;
     if deleted.rows_affected() == 0 {

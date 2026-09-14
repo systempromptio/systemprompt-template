@@ -9,8 +9,8 @@ use std::sync::Arc;
 use systemprompt::extension::prelude::*;
 use systemprompt::traits::Job;
 
+use crate::SkillsPagePrerenderer;
 use crate::assets::web_assets;
-use crate::features::FeaturePagePrerenderer;
 use crate::homepage::{HomepagePageDataProvider, HomepagePrerenderer};
 use crate::navigation::NavigationPageDataProvider;
 use crate::schemas::{migrations, schema_definitions};
@@ -56,10 +56,8 @@ impl Extension for WebExtension {
             prerenderers.push(Arc::new(HomepagePrerenderer::new(config)));
         }
 
-        if let Some(config) = Self::features_config() {
-            for page in &config.pages {
-                prerenderers.push(Arc::new(FeaturePagePrerenderer::new(page.clone())));
-            }
+        if let Some(config) = Self::skills_page_config() {
+            prerenderers.push(Arc::new(SkillsPagePrerenderer::new(config)));
         }
 
         prerenderers
@@ -84,10 +82,6 @@ impl Extension for WebExtension {
     fn seeds(&self) -> Vec<Seed> {
         vec![
             Seed::new(
-                "dashboard_unassigned_group",
-                include_str!("../schema/seeds/dashboard_unassigned_group.sql"),
-            ),
-            Seed::new(
                 "admin_oauth_client",
                 include_str!("../schema/seeds/admin_oauth_client.sql"),
             ),
@@ -96,26 +90,33 @@ impl Extension for WebExtension {
                 include_str!("../schema/seeds/marketplace_plans.sql"),
             ),
             Seed::new(
-                "default_department",
-                include_str!("../schema/seeds/default_department.sql"),
+                "groups_projects",
+                include_str!("../schema/seeds/groups_projects.sql"),
             ),
         ]
     }
 
     fn dependencies(&self) -> Vec<&'static str> {
-        vec!["content", "users", "authz", "ai"]
+        vec![
+            "content",
+            "users",
+            "authz",
+            "evaluation",
+            "managed_resources",
+        ]
     }
 
     fn cross_extension_tables(&self) -> Vec<&'static str> {
         vec![
+            "eval_resource_revisions",
+            "eval_session_bindings",
+            "managed_installation_receipts",
+            "managed_invocation_attributions",
+            "managed_publications",
+            "managed_resources",
             "markdown_content",
+            "mcp_tool_executions",
             "users",
-            "eval_runs",
-            "eval_cases",
-            "eval_results",
-            "eval_pairs",
-            "eval_judge_calls",
-            "eval_rubrics",
         ]
     }
 
@@ -126,8 +127,8 @@ impl Extension for WebExtension {
     fn site_auth(&self) -> Option<SiteAuthConfig> {
         Some(SiteAuthConfig {
             login_path: "/admin/login",
-            protected_prefixes: &["/admin"],
-            public_prefixes: &["/admin/login", "/admin/add-passkey"],
+            protected_prefixes: &["/admin", "/bridge-auth"],
+            public_prefixes: &["/admin/login", "/admin/auth/adfs"],
             required_scope: "user",
         })
     }

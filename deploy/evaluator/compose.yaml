@@ -1,0 +1,58 @@
+name: systemprompt-evaluations-local
+services:
+  postgres:
+    image: pgvector/pgvector:pg18
+    environment:
+      POSTGRES_USER: evaluator
+      POSTGRES_PASSWORD: local-evaluation-only
+      POSTGRES_DB: evaluator
+    volumes:
+      - database:/var/lib/postgresql
+    networks: [control]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U evaluator -d evaluator']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 128
+  client-probe:
+    image: systemprompt-evaluator:local
+    build:
+      context: .
+    profiles: [probe]
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 64
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      - /home/tester/.config:size=32m,uid=1001,gid=1001,mode=0700
+      - /home/tester/.cache:size=32m,uid=1001,gid=1001,mode=0700
+      - /home/tester/.local/state:size=32m,uid=1001,gid=1001,mode=0700
+      - /home/tester/.local/share:size=32m,uid=1001,gid=1001,mode=0700
+    command: [claude, --version]
+  relay:
+    image: systemprompt-evaluator-relay:local
+    build:
+      context: ../..
+      dockerfile: deploy/evaluator/relay.Dockerfile
+    profiles: [relay]
+    environment:
+      SYSTEMPROMPT_RELAY_UPSTREAM: ${SYSTEMPROMPT_RELAY_UPSTREAM:?relay upstream origin required}
+      RUST_LOG: ${RUST_LOG:-info}
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 0.25
+    pids_limit: 64
+networks:
+  control:
+    internal: true
+volumes:
+  database:

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "issue_generator": {
+      "count": 2501,
+      "page_size": 100,
+      "template": {
+        "key": "CAP-{index}",
+        "fields": {
+          "summary": "[EVAL] CAP-{index}",
+          "status": {
+            "name": "Open",
+            "statusCategory": {
+              "key": "new"
+            }
+          },
+          "updated": "2026-09-11T08:00:00Z",
+          "assignee": {
+            "displayName": "Test Owner"
+          }
+        }
+      }
+    },
+    "last_page_after_cap": false
+  }
+}

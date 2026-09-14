@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "ALTER TABLE eval_managed_workspace_assets DISABLE TRIGGER eval_managed_workspace_assets_immutable",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "7f2b423b89d50e2fd090a008b2097d1000cc4e019a90d95470cc3b1ebb521351"
+}

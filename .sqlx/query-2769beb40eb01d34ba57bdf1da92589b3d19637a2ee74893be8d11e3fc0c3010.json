@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO eval_campaign_events(campaign_id,generation,actor_id,action) VALUES($1,0,$2,'created')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2769beb40eb01d34ba57bdf1da92589b3d19637a2ee74893be8d11e3fc0c3010"
+}

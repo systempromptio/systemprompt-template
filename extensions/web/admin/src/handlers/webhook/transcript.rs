@@ -14,7 +14,7 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 
-use crate::error::AdminResult;
+use crate::error::{AdminError, AdminResult};
 use crate::repositories::analytics::conversations::upsert_session_transcript;
 use crate::types::webhook::{TranscriptPayload, TranscriptQuery};
 
@@ -28,17 +28,21 @@ pub(crate) async fn track_transcript_event(
 ) -> AdminResult<Response> {
     let user_id = authenticate_webhook(&headers)?;
 
-    if let Some(session_id) = payload.session_id.as_ref() {
-        let plugin_id = query
-            .plugin_id
-            .as_ref()
-            .map(systemprompt_web_shared::PluginId::as_str);
-        if let Err(e) =
-            upsert_session_transcript(&pool, &user_id, session_id, plugin_id, &payload.transcript)
-                .await
-        {
-            tracing::warn!(error = %e, "Failed to persist session transcript");
-        }
+    let session_id = payload
+        .session_id
+        .as_ref()
+        .ok_or_else(|| AdminError::BadRequest("session_id is required".to_owned()))?;
+    crate::types::webhook::validate_session_key(session_id.as_str())
+        .map_err(AdminError::BadRequest)?;
+    if !payload.transcript.is_array() {
+        return Err(AdminError::BadRequest(
+            "transcript must be an array".to_owned(),
+        ));
+    }
+    {
+        let plugin_id = query.plugin_id.as_ref();
+        upsert_session_transcript(&pool, &user_id, session_id, plugin_id, &payload.transcript)
+            .await?;
     }
 
     Ok(StatusCode::NO_CONTENT.into_response())

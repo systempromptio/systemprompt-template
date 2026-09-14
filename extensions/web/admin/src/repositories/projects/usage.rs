@@ -9,6 +9,7 @@
 
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt_web_shared::ProjectId;
 
 use crate::repositories::scope::{Attribution, ScopeKind};
 
@@ -21,7 +22,7 @@ pub const LISTING_CAP: i64 = 500;
 /// the window's traffic, tool health and skill spread.
 #[derive(Debug, Clone, Serialize)]
 pub struct ProjectRollup {
-    pub id: String,
+    pub id: ProjectId,
     pub name: String,
     pub description: Option<String>,
     pub member_count: i64,
@@ -41,7 +42,7 @@ pub async fn list_project_rollups(
     limit: i64,
 ) -> Result<Vec<ProjectRollup>, sqlx::Error> {
     let rows = crate::scoped_query!(
-        r#"SELECT p.id AS "id!",
+        r#"SELECT p.id AS "id!: ProjectId",
                   p.name AS "name!",
                   p.description AS "description?",
                   (SELECT COUNT(DISTINCT pm.user_id) FROM project_members pm

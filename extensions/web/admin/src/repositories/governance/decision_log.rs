@@ -13,7 +13,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{CallId, SessionId, UserId};
 
 use crate::repositories::scope::SubjectScope;
 use crate::util::time_range::TimeRange;
@@ -30,12 +30,19 @@ pub struct DecisionLogRow {
     pub agent_scope: Option<String>,
     pub reason: String,
     pub trace_id: Option<String>,
+    pub session_id: SessionId,
+    pub call_id: Option<CallId>,
+    pub evidence: String,
 }
 
 /// The KPI strip's numbers, over the same window and scope as the rows.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct DecisionStats {
     pub evaluated: i64,
+    // Why: the table counts calls, so the header must too, or the page
+    // contradicts itself on screen.
+    pub calls: i64,
+    pub attention_calls: i64,
     pub allowed: i64,
     pub warned: i64,
     pub denied: i64,
@@ -52,6 +59,10 @@ pub struct DecisionFilter {
     pub policy: Option<String>,
     pub decision: Option<String>,
     pub search: Option<String>,
+    // Why: narrow to calls that *contain* a deny or a warn. Distinct from
+    // `decision`, which asks what the call's worst evaluation was — a call can
+    // hold a warn and still end up allowed.
+    pub attention: bool,
 }
 
 /// Column and direction the log is ordered by.
@@ -70,23 +81,20 @@ impl Default for DecisionSort {
     }
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "page query plumbing; splitting the parameters is tracked in docs/tech-debt.md"
-)]
 pub async fn list_governance_decisions_paged(
     pool: &PgPool,
     range: TimeRange,
     scope: &SubjectScope,
     filter: &DecisionFilter,
-    sort: DecisionSort,
-    limit: i64,
-    offset: i64,
+    page: super::DecisionPage,
 ) -> Result<(Vec<DecisionLogRow>, i64), sqlx::Error> {
     let rows = sqlx::query_as!(
         DecisionLogRow,
         r#"SELECT g.id, g.created_at, g.decision, g.policy, g.tool_name,
-                  g.user_id AS "user_id!: UserId", g.agent_scope, g.reason, g.trace_id
+                  g.user_id AS "user_id!: UserId", g.agent_scope, g.reason, g.trace_id,
+                  g.session_id AS "session_id!: SessionId",
+                  g.evaluated_rules ->> 'call_id' AS "call_id: CallId",
+                  g.evaluated_rules::TEXT AS "evidence!"
            FROM governance_decisions g
            WHERE g.created_at >= $1 AND g.created_at < $2
              AND ($3::TEXT[] IS NULL OR g.user_id = ANY($3))
@@ -96,6 +104,7 @@ pub async fn list_governance_decisions_paged(
                   OR g.tool_name ILIKE '%' || $6 || '%'
                   OR g.user_id ILIKE '%' || $6 || '%'
                   OR g.reason ILIKE '%' || $6 || '%')
+             AND (NOT $11::BOOL OR (g.decision = 'deny' OR (g.decision = 'warn' AND g.reason NOT LIKE 'secret detected: High-entropy token%')))
            ORDER BY
              CASE WHEN $7 = 'policy'   AND $8 THEN g.policy END ASC,
              CASE WHEN $7 = 'policy'   AND NOT $8 THEN g.policy END DESC,
@@ -114,10 +123,11 @@ pub async fn list_governance_decisions_paged(
         filter.policy.as_deref(),
         filter.decision.as_deref(),
         filter.search.as_deref(),
-        sort.key,
-        sort.ascending,
-        limit,
-        offset,
+        page.sort.key,
+        page.sort.ascending,
+        page.slice.limit,
+        page.slice.offset,
+        filter.attention,
     )
     .fetch_all(pool)
     .await?;
@@ -132,13 +142,15 @@ pub async fn list_governance_decisions_paged(
              AND ($6::TEXT IS NULL
                   OR g.tool_name ILIKE '%' || $6 || '%'
                   OR g.user_id ILIKE '%' || $6 || '%'
-                  OR g.reason ILIKE '%' || $6 || '%')"#,
+                  OR g.reason ILIKE '%' || $6 || '%')
+             AND (NOT $7::BOOL OR (g.decision = 'deny' OR (g.decision = 'warn' AND g.reason NOT LIKE 'secret detected: High-entropy token%')))"#,
         range.from,
         range.to,
         scope.as_sql(),
         filter.policy.as_deref(),
         filter.decision.as_deref(),
         filter.search.as_deref(),
+        filter.attention,
     )
     .fetch_one(pool)
     .await?;
@@ -170,7 +182,11 @@ pub async fn get_decision_stats(
                AS "blocklist_denied!",
              COUNT(*) FILTER (WHERE decision = 'deny' AND policy = 'rate_limit')::BIGINT
                AS "rate_denied!",
-             COUNT(DISTINCT user_id)::BIGINT AS "distinct_users!"
+             COUNT(DISTINCT user_id)::BIGINT AS "distinct_users!",
+             COUNT(DISTINCT COALESCE(NULLIF(trace_id, ''), id))::BIGINT AS "calls!",
+             COUNT(DISTINCT 'review:' || md5(user_id || ':' || session_id || ':' || policy || ':' || COALESCE(substring(reason from 'fingerprint:([0-9a-f]{64})'), reason)))
+               FILTER (WHERE (decision = 'deny' OR (decision = 'warn' AND reason NOT LIKE 'secret detected: High-entropy token%')))::BIGINT
+               AS "attention_calls!"
            FROM governance_decisions
            WHERE created_at >= $1 AND created_at < $2
              AND ($3::TEXT[] IS NULL OR user_id = ANY($3))"#,
@@ -179,6 +195,45 @@ pub async fn get_decision_stats(
         scope.as_sql(),
     )
     .fetch_one(pool)
+    .await
+}
+
+/// One policy's showing in the window, for the chip strip.
+#[derive(Debug, Clone)]
+pub struct PolicyCount {
+    pub policy: String,
+    pub total: i64,
+    pub denied: i64,
+    pub warned: i64,
+}
+
+// Why: the chip strip used to name the four synchronous chain stages and count
+// only those, so on an instance whose traffic is authz and gateway decisions it
+// showed four zeroes beside a full log. Counting what the window actually holds
+// means a chip appears because a policy fired, and a producer nobody knew about
+// announces itself instead of hiding behind an em-dash.
+pub async fn list_decision_policy_counts(
+    pool: &PgPool,
+    range: TimeRange,
+    scope: &SubjectScope,
+) -> Result<Vec<PolicyCount>, sqlx::Error> {
+    sqlx::query_as!(
+        PolicyCount,
+        r#"SELECT policy AS "policy!",
+                  COUNT(*)::BIGINT AS "total!",
+                  COUNT(*) FILTER (WHERE decision = 'deny')::BIGINT AS "denied!",
+                  COUNT(*) FILTER (WHERE decision = 'warn')::BIGINT AS "warned!"
+           FROM governance_decisions
+           WHERE created_at >= $1 AND created_at < $2
+             AND ($3::TEXT[] IS NULL OR user_id = ANY($3))
+           GROUP BY policy
+           ORDER BY COUNT(*) FILTER (WHERE decision IN ('deny', 'warn')) DESC,
+                    COUNT(*) DESC, policy"#,
+        range.from,
+        range.to,
+        scope.as_sql(),
+    )
+    .fetch_all(pool)
     .await
 }
 

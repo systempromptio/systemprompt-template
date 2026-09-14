@@ -13,6 +13,7 @@ use axum::extract::{Extension, Path, Query, State};
 use axum::response::Response;
 use serde::Deserialize;
 use sqlx::PgPool;
+use systemprompt_web_shared::GroupId;
 
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::repositories;
@@ -45,7 +46,7 @@ pub(crate) async fn group_detail_page(
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
-    Path(group_id): Path<String>,
+    Path(group_id): Path<GroupId>,
     Query(query): Query<TabQuery>,
 ) -> AdminHtmlResult<Response> {
     if !user_ctx.is_console {
@@ -90,7 +91,7 @@ pub(crate) async fn group_detail_page(
         is_unassigned,
         not_found: false,
         can_manage: user_ctx.is_admin,
-        can_map: crate::types::roles_grant_platform(&user_ctx.roles),
+        can_map: user_ctx.is_platform_admin,
         group_id,
     };
 
@@ -103,7 +104,11 @@ pub(crate) async fn group_detail_page(
     ))
 }
 
-async fn load_overview(pool: &PgPool, group_id: &str, active: &str) -> Option<GroupOverviewView> {
+async fn load_overview(
+    pool: &PgPool,
+    group_id: &GroupId,
+    active: &str,
+) -> Option<GroupOverviewView> {
     if active != tabs::USAGE {
         return None;
     }
@@ -137,7 +142,7 @@ async fn load_overview(pool: &PgPool, group_id: &str, active: &str) -> Option<Gr
 // than a receipt.
 async fn load_marketplaces(
     pool: &PgPool,
-    group_id: &str,
+    group_id: &GroupId,
     active: &str,
 ) -> Option<Vec<MarketplaceAssignmentView>> {
     if active != tabs::MARKETPLACES {
@@ -159,7 +164,7 @@ async fn load_marketplaces(
 
 async fn load_members(
     pool: &PgPool,
-    group_id: &str,
+    group_id: &GroupId,
     active: &str,
     user_ctx: &UserContext,
 ) -> Option<MembersTabView> {
@@ -167,7 +172,7 @@ async fn load_members(
         return None;
     }
     let loaded = data::load_members(pool, group_id, user_ctx.is_admin).await;
-    let assign_targets = if group_id == UNASSIGNED_GROUP && user_ctx.is_admin {
+    let assign_targets = if group_id.as_str() == UNASSIGNED_GROUP && user_ctx.is_admin {
         assign_targets(pool).await
     } else {
         Vec::new()
@@ -188,7 +193,7 @@ async fn assign_targets(pool: &PgPool) -> Vec<MemberSetChipView> {
         .into_iter()
         .filter(|g| g.id != UNASSIGNED_GROUP)
         .map(|g| MemberSetChipView {
-            id: g.id,
+            id: g.id.as_str().to_owned(),
             label: g.name,
         })
         .collect()
@@ -196,7 +201,7 @@ async fn assign_targets(pool: &PgPool) -> Vec<MemberSetChipView> {
 
 async fn load_access(
     pool: &PgPool,
-    group_id: &str,
+    group_id: &GroupId,
     active: &str,
 ) -> Option<Vec<super::types::AccessSectionView>> {
     if active != tabs::ACCESS {
@@ -207,7 +212,7 @@ async fn load_access(
 
 async fn load_projects(
     pool: &PgPool,
-    group_id: &str,
+    group_id: &GroupId,
     active: &str,
 ) -> Option<Vec<super::types::ProjectRowView>> {
     if active != tabs::PROJECTS {
@@ -219,7 +224,7 @@ async fn load_projects(
 
 async fn load_mappings(
     pool: &PgPool,
-    group_id: &str,
+    group_id: &GroupId,
     active: &str,
     user_ctx: &UserContext,
 ) -> Option<Vec<super::types::MappingRowView>> {
@@ -229,7 +234,7 @@ async fn load_mappings(
     let rows = data::load_mappings(pool, group_id).await;
     Some(people_view::mapping_rows(
         rows.into_iter().map(|r| (r.ad_group, r.source)),
-        crate::types::roles_grant_platform(&user_ctx.roles),
+        user_ctx.is_platform_admin,
     ))
 }
 

@@ -10,6 +10,7 @@ use systemprompt::oauth::SessionCreationService;
 use systemprompt::users::UserService;
 
 pub(crate) struct DbHandles {
+    pub owner: systemprompt::identifiers::UserId,
     pub read: Arc<PgPool>,
     pub write: Arc<PgPool>,
 }
@@ -23,7 +24,11 @@ impl DbHandles {
             tracing::warn!(error = %e, "Failed to get write pool, falling back to read pool");
             Arc::clone(&read)
         });
-        Some(Self { read, write })
+        Some(Self {
+            read,
+            write,
+            owner: ctx.system_owner_id(),
+        })
     }
 
     fn database(&self) -> Arc<Database> {

@@ -81,18 +81,27 @@ pub(super) fn kpis(
     ]
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "page query plumbing; splitting the parameters is tracked in docs/tech-debt.md"
-)]
+// Why: the query-string facets every page link must carry to keep the view
+// the reader is on.
+#[derive(Clone, Copy)]
+pub(super) struct ListingFacets<'a> {
+    pub(super) range: &'a str,
+    pub(super) sort: &'a str,
+    pub(super) dir: &'a str,
+    pub(super) source: &'a str,
+}
+
 pub(super) fn paginate(
     rows: Vec<GroupRowView>,
     page: i64,
-    range: &str,
-    sort: &str,
-    dir: &str,
-    source: &str,
+    facets: ListingFacets<'_>,
 ) -> (Vec<GroupRowView>, Pagination) {
+    let ListingFacets {
+        range,
+        sort,
+        dir,
+        source,
+    } = facets;
     let total_rows = rows.len() as i64;
     // Why: `i64::div_ceil` is unstable on the pinned toolchain, so the ceiling
     // is spelled out as the quotient plus a partial page. Written this way

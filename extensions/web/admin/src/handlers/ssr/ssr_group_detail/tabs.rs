@@ -5,6 +5,7 @@
 //! to show one.
 
 use super::super::types::TabLinkView;
+use systemprompt_web_shared::GroupId;
 
 pub(super) const USAGE: &str = "usage";
 pub(super) const MEMBERS: &str = "members";
@@ -43,7 +44,7 @@ pub(super) fn resolve_tab(requested: Option<&str>, is_unassigned: bool) -> &'sta
 }
 
 pub(super) fn tab_links(
-    group_id: &str,
+    group_id: &GroupId,
     active: &str,
     is_unassigned: bool,
     counts: &TabCounts,

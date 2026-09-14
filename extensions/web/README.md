@@ -273,7 +273,3 @@ The blog extension implements:
 - `SchemaExtension` - Database migrations
 - `ApiExtension` - HTTP routes
 - `JobExtension` - Background jobs
-
-## License
-
-MIT

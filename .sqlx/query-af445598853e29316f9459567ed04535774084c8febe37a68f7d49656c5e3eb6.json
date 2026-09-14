@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(SELECT 1 FROM eval_managed_workspace_projections p WHERE p.owner_id=$1 AND p.digest=$2 AND p.managed_revision_id=$3 AND p.publication_generation IS NOT DISTINCT FROM $4 AND p.manifest=$5 AND p.verified_file_count=$6 AND p.verified_byte_count=$7 AND p.verified_file_count=(SELECT count(*) FROM eval_managed_workspace_assets a WHERE a.owner_id=p.owner_id AND a.workspace_digest=p.digest) AND p.verified_byte_count=(SELECT COALESCE(sum(octet_length(a.content)),0) FROM eval_managed_workspace_assets a WHERE a.owner_id=p.owner_id AND a.workspace_digest=p.digest) AND NOT EXISTS(SELECT 1 FROM eval_managed_workspace_assets a WHERE a.owner_id=p.owner_id AND a.workspace_digest=p.digest AND a.asset_digest<>encode(digest(a.content,'sha256'),'hex')))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Jsonb",
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "af445598853e29316f9459567ed04535774084c8febe37a68f7d49656c5e3eb6"
+}

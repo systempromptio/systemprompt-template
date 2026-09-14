@@ -3,12 +3,26 @@
 //! A context is the persisted state of an AI conversation: metadata in
 //! `user_contexts`, plus every prompt + tool call carried by `ai_requests`
 //! linked to that `context_id`.
+//!
+//! Message and tool-call bodies are fetched by request id, never by context.
+//! The gateway stores the whole message array on every request, so a context's
+//! message rows grow with the square of its turns; a context-wide query needs
+//! a cap, and any cap on it silently truncates the one request the transcript
+//! is actually built from. The caller names the handful of requests it needs
+//! (`transcript_view::transcript_request_ids`) and the queries stay bounded by
+//! the transcript rather than by the conversation's whole history.
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use systemprompt::identifiers::{
     AiRequestId, ContextId, GatewayConversationId, SessionId, TraceId, UserId,
 };
+
+// Why: a conversation of any sane size fits well inside this; the cap only
+// exists so a runaway context cannot pull an unbounded result set into memory.
+// It is taken newest-first and reversed, so what a cap drops is always the
+// oldest history rather than the transcript the reader is built from.
+const REQUEST_CAP: i64 = 5000;
 
 #[derive(Debug, Clone)]
 pub struct ContextHeader {
@@ -182,7 +196,7 @@ pub async fn list_context_requests(
     pool: &PgPool,
     context_id: &ContextId,
 ) -> Result<Vec<ContextRequestRow>, sqlx::Error> {
-    sqlx::query_as!(
+    let mut rows = sqlx::query_as!(
         ContextRequestRow,
         r#"
         SELECT
@@ -202,19 +216,29 @@ pub async fn list_context_requests(
               WHERE m.request_id = cr.id)       AS "message_count!"
         FROM conversation_requests cr
         WHERE context_id = $1
-        ORDER BY created_at ASC
-        LIMIT 500
+        ORDER BY created_at DESC
+        LIMIT $2
         "#,
-        context_id.as_str()
+        context_id.as_str(),
+        REQUEST_CAP
     )
     .fetch_all(pool)
-    .await
+    .await?;
+    // Why: the cap has to fall on the OLDEST requests, never the newest. The
+    // transcript is built from the latest request of each thread, so a
+    // cap taken ascending drops exactly the rows the reader needs and the page
+    // renders empty while the KPI tiles still report the real totals.
+    rows.reverse();
+    Ok(rows)
 }
 
-pub async fn list_context_messages(
+pub async fn list_messages_for_requests(
     pool: &PgPool,
-    context_id: &ContextId,
+    request_ids: &[String],
 ) -> Result<Vec<ContextMessageRow>, sqlx::Error> {
+    if request_ids.is_empty() {
+        return Ok(Vec::new());
+    }
     sqlx::query_as!(
         ContextMessageRow,
         r#"
@@ -226,20 +250,22 @@ pub async fn list_context_messages(
             r.created_at      AS "created_at!"
         FROM ai_request_messages m
         JOIN ai_requests r ON r.id = m.request_id
-        WHERE r.context_id = $1
+        WHERE m.request_id = ANY($1)
         ORDER BY r.created_at ASC, m.sequence_number ASC
-        LIMIT 2000
         "#,
-        context_id.as_str()
+        request_ids
     )
     .fetch_all(pool)
     .await
 }
 
-pub async fn list_context_tool_calls(
+pub async fn list_tool_calls_for_requests(
     pool: &PgPool,
-    context_id: &ContextId,
+    request_ids: &[String],
 ) -> Result<Vec<ContextToolCallRow>, sqlx::Error> {
+    if request_ids.is_empty() {
+        return Ok(Vec::new());
+    }
     // JSON: per-tool payload columns — see ContextToolCallRow above.
     sqlx::query_as!(
         ContextToolCallRow,
@@ -258,11 +284,10 @@ pub async fn list_context_tool_calls(
             r.created_at          AS "created_at!"
         FROM ai_request_tool_calls t
         JOIN ai_requests r ON r.id = t.request_id
-        WHERE r.context_id = $1
+        WHERE t.request_id = ANY($1)
         ORDER BY r.created_at ASC, t.sequence_number ASC
-        LIMIT 1000
         "#,
-        context_id.as_str()
+        request_ids
     )
     .fetch_all(pool)
     .await

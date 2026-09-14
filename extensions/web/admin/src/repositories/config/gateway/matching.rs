@@ -5,7 +5,7 @@
 //! the same first-match-wins `*` semantics the gateway uses at request time.
 //!
 //! Synthesis itself belongs to core and lives in
-//! `systemprompt::models::services`. A second implementation here would only
+//! `systemprompt::models::profile`. A second implementation here would only
 //! ever agree with core's by accident — the id is a hash, and any drift in the
 //! algorithm mints ids the gateway cannot dispatch — so the functions below
 //! delegate. They exist only to keep the `String`-returning signature this
@@ -19,7 +19,7 @@ pub fn slugify_pattern(pattern: &str) -> String {
 }
 
 // Why: `String` rather than core's `RouteId` because every caller here writes
-// the id straight into services YAML as a scalar.
+// the id straight into profile YAML as a scalar.
 #[must_use]
 pub fn synthesize_route_id(model_pattern: &str, provider: &str) -> String {
     systemprompt::models::services::synthesize_route_id(model_pattern, provider)

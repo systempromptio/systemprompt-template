@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "issues": [
+      {
+        "key": "HISTORY-1",
+        "fields": {
+          "summary": "[EVAL] HISTORY-1",
+          "status": {
+            "name": "Open",
+            "statusCategory": {
+              "key": "new"
+            }
+          },
+          "updated": "2026-09-11T08:00:00Z",
+          "assignee": {
+            "displayName": "Test Owner"
+          }
+        }
+      }
+    ],
+    "history_available": false,
+    "previous_snapshot": null
+  }
+}

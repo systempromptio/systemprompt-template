@@ -7,8 +7,8 @@
 use serde::Serialize;
 
 use super::columns::columns;
-use super::data::DashboardGovernanceData;
-use super::kpis::{DashboardGovernanceKpiView, StageFilterView, kpis, stage_filters};
+use super::data::GovernanceData;
+use super::kpis::{GovernanceKpiView, StageFilterView, kpis, stage_filters};
 use super::urls::{ColumnHeader, build_pagination, filter_url, url_with};
 use super::{BASE_URL, GovernanceQuery, GovernanceTab, TabLink, view};
 use crate::handlers::ssr::list_view::{
@@ -27,7 +27,7 @@ pub(super) struct RankView {
 }
 
 #[derive(Debug, Serialize)]
-pub(super) struct DashboardGovernancePageContext {
+pub(super) struct GovernancePageContext {
     pub(super) page: &'static str,
     pub(super) title: &'static str,
     pub(super) subtitle: &'static str,
@@ -39,8 +39,15 @@ pub(super) struct DashboardGovernancePageContext {
     pub(super) is_hooks: bool,
     pub(super) time_range: TimeRangeContext,
     pub(super) scope_filter: ScopeFilterView,
-    pub(super) kpis: Vec<DashboardGovernanceKpiView>,
+    pub(super) kpis: Vec<GovernanceKpiView>,
     pub(super) stage_filters: Vec<StageFilterView>,
+    pub(super) attention: Vec<view::DecisionRow>,
+    pub(super) attention_total: i64,
+    // Why: empty when the band already shows every call that objected. The
+    // template tests it for emptiness rather than carrying a second bool —
+    // `GovernancePageContext` is at its bool ceiling and a URL that is only
+    // sometimes there says the same thing.
+    pub(super) attention_more_url: String,
     pub(super) columns: Vec<ColumnHeader>,
     pub(super) decisions: Vec<view::DecisionRow>,
     pub(super) findings: Vec<view::FindingRow>,
@@ -71,14 +78,49 @@ pub(super) struct Build<'a> {
     pub(super) page: i64,
     pub(super) sort: DecisionSort,
     pub(super) scope_filter: ScopeFilterView,
-    pub(super) data: &'a DashboardGovernanceData,
+    pub(super) data: &'a GovernanceData,
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "one page assembly per handler; splitting is tracked in docs/tech-debt.md"
-)]
-pub(super) fn build(input: Build<'_>) -> DashboardGovernancePageContext {
+fn has_filters(query: &GovernanceQuery) -> bool {
+    query.policy.is_some()
+        || query.decision.is_some()
+        || query.category.is_some()
+        || query.blocked.is_some()
+        || query.q.as_deref().is_some_and(|q| !q.is_empty())
+        || query.attention.as_deref().is_some_and(|a| !a.is_empty())
+}
+
+fn attention_more_url(query: &GovernanceQuery, data: &GovernanceData) -> String {
+    if data.stats.attention_calls > i64::try_from(data.attention.len()).unwrap_or(0) {
+        filter_url(query, &[("tab", "decisions"), ("attention", "1")])
+    } else {
+        String::new()
+    }
+}
+
+fn top_policies(data: &GovernanceData) -> Vec<RankView> {
+    data.top_policies
+        .iter()
+        .map(|p| RankView {
+            name: p.policy.clone(),
+            detail: p.tool_name.clone(),
+            count: p.hits,
+        })
+        .collect()
+}
+
+fn top_actors(data: &GovernanceData) -> Vec<RankView> {
+    data.top_actors
+        .iter()
+        .map(|a| RankView {
+            name: a.display_name.clone(),
+            detail: a.email.clone().unwrap_or_else(|| a.user_id.to_string()),
+            count: a.deny_count,
+        })
+        .collect()
+}
+
+pub(super) fn build(input: Build<'_>) -> GovernancePageContext {
     let Build {
         query,
         tab,
@@ -90,7 +132,7 @@ pub(super) fn build(input: Build<'_>) -> DashboardGovernancePageContext {
     } = input;
 
     let (rows_shown, total, noun) = match tab {
-        GovernanceTab::Decisions => (data.decisions.len(), data.decision_total, "decisions"),
+        GovernanceTab::Decisions => (data.decisions.len(), data.decision_total, "calls"),
         GovernanceTab::Safety => (data.findings.len(), data.finding_total, "findings"),
         GovernanceTab::Hooks => (
             data.hooks.len(),
@@ -106,7 +148,7 @@ pub(super) fn build(input: Build<'_>) -> DashboardGovernancePageContext {
         noun,
     );
 
-    DashboardGovernancePageContext {
+    GovernancePageContext {
         page: "governance-warnings",
         title: "Governance",
         subtitle: "The policy chain and the safety scanners, over one window.",
@@ -123,6 +165,9 @@ pub(super) fn build(input: Build<'_>) -> DashboardGovernancePageContext {
         scope_filter,
         kpis: kpis(query, data),
         stage_filters: stage_filters(query, data),
+        attention: view::decision_rows(&data.attention),
+        attention_total: data.stats.attention_calls,
+        attention_more_url: attention_more_url(query, data),
         columns: columns(query, tab, sort),
         decisions: view::decision_rows(&data.decisions),
         findings: view::finding_rows(&data.findings),
@@ -140,40 +185,20 @@ pub(super) fn build(input: Build<'_>) -> DashboardGovernancePageContext {
         search: query.q.clone().unwrap_or_default(),
         csv_url: csv_url(query),
         clear_url: format!("{BASE_URL}?tab={}", tab.as_str()),
-        has_filters: query.policy.is_some()
-            || query.decision.is_some()
-            || query.category.is_some()
-            || query.blocked.is_some()
-            || query.q.as_deref().is_some_and(|q| !q.is_empty()),
+        has_filters: has_filters(query),
         base_url: BASE_URL,
         decision_options: decision_options(query),
         pretool_24h: data.pretool_24h,
         posttool_24h: data.posttool_24h,
-        top_policies: data
-            .top_policies
-            .iter()
-            .map(|p| RankView {
-                name: p.policy.clone(),
-                detail: p.tool_name.clone(),
-                count: p.hits,
-            })
-            .collect(),
-        top_actors: data
-            .top_actors
-            .iter()
-            .map(|a| RankView {
-                name: a.display_name.clone(),
-                detail: a.email.clone().unwrap_or_else(|| a.user_id.to_string()),
-                count: a.deny_count,
-            })
-            .collect(),
+        top_policies: top_policies(data),
+        top_actors: top_actors(data),
     }
 }
 
 fn tab_links(
     query: &GovernanceQuery,
     active: GovernanceTab,
-    data: &DashboardGovernanceData,
+    data: &GovernanceData,
 ) -> Vec<TabLink> {
     [
         (GovernanceTab::Decisions, data.stats.evaluated),

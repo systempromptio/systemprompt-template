@@ -1,14 +1,19 @@
 //! User create, update, and delete.
+//!
+//! Neither door touches group or project membership: those are what the
+//! directory says at SSO sign-in (see [`super::federated`]), never an operator
+//! edit. An operator-created account has no project until it signs in.
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
+use systemprompt_web_shared::error::MarketplaceError;
 
 use crate::types::{CreateUserRequest, UpdateUserRequest, UserSummary};
 
 pub async fn create_user(
     pool: &PgPool,
     req: &CreateUserRequest,
-) -> Result<UserSummary, sqlx::Error> {
+) -> Result<UserSummary, MarketplaceError> {
     let user_id_str = req.user_id.as_str().to_owned();
     let status = req.status.clone().unwrap_or_else(|| "active".to_owned());
     let username = req.email.as_str();
@@ -47,7 +52,6 @@ pub async fn create_user(
     )
     .fetch_one(pool)
     .await?;
-
     Ok(summary)
 }
 
@@ -64,10 +68,12 @@ pub async fn update_user(
         }
     });
     let set_email_verified = req.is_active == Some(true);
-    let roles_update: Option<&[String]> = req.roles.as_deref();
-    let mut tx = pool.begin().await?;
+    // Why: roles moved to their own route, which is the only place the
+    // platform-admin and directory rules can be applied. The bind stays so the
+    // statement is untouched; B3 removes it with the column from the UPDATE.
+    let roles_update: Option<&[String]> = None;
 
-    let summary = sqlx::query_as!(
+    sqlx::query_as!(
         UserSummary,
         r#"
         UPDATE users
@@ -102,27 +108,8 @@ pub async fn update_user(
         status.as_deref(),
         set_email_verified,
     )
-    .fetch_optional(&mut *tx)
-    .await?;
-
-    if summary.is_some()
-        && let Some(department) = req.department.as_deref()
-    {
-        sqlx::query!(
-            r#"
-                INSERT INTO user_profile_ext (user_id, department)
-                VALUES ($1, $2)
-                ON CONFLICT (user_id) DO UPDATE SET department = EXCLUDED.department
-                "#,
-            user_id.as_str(),
-            department,
-        )
-        .execute(&mut *tx)
-        .await?;
-    }
-
-    tx.commit().await?;
-    Ok(summary)
+    .fetch_optional(pool)
+    .await
 }
 
 pub async fn delete_user(pool: &PgPool, user_id: &UserId) -> Result<bool, sqlx::Error> {

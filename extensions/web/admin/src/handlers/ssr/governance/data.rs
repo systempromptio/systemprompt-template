@@ -10,9 +10,10 @@
 
 use sqlx::PgPool;
 
+use crate::repositories::governance::decision_calls::{DecisionCallRow, list_decision_calls_paged};
 use crate::repositories::governance::decision_log::{
-    DecisionFilter, DecisionLogRow, DecisionSort, DecisionStats, get_decision_stats,
-    list_decision_policies, list_governance_decisions_paged,
+    DecisionFilter, DecisionSort, DecisionStats, PolicyCount, get_decision_stats,
+    list_decision_policies, list_decision_policy_counts,
 };
 use crate::repositories::governance::findings::{
     FindingFilter, SafetyFindingLogRow, SafetyStats, get_safety_stats, list_finding_categories,
@@ -21,7 +22,9 @@ use crate::repositories::governance::findings::{
 use crate::repositories::governance::hook_events::{
     RecentHookEvent, count_posttool_fired_24h, count_pretool_fired_24h, recent_hook_events,
 };
-use crate::repositories::governance::{list_top_actors, list_top_policies};
+use crate::repositories::governance::{
+    DecisionPage, PageSlice, list_top_actors, list_top_policies,
+};
 use crate::repositories::scope::SubjectScope;
 use crate::types::{TopActor, TopPolicy};
 use crate::util::time_range::TimeRange;
@@ -31,13 +34,19 @@ use super::GovernanceTab;
 const RANK_LIMIT: i64 = 10;
 const HOOK_LIMIT: i64 = 50;
 
+// Why: the band is a summary, not a second table. Ten is what fits above the
+// log without pushing it off the screen; the "see all" link carries the rest.
+const ATTENTION_LIMIT: i64 = 10;
+
 // Why: What one render of the page needs from the database.
-pub(super) struct DashboardGovernanceData {
+pub(super) struct GovernanceData {
     pub(super) stats: DecisionStats,
     pub(super) safety: SafetyStats,
     pub(super) policies: Vec<String>,
     pub(super) categories: Vec<String>,
-    pub(super) decisions: Vec<DecisionLogRow>,
+    pub(super) decisions: Vec<DecisionCallRow>,
+    pub(super) attention: Vec<DecisionCallRow>,
+    pub(super) policy_counts: Vec<PolicyCount>,
     pub(super) decision_total: i64,
     pub(super) findings: Vec<SafetyFindingLogRow>,
     pub(super) finding_total: i64,
@@ -60,7 +69,56 @@ pub(super) struct GovernanceRead<'a> {
     pub(super) offset: i64,
 }
 
-pub(super) async fn load(pool: &PgPool, read: GovernanceRead<'_>) -> DashboardGovernanceData {
+impl GovernanceRead<'_> {
+    const fn slice(&self) -> PageSlice {
+        PageSlice {
+            limit: self.page_size,
+            offset: self.offset,
+        }
+    }
+}
+
+// Why: the band that puts the denials and the warnings above the log rather
+// than somewhere inside twenty pages of allows. It is skipped when the log is
+// already narrowed to them — the table would then be the band, repeated — and
+// when the window is clean, because a band that is empty every day is a band
+// nobody reads.
+async fn load_attention(
+    pool: &PgPool,
+    read: &GovernanceRead<'_>,
+    attention_calls: i64,
+) -> Vec<DecisionCallRow> {
+    if read.tab != GovernanceTab::Decisions
+        || read.decision_filter.attention
+        || attention_calls <= 0
+    {
+        return Vec::new();
+    }
+    let filter = DecisionFilter {
+        attention: true,
+        ..read.decision_filter.clone()
+    };
+    match list_decision_calls_paged(
+        pool,
+        read.range,
+        read.scope,
+        &filter,
+        DecisionPage {
+            sort: read.sort,
+            slice: PageSlice::first(ATTENTION_LIMIT),
+        },
+    )
+    .await
+    {
+        Ok((rows, _)) => rows,
+        Err(e) => {
+            tracing::warn!(error = %e, "governance attention band failed");
+            Vec::new()
+        },
+    }
+}
+
+pub(super) async fn load(pool: &PgPool, read: GovernanceRead<'_>) -> GovernanceData {
     let stats = get_decision_stats(pool, read.range, read.scope)
         .await
         .unwrap_or_else(|e| warn_default("governance decision stats", &e));
@@ -69,20 +127,24 @@ pub(super) async fn load(pool: &PgPool, read: GovernanceRead<'_>) -> DashboardGo
         .unwrap_or_else(|e| warn_default("safety finding stats", &e));
     let policies = list_decision_policies(pool, read.range, read.scope)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|e| warn_default("decision policies", &e));
     let categories = list_finding_categories(pool, read.range, read.scope)
         .await
-        .unwrap_or_default();
+        .unwrap_or_else(|e| warn_default("finding categories", &e));
+    let policy_counts = list_decision_policy_counts(pool, read.range, read.scope)
+        .await
+        .unwrap_or_else(|e| warn_default("decision policy counts", &e));
 
     let (decisions, decision_total) = if read.tab == GovernanceTab::Decisions {
-        list_governance_decisions_paged(
+        list_decision_calls_paged(
             pool,
             read.range,
             read.scope,
             read.decision_filter,
-            read.sort,
-            read.page_size,
-            read.offset,
+            DecisionPage {
+                sort: read.sort,
+                slice: read.slice(),
+            },
         )
         .await
         .unwrap_or_else(|e| {
@@ -90,7 +152,7 @@ pub(super) async fn load(pool: &PgPool, read: GovernanceRead<'_>) -> DashboardGo
             (Vec::new(), 0)
         })
     } else {
-        (Vec::new(), stats.evaluated)
+        (Vec::new(), stats.calls)
     };
 
     let (findings, finding_total) = if read.tab == GovernanceTab::Safety {
@@ -99,8 +161,7 @@ pub(super) async fn load(pool: &PgPool, read: GovernanceRead<'_>) -> DashboardGo
             read.range,
             read.scope,
             read.finding_filter,
-            read.page_size,
-            read.offset,
+            read.slice(),
         )
         .await
         .unwrap_or_else(|e| {
@@ -111,13 +172,17 @@ pub(super) async fn load(pool: &PgPool, read: GovernanceRead<'_>) -> DashboardGo
         (Vec::new(), safety.findings)
     };
 
+    let attention = load_attention(pool, &read, stats.attention_calls).await;
+
     let window_seconds = (read.range.to - read.range.from).num_seconds().max(1);
     let hooks = load_hooks(pool, read.tab, window_seconds).await;
 
-    DashboardGovernanceData {
+    GovernanceData {
         stats,
         safety,
         policies,
+        policy_counts,
+        attention,
         categories,
         decisions,
         decision_total,
@@ -150,19 +215,20 @@ async fn load_hooks(pool: &PgPool, tab: GovernanceTab, window_seconds: i64) -> H
     HookData {
         events: recent_hook_events(pool, HOOK_LIMIT)
             .await
+            .inspect_err(|e| tracing::warn!(error = %e, surface = "recent hook events", "governance read failed"))
             .unwrap_or_default(),
         pretool_24h: count_pretool_fired_24h(pool).await.unwrap_or(0),
         posttool_24h: count_posttool_fired_24h(pool).await.unwrap_or(0),
         top_policies: list_top_policies(pool, window_seconds, RANK_LIMIT)
             .await
-            .unwrap_or_default(),
+            .unwrap_or_else(|e| warn_default("top policies", &e)),
         top_actors: list_top_actors(pool, window_seconds, RANK_LIMIT)
             .await
-            .unwrap_or_default(),
+            .unwrap_or_else(|e| warn_default("top actors", &e)),
     }
 }
 
-fn warn_default<T: Default>(what: &str, error: &sqlx::Error) -> T {
+fn warn_default<T: Default>(what: &str, error: &impl std::fmt::Display) -> T {
     tracing::warn!(error = %error, surface = what, "governance read failed");
     T::default()
 }

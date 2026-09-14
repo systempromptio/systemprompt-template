@@ -116,7 +116,6 @@ pub async fn revoke_user_access(
 // on the person being turned away is the address the assertion carried. An
 // inactive row is skipped: `revoke_user_access` is about live credentials, and
 // a closed account's were taken when it closed.
-// Why: lint-ok: unused-pub — called by the downstream ADFS sign-in integration.
 pub async fn revoke_access_by_email(
     pool: &PgPool,
     email: &str,

@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT managed_revision_id,publication_generation,manifest,verified_file_count,verified_byte_count FROM eval_managed_workspace_projections WHERE owner_id=$1 AND digest=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "managed_revision_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_managed_workspace_projections",
+            "name": "managed_revision_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "publication_generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "eval_managed_workspace_projections",
+            "name": "publication_generation"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "manifest",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "eval_managed_workspace_projections",
+            "name": "manifest"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "verified_file_count",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "eval_managed_workspace_projections",
+            "name": "verified_file_count"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "verified_byte_count",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "eval_managed_workspace_projections",
+            "name": "verified_byte_count"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "89244b518b6e66e40dfb72cc015e7f8c850b6c7b8af6b67e7e0518fab5bf37f1"
+}

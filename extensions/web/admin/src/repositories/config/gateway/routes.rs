@@ -1,4 +1,4 @@
-//! Route CRUD against the services tree's `gateway.routes` sequence.
+//! Route CRUD against the profile YAML's `gateway.routes` sequence.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -139,53 +139,4 @@ pub fn reorder_routes(gateway_path: &Path, order: &[usize]) -> Result<(), Market
     }
     write_gateway_file(gateway_path, &doc)?;
     Ok(())
-}
-
-// Why: explicit maintenance persists IDs; ordinary reads and edits derive them
-// in memory.
-pub fn ensure_route_ids(config_path: &Path) -> Result<bool, MarketplaceError> {
-    let mut doc = read_gateway_file(config_path)?;
-    let mut changed = false;
-    let Some(gateway) = doc
-        .as_mapping_mut()
-        .and_then(|m| m.get_mut(Value::from("gateway")))
-    else {
-        return Ok(false);
-    };
-    let Some(routes) = gateway
-        .as_mapping_mut()
-        .and_then(|g| g.get_mut(Value::from("routes")))
-        .and_then(Value::as_sequence_mut)
-    else {
-        return Ok(false);
-    };
-    for route in routes.iter_mut() {
-        let Some(map) = route.as_mapping_mut() else {
-            continue;
-        };
-        let has_id = map
-            .get(Value::from("id"))
-            .and_then(Value::as_str)
-            .is_some_and(|s| !s.trim().is_empty());
-        if has_id {
-            continue;
-        }
-        let model_pattern = map
-            .get(Value::from("model_pattern"))
-            .and_then(Value::as_str)
-            .unwrap_or_default()
-            .to_owned();
-        let provider = map
-            .get(Value::from("provider"))
-            .and_then(Value::as_str)
-            .unwrap_or_default()
-            .to_owned();
-        let id = synthesize_route_id(&model_pattern, &provider);
-        map.insert(Value::from("id"), Value::from(id));
-        changed = true;
-    }
-    if changed {
-        write_gateway_file(config_path, &doc)?;
-    }
-    Ok(changed)
 }

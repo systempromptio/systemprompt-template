@@ -19,8 +19,6 @@ use systemprompt_security::authz::{RuleType, SubjectAttributes};
 use super::matrix::{
     MatrixSection, SectionInput, resolution_inputs, resolve_sections_for, sections_with,
 };
-use systemprompt_security::authz::AuthzError;
-
 use crate::authz::subject_attributes_for;
 
 #[derive(Debug, Clone)]
@@ -64,7 +62,7 @@ pub async fn user_subject(
     pool: &PgPool,
     user_id: &UserId,
     roles: Vec<String>,
-) -> Result<MatrixSubject, AuthzError> {
+) -> Result<MatrixSubject, sqlx::Error> {
     Ok(MatrixSubject {
         id: user_id.clone(),
         roles,

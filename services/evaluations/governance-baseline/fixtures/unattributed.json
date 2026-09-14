@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "platform_spend_usd": 2.5,
+    "jira_project_attribution": null,
+    "productivity_outcomes": null
+  }
+}

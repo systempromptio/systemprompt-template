@@ -5,6 +5,7 @@
 //! request flow stops being readable at that size.
 
 use std::sync::Arc;
+use systemprompt::identifiers::McpServerId;
 
 use sqlx::PgPool;
 use systemprompt_security::authz::{AccessControlRepository, EntityKind};
@@ -58,12 +59,12 @@ pub(super) struct DetailSections {
 // the page down with it.
 pub(super) async fn detail_sections(
     pool: &Arc<PgPool>,
-    mcp_id: &str,
+    mcp_id: &McpServerId,
     page_index: i64,
 ) -> DetailSections {
     let (executions, executions_total) = runtime::list_mcp_executions_paged(
         pool,
-        mcp_id,
+        mcp_id.as_str(),
         EXECUTIONS_PAGE_SIZE,
         page_index * EXECUTIONS_PAGE_SIZE,
     )
@@ -72,7 +73,7 @@ pub(super) async fn detail_sections(
     .unwrap_or_default();
     let shown = i64::try_from(executions.len()).unwrap_or(0);
 
-    let tools = runtime::list_mcp_tool_stats(pool, mcp_id, WINDOW_HOURS, TOOL_LIMIT)
+    let tools = runtime::list_mcp_tool_stats(pool, mcp_id.as_str(), WINDOW_HOURS, TOOL_LIMIT)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "mcp: tool stats read failed"))
         .unwrap_or_default();
@@ -80,14 +81,18 @@ pub(super) async fn detail_sections(
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "mcp: session read failed"))
         .unwrap_or_default();
-    let rules =
-        repositories::users::access_control::list_rules_for_entity(pool, ENTITY_MCP_SERVER, mcp_id)
-            .await
-            .inspect_err(|e| tracing::warn!(error = %e, "mcp: grant read failed"))
-            .unwrap_or_default();
+    let rules = repositories::users::access_control::list_rules_for_entity(
+        pool,
+        ENTITY_MCP_SERVER,
+        mcp_id.as_str(),
+    )
+    .await
+    .inspect_err(|e| tracing::warn!(error = %e, "mcp: grant read failed"))
+    .unwrap_or_default();
     let default_included = AccessControlRepository::from_pool(Arc::clone(pool))
-        .get_entity(EntityKind::McpServer, mcp_id)
+        .get_entity(EntityKind::McpServer, mcp_id.as_str())
         .await
+        .inspect_err(|e| tracing::warn!(error = %e, "mcp: entity access read failed"))
         .unwrap_or_default()
         .is_some_and(|e| e.default_included);
 

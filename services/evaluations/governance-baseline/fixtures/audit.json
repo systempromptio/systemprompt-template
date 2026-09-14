@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "request": {
+      "id": "fixture-request",
+      "trace_id": "fixture-trace",
+      "user_id": "eval-owner",
+      "status": "admitted",
+      "usage": null
+    },
+    "trace": {
+      "id": "fixture-trace",
+      "terminal_event": null
+    }
+  }
+}

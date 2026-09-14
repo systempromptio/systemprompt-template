@@ -17,12 +17,9 @@ use uuid::Uuid;
 use crate::repositories::bridge::{BridgeIdentityRow, find_bridge_user};
 use crate::repositories::users::usage as usage_repo;
 
-use super::{
-    BridgeAgentItem, BridgeAgentsBlock, BridgeProfileBlock, BridgeProfileUsage,
-    ProfileMarketplaceView,
-};
+use super::{AgentItem, AgentsBlock, BridgeProfileBlock, ProfileMarketplaceView, ProfileUsage};
 
-pub(super) struct BridgeUsageSections {
+pub(super) struct UsageSections {
     pub(super) d1: usage_repo::UsageWindow,
     pub(super) d7: usage_repo::UsageWindow,
     pub(super) d30: usage_repo::UsageWindow,
@@ -31,10 +28,7 @@ pub(super) struct BridgeUsageSections {
     pub(super) bridge_user: Option<BridgeIdentityRow>,
 }
 
-pub(super) async fn load_usage_sections(
-    pool: &Arc<PgPool>,
-    user_id: &UserId,
-) -> BridgeUsageSections {
+pub(super) async fn load_usage_sections(pool: &Arc<PgPool>, user_id: &UserId) -> UsageSections {
     let pool_for_d1 = Arc::clone(pool);
     let pool_for_d7 = Arc::clone(pool);
     let pool_for_d30 = Arc::clone(pool);
@@ -53,16 +47,23 @@ pub(super) async fn load_usage_sections(
         async move {
             usage_repo::get_usage_window(&pool_for_d1, &user_id_d1, 1)
                 .await
+                .inspect_err(
+                    |e| tracing::warn!(error = %e, days = 1, "bridge profile: usage window failed"),
+                )
                 .unwrap_or_default()
         },
         async move {
             usage_repo::get_usage_window(&pool_for_d7, &user_id_d7, 7)
                 .await
+                .inspect_err(
+                    |e| tracing::warn!(error = %e, days = 7, "bridge profile: usage window failed"),
+                )
                 .unwrap_or_default()
         },
         async move {
             usage_repo::get_usage_window(&pool_for_d30, &user_id_d30, 30)
                 .await
+                .inspect_err(|e| tracing::warn!(error = %e, days = 30, "bridge profile: usage window failed"))
                 .unwrap_or_default()
         },
         async move {
@@ -73,11 +74,15 @@ pub(super) async fn load_usage_sections(
                 5,
             )
             .await
+            .inspect_err(|e| tracing::warn!(error = %e, "bridge profile: top skills failed"))
             .unwrap_or_default()
         },
         async move {
             usage_repo::get_conversation_summary(&pool_for_conv, &user_id_conv)
                 .await
+                .inspect_err(
+                    |e| tracing::warn!(error = %e, "bridge profile: conversation summary failed"),
+                )
                 .unwrap_or_default()
         },
         async move {
@@ -91,7 +96,7 @@ pub(super) async fn load_usage_sections(
         }
     );
 
-    BridgeUsageSections {
+    UsageSections {
         d1,
         d7,
         d30,
@@ -101,8 +106,8 @@ pub(super) async fn load_usage_sections(
     }
 }
 
-pub(super) fn build_usage(sections: BridgeUsageSections) -> BridgeProfileUsage {
-    BridgeProfileUsage {
+pub(super) fn build_usage(sections: UsageSections) -> ProfileUsage {
+    ProfileUsage {
         d1: sections.d1,
         d7: sections.d7,
         d30: sections.d30,
@@ -170,17 +175,17 @@ fn canonicalize_org_uuid(tenant_id: &TenantId) -> String {
     Uuid::new_v5(&Uuid::NAMESPACE_OID, s.as_bytes()).to_string()
 }
 
-pub(super) fn build_agents_block() -> BridgeAgentsBlock {
+pub(super) fn build_agents_block() -> AgentsBlock {
     let services_path = match ProfileBootstrap::get() {
         Ok(p) => PathBuf::from(&p.paths.services),
-        Err(_) => return BridgeAgentsBlock::default(),
+        Err(_) => return AgentsBlock::default(),
     };
 
     let agents = match crate::repositories::config::agents::list_configured_agents(&services_path) {
         Ok(a) => a,
         Err(e) => {
             tracing::warn!(error = %e, "list_configured_agents failed for profile pane");
-            return BridgeAgentsBlock::default();
+            return AgentsBlock::default();
         },
     };
 
@@ -190,7 +195,7 @@ pub(super) fn build_agents_block() -> BridgeAgentsBlock {
 
     let items = visible
         .into_iter()
-        .map(|a| BridgeAgentItem {
+        .map(|a| AgentItem {
             id: a.id.as_str().to_owned(),
             display_name: if a.name.is_empty() {
                 a.id.as_str().to_owned()
@@ -202,7 +207,7 @@ pub(super) fn build_agents_block() -> BridgeAgentsBlock {
         })
         .collect();
 
-    BridgeAgentsBlock {
+    AgentsBlock {
         total,
         enabled,
         items,
@@ -217,45 +222,41 @@ pub(super) async fn build_marketplaces(
     pool: &PgPool,
     user_id: &UserId,
     roles: Vec<String>,
-) -> Vec<ProfileMarketplaceView> {
+) -> crate::error::AdminResult<Vec<ProfileMarketplaceView>> {
     let Ok(services_path) = crate::handlers::shared::get_services_path() else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
     let manifests =
         crate::repositories::marketplace::manifests::list_marketplace_configs(&services_path)
+            .inspect_err(
+                |e| tracing::warn!(error = %e, "bridge profile: marketplace configs failed"),
+            )
             .unwrap_or_default();
     if manifests.is_empty() {
-        return Vec::new();
+        return Ok(Vec::new());
     }
     let rows = manifests
         .iter()
-        .map(|m| (m.id.clone(), m.name.clone(), None))
+        .map(|m| (m.id.as_str().to_owned(), m.name.clone(), None))
         .collect();
     let sections = vec![("marketplace".to_owned(), "Marketplaces".to_owned(), rows)];
 
-    let Ok(subject) =
-        crate::repositories::users::access_control::user_subject(pool, user_id, roles)
-            .await
-            .inspect_err(|e| tracing::warn!(error = %e, "profile: subject attributes failed"))
-    else {
-        return Vec::new();
-    };
+    let subject =
+        crate::repositories::users::access_control::user_subject(pool, user_id, roles).await?;
     let resolved = crate::repositories::users::access_control::resolve_subject_matrix(
         pool, &subject, sections,
     )
-    .await
-    .inspect_err(|e| tracing::warn!(error = %e, "profile: marketplace matrix failed"))
-    .unwrap_or_default();
+    .await?;
 
     let Some(section) = resolved.into_iter().next() else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
-    section
+    Ok(section
         .rows
         .into_iter()
         .filter(|row| row.effective == "allow")
         .filter_map(|row| {
-            let manifest = manifests.iter().find(|m| m.id == row.entity_id)?;
+            let manifest = manifests.iter().find(|m| m.id.as_str() == row.entity_id)?;
             Some(ProfileMarketplaceView {
                 id: manifest.id.clone(),
                 name: manifest.name.clone(),
@@ -264,5 +265,5 @@ pub(super) async fn build_marketplaces(
                 layer: row.source.layer,
             })
         })
-        .collect()
+        .collect())
 }

@@ -8,5 +8,6 @@ mod overview;
 
 pub use catalog::{list_agent_catalog, list_plugin_catalog, list_skill_catalog};
 pub use overview::{
-    MarketplaceCounts, count_marketplace_items, list_plugins_for_roles, list_plugins_for_roles_full,
+    MarketplaceCounts, count_visible_items, list_plugins_for_roles, list_plugins_for_roles_full,
+    list_plugins_for_user,
 };

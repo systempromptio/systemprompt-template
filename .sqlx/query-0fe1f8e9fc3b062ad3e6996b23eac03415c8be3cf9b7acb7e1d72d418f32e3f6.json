@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE eval_campaigns SET status=$4,generation=generation+1,updated_at=NOW() WHERE owner_id=$1 AND id=$2 AND generation=$3 AND status IN ('active','paused') AND status<>$4 RETURNING generation",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "eval_campaigns",
+            "name": "generation"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0fe1f8e9fc3b062ad3e6996b23eac03415c8be3cf9b7acb7e1d72d418f32e3f6"
+}

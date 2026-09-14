@@ -17,5 +17,3 @@ pub use role::{UserAccessProfile, find_user_access_profile};
 pub use runtime::{
     UserRuntimeAggregate, UserRuntimeDetail, get_user_runtime_detail, list_user_runtime_aggregates,
 };
-
-pub use role::find_user_roles_department;

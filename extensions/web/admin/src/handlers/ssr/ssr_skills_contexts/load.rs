@@ -3,7 +3,7 @@ use super::{ContextsPageInputs, PAGE_SIZE, view};
 use crate::repositories;
 use crate::repositories::analytics::conversation_rows::{
     ConversationPage, ConversationPageMode, ConversationRow, ConversationTotals,
-    UserConversationSummary, list_conversation_models, load_conversation_page,
+    UserConversationSummary, list_distinct_models, load_conversation_page,
 };
 use crate::repositories::scope::SubjectScope;
 use sqlx::PgPool;
@@ -35,7 +35,7 @@ pub(super) async fn load_page_data(
     };
     let (result, models, users) = tokio::join!(
         load_conversation_page(pool, &inputs.filter, page, mode),
-        list_conversation_models(pool),
+        list_distinct_models(pool),
         repositories::users::queries::list_users(pool, user_scope),
     );
     // Why: a failed primary read must not masquerade as an empty, successful page.

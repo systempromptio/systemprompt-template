@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "sites": [
+      {
+        "cloudId": "eval-site",
+        "name": "Evaluation site"
+      }
+    ],
+    "project_pages": [
+      {
+        "values": [
+          {
+            "key": "STEADY",
+            "name": "[EVAL] Steady"
+          }
+        ],
+        "isLast": false,
+        "startAt": 0,
+        "total": 2
+      },
+      {
+        "values": [
+          {
+            "key": "LATE",
+            "name": "[EVAL] Late-page project"
+          }
+        ],
+        "isLast": true,
+        "startAt": 1,
+        "total": 2
+      }
+    ],
+    "issues": {
+      "STEADY": [
+        {
+          "key": "STEADY-1",
+          "fields": {
+            "summary": "[EVAL] STEADY-1",
+            "status": {
+              "name": "Open",
+              "statusCategory": {
+                "key": "done"
+              }
+            },
+            "updated": "2026-09-11T08:00:00Z",
+            "assignee": {
+              "displayName": "Test Owner"
+            }
+          }
+        }
+      ],
+      "LATE": [
+        {
+          "key": "LATE-1",
+          "fields": {
+            "summary": "[EVAL] LATE-1",
+            "status": {
+              "name": "Open",
+              "statusCategory": {
+                "key": "new"
+              }
+            },
+            "updated": "2026-09-11T08:00:00Z",
+            "assignee": {
+              "displayName": "Test Owner"
+            },
+            "duedate": "2026-09-01"
+          }
+        },
+        {
+          "key": "LATE-2",
+          "fields": {
+            "summary": "[EVAL] LATE-2",
+            "status": {
+              "name": "Open",
+              "statusCategory": {
+                "key": "new"
+              }
+            },
+            "updated": "2026-09-11T08:00:00Z",
+            "assignee": {
+              "displayName": "Test Owner"
+            }
+          }
+        }
+      ]
+    },
+    "pages": [
+      {
+        "id": "status-late",
+        "title": "[EVAL] Late project status",
+        "body": "Delivery has unresolved overdue work."
+      }
+    ],
+    "usage": {
+      "period_start": "2026-09-05T08:00:00Z",
+      "period_end": "2026-09-12T08:00:00Z",
+      "total_usd": 1.25,
+      "total_microdollars": 1250000
+    }
+  }
+}

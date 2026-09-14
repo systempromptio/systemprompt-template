@@ -58,46 +58,6 @@ pub(super) struct RedirectRowView {
 }
 
 #[derive(Debug, Default, Serialize)]
-pub(super) struct SkillsTabView {
-    pub kpis: Vec<KpiTile>,
-    pub skill_count: i64,
-    pub by_model_count: usize,
-    pub rows: Vec<SkillRowView>,
-    pub has_rows: bool,
-    pub pagination: Option<Pagination>,
-    pub by_model: Vec<SkillModelRowView>,
-    pub has_by_model: bool,
-    pub measurement_note: String,
-}
-
-#[derive(Debug, Serialize)]
-pub(super) struct SkillRowView {
-    pub skill: String,
-    // Why: no qualifier field. The full `plugin:skill` is already on the
-    // title, so a separate plugin string would be the same text twice.
-    pub name_display: String,
-    pub invocations: i64,
-    pub share_pct: i64,
-    pub slash_display: String,
-    pub tool_display: String,
-    pub users: i64,
-    pub sessions: i64,
-    pub cost_display: String,
-    pub unattributed_display: String,
-    pub rating_display: String,
-    pub drill_url: String,
-}
-
-#[derive(Debug, Serialize)]
-pub(super) struct SkillModelRowView {
-    pub skill: String,
-    pub model: String,
-    pub requests: i64,
-    pub cost_display: String,
-    pub drill_url: String,
-}
-
-#[derive(Debug, Default, Serialize)]
 pub(super) struct ToolsTabView {
     pub kpis: Vec<KpiTile>,
     pub server_count: usize,

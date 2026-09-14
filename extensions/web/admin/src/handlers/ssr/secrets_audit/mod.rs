@@ -97,6 +97,38 @@ fn filter_of(query: &SecretsQuery) -> SecretAuditFilter {
     }
 }
 
+fn time_range_context(query: &SecretsQuery, range: TimeRange) -> TimeRangeContext {
+    TimeRangeContext {
+        preset: query.preset.clone().unwrap_or_else(|| "7d".to_owned()),
+        from: range.from.format("%Y-%m-%dT%H:%M").to_string(),
+        to: range.to.format("%Y-%m-%dT%H:%M").to_string(),
+        base_url: BASE_URL,
+        query: "",
+        rejected: range.rejected_bounds,
+    }
+}
+
+fn pagination(
+    query: &SecretsQuery,
+    action: Option<&str>,
+    page: i64,
+    window: PageWindow,
+) -> Pagination {
+    let (first_row, last_row) = window.bounds();
+    Pagination {
+        current_page: page + 1,
+        total_pages: window.total_pages,
+        first_row,
+        last_row,
+        total_rows: window.total_rows,
+        noun: "entries",
+        has_prev: page > 0,
+        has_next: page + 1 < window.total_pages,
+        prev_url: (page > 0).then(|| url_for(query, action, page - 1)),
+        next_url: (page + 1 < window.total_pages).then(|| url_for(query, action, page + 1)),
+    }
+}
+
 pub(crate) async fn secrets_audit_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
@@ -124,11 +156,11 @@ pub(crate) async fn secrets_audit_page(
         });
     let actions = list_secret_audit_actions(&pool, range)
         .await
+        .inspect_err(|e| tracing::warn!(error = %e, "secrets audit: action listing failed"))
         .unwrap_or_default();
 
     let shown = i64::try_from(rows.len()).unwrap_or(0);
     let window = PageWindow::new(page, PAGE_SIZE, total, shown, "entries");
-    let (first_row, last_row) = window.bounds();
 
     let ctx = SecretsPageContext {
         page: "governance-secrets",
@@ -139,31 +171,12 @@ pub(crate) async fn secrets_audit_page(
             BreadcrumbView::link("Governance", "/admin/governance"),
             BreadcrumbView::current("Secrets audit"),
         ],
-        time_range: TimeRangeContext {
-            preset: query.preset.clone().unwrap_or_else(|| "7d".to_owned()),
-            from: range.from.format("%Y-%m-%dT%H:%M").to_string(),
-            to: range.to.format("%Y-%m-%dT%H:%M").to_string(),
-            base_url: BASE_URL,
-            query: "",
-            rejected: range.rejected_bounds,
-        },
+        time_range: time_range_context(&query, range),
         kpis: kpis(&stats, &query),
         rows: view::rows(&rows),
         has_rows: !rows.is_empty(),
         row_count: format!("{total} entries"),
-        pagination: Pagination {
-            current_page: page + 1,
-            total_pages: window.total_pages,
-            first_row,
-            last_row,
-            total_rows: total,
-            noun: "entries",
-            has_prev: page > 0,
-            has_next: page + 1 < window.total_pages,
-            prev_url: (page > 0).then(|| url_for(&query, filter.action.as_deref(), page - 1)),
-            next_url: (page + 1 < window.total_pages)
-                .then(|| url_for(&query, filter.action.as_deref(), page + 1)),
-        },
+        pagination: pagination(&query, filter.action.as_deref(), page, window),
         actions: action_options(&actions, filter.action.as_deref()),
         search: query.q.clone().unwrap_or_default(),
         csv_url: format!(
@@ -209,7 +222,7 @@ pub(crate) async fn secrets_audit_csv(
             &row.created_at.to_rfc3339(),
             &row.action,
             &row.var_name,
-            &row.plugin_id,
+            row.plugin_id.as_str(),
             row.user_id.as_str(),
             row.actor_id.as_str(),
             if row.actor_id == row.user_id {

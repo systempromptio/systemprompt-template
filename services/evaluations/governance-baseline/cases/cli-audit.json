@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "cli-audit",
+  "skill_id": "manage_permissions",
+  "partition": "development",
+  "prompt": "Investigate the supplied request ID and its trace.",
+  "expected_behavior": [
+    "Use the audit surface to connect request and trace.",
+    "Do not invent missing identity or infer successful completion from admission alone."
+  ],
+  "fixture": "audit",
+  "assertions": [
+    "request_trace_linked",
+    "unknown_completion_visible"
+  ]
+}

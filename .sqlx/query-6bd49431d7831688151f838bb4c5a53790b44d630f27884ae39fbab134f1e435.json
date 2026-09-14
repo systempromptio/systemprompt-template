@@ -1,0 +1,151 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.id,p.review_id,p.generation,p.action,p.revision_id,p.bundle_digest,p.created_at,r.reviewer_id,r.comparison_evidence,r.limitations,\n            EXISTS(SELECT 1 FROM managed_distribution_deliveries d WHERE d.owner_id=p.owner_id AND d.publication_id=p.id AND d.status='distributed') AS \"distributed!\",\n            EXISTS(SELECT 1 FROM managed_installation_receipts i WHERE i.owner_id=p.owner_id AND i.publication_id=p.id) AS \"installation_verified!\"\n            FROM managed_publications p JOIN managed_publication_reviews r ON r.id=p.review_id AND r.owner_id=p.owner_id WHERE p.owner_id=$1 AND p.resource_id=$2 ORDER BY p.generation DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "review_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "review_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "generation"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "action",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "action"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "revision_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "revision_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "bundle_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "bundle_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "reviewer_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_reviews",
+            "name": "reviewer_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "comparison_evidence",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_reviews",
+            "name": "comparison_evidence"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "limitations",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_reviews",
+            "name": "limitations"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "distributed!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "installation_verified!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "6bd49431d7831688151f838bb4c5a53790b44d630f27884ae39fbab134f1e435"
+}

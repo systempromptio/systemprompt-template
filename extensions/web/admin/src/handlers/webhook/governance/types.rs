@@ -21,18 +21,20 @@ use systemprompt_security::policy::ClaimedAgent;
 pub enum GovernanceDecision {
     Allow,
     Deny,
-    // Why: the hook contract's third value. It renders `Decision::Pending` on
-    // this plane — the caller is a person at a terminal, so the approval is
-    // asked for in place rather than parked for the admin console.
-    Ask,
 }
 
 impl GovernanceDecision {
     pub const fn from_decision(d: &Decision) -> Self {
         match d {
+            // Why: warn is an allow to the caller. The policy that warned is
+            // already on the `governance_decisions` row, so answering the hook
+            // with a deny reason here would block the call the mode exists to
+            // let through.
             Decision::Allow { .. } | Decision::Warn { .. } => Self::Allow,
-            Decision::Deny { .. } => Self::Deny,
-            Decision::Pending { .. } => Self::Ask,
+            // Why: the Anthropic hook contract has no third answer, and this
+            // webhook answers synchronously — it cannot park the call and
+            // resume it. A hold degrades to a deny rather than an allow.
+            Decision::Deny { .. } | Decision::Pending { .. } => Self::Deny,
         }
     }
 }
@@ -42,7 +44,6 @@ impl From<GovernanceDecision> for DecisionTag {
         match d {
             GovernanceDecision::Allow => Self::Allow,
             GovernanceDecision::Deny => Self::Deny,
-            GovernanceDecision::Ask => Self::Pending,
         }
     }
 }

@@ -20,7 +20,7 @@ pub(super) fn demo_help_text(page: &str) -> (&'static str, &'static str) {
 fn demo_help_core_pages(page: &str) -> Option<(&'static str, &'static str)> {
     match page {
         "control-center" => Some((
-            "The <strong>Control Center</strong> is your real-time operations hub. It shows live Claude sessions, conversation history, skill effectiveness ratings, and session health analytics. In a production deployment, this page streams live updates via SSE as your team uses Claude, giving you instant visibility into AI usage patterns and performance. The Control Center is fully functional in this demo &mdash; connect via <strong>Claude Code</strong> to see live session data populate in real time. Claude Code is the recommended integration for evaluation.",
+            "The <strong>Control Center</strong> is your real-time operations hub. It shows live Claude sessions, APM (Actions Per Minute) metrics, conversation history, skill effectiveness ratings, and session health analytics. In a production deployment, this page streams live updates via SSE as your team uses Claude, giving you instant visibility into AI usage patterns and performance. The Control Center is fully functional in this demo &mdash; connect via <strong>Claude Code</strong> to see live session data populate in real time. Claude Code is the recommended integration for evaluation.",
             "dashboard",
         )),
         "profile" => Some((
@@ -32,7 +32,7 @@ fn demo_help_core_pages(page: &str) -> Option<(&'static str, &'static str)> {
             "dashboard",
         )),
         "my-plugins" | "plugins" => Some((
-            "<strong>Plugins</strong> shows all plugins installed in your workspace. Plugins are the core building block &mdash; each bundles skills (prompt templates), agents (specialised Claude configurations), and MCP server connections into a single distributable package. You can customise any plugin's components, fork official plugins, or create your own from scratch. Enterprise deployments control which plugins are available per role and department. Plugins work best with <strong>Claude Code</strong>, the recommended integration &mdash; install your marketplace link to load all governed plugins into any Claude Code session.",
+            "<strong>Plugins</strong> shows all plugins installed in your workspace. Plugins are the core building block &mdash; each bundles skills (prompt templates), agents (specialised Claude configurations), and MCP server connections into a single distributable package. You can customise any plugin's components, fork official plugins, or create your own from scratch. Enterprise deployments control which plugins are available per role and AD group. Plugins work best with <strong>Claude Code</strong>, the recommended integration &mdash; install your marketplace link to load all governed plugins into any Claude Code session.",
             "plugins",
         )),
         "browse-plugins" => Some((
@@ -78,7 +78,7 @@ fn demo_help_admin_pages(page: &str) -> Option<(&'static str, &'static str)> {
             "achievements",
         )),
         "leaderboard" => Some((
-            "The <strong>Leaderboard</strong> ranks users by XP, sessions, streaks, and other engagement metrics. It provides a community view of platform adoption, helping identify power users, track team-wide engagement, and encourage healthy competition. Department and team filters let managers see adoption within their groups. Users can opt out of leaderboard visibility in Settings. Connect via <strong>Claude Code</strong> for the best evaluation experience &mdash; it is the recommended integration.",
+            "The <strong>Leaderboard</strong> ranks users by XP, sessions, streaks, and other engagement metrics. It provides a community view of platform adoption, helping identify power users, track team-wide engagement, and encourage healthy competition. Project filters let managers see adoption within Commerce or Core. Users can opt out of leaderboard visibility in Settings. Connect via <strong>Claude Code</strong> for the best evaluation experience &mdash; it is the recommended integration.",
             "gamification",
         )),
         "settings" => Some((
@@ -86,7 +86,7 @@ fn demo_help_admin_pages(page: &str) -> Option<(&'static str, &'static str)> {
             "my-workspace",
         )),
         "users" => Some((
-            "<strong>Users</strong> is the admin user management console. It shows all registered users with their activity metrics, XP rankings, session counts, roles, departments, and last active timestamps. Admins can create users, assign roles and departments, manage permissions, and monitor adoption across the organisation. User data drives access control policies and governance decisions. Connect via <strong>Claude Code</strong> for the best evaluation experience &mdash; it is the recommended integration.",
+            "<strong>Users</strong> is the admin user management console. It shows all registered users with their activity metrics, XP rankings, session counts, roles, projects, and last active timestamps. Admins can create users, assign roles, manage permissions, and monitor adoption across the organisation. User data drives access control policies and governance decisions. Connect via <strong>Claude Code</strong> for the best evaluation experience &mdash; it is the recommended integration.",
             "users",
         )),
         "events" => Some((
@@ -110,11 +110,11 @@ fn demo_help_admin_pages(page: &str) -> Option<(&'static str, &'static str)> {
             "events",
         )),
         "governance" => Some((
-            "<strong>Governance</strong> provides oversight and policy management for AI usage across your organisation. Review every tool call decision (allowed, denied, or modified), configure usage policies per role and department, and set guardrails for how Claude is used by your team. Governance tracks compliance rates, policy violations, and cost allocation in real time. In production, governance policies are enforced automatically at the tool call level. Connect via <strong>Claude Code</strong> for the best evaluation experience &mdash; it is the recommended integration.",
+            "<strong>Governance</strong> provides oversight and policy management for AI usage across your organisation. Review every tool call decision (allowed, denied, or modified), configure usage policies per role and AD group, and set guardrails for how Claude is used by your team. Governance tracks compliance rates, policy violations, and cost allocation in real time. In production, governance policies are enforced automatically at the tool call level. Connect via <strong>Claude Code</strong> for the best evaluation experience &mdash; it is the recommended integration.",
             "tool-governance",
         )),
         "access-control" => Some((
-            "<strong>Access Control</strong> manages permissions, roles, and authorisation policies across your organisation. Define which roles and departments can access specific plugins, agents, and MCP servers. Access control operates at the tool call level &mdash; when Claude invokes a governed tool, the platform checks the user's role and department against the configured policies in real time. Audit every permission change with full history. Connect via <strong>Claude Code</strong> for the best evaluation experience &mdash; it is the recommended integration.",
+            "<strong>Access Control</strong> manages permissions, roles, and authorisation policies across your organisation. Define which roles and AD groups can access specific plugins, agents, and MCP servers. Access control operates at the tool call level &mdash; when Claude invokes a governed tool, the platform checks the user's role and groups against the configured policies in real time. Audit every permission change with full history. Connect via <strong>Claude Code</strong> for the best evaluation experience &mdash; it is the recommended integration.",
             "access-control",
         )),
         "setup" => Some((

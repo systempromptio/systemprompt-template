@@ -8,6 +8,7 @@
 //! restricted rather than open: silence is not a grant.
 
 use std::collections::BTreeSet;
+use systemprompt::identifiers::PluginId;
 
 use serde::Serialize;
 
@@ -124,11 +125,11 @@ pub(crate) fn visibility_for(
 // Why: The marketplaces that carry a given plugin.
 pub(crate) fn carriers_of_plugin<'a>(
     manifests: &'a [MarketplaceConfigSummary],
-    plugin_id: &str,
+    plugin_id: &PluginId,
 ) -> Vec<&'a MarketplaceConfigSummary> {
     manifests
         .iter()
-        .filter(|m| m.plugins.iter().any(|p| p == plugin_id))
+        .filter(|m| m.plugins.iter().any(|p| p == plugin_id.as_str()))
         .collect()
 }
 

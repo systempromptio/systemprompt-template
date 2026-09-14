@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT to_jsonb(w) - 'token_hash' AS \"record!: Json<WorkerRecord>\" FROM eval_workers w WHERE id=$1 AND owner_id=$2 AND environment=$3 AND enabled=TRUE AND expires_at>NOW()",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record!: Json<WorkerRecord>",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "3d6d852e76b9c20adc575cb076855b6a5526a74a441d885033d093fc1ecd5580"
+}

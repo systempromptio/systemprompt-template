@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE eval_experiments SET status='running' WHERE id=$1 AND status='queued'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2d0716dd0877f7d7a1cdba9b26cf929a036acf5c874e05b0b619d50aaed4d95a"
+}

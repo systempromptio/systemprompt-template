@@ -118,7 +118,7 @@ pub(crate) async fn approvals_page(
         rows: view::rows(&rows),
         has_rows: !rows.is_empty(),
         row_count: format!("{total} requests"),
-        pagination: pagination(page, total, shown, status_filter.as_deref()),
+        pagination: pagination(page, total, shown),
         statuses: status_options(status_filter.as_deref()),
         can_decide: user_ctx.is_admin,
         base_url: BASE_URL,
@@ -219,7 +219,7 @@ fn kpis(stats: &ApprovalStats, active: Option<&str>) -> Vec<ApprovalKpiView> {
     ]
 }
 
-fn pagination(page: i64, total: i64, shown: i64, status: Option<&str>) -> Pagination {
+fn pagination(page: i64, total: i64, shown: i64) -> Pagination {
     let window = PageWindow::new(page, PAGE_SIZE, total, shown, "requests");
     let (first_row, last_row) = window.bounds();
     Pagination {
@@ -231,8 +231,8 @@ fn pagination(page: i64, total: i64, shown: i64, status: Option<&str>) -> Pagina
         noun: "requests",
         has_prev: page > 0,
         has_next: page + 1 < window.total_pages,
-        prev_url: (page > 0).then(|| url_for(status, page - 1)),
-        next_url: (page + 1 < window.total_pages).then(|| url_for(status, page + 1)),
+        prev_url: (page > 0).then(|| url_for(None, page - 1)),
+        next_url: (page + 1 < window.total_pages).then(|| url_for(None, page + 1)),
     }
 }
 

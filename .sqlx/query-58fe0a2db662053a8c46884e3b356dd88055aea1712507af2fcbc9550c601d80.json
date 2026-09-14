@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT e.id AS experiment_id,m.reservation_id FROM eval_request_reservations m JOIN eval_executions x ON x.id=m.execution_id JOIN eval_experiments e ON e.id=x.experiment_id JOIN eval_resource_revisions c ON c.id=x.case_revision_id AND c.owner_id=e.owner_id WHERE e.owner_id=$1 AND x.id=$2 AND m.request_id=$3 AND m.traffic_class='suggestion' AND c.content->'content'->>'partition'='development'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "experiment_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_experiments",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "reservation_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_request_reservations",
+            "name": "reservation_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "58fe0a2db662053a8c46884e3b356dd88055aea1712507af2fcbc9550c601d80"
+}

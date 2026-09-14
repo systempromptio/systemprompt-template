@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE eval_managed_workspace_assets SET content=$3 WHERE owner_id=$1 AND workspace_digest=$2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a7c579705e57368f2c526125776566e3b068de0970a038f02ba485b80ebd6a38"
+}

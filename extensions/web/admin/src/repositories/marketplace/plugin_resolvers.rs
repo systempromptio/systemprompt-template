@@ -103,7 +103,11 @@ fn read_skill_config(
         .to_owned();
     let required_secrets: Vec<RequiredSecret> = cfg
         .get("required_secrets")
-        .and_then(|v| serde_yaml::from_value(v.clone()).ok())
+        .and_then(|v| {
+            serde_yaml::from_value(v.clone())
+                .inspect_err(|e| tracing::warn!(error = %e, plugin = %name, "plugin config: malformed required_secrets"))
+                .ok()
+        })
         .unwrap_or_else(Vec::new);
     (name, desc, required_secrets)
 }

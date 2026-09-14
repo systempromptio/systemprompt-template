@@ -3,19 +3,20 @@ name = "systemprompt-web-jobs"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
-license.workspace = true
 description = "Scheduled jobs extension for the systemprompt.io template: content generation and maintenance jobs run under the governed scheduler."
 repository.workspace = true
 homepage.workspace = true
 publish = false
 
 [dependencies]
+systemprompt-mcp-shared = { workspace = true }
 systemprompt-web-shared = { workspace = true }
 systemprompt-web-admin = { workspace = true }
 systemprompt-web-content = { workspace = true }
 # Audit: uses ai, content, database, extension, generator, identifiers, models, traits — requires `full`.
 systemprompt = { workspace = true, features = ["full"] }
 sqlx = { workspace = true }
+chrono = { workspace = true }
 tokio = { workspace = true }
 async-trait = { workspace = true }
 tracing = { workspace = true }

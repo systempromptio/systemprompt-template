@@ -13,7 +13,7 @@
 --     back the underlying audit INSERT. Auditing is the hot-path invariant;
 --     SSE notification is best-effort.
 --   * Payloads carry only stable row-local fields. Consumers that need user
---     display name / department fetch them via a repo helper keyed by `id`.
+--     display name / project fetch them via a repo helper keyed by `id`.
 --     This removes the cross-extension JOIN against `user_profile_ext` from
 --     the governance write path.
 --   * Payload size is explicitly bounded to 7800 bytes (pg_notify limit is

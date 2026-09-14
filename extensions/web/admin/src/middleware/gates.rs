@@ -26,6 +26,9 @@ fn original_path(request: &Request) -> String {
         )
 }
 
+// Why: `/bridge/device-link` carries the bridge's loopback callback in
+// `?redirect=`; dropping the query strands the CLI on a callback that never
+// arrives.
 fn original_target(request: &Request) -> String {
     fn render(uri: &axum::http::Uri) -> String {
         uri.path_and_query()
@@ -63,6 +66,33 @@ pub(crate) async fn require_auth_middleware(request: Request, next: Next) -> Res
     }
 }
 
+// Why: one gate for all three tiers, taking the accepted roles as state, so
+// the router names the tier at the mount point and this file holds no list.
+// The message names the roles rather than saying "admin": a project manager
+// refused a write route otherwise reads it as a bug in their session.
+pub(crate) async fn require_roles_middleware(
+    State(accepted): State<&'static [Role]>,
+    request: Request,
+    next: Next,
+) -> Response {
+    let user_ctx = request.extensions().get::<UserContext>().cloned();
+    let allowed = user_ctx.is_some_and(|ctx| has_any(&ctx.roles, accepted));
+    if allowed {
+        return next.run(request).await;
+    }
+    let names = accepted
+        .iter()
+        .map(|r| r.as_str())
+        .collect::<Vec<_>>()
+        .join(", ");
+    (
+        StatusCode::FORBIDDEN,
+        axum::Json(ErrorBody {
+            error: format!("Role required: {names}"),
+        }),
+    )
+        .into_response()
+}
 
 // Why: anonymous users are deliberately not handled here —
 // `require_user_middleware` runs after this layer and owns that case. The path
@@ -92,39 +122,12 @@ fn is_non_admin_allowed_path(path: &str) -> bool {
     path.starts_with("/admin/profile")
         || path.starts_with("/admin/history")
         || path.starts_with("/admin/settings")
+        || path.starts_with("/admin/requirements/")
         || path.starts_with("/admin/auth/")
         || path.starts_with("/admin/api/")
         || path == "/admin/logout"
         || path == "/admin/login"
-        || path == "/admin/register"
-        || path == "/admin/add-passkey"
-        || path == "/admin/verify-pending"
         || path == "/admin/setup"
-        || path == "/admin/demo-register"
         || path == "/admin/"
         || path == "/admin"
-}
-
-pub(crate) async fn require_roles_middleware(
-    State(accepted): State<&'static [Role]>,
-    request: Request,
-    next: Next,
-) -> Response {
-    let user_ctx = request.extensions().get::<UserContext>().cloned();
-    let allowed = user_ctx.is_some_and(|ctx| has_any(&ctx.roles, accepted));
-    if allowed {
-        return next.run(request).await;
-    }
-    let names = accepted
-        .iter()
-        .map(|r| r.as_str())
-        .collect::<Vec<_>>()
-        .join(", ");
-    (
-        StatusCode::FORBIDDEN,
-        axum::Json(ErrorBody {
-            error: format!("Role required: {names}"),
-        }),
-    )
-        .into_response()
 }

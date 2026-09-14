@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "test_user": {
+      "id": "eval-target",
+      "display_name": "Before Evaluation",
+      "version": 1
+    },
+    "requested_patch": {
+      "display_name": "Eval Pilot"
+    },
+    "mutation_response": {
+      "status": 200
+    },
+    "readback_response": {
+      "status": 403
+    }
+  }
+}

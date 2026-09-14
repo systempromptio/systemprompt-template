@@ -2,20 +2,23 @@
 
 use chrono::{DateTime, Utc};
 use systemprompt::identifiers::UserId;
+use systemprompt_web_shared::{GroupId, ProjectId};
+
+pub(super) use super::access_view::access_tab;
 
 use crate::handlers::ssr::list_view::{PageWindow, Pagination};
+use crate::handlers::ssr::ssr_history::{HistoryRowView, HistoryView, row_view};
 use crate::repositories::scope::defaults::ScopeDefaults;
 use crate::repositories::users::enrolment::UserDeviceRow;
 use crate::repositories::users::sessions::SigninSessionRow;
 
-use crate::types::access_control::{AccessControlRule, AccessDecision};
-
 use super::context::{
-    AccessTabView, DeviceRowView, DevicesTabView, IdentityTabView, MembershipTabView,
-    ScopeDefaultOptionView, UserAccessRowView, UserAccessSectionView, UserSessionRowView,
-    UserSessionsTabView,
+    DeviceRowView, DevicesTabView, IdentityTabView, MembershipTabView, SalesforceIdentityView,
+    ScopeDefaultOptionView, UserConversationsTabView, UserSessionRowView, UserSessionsTabView,
 };
-use super::load::{AccessData, IdentityData, MembershipData};
+use super::load::{IdentityData, MembershipData, UserConversationsData};
+use crate::services::connector_oauth::Provider;
+use crate::types::UserContext;
 
 pub(super) use super::usage::usage_tab;
 
@@ -48,7 +51,16 @@ pub(super) fn identity_tab(
             .find(|i| i.issuer == SLACK_ISSUER)
             .map(|i| i.external_sub.clone())
             .unwrap_or_default(),
-        salesforce_username: data.salesforce_username.clone().unwrap_or_default(),
+        salesforce_identities: data
+            .salesforce_identities
+            .iter()
+            .map(|identity| SalesforceIdentityView {
+                label: Provider::try_from(identity.provider.clone())
+                    .map_or_else(|_| identity.provider.clone(), |p| p.display_name()),
+                provider: identity.provider.clone(),
+                sf_username: identity.sf_username.clone(),
+            })
+            .collect(),
         share_token_version: data.share_token_version,
     }
 }
@@ -62,12 +74,12 @@ pub(super) fn membership_tab(data: MembershipData) -> MembershipTabView {
     MembershipTabView {
         primary_group_options: scope_options(
             &data.groups,
-            defaults.primary_group_id.as_deref(),
+            defaults.primary_group_id.as_ref().map(GroupId::as_str),
             "No primary group",
         ),
         primary_project_options: scope_options(
             &data.projects,
-            defaults.primary_project_id.as_deref(),
+            defaults.primary_project_id.as_ref().map(ProjectId::as_str),
             "No primary project",
         ),
         scope_source_is_manual: defaults.source == "manual",
@@ -101,78 +113,6 @@ fn scope_options(
             }),
     );
     out
-}
-
-pub(super) fn access_tab(data: AccessData, user_id: &UserId) -> AccessTabView {
-    let Some(matrix) = data.matrix else {
-        return AccessTabView {
-            has_groups: false,
-            sections: Vec::new(),
-        };
-    };
-    let sections = matrix
-        .sections
-        .into_iter()
-        .map(|section| {
-            let rows: Vec<UserAccessRowView> = section
-                .rows
-                .into_iter()
-                .map(|row| {
-                    let own = own_rule(&data.rules, &section.entity_type, &row.entity_id, user_id);
-                    UserAccessRowView {
-                        entity_type: section.entity_type.clone(),
-                        effective_tone: effective_tone(&row.effective),
-                        entity_id: row.entity_id,
-                        entity_name: row.entity_name,
-                        effective: row.effective,
-                        layer: row.source.layer,
-                        detail: row.source.detail,
-                        state: own.map_or("inherit", |r| match r.access {
-                            AccessDecision::Allow => "allow",
-                            AccessDecision::Deny => "deny",
-                        }),
-                        rule_id: own.map(|r| r.id.clone()).unwrap_or_default(),
-                    }
-                })
-                .collect();
-            UserAccessSectionView {
-                has_rows: !rows.is_empty(),
-                rows,
-                entity_type: section.entity_type,
-                label: section.label,
-            }
-        })
-        .collect();
-    AccessTabView {
-        has_groups: !matrix.user.group_ids.is_empty(),
-        sections,
-    }
-}
-
-// Why: `warn` and `pending` are real resolver outcomes, not failures. A warn
-// is a reach that enforcement is currently letting through; a pending is a
-// hold awaiting approval. Both get a tone that says "look here", not red.
-const fn effective_tone(effective: &str) -> &'static str {
-    match effective.as_bytes() {
-        b"allow" => "ok",
-        b"deny" => "err",
-        b"warn" => "warn",
-        _ => "info",
-    }
-}
-
-fn own_rule<'a>(
-    rules: &'a [AccessControlRule],
-    entity_type: &str,
-    entity_id: &str,
-    user_id: &UserId,
-) -> Option<&'a AccessControlRule> {
-    rules.iter().find(|r| {
-        r.entity_type == entity_type
-            && r.entity_id == entity_id
-            && r.rule_type.as_str() == "user"
-            && r.rule_value == user_id.as_str()
-    })
 }
 
 pub(super) fn devices_tab(rows: Vec<UserDeviceRow>) -> DevicesTabView {
@@ -263,10 +203,35 @@ fn session_row(row: &SigninSessionRow) -> UserSessionRowView {
     }
 }
 
+pub(super) fn conversations_tab(
+    data: &UserConversationsData,
+    user_id: &UserId,
+    viewer: &UserContext,
+    page: i64,
+    page_size: i64,
+) -> UserConversationsTabView {
+    let rows: Vec<HistoryRowView> = data
+        .items
+        .iter()
+        .map(|item| row_view(item, viewer, HistoryView::Org))
+        .collect();
+    let shown = i64::try_from(rows.len()).unwrap_or(0);
+    let window = PageWindow::new(page, page_size, data.total, shown, "conversations");
+    UserConversationsTabView {
+        has_rows: !rows.is_empty(),
+        pagination: tab_pagination(user_id, "conversations", window),
+        rows,
+    }
+}
+
 fn sessions_pagination(user_id: &UserId, window: PageWindow) -> Pagination {
+    tab_pagination(user_id, "sessions", window)
+}
+
+fn tab_pagination(user_id: &UserId, tab: &str, window: PageWindow) -> Pagination {
     let page = window.index;
     let prefix = format!(
-        "/admin/users/{}?tab=sessions&",
+        "/admin/users/{}?tab={tab}&",
         urlencoding::encode(user_id.as_str())
     );
     let prev_url = (page > 0).then(|| format!("{prefix}page={}", page - 1));

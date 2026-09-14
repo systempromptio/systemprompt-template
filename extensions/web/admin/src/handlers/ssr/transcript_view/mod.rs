@@ -19,13 +19,15 @@ use crate::repositories::analytics::context_detail::ContextRequestRow;
 use crate::repositories::analytics::conversations::{redact_text, strip_gateway_markers};
 
 mod conversation;
+mod grouping;
 mod markers;
 mod thread;
 
 pub use conversation::{
-    ConversationView, SideCallRowView, SideCallsView, StepView, ThreadView, ToolChipView, TurnView,
-    build_conversation,
+    ConversationView, EmptyReason, SideCallRowView, SideCallsView, StepView, ThreadView,
+    ToolChipView, TurnView, build_conversation,
 };
+pub use grouping::{TranscriptRequestIds, transcript_request_ids};
 pub use markers::{
     ParsedAssistant, ToolUseMarker, parse_assistant, strip_system_reminders, tidy_lines,
 };

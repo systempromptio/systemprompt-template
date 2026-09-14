@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "models": [
+      {
+        "id": "model-a",
+        "requests": 90,
+        "spend_usd": 1.0
+      },
+      {
+        "id": "model-b",
+        "requests": 10,
+        "spend_usd": 9.0
+      }
+    ],
+    "authorized_mutations": []
+  }
+}

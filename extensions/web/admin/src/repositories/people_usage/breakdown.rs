@@ -69,9 +69,9 @@ pub async fn list_scope_top_models(
            GROUP BY 1, 2
            ORDER BY 3 DESC, 1
            LIMIT $5"#,
-        q.kind.as_str(),
+        q.kind().as_str(),
         q.attribution.is_exclusive(),
-        q.id,
+        q.id(),
         q.window_days,
         limit
     )
@@ -107,9 +107,9 @@ pub async fn list_scope_top_skills(
            GROUP BY 1
            ORDER BY 2 DESC, 1
            LIMIT $5"#,
-        q.kind.as_str(),
+        q.kind().as_str(),
         q.attribution.is_exclusive(),
-        q.id,
+        q.id(),
         q.window_days,
         limit
     )
@@ -142,9 +142,9 @@ pub async fn list_scope_top_tools(
            GROUP BY 1, 2
            ORDER BY 3 DESC, 2
            LIMIT $5"#,
-        q.kind.as_str(),
+        q.kind().as_str(),
         q.attribution.is_exclusive(),
-        q.id,
+        q.id(),
         q.window_days,
         limit
     )
@@ -183,9 +183,9 @@ pub async fn list_linked_scopes(
            WHERE linked.user_id IN (SELECT m.user_id FROM membership m WHERE m.scope_id = $3)
            GROUP BY 1, 2, 3
            ORDER BY 4 DESC, 2"#,
-        q.kind.as_str(),
+        q.kind().as_str(),
         q.attribution.is_exclusive(),
-        q.id
+        q.id()
     )
     .fetch_all(pool)
     .await?;

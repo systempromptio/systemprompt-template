@@ -6,7 +6,7 @@
 //! complete conversation rather than fragments.
 
 use sqlx::PgPool;
-use systemprompt::identifiers::{SessionId, UserId};
+use systemprompt::identifiers::{PluginId, SessionId, UserId};
 
 // JSON: walks one transcript entry of the third-party Claude Code shape,
 // where usage and model live either at the top level or under `message`.
@@ -27,7 +27,7 @@ pub async fn upsert_session_transcript(
     pool: &PgPool,
     user_id: &UserId,
     session_id: &SessionId,
-    plugin_id: Option<&str>,
+    plugin_id: Option<&PluginId>,
     transcript: &serde_json::Value,
 ) -> Result<(), sqlx::Error> {
     let empty = Vec::new();
@@ -64,7 +64,7 @@ pub async fn upsert_session_transcript(
         format!("st-{}", session_id.as_str()),
         user_id.as_str(),
         session_id.as_str(),
-        plugin_id,
+        plugin_id.map(PluginId::as_str),
         transcript,
         input_tokens,
         output_tokens,

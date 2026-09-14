@@ -1,6 +1,7 @@
 //! Row shaping for the secrets audit trail.
 
 use serde::Serialize;
+use systemprompt::identifiers::PluginId;
 
 use crate::handlers::ssr::format::local_time;
 use crate::repositories::governance::secret_audit_log::SecretAuditRow;
@@ -11,7 +12,7 @@ pub(super) struct SecretAuditRowView {
     pub(super) action: String,
     pub(super) tone: &'static str,
     pub(super) var_name: String,
-    pub(super) plugin_id: String,
+    pub(super) plugin_id: PluginId,
     pub(super) owner: String,
     pub(super) owner_url: String,
     pub(super) actor: String,

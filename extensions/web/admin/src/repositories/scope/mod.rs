@@ -18,6 +18,7 @@ pub mod visibility;
 
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
+use systemprompt_web_shared::{GroupId, ProjectId};
 
 pub use visibility::{ScopeRequest, SubjectScope, Visibility};
 
@@ -52,8 +53,8 @@ impl ScopeKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Scope {
     All,
-    Group(String),
-    Project(String),
+    Group(GroupId),
+    Project(ProjectId),
     User(UserId),
 }
 
@@ -68,11 +69,17 @@ impl Scope {
     }
 
     #[must_use]
-    pub const fn container_id(&self) -> Option<&str> {
+    pub const fn target(&self) -> Option<ScopeTarget<'_>> {
         match self {
-            Self::Group(id) | Self::Project(id) => Some(id.as_str()),
+            Self::Group(id) => Some(ScopeTarget::Group(id)),
+            Self::Project(id) => Some(ScopeTarget::Project(id)),
             Self::All | Self::User(_) => None,
         }
+    }
+
+    #[must_use]
+    pub fn container_id(&self) -> Option<&str> {
+        self.target().map(ScopeTarget::id)
     }
 
     pub async fn resolve(
@@ -80,9 +87,9 @@ impl Scope {
         pool: &PgPool,
         attribution: Attribution,
     ) -> Result<SubjectScope, sqlx::Error> {
-        match (self.kind(), self.container_id()) {
-            (Some(kind), Some(id)) => {
-                let ids = membership::list_scope_user_ids(pool, kind, attribution, id).await?;
+        match self.target() {
+            Some(target) => {
+                let ids = membership::list_scope_user_ids(pool, target, attribution).await?;
                 Ok(SubjectScope::Users(
                     ids.into_iter()
                         .map(|user_id| user_id.as_str().to_owned())
@@ -97,6 +104,32 @@ impl Scope {
     }
 }
 
+/// The one container a scoped query names, carried with its kind so the two
+/// cannot be paired wrongly.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScopeTarget<'a> {
+    Group(&'a GroupId),
+    Project(&'a ProjectId),
+}
+
+impl<'a> ScopeTarget<'a> {
+    #[must_use]
+    pub const fn kind(self) -> ScopeKind {
+        match self {
+            Self::Group(_) => ScopeKind::Group,
+            Self::Project(_) => ScopeKind::Project,
+        }
+    }
+
+    #[must_use]
+    pub fn id(self) -> &'a str {
+        match self {
+            Self::Group(id) => id.as_str(),
+            Self::Project(id) => id.as_str(),
+        }
+    }
+}
+
 /// One scoped question: which container, attributed how, over how long.
 ///
 /// The trailing-days window is what the people pages ask for; a page working
@@ -105,26 +138,29 @@ impl Scope {
 /// selects itself.
 #[derive(Debug, Clone, Copy)]
 pub struct ScopeQuery<'a> {
-    pub kind: ScopeKind,
+    pub target: ScopeTarget<'a>,
     pub attribution: Attribution,
-    pub id: &'a str,
     pub window_days: i32,
 }
 
 impl<'a> ScopeQuery<'a> {
     #[must_use]
-    pub const fn new(
-        kind: ScopeKind,
-        attribution: Attribution,
-        id: &'a str,
-        window_days: i32,
-    ) -> Self {
+    pub const fn new(target: ScopeTarget<'a>, attribution: Attribution, window_days: i32) -> Self {
         Self {
-            kind,
+            target,
             attribution,
-            id,
             window_days,
         }
+    }
+
+    #[must_use]
+    pub const fn kind(&self) -> ScopeKind {
+        self.target.kind()
+    }
+
+    #[must_use]
+    pub fn id(&self) -> &'a str {
+        self.target.id()
     }
 }
 

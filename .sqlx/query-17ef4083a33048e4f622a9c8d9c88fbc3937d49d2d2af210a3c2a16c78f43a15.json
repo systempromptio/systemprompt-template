@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_revision_assets(owner_id,revision_id,path,digest) VALUES($1,$2,$3,$4) ON CONFLICT(revision_id,path) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "17ef4083a33048e4f622a9c8d9c88fbc3937d49d2d2af210a3c2a16c78f43a15"
+}

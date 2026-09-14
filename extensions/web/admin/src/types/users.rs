@@ -138,8 +138,6 @@ pub struct CreateUserRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateUserRequest {
-    pub roles: Option<Vec<String>>,
-    pub department: Option<String>,
     pub display_name: Option<String>,
     pub email: Option<String>,
     pub is_active: Option<bool>,
@@ -162,7 +160,6 @@ pub struct UpsertSkillSecretRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct UsersQuery {
-    pub department: Option<String>,
     pub group: Option<String>,
     pub project: Option<String>,
     pub role: Option<String>,
@@ -210,19 +207,4 @@ pub struct UserIdentityRow {
     pub denies: i64,
     pub secret_breaches: i64,
     pub scope_violations: i64,
-}
-
-#[derive(Debug, Serialize, Deserialize, FromRow)]
-pub struct DepartmentStats {
-    pub department: String,
-    pub user_count: i64,
-    pub active_count: i64,
-    pub total_events: i64,
-    pub active_24h: i64,
-    pub active_7d: i64,
-    pub total_tokens: i64,
-    pub total_prompts: i64,
-    pub total_sessions: i64,
-    pub sessions_this_week: i64,
-    pub sessions_prev_week: i64,
 }

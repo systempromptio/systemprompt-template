@@ -7,6 +7,8 @@
 //! folded in: it was the same account seen from a different sidebar entry, and
 //! the two are now one URL.
 
+mod access_overview;
+mod access_view;
 mod context;
 mod load;
 mod usage;
@@ -30,10 +32,14 @@ use context::{DetailKpiView, DetailTabView, UserDetailContext, UserHeaderView};
 
 use super::BASE_URL;
 
-const TABS: [(&str, &str); 6] = [
+// Why: Conversations sits second, directly after Identity. What this person
+// has actually been asking the models is the question an operator opens an
+// account for.
+const TABS: [(&str, &str); 7] = [
     ("identity", "Identity"),
+    ("conversations", "Conversations"),
     ("membership", "Membership"),
-    ("access", "Access"),
+    ("access", "Access & connections"),
     ("devices", "Devices"),
     ("sessions", "Sessions"),
     ("usage", "Usage"),
@@ -47,7 +53,7 @@ pub(crate) struct DetailQuery {
 
 #[expect(
     clippy::too_many_arguments,
-    reason = "page query plumbing; splitting the parameters is tracked in docs/tech-debt.md"
+    reason = "axum extractor list; the router decides the arity, not this signature"
 )]
 pub(crate) async fn user_detail_page(
     Extension(user_ctx): Extension<UserContext>,
@@ -76,18 +82,11 @@ pub(crate) async fn user_detail_page(
     let tab = resolve_tab(query.tab.as_deref());
     let page = query.page.unwrap_or(0).max(0);
 
-    let (profile, summary, defaults) = tokio::join!(
-        repositories::users::queries::find_user_access_profile(&pool, &user_id),
-        repositories::users::usage::get_ai_request_summary(&pool, &user_id),
-        repositories::scope::defaults::find_scope_defaults(&pool, &user_id),
-    );
-    let profile = profile
-        .inspect_err(|e| tracing::warn!(error = %e, "user detail: access profile unavailable"))
-        .ok()
-        .flatten();
-    let summary = summary.unwrap_or_default();
-    let defaults = defaults.ok().flatten();
-
+    let load::Headline {
+        profile,
+        summary,
+        defaults,
+    } = load::load_headline(&pool, &user_id).await;
     let group_ids = profile
         .as_ref()
         .map(|p| p.group_ids.clone())
@@ -119,6 +118,7 @@ pub(crate) async fn user_detail_page(
         can_write: user_ctx.is_admin,
         is_self: user_ctx.user_id.as_str() == user_id.as_str(),
         identity: None,
+        conversations: None,
         membership: None,
         access: None,
         devices: None,
@@ -126,7 +126,18 @@ pub(crate) async fn user_detail_page(
         usage: None,
     };
 
-    let data = Box::pin(fill_tab(&pool, &user_id, &detail, tab, page, data)).await;
+    let data = Box::pin(fill_tab(
+        TabRead {
+            pool: &pool,
+            user_id: &user_id,
+            detail: &detail,
+            tab,
+            page,
+            viewer: &user_ctx,
+        },
+        data,
+    ))
+    .await;
 
     Ok(super::super::render_typed_page(
         &engine,
@@ -137,21 +148,36 @@ pub(crate) async fn user_detail_page(
     ))
 }
 
-// Why: only the active tab is loaded. Rendering all six would make opening a
+// Why: only the active tab is loaded. Rendering all seven would make opening a
 // person's Identity tab pay for their whole request history.
-#[expect(
-    clippy::too_many_arguments,
-    reason = "page query plumbing; splitting the parameters is tracked in docs/tech-debt.md"
-)]
-async fn fill_tab(
-    pool: &PgPool,
-    user_id: &UserId,
-    detail: &crate::types::UserDetail,
+struct TabRead<'a> {
+    pool: &'a PgPool,
+    user_id: &'a UserId,
+    detail: &'a crate::types::UserDetail,
     tab: &'static str,
     page: i64,
-    mut data: UserDetailContext,
-) -> UserDetailContext {
+    viewer: &'a UserContext,
+}
+
+async fn fill_tab(read: TabRead<'_>, mut data: UserDetailContext) -> UserDetailContext {
+    let TabRead {
+        pool,
+        user_id,
+        detail,
+        tab,
+        page,
+        viewer,
+    } = read;
     match tab {
+        "conversations" => {
+            data.conversations = Some(view::conversations_tab(
+                &load::load_conversations(pool, user_id, page).await,
+                user_id,
+                viewer,
+                page,
+                load::CONVERSATION_PAGE_SIZE,
+            ));
+        },
         "membership" => {
             data.membership = Some(view::membership_tab(
                 load::load_membership(pool, user_id).await,
@@ -250,10 +276,10 @@ fn header_view(
         created_at: view::stamp(Some(detail.created_at)),
         last_active: view::stamp(detail.last_active),
         primary_group: defaults
-            .and_then(|d| d.primary_group_id.clone())
+            .and_then(|d| d.primary_group_id.as_ref().map(ToString::to_string))
             .unwrap_or_else(|| group_ids.first().cloned().unwrap_or_else(|| "—".to_owned())),
         primary_project: defaults
-            .and_then(|d| d.primary_project_id.clone())
+            .and_then(|d| d.primary_project_id.as_ref().map(ToString::to_string))
             .unwrap_or_else(|| {
                 project_ids
                     .first()

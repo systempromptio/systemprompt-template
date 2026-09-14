@@ -5,6 +5,7 @@ pub mod ingestion;
 pub mod link;
 pub mod link_analytics;
 pub mod link_generation;
+pub mod release_version;
 pub mod search;
 pub mod validation;
 
@@ -13,5 +14,6 @@ pub use ingestion::IngestionService;
 pub use link::LinkService;
 pub use link_analytics::LinkAnalyticsService;
 pub use link_generation::LinkGenerationService;
+pub use release_version::substitute_release_version;
 pub use search::SearchService;
 pub use validation::ValidationService;

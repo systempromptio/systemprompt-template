@@ -15,8 +15,11 @@ use crate::repositories::analytics::conversation_rows::{
     ConversationRow, ConversationSort, UserConversationSummary,
 };
 
-use super::context::{ContextsSortHeaders, ConversationItemView, UserSummaryView};
-use super::{BASE_URL, ContextsListQuery, PAGE_SIZE};
+use super::context::{
+    ContextsSortHeaders, ConversationItemView, ModelOptionView, UserForFilterView, UserSummaryView,
+};
+use super::load::ContextsPageData;
+use super::{BASE_URL, ContextsListQuery, ContextsPageInputs, PAGE_SIZE};
 
 pub(super) fn preserved_query_string(query: &ContextsListQuery, drop: &[&str]) -> String {
     let pairs: [(&str, Option<&str>); 11] = [
@@ -235,4 +238,56 @@ pub(super) fn user_summary(
         has_conversations: !conversations.is_empty(),
         conversations,
     }
+}
+
+pub(super) fn filter_options(
+    inputs: &ContextsPageInputs,
+    data: &ContextsPageData,
+) -> ContextFilterOptions {
+    ContextFilterOptions {
+        users: data
+            .users_for_filter
+            .iter()
+            .map(|u| UserForFilterView {
+                selected: inputs.user_id.as_ref() == Some(&u.user_id),
+                user_id: u.user_id.clone(),
+                display_name: u.display_name.clone(),
+            })
+            .collect(),
+        models: data
+            .models
+            .iter()
+            .map(|m| ModelOptionView {
+                selected: inputs.model.as_deref() == Some(m.as_str()),
+                model: m.clone(),
+            })
+            .collect(),
+    }
+}
+
+pub(super) struct ContextFilterOptions {
+    pub(super) users: Vec<UserForFilterView>,
+    pub(super) models: Vec<ModelOptionView>,
+}
+
+pub(super) fn preserved_filters(inputs: &ContextsPageInputs) -> Vec<(String, String)> {
+    let side = if inputs.show_side { "1" } else { "" }.to_owned();
+    vec![
+        ("q".to_owned(), inputs.q.clone().unwrap_or_default()),
+        ("model".to_owned(), inputs.model.clone().unwrap_or_default()),
+        (
+            "user_id".to_owned(),
+            inputs
+                .user_id
+                .as_ref()
+                .map(|u| u.as_str().to_owned())
+                .unwrap_or_default(),
+        ),
+        (
+            "since".to_owned(),
+            inputs.since_label.clone().unwrap_or_default(),
+        ),
+        ("view".to_owned(), inputs.view.clone()),
+        ("side".to_owned(), side),
+    ]
 }

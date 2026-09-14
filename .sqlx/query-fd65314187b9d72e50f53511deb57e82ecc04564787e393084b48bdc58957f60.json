@@ -1,0 +1,125 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id,installation_id,publication_id,resource_id,generation,bundle_digest,installed_manifest,client_evidence,verified_at FROM managed_installation_receipts WHERE owner_id=$1 AND ($2::TEXT IS NULL OR resource_id=$2) ORDER BY verified_at DESC LIMIT 100",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "installation_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "installation_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "publication_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "publication_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "resource_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "resource_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "generation"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "bundle_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "bundle_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "installed_manifest",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "installed_manifest"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "client_evidence",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "client_evidence"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "verified_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "verified_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fd65314187b9d72e50f53511deb57e82ecc04564787e393084b48bdc58957f60"
+}

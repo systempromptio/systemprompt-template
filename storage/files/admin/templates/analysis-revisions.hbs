@@ -1,0 +1,9 @@
+{{#> layout title=title page=page}}{{#*inline "content"}}
+{{> components/page-header title=title subtitle="Immutable imports and authored changes, with their parent revisions."}}
+<p><a href="/admin/analysis/versions">All managed resources</a></p>
+<div class="sp-table"><div class="sp-table__scroll"><table class="sp-table__el sp-analysis-table"><thead><tr><th>Revision</th><th>Created</th><th>Rationale</th><th>Parent</th></tr></thead><tbody>
+{{#each resources}}<tr><td><a href="/admin/analysis/revisions/{{id}}">{{id}}</a><br><small>{{digest}}</small></td><td>{{created_at}}</td><td>{{rationale}}</td><td>{{#if parent_id}}<a href="/admin/analysis/revisions/{{parent_id}}">View parent</a>{{else}}Source import{{/if}}</td></tr>
+{{else}}<tr><td colspan="4">No revisions available in this scope.</td></tr>{{/each}}
+</tbody></table></div></div>
+<nav class="sp-analysis-pagination" aria-label="Revision pages">{{#if previous}}<a href="{{previous}}">Previous</a>{{/if}}{{#if next}}<a href="{{next}}">Next</a>{{/if}}</nav>
+{{/inline}}{{/layout}}

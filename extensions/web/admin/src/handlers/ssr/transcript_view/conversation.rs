@@ -13,8 +13,8 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use systemprompt::identifiers::GatewayConversationId;
 
+use super::grouping::{group_threads, has_turns};
 use super::thread::ThreadBuilder;
 use super::{TranscriptMetaView, TranscriptOptions, display_body, short_id};
 use crate::handlers::ssr::entity_urls::request_detail_url;
@@ -36,6 +36,19 @@ pub struct ConversationView {
     pub side_calls: SideCallsView,
     pub redaction_count: u32,
     pub has_content: bool,
+    // Why: an empty transcript has three quite different causes and the reader
+    // used to state only one of them. See [`EmptyReason`].
+    pub empty_reason: EmptyReason,
+}
+
+/// Why a conversation rendered no turns, so the page can say which it was
+/// rather than always claiming none were recorded.
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum EmptyReason {
+    None,
+    NoRequests,
+    NoBodies,
 }
 
 #[derive(Debug, Serialize)]
@@ -131,30 +144,12 @@ pub fn build_conversation(
 ) -> ConversationView {
     let mut side: Vec<&ContextRequestRow> = requests
         .iter()
-        .filter(|r| r.effective_kind != "turn")
+        .filter(|r| r.effective_kind != "turn" && has_turns(requests))
         .collect();
     side.sort_by_key(|r| r.created_at);
     let side_calls = side_calls_view(&side);
 
-    let mut turns: Vec<&ContextRequestRow> = requests
-        .iter()
-        .filter(|r| r.effective_kind == "turn")
-        .collect();
-    turns.sort_by_key(|r| r.created_at);
-
-    let mut groups: Vec<Vec<&ContextRequestRow>> = Vec::new();
-    let mut group_of: HashMap<Option<&str>, usize> = HashMap::new();
-    for r in turns {
-        let key = r
-            .gateway_conversation_id
-            .as_ref()
-            .map(GatewayConversationId::as_str);
-        let idx = *group_of.entry(key).or_insert_with(|| {
-            groups.push(Vec::new());
-            groups.len() - 1
-        });
-        groups[idx].push(r);
-    }
+    let groups = group_threads(requests);
 
     let mut messages_by_request: HashMap<&str, Vec<&ContextMessageRow>> = HashMap::new();
     for m in messages {
@@ -193,6 +188,13 @@ pub fn build_conversation(
         .collect();
 
     let has_content = threads.iter().any(|t| !t.turns.is_empty());
+    let empty_reason = if has_content {
+        EmptyReason::None
+    } else if requests.is_empty() {
+        EmptyReason::NoRequests
+    } else {
+        EmptyReason::NoBodies
+    };
     ConversationView {
         threads,
         turn_count: counters.turn_number,
@@ -200,6 +202,7 @@ pub fn build_conversation(
         side_calls,
         redaction_count: counters.redactions,
         has_content,
+        empty_reason,
     }
 }
 

@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT execution_id FROM eval_session_bindings WHERE session_id=$1 AND owner_id=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "execution_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_session_bindings",
+            "name": "execution_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3481e84c516dcdc0d1801cf255fd3f6b57aed1842b038a28294715b7a6b48269"
+}

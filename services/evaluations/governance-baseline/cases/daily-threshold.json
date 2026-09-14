@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "daily-threshold",
+  "skill_id": "inspect_conversation",
+  "partition": "development",
+  "prompt": "Give the portfolio traffic lights and explain the arithmetic.",
+  "expected_behavior": [
+    "Apply overdue >=10% as red and stalled/unassigned >=25% as amber.",
+    "Use issue samples as the denominator and the worst project light for the portfolio."
+  ],
+  "fixture": "thresholds",
+  "assertions": [
+    "traffic_light_arithmetic",
+    "portfolio_worst_light"
+  ]
+}

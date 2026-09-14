@@ -13,6 +13,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::McpServerId;
 
 // Why: how often a busy MCP session is expected to touch its row. Not a
 // configured value — nothing in `services/mcp/*.yaml` declares a heartbeat, so
@@ -78,7 +79,7 @@ pub fn liveness_state(
 /// One server's heartbeat, keyed by the id used in `services/mcp/*.yaml`.
 #[derive(Debug, Clone)]
 pub struct McpHeartbeatRow {
-    pub server_id: String,
+    pub server_id: McpServerId,
     pub last_heartbeat: Option<DateTime<Utc>>,
     pub active_sessions: i64,
 }
@@ -86,7 +87,7 @@ pub struct McpHeartbeatRow {
 pub async fn list_mcp_server_liveness(pool: &PgPool) -> Result<Vec<McpHeartbeatRow>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"
-        SELECT s.mcp_server_id AS "server_id!",
+        SELECT s.mcp_server_id AS "server_id!: McpServerId",
                MAX(s.last_activity_at) AS "last_heartbeat?",
                COUNT(*) FILTER (WHERE s.status = 'active')::BIGINT AS "active_sessions!"
         FROM mcp_sessions s

@@ -93,25 +93,7 @@ fn matches(row: &LedgerRuleRow, source: &str, query: &RulesQuery) -> bool {
     true
 }
 
-// Why: Build the whole ledger view from one read plus the declarative set.
-#[expect(
-    clippy::too_many_lines,
-    reason = "one page assembly per handler; splitting is tracked in docs/tech-debt.md"
-)]
-pub(super) fn build(
-    rows: &[LedgerRuleRow],
-    declared: &DeclaredRules,
-    open_entities: i64,
-    query: &RulesQuery,
-    capped: bool,
-) -> AcRulesView {
-    let sources: Vec<&str> = rows.iter().map(|r| source_of(r, declared)).collect();
-    let mut matching: Vec<(&LedgerRuleRow, &str)> = rows
-        .iter()
-        .zip(sources.iter().copied())
-        .filter(|(row, source)| matches(row, source, query))
-        .collect();
-
+fn sort_matching(matching: &mut [(&LedgerRuleRow, &'static str)], query: &RulesQuery) {
     match query.sort_key() {
         "entity" => matching.sort_by(|a, b| a.0.entity_id.cmp(&b.0.entity_id)),
         "subject_kind" => matching.sort_by(|a, b| a.0.rule_type.cmp(&b.0.rule_type)),
@@ -123,6 +105,72 @@ pub(super) fn build(
     if query.descending() {
         matching.reverse();
     }
+}
+
+fn rule_view(row: &LedgerRuleRow, source: &'static str) -> AcRuleView {
+    AcRuleView {
+        entity_type_label: row.entity_type.replace('_', " "),
+        entity_type: row.entity_type.clone(),
+        entity_id: row.entity_id.clone(),
+        subject_kind: row.rule_type.clone(),
+        subject: row.rule_value.clone(),
+        access: row.access.to_string(),
+        access_tone: match row.access {
+            crate::types::access_control::AccessDecision::Allow => "ok",
+            crate::types::access_control::AccessDecision::Deny => "err",
+        },
+        source,
+        source_tone: if source == YAML { "muted" } else { "warn" },
+        default_label: if row.default_included {
+            "open"
+        } else {
+            "closed"
+        },
+        justification: row.justification.clone().unwrap_or_default(),
+    }
+}
+
+fn pagination(query: &RulesQuery, index: i64, total: i64, shown: usize) -> Pagination {
+    let window = PageWindow::new(
+        index,
+        PAGE_SIZE,
+        total,
+        i64::try_from(shown).unwrap_or(0),
+        "rules",
+    );
+    let (first_row, last_row) = window.bounds();
+    let prev_url = (index > 0).then(|| query.url_with(&[("page", &(index - 1).to_string())]));
+    let next_url = (index + 1 < window.total_pages)
+        .then(|| query.url_with(&[("page", &(index + 1).to_string())]));
+    Pagination {
+        current_page: index + 1,
+        total_pages: window.total_pages,
+        first_row,
+        last_row,
+        total_rows: total,
+        noun: window.noun,
+        has_prev: prev_url.is_some(),
+        has_next: next_url.is_some(),
+        prev_url,
+        next_url,
+    }
+}
+
+// Why: Build the whole ledger view from one read plus the declarative set.
+pub(super) fn build(
+    rows: &[LedgerRuleRow],
+    declared: &DeclaredRules,
+    open_entities: i64,
+    query: &RulesQuery,
+    capped: bool,
+) -> AcRulesView {
+    let sources: Vec<&'static str> = rows.iter().map(|r| source_of(r, declared)).collect();
+    let mut matching: Vec<(&LedgerRuleRow, &'static str)> = rows
+        .iter()
+        .zip(sources.iter().copied())
+        .filter(|(row, source)| matches(row, source, query))
+        .collect();
+    sort_matching(&mut matching, query);
 
     let total = i64::try_from(matching.len()).unwrap_or(i64::MAX);
     let last_page = (total.max(1) - 1) / PAGE_SIZE;
@@ -132,55 +180,13 @@ pub(super) fn build(
         .iter()
         .skip(start)
         .take(usize::try_from(PAGE_SIZE).unwrap_or(50))
-        .map(|(row, source)| AcRuleView {
-            entity_type_label: row.entity_type.replace('_', " "),
-            entity_type: row.entity_type.clone(),
-            entity_id: row.entity_id.clone(),
-            subject_kind: row.rule_type.clone(),
-            subject: row.rule_value.clone(),
-            access: row.access.to_string(),
-            access_tone: match row.access {
-                crate::types::access_control::AccessDecision::Allow => "ok",
-                crate::types::access_control::AccessDecision::Deny => "err",
-            },
-            source,
-            source_tone: if *source == YAML { "muted" } else { "warn" },
-            default_label: if row.default_included {
-                "open"
-            } else {
-                "closed"
-            },
-            justification: row.justification.clone().unwrap_or_default(),
-        })
+        .map(|(row, source)| rule_view(row, source))
         .collect();
 
-    let window = PageWindow::new(
-        index,
-        PAGE_SIZE,
-        total,
-        i64::try_from(page.len()).unwrap_or(0),
-        "rules",
-    );
-    let (first_row, last_row) = window.bounds();
-    let prev_url = (index > 0).then(|| query.url_with(&[("page", &(index - 1).to_string())]));
-    let next_url = (index + 1 < window.total_pages)
-        .then(|| query.url_with(&[("page", &(index + 1).to_string())]));
-
     AcRulesView {
-        rows: page,
         total,
-        pagination: Some(Pagination {
-            current_page: index + 1,
-            total_pages: window.total_pages,
-            first_row,
-            last_row,
-            total_rows: total,
-            noun: window.noun,
-            has_prev: prev_url.is_some(),
-            has_next: next_url.is_some(),
-            prev_url,
-            next_url,
-        }),
+        pagination: Some(pagination(query, index, total, page.len())),
+        rows: page,
         kpis: kpis(rows, &sources, open_entities),
         sort_headers: sort_headers(query),
         subject_options: options(

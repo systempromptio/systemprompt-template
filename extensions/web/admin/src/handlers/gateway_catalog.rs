@@ -52,13 +52,16 @@ pub(crate) async fn for_user_handler(
     if !user_ctx.is_console && user_ctx.user_id != user_id {
         return Err(AdminError::Forbidden("Forbidden".to_owned()));
     }
+    // Why: the per-user catalog is what a client UI renders, so it lists only
+    // routes whose provider is advertised. A `surface: backend` provider is
+    // reachable through an upstream rewrite and never by name.
     let routes = repositories::config::gateway::client_facing_routes_from_services()
         .map_err(AdminError::internal)?;
 
-    let (user_roles, _department) =
-        repositories::users::queries::find_user_roles_department(&pool, &user_id)
-            .await?
-            .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?;
+    let user_roles = repositories::users::queries::find_user_access_profile(&pool, &user_id)
+        .await?
+        .ok_or_else(|| AdminError::NotFound("User not found".to_owned()))?
+        .roles;
 
     let routes = collect_allowed_routes(&pool, &routes, &user_id, &user_roles).await?;
     Ok(Json(CatalogResponse { user_id, routes }).into_response())
@@ -73,28 +76,32 @@ async fn collect_allowed_routes(
     let attributes = subject_attributes_for(pool, user_id).await?;
     let mut allowed = Vec::with_capacity(routes.len());
     for route in routes {
-        let rules = gateway_acl::list_rules_for_route(pool, &route.id).await?;
-        let default_included = gateway_acl::find_entity(pool, &route.id)
+        let route_id = RouteId::new(route.id.clone());
+        let rules = gateway_acl::list_rules_for_route(pool, &route_id).await?;
+        let default_included = gateway_acl::find_entity(pool, &route_id)
             .await
             .unwrap_or_else(|e| {
-                tracing::error!(error = %e, route_id = %route.id, "Failed to load catalog entity");
+                tracing::error!(error = %e, %route_id, "Failed to load catalog entity");
                 None
             })
             .map(|e| e.default_included);
-        let entity = EntityRef::GatewayRoute(RouteId::new(route.id.clone()));
-        if matches!(
-            gateway_acl::resolve(ResolveInput {
-                entity: &entity,
-                rules: &rules,
-                user_id,
-                user_roles,
-                default_included,
-                parents: &[],
-                attributes: &attributes,
-                dimensions: dimensions(pool),
-            }),
-            Decision::Allow { .. }
-        ) {
+        let entity = EntityRef::GatewayRoute(route_id);
+        // Why: `permits` rather than a match on `Allow`, so a warn-mode verdict
+        // shows the route instead of silently hiding it. The rule resolver does
+        // not warn today, but a catalog that disagreed with what the gateway
+        // will actually serve is the worst failure this listing can have.
+        if gateway_acl::resolve(ResolveInput {
+            entity: &entity,
+            rules: &rules,
+            user_id,
+            user_roles,
+            default_included,
+            parents: &[],
+            attributes: &attributes,
+            dimensions: dimensions(pool),
+        })
+        .permits()
+        {
             allowed.push(CatalogEntry {
                 id: route.id.clone(),
                 model_pattern: route.model_pattern.clone(),
@@ -129,6 +136,8 @@ pub(crate) async fn detect_handler(
     Extension(user_ctx): Extension<UserContext>,
     axum::extract::Query(query): axum::extract::Query<DetectQuery>,
 ) -> AdminResult<Response> {
+    // Why: `admin`, not `is_console`. Detection writes governance decision
+    // rows; it is a mutation wearing a GET.
     if !user_ctx.is_admin {
         return Err(AdminError::Forbidden("Admin only".to_owned()));
     }
@@ -154,7 +163,7 @@ pub(crate) async fn detect_after_the_fact(
     pool: &PgPool,
     routes: &[GatewayRouteView],
     since_minutes: i64,
-) -> AdminResult<usize> {
+) -> Result<usize, sqlx::Error> {
     let rows = acl_detect::list_recent_unrejected_requests(pool, since_minutes).await?;
 
     let mut emitted = 0usize;
@@ -163,17 +172,19 @@ pub(crate) async fn detect_after_the_fact(
         else {
             continue;
         };
-        let Some((user_roles, _department)) =
-            repositories::users::queries::find_user_roles_department(pool, &row.user_id).await?
+        let Some(profile) =
+            repositories::users::queries::find_user_access_profile(pool, &row.user_id).await?
         else {
             continue;
         };
+        let user_roles = profile.roles;
         let attributes = subject_attributes_for(pool, &UserId::new(&row.user_id)).await?;
-        let rules = gateway_acl::list_rules_for_route(pool, &route.id).await?;
-        let default_included = gateway_acl::find_entity(pool, &route.id)
+        let route_id = RouteId::new(route.id.clone());
+        let rules = gateway_acl::list_rules_for_route(pool, &route_id).await?;
+        let default_included = gateway_acl::find_entity(pool, &route_id)
             .await?
             .map(|e| e.default_included);
-        let entity = EntityRef::GatewayRoute(RouteId::new(route.id.clone()));
+        let entity = EntityRef::GatewayRoute(route_id);
         let uid = UserId::new(&row.user_id);
         if let Decision::Deny { reason } = gateway_acl::resolve(ResolveInput {
             entity: &entity,

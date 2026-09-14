@@ -5,6 +5,7 @@
 
 use crate::types::access_control::{AccessControlRule, AccessDecision};
 use crate::types::groups::GroupMemberRow;
+use systemprompt_web_shared::GroupId;
 
 use super::super::people_view::{MemberContext, MemberInput, member_rows};
 use super::super::types::{AccessRowView, AccessSectionView, MemberRowView};
@@ -39,7 +40,7 @@ fn as_member_input(row: &GroupMemberRow) -> MemberInput<'_> {
 pub(super) fn access_sections(
     resolved: Vec<crate::repositories::users::access_control::MatrixSection>,
     rules: &[AccessControlRule],
-    group_id: &str,
+    group_id: &GroupId,
 ) -> Vec<AccessSectionView> {
     resolved
         .into_iter()
@@ -70,7 +71,7 @@ fn own_rule_state(
     rules: &[AccessControlRule],
     entity_type: &str,
     entity_id: &str,
-    group_id: &str,
+    group_id: &GroupId,
 ) -> &'static str {
     rules
         .iter()
@@ -78,7 +79,7 @@ fn own_rule_state(
             r.entity_type == entity_type
                 && r.entity_id == entity_id
                 && r.rule_type.as_str() == "group"
-                && r.rule_value == group_id
+                && r.rule_value == group_id.as_str()
         })
         .map_or("inherit", |r| match r.access {
             AccessDecision::Allow => "allow",

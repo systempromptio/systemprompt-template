@@ -11,7 +11,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::repositories::scope::SubjectScope;
 use crate::util::time_range::TimeRange;
@@ -30,6 +30,8 @@ pub struct SafetyFindingLogRow {
     pub ai_request_id: String,
     pub user_id: Option<UserId>,
     pub model: Option<String>,
+    pub trace_id: Option<String>,
+    pub session_id: Option<SessionId>,
 }
 
 /// The safety KPIs: what was scanned, and what that scan actually refused.
@@ -50,23 +52,19 @@ pub struct FindingFilter {
     pub blocked: Option<bool>,
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "page query plumbing; splitting the parameters is tracked in docs/tech-debt.md"
-)]
 pub async fn list_safety_findings_paged(
     pool: &PgPool,
     range: TimeRange,
     scope: &SubjectScope,
     filter: &FindingFilter,
-    limit: i64,
-    offset: i64,
+    slice: super::PageSlice,
 ) -> Result<(Vec<SafetyFindingLogRow>, i64), sqlx::Error> {
     let rows = sqlx::query_as!(
         SafetyFindingLogRow,
         r#"SELECT f.id, f.created_at, f.category, f.scanner, f.severity, f.phase,
                   f.blocked, f.excerpt, f.ai_request_id,
-                  r.user_id AS "user_id: UserId", r.model
+                  r.user_id AS "user_id: UserId", r.model, r.trace_id,
+                  r.session_id AS "session_id: SessionId"
            FROM ai_safety_findings f
            LEFT JOIN ai_requests r ON r.id = f.ai_request_id
            WHERE f.created_at >= $1 AND f.created_at < $2
@@ -80,8 +78,8 @@ pub async fn list_safety_findings_paged(
         scope.as_sql(),
         filter.category.as_deref(),
         filter.blocked,
-        limit,
-        offset,
+        slice.limit,
+        slice.offset,
     )
     .fetch_all(pool)
     .await?;
@@ -122,8 +120,8 @@ pub async fn get_safety_stats(
              COUNT(*) FILTER (WHERE f.blocked)::BIGINT AS "blocked!",
              COUNT(*) FILTER (WHERE NOT f.blocked)::BIGINT AS "audited!",
              COUNT(DISTINCT f.category)::BIGINT AS "categories!",
-             COUNT(*) FILTER (WHERE f.phase = 'request')::BIGINT AS "inbound!",
-             COUNT(*) FILTER (WHERE f.phase <> 'request')::BIGINT AS "outbound!"
+             COUNT(*) FILTER (WHERE f.phase IN ('request', 'request_history'))::BIGINT AS "inbound!",
+             COUNT(*) FILTER (WHERE f.phase = 'response')::BIGINT AS "outbound!"
            FROM ai_safety_findings f
            LEFT JOIN ai_requests r ON r.id = f.ai_request_id
            WHERE f.created_at >= $1 AND f.created_at < $2

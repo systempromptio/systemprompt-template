@@ -1,4 +1,4 @@
-//! Entry point for the systemprompt template binary.
+//! Entry point for the systemprompt.io template binary.
 //!
 //! Thin by design: every capability is registered at compile time by the
 //! extension crates under `extensions/`, and this delegates to the published

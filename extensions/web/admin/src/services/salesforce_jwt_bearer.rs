@@ -9,17 +9,15 @@
 //!
 //! Operational prerequisite: the Connected App must have the matching digital
 //! certificate uploaded with "Use digital signatures" enabled, and the user
-//! must be admin-pre-authorized. The private key is provisioned as
-//! `SALESFORCE_PRIVATE_KEY` (PEM).
+//! must be admin-pre-authorized. The private key PEM is the caller's to
+//! resolve: each Salesforce org signs with its own app's key.
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
 use serde::Serialize;
 
-use crate::handlers::salesforce_auth::{
-    SalesforceConfig, SalesforceError, post_token_request, salesforce_private_key,
-};
+use crate::handlers::salesforce_auth::{SalesforceConfig, SalesforceError, post_token_request};
 
 pub(crate) struct FreshToken {
     pub access_token: String,
@@ -43,9 +41,8 @@ struct Assertion {
 pub(crate) async fn get_token(
     cfg: &SalesforceConfig,
     username: &str,
+    private_key_pem: &str,
 ) -> Result<FreshToken, SalesforceError> {
-    let private_key_pem = salesforce_private_key().ok_or(SalesforceError::MissingPrivateKey)?;
-
     let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
     let audience = cfg.jwt_bearer_audience().to_owned();
 

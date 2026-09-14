@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO eval_approved_operation_receipts(approval_id,execution_id,operation_digest,output) VALUES($1,$2,$3,$4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3f6d9c0e86de0d4b9c37867aeddd1e4e3305c41aecb1821a68446b62fd96b52d"
+}

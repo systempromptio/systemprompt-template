@@ -10,18 +10,17 @@
 //! person does. The code itself is issued by the
 //! `dev-login` CLI extension, which applies the same gate before it writes.
 
+use axum::Extension;
+use axum::extract::Query;
 use axum::extract::rejection::QueryRejection;
-use axum::extract::{Query, State};
 use axum::http::HeaderMap;
 use axum::http::header::SET_COOKIE;
 use axum::response::{IntoResponse, Redirect, Response};
 use serde::Deserialize;
-use sqlx::PgPool;
-use std::sync::Arc;
 use systemprompt::config::ProfileBootstrap;
 use systemprompt::models::profile::{Environment, ProfileType};
 
-use super::dev_login_session::{mint_session, session_cookie, session_service};
+use super::adfs_auth::{AdfsDeps, SessionSubject, mint_session, session_cookie};
 use crate::repositories::dev_login::consume_dev_login_code;
 
 pub const DEV_LOGIN_PATH: &str = "/admin/auth/dev/login";
@@ -57,7 +56,7 @@ pub(crate) struct DevLoginParams {
 // Why: every outcome is a redirect, success and failure alike; the login page
 // is the only place the browser can usefully land.
 pub(crate) async fn dev_login_redeem(
-    State(pool): State<Arc<PgPool>>,
+    Extension(deps): Extension<AdfsDeps>,
     headers: HeaderMap,
     params: Result<Query<DevLoginParams>, QueryRejection>,
 ) -> Response {
@@ -66,7 +65,7 @@ pub(crate) async fn dev_login_redeem(
         return invalid();
     };
 
-    let user = match consume_dev_login_code(&pool, &code).await {
+    let user = match consume_dev_login_code(&deps.write_pool, &code).await {
         Ok(Some(user)) => user,
         Ok(None) => return invalid(),
         Err(e) => {
@@ -75,22 +74,16 @@ pub(crate) async fn dev_login_redeem(
         },
     };
 
-    let service = match session_service(&pool) {
-        Ok(service) => service,
-        Err(error) => {
-            tracing::error!(%error, "dev login service initialization failed");
-            return invalid();
-        },
-    };
     let user_id = user.user_id.clone();
     let email = user.email.clone();
-    let (jwt, max_age) = match mint_session(&service, &user, &headers).await {
-        Ok(minted) => minted,
-        Err(e) => {
-            tracing::error!(error = %e, user_id = %user_id, "dev login session mint failed");
-            return invalid();
-        },
-    };
+    let (jwt, max_age) =
+        match mint_session(&deps.session_service, &SessionSubject::from(user), &headers).await {
+            Ok(minted) => minted,
+            Err(e) => {
+                tracing::error!(error = %e, user_id = %user_id, "dev login session mint failed");
+                return invalid();
+            },
+        };
 
     tracing::info!(user_id = %user_id, email = %email, "dev login code redeemed");
 

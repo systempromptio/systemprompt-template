@@ -2,19 +2,20 @@
 //! are: the YAML loader owns `yaml` rows, the dashboard owns the rest.
 
 use sqlx::PgPool;
+use systemprompt_web_shared::ProjectId;
 
 use crate::error::{AdminError, AdminResult};
 use crate::types::projects::ProjectAdMappingRow;
 
 pub async fn list_project_ad_mappings(
     pool: &PgPool,
-    project_id: &str,
+    project_id: &ProjectId,
 ) -> Result<Vec<ProjectAdMappingRow>, sqlx::Error> {
     sqlx::query_as!(
         ProjectAdMappingRow,
-        "SELECT ad_group, project_id, source FROM project_ad_mappings
-         WHERE project_id = $1 ORDER BY ad_group",
-        project_id
+        r#"SELECT ad_group, project_id AS "project_id: ProjectId", source FROM project_ad_mappings
+         WHERE project_id = $1 ORDER BY ad_group"#,
+        project_id.as_str()
     )
     .fetch_all(pool)
     .await
@@ -22,7 +23,7 @@ pub async fn list_project_ad_mappings(
 
 pub async fn insert_project_ad_mapping(
     pool: &PgPool,
-    project_id: &str,
+    project_id: &ProjectId,
     ad_group: &str,
     source: &str,
 ) -> AdminResult<()> {
@@ -30,7 +31,7 @@ pub async fn insert_project_ad_mapping(
         "INSERT INTO project_ad_mappings (ad_group, project_id, source) VALUES ($1, $2, $3)
          ON CONFLICT DO NOTHING",
         ad_group,
-        project_id,
+        project_id.as_str(),
         source
     )
     .execute(pool)
@@ -45,12 +46,12 @@ pub async fn insert_project_ad_mapping(
 
 pub async fn delete_project_ad_mapping(
     pool: &PgPool,
-    project_id: &str,
+    project_id: &ProjectId,
     ad_group: &str,
 ) -> AdminResult<()> {
     let deleted = sqlx::query!(
         "DELETE FROM project_ad_mappings WHERE project_id = $1 AND ad_group = $2",
-        project_id,
+        project_id.as_str(),
         ad_group
     )
     .execute(pool)

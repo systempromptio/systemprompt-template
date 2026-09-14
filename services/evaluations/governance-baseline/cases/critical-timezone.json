@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "critical-timezone",
+  "skill_id": "inspect_ai_requests",
+  "partition": "development",
+  "prompt": "What changed during the preceding 24 hours?",
+  "expected_behavior": [
+    "Anchor the rolling window to the frozen timestamp and normalize source offsets.",
+    "Do not substitute a calendar-day query without labelling it."
+  ],
+  "fixture": "timezone",
+  "assertions": [
+    "rolling_window_correct"
+  ]
+}

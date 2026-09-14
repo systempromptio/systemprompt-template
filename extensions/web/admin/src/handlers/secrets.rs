@@ -9,7 +9,7 @@ use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
 use sqlx::PgPool;
 
-use systemprompt::identifiers::UserId;
+use systemprompt::identifiers::{PluginId, UserId};
 
 use crate::error::AdminResult;
 use crate::handlers::users::extract_user_from_cookie;
@@ -30,7 +30,7 @@ pub(crate) struct ResolveQuery {
 
 pub(crate) async fn create_resolution_token_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(plugin_id): Path<String>,
+    Path(plugin_id): Path<PluginId>,
     headers: HeaderMap,
 ) -> AdminResult<Response> {
     let subject = validate_plugin_jwt(&headers)?;
@@ -45,7 +45,7 @@ pub(crate) async fn create_resolution_token_handler(
 
 pub(crate) async fn resolve_secrets_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(plugin_id): Path<String>,
+    Path(plugin_id): Path<PluginId>,
     Query(params): Query<ResolveQuery>,
 ) -> AdminResult<Response> {
     let secrets = secret_service::resolve_secrets(&pool, &plugin_id, &params.token).await?;
@@ -54,7 +54,7 @@ pub(crate) async fn resolve_secrets_handler(
 
 pub(crate) async fn audit_log_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(plugin_id): Path<String>,
+    Path(plugin_id): Path<PluginId>,
     headers: HeaderMap,
 ) -> AdminResult<Response> {
     let session = extract_user_from_cookie(&headers)?;
@@ -75,7 +75,7 @@ pub(crate) async fn audit_log_handler(
 
 pub(crate) async fn rotate_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(plugin_id): Path<String>,
+    Path(plugin_id): Path<PluginId>,
     headers: HeaderMap,
 ) -> AdminResult<Response> {
     let session = extract_user_from_cookie(&headers)?;

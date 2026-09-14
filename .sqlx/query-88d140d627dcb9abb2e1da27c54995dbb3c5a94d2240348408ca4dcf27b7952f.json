@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT payload,digest,evidence_label FROM eval_fixture_payloads WHERE owner_id=$1 AND fixture_key=$2 AND ($3::TEXT IS NULL OR digest=$3) ORDER BY created_at DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "payload",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "eval_fixture_payloads",
+            "name": "payload"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_fixture_payloads",
+            "name": "digest"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "evidence_label",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_fixture_payloads",
+            "name": "evidence_label"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "88d140d627dcb9abb2e1da27c54995dbb3c5a94d2240348408ca4dcf27b7952f"
+}

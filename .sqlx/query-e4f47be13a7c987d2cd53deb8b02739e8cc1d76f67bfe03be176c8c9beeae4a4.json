@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    UPDATE ai_requests\n                    SET status = 'failed', error_message = $2,\n                        completed_at = COALESCE(completed_at, CURRENT_TIMESTAMP),\n                        updated_at = CURRENT_TIMESTAMP\n                    WHERE id = $1 AND status <> 'completed'\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e4f47be13a7c987d2cd53deb8b02739e8cc1d76f67bfe03be176c8c9beeae4a4"
+}

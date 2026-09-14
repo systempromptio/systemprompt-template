@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Systemprompt Admin — AI Usage</title>
+<style>
+/* Systemprompt brand tokens, mirrored from storage/files/css/core/variables.css.
+   Inlined because this page renders inside a sandboxed MCP-App iframe that
+   cannot reach the gateway's stylesheets. */
+:root{
+  color-scheme: light dark;
+  --accent:#fe190a;
+  --bg:#f8f7f3; --surface:#f1efed; --raised:#ffffff;
+  --ink:#171717; --ink-2:#4d4d4d; --muted:#707070;
+  --line:#dddddd; --line-soft:rgba(23,23,23,.08);
+  --ok:#22c55e; --warn:#fbbf24; --err:#ef4444; --info:#0071ce;
+  --ok-soft:rgba(34,197,94,.14); --warn-soft:rgba(251,191,36,.18);
+  --err-soft:rgba(239,68,68,.14); --muted-soft:rgba(112,112,112,.14);
+  --radius:16px 4px 16px 16px; --radius-sm:8px 2px 8px 8px; --pill:9999px;
+  --shadow:0 4px 8px rgba(0,0,0,.08); --shadow-lg:0 10px 20px rgba(0,0,0,.10);
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  --mono:'Roboto Mono',ui-monospace,'SF Mono','Fira Code',monospace;
+  --step:150ms ease;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0a0a0a; --surface:#171717; --raised:#1f1f1f;
+    --ink:#f8f7f3; --ink-2:#d4d4d4; --muted:#9a9a9a;
+    --line:#333333; --line-soft:rgba(248,247,243,.10);
+    --shadow:0 4px 8px rgba(0,0,0,.4); --shadow-lg:0 10px 20px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0a0a0a; --surface:#171717; --raised:#1f1f1f;
+  --ink:#f8f7f3; --ink-2:#d4d4d4; --muted:#9a9a9a;
+  --line:#333333; --line-soft:rgba(248,247,243,.10);
+  --shadow:0 4px 8px rgba(0,0,0,.4); --shadow-lg:0 10px 20px rgba(0,0,0,.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:var(--font); font-size:15px; line-height:1.5; color:var(--ink);
+  background:var(--bg); padding:24px; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px;margin:0 auto}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* header */
+.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.brand{font-size:12px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:4px}
+.meta{color:var(--muted);font-size:13px}
+
+/* toolbar */
+.toolbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;margin:20px 0}
+.toolbar label{display:grid;gap:6px;font-size:12px;font-weight:600;color:var(--muted);
+  letter-spacing:.03em;text-transform:uppercase}
+input,select,button{font:inherit;font-size:14px;color:var(--ink);background:var(--raised);
+  border:1px solid var(--line);border-radius:var(--sp-radius-md,8px);padding:9px 12px;transition:border-color var(--step)}
+input:hover,select:hover{border-color:var(--muted)}
+button{cursor:pointer;font-weight:600}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.08)}
+button:disabled{opacity:.5;cursor:progress}
+
+/* status line */
+.state{padding:10px 0;font-size:13px;color:var(--ink-2)}
+.state.warn{color:var(--accent);font-weight:600}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:16px 0}
+.kpi{padding:14px 16px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--line-soft)}
+.kpi .k-l{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.kpi .k-v{margin-top:6px;font-size:26px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+
+/* sections + tables */
+h2{font-size:17px;font-weight:700;letter-spacing:-.01em;margin:28px 0 10px}
+h2 small{font-weight:400;font-size:12px;color:var(--muted);margin-left:8px}
+.card{border-radius:var(--radius);background:var(--raised);border:1px solid var(--line);
+  box-shadow:var(--shadow);overflow:hidden}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{position:sticky;top:0;text-align:left;font-weight:600;font-size:11px;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--muted);padding:13px 16px;background:var(--surface);
+  border-bottom:1px solid var(--line);white-space:nowrap}
+tbody td{padding:12px 16px;border-bottom:1px solid var(--line-soft);color:var(--ink-2);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface)}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.empty{padding:22px;color:var(--muted);font-size:13.5px}
+
+/* sources */
+.sources{list-style:none;display:grid;gap:8px;margin-top:8px}
+.sources li{padding:11px 14px;border-radius:var(--radius-sm);background:var(--surface);
+  border:1px solid var(--line-soft);font-size:13px;color:var(--ink-2);border-left:3px solid var(--ok)}
+.sources li.incomplete{border-left-color:var(--warn)}
+.sources li .src{font-family:var(--mono);font-size:12px;color:var(--ink);font-weight:500}
+.foot{margin-top:28px;padding-top:16px;border-top:1px solid var(--line-soft);color:var(--muted);font-size:12px}
+[hidden]{display:none!important}
+@media (max-width:640px){
+  body{padding:14px} h1{font-size:22px} .toolbar>*{flex:1 1 100%}
+  table{min-width:560px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style></head><body><main class="wrap">
+<header class="hd">
+  <div>
+    <div class="brand">Systemprompt Digital &middot; Admin</div>
+    <h1>AI Usage</h1>
+    <p class="meta">Spend, models, trends and sessions from this platform&rsquo;s own audit tables. Exact rather than sampled &mdash; there is no third party in this path.</p>
+  </div>
+</header>
+
+<div class="toolbar">
+  <label>Period
+    <select id="days">
+      <option value="1">24 hours</option>
+      <option value="7" selected>7 days</option>
+      <option value="30">30 days</option>
+      <option value="90">90 days</option>
+    </select>
+  </label>
+  <button id="refresh" type="button" class="primary">Refresh</button>
+  <label>Filter rows
+    <input id="filter" type="search" placeholder="Model, provider&hellip;">
+  </label>
+</div>
+
+<div id="state" class="state" role="status" aria-live="polite">Ready</div>
+<p id="period" class="meta"></p>
+<div id="metrics" class="kpis"></div>
+<div id="tables"></div>
+
+<h2>Source coverage</h2>
+<ul id="sources" class="sources"></ul>
+
+<p class="foot">Delivery health is not shown here. Jira and Confluence are read by the <code>admin_daily_brief</code> skill as your own linked account, and this page allocates no AI cost to a project.</p>
+</main><script>
+'use strict';
+/*MCP_BRIDGE*/
+const initial = /*REPORT_DATA*/null;
+const $ = id => document.getElementById(id);
+const REPORT_TOOL = 'mcp__systemprompt__admin_report';
+let current = null, busy = false;
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = v => typeof v === 'number' ? v.toLocaleString() : esc(v);
+
+// The server's ReportOutput contract. A payload that does not match it is a bug
+// worth showing, not something to render half of: the point of this page is
+// that every number on it can be trusted.
+function validate(report) {
+  if (!report || typeof report !== 'object') return ['response is not an object'];
+  const problems = [];
+  for (const [field, ok] of [
+    ['report', typeof report.report === 'string'],
+    ['title', typeof report.title === 'string'],
+    ['checked_at', typeof report.checked_at === 'string'],
+    ['period', typeof report.period === 'string'],
+    ['complete', typeof report.complete === 'boolean'],
+    ['tables', Array.isArray(report.tables)],
+    ['sources', Array.isArray(report.sources)],
+    ['metrics', report.metrics && typeof report.metrics === 'object'],
+  ]) if (!ok) problems.push(field);
+  for (const t of report.tables || []) {
+    if (typeof t.title !== 'string' || !Array.isArray(t.columns) || !Array.isArray(t.rows)) {
+      problems.push('table ' + esc(t && t.title));
+    }
+  }
+  return problems;
+}
+
+function cell(key, value) {
+  if (value === null || value === undefined || value === '') return '&mdash;';
+  if (key.endsWith('microdollars') && typeof value === 'number') {
+    return new Intl.NumberFormat('en-US',
+      { style: 'currency', currency: 'USD', maximumFractionDigits: 6 }).format(value / 1e6);
+  }
+  if (key.endsWith('_usd') && typeof value === 'number') {
+    return new Intl.NumberFormat('en-US',
+      { style: 'currency', currency: 'USD', maximumFractionDigits: 6 }).format(value);
+  }
+  return typeof value === 'object' ? esc(JSON.stringify(value)) : num(value);
+}
+
+function tableHtml(t, filter) {
+  const rows = t.rows.filter(r => JSON.stringify(r).toLowerCase().includes(filter));
+  const head = '<h2>' + esc(t.title) + '<small>' + rows.length + ' of ' + t.rows.length + ' shown</small></h2>';
+  if (!rows.length) {
+    return head + '<div class="card"><p class="empty">No rows' + (filter ? ' match your filter' : '') + '.</p></div>';
+  }
+  return head + '<div class="card"><div class="scroll"><table><thead><tr>'
+    + t.columns.map(c => '<th scope="col">' + esc(c.replaceAll('_', ' ')) + '</th>').join('')
+    + '</tr></thead><tbody>'
+    + rows.map(r => '<tr>' + t.columns.map(c => {
+        const cls = typeof r[c] === 'number' ? ' class="num"' : '';
+        const key = c === 'content' && typeof r.heading === 'string' ? r.heading : c;
+        return '<td' + cls + '>' + cell(key, r[c]) + '</td>';
+      }).join('') + '</tr>').join('')
+    + '</tbody></table></div></div>';
+}
+
+function render(report) {
+  const problems = validate(report);
+  if (problems.length) {
+    $('state').textContent = 'The server returned a report this page cannot trust (' + problems.join(', ') + ').';
+    $('state').className = 'state warn';
+    return;
+  }
+  current = report;
+  $('period').textContent = report.period + ' \u00b7 retrieved ' + new Date(report.checked_at).toLocaleString();
+  $('state').textContent = report.complete
+    ? 'Sources loaded'
+    : 'Partial data \u2014 read source coverage before trusting any total';
+  $('state').className = report.complete ? 'state' : 'state warn';
+  $('metrics').innerHTML = Object.entries(report.metrics || {}).map(([k, v]) =>
+    '<div class="kpi"><div class="k-l">' + esc(k.replace(/_microdollars$/, '_usd').replaceAll('_', ' ')) + '</div><div class="k-v">' + cell(k, v) + '</div></div>').join('');
+  const filter = $('filter').value.toLowerCase();
+  $('tables').innerHTML = (report.tables || []).map(t => tableHtml(t, filter)).join('');
+  $('sources').innerHTML = (report.sources || []).map(s =>
+    '<li class="' + (s.complete ? '' : 'incomplete') + '"><span class="src">' + esc(s.source) + '</span> \u2014 '
+    + (s.complete ? 'loaded' : 'incomplete') + (s.warning ? ': ' + esc(s.warning) : '') + '</li>').join('')
+    || '<li>No source warnings.</li>';
+}
+
+function unpack(result) {
+  if (result && result.isError) {
+    const t = (result.content || []).find(c => c.text);
+    throw Error(t ? t.text : 'MCP report failed');
+  }
+  let data = result && result.structuredContent;
+  if (!data) {
+    const block = ((result && result.content) || []).find(c => c.text);
+    const text = block ? block.text : '';
+    try { data = JSON.parse(text); }
+    catch { const i = text.indexOf('{'); if (i >= 0) data = JSON.parse(text.slice(i)); }
+  }
+  if (data && typeof data.content === 'string') data = JSON.parse(data.content);
+  if (!data || !Array.isArray(data.tables)) throw Error('Unsupported structured report response');
+  return data;
+}
+
+async function call(args) {
+  if (!window.cowork || !window.cowork.callMcpTool) {
+    throw Error('The workspace MCP bridge is unavailable. Open this artifact in a connected MCP Apps or Cowork host.');
+  }
+  let timer;
+  try {
+    return unpack(await Promise.race([
+      window.cowork.callMcpTool(REPORT_TOOL, args),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(Error('Report timed out. Previously displayed data is unchanged.')), 180000);
+      }),
+    ]));
+  } finally { clearTimeout(timer); }
+}
+
+async function refresh() {
+  if (busy) return;
+  busy = true;
+  $('refresh').disabled = true;
+  $('state').textContent = 'Loading live sources\u2026';
+  $('state').className = 'state';
+  try { render(await call({ report: 'costs', days: Number($('days').value) })); }
+  catch (error) { $('state').textContent = error.message; $('state').className = 'state warn'; }
+  finally { busy = false; $('refresh').disabled = false; }
+}
+
+$('refresh').onclick = refresh;
+$('days').onchange = refresh;
+$('filter').oninput = () => { if (current) render(current); };
+
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  const d = event.data || {};
+  const t = (d.params && d.params.hostContext && d.params.hostContext.theme)
+         || (d.hostContext && d.hostContext.theme) || d.theme;
+  if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+});
+
+if (initial) {
+  if (initial.request && initial.request.days) $('days').value = initial.request.days;
+  render(initial);
+}
+</script></body></html>

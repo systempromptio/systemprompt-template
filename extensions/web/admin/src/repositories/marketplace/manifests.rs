@@ -11,6 +11,7 @@
 //! the whole catalog page.
 
 use std::path::Path;
+use systemprompt::identifiers::MarketplaceId;
 
 use serde::Serialize;
 
@@ -38,7 +39,7 @@ pub struct MarketplaceAccessSummary {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct MarketplaceConfigSummary {
-    pub id: String,
+    pub id: MarketplaceId,
     pub name: String,
     pub version: String,
     pub description: String,
@@ -148,6 +149,7 @@ fn parse_manifest(
     };
     Some(MarketplaceConfigSummary {
         name: text("name", &id),
+        id: MarketplaceId::new(id.clone()),
         version: text("version", "0.0.0"),
         description: text("description", ""),
         visibility: text("visibility", "private"),
@@ -160,7 +162,6 @@ fn parse_manifest(
         mcp_servers: member_ids(marketplace, "mcp_servers"),
         agents: member_ids(marketplace, "agents"),
         source_path,
-        id,
     })
 }
 

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "daily-scope",
+  "skill_id": "inspect_conversation",
+  "partition": "holdout",
+  "prompt": "Prepare the morning portfolio brief.",
+  "expected_behavior": [
+    "Ask which accessible site to use when no site is selected.",
+    "Do not invent a cloud ID or silently merge sites."
+  ],
+  "fixture": "multiple-sites",
+  "assertions": [
+    "ambiguous_scope_blocks_query"
+  ]
+}

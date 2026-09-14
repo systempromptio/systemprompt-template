@@ -1,7 +1,7 @@
 //! Salesforce ECA pre-authorization using the user's administratively mapped
-//! identity.
+//! identity for one org.
 
-use super::{Grant, Provider, config};
+use super::{Grant, Provider};
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::salesforce_auth::SalesforceConfig;
 use crate::repositories::users::salesforce_identity;
@@ -10,8 +10,14 @@ use chrono::Utc;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
-pub(super) async fn mint(pool: &PgPool, user: &UserId, generation: i64) -> AdminResult<Grant> {
-    let username = salesforce_identity::find_username(pool, user)
+pub(super) async fn mint(
+    pool: &PgPool,
+    user: &UserId,
+    provider: &Provider,
+    generation: i64,
+) -> AdminResult<Grant> {
+    let org = provider.salesforce_org()?;
+    let username = salesforce_identity::find_username(pool, user, provider.slug())
         .await?
         .ok_or_else(|| {
             AdminError::NotFound(
@@ -20,10 +26,11 @@ pub(super) async fn mint(pool: &PgPool, user: &UserId, generation: i64) -> Admin
         })?;
     let cfg = SalesforceConfig {
         enabled: true,
-        my_domain: config::salesforce_domain()?,
-        consumer_key: config::secret("salesforce_mcp_client_id")?,
+        my_domain: org.domain()?,
+        consumer_key: org.client_id()?,
     };
-    let token = salesforce_jwt_bearer::get_token(&cfg, &username)
+    let private_key = org.private_key()?;
+    let token = salesforce_jwt_bearer::get_token(&cfg, &username, &private_key)
         .await
         .map_err(|_redacted_error| {
             AdminError::Upstream(
@@ -31,8 +38,11 @@ pub(super) async fn mint(pool: &PgPool, user: &UserId, generation: i64) -> Admin
             )
         })?;
     Ok(Grant {
+        configuration_binding: String::new(),
+        authorization_issuer: String::new(),
+        token_auth_method: String::new(),
         user: user.to_string(),
-        provider: Provider::Salesforce,
+        provider: provider.clone(),
         client: cfg.consumer_key,
         client_secret: String::new(),
         verifier: String::new(),

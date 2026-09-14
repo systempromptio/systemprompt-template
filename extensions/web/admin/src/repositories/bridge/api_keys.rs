@@ -14,7 +14,7 @@ const SECRET_BYTES: usize = 32;
 const PREFIX_ID_BYTES: usize = 6;
 
 #[derive(Debug, sqlx::FromRow)]
-pub struct BridgeApiKeyRow {
+pub struct ApiKeyRow {
     pub id: String,
     pub name: String,
     pub key_prefix: String,
@@ -25,7 +25,7 @@ pub struct BridgeApiKeyRow {
 }
 
 #[derive(Debug)]
-pub struct BridgeIssuedApiKey {
+pub struct IssuedApiKey {
     pub id: String,
     pub name: String,
     pub key_prefix: String,
@@ -34,12 +34,12 @@ pub struct BridgeIssuedApiKey {
     pub expires_at: Option<DateTime<Utc>>,
 }
 
-pub async fn issue_bridge_api_key(
+pub async fn issue_api_key(
     pool: &PgPool,
     user_id: &UserId,
     name: &str,
     expires_at: Option<DateTime<Utc>>,
-) -> Result<BridgeIssuedApiKey> {
+) -> Result<IssuedApiKey> {
     let trimmed = name.trim();
     if trimmed.is_empty() {
         return Err(BridgeRepoError::Validation(
@@ -65,7 +65,7 @@ pub async fn issue_bridge_api_key(
     .fetch_one(pool)
     .await?;
 
-    Ok(BridgeIssuedApiKey {
+    Ok(IssuedApiKey {
         id,
         name: trimmed.to_owned(),
         key_prefix,
@@ -173,14 +173,9 @@ pub async fn enroll_device(
     })
 }
 
-// Why: lint-ok: unused-pub — the internal fork uses this shared query in setup
-// and user inventory.
-pub async fn list_api_keys_for_user(
-    pool: &PgPool,
-    user_id: &UserId,
-) -> Result<Vec<BridgeApiKeyRow>> {
+pub async fn list_api_keys_for_user(pool: &PgPool, user_id: &UserId) -> Result<Vec<ApiKeyRow>> {
     let rows = sqlx::query_as!(
-        BridgeApiKeyRow,
+        ApiKeyRow,
         r#"
         SELECT id, name, key_prefix, created_at, last_used_at, expires_at, revoked_at
         FROM user_api_keys
@@ -194,7 +189,7 @@ pub async fn list_api_keys_for_user(
     Ok(rows)
 }
 
-pub async fn revoke_bridge_api_key(pool: &PgPool, user_id: &UserId, id: &str) -> Result<bool> {
+pub async fn revoke_api_key(pool: &PgPool, user_id: &UserId, id: &str) -> Result<bool> {
     let result = sqlx::query!(
         r#"
         UPDATE user_api_keys

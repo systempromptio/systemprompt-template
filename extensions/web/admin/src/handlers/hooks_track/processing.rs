@@ -79,20 +79,11 @@ pub(super) async fn process_inserted_event(params: &ProcessInsertedEventParams<'
 
 async fn update_session_tracking(params: &ProcessInsertedEventParams<'_>) {
     let file_path = helpers::extract_file_path(params.payload);
-    let is_from_subagent = params.payload.common.agent_id.is_some();
-    usage_aggregations::increment_session_summary(&usage_aggregations::SessionSummaryParams {
-        pool: params.pool,
-        session_id: params.session_id,
-        user_id: params.user_id,
-        event_type: params.event_type,
-        content_input_bytes: params.content_input_bytes,
-        content_output_bytes: params.content_output_bytes,
-        loc_added: params.loc_added,
-        loc_removed: params.loc_removed,
-        is_subagent_stop: matches!(&params.payload.event, HookEvent::SubagentStop(_)),
-        file_path: file_path.as_deref(),
-        is_from_subagent,
-    })
+    usage_aggregations::refresh_session_summary(
+        params.pool,
+        params.session_id,
+        file_path.as_deref(),
+    )
     .await;
 
     if params.event_type == EVENT_SESSION_START

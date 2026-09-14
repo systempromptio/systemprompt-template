@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "clock": "2026-09-12T08:00:00Z",
+  "timezone": "UTC",
+  "dataset": "synthetic-evaluation",
+  "records": {
+    "updates": [
+      {
+        "key": "WINDOW-1",
+        "updated": "2026-09-11T09:30:00+02:00"
+      },
+      {
+        "key": "WINDOW-2",
+        "updated": "2026-09-11T10:30:00+02:00"
+      }
+    ],
+    "window_start": "2026-09-11T08:00:00Z",
+    "window_end": "2026-09-12T08:00:00Z"
+  }
+}

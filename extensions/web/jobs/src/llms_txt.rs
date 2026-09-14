@@ -66,9 +66,7 @@ pub(crate) async fn generate_llms_txt(db_pool: DbPool, paths: &AppPaths) -> Resu
     use systemprompt::models::Config;
     use tokio::fs;
 
-    let global_config =
-        // Why: lint-ok: error-adapt — JobError carries strings by design
-        Config::get().map_err(|e| JobError::config(format!("Config error: {e}")))?;
+    let global_config = Config::get()?;
 
     let config_path = paths.system().content_config();
     let yaml_content = fs::read_to_string(&config_path).await?;
@@ -127,12 +125,9 @@ async fn build_llms_txt_content(
 
     write_header(&mut content, base_url)?;
 
-    let repo = ContentRepository::new(&db_pool)
-        // Why: lint-ok: error-adapt — JobError carries strings by design
-        .map_err(|e| JobError::other(format!("ContentRepository error: {e}")))?;
+    let repo = ContentRepository::new(&db_pool)?;
 
     write_documentation_section(&mut content, config, &repo, base_url).await?;
-    write_blog_section(&mut content, config, &repo, base_url).await?;
 
     writeln!(content, "## Resources")?;
     writeln!(content)?;
@@ -161,7 +156,6 @@ pub fn write_header(content: &mut String, base_url: &str) -> std::fmt::Result {
     writeln!(content)?;
     writeln!(content, "- Homepage: {base_url}")?;
     writeln!(content, "- Documentation: {base_url}/documentation")?;
-    writeln!(content, "- Blog: {base_url}/blog")?;
     writeln!(content)
 }
 
@@ -223,34 +217,5 @@ async fn write_documentation_section(
             write_section(content, "General", &other)?;
         }
     }
-    Ok(())
-}
-
-async fn write_blog_section(
-    content: &mut String,
-    config: &ContentConfigRaw,
-    repo: &systemprompt::content::ContentRepository,
-    base_url: &str,
-) -> Result<(), JobError> {
-    use systemprompt::identifiers::{LocaleCode, SourceId};
-
-    writeln!(content, "## Blog")?;
-    writeln!(content)?;
-    writeln!(content, "Articles and updates.")?;
-    writeln!(content)?;
-
-    if let Some(source) = config.content_sources.get("blog")
-        && source.enabled
-    {
-        let source_id = SourceId::new(&source.source_id);
-        let locale = LocaleCode::new("en");
-        if let Ok(posts) = repo.list_by_source(&source_id, &locale).await {
-            for post in posts.iter().take(15) {
-                let url = format!("{}/blog/{}", base_url, post.slug);
-                writeln!(content, "- [{}]({}): {}", post.title, url, post.description)?;
-            }
-        }
-    }
-    writeln!(content)?;
     Ok(())
 }

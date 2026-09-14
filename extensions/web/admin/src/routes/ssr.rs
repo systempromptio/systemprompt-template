@@ -9,22 +9,39 @@ use tower_http::normalize_path::NormalizePathLayer;
 
 use super::super::templates::AdminTemplateEngine;
 use super::super::{handlers, middleware};
+use super::ssr_redirects;
+use crate::handlers::adfs_auth::AdfsDeps;
 
-pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Router {
-    let inner = super::dashboard_redirects::legacy_routes()
-        .merge(super::ssr_dashboard::dashboard_routes())
-        .merge(root_routes())
-        .merge(access_routes())
+pub fn admin_ssr_router(
+    pool: Arc<PgPool>,
+    write_pool: &PgPool,
+    engine: AdminTemplateEngine,
+    sso_deps: AdfsDeps,
+    owner: systemprompt::identifiers::UserId,
+) -> Router {
+    let evaluations = Arc::new(super::evaluation_state::EvaluationState::new(
+        write_pool.clone(),
+        owner.clone(),
+    ));
+    let managed = Arc::new(super::managed_state::ManagedState::new(
+        write_pool.clone(),
+        owner,
+    ));
+    let inner = overview_routes()
+        .merge(people_routes())
+        .merge(ai_activity_routes())
+        .merge(super::ssr_analysis::routes())
         .merge(governance_routes())
-        .merge(entity_routes())
+        .merge(platform_routes())
         .merge(account_routes())
         .merge(api_routes())
-        .merge(super::ssr_redirects::legacy_routes())
-        .layer(axum_middleware::from_fn(
-            super::ssr_write_gate::require_write_access,
-        ))
+        .merge(ssr_redirects::legacy_routes())
         .layer(Extension(engine.clone()))
-        .layer(axum_middleware::from_fn(
+        .layer(Extension(managed))
+        .layer(Extension(evaluations))
+        .layer(Extension(sso_deps.clone()))
+        .layer(axum_middleware::from_fn_with_state(
+            Arc::clone(&pool),
             middleware::marketplace_context_middleware,
         ))
         .layer(axum_middleware::from_fn(
@@ -39,8 +56,9 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
         ))
         .with_state(Arc::clone(&pool));
 
-    let combined = public_routes()
+    let combined = public_routes(Arc::clone(&pool))
         .layer(Extension(engine))
+        .layer(Extension(sso_deps))
         .with_state(pool)
         .fallback_service(inner);
 
@@ -51,116 +69,216 @@ pub fn admin_ssr_router(pool: Arc<PgPool>, engine: AdminTemplateEngine) -> Route
     )
 }
 
-fn public_routes() -> Router<Arc<PgPool>> {
-    let public = Router::new()
+fn public_routes(pool: Arc<PgPool>) -> Router<Arc<PgPool>> {
+    let login = Router::new()
         .route("/login", get(handlers::ssr::login_page))
-        .route("/register", get(handlers::ssr::register_page))
-        .route("/add-passkey", get(handlers::ssr::add_passkey_page))
-        .route("/verify-pending", get(handlers::ssr::verify_pending_page))
-        .route(
-            "/api/magic-link/request",
-            post(handlers::magic_link::request_magic_link),
-        )
-        .route(
-            "/api/magic-link/validate",
-            post(handlers::magic_link::validate_magic_link),
-        )
-        .route(
-            "/api/register",
-            post(handlers::public_register::public_register_handler),
-        );
-    if handlers::dev_login::dev_login_enabled() {
-        public.route(
-            "/auth/dev/login",
-            get(handlers::dev_login::dev_login_redeem),
-        )
-    } else {
-        public
-    }
+        .layer(axum_middleware::from_fn_with_state(
+            pool,
+            middleware::user_context_middleware,
+        ));
+    let routes = login
+        .route("/auth/adfs/start", get(handlers::adfs_auth::adfs_start))
+        .route("/auth/adfs/acs", post(handlers::adfs_auth::adfs_callback));
+    dev_login_routes(routes)
 }
 
-fn root_routes() -> Router<Arc<PgPool>> {
+// Why: the developer login link is mounted, not merely refused, only on a
+// development non-cloud profile — production has no route to hit, so there is
+// nothing there to misconfigure open.
+fn dev_login_routes(router: Router<Arc<PgPool>>) -> Router<Arc<PgPool>> {
+    if !handlers::dev_login::dev_login_enabled() {
+        return router;
+    }
+    router.route(
+        "/auth/dev/login",
+        get(handlers::dev_login::dev_login_redeem),
+    )
+}
+
+// Why: Overview is the console landing page, not a redirect — a signed-in
+// admin lands on the overview itself, and only a non-console viewer is sent on
+// to their profile. The handler makes that call, so `/admin` stays one URL.
+fn overview_routes() -> Router<Arc<PgPool>> {
     Router::new().route("/", get(handlers::ssr::overview_page))
 }
 
-fn access_routes() -> Router<Arc<PgPool>> {
+// Why: sidebar group 2 — the accounts, the groups that carry their
+// entitlement, the projects they are attributed to, and the rules that bind
+// the three together. Access control moved here from the catalog: it grants
+// people access to catalog entries, it is not itself one.
+fn people_routes() -> Router<Arc<PgPool>> {
     Router::new()
+        .route("/users", get(handlers::ssr::users_page))
+        .route(
+            "/users/{user_id}",
+            get(handlers::ssr::user_detail_by_id_page),
+        )
+        // Why: the query form is what the roster's row links and the header
+        // search resolve to; it stays mounted beside the path form rather
+        // than forcing every caller to rewrite its links at once.
         .route("/user", get(handlers::ssr::user_detail_page))
+        .route("/groups", get(handlers::ssr::groups_page))
+        .route("/groups/{group_id}", get(handlers::ssr::group_detail_page))
+        .route("/projects", get(handlers::ssr::projects_page))
         .route(
-            "/departments",
-            get(handlers::ssr::management_departments_page),
+            "/projects/{project_id}",
+            get(handlers::ssr::project_detail_page),
+        )
+        .route("/roles", get(handlers::ssr::roles_page))
+        .route("/devices", get(handlers::ssr::devices_page))
+        .route("/access-control", get(handlers::ssr::access_control_page))
+        // Why: the token and access-matrix *pages* are gone — entitlement is
+        // derived from roles and AD groups, and tokens are minted by the
+        // bridge's device-link flow. These endpoints are that flow's API.
+        .route("/devices/pats", post(handlers::devices::issue_pat))
+        .route(
+            "/devices/pats/{id}",
+            axum::routing::delete(handlers::devices::revoke_pat),
         )
         .route(
-            "/departments/{id}",
-            get(handlers::ssr::management_department_detail_page),
-        )
-        .route(
-            "/access-tokens",
-            get(handlers::ssr::management_access_tokens_page),
-        )
-        .route("/tokens/pats", post(handlers::access_tokens::issue_pat))
-        .route(
-            "/tokens/pats/{id}",
-            axum::routing::delete(handlers::access_tokens::revoke_pat),
+            "/devices/certs/{id}",
+            axum::routing::delete(handlers::devices::revoke_cert),
         )
 }
 
+// Why: sidebar group 3 — everything that reads what the AI actually did. They
+// share one scope contract (`?scope=`/`?range=`), which is why they are one
+// group rather than filed under the entity they happen to list.
+fn ai_activity_routes() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route("/analytics", get(handlers::ssr::analytics_dashboard_page))
+        // Why: the Cost tab's export. Same handler contract as the tab, so the
+        // file always matches the view the operator was looking at.
+        .route("/analytics/cost.csv", get(handlers::ssr::cost_csv))
+        .route("/requests", get(handlers::ssr::analytics_requests_page))
+        .route("/requests.csv", get(handlers::ssr::analytics_requests_csv))
+        .route(
+            "/requests/{request_id}",
+            get(handlers::ssr::governance_audit_detail_page),
+        )
+        .route("/sessions", get(handlers::ssr::sessions_list_page))
+        .route(
+            "/sessions/{session_id}",
+            get(handlers::ssr::session_detail_page),
+        )
+        .route("/traces", get(handlers::ssr::perf_traces_page))
+        .route(
+            "/traces/{trace_id}",
+            get(handlers::ssr::perf_trace_detail_page),
+        )
+        // Why: the org-wide twin of "My conversations". It reads one
+        // conversation per row where `/contexts` reads one context, and it is
+        // the page an operator looks for under AI activity when they want to
+        // see what everyone has been asking.
+        .route("/conversations", get(handlers::ssr::conversations_page))
+        .route("/contexts", get(handlers::ssr::skills_contexts_page))
+        .route(
+            "/contexts/{context_id}",
+            get(handlers::ssr::context_detail_page),
+        )
+}
+
+// Why: sidebar group 4. These read a posture rather than listing an entity.
+// The three are one group because they are the three things a policy can do to
+// a call — decide it, hold it for a person, or record a credential it touched —
+// and an operator tuning one reads the other two.
 fn governance_routes() -> Router<Arc<PgPool>> {
     Router::new()
         .route("/governance", get(handlers::ssr::governance_page))
         .route(
-            "/governance/policies/{policy_id}",
-            get(handlers::ssr::governance_policy_edit_page),
+            "/governance/warnings.csv",
+            get(handlers::ssr::governance_csv),
         )
         .route(
-            "/governance/policies/{policy_id}/toggle",
-            post(handlers::ssr::governance_policy_toggle),
+            "/governance/decisions/{decision_id}",
+            get(handlers::ssr::governance_audit_detail_page),
+        )
+        .route("/governance/approvals", get(handlers::ssr::approvals_page))
+        .route(
+            "/governance/secrets",
+            get(handlers::ssr::secrets_audit_page),
         )
         .route(
-            "/governance/decisions",
-            get(handlers::ssr::governance_decisions_page),
+            "/governance/secrets.csv",
+            get(handlers::ssr::secrets_audit_csv),
         )
-        .route(
-            "/governance/hooks",
-            get(handlers::ssr::governance_hooks_page),
-        )
-        .route("/models", get(handlers::ssr::models_page))
-        .route("/demo/trace", get(handlers::ssr::demo_trace_page))
 }
 
-fn entity_routes() -> Router<Arc<PgPool>> {
+// Why: sidebar group 5 — the installable units declared in `services/*.yaml`,
+// flattened out of the old `/catalog/` prefix, plus the gateway that routes
+// model traffic to the providers behind them.
+fn platform_routes() -> Router<Arc<PgPool>> {
     Router::new()
-        .route("/evals", get(handlers::ssr::evals_page))
-        .route("/evals/run", post(handlers::ssr::eval_run_action))
+        .route("/mcp", get(handlers::catalog::mcp::mcp_servers_page))
         .route(
-            "/evals/cases",
-            post(handlers::ssr::eval_promote_case_action),
+            "/mcp/{mcp_id}",
+            get(handlers::catalog::mcp::mcp_detail_page),
         )
         .route(
-            "/evals/runs/{run_id}",
-            get(handlers::ssr::eval_run_detail_page),
+            "/marketplaces",
+            get(handlers::catalog::marketplaces::marketplaces_page),
+        )
+        .route(
+            "/marketplaces/{marketplace_id}",
+            get(handlers::catalog::marketplaces::marketplace_detail_page),
+        )
+        .route("/plugins", get(handlers::catalog::plugins_page))
+        .route(
+            "/plugins/{plugin_id}",
+            get(handlers::catalog::plugin_detail_page),
+        )
+        .route("/skills", get(handlers::catalog::skills_page))
+        .route(
+            "/skills/{skill_id}",
+            get(handlers::catalog::skill_detail_page),
+        )
+        .route("/gateway", get(handlers::ssr::gateway_page))
+        // Why: the month-end pack's *pages* are gone — the cost tab of the
+        // analytics dashboard replaced them — but the CSV exports are a data
+        // endpoint the finance hand-off still fetches, so they stay mounted.
+        .route(
+            "/reports/customer.csv",
+            get(handlers::ssr::report_customer_csv),
+        )
+        .route(
+            "/reports/internal.csv",
+            get(handlers::ssr::report_internal_csv),
         )
 }
 
 fn account_routes() -> Router<Arc<PgPool>> {
     Router::new()
         .route("/profile", get(handlers::ssr::profile_page))
+        // Why: identity-scoped, not admin-gated — the handler resolves what
+        // the viewer may see (self, or everything for admins) per request.
+        .route("/history", get(handlers::ssr::history_page))
+        // Why: owner-facing, so it sits in `account_routes` beside `/history`
+        // rather than under the admin-gated `/entities/` tree. The handler
+        // resolves ownership per request and 404s a viewer who is not the owner.
+        .route(
+            "/history/conversations/{context_id}",
+            get(handlers::ssr::history_conversation_page),
+        )
         .route("/settings", get(handlers::ssr::settings_page))
         .route("/setup", get(handlers::ssr::setup_page))
-        .route("/demo-register", get(handlers::ssr::demo_register_page))
 }
 
 fn api_routes() -> Router<Arc<PgPool>> {
     Router::new()
-        .route(
-            "/api/profile/salesforce/unlink",
-            post(handlers::salesforce_auth::salesforce_unlink),
-        )
         .route("/auth/me", get(middleware::auth_me_handler))
         .route(
             "/api/conversations/{session_id}/raw",
             get(handlers::ssr::conversations_raw),
         )
         .route("/api/chain/{id}", get(handlers::ssr::chain_envelope))
+        .route("/api/history/search", get(handlers::ssr::history_search))
         .route("/api/search/resolve", get(handlers::ssr::search_resolve))
+        .route(
+            "/api/profile/bridge-code",
+            post(handlers::ssr::issue_bridge_code),
+        )
+        .route(
+            "/api/profile/salesforce/unlink",
+            post(handlers::salesforce_auth::salesforce_unlink),
+        )
 }

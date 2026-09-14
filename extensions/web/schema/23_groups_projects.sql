@@ -30,7 +30,7 @@ CREATE TRIGGER trg_groups_protect_system BEFORE DELETE ON groups
 CREATE TABLE IF NOT EXISTS group_members (
     group_id TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    source TEXT NOT NULL CHECK (source IN ('adfs','manual','odoo')),
+    source TEXT NOT NULL CHECK (source IN ('adfs','manual')),
     source_ad_group TEXT,
     granted_by TEXT REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS projects (
 CREATE TABLE IF NOT EXISTS project_members (
     project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    source TEXT NOT NULL CHECK (source IN ('adfs','manual','odoo')),
+    source TEXT NOT NULL CHECK (source IN ('adfs','manual')),
     source_ad_group TEXT,
     granted_by TEXT REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS project_ad_mappings (
 
 CREATE TABLE IF NOT EXISTS user_manual_roles (
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    role TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('platform_admin','admin','developer','user','project_manager','knowledge_worker','super_admin')),
     granted_by TEXT REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, role)

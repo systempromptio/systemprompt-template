@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO eval_workers(id,owner_id,environment,name,token_hash) VALUES($1,$2,$3,$4,$5)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "211613ae5c0a57a2b68f76a8f124e89f08e4b8f20bde133b8abbcbf8b1ecf839"
+}

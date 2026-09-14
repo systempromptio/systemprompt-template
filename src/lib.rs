@@ -1,4 +1,4 @@
-//! `SystemPrompt` Template
+//! systemprompt.io evaluation template.
 //!
 //! This crate re-exports extensions for use with the `SystemPrompt` runtime.
 //! Extensions are automatically discovered via the `inventory` crate.

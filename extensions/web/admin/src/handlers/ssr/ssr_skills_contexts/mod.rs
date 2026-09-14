@@ -7,10 +7,10 @@
 //! calls alone, which are hidden by default.
 
 mod context;
+mod listing;
 mod load;
 mod view;
 
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use axum::extract::{Extension, Query, State};
@@ -32,7 +32,7 @@ use crate::repositories::scope::{ScopeRequest, SubjectScope};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
-use context::{ContextsPageContext, FilterView, ModelOptionView, PageKpisView, UserForFilterView};
+use context::{ContextsPageContext, PageKpisView};
 use load::{ContextsPageData, load_page_data};
 
 #[derive(Debug, Deserialize, Default)]
@@ -132,67 +132,40 @@ fn parse_inputs(params: &ContextsListQuery, scope: &SubjectScope) -> ContextsPag
     }
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "one call site; splitting the six inputs into a struct would only rename them"
-)]
-#[expect(
-    clippy::too_many_lines,
-    reason = "one page assembly per handler; splitting is tracked in docs/tech-debt.md"
-)]
-async fn build_page_context(
-    pool: &PgPool,
-    user_ctx: &UserContext,
-    request: &ScopeRequest,
-    inputs: &ContextsPageInputs,
-    data: &ContextsPageData,
-    params: &ContextsListQuery,
-) -> ContextsPageContext {
-    let by_user = if inputs.view_is_users {
-        view::group_by_user(&data.conversations)
-    } else {
-        HashMap::new()
-    };
-    let conversations: Vec<_> = if inputs.view_is_users {
-        Vec::new()
-    } else {
-        data.conversations
-            .iter()
-            .map(view::conversation_item)
-            .collect()
-    };
-    let user_summaries: Vec<_> = data
-        .user_summaries
-        .iter()
-        .map(|s| view::user_summary(s, &by_user, params))
-        .collect();
-    let users_for_filter: Vec<UserForFilterView> = data
-        .users_for_filter
-        .iter()
-        .map(|u| UserForFilterView {
-            selected: inputs.user_id.as_ref() == Some(&u.user_id),
-            user_id: u.user_id.clone(),
-            display_name: u.display_name.clone(),
-        })
-        .collect();
-    let models: Vec<ModelOptionView> = data
-        .models
-        .iter()
-        .map(|m| ModelOptionView {
-            selected: inputs.model.as_deref() == Some(m.as_str()),
-            model: m.clone(),
-        })
-        .collect();
-    let (count, shown, noun) = if inputs.view_is_users {
-        (data.totals.users, data.user_summaries.len(), "users")
-    } else {
-        (
-            data.total_conversations,
-            data.conversations.len(),
-            "conversations",
-        )
-    };
-    let shown = i64::try_from(shown).unwrap_or(PAGE_SIZE);
+struct PageBuild<'a> {
+    pool: &'a PgPool,
+    user_ctx: &'a UserContext,
+    request: &'a ScopeRequest,
+    inputs: &'a ContextsPageInputs,
+    data: &'a ContextsPageData,
+    params: &'a ContextsListQuery,
+}
+
+async fn build_page_context(build: PageBuild<'_>) -> ContextsPageContext {
+    let PageBuild {
+        pool,
+        user_ctx,
+        request,
+        inputs,
+        data,
+        params,
+    } = build;
+    let listing::ContextsListing {
+        conversations,
+        user_summaries,
+        count,
+        shown,
+        noun,
+    } = listing::listing(inputs, data, params);
+    let options = view::filter_options(inputs, data);
+    let scope_filter = crate::handlers::ssr::list_view::scope_filter_view(
+        pool,
+        user_ctx,
+        request,
+        BASE_URL,
+        view::preserved_filters(inputs),
+    )
+    .await;
     ContextsPageContext {
         page: "contexts",
         title: "Conversations",
@@ -204,45 +177,11 @@ async fn build_page_context(
         has_user_summaries: !user_summaries.is_empty(),
         conversations,
         user_summaries,
-        users_for_filter,
-        models,
+        users_for_filter: options.users,
+        models: options.models,
         kpis: page_kpis(&data.totals),
-        filter: FilterView {
-            q: inputs.q.clone().unwrap_or_default(),
-            since: inputs.since_label.clone().unwrap_or_default(),
-            view: inputs.view.clone(),
-            group: request.group.clone().unwrap_or_default(),
-            project: request.project.clone().unwrap_or_default(),
-            side: if inputs.show_side { "1" } else { "" }.to_owned(),
-        },
-        scope_filter: crate::handlers::ssr::list_view::scope_filter_view(
-            pool,
-            user_ctx,
-            request,
-            BASE_URL,
-            vec![
-                ("q".to_owned(), inputs.q.clone().unwrap_or_default()),
-                ("model".to_owned(), inputs.model.clone().unwrap_or_default()),
-                (
-                    "user_id".to_owned(),
-                    inputs
-                        .user_id
-                        .as_ref()
-                        .map(|u| u.as_str().to_owned())
-                        .unwrap_or_default(),
-                ),
-                (
-                    "since".to_owned(),
-                    inputs.since_label.clone().unwrap_or_default(),
-                ),
-                ("view".to_owned(), inputs.view.clone()),
-                (
-                    "side".to_owned(),
-                    if inputs.show_side { "1" } else { "" }.to_owned(),
-                ),
-            ],
-        )
-        .await,
+        filter: listing::filter_view(inputs, request),
+        scope_filter,
         view_tabs: view::view_tabs(params, &inputs.view),
         view_is_users: inputs.view_is_users,
         view_is_all: !inputs.view_is_users,
@@ -276,7 +215,15 @@ pub(crate) async fn skills_contexts_page(
     let scope = repositories::scope::membership::get_subject_scope(&pool, &request).await?;
     let inputs = parse_inputs(&params, &scope);
     let data = load_page_data(&pool, &inputs, &scope).await?;
-    let payload = build_page_context(&pool, &user_ctx, &request, &inputs, &data, &params).await;
+    let payload = build_page_context(PageBuild {
+        pool: &pool,
+        user_ctx: &user_ctx,
+        request: &request,
+        inputs: &inputs,
+        data: &data,
+        params: &params,
+    })
+    .await;
     Ok(super::render_typed_page(
         &engine,
         "skills-contexts",

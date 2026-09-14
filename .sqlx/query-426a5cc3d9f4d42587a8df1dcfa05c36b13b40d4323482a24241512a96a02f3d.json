@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT group_id AS \"group_id!: GroupId\" FROM user_groups WHERE user_id = $1 ORDER BY group_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "group_id!: GroupId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_groups",
+            "name": "group_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "426a5cc3d9f4d42587a8df1dcfa05c36b13b40d4323482a24241512a96a02f3d"
+}

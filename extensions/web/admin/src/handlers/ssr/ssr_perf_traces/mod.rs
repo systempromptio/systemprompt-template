@@ -15,11 +15,11 @@ use systemprompt::identifiers::{AgentId, UserId};
 
 use crate::error::AdminHtmlResult;
 use crate::handlers::ssr::list_view;
-use crate::repositories::governance::filter_options::get_filter_options;
+use crate::repositories::governance::filter_options::{FilterOptions, get_filter_options};
 use crate::repositories::scope::{ScopeRequest, SubjectScope};
 use crate::repositories::traces::{
-    TraceFilter, TracePage, TraceSort, TraceSortColumn, TraceSortDir, TraceStats, get_trace_stats,
-    list_traces,
+    TraceFilter, TracePage, TraceSort, TraceSortColumn, TraceSortDir, TraceStats, TraceSummary,
+    get_trace_stats, list_traces,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -110,10 +110,42 @@ struct TraceScope<'a> {
     subjects: SubjectScope,
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "one page assembly per handler; splitting is tracked in docs/tech-debt.md"
-)]
+struct TraceRead {
+    rows: Vec<TraceSummary>,
+    total: i64,
+    stats: TraceStats,
+    options: FilterOptions,
+}
+
+async fn load_traces(
+    pool: &PgPool,
+    filter: TraceFilter<'_>,
+    subject_ids: Option<&[String]>,
+    range: TimeRange,
+    trace_page: TracePage,
+) -> TraceRead {
+    let (list_res, stats_res, options_res) = tokio::join!(
+        list_traces(pool, filter, range, trace_page),
+        get_trace_stats(pool, range, subject_ids),
+        get_filter_options(pool, range),
+    );
+    let (rows, total) = list_res.unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "list_traces failed");
+        (Vec::new(), 0)
+    });
+    TraceRead {
+        rows,
+        total,
+        stats: stats_res.unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "get_trace_stats failed");
+            TraceStats::default()
+        }),
+        options: options_res
+            .inspect_err(|e| tracing::warn!(error = %e, "get_filter_options failed"))
+            .unwrap_or_default(),
+    }
+}
+
 async fn load_traces_data(
     pool: &PgPool,
     user_ctx: &UserContext,
@@ -125,40 +157,35 @@ async fn load_traces_data(
     let preset = preset_str(query, range);
     let filter = build_filter(query, scope.subjects.as_sql());
     let sort = sort_from_query(query);
-    let offset = page * PAGE_SIZE;
     let trace_page = TracePage {
         sort,
         limit: PAGE_SIZE,
-        offset,
+        offset: page * PAGE_SIZE,
     };
-    let (list_res, stats_res, options_res) = tokio::join!(
-        list_traces(pool, filter, range, trace_page),
-        get_trace_stats(pool, range, scope.subjects.as_sql()),
-        get_filter_options(pool, range),
-    );
+    let read = load_traces(pool, filter, scope.subjects.as_sql(), range, trace_page).await;
 
-    let (rows, total) = list_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "list_traces failed");
-        (Vec::new(), 0)
-    });
-    let stats = stats_res.unwrap_or_else(|e| {
-        tracing::warn!(error = %e, "get_trace_stats failed");
-        TraceStats::default()
-    });
-    let options = options_res.unwrap_or_default();
-
-    let trace_rows: Vec<rows::TraceRow> = rows.iter().map(rows::trace_to_json).collect();
+    let trace_rows: Vec<rows::TraceRow> = read.rows.iter().map(rows::trace_to_json).collect();
     let has_traces = !trace_rows.is_empty();
     let window = list_view::PageWindow::new(
         page,
         PAGE_SIZE,
-        total,
+        read.total,
         i64::try_from(trace_rows.len()).unwrap_or(PAGE_SIZE),
         "traces",
     );
-    let pagination = view::build_pagination(query, window);
     let sort_col = view::sort_col_to_str(sort.column);
     let sort_dir = view::sort_dir_to_str(sort.dir);
+    let scope_filter = view::scope_filter(
+        pool,
+        user_ctx,
+        &view::TraceScopeFilterArgs {
+            request: scope.request,
+            query,
+            range,
+            preset: &preset,
+        },
+    )
+    .await;
 
     PerfTracesPageContext {
         page: "traces",
@@ -171,33 +198,23 @@ async fn load_traces_data(
         filter_ribbon: context::TraceFilterRibbon {
             base_url: BASE_URL,
             preserved: view::build_preserved(query, range, &preset),
-            options: view::annotate_options(&options, &filter),
+            options: view::annotate_options(&read.options, &filter),
             chips: view::build_chips(query),
         },
-        stats: summary::serde_stats(query, &stats),
+        stats: summary::serde_stats(query, &read.stats),
         traces: trace_rows,
         has_traces,
-        total_count: total,
+        total_count: read.total,
         page_size: PAGE_SIZE,
         page_index: page,
         page_count: window.total_pages,
-        pagination,
+        pagination: view::build_pagination(query, window),
         sort_headers: summary::build_sort_headers(query, sort_col, sort_dir),
         sort: sort_col,
         dir: sort_dir,
         error_only: filter.error_only,
         deny_only: filter.deny_only,
-        scope_filter: view::scope_filter(
-            pool,
-            user_ctx,
-            &view::TraceScopeFilterArgs {
-                request: scope.request,
-                query,
-                range,
-                preset: &preset,
-            },
-        )
-        .await,
+        scope_filter,
     }
 }
 

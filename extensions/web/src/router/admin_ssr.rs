@@ -21,7 +21,7 @@ pub(crate) struct SsrRouters {
     pub bridge_auth: Router,
 }
 
-pub(crate) fn build(db: &DbHandles) -> Option<SsrRouters> {
+pub(crate) fn build(db: &DbHandles, sso_deps: admin::AdfsDeps) -> Option<SsrRouters> {
     let admin_dir = admin_template_dir()?;
     let branding = config_loader::branding_config();
     let engine = admin::templates::AdminTemplateEngine::new(&admin_dir)
@@ -29,8 +29,14 @@ pub(crate) fn build(db: &DbHandles) -> Option<SsrRouters> {
         .ok()?
         .with_branding(branding);
     Some(SsrRouters {
-        bridge_auth: admin::bridge_auth_ssr_router(Arc::clone(&db.write), engine.clone()),
-        admin: admin::admin_ssr_router(Arc::clone(&db.write), engine),
+        bridge_auth: admin::bridge_auth_ssr_router(Arc::clone(&db.read), engine.clone()),
+        admin: admin::admin_ssr_router(
+            Arc::clone(&db.read),
+            &db.write,
+            engine,
+            sso_deps,
+            db.owner.clone(),
+        ),
     })
 }
 
@@ -38,8 +44,12 @@ fn admin_template_dir() -> Option<PathBuf> {
     let profile = ProfileBootstrap::get()
         .map_err(|e| tracing::error!(error = %e, "Profile unavailable for admin template dir"))
         .ok()?;
-    let paths = AppPaths::from_profile(&profile.paths, profile.path_resolution())
-        .map_err(|e| tracing::error!(error = %e, "App paths unavailable for admin template dir"))
-        .ok()?;
+    let paths = AppPaths::from_profile(
+        &profile.paths,
+        profile.path_resolution(),
+        systemprompt::loader::ServicesRootBootstrap::get().map(|root| root.path.as_path()),
+    )
+    .map_err(|e| tracing::error!(error = %e, "App paths unavailable for admin template dir"))
+    .ok()?;
     Some(paths.storage().files().join("admin"))
 }

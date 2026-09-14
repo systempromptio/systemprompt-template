@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "daily-no-dates",
+  "skill_id": "inspect_conversation",
+  "partition": "development",
+  "prompt": "Brief the project whose full issue records contain no due dates.",
+  "expected_behavior": [
+    "Explain that due dates are unset.",
+    "Do not infer a permission or compact-view failure when statusCategory is present."
+  ],
+  "fixture": "no-dates",
+  "assertions": [
+    "unset_not_unreadable"
+  ]
+}

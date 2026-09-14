@@ -5,7 +5,7 @@
 //! rendering. Queries are confined to `repositories`, which reads the
 //! `markdown_content` tables populated by the content ingestion job.
 //!
-//! - [`homepage`], [`blog`], [`docs`], [`features`] — section providers.
+//! - [`homepage`], [`docs`] — section providers.
 //! - [`navigation`] — header / footer nav config consumed by every page.
 //! - [`partials`] / `partials_animations` — shared template fragments.
 //! - [`extenders`] — URL extenders that splice org-specific routes onto the
@@ -14,11 +14,9 @@
 //!   extension trait.
 
 pub mod assets;
-pub mod blog;
 pub mod config_loader;
 pub mod docs;
 pub mod extenders;
-pub mod features;
 #[doc(hidden)]
 pub mod format;
 pub mod homepage;
@@ -26,5 +24,6 @@ pub mod navigation;
 pub mod partials;
 mod partials_animations;
 mod repositories;
+pub mod skills_page;
 
 pub use assets::web_assets;

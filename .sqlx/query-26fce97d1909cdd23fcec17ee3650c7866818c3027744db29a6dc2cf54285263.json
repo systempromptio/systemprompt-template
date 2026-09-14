@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT a.id,a.execution_id AS \"execution_id!: EvalExecutionId\",a.status,a.precondition_digest,a.operation,a.expires_at FROM eval_execution_approvals a JOIN eval_executions x ON x.id=a.execution_id JOIN eval_experiments e ON e.id=x.experiment_id WHERE e.owner_id=$1 AND e.id=$2 ORDER BY a.requested_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_execution_approvals",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "execution_id!: EvalExecutionId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_execution_approvals",
+            "name": "execution_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_execution_approvals",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "precondition_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_execution_approvals",
+            "name": "precondition_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "operation",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "eval_execution_approvals",
+            "name": "operation"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "expires_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "eval_execution_approvals",
+            "name": "expires_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "26fce97d1909cdd23fcec17ee3650c7866818c3027744db29a6dc2cf54285263"
+}

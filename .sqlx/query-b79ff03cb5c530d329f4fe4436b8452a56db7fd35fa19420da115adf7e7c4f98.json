@@ -1,0 +1,69 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.id AS receipt_id,r.resource_id,r.generation,p.revision_id FROM managed_installation_receipts r JOIN managed_resources m ON m.id=r.resource_id AND m.owner_id=r.owner_id JOIN managed_publications p ON p.id=r.publication_id AND p.owner_id=r.owner_id WHERE r.owner_id=$1 AND r.installation_id=$2 AND m.resource_key=$3 AND r.client_evidence->>'session_id'=$4 AND r.generation=$5 AND p.revision_id=$6 ORDER BY r.verified_at DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "receipt_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "resource_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "resource_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "generation"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "revision_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "revision_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "b79ff03cb5c530d329f4fe4436b8452a56db7fd35fa19420da115adf7e7c4f98"
+}

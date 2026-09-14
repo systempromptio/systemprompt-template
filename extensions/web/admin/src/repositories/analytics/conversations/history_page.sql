@@ -108,7 +108,11 @@ WITH classified AS MATERIALIZED (
             source                          AS source,
             session_id                      AS session_id,
             context_id                      AS context_id,
-            COALESCE(user_id, '')           AS user_id,
+            COALESCE(page.user_id, '')      AS user_id,
+            -- Why: a raw uuid names nobody. The join runs after LIMIT/OFFSET,
+            -- so it costs one lookup per rendered row, not per conversation.
+            COALESCE(NULLIF(u.display_name, ''), NULLIF(u.email, ''),
+                     COALESCE(page.user_id, '')) AS user_label,
             title                           AS title,
             COALESCE(preview, CASE WHEN source = 'gateway'
                 THEN conversation_opening_prompt(context_id, 200) END) AS preview,
@@ -128,7 +132,7 @@ WITH classified AS MATERIALIZED (
                  FROM session_transcripts st WHERE st.id = transcript_id)
             END AS snippet,
             total_count AS total_count
-        FROM page
+        FROM page LEFT JOIN users u ON u.id = page.user_id
         ORDER BY rank DESC NULLS LAST, last_at DESC, source, COALESCE(session_id, context_id)
         ) SELECT jsonb_build_object(
             'items', COALESCE((SELECT jsonb_agg(to_jsonb(e) ORDER BY rank DESC NULLS LAST,

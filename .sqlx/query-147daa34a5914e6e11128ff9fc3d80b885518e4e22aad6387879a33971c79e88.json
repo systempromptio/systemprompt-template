@@ -1,0 +1,186 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT e.invocation_id AS \"invocation_id!\",e.user_id AS \"user_id!\",e.session_id AS \"session_id!\",e.skill AS \"skill!\",e.plugin_id AS \"plugin_id!\",e.invoked_at AS \"invoked_at!\",e.attribution_status AS \"attribution_status!\",\n        r.id AS \"request_id?\",r.input_tokens::BIGINT AS \"input_tokens?\",r.output_tokens::BIGINT AS \"output_tokens?\",\n        r.cache_read_tokens::BIGINT AS \"cache_read_tokens?\",r.cache_creation_tokens::BIGINT AS \"cache_creation_tokens?\",\n        NULLIF(r.cost_microdollars,0) AS \"cost_microdollars?\",r.latency_ms::BIGINT AS \"latency_ms?\",r.status AS \"status?\",\n        a.quality_score::FLOAT8 AS \"quality_score?\",a.outcome AS \"outcome?\"\n        FROM analysis_skill_version_events e\n        LEFT JOIN ai_requests r ON r.user_id=e.user_id AND r.client_session_id=e.session_id\n            AND r.created_at >= $1 AND r.created_at < $2 AND NOT r.synthetic\n            AND NOT EXISTS(SELECT 1 FROM eval_request_reservations er WHERE er.request_id=r.id)\n            AND NOT EXISTS(SELECT 1 FROM eval_session_bindings b WHERE b.session_id=r.session_id)\n        LEFT JOIN session_analyses a ON a.user_id=e.user_id AND a.session_id=e.session_id\n        WHERE e.invoked_at >= $1 AND e.invoked_at < $2 AND e.traffic_class='production'\n          AND NOT EXISTS(SELECT 1 FROM eval_session_bindings b WHERE b.session_id=e.session_id)\n        ORDER BY e.invoked_at DESC,e.invocation_id,r.id LIMIT 100001",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "invocation_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "invocation_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "session_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "skill!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "skill"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "plugin_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "plugin_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "invoked_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "invoked_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "attribution_status!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analysis_skill_version_events",
+            "name": "attribution_status"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "request_id?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "input_tokens?",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "output_tokens?",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "cache_read_tokens?",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "cache_creation_tokens?",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "cost_microdollars?",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "latency_ms?",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 14,
+        "name": "status?",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "quality_score?",
+        "type_info": "Float8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 16,
+        "name": "outcome?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "session_analyses",
+            "name": "outcome"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      false,
+      null,
+      false
+    ]
+  },
+  "hash": "147daa34a5914e6e11128ff9fc3d80b885518e4e22aad6387879a33971c79e88"
+}

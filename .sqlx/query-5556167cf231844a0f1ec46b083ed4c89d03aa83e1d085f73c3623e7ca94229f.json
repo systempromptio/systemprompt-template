@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH expired AS (UPDATE eval_executions x SET status='error',finished_at=NOW(),lease_expires_at=NULL,result=jsonb_build_object('outcome','error','summary','Supervisor restart invalidated lease; uncertain writes require review') FROM eval_experiments e WHERE x.experiment_id=e.id AND e.owner_id=$1 AND x.status='running' AND x.lease_expires_at<=NOW() RETURNING x.id) INSERT INTO eval_execution_cleanup(execution_id,status,attempts) SELECT id,'retrying',1 FROM expired ON CONFLICT(execution_id) DO UPDATE SET status='retrying',attempts=eval_execution_cleanup.attempts+1,updated_at=NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5556167cf231844a0f1ec46b083ed4c89d03aa83e1d085f73c3623e7ca94229f"
+}

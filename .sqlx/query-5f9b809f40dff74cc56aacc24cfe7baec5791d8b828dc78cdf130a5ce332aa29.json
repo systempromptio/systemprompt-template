@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO eval_execution_evidence(execution_id,fencing_token,digest,manifest) VALUES($1,$2,$3,$4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5f9b809f40dff74cc56aacc24cfe7baec5791d8b828dc78cdf130a5ce332aa29"
+}

@@ -10,12 +10,13 @@
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
+use systemprompt_web_shared::{GroupId, ProjectId};
 
 /// One person's attribution key, with who decided it.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ScopeDefaults {
-    pub primary_group_id: Option<String>,
-    pub primary_project_id: Option<String>,
+    pub primary_group_id: Option<GroupId>,
+    pub primary_project_id: Option<ProjectId>,
     pub source: String,
 }
 
@@ -24,7 +25,8 @@ pub async fn find_scope_defaults(
     user_id: &UserId,
 ) -> Result<Option<ScopeDefaults>, sqlx::Error> {
     let row = sqlx::query!(
-        r#"SELECT primary_group_id, primary_project_id, source
+        r#"SELECT primary_group_id AS "primary_group_id: GroupId",
+                  primary_project_id AS "primary_project_id: ProjectId", source
            FROM user_scope_defaults WHERE user_id = $1"#,
         user_id.as_str()
     )
@@ -40,8 +42,8 @@ pub async fn find_scope_defaults(
 pub async fn set_scope_defaults(
     pool: &PgPool,
     user_id: &UserId,
-    primary_group_id: Option<&str>,
-    primary_project_id: Option<&str>,
+    primary_group_id: Option<&GroupId>,
+    primary_project_id: Option<&ProjectId>,
 ) -> Result<ScopeDefaults, sqlx::Error> {
     let row = sqlx::query!(
         r#"INSERT INTO user_scope_defaults
@@ -52,10 +54,11 @@ pub async fn set_scope_defaults(
                primary_project_id = EXCLUDED.primary_project_id,
                source = 'manual',
                updated_at = NOW()
-           RETURNING primary_group_id, primary_project_id, source"#,
+           RETURNING primary_group_id AS "primary_group_id: GroupId",
+                     primary_project_id AS "primary_project_id: ProjectId", source"#,
         user_id.as_str(),
-        primary_group_id,
-        primary_project_id
+        primary_group_id.map(GroupId::as_str),
+        primary_project_id.map(ProjectId::as_str)
     )
     .fetch_one(pool)
     .await?;

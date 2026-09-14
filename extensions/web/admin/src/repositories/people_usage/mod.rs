@@ -76,15 +76,15 @@ pub async fn get_scope_usage(
              ON r.user_id = m.user_id
             AND r.created_at >= NOW() - make_interval(days => $4)
            WHERE m.scope_id = $3"#,
-        q.kind.as_str(),
+        q.kind().as_str(),
         q.attribution.is_exclusive(),
-        q.id,
+        q.id(),
         q.window_days
     )
     .fetch_one(pool)
     .await?;
     Ok(ScopeUsageRow {
-        scope_id: q.id.to_owned(),
+        scope_id: q.id().to_owned(),
         active_members: row.active_members,
         requests: row.requests,
         tokens: row.tokens,
@@ -110,9 +110,9 @@ pub async fn list_member_usage(
             AND r.created_at >= NOW() - make_interval(days => $4)
            WHERE m.scope_id = $3
            GROUP BY m.user_id"#,
-        q.kind.as_str(),
+        q.kind().as_str(),
         q.attribution.is_exclusive(),
-        q.id,
+        q.id(),
         q.window_days
     )
     .fetch_all(pool)
@@ -160,9 +160,9 @@ pub async fn list_daily_requests(
                   COALESCE(counts.cost_microdollars, 0)::BIGINT AS "cost_microdollars!"
            FROM days LEFT JOIN counts ON counts.day = days.day
            ORDER BY days.day"#,
-        q.kind.as_str(),
+        q.kind().as_str(),
         q.attribution.is_exclusive(),
-        q.id,
+        q.id(),
         q.window_days
     )
     .fetch_all(pool)

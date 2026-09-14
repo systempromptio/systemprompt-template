@@ -117,6 +117,9 @@ pub(super) async fn authenticate_tool_request(
 #[doc(hidden)]
 #[derive(Debug)]
 pub struct Dispatch<'a> {
+    pub service_id: &'a str,
+    pub role: super::ServerRole,
+    pub db_pool: &'a DbPool,
     pub executor: &'a McpToolExecutor,
     pub request: &'a CallToolRequestParams,
     pub request_context: &'a SysRequestContext,
@@ -134,6 +137,29 @@ pub async fn dispatch_tool(
     auth_token: &str,
 ) -> Result<CallToolResult, McpError> {
     match tool_name {
+        "evaluation_fixture" if ctx.role == super::ServerRole::EvaluationFixture => {
+            ctx.executor
+                .execute(
+                    &crate::fixtures::FixtureHandler { pool: ctx.db_pool },
+                    ctx.request,
+                    ctx.request_context,
+                    ctx.client,
+                )
+                .await
+        },
+        "admin_report" => {
+            ctx.executor
+                .execute(
+                    &crate::reports::ReportHandler {
+                        cli: ctx.cli,
+                        token: auth_token,
+                    },
+                    ctx.request,
+                    ctx.request_context,
+                    ctx.client,
+                )
+                .await
+        },
         "systemprompt" => {
             let handler = SystempromptToolHandler {
                 auth_token: auth_token.to_owned(),

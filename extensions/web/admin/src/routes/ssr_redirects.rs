@@ -20,7 +20,8 @@ use axum::routing::get;
 use sqlx::PgPool;
 
 // Why: `Redirect::permanent` is a 308, which preserves the method and the
-// body. A 301 would let an intermediary rewrite a POST into a GET.
+// body. A 301 would let an intermediary rewrite a POST into a GET, and the
+// device endpoints under these prefixes are POSTs.
 fn moved(target: &str) -> Redirect {
     Redirect::permanent(target)
 }
@@ -32,17 +33,57 @@ fn with_query(base: &str, query: Option<String>) -> Redirect {
     }
 }
 
+// Why: the analytics dashboard's tabs absorbed four standalone pages, so their
+// redirect target is a tab rather than a path. An existing query string is
+// dropped here on purpose: those pages' filters do not exist on the tab.
+fn to_tab(tab: &str) -> Redirect {
+    moved(&format!("/admin/analytics?tab={tab}"))
+}
+
 // Why: the old paths, each 308ing to its new home.
 pub(super) fn legacy_routes() -> Router<Arc<PgPool>> {
+    people_redirects().merge(catalog_redirects()).merge(
+        entity_redirects()
+            .merge(demo_and_report_redirects())
+            .merge(governance_redirects()),
+    )
+}
+
+fn people_redirects() -> Router<Arc<PgPool>> {
     Router::new()
         .route("/access/users", get(access_users))
         .route("/access/user", get(access_user))
-        .route("/access/departments", get(access_departments))
-        .route("/access/departments/{id}", get(access_department_detail))
-        .route("/access/tokens", get(access_tokens))
-        .route("/access/devices", get(access_tokens))
-        .route("/access/matrix", get(access_control))
-        .route("/governance/policies", get(governance_policies))
+        // Why: mounted before the `{group_id}` form below reads it as an id.
+        // Axum gives a static segment priority over a dynamic one, so the
+        // order here is documentation rather than load-bearing.
+        .route("/access/groups/unassigned", get(access_unassigned))
+        .route("/access/groups", get(access_groups))
+        .route("/access/groups/{group_id}", get(access_group_detail))
+        .route("/access/projects", get(access_projects))
+        .route("/access/projects/{project_id}", get(access_project_detail))
+        .route("/access/control", get(access_control))
+}
+
+fn catalog_redirects() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route("/catalog", get(catalog))
+        .route("/catalog/marketplace", get(catalog_marketplaces))
+        .route("/catalog/marketplaces", get(catalog_marketplaces))
+        .route(
+            "/catalog/marketplaces/{marketplace_id}",
+            get(catalog_marketplace_detail),
+        )
+        .route("/catalog/plugins", get(catalog_plugins))
+        .route("/catalog/plugins/{plugin_id}", get(catalog_plugin_detail))
+        .route("/catalog/skills", get(catalog_skills))
+        .route("/catalog/skills/{skill_id}", get(catalog_skill_detail))
+        .route("/catalog/mcp", get(catalog_mcp))
+        .route("/catalog/mcp/{mcp_id}", get(catalog_mcp_detail))
+        .route("/catalog/access-control", get(access_control))
+}
+
+fn entity_redirects() -> Router<Arc<PgPool>> {
+    Router::new()
         .route("/entities/requests", get(entities_requests))
         .route("/entities/requests/{request_id}", get(entities_request))
         .route("/entities/sessions", get(entities_sessions))
@@ -51,6 +92,20 @@ pub(super) fn legacy_routes() -> Router<Arc<PgPool>> {
         .route("/entities/traces/{trace_id}", get(entities_trace))
         .route("/entities/contexts", get(entities_contexts))
         .route("/entities/contexts/{context_id}", get(entities_context))
+        .route("/entities/skills", get(entities_skills))
+}
+
+fn demo_and_report_redirects() -> Router<Arc<PgPool>> {
+    Router::new()
+        .route("/demo/skills", get(demo_skills))
+        .route("/demo/tools", get(demo_tools))
+        .route("/reports/internal", get(reports))
+        .route("/reports/customer", get(reports))
+        .route("/analytics/users/{user_id}", get(analytics_user))
+}
+
+fn governance_redirects() -> Router<Arc<PgPool>> {
+    Router::new().route("/governance/warnings", get(governance_warnings))
 }
 
 async fn access_users(RawQuery(q): RawQuery) -> Redirect {
@@ -61,24 +116,66 @@ async fn access_user(RawQuery(q): RawQuery) -> Redirect {
     with_query("/admin/user", q)
 }
 
-async fn access_departments(RawQuery(q): RawQuery) -> Redirect {
-    with_query("/admin/departments", q)
+// Why: "unassigned" stopped being a group and became a filter on the roster —
+// there was never a group row behind it, only a query that read one.
+async fn access_unassigned() -> Redirect {
+    moved("/admin/users?filter=unassigned")
 }
 
-async fn access_department_detail(Path(id): Path<String>, RawQuery(q): RawQuery) -> Redirect {
-    with_query(&format!("/admin/departments/{id}"), q)
+async fn access_groups(RawQuery(q): RawQuery) -> Redirect {
+    with_query("/admin/groups", q)
 }
 
-async fn access_tokens(RawQuery(q): RawQuery) -> Redirect {
-    with_query("/admin/access-tokens", q)
+async fn access_group_detail(Path(id): Path<String>, RawQuery(q): RawQuery) -> Redirect {
+    with_query(&format!("/admin/groups/{id}"), q)
+}
+
+async fn access_projects(RawQuery(q): RawQuery) -> Redirect {
+    with_query("/admin/projects", q)
+}
+
+async fn access_project_detail(Path(id): Path<String>, RawQuery(q): RawQuery) -> Redirect {
+    with_query(&format!("/admin/projects/{id}"), q)
 }
 
 async fn access_control(RawQuery(q): RawQuery) -> Redirect {
     with_query("/admin/access-control", q)
 }
 
-async fn governance_policies(RawQuery(q): RawQuery) -> Redirect {
-    with_query("/admin/governance", q)
+async fn catalog() -> Redirect {
+    moved("/admin/plugins")
+}
+
+async fn catalog_marketplaces(RawQuery(q): RawQuery) -> Redirect {
+    with_query("/admin/marketplaces", q)
+}
+
+async fn catalog_marketplace_detail(Path(id): Path<String>, RawQuery(q): RawQuery) -> Redirect {
+    with_query(&format!("/admin/marketplaces/{id}"), q)
+}
+
+async fn catalog_plugins(RawQuery(q): RawQuery) -> Redirect {
+    with_query("/admin/plugins", q)
+}
+
+async fn catalog_plugin_detail(Path(id): Path<String>, RawQuery(q): RawQuery) -> Redirect {
+    with_query(&format!("/admin/plugins/{id}"), q)
+}
+
+async fn catalog_skills(RawQuery(q): RawQuery) -> Redirect {
+    with_query("/admin/skills", q)
+}
+
+async fn catalog_skill_detail(Path(id): Path<String>, RawQuery(q): RawQuery) -> Redirect {
+    with_query(&format!("/admin/skills/{id}"), q)
+}
+
+async fn catalog_mcp(RawQuery(q): RawQuery) -> Redirect {
+    with_query("/admin/mcp", q)
+}
+
+async fn catalog_mcp_detail(Path(id): Path<String>, RawQuery(q): RawQuery) -> Redirect {
+    with_query(&format!("/admin/mcp/{id}"), q)
 }
 
 async fn entities_requests(RawQuery(q): RawQuery) -> Redirect {
@@ -111,4 +208,30 @@ async fn entities_contexts(RawQuery(q): RawQuery) -> Redirect {
 
 async fn entities_context(Path(id): Path<String>, RawQuery(q): RawQuery) -> Redirect {
     with_query(&format!("/admin/contexts/{id}"), q)
+}
+
+async fn entities_skills() -> Redirect {
+    Redirect::to("/admin/analysis/skills")
+}
+
+async fn demo_skills() -> Redirect {
+    Redirect::to("/admin/analysis/skills")
+}
+
+async fn demo_tools() -> Redirect {
+    to_tab("tools")
+}
+
+async fn reports() -> Redirect {
+    to_tab("cost")
+}
+
+// Why: per-user analytics became a tab on the user's own detail page — the
+// question "what has this person spent" belongs beside who they are.
+async fn analytics_user(Path(user_id): Path<String>) -> Redirect {
+    moved(&format!("/admin/users/{user_id}?tab=usage"))
+}
+
+async fn governance_warnings(RawQuery(q): RawQuery) -> Redirect {
+    with_query("/admin/governance", q)
 }

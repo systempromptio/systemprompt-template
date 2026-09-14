@@ -5,10 +5,10 @@
 //! 0. Validate `services/governance/config.yaml`, failing the boot rather than
 //!    letting an unparseable file degrade to the built-in defaults unnoticed,
 //!    and warn when the resulting chain enforces nothing.
-//! 1. Reconcile the profile's gateway-route entities into
+//! 1. Reconcile the services gateway-route entities into
 //!    `access_control_entities` (so the FK on `access_control_rules` is
 //!    satisfied and a `gateway_route` `entity_match` glob has routes to expand
-//!    over), deleting catalog rows no profile route claims.
+//!    over), deleting catalog rows no configured route claims.
 //! 2. Project `services/access-control/*.yaml` into the authz tables via core
 //!    ingestion, handing it step 1's route ids as the authoritative
 //!    `gateway_route` catalog. For a kind it is not handed, core ingestion
@@ -34,10 +34,10 @@ use systemprompt::traits::{Job, JobContext, JobResult};
 use systemprompt::security::authz::{EntityKind, RegisteredEntities};
 
 use crate::error::JobError;
-use systemprompt_web_admin::repositories::config::acl_yaml_loader;
 use systemprompt_web_admin::repositories::config::gateway::{
     dispatchable_route_ids, registered_routes,
 };
+use systemprompt_web_admin::repositories::config::{acl_yaml_loader, groups_yaml_loader};
 use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -85,16 +85,22 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 
     let governance = check_governance_config(&services_path)?;
 
+    systemprompt_web_admin::salesforce_orgs_boot_check(&services_path)
+        .await
+        .map_err(|e| JobError::from(MarketplaceError::Internal(e)))?;
+
     let catalog = bootstrap_gateway_entities(db_pool).await?;
 
     let pool = db_pool.write_pool().ok_or(MarketplaceError::Internal(
         "PgPool not available from database".to_owned(),
     ))?;
-    systemprompt_web_admin::repositories::config::groups_yaml_loader::load_groups_from_yaml(
-        &pool,
-        &services_path,
-    )
-    .await?;
+    // Why: before the ACL pass. The access-control files and each
+    // marketplace's `access.rules` write rows whose `rule_value` is a group or
+    // project id, so those rows must exist first or a fresh install would
+    // project a gate naming a group nothing can ever be a member of.
+    groups_yaml_loader::load_groups_from_yaml(&pool, &services_path)
+        .await
+        .map_err(JobError::from)?;
 
     acl_yaml_loader::load_from_yaml(&pool, &services_path, &catalog.registered)
         .await
@@ -112,6 +118,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         gateway_entities_pruned = catalog.pruned,
         gateway_policies = policy.inserted + policy.updated,
         governance_policies_active = governance.active,
+        governance_policies_warning = governance.warning,
         duration_ms,
         "governance bootstrap completed"
     );
@@ -122,12 +129,17 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 #[derive(Debug, Clone, Copy)]
 pub struct GovernanceStatus {
     pub active: usize,
+    // Why: reported separately from `active` because the two answer different
+    // questions. `active` says the chain is wired; `warning` says how much of
+    // it will actually refuse anything. Four active and four warning policies
+    // enforce nothing, and a boot line showing only `active = 4` would read as
+    // fully protected.
+    pub warning: usize,
 }
 
-// Why: `GovernanceConfig::load` cannot fail, so without this the request path
-// silently restores the built-in defaults when the file is unparseable — an
-// operator who edited it to relax a policy gets stricter enforcement than
-// before and no signal. Boot is the last point that can still refuse.
+// Why: an unparseable policy file must fail boot rather than degrade to the
+// built-in defaults — an operator who edited it to relax a policy would get
+// stricter enforcement than before and no signal.
 #[doc(hidden)]
 pub fn check_governance_config(
     services_path: &std::path::Path,
@@ -135,15 +147,30 @@ pub fn check_governance_config(
     use systemprompt::security::policy::GovernanceConfig;
 
     let path = services_path.join("governance/config.yaml");
-    GovernanceConfig::validate(&path)
+    let config = GovernanceConfig::load(&path)
         .map_err(|e| MarketplaceError::config_file(path.display().to_string(), e))?;
-
-    let config = GovernanceConfig::load(&path);
     let active = if config.enabled {
         config.policies.iter().filter(|p| p.enabled).count()
     } else {
         0
     };
+    let warning = if config.enabled {
+        config
+            .policies
+            .iter()
+            .filter(|p| p.enabled && p.mode.is_warn())
+            .count()
+    } else {
+        0
+    };
+    if warning > 0 {
+        tracing::warn!(
+            path = %path.display(),
+            active,
+            warning,
+            "governance policies are in warn mode: they evaluate and audit but refuse              nothing. Read them back with `systemprompt infra logs governance report`."
+        );
+    }
     if active == 0 {
         tracing::warn!(
             path = %path.display(),
@@ -151,7 +178,7 @@ pub fn check_governance_config(
             "governance is not enforcing: no policy will run on any request"
         );
     }
-    Ok(GovernanceStatus { active })
+    Ok(GovernanceStatus { active, warning })
 }
 
 struct GatewayCatalog {
@@ -161,23 +188,23 @@ struct GatewayCatalog {
 
 async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<GatewayCatalog, JobError> {
     let profile = systemprompt::config::ProfileBootstrap::get()?;
-    let services_path = &profile.paths.services;
+    let services = systemprompt::loader::ServicesBootstrap::get()?;
+    let gateway_path = std::path::Path::new(&profile.paths.services)
+        .join("ai")
+        .join("gateway.yaml");
 
-    let services = systemprompt::loader::ServicesBootstrap::get()
-        // Why: lint-ok: error-adapt — ConfigLoadError is core's variant-less loader error.
-        .map_err(|e| MarketplaceError::Internal(format!("services tree is not loaded: {e}")))?;
     let route_ids = dispatchable_route_ids(services);
     let registered = registered_routes(&route_ids);
     let id_refs: Vec<&str> = route_ids.iter().map(String::as_str).collect();
 
     // Why: reconciling against an empty set would delete every gateway_route
     // entity and cascade away every route grant. A services tree with no
-    // gateway is a legitimate configuration, not a signal to empty the
-    // catalog, so leave it untouched and let step 2 run unenforced.
+    // gateway is a legitimate configuration, not a signal to empty the catalog,
+    // so leave it untouched and let step 2 run unenforced.
     if id_refs.is_empty() {
         tracing::warn!(
-            services = %services_path,
-            "services tree declares no dispatchable gateway routes — leaving the \
+            gateway = %gateway_path.display(),
+            "services config declares no dispatchable gateway routes — leaving the \
              gateway_route catalog untouched and not enforcing route ids in roles.yaml"
         );
         return Ok(GatewayCatalog {
@@ -186,7 +213,7 @@ async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<GatewayCatalog, 
         });
     }
 
-    let source = format!("services:{services_path}");
+    let source = format!("services:{}", gateway_path.display());
     let repo = systemprompt::security::authz::AccessControlRepository::new(db_pool)
         .map_err(|e| MarketplaceError::Internal(e.to_string()))?;
     let report =

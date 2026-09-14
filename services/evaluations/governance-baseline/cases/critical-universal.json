@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "critical-universal",
+  "skill_id": "inspect_ai_requests",
+  "partition": "development",
+  "prompt": "Are there no blockers or emergencies anywhere?",
+  "expected_behavior": [
+    "Scope absence claims to the fields and records read.",
+    "Do not claim exhaustive absence from a partial result."
+  ],
+  "fixture": "partial",
+  "assertions": [
+    "no_unsupported_universal_claim"
+  ]
+}

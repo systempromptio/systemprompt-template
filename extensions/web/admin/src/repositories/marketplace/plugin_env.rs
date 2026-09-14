@@ -17,14 +17,14 @@ pub struct PluginEnvVar {
 pub async fn list_plugin_env_vars(
     pool: &PgPool,
     user_id: &UserId,
-    plugin_id: &str,
+    plugin_id: &PluginId,
 ) -> Result<Vec<PluginEnvVar>, MarketplaceError> {
     let rows = sqlx::query_as!(
         PluginEnvVar,
         "SELECT id, plugin_id AS \"plugin_id: PluginId\", var_name, var_value, is_secret \
          FROM plugin_env_vars WHERE user_id = $1 AND plugin_id = $2 ORDER BY var_name",
         user_id.as_str(),
-        plugin_id,
+        plugin_id.as_str(),
     )
     .fetch_all(pool)
     .await?;
@@ -34,7 +34,7 @@ pub async fn list_plugin_env_vars(
             PluginEnvVar,
             "SELECT id, plugin_id AS \"plugin_id: PluginId\", var_name, var_value, is_secret \
              FROM plugin_env_vars WHERE user_id = 'admin' AND plugin_id = $1 ORDER BY var_name",
-            plugin_id,
+            plugin_id.as_str(),
         )
         .fetch_all(pool)
         .await

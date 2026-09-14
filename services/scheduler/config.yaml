@@ -12,6 +12,13 @@
 scheduler:
   enabled: true
   jobs:
+    - name: evaluation_supervisor
+      extension: core
+      owner: admin
+      schedule: "*/5 * * * * *"
+      enabled: true
+      scope: node
+
     - name: usage_anomaly
       extension: web
       owner: admin

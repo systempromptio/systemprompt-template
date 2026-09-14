@@ -7,6 +7,7 @@
 //! so `configured` and `has_runtime` are separate fields rather than one.
 
 use serde::Serialize;
+use systemprompt::identifiers::{McpExecutionId, McpServerId};
 
 use crate::handlers::catalog::sorting::SortHeaderView;
 use crate::handlers::ssr::list_view::Pagination;
@@ -93,7 +94,7 @@ pub(super) struct McpToolRow {
 // Why: One line of the call log.
 #[derive(Debug, Clone, Serialize)]
 pub(super) struct McpExecutionRowView {
-    pub execution_id: String,
+    pub execution_id: McpExecutionId,
     pub short_id: String,
     pub tool_name: String,
     pub status: String,
@@ -148,7 +149,7 @@ pub(super) struct McpDetailData {
     pub title: String,
     pub subtitle: String,
     pub breadcrumbs: Vec<BreadcrumbView>,
-    pub id: String,
+    pub id: McpServerId,
     pub configured: bool,
     pub enabled: bool,
     pub status_label: &'static str,

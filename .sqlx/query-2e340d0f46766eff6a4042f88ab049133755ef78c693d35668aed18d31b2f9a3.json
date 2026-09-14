@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE ai_requests\n            SET status = 'failed', error_message = $2,\n                completed_at = COALESCE(completed_at, CURRENT_TIMESTAMP),\n                updated_at = CURRENT_TIMESTAMP\n            WHERE status = 'pending'\n              AND created_at < CURRENT_TIMESTAMP - make_interval(secs => $1::double precision)\n            RETURNING id, user_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "user_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Float8",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "2e340d0f46766eff6a4042f88ab049133755ef78c693d35668aed18d31b2f9a3"
+}

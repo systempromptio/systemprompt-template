@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE eval_experiments e SET status='completed' WHERE owner_id=$1 AND status='running' AND NOT EXISTS(SELECT 1 FROM eval_executions x WHERE x.experiment_id=e.id AND x.status IN ('queued','running','awaiting_approval'))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9bb42039d0a0e0dce32778eb0d1ef7dd84c05f369be1f13afefd2e3abc901132"
+}

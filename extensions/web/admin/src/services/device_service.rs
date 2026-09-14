@@ -5,7 +5,7 @@ use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
 use crate::error::{AdminError, AdminResult};
-use crate::repositories::bridge::{self, BridgeIssuedApiKey, EnrollDeviceParams, EnrolledDevice};
+use crate::repositories::bridge::{self, EnrollDeviceParams, EnrolledDevice, IssuedApiKey};
 
 pub(crate) struct EnrollDeviceInput<'a> {
     pub name: &'a str,
@@ -38,13 +38,13 @@ pub(crate) async fn issue_pat(
     user_id: &UserId,
     name: &str,
     expires_at: Option<DateTime<Utc>>,
-) -> AdminResult<BridgeIssuedApiKey> {
-    let issued = bridge::issue_bridge_api_key(pool, user_id, name, expires_at).await?;
+) -> AdminResult<IssuedApiKey> {
+    let issued = bridge::issue_api_key(pool, user_id, name, expires_at).await?;
     Ok(issued)
 }
 
 pub(crate) async fn revoke_pat(pool: &PgPool, user_id: &UserId, id: &str) -> AdminResult<()> {
-    let revoked = bridge::revoke_bridge_api_key(pool, user_id, id).await?;
+    let revoked = bridge::revoke_api_key(pool, user_id, id).await?;
     if !revoked {
         return Err(AdminError::NotFound("PAT not found".to_owned()));
     }

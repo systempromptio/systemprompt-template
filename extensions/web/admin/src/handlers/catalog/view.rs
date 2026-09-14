@@ -8,6 +8,7 @@
 //! module owns the row/page shaping and the cross-link URL construction.
 
 use std::collections::HashMap;
+use systemprompt::identifiers::PluginId;
 
 use serde::Serialize;
 use sqlx::PgPool;
@@ -30,7 +31,7 @@ pub(super) struct HookRef {
 
 #[derive(Debug, Serialize)]
 pub(super) struct PluginListRow {
-    pub(super) id: String,
+    pub(super) id: PluginId,
     pub(super) name: String,
     pub(super) description: String,
     pub(super) category: String,
@@ -102,7 +103,7 @@ pub(super) struct PluginDetailData {
     pub(super) page: &'static str,
     pub(super) title: String,
     pub(super) breadcrumbs: Vec<crate::handlers::ssr::types::BreadcrumbView>,
-    pub(super) id: String,
+    pub(super) id: PluginId,
     pub(super) name: String,
     pub(super) description: String,
     pub(super) version: String,

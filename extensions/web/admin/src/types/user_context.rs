@@ -3,7 +3,7 @@
 use serde::Serialize;
 use systemprompt::identifiers::{Email, SessionId, UserId};
 
-use super::role::{ROLES_CONSOLE, ROLES_MANAGE, ROLES_PLATFORM, Role, has_any};
+use super::role::{ROLES_CONSOLE, ROLES_PLATFORM, Role, has_any};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct UserContext {
@@ -11,7 +11,6 @@ pub struct UserContext {
     pub username: String,
     pub email: Email,
     pub roles: Vec<String>,
-    pub department: String,
     // Why: the groups and projects the caller belongs to, resolved once per
     // request. Listings narrow to these for a caller who may not see the
     // whole estate, so they are part of identity rather than something each
@@ -39,7 +38,7 @@ pub fn roles_grant_console(roles: &[String]) -> bool {
 
 #[must_use]
 pub fn roles_grant_manage(roles: &[String]) -> bool {
-    has_any(roles, ROLES_MANAGE)
+    systemprompt_mcp_shared::access_policy::roles_grant_manage(roles)
 }
 
 #[must_use]

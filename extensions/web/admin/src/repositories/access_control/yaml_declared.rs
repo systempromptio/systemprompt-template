@@ -136,13 +136,14 @@ pub fn load_declared_rules(services_path: &Path) -> DeclaredRules {
         &mut out,
     );
     read_marketplaces(services_path, &mut out);
-    read_slack_apps(services_path, &mut out);
     out
 }
 
 fn parse<T: for<'de> Deserialize<'de>>(path: &Path) -> Option<T> {
     let text = std::fs::read_to_string(path).ok()?;
-    serde_yaml::from_str::<T>(&text).ok()
+    serde_yaml::from_str::<T>(&text)
+        .inspect_err(|e| tracing::warn!(error = %e, path = %path.display(), "declared access rules: malformed yaml"))
+        .ok()
 }
 
 #[derive(Deserialize)]
@@ -260,42 +261,6 @@ fn read_marketplaces(services_path: &Path, out: &mut DeclaredRules) {
         for rule in &doc.marketplace.access.rules {
             for value in &rule.values {
                 out.push("marketplace", &target, &rule.rule_type, value);
-            }
-        }
-    }
-}
-
-#[derive(Deserialize)]
-struct SlackDoc {
-    #[serde(default)]
-    slack_apps: std::collections::HashMap<String, SlackApp>,
-}
-
-#[derive(Deserialize)]
-struct SlackApp {
-    workspace_id: String,
-    #[serde(default)]
-    authz: SlackAuthz,
-}
-
-#[derive(Default, Deserialize)]
-struct SlackAuthz {
-    #[serde(default)]
-    allowed_roles: Vec<String>,
-}
-
-fn read_slack_apps(services_path: &Path, out: &mut DeclaredRules) {
-    let Ok(entries) = std::fs::read_dir(services_path.join("slack")) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let Some(doc) = parse::<SlackDoc>(&entry.path()) else {
-            continue;
-        };
-        for app in doc.slack_apps.into_values() {
-            let target = Target::Id(app.workspace_id);
-            for role in &app.authz.allowed_roles {
-                out.push("slack_workspace", &target, "role", role);
             }
         }
     }

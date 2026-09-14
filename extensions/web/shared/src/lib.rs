@@ -25,10 +25,9 @@ pub mod ids;
 pub mod models;
 pub mod pagination;
 pub mod registry;
-pub mod session_cookies;
 mod utils;
 
-pub use ids::{MarketplaceId, PluginId, RankTier, RequestId, TierLevel, TraceId, UserId};
+pub use ids::{GroupId, MarketplaceId, PluginId, ProjectId, RankTier, TierLevel, TraceId, UserId};
 
 pub use utils::html_escape;
 

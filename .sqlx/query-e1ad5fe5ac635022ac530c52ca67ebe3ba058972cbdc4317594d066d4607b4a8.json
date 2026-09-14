@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT a.status,r.operation_digest AS \"operation_digest?\",r.output AS \"output?\" FROM eval_execution_approvals a LEFT JOIN eval_approved_operation_receipts r ON r.approval_id=a.id WHERE a.id=$1 AND a.owner_id=$2 AND a.execution_id=$3 FOR UPDATE OF a",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_execution_approvals",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "operation_digest?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "eval_approved_operation_receipts",
+            "name": "operation_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "output?",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "eval_approved_operation_receipts",
+            "name": "output"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e1ad5fe5ac635022ac530c52ca67ebe3ba058972cbdc4317594d066d4607b4a8"
+}

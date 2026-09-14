@@ -11,7 +11,6 @@
 //! only one that alerts.
 
 use sqlx::PgPool;
-use sqlx::types::chrono;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
@@ -86,15 +85,15 @@ impl UsageAnomalyJob {
     }
 }
 
-// Why: a metric past its threshold is persisted and logged once per window.
+/// A metric past its threshold. Public for the unit tests behind `internals`.
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct Finding {
+pub struct Finding {
     pub metric: &'static str,
     pub observed: i64,
     pub baseline: i64,
 }
 
-pub(crate) fn evaluate(
+pub fn evaluate(
     metric: &'static str,
     observed: i64,
     baseline: i64,
@@ -182,12 +181,16 @@ fn alert(finding: Finding, obs: &HourlyObservation) {
     } else {
         (finding.observed.to_string(), finding.baseline.to_string())
     };
+    // Why: the Slack delivery this used to fan out to is gone with the rest of
+    // the Slack integration. The finding still has to leave a trace a human can
+    // find, so it warns on the transition — the first-detection rule above
+    // keeps a recurring condition from warning on every observation.
     tracing::warn!(
-        metric = finding.metric,
-        window_start = %obs.window_start,
-        observed,
-        baseline,
-        "Usage anomaly detected; inspect the request log"
+        metric = %finding.metric,
+        window_start = %obs.window_start.format("%Y-%m-%d %H:%M UTC"),
+        %observed,
+        %baseline,
+        "usage anomaly: check /admin/analytics?tab=spend and the request log"
     );
 }
 
@@ -210,7 +213,7 @@ impl Job for UsageAnomalyJob {
     }
 
     fn description(&self) -> &'static str {
-        "Hourly spike detection over gateway requests/cost/errors, persisted and logged"
+        "Hourly spike detection over gateway requests/cost/errors, persisted and Slack-alerted"
     }
 
     // Why: five past the hour, so the hour being judged is complete and the

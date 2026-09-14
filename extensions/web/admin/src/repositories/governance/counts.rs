@@ -1,4 +1,5 @@
 //! Allow/deny/secret rollups: overall and per-policy, lifetime and windowed.
+#![cfg(feature = "governance-ssr")]
 
 use sqlx::PgPool;
 

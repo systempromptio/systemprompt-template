@@ -13,6 +13,8 @@ use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
+use systemprompt::identifiers::MarketplaceId;
+use systemprompt_web_shared::GroupId;
 
 use crate::error::AdminResult;
 use crate::repositories::groups::marketplaces as repo;
@@ -20,13 +22,13 @@ use crate::types::groups::SetGroupMarketplacesRequest;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct GroupMarketplacesResponse {
-    pub group_id: String,
-    pub marketplace_ids: Vec<String>,
+    pub group_id: GroupId,
+    pub marketplace_ids: Vec<MarketplaceId>,
 }
 
 pub(crate) async fn list_group_marketplaces_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(group_id): Path<String>,
+    Path(group_id): Path<GroupId>,
 ) -> AdminResult<Response> {
     let marketplace_ids = repo::list_group_marketplace_ids(&pool, &group_id).await?;
     Ok(Json(GroupMarketplacesResponse {
@@ -38,7 +40,7 @@ pub(crate) async fn list_group_marketplaces_handler(
 
 pub(crate) async fn set_group_marketplaces_handler(
     State(pool): State<Arc<PgPool>>,
-    Path(group_id): Path<String>,
+    Path(group_id): Path<GroupId>,
     Json(body): Json<SetGroupMarketplacesRequest>,
 ) -> AdminResult<Response> {
     super::refuse_missing_group(&pool, &group_id).await?;

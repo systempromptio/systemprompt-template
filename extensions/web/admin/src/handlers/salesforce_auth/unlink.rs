@@ -1,5 +1,5 @@
 //! `POST /admin/api/profile/salesforce/unlink` — drop the caller's Salesforce
-//! username mapping.
+//! username mappings for every org.
 
 use axum::extract::State;
 use axum::response::{IntoResponse, Response};
@@ -17,7 +17,7 @@ pub(crate) async fn salesforce_unlink(
 ) -> AdminResult<Response> {
     // Why: an absent mapping is not an error — the caller asked for it gone and
     // it is gone.
-    salesforce_identity::delete_identity(&pool, &user_ctx.user_id).await?;
+    salesforce_identity::delete_all_identities(&pool, &user_ctx.user_id).await?;
     authz::salesforce::invalidate(&user_ctx.user_id).await;
     tracing::info!(user_id = %user_ctx.user_id, "Salesforce identity unlinked");
     Ok(Json(serde_json::json!({ "unlinked": true })).into_response())

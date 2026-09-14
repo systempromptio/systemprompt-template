@@ -6,7 +6,7 @@ use crate::repositories::users::{
     connector_accounts as accounts, connector_credentials as credentials,
 };
 use crate::services::connector_accounts as service;
-use crate::services::connector_oauth::{self as oauth, Provider};
+use crate::services::connector_oauth::{self as oauth, Consent, Provider};
 use axum::Json;
 use axum::extract::{Path, Query, State};
 use axum::http::HeaderMap;
@@ -40,14 +40,21 @@ pub(super) async fn start(
             "Sign in to the same Systemprompt account as your bridge".into(),
         ));
     }
-    service::require_entitlement(&pool, &user.user_id, provider).await?;
+    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
     let mut tx = pool.begin().await?;
     let account = accounts::get_locked_account(&mut tx, &user.user_id, provider.slug()).await?;
     tx.commit().await?;
     let state = URL_SAFE_NO_PAD.encode(rand::rng().random::<[u8; 32]>());
     let verifier = URL_SAFE_NO_PAD.encode(rand::rng().random::<[u8; 32]>());
-    let (url, mut grant) =
-        oauth::authorize(user.user_id.as_str(), provider, &state, verifier).await?;
+    let (url, mut grant) = oauth::authorize(
+        Consent {
+            user: user.user_id.as_str(),
+            state: &state,
+            verifier,
+        },
+        provider.clone(),
+    )
+    .await?;
     grant.session = user.session_id.map(|s| s.to_string());
     grant.generation = account.generation;
     grant.resource_id = params.resource_id.unwrap_or_default();
@@ -76,13 +83,13 @@ pub(super) async fn callback(
     Query(params): Query<Callback>,
 ) -> AdminResult<Response> {
     let user = live_user(&pool, &headers, false).await?;
-    service::require_entitlement(&pool, &user.user_id, provider).await?;
+    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
     let row = credentials::consume_state(&pool, &user.user_id, provider.slug(), &params.state)
         .await?
         .ok_or_else(|| {
             AdminError::Unauthorized("Connector consent expired or already consumed".into())
         })?;
-    let mut grant = oauth::open(&row, &user.user_id, provider)?;
+    let mut grant = oauth::open(&row, &user.user_id, provider.clone())?;
     if grant.session != user.session_id.as_ref().map(ToString::to_string) {
         return Err(AdminError::Unauthorized(
             "Login changed during connector consent".into(),
@@ -131,8 +138,8 @@ pub(super) async fn token(
         ));
     }
     let user = live_user(&pool, &headers, false).await?;
-    service::require_entitlement(&pool, &user.user_id, provider).await?;
-    let access_token = oauth::verified_token(&pool, &user.user_id, provider, false).await?;
+    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
+    let access_token = oauth::verified_token(&pool, &user.user_id, provider.clone(), false).await?;
     // Why: The descriptor uses an empty scheme: the trusted adapter supplies the
     // complete header so personal Atlassian tokens can use Basic authentication.
     Ok((

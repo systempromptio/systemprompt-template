@@ -242,7 +242,7 @@ pub struct HookDetail {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PluginDetail {
-    pub id: String,
+    pub id: PluginId,
     pub name: String,
     pub description: String,
     pub version: String,

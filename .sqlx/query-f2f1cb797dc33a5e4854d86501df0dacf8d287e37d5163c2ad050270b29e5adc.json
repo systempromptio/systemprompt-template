@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT provenance,digest FROM managed_source_snapshots WHERE owner_id=$1 AND id=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "provenance",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "managed_source_snapshots",
+            "name": "provenance"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_source_snapshots",
+            "name": "digest"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "f2f1cb797dc33a5e4854d86501df0dacf8d287e37d5163c2ad050270b29e5adc"
+}

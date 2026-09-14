@@ -12,6 +12,7 @@
 //! first would be the single worst failure this table exists to prevent.
 
 use std::sync::Arc;
+use systemprompt::identifiers::CallId;
 
 use axum::Json;
 use axum::extract::{Extension, Path, Query, State};
@@ -21,7 +22,9 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
 use crate::error::{AdminError, AdminResult};
-use crate::repositories::governance::approvals::{find_approval, update_approval_decision};
+use crate::repositories::governance::approvals::{
+    ApprovalVerdict, find_approval, update_approval_decision,
+};
 use crate::types::UserContext;
 
 const NOTE_LIMIT: usize = 500;
@@ -34,7 +37,7 @@ pub(crate) struct DecideQuery {
 
 #[derive(Debug, Serialize)]
 pub(crate) struct DecisionResponse {
-    pub call_id: String,
+    pub call_id: CallId,
     pub status: &'static str,
     pub decided_by: String,
 }
@@ -42,7 +45,7 @@ pub(crate) struct DecisionResponse {
 pub(crate) async fn approve_handler(
     user_ctx: Extension<UserContext>,
     pool: State<Arc<PgPool>>,
-    call_id: Path<String>,
+    call_id: Path<CallId>,
     query: Query<DecideQuery>,
 ) -> AdminResult<Response> {
     decide(user_ctx, pool, call_id, query, "approved").await
@@ -51,7 +54,7 @@ pub(crate) async fn approve_handler(
 pub(crate) async fn deny_handler(
     user_ctx: Extension<UserContext>,
     pool: State<Arc<PgPool>>,
-    call_id: Path<String>,
+    call_id: Path<CallId>,
     query: Query<DecideQuery>,
 ) -> AdminResult<Response> {
     decide(user_ctx, pool, call_id, query, "denied").await
@@ -60,7 +63,7 @@ pub(crate) async fn deny_handler(
 async fn decide(
     Extension(user_ctx): Extension<UserContext>,
     State(pool): State<Arc<PgPool>>,
-    Path(call_id): Path<String>,
+    Path(call_id): Path<CallId>,
     Query(query): Query<DecideQuery>,
     status: &'static str,
 ) -> AdminResult<Response> {
@@ -90,10 +93,12 @@ async fn decide(
     let changed = update_approval_decision(
         &pool,
         &call_id,
-        status,
-        &user_ctx.user_id,
-        &user_ctx.username,
-        note.as_deref(),
+        ApprovalVerdict {
+            status,
+            approver: &user_ctx.user_id,
+            approver_username: &user_ctx.username,
+            note: note.as_deref(),
+        },
     )
     .await?;
 

@@ -45,15 +45,17 @@ async fn main() -> Result<()> {
         profile.runtime.environment,
         profile.target
     );
-    SecretsBootstrap::init().context("Failed to initialize secrets")?;
-    init_config().context("Failed to initialize configuration")?;
+    SecretsBootstrap::init()
+        .await
+        .context("Failed to initialize secrets")?;
+    init_config(None).context("Failed to initialize configuration")?;
 
     let ctx = AppContext::new()
         .await
         .context("Failed to initialize application context")?;
     let pool = ctx
         .db_pool()
-        .write_pool_arc()
+        .pool_arc()
         .context("dev login needs a Postgres pool")?;
 
     let Some(user_id) = find_active_user_id_by_login(&pool, &cli.user).await? else {
