@@ -1,0 +1,16 @@
+:root { color-scheme: light; font-family: system-ui, sans-serif; color: #17212f; background: #f5f7fa; }
+body { margin: 0; }
+main { max-width: 72rem; margin: 2rem auto; padding: 2rem; background: white; border: 1px solid #d7dee7; border-radius: .75rem; }
+h1, h2, h3 { line-height: 1.25; }
+p, li { line-height: 1.6; }
+a { color: #154c9c; }
+section, form { border-top: 1px solid #d7dee7; margin-top: 2rem; padding-top: 1rem; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 38rem; overflow: auto; padding: 1rem; background: #f3f5f8; border-radius: .4rem; line-height: 1.5; }
+details { margin: 1rem 0; }
+summary { cursor: pointer; font-weight: 600; padding: .5rem 0; }
+label { display: block; font-weight: 600; }
+textarea { display: block; box-sizing: border-box; width: 100%; min-height: 7rem; margin: .5rem 0 1rem; padding: .75rem; font: inherit; border: 1px solid #77869b; border-radius: .4rem; }
+button { padding: .75rem 1rem; margin: .3rem .5rem .3rem 0; border: 1px solid #154c9c; border-radius: .4rem; background: white; color: #154c9c; font: inherit; cursor: pointer; }
+button[value=approve] { background: #154c9c; color: white; }
+:focus-visible { outline: 3px solid #e29618; outline-offset: 3px; }
+@media (max-width: 48rem) { main { margin: 0; padding: 1rem; border-radius: 0; } }
