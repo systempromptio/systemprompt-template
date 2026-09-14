@@ -13,10 +13,9 @@ use systemprompt_web_admin::gateway_safety::SecretsScanner;
 const TOKEN: &str = "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 fn configured_scanner() -> SecretsScanner {
-    let config = GovernanceConfig::parse(include_str!(
-        "../../../../services/governance/config.yaml"
-    ))
-    .unwrap();
+    let config =
+        GovernanceConfig::parse(include_str!("../../../../services/governance/config.yaml"))
+            .unwrap();
     let engine = GovernanceEngine::from_config(&config).unwrap();
     SecretsScanner::with_scanner(engine.secret_scanner().unwrap().clone())
 }
