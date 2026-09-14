@@ -1,0 +1,27 @@
+name: Core checkout
+description: >-
+  Check out systempromptio/systemprompt-core at bridge/CORE_REF inside the
+  workspace and link it as the ../systemprompt-core sibling that both the
+  [patch.crates-io] blocks and the bridge/ workspace resolve by path.
+runs:
+  using: composite
+  steps:
+    - name: Read pinned core ref
+      id: core
+      shell: bash
+      run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
+    - uses: actions/checkout@v4
+      with:
+        repository: systempromptio/systemprompt-core
+        ref: ${{ steps.core.outputs.ref }}
+        path: .vendor/systemprompt-core
+    - name: Link the sibling path bridge/ resolves
+      shell: bash
+      run: |
+        ln -sfn "$GITHUB_WORKSPACE/.vendor/systemprompt-core" "$GITHUB_WORKSPACE/../systemprompt-core"
+        echo "core ${{ steps.core.outputs.ref }} at .vendor/systemprompt-core (sibling link in place)"
+        if grep -qE '^\[patch\.crates-io\]' Cargo.toml; then
+          echo "[patch.crates-io] active — server crates resolve from the ../systemprompt-core link"
+        else
+          echo "[patch.crates-io] commented — server crates resolve from crates.io; only bridge/ uses the checkout"
+        fi

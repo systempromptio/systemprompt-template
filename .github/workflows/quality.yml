@@ -38,6 +38,7 @@ jobs:
       # Clippy runs on the pinned nightly (channel + clippy component) declared
       # in rust-toolchain.toml, which `rustup show` installs — so lint results
       # match local `just clippy` with no channel duplicated here.
+      - uses: ./.github/actions/core-checkout
       - run: rustup show
       - uses: Swatinem/rust-cache@v2
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
@@ -51,6 +52,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
+      - uses: ./.github/actions/core-checkout
       - run: rustup show
       - uses: Swatinem/rust-cache@v2
       - run: cargo doc --workspace --no-deps --locked

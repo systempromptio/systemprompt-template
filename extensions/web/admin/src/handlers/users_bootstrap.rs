@@ -1,9 +1,9 @@
 //! `POST /users` — operator-created accounts and their credential bootstrap.
 //!
 //! Split from `users.rs` at the 300-line ceiling. A user created here gets no
-//! credential of its own: Systemprompt SSO is the only door, so the row waits to be
-//! adopted by the first assertion carrying the matching email and a mapped
-//! Active Directory group.
+//! credential of its own: Systemprompt SSO is the only door, so the row waits
+//! to be adopted by the first assertion carrying the matching email and a
+//! mapped Active Directory group.
 
 use std::sync::Arc;
 

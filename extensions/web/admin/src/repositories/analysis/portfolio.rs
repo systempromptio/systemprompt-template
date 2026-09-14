@@ -1,4 +1,5 @@
-//! Adapter from Systemprompt's authenticated hook evidence to core resource metrics.
+//! Adapter from Systemprompt's authenticated hook evidence to core resource
+//! metrics.
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;

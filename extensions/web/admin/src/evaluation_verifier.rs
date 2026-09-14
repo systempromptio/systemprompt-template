@@ -1,4 +1,5 @@
-//! Deterministic verifier for Systemprompt's immutable authored evaluation suite.
+//! Deterministic verifier for Systemprompt's immutable authored evaluation
+//! suite.
 
 use std::collections::BTreeMap;
 

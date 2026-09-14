@@ -42,6 +42,7 @@ jobs:
       # (rustfmt, clippy, llvm-tools). `rustup show` installs exactly that
       # toolchain, so fmt runs on the same version developers use locally with
       # no channel duplicated in this file.
+      - uses: ./.github/actions/core-checkout
       - run: rustup show
       - run: cargo fmt --all -- --check
       # tests/ is excluded from the root workspace, so --all does not reach it.
@@ -54,6 +55,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
+      - uses: ./.github/actions/core-checkout
       - run: rustup show
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --workspace --locked
@@ -65,6 +67,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.ref }}
+      - uses: ./.github/actions/core-checkout
       - run: rustup show
       - uses: Swatinem/rust-cache@v2
       # Every extension crate that invokes a sqlx query macro must ship a
@@ -120,6 +123,7 @@ jobs:
             echo "::notice::tests/Cargo.toml not present yet; skipping test job."
           fi
 
+      - uses: ./.github/actions/core-checkout
       - run: rustup show
         if: steps.tests.outputs.present == 'true'
       - uses: Swatinem/rust-cache@v2
@@ -199,6 +203,7 @@ jobs:
           ref: ${{ inputs.ref || github.ref }}
       - uses: extractions/setup-just@v2
       - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends clang mold libpq-dev libssl-dev pkg-config python3 postgresql-client
+      - uses: ./.github/actions/core-checkout
       - run: rustup show
       - uses: Swatinem/rust-cache@v2
         with:
