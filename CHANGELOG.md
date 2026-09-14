@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Security
+
+- The template owns its starter `secret_scan.patterns` catalog, including separate AWS access-key id and secret-value rules. Core supplies the validated scanner and recovery engine without activating vendor signatures. The response scanner consumes the same compiled catalog as ingress governance.
+
 ## [0.49.0] - 2026-09-09
 
 ### Security

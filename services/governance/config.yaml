@@ -1,7 +1,116 @@
 governance:
+  mode: enforce
   policies:
   - id: secret_scan
     enabled: true
+    patterns:
+      - id: aws-access-key
+        name: AWS Access Key
+        regex: '\b(?:AKIA|ASIA)[0-9A-Z]{16}\b'
+      - id: aws-secret-key
+        name: AWS Secret Key
+        regex: '^[A-Za-z0-9/+=]{40}$'
+        field: aws_secret_access_key
+        redact_whole_value: true
+      - id: github-token-classic
+        name: GitHub Token (classic)
+        regex: '\bghp_[A-Za-z0-9]{36,}'
+      - id: github-token-fine-grained
+        name: GitHub Token (fine-grained)
+        regex: '\bgithub_pat_[A-Za-z0-9_]{22,}'
+      - id: github-oauth
+        name: GitHub OAuth Token
+        regex: '\bgho_[A-Za-z0-9]{36,}'
+      - id: github-app-user-to-server
+        name: GitHub App User-to-Server Token
+        regex: '\bghu_[A-Za-z0-9]{36,}'
+      - id: github-app-server-to-server
+        name: GitHub App Server-to-Server Token
+        regex: '\bghs_[A-Za-z0-9]{36,}'
+      - id: github-app-refresh
+        name: GitHub App Refresh Token
+        regex: '\bghr_[A-Za-z0-9]{36,}'
+      - id: gitlab-token
+        name: GitLab Token
+        regex: '\bglpat-[A-Za-z0-9_-]{20,}'
+      - id: slack-bot-token
+        name: Slack Bot Token
+        regex: '\bxoxb-[0-9A-Za-z-]{10,}'
+      - id: slack-user-token
+        name: Slack User Token
+        regex: '\bxoxp-[0-9A-Za-z-]{10,}'
+      - id: slack-webhook
+        name: Slack Webhook
+        regex: 'hooks\.slack\.com/services/T[0-9A-Za-z_]+/B[0-9A-Za-z_]+/[0-9A-Za-z_]+'
+      - id: stripe-secret-key
+        name: Stripe Secret Key
+        regex: '\bsk_live_[A-Za-z0-9]{16,}'
+      - id: stripe-restricted-key
+        name: Stripe Restricted Key
+        regex: '\brk_live_[A-Za-z0-9]{16,}'
+      - id: google-api-key
+        name: Google API Key
+        regex: '\bAIza[0-9A-Za-z_-]{35}'
+      - id: anthropic-api-key
+        name: Anthropic API Key
+        regex: '\bsk-ant-[A-Za-z0-9_-]{20,}'
+      - id: openai-api-key
+        name: OpenAI API Key
+        regex: '\bsk-proj-[A-Za-z0-9_-]{20,}'
+      - id: twilio-auth-token
+        name: Twilio Auth Token
+        field: twilio_auth_token
+        regex: '.+'
+        redact_whole_value: true
+      - id: sendgrid-api-key
+        name: SendGrid API Key
+        regex: '\bSG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}'
+      - id: mailgun-api-key
+        name: Mailgun API Key
+        regex: '\bkey-[a-f0-9]{32}\b'
+      - id: heroku-api-key
+        name: Heroku API Key
+        field: heroku_api_key
+        regex: '.+'
+        redact_whole_value: true
+      - id: pem-private-key-rsa
+        name: RSA Private Key
+        regex: '-----BEGIN RSA PRIVATE KEY-----'
+        redact_whole_value: true
+      - id: pem-private-key-ec
+        name: EC Private Key
+        regex: '-----BEGIN EC PRIVATE KEY-----'
+        redact_whole_value: true
+      - id: pem-private-key
+        name: PEM Private Key
+        regex: '-----BEGIN PRIVATE KEY-----'
+        redact_whole_value: true
+      - id: generic-password-field
+        name: Generic password assignment
+        regex: '(?i)\bpassword=[^\s&"'']+'
+      - id: generic-secret-field
+        name: Generic secret assignment
+        regex: '(?i)\bsecret=[^\s&"'']+'
+      - id: bearer-token-jwt
+        name: Bearer Token (JWT)
+        regex: 'Bearer eyJ[A-Za-z0-9_-]+'
+        redact_whole_value: true
+      - id: jwt-raw
+        name: JWT Token (raw)
+        regex: '\beyJhbGciOi[A-Za-z0-9_-]+'
+        redact_whole_value: true
+      - id: postgres-url-with-password
+        name: Postgres URL with password
+        regex: '\bpostgres(?:ql)?://[^\s:@/]+:[^\s@/]+@'
+      - id: mysql-url-with-password
+        name: MySQL URL with password
+        regex: '\bmysql://[^\s:@/]+:[^\s@/]+@'
+      - id: mongodb-srv-url
+        name: MongoDB connection string
+        regex: '\bmongodb\+srv://[^\s:@/]+:[^\s@/]+@'
+      - id: redis-url-with-auth
+        name: Redis URL with auth
+        regex: '\bredis://[^\s:@/]+:[^\s@/]+@'
   - id: scope_check
     enabled: true
     admin_only_prefixes:

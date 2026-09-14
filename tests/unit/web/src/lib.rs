@@ -71,6 +71,8 @@ mod page_window;
 #[cfg(test)]
 mod registry_completeness;
 #[cfg(test)]
+mod secret_signature_catalog;
+#[cfg(test)]
 mod secrets_scanner_response;
 #[cfg(test)]
 mod seed_contract;

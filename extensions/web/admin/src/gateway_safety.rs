@@ -1,9 +1,8 @@
 //! Gateway [`SafetyScanner`] implementation for the systemprompt template.
 //!
-//! [`SecretsScanner`] flags plaintext credentials (GitHub / Anthropic / AWS /
-//! Stripe / … tokens, private keys, DB URLs with passwords) leaving the
-//! gateway in a model reply, reusing the same `SECRET_PATTERNS` that the
-//! governance chain applies on the way in. It registers through
+//! [`SecretsScanner`] flags credentials from the installation's configured
+//! catalog leaving the gateway in a model reply. It uses the same compiled
+//! scanner as the governance chain and registers through
 //! `register_safety_scanner!` under the name `secrets`; the gateway runs it
 //! for any policy whose `safety.scanners` lists it and blocks the reply when
 //! `safety.block_response_categories` includes `secret`.
@@ -20,15 +19,24 @@
 use systemprompt::ai::{Finding, SafetyScanner, Severity, register_safety_scanner};
 use systemprompt::models::wire::canonical::{CanonicalRequest, CanonicalResponse};
 
-use systemprompt_security::policy::secrets::scan_str_for_secret;
+use systemprompt_security::policy::{GovernanceEngine, GovernedInput, SecretScanner};
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct SecretsScanner;
+#[derive(Debug, Clone, Default)]
+pub struct SecretsScanner {
+    scanner: Option<SecretScanner>,
+}
 
 impl SecretsScanner {
     #[must_use]
     pub const fn new() -> Self {
-        Self
+        Self { scanner: None }
+    }
+
+    #[must_use]
+    pub const fn with_scanner(scanner: SecretScanner) -> Self {
+        Self {
+            scanner: Some(scanner),
+        }
     }
 }
 
@@ -45,22 +53,45 @@ impl SafetyScanner for SecretsScanner {
     async fn scan_response_final(&self, response: &CanonicalResponse) -> Vec<Finding> {
         let mut findings = Vec::new();
         for unit in response.content_units() {
-            findings.extend(scan(&unit));
+            findings.extend(self.scan(&unit));
         }
         findings
     }
 }
 
-fn scan(text: &str) -> Vec<Finding> {
-    scan_str_for_secret(text).map_or_else(Vec::new, |excerpt| {
-        vec![Finding {
-            phase: "response",
-            severity: Severity::High,
-            category: "secret".to_owned(),
-            excerpt: Some(excerpt),
-            scanner: "secrets",
-        }]
-    })
+impl SecretsScanner {
+    fn scan(&self, text: &str) -> Vec<Finding> {
+        let configured = self.scanner.as_ref();
+        let scanner = configured.or_else(|| match GovernanceEngine::global() {
+            Ok(engine) => engine.secret_scanner(),
+            Err(error) => {
+                tracing::error!(%error, "response secret scanner configuration unavailable");
+                None
+            },
+        });
+        let input = GovernedInput::prompt_text(text.to_owned());
+        scanner
+            .and_then(|scanner| scanner.detect(&input))
+            .map_or_else(Vec::new, |hit| {
+                let observation = hit.observation;
+                vec![Finding {
+                    phase: "response",
+                    severity: if observation {
+                        Severity::Low
+                    } else {
+                        Severity::High
+                    },
+                    category: if observation {
+                        "secret_observation"
+                    } else {
+                        "secret"
+                    }
+                    .to_owned(),
+                    excerpt: Some(format!("{}: {}", hit.pattern.id, hit.redacted)),
+                    scanner: "secrets",
+                }]
+            })
+    }
 }
 
 register_safety_scanner!(SecretsScanner::new, name = "secrets");

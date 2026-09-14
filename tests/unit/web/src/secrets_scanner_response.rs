@@ -7,9 +7,19 @@ use systemprompt::models::wire::canonical::{
     CanonicalContent, CanonicalMessage, CanonicalRequest, CanonicalResponse, Role,
 };
 use systemprompt::models::wire::inspect::{SurfaceBudget, string_leaves};
+use systemprompt_security::policy::{GovernanceConfig, GovernanceEngine};
 use systemprompt_web_admin::gateway_safety::SecretsScanner;
 
 const TOKEN: &str = "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+fn configured_scanner() -> SecretsScanner {
+    let config = GovernanceConfig::parse(include_str!(
+        "../../../../services/governance/config.yaml"
+    ))
+    .unwrap();
+    let engine = GovernanceEngine::from_config(&config).unwrap();
+    SecretsScanner::with_scanner(engine.secret_scanner().unwrap().clone())
+}
 
 fn response(content: Vec<CanonicalContent>) -> CanonicalResponse {
     CanonicalResponse {
@@ -29,7 +39,7 @@ async fn credential_in_a_tool_use_argument_is_flagged() {
         signature: None,
     }]);
 
-    let findings = SecretsScanner::new().scan_response_final(&resp).await;
+    let findings = configured_scanner().scan_response_final(&resp).await;
 
     assert_eq!(findings.len(), 1, "got {findings:?}");
     assert_eq!(findings[0].category, "secret");
@@ -46,7 +56,7 @@ async fn credential_in_a_tool_result_is_flagged() {
         meta: None,
     }]);
 
-    let findings = SecretsScanner::new().scan_response_final(&resp).await;
+    let findings = configured_scanner().scan_response_final(&resp).await;
 
     assert_eq!(findings.len(), 1, "got {findings:?}");
     assert_eq!(findings[0].category, "secret");
@@ -60,7 +70,7 @@ async fn credential_only_in_the_received_surface_is_flagged() {
         SurfaceBudget::default(),
     );
 
-    let findings = SecretsScanner::new().scan_response_final(&resp).await;
+    let findings = configured_scanner().scan_response_final(&resp).await;
 
     assert_eq!(findings.len(), 1, "got {findings:?}");
     assert_eq!(findings[0].category, "secret");

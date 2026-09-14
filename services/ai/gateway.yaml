@@ -21,3 +21,13 @@ gateway:
   allow_unlisted_models: false
   auth_scheme: bearer
   inference_path_prefix: /v1
+  # Where an installed bridge looks for its own updates. The gateway resolves
+  # and proxies the release assets so the client needs no GitHub credential.
+  # No macos slug: the self-updater installs a zipped .app and core publishes
+  # a bare darwin binary, which only the `update` CLI command can install.
+  bridge_releases:
+    repo: systempromptio/systemprompt-core
+    tag_prefix: bridge-v
+    assets:
+      windows: systemprompt-bridge-x86_64-pc-windows-msvc.exe
+      linux-x86_64: systemprompt-bridge-x86_64-unknown-linux-gnu

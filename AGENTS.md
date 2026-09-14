@@ -35,7 +35,7 @@ Full developer guidance for working in this repo lives in [`CLAUDE.md`](./CLAUDE
 
 ## Governance pipeline
 
-Every tool call passes through four synchronous stages before execution: **scope check → secret scan (35+ patterns) → blocklist → rate limit**. Every decision is logged as a structured JSON event with a `trace_id` linking identity → agent → tool call → result → cost.
+Every tool call passes through four synchronous stages before execution: **scope check → configured secret scan → blocklist → rate limit**. Every decision is logged as a structured JSON event with a `trace_id` linking identity → agent → tool call → result → cost.
 
 ## Key facts
 

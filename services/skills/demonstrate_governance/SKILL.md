@@ -16,7 +16,7 @@ Every tool call runs a synchronous four-stage check before it executes (config i
 | Stage | Policy id | What it blocks |
 |-------|-----------|----------------|
 | Scope check | `scope_check` | Non-admin scope calling `mcp__systemprompt__*` tools |
-| Secret scan | `secret_scan` | Plaintext credentials in any tool input (35+ patterns), any scope |
+| Secret scan | `secret_scan` | Plaintext credentials matching the configured catalog, any scope |
 | Blocklist | `tool_blocklist` | Destructive tool names (`delete`, `drop`, `destroy`) for user/non-admin scope |
 | Rate limit | `rate_limit` | More than 300 calls per 60s for one identity |
 
