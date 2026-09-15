@@ -5,6 +5,7 @@ mcp_servers:
     package: systemprompt
     port: 5010
     enabled: true
+    tool_policy: allow
     display_in_web: true
     removable: false
     description: systemprompt.io MCP Server - Execute CLI commands (admin only)

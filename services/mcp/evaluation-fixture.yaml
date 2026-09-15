@@ -5,6 +5,7 @@ mcp_servers:
     package: systemprompt
     port: 5011
     enabled: true
+    tool_policy: allow
     display_in_web: false
     removable: false
     description: Evaluation-only deterministic fixture adapter

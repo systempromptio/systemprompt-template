@@ -6,6 +6,10 @@
 
 - The template owns its starter `secret_scan.patterns` catalog, including separate AWS access-key id and secret-value rules. Core supplies the validated scanner and recovery engine without activating vendor signatures. The response scanner consumes the same compiled catalog as ingress governance.
 
+### Fixed
+
+- Every managed MCP server in `services/mcp/*.yaml` now declares `tool_policy: allow`. Core 0.53.0 makes the key mandatory: a server without it is withheld from the signed bridge manifest and rejected by boot validation, so the deployment would have refused to start. `allow` keeps today's effective behaviour.
+
 ## [0.49.0] - 2026-09-09
 
 ### Security
