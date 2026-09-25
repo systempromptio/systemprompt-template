@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+
 -- Consolidated schema: Plugin usage events
 
 CREATE TABLE IF NOT EXISTS plugin_usage_events (
