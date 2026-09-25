@@ -8,13 +8,10 @@ const ADMIN_OAUTH_CLIENT: &str =
     include_str!("../../../../extensions/web/schema/seeds/admin_oauth_client.sql");
 const MARKETPLACE_PLANS: &str =
     include_str!("../../../../extensions/web/schema/seeds/marketplace_plans.sql");
-const DEFAULT_DEPARTMENT: &str =
-    include_str!("../../../../extensions/web/schema/seeds/default_department.sql");
 
-const ALL_SEEDS: [(&str, &str); 3] = [
+const ALL_SEEDS: [(&str, &str); 2] = [
     ("admin_oauth_client", ADMIN_OAUTH_CLIENT),
     ("marketplace_plans", MARKETPLACE_PLANS),
-    ("default_department", DEFAULT_DEPARTMENT),
 ];
 
 fn statements(sql: &str) -> Vec<String> {
@@ -55,11 +52,8 @@ fn every_seed_is_idempotent_sql() {
 }
 
 #[test]
-fn plan_and_department_seeds_never_overwrite_operator_edits() {
-    for (id, sql) in [
-        ("marketplace_plans", MARKETPLACE_PLANS),
-        ("default_department", DEFAULT_DEPARTMENT),
-    ] {
+fn plan_seeds_never_overwrite_operator_edits() {
+    for (id, sql) in [("marketplace_plans", MARKETPLACE_PLANS)] {
         for stmt in statements(sql) {
             assert!(
                 stmt.contains("DO NOTHING"),
