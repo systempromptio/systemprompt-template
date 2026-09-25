@@ -9,6 +9,9 @@ publish = false
 workspace = true
 
 [dependencies]
+systemprompt-users = { workspace = true }
+systemprompt-content = { workspace = true }
+systemprompt-marketplace = { workspace = true }
 sha2 = { workspace = true }
 systemprompt = { workspace = true, features = ["full"] }
 systemprompt-web-admin = { workspace = true }

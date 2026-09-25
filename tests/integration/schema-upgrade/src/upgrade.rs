@@ -3,6 +3,9 @@
 
 use systemprompt::database::install_extension_schemas;
 use systemprompt::extension::ExtensionRegistry;
+use systemprompt_content as _;
+use systemprompt_marketplace as _;
+use systemprompt_users as _;
 use systemprompt_web_content as _;
 use template_test_common::{TempDb, db_or_skip, empty_db_or_skip, repo_path};
 

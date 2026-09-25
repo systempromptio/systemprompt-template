@@ -9,6 +9,9 @@ publish = false
 workspace = true
 
 [dependencies]
+systemprompt-users = { workspace = true }
+systemprompt-content = { workspace = true }
+systemprompt-marketplace = { workspace = true }
 # `full` links the core extension crates whose `register_extension!` supplies
 # the migrations these repositories query (users, ai_requests, access control,
 # scheduled jobs); the admin crate itself carries the web-owned schema.
