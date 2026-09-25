@@ -131,7 +131,7 @@ async fn a_different_service_id_only_changes_the_server_name() {
 }
 
 #[tokio::test]
-async fn the_server_exposes_exactly_one_cli_tool() {
+async fn the_server_exposes_cli_and_admin_report_tools() {
     let Some(db) = TempDb::create().await else {
         return;
     };
@@ -139,9 +139,14 @@ async fn the_server_exposes_exactly_one_cli_tool() {
 
     let listed = tools::list_tools();
 
-    assert_eq!(listed.len(), 1, "the CLI tool is the whole tool surface");
-    assert_eq!(listed[0].name.as_ref(), tools::SERVER_NAME);
+    assert_eq!(
+        listed.len(),
+        2,
+        "the MCP server exposes its CLI and reporting tools"
+    );
+    assert_eq!(listed[0].name.as_ref(), tools::TOOL_SYSTEMPROMPT);
     assert_eq!(listed[0].title.as_deref(), Some("SystemPrompt CLI"));
+    assert_eq!(listed[1].name.as_ref(), tools::TOOL_ADMIN_REPORT);
 
     db.cleanup().await;
 }
