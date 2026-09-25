@@ -21,8 +21,8 @@ use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
 use sqlx::{AssertSqlSafe, PgPool};
-use systemprompt::extension::ExtensionRegistry;
 use systemprompt::database::{Database, DbPool, install_extension_schemas};
+use systemprompt::extension::ExtensionRegistry;
 use url::Url;
 
 use systemprompt_web_admin as _;
