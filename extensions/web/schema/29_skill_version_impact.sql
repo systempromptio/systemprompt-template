@@ -16,9 +16,7 @@ BEGIN
         RETURN NEW;
     END IF;
     skill_key := replace(split_part(raw_skill, ':', 2), '-', '_');
-    SELECT COALESCE(b.traffic_class,'production') INTO traffic
-      FROM (SELECT 1) seed LEFT JOIN eval_session_bindings b
-        ON b.owner_id=NEW.user_id AND b.session_id=NEW.session_id;
+    traffic := 'production';
     SELECT i.id AS receipt_id,i.resource_id,i.generation,p.revision_id
       INTO receipt
       FROM managed_installation_receipts i
