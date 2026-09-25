@@ -6,6 +6,11 @@
 
 use std::sync::Arc;
 
+use systemprompt_content as _;
+use systemprompt_marketplace as _;
+use systemprompt_security as _;
+use systemprompt_users as _;
+
 use systemprompt::extension::prelude::*;
 use systemprompt::traits::Job;
 
@@ -101,7 +106,6 @@ impl Extension for WebExtension {
             "content",
             "users",
             "authz",
-            "evaluation",
             "managed_resources",
         ]
     }
