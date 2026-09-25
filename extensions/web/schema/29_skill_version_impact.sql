@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS managed_invocation_attributions (
     FOREIGN KEY(owner_id,receipt_id) REFERENCES managed_installation_receipts(owner_id,id),
     UNIQUE(owner_id,invocation_id)
 );
+DROP TRIGGER IF EXISTS managed_invocation_attributions_immutable ON managed_invocation_attributions;
 CREATE TRIGGER managed_invocation_attributions_immutable
     BEFORE UPDATE ON managed_invocation_attributions
     FOR EACH ROW EXECUTE FUNCTION reject_managed_content_update();
