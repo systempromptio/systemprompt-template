@@ -15,6 +15,7 @@
 
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
+use std::path::Path;
 use std::sync::Arc;
 
 use sqlx::{AssertSqlSafe, PgPool};
@@ -225,6 +226,12 @@ async fn copy_template(admin: &PgPool, template: &str, db_name: &str) {
 
 impl TempDb {
     pub async fn create() -> Option<Self> {
+        if !systemprompt::loader::ServicesBootstrap::is_initialized() {
+            let services =
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../services/config/config.yaml");
+            systemprompt::loader::ServicesBootstrap::init_from_path(&services)
+                .expect("bootstrap services config for admin integration tests");
+        }
         let base = server_url()?;
         // CREATE DATABASE cannot run inside a transaction, so the maintenance
         // connection lives on `postgres` and executes autocommit.
