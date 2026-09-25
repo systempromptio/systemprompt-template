@@ -9,11 +9,6 @@ publish = false
 workspace = true
 
 [dependencies]
-toml = { workspace = true }
-reqwest = { workspace = true }
-serde_yaml = { workspace = true }
-serde = { workspace = true }
-template-test-common = { workspace = true }
 sha2 = { workspace = true }
 systemprompt = { workspace = true, features = ["full"] }
 systemprompt-web-admin = { workspace = true }
