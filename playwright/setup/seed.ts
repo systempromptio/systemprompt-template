@@ -14,7 +14,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Client } from 'pg';
-import { seedDepartments } from './seed/departments';
 import { seedEvals } from './seed/evals';
 import { seedGovernance } from './seed/governance';
 import { seedPrincipals } from './seed/principals';
@@ -24,7 +23,6 @@ import { seedTraffic } from './seed/traffic';
 const REPO = join(__dirname, '..', '..');
 
 export { E2E, E2E_SESSIONS, DEPARTMENT_OF } from './seed/principals';
-export { departmentId } from './seed/departments';
 export { EVAL_RUN_ID } from './seed/evals';
 export { T0 } from './seed/kit';
 
@@ -101,7 +99,6 @@ export async function seed(opts: { reset?: boolean } = {}): Promise<void> {
   await db.connect();
   try {
     if (opts.reset) await reset(db);
-    await seedDepartments(db);
     await seedPrincipals(db);
     await seedTokens(db);
     await seedTraffic(db);

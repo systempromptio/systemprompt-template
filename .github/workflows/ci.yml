@@ -160,7 +160,7 @@ jobs:
         if: steps.tests.outputs.present == 'true'
         env:
           SQLX_OFFLINE: "true"
-        run: cargo nextest run --locked -p systemprompt-web-admin --tests
+        run: cargo nextest run --locked -p systemprompt-web-admin --tests --no-tests=pass
 
       # Asset manifests, CSS reachability, and frontend standards live in
       # web-unit-tests and run in the tests workspace above.

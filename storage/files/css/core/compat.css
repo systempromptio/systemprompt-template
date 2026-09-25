@@ -1,0 +1,27 @@
+:root {
+  --sp-animation-fast: var(--sp-transition-fast);
+
+  --sp-brand-50: var(--sp-orange-50);
+  --sp-brand-200: var(--sp-orange-200);
+  --sp-brand-800: var(--sp-orange-800);
+  --sp-brand-950: var(--sp-orange-950);
+
+  --sp-color-accent: var(--sp-color-primary-hover);
+  --sp-color-accent-sky: var(--sp-color-accent-blue);
+  --sp-color-accent-sky-rgb: 56, 189, 248;
+  --sp-color-background: var(--sp-color-bg);
+  --sp-color-black-rgb: 0, 0, 0;
+  --sp-color-white-rgb: 255, 255, 255;
+  --sp-color-success-rgb: 34, 197, 94;
+
+  --sp-font-size-xs: var(--sp-text-xs);
+  --sp-font-size-sm: var(--sp-text-sm);
+  --sp-font-size-lg: var(--sp-text-lg);
+
+  --sp-space-xs: var(--sp-space-1);
+  --sp-space-sm: var(--sp-space-2);
+  --sp-space-md: var(--sp-space-4);
+  --sp-space-lg: var(--sp-space-6);
+  --sp-space-xl: var(--sp-space-8);
+  --sp-space-2xl: var(--sp-space-12);
+}

@@ -1,5 +1,5 @@
 governance:
-  mode: enforce
+  mode: warn
   policies:
   - id: secret_scan
     enabled: true

@@ -5,6 +5,7 @@ use std::sync::Arc;
 use systemprompt::extension::ExtensionRegistry;
 use systemprompt::database::{Database, install_extension_schemas};
 
+use crate::fixtures::{insert_user, unclaimed_email};
 use crate::tempdb::TempDb;
 
 #[tokio::test]
@@ -19,21 +20,23 @@ async fn existing_transcripts_gain_search_before_the_declarative_index() {
             .expect("fresh declarative install creates the search index");
     assert!(fresh_index);
 
-    // Model a populated pre-059 database. Do not execute migration SQL here:
+    // Model a populated pre-066 database. Do not execute migration SQL here:
     // the production installer must discover and run it before its index phase.
     sqlx::query("ALTER TABLE session_transcripts DROP COLUMN search_tsv CASCADE")
         .execute(&*db.pool)
         .await
         .expect("restore pre-search transcript shape");
-    sqlx::query("DELETE FROM extension_migrations WHERE extension_id = 'web' AND version = 59")
+    sqlx::query("DELETE FROM extension_migrations WHERE extension_id = 'web' AND version = 66")
         .execute(&*db.pool)
         .await
-        .expect("mark only migration 059 pending");
+        .expect("mark only migration 066 pending");
+    let owner = insert_user(&db.pool, "upgrade-owner", &unclaimed_email("upgrade")).await;
     sqlx::query(
         "INSERT INTO session_transcripts (id, user_id, session_id, transcript)
-         VALUES ('upgrade-preservation', 'upgrade-owner', 'upgrade-session',
+         VALUES ('upgrade-preservation', $1, 'upgrade-session',
                  '[{\"text\":\"migration preservation\"}]'::jsonb)",
     )
+    .bind(owner.as_str())
     .execute(&*db.pool)
     .await
     .expect("seed an existing transcript");
@@ -47,7 +50,7 @@ async fn existing_transcripts_gain_search_before_the_declarative_index() {
     let restored: bool = sqlx::query_scalar(
         "SELECT to_regclass('idx_session_transcripts_fts') IS NOT NULL
          AND EXISTS (SELECT 1 FROM extension_migrations
-                     WHERE extension_id = 'web' AND version = 59)
+                     WHERE extension_id = 'web' AND version = 66)
          AND EXISTS (SELECT 1 FROM session_transcripts
                      WHERE id = 'upgrade-preservation'
                        AND transcript = '[{\"text\":\"migration preservation\"}]'::jsonb

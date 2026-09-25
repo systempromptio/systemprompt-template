@@ -20,6 +20,9 @@ use systemprompt::extension::ExtensionRegistry;
 use url::Url;
 
 use systemprompt_web_extension as _;
+use systemprompt_marketplace as _;
+use systemprompt_users as _;
+use systemprompt_web_content as _;
 
 pub struct TempDb {
     pub pool: Arc<PgPool>,
@@ -140,6 +143,16 @@ async fn ensure_template(admin: &PgPool, base: &str, template: &str) {
                 .expect("connect to the template database"),
         );
         let database = Database::from_pools(Arc::clone(&pool), Some(Arc::clone(&pool)));
+        let _ = std::hint::black_box(systemprompt_content::ContentExtension);
+        let _ = systemprompt::extension::runtime_config::set_injected_extensions(
+            systemprompt::extension::runtime_config::InjectedExtensions {
+                extensions: vec![
+                    Arc::new(systemprompt_content::ContentExtension),
+                    Arc::new(systemprompt_marketplace::ManagedResourcesExtension),
+                ],
+                ..Default::default()
+            },
+        );
         let registry = ExtensionRegistry::discover().expect("discover extension registrations");
         assert!(
             !registry.is_empty(),

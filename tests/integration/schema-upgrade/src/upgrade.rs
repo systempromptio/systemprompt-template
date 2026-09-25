@@ -1,8 +1,13 @@
 //! Restore the previous release's schema, run the current installer over it,
 //! and compare the result with a fresh install.
 
+use std::sync::Arc;
+
 use systemprompt::database::install_extension_schemas;
 use systemprompt::extension::ExtensionRegistry;
+use systemprompt_marketplace as _;
+use systemprompt_users as _;
+use systemprompt_web_content as _;
 use template_test_common::{TempDb, db_or_skip, empty_db_or_skip, repo_path};
 
 use crate::catalog;
@@ -39,6 +44,16 @@ async fn restore_and_upgrade(db: &TempDb) {
         .execute(&*db.pool)
         .await
         .expect("restore the previous release's schema");
+    let _ = std::hint::black_box(systemprompt_content::ContentExtension);
+    let _ = systemprompt::extension::runtime_config::set_injected_extensions(
+        systemprompt::extension::runtime_config::InjectedExtensions {
+            extensions: vec![
+                Arc::new(systemprompt_content::ContentExtension),
+                Arc::new(systemprompt_marketplace::ManagedResourcesExtension),
+            ],
+            ..Default::default()
+        },
+    );
     let registry = ExtensionRegistry::discover().expect("discover extension registrations");
     assert!(
         !registry.is_empty(),

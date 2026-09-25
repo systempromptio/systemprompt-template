@@ -25,7 +25,10 @@ use systemprompt::database::{Database, DbPool, install_extension_schemas};
 use systemprompt::extension::ExtensionRegistry;
 use url::Url;
 
+use systemprompt_marketplace as _;
+use systemprompt_users as _;
 use systemprompt_web_admin as _;
+use systemprompt_web_content as _;
 use systemprompt_web_extension as _;
 
 use crate::skip::skip_or_panic;
@@ -190,6 +193,16 @@ async fn ensure_template(admin: &PgPool, base: &str, prefix: &str, template: &st
                 .expect("connect to the template database"),
         );
         let database = Database::from_pools(Arc::clone(&pool), Some(Arc::clone(&pool)));
+        let _ = std::hint::black_box(systemprompt_content::ContentExtension);
+        let _ = systemprompt::extension::runtime_config::set_injected_extensions(
+            systemprompt::extension::runtime_config::InjectedExtensions {
+                extensions: vec![
+                    Arc::new(systemprompt_content::ContentExtension),
+                    Arc::new(systemprompt_marketplace::ManagedResourcesExtension),
+                ],
+                ..Default::default()
+            },
+        );
         let registry = ExtensionRegistry::discover().expect("discover extension registrations");
         assert!(
             !registry.is_empty(),

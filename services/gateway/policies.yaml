@@ -16,6 +16,19 @@ policies:
   - name: default-quotas
     enabled: true
     spec:
+      quota_mode: warn
+      quota_windows:
+        - subject: user
+          window_seconds: 3600
+          max_requests: 600
+          max_cost_microdollars: 20000000
+        - subject: organization
+          window_seconds: 86400
+          max_cost_microdollars: 200000000
       safety:
-        scanners: [heuristic, secrets]
-        block_categories: [secret]
+        mode: warn
+        scanners: [heuristic, secrets, pii_extended]
+        heuristic:
+          phrases: ["ignore previous instructions", "reveal system prompt"]
+        block_categories: [pii_ssn]
+        block_response_categories: [secret, pii_ssn]

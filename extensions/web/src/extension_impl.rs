@@ -6,6 +6,11 @@
 
 use std::sync::Arc;
 
+use systemprompt_content as _;
+use systemprompt_marketplace as _;
+use systemprompt_security as _;
+use systemprompt_users as _;
+
 use systemprompt::extension::prelude::*;
 use systemprompt::traits::Job;
 
@@ -97,21 +102,12 @@ impl Extension for WebExtension {
     }
 
     fn dependencies(&self) -> Vec<&'static str> {
-        vec![
-            "content",
-            "users",
-            "authz",
-            "evaluation",
-            "managed_resources",
-        ]
+        vec!["content", "users", "authz", "managed_resources"]
     }
 
     fn cross_extension_tables(&self) -> Vec<&'static str> {
         vec![
-            "eval_resource_revisions",
-            "eval_session_bindings",
             "managed_installation_receipts",
-            "managed_invocation_attributions",
             "managed_publications",
             "managed_resources",
             "markdown_content",

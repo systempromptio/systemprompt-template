@@ -19,6 +19,7 @@ fn all_jobs_registered() {
         "governance_bootstrap",
         "llms_txt_generation",
         "publish_pipeline",
+        "plugin_usage_retention",
         "robots_txt_generation",
         "scope_defaults_recompute",
         "secret_migration",
@@ -33,7 +34,7 @@ fn all_jobs_registered() {
 #[test]
 fn stateless_provider_registries_are_complete() {
     assert_eq!(registry::component_renderers().len(), 9);
-    assert_eq!(registry::page_data_providers().len(), 3);
+    assert_eq!(registry::page_data_providers().len(), 1);
     assert_eq!(registry::content_data_providers().len(), 1);
-    assert_eq!(registry::template_data_extenders().len(), 1);
+    assert_eq!(registry::template_data_extenders().len(), 2);
 }
