@@ -14,7 +14,7 @@ pub struct DeviceAppLinkRow {
     pub last_seen_at: Option<DateTime<Utc>>,
 }
 
-// lint-ok: unused-pub — retained repository query for extension consumers.
+// Why: lint-ok: unused-pub — retained repository query for extension consumers.
 pub async fn list_device_app_links(
     pool: &PgPool,
     user_id: &UserId,
