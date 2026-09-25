@@ -53,7 +53,7 @@ BEGIN
        AND m.resource_key=skill_key
        AND i.client_evidence->>'session_id'=NEW.session_id
      ORDER BY i.verified_at DESC LIMIT 1;
-    INSERT INTO managed_invocation_attributions(
+    WITH attributed AS (INSERT INTO managed_invocation_attributions(
         id,owner_id,invocation_id,installation_id,resource_id,revision_id,
         publication_generation,traffic_class,status,receipt_id,authenticated_evidence
     ) VALUES (
@@ -63,7 +63,8 @@ BEGIN
         CASE WHEN receipt.receipt_id IS NULL THEN 'revision_unknown' ELSE 'verified' END,
         receipt.receipt_id,
         jsonb_build_object('session_id',NEW.session_id,'dedup_key',NEW.dedup_key,'ingestion_owner_verified',true)
-    ) ON CONFLICT(owner_id,invocation_id) DO NOTHING;
+    ) ON CONFLICT(owner_id,invocation_id) DO NOTHING RETURNING 1)
+    SELECT 1 FROM attributed LIMIT 1;
     RETURN NEW;
 END $$;
 
