@@ -1,10 +1,10 @@
 //! Restore the previous release's schema, run the current installer over it,
 //! and compare the result with a fresh install.
 
-use systemprompt::content as _;
+use std::sync::Arc;
+
 use systemprompt::database::install_extension_schemas;
 use systemprompt::extension::ExtensionRegistry;
-use systemprompt_content as _;
 use systemprompt_marketplace as _;
 use systemprompt_users as _;
 use systemprompt_web_content as _;

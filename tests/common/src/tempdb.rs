@@ -25,8 +25,6 @@ use systemprompt::database::{Database, DbPool, install_extension_schemas};
 use systemprompt::extension::ExtensionRegistry;
 use url::Url;
 
-use systemprompt::content as _;
-use systemprompt_content as _;
 use systemprompt_marketplace as _;
 use systemprompt_users as _;
 use systemprompt_web_admin as _;
