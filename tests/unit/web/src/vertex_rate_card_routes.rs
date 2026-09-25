@@ -89,7 +89,8 @@ fn the_full_rate_card_still_validates_against_the_gateway() {
 #[test]
 fn every_rate_card_id_matches_a_gateway_route() {
     let config = gateway().resolve();
-    let configured_ids: std::collections::HashSet<&str> = registry()
+    let configured_registry = registry();
+    let configured_ids: std::collections::HashSet<&str> = configured_registry
         .providers
         .iter()
         .flat_map(|provider| provider.models.iter().map(|model| model.id.as_str()))
