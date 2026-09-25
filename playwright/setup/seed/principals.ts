@@ -130,13 +130,10 @@ export async function seedPrincipals(db: Client) {
   await seedWorkSessions(db);
   for (const p of PRINCIPALS) {
     await upsertUser(db, p.id, p.email, p.roles);
-    // The department is written here rather than in departments.ts so a
-    // principal always has its profile row. seed.ts upserts the department
-    // rows first, so the name is never dangling.
     await db.query(
-      `INSERT INTO user_profile_ext (user_id, department) VALUES ($1, $2)
-       ON CONFLICT (user_id) DO UPDATE SET department = EXCLUDED.department`,
-      [p.id, DEPARTMENT_OF[p.id] ?? 'Default'],
+      `INSERT INTO user_profile_ext (user_id) VALUES ($1)
+       ON CONFLICT (user_id) DO NOTHING`,
+      [p.id],
     );
   }
   // Group membership is the dashboard's organization model; departments remain
