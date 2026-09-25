@@ -9,6 +9,7 @@ publish = false
 workspace = true
 
 [dependencies]
+template-test-common = { workspace = true }
 # `full` links the core extension crates whose `register_extension!` supplies
 # the users / ai_requests / governance migrations these repositories query;
 # `systemprompt-web-extension` pulls in the web schema (user_profile_ext,

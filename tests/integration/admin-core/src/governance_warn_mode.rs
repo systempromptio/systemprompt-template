@@ -33,7 +33,7 @@ use crate::tempdb::TempDb;
 // moment a crate moves; `repo_root` climbs until the repository's own
 // markers appear and fails loudly when they never do.
 fn shipped_config_path() -> PathBuf {
-    astound_test_common::repo_path("services/governance/config.yaml")
+    template_test_common::repo_path("services/governance/config.yaml")
 }
 
 fn shipped_config() -> GovernanceConfig {
