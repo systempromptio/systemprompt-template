@@ -9,6 +9,10 @@ publish = false
 workspace = true
 
 [dependencies]
+anyhow = { workspace = true }
+tower = { workspace = true }
+axum = { workspace = true }
+systemprompt-security = { workspace = true }
 systemprompt-web-shared = { workspace = true }
 systemprompt-web-admin = { workspace = true }
 systemprompt-web-extension = { workspace = true }

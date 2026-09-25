@@ -80,6 +80,8 @@ tempfile = "3"
 rmcp = { version = "=3.3.0", features = ["server"] }
 uuid = { version = "1.18", features = ["v4"] }
 base64 = "0.22"
+anyhow = "1"
+sha2 = "0.10"
 # Pinned to the version core signs with, so the tokens this suite mints for the
 # hook audiences validate against core's own decoder.
 jsonwebtoken = { version = "10", features = ["rust_crypto"] }

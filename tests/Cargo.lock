@@ -18,6 +18,7 @@ dependencies = [
  "http-body-util",
  "jsonwebtoken 10.4.0",
  "serde_json",
+ "sha2 0.10.9",
  "sqlx",
  "systemprompt",
  "systemprompt-security",
@@ -59,6 +60,7 @@ dependencies = [
  "systemprompt-security",
  "systemprompt-web-admin",
  "systemprompt-web-extension",
+ "tempfile",
  "tokio",
  "url",
  "uuid",
@@ -6939,17 +6941,21 @@ dependencies = [
 name = "web-unit-tests"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
+ "axum",
  "chrono",
  "handlebars",
  "serde_json",
  "serde_yaml_ng",
  "systemprompt",
+ "systemprompt-security",
  "systemprompt-web-admin",
  "systemprompt-web-extension",
  "systemprompt-web-shared",
  "systemprompt-web-site",
  "tempfile",
  "tokio",
+ "tower",
 ]
 
 [[package]]
