@@ -30,9 +30,12 @@ async fn find_context_header_returns_none_for_an_unknown_context() {
         return;
     };
 
-    let header = repo::find_context_header(&db.pool, &ContextId::new_unchecked(new_context_id()))
-        .await
-        .expect("query header");
+    let header = repo::find_context_header(
+        &db.pool,
+        &ContextId::try_new(new_context_id()).expect("valid test context ID"),
+    )
+    .await
+    .expect("query header");
 
     assert!(header.is_none());
     db.cleanup().await;
@@ -49,10 +52,13 @@ async fn find_context_header_resolves_a_context_known_only_to_requests() {
     spec.context_id = Some(&context);
     insert_request(&db.pool, &spec).await;
 
-    let header = repo::find_context_header(&db.pool, &ContextId::new_unchecked(context.clone()))
-        .await
-        .expect("query header")
-        .expect("header present");
+    let header = repo::find_context_header(
+        &db.pool,
+        &ContextId::try_new(context.clone()).expect("valid test context ID"),
+    )
+    .await
+    .expect("query header")
+    .expect("header present");
 
     assert_eq!(header.context_id.as_str(), context);
     assert_eq!(
@@ -73,10 +79,13 @@ async fn find_context_header_resolves_a_stored_context_with_no_requests() {
     let context = new_context_id();
     insert_context(&db.pool, &context, &user, None, "Design review").await;
 
-    let header = repo::find_context_header(&db.pool, &ContextId::new_unchecked(context))
-        .await
-        .expect("query header")
-        .expect("header present");
+    let header = repo::find_context_header(
+        &db.pool,
+        &ContextId::try_new(context).expect("valid test context ID"),
+    )
+    .await
+    .expect("query header")
+    .expect("header present");
 
     assert_eq!(header.name.as_deref(), Some("Design review"));
     assert!(header.created_at.is_some());
@@ -99,10 +108,13 @@ async fn find_context_header_carries_the_session_from_the_stored_row() {
     spec.session_id = Some(&session);
     insert_request(&db.pool, &spec).await;
 
-    let header = repo::find_context_header(&db.pool, &ContextId::new_unchecked(context))
-        .await
-        .expect("query header")
-        .expect("header present");
+    let header = repo::find_context_header(
+        &db.pool,
+        &ContextId::try_new(context).expect("valid test context ID"),
+    )
+    .await
+    .expect("query header")
+    .expect("header present");
 
     assert_eq!(
         header.session_id.map(|s| s.as_str().to_owned()),
@@ -118,9 +130,12 @@ async fn get_context_kpis_returns_zeroes_for_a_context_with_no_requests() {
         return;
     };
 
-    let kpis = repo::get_context_kpis(&db.pool, &ContextId::new_unchecked(new_context_id()))
-        .await
-        .expect("query kpis");
+    let kpis = repo::get_context_kpis(
+        &db.pool,
+        &ContextId::try_new(new_context_id()).expect("valid test context ID"),
+    )
+    .await
+    .expect("query kpis");
 
     assert_eq!(kpis.request_count, 0);
     assert_eq!(kpis.total_cost_microdollars, 0);
@@ -145,9 +160,12 @@ async fn get_context_kpis_sums_the_requests_and_counts_failures() {
         insert_request(&db.pool, &spec).await;
     }
 
-    let kpis = repo::get_context_kpis(&db.pool, &ContextId::new_unchecked(context))
-        .await
-        .expect("query kpis");
+    let kpis = repo::get_context_kpis(
+        &db.pool,
+        &ContextId::try_new(context).expect("valid test context ID"),
+    )
+    .await
+    .expect("query kpis");
 
     assert_eq!(kpis.request_count, 2);
     assert_eq!(kpis.error_count, 1);
@@ -177,9 +195,12 @@ async fn get_context_kpis_reports_the_model_of_the_newest_request() {
     new.model = "new-model";
     insert_request(&db.pool, &new).await;
 
-    let kpis = repo::get_context_kpis(&db.pool, &ContextId::new_unchecked(context))
-        .await
-        .expect("query kpis");
+    let kpis = repo::get_context_kpis(
+        &db.pool,
+        &ContextId::try_new(context).expect("valid test context ID"),
+    )
+    .await
+    .expect("query kpis");
 
     assert_eq!(kpis.model.as_deref(), Some("new-model"));
     db.cleanup().await;

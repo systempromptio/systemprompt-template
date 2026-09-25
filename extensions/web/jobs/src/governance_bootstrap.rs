@@ -27,8 +27,8 @@
 
 use std::sync::Arc;
 
+use systemprompt::config::AppPaths;
 use systemprompt::database::DbPool;
-use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use systemprompt::security::authz::{EntityKind, RegisteredEntities};
@@ -91,9 +91,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
 
     let catalog = bootstrap_gateway_entities(db_pool).await?;
 
-    let pool = db_pool.write_pool().ok_or(MarketplaceError::Internal(
-        "PgPool not available from database".to_owned(),
-    ))?;
+    let pool = db_pool.write_pool();
     // Why: before the ACL pass. The access-control files and each
     // marketplace's `access.rules` write rows whose `rule_value` is a group or
     // project id, so those rows must exist first or a fresh install would

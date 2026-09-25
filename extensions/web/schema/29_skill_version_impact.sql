@@ -30,8 +30,7 @@ BEGIN
        AND p.revision_id=NEW.metadata->>'resource_revision_id'
        AND m.resource_key=skill_key
        AND i.client_evidence->>'session_id'=NEW.session_id
-     ORDER BY i.verified_at DESC LIMIT 1;
-    INSERT INTO managed_invocation_attributions(
+     ORDER BY i.verified_at DESC LIMIT 1; INSERT INTO managed_invocation_attributions(
         id,owner_id,invocation_id,installation_id,resource_id,revision_id,
         publication_generation,traffic_class,status,receipt_id,authenticated_evidence
     ) VALUES (

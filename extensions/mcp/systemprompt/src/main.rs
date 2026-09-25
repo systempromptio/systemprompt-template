@@ -3,7 +3,7 @@
 use anyhow::{Context, Result};
 use std::env;
 use std::sync::Arc;
-use systemprompt::config::{ProfileBootstrap, SecretsBootstrap, init_config};
+use systemprompt::config::{ProfileBootstrap, SecretsBootstrap, try_init_config};
 use systemprompt::identifiers::McpServerId;
 use systemprompt::system::AppContext;
 use systemprompt_mcp_agent::SystempromptServer;
@@ -20,7 +20,7 @@ async fn main() -> Result<()> {
     SecretsBootstrap::init()
         .await
         .context("Failed to initialize secrets")?;
-    init_config(None).context("Failed to initialize configuration")?;
+    try_init_config(None).context("Failed to initialize configuration")?;
 
     let ctx = Arc::new(
         AppContext::new()
@@ -28,16 +28,14 @@ async fn main() -> Result<()> {
             .context("Failed to initialize application context")?,
     );
 
-    let service_id = env::var("MCP_SERVICE_ID").map_or_else(
-        |_| {
-            tracing::warn!(
-                default = DEFAULT_SERVICE_ID,
-                "MCP_SERVICE_ID not set, using default"
-            );
-            McpServerId::new(DEFAULT_SERVICE_ID)
-        },
-        McpServerId::new,
-    );
+    let service_id_raw = env::var("MCP_SERVICE_ID").unwrap_or_else(|_| {
+        tracing::warn!(
+            default = DEFAULT_SERVICE_ID,
+            "MCP_SERVICE_ID not set, using default"
+        );
+        DEFAULT_SERVICE_ID.to_owned()
+    });
+    let service_id = McpServerId::try_new(service_id_raw).context("Invalid MCP_SERVICE_ID")?;
 
     let port = env::var("MCP_PORT").map_or_else(
         |_| {

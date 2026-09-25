@@ -146,5 +146,3 @@ fn sanitize_login_redirect(raw: Option<&str>) -> Option<String> {
     let raw = raw?.trim();
     (raw.starts_with('/') && !raw.starts_with("//")).then(|| raw.to_owned())
 }
-
-pub(crate) mod analysis;

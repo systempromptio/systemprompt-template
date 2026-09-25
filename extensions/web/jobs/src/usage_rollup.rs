@@ -62,9 +62,7 @@ impl Job for UsageDailyRollupJob {
         let db = ctx
             .db_pool::<DbPool>()
             .ok_or(JobError::MissingContext("DbPool"))?;
-        let pool = db
-            .write_pool()
-            .ok_or(JobError::MissingContext("write PgPool"))?;
+        let pool = db.write_pool();
 
         Ok(Self::execute_with_pool(&pool).await?)
     }

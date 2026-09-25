@@ -1,11 +1,16 @@
 //! `repositories::config::gateway_acl` — the route-scoped wrappers over core's
 //! access-control repository.
 
+use systemprompt::identifiers::RouteId;
 use systemprompt_security::authz::{Access, EntityKind, RuleType};
 use systemprompt_web_admin::repositories::config::gateway_acl;
 
 use crate::fixtures::{count_rows, insert_acl_entity, unique};
 use crate::tempdb::TempDb;
+
+fn route_id(prefix: &str) -> RouteId {
+    RouteId::new(unique(prefix))
+}
 
 #[tokio::test]
 async fn list_rules_for_route_returns_nothing_for_an_unknown_route() {
@@ -13,7 +18,7 @@ async fn list_rules_for_route_returns_nothing_for_an_unknown_route() {
         return;
     };
 
-    let rules = gateway_acl::list_rules_for_route(&db.pool, &unique("route"))
+    let rules = gateway_acl::list_rules_for_route(&db.pool, &route_id("route"))
         .await
         .expect("list rules");
 
@@ -27,8 +32,14 @@ async fn upsert_rule_then_list_rules_for_route_round_trips() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let route = unique("route");
-    insert_acl_entity(&db.pool, EntityKind::GatewayRoute.as_str(), &route, false).await;
+    let route = route_id("route");
+    insert_acl_entity(
+        &db.pool,
+        EntityKind::GatewayRoute.as_str(),
+        route.as_str(),
+        false,
+    )
+    .await;
 
     let created =
         gateway_acl::upsert_rule(&db.pool, &route, RuleType::ROLE, "admin", Access::Allow)
@@ -51,8 +62,14 @@ async fn upsert_rule_updates_access_in_place_rather_than_duplicating() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let route = unique("route");
-    insert_acl_entity(&db.pool, EntityKind::GatewayRoute.as_str(), &route, false).await;
+    let route = route_id("route");
+    insert_acl_entity(
+        &db.pool,
+        EntityKind::GatewayRoute.as_str(),
+        route.as_str(),
+        false,
+    )
+    .await;
 
     let first = gateway_acl::upsert_rule(&db.pool, &route, RuleType::ROLE, "admin", Access::Allow)
         .await
@@ -79,7 +96,7 @@ async fn upsert_rule_fails_without_a_catalog_entity() {
 
     let result = gateway_acl::upsert_rule(
         &db.pool,
-        &unique("route"),
+        &route_id("route"),
         RuleType::ROLE,
         "admin",
         Access::Allow,
@@ -99,11 +116,17 @@ async fn list_rules_bulk_groups_rules_by_route() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let route_a = unique("route-a");
-    let route_b = unique("route-b");
-    let route_absent = unique("route-c");
+    let route_a = route_id("route-a");
+    let route_b = route_id("route-b");
+    let route_absent = route_id("route-c");
     for route in [&route_a, &route_b] {
-        insert_acl_entity(&db.pool, EntityKind::GatewayRoute.as_str(), route, false).await;
+        insert_acl_entity(
+            &db.pool,
+            EntityKind::GatewayRoute.as_str(),
+            route.as_str(),
+            false,
+        )
+        .await;
     }
     gateway_acl::upsert_rule(&db.pool, &route_a, RuleType::ROLE, "admin", Access::Allow)
         .await
@@ -115,15 +138,19 @@ async fn list_rules_bulk_groups_rules_by_route() {
         .await
         .expect("rule on b");
 
-    let ids = vec![route_a.clone(), route_b.clone(), route_absent.clone()];
+    let ids = vec![
+        route_a.as_str().to_owned(),
+        route_b.as_str().to_owned(),
+        route_absent.as_str().to_owned(),
+    ];
     let map = gateway_acl::list_rules_bulk(&db.pool, &ids)
         .await
         .expect("bulk list");
 
-    assert_eq!(map.get(&route_a).map(Vec::len), Some(2));
-    assert_eq!(map.get(&route_b).map(Vec::len), Some(1));
+    assert_eq!(map.get(route_a.as_str()).map(Vec::len), Some(2));
+    assert_eq!(map.get(route_b.as_str()).map(Vec::len), Some(1));
     assert_eq!(
-        map.get(&route_absent).map(Vec::len),
+        map.get(route_absent.as_str()).map(Vec::len),
         Some(0),
         "every requested route is present, so the caller can index without a fallback"
     );
@@ -136,8 +163,14 @@ async fn delete_rule_reports_whether_a_row_was_removed() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let route = unique("route");
-    insert_acl_entity(&db.pool, EntityKind::GatewayRoute.as_str(), &route, false).await;
+    let route = route_id("route");
+    insert_acl_entity(
+        &db.pool,
+        EntityKind::GatewayRoute.as_str(),
+        route.as_str(),
+        false,
+    )
+    .await;
     let rule = gateway_acl::upsert_rule(&db.pool, &route, RuleType::ROLE, "admin", Access::Allow)
         .await
         .expect("upsert rule");
@@ -155,7 +188,7 @@ async fn delete_rule_reports_whether_a_row_was_removed() {
         count_rows(
             &db.pool,
             "SELECT COUNT(*) FROM access_control_rules WHERE entity_id = $1",
-            &route,
+            route.as_str(),
         )
         .await,
         0
@@ -170,7 +203,7 @@ async fn find_entity_returns_none_for_an_unregistered_route() {
         return;
     };
 
-    let entity = gateway_acl::find_entity(&db.pool, &unique("route"))
+    let entity = gateway_acl::find_entity(&db.pool, &route_id("route"))
         .await
         .expect("find entity");
 
@@ -184,15 +217,21 @@ async fn find_entity_reads_back_default_included() {
     let Some(db) = TempDb::create().await else {
         return;
     };
-    let route = unique("route");
-    insert_acl_entity(&db.pool, EntityKind::GatewayRoute.as_str(), &route, true).await;
+    let route = route_id("route");
+    insert_acl_entity(
+        &db.pool,
+        EntityKind::GatewayRoute.as_str(),
+        route.as_str(),
+        true,
+    )
+    .await;
 
     let entity = gateway_acl::find_entity(&db.pool, &route)
         .await
         .expect("find entity")
         .expect("registered entity");
 
-    assert_eq!(entity.id, route);
+    assert_eq!(entity.id, route.as_str());
     assert_eq!(entity.kind, EntityKind::GatewayRoute);
     assert!(entity.default_included);
 

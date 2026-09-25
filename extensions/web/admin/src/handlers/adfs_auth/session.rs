@@ -108,7 +108,7 @@ pub(crate) async fn mint_session(
     let jwt_config = JwtConfig {
         permissions,
         audience: cfg.jwt_audiences.clone(),
-        expires_in_hours: Some(cfg.jwt_access_token_expiration / 3600),
+        expires_in: chrono::Duration::seconds(cfg.jwt_access_token_expiration),
         resource: None,
         plugin_id: None,
         // Why: a browser session is minted for a person, not for a registered

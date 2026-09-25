@@ -1,6 +1,7 @@
 [package]
 name = "systemprompt-web-jobs"
 version.workspace = true
+license.workspace = true
 edition.workspace = true
 authors.workspace = true
 description = "Scheduled jobs extension for the systemprompt.io template: content generation and maintenance jobs run under the governed scheduler."
@@ -9,7 +10,6 @@ homepage.workspace = true
 publish = false
 
 [dependencies]
-systemprompt-mcp-shared = { workspace = true }
 systemprompt-web-shared = { workspace = true }
 systemprompt-web-admin = { workspace = true }
 systemprompt-web-content = { workspace = true }

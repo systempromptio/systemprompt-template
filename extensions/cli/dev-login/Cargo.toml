@@ -1,6 +1,7 @@
 [package]
 name = "systemprompt-dev-login"
 version.workspace = true
+license.workspace = true
 edition.workspace = true
 authors.workspace = true
 description = "Development-only CLI extension for the Systemprompt instance: prints a single-use admin-console login link."

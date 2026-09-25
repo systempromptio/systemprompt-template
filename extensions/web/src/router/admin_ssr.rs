@@ -5,8 +5,7 @@ use std::sync::Arc;
 
 use axum::Router;
 
-use systemprompt::config::ProfileBootstrap;
-use systemprompt::models::AppPaths;
+use systemprompt::config::{AppPaths, ProfileBootstrap};
 
 use super::pools::DbHandles;
 use systemprompt_web_site::config_loader;

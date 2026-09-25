@@ -61,7 +61,10 @@ pub(crate) async fn search_resolve(
         ResolvedKind::Session => ("session", session_detail_url(&SessionId::new(&r.id))),
         ResolvedKind::Context => (
             "context",
-            context_detail_url(&ContextId::new_unchecked(&r.id)),
+            context_detail_url(
+                &ContextId::try_new(&r.id)
+                    .map_err(|error| AdminError::BadRequest(error.to_string()))?,
+            ),
         ),
     };
     Ok(Json(SearchResponse {

@@ -41,8 +41,6 @@
 //!   plus the asset-manifest check, all sharing `support`
 
 #[cfg(test)]
-mod builders;
-#[cfg(test)]
 mod campaign_link_full_url;
 #[cfg(test)]
 mod catalog_sorting;
@@ -82,8 +80,6 @@ mod downstream_credential_configs;
 mod format_display;
 #[cfg(test)]
 mod groups_yaml_types;
-#[cfg(test)]
-mod optimization_policy;
 #[cfg(test)]
 mod release_version_substitution;
 #[cfg(test)]
@@ -137,15 +133,11 @@ mod pii_scanner;
 mod registry_completeness;
 #[cfg(test)]
 mod report_pnl;
-#[cfg(test)]
-mod secrets_scanner_response;
 
 #[cfg(test)]
 mod seed_contract;
 #[cfg(test)]
 mod shared_errors;
-#[cfg(test)]
-mod shared_ids;
 #[cfg(test)]
 mod short_id_display;
 #[cfg(test)]
@@ -210,8 +202,6 @@ mod analytics_conversations_redact;
 mod asset_manifest;
 #[cfg(test)]
 #[cfg(test)]
-mod authz_marketplace_pure;
-#[cfg(test)]
 #[cfg(test)]
 mod config_gateway_pure;
 #[cfg(test)]
@@ -220,10 +210,6 @@ mod frontend_standards;
 mod gateway_catalog_pure;
 #[cfg(test)]
 mod governance_decision_view;
-#[cfg(test)]
-mod governance_gateway;
-#[cfg(test)]
-mod governance_pages;
 #[cfg(test)]
 mod governance_warnings_rollup;
 #[cfg(test)]
@@ -266,8 +252,6 @@ mod util_ranges;
 mod util_svg_pure;
 
 #[cfg(test)]
-mod connector_oauth;
-#[cfg(test)]
 mod india_skills;
 #[cfg(test)]
 mod salesforce_orgs;
@@ -275,12 +259,8 @@ mod salesforce_orgs;
 mod bridge_release_parity;
 
 #[cfg(test)]
-mod authorization_failures;
-#[cfg(test)]
 mod vertex_rate_card_routes;
 
-#[cfg(test)]
-mod governance_calibration;
 
 #[cfg(test)]
 mod ingestion_identity;

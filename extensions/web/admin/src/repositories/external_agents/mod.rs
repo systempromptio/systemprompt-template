@@ -42,6 +42,7 @@ struct DiskFile {
     external_agents: std::collections::BTreeMap<String, DiskEntry>,
 }
 
+// Why: lint-ok: unused-pub — retained repository query for extension consumers.
 pub fn list_external_agents() -> Vec<ExternalAgentRow> {
     let dir = resolve_dir();
     let Ok(entries) = std::fs::read_dir(&dir) else {

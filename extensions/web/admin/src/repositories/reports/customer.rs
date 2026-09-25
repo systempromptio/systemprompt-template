@@ -35,6 +35,7 @@ pub struct CustomerMonthSummary {
     pub error_count: i64,
 }
 
+// Why: lint-ok: unused-pub — retained repository query for extension consumers.
 pub async fn get_customer_month_summary(
     pool: &PgPool,
     scope: &SubjectScope,

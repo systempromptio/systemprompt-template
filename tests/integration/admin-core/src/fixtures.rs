@@ -97,6 +97,7 @@ pub async fn set_department(pool: &PgPool, user_id: &UserId, department: &str) {
 
 // Insert a department. `departments.name` is unique, so callers mint the name
 // through `unique` rather than reusing a literal.
+#[allow(dead_code)]
 pub async fn insert_department(pool: &PgPool, id: &str, name: &str) {
     sqlx::query("INSERT INTO departments (id, name, description) VALUES ($1, $2, $3)")
         .bind(id)

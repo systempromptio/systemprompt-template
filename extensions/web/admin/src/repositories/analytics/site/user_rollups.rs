@@ -27,7 +27,7 @@ pub struct UserDailyRollupRow {
     pub output_tokens: i64,
     pub cost_microdollars: i64,
 }
-
+// Why: downstream API. lint-ok: unused-pub
 pub async fn list_user_daily_rollups(
     pool: &PgPool,
     user_id: &UserId,

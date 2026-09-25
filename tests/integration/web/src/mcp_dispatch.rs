@@ -36,8 +36,8 @@ fn request_context() -> SysRequestContext {
     SysRequestContext::new(
         SessionId::new("dispatch-session"),
         TraceId::new("dispatch-trace"),
-        ContextId::new_unchecked("00000000-0000-4000-8000-00000000d15b"),
-        AgentName::new("dispatch-agent"),
+        ContextId::try_new("00000000-0000-4000-8000-00000000d15b").expect("valid test identifier"),
+        AgentName::try_new("dispatch-agent").expect("valid test identifier"),
     )
 }
 

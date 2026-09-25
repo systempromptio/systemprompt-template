@@ -27,7 +27,7 @@ pub(crate) async fn post_token_request(
     token_url: &str,
     body: String,
 ) -> Result<SalesforceTokenResponse, SalesforceError> {
-    let resp = reqwest::Client::new()
+    let resp = reqwest::Client::new() // lint-ok: web-transport - OAuth validation calls an external provider
         .post(token_url)
         .header(
             reqwest::header::CONTENT_TYPE,

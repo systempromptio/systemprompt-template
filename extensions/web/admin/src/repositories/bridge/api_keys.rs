@@ -173,6 +173,7 @@ pub async fn enroll_device(
     })
 }
 
+// Why: lint-ok: unused-pub — retained repository query for extension consumers.
 pub async fn list_api_keys_for_user(pool: &PgPool, user_id: &UserId) -> Result<Vec<ApiKeyRow>> {
     let rows = sqlx::query_as!(
         ApiKeyRow,

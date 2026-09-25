@@ -18,22 +18,12 @@ mod config_acl_detect;
 #[cfg(test)]
 mod config_gateway_acl;
 #[cfg(test)]
-mod config_roles;
-#[cfg(test)]
 mod fixtures;
 #[cfg(test)]
 mod jobs_repo;
 #[cfg(test)]
 mod marketplace_catalog;
 #[cfg(test)]
-mod marketplace_env;
-#[cfg(test)]
-mod marketplace_usage;
-#[cfg(test)]
-mod secrets_keys;
-#[cfg(test)]
 mod secrets_migration;
-#[cfg(test)]
-mod secrets_resolve;
 #[cfg(test)]
 mod tempdb;

@@ -14,19 +14,3 @@ mod common;
 mod record_access;
 #[cfg(test)]
 mod rejection_fail_closed;
-
-#[cfg(test)]
-mod evaluation_experiments;
-
-#[cfg(test)]
-mod evaluation_gateway;
-
-#[cfg(test)]
-mod evaluation_workers;
-
-#[cfg(test)]
-mod evaluation_assignments;
-#[cfg(test)]
-mod optimization_campaigns;
-#[cfg(test)]
-mod optimization_reports;

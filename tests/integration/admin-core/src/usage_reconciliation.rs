@@ -95,7 +95,7 @@ async fn the_profile_and_the_dashboard_agree_when_cache_tokens_dominate() {
 
 #[tokio::test]
 async fn the_profile_and_the_dashboard_agree_when_the_provider_reported_no_total() {
-    let db = astound_test_common::db_or_skip!();
+    let db = template_test_common::db_or_skip!();
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("recon-null")).await;
 
     // Why: `tokens_used` is nullable, and both readers now aggregate that one
@@ -144,7 +144,7 @@ async fn the_profile_and_the_dashboard_agree_when_the_provider_reported_no_total
 
 #[tokio::test]
 async fn reasoning_tokens_are_reported_beside_the_total_not_added_into_it() {
-    let db = astound_test_common::db_or_skip!();
+    let db = template_test_common::db_or_skip!();
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("recon-think")).await;
 
     // Why: a total no re-summation of the components could produce. A reader

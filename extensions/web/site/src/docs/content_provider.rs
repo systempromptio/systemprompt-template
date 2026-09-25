@@ -53,10 +53,7 @@ impl ContentDataProvider for DocsContentDataProvider {
             .ok_or(DocsError::NoDatabaseInContext)
             .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
 
-        let pool = db
-            .pool()
-            .ok_or(DocsError::PoolNotInitialized)
-            .map_err(|e| systemprompt::traits::ProviderError::Internal(e.to_string()))?;
+        let pool = db.pool();
 
         let content_id = ctx.content_id();
         let content_id_typed = ContentId::new(content_id.to_owned());

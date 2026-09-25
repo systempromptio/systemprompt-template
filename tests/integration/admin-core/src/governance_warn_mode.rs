@@ -33,7 +33,7 @@ use crate::tempdb::TempDb;
 // moment a crate moves; `repo_root` climbs until the repository's own
 // markers appear and fails loudly when they never do.
 fn shipped_config_path() -> PathBuf {
-    astound_test_common::repo_path("services/governance/config.yaml")
+    template_test_common::repo_path("services/governance/config.yaml")
 }
 
 fn shipped_config() -> GovernanceConfig {
@@ -76,7 +76,7 @@ impl<'a> Call<'a> {
     fn tool(name: &str, args: serde_json::Value, user: &'a UserId, session: &'a SessionId) -> Self {
         Self {
             target: GovernedTarget::Tool {
-                tool: McpToolName::new(name),
+                tool: McpToolName::try_new(name).expect("test tool name is valid"),
             },
             input: GovernedInput::tool_arguments(McpToolInput::new(args)),
             scope: AccessScope::User,

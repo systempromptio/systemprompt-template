@@ -10,6 +10,8 @@ use systemprompt::mcp::{
 use systemprompt::models::artifacts::CliArtifact;
 
 pub const SERVER_NAME: &str = "systemprompt";
+pub const TOOL_SYSTEMPROMPT: &str = "systemprompt";
+pub const TOOL_ADMIN_REPORT: &str = "admin_report";
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CliInput {
@@ -91,7 +93,7 @@ pub fn list_tools() -> Vec<Tool> {
     );
     let mut tools = vec![create_tool(&ToolDef {
         server_name: SERVER_NAME,
-        name: "systemprompt",
+        name: TOOL_SYSTEMPROMPT,
         title: "SystemPrompt CLI",
         description: &desc,
         input_schema: &input_schema(),
@@ -109,9 +111,4 @@ pub fn list_tools() -> Vec<Tool> {
         .tool_definition(SERVER_NAME),
     );
     tools
-}
-
-#[must_use]
-pub fn fixture_tools(pool: &systemprompt::database::DbPool) -> Vec<Tool> {
-    vec![crate::fixtures::FixtureHandler { pool }.tool_definition("evaluation_fixture")]
 }

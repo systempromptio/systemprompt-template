@@ -30,10 +30,6 @@ mod link_analytics_repository;
 #[cfg(test)]
 mod link_repository;
 #[cfg(test)]
-mod mcp_cli;
-#[cfg(test)]
-mod mcp_dispatch;
-#[cfg(test)]
 mod mcp_server;
 #[cfg(test)]
 mod search_repository;

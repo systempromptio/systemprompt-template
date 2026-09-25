@@ -1,8 +1,8 @@
 //! Restore the previous release's schema, run the current installer over it,
 //! and compare the result with a fresh install.
 
-use systemprompt::ExtensionRegistry;
 use systemprompt::database::install_extension_schemas;
+use systemprompt::extension::ExtensionRegistry;
 use template_test_common::{TempDb, db_or_skip, empty_db_or_skip, repo_path};
 
 use crate::catalog;

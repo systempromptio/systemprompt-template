@@ -225,7 +225,7 @@ pub(super) fn skill_detail(
         breadcrumbs: trail("Skills", "/admin/skills", &entry.name),
         // Why: the catalog page defines the skill; the analytics tab says who
         // actually runs it. They are different pages and this is the hop.
-        activity_url: "/admin/analysis/skills".to_owned(),
+        activity_url: "/admin/skills".to_owned(),
         page: "skill-detail",
         title: entry.name.clone(),
         matrix_url: matrix_url(ENTITY_SKILL, id),

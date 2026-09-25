@@ -69,17 +69,21 @@ fn registry_parses_and_selects_the_endpoint_by_environment() {
         registry.list_ids().collect::<Vec<_>>(),
         ["salesforce", "salesforce-uat"]
     );
-    let prod = registry.find(&McpServerId::new("salesforce")).unwrap();
+    let prod = registry
+        .find(&McpServerId::try_new("salesforce").expect("valid test identifier"))
+        .unwrap();
     assert_eq!(prod.environment, SalesforceEnvironment::Production);
     assert_eq!(prod.expected_endpoint(), PROD);
     assert!(prod.org_id.is_none());
-    let uat = registry.find(&McpServerId::new("salesforce-uat")).unwrap();
+    let uat = registry
+        .find(&McpServerId::try_new("salesforce-uat").expect("valid test identifier"))
+        .unwrap();
     assert_eq!(uat.expected_endpoint(), SANDBOX);
     assert_eq!(uat.org_id.as_deref(), Some("00D000000000001AAA"));
     assert!(
         SalesforceOrgRegistry::parse("")
             .unwrap()
-            .find(&McpServerId::new("salesforce"))
+            .find(&McpServerId::try_new("salesforce").expect("valid test identifier"))
             .is_none()
     );
 }
@@ -140,8 +144,12 @@ fn boot_validation_requires_the_domain_to_match_the_environment() {
 #[test]
 fn entitlement_is_open_without_groups_and_group_scoped_with_them() {
     let registry = registry();
-    let prod = registry.find(&McpServerId::new("salesforce")).unwrap();
-    let uat = registry.find(&McpServerId::new("salesforce-uat")).unwrap();
+    let prod = registry
+        .find(&McpServerId::try_new("salesforce").expect("valid test identifier"))
+        .unwrap();
+    let uat = registry
+        .find(&McpServerId::try_new("salesforce-uat").expect("valid test identifier"))
+        .unwrap();
     assert!(prod.is_entitled(&[]));
     assert!(prod.is_entitled(&["core".to_owned()]));
     assert!(!uat.is_entitled(&[]));

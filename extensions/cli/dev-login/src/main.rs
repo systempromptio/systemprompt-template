@@ -9,7 +9,7 @@
 
 use anyhow::{Context, Result, bail, ensure};
 use clap::Parser;
-use systemprompt::config::{ProfileBootstrap, SecretsBootstrap, init_config};
+use systemprompt::config::{ProfileBootstrap, SecretsBootstrap, try_init_config};
 use systemprompt::logging::CliService;
 use systemprompt::system::AppContext;
 use systemprompt_web_admin::repositories::dev_login::{
@@ -48,7 +48,7 @@ async fn main() -> Result<()> {
     SecretsBootstrap::init()
         .await
         .context("Failed to initialize secrets")?;
-    init_config(None).context("Failed to initialize configuration")?;
+    try_init_config(None).context("Failed to initialize configuration")?;
 
     let ctx = AppContext::new()
         .await

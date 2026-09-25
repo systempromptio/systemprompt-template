@@ -1,6 +1,7 @@
 [package]
 name = "admin-db-core-tests"
 version.workspace = true
+license.workspace = true
 edition.workspace = true
 publish = false
 
@@ -8,6 +9,8 @@ publish = false
 workspace = true
 
 [dependencies]
+serde_yaml = { workspace = true }
+template-test-common = { workspace = true }
 # `full` links the core extension crates whose `register_extension!` supplies
 # the users / ai_requests / governance migrations these repositories query;
 # `systemprompt-web-extension` pulls in the web schema (user_profile_ext,
@@ -16,10 +19,12 @@ systemprompt = { workspace = true, features = ["full"] }
 systemprompt-web-admin = { workspace = true }
 systemprompt-security = { workspace = true }
 systemprompt-web-extension = { workspace = true }
+systemprompt-web-shared = { workspace = true }
 
 chrono = { workspace = true }
 tokio = { workspace = true }
 sqlx = { workspace = true }
 serde_json = { workspace = true }
+tempfile = { workspace = true }
 uuid = { workspace = true }
 url = { workspace = true }

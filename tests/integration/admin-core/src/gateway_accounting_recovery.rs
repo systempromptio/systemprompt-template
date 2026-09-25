@@ -19,7 +19,7 @@ use systemprompt_security::policy::types::AccessScope;
 
 async fn profile() -> tempfile::TempDir {
     let dir = tempfile::tempdir().expect("profile directory");
-    let root = astound_test_common::repo_path("");
+    let root = template_test_common::repo_path("");
     let yaml = include_str!("../../../contract/admin/fixtures/profile.yaml")
         .replace("__PROFILE_DIR__", &dir.path().to_string_lossy())
         .replace("__REPO__", &root.to_string_lossy());

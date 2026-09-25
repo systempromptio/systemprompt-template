@@ -1,6 +1,7 @@
 [package]
 name = "systemprompt-web-admin"
 version.workspace = true
+license.workspace = true
 edition.workspace = true
 authors.workspace = true
 description = "Admin dashboard extension for the systemprompt.io template: governed operations UI over agents, MCP servers, users, and analytics."
@@ -43,7 +44,6 @@ tracing = { workspace = true }
 
 # Crypto & encoding
 sha2 = { workspace = true }
-serde_jcs = { workspace = true }
 chacha20poly1305 = { workspace = true }
 hex = { workspace = true }
 jsonwebtoken = { workspace = true }
@@ -54,7 +54,6 @@ rand = { workspace = true }
 handlebars = { workspace = true }
 
 # Archive
-tempfile = { workspace = true }
 
 # HTTP client
 reqwest = { workspace = true }
@@ -76,3 +75,6 @@ governance-ssr = []
 
 [lints]
 workspace = true
+
+[package.metadata.cargo-machete]
+ignored = ["inventory"]

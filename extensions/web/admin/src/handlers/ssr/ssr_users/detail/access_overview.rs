@@ -8,7 +8,7 @@ use serde::Serialize;
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt::loader::ConfigLoader;
-use systemprompt::marketplace::ManifestService;
+use systemprompt::marketplace::{AssembleRequest, ManifestService, MarketplaceCache};
 use systemprompt::models::Config;
 
 use crate::marketplace_filter::TemplateMarketplaceFilter;
@@ -191,9 +191,19 @@ async fn included_content(pool: &PgPool, user_id: &UserId) -> Result<Vec<Workspa
         .api_external_url
         .clone();
     let filter = TemplateMarketplaceFilter::from_pool(Arc::new(pool.clone()));
-    let candidate = ManifestService::assemble_candidate(&services, &root, &url, &filter, user_id)
-        .await
-        .map_err(|e| e.to_string())?;
+    let cache = MarketplaceCache::default();
+    let candidate = ManifestService::assemble_candidate(
+        &AssembleRequest {
+            services: &services,
+            services_root: &root,
+            filter: &filter,
+            user_id,
+            cache: &cache,
+        },
+        &url,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
     let (entries, _) = candidate.into_manifest_parts();
     let mut workspaces = Vec::new();
     for marketplace in entries.marketplaces {

@@ -20,6 +20,7 @@ use axum::http::{Request, StatusCode};
 use sqlx::PgPool;
 use systemprompt::database::Database;
 use systemprompt::extension::prelude::{Extension, ExtensionContext};
+use systemprompt::identifiers::UserId;
 use systemprompt::traits::{ConfigProvider, DatabaseHandle};
 use systemprompt_web_extension::WebExtension;
 use tower::ServiceExt as _;
@@ -63,6 +64,9 @@ impl PoolCtx {
 }
 
 impl ExtensionContext for PoolCtx {
+    fn system_owner_id(&self) -> UserId {
+        UserId::new("web-router-test-owner")
+    }
     fn config(&self) -> Arc<dyn ConfigProvider> {
         Arc::new(StubConfig)
     }
@@ -91,6 +95,9 @@ impl DatabaseHandle for ForeignDb {
 }
 
 impl ExtensionContext for ForeignDbCtx {
+    fn system_owner_id(&self) -> UserId {
+        UserId::new("web-router-test-owner")
+    }
     fn config(&self) -> Arc<dyn ConfigProvider> {
         Arc::new(StubConfig)
     }

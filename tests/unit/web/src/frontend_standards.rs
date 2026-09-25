@@ -364,10 +364,10 @@ fn print_block_lines(css: &str) -> BTreeSet<usize> {
         }
         depth += i32::try_from(line.matches('{').count()).unwrap_or(0);
         depth -= i32::try_from(line.matches('}').count()).unwrap_or(0);
-        if let Some(sd) = start_depth {
-            if depth <= sd {
-                start_depth = None;
-            }
+        if let Some(sd) = start_depth
+            && depth <= sd
+        {
+            start_depth = None;
         }
     }
     out

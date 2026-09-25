@@ -60,10 +60,7 @@ pub async fn record_mcp_access(
     tool: &str,
     action: &str,
 ) {
-    let Some(pg_pool) = pool.pool() else {
-        tracing::warn!("No PgPool available to record MCP access event");
-        return;
-    };
+    let pg_pool = pool.pool();
     let description = match action {
         "authenticated" => format!("Authenticated to {server} for '{tool}'"),
         ACTION_USED => format!("Executed '{tool}' on {server}"),
@@ -96,10 +93,7 @@ pub async fn record_mcp_access(
 }
 
 pub async fn record_mcp_access_rejected(pool: &DbPool, server: &str, tool: &str, reason: &str) {
-    let Some(pg_pool) = pool.pool() else {
-        tracing::warn!("No PgPool available to record MCP access rejection");
-        return;
-    };
+    let pg_pool = pool.pool();
     let reason_text = truncate_on_char_boundary(reason, MAX_REASON_LEN);
     let description = format!("Access rejected on {server}: {reason_text}");
     let metadata = AuditMetadata {

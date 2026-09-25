@@ -1,6 +1,7 @@
 [package]
 name = "schema-upgrade-tests"
 version.workspace = true
+license.workspace = true
 edition.workspace = true
 publish = false
 
@@ -13,9 +14,6 @@ template-test-common = { workspace = true }
 # binary. The same set the shared harness links, so the "current installer"
 # this crate runs is the one the server runs at boot.
 systemprompt = { workspace = true, features = ["full"] }
-systemprompt-evaluation = { workspace = true }
-systemprompt-web-admin = { workspace = true }
-systemprompt-web-extension = { workspace = true }
 
 sqlx = { workspace = true }
 tokio = { workspace = true }

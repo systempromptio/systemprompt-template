@@ -2,3 +2,17 @@
 # redirect stubs, aliases, or targets served by other means. One path per line,
 # `#` comments. Never list a genuinely dead link here — fix the href or add the
 # route instead.
+# Client-side flows and compatibility links retained while Core 0.61 no longer owns SSR routes.
+/admin/governance/decisions
+/admin/evals
+/admin/models
+/admin/governance/hooks
+/admin/register
+/admin/access-tokens
+/admin/analysis/campaigns
+/admin/analysis/evaluations
+/admin/analysis/impact
+/admin/analysis/publications
+/admin/analysis/resources
+/admin/analysis/skills
+/admin/analysis/versions

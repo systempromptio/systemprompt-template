@@ -61,36 +61,44 @@ impl SafetyScanner for SecretsScanner {
 
 impl SecretsScanner {
     fn scan(&self, text: &str) -> Vec<Finding> {
-        let configured = self.scanner.as_ref();
-        let scanner = configured.or_else(|| match GovernanceEngine::global() {
-            Ok(engine) => engine.secret_scanner(),
-            Err(error) => {
-                tracing::error!(%error, "response secret scanner configuration unavailable");
-                None
-            },
-        });
         let input = GovernedInput::prompt_text(text.to_owned());
-        scanner
-            .and_then(|scanner| scanner.detect(&input))
-            .map_or_else(Vec::new, |hit| {
-                let observation = hit.observation;
-                vec![Finding {
-                    phase: "response",
-                    severity: if observation {
-                        Severity::Low
-                    } else {
-                        Severity::High
-                    },
-                    category: if observation {
-                        "secret_observation"
-                    } else {
-                        "secret"
-                    }
-                    .to_owned(),
-                    excerpt: Some(format!("{}: {}", hit.pattern.id, hit.redacted)),
-                    scanner: "secrets",
-                }]
-            })
+        let finding = self.scanner.as_ref().map_or_else(
+            || {
+                systemprompt::config::ProfileBootstrap::get()
+                    .ok()
+                    .and_then(|profile| {
+                        GovernanceEngine::from_services_root(std::path::Path::new(
+                            &profile.paths.services,
+                        ))
+                        .ok()
+                    })
+                    .and_then(|engine| {
+                        engine
+                            .secret_scanner()
+                            .and_then(|scanner| scanner.detect(&input))
+                    })
+            },
+            |scanner| scanner.detect(&input),
+        );
+        finding.map_or_else(Vec::new, |hit| {
+            let observation = hit.observation;
+            vec![Finding {
+                phase: "response",
+                severity: if observation {
+                    Severity::Low
+                } else {
+                    Severity::High
+                },
+                category: if observation {
+                    "secret_observation"
+                } else {
+                    "secret"
+                }
+                .to_owned(),
+                excerpt: Some(format!("{}: {}", hit.pattern.id, hit.redacted)),
+                scanner: "secrets",
+            }]
+        })
     }
 }
 

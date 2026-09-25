@@ -8,9 +8,10 @@ use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::time::Duration;
 use systemprompt::identifiers::ClientId;
+type HttpClient = reqwest::Client; // Why: external OAuth boundary. lint-ok: web-transport
 
-pub(super) fn client() -> AdminResult<reqwest::Client> {
-    reqwest::Client::builder()
+pub(super) fn client() -> AdminResult<HttpClient> {
+    reqwest::Client::builder() // Why: external OAuth boundary. lint-ok: web-transport
         .timeout(Duration::from_secs(15))
         .redirect(reqwest::redirect::Policy::none())
         .build()

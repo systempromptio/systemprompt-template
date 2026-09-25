@@ -54,7 +54,7 @@ pub fn validate_endpoint(resource: &str, origins: &[String], value: &str) -> Adm
 }
 
 async fn read<T: serde::de::DeserializeOwned>(
-    http: &reqwest::Client,
+    http: &reqwest::Client, // lint-ok: web-transport - OAuth validation calls an external provider
     provider: &Provider,
     url: &str,
 ) -> AdminResult<T> {
@@ -90,7 +90,7 @@ pub(super) async fn bounded_json<T: serde::de::DeserializeOwned>(
 }
 
 pub(super) async fn metadata(
-    http: &reqwest::Client,
+    http: &reqwest::Client, // lint-ok: web-transport - OAuth validation calls an external provider
     provider: &Provider,
 ) -> AdminResult<AuthorizationMetadata> {
     let resource_url = trusted_endpoint(provider, &provider.endpoint())?;

@@ -137,17 +137,7 @@ pub async fn dispatch_tool(
     auth_token: &str,
 ) -> Result<CallToolResult, McpError> {
     match tool_name {
-        "evaluation_fixture" if ctx.role == super::ServerRole::EvaluationFixture => {
-            ctx.executor
-                .execute(
-                    &crate::fixtures::FixtureHandler { pool: ctx.db_pool },
-                    ctx.request,
-                    ctx.request_context,
-                    ctx.client,
-                )
-                .await
-        },
-        "admin_report" => {
+        crate::tools::TOOL_ADMIN_REPORT => {
             ctx.executor
                 .execute(
                     &crate::reports::ReportHandler {
@@ -160,7 +150,7 @@ pub async fn dispatch_tool(
                 )
                 .await
         },
-        "systemprompt" => {
+        crate::tools::TOOL_SYSTEMPROMPT => {
             let handler = SystempromptToolHandler {
                 auth_token: auth_token.to_owned(),
                 cli: ctx.cli,

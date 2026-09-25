@@ -153,6 +153,7 @@ async fn audit_decision(
         // Why: authz decisions are entity-keyed, not agent-keyed; entity_type
         // remains in evaluated_rules above for forensic lookup.
         agent_scope: None,
+        tool_use_id: None,
         decision: decision_tag,
         policy: POLICY_NAME,
         reason: &reason_str,

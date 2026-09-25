@@ -100,6 +100,7 @@ pub struct PlatformMonthPoint {
     pub requests: i64,
 }
 
+// Why: lint-ok: unused-pub — retained repository query for extension consumers.
 pub async fn list_platform_month_series(
     pool: &PgPool,
     months: i32,

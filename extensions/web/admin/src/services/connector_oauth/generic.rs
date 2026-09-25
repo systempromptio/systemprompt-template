@@ -60,7 +60,7 @@ pub async fn authorize_with_client(
     consent: Consent<'_>,
     provider: Provider,
     callback: &str,
-    http: &reqwest::Client,
+    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
 ) -> AdminResult<(String, Grant)> {
     let Consent {
         user,
@@ -123,8 +123,10 @@ pub async fn authorize_with_client(
     };
     Ok((url.into(), grant))
 }
-
-pub async fn validate_refresh(grant: &Grant, http: &reqwest::Client) -> AdminResult<()> {
+pub async fn validate_refresh(
+    grant: &Grant,
+    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
+) -> AdminResult<()> {
     validate_grant(grant)?;
     let metadata = metadata(http, &grant.provider).await?;
     if (metadata.issuer.as_str(), metadata.token_endpoint.as_str())
@@ -144,7 +146,7 @@ async fn register_client(
     provider: &Provider,
     meta: &super::generic_discovery::AuthorizationMetadata,
     callback: &str,
-    http: &reqwest::Client,
+    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
 ) -> AdminResult<(Registration, &'static str)> {
     let settings = provider
         .settings()

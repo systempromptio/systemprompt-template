@@ -27,7 +27,7 @@ use crate::fixtures::unique;
 use crate::tempdb::TempDb;
 
 fn shipped_policies() -> GatewayPolicyConfig {
-    let path = astound_test_common::repo_path("services/gateway/policies.yaml");
+    let path = template_test_common::repo_path("services/gateway/policies.yaml");
     let yaml =
         std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
     serde_yaml::from_str(&yaml).unwrap_or_else(|e| panic!("parse {}: {e}", path.display()))

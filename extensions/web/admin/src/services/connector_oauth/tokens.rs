@@ -16,7 +16,7 @@ struct Tokens {
 async fn request_with_client(
     grant: &mut Grant,
     fields: &[(&str, &str)],
-    http: &reqwest::Client,
+    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
 ) -> AdminResult<()> {
     super::generic::validate_grant(grant)?;
     let body = {
@@ -122,7 +122,7 @@ pub async fn exchange_with_client(
     grant: &mut Grant,
     code: &str,
     callback: &str,
-    http: &reqwest::Client,
+    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
 ) -> AdminResult<()> {
     let verifier = grant.verifier.clone();
     request_with_client(
@@ -143,8 +143,10 @@ pub async fn exchange_with_client(
 pub(super) async fn refresh(grant: &mut Grant) -> AdminResult<()> {
     refresh_with_client(grant, &client()?).await
 }
-
-pub async fn refresh_with_client(grant: &mut Grant, http: &reqwest::Client) -> AdminResult<()> {
+pub async fn refresh_with_client(
+    grant: &mut Grant,
+    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
+) -> AdminResult<()> {
     if matches!(grant.provider, Provider::Generic(_)) {
         super::generic::validate_refresh(grant, http).await?;
     }

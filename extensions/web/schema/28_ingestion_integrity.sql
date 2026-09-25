@@ -20,8 +20,7 @@ BEGIN
        OR EXISTS (SELECT 1 FROM session_cost_snapshots WHERE session_id = session_key AND user_id <> owner_key)
        OR EXISTS (SELECT 1 FROM session_transcripts WHERE session_id = session_key AND user_id <> owner_key) THEN
         RAISE EXCEPTION 'Ingestion session ownership conflict' USING ERRCODE = '23514';
-    END IF;
-    INSERT INTO ingestion_session_owners(session_id, user_id) VALUES(session_key, owner_key)
+    END IF; INSERT INTO ingestion_session_owners(session_id, user_id) VALUES(session_key, owner_key)
     ON CONFLICT (session_id) DO NOTHING;
     SELECT user_id INTO bound_owner FROM ingestion_session_owners WHERE session_id = session_key;
     IF bound_owner <> owner_key THEN
@@ -108,8 +107,7 @@ RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE old_digest text; digest text;
 BEGIN
     digest := NEW.metadata->>'_ingestion_digest';
-    IF digest IS NOT NULL THEN
-        INSERT INTO ingestion_event_receipts(dedup_key, payload_digest) VALUES(NEW.dedup_key, digest)
+    IF digest IS NOT NULL THEN INSERT INTO ingestion_event_receipts(dedup_key, payload_digest) VALUES(NEW.dedup_key, digest)
         ON CONFLICT(dedup_key) DO NOTHING;
         SELECT payload_digest INTO old_digest FROM ingestion_event_receipts WHERE dedup_key = NEW.dedup_key;
         IF old_digest <> digest THEN
@@ -122,8 +120,7 @@ DROP TRIGGER IF EXISTS ingestion_delivery ON plugin_usage_events;
 CREATE TRIGGER ingestion_delivery BEFORE INSERT ON plugin_usage_events FOR EACH ROW EXECUTE FUNCTION accept_ingestion_delivery();
 
 CREATE OR REPLACE FUNCTION enqueue_ingestion_event()
-RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
-    INSERT INTO ingestion_outbox(event_id) VALUES(NEW.id) ON CONFLICT DO NOTHING;
+RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN INSERT INTO ingestion_outbox(event_id) VALUES(NEW.id) ON CONFLICT DO NOTHING;
     RETURN NEW;
 END $$;
 DROP TRIGGER IF EXISTS ingestion_enqueue ON plugin_usage_events;
@@ -139,8 +136,7 @@ BEGIN
     ) pending;
     IF event_ids IS NULL THEN RETURN 0; END IF;
     PERFORM pg_advisory_xact_lock(hashtextextended('ingestion:' || session_id, 0))
-    FROM (SELECT DISTINCT session_id FROM plugin_usage_events WHERE id = ANY(event_ids) ORDER BY session_id) owners;
-    INSERT INTO plugin_session_summaries(id,session_id,user_id,total_events,tool_uses,prompts,errors,
+    FROM (SELECT DISTINCT session_id FROM plugin_usage_events WHERE id = ANY(event_ids) ORDER BY session_id) owners; INSERT INTO plugin_session_summaries(id,session_id,user_id,total_events,tool_uses,prompts,errors,
         content_input_bytes,content_output_bytes,loc_added,loc_removed,started_at,subagent_spawns,user_prompts,automated_actions)
     SELECT 'sess_' || e.session_id,e.session_id,e.user_id,count(*),
         count(*) FILTER(WHERE event_type IN ('PostToolUse','PostToolUseFailure')),
@@ -159,8 +155,7 @@ BEGIN
         content_input_bytes=EXCLUDED.content_input_bytes,content_output_bytes=EXCLUDED.content_output_bytes,
         loc_added=EXCLUDED.loc_added,loc_removed=EXCLUDED.loc_removed,subagent_spawns=EXCLUDED.subagent_spawns,
         user_prompts=EXCLUDED.user_prompts,automated_actions=EXCLUDED.automated_actions,updated_at=now()
-    WHERE plugin_session_summaries.user_id=EXCLUDED.user_id;
-    UPDATE ingestion_outbox SET processed_at=now() WHERE event_id=ANY(event_ids);
+    WHERE plugin_session_summaries.user_id=EXCLUDED.user_id; UPDATE ingestion_outbox SET processed_at=now() WHERE event_id=ANY(event_ids);
     GET DIAGNOSTICS affected = ROW_COUNT;
     RETURN affected;
 END $$;

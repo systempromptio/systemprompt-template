@@ -10,7 +10,6 @@
 [workspace]
 members = [
     "common",
-    "unit/evaluation",
     "unit/mcp",
     "unit/web",
     "integration/admin-config",
@@ -25,6 +24,7 @@ resolver = "2"
 [workspace.package]
 edition = "2024"
 version = "0.0.0"
+license = "MIT"
 publish = false
 
 # Test code asserts by panicking and constructs fixtures liberally; relax the
@@ -54,10 +54,9 @@ systemprompt-web-site = { path = "../extensions/web/site" }
 # The contract crate additionally enables `full`, which links the core
 # extension crates whose `register_extension!` registrations carry the
 # migrations the admin schema needs.
-systemprompt = { version = "0.52.0", default-features = false, features = ["core", "database"] }
-systemprompt-security = { version = "0.52.0" }
-systemprompt-evaluation = { version = "0.52.0" }
-systemprompt-api = { version = "0.52.0" }
+systemprompt = { version = "0.61.0", default-features = false, features = ["core", "database"] }
+systemprompt-security = { version = "0.61.0" }
+systemprompt-api = { version = "0.61.0" }
 
 # HTTP contract harness — drives the real admin router in-process.
 axum = "0.8"
@@ -68,6 +67,7 @@ http-body-util = "0.1"
 tokio = { version = "1.49", features = ["rt-multi-thread", "macros"] }
 sqlx = { version = "0.9", features = ["runtime-tokio", "tls-rustls-ring-webpki", "postgres", "uuid", "chrono", "json"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
+serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
 url = "2.5"
 # Alias serde_yaml_ng exactly as the root workspace does: core's APIs expose
@@ -78,9 +78,13 @@ clap = { version = "4", features = ["derive"] }
 tempfile = "3"
 # Pinned to the exact version the root workspace pins, so the `ServerHandler`
 # trait the tests bring into scope is the one the MCP crates implement.
-rmcp = { version = "=3.1.3", features = ["server"] }
+rmcp = { version = "=3.3.0", features = ["server"] }
 uuid = { version = "1.18", features = ["v4"] }
 base64 = "0.22"
+anyhow = "1"
+toml = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+sha2 = "0.10"
 # Pinned to the version core signs with, so the tokens this suite mints for the
 # hook audiences validate against core's own decoder.
 jsonwebtoken = { version = "10", features = ["rust_crypto"] }
@@ -90,7 +94,7 @@ jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 # workspace, so without this the test crates resolve core from crates.io
 # while the extensions under test resolve it from the local checkout.
 # Active in lockstep with the root patch block while core 0.51.0 is unreleased.
-[patch.crates-io]
+[workspace.metadata.unreleased-core-patch]
 systemprompt = { path = "../../systemprompt-core/systemprompt" }
 systemprompt-models = { path = "../../systemprompt-core/crates/shared/models" }
 systemprompt-traits = { path = "../../systemprompt-core/crates/shared/traits" }
@@ -123,7 +127,6 @@ systemprompt-api = { path = "../../systemprompt-core/crates/entry/api" }
 systemprompt-cli = { path = "../../systemprompt-core/crates/entry/cli" }
 systemprompt-slack = { path = "../../systemprompt-core/crates/domain/slack" }
 systemprompt-teams = { path = "../../systemprompt-core/crates/domain/teams" }
-systemprompt-evaluation = { path = "../../systemprompt-core/crates/domain/evaluation" }
 
 # Published macro dependency compatibility fix; see vendor/README.md.
 [patch.crates-io.proc-macro-error2]
