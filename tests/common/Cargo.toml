@@ -15,6 +15,7 @@ workspace = true
 # harness usable by every suite.
 systemprompt = { workspace = true, features = ["full"] }
 systemprompt-web-admin = { workspace = true }
+systemprompt-web-content = { workspace = true }
 systemprompt-web-extension = { workspace = true }
 
 sqlx = { workspace = true }

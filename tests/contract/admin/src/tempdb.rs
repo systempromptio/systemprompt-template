@@ -20,6 +20,7 @@ use systemprompt::extension::ExtensionRegistry;
 use url::Url;
 
 use systemprompt_web_extension as _;
+use systemprompt_web_content as _;
 
 pub struct TempDb {
     pub pool: Arc<PgPool>,

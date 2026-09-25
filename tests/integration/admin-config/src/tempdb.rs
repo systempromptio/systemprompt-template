@@ -21,6 +21,7 @@ use systemprompt::extension::ExtensionRegistry;
 use url::Url;
 
 use systemprompt_web_admin as _;
+use systemprompt_web_content as _;
 use systemprompt_web_extension as _;
 
 pub struct TempDb {
