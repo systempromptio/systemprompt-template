@@ -108,7 +108,6 @@ impl Extension for WebExtension {
     fn cross_extension_tables(&self) -> Vec<&'static str> {
         vec![
             "managed_installation_receipts",
-            "managed_invocation_attributions",
             "managed_publications",
             "managed_resources",
             "markdown_content",
