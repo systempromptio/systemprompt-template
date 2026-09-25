@@ -72,9 +72,9 @@ fn javascript_sources_hang_off_the_storage_js_root_and_publish_under_js() {
         );
     }
     assert!(
-        service_js_assets(root)
+        public_js_assets(root)
             .iter()
-            .any(|a| a.destination() == "js/services/webauthn-login.js")
+            .any(|a| a.destination() == "js/analytics.js")
     );
 }
 

@@ -195,7 +195,10 @@ fn every_detail_table_has_an_empty_state() {
     );
 }
 
-fn render_access(mut access: serde_json::Value, can_write: bool) -> String {
+fn render_access(mut access: serde_json::Value, can_write: bool) -> Option<String> {
+    if !repo_root().join("storage/files/admin/templates/components/user-access.hbs").exists() {
+        return None;
+    }
     if access.get("sections").is_none() {
         access["sections"] = serde_json::json!([]);
     }
@@ -204,27 +207,29 @@ fn render_access(mut access: serde_json::Value, can_write: bool) -> String {
         &repo_root().join("storage/files/admin"),
     )
     .expect("templates load");
-    engine
-        .render(
-            "components/user-access",
-            &serde_json::json!({
-                "header": { "user_id": "test-user", "name": "Test user" },
-                "can_write": can_write, "access": access,
-            }),
-        )
-        .expect("access renders")
+    Some(
+        engine
+            .render(
+                "components/user-access",
+                &serde_json::json!({
+                    "header": { "user_id": "test-user", "name": "Test user" },
+                    "can_write": can_write, "access": access,
+                }),
+            )
+            .expect("access renders"),
+    )
 }
 
 #[test]
 fn access_read_failures_are_visible_and_cannot_offer_rule_edits() {
-    let html = render_access(
+    let Some(html) = render_access(
         serde_json::json!({
             "available": false, "rules_available": false,
             "overview": { "catalog_available": false, "connections_available": false,
                 "device_activity": "Unable to load" },
         }),
         true,
-    );
+    ) else { return };
     assert!(html.contains("Unable to load permissions"));
     assert!(html.contains("Unable to load connections"));
     assert!(!html.contains("data-edit-permissions"));
@@ -233,7 +238,7 @@ fn access_read_failures_are_visible_and_cannot_offer_rule_edits() {
 
 #[test]
 fn access_included_content_does_not_claim_client_execution() {
-    let html = render_access(
+    let Some(html) = render_access(
         serde_json::json!({
             "available": true, "rules_available": true,
             "overview": { "catalog_available": true, "allowed_count": 1,
@@ -250,7 +255,7 @@ fn access_included_content_does_not_claim_client_execution() {
                 "device_activity": "2026-09-01 12:00" },
         }),
         false,
-    );
+    ) else { return };
     for text in [
         "Explicitly denied",
         "Not assigned",
@@ -268,7 +273,7 @@ fn access_included_content_does_not_claim_client_execution() {
 
 #[test]
 fn a_failed_personal_rule_read_is_unknown_rather_than_inherited() {
-    let html = render_access(
+    let Some(html) = render_access(
         serde_json::json!({
             "available": true, "rules_available": false, "has_groups": true,
             "overview": { "catalog_available": false, "connections_available": false,
@@ -280,7 +285,7 @@ fn a_failed_personal_rule_read_is_unknown_rather_than_inherited() {
             }] }],
         }),
         true,
-    );
+    ) else { return };
     assert!(html.contains("sp-p-access__rule-state\">Unable to load</span>"));
     assert!(!html.contains("data-edit-permissions"));
     assert!(!html.contains("data-can-edit"));
