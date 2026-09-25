@@ -62,24 +62,24 @@ impl SafetyScanner for SecretsScanner {
 impl SecretsScanner {
     fn scan(&self, text: &str) -> Vec<Finding> {
         let input = GovernedInput::prompt_text(text.to_owned());
-        let finding = if let Some(scanner) = &self.scanner {
-            scanner.detect(&input)
-        } else {
-            let scanner = systemprompt::config::ProfileBootstrap::get()
-                .ok()
-                .and_then(|profile| {
-                    GovernanceEngine::from_services_root(std::path::Path::new(
-                        &profile.paths.services,
-                    ))
+        let finding = self.scanner.as_ref().map_or_else(
+            || {
+                systemprompt::config::ProfileBootstrap::get()
                     .ok()
-                })
-                .and_then(|engine| {
-                    engine
-                        .secret_scanner()
-                        .and_then(|scanner| scanner.detect(&input))
-                });
-            scanner
-        };
+                    .and_then(|profile| {
+                        GovernanceEngine::from_services_root(std::path::Path::new(
+                            &profile.paths.services,
+                        ))
+                        .ok()
+                    })
+                    .and_then(|engine| {
+                        engine
+                            .secret_scanner()
+                            .and_then(|scanner| scanner.detect(&input))
+                    })
+            },
+            |scanner| scanner.detect(&input),
+        );
         finding.map_or_else(Vec::new, |hit| {
             let observation = hit.observation;
             vec![Finding {

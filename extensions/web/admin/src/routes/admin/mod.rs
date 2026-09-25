@@ -80,10 +80,6 @@ fn build_access_control_write_routes() -> Router<Arc<PgPool>> {
         )
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "the declarative route inventory is kept in one access tier"
-)]
 fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
     Router::new()
         .route("/gateway", patch(handlers::update_gateway_settings_handler))

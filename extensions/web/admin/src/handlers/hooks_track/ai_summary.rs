@@ -121,6 +121,10 @@ RULES:
 - recommendations must be null or genuinely useful. Never say \"add tests\" or \"improve documentation\"
 - improvement_hints must be specific to THIS session, referencing actual prompts or patterns. Never give generic advice. null if quality_score is 5";
 
+#[expect(
+    clippy::expect_used,
+    reason = "the agent name is a static protocol constant"
+)]
 pub fn build_request_context(
     user_id: &UserId,
     session_id: &SessionId,
