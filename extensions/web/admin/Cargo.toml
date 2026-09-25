@@ -75,3 +75,6 @@ governance-ssr = []
 
 [lints]
 workspace = true
+
+[package.metadata.cargo-machete]
+ignored = ["inventory"]
