@@ -5567,6 +5567,8 @@ dependencies = [
 name = "systemprompt-mcp-shared"
 version = "0.61.0"
 dependencies = [
+ "serde",
+ "sqlx",
  "systemprompt",
  "tracing",
 ]
