@@ -52,8 +52,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS plugin_usage_events_owner_id
     ON plugin_usage_events(user_id,id);
 CREATE UNIQUE INDEX IF NOT EXISTS mcp_tool_executions_owner_id
     ON mcp_tool_executions(user_id,mcp_execution_id);
-CREATE UNIQUE INDEX IF NOT EXISTS eval_resource_revisions_owner_id
-    ON eval_resource_revisions(owner_id,id);
+CREATE UNIQUE INDEX IF NOT EXISTS managed_revisions_owner_id
+    ON managed_revisions(owner_id,id);
 
 -- The owner-paired keys need the unique indexes declared above, which on an
 -- established database only arrive through migration 057. The installer
@@ -68,12 +68,12 @@ CREATE TABLE IF NOT EXISTS reviewed_production_failures (
     invocation_id TEXT NOT NULL REFERENCES plugin_usage_events(id),
     reviewer_id TEXT NOT NULL REFERENCES users(id),
     sanitized_evidence JSONB NOT NULL,
-    development_case_revision_id TEXT NOT NULL REFERENCES eval_resource_revisions(id),
+    development_case_revision_id TEXT NOT NULL REFERENCES managed_revisions(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE(owner_id,invocation_id),
     CONSTRAINT reviewed_failure_invocation_owner
         FOREIGN KEY(owner_id,invocation_id) REFERENCES plugin_usage_events(user_id,id),
     CONSTRAINT reviewed_failure_case_owner
-        FOREIGN KEY(owner_id,development_case_revision_id) REFERENCES eval_resource_revisions(owner_id,id)
+        FOREIGN KEY(owner_id,development_case_revision_id) REFERENCES managed_revisions(owner_id,id)
 );
 
