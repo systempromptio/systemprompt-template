@@ -17,7 +17,7 @@ use systemprompt::database::Database;
 use systemprompt::extension::{AssetDefinition, AssetType, ExtensionRegistry};
 use systemprompt::identifiers::{Actor, UserId};
 use systemprompt::models::profile::{
-    ContentNegotiationConfig, PathsConfig, RateLimitsConfig, SecurityHeadersConfig,
+    ContentNegotiationConfig, PathsConfig, RateLimitsConfig, RetentionConfig, SecurityHeadersConfig,
 };
 use systemprompt::models::{Config, PathResolution};
 use systemprompt::traits::{Job, JobContext};
@@ -115,11 +115,13 @@ pub(crate) fn install_config() {
         signing_key_path: std::path::PathBuf::from("signing_key.pem"),
         use_https: true,
         rate_limits: RateLimitsConfig::default(),
+        retention: RetentionConfig::default(),
         cors_allowed_origins: vec![],
         trusted_proxies: vec![],
         is_cloud: false,
         content_negotiation: ContentNegotiationConfig::default(),
         security_headers: SecurityHeadersConfig::default(),
+        allow_dynamic_client_registration: false,
         allow_registration: false,
         login_page_url: None,
         system_admin_username: "admin".to_owned(),

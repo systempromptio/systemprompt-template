@@ -7,7 +7,7 @@
 
 use systemprompt::models::Config;
 use systemprompt::models::profile::{
-    ContentNegotiationConfig, RateLimitsConfig, SecurityHeadersConfig,
+    ContentNegotiationConfig, RateLimitsConfig, RetentionConfig, SecurityHeadersConfig,
 };
 use systemprompt::models::services::WebConfig;
 use systemprompt::template_provider::{ExtenderContext, TemplateDataExtender};
@@ -64,11 +64,13 @@ fn install_config() {
         signing_key_path: std::path::PathBuf::from("signing_key.pem"),
         use_https: true,
         rate_limits: RateLimitsConfig::default(),
+        retention: RetentionConfig::default(),
         cors_allowed_origins: vec![],
         trusted_proxies: vec![],
         is_cloud: false,
         content_negotiation: ContentNegotiationConfig::default(),
         security_headers: SecurityHeadersConfig::default(),
+        allow_dynamic_client_registration: false,
         allow_registration: false,
         login_page_url: None,
         system_admin_username: "admin".to_owned(),
