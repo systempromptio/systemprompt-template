@@ -12,12 +12,14 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use systemprompt::config::AppPaths;
 use systemprompt::database::Database;
 use systemprompt::extension::{AssetDefinition, AssetType, ExtensionRegistry};
 use systemprompt::identifiers::{Actor, UserId};
-use systemprompt::models::config::RateLimitConfig;
-use systemprompt::models::profile::{ContentNegotiationConfig, PathsConfig, SecurityHeadersConfig};
-use systemprompt::models::{AppPaths, Config, PathResolution};
+use systemprompt::models::profile::{
+    ContentNegotiationConfig, PathsConfig, RateLimitsConfig, SecurityHeadersConfig,
+};
+use systemprompt::models::{Config, PathResolution};
 use systemprompt::traits::{Job, JobContext};
 use systemprompt_web_jobs::{
     BundleAdminCssJob, ContentIngestionJob, ContentPrerenderJob, CopyExtensionAssetsJob,
@@ -112,7 +114,7 @@ pub(crate) fn install_config() {
         id_jag_ttl_secs: 300,
         signing_key_path: std::path::PathBuf::from("signing_key.pem"),
         use_https: true,
-        rate_limits: RateLimitConfig::default(),
+        rate_limits: RateLimitsConfig::default(),
         cors_allowed_origins: vec![],
         trusted_proxies: vec![],
         is_cloud: false,
