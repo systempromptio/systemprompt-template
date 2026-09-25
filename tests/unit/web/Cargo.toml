@@ -9,6 +9,9 @@ publish = false
 workspace = true
 
 [dependencies]
+toml = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
 anyhow = { workspace = true }
 tower = { workspace = true }
 axum = { workspace = true }

@@ -9,6 +9,10 @@ publish = false
 workspace = true
 
 [dependencies]
+toml = { workspace = true }
+reqwest = { workspace = true }
+serde_yaml = { workspace = true }
+serde = { workspace = true }
 # `full` links the core extension crates whose `register_extension!` supplies
 # the migrations these repositories query (users, ai_requests, access control,
 # scheduled jobs); the admin crate itself carries the web-owned schema.
