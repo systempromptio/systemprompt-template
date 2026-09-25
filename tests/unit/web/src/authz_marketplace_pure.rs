@@ -166,7 +166,9 @@ fn keep_sets_shrink_every_list_to_what_survived() {
             skills: keep(&["skill-b"], |s| SkillId::try_new(s).expect("skill id")),
             agents: std::collections::HashSet::new(),
             hooks: keep(&["hook-a"], |s| HookId::new(s)),
-            mcp_servers: keep(&["crm"], |s| McpServerId::new(s)),
+            mcp_servers: keep(&["crm"], |s| {
+                McpServerId::try_new(s).expect("valid test server ID")
+            }),
             marketplaces: std::collections::HashSet::new(),
         },
     );
@@ -286,7 +288,9 @@ fn keeping_everything_is_the_identity() {
             }),
             agents: keep(&["agent-a"], |s| AgentId::new(s)),
             hooks: keep(&["hook-a"], |s| HookId::new(s)),
-            mcp_servers: keep(&["crm", "systemprompt"], |s| McpServerId::new(s)),
+            mcp_servers: keep(&["crm", "systemprompt"], |s| {
+                McpServerId::try_new(s).expect("valid test server ID")
+            }),
             marketplaces: std::collections::HashSet::new(),
         },
     );

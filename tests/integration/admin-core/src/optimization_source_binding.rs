@@ -14,7 +14,8 @@ async fn source_attestation_rejects_unverified_commits_and_preserves_content_ide
         &unclaimed_email("source-owner"),
     )
     .await;
-    let repo = ManagedRepository::new((*db.pool).clone());
+    let repo =
+        ManagedRepository::new((*db.pool).clone()).expect("test database has a managed repository");
     let input =
         crate::managed_revisions::revision_input(&repo, &owner, &unique("source-skill")).await;
     let baseline = repo.create_revision(&owner, &input).await.unwrap();

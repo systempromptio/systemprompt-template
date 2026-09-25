@@ -26,8 +26,12 @@ fn server(pool: &Arc<PgPool>) -> SystempromptServer {
         Arc::clone(pool),
         Some(Arc::clone(pool)),
     ));
-    SystempromptServer::new(db_pool, McpServerId::new("systemprompt"), hook())
-        .expect("construct the systemprompt server against a live pool")
+    SystempromptServer::new(
+        db_pool,
+        McpServerId::try_new("systemprompt").expect("valid test identifier"),
+        hook(),
+    )
+    .expect("construct the systemprompt server against a live pool")
 }
 
 #[tokio::test]
@@ -107,8 +111,12 @@ async fn a_different_service_id_only_changes_the_server_name() {
         Arc::clone(&db.pool),
         Some(Arc::clone(&db.pool)),
     ));
-    let renamed = SystempromptServer::new(db_pool, McpServerId::new("sp-staging"), hook())
-        .expect("construct with a different service id");
+    let renamed = SystempromptServer::new(
+        db_pool,
+        McpServerId::try_new("sp-staging").expect("valid test identifier"),
+        hook(),
+    )
+    .expect("construct with a different service id");
 
     let info = renamed.get_info();
 

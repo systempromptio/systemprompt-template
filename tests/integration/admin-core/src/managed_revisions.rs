@@ -85,7 +85,8 @@ async fn revision_round_trip_is_immutable_idempotent_and_owner_scoped() {
         &unclaimed_email("revision-bob"),
     )
     .await;
-    let repo = ManagedRepository::new((*db.pool).clone());
+    let repo =
+        ManagedRepository::new((*db.pool).clone()).expect("test database has a managed repository");
     let input = revision_input(&repo, &alice, &unique("managed_skill")).await;
     let id = repo
         .create_revision(&alice, &input)
@@ -167,7 +168,8 @@ async fn resources_isolate_source_keys_and_reject_foreign_parents() {
         &unclaimed_email("source-bob"),
     )
     .await;
-    let repo = ManagedRepository::new((*db.pool).clone());
+    let repo =
+        ManagedRepository::new((*db.pool).clone()).expect("test database has a managed repository");
     let key = unique("source_skill");
     let input = revision_input(&repo, &alice, &key).await;
     let id = repo
@@ -212,7 +214,8 @@ async fn importing_the_current_baseline_is_repeatable_and_preserves_source_bytes
         &unclaimed_email("baseline-owner"),
     )
     .await;
-    let repo = ManagedRepository::new((*db.pool).clone());
+    let repo =
+        ManagedRepository::new((*db.pool).clone()).expect("test database has a managed repository");
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../services");
     let ids = [
         "admin_daily_brief",
@@ -279,7 +282,8 @@ async fn text_candidates_inherit_assets_and_comparisons_reject_foreign_resources
         &unclaimed_email("candidate-owner"),
     )
     .await;
-    let repo = ManagedRepository::new((*db.pool).clone());
+    let repo =
+        ManagedRepository::new((*db.pool).clone()).expect("test database has a managed repository");
     let input = revision_input(&repo, &owner, &unique("candidate_skill")).await;
     let baseline = repo
         .create_revision(&owner, &input)
@@ -357,7 +361,8 @@ async fn bundle_resolves_the_exact_owned_dependency_closure() {
         &unclaimed_email("bundle-foreign"),
     )
     .await;
-    let repo = ManagedRepository::new((*db.pool).clone());
+    let repo =
+        ManagedRepository::new((*db.pool).clone()).expect("test database has a managed repository");
     let mut supporting = revision_input(&repo, &owner, &unique("bundle_reference")).await;
     supporting
         .files
@@ -416,7 +421,8 @@ async fn reviewed_publications_are_idempotent_fenced_and_generation_pinned() {
         &unclaimed_email("publication-owner"),
     )
     .await;
-    let repo = ManagedRepository::new((*db.pool).clone());
+    let repo =
+        ManagedRepository::new((*db.pool).clone()).expect("test database has a managed repository");
     let key = unique("published_skill");
     let input = revision_input(&repo, &owner, &key).await;
     let baseline = repo.create_revision(&owner, &input).await.unwrap();
@@ -603,7 +609,8 @@ async fn publication_races_corruption_receipts_and_rollback_fail_closed() {
         &unclaimed_email("lifecycle-owner"),
     )
     .await;
-    let repo = ManagedRepository::new((*db.pool).clone());
+    let repo =
+        ManagedRepository::new((*db.pool).clone()).expect("test database has a managed repository");
     let input = revision_input(&repo, &owner, &unique("lifecycle-skill")).await;
     let baseline = repo
         .create_revision(&owner, &input)
