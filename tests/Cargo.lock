@@ -4299,8 +4299,6 @@ version = "0.0.0"
 dependencies = [
  "sqlx",
  "systemprompt",
- "systemprompt-web-admin",
- "systemprompt-web-extension",
  "template-test-common",
  "tokio",
 ]
@@ -4439,17 +4437,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.5",
-]
-
-[[package]]
-name = "serde_jcs"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cacecf649bc1a7c5f0e299cc813977c6a78116abda2b93b1ee01735b71ead9a8"
-dependencies = [
- "ryu-js",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -5583,7 +5570,7 @@ dependencies = [
  "libc",
  "schemars",
  "serde",
- "serde_jcs 0.2.0",
+ "serde_jcs",
  "serde_json",
  "serde_yaml_ng",
  "sha2 0.11.0",
@@ -5645,19 +5632,14 @@ name = "systemprompt-mcp-agent"
 version = "0.61.0"
 dependencies = [
  "anyhow",
- "async-trait",
  "axum",
  "chrono",
- "hex",
  "inventory",
  "rmcp",
  "schemars",
  "serde",
- "serde_jcs 0.1.0",
  "serde_json",
- "sha2 0.10.9",
  "shell-words",
- "sqlx",
  "systemprompt",
  "systemprompt-mcp-shared",
  "thiserror 2.0.20",
@@ -5669,16 +5651,9 @@ dependencies = [
 name = "systemprompt-mcp-shared"
 version = "0.61.0"
 dependencies = [
- "axum",
- "chrono",
- "glob",
- "reqwest 0.13.5",
  "serde",
- "serde_json",
- "serde_yaml_ng",
  "sqlx",
  "systemprompt",
- "thiserror 2.0.20",
  "tracing",
 ]
 
@@ -5704,7 +5679,7 @@ dependencies = [
  "schemars",
  "semver",
  "serde",
- "serde_jcs 0.2.0",
+ "serde_jcs",
  "serde_json",
  "serde_yaml_ng",
  "sha2 0.11.0",
@@ -5879,7 +5854,7 @@ dependencies = [
  "reqwest 0.12.28",
  "rsa",
  "serde",
- "serde_jcs 0.2.0",
+ "serde_jcs",
  "serde_json",
  "serde_yaml_ng",
  "sha2 0.11.0",
@@ -6045,7 +6020,6 @@ dependencies = [
  "saml",
  "semver",
  "serde",
- "serde_jcs 0.1.0",
  "serde_json",
  "serde_yaml_ng",
  "sha2 0.10.9",
@@ -6054,7 +6028,6 @@ dependencies = [
  "systemprompt-mcp-shared",
  "systemprompt-security",
  "systemprompt-web-shared",
- "tempfile",
  "thiserror 2.0.20",
  "tokio",
  "tower",
@@ -6111,7 +6084,6 @@ dependencies = [
  "serde_yaml_ng",
  "sqlx",
  "systemprompt",
- "systemprompt-mcp-shared",
  "systemprompt-web-admin",
  "systemprompt-web-content",
  "systemprompt-web-shared",
