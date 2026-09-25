@@ -445,6 +445,7 @@ async fn copy_extension_assets_copies_every_registered_required_asset() {
     let Some(h) = Harness::create().await else {
         return;
     };
+    let _ = std::hint::black_box(systemprompt_content::ContentExtension);
     let registry = ExtensionRegistry::discover().expect("discover extension registrations");
     let assets = registry.all_required_assets(h.paths.as_ref());
     // Sources live under the temporary tree because `AppPaths` was built over

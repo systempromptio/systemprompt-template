@@ -44,6 +44,7 @@ async fn restore_and_upgrade(db: &TempDb) {
         .execute(&*db.pool)
         .await
         .expect("restore the previous release's schema");
+    let _ = std::hint::black_box(systemprompt_content::ContentExtension);
     let registry = ExtensionRegistry::discover().expect("discover extension registrations");
     assert!(
         !registry.is_empty(),

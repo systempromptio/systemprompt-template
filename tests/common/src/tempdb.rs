@@ -195,6 +195,7 @@ async fn ensure_template(admin: &PgPool, base: &str, prefix: &str, template: &st
                 .expect("connect to the template database"),
         );
         let database = Database::from_pools(Arc::clone(&pool), Some(Arc::clone(&pool)));
+        let _ = std::hint::black_box(systemprompt_content::ContentExtension);
         let registry = ExtensionRegistry::discover().expect("discover extension registrations");
         assert!(
             !registry.is_empty(),
