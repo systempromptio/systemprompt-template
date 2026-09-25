@@ -171,11 +171,11 @@ async fn historical_pii_is_separate_in_canonical_and_forwarded_requests() {
         messages: vec![
             CanonicalMessage {
                 role: Role::User,
-                content: vec![CanonicalContent::Text("Phone +442079460100".to_owned())],
+                content: vec![CanonicalContent::text("Phone +442079460100".to_owned())],
             },
             CanonicalMessage {
                 role: Role::User,
-                content: vec![CanonicalContent::Text("Summarize".to_owned())],
+                content: vec![CanonicalContent::text("Summarize".to_owned())],
             },
         ],
         ..Default::default()

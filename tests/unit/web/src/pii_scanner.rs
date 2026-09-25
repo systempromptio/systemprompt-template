@@ -11,7 +11,7 @@ fn response(text: &str) -> CanonicalResponse {
     CanonicalResponse {
         id: "resp-1".to_owned(),
         model: "test-model".to_owned(),
-        content: vec![CanonicalContent::Text(text.to_owned())],
+        content: vec![CanonicalContent::text(text.to_owned())],
         ..Default::default()
     }
 }
