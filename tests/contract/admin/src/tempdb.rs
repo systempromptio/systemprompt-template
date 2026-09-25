@@ -20,6 +20,7 @@ use systemprompt::extension::ExtensionRegistry;
 use url::Url;
 
 use systemprompt_web_extension as _;
+use systemprompt::content as _;
 use systemprompt_content as _;
 use systemprompt_marketplace as _;
 use systemprompt_users as _;
