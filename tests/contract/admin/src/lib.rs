@@ -87,12 +87,9 @@ mod status_contract;
 #[cfg(test)]
 mod tempdb;
 #[cfg(test)]
-#[cfg(test)]
 mod user_management_contract;
 #[cfg(test)]
 mod webhook_contract;
 
 #[cfg(test)]
 mod dashboard_query_scaling;
-
-#[cfg(test)]
