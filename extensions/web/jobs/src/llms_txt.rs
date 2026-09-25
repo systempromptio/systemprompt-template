@@ -176,6 +176,10 @@ async fn write_documentation_section(
         && source.enabled
     {
         let source_id = SourceId::new(&source.source_id);
+        #[expect(
+            clippy::expect_used,
+            reason = "the locale is a static protocol constant"
+        )]
         let locale = LocaleCode::try_new("en").expect("static locale is valid");
         if let Ok(docs) = repo.list_by_source(&source_id, &locale).await {
             let prefixes = [
