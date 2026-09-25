@@ -127,7 +127,6 @@ async function seedWorkSessions(db: Client) {
 }
 
 export async function seedPrincipals(db: Client) {
-  await seedWorkSessions(db);
   for (const p of PRINCIPALS) {
     await upsertUser(db, p.id, p.email, p.roles);
     await db.query(
@@ -136,6 +135,9 @@ export async function seedPrincipals(db: Client) {
       [p.id],
     );
   }
+  // Core 61 validates usage-event owners, so principal rows must exist before
+  // the synthetic session records that reference them are inserted.
+  await seedWorkSessions(db);
   // Group membership is the dashboard's organization model; departments remain
   // seeded for the compatibility pages.
   for (const [userId, name] of Object.entries(DEPARTMENT_OF)) {
