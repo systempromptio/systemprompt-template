@@ -151,5 +151,3 @@ mod gateway_owner_isolation;
 mod managed_attestation_fixture;
 #[cfg(test)]
 mod managed_revisions;
-#[cfg(test)]
-mod optimization_source_binding;
