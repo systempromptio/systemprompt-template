@@ -11,15 +11,6 @@ publish = false
 [dependencies]
 # Audit: uses database, identifiers, models (execution context), traits (ExtensionError) — requires `full`.
 systemprompt = { workspace = true, features = ["full"] }
-sqlx = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-serde_yaml = { workspace = true }
-glob = { workspace = true }
-chrono = { workspace = true }
-axum = { workspace = true }
-reqwest = { workspace = true }
-thiserror = { workspace = true }
 tracing = { workspace = true }
 
 [lints]

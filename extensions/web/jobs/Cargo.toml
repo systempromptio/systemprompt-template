@@ -9,7 +9,6 @@ homepage.workspace = true
 publish = false
 
 [dependencies]
-systemprompt-mcp-shared = { workspace = true }
 systemprompt-web-shared = { workspace = true }
 systemprompt-web-admin = { workspace = true }
 systemprompt-web-content = { workspace = true }

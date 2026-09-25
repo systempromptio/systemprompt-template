@@ -32,12 +32,7 @@ tracing.workspace = true
 
 shell-words.workspace = true
 chrono.workspace = true
-async-trait.workspace = true
 inventory.workspace = true
-sqlx.workspace = true
-sha2.workspace = true
-hex.workspace = true
-serde_jcs.workspace = true
 
 systemprompt-mcp-shared.workspace = true
 

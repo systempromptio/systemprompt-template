@@ -43,7 +43,6 @@ tracing = { workspace = true }
 
 # Crypto & encoding
 sha2 = { workspace = true }
-serde_jcs = { workspace = true }
 chacha20poly1305 = { workspace = true }
 hex = { workspace = true }
 jsonwebtoken = { workspace = true }
@@ -54,7 +53,6 @@ rand = { workspace = true }
 handlebars = { workspace = true }
 
 # Archive
-tempfile = { workspace = true }
 
 # HTTP client
 reqwest = { workspace = true }
@@ -65,7 +63,6 @@ saml = { workspace = true }
 # Utilities
 url = { workspace = true }
 urlencoding = { workspace = true }
-inventory = { workspace = true }
 async-trait = { workspace = true }
 
 [features]

@@ -46,7 +46,7 @@ pub enum ServerRole {
 
 impl ServerRole {
     #[must_use]
-    pub fn of(_service_id: &McpServerId) -> Self {
+    pub const fn of(_service_id: &McpServerId) -> Self {
         Self::Console
     }
 }

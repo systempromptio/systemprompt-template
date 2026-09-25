@@ -83,8 +83,6 @@ mod format_display;
 #[cfg(test)]
 mod groups_yaml_types;
 #[cfg(test)]
-mod optimization_policy;
-#[cfg(test)]
 mod release_version_substitution;
 #[cfg(test)]
 mod role;
