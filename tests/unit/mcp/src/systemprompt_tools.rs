@@ -10,10 +10,10 @@ use systemprompt_mcp_agent::tools::{
 };
 
 #[test]
-fn exactly_one_tool_is_exposed_under_the_server_name() {
+fn systemprompt_cli_tool_is_exposed_under_the_server_name() {
     let tools = list_tools();
-    assert_eq!(tools.len(), 1);
-    assert_eq!(tools[0].name.as_ref(), SERVER_NAME);
+    assert!(tools.len() >= 2, "Core 0.61 adds the admin report tool");
+    assert!(tools.iter().any(|tool| tool.name.as_ref() == SERVER_NAME));
     assert_eq!(SERVER_NAME, "systemprompt");
 }
 
