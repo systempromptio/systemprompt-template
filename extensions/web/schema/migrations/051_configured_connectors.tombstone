@@ -1,0 +1,5 @@
+Slot 051 was shipped as configured_connectors and is spent.
+
+The dashboard_usage_metrics migration was incorrectly assigned this slot in a
+later tree. It now uses slot 068 so databases that already applied slot 051
+cannot silently skip its SQL.
