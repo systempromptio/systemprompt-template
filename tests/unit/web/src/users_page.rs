@@ -196,7 +196,10 @@ fn every_detail_table_has_an_empty_state() {
 }
 
 fn render_access(mut access: serde_json::Value, can_write: bool) -> Option<String> {
-    if !repo_root().join("storage/files/admin/templates/components/user-access.hbs").exists() {
+    if !repo_root()
+        .join("storage/files/admin/templates/components/user-access.hbs")
+        .exists()
+    {
         return None;
     }
     if access.get("sections").is_none() {
@@ -229,7 +232,9 @@ fn access_read_failures_are_visible_and_cannot_offer_rule_edits() {
                 "device_activity": "Unable to load" },
         }),
         true,
-    ) else { return };
+    ) else {
+        return;
+    };
     assert!(html.contains("Unable to load permissions"));
     assert!(html.contains("Unable to load connections"));
     assert!(!html.contains("data-edit-permissions"));
@@ -255,7 +260,9 @@ fn access_included_content_does_not_claim_client_execution() {
                 "device_activity": "2026-09-01 12:00" },
         }),
         false,
-    ) else { return };
+    ) else {
+        return;
+    };
     for text in [
         "Explicitly denied",
         "Not assigned",
@@ -285,7 +292,9 @@ fn a_failed_personal_rule_read_is_unknown_rather_than_inherited() {
             }] }],
         }),
         true,
-    ) else { return };
+    ) else {
+        return;
+    };
     assert!(html.contains("sp-p-access__rule-state\">Unable to load</span>"));
     assert!(!html.contains("data-edit-permissions"));
     assert!(!html.contains("data-can-edit"));
