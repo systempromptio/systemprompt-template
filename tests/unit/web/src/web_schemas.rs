@@ -55,11 +55,20 @@ fn migrations_have_unique_increasing_versions_and_non_empty_sql() {
     assert_eq!(names.len(), migrations.len(), "two migrations share a name");
 
     for migration in &migrations {
-        assert!(
-            !migration.sql.trim().is_empty(),
-            "migration {} ({}) has no SQL",
-            migration.version,
-            migration.name
-        );
+        if migration.tombstone {
+            assert!(
+                migration.sql.trim().is_empty(),
+                "tombstone migration {} ({}) unexpectedly carries SQL",
+                migration.version,
+                migration.name
+            );
+        } else {
+            assert!(
+                !migration.sql.trim().is_empty(),
+                "migration {} ({}) has no SQL",
+                migration.version,
+                migration.name
+            );
+        }
     }
 }
