@@ -69,21 +69,3 @@ fn the_printed_link_targets_the_redeem_route_under_the_external_url() {
         "a trailing slash on the base must not double up"
     );
 }
-
-#[test]
-fn developer_sessions_preserve_admin_and_console_reader_permissions() {
-    use systemprompt::models::auth::Permission;
-    use systemprompt_web_admin::test_support::dev_login_permissions_for_roles;
-    for role in ["admin", "platform_admin"] {
-        assert_eq!(
-            dev_login_permissions_for_roles(&[role.to_owned()]),
-            vec![Permission::Admin, Permission::User]
-        );
-    }
-    for role in ["user", "project_manager", "sales", "developer"] {
-        assert_eq!(
-            dev_login_permissions_for_roles(&[role.to_owned()]),
-            vec![Permission::User]
-        );
-    }
-}

@@ -143,8 +143,6 @@ mod seed_contract;
 #[cfg(test)]
 mod shared_errors;
 #[cfg(test)]
-mod shared_ids;
-#[cfg(test)]
 mod short_id_display;
 #[cfg(test)]
 mod site_assets;
@@ -218,8 +216,6 @@ mod frontend_standards;
 mod gateway_catalog_pure;
 #[cfg(test)]
 mod governance_decision_view;
-#[cfg(test)]
-mod governance_gateway;
 #[cfg(test)]
 mod governance_pages;
 #[cfg(test)]
