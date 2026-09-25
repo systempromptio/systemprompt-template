@@ -5939,6 +5939,7 @@ dependencies = [
  "chrono",
  "handlebars",
  "hex",
+ "inventory",
  "jsonwebtoken 10.4.0",
  "rand 0.9.5",
  "reqwest 0.13.5",
