@@ -1,6 +1,7 @@
 [package]
 name = "schema-upgrade-tests"
 version.workspace = true
+license.workspace = true
 edition.workspace = true
 publish = false
 

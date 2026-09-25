@@ -1,6 +1,7 @@
 [package]
 name = "systemprompt-web-extension"
 version.workspace = true
+license.workspace = true
 edition.workspace = true
 authors.workspace = true
 description = "Web extension for the systemprompt.io template: content, navigation, and template rendering for the self-hosted AI governance binary."
