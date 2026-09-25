@@ -149,7 +149,10 @@ async fn ensure_template(admin: &PgPool, base: &str, template: &str) {
         let _ = std::hint::black_box(systemprompt_content::ContentExtension);
         let _ = systemprompt::extension::runtime_config::set_injected_extensions(
             systemprompt::extension::runtime_config::InjectedExtensions {
-                extensions: vec![Arc::new(systemprompt_content::ContentExtension)],
+                extensions: vec![
+                    Arc::new(systemprompt_content::ContentExtension),
+                    Arc::new(systemprompt_marketplace::ManagedResourcesExtension),
+                ],
                 ..Default::default()
             },
         );
