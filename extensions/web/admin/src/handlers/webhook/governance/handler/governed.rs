@@ -14,8 +14,10 @@ pub(super) fn governed_target(payload: &HookEventPayload) -> GovernedTarget {
                 GovernedTarget::Unknown
             }
         },
-        |name| GovernedTarget::Tool {
-            tool: McpToolName::new(name),
+        |name| {
+            McpToolName::try_new(name).map_or(GovernedTarget::Unknown, |tool| {
+                GovernedTarget::Tool { tool }
+            })
         },
     )
 }

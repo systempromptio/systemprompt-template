@@ -6,25 +6,11 @@ use axum::Router;
 use axum::routing::get;
 use sqlx::PgPool;
 
-use crate::handlers::{self, evaluation_experiments as evals, evaluation_results as results};
+use crate::handlers;
 use crate::routes::admin_groups;
 
 pub(super) fn build_admin_read_routes_inner(read_pool: &Arc<PgPool>) -> Router {
     Router::new()
-        .route("/evals/experiments", get(evals::list))
-        .route("/evals/budgets/{id}", get(evals::get_budget))
-        .route("/evals/experiments/{id}", get(evals::show))
-        .route(
-            "/evals/experiments/{id}/comparison",
-            get(results::comparison),
-        )
-        .route(
-            "/evals/experiments/{id}/comparison.md",
-            get(results::comparison_markdown),
-        )
-        .route("/evals/revisions/{id}", get(evals::get_revision))
-        .route("/evals/executions/{id}/evidence", get(results::evidence))
-        .route("/evals/executions/{id}/artifacts", get(results::artifacts))
         .route("/gateway", get(handlers::get_gateway_handler))
         .route(
             "/gateway/catalog/for-user/{user_id}",

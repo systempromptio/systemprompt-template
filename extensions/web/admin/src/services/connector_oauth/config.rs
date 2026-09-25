@@ -36,7 +36,9 @@ impl TryFrom<String> for Provider {
         Ok(match id.as_str() {
             "atlassian" => Self::Atlassian,
             "github" => Self::Github,
-            _ if is_salesforce_server_id(&id) => Self::Salesforce(McpServerId::new(id)),
+            _ if is_salesforce_server_id(&id) => {
+                Self::Salesforce(McpServerId::try_new(id).map_err(|error| error.to_string())?)
+            },
             _ => Self::Generic(id),
         })
     }

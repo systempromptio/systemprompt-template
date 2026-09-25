@@ -33,7 +33,6 @@ pub(super) fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
     let reason = reason.to_owned();
     let session_id = params.session_id.clone();
     let tool_name = params.tool_name.to_owned();
-    let claimed = params.claimed.cloned();
     let plugin_id = params.plugin_id.cloned();
     let session_service = Arc::clone(params.session_service);
     let headers = params.headers.clone();
@@ -65,7 +64,7 @@ pub(super) fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
             id: uuid::Uuid::new_v4().to_string(),
             // Why: refused before the chain ran, so no call identity was ever
             // minted for it — this denial is the whole of the call's history.
-            call_id: CallId::generate().as_str().to_owned(),
+            call_id: CallId::generate(),
             origin: AuditOrigin::Governed,
             decision: deny_for_auth_failure(&reason),
             // Why: authentication is what failed, so nothing about this caller
@@ -76,11 +75,12 @@ pub(super) fn spawn_auth_denial(params: &AuthDenialParams<'_>, reason: &str) {
                 session_id.clone(),
                 AccessScope::Unknown,
                 None,
-                claimed,
+                None,
             ),
             target: AuditTarget {
                 tool_name,
                 plugin_id,
+                tool_use_id: None,
             },
             chain: vec![ChainEntryOutcome {
                 policy_id: systemprompt::identifiers::PolicyId::new("authentication"),

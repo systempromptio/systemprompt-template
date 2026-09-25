@@ -5,8 +5,8 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use systemprompt::config::AppPaths;
 use systemprompt::extension::{AssetDefinition, ExtensionRegistry};
-use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::error::JobError;

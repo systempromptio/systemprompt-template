@@ -1,11 +1,9 @@
 //! Read-only provider identity and MCP protocol verification before connection
 //! use.
-
 use super::transport::client;
 use super::{Grant, Provider};
 use crate::error::{AdminError, AdminResult};
 use serde_json::{Value, json};
-
 async fn body(response: reqwest::Response) -> AdminResult<Value> {
     let status = response.status();
     if status.as_u16() == 401 {
@@ -58,9 +56,8 @@ async fn body(response: reqwest::Response) -> AdminResult<Value> {
         "Provider returned an invalid response".into(),
     ))
 }
-
 async fn rpc(
-    http: &reqwest::Client,
+    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
     grant: &Grant,
     session: &mut Option<String>,
     payload: Value,
@@ -147,7 +144,7 @@ fn tool_error(grant: &Grant, payload: &Value, value: &Value) -> AdminError {
 }
 
 async fn identity(
-    http: &reqwest::Client,
+    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
     grant: &mut Grant,
     session: &mut Option<String>,
 ) -> AdminResult<()> {
@@ -244,8 +241,10 @@ fn bind_salesforce_org(grant: &mut Grant, info: &Value) -> AdminResult<()> {
 pub async fn verify(grant: &mut Grant) -> AdminResult<()> {
     verify_with_client(grant, &client()?).await
 }
-
-pub async fn verify_with_client(grant: &mut Grant, http: &reqwest::Client) -> AdminResult<()> {
+pub async fn verify_with_client(
+    grant: &mut Grant,
+    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
+) -> AdminResult<()> {
     let mut session = None;
     let result = async {
         rpc(

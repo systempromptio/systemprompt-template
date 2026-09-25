@@ -28,14 +28,6 @@
 #     roles: [admin]
 
 rules:
-  # Deterministic evidence is restricted to administrators; fixture writes are
-  # additionally fenced to evaluator execution identities by the MCP server.
-  - entity_type: mcp_server
-    entity_id: evaluation_fixture
-    access: allow
-    default_included: false
-    roles: [admin]
-
   # enterprise-demo marketplace. The bridge manifest filter resolves this rule
   # and cascades it onto every member skill/agent/mcp that lacks an own rule
   # (see marketplace_filter.rs). Mirrors marketplace.access in

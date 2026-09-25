@@ -47,9 +47,7 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
         "Database not available in job context".to_owned(),
     ))?;
 
-    let pool = db.pool().ok_or(MarketplaceError::Internal(
-        "PgPool not available from database".to_owned(),
-    ))?;
+    let pool = db.pool();
 
     let actor_user = &ctx.actor().user_id;
 

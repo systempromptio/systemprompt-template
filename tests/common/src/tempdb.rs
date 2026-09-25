@@ -170,7 +170,6 @@ async fn ensure_template(admin: &PgPool, base: &str, prefix: &str, template: &st
     // A dependency alone does not keep an inventory section alive under link-time
     // garbage collection. Referencing the extension value makes its submitted
     // evaluation migrations part of every shared test-schema binary.
-    let _evaluation_extension = systemprompt_evaluation::EvaluationExtension;
     let mut conn = admin.acquire().await.expect("maintenance connection");
     // The lock is session-scoped, so every statement below has to run on this
     // one connection -- a pool would hand the unlock to a different session.

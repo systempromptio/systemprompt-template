@@ -13,7 +13,6 @@ workspace = true
 # actually linked into the test binary. Linking them here is what makes one
 # harness usable by every suite.
 systemprompt = { workspace = true, features = ["full"] }
-systemprompt-evaluation = { workspace = true }
 systemprompt-web-admin = { workspace = true }
 systemprompt-web-extension = { workspace = true }
 

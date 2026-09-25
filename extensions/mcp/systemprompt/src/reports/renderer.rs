@@ -1,6 +1,5 @@
 //! Render the same maintained assets in MCP Apps and the Cowork library.
 
-use async_trait::async_trait;
 use systemprompt::mcp::McpDomainResult;
 use systemprompt::mcp::services::ui_renderer::templates::DashboardRenderer;
 use systemprompt::mcp::services::ui_renderer::{UiRenderer, UiRendererRegistration, UiResource};
@@ -13,13 +12,12 @@ inventory::submit! {
     UiRendererRegistration { name: "systemprompt-admin-reports", factory: || std::sync::Arc::new(AdminRenderer) }
 }
 
-#[async_trait]
 impl UiRenderer for AdminRenderer {
     fn artifact_type(&self) -> ArtifactType {
         ArtifactType::Dashboard
     }
 
-    async fn render(&self, artifact: &Artifact) -> McpDomainResult<UiResource> {
+    fn render(&self, artifact: &Artifact) -> McpDomainResult<UiResource> {
         // Why: report the deserialisation failure instead of swallowing it.
         // Falling through to DashboardRenderer looked like a safe default, but
         // that renderer expects a DashboardArtifact and cannot read a
@@ -47,7 +45,7 @@ impl UiRenderer for AdminRenderer {
                     "admin report artifact does not match the ReportOutput contract: {error}"
                 )));
             }
-            return DashboardRenderer::new().render(artifact).await;
+            return DashboardRenderer::new().render(artifact);
         };
         let template = include_str!("../../../../../services/artifacts/admin-ai-usage/view.html");
         let data = serde_json::to_string(&report)

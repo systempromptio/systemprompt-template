@@ -77,7 +77,7 @@ pub async fn list_source_ad_groups(
     .fetch_all(pool)
     .await
 }
-
+// Why: downstream API. lint-ok: unused-pub
 pub async fn list_unassigned_users(pool: &PgPool) -> Result<Vec<UserId>, sqlx::Error> {
     sqlx::query_scalar!(
         r#"SELECT user_id AS "user_id!: UserId" FROM user_groups

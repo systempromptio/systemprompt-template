@@ -25,6 +25,24 @@ pub fn admin_assets(paths: &dyn AssetPaths) -> Vec<AssetDefinition> {
         storage_css.join("requirements-review.css"),
         "css/requirements-review.css",
     ));
+    assets.extend([
+        page_js!(&storage_js.join("pages"), "admin-report-print.js"),
+        page_js!(&storage_js.join("pages"), "management-department-detail.js"),
+        page_js!(&storage_js.join("pages"), "management-departments.js"),
+        page_js!(&storage_js.join("pages"), "profile-odoo.js"),
+        AssetDefinition::js(
+            storage_js.join("services/odoo-login.js"),
+            "js/services/odoo-login.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("services/webauthn-login.js"),
+            "js/services/webauthn-login.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("services/webauthn-register.js"),
+            "js/services/webauthn-register.js",
+        ),
+    ]);
     assets.push(AssetDefinition::js(
         storage_js.join("admin-report-bridge.js"),
         "js/admin-report-bridge.js",
@@ -52,7 +70,6 @@ fn page_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
         page_js!(&pages, "admin-group-detail.js"),
         page_js!(&pages, "admin-group-marketplaces.js"),
         page_js!(&pages, "admin-groups.js"),
-        page_js!(&pages, "admin-login.js"),
         page_js!(&pages, "admin-marketplace-groups.js"),
         page_js!(&pages, "admin-project-detail.js"),
         page_js!(&pages, "admin-projects.js"),

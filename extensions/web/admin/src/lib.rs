@@ -21,7 +21,6 @@ pub mod assets;
 pub mod audit_event_bus;
 pub mod authz;
 pub mod error;
-mod evaluation_verifier;
 pub mod event_hub;
 pub mod gateway_entitlement;
 pub mod gateway_safety;

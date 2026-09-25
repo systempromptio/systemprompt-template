@@ -19,8 +19,8 @@ use systemprompt::oauth::SessionCreationService;
 use systemprompt_security::authz::Decision;
 use systemprompt_security::policy::types::AccessScope;
 use systemprompt_security::policy::{
-    AgentScope, AuditOrigin, AuditTarget, ClaimedAgent, DecisionAudit, GovernedInput,
-    GovernedTarget, PolicyContext, PrincipalSnapshot, record_decision,
+    AgentScope, AuditOrigin, AuditTarget, DecisionAudit, GovernedInput, GovernedTarget,
+    PolicyContext, PrincipalSnapshot, record_decision,
 };
 
 use crate::repositories::dashboard::usage_aggregations::ingestion;
@@ -38,12 +38,12 @@ use governed::{governed_input, governed_target};
 // from the credential, so it lands in `claimed`. Core writes `agent_id` to the
 // verified identity column and keeps `claimed` in the audit blob only, where
 // it is never an input to a decision.
-pub(super) const fn principal_snapshot(
+pub(super) fn principal_snapshot(
     user_id: UserId,
     session_id: SessionId,
     agent_scope: AccessScope,
     client_id: Option<ClientId>,
-    claimed: Option<ClaimedAgent>,
+    _claimed: Option<String>,
 ) -> PrincipalSnapshot {
     PrincipalSnapshot {
         user_id,
@@ -52,7 +52,6 @@ pub(super) const fn principal_snapshot(
         agent_id: None,
         agent_scope,
         client_id,
-        claimed,
     }
 }
 
@@ -89,7 +88,7 @@ struct Governed<'a> {
     user_id: UserId,
     client_id: Option<ClientId>,
     access_scope: AccessScope,
-    claimed: Option<ClaimedAgent>,
+    _claimed: Option<String>,
     plugin_id: Option<&'a PluginId>,
 }
 
@@ -119,7 +118,7 @@ async fn evaluate_and_record(
     });
     let audit = DecisionAudit {
         id: uuid::Uuid::new_v4().to_string(),
-        call_id: call_id.as_str().to_owned(),
+        call_id,
         origin: AuditOrigin::Governed,
         decision: evaluation.decision.clone(),
         principal: principal_snapshot(
@@ -127,21 +126,21 @@ async fn evaluate_and_record(
             governed.session_id.clone(),
             governed.access_scope,
             governed.client_id,
-            governed.claimed,
+            None,
         ),
         target: AuditTarget {
             tool_name: governed.target.as_str().to_owned(),
             plugin_id: governed.plugin_id.cloned(),
+            tool_use_id: None,
         },
         chain: evaluation.chain,
         approver: None,
         act_chain: Vec::new(),
         // Why: the tool-call webhook carries no conversational context; only
         // the gateway path knows one.
-        context_id: Some(
-            systemprompt::identifiers::ContextId::derived_from_session(governed.session_id)
-                .to_string(),
-        ),
+        context_id: Some(systemprompt::identifiers::ContextId::derived_from_session(
+            governed.session_id,
+        )),
         trace_id: Some(systemprompt::identifiers::TraceId::generate().to_string()),
     };
     record_decision(pool, &audit).await.map_err(|error| {
@@ -173,17 +172,13 @@ pub(crate) async fn govern_tool_use(
     // Why: the hook body's agent id is a self-report — a Claude Code subagent
     // id, never a platform agent. It is kept for display and never becomes an
     // identity or a scope input.
-    let claimed = payload.common.agent_id.as_ref().map(|id| ClaimedAgent {
-        agent_id: id.as_str().to_owned(),
-        agent_type: payload.common.agent_type.clone(),
-    });
+    let claimed = payload.common.agent_id.as_ref().map(ToString::to_string);
     let plugin_id = query.plugin_id.as_ref();
     let denial_params = AuthDenialParams {
         pool: &pool,
         session_id: &session_id,
         tool_name: target.as_str(),
         hook_event_name: response_event,
-        claimed: claimed.as_ref(),
         plugin_id,
         session_service: &session_service,
         headers: &headers,
@@ -217,7 +212,7 @@ pub(crate) async fn govern_tool_use(
         user_id: principal.user_id,
         client_id: principal.client_id,
         access_scope,
-        claimed: claimed.clone(),
+        _claimed: claimed,
         plugin_id,
     };
     match evaluate_and_record(&pool, governed, &denial_params).await {

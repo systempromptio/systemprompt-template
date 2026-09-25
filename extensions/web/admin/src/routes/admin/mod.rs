@@ -18,9 +18,6 @@ use axum::routing::{delete, get, patch, post, put};
 use axum::{Router, middleware as axum_middleware};
 use sqlx::PgPool;
 
-use super::super::handlers::{
-    evaluation_experiments as evals, evaluation_results as results, evaluation_workers as workers,
-};
 use super::super::types::{ROLES_CONSOLE, ROLES_MANAGE, ROLES_PLATFORM};
 use super::super::{handlers, middleware};
 use super::admin_groups;
@@ -31,7 +28,7 @@ use read::build_admin_read_routes_inner;
 pub(crate) fn build_admin_only_routes(
     read_pool: &Arc<PgPool>,
     write_pool: &Arc<PgPool>,
-    owner: systemprompt::identifiers::UserId,
+    _owner: systemprompt::identifiers::UserId,
 ) -> Router {
     // Why: the split is the `project_manager` boundary. Reads are the admin
     // dashboard's data and open to any console role; every ordinary write
@@ -39,35 +36,18 @@ pub(crate) fn build_admin_only_routes(
     // stays with the admin roles. The platform tier is narrower still: an AD
     // mapping decides what the directory grants everyone, so only
     // `platform_admin` may move one.
-    let reads = build_admin_read_routes_inner(read_pool)
-        .merge(super::managed_resources::reads())
-        .layer(axum_middleware::from_fn_with_state(
-            ROLES_CONSOLE,
-            middleware::require_roles_middleware,
-        ));
-    let writes = build_admin_write_routes(write_pool)
-        .merge(super::managed_resources::writes())
-        .layer(axum_middleware::from_fn_with_state(
-            ROLES_MANAGE,
-            middleware::require_roles_middleware,
-        ));
+    let reads = build_admin_read_routes_inner(read_pool).layer(
+        axum_middleware::from_fn_with_state(ROLES_CONSOLE, middleware::require_roles_middleware),
+    );
+    let writes = build_admin_write_routes(write_pool).layer(axum_middleware::from_fn_with_state(
+        ROLES_MANAGE,
+        middleware::require_roles_middleware,
+    ));
     let platform = build_admin_platform_routes(write_pool).layer(
         axum_middleware::from_fn_with_state(ROLES_PLATFORM, middleware::require_roles_middleware),
     );
 
-    let managed = Arc::new(super::managed_state::ManagedState::new(
-        (**write_pool).clone(),
-        owner.clone(),
-    ));
-    let evaluations = Arc::new(super::evaluation_state::EvaluationState::new(
-        (**write_pool).clone(),
-        owner,
-    ));
-    reads
-        .merge(writes)
-        .merge(platform)
-        .layer(axum::Extension(evaluations))
-        .layer(axum::Extension(managed))
+    reads.merge(writes).merge(platform)
 }
 
 // Why: the access-control writes are their own table — every route here edits
@@ -106,19 +86,6 @@ fn build_access_control_write_routes() -> Router<Arc<PgPool>> {
 )]
 fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
     Router::new()
-        .route("/evals/budgets", post(evals::create_budget))
-        .route("/evals/experiments/preflight", post(evals::preflight))
-        .route("/evals/experiments", post(evals::create))
-        .route("/evals/experiments/{id}/cancel", post(evals::cancel))
-        .route("/evals/suggestions", post(results::suggestion))
-        .route("/evals/approvals/{id}", post(results::decide_approval))
-        .route("/evals/revisions", post(evals::create_revision))
-        .route(
-            "/evals/suites/super-admin",
-            post(handlers::evaluation_baseline::seed_suite),
-        )
-        .route("/evals/workers", post(workers::enroll))
-        .route("/evals/workers/{id}/revoke", post(workers::revoke))
         .route("/gateway", patch(handlers::update_gateway_settings_handler))
         .route(
             "/gateway/routes",

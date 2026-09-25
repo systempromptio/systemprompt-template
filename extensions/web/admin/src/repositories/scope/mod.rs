@@ -78,6 +78,7 @@ impl Scope {
     }
 
     #[must_use]
+    // Why: downstream API. lint-ok: unused-pub
     pub fn container_id(&self) -> Option<&str> {
         self.target().map(ScopeTarget::id)
     }

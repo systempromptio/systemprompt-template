@@ -81,7 +81,7 @@ pub struct UserSessionCostRow {
     pub output_tokens: i64,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
-
+// Why: downstream API. lint-ok: unused-pub
 pub async fn list_user_session_costs(
     pool: &PgPool,
     user_id: &UserId,

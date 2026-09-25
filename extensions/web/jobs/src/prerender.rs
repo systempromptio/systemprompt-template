@@ -2,9 +2,9 @@
 //! artifacts.
 
 use std::sync::Arc;
+use systemprompt::config::AppPaths;
 use systemprompt::database::DbPool;
 use systemprompt::generator::prerender_content;
-use systemprompt::models::AppPaths;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
 use crate::error::JobError;

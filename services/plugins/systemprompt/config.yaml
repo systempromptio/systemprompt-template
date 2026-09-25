@@ -56,6 +56,12 @@ plugin:
     include: []
     exclude: []
 
+  artifacts:
+    source: explicit
+    include:
+      - admin-ai-usage
+    exclude: []
+
   # `governance: true` emits the built-in govern (PreToolUse) and track
   # (PostToolUse) HTTP hooks, with their URLs generated against this
   # deployment's real base URL. Hand-writing them in services/hooks/ is what

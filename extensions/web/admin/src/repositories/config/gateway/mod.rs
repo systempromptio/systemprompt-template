@@ -17,8 +17,5 @@ pub use catalog::{
     registered_routes_from_services, retain_client_facing,
 };
 pub use config::{get_gateway_config, update_gateway_settings};
-pub use matching::{
-    find_matching_route, find_matching_route_index, find_route_index_by_id, glob_match,
-    slugify_pattern, synthesize_route_id,
-};
+pub use matching::{find_matching_route, glob_match, slugify_pattern, synthesize_route_id};
 pub use routes::{create_route, delete_route, reorder_routes, update_route, validate_route};

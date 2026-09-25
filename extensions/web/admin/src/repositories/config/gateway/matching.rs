@@ -27,26 +27,12 @@ pub fn synthesize_route_id(model_pattern: &str, provider: &str) -> String {
         .to_owned()
 }
 
-// Why: Best-effort: which route index (if any) would match the given model
-// string, using the same first-match-wins glob semantics the gateway uses.
-#[must_use]
-pub fn find_matching_route_index(routes: &[GatewayRouteView], model: &str) -> Option<usize> {
-    routes
-        .iter()
-        .position(|r| glob_match(&r.model_pattern, model))
-}
-
 #[must_use]
 pub fn find_matching_route<'a>(
     routes: &'a [GatewayRouteView],
     model: &str,
 ) -> Option<&'a GatewayRouteView> {
     routes.iter().find(|r| glob_match(&r.model_pattern, model))
-}
-
-#[must_use]
-pub fn find_route_index_by_id(routes: &[GatewayRouteView], id: &str) -> Option<usize> {
-    routes.iter().position(|r| r.id == id)
 }
 
 pub fn glob_match(pattern: &str, value: &str) -> bool {

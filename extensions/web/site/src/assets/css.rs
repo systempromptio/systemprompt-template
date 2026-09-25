@@ -22,8 +22,12 @@ pub fn css_assets(storage_css: &Path) -> Vec<AssetDefinition> {
 fn core_css(p: &Path) -> Vec<AssetDefinition> {
     vec![
         css!(p, "core/variables.css"),
+        css!(p, "core/compat.css"),
         css!(p, "core/fonts.css"),
+        css!(p, "core/page-tokens.css"),
         css!(p, "core/reset.css"),
+        css!(p, "core/tokens-primitives.css"),
+        css!(p, "core/tokens.css"),
         css!(p, "components/header-core.css"),
         css!(p, "components/header-dropdown.css"),
         css!(p, "components/footer.css"),
@@ -44,7 +48,6 @@ fn docs_css(p: &Path) -> Vec<AssetDefinition> {
         css!(p, "docs-layout.css"),
         css!(p, "docs-header.css"),
         css!(p, "docs-content.css"),
-        css!(p, "docs-evidence-gallery.css"),
         css!(p, "docs-pagination.css"),
         css!(p, "docs-toc.css"),
         css!(p, "docs-responsive.css"),

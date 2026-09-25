@@ -130,7 +130,7 @@ pub fn build_request_context(
         SessionId::new(session_id.as_str()),
         TraceId::new(uuid::Uuid::new_v4().to_string()),
         ContextId::derived_from_session(session_id),
-        AgentName::new("hook-summary"),
+        AgentName::try_new("hook-summary").expect("static agent name is valid"),
     )
     .with_user(AuthenticatedUser::new(
         user_id

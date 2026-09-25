@@ -36,7 +36,8 @@ pub(crate) async fn list_entity_access_handler(
     Path((entity_type, entity_id)): Path<(String, String)>,
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&entity_type)?;
-    let entity = EntityRef::from_kind_and_id(kind, &entity_id);
+    let entity = EntityRef::from_kind_and_id(kind, &entity_id)
+        .map_err(|error| AdminError::BadRequest(error.to_string()))?;
     let r = repo(&pool);
     let rules = r
         .list_rules_for_entity(entity.kind(), entity.id_str())
@@ -108,7 +109,8 @@ pub(crate) async fn set_entity_default_handler(
 ) -> AdminResult<Response> {
     let kind = validate_entity_type(&entity_type)?;
     registered_routes_from_services()?.require(kind, &entity_id)?;
-    let entity = EntityRef::from_kind_and_id(kind, &entity_id);
+    let entity = EntityRef::from_kind_and_id(kind, &entity_id)
+        .map_err(|error| AdminError::BadRequest(error.to_string()))?;
     repo(&pool)
         .upsert_entity(
             entity.kind(),
@@ -141,7 +143,8 @@ pub(crate) async fn list_all_entity_access_handler(
         .map_err(AdminError::internal)?;
     let mut entries: Vec<EntityAccessEntry> = Vec::with_capacity(entity_ids.len());
     for eid in &entity_ids {
-        let entity = EntityRef::from_kind_and_id(kind, eid);
+        let entity = EntityRef::from_kind_and_id(kind, eid)
+            .map_err(|error| AdminError::BadRequest(error.to_string()))?;
         let default_included = r
             .get_entity(entity.kind(), entity.id_str())
             .await

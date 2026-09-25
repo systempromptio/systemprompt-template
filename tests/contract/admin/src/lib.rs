@@ -96,4 +96,3 @@ mod webhook_contract;
 mod dashboard_query_scaling;
 
 #[cfg(test)]
-mod managed_resources_contract;

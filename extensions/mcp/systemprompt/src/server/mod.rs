@@ -23,7 +23,7 @@ use systemprompt::database::DbPool;
 use systemprompt::identifiers::McpServerId;
 use systemprompt::mcp::repository::ToolUsageRepository;
 use systemprompt::mcp::{
-    ArtifactViewerConfig, McpArtifactRepository, McpToolExecutor, WEBSITE_URL,
+    ArtifactIngest, ArtifactViewerConfig, McpToolExecutor, WEBSITE_URL,
     build_artifact_viewer_resource, build_extension_capabilities,
     build_resource_template_list_result, build_tool_list_result, parse_artifact_resource_uri,
     read_artifact_resource, read_artifact_viewer_resource,
@@ -42,17 +42,12 @@ use tool::{authenticate_tool_request, dispatch_tool};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ServerRole {
     Console,
-    EvaluationFixture,
 }
 
 impl ServerRole {
     #[must_use]
-    pub fn of(service_id: &McpServerId) -> Self {
-        if service_id.as_str() == "evaluation_fixture" {
-            Self::EvaluationFixture
-        } else {
-            Self::Console
-        }
+    pub fn of(_service_id: &McpServerId) -> Self {
+        Self::Console
     }
 }
 
@@ -75,11 +70,11 @@ impl SystempromptServer {
             ToolUsageRepository::new(&db_pool)
                 .map_err(|e| SystempromptToolError::Internal(e.to_string()))?,
         );
-        let artifact_repo = Arc::new(
-            McpArtifactRepository::new(&db_pool)
+        let artifact_ingest = Arc::new(
+            ArtifactIngest::from_db(&db_pool, None)
                 .map_err(|e| SystempromptToolError::Internal(e.to_string()))?,
         );
-        let executor = McpToolExecutor::new(tool_usage_repo, artifact_repo, service_id.as_str());
+        let executor = McpToolExecutor::new(tool_usage_repo, artifact_ingest, service_id.as_str());
 
         Ok(Self {
             role: ServerRole::of(&service_id),
@@ -145,7 +140,6 @@ impl ServerHandler for SystempromptServer {
         _ctx: RequestContext<RoleServer>,
     ) -> impl Future<Output = Result<ListToolsResult, McpError>> + MaybeSendFuture + '_ {
         let tool_list = match self.role {
-            ServerRole::EvaluationFixture => tools::fixture_tools(&self.db_pool),
             ServerRole::Console => tools::list_tools(),
         };
         std::future::ready(Ok(build_tool_list_result(tool_list)))
@@ -232,9 +226,9 @@ impl ServerHandler for SystempromptServer {
         _ctx: RequestContext<RoleServer>,
     ) -> Result<ReadResourceResponse, McpError> {
         if parse_artifact_resource_uri(&request.uri).is_some() {
-            let repo = McpArtifactRepository::new(&self.db_pool)
+            let ingest = ArtifactIngest::from_db(&self.db_pool, None)
                 .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-            return read_artifact_resource(&request, SERVER_NAME, &repo)
+            return read_artifact_resource(&request, SERVER_NAME, ingest.artifacts())
                 .await
                 .map(Into::into);
         }
