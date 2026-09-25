@@ -9,7 +9,7 @@ use crate::fixtures::{count_rows, insert_acl_entity, unique};
 use crate::tempdb::TempDb;
 
 fn route_id(prefix: &str) -> RouteId {
-    RouteId::try_new(unique(prefix)).expect("generated route id is valid")
+    RouteId::new(unique(prefix))
 }
 
 #[tokio::test]
@@ -138,15 +138,19 @@ async fn list_rules_bulk_groups_rules_by_route() {
         .await
         .expect("rule on b");
 
-    let ids = vec![route_a.clone(), route_b.clone(), route_absent.clone()];
+    let ids = vec![
+        route_a.as_str().to_owned(),
+        route_b.as_str().to_owned(),
+        route_absent.as_str().to_owned(),
+    ];
     let map = gateway_acl::list_rules_bulk(&db.pool, &ids)
         .await
         .expect("bulk list");
 
-    assert_eq!(map.get(&route_a).map(Vec::len), Some(2));
-    assert_eq!(map.get(&route_b).map(Vec::len), Some(1));
+    assert_eq!(map.get(route_a.as_str()).map(Vec::len), Some(2));
+    assert_eq!(map.get(route_b.as_str()).map(Vec::len), Some(1));
     assert_eq!(
-        map.get(&route_absent).map(Vec::len),
+        map.get(route_absent.as_str()).map(Vec::len),
         Some(0),
         "every requested route is present, so the caller can index without a fallback"
     );
@@ -227,7 +231,7 @@ async fn find_entity_reads_back_default_included() {
         .expect("find entity")
         .expect("registered entity");
 
-    assert_eq!(entity.id, route);
+    assert_eq!(entity.id, route.as_str());
     assert_eq!(entity.kind, EntityKind::GatewayRoute);
     assert!(entity.default_included);
 
