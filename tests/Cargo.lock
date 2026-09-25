@@ -72,6 +72,7 @@ dependencies = [
  "systemprompt-security",
  "systemprompt-web-admin",
  "systemprompt-web-extension",
+ "systemprompt-web-shared",
  "tempfile",
  "template-test-common",
  "tokio",
