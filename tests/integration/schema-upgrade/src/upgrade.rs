@@ -45,6 +45,12 @@ async fn restore_and_upgrade(db: &TempDb) {
         .await
         .expect("restore the previous release's schema");
     let _ = std::hint::black_box(systemprompt_content::ContentExtension);
+    let _ = systemprompt::extension::runtime_config::set_injected_extensions(
+        systemprompt::extension::runtime_config::InjectedExtensions {
+            extensions: vec![Arc::new(systemprompt_content::ContentExtension)],
+            ..Default::default()
+        },
+    );
     let registry = ExtensionRegistry::discover().expect("discover extension registrations");
     assert!(
         !registry.is_empty(),
