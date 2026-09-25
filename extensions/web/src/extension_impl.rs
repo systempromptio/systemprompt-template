@@ -148,9 +148,6 @@ impl Extension for WebExtension {
     fn required_assets(&self, paths: &dyn AssetPaths) -> Vec<AssetDefinition> {
         let mut assets = web_assets(paths);
         assets.extend(crate::admin::assets::admin_assets(paths));
-        // Why: reusable profiles omit internal-only assets, so startup must
-        // publish the sources that profile actually ships.
-        assets.retain(|asset| asset.source().exists());
         assets
     }
 }
