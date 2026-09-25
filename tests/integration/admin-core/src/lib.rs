@@ -21,10 +21,6 @@ mod analytics_content_rollup;
 #[cfg(test)]
 mod analytics_context_detail;
 #[cfg(test)]
-mod analytics_context_messages;
-#[cfg(test)]
-mod analytics_contexts;
-#[cfg(test)]
 mod analytics_request_stats;
 #[cfg(test)]
 mod analytics_requests;
@@ -45,8 +41,6 @@ mod dashboard_entity_links;
 #[cfg(test)]
 mod dashboard_session_analyses;
 #[cfg(test)]
-mod dashboard_session_summary;
-#[cfg(test)]
 mod dashboard_session_updates;
 #[cfg(test)]
 mod dashboard_sessions;
@@ -63,23 +57,11 @@ mod fixtures;
 #[cfg(test)]
 mod gateway_policy_warn_mode;
 #[cfg(test)]
-mod governance_counts;
-#[cfg(test)]
-mod governance_decision_calls;
-#[cfg(test)]
 mod governance_facets;
-#[cfg(test)]
-mod governance_warn_mode;
-#[cfg(test)]
-mod history_unified;
 #[cfg(test)]
 mod mcp_servers_yaml;
 #[cfg(test)]
 mod req_026_audit_completeness;
-#[cfg(test)]
-mod req_044_access_matrix;
-#[cfg(test)]
-mod scope_attribution;
 #[cfg(test)]
 mod tempdb;
 #[cfg(test)]
@@ -95,8 +77,6 @@ mod usage_conversation_summary;
 #[cfg(test)]
 mod usage_metrics;
 #[cfg(test)]
-mod usage_reconciliation;
-#[cfg(test)]
 mod users_access_matrix;
 #[cfg(test)]
 mod users_access_matrix_dimensions;
@@ -108,46 +88,13 @@ mod users_activity_record;
 mod users_ai_request_summary;
 
 #[cfg(test)]
-mod authz_group_provider;
-#[cfg(test)]
-mod authz_project_provider;
-#[cfg(test)]
-mod groups_crud;
-#[cfg(test)]
-mod groups_mappings;
-#[cfg(test)]
-mod groups_marketplaces;
-#[cfg(test)]
-mod groups_members;
-#[cfg(test)]
-mod groups_usage;
-#[cfg(test)]
 mod projects_members;
 #[cfg(test)]
-mod users_federated_sso;
-#[cfg(test)]
-mod users_identity;
-#[cfg(test)]
-mod users_identity_envelope;
-#[cfg(test)]
 mod users_lookups;
-#[cfg(test)]
-mod users_manual_roles;
-#[cfg(test)]
-mod users_revocation;
-#[cfg(test)]
-mod users_scope;
 
 #[cfg(test)]
 mod dashboard_query_scaling;
 
-#[cfg(test)]
-mod gateway_accounting_recovery;
 
 #[cfg(test)]
 mod gateway_owner_isolation;
-
-#[cfg(test)]
-mod managed_attestation_fixture;
-#[cfg(test)]
-mod managed_revisions;

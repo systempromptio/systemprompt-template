@@ -145,6 +145,7 @@ fn app_paths(root: &Path) -> Arc<AppPaths> {
                 geoip_database: None,
             },
             PathResolution::Canonicalize,
+            None,
         )
         .expect("build AppPaths over the temporary tree"),
     )
