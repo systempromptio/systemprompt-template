@@ -83,10 +83,31 @@
       ],
       "default": null
     },
+    "judge": {
+      "$ref": "#/$defs/JudgeProfile",
+      "default": {
+        "automatic": false
+      }
+    },
+    "retention": {
+      "$ref": "#/$defs/RetentionConfig",
+      "default": {
+        "logs_days": 30,
+        "analytics_events_days": 90,
+        "ai_request_messages_days": null,
+        "mcp_tool_executions_days": 365,
+        "outbox_processed_days": 7,
+        "ai_request_payload_raw_days": 7,
+        "governance_decisions_days": 180
+      }
+    },
     "services": {
       "$ref": "#/$defs/ServicesProfileConfig",
       "default": {
-        "port_offset": 0
+        "port_offset": 0,
+        "sources": [],
+        "cache_dir": null,
+        "on_fetch_failure": "use_last_good"
       }
     },
     "storage": {
@@ -94,6 +115,12 @@
       "default": {
         "backend": "local",
         "shared": false
+      }
+    },
+    "observability": {
+      "$ref": "#/$defs/ObservabilityConfig",
+      "default": {
+        "otlp": null
       }
     }
   },
@@ -429,6 +456,10 @@
           "type": "boolean",
           "default": true
         },
+        "allow_dynamic_client_registration": {
+          "type": "boolean",
+          "default": true
+        },
         "login_page_url": {
           "type": [
             "string",
@@ -516,6 +547,7 @@
       ]
     },
     "RateLimitsConfig": {
+      "description": "Per-route-group request budgets, in requests per second.\n\nEach `*_per_second` field governs one route group:\n\n- `oauth_public` — `/api/v1/core/oauth` public endpoints,\n  `/auth/link-passkey`, and the public gateway session routes under\n  `/api/public/gateway`.\n- `oauth_auth` — the authenticated half of `/api/v1/core/oauth`, plus\n  `/api/v1/core/users`.\n- `contexts` — `/api/v1/core/contexts` and the inbound `/api/v1/webhook`\n  mount.\n- `tasks` — `/api/v1/core/tasks`.\n- `artifacts` — `/api/v1/core/artifacts`.\n- `agent_registry` — `/api/v1/agents/registry`, discovery only, kept apart\n  from `agents_per_second` so listing agents cannot spend an execution\n  budget.\n- `agents` — `/api/v1/agents` execution, and the Slack and Teams inbound\n  mounts that dispatch to an agent.\n- `mcp_registry` — `/api/v1/mcp/registry`, the MCP server catalog, discovery\n  only.\n- `mcp` — `/api/v1/mcp` tool calls, the busiest protocol route group.\n- `stream` — `/api/v1/stream`, long-lived SSE connections, so this is a\n  connection budget rather than a request one and is set high.\n- `content` — `/api/v1/content`, `/api/v1/sync`, `/api/v1/marketplace`,\n  `/api/v1/analytics` and `/track/engagement`.\n- `gateway` — inference traffic under `/v1`: `/v1/messages` and the\n  OpenAI-shaped `/v1/chat/completions`.\n- `bridge_auth` — `/v1/auth/bridge/*`, deliberately separate from\n  `gateway_per_second`: sign-in is low-volume and must stay reachable on an\n  instance whose inference traffic is saturating its own budget. Sharing one\n  bucket let a busy gateway lock every user out of authenticating.\n\n`per_second_budgets` projects those fields as a list; both validators\niterate it rather than naming the fields themselves, which had already let\nthem drift apart and let a zero in an unnamed field through.",
       "type": "object",
       "properties": {
         "disabled": {
@@ -587,6 +619,18 @@
           "format": "uint64",
           "minimum": 0,
           "default": 50
+        },
+        "gateway_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 100
+        },
+        "bridge_auth_per_second": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 20
         },
         "burst_multiplier": {
           "type": "integer",
@@ -696,21 +740,43 @@
     "SecretsConfig": {
       "type": "object",
       "properties": {
-        "secrets_path": {
-          "type": "string"
+        "source": {
+          "$ref": "#/$defs/SecretsSource"
         },
         "validation": {
           "$ref": "#/$defs/SecretsValidationMode",
           "default": "warn"
         },
-        "source": {
-          "$ref": "#/$defs/SecretsSource"
+        "secrets_path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "vault": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VaultSecretsConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "additionalProperties": false,
       "required": [
-        "secrets_path",
         "source"
+      ]
+    },
+    "SecretsSource": {
+      "type": "string",
+      "enum": [
+        "file",
+        "env",
+        "vault"
       ]
     },
     "SecretsValidationMode": {
@@ -721,11 +787,156 @@
         "skip"
       ]
     },
-    "SecretsSource": {
-      "type": "string",
-      "enum": [
-        "file",
-        "env"
+    "VaultSecretsConfig": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "mount": {
+          "type": "string",
+          "default": "secret"
+        },
+        "path": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "auth": {
+          "$ref": "#/$defs/VaultAuth"
+        },
+        "keys": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/VaultKeyRef"
+          },
+          "default": {}
+        },
+        "ca_cert_path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "timeout_secs": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 10
+        },
+        "retries": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0,
+          "maximum": 255,
+          "default": 3
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "address",
+        "path",
+        "auth"
+      ]
+    },
+    "VaultAuth": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "token_env": {
+              "type": "string",
+              "default": "VAULT_TOKEN"
+            },
+            "token_file": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null
+            },
+            "method": {
+              "type": "string",
+              "const": "token"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "method"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "role_id_env": {
+              "type": "string",
+              "default": "VAULT_ROLE_ID"
+            },
+            "secret_id_env": {
+              "type": "string",
+              "default": "VAULT_SECRET_ID"
+            },
+            "mount": {
+              "type": "string",
+              "default": "approle"
+            },
+            "method": {
+              "type": "string",
+              "const": "approle"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "method"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "role": {
+              "type": "string"
+            },
+            "jwt_path": {
+              "type": "string",
+              "default": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            },
+            "mount": {
+              "type": "string",
+              "default": "kubernetes"
+            },
+            "method": {
+              "type": "string",
+              "const": "kubernetes"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "method",
+            "role"
+          ]
+        }
+      ]
+    },
+    "VaultKeyRef": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "field": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "field"
       ]
     },
     "ExtensionsConfig": {
@@ -754,6 +965,12 @@
             }
           ],
           "default": null
+        },
+        "audit": {
+          "$ref": "#/$defs/AuditConfig",
+          "default": {
+            "payload_cap_bytes": 1048576
+          }
         }
       },
       "additionalProperties": false
@@ -811,6 +1028,81 @@
         "unrestricted"
       ]
     },
+    "AuditConfig": {
+      "description": "Retention bounds for the gateway audit trail.",
+      "type": "object",
+      "properties": {
+        "payload_cap_bytes": {
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0,
+          "default": 1048576
+        }
+      },
+      "additionalProperties": false
+    },
+    "JudgeProfile": {
+      "type": "object",
+      "properties": {
+        "automatic": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "RetentionConfig": {
+      "description": "Retention windows, in days, for the high-volume operational tables.\n\nEach field names the table it bounds and rows older than the window are\ndeleted, with two exceptions worth knowing:\n\n- `ai_request_messages_days` drops the stored messages and keeps the request\n  row; `None` follows `ai.history.retention_days` from the services\n  configuration instead.\n- `ai_request_payload_raw_days` sets the raw request and response bodies on\n  `ai_request_payloads` to NULL rather than deleting the row; the excerpts,\n  hashes and sizes stay.",
+      "type": "object",
+      "properties": {
+        "logs_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 30
+        },
+        "analytics_events_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 90
+        },
+        "ai_request_messages_days": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0,
+          "default": null
+        },
+        "mcp_tool_executions_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 365
+        },
+        "outbox_processed_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 7
+        },
+        "ai_request_payload_raw_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 7
+        },
+        "governance_decisions_days": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 180
+        }
+      },
+      "additionalProperties": false
+    },
     "ServicesProfileConfig": {
       "type": "object",
       "properties": {
@@ -820,9 +1112,139 @@
           "minimum": 0,
           "maximum": 65535,
           "default": 0
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ServicesSource"
+          },
+          "default": []
+        },
+        "cache_dir": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "on_fetch_failure": {
+          "$ref": "#/$defs/FetchFailurePolicy",
+          "default": "use_last_good"
         }
       },
       "additionalProperties": false
+    },
+    "ServicesSource": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "https": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HttpsServicesSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "oci": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OciServicesSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "HttpsServicesSource": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "auth_secret": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "verify": {
+          "$ref": "#/$defs/BundleVerification",
+          "default": {
+            "sha256": null,
+            "ed25519_public_keys": []
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "url"
+      ]
+    },
+    "BundleVerification": {
+      "type": "object",
+      "properties": {
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "ed25519_public_keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "OciServicesSource": {
+      "type": "object",
+      "properties": {
+        "reference": {
+          "type": "string"
+        },
+        "auth_secret": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "verify": {
+          "$ref": "#/$defs/BundleVerification",
+          "default": {
+            "sha256": null,
+            "ed25519_public_keys": []
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "reference"
+      ]
+    },
+    "FetchFailurePolicy": {
+      "type": "string",
+      "enum": [
+        "fail_closed",
+        "use_last_good",
+        "use_bundled"
+      ]
     },
     "StorageConfig": {
       "description": "Where user-visible files are written and whether the root is shared\nbetween replicas.\n\n`shared: true` declares that `paths.storage` is a mount every replica can\nsee; boot warns when the declaration and the observed mount disagree.",
@@ -843,6 +1265,77 @@
       "type": "string",
       "enum": [
         "local"
+      ]
+    },
+    "ObservabilityConfig": {
+      "type": "object",
+      "properties": {
+        "otlp": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OtlpExportConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false
+    },
+    "OtlpExportConfig": {
+      "description": "An OTLP collector to export traces and logs to.",
+      "type": "object",
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        },
+        "protocol": {
+          "$ref": "#/$defs/OtlpProtocol",
+          "default": "http"
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "signals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OtlpSignal"
+          },
+          "default": [
+            "traces",
+            "logs"
+          ]
+        },
+        "batch_seconds": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0,
+          "default": 15
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "endpoint"
+      ]
+    },
+    "OtlpProtocol": {
+      "type": "string",
+      "enum": [
+        "http",
+        "grpc"
+      ]
+    },
+    "OtlpSignal": {
+      "type": "string",
+      "enum": [
+        "traces",
+        "logs"
       ]
     }
   }
