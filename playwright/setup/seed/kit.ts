@@ -52,8 +52,6 @@ export const ID = {
   approval: (n: number) => `e2e-dappr-${pad(n)}`,
   apiKey: (n: number) => `e2e-dkey-${pad(n, 2)}`,
   mcpSession: (n: number) => `e2e-dmcp-${pad(n, 2)}`,
-  evalRun: (n: number) => `e2e-deval-${pad(n, 2)}`,
-  evalResult: (n: number) => `e2e-devalres-${pad(n)}`,
 };
 
 /** True when `table` exists in the public schema. */

@@ -23,8 +23,6 @@ export const PATHS = {
   trace: (id: string) => `/admin/traces/${id}`,
   contexts: '/admin/contexts',
   context: (id: string) => `/admin/contexts/${id}`,
-  evals: '/admin/evals',
-  evalRun: (id: string) => `/admin/evals/runs/${id}`,
 
   governance: '/admin/governance',
   governancePolicy: (id: string) => `/admin/governance/policies/${id}`,

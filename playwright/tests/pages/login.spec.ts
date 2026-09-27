@@ -99,7 +99,7 @@ test.describe('design language', () => {
   test('the page it signs into meets the density bar', async ({ browser }) => {
     const context = await browser.newContext({ storageState: AUTH.admin });
     const page = await context.newPage();
-    await page.goto(PATHS.evals);
+    await page.goto(PATHS.requests);
     await expect(page.locator('h1').first()).toBeVisible();
     await expectDensity(page, 'list');
     await context.close();

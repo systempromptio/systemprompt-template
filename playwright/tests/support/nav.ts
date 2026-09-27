@@ -61,7 +61,6 @@ export const NAV: NavSection[] = [
       item('Sessions', 'sessions'),
       item('Traces', 'traces'),
       item('Contexts', 'contexts'),
-      item('Evals', 'evals'),
     ],
   },
   {
