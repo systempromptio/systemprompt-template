@@ -50,7 +50,6 @@ export const NAV: NavSection[] = [
     items: [
       item('Users', 'users'),
       item('Departments', 'departments'),
-      item('Access tokens', 'accessTokens'),
       item('Access control', 'accessControl'),
     ],
   },

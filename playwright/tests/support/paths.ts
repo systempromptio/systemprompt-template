@@ -12,7 +12,6 @@ export const PATHS = {
   user: (id: string) => `/admin/users/${encodeURIComponent(id)}`,
   departments: '/admin/departments',
   department: (id: string) => `/admin/departments/${id}`,
-  accessTokens: '/admin/access-tokens',
   accessControl: '/admin/access-control',
 
   requests: '/admin/requests',
@@ -28,7 +27,6 @@ export const PATHS = {
   governancePolicy: (id: string) => `/admin/governance/policies/${id}`,
   governanceDecisions: '/admin/governance/decisions',
   governanceHooks: '/admin/governance/hooks',
-  demoTrace: '/admin/demo/trace',
 
   models: '/admin/models',
 
