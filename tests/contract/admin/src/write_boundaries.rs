@@ -59,7 +59,7 @@ async fn console_reader_cannot_revoke_sessions_or_post_to_admin_pages() {
     assert_eq!(
         ssr,
         StatusCode::FORBIDDEN,
-        "console access must not authorize SSR mutations"
+        "console access must not authorize administrative mutations"
     );
     for path in [
         "/admin/contexts/00000000-0000-4000-8000-000000000000",
@@ -77,4 +77,9 @@ async fn console_reader_cannot_revoke_sessions_or_post_to_admin_pages() {
     db.cleanup().await;
 }
 
-const SSR_MUTATION: &str = "/admin/evals/run";
+// Why: the console's own pages carry no administrative mutation any more
+// (evals, the last one, went with core 0.61; what remains under /admin is
+// self-service), so the write this reader must not reach is the gateway
+// route editor's create, the mutation an administrator makes from the
+// console.
+const SSR_MUTATION: &str = "/api/public/admin/gateway/routes";
