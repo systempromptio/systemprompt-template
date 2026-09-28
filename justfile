@@ -66,7 +66,9 @@ _db-url:
 build *FLAGS:
     $env:SQLX_OFFLINE="true"; cargo build --workspace {{FLAGS}}
 
-# Build (Unix) - single-flight: dedupes concurrent identical builds across agents
+# Build (Unix) - one build in flight at a time, always of the latest source;
+# cargo's own incremental cache decides how much recompiles. Refuses when the
+# target/ volume has less than BUILD_MIN_FREE_GB (default 25) GB free.
 [unix]
 build *FLAGS:
     @scripts/build-coordinator.sh run build "{{FLAGS}}" -- {{just_executable()}} _build-uncoordinated {{FLAGS}}
@@ -76,10 +78,11 @@ build *FLAGS:
 build-status *RECIPE:
     @scripts/build-coordinator.sh status {{RECIPE}}
 
-# Re-run even if the coordinator considers this source tree already green
+# Kept for muscle memory: `just build` always compiles the current tree (there
+# is no success cache), so this is the same recipe.
 [unix]
 build-force *FLAGS:
-    @BUILD_FORCE=1 scripts/build-coordinator.sh run build "{{FLAGS}}" -- {{just_executable()}} _build-uncoordinated {{FLAGS}}
+    @scripts/build-coordinator.sh run build "{{FLAGS}}" -- {{just_executable()}} _build-uncoordinated {{FLAGS}}
 
 # The real build. Call `just build` instead - this one skips coordination.
 [unix]
@@ -93,7 +96,7 @@ _build-uncoordinated *FLAGS:
 
 # Clippy (Windows) - always uses offline mode
 [windows]
-clippy *FLAGS: lint-no-synthesis lint-gates
+clippy *FLAGS: lint-no-synthesis lint-no-untyped-admin lint-gates
     $env:SQLX_OFFLINE="true"; cargo clippy --workspace {{FLAGS}} -- -D warnings
 
 # Clippy (Unix) - single-flight, same coordinator as `just build`
@@ -103,7 +106,7 @@ clippy *FLAGS:
 
 # The real clippy. Call `just clippy` instead - this one skips coordination.
 [unix]
-_clippy-uncoordinated *FLAGS: lint-no-synthesis lint-gates
+_clippy-uncoordinated *FLAGS: lint-no-synthesis lint-no-untyped-admin lint-gates
     #!/usr/bin/env bash
     set -euo pipefail
     export CC="${CC:-clang}"
@@ -115,10 +118,22 @@ _clippy-uncoordinated *FLAGS: lint-no-synthesis lint-gates
 test-unit:
     @scripts/build-coordinator.sh run test-unit "" -- {{just_executable()}} _test-unit-uncoordinated
 
+# Why: without --no-fail-fast nextest stops at the first failing test, so a
+# Gates round reports one finding and the next waits for another round. Every
+# tier runs to completion and lists every failure at once.
+#
+# Why: the tests/ tiers pass --workspace and pick their crates with a nextest
+# filter rather than -p. A -p set unifies features for that set alone, so each
+# tier recompiled systemprompt-web-admin and everything above it; --workspace
+# unifies once and the later tiers reuse the build.
 _test-unit-uncoordinated:
-    cargo nextest run --locked -p systemprompt-web-admin --tests
-    cargo nextest run --locked -p systemprompt-web-extension --tests
-    cargo nextest run --locked --manifest-path tests/Cargo.toml -p mcp-unit-tests -p web-unit-tests
+    #!/usr/bin/env bash
+    set -uo pipefail
+    failed=()
+    cargo nextest run --locked --no-fail-fast --no-tests=pass -p systemprompt-web-admin --tests || failed+=(web-admin)
+    cargo nextest run --locked --no-fail-fast --no-tests=pass -p systemprompt-web-extension --tests || failed+=(web-extension)
+    cargo nextest run --locked --no-fail-fast --manifest-path tests/Cargo.toml --workspace -E 'package(mcp-unit-tests) | package(web-unit-tests)' || failed+=(tests-workspace)
+    if [ "${#failed[@]}" -gt 0 ]; then printf '::error::test-unit failed: %s\n' "${failed[@]}"; exit 1; fi
 
 # DB-backed integration tests. Creates/drops throwaway mcp_ext_test_*
 # databases on the maintenance DB; the harness guard refuses any database
@@ -137,17 +152,24 @@ _test-integration-uncoordinated:
     print(up.urlunsplit((u.scheme, u.netloc, '/postgres', '', '')))")
         export SYSTEMPROMPT_TEST_DATABASE_URL
     fi
-    cargo nextest run --locked --manifest-path tests/Cargo.toml -p mcp-integration-tests -p web-integration-tests -p admin-db-core-tests -p admin-db-config-tests
+    # Why: falling through with no URL hands the suites a reason to skip, and a
+    # skipped DB tier reports the same green as one that ran every assertion.
+    if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ]; then
+        echo "No test database. Set SYSTEMPROMPT_TEST_DATABASE_URL, or run \`just setup-local\`" >&2
+        echo "so .systemprompt/profiles/local/secrets.json carries a database_url." >&2
+        exit 1
+    fi
+    cargo nextest run --locked --no-fail-fast --manifest-path tests/Cargo.toml --workspace -E 'package(mcp-integration-tests) | package(web-integration-tests) | package(admin-db-core-tests) | package(admin-db-config-tests) | package(schema-upgrade-tests)'
 
 # HTTP contract suite: drives every admin route under three principals and
 # diffs the result against tests/contract/admin/baseline.txt. Same throwaway-
 # database convention as test-integration. A status change fails the run; if
 # it is deliberate, re-record with UPDATE_CONTRACT_BASELINE=1 and list it in
 # the PR.
-test-contract:
-    @scripts/build-coordinator.sh run test-contract "" -- {{just_executable()}} _test-contract-uncoordinated
+test-contract *ARGS:
+    @scripts/build-coordinator.sh run test-contract "$*" -- {{just_executable()}} _test-contract-uncoordinated "$@"
 
-_test-contract-uncoordinated:
+_test-contract-uncoordinated *ARGS:
     #!/usr/bin/env bash
     set -euo pipefail
     if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ] && [ -f .systemprompt/profiles/local/secrets.json ]; then
@@ -157,18 +179,33 @@ _test-contract-uncoordinated:
     print(up.urlunsplit((u.scheme, u.netloc, '/postgres', '', '')))")
         export SYSTEMPROMPT_TEST_DATABASE_URL
     fi
-    cargo nextest run --locked --manifest-path tests/Cargo.toml -p admin-contract-tests
+    if [ -z "${SYSTEMPROMPT_TEST_DATABASE_URL:-}" ]; then
+        echo "No test database. Set SYSTEMPROMPT_TEST_DATABASE_URL, or run \`just setup-local\`" >&2
+        echo "so .systemprompt/profiles/local/secrets.json carries a database_url." >&2
+        exit 1
+    fi
+    # Why: the contract suite self-skips when no database is reachable; this
+    # turns that skip into a failure, so a missing database never reads as a pass.
+    export SYSTEMPROMPT_REQUIRE_DB=1
+    cargo nextest run --locked --no-fail-fast --manifest-path tests/Cargo.toml --workspace -E 'package(admin-contract-tests)' "$@"
 
-# All tests
-test: test-unit test-integration test-contract
+# All tests. Every tier runs even after one fails: as `just` dependencies they
+# stopped at the first red tier, hiding the next tier's failures for a round.
+test:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    failed=()
+    for tier in test-unit test-integration test-contract; do
+        echo "==> $tier"
+        {{just_executable()}} "$tier" || failed+=("$tier")
+    done
+    if [ "${#failed[@]}" -gt 0 ]; then printf '::error::test failed: %s\n' "${failed[@]}"; exit 1; fi
+
+# Reject tests that return early on a missing prerequisite without saying so
+lint-silent-skips:
+    ./scripts/lint-silent-skips.sh tests
 
 # Source gates ported from systemprompt-core (scripts/*.sh)
-# Both workspaces must build on the declared minimum supported Rust version,
-# and must declare the same one. The number is read from the manifests, never
-# hardcoded — see scripts/check-msrv.sh for why that matters.
-msrv-check:
-    bash scripts/check-msrv.sh
-
 lint-gates:
     @scripts/build-coordinator.sh run lint-gates "" -- {{just_executable()}} _lint-gates-uncoordinated
 
@@ -245,6 +282,216 @@ _lint-gates-uncoordinated:
     fi
     echo "all ${#gates[@]} lint gates passed"
 
+# The whole gate, in one command — exactly what .github/workflows/gates.yml
+# runs on every push to next and on ordinary PRs (the static, lint and test
+# tiers; the browser tier is `just e2e-gate`). Run it before you push so CI is
+# confirmation, not discovery. `preflight` adds the coverage floor/ratchet.
+verify: preflight-static preflight-lint test
+    @echo "verify: format, sqlx cache, lint gates, clippy, docs, msrv, and tests all pass"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PREFLIGHT (local stand-in for CI — tiered, cheapest first)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Everything: static gates → lint/doc/msrv → tests → coverage floor+ratchet.
+preflight: preflight-static preflight-lint test coverage-check
+
+# Tier 0 — seconds, no compile. Formatting, sqlx cache freshness, pins, the
+# release-script self-tests, deploy config, and the source gates. The gates
+# run UNCOORDINATED here: they are read-only, so queueing them on the build
+# lock only made this hang behind whoever was mid test run.
+#
+# Every check runs even after one fails, and the recipe fails if any did: a
+# formatting slip must not hide thirty source gates until the next round.
+preflight-static:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    failed=()
+    check() { echo "==> $1"; shift; "$@" || failed+=("$*"); }
+    version="$(sed -n 's/^version = "\([0-9.]*\)"/\1/p' Cargo.toml | head -1)"
+    check "fmt (root)" cargo fmt --all -- --check
+    check "fmt (tests)" cargo fmt --manifest-path tests/Cargo.toml --all -- --check
+    check "sqlx cache" bash scripts/check-sqlx-cache.sh
+    check "release version pins" bash scripts/sync-release-version.sh "$version" --check
+    check "core version pins" bash scripts/sync-core-version.sh --check
+    check "core crate versions" bash scripts/check-core-crate-versions.sh
+    check "release proof self-test" bash tests/scripts/release-proof.sh
+    check "release merge self-test" bash tests/scripts/release-merge.sh
+    check "release helper self-test" bash tests/scripts/release-helper.sh
+    check "deploy config" python3 scripts/check-deploy-config.py
+    check "docker migrate-profile" python3 docker/test_migrate_profile.py
+    check "docker container-state" python3 docker/test_container_state.py
+    check "source gates" {{just_executable()}} _lint-gates-uncoordinated
+    if [ "${#failed[@]}" -gt 0 ]; then printf '::error::preflight-static failed: %s\n' "${failed[@]}"; exit 1; fi
+
+# Tier 1 — compilers. Clippy, rustdoc as errors, MSRV. Each runs even after
+# one fails, as in preflight-static.
+preflight-lint:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    failed=()
+    for recipe in clippy doc-check msrv-check; do
+        echo "==> $recipe"
+        {{just_executable()}} "$recipe" || failed+=("$recipe")
+    done
+    if [ "${#failed[@]}" -gt 0 ]; then printf '::error::preflight-lint failed: %s\n' "${failed[@]}"; exit 1; fi
+
+# Weekly deep pass: preflight plus the network-touching supply-chain gates.
+preflight-full: preflight deny audit machete hack
+
+# Rustdoc with warnings denied (root workspace, as quality.yml ran it).
+# Single-flight coordinated.
+doc-check:
+    @scripts/build-coordinator.sh run doc-check "" -- {{just_executable()}} _doc-check-uncoordinated
+
+_doc-check-uncoordinated:
+    SQLX_OFFLINE=true RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --locked
+
+# Both workspaces must build on the declared minimum supported Rust version,
+# and must declare the same one. The number is read from the manifests, never
+# hardcoded — see scripts/check-msrv.sh for why that matters.
+msrv-check:
+    @scripts/build-coordinator.sh run msrv-check "" -- bash scripts/check-msrv.sh
+
+# ══════════════════════════════════════════════════════════════════════════════
+# COVERAGE (raw llvm-cov; floor + ratchet vs tracked coverage/baseline.json)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Instrumented test run over both workspaces; writes coverage-report/.
+# See scripts/coverage.sh for the sccache/mold neutralisation notes.
+coverage:
+    @scripts/build-coordinator.sh run coverage "" -- bash scripts/coverage.sh
+
+# Enforce the floor and ratchet recorded in coverage/baseline.json.
+coverage-check: coverage
+    bash scripts/coverage-check.sh
+
+# Re-record coverage/baseline.json at the measured value (deliberate act —
+# commit the result, then `just coverage-badge`). Raise "floor" by hand.
+coverage-baseline: coverage
+    UPDATE_BASELINE=1 bash scripts/coverage-check.sh
+
+# Rewrite the README's coverage badge from coverage/baseline.json. The
+# `coverage-badge.sh --check` gate fails the build if the two disagree.
+coverage-badge:
+    bash scripts/coverage-badge.sh --write
+
+# Browsable HTML tree from the last `just coverage` run (GNU find required).
+coverage-html:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ROOT="$(pwd)"
+    if [ ! -f "$ROOT/coverage-report/tests.profdata" ]; then
+        echo "Run 'just coverage' first" >&2
+        exit 1
+    fi
+    FIND=find; command -v gfind >/dev/null 2>&1 && FIND=gfind
+    TOOLDIR="$(rustc --print sysroot)/lib/rustlib/$(rustc -vV | sed -n 's/^host: //p')/bin"
+    TBASE="${COVERAGE_TARGET_DIR:-$ROOT/coverage-report/target}"
+    BINS=$(for t in "$TBASE-tests" "$TBASE-root"; do \
+        "$FIND" "$t/debug/deps" -maxdepth 1 -executable -type f ! -name '*.d' ! -name '*.so' -printf '%T@ %p\n' 2>/dev/null; \
+    done | sort -rn | awk '{ base=$2; sub(".*/", "", base); sub(/-[0-9a-f]+$/, "", base); if (!seen[base]++) print $2 }')
+    OBJ_ARGS=""
+    for b in $BINS; do OBJ_ARGS="$OBJ_ARGS --object $b"; done
+    ROOT_RE="$(printf '%s' "$ROOT" | sed 's/[][\.*^$()+?{}|]/\\&/g')"
+    mkdir -p "$ROOT/coverage-report/html"
+    "$TOOLDIR/llvm-cov" show \
+        --instr-profile="$ROOT/coverage-report/tests.profdata" \
+        $OBJ_ARGS \
+        --ignore-filename-regex="(\.cargo|/rustc/|/registry/|/debug/build/|/tests/|/target/|systemprompt-core/|\.vendor/|${ROOT_RE}/src/(main|lib)\.rs|extensions/(cli|mcp)/[^/]+/src/main\.rs|extensions/cli/[^/]+/src/commands/|extensions/.*/extension\.rs|build\.rs)" \
+        --format=html \
+        --output-dir="$ROOT/coverage-report/html"
+    echo "Coverage report: coverage-report/html/index.html"
+
+# Remove all coverage artifacts (instrumented target dirs included).
+# Refuses while a coordinated run holds the lock: coverage-report/ carries the
+# instrumented test binaries, so deleting it mid-run makes every remaining test
+# fail to exec and the report come out at 0.00% — a failure that looks like a
+# code regression and is not.
+coverage-clean:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    LOCK="${COORD_STATE_DIR:-{{ justfile_directory() }}/.build}/lock"
+    if [ -d "$LOCK" ]; then
+        PID="$(cat "$LOCK/pid" 2>/dev/null || echo)"
+        if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
+            echo "refusing: '$(cat "$LOCK/recipe" 2>/dev/null || echo run)' is running (pid $PID)." >&2
+            echo "  Deleting coverage-report/ now would pull the instrumented binaries" >&2
+            echo "  out from under it. Wait for it, or override with COVERAGE_CLEAN_FORCE=1." >&2
+            [ "${COVERAGE_CLEAN_FORCE:-0}" = "1" ] || exit 1
+        fi
+    fi
+    rm -rf coverage-report/
+
+# Record tests/fixtures/schema/release-baseline-<version>.sql: the schema a
+# fresh install of a release produces, plus its extension_migrations rows,
+# dumped by the local Postgres container's own pg_dump (always the server's
+# major — the host client may be older and refuse). With no argument the
+# current tree is installed under the workspace version — run it after every
+# version bump (scripts/check-schema-baseline.sh enforces that). With a
+# version, that release's gateway tarball is fetched and ITS binary does the
+# install (linux-amd64, linux-arm64 or darwin-arm64), so a rung can be added
+# for a release that shipped before the ladder existed. The upgrade test
+# restores every rung and runs the current installer over it; the ladder is
+# append-only.
+schema-baseline VERSION="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    version="{{VERSION}}"
+    tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+    if [ -n "$version" ]; then
+        case "$(uname -s)-$(uname -m)" in
+            Linux-x86_64) target=linux-amd64 ;;
+            Linux-aarch64|Linux-arm64) target=linux-arm64 ;;
+            Darwin-arm64) target=darwin-arm64 ;;
+            *) echo "schema-baseline: no gateway tarball for $(uname -s)-$(uname -m)" >&2; exit 1 ;;
+        esac
+        name="systemprompt-gateway-$version-$target.tar.gz"
+        echo "schema-baseline: downloading $name"
+        gh release download "v$version" -R systempromptio/systemprompt-template -p "$name" -p SHA256SUMS.gateway -D "$tmp" \
+            || { echo "schema-baseline: release v$version has no $name" >&2; exit 1; }
+        (cd "$tmp" && grep " $name\$" SHA256SUMS.gateway | { sha256sum -c - 2>/dev/null || shasum -a 256 -c -; } >/dev/null)
+        tar xzf "$tmp/$name" -C "$tmp"
+        cli="$tmp/${name%.tar.gz}/systemprompt"
+        core_ref="v$(sed -n 's/^systemprompt = { version = "\([0-9.]*\)".*/\1/p' Cargo.toml | head -1)"
+    else
+        just build
+        version="$(awk '/^\[workspace\.package\]/{p=1;next}/^\[/{p=0}p&&/^version[[:space:]]*=/{gsub(/[[:space:]"]/,""); sub(/^version=/,""); print; exit}' Cargo.toml)"
+        core_ref="$(tr -d '[:space:]' < bridge/CORE_REF)"
+        cli="{{CLI}}"
+    fi
+    container="$(docker compose -p "$(just _project_name local)" -f .systemprompt/docker/local.yaml ps -q postgres)"
+    [ -n "$container" ] || { echo "schema-baseline: local Postgres is not running (just db-up)" >&2; exit 1; }
+    base_url="$(jq -r '.database_url' .systemprompt/profiles/local/secrets.json)"
+    scratch="sp_schema_baseline_$$"
+    scratch_url="${base_url%/*}/$scratch"
+    fixture="tests/fixtures/schema/release-baseline-$version.sql"
+    mkdir -p "$(dirname "$fixture")"
+    cleanup() { docker exec "$container" psql -U systemprompt -d postgres -qc "DROP DATABASE IF EXISTS \"$scratch\" WITH (FORCE)" >/dev/null 2>&1 || true; rm -rf "$tmp"; }
+    trap cleanup EXIT
+    docker exec "$container" psql -U systemprompt -d postgres -qc "CREATE DATABASE \"$scratch\""
+    echo "schema-baseline: fresh install of $version (core $core_ref) into $scratch"
+    if ! log="$(SYSTEMPROMPT_DATABASE_URL="$scratch_url" "$cli" infra db migrate --profile local 2>&1)"; then
+        echo "$log" | tail -30; echo "schema-baseline: fresh install failed" >&2; exit 1
+    fi
+    {
+        echo "-- systemprompt-template release-baseline: $version (core $core_ref)"
+        echo "-- Recorded by 'just schema-baseline' from a fresh install; the upgrade test"
+        echo "-- restores it and migrates forward. Re-record after every version bump."
+        docker exec "$container" pg_dump -U systemprompt --schema-only --no-owner --no-privileges --no-comments "$scratch"
+        docker exec "$container" pg_dump -U systemprompt --data-only --inserts --no-owner --table=extension_migrations "$scratch"
+    } | grep -v -e '^\\' -e "set_config('search_path'" > "$fixture"
+    echo "schema-baseline: wrote $fixture ($(wc -l < "$fixture") lines)"
+    git diff --stat -- "$fixture" | tail -1
+    bash scripts/check-schema-baseline.sh
+
+# Point git at the tracked hooks (pre-commit patch-marker guard + fast gates).
+# There is deliberately NO pre-push hook: pushes to next are gated by CI
+# (gates.yml). Run once per clone.
+init-hooks:
+    git config core.hooksPath .githooks
+    @echo "git hooks now sourced from .githooks/"
+
 # Cross-file referential integrity for services/ (ACL entity ids, MCP ports)
 validate:
     bash scripts/validate-services.sh
@@ -261,19 +508,59 @@ audit-standards:
 file-size:
     bash scripts/check-file-size.sh
 
-# Detect unused dependencies (same check the CI machete job runs)
-machete:
-    cargo machete
+# Every Cargo workspace in the repo. `tests/` is excluded from the root
+# workspace, so a bare root-level scan silently skips its lockfile. Keep in
+# sync with `git ls-files '*Cargo.lock'`.
+workspaces := ". tests"
 
-# Supply-chain gates: cargo-deny (licenses/bans/advisories) and cargo-audit
+# Detect unused dependencies across every workspace
+machete:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for w in {{ workspaces }}; do
+        echo "==> cargo machete: $w"
+        (cd "$w" && cargo machete)
+    done
+
+# Supply-chain gates across every workspace: cargo-deny (licenses/bans/
+# advisories, root deny.toml discovered via --manifest-path) and cargo-audit
 deny:
-    cargo deny check
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for w in {{ workspaces }}; do
+        echo "==> cargo deny: $w"
+        cargo deny --manifest-path "${w%/}/Cargo.toml" check
+    done
 
 check-bans:
     cargo deny check bans
 
 audit:
-    cargo audit
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for w in {{ workspaces }}; do
+        echo "==> cargo audit: $w"
+        cargo audit --file "${w%/}/Cargo.lock"
+    done
+
+# Build every feature powerset (catches feature-flag drift); weekly tier only
+hack:
+    cargo hack --workspace --feature-powerset --depth 2 check
+
+# Structural guard: `UserId::admin()` is banned outside sanctioned call sites.
+# The allowlist is empty by design — this repo has no sanctioned site; adding
+# one requires justification in review.
+lint-no-untyped-admin:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    hits=$(grep -rn 'UserId::admin()' extensions/ src/ --include='*.rs' 2>/dev/null \
+        | grep -v '/tests/' \
+        || true)
+    if [ -n "$hits" ]; then
+        echo "lint-no-untyped-admin: untyped UserId::admin() outside the sanctioned call sites:"
+        echo "$hits"
+        exit 1
+    fi
 
 # Structural guard: no string-literal `UserId::new("...")` in extension code.
 # String literals are how principal synthesis sneaks in — every legitimate
@@ -410,6 +697,10 @@ start:
 [unix]
 server-status:
     @scripts/server-state.sh report
+
+# Stop this clone's services (clean shutdown; avoids orphaned MCP children)
+stop:
+    {{CLI}} infra services stop --all
 
 # Start server with release binary
 start-release:
@@ -749,7 +1040,7 @@ backup *ARGS:
 
 # Deploy to cloud
 # Note: publish_pipeline runs automatically on server startup with correct profile URLs
-deploy *FLAGS: deploy-check
+deploy *FLAGS: core-guard deploy-check
     just build --release
     {{CLI_RELEASE}} cloud deploy {{FLAGS}}
 
@@ -1135,18 +1426,123 @@ flake-check:
 
 # --- Release ------------------------------------------------------------
 
-# Step A of a release: bump every version pin to the new core release and
-# gate locally (migrate + build + clippy). Review + commit + push, then
-# `just release <version>`. See docs/RELEASING.md.
+# Adopt a published core release: move every pin (lockstep — the workspace
+# version, helm appVersion and deploy image pins follow core), point
+# bridge/CORE_REF at its tag, refresh BOTH lockfiles so the core crates cannot
+# drift between them (scripts/check-core-crate-versions.sh), migrate the LOCAL
+# database with the new binary, and gate (build + clippy). Then
+# `just schema-baseline` for the new rung, a CHANGELOG entry, `just verify`,
+# push next, and `just release X.Y.Z`. See docs/RELEASING.md.
+#
+# LOCAL-ONLY. The migrate is pinned to `--profile local`: a bare `infra db
+# migrate` follows the active CLI session, which can be a cloud profile. A
+# failed migrate stops the bump (no `|| true`).
 core-bump version:
     @! grep -q '^\[patch\.crates-io\]' Cargo.toml || (echo "ERROR: [patch.crates-io] is active — publish core and re-comment it first" && exit 1)
     scripts/sync-release-version.sh {{version}}
+    scripts/sync-core-version.sh {{version}}
     cargo update -w
+    cargo update -w --manifest-path tests/Cargo.toml
     just db-up
-    cargo run --bin systemprompt -- infra db migrate || true
+    cargo run --bin systemprompt -- infra db migrate --profile local
     just build
     just clippy
-    @echo "core-bump {{version}} complete — review the diff, run tests, commit to main, push, then: just release {{version}}"
+    @echo "core-bump {{version}} complete — then: just schema-baseline, CHANGELOG, just verify, push next, just release {{version}}"
+
+# Pin bridge/CORE_REF to a core `next` commit while [patch.crates-io] is
+# active (the sibling checkout's HEAD by default). CI checks that ref out.
+core-pin REF="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ref="{{REF}}"
+    core="${CORE_REPO:-../systemprompt-core}"
+    [ -n "$ref" ] || ref="$(git -C "$core" rev-parse HEAD)"
+    # check-core-ref.sh accepts only a vX.Y.Z tag or a full 40-char SHA, so expand abbreviations.
+    case "$ref" in v[0-9]*) ;; *) ref="$(git -C "$core" rev-parse --verify "${ref}^{commit}")" ;; esac
+    printf '%s\n' "$ref" > bridge/CORE_REF
+    echo "bridge/CORE_REF = $ref"
+
+# What "build next and next together" means in practice: while
+# [patch.crates-io] is active the server compiles against ../systemprompt-core
+# in place, so the only way a deploy can ship exactly the core CI gates is if
+# that checkout is clean and sits at bridge/CORE_REF. Refuses otherwise; with
+# the patch inactive there is nothing to check.
+core-guard:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    grep -qE '^\[patch\.crates-io\]' Cargo.toml || { echo "core-guard: patch inactive; building against the published core"; exit 0; }
+    core="${CORE_REPO:-../systemprompt-core}"
+    # -e, not -d: a worktree's .git is a file, and a detached worktree is the sanctioned clean checkout.
+    [ -e "$core/.git" ] || { echo "core-guard: no core checkout at $core" >&2; exit 1; }
+    expected="$(tr -d '[:space:]' < bridge/CORE_REF)"
+    head="$(git -C "$core" rev-parse HEAD)"
+    [ "$head" = "$expected" ] || { echo "core-guard: $core is at ${head:0:12}, bridge/CORE_REF pins ${expected:0:12}; commit and 'just core-pin' first" >&2; exit 1; }
+    dirty="$(git -C "$core" status --porcelain --untracked-files=all)"
+    [ -z "$dirty" ] || { echo "core-guard: $core has uncommitted changes; commit them on core next (or set them aside) before deploying:" >&2; echo "$dirty" >&2; exit 1; }
+    echo "core-guard: $core clean at ${head:0:12} == bridge/CORE_REF"
+
+# Clone systemprompt-core beside this repo when absent (the patch-active build
+# and core's contract gates need it), leave local work alone, and compare a
+# clean checkout with bridge/CORE_REF: a mismatch is fatal by default and a
+# warning with MISMATCH=warn. It never moves the checkout — updating here
+# could mix a server built from one core with gates run against another.
+core-checkout MISMATCH="fail":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    CORE="{{justfile_directory()}}/../systemprompt-core"
+    if [ -e "$CORE/.git" ]; then
+        if [ -n "$(git -C "$CORE" status --porcelain)" ]; then
+            echo "core checkout has local changes — leaving it as it is."
+        else
+            echo "Using existing core checkout at $(git -C "$CORE" rev-parse --short HEAD)"
+            expected="$(tr -d '\r\n' < "{{justfile_directory()}}/bridge/CORE_REF")"
+            head="$(git -C "$CORE" rev-parse HEAD)"
+            pinned="$(git -C "$CORE" rev-parse "$expected^{commit}")"
+            if [ "$head" != "$pinned" ]; then
+                if [ "{{MISMATCH}}" = "warn" ]; then
+                    echo "warn: core checkout ${head:0:9} differs from bridge/CORE_REF ${pinned:0:9};" >&2
+                    echo "      using the checkout as it is. Pin with: just core-pin" >&2
+                else
+                    echo "core checkout differs from bridge/CORE_REF; pin core (just core-pin) or check out $expected." >&2
+                    exit 1
+                fi
+            fi
+        fi
+    else
+        echo "Cloning systemprompt-core beside this repo at bridge/CORE_REF."
+        git clone --quiet https://github.com/systempromptio/systemprompt-core "$CORE"
+        git -C "$CORE" checkout --quiet "$(tr -d '\r\n' < "{{justfile_directory()}}/bridge/CORE_REF")"
+    fi
+
+# Install the compiled gateway binaries from a GitHub Release instead of
+# building them: `systemprompt-gateway-<version>-<target>.tar.gz` (linux-amd64,
+# linux-arm64, darwin-arm64) holds systemprompt and systemprompt-mcp-agent,
+# built by release-gateway.yml. They land in target/release/, where
+# `just start` and setup-local already look, so a clone needs no Rust
+# toolchain. Verified against the release's SHA256SUMS.gateway. Default
+# version = the workspace version in Cargo.toml.
+fetch-release VERSION="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    v="{{VERSION}}"
+    [ -n "$v" ] || v=$(sed -n 's/^version = "\([0-9.]*\)"/\1/p' Cargo.toml | head -1)
+    case "$(uname -s)-$(uname -m)" in
+        Linux-x86_64) target=linux-amd64 ;;
+        Linux-aarch64|Linux-arm64) target=linux-arm64 ;;
+        Darwin-arm64) target=darwin-arm64 ;;
+        *) echo "fetch-release: no gateway tarball for $(uname -s)-$(uname -m); use the image (docs/install/ghcr.md) or 'just build --release'." >&2; exit 1 ;;
+    esac
+    name="systemprompt-gateway-$v-$target.tar.gz"
+    tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+    echo "==> downloading $name from release v$v"
+    gh release download "v$v" -R systempromptio/systemprompt-template -p "$name" -p SHA256SUMS.gateway -D "$tmp" \
+        || { echo "fetch-release: release v$v has no $name (gh auth, or the release does not exist yet)." >&2; exit 1; }
+    (cd "$tmp" && grep " $name\$" SHA256SUMS.gateway | { sha256sum -c - 2>/dev/null || shasum -a 256 -c -; })
+    tar xzf "$tmp/$name" -C "$tmp"
+    mkdir -p target/release
+    install -m 0755 "$tmp/${name%.tar.gz}"/systemprompt "$tmp/${name%.tar.gz}"/systemprompt-mcp-* target/release/
+    echo "==> installed into target/release/:"; ls -1 target/release/systemprompt target/release/systemprompt-mcp-* | sed 's/^/    /'
+    target/release/systemprompt --version
 
 # Promote the exact green next-push candidate through a frozen PR onto main,
 # then tag the merge (release-gateway.yml runs on the tag). Run it once to open
