@@ -1,0 +1,75 @@
+{{!--
+  Generic filter ribbon: one pill per dimension, each a native <details> with
+  a typeahead and the choices the filtered set actually contains, a free-text
+  box, Apply / Clear, and a chip per active filter. SSR-first — a plain
+  <form method=get>; `services/filter-ribbon.js` adds the typeahead and
+  exclusive-open behaviour it already gives the identity ribbon.
+
+  Invoke as: {{> components/filter-ribbon ribbon}}
+  Root context is a RibbonView (handlers/ssr/analysis/ribbon.rs):
+    base_url, preserved [{name,value}], groups [{param,label,icon,options
+    [{id,label,count,selected}],multi,active_count}], search {name,value,
+    placeholder}, chips [{group_label,label,remove_url}], clear_url.
+
+  A single-choice group renders radios so the query carries one value; a
+  multi group renders checkboxes whose values the server reads as a list.
+--}}
+<form class="sp-filter-ribbon sp-ribbon" method="get" action="{{base_url}}" data-filter-ribbon role="search" aria-label="Filters">
+  {{#each preserved}}<input type="hidden" name="{{this.name}}" value="{{this.value}}">{{/each}}
+  <div class="sp-filter-ribbon__groups">
+    {{#each groups}}
+    {{#if this.options}}
+    <details class="sp-filter-ribbon__group{{#if this.active_count}} is-active{{/if}}" data-filter-group="{{this.param}}">
+      <summary class="sp-filter-ribbon__group-summary">
+        {{#if this.icon}}{{> components/icon name=this.icon}}{{/if}}
+        <span class="sp-filter-ribbon__group-title">{{this.label}}</span>
+        {{#if this.active_count}}<span class="sp-ribbon__badge">{{this.active_count}}</span>{{/if}}
+        <span class="sp-filter-ribbon__group-caret" aria-hidden="true">&#9662;</span>
+      </summary>
+      <div class="sp-filter-ribbon__group-panel" role="group" aria-label="{{this.label}} filter">
+        <input type="search" class="sp-filter-ribbon__group-search" placeholder="Find {{this.label}}…" data-filter-typeahead aria-label="Find {{this.label}} options">
+        <ul class="sp-filter-ribbon__group-list" data-filter-list>
+          {{#unless this.multi}}
+          <li class="sp-filter-ribbon__group-item" data-label="any">
+            <label class="sp-filter-ribbon__option"><input type="radio" name="{{this.param}}" value=""{{#unless this.active_count}} checked{{/unless}}><span class="sp-filter-ribbon__option-label">Any {{toLowerCase this.label}}</span></label>
+          </li>
+          {{/unless}}
+          {{#each this.options}}
+          <li class="sp-filter-ribbon__group-item" data-label="{{this.label}}">
+            <label class="sp-filter-ribbon__option">
+              <input type="{{#if ../this.multi}}checkbox{{else}}radio{{/if}}" name="{{../this.param}}" value="{{this.id}}"{{#if this.selected}} checked{{/if}}>
+              <span class="sp-filter-ribbon__option-label">{{this.label}}</span>
+              {{#if this.count}}<span class="sp-filter-ribbon__option-count">{{formatNumber this.count}}</span>{{/if}}
+            </label>
+          </li>
+          {{/each}}
+        </ul>
+      </div>
+    </details>
+    {{/if}}
+    {{/each}}
+    {{#if search}}
+    <label class="sp-ribbon__search">
+      {{> components/icon name="search"}}
+      <span class="sp-u-sr-only">Search</span>
+      <input type="search" class="sp-ribbon__search-input" name="{{search.name}}" value="{{search.value}}" placeholder="{{search.placeholder}}">
+    </label>
+    {{/if}}
+  </div>
+  <div class="sp-filter-ribbon__actions">
+    <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Apply</button>
+    {{#if chips}}<a href="{{clear_url}}" class="sp-filter-ribbon__clear">Clear all</a>{{/if}}
+  </div>
+  {{#if chips}}
+  <ul class="sp-filter-ribbon__chips" aria-label="Active filters">
+    {{#each chips}}
+    <li class="sp-filter-ribbon__chip">
+      <span class="sp-filter-ribbon__chip-group">{{this.group_label}}:</span>
+      <span class="sp-filter-ribbon__chip-value">{{this.label}}</span>
+      {{#if this.export_href}}<a class="sp-ribbon__chip-export" href="{{this.export_href}}" title="Download the rows this filter selects as CSV" aria-label="Export {{this.group_label}} {{this.label}}">{{> components/icon name="download"}}</a>{{/if}}
+      <a class="sp-filter-ribbon__chip-remove" href="{{this.remove_url}}" aria-label="Remove {{this.group_label}} filter {{this.label}}">&times;</a>
+    </li>
+    {{/each}}
+  </ul>
+  {{/if}}
+</form>

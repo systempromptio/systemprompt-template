@@ -34,8 +34,21 @@
     padding: var(--sp-space-3) 0;
 }
 
+/* The release the page is being served by, ruled off at the foot of the rail.
+   `margin-block-start: auto` rather than a fixed offset, so it sits at the
+   bottom on a short viewport and directly under the last link on a tall one. */
+.sp-nav-version {
+    margin: auto 0 0;
+    padding: var(--sp-space-3) var(--sp-space-5);
+    border-top: 1px solid var(--sp-sidebar-border);
+    font-size: var(--sp-text-xs);
+    font-variant-numeric: tabular-nums;
+    color: var(--sp-sidebar-text-muted);
+}
+
 .sp-nav-label {
-    padding: var(--sp-space-5) var(--sp-space-5) var(--sp-space-2);
+    margin: 0;
+    padding: 0 var(--sp-space-2);
     font-size: var(--sp-text-xs);
     font-weight: 600;
     text-transform: uppercase;
@@ -43,40 +56,40 @@
     color: var(--sp-sidebar-text-muted);
 }
 
-.sp-nav-label:first-child {
-    padding-top: var(--sp-space-3);
-}
+/* Each group heading carries its own hue so the rail reads as five zones at
+   a glance. The hue is keyed by the group's modifier class, not its position,
+   so reordering the groups never recolours a neighbour; the account group
+   stays neutral because it is about the reader, not the business. */
+.sp-nav-group--activity .sp-nav-group__title { color: var(--sp-nav-label-1); }
 
-.sp-admin-sidebar nav h2.sp-nav-label:nth-of-type(1) { color: var(--sp-nav-label-1); }
+.sp-nav-group--people .sp-nav-group__title { color: var(--sp-nav-label-2); }
 
-.sp-admin-sidebar nav h2.sp-nav-label:nth-of-type(2) { color: var(--sp-nav-label-2); }
+.sp-nav-group--analysis .sp-nav-group__title { color: var(--sp-nav-label-3); }
 
-.sp-admin-sidebar nav h2.sp-nav-label:nth-of-type(3) { color: var(--sp-nav-label-3); }
+.sp-nav-group--governance .sp-nav-group__title { color: var(--sp-nav-label-4); }
 
-.sp-admin-sidebar nav h2.sp-nav-label:nth-of-type(4) { color: var(--sp-nav-label-4); }
+.sp-nav-group--platform .sp-nav-group__title { color: var(--sp-nav-label-5); }
 
-.sp-admin-sidebar nav h2.sp-nav-label:nth-of-type(5) { color: var(--sp-nav-label-5); }
-
-h2.sp-nav-label {
-    margin: 0;
-    font-weight: inherit;
-}
-
+/* A row sits one `space-1` clear of the group rail drawn by
+   `.sp-nav-group__inner::before`; nothing about it moves on hover, only
+   colour changes, so a dense rail stays still under the pointer. */
 .sp-admin-sidebar nav a {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: var(--sp-space-3);
-    padding: var(--sp-space-2) var(--sp-space-5);
-    margin: 0.0625rem var(--sp-space-2);
+    gap: var(--sp-space-2);
+    min-height: 2rem;
+    padding: var(--sp-space-1) var(--sp-space-2);
+    margin: 0 var(--sp-space-2) 0 var(--sp-space-6);
     color: var(--sp-sidebar-text);
     text-decoration: none;
     transition: background var(--sp-duration-fast) var(--sp-ease-in-out),
                 color var(--sp-duration-fast) var(--sp-ease-in-out);
     font-size: var(--sp-text-sm);
     font-weight: 500;
-    border-radius: var(--sp-radius-sm);
+    line-height: var(--sp-leading-normal);
+    border-radius: var(--sp-corners-sm);
     min-width: 0;
-    overflow: hidden;
 }
 
 .sp-admin-sidebar nav a:hover {
@@ -84,41 +97,44 @@ h2.sp-nav-label {
     color: var(--sp-sidebar-text-hover);
 }
 
+.sp-admin-sidebar nav a:active {
+    background: var(--sp-sidebar-control-bg);
+}
+
 .sp-admin-sidebar nav a.is-active {
     background: var(--sp-sidebar-active-bg);
     color: var(--sp-sidebar-active-color);
     font-weight: 600;
-    position: relative;
-    padding-left: var(--sp-space-5);
 }
 
+/* The active bar is drawn over the group rail so the two read as one
+   stroke: rail at 20px, bar 3px wide starting 1px before it. */
 .sp-admin-sidebar nav a.is-active::before {
     content: '';
     position: absolute;
-    left: 0;
-    top: 20%;
-    bottom: 20%;
+    left: calc(-1 * var(--sp-space-15) + 1px);
+    top: var(--sp-space-1);
+    bottom: var(--sp-space-1);
     width: 3px;
     border-radius: var(--sp-radius-full);
-    background: var(--sp-sidebar-active-color);
-    box-shadow: 0 0 8px color-mix(in oklch, var(--sp-sidebar-active-color) 40%, transparent);
+    background: var(--sp-accent);
 }
 
 .sp-admin-sidebar nav a .sp-icon {
-    width: 16px;
-    height: 16px;
+    width: 1rem;
+    height: 1rem;
     flex-shrink: 0;
-    opacity: 0.6;
+    opacity: 0.7;
     transition: opacity var(--sp-duration-fast);
 }
 
-.sp-admin-sidebar nav a:hover .sp-icon { opacity: 0.85; }
-
+.sp-admin-sidebar nav a:hover .sp-icon,
 .sp-admin-sidebar nav a.is-active .sp-icon { opacity: 1; }
 
+/* Inset ring: the rail clips overflow, so an outset ring would be cut off. */
 .sp-admin-sidebar nav a:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--sp-sidebar-bg), 0 0 0 4px var(--sp-sidebar-active-color);
+    outline: 2px solid var(--sp-accent-text);
+    outline-offset: -2px;
 }
 
 }

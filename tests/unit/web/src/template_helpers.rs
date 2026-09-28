@@ -209,6 +209,22 @@ fn initials_takes_the_first_letter_of_up_to_two_name_parts() {
 }
 
 #[test]
+fn avatar_tone_is_stable_case_insensitive_and_within_the_wheel() {
+    let tone = |name: &str| render_value("{{avatar_tone v}}", serde_json::json!(name));
+    assert_eq!(tone("Ada Lovelace"), tone("ada lovelace"));
+    assert_eq!(tone("Ada Lovelace"), tone("  Ada Lovelace "));
+    for name in ["Ada Lovelace", "Grace Hopper", "", "?"] {
+        let n: u64 = tone(name).parse().unwrap_or_else(|e| panic!("{name}: {e}"));
+        assert!(n < 12, "{name} -> {n}");
+    }
+    assert_ne!(tone("Ada Lovelace"), tone("Grace Hopper"));
+    assert_eq!(
+        render("{{avatar_tone missing}}", &serde_json::json!({})),
+        tone("")
+    );
+}
+
+#[test]
 fn truncate_appends_an_ellipsis_only_past_the_limit() {
     let data = serde_json::json!({ "short": "abc", "long": "abcdefghij" });
     assert_eq!(render("{{truncate short 5}}", &data), "abc");
@@ -397,4 +413,22 @@ fn css_version_always_renders_something_cache_bustable() {
     let out = render("{{css_version}}", &serde_json::json!({}));
     assert!(!out.is_empty());
     assert!(!out.contains(' '), "{out}");
+}
+
+#[test]
+fn nav_state_marks_leaf_active_and_child_pages_as_ancestor() {
+    let t = r#"<a{{navState page "users" "user-detail" child2}}>"#;
+    let leaf = render(t, &serde_json::json!({ "page": "users" }));
+    assert_eq!(leaf, r#"<a class="is-active" aria-current="page">"#);
+    let child = render(t, &serde_json::json!({ "page": "user-detail" }));
+    assert_eq!(child, r#"<a class="is-ancestor" aria-expanded="true">"#);
+    let other = render(t, &serde_json::json!({ "page": "groups" }));
+    assert_eq!(other, "<a>");
+}
+
+#[test]
+fn nav_state_accepts_a_second_child_id() {
+    let t = r#"<a{{navState page "plugins" "plugin-detail" "catalog"}}>"#;
+    let catalog = render(t, &serde_json::json!({ "page": "catalog" }));
+    assert_eq!(catalog, r#"<a class="is-ancestor" aria-expanded="true">"#);
 }

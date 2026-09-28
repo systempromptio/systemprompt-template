@@ -1,0 +1,131 @@
+@layer components {
+
+/* The explanations used to sit at the foot of every Analysis page as a
+   <details>; they are reference, not reading, so they live behind one `?`
+   and open as a two-column glossary the reader can scan while the table is
+   still in view underneath. */
+.sp-help {
+    max-width: min(760px, 94vw);
+}
+
+.sp-help__frame {
+    display: flex;
+    flex-direction: column;
+    max-height: 86vh;
+}
+
+.sp-help__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-4) var(--sp-space-5);
+    border-bottom: 1px solid var(--sp-border-subtle);
+}
+
+.sp-help__title {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin: 0;
+    font-size: var(--sp-text-lg);
+    font-weight: var(--sp-font-semibold);
+}
+
+.sp-help__title .sp-icon {
+    color: var(--sp-accent-text);
+}
+
+.sp-help__close {
+    flex-shrink: 0;
+    font-size: var(--sp-text-lg);
+    line-height: 1;
+}
+
+.sp-help__body {
+    overflow: auto;
+    padding: var(--sp-space-4) var(--sp-space-5);
+    display: grid;
+    gap: var(--sp-space-5);
+}
+
+.sp-help__intro {
+    margin: 0;
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+    line-height: var(--sp-leading-relaxed);
+}
+
+.sp-help__heading {
+    margin: 0 0 var(--sp-space-2);
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-help__section {
+    display: grid;
+    gap: var(--sp-space-2);
+}
+
+.sp-help__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: var(--sp-space-3) var(--sp-space-5);
+    margin: 0;
+}
+
+.sp-help__item {
+    display: grid;
+    gap: var(--sp-space-05);
+}
+
+.sp-help__term {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+}
+
+.sp-help__term .sp-icon {
+    color: var(--sp-accent-text);
+}
+
+.sp-help__text {
+    margin: 0;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    line-height: var(--sp-leading-relaxed);
+}
+
+.sp-help__foot {
+    padding: var(--sp-space-3) var(--sp-space-5);
+    border-top: 1px solid var(--sp-border-subtle);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.sp-help-open {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-surface);
+    color: var(--sp-text-secondary);
+    cursor: pointer;
+}
+
+.sp-help-open:hover,
+.sp-help-open:focus-visible {
+    color: var(--sp-accent-text);
+    border-color: var(--sp-accent);
+}
+
+}

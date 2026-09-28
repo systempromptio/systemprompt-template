@@ -1,0 +1,25 @@
+@layer tokens {
+
+/* Identity colour is a wheel spun from the brand accent, not a palette of its
+   own: every tone keeps the accent's lightness band and rotates its hue by a
+   fixed step, so a white-label theme that moves --sp-accent moves all twelve
+   tones with it and they still read as one family. The lightness is pinned
+   to the value --sp-accent-fill measured at 5.3:1 under --sp-text-on-accent,
+   so the monogram clears AA on every hue; chroma is held below the accent's
+   so no tone outshouts the brand red it sits beside. */
+:root {
+    --sp-avatar-tone-0:  oklch(from var(--sp-accent) 0.535 0.135 h);
+    --sp-avatar-tone-1:  oklch(from var(--sp-accent) 0.535 0.135 calc(h + 30));
+    --sp-avatar-tone-2:  oklch(from var(--sp-accent) 0.535 0.135 calc(h + 60));
+    --sp-avatar-tone-3:  oklch(from var(--sp-accent) 0.535 0.135 calc(h + 90));
+    --sp-avatar-tone-4:  oklch(from var(--sp-accent) 0.535 0.135 calc(h + 120));
+    --sp-avatar-tone-5:  oklch(from var(--sp-accent) 0.535 0.135 calc(h + 150));
+    --sp-avatar-tone-6:  oklch(from var(--sp-accent) 0.535 0.135 calc(h + 180));
+    --sp-avatar-tone-7:  oklch(from var(--sp-accent) 0.535 0.135 calc(h + 210));
+    --sp-avatar-tone-8:  oklch(from var(--sp-accent) 0.535 0.135 calc(h + 240));
+    --sp-avatar-tone-9:  oklch(from var(--sp-accent) 0.535 0.135 calc(h + 270));
+    --sp-avatar-tone-10: oklch(from var(--sp-accent) 0.535 0.135 calc(h + 300));
+    --sp-avatar-tone-11: oklch(from var(--sp-accent) 0.535 0.135 calc(h + 330));
+}
+
+}

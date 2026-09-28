@@ -45,7 +45,7 @@ BLOCKPARAM = re.compile(r"\{\{#\w+[^}]*\bas\s*\|([^|]+)\|")
 PATH = re.compile(r"\{\{[\{~]?\s*[#/^]?\s*([A-Za-z_][\w.@/-]*)")
 
 HELPERS = set(
-    "formatDate formatNumber relativeTime initials truncate json concat toLowerCase "
+    "formatDate formatNumber relativeTime initials avatar_tone truncate json concat toLowerCase "
     "toUpperCase default governanceColor css_version eq gt not add sub formatUsd "
     "percent deltaPct shortId navActive navState".split()
 )

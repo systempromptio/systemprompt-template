@@ -53,10 +53,10 @@
       </tr></thead>
       <tbody>
         {{#each groups}}
-        <tr class="sp-table__row--expand">
+        <tr class="sp-table__row--expand" data-expand-row tabindex="0">
           <td class="sp-col-user">
             <a class="sp-user-cell" href="{{this.user_url}}">
-              <span class="sp-avatar sp-avatar-sm">{{initials this.user_name}}</span>
+              <span class="sp-avatar sp-avatar--sm sp-avatar--tone-{{avatar_tone this.user_name}}" aria-hidden="true">{{initials this.user_name}}</span>
               <span>{{this.user_name}}</span>
             </a>
           </td>
@@ -65,13 +65,16 @@
           {{#each this.cells}}<td class="{{this.class}}">{{this.value}}</td>{{/each}}
           <td class="sp-col-status">{{> components/badge tone=this.status_tone text=this.status_label}}</td>
           <td class="sp-table__cell--actions">
-            <button class="sp-btn--actions sp-table__row-toggle" type="button"
+            <button class="sp-btn sp-btn--sm sp-btn--icon sp-btn--ghost sp-table__row-toggle" data-action="row-toggle" type="button"
                     aria-expanded="false" aria-controls="{{this.detail_id}}"
-                    aria-label="Show {{this.count_label}} for {{this.user_name}}">&#9662;</button>
+                    aria-label="Show {{this.count_label}} for {{this.user_name}}">
+              <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </td>
         </tr>
         <tr class="sp-table__row-detail" id="{{this.detail_id}}" hidden>
           <td colspan="9">
+<div class="sp-table__detail-panel"><div class="sp-table__detail-inner">
             <table class="sp-table__el sp-table__el--nested">
               {{#if (eq ../tab "bridges")}}
               <thead><tr>
@@ -172,6 +175,7 @@
                 {{/each}}
               </tbody>
             </table>
+</div></div>
           </td>
         </tr>
         {{/each}}

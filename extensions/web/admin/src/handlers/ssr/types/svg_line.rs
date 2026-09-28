@@ -8,7 +8,6 @@
 
 use serde::Serialize;
 
-use crate::util::delta::{Delta, delta};
 use crate::util::svg;
 
 // Why: shared with the pie so a model keeps one color across every chart in
@@ -170,47 +169,5 @@ pub(crate) fn line_chart(spec: LineChartSpec) -> SvgLineChartView {
         x_start_display: spec.x_start_display,
         x_mid_display: spec.x_mid_display,
         x_end_display: spec.x_end_display,
-    }
-}
-
-// Why: decoration only (`aria-hidden`) — the card's value and delta text are
-// the accessible copy. Its own 100x24 unit space, not the chart's 100x40.
-#[derive(Debug, Serialize)]
-pub(crate) struct SparklineView {
-    pub path_d: String,
-    pub has_data: bool,
-}
-
-pub(crate) fn sparkline(values: &[i64]) -> SparklineView {
-    let max = values.iter().copied().max().unwrap_or(0);
-    if max <= 0 {
-        return SparklineView {
-            path_d: String::new(),
-            has_data: false,
-        };
-    }
-    let points: Vec<(f64, f64)> = svg::scale_points(values, max)
-        .into_iter()
-        .map(|(x, y)| (x, y / svg::PLOT_H * 24.0))
-        .collect();
-    SparklineView {
-        path_d: svg::line_path(&points),
-        has_data: true,
-    }
-}
-
-#[derive(Debug, Serialize)]
-pub(crate) struct DeltaView {
-    pub display: String,
-    pub direction: &'static str,
-    pub tone: &'static str,
-}
-
-pub(crate) fn delta_view(current: i64, previous: i64, up_is_good: bool) -> DeltaView {
-    let d: Delta = delta(current, previous, up_is_good);
-    DeltaView {
-        display: d.display(),
-        direction: d.direction,
-        tone: d.tone,
     }
 }

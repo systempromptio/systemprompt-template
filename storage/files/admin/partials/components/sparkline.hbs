@@ -1,0 +1,10 @@
+{{!--
+  A row-sized trend line: decoration for a number that already stands beside
+  it, so it is aria-hidden and carries the values as a title only.
+
+  Invoke as: {{> components/sparkline spark}}
+  The partial's root context is a SparklineView: has_data, path_d, area_d,
+  tone (ok|warn|err|accent|muted), last_x, last_y, title. Its own 100x24
+  unit space; the stroke keeps its weight through the stretch.
+--}}
+{{#if has_data}}<svg class="sp-spark sp-spark--{{tone}}" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"{{#if title}}><title>{{title}}</title{{/if}}><path class="sp-spark__area" d="{{area_d}}"></path><path class="sp-spark__line" d="{{path_d}}" vector-effect="non-scaling-stroke"></path><path class="sp-spark__dot-ring" d="M{{last_x}},{{last_y}} h0" vector-effect="non-scaling-stroke"></path><path class="sp-spark__dot" d="M{{last_x}},{{last_y}} h0" vector-effect="non-scaling-stroke"></path></svg>{{else}}<span class="sp-spark sp-spark--empty" aria-hidden="true"></span>{{/if}}

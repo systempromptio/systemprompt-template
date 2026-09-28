@@ -10,6 +10,6 @@ pub(super) use datetime::{FormatDateHelper, RelativeTimeHelper};
 pub(super) use numeric::{DeltaPctHelper, FormatNumberHelper, FormatUsdHelper, PercentHelper};
 pub(super) use presentation::{CssVersionHelper, DefaultHelper, GovernanceColorHelper, JsonHelper};
 pub(super) use text::{
-    ConcatHelper, InitialsHelper, ShortIdHelper, ToLowerCaseHelper, ToUpperCaseHelper,
-    TruncateHelper,
+    AvatarToneHelper, ConcatHelper, InitialsHelper, ShortIdHelper, ToLowerCaseHelper,
+    ToUpperCaseHelper, TruncateHelper,
 };

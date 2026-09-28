@@ -1,0 +1,85 @@
+@layer components {
+
+/* The generic ribbon reuses the identity ribbon's pills and panels; these
+   rules only add what the generic form has that the identity one has not —
+   a search box in the pill row, a per-pill active count, and the export
+   glyph on a chip. */
+.sp-ribbon {
+    margin-block: var(--sp-space-2) var(--sp-space-3);
+}
+
+.sp-ribbon .sp-filter-ribbon__group-summary .sp-icon {
+    color: var(--sp-text-tertiary);
+}
+
+.sp-ribbon .sp-filter-ribbon__group.is-active > .sp-filter-ribbon__group-summary {
+    color: var(--sp-accent-text);
+    background: var(--sp-accent-dim);
+    border-color: transparent;
+}
+
+.sp-ribbon .sp-filter-ribbon__group.is-active > .sp-filter-ribbon__group-summary .sp-icon {
+    color: var(--sp-accent-text);
+}
+
+.sp-ribbon__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    padding-inline: var(--sp-space-1);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-accent);
+    color: var(--sp-text-on-accent);
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-ribbon__search {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    padding: 0 var(--sp-space-2) 0 var(--sp-space-3);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-full);
+    color: var(--sp-text-tertiary);
+    min-width: 14rem;
+    flex: 1 1 14rem;
+    max-width: 26rem;
+}
+
+.sp-ribbon__search:focus-within {
+    border-color: var(--sp-accent);
+    box-shadow: 0 0 0 2px var(--sp-accent-dim);
+}
+
+.sp-ribbon__search-input {
+    flex: 1;
+    min-width: 0;
+    padding: var(--sp-space-1) 0;
+    border: 0;
+    background: transparent;
+    color: var(--sp-text-primary);
+    font: inherit;
+    font-size: var(--sp-text-sm);
+}
+
+.sp-ribbon__search-input:focus {
+    outline: none;
+}
+
+.sp-ribbon__chip-export {
+    display: inline-flex;
+    color: var(--sp-text-tertiary);
+    text-decoration: none;
+}
+
+.sp-ribbon__chip-export:hover,
+.sp-ribbon__chip-export:focus-visible {
+    color: var(--sp-accent-text);
+}
+
+}

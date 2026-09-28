@@ -1,27 +1,44 @@
+
+
 @layer components {
 
-/* The open record sits on an inset branch; only the record is selected. */
+/* The open record sits on an inset branch; only the record is selected. The
+   ancestor link is emboldened but carries no background and no bar. */
+.sp-admin-sidebar nav a.is-ancestor {
+    background: transparent;
+    color: var(--sp-sidebar-text-hover);
+    font-weight: 600;
+}
 
+.sp-admin-sidebar nav a.is-ancestor:hover {
+    background: var(--sp-sidebar-hover-bg);
+}
+
+.sp-admin-sidebar nav a.is-ancestor .sp-icon { opacity: 1; }
+
+/* The branch hangs off the group rail: a horizontal tick runs from the rail
+   (20px) to the row (40px), accent-coloured because the open record is the
+   active page. */
 .sp-nav-branch {
-    margin: var(--sp-space-1) var(--sp-space-2) var(--sp-space-2)
-        calc(var(--sp-space-2) + var(--sp-space-5) + var(--sp-space-2));
-    padding-left: var(--sp-space-2);
-    border-left: 1px solid var(--sp-sidebar-border);
+    position: relative;
+    margin: 0 var(--sp-space-2) var(--sp-space-1) var(--sp-space-10);
     min-width: 0;
+}
+
+.sp-nav-branch::before {
+    content: '';
+    position: absolute;
+    left: calc(-1 * var(--sp-space-5));
+    top: 50%;
+    width: var(--sp-space-4);
+    height: 1px;
+    background: var(--sp-accent);
 }
 
 .sp-admin-sidebar nav a.sp-nav-child {
     margin: 0;
-    min-height: 36px;
-    padding: var(--sp-space-2) var(--sp-space-3);
-    font-size: var(--sp-text-sm);
-    line-height: var(--sp-leading-normal);
-}
-
-.sp-admin-sidebar nav a.sp-nav-child.is-active {
-    background: var(--sp-sidebar-active-bg);
-    color: var(--sp-sidebar-active-color);
-    font-weight: 600;
+    min-height: 2rem;
+    padding: var(--sp-space-1) var(--sp-space-2);
 }
 
 .sp-admin-sidebar nav a.sp-nav-child.is-active::before {
@@ -35,14 +52,11 @@
     white-space: nowrap;
 }
 
-.sp-nav-label--account {
-    margin-top: var(--sp-space-6);
+.sp-nav-group--account,
+.sp-nav-group--developer {
+    margin-top: var(--sp-space-4);
     border-top: 1px solid var(--sp-sidebar-border);
-    padding-top: var(--sp-space-5);
-}
-
-.sp-admin-sidebar nav h2.sp-nav-label--account:nth-of-type(n) {
-    color: var(--sp-sidebar-text-muted);
+    padding-top: var(--sp-space-2);
 }
 
 .sp-nav-external {
@@ -77,13 +91,10 @@
         transform: translateX(0);
         box-shadow: var(--sp-shadow-xl);
     }
+    .sp-admin-sidebar nav a,
     .sp-admin-sidebar nav a.sp-nav-child {
-        min-height: 44px;
-        padding-inline: var(--sp-space-3);
-    }
-    .sp-admin-sidebar nav a {
-        padding: var(--sp-space-3) var(--sp-space-5);
-        min-height: 44px;
+        min-height: 2.75rem;
+        padding: var(--sp-space-2);
     }
 }
 

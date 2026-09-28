@@ -1,5 +1,5 @@
-// The sidebar's information architecture: five sections, in render order, each
-// with its items as they are labelled and where they go. Mirrors
+// The sidebar's information architecture: its collapsible groups, in render
+// order, each with its items as they are labelled and where they go. Mirrors
 // storage/files/admin/partials/sidebar.hbs.
 //
 // A page spec asserts its own nav item is the active one; this map is what lets
@@ -46,20 +46,15 @@ function item(label: string, key: string): NavItem {
 
 export const NAV: NavSection[] = [
   {
+    heading: 'AI activity',
+    items: [item('By person', 'contexts')],
+  },
+  {
     heading: 'People & access',
     items: [
       item('Users', 'users'),
       item('Departments', 'departments'),
       item('Access control', 'accessControl'),
-    ],
-  },
-  {
-    heading: 'AI activity',
-    items: [
-      item('Requests', 'requests'),
-      item('Sessions', 'sessions'),
-      item('Traces', 'traces'),
-      item('Contexts', 'contexts'),
     ],
   },
   {
@@ -70,6 +65,14 @@ export const NAV: NavSection[] = [
     heading: 'Account',
     everyone: true,
     items: [item('Profile', 'profile'), item('Settings', 'settings')],
+  },
+  {
+    heading: 'Developer',
+    items: [
+      item('Requests', 'requests'),
+      item('Sessions', 'sessions'),
+      item('Traces', 'traces'),
+    ],
   },
 ];
 

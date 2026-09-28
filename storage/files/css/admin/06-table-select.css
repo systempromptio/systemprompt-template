@@ -1,0 +1,107 @@
+@layer components {
+
+/* Drawn by hand: the UA checkbox under color-scheme light is a hairline grey
+   square that vanished against the row, so a selection column read as empty. */
+.sp-select__box {
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    border: 1.5px solid var(--sp-border-strong);
+    border-radius: var(--sp-radius-sm);
+    background: var(--sp-bg-surface);
+    cursor: pointer;
+    vertical-align: middle;
+    display: inline-grid;
+    place-content: center;
+    transition: background var(--sp-duration-fast), border-color var(--sp-duration-fast);
+}
+
+.sp-select__box:hover {
+    border-color: var(--sp-accent);
+}
+
+.sp-select__box:focus-visible {
+    outline: 2px solid var(--sp-accent);
+    outline-offset: 2px;
+}
+
+.sp-select__box:checked,
+.sp-select__box:indeterminate {
+    border-color: var(--sp-accent);
+    background: var(--sp-accent);
+}
+
+.sp-select__box::before {
+    content: "";
+    width: 0.6rem;
+    height: 0.6rem;
+    background: var(--sp-text-on-accent);
+    transform: scale(0);
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    transition: transform var(--sp-duration-fast);
+}
+
+.sp-select__box:checked::before {
+    transform: scale(1);
+}
+
+.sp-select__box:indeterminate::before {
+    transform: scale(1);
+    clip-path: inset(40% 10% 40% 10%);
+}
+
+.sp-table__el tr.is-selected > td {
+    background: var(--sp-accent-dim);
+}
+
+/* Sticks to the viewport foot so a selection made three screens down still
+   has its actions in reach; hidden entirely until the first tick so an
+   unselected table looks exactly as it did. */
+.sp-bulk-bar {
+    position: sticky;
+    inset-block-end: var(--sp-space-3);
+    z-index: var(--sp-z-sticky);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-space-3);
+    margin-block: var(--sp-space-3);
+    padding: var(--sp-space-2) var(--sp-space-4);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface-overlay);
+    box-shadow: var(--sp-shadow-float);
+}
+
+.sp-bulk-bar[hidden] {
+    display: none;
+}
+
+.sp-bulk-bar__count {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+}
+
+.sp-bulk-bar__count b {
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-bulk-bar__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+}
+
+.sp-bulk-bar__form {
+    display: contents;
+}
+
+.sp-bulk-bar .sp-btn .sp-icon {
+    margin-inline-end: var(--sp-space-1);
+}
+
+}

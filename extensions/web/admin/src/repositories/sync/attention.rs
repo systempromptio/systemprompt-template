@@ -17,8 +17,6 @@ use crate::repositories::access_control::review::{EntityReview, review_entities}
 
 static ACCESS_ATTENTION: AtomicUsize = AtomicUsize::new(0);
 
-// Why: lint-ok: unused-pub — read by the console shell for its sidebar count,
-// which lands with the Stage-3 admin port.
 #[must_use]
 pub fn access_attention() -> usize {
     ACCESS_ATTENTION.load(Ordering::Relaxed)

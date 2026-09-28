@@ -7,12 +7,6 @@
         height: 38px;
     }
 
-    .sp-user-widget .sp-avatar {
-        width: 30px;
-        height: 30px;
-        font-size: 0.6rem;
-    }
-
     .sp-user-meta {
         display: none;
     }
@@ -33,9 +27,11 @@
         min-height: 36px;
     }
 
-    .sp-btn--actions {
-        min-width: 44px;
-        min-height: 44px;
+    /* Why: a row action inherits the 44px touch target above and would turn a
+       one-line roster row into a 56px one; the cell already sizes it to the
+       density line (06-table.css). */
+    .sp-table__el td .sp-btn {
+        min-height: 0;
     }
 
     .sp-install-trigger {
@@ -55,12 +51,6 @@
     .sp-user-widget {
         width: 34px;
         height: 34px;
-    }
-
-    .sp-user-widget .sp-avatar {
-        width: 26px;
-        height: 26px;
-        font-size: 0.55rem;
     }
 
     .sp-install-dropdown {

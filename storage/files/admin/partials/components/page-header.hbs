@@ -10,11 +10,13 @@
       {{#*inline "header_meta"}}<span>Updated {{updated_at}}</span>{{/inline}}
     {{/components/page-header}}
 
-  Both slots are optional; an unfilled slot renders nothing.
+  Both slots are optional; an unfilled slot renders nothing. Pass `help=help`
+  (the page's HelpView, also rendered by the layout as components/help-dialog)
+  to draw the `?` button that opens it beside the title.
 --}}
 <header class="sp-page-header">
     <div class="sp-page-header__title-group">
-        <h1 class="sp-page-header__title">{{title}}</h1>
+        <h1 class="sp-page-header__title">{{title}}{{#if help}} <button type="button" class="sp-help-open" data-action="help-open" aria-haspopup="dialog" title="What these columns and numbers mean">{{> components/icon name="question"}}</button>{{/if}}</h1>
         {{#if subtitle}}<p class="sp-page-header__subtitle">{{subtitle}}</p>{{/if}}
         <div class="sp-page-header__meta">{{#> header_meta}}{{/header_meta}}</div>
     </div>

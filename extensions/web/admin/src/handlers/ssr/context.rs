@@ -104,6 +104,9 @@ pub(crate) struct PageShell<'a, T> {
     // version is inherited by every crate from the release pin, so this crate's
     // own is the release version and cannot drift from it.
     app_version: &'static str,
+    // Why: the sidebar's count of access-control entities where code and the
+    // database disagree and nobody has decided yet. Console viewers only.
+    access_attention: usize,
     #[serde(flatten)]
     page: &'a T,
 }
@@ -131,6 +134,11 @@ impl<'a, T: Serialize> PageShell<'a, T> {
                 .and_then(|(_, topic)| crate::types::doc_links::documentation_url(topic)),
             scope_selector: takes_scope_selector(page_id),
             app_version: env!("CARGO_PKG_VERSION"),
+            access_attention: if user_ctx.is_console {
+                crate::repositories::sync::attention::access_attention()
+            } else {
+                0
+            },
             page,
         }
     }

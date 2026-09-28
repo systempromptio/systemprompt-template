@@ -1,9 +1,5 @@
 @layer components {
 
-.sp-btn--actions,
-.sp-btn--actions:hover,
-.sp-btn--actions.is-active,
-.sp-btn--actions:focus-visible,
 .sp-actions-menu {
     position: relative;
     display: inline-block;

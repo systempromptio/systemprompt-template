@@ -79,3 +79,48 @@
     }
 
 }
+
+@layer components {
+    /* Sparklines: a 100x24 unit space stretched to its cell. The stroke keeps
+       its weight through the stretch; the last point is marked. */
+    .sp-spark {
+        display: block;
+        width: 6rem;
+        height: 1.5rem;
+        color: var(--sp-accent);
+        overflow: visible;
+    }
+    .sp-spark--ok { color: var(--sp-success-strong); }
+    .sp-spark--warn { color: var(--sp-warning-strong); }
+    .sp-spark--err { color: var(--sp-danger-strong); }
+    .sp-spark--muted { color: var(--sp-text-tertiary); }
+    .sp-spark--accent { color: var(--sp-accent); }
+    .sp-spark--empty {
+        border-bottom: 1px dashed var(--sp-border-subtle);
+        height: 1rem;
+    }
+    .sp-spark__line {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.5px;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+    }
+    .sp-spark__area {
+        fill: currentColor;
+        opacity: 0.1;
+    }
+    .sp-spark__dot {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 6px;
+        stroke-linecap: round;
+        paint-order: stroke;
+    }
+    .sp-spark__dot-ring {
+        fill: none;
+        stroke: var(--sp-bg-surface);
+        stroke-width: 9px;
+        stroke-linecap: round;
+    }
+}

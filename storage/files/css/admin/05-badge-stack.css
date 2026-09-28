@@ -1,0 +1,116 @@
+@layer components {
+
+/* A cell holding several badges stays one line: the first few show, the rest
+   sit as offset cards behind a +N pill and fan out as a list on hover/focus. */
+.sp-badge-stack {
+    position: relative;
+    display: inline-flex;
+    max-width: 100%;
+    vertical-align: middle;
+    border-radius: var(--sp-radius-sm);
+    outline-offset: 2px;
+}
+
+.sp-badge-stack__row {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.sp-badge-stack__item {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sp-badge-stack--mono .sp-badge { font-family: var(--sp-font-mono); }
+
+.sp-badge-stack__more {
+    position: relative;
+    flex: 0 0 auto;
+    padding: 0.0625rem var(--sp-space-2);
+    border-radius: var(--sp-radius-full);
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    line-height: var(--sp-leading-normal);
+    color: var(--sp-text-secondary);
+    background: var(--sp-bg-surface-raised);
+    border: 1px solid var(--sp-border-subtle);
+    box-shadow:
+        3px -3px 0 -1px var(--sp-bg-tertiary),
+        3px -3px 0 0 var(--sp-border-subtle),
+        6px -6px 0 -1px var(--sp-bg-tertiary),
+        6px -6px 0 0 var(--sp-border-subtle);
+    cursor: default;
+    transition: box-shadow var(--sp-duration-fast) var(--sp-ease-out);
+}
+
+.sp-badge-stack__pop {
+    position: absolute;
+    inset-block-start: calc(100% + var(--sp-space-1));
+    inset-inline-start: 0;
+    z-index: var(--sp-z-dropdown);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sp-space-1);
+    min-width: 100%;
+    margin: 0;
+    padding: var(--sp-space-2);
+    list-style: none;
+    background: var(--sp-bg-surface-raised);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    box-shadow: var(--sp-shadow-float);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px) scale(0.98);
+    transform-origin: top left;
+    transition:
+        opacity var(--sp-duration-fast) var(--sp-ease-out),
+        transform var(--sp-duration-fast) var(--sp-ease-out),
+        visibility 0s linear var(--sp-duration-fast);
+}
+
+/* Table cells clip to ellipsis; a cell holding a stack must let the list out. */
+td:has(> .sp-badge-stack) { overflow: visible; }
+td:has(> .sp-badge-stack:is(:hover, :focus-within)) { position: relative; z-index: 2; }
+
+/* Nothing hidden means nothing to reveal. */
+.sp-badge-stack:not(:has(.sp-badge-stack__more)) .sp-badge-stack__pop { display: none; }
+
+.sp-badge-stack:is(:hover, :focus-within) .sp-badge-stack__more {
+    box-shadow: 0 0 0 1px var(--sp-border-subtle);
+}
+
+.sp-badge-stack:is(:hover, :focus-within) .sp-badge-stack__pop {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition-delay: 0s;
+}
+
+.sp-badge-stack__pop > li {
+    opacity: 0;
+    transform: translateY(-3px);
+    transition: opacity var(--sp-duration-fast) var(--sp-ease-out), transform var(--sp-duration-fast) var(--sp-ease-out);
+}
+
+.sp-badge-stack:is(:hover, :focus-within) .sp-badge-stack__pop > li {
+    opacity: 1;
+    transform: none;
+}
+
+.sp-badge-stack:is(:hover, :focus-within) .sp-badge-stack__pop > li:nth-child(2) { transition-delay: 20ms; }
+.sp-badge-stack:is(:hover, :focus-within) .sp-badge-stack__pop > li:nth-child(3) { transition-delay: 40ms; }
+.sp-badge-stack:is(:hover, :focus-within) .sp-badge-stack__pop > li:nth-child(n + 4) { transition-delay: 60ms; }
+
+@media (prefers-reduced-motion: reduce) {
+    .sp-badge-stack__pop,
+    .sp-badge-stack__pop > li,
+    .sp-badge-stack__more { transition: none; transform: none; }
+}
+
+}

@@ -221,6 +221,16 @@ fn declared_classes(css: &str) -> BTreeSet<String> {
     let mut in_block = false;
     while idx < bytes.len() {
         let c = bytes[idx];
+        // Why: a comment may name a source file, and `foo.rs` must never be
+        // read as a declared `.rs` class.
+        if c == '/' && bytes.get(idx + 1) == Some(&'*') {
+            idx += 2;
+            while idx + 1 < bytes.len() && !(bytes[idx] == '*' && bytes[idx + 1] == '/') {
+                idx += 1;
+            }
+            idx += 2;
+            continue;
+        }
         if c == '{' {
             in_block = true;
         } else if c == '}' {

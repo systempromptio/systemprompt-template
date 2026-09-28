@@ -33,13 +33,3 @@ on('click', '[data-revoke-id]', (event, button) => {
     () => revoke(button),
   );
 });
-
-for (const btn of document.querySelectorAll('.sp-table__row-toggle')) {
-  btn.addEventListener('click', () => {
-    const target = document.getElementById(btn.getAttribute('aria-controls') || '');
-    if (!target) return;
-    const expanded = btn.getAttribute('aria-expanded') === 'true';
-    btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-    target.hidden = expanded;
-  });
-}

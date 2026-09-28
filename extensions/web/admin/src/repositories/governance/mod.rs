@@ -41,6 +41,7 @@ pub mod hook_events;
 pub mod rankings;
 pub mod resolve;
 pub mod secret_audit_log;
+pub mod suggest;
 pub mod warnings;
 
 #[cfg(feature = "governance-ssr")]

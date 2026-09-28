@@ -7,7 +7,7 @@
     color: var(--sp-text-secondary);
     cursor: pointer;
     padding: var(--sp-space-2);
-    border-radius: var(--sp-radius-sm);
+    border-radius: var(--sp-corners-sm);
     min-width: 44px;
     min-height: 44px;
     align-items: center;
@@ -51,7 +51,7 @@
     border: none;
     background: var(--sp-sidebar-control-bg);
     color: var(--sp-sidebar-text);
-    border-radius: var(--sp-radius-sm);
+    border-radius: var(--sp-corners-sm);
     cursor: pointer;
     font-size: var(--sp-text-md);
     line-height: 1;

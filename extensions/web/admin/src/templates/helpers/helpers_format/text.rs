@@ -30,6 +30,36 @@ impl HelperDef for InitialsHelper {
     }
 }
 
+// Why: the avatar stylesheet defines exactly this many `--sp-avatar-tone-N`
+// tokens.
+const AVATAR_TONES: u64 = 12;
+
+// Why: FNV-1a over the normalised name is stable across pages and renders, so
+// the same person always gets the same colour with no state to keep.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct AvatarToneHelper;
+impl HelperDef for AvatarToneHelper {
+    fn call<'reg: 'rc, 'rc>(
+        &self,
+        h: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+        out: &mut dyn Output,
+    ) -> HelperResult {
+        let name = h.param(0).and_then(|v| v.value().as_str()).unwrap_or("");
+        let hash = name
+            .trim()
+            .to_lowercase()
+            .bytes()
+            .fold(0xcbf2_9ce4_8422_2325u64, |acc, b| {
+                (acc ^ u64::from(b)).wrapping_mul(0x0100_0000_01b3)
+            });
+        out.write(&(hash % AVATAR_TONES).to_string())?;
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct TruncateHelper;
 impl HelperDef for TruncateHelper {

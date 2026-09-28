@@ -1,0 +1,22 @@
+{{!--
+  The sticky bar a selection enables. Hidden until a row is ticked; the
+  script fills the count and the ids. `export_dataset` is the dataset the
+  "Export selected" action opens the export dialog on, and `transcripts`
+  (optional, true) opens the same dialog on the full record of the selection
+  — every message body, tool call, decision, finding and hook event, one JSON
+  object per line (the page's export must offer transcripts); `judge_url`
+  (optional)
+  is the POST that queues every selected conversation for the judge, with
+  `back` returning to this page.
+
+    {{> components/bulk-bar noun="conversations" export_dataset="analysis-conversations" judge_url="/admin/analysis/conversations/judge" back=current_url}}
+--}}
+<div class="sp-bulk-bar" data-bulk-bar hidden role="region" aria-label="Selection actions">
+  <span class="sp-bulk-bar__count"><b data-bulk-count>0</b> {{noun}} selected</span>
+  <div class="sp-bulk-bar__actions">
+    {{#if export_dataset}}<button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-export-open data-export-selected="{{export_dataset}}" data-export-noun="{{noun}}">{{> components/icon name="export"}} Export selected</button>{{/if}}
+    {{#if transcripts}}<button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-export-open data-export-selected="transcripts" data-export-noun="{{noun}}" title="The selected conversations in full — message bodies, tool calls, decisions, findings, hook events — one JSON object per line">{{> components/icon name="export"}} Full transcripts</button>{{/if}}
+    {{#if judge_url}}<form method="post" action="{{judge_url}}" class="sp-bulk-bar__form"><input type="hidden" name="back" value="{{back}}"><input type="hidden" name="ids" value="" data-bulk-ids><button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">{{> components/icon name="judge"}} Judge selected</button></form>{{/if}}
+    <button type="button" class="sp-btn sp-btn--sm sp-btn--ghost" data-action="bulk-clear">Clear</button>
+  </div>
+</div>

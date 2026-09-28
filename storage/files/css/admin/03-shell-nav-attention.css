@@ -1,0 +1,19 @@
+@layer components {
+
+/* A to-do count beside one sidebar link. Colour is not the only carrier:
+   the number is always shown, and the screen-reader text names what it
+   counts. */
+.sp-nav-attention {
+    margin-left: auto;
+    min-width: 1.25rem;
+    padding: 0 var(--sp-space-1);
+    border-radius: var(--sp-corners-sm);
+    font-size: var(--sp-text-xs);
+    font-weight: var(--sp-font-semibold);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    color: var(--sp-danger-strong);
+    background: var(--sp-danger-dim);
+}
+
+}

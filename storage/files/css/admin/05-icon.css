@@ -1,0 +1,18 @@
+@layer components {
+
+/* Glyphs size from the text they sit beside, so the same partial reads right
+   in a tile label, a table head, a button and a dialog list without a size
+   parameter; the sidebar's own 1rem rule is more specific and still wins. */
+.sp-icon {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+    vertical-align: -0.125em;
+}
+
+.sp-icon--sm {
+    width: 0.75em;
+    height: 0.75em;
+}
+
+}

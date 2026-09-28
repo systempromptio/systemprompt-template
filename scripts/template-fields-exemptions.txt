@@ -15,3 +15,8 @@ storage/files/admin/templates/management-department-detail.hbs: users_url
 storage/files/admin/templates/governance-decisions.hbs: policy_url, user_filter
 storage/files/admin/templates/governance-hooks.hbs: export_json, timeout_label
 storage/files/admin/templates/models.hbs: deny_rule_id, requests_link, route_id, selected_user_id, selected_user_label
+
+# The page help modal's view model (HelpView) lands with its first page, the
+# analysis suite (Stage 3 phase 7); until then no page carries `help` and the
+# layout never renders this partial.
+storage/files/admin/partials/components/help-dialog.hbs: guide_href, intro

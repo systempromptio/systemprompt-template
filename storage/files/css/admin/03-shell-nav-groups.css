@@ -1,0 +1,134 @@
+@layer components {
+
+/* A group's body is a one-row grid whose track animates between 0fr and 1fr,
+   so the reveal follows the real height of the links without JS measuring
+   anything. Before JS owns the state, `:has(.is-active)` opens the group the
+   reader is standing in, so a first paint never hides the current page. */
+.sp-nav-group {
+    margin-block: var(--sp-space-1);
+}
+
+.sp-nav-group__items {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--sp-duration-moderate) var(--sp-ease-out);
+}
+
+/* The rail hangs from under the heading's first letter (label padding plus
+   toggle padding = 20px) and ties the group's rows to their heading. */
+.sp-nav-group__inner {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    transition: visibility 0s linear var(--sp-duration-moderate);
+}
+
+.sp-nav-group__inner::before {
+    content: '';
+    position: absolute;
+    left: calc(var(--sp-space-2) + var(--sp-space-3));
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--sp-sidebar-border);
+}
+
+.sp-nav-group.is-open .sp-nav-group__items,
+.sp-admin-sidebar nav:not([data-nav-ready]) .sp-nav-group:has(.is-active, .is-ancestor) .sp-nav-group__items {
+    grid-template-rows: 1fr;
+}
+
+.sp-nav-group.is-open .sp-nav-group__inner,
+.sp-admin-sidebar nav:not([data-nav-ready]) .sp-nav-group:has(.is-active, .is-ancestor) .sp-nav-group__inner {
+    visibility: visible;
+    transition-delay: 0s;
+}
+
+/* Groups restored from storage must not animate open on page load; JS sets
+   `data-nav-motion` after the first paint, and only then do tracks animate. */
+.sp-admin-sidebar nav:not([data-nav-motion]) .sp-nav-group__items,
+.sp-admin-sidebar nav:not([data-nav-motion]) .sp-nav-group__inner,
+.sp-admin-sidebar nav:not([data-nav-motion]) .sp-nav-group__chevron {
+    transition: none;
+}
+
+.sp-nav-group__toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    width: 100%;
+    min-height: 1.75rem;
+    padding: var(--sp-space-1) var(--sp-space-3);
+    border: none;
+    border-radius: var(--sp-corners-sm);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: color var(--sp-duration-fast) var(--sp-ease-in-out);
+}
+
+.sp-nav-group__toggle:focus-visible {
+    outline: 2px solid var(--sp-accent-text);
+    outline-offset: -2px;
+}
+
+.sp-nav-group__title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The count is the collapsed group's promise of what is inside; it steps
+   aside once the links themselves are showing. */
+.sp-nav-group__count {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--sp-sidebar-text-muted);
+    opacity: 0.8;
+}
+
+.sp-nav-group__count:empty,
+.sp-nav-group.is-open .sp-nav-group__count { display: none; }
+
+.sp-nav-group__chevron {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: var(--sp-sidebar-text-muted);
+    transition: transform var(--sp-duration-normal) var(--sp-ease-out),
+                color var(--sp-duration-fast);
+}
+
+.sp-nav-group__toggle:hover .sp-nav-group__chevron,
+.sp-nav-group__toggle:hover .sp-nav-group__count {
+    color: var(--sp-sidebar-text-hover);
+}
+
+.sp-nav-group.is-open .sp-nav-group__chevron,
+.sp-admin-sidebar nav:not([data-nav-ready]) .sp-nav-group:has(.is-active, .is-ancestor) .sp-nav-group__chevron {
+    transform: rotate(90deg);
+}
+
+/* The group holding the current page is locked open: no chevron to invite a
+   collapse, no pointer cursor, because hiding where you are is never useful. */
+.sp-nav-group:has(.is-active, .is-ancestor) .sp-nav-group__toggle { cursor: default; }
+
+.sp-nav-group:has(.is-active, .is-ancestor) .sp-nav-group__chevron { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    .sp-nav-group__items,
+    .sp-nav-group__inner,
+    .sp-nav-group__chevron {
+        transition: none;
+    }
+}
+
+}

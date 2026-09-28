@@ -86,10 +86,10 @@
             </tr></thead>
             <tbody>
             {{#each user_summaries}}
-            <tr class="sp-table__row--expand" data-user-id="{{this.user_id}}">
+            <tr class="sp-table__row--expand" data-expand-row tabindex="0" data-user-id="{{this.user_id}}">
                 <td class="sp-col-identity">
                     <a href="{{this.user_url}}" class="sp-user-cell" title="{{this.user_id}}">
-                        <span class="sp-avatar sp-avatar-sm" aria-hidden="true">{{initials this.user_label}}</span>
+                        <span class="sp-avatar sp-avatar--sm sp-avatar--tone-{{avatar_tone this.user_label}}" aria-hidden="true">{{initials this.user_label}}</span>
                         <span>{{this.user_label}}</span>
                     </a>
                 </td>
@@ -104,15 +104,18 @@
                 <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
                 <td class="sp-col-model sp-p-contexts__models">{{#each this.models}}<span class="sp-badge sp-badge--info">{{this}}</span> {{/each}}</td>
                 <td class="sp-table__cell--actions">
-                    <button class="sp-btn--actions sp-table__row-toggle"
+                    <button class="sp-btn sp-btn--sm sp-btn--icon sp-btn--ghost sp-table__row-toggle" data-action="row-toggle"
                             type="button"
                             aria-expanded="false"
                             aria-controls="user-contexts-{{this.user_id}}"
-                            aria-label="Show conversations for {{this.user_label}}">&#9662;</button>
+                            aria-label="Show conversations for {{this.user_label}}">
+                        <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
                 </td>
             </tr>
             <tr class="sp-table__row-detail" id="user-contexts-{{this.user_id}}" hidden>
                 <td colspan="10">
+<div class="sp-table__detail-panel"><div class="sp-table__detail-inner">
                     {{#if this.has_conversations}}
                     <div class="sp-table"><div class="sp-table__scroll">
                       <table class="sp-table__el sp-table__el--nested">
@@ -145,6 +148,7 @@
                     <p class="sp-u-text-tertiary sp-u-p-3">No matching conversation previews.</p>
                     {{/if}}
                     <p class="sp-u-p-3"><a href="{{this.all_conversations_url}}">View all matching conversations ({{this.conversation_count}})</a></p>
+                </div></div>
                 </td>
             </tr>
             {{/each}}

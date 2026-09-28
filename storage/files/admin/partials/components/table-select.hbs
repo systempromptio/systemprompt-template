@@ -1,0 +1,13 @@
+{{!--
+  Row selection for a table that offers bulk actions. Two shapes:
+
+    <th>{{> components/table-select header=true label="conversations"}}</th>
+    <td>{{> components/table-select id=context_key label=title}}</td>
+
+  The header renders the select-all box, a row renders its own box carrying
+  `data-select-row="<id>"`. `components/sp-table-select.js` counts the ticked
+  rows, enables the `[data-bulk-bar]` beneath the table and fills its
+  `[data-bulk-ids]` input with the comma-joined ids. Without JavaScript the
+  boxes are inert and the page is unchanged.
+--}}
+{{#if header}}<input type="checkbox" class="sp-select__box" data-select-all aria-label="Select every {{label}} on this page">{{else}}<input type="checkbox" class="sp-select__box" data-select-row="{{id}}" aria-label="Select {{label}}">{{/if}}

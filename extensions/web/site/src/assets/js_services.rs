@@ -59,9 +59,12 @@ fn service_core_js(p: &Path) -> Vec<AssetDefinition> {
         svc_js!(p, "events.js"),
         svc_js!(p, "filter-ribbon.js"),
         svc_js!(p, "header-actions.js"),
+        svc_js!(p, "header-search-list.js"),
         svc_js!(p, "header-search.js"),
+        svc_js!(p, "nav-groups.js"),
         svc_js!(p, "scope.js"),
         svc_js!(p, "sidebar.js"),
+        svc_js!(p, "table-expand.js"),
         svc_js!(p, "toast.js"),
     ]
 }
@@ -87,6 +90,10 @@ fn service_utils_js(storage_js: &Path) -> Vec<AssetDefinition> {
         AssetDefinition::js(
             storage_js.join("components/sp-tabs.js"),
             "js/components/sp-tabs.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-help.js"),
+            "js/components/sp-help.js",
         ),
     ]
 }

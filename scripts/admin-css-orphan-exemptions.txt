@@ -13,6 +13,16 @@ sp-btn--outline-primary
 sp-btn--tertiary
 sp-btn--view
 sp-btn--xs
+sp-avatar--xs
+sp-avatar--lg
+sp-avatar--xl
+sp-avatar--soft
+sp-avatar__img
+sp-avatar__status
+sp-avatar__status--ok
+sp-avatar__status--warn
+sp-avatar__status--err
+sp-avatar-group
 sp-badge--accent
 sp-badge--nodot
 sp-badge--sm
@@ -95,7 +105,6 @@ sp-col-tags
 sp-col-text
 sp-col-thumbnail
 #
-# 4. Sidebar navigation grouping, rendered by the sidebar rewrite that lands
-#    alongside this change set.
-sp-nav-group
-sp-nav-group-chevron
+# 4. The Analysis nav group's hue. The group itself returns with the analysis
+#    suite (Stage 3 phase 7), which deletes this entry.
+sp-nav-group--analysis

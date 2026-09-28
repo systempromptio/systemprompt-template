@@ -1,8 +1,15 @@
 {{!--
-  Admin navigation: six groups, in the order an operator moves through them —
-  what happened (Overview), who it happened to (People & access), what the AI
-  did (AI activity), what the policy said (Governance), what is installed
-  (Platform), and the signed-in person themselves (Account).
+  Admin navigation: six collapsible groups, in the order an operator moves
+  through them — what the AI did (AI activity, which opens with Overview), who
+  it happened to (People & access), what the policy said (Governance), what is
+  installed (Platform), the signed-in person themselves (Account), and last the
+  raw technical records (Developer).
+
+  Exactly one group is always open: the one holding the current page. It has
+  no chevron and its toggle is a no-op. Before JS runs, CSS opens it with
+  `:has(.is-active, .is-ancestor)`; `services/nav-groups.js` then owns the
+  state and remembers which other groups the reader opened. Each section carries a `sp-nav-group--<id>` modifier that keys its hue,
+  so reordering groups never recolours a neighbour.
 
   Active state: `{{navActive page "id"}}` marks a plain link; a link that owns
   record pages goes through the `nav-item` partial, which draws the expanded
@@ -17,17 +24,50 @@
         <img src="{{default branding.logo_dark "/files/images/logo-white.svg"}}" alt="{{default branding.domain "systemprompt.io"}}" class="sp-admin-logo sp-admin-logo--dark" />
     </a>
     <nav aria-label="Admin navigation" data-nav>
-
         {{#if current_user.is_console}}
-        <h2 class="sp-nav-label">Overview</h2>
+        {{!-- AI ACTIVITY — what the models actually did, opening on the
+             Overview so a fresh visit lands somewhere useful. Every page in this
+             group honours the same `?scope=`/`?range=` contract, which is why
+             they are one group rather than filed by entity. --}}
+        <section class="sp-nav-group sp-nav-group--activity" data-nav-group="activity">
+        <h2 class="sp-nav-label">
+            <button class="sp-nav-group__toggle" type="button" data-action="nav-group-toggle" aria-expanded="false" aria-controls="sp-nav-group-activity">
+                <span class="sp-nav-group__title">AI activity</span>
+                <span class="sp-nav-group__count" data-nav-group-count aria-hidden="true"></span>
+                <svg class="sp-nav-group__chevron" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+        </h2>
+        <div class="sp-nav-group__items" id="sp-nav-group-activity">
+        <div class="sp-nav-group__inner">
         <a href="/admin"{{navActive page "overview"}}>
             <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
             Overview
         </a>
+        {{#> nav-item href="/admin/analytics" text="Analytics" leaf="analytics-dashboard" child="analytics-user" page=page scope_nav=true}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M3.5 13V8.5M7 13V4.5M10.5 13V6.5M14 13V3" stroke-linecap="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{!-- Why: no `child` — the conversation reader is owned by Conversations
+             above; a second owner drew the open record under both links. --}}
+        {{#> nav-item href="/admin/contexts" text="By person" leaf="contexts" child="" page=page scope_nav=true}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v1H2zm0 3h10v1H2zm0 3h12v1H2zm0 3h8v1H2z"/></svg>{{/inline}}
+        {{/nav-item}}
+
+        </div>
+        </div>
+        </section>
 
         {{!-- PEOPLE & ACCESS — the accounts, the groups that carry their
              entitlement, and the rules that bind the two together. --}}
-        <h2 class="sp-nav-label">People &amp; access</h2>
+        <section class="sp-nav-group sp-nav-group--people" data-nav-group="people">
+        <h2 class="sp-nav-label">
+            <button class="sp-nav-group__toggle" type="button" data-action="nav-group-toggle" aria-expanded="false" aria-controls="sp-nav-group-people">
+                <span class="sp-nav-group__title">People &amp; access</span>
+                <span class="sp-nav-group__count" data-nav-group-count aria-hidden="true"></span>
+                <svg class="sp-nav-group__chevron" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+        </h2>
+        <div class="sp-nav-group__items" id="sp-nav-group-people">
+        <div class="sp-nav-group__inner">
         {{#> nav-item href="/admin/users" text="Users" leaf="users" child="user-detail" page=page}}
             {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><path d="M1.5 13.5c0-2.5 2-4.5 4.5-4.5s4.5 2 4.5 4.5"/><path d="M11 3.2a2.5 2.5 0 010 4.6M12.5 13.5c0-1.6-.5-3-1.4-4" stroke-linecap="round"/></svg>{{/inline}}
         {{/nav-item}}
@@ -44,63 +84,31 @@
         <a href="/admin/access-control"{{navActive page "access-control"}}>
             <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5.5 7V4.5a2.5 2.5 0 015 0V7" stroke-linecap="round"/></svg>
             Access control
+            {{#if access_attention}}<span class="sp-nav-attention" title="{{access_attention}} entities where code and this database disagree">{{access_attention}}<span class="sp-u-sr-only"> entities need review</span></span>{{/if}}
         </a>
         {{#> nav-item href="/admin/devices" text="Devices & enrolments" leaf="devices" child="device-detail" page=page}}
             {{#*inline "nav_text"}}Devices &amp; enrolments{{/inline}}
             {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="8" rx="1"/><path d="M5.5 13.5h5" stroke-linecap="round"/></svg>{{/inline}}
         {{/nav-item}}
-
-        {{!-- AI ACTIVITY — what the models actually did. Every page in this
-             group honours the same `?scope=`/`?range=` contract, which is why
-             they are one group rather than filed by entity. --}}
-        <h2 class="sp-nav-label">AI activity</h2>
-        {{#> nav-item href="/admin/analytics" text="Analytics" leaf="analytics-dashboard" child="analytics-user" page=page scope_nav=true}}
-            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M3.5 13V8.5M7 13V4.5M10.5 13V6.5M14 13V3" stroke-linecap="round"/></svg>{{/inline}}
-        {{/nav-item}}
-        {{#> nav-item href="/admin/requests" text="Requests" leaf="requests" child="request-detail" page=page scope_nav=true}}
-            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8a6 6 0 0112 0M14 8a6 6 0 01-12 0M5 8l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>{{/inline}}
-        {{/nav-item}}
-        {{#> nav-item href="/admin/sessions" text="Sessions" leaf="sessions" child="session-detail" page=page scope_nav=true}}
-            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.5 1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>{{/inline}}
-        {{/nav-item}}
-        {{#> nav-item href="/admin/conversations" text="Conversations" leaf="conversations" child="context-detail" page=page scope_nav=true}}
-            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 3.5h11v8h-6l-2.5 2v-2h-2.5z" stroke-linejoin="round"/><path d="M5 6.5h6M5 9h4" stroke-linecap="round"/></svg>{{/inline}}
-        {{/nav-item}}
-        {{#> nav-item href="/admin/traces" text="Traces" leaf="traces" child="trace-detail" page=page scope_nav=true}}
-            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h6M2 8h10M2 12h4" stroke-linecap="round"/><circle cx="13" cy="4" r="1.5" fill="currentColor"/><circle cx="13" cy="12" r="1.5" fill="currentColor"/></svg>{{/inline}}
-        {{/nav-item}}
-        {{#> nav-item href="/admin/contexts" text="Contexts" leaf="contexts" child="context-detail" page=page scope_nav=true}}
-            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v1H2zm0 3h10v1H2zm0 3h12v1H2zm0 3h8v1H2z"/></svg>{{/inline}}
-        {{/nav-item}}
-
-        <h2 class="sp-nav-label">Analysis (Beta)</h2>
-        <a href="/admin/analysis/resources"{{navActive page "analysis-portfolio"}}>Resource effectiveness</a>
-        <a href="/admin/analysis/campaigns"{{navActive page "analysis-campaigns"}}>Optimization campaigns</a>
-        <a href="/admin/analysis/skills"{{navActive page "analysis-skills"}}>
-            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M4 10V6M8 10V2M12 10V4"/></svg>
-            Skills
-        </a>
-        <a href="/admin/analysis/evaluations"{{navActive page "analysis-evaluations"}}>
-            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="10" height="12" rx="2"/><path d="m5 8 2 2 4-4"/></svg>
-            Evaluations
-        </a>
-
-        <a href="/admin/analysis/versions"{{navActive page "analysis-versions"}}>
-            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2v8a3 3 0 0 0 3 3h5M4 5h5a3 3 0 0 0 3-3"/><circle cx="4" cy="2" r="1"/><circle cx="12" cy="2" r="1"/><circle cx="12" cy="13" r="1"/></svg>
-            Versions
-        </a>
-        <a href="/admin/analysis/impact"{{navActive page "analysis-impact"}}>
-            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M3 10l3-3 2 2 5-6"/></svg>
-            Version impact
-        </a>
-        <a href="/admin/analysis/publications"{{navActive page "analysis-publications"}}>
-            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10v10H3zM6 8h4M8 6v4"/></svg>
-            Publication
-        </a>
+        </div>
+        </div>
+        </section>
+        {{/if}}
 
         {{!-- GOVERNANCE — what the policy chain decided, and what it is still
              waiting on a human for. --}}
-        <h2 class="sp-nav-label">Governance</h2>
+        {{#if current_user.is_console}}
+
+        <section class="sp-nav-group sp-nav-group--governance" data-nav-group="governance">
+        <h2 class="sp-nav-label">
+            <button class="sp-nav-group__toggle" type="button" data-action="nav-group-toggle" aria-expanded="false" aria-controls="sp-nav-group-governance">
+                <span class="sp-nav-group__title">Governance</span>
+                <span class="sp-nav-group__count" data-nav-group-count aria-hidden="true"></span>
+                <svg class="sp-nav-group__chevron" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+        </h2>
+        <div class="sp-nav-group__items" id="sp-nav-group-governance">
+        <div class="sp-nav-group__inner">
         {{#> nav-item href="/admin/governance" text="Governance" leaf="governance-warnings" child="governance-decisions" page=page}}
             {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l6 11H2z" stroke-linejoin="round"/><path d="M8 6.5v3M8 11.5v.01" stroke-linecap="round"/></svg>{{/inline}}
         {{/nav-item}}
@@ -113,12 +121,24 @@
             Secrets audit
         </a>
 
+        </div>
+        </div>
+        </section>
+        {{/if}}
+
         {{!-- PLATFORM — the installable units declared in services/*.yaml, and
              the gateway that routes to them. --}}
-        <h2 class="sp-nav-label">Platform</h2>
-        {{#> nav-item href="/admin/mcp" text="MCP servers" leaf="mcp" child="mcp-detail" page=page}}
-            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="4" rx="1"/><rect x="2" y="9" width="12" height="4" rx="1"/><path d="M5 5h.01M5 11h.01" stroke-linecap="round"/></svg>{{/inline}}
-        {{/nav-item}}
+        {{#if current_user.is_console}}
+        <section class="sp-nav-group sp-nav-group--platform" data-nav-group="platform">
+        <h2 class="sp-nav-label">
+            <button class="sp-nav-group__toggle" type="button" data-action="nav-group-toggle" aria-expanded="false" aria-controls="sp-nav-group-platform">
+                <span class="sp-nav-group__title">Platform</span>
+                <span class="sp-nav-group__count" data-nav-group-count aria-hidden="true"></span>
+                <svg class="sp-nav-group__chevron" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+        </h2>
+        <div class="sp-nav-group__items" id="sp-nav-group-platform">
+        <div class="sp-nav-group__inner">
         {{#> nav-item href="/admin/marketplaces" text="Marketplaces" leaf="marketplaces" child="marketplace-detail" page=page}}
             {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5.5h12L13 13H3z" stroke-linejoin="round"/><path d="M5.5 5.5V4a2.5 2.5 0 015 0v1.5" stroke-linecap="round"/></svg>{{/inline}}
         {{/nav-item}}
@@ -128,14 +148,29 @@
         {{#> nav-item href="/admin/skills" text="Skills" leaf="skills" child="skill-detail" page=page}}
             {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.3 4.2 13.3l.7-4.3-3.1-3 4.3-.6z" stroke-linejoin="round"/></svg>{{/inline}}
         {{/nav-item}}
+        {{#> nav-item href="/admin/mcp" text="MCP servers" leaf="mcp" child="mcp-detail" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="4" rx="1"/><rect x="2" y="9" width="12" height="4" rx="1"/><path d="M5 5h.01M5 11h.01" stroke-linecap="round"/></svg>{{/inline}}
+        {{/nav-item}}
         <a href="/admin/gateway"{{navActive page "gateway"}}>
             <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12" stroke-linecap="round"/><circle cx="5" cy="8" r="2"/><circle cx="11" cy="8" r="2"/></svg>
             Gateway
         </a>
+        </div>
+        </div>
+        </section>
         {{/if}}
 
         {{!-- ACCOUNT — the signed-in person, not the business --}}
-        <h2 class="sp-nav-label sp-nav-label--account">Account</h2>
+        <section class="sp-nav-group sp-nav-group--account" data-nav-group="account">
+        <h2 class="sp-nav-label">
+            <button class="sp-nav-group__toggle" type="button" data-action="nav-group-toggle" aria-expanded="false" aria-controls="sp-nav-group-account">
+                <span class="sp-nav-group__title">Account</span>
+                <span class="sp-nav-group__count" data-nav-group-count aria-hidden="true"></span>
+                <svg class="sp-nav-group__chevron" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+        </h2>
+        <div class="sp-nav-group__items" id="sp-nav-group-account">
+        <div class="sp-nav-group__inner">
         <a href="/admin/profile"{{navActive page "profile"}}>
             <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
             Profile
@@ -151,6 +186,39 @@
             Help &amp; docs
             <span class="sp-nav-external" aria-hidden="true">↗</span>
         </a>
+        </div>
+        </div>
+        </section>
+        {{!-- DEVELOPER — the raw records under AI activity: requests, sessions,
+             conversations, traces. Technical and noisy, so it sits last
+             and stays collapsed unless one of its pages is open. --}}
+        {{#if current_user.is_console}}
+        <section class="sp-nav-group sp-nav-group--developer" data-nav-group="developer">
+        <h2 class="sp-nav-label">
+            <button class="sp-nav-group__toggle" type="button" data-action="nav-group-toggle" aria-expanded="false" aria-controls="sp-nav-group-developer">
+                <span class="sp-nav-group__title">Developer</span>
+                <span class="sp-nav-group__count" data-nav-group-count aria-hidden="true"></span>
+                <svg class="sp-nav-group__chevron" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+        </h2>
+        <div class="sp-nav-group__items" id="sp-nav-group-developer">
+        <div class="sp-nav-group__inner">
+        {{#> nav-item href="/admin/requests" text="Requests" leaf="requests" child="request-detail" page=page scope_nav=true}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8a6 6 0 0112 0M14 8a6 6 0 01-12 0M5 8l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/sessions" text="Sessions" leaf="sessions" child="session-detail" page=page scope_nav=true}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.5 1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/conversations" text="Conversations" leaf="conversations" child="context-detail" page=page scope_nav=true}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 3.5h11v8h-6l-2.5 2v-2h-2.5z" stroke-linejoin="round"/><path d="M5 6.5h6M5 9h4" stroke-linecap="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/traces" text="Traces" leaf="traces" child="trace-detail" page=page scope_nav=true}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h6M2 8h10M2 12h4" stroke-linecap="round"/><circle cx="13" cy="4" r="1.5" fill="currentColor"/><circle cx="13" cy="12" r="1.5" fill="currentColor"/></svg>{{/inline}}
+        {{/nav-item}}
+        </div>
+        </div>
+        </section>
+        {{/if}}
     </nav>
 
     <p class="sp-nav-version">v{{app_version}}</p>

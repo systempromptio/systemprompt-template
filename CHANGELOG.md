@@ -24,6 +24,43 @@ Conventions (strict — hold every entry to them):
 
 ## [Unreleased]
 
+### Added
+
+- Console chrome from the upstream admin: the sidebar is now six collapsible
+  groups (AI activity, People & access, Governance, Platform, Account,
+  Developer). The group holding the current page is always open; the others
+  remember the reader's choice (`services/nav-groups.js`). The Access control
+  link carries a count of entities where code and the database disagree and no
+  one has decided yet (`repositories/sync/attention.rs`), shown to console
+  viewers only.
+- The header search box suggests matching ids as you type and accepts the
+  `short_id` prefixes every list page shows: `GET /admin/api/search/resolve`
+  returns `matches` (up to eight, newest first) alongside `url`, and a lone
+  match still jumps straight to its page
+  (`repositories/governance/suggest.rs`, `services/header-search-list.js`).
+- Shared partials for later console pages: `components/icon`, `badge-stack`,
+  `sparkline`, `filter-ribbon`, `table-select`, `bulk-bar` and `help-dialog`
+  (opened by the page header's `?` through `components/sp-help.js`), with their
+  stylesheets.
+- `util::mcp_tool_name` reduces a host's namespaced MCP tool name
+  (`mcp__<server>__<tool>`, `mcp__plugin_<marketplace>_<server>__<tool>`) to the
+  server and bare tool the gateway records.
+
+### Changed
+
+- Avatars take a stable per-person tone from the new `avatar_tone` helper and
+  one size scale (`05-avatar.css`, `01-tokens-avatar.css`) instead of a single
+  gradient. Expandable table rows (Devices, By person) are driven by the shared
+  `services/table-expand.js`: the whole row is the trigger and the detail
+  slides open, replacing the per-page toggles.
+- The header actions and install menus now bind to the ids the templates
+  actually write (`header-actions`, `install-menu`); previously neither control
+  was wired and the install button did nothing at narrow widths.
+
+### Removed
+
+- `73-analysis.css`: every rule in it styled an analysis page this branch does not render; the analysis suite brings its own stylesheet back.
+
 ## [0.62.0] - 2026-09-28
 
 ### Breaking

@@ -1,0 +1,140 @@
+@layer components {
+
+.sp-avatar {
+    --sp-avatar-tone: var(--sp-accent-fill);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    width: var(--sp-space-8);
+    height: var(--sp-space-8);
+    border-radius: var(--sp-radius-full);
+    /* The highlight is a lit top edge, not a second colour: it keeps a flat
+       tone from reading as a dead disc at 20px and stays inside the tone's
+       measured contrast because it only mixes toward the text colour. */
+    background:
+        linear-gradient(160deg, color-mix(in oklch, var(--sp-text-on-accent) 22%, transparent), transparent 55%),
+        var(--sp-avatar-tone);
+    color: var(--sp-text-on-accent);
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+    line-height: 1;
+    letter-spacing: var(--sp-tracking-normal);
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    user-select: none;
+    overflow: hidden;
+    /* The inner hairline is what separates two touching tones in a stack and
+       lifts a tone off a surface of nearly the same lightness. */
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--sp-text-on-accent) 18%, transparent);
+    transition:
+        transform var(--sp-duration-fast) var(--sp-ease-spring),
+        box-shadow var(--sp-duration-fast) var(--sp-ease-default);
+}
+
+.sp-avatar img,
+.sp-avatar__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* The monogram is sized to the disc, not to the text scale: two semibold
+   capitals need roughly 65% of the diameter, so each size names the largest
+   face that still leaves the letters a clear margin from the edge. */
+.sp-avatar--xs { width: var(--sp-space-5); height: var(--sp-space-5); font-size: var(--sp-text-2xs); letter-spacing: var(--sp-tracking-tight); }
+.sp-avatar--sm { width: var(--sp-space-6); height: var(--sp-space-6); font-size: var(--sp-text-2xs); }
+.sp-avatar--md { width: var(--sp-space-8); height: var(--sp-space-8); font-size: var(--sp-text-sm); }
+.sp-avatar--lg { width: var(--sp-space-10); height: var(--sp-space-10); font-size: var(--sp-text-md); }
+.sp-avatar--xl { width: var(--sp-space-16); height: var(--sp-space-16); font-size: var(--sp-text-2xl); }
+
+.sp-avatar--tone-0  { --sp-avatar-tone: var(--sp-avatar-tone-0); }
+.sp-avatar--tone-1  { --sp-avatar-tone: var(--sp-avatar-tone-1); }
+.sp-avatar--tone-2  { --sp-avatar-tone: var(--sp-avatar-tone-2); }
+.sp-avatar--tone-3  { --sp-avatar-tone: var(--sp-avatar-tone-3); }
+.sp-avatar--tone-4  { --sp-avatar-tone: var(--sp-avatar-tone-4); }
+.sp-avatar--tone-5  { --sp-avatar-tone: var(--sp-avatar-tone-5); }
+.sp-avatar--tone-6  { --sp-avatar-tone: var(--sp-avatar-tone-6); }
+.sp-avatar--tone-7  { --sp-avatar-tone: var(--sp-avatar-tone-7); }
+.sp-avatar--tone-8  { --sp-avatar-tone: var(--sp-avatar-tone-8); }
+.sp-avatar--tone-9  { --sp-avatar-tone: var(--sp-avatar-tone-9); }
+.sp-avatar--tone-10 { --sp-avatar-tone: var(--sp-avatar-tone-10); }
+.sp-avatar--tone-11 { --sp-avatar-tone: var(--sp-avatar-tone-11); }
+
+/* A soft avatar is the tone as ink on a tint of itself, for a disc that must
+   sit quietly beside a solid one (a pending invite, a system principal). */
+.sp-avatar--soft {
+    color: var(--sp-avatar-tone);
+    background: color-mix(in oklch, var(--sp-avatar-tone) 14%, var(--sp-bg-surface));
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--sp-avatar-tone) 30%, transparent);
+}
+
+/* The avatar is the hit target's face: when its link or button is hovered or
+   keyboard-focused, the ring appears on the disc rather than around the whole
+   row, which is where the eye already is. The surface-coloured gap is what
+   keeps the ring legible against the tone. */
+a:hover > .sp-avatar,
+button:hover > .sp-avatar {
+    transform: scale(1.08);
+    box-shadow:
+        inset 0 0 0 1px color-mix(in oklch, var(--sp-text-on-accent) 18%, transparent),
+        0 0 0 2px var(--sp-bg-surface),
+        0 0 0 4px var(--sp-focus-ring);
+}
+
+a:focus-visible > .sp-avatar,
+button:focus-visible > .sp-avatar {
+    box-shadow:
+        inset 0 0 0 1px color-mix(in oklch, var(--sp-text-on-accent) 18%, transparent),
+        0 0 0 2px var(--sp-bg-surface),
+        0 0 0 4px var(--sp-accent);
+}
+
+/* Presence sits on the disc's lower-right quadrant with a surface-coloured
+   halo so it survives any tone behind it; the shape carries the meaning and
+   the colour only confirms it. */
+.sp-avatar__status {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 28%;
+    height: 28%;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-text-disabled);
+    box-shadow: 0 0 0 2px var(--sp-bg-surface);
+}
+.sp-avatar__status--ok   { background: var(--sp-success); }
+.sp-avatar__status--warn { background: var(--sp-warning); }
+.sp-avatar__status--err  { background: var(--sp-danger); }
+
+/* A stack overlaps its discs by a third so five people read as one group;
+   the surface-coloured ring is what keeps each edge distinct from the next
+   tone, and hover lifts one disc clear of its neighbours. */
+.sp-avatar-group {
+    display: inline-flex;
+    align-items: center;
+    padding-inline-start: var(--sp-space-2);
+}
+.sp-avatar-group > .sp-avatar {
+    margin-inline-start: calc(-1 * var(--sp-space-2));
+    box-shadow: 0 0 0 2px var(--sp-bg-surface);
+}
+.sp-avatar-group > .sp-avatar:hover {
+    z-index: 1;
+    transform: translateY(-2px) scale(1.08);
+}
+
+/* Inside a table the disc must not stretch the line box: it is sized to the
+   sm step and its overflow past the density line is folded into the cell's
+   own padding, so a 24px disc sits in a 20px line without growing the row. */
+.sp-table__el td .sp-avatar {
+    width: var(--sp-space-6);
+    height: var(--sp-space-6);
+    font-size: var(--sp-text-2xs);
+    margin-block: calc((var(--sp-density-cell-line) - var(--sp-space-6)) / 2);
+}
+
+}

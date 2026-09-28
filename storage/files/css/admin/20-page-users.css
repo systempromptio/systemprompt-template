@@ -36,15 +36,6 @@
   color: inherit;
 }
 
-/* 28px of avatar plus the cell's own padding is already past the 36px row
-   the density bar allows, so the roster draws a smaller one. */
-.sp-p-users__identity .sp-avatar {
-  width: var(--sp-space-5);
-  height: var(--sp-space-5);
-  flex-shrink: 0;
-  font-size: var(--sp-text-xs);
-}
-
 .sp-p-users__name {
   overflow: hidden;
   text-overflow: ellipsis;

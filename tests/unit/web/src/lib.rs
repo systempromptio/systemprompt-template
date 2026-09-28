@@ -77,6 +77,8 @@ mod format_display;
 #[cfg(test)]
 mod groups_yaml_types;
 #[cfg(test)]
+mod mcp_tool_name;
+#[cfg(test)]
 mod release_version_substitution;
 #[cfg(test)]
 mod role;
@@ -192,11 +194,11 @@ mod adfs_session_pure;
 #[cfg(test)]
 mod adfs_state_cookie;
 #[cfg(test)]
+mod admin_css_classes;
+#[cfg(test)]
 mod analytics;
 #[cfg(test)]
 mod analytics_conversations_redact;
-#[cfg(test)]
-#[cfg(test)]
 #[cfg(test)]
 mod config_gateway_pure;
 #[cfg(test)]

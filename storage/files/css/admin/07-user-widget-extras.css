@@ -1,22 +1,5 @@
 @layer components {
 
-.sp-user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--sp-radius-full);
-    background: linear-gradient(135deg, var(--sp-accent), color-mix(in oklch, var(--sp-accent) 70%, var(--sp-success)));
-    color: var(--sp-text-on-accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--sp-text-xs);
-    font-weight: 700;
-    flex-shrink: 0;
-    letter-spacing: 0.02em;
-    box-shadow: var(--sp-shadow-sm);
-    position: relative;
-}
-
 .sp-user-name {
     font-size: var(--sp-text-sm);
     color: var(--sp-text-primary);
@@ -59,21 +42,4 @@
     display: block;
 }
 
-.sp-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--sp-radius-full);
-    background: linear-gradient(135deg, var(--sp-accent), color-mix(in oklch, var(--sp-accent) 70%, var(--sp-success)));
-    color: var(--sp-text-on-accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--sp-text-xs);
-    font-weight: 700;
-    flex-shrink: 0;
-    overflow: hidden;
-}
-.sp-avatar img,
-.sp-avatar__img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.sp-avatar-sm { width: 28px; height: 28px; font-size: 0.625rem; }
 }

@@ -1,0 +1,32 @@
+{{!--
+  The page's help modal: what each column means and where each number comes
+  from, opened by the `?` button the page header renders when the context
+  carries `help`. Rendered once by the layout; `components/sp-help.js` opens
+  and closes it. Root context is a HelpView: `title`, `intro`, `sections`
+  ([{heading, items: [{icon, term, text}]}]) and an optional `guide_href`.
+--}}
+<dialog class="sp-dialog sp-help" data-dialog="help" aria-labelledby="sp-help-title">
+  <div class="sp-help__frame">
+    <header class="sp-help__head">
+      <h2 class="sp-help__title" id="sp-help-title">{{> components/icon name="question"}}{{title}}</h2>
+      <button type="button" class="sp-btn sp-btn--xs sp-btn--ghost sp-help__close" data-action="help-close" aria-label="Close help">&times;</button>
+    </header>
+    <div class="sp-help__body">
+    {{#if intro}}<p class="sp-help__intro">{{intro}}</p>{{/if}}
+    {{#each sections}}
+    <section class="sp-help__section">
+      <h3 class="sp-help__heading">{{this.heading}}</h3>
+      <dl class="sp-help__list">
+        {{#each this.items}}
+        <div class="sp-help__item">
+          <dt class="sp-help__term">{{> components/icon name=this.icon}}{{this.term}}</dt>
+          <dd class="sp-help__text">{{this.text}}</dd>
+        </div>
+        {{/each}}
+      </dl>
+    </section>
+    {{/each}}
+    </div>
+    {{#if guide_href}}<footer class="sp-help__foot"><a class="sp-btn sp-btn--sm sp-btn--outline" href="{{guide_href}}" target="_blank" rel="noopener">Open the guide</a></footer>{{/if}}
+  </div>
+</dialog>

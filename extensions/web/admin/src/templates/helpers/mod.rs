@@ -4,10 +4,10 @@ mod helpers_format;
 mod helpers_logic;
 
 use helpers_format::{
-    ConcatHelper, CssVersionHelper, DefaultHelper, DeltaPctHelper, FormatDateHelper,
-    FormatNumberHelper, FormatUsdHelper, GovernanceColorHelper, InitialsHelper, JsonHelper,
-    PercentHelper, RelativeTimeHelper, ShortIdHelper, ToLowerCaseHelper, ToUpperCaseHelper,
-    TruncateHelper,
+    AvatarToneHelper, ConcatHelper, CssVersionHelper, DefaultHelper, DeltaPctHelper,
+    FormatDateHelper, FormatNumberHelper, FormatUsdHelper, GovernanceColorHelper, InitialsHelper,
+    JsonHelper, PercentHelper, RelativeTimeHelper, ShortIdHelper, ToLowerCaseHelper,
+    ToUpperCaseHelper, TruncateHelper,
 };
 use helpers_logic::{
     AddHelper, EqHelper, GtHelper, NavActiveHelper, NavStateHelper, NotHelper, SubHelper,
@@ -18,6 +18,7 @@ pub fn register_helpers(hbs: &mut handlebars::Handlebars<'static>) {
     hbs.register_helper("formatNumber", Box::new(FormatNumberHelper));
     hbs.register_helper("relativeTime", Box::new(RelativeTimeHelper));
     hbs.register_helper("initials", Box::new(InitialsHelper));
+    hbs.register_helper("avatar_tone", Box::new(AvatarToneHelper));
     hbs.register_helper("truncate", Box::new(TruncateHelper));
     hbs.register_helper("json", Box::new(JsonHelper));
     hbs.register_helper("concat", Box::new(ConcatHelper));

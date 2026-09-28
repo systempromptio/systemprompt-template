@@ -156,7 +156,7 @@
             <tr data-user-id="{{user_id}}">
                 <td>
                     <a href="{{detail_href}}" class="sp-user-cell">
-                        <span class="sp-avatar sp-avatar-sm">{{initials display_name}}</span>
+                        <span class="sp-avatar sp-avatar--sm sp-avatar--tone-{{avatar_tone display_name}}" aria-hidden="true">{{initials display_name}}</span>
                         <span class="sp-user-cell-text">
                             <span class="sp-user-cell-name">{{display_name}}</span>
                             {{#if email}}<span class="sp-user-cell-email">{{email}}</span>{{/if}}

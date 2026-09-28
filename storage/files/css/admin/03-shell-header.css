@@ -84,6 +84,55 @@
     animation: admin-header-search-spin 0.9s linear infinite;
 }
 
+.sp-topbar__search-list {
+    position: absolute;
+    top: calc(100% + var(--sp-space-1));
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: var(--sp-space-1);
+    list-style: none;
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    box-shadow: var(--sp-shadow-md);
+    z-index: var(--sp-z-dropdown);
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.sp-topbar__search-item {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border-radius: 4px;
+    font-size: var(--sp-text-sm);
+    cursor: pointer;
+}
+
+.sp-topbar__search-item:hover,
+.sp-topbar__search-item.is-active {
+    background: var(--sp-bg-surface-raised);
+}
+
+.sp-topbar__search-kind {
+    flex: none;
+    min-width: 6.5em;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sp-text-tertiary);
+}
+
+.sp-topbar__search-id {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sp-text-primary);
+}
+
 @keyframes admin-header-search-spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
