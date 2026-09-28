@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_inventory_membership(owner_id,entry_id,effective_from,record) VALUES($1,$2,$3,$4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7e6d89065bf41f520f1bf846e73be2425ad4d90b560417215cc5a332e10c8adc"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_installation_coverage(owner_id,resource_id,body,generation)\n   WITH latest AS(SELECT DISTINCT ON(resource_id,consumer_id,device_id,host,installation_id) * FROM managed_installation_receipts WHERE owner_id=$1 AND consumer_id IS NOT NULL ORDER BY resource_id,consumer_id,device_id,host,installation_id,generation DESC,verified_at DESC),\n   eligible AS(SELECT g.resource_id,d.device_id,g.consumer_id FROM managed_consumer_grants g CROSS JOIN LATERAL public.active_devices_for_consumer(g.consumer_id) d WHERE g.owner_id=$1 AND g.revoked_at IS NULL),\n   current_receipts AS(SELECT l.* FROM latest l JOIN managed_publication_selections p ON p.owner_id=l.owner_id AND p.resource_id=l.resource_id AND p.generation=l.generation AND p.state='published' JOIN eligible e ON e.resource_id=l.resource_id AND e.device_id=l.device_id AND e.consumer_id=l.consumer_id)\n   SELECT $1,r.id,jsonb_build_object(\n    'eligible_devices',(SELECT COUNT(DISTINCT device_id) FROM eligible e WHERE e.resource_id=r.id),\n    'current_acknowledged_devices',(SELECT COUNT(DISTINCT device_id) FROM current_receipts c WHERE c.resource_id=r.id),\n    'current_verified_devices',(SELECT COUNT(DISTINCT device_id) FROM current_receipts c WHERE c.resource_id=r.id AND fully_verified),\n    'acknowledged_installations',(SELECT COUNT(*) FROM latest l WHERE l.resource_id=r.id),\n    'unverifiable_installations',(SELECT COUNT(*) FROM latest l WHERE l.resource_id=r.id AND NOT COALESCE(fully_verified,false)),\n    'legacy_receipts',(SELECT COUNT(*) FROM managed_installation_receipts l WHERE l.owner_id=$1 AND l.resource_id=r.id AND l.consumer_id IS NULL)), $2\n   FROM managed_resources r WHERE r.owner_id=$1\n   ON CONFLICT(owner_id,resource_id) DO UPDATE SET body=EXCLUDED.body,generation=EXCLUDED.generation WHERE managed_installation_coverage.body IS DISTINCT FROM EXCLUDED.body",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a8c47ffba13615bc5edb77f8122ac908c82476484e157ea5b8b59ef370cd2afd"
+}

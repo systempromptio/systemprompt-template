@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE managed_installation_coverage_state SET generation=$2,observed_at=$3 WHERE owner_id=$1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6d466ca18dab28dfcb1f1df02958b160976d281a09193216a152767ba43e4292"
+}

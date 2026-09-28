@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT 'group' AS \"kind!\", ad_group AS \"ad_group!\", group_id AS \"set_id!\",\n                  source AS \"source!\"\n             FROM group_ad_mappings\n            UNION ALL\n           SELECT 'project', ad_group, project_id, source\n             FROM project_ad_mappings\n            ORDER BY 1, 3, 2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "kind!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "ad_group!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "set_id!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "source!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "b90ba5e26ae0102a27d3b1abeb4fcb37eeb083356c6dd8103d250d71099e36d2"
+}

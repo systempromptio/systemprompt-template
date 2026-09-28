@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM bridge_exchange_codes WHERE expires_at < NOW() OR consumed_at IS NOT NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "fb7f1ecae4319d4a3cd3fdb1b71f01325afdc00a9e04fc0f630eab2b8f4bd840"
+}

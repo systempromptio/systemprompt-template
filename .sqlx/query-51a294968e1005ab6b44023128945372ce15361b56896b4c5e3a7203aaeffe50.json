@@ -1,0 +1,251 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            id as \"id!: AiRequestId\",\n            created_at as \"created_at!\",\n            trace_id,\n            user_id as \"user_id!: UserId\",\n            actor_kind as \"actor_kind!\",\n            actor_id as \"actor_id!\",\n            client_kind as \"client_kind!\",\n            client_attestation as \"client_attestation!\",\n            provider, model,\n            input_tokens, output_tokens,\n            cache_read_tokens, cache_creation_tokens, reasoning_tokens,\n            cost_microdollars as \"cost_microdollars!\",\n            latency_ms,\n            status as \"status!\",\n            finish_reason\n        FROM ai_requests\n        WHERE ($1::timestamptz IS NULL OR created_at >= $1)\n          AND ($2::text IS NULL OR model ILIKE $2)\n          AND ($3::text IS NULL OR provider ILIKE $3)\n          AND ($4::text IS NULL OR user_id = $4)\n          AND ($6::timestamptz IS NULL OR created_at < $6)\n          AND ($7::timestamptz IS NULL OR (created_at, id) < ($7, $8))\n        ORDER BY created_at DESC, id DESC\n        LIMIT $5\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: AiRequestId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "trace_id",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "trace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "user_id!: UserId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "actor_kind!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "actor_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "actor_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "client_kind!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "client_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "client_attestation!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "client_attestation"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "provider",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "provider"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "input_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "input_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "output_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "output_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "cache_read_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "cache_read_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "cache_creation_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "cache_creation_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "reasoning_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "reasoning_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "status!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "finish_reason",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "finish_reason"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Timestamptz",
+        "Timestamptz",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "51a294968e1005ab6b44023128945372ce15361b56896b4c5e3a7203aaeffe50"
+}

@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO mcp_artifacts (\n                artifact_id, mcp_execution_id, context_id, user_id, session_id, trace_id,\n                ai_tool_call_id, server_name, tool_name, artifact_type, title, source,\n                last_seen_source, data, metadata, payload_sha256, payload_bytes,\n                is_structured, has_ui_resource, is_error, secret_redactions, expires_at\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16,\n                    $17, $18, $19, $20, $21)\n            ON CONFLICT (artifact_id) DO UPDATE SET\n                data = EXCLUDED.data,\n                metadata = EXCLUDED.metadata,\n                title = EXCLUDED.title,\n                payload_sha256 = EXCLUDED.payload_sha256,\n                payload_bytes = EXCLUDED.payload_bytes,\n                last_seen_source = EXCLUDED.source\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Jsonb",
+        "Jsonb",
+        "Bpchar",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "32ad030a96dc2e8b674126361b64baa9be65b98ff090e43b8d19c145a960bb4d"
+}

@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT mcp_execution_id as \"mcp_execution_id!\"\n            FROM mcp_tool_executions\n            WHERE session_id = $1\n              AND tool_name = $2\n              AND payload_sha256 = $3\n              AND started_at > NOW() - make_interval(secs => $4::double precision)\n            ORDER BY started_at DESC\n            LIMIT 1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "mcp_execution_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "mcp_execution_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Bpchar",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8545e06c49b56ab4d7bf6247197eef6838de14336fcec83276bd9f13ed0a1749"
+}

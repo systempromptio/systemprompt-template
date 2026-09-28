@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO service_owned_ids (kind, id, source, marketplace_id)\n              VALUES ($1, $2, $3, $4)\n              ON CONFLICT (kind, id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bf7099047f34f53c56ddfa226e5234acb1d6264e4db467a550904cdadd88f6e0"
+}

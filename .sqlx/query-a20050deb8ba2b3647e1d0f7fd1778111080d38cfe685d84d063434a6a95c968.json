@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO access_control_rule_validity (rule_id, valid_until)\n                 VALUES ($1, $2)\n                 ON CONFLICT (rule_id) DO UPDATE\n                    SET valid_until = EXCLUDED.valid_until, updated_at = NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a20050deb8ba2b3647e1d0f7fd1778111080d38cfe685d84d063434a6a95c968"
+}

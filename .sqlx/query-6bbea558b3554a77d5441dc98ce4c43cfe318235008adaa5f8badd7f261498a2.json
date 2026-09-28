@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM ai_quota_buckets WHERE ctid = ANY(ARRAY(SELECT ctid FROM ai_quota_buckets WHERE window_start < $1 LIMIT $2))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6bbea558b3554a77d5441dc98ce4c43cfe318235008adaa5f8badd7f261498a2"
+}

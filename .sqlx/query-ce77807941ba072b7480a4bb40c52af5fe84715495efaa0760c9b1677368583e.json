@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT (SELECT COUNT(*) FROM groups WHERE NOT is_system)\n                + (SELECT COUNT(*) FROM projects)\n                + (SELECT COUNT(*) FROM group_ad_mappings)\n                + (SELECT COUNT(*) FROM project_ad_mappings) AS \"count!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "ce77807941ba072b7480a4bb40c52af5fe84715495efaa0760c9b1677368583e"
+}

@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                r.user_id as \"user_id!: UserId\",\n                u.name as \"name?\",\n                COALESCE(SUM(r.cost_microdollars), 0)::bigint as \"cost!\",\n                COUNT(*)::bigint as \"requests!\",\n                COALESCE(SUM(r.tokens_used), 0)::bigint as \"tokens!\",\n                COUNT(DISTINCT r.context_id)::bigint as \"conversations!\"\n            FROM report_ai_requests r\n            LEFT JOIN report_users u ON u.id = r.user_id\n            WHERE r.created_at >= $1 AND r.created_at < $2\n              AND NOT r.synthetic\n            GROUP BY r.user_id, u.name\n            ORDER BY SUM(r.cost_microdollars) DESC NULLS LAST\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "report_ai_requests",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name?",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "report_users",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "cost!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "requests!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "conversations!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "fb6d58d815dbe98db202a11a703d7f77933d36793c775e780581df1970cd96b2"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_installation_coverage_state(owner_id) VALUES($1) ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "17329291a7145aeb9ad798f3aa9510984cfefb1e94f83a574962a9e5229f8607"
+}

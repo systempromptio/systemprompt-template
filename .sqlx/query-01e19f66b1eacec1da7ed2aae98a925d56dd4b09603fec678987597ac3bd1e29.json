@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT mcp_execution_id as \"mcp_execution_id!\"\n            FROM mcp_tool_executions\n            WHERE source IN ('in_process', 'proxy')\n              AND ai_tool_call_id IS NULL\n              AND user_id = $1\n              AND server_name = $2\n              AND tool_name = $3\n              AND started_at BETWEEN $4::timestamptz - make_interval(secs => $5::double precision)\n                                 AND $4::timestamptz\n            ORDER BY started_at DESC\n            LIMIT 1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "mcp_execution_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_tool_executions",
+            "name": "mcp_execution_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "01e19f66b1eacec1da7ed2aae98a925d56dd4b09603fec678987597ac3bd1e29"
+}

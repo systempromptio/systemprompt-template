@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM service_owned_ids",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "f4b32463fe46bed7c52b79372d87c50391083b38a3439f6cbe5b411343c4d3ec"
+}

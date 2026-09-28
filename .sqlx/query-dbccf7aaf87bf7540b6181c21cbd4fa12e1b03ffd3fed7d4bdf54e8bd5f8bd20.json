@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT path,base_digest,candidate_digest,incoming_digest,resolution AS \"resolution?: ConflictResolution\" FROM managed_reconciliation_conflicts WHERE reconciliation_id=$1 ORDER BY path",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "path",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliation_conflicts",
+            "name": "path"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "base_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliation_conflicts",
+            "name": "base_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "candidate_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliation_conflicts",
+            "name": "candidate_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "incoming_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliation_conflicts",
+            "name": "incoming_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "resolution?: ConflictResolution",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliation_conflicts",
+            "name": "resolution"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "dbccf7aaf87bf7540b6181c21cbd4fa12e1b03ffd3fed7d4bdf54e8bd5f8bd20"
+}

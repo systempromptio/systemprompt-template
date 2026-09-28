@@ -1,0 +1,53 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                created_at as \"created_at!\",\n                cost_microdollars,\n                tokens_used\n            FROM report_ai_requests\n            WHERE created_at >= $1 AND created_at < $2\n              AND NOT synthetic\n            ORDER BY created_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "report_ai_requests",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "cost_microdollars",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "report_ai_requests",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "tokens_used",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "report_ai_requests",
+            "name": "tokens_used"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "c336d7a794bfff1ab3c39e08a52763356d7877def3a56df218f2f256142aa9e5"
+}

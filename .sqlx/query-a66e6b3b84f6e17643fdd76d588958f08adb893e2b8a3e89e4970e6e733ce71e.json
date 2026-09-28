@@ -1,0 +1,78 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT status AS \"status: DistributionState\",error,outbox_id,publication_id,generation FROM managed_distribution_deliveries WHERE id=$1 AND owner_id=$2 AND claim_token=$3 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "status: DistributionState",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_distribution_deliveries",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "error",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_distribution_deliveries",
+            "name": "error"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "outbox_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_distribution_deliveries",
+            "name": "outbox_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "publication_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_distribution_deliveries",
+            "name": "publication_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "managed_distribution_deliveries",
+            "name": "generation"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a66e6b3b84f6e17643fdd76d588958f08adb893e2b8a3e89e4970e6e733ce71e"
+}

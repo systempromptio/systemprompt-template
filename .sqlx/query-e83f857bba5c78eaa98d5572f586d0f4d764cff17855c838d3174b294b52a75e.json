@@ -1,0 +1,67 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id,upstream_base_revision_id,status AS \"status: ReconciliationStatus\",resolved_revision_id FROM managed_reconciliations WHERE owner_id=$1 AND resource_id=$2 AND managed_candidate_revision_id=$3 AND incoming_revision_id=$4 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliations",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "upstream_base_revision_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliations",
+            "name": "upstream_base_revision_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "status: ReconciliationStatus",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliations",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "resolved_revision_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliations",
+            "name": "resolved_revision_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "e83f857bba5c78eaa98d5572f586d0f4d764cff17855c838d3174b294b52a75e"
+}

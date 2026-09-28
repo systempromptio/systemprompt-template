@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT generation,observed_at,entries,last_error FROM managed_inventory_state WHERE owner_id=$1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "managed_inventory_state",
+            "name": "generation"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "observed_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "managed_inventory_state",
+            "name": "observed_at"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "entries",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "managed_inventory_state",
+            "name": "entries"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "last_error",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_inventory_state",
+            "name": "last_error"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "3d1418cd5510feca6dc5c5c58a069e60573f28ba95a4722810492e49afa0271f"
+}

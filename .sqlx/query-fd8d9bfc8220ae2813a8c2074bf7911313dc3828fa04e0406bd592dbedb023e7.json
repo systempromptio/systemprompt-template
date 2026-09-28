@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE otlp_export_state\n            SET watermark = $2, watermark_id = $3, last_success_at = NOW(),\n                last_error = NULL, last_error_at = NULL,\n                batches_total = batches_total + 1, rows_total = rows_total + $4,\n                updated_at = NOW()\n            WHERE signal = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fd8d9bfc8220ae2813a8c2074bf7911313dc3828fa04e0406bd592dbedb023e7"
+}

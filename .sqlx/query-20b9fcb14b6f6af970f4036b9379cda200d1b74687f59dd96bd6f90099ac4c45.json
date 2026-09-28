@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM access_control_rules r\n          USING access_control_rule_validity v\n          WHERE v.rule_id = r.id AND v.valid_until <= CURRENT_TIMESTAMP",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "20b9fcb14b6f6af970f4036b9379cda200d1b74687f59dd96bd6f90099ac4c45"
+}

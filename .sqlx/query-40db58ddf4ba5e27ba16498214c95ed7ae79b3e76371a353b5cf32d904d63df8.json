@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO artifact_payloads (sha256, byte_len, body, ref_count)\n            VALUES ($1, $2, $3, 1)\n            ON CONFLICT (sha256) DO UPDATE SET\n                ref_count = artifact_payloads.ref_count + 1,\n                last_seen_at = CURRENT_TIMESTAMP\n            RETURNING (xmax = 0) as \"created!\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "created!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bpchar",
+        "Int4",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "40db58ddf4ba5e27ba16498214c95ed7ae79b3e76371a353b5cf32d904d63df8"
+}

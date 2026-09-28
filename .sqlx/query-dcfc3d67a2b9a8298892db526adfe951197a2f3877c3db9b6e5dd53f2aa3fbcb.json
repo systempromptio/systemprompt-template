@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT revision_id FROM managed_inventory_authoring_heads WHERE owner_id=$1 AND entry_id=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "revision_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_inventory_authoring_heads",
+            "name": "revision_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "dcfc3d67a2b9a8298892db526adfe951197a2f3877c3db9b6e5dd53f2aa3fbcb"
+}

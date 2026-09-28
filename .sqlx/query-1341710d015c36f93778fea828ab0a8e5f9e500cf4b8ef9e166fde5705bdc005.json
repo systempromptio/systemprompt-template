@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO sync_state (plane, declared_hash)\n          VALUES ($1, $2)\n          ON CONFLICT (plane) DO UPDATE\n             SET declared_hash = EXCLUDED.declared_hash,\n                 updated_at = CASE WHEN sync_state.declared_hash IS DISTINCT FROM EXCLUDED.declared_hash\n                                   THEN NOW() ELSE sync_state.updated_at END",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1341710d015c36f93778fea828ab0a8e5f9e500cf4b8ef9e166fde5705bdc005"
+}

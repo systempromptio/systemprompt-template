@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(SELECT 1 FROM managed_consumer_grants g JOIN managed_resources r ON r.id=g.resource_id AND r.owner_id=g.owner_id WHERE g.owner_id=$1 AND g.consumer_id=$2 AND r.kind='skill' AND r.resource_key=$3 AND g.revoked_at IS NULL) AS \"granted!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "granted!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "06ffa0d215230717195d38517a3bf53afc9be482125e2b8087f21d7e145efb4e"
+}

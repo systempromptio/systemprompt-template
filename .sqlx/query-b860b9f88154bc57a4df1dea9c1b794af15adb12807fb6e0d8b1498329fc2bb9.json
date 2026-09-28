@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT user_id AS \"user_id!: UserId\" FROM user_manual_roles\n           WHERE valid_until IS NOT NULL AND valid_until <= CURRENT_TIMESTAMP\n           ORDER BY user_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_manual_roles",
+            "name": "user_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b860b9f88154bc57a4df1dea9c1b794af15adb12807fb6e0d8b1498329fc2bb9"
+}

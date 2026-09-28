@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO sync_state\n              (plane, declared_hash, applied_hash, applied_mode, applied_at, applied_by,\n               base_tree_hash, composed_hash, updated_at)\n          VALUES ($1, $2, $2, $3, NOW(), $4, $5, $6, NOW())\n          ON CONFLICT (plane) DO UPDATE\n             SET declared_hash = EXCLUDED.declared_hash,\n                 applied_hash = EXCLUDED.applied_hash,\n                 applied_mode = EXCLUDED.applied_mode,\n                 applied_at = EXCLUDED.applied_at,\n                 applied_by = EXCLUDED.applied_by,\n                 base_tree_hash = EXCLUDED.base_tree_hash,\n                 composed_hash = EXCLUDED.composed_hash,\n                 updated_at = NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ed7e8927e611682d1499eecae0e27b8759df7956ee3bf9fe68aa4f207c418729"
+}

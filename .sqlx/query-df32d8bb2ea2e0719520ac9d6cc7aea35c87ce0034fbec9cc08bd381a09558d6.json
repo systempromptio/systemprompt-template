@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT session_id as \"session_id!: SessionId\"\n            FROM user_sessions\n            WHERE fingerprint_hash = $1\n              AND started_at > CURRENT_TIMESTAMP - make_interval(days => $2)\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id!: SessionId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "session_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "df32d8bb2ea2e0719520ac9d6cc7aea35c87ce0034fbec9cc08bd381a09558d6"
+}

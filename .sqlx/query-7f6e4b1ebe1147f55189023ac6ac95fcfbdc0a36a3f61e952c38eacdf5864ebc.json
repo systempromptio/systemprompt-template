@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_inventory_observations(owner_id,generation,observed_at,entries,sources) VALUES($1,$2,$3,$4,$5) ON CONFLICT(owner_id,generation) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Timestamptz",
+        "Int8",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7f6e4b1ebe1147f55189023ac6ac95fcfbdc0a36a3f61e952c38eacdf5864ebc"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM access_control_rules WHERE id = ANY($1) AND rule_type <> 'user'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f65af28cd70639a3b4b32a9ac1efb5e166f997fd2d8f121e7e58f1371647c831"
+}

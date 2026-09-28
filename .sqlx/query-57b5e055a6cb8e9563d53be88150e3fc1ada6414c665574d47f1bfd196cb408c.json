@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE otlp_export_state SET last_attempt_at = NOW(), updated_at = NOW() WHERE signal = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "57b5e055a6cb8e9563d53be88150e3fc1ada6414c665574d47f1bfd196cb408c"
+}

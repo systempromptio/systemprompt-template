@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM scheduled_jobs WHERE NOT (job_name = ANY($1)) AND updated_at < NOW() - make_interval(days => $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a7bfb10fabc848251091658267da9598ffe20760d914b4eda01631d673b22ebb"
+}

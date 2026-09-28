@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ai_request_client_evidence (\n                ai_request_id, kind_source, attested_host, declared_client, native_marker,\n                ua_product, ua_version, sdk_lang, sdk_package_version, sdk_runtime,\n                sdk_runtime_version, sdk_os, sdk_arch\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)\n            ON CONFLICT (ai_request_id) DO UPDATE\n            SET kind_source = EXCLUDED.kind_source,\n                attested_host = EXCLUDED.attested_host,\n                declared_client = EXCLUDED.declared_client,\n                native_marker = EXCLUDED.native_marker,\n                ua_product = EXCLUDED.ua_product,\n                ua_version = EXCLUDED.ua_version,\n                sdk_lang = EXCLUDED.sdk_lang,\n                sdk_package_version = EXCLUDED.sdk_package_version,\n                sdk_runtime = EXCLUDED.sdk_runtime,\n                sdk_runtime_version = EXCLUDED.sdk_runtime_version,\n                sdk_os = EXCLUDED.sdk_os,\n                sdk_arch = EXCLUDED.sdk_arch\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a4b047dccb4b0c990ac9531bc08159e9fdea54df66e90bb91dfa9ffb19b23a87"
+}

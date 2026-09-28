@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT owner_id,resource_id FROM managed_installation_receipts WHERE id=$1 AND consumer_id=$2 AND device_id=$3 AND host=$4 AND fully_verified=true AND jsonb_array_length(COALESCE(consumer_evidence->'runtime_files','[]'::jsonb))>0",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "owner_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "owner_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "resource_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "resource_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "ef2776e2aff30fb93e29043db734385ca2100fc9d92b07ad0f6b6de6a2eea67d"
+}

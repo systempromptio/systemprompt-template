@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE mcp_tool_executions\n            SET ai_tool_call_id = COALESCE(ai_tool_call_id, $2),\n                correlation = $3,\n                payload_sha256 = COALESCE($4, payload_sha256)\n            WHERE mcp_execution_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Varchar",
+        "Varchar",
+        "Bpchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7b533550075c13f6f195e3ba07c1f9af98f95c5a405e41ba5439be1d7ab8fdf4"
+}

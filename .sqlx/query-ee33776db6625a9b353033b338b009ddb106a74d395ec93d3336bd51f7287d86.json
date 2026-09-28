@@ -1,0 +1,145 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.id,r.source_id,r.kind,r.resource_key,s.kind AS source_kind,p.state AS \"publication_state?\",p.revision_id AS published_revision,\n            (SELECT v.id FROM managed_revisions v WHERE v.owner_id=r.owner_id AND v.resource_id=r.id ORDER BY v.created_at DESC,v.id DESC LIMIT 1) AS \"latest_revision?\",\n            b.entry_id AS \"bound_entry?\",e.configured_key AS bound_path,\n            EXISTS(SELECT 1 FROM managed_reconciliations x WHERE x.owner_id=r.owner_id AND x.resource_id=r.id AND x.status='open') AS \"open_reconciliation!\",\n            EXISTS(SELECT 1 FROM managed_withdrawal_proposals w WHERE w.owner_id=r.owner_id AND w.resource_id=r.id AND w.status='pending') AS \"upstream_removed!\"\n            FROM managed_resources r JOIN managed_sources s ON s.owner_id=r.owner_id AND s.id=r.source_id\n            LEFT JOIN managed_publication_selections p ON p.owner_id=r.owner_id AND p.resource_id=r.id\n            LEFT JOIN managed_inventory_bindings b ON b.owner_id=r.owner_id AND b.resource_id=r.id\n            LEFT JOIN managed_inventory_entries e ON e.owner_id=b.owner_id AND e.entry_id=b.entry_id\n            WHERE r.owner_id=$1 ORDER BY r.id LIMIT 10001",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_resources",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "source_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_resources",
+            "name": "source_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_resources",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "resource_key",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_resources",
+            "name": "resource_key"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "source_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_sources",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "publication_state?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_selections",
+            "name": "state"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "published_revision",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_selections",
+            "name": "revision_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "latest_revision?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "bound_entry?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_inventory_bindings",
+            "name": "entry_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "bound_path",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_inventory_entries",
+            "name": "configured_key"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "open_reconciliation!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "upstream_removed!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      null,
+      false,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "ee33776db6625a9b353033b338b009ddb106a74d395ec93d3336bd51f7287d86"
+}

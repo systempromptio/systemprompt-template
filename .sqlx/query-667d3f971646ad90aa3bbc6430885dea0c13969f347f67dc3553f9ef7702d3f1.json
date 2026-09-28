@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT started_at as \"timestamp!\"\n            FROM report_agent_tasks\n            WHERE started_at >= $1 AND started_at < $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "timestamp!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "report_agent_tasks",
+            "name": "started_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "667d3f971646ad90aa3bbc6430885dea0c13969f347f67dc3553f9ef7702d3f1"
+}

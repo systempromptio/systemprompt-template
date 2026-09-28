@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT sha256 as \"sha256!\", byte_len as \"byte_len!\", body as \"body!\",\n                   ref_count as \"ref_count!\", first_seen_at as \"first_seen_at!\",\n                   last_seen_at as \"last_seen_at!\"\n            FROM artifact_payloads\n            WHERE sha256 = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sha256!",
+        "type_info": "Bpchar",
+        "origin": {
+          "Table": {
+            "table": "artifact_payloads",
+            "name": "sha256"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "byte_len!",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "artifact_payloads",
+            "name": "byte_len"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "body!",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "artifact_payloads",
+            "name": "body"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "ref_count!",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "artifact_payloads",
+            "name": "ref_count"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "first_seen_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "artifact_payloads",
+            "name": "first_seen_at"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "last_seen_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "artifact_payloads",
+            "name": "last_seen_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bpchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b75aa919290ccfb7ad7300450d7adde6751912bcb1808575f7a2c663227f689d"
+}

@@ -1,0 +1,112 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id AS \"id: WithdrawalProposalId\",resource_id AS \"resource_id: ManagedResourceId\",snapshot_id AS \"snapshot_id: SourceSnapshotId\",reason,status AS \"status: WithdrawalStatus\",created_at,decided_by AS \"decided_by?: UserId\",decided_at FROM managed_withdrawal_proposals WHERE owner_id=$1 ORDER BY created_at DESC LIMIT 100",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: WithdrawalProposalId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_withdrawal_proposals",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "resource_id: ManagedResourceId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_withdrawal_proposals",
+            "name": "resource_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "snapshot_id: SourceSnapshotId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_withdrawal_proposals",
+            "name": "snapshot_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "reason",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_withdrawal_proposals",
+            "name": "reason"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "status: WithdrawalStatus",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_withdrawal_proposals",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "managed_withdrawal_proposals",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "decided_by?: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_withdrawal_proposals",
+            "name": "decided_by"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "decided_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "managed_withdrawal_proposals",
+            "name": "decided_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "a3c5dd20e567c875f7df796118c295b977f85ae0d503e9104d24aa56ba65e540"
+}

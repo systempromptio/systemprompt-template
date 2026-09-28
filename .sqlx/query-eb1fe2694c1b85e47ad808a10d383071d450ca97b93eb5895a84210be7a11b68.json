@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    UPDATE ai_requests\n                    SET status = 'failed', error_message = $2,\n                        input_tokens = CASE WHEN $3 THEN $4 ELSE input_tokens END,\n                        output_tokens = CASE WHEN $3 THEN $5 ELSE output_tokens END,\n                        cache_read_tokens = CASE WHEN $3 THEN $6 ELSE cache_read_tokens END,\n                        cache_creation_tokens = CASE WHEN $3 THEN $7 ELSE cache_creation_tokens END,\n                        reasoning_tokens = CASE WHEN $3 THEN $8 ELSE reasoning_tokens END,\n                        tokens_used = CASE WHEN $3 THEN $9 ELSE tokens_used END,\n                        cost_microdollars = CASE WHEN $3 THEN $10 ELSE cost_microdollars END,\n                        latency_ms = COALESCE($11, latency_ms),\n                        upstream_latency_ms = COALESCE($12, upstream_latency_ms),\n                        completed_at = COALESCE(completed_at, CURRENT_TIMESTAMP),\n                        updated_at = CURRENT_TIMESTAMP\n                    WHERE id = $1 AND status <> 'completed' AND accounting_failed_at IS NULL\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Bool",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int8",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "eb1fe2694c1b85e47ad808a10d383071d450ca97b93eb5895a84210be7a11b68"
+}

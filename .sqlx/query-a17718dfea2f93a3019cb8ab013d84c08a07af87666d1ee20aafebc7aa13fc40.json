@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                channel,\n                user_id as \"user_id: UserId\",\n                payload,\n                origin_instance_id as \"origin_instance_id: InstanceId\",\n                deliver_to_origin\n            FROM event_outbox\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "channel",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "event_outbox",
+            "name": "channel"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "event_outbox",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "payload",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "event_outbox",
+            "name": "payload"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "origin_instance_id: InstanceId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "event_outbox",
+            "name": "origin_instance_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "deliver_to_origin",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "event_outbox",
+            "name": "deliver_to_origin"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a17718dfea2f93a3019cb8ab013d84c08a07af87666d1ee20aafebc7aa13fc40"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM artifact_payloads p\n        WHERE NOT EXISTS (SELECT 1 FROM mcp_artifacts a WHERE a.payload_sha256 = p.sha256)\n          AND p.last_seen_at < NOW() - make_interval(secs => $1::double precision)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "576d68cc53e4d7fcb9e71b2c234e0311ca45b8b282c48a7cab84d31279fbee35"
+}

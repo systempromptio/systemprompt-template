@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO mcp_tool_executions (\n                mcp_execution_id, tool_name, server_name, context_id, user_id, task_id,\n                session_id, trace_id, status, input, output, error_message, execution_time_ms,\n                started_at, completed_at, request_method, request_source, actor_kind, actor_id,\n                ai_tool_call_id, source, correlation\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,\n                    $18, $19, $20, $21, $22)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Varchar",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f8c57693dc601dc578ba6fec0d9ef282e88161c7ad20b9763e62579f2b4cdcb6"
+}

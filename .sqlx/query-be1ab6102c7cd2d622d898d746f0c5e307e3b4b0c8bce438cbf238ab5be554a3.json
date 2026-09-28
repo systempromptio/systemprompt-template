@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_inventory_entries(owner_id,entry_id,kind,resource_key,origin,configured_key,resource_id,source_id,availability,latest_revision_id,published_revision_id,diagnostic,first_observed_at,last_observed_at,generation) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$13,$14) ON CONFLICT(owner_id,entry_id) DO UPDATE SET kind=EXCLUDED.kind,resource_key=EXCLUDED.resource_key,origin=EXCLUDED.origin,configured_key=EXCLUDED.configured_key,resource_id=EXCLUDED.resource_id,source_id=EXCLUDED.source_id,availability=EXCLUDED.availability,latest_revision_id=EXCLUDED.latest_revision_id,published_revision_id=EXCLUDED.published_revision_id,diagnostic=EXCLUDED.diagnostic,last_observed_at=EXCLUDED.last_observed_at,generation=EXCLUDED.generation",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "be1ab6102c7cd2d622d898d746f0c5e307e3b4b0c8bce438cbf238ab5be554a3"
+}

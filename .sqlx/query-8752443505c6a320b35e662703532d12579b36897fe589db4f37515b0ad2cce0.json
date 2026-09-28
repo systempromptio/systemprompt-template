@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT candidate AS \"candidate!\"\n            FROM UNNEST($1::text[]) AS candidate\n            WHERE NOT EXISTS (\n                SELECT 1 FROM users WHERE candidate = ANY(users.roles)\n            )\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "candidate!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "8752443505c6a320b35e662703532d12579b36897fe589db4f37515b0ad2cce0"
+}

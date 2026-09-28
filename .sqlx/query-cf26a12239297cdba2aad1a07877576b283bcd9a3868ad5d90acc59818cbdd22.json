@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM logs WHERE ctid = ANY(ARRAY(SELECT ctid FROM logs WHERE timestamp < $1 LIMIT $2))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cf26a12239297cdba2aad1a07877576b283bcd9a3868ad5d90acc59818cbdd22"
+}

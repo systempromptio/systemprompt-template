@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE access_control_rules\n                 SET access = $2, justification = $3, source = $4, updated_at = NOW()\n               WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bd0861f4050a9337d7252377e4f3d910a2b0d877236b0ec2659a28d1baef0c75"
+}

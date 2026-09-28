@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE managed_inventory_authoring_heads SET revision_id=$3 WHERE owner_id=$1 AND entry_id=$2 AND (revision_id=$4 OR revision_id=$3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c361639bea50c73e915fb8a9b3ab42499a6be5fcab5e56706922e4f75bcf5a1e"
+}

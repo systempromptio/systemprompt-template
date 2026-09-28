@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE mcp_artifacts\n            SET session_id = COALESCE(session_id, $2),\n                trace_id = COALESCE(trace_id, $3),\n                ai_tool_call_id = COALESCE(ai_tool_call_id, $4),\n                last_seen_source = COALESCE($5, last_seen_source)\n            WHERE artifact_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "31861e6e885bc78d7425fc8d8ac05d3a535c32118de592acb5480b0bbda6c45e"
+}

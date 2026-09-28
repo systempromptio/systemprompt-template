@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT session_id as \"session_id!: SessionId\"\n            FROM user_sessions\n            WHERE fingerprint_hash = $1\n              AND ended_at IS NULL\n              AND last_activity_at > CURRENT_TIMESTAMP - INTERVAL '7 days'\n            ORDER BY last_activity_at ASC\n            LIMIT 1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "session_id!: SessionId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "session_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1fbf2b951ea52f4943f82e563f72c01cb9194088360e55eb27bf7a1aca6e514a"
+}

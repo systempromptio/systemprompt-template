@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE group_members SET revoked_at = CURRENT_TIMESTAMP\n            WHERE revoked_at IS NULL AND valid_until IS NOT NULL\n              AND valid_until <= CURRENT_TIMESTAMP\n            RETURNING user_id AS \"user_id!: UserId\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "user_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "817b460565d26c3104fa86ef4a9b258fcb1fecfad37a7037dd9ccf1d58c4d4e7"
+}

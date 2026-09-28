@@ -1,0 +1,124 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT plane, declared_hash, applied_hash, applied_mode, applied_at, applied_by,\n                 base_tree_hash, composed_hash, updated_at\n            FROM sync_state\n           WHERE plane = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "plane",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sync_state",
+            "name": "plane"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "declared_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sync_state",
+            "name": "declared_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "applied_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sync_state",
+            "name": "applied_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "applied_mode",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sync_state",
+            "name": "applied_mode"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "applied_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "sync_state",
+            "name": "applied_at"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "applied_by",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sync_state",
+            "name": "applied_by"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "base_tree_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sync_state",
+            "name": "base_tree_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "composed_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sync_state",
+            "name": "composed_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "sync_state",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "a847a1baaef4f38787c10ae7591327c3ece02d69f5597e31d849f2b1160becb8"
+}

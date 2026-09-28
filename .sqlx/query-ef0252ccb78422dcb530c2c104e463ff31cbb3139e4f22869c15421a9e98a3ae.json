@@ -1,0 +1,146 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT marketplace_id AS \"marketplace_id: MarketplaceId\", content_hash, source, source_hash,\n                  manifest AS \"manifest: Json<MarketplaceManifest>\", plugin_count, skill_count,\n                  first_seen_at, last_seen_at, effective_until, origin\n           FROM marketplace_versions WHERE effective_until IS NULL ORDER BY marketplace_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "marketplace_id: MarketplaceId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "marketplace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "content_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "content_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "source",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "source"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "source_hash",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "source_hash"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "manifest: Json<MarketplaceManifest>",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "manifest"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "plugin_count",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "plugin_count"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "skill_count",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "skill_count"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "first_seen_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "first_seen_at"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "last_seen_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "last_seen_at"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "effective_until",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "effective_until"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "origin",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "marketplace_versions",
+            "name": "origin"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "ef0252ccb78422dcb530c2c104e463ff31cbb3139e4f22869c15421a9e98a3ae"
+}

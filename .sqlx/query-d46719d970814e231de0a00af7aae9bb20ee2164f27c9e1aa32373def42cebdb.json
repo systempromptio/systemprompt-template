@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE marketplace_versions SET effective_until = now()\n         WHERE effective_until IS NULL AND NOT (marketplace_id = ANY($1::text[]))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d46719d970814e231de0a00af7aae9bb20ee2164f27c9e1aa32373def42cebdb"
+}

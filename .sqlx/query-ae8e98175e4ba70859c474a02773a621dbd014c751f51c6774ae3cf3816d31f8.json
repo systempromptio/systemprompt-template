@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE ai_gateway_thought_signatures SET user_id = $2 WHERE user_id = $1 AND NOT EXISTS (SELECT 1 FROM ai_gateway_thought_signatures t WHERE t.user_id = $2 AND t.conversation_id = ai_gateway_thought_signatures.conversation_id AND t.tool_use_id = ai_gateway_thought_signatures.tool_use_id)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ae8e98175e4ba70859c474a02773a621dbd014c751f51c6774ae3cf3816d31f8"
+}

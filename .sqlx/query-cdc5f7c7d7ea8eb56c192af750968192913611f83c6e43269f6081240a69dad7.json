@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_consumer_grants(owner_id,resource_id,consumer_id,revoked_at) VALUES($1,$2,$3,$4) ON CONFLICT(owner_id,resource_id,consumer_id) DO UPDATE SET revoked_at=EXCLUDED.revoked_at",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cdc5f7c7d7ea8eb56c192af750968192913611f83c6e43269f6081240a69dad7"
+}

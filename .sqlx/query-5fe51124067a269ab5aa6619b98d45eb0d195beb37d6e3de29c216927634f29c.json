@@ -1,0 +1,160 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT kind_source, attested_host, declared_client, native_marker,\n                   ua_product, ua_version, sdk_lang, sdk_package_version, sdk_runtime,\n                   sdk_runtime_version, sdk_os, sdk_arch\n            FROM ai_request_client_evidence\n            WHERE ai_request_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "kind_source",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "kind_source"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "attested_host",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "attested_host"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "declared_client",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "declared_client"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "native_marker",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "native_marker"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "ua_product",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "ua_product"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "ua_version",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "ua_version"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "sdk_lang",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "sdk_lang"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "sdk_package_version",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "sdk_package_version"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "sdk_runtime",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "sdk_runtime"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "sdk_runtime_version",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "sdk_runtime_version"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "sdk_os",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "sdk_os"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "sdk_arch",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "sdk_arch"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "5fe51124067a269ab5aa6619b98d45eb0d195beb37d6e3de29c216927634f29c"
+}

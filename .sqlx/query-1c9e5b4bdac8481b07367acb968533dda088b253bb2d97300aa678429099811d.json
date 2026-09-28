@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO project_ad_mappings (ad_group, project_id, source) VALUES ($1, $2, 'yaml')\n                 ON CONFLICT (ad_group, project_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1c9e5b4bdac8481b07367acb968533dda088b253bb2d97300aa678429099811d"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE managed_inventory_membership SET effective_until=$3 WHERE owner_id=$1 AND entry_id=$2 AND effective_until IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e53712db4046b9913d73b7e57e5980fd0f74f21f2daed8259fbfe79982b612db"
+}

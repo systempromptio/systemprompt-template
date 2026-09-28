@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM analytics_events WHERE ctid = ANY(ARRAY(SELECT ctid FROM analytics_events WHERE timestamp < $1 LIMIT $2))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2e1173c31c86bdfe5ac78ce3768e794e324faa30c5ac18c5fbceccd5eebbcfd4"
+}

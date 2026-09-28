@@ -1,0 +1,367 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT id, request_id, user_id AS \"user_id: UserId\", session_id AS \"session_id: SessionId\",\n               context_id AS \"context_id: ContextId\", trace_id AS \"trace_id: TraceId\", provider,\n               served_provider, model, requested_model, route_match, input_tokens,\n               output_tokens, cache_read_tokens, cache_creation_tokens, cost_microdollars,\n               latency_ms, upstream_latency_ms, finish_reason, status, error_message,\n               client_kind, wire_protocol, request_kind, actor_kind, actor_id, instance_id,\n               created_at, completed_at AS \"completed_at!\"\n        FROM ai_requests\n        WHERE completed_at IS NOT NULL\n          AND (completed_at > $1 OR (completed_at = $1 AND id > $2))\n          AND completed_at <= NOW() - make_interval(secs => $3::DOUBLE PRECISION)\n        ORDER BY completed_at, id\n        LIMIT $4\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "request_id",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "request_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "user_id: UserId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "session_id: SessionId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "context_id: ContextId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "context_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "trace_id: TraceId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "trace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "provider",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "provider"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "served_provider",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "served_provider"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "requested_model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "requested_model"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "route_match",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "route_match"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "input_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "input_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "output_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "output_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "cache_read_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "cache_read_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "cache_creation_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "cache_creation_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "cost_microdollars",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "upstream_latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "upstream_latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "finish_reason",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "finish_reason"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "status",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 20,
+        "name": "error_message",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "error_message"
+          }
+        }
+      },
+      {
+        "ordinal": 21,
+        "name": "client_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "client_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 22,
+        "name": "wire_protocol",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "wire_protocol"
+          }
+        }
+      },
+      {
+        "ordinal": 23,
+        "name": "request_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "request_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 24,
+        "name": "actor_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "actor_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 25,
+        "name": "actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 26,
+        "name": "instance_id",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "instance_id"
+          }
+        }
+      },
+      {
+        "ordinal": 27,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 28,
+        "name": "completed_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "completed_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Text",
+        "Float8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "97e91f6146d65f06f31f34c7ce1034b242745acd27913a70b7cf5cde3c6e9486"
+}

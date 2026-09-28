@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE managed_consumer_credentials SET revoked_at=COALESCE(revoked_at,now()) WHERE device_id=$1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f1b1b8837c89ce82d0bfcc73ae683729211c0a53a0576c9355c0637f2f07743b"
+}

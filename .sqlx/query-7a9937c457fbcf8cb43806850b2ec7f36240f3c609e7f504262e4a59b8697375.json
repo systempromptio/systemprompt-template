@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                bot_type as \"bot_type\",\n                COUNT(*)::bigint as \"count!\"\n            FROM report_bot_sessions\n            WHERE started_at >= $1 AND started_at < $2\n            GROUP BY 1\n            ORDER BY COUNT(*) DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "bot_type",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "report_bot_sessions",
+            "name": "bot_type"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      true,
+      null
+    ]
+  },
+  "hash": "7a9937c457fbcf8cb43806850b2ec7f36240f3c609e7f504262e4a59b8697375"
+}

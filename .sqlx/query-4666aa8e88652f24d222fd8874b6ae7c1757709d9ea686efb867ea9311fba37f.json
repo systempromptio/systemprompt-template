@@ -1,0 +1,68 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id,consumer_evidence,verified_at,fully_verified FROM managed_installation_receipts WHERE consumer_id=$1 AND device_id=$2 AND host=$3 AND installation_id=$4 AND publication_id=$5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "consumer_evidence",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "consumer_evidence"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "verified_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "verified_at"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "fully_verified",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "fully_verified"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "4666aa8e88652f24d222fd8874b6ae7c1757709d9ea686efb867ea9311fba37f"
+}

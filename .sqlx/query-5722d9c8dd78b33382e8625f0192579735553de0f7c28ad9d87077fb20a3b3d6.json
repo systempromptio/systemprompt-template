@@ -1,0 +1,90 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id,status,upstream_base_revision_id,managed_candidate_revision_id,incoming_revision_id,resolved_revision_id FROM managed_reconciliations WHERE owner_id=$1 AND resource_id=$2 AND ($3::text IS NULL OR id>$3) ORDER BY id LIMIT 50",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliations",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliations",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "upstream_base_revision_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliations",
+            "name": "upstream_base_revision_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "managed_candidate_revision_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliations",
+            "name": "managed_candidate_revision_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "incoming_revision_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliations",
+            "name": "incoming_revision_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "resolved_revision_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_reconciliations",
+            "name": "resolved_revision_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "5722d9c8dd78b33382e8625f0192579735553de0f7c28ad9d87077fb20a3b3d6"
+}

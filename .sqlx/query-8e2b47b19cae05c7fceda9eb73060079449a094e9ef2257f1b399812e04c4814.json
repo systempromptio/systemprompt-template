@@ -1,0 +1,185 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id,installation_id,publication_id,resource_id,generation,bundle_digest,installed_manifest,client_evidence,consumer_id,device_id,host,consumer_evidence,fully_verified,verified_at FROM managed_installation_receipts WHERE owner_id=$1 AND ($2::TEXT IS NULL OR resource_id=$2) ORDER BY verified_at DESC LIMIT 100",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "installation_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "installation_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "publication_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "publication_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "resource_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "resource_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "generation"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "bundle_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "bundle_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "installed_manifest",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "installed_manifest"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "client_evidence",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "client_evidence"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "consumer_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "consumer_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "device_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "device_id"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "host",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "host"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "consumer_evidence",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "consumer_evidence"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "fully_verified",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "fully_verified"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "verified_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "managed_installation_receipts",
+            "name": "verified_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "8e2b47b19cae05c7fceda9eb73060079449a094e9ef2257f1b399812e04c4814"
+}

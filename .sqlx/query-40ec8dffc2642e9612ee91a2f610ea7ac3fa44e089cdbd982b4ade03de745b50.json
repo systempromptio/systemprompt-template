@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_inventory_authoring_heads(owner_id,entry_id,revision_id) SELECT $1,$2,$3 WHERE $4::text IS NULL ON CONFLICT(owner_id,entry_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "40ec8dffc2642e9612ee91a2f610ea7ac3fa44e089cdbd982b4ade03de745b50"
+}

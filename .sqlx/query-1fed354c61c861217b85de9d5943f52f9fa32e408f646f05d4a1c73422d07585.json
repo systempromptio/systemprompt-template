@@ -1,0 +1,124 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.id, r.resource_key,\n                s.generation AS \"generation?\", s.state AS \"state?\", s.publication_id AS \"publication_id?\",\n                s.revision_id AS \"revision_id?\", s.bundle_digest AS \"bundle_digest?\",\n                p.revision_id AS \"published_revision_id?\", p.bundle_digest AS \"published_bundle_digest?\"\n            FROM managed_resources r\n            LEFT JOIN managed_publication_selections s ON s.owner_id=r.owner_id AND s.resource_id=r.id\n            LEFT JOIN managed_publications p ON p.owner_id=s.owner_id AND p.resource_id=s.resource_id\n                AND p.generation=s.generation AND p.revision_id IS NOT NULL\n            WHERE r.owner_id=$1 AND r.kind='skill'\n            ORDER BY r.resource_key, r.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_resources",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "resource_key",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_resources",
+            "name": "resource_key"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "generation?",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_selections",
+            "name": "generation"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "state?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_selections",
+            "name": "state"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "publication_id?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_selections",
+            "name": "publication_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "revision_id?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_selections",
+            "name": "revision_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "bundle_digest?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publication_selections",
+            "name": "bundle_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "published_revision_id?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "revision_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "published_bundle_digest?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_publications",
+            "name": "bundle_digest"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "1fed354c61c861217b85de9d5943f52f9fa32e408f646f05d4a1c73422d07585"
+}

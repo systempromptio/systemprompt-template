@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE otlp_export_state\n            SET watermark = GREATEST(watermark, NOW() - make_interval(secs => $2::DOUBLE PRECISION)),\n                watermark_id = CASE\n                    WHEN NOW() - make_interval(secs => $2::DOUBLE PRECISION) > watermark THEN ''\n                    ELSE watermark_id\n                END,\n                last_success_at = NOW(), updated_at = NOW()\n            WHERE signal = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ede06ea04c8c4dc235963f444c292b5c99ceecf0f6a825c151a296f055dd3171"
+}

@@ -1,0 +1,329 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            r.id as \"id!: AiRequestId\",\n            r.user_id as \"user_id!: UserId\",\n            r.actor_kind as \"actor_kind!\",\n            r.actor_id as \"actor_id!\",\n            r.provider,\n            r.model,\n            r.input_tokens,\n            r.output_tokens,\n            r.cost_microdollars as \"cost_microdollars!\",\n            r.latency_ms,\n            r.status as \"status!\",\n            r.error_message,\n            r.client_kind as \"client_kind!\",\n            r.client_attestation as \"client_attestation!\",\n            e.kind_source as \"evidence_kind_source?\",\n            e.attested_host as \"evidence_attested_host?\",\n            e.declared_client as \"evidence_declared_client?\",\n            e.native_marker as \"evidence_native_marker?\",\n            e.ua_product as \"evidence_ua_product?\",\n            e.ua_version as \"evidence_ua_version?\",\n            e.sdk_lang as \"evidence_sdk_lang?\",\n            e.sdk_package_version as \"evidence_sdk_package_version?\",\n            e.sdk_runtime as \"evidence_sdk_runtime?\",\n            e.sdk_runtime_version as \"evidence_sdk_runtime_version?\",\n            e.sdk_os as \"evidence_sdk_os?\",\n            e.sdk_arch as \"evidence_sdk_arch?\"\n        FROM ai_requests r\n        LEFT JOIN ai_request_client_evidence e ON e.ai_request_id = r.id\n        WHERE r.id = $1 OR r.id LIKE $2\n        LIMIT 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: AiRequestId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: UserId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "actor_kind!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "actor_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "actor_id!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "provider",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "provider"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "model"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "input_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "input_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "output_tokens",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "output_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "cost_microdollars!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "cost_microdollars"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "latency_ms",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "latency_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "status!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "error_message",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "error_message"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "client_kind!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "client_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "client_attestation!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_requests",
+            "name": "client_attestation"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "evidence_kind_source?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "kind_source"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "evidence_attested_host?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "attested_host"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "evidence_declared_client?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "declared_client"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "evidence_native_marker?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "native_marker"
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "evidence_ua_product?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "ua_product"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "evidence_ua_version?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "ua_version"
+          }
+        }
+      },
+      {
+        "ordinal": 20,
+        "name": "evidence_sdk_lang?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "sdk_lang"
+          }
+        }
+      },
+      {
+        "ordinal": 21,
+        "name": "evidence_sdk_package_version?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "sdk_package_version"
+          }
+        }
+      },
+      {
+        "ordinal": 22,
+        "name": "evidence_sdk_runtime?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "sdk_runtime"
+          }
+        }
+      },
+      {
+        "ordinal": 23,
+        "name": "evidence_sdk_runtime_version?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "sdk_runtime_version"
+          }
+        }
+      },
+      {
+        "ordinal": 24,
+        "name": "evidence_sdk_os?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "sdk_os"
+          }
+        }
+      },
+      {
+        "ordinal": 25,
+        "name": "evidence_sdk_arch?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ai_request_client_evidence",
+            "name": "sdk_arch"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "ace73d7121de07c22dba328324e2482554f8265af6e4f32ffbad9274b85ddf90"
+}

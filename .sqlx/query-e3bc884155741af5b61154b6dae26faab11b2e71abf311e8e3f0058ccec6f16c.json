@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM ai_quota_buckets\n           WHERE subject_kind = $1 AND window_seconds = $2 AND window_start = $3\n             AND updated_at < $4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e3bc884155741af5b61154b6dae26faab11b2e71abf311e8e3f0058ccec6f16c"
+}

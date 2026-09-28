@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM ai_request_messages WHERE ctid = ANY(ARRAY(SELECT ctid FROM ai_request_messages WHERE created_at < $1 LIMIT $2))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "24add74fb3cff48424f63a72bcba0f25e573ea3ba934a0d2b0eb124abbcef9dc"
+}

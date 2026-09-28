@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO governance_chain_settings (singleton, enabled, mode, updated_at)\n          VALUES (TRUE, $1, $2, NOW())\n          ON CONFLICT (singleton) DO UPDATE\n             SET enabled = EXCLUDED.enabled, mode = EXCLUDED.mode, updated_at = NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5c20b91a0a106b1696ad43dbae1ea963ddbef15adcb6b7a5727313b89e158dfd"
+}

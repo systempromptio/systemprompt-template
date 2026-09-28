@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE ai_requests SET user_id = $2, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4dc61c71f4e6c65947f5a94add9dc1dd3e7bb777e20051eca6304ed47ffb1666"
+}

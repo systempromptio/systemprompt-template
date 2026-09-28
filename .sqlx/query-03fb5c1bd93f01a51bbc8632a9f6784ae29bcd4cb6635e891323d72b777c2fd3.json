@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_inventory_bindings(owner_id,entry_id,resource_id,bound_by) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "03fb5c1bd93f01a51bbc8632a9f6784ae29bcd4cb6635e891323d72b777c2fd3"
+}

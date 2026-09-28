@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(SELECT 1 FROM managed_consumer_session_bindings b JOIN managed_installation_receipts r ON r.id=b.receipt_id WHERE b.consumer_id=$1 AND b.device_id=$2 AND b.host=$3 AND b.native_session_id=$4 AND r.resource_id=$5 AND b.receipt_id<>$6)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "7023ff3ccdfb19e6fcde21e26a8ab128a949da340fa46da696a46e31668e8520"
+}

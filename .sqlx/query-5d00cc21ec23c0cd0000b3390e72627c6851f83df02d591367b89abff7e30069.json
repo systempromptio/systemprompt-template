@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE project_members SET revoked_at = CURRENT_TIMESTAMP\n            WHERE revoked_at IS NULL AND valid_until IS NOT NULL\n              AND valid_until <= CURRENT_TIMESTAMP\n            RETURNING user_id AS \"user_id!: UserId\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!: UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "project_members",
+            "name": "user_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5d00cc21ec23c0cd0000b3390e72627c6851f83df02d591367b89abff7e30069"
+}

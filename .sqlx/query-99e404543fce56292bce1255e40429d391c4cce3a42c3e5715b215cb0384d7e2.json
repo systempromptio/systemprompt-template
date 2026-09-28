@@ -1,0 +1,143 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO otlp_export_state (signal)\n            VALUES ($1)\n            ON CONFLICT (signal) DO UPDATE SET signal = EXCLUDED.signal\n            RETURNING signal, watermark, watermark_id, last_attempt_at, last_success_at,\n                      last_error, last_error_at, batches_total, failures_total, rows_total,\n                      EXTRACT(EPOCH FROM (NOW() - watermark))::BIGINT AS \"lag_seconds!\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "signal",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "otlp_export_state",
+            "name": "signal"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "watermark",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "otlp_export_state",
+            "name": "watermark"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "watermark_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "otlp_export_state",
+            "name": "watermark_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "last_attempt_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "otlp_export_state",
+            "name": "last_attempt_at"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "last_success_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "otlp_export_state",
+            "name": "last_success_at"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "last_error",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "otlp_export_state",
+            "name": "last_error"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "last_error_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "otlp_export_state",
+            "name": "last_error_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "batches_total",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "otlp_export_state",
+            "name": "batches_total"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "failures_total",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "otlp_export_state",
+            "name": "failures_total"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "rows_total",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "otlp_export_state",
+            "name": "rows_total"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "lag_seconds!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "99e404543fce56292bce1255e40429d391c4cce3a42c3e5715b215cb0384d7e2"
+}

@@ -1,0 +1,304 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                id as \"id!\",\n                artifact_id as \"artifact_id!: ArtifactId\",\n                mcp_execution_id as \"mcp_execution_id!: McpExecutionId\",\n                context_id as \"context_id: ContextId\",\n                user_id as \"user_id: UserId\",\n                session_id as \"session_id: SessionId\",\n                trace_id as \"trace_id: TraceId\",\n                ai_tool_call_id as \"ai_tool_call_id: AiToolCallId\",\n                server_name as \"server_name!\",\n                tool_name,\n                artifact_type as \"artifact_type!\",\n                title,\n                source as \"source!\",\n                last_seen_source,\n                data as \"data!\",\n                metadata,\n                payload_sha256,\n                payload_bytes,\n                is_structured as \"is_structured!\",\n                has_ui_resource as \"has_ui_resource!\",\n                is_error as \"is_error!\",\n                secret_redactions as \"secret_redactions!\",\n                created_at as \"created_at!\",\n                expires_at\n            FROM mcp_artifacts\n            WHERE (expires_at IS NULL OR expires_at > NOW())\n              AND mcp_execution_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "artifact_id!: ArtifactId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "artifact_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "mcp_execution_id!: McpExecutionId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "mcp_execution_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "context_id: ContextId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "context_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "user_id: UserId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "session_id: SessionId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "trace_id: TraceId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "trace_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "ai_tool_call_id: AiToolCallId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "ai_tool_call_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "server_name!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "server_name"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "tool_name",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "tool_name"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "artifact_type!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "artifact_type"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "title",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "source!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "source"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "last_seen_source",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "last_seen_source"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "data!",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "data"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "metadata",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "metadata"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "payload_sha256",
+        "type_info": "Bpchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "payload_sha256"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "payload_bytes",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "payload_bytes"
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "is_structured!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "is_structured"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "has_ui_resource!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "has_ui_resource"
+          }
+        }
+      },
+      {
+        "ordinal": 20,
+        "name": "is_error!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "is_error"
+          }
+        }
+      },
+      {
+        "ordinal": 21,
+        "name": "secret_redactions!",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "secret_redactions"
+          }
+        }
+      },
+      {
+        "ordinal": 22,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 23,
+        "name": "expires_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifacts",
+            "name": "expires_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "b8c79298288d60f1da9a61e2162e7f9f3ff13fd083aba43a02bb0230bd7d2816"
+}

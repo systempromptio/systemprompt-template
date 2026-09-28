@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE ai_request_tool_calls c\n            SET mcp_execution_id = $5, updated_at = NOW()\n            WHERE c.id = (\n                SELECT i.id\n                FROM ai_request_tool_calls i\n                JOIN ai_requests r ON r.id = i.request_id\n                WHERE r.session_id = $1\n                  AND i.ai_tool_call_id IS NOT NULL\n                  AND i.mcp_execution_id IS NULL\n                  AND NOT EXISTS (\n                      SELECT 1 FROM mcp_tool_executions e\n                      WHERE e.ai_tool_call_id = i.ai_tool_call_id\n                  )\n                  AND (i.tool_name = $2 OR i.tool_name LIKE $3)\n                  AND i.created_at > NOW() - make_interval(secs => $4::double precision)\n                ORDER BY i.created_at DESC\n                LIMIT 1\n                FOR UPDATE OF i SKIP LOCKED\n            )\n              AND c.mcp_execution_id IS NULL\n            RETURNING c.ai_tool_call_id AS \"ai_tool_call_id!\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ai_tool_call_id!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "ai_request_tool_calls",
+            "name": "ai_tool_call_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Float8",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "1485435882d4c28ceff56f1f76c8c27e9585a863d2c2aeb785d5e8eabf20635f"
+}

@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.device_id,d.consumer_id AS \"user_id!\" FROM managed_consumer_credentials c CROSS JOIN LATERAL public.active_device_identity(c.device_id) d WHERE c.credential_digest=$1 AND c.revoked_at IS NULL FOR SHARE OF c",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "device_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "managed_consumer_credentials",
+            "name": "device_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "e803d62c75e2d36a2cdda6484810f091bfea5edc60d7f0b90a215515a0a0989d"
+}

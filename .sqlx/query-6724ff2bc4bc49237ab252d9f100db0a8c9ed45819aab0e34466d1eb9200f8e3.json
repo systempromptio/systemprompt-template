@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE mcp_tool_executions\n                SET ai_tool_call_id = $2, correlation = $3\n                WHERE mcp_execution_id = $1\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6724ff2bc4bc49237ab252d9f100db0a8c9ed45819aab0e34466d1eb9200f8e3"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM governance_chain WHERE policy_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a8c0a0c6f0f23f19e9bb00d78e9da522dc8951c8eb64824a2e7bd26f91315a89"
+}

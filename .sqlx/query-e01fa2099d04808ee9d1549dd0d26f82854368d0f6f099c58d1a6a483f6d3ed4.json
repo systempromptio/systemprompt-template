@@ -1,0 +1,94 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                uc.context_id as \"context_id!: systemprompt_identifiers::ContextId\",\n                uc.user_id as \"user_id!: systemprompt_identifiers::UserId\",\n                uc.name as \"name?\",\n                (SELECT COUNT(*) FROM report_agent_tasks at WHERE at.context_id = uc.context_id)::bigint as \"task_count!\",\n                (SELECT COUNT(*) FROM report_task_messages tm\n                 JOIN report_agent_tasks at ON at.task_id = tm.task_id\n                 WHERE at.context_id = uc.context_id)::bigint as \"message_count!\",\n                uc.created_at as \"created_at!\",\n                uc.updated_at as \"updated_at!\"\n            FROM report_user_contexts uc\n            WHERE uc.created_at >= $1 AND uc.created_at < $2 AND uc.kind = $4\n              AND ($5::text IS NULL OR uc.user_id = $5)\n            ORDER BY uc.updated_at DESC\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "context_id!: systemprompt_identifiers::ContextId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "report_user_contexts",
+            "name": "context_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: systemprompt_identifiers::UserId",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "report_user_contexts",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "name?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "report_user_contexts",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "task_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "message_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "report_user_contexts",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "report_user_contexts",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      null,
+      null,
+      true,
+      true
+    ]
+  },
+  "hash": "e01fa2099d04808ee9d1549dd0d26f82854368d0f6f099c58d1a6a483f6d3ed4"
+}

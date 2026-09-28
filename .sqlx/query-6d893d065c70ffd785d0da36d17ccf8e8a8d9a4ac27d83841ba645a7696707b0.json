@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO managed_inventory_state(owner_id,last_error) VALUES($1,'Inventory scan failed; previous membership retained, inspect configured catalog availability') ON CONFLICT(owner_id) DO UPDATE SET last_error=EXCLUDED.last_error",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6d893d065c70ffd785d0da36d17ccf8e8a8d9a4ac27d83841ba645a7696707b0"
+}

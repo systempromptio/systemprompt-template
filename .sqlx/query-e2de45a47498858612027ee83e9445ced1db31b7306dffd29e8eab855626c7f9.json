@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO marketplace_versions\n                 (marketplace_id, content_hash, source, source_hash, manifest, plugin_count, skill_count)\n               VALUES ($1, $2, $3, $4, $5, $6, $7)\n               ON CONFLICT (marketplace_id, content_hash) DO UPDATE SET\n                 last_seen_at = now(), effective_until = NULL, origin = 'manifest',\n                 source = EXCLUDED.source, source_hash = EXCLUDED.source_hash,\n                 manifest = EXCLUDED.manifest, plugin_count = EXCLUDED.plugin_count,\n                 skill_count = EXCLUDED.skill_count\n               RETURNING (xmax = 0) AS \"inserted!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "inserted!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e2de45a47498858612027ee83e9445ced1db31b7306dffd29e8eab855626c7f9"
+}

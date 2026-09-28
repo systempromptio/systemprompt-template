@@ -1,0 +1,105 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT a.id, a.user_id,\n                  COALESCE(u.display_name, u.full_name, u.name, u.email, a.user_id) AS \"display_name!\",\n                  a.action, a.entity_id, a.description, a.created_at,\n                  COALESCE(\n                      ARRAY(SELECT jsonb_array_elements_text(a.metadata -> 'marketplaces')),\n                      ARRAY[]::TEXT[]\n                  ) AS \"marketplaces!: Vec<String>\"\n           FROM user_activity a\n           JOIN users u ON u.id = a.user_id\n           WHERE a.entity_type = $1\n             AND ($2::TEXT[] IS NULL\n                  OR a.entity_id = $3\n                  OR EXISTS (\n                      SELECT 1 FROM jsonb_array_elements_text(a.metadata -> 'marketplaces') m\n                      WHERE m = ANY($2)))\n           ORDER BY a.created_at DESC\n           LIMIT $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "display_name!",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "action",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "action"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "entity_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "entity_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "description",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_activity",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "marketplaces!: Vec<String>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false,
+      true,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "337efe949f1962876774c94df9925a5fb486af1bfccc008ea47a31770aa34b96"
+}

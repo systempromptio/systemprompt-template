@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT md5(concat_ws('|',\n                (SELECT count(*)::text || ':' || coalesce(max(created_at)::text, '') FROM managed_resources WHERE owner_id = ANY($1) AND kind='skill'),\n                (SELECT count(*)::text || ':' || coalesce(sum(generation)::text, '') || ':' || coalesce(max(updated_at)::text, '') FROM managed_publication_selections WHERE owner_id = ANY($1)),\n                (SELECT count(revoked_at)::text || ':' || coalesce(max(revoked_at)::text, '') FROM managed_consumer_grants WHERE owner_id=$2 AND consumer_id=$3)\n            )) AS \"stamp!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "stamp!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "5dcdeea90cedc59b5c9dfb65e232854ad880ce7403d2848d2b612380c4fceef2"
+}

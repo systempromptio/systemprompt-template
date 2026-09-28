@@ -1,0 +1,136 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id as \"id!\", artifact_id as \"artifact_id!: ArtifactId\", phase as \"phase!\",\n                   severity as \"severity!\", category as \"category!\", scanner as \"scanner!\",\n                   path, excerpt, redacted as \"redacted!\", created_at as \"created_at!\"\n            FROM mcp_artifact_findings\n            WHERE artifact_id = $1\n            ORDER BY created_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifact_findings",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "artifact_id!: ArtifactId",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifact_findings",
+            "name": "artifact_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "phase!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifact_findings",
+            "name": "phase"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "severity!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifact_findings",
+            "name": "severity"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "category!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifact_findings",
+            "name": "category"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "scanner!",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifact_findings",
+            "name": "scanner"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "path",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifact_findings",
+            "name": "path"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "excerpt",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifact_findings",
+            "name": "excerpt"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "redacted!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifact_findings",
+            "name": "redacted"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "mcp_artifact_findings",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "41231d168d5c2c9238e656e05b172719be90a00a5062b67512a2ad472eb0c87c"
+}

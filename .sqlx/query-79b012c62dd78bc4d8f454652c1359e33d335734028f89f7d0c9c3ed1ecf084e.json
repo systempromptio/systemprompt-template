@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO ai_quota_buckets\n              (id, subject_kind, subject_id, window_seconds, window_start,\n               requests, input_tokens, output_tokens, cost_microdollars, updated_at)\n          SELECT gen_random_uuid()::text, subject_kind, subject_id, $4, $5,\n                 requests, input_tokens, output_tokens, cost_microdollars, CURRENT_TIMESTAMP\n            FROM ai_quota_buckets\n           WHERE subject_kind = $1 AND window_seconds = $2 AND window_start = $3\n          ON CONFLICT (subject_kind, subject_id, window_seconds, window_start) DO UPDATE\n             SET requests = ai_quota_buckets.requests + EXCLUDED.requests,\n                 input_tokens = ai_quota_buckets.input_tokens + EXCLUDED.input_tokens,\n                 output_tokens = ai_quota_buckets.output_tokens + EXCLUDED.output_tokens,\n                 cost_microdollars = ai_quota_buckets.cost_microdollars + EXCLUDED.cost_microdollars,\n                 updated_at = CURRENT_TIMESTAMP",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Timestamptz",
+        "Int4",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "79b012c62dd78bc4d8f454652c1359e33d335734028f89f7d0c9c3ed1ecf084e"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM access_control_rule_validity WHERE rule_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fdcd96e0e363b6a36b22b7b142f3b6d542a11b4fb4ec33a9bbcc0cc4bef6b798"
+}

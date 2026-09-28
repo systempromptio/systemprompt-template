@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE ai_request_payloads SET request_body = NULL, response_body = NULL, updated_at = NOW() WHERE ctid = ANY(ARRAY(SELECT ctid FROM ai_request_payloads WHERE created_at < $1 AND (request_body IS NOT NULL OR response_body IS NOT NULL) LIMIT $2))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8a5e8ae11adbe89ac9fa110b1bb023a33776fdeb5738f5919c838d4c953e2e01"
+}

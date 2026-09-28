@@ -1,0 +1,206 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, position, name, description, model_pattern, provider, upstream_model,\n                 extra_headers, pricing, when_match, requires, fallback_provider,\n                 fallback_upstream_model, explicit_id, source, updated_at\n            FROM gateway_routes\n           ORDER BY position ASC, id ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "position",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "position"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "model_pattern",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "model_pattern"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "provider",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "provider"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "upstream_model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "upstream_model"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "extra_headers",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "extra_headers"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "pricing",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "pricing"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "when_match",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "when_match"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "requires",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "requires"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "fallback_provider",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "fallback_provider"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "fallback_upstream_model",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "fallback_upstream_model"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "explicit_id",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "explicit_id"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "source",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "source"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "gateway_routes",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "6dbf4bc553c0a1be8e42d85e0d2cb855ac78d1b6484c407161e36d43c3522b42"
+}
