@@ -14,7 +14,7 @@ This detects your OS + arch, downloads the signed tarball, verifies SHA256, and 
 
 ```bash
 # Pin a specific version
-curl -sSL https://get.systemprompt.io | sh -s -- --version v0.61.0
+curl -sSL https://get.systemprompt.io | sh -s -- --version v0.62.0
 
 # Install to a custom prefix
 curl -sSL https://get.systemprompt.io | sh -s -- --prefix /opt/systemprompt
@@ -37,12 +37,12 @@ Windows runs the gateway through Docker ([install/ghcr.md](ghcr.md)); there is n
 
 ```bash
 # Verify SHA256
-curl -LO https://github.com/systempromptio/systemprompt-template/releases/download/v0.61.0/SHA256SUMS.gateway
-grep systemprompt-gateway-0.61.0-linux-amd64.tar.gz SHA256SUMS.gateway | sha256sum -c -
+curl -LO https://github.com/systempromptio/systemprompt-template/releases/download/v0.62.0/SHA256SUMS.gateway
+grep systemprompt-gateway-0.62.0-linux-amd64.tar.gz SHA256SUMS.gateway | sha256sum -c -
 
 # Extract
-tar -xzf systemprompt-gateway-0.61.0-linux-amd64.tar.gz
-cd systemprompt-gateway-0.61.0-linux-amd64
+tar -xzf systemprompt-gateway-0.62.0-linux-amd64.tar.gz
+cd systemprompt-gateway-0.62.0-linux-amd64
 ./systemprompt --version
 ```
 

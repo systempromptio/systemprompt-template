@@ -20,7 +20,7 @@ systemprompt --version
 ## Pin a version
 
 ```bash
-nix run github:systempromptio/systemprompt-template/v0.61.0 -- --version
+nix run github:systempromptio/systemprompt-template/v0.62.0 -- --version
 ```
 
 ## NixOS module (flake input)

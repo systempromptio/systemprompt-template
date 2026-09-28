@@ -24,6 +24,12 @@ Conventions (strict — hold every entry to them):
 
 ## [Unreleased]
 
+## [0.62.0] - 2026-09-28
+
+### Breaking
+
+- **Breaking:** core 0.62.0. `secrets.json` must carry `encryption_master_key` (32 bytes as 64 hex characters): core refuses to boot without it, before migrations run, where 0.61 died later in extension init. `admin setup` mints it from 0.62.0 on, the Docker image mints it once into a persisted profile that predates it (`docker/container-state.py`), and `just setup-local` adds it to an existing local profile. Migrate by adding `openssl rand -hex 32` as `encryption_master_key` to every operator-managed secrets file (helm `profile.existingSecret`, the air-gap and scaled profiles) before upgrading; a supplied `SYSTEMPROMPT_PROFILE_DIR` without it now fails at the entrypoint with that instruction.
+
 ### Security
 
 - The template owns its starter `secret_scan.patterns` catalog, including separate AWS access-key id and secret-value rules. Core supplies the validated scanner and recovery engine without activating vendor signatures. The response scanner consumes the same compiled catalog as ingress governance.
@@ -41,6 +47,8 @@ Conventions (strict — hold every entry to them):
 
 ### Changed
 
+- **Core:** every core crate pin (both workspaces, `extensions/web`) is 0.62.0, `bridge/CORE_REF` is `v0.62.0`, and the workspace version follows it (lockstep).
+- **Docker entrypoint:** migrations run as `infra db migrate --repair-drift` (repairs checksum drift only, then retries once) instead of a blind `migrate-repair --apply` and retry; `DATABASE_WRITE_URL` lands in the secrets as `database_write_url`; `SYSTEMPROMPT_ADMIN_EMAIL` is accepted beside `ADMIN_EMAIL` and wins when both are set; every node runs `publish_pipeline` before serving, because the scheduler's boot run takes a database-wide lock and renders only one node's `web/dist`. A supplied `SYSTEMPROMPT_PROFILE_DIR` (helm, air-gap; mounted read-only) takes `DATABASE_URL` from its secrets when unset and must already carry `encryption_master_key` and either `signing_key_pem` or the key file its profile names — nothing is minted into a shared profile.
 - **Release:** `just release X.Y.Z` replaces `just gate` / `just promote` and the mutable `promote` ref. It requires a green `Gates passed` on the exact `next` push commit, freezes it on `promote/X.Y.Z/<main>/<sha>`, opens the PR onto `main`, and — run again once the PR's `Verify frozen promotion` proof is green — merges it and pushes the `vX.Y.Z` tag at the merge. `release-gateway.yml` re-verifies that merge (`scripts/check-release-merge.sh`) before building anything. See `docs/RELEASING.md` and the new `docs/BRANCHING.md`.
 - **CI:** `.github/workflows/gates.yml` replaces `ci.yml` and `quality.yml` and now runs on every push to `next`: independent static, lint, test (Postgres 18), e2e (Playwright) and audit/deny/machete tiers plus a `Gates passed` aggregate for the `main` ruleset. `just verify` runs the same static, lint and test tiers locally.
 - **Images:** a release image gets `:X.Y.Z`, `:X.Y`, `:X` and `:latest` only after the per-arch smoke and a new `upgrade-boot` job (the image booted over every recorded release schema with 2000 seeded rows per hot table) pass; until then it carries only `:sha-<7>`. Probes now require a finished-boot `/health` body, not any 200.
@@ -64,6 +72,28 @@ Conventions (strict — hold every entry to them):
 
 - The orphaned evals admin templates (`evals.hbs`, `eval-run-detail.hbs`, `partials/evals/*`) and `css/admin/20-page-evals.css`: core 0.61 retired evals and nothing renders them. The `/admin/evals` contract variants and the never-compiled `evals_repositories.rs` test go with them.
 - `tests/unit/web/src/india_skills.rs`, a test for another deployment's skill inventory.
+
+## [0.61.0] - never released (included in 0.62.0)
+
+The workspace moved from 0.49.0 to 0.52.0 (2026-09-14) and to 0.61.0 (2026-09-25) without a tag or image; its changes ship in 0.62.0.
+
+### Breaking
+
+- **Breaking:** core 0.61.0. Evaluations are retired in core: the evaluation scheduler job, the eval session attribution and the evals admin routes are gone. Departments are retired from the admin console and E2E surface. Migrate by removing any `scheduler.jobs` entry that names an evaluation job and any `departments` reference outside `services/access-control/`.
+
+### Security
+
+- **Core:** the rustls dependency is pinned to its security repair (2026-09-14).
+
+### Added
+
+- **Evaluation (0.52.0):** the managed optimization pipeline was backported, then retired again with core 0.61.
+- **Governance (0.52.0):** configured secret-scanning work is preserved across restarts.
+
+### Changed
+
+- **Core:** migrated to core 0.61 — the extension graph links core's migration extensions into every test harness, fresh and upgraded schemas converge, the web billing model is retained under core's ownership rules, governance rows and layout follow core's template, and `just setup-local` generates the gateway `encryption_master_key` locally.
+- **Tests:** the admin contract suite and Playwright E2E follow the core 0.61 route set; retired helpers, routes and department coverage were removed.
 
 ## [0.49.0] - 2026-09-09
 

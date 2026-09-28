@@ -63,6 +63,35 @@ class ContainerStateTest(unittest.TestCase):
             self.assertEqual(first['oauth_at_rest_pepper'], 'p' * 64)
             self.assertEqual(first['signing_key_pem'], 'existing')
 
+    def test_master_key_is_minted_once_and_kept(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            secret = root / 'secrets.json'
+            secret.write_text(json.dumps({'signing_key_pem': 'existing'}))
+            profile = root / 'profile.yaml'
+            profile.write_text(yaml.safe_dump({'secrets': {'secrets_path': 'secrets.json'}}))
+            state.configure(profile, {})
+            key = json.loads(secret.read_text())['encryption_master_key']
+            self.assertEqual(len(key), 64)
+            int(key, 16)
+            state.configure(profile, {})
+            self.assertEqual(json.loads(secret.read_text())['encryption_master_key'], key)
+
+    def test_existing_master_key_and_write_url(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            secret = root / 'secrets.json'
+            secret.write_text(json.dumps({'signing_key_pem': 'existing',
+                                          'encryption_master_key': 'ab' * 32}))
+            profile = root / 'profile.yaml'
+            profile.write_text(yaml.safe_dump({'secrets': {'secrets_path': 'secrets.json'}}))
+            state.configure(profile, {'DATABASE_URL': 'postgres://replica/db',
+                                      'DATABASE_WRITE_URL': 'postgres://primary/db'})
+            result = json.loads(secret.read_text())
+            self.assertEqual(result['encryption_master_key'], 'ab' * 32)
+            self.assertEqual(result['database_url'], 'postgres://replica/db')
+            self.assertEqual(result['database_write_url'], 'postgres://primary/db')
+
 
 if __name__ == '__main__':
     unittest.main()

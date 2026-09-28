@@ -58,6 +58,10 @@ def configure(profile_path, env):
     secrets = json.loads(secret_path.read_text())
     if env.get('DATABASE_URL'):
         secrets['database_url'] = env['DATABASE_URL']
+    # Optional read/write split: reads stay on DATABASE_URL, writes go to the
+    # primary named here (core refuses a standby as the write target).
+    if env.get('DATABASE_WRITE_URL'):
+        secrets['database_write_url'] = env['DATABASE_WRITE_URL']
     # Platform-generated identity inputs apply once; redeploys retain identity.
     marker = profile_path.parent / '.platform-identity-initialized'
     if not marker.exists() and env.get('PROFILE_CREATED') == 'true':
@@ -71,6 +75,12 @@ def configure(profile_path, env):
                 elif len(value) < 32:
                     raise ValueError('OAUTH_AT_REST_PEPPER must contain at least 32 characters')
                 secrets[field] = value
+    # Core 0.62 refuses to boot without a 64-hex master key: it seals the
+    # gateway accounting journal and at-rest secrets. admin setup mints one
+    # since 0.62, but a profile persisted by an older image has none. Minted
+    # once and kept: a new key would leave every sealed record unreadable.
+    if not secrets.get('encryption_master_key'):
+        secrets['encryption_master_key'] = os.urandom(32).hex()
     if not secrets.get('manifest_signing_secret_seed'):
         secrets['manifest_signing_secret_seed'] = base64.b64encode(os.urandom(32)).decode()
     if not secrets.get('signing_key_pem'):
