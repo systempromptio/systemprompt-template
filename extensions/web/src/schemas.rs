@@ -46,6 +46,20 @@ pub fn schema_definitions() -> Vec<SchemaDefinition> {
         SchemaDefinition::new("", include_str!("../schema/27_conversation_requests.sql")),
         SchemaDefinition::new("", include_str!("../schema/28_ingestion_integrity.sql")),
         SchemaDefinition::new("", include_str!("../schema/29_skill_version_impact.sql")),
+        SchemaDefinition::new("", include_str!("../schema/32_raw_retention.sql")),
+        SchemaDefinition::new("", include_str!("../schema/33_sync_state.sql")),
+        SchemaDefinition::new("", include_str!("../schema/34_service_sources.sql")),
+        SchemaDefinition::new("", include_str!("../schema/36_marketplace_versions.sql")),
+        SchemaDefinition::new("", include_str!("../schema/37_conversation_analyses.sql")),
+        SchemaDefinition::new("", include_str!("../schema/40_request_scopes.sql")),
+        SchemaDefinition::new("", include_str!("../schema/41_time_bound_access.sql")),
+        SchemaDefinition::new("", include_str!("../schema/42_gateway_routes.sql")),
+        // Why: 46 before 45 — conversation_facts' refresh reads the
+        // `tool_activity` view that 46 defines.
+        SchemaDefinition::new("", include_str!("../schema/46_tool_artifacts.sql")),
+        SchemaDefinition::new("", include_str!("../schema/45_conversation_facts.sql")),
+        SchemaDefinition::new("", include_str!("../schema/47_user_last_seen.sql")),
+        SchemaDefinition::new("", include_str!("../schema/48_retention.sql")),
     ]
 }
 
