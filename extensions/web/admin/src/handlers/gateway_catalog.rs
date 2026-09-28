@@ -205,6 +205,7 @@ pub(crate) async fn detect_after_the_fact(
                 .unwrap_or_default();
             // JSON: JSONB column — `governance_decisions.evaluated_rules`,
             // serialized from the typed `AclDetectAudit` below
+            // Why: discard-ok: serialising a derived struct of plain fields cannot fail.
             let evaluated = serde_json::to_value(AclDetectAudit {
                 ai_request_id: &row.id,
                 model: &row.model,

@@ -65,6 +65,7 @@ fn spawn_listener(pool: Arc<PgPool>, sender: broadcast::Sender<String>) {
                                 // Why: `broadcast::Sender::send` returns Err when there are
                                 // zero subscribers. That's a normal idle state for this bus
                                 // — no SSE clients connected — not a failure to log.
+                                // Why: discard-ok: zero subscribers is the idle state.
                                 drop(sender.send(payload));
                             },
                             Err(e) => {

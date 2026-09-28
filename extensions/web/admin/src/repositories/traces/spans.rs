@@ -142,6 +142,7 @@ async fn list_governance_spans(
                 model: None,
                 cost_microdollars: None,
                 latency_ms: None,
+                // Why: discard-ok: serialising a derived struct of plain fields cannot fail.
                 raw: serde_json::to_value(GovernanceSpanRaw {
                     policy: &d.policy,
                     decision: &d.decision,
@@ -210,6 +211,7 @@ async fn list_request_spans(
                 model: r.model.clone(),
                 cost_microdollars: Some(r.cost_microdollars),
                 latency_ms: r.latency_ms.map(i64::from),
+                // Why: discard-ok: serialising a derived struct of plain fields cannot fail.
                 raw: serde_json::to_value(RequestSpanRaw {
                     request_id: &r.request_id,
                     provider: r.provider.as_deref(),
@@ -267,6 +269,7 @@ async fn list_event_spans(pool: &PgPool, session_id: &SessionId) -> Result<Vec<S
                 model: None,
                 cost_microdollars: None,
                 latency_ms: None,
+                // Why: discard-ok: serialising a derived struct of plain fields cannot fail.
                 raw: serde_json::to_value(EventSpanRaw {
                     event_type: &e.event_type,
                     tool_name: e.tool_name.as_deref(),

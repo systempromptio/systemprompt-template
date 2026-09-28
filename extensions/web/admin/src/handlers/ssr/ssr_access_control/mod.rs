@@ -50,6 +50,7 @@ pub(crate) async fn access_control_page(
         .unwrap_or_default();
     let open_entities = crate::repositories::access_control::rules::count_open_entities(&pool)
         .await
+        .inspect_err(|e| tracing::warn!(error = %e, "access-control: open-entity count failed"))
         .unwrap_or_default();
     let declared =
         crate::repositories::access_control::yaml_declared::load_declared_rules(&services_path);
