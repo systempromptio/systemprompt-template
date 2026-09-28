@@ -219,3 +219,11 @@ storage/files/css/admin-bundle.css
 # tracked; every crate below it is a workspace member and resolves against it.
 extensions/**/.sqlx/
 !/.sqlx/
+
+# Coverage output (scripts/coverage.sh). The tracked ratchet baseline lives in
+# coverage/baseline.json, not here.
+/coverage-report/
+
+# CI checks systemprompt-core out here (.github/actions/core-checkout); it is
+# core's tree, never ours.
+.vendor/

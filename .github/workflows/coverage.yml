@@ -1,0 +1,146 @@
+name: Coverage
+
+# The coverage floor and ratchet (scripts/coverage-check.sh against the tracked
+# coverage/baseline.json). A measurement, not a gate: an instrumented build of
+# both workspaces plus the full suite is the slowest thing this repo runs, and
+# it never changes a release decision. It runs on the released line, nightly
+# on `next`, and on demand; a trip is a signal to raise tests on `next`, not a
+# block. Until coverage/baseline.json is recorded (`just coverage-baseline`),
+# coverage-check reports the number and fails for want of a baseline.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit SHA or branch to measure. Defaults to the triggering ref."
+        type: string
+        required: false
+  push:
+    branches: [main]
+  schedule:
+    - cron: "23 3 * * *"
+
+concurrency:
+  # Scheduled workflows are created from the default branch. Explicitly make
+  # that run measure `next`, as promised above, instead of silently measuring
+  # `main` again after the release has already landed.
+  group: coverage-${{ inputs.ref || (github.event_name == 'schedule' && 'next') || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  SQLX_OFFLINE: "true"
+  CC: clang
+  CXX: clang++
+  BUILD_NO_COORD: "1"
+
+jobs:
+  coverage:
+    name: Coverage (floor + ratchet)
+    runs-on: ubuntu-latest
+    # An instrumented build of both workspaces, then the full suite again
+    # under it: slower than `test`, and the reason this is its own job rather
+    # than a step appended to it.
+    timeout-minutes: 90
+    env:
+      CARGO_INCREMENTAL: "0"
+      # Why: instrumenting every crate already inflates each object, and the
+      # first `just coverage` run here was SIGTERMed nine minutes into linking
+      # the root workspace — the runner running out of memory, which surfaces
+      # as a bare exit 143 with no diagnostic. Dropping debug info is what the
+      # gates.yml `test` job already does, and coverage does not need it: the line
+      # mapping comes from the instrumentation's own coverage section, not
+      # from DWARF.
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      # Same failure, second cause: four instrumented binaries linking at once
+      # exceeds the runner's memory even without debug info.
+      COVERAGE_BUILD_JOBS: "2"
+      SYSTEMPROMPT_TEST_DATABASE_URL: postgres://test:test@localhost:5432/postgres
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U test -d test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      # Why: the runner ships ~13 GB free, and the cargo target trees exhaust
+      # it — `just test` began failing with "No space left on device" while
+      # linking the contract crate, which reads as a compile error rather than
+      # as a full disk, and the coverage job builds two instrumented trees on
+      # top of that. Everything removed here is a preinstalled SDK or language
+      # runtime nothing in this repo uses. Ordered roughly by size; `|| true`
+      # throughout because the image's contents drift between runner releases
+      # and a path that has moved must not fail the build.
+      - name: Reclaim runner disk
+        run: |
+          echo "before:"; df -h / | tail -1
+          sudo rm -rf \
+            /usr/local/lib/android \
+            /opt/hostedtoolcache \
+            /usr/share/dotnet \
+            /opt/ghc /usr/local/.ghcup \
+            /usr/share/swift \
+            /usr/local/share/powershell \
+            /usr/share/miniconda \
+            /usr/local/lib/node_modules \
+            /usr/lib/google-cloud-sdk \
+            /opt/microsoft /opt/az /usr/share/az_* \
+            /usr/local/graalvm /usr/share/kotlinc \
+            /usr/local/share/boost /usr/local/julia* \
+            /opt/pipx /usr/local/aws-cli /usr/local/lib/heroku \
+            "${AGENT_TOOLSDIRECTORY:-}" 2>/dev/null || true
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          echo "after:"; df -h / | tail -1
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || (github.event_name == 'schedule' && 'next') || github.sha }}
+      - uses: ./.github/actions/core-checkout
+      - uses: extractions/setup-just@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends clang mold libpq-dev libssl-dev pkg-config python3
+      - run: rustup show
+      # scripts/coverage.sh calls llvm-profdata and llvm-cov out of the
+      # toolchain's own sysroot rather than installing cargo-llvm-cov, which
+      # re-injects the mold linker flags and silently produces zero profraws.
+      - run: rustup component add llvm-tools-preview
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            . -> coverage-report/target-root
+            tests -> ../coverage-report/target-tests
+          # The instrumented build is a different rustflags set from `test`,
+          # so it must not share that job's cache entry.
+          key: coverage
+      # `tee` so the totals survive into the summary below; `pipefail` (set by
+      # the shell default here) keeps the job red when the ratchet trips.
+      #
+      # The mkdir is load-bearing: the shell opens tee's output file before
+      # `just` runs, and on a fresh checkout coverage-report/ does not exist
+      # yet. GNU tee then keeps copying to stdout and exits 1 at the very end,
+      # which turned four correct 83.86% runs into red jobs whose logs said
+      # "coverage-check passed" immediately above the failure.
+      - run: |
+          set -o pipefail
+          mkdir -p coverage-report
+          just coverage-check | tee coverage-report/check.txt
+      # Why `always()`: the number is most wanted on the run that failed the
+      # ratchet, which is exactly when a success-gated step would be skipped.
+      - if: always()
+        run: |
+          {
+            echo "### Coverage"
+            echo
+            echo '```'
+            cat coverage-report/check.txt 2>/dev/null || echo "no coverage produced"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
