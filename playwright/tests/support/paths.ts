@@ -24,11 +24,6 @@ export const PATHS = {
   context: (id: string) => `/admin/contexts/${id}`,
 
   governance: '/admin/governance',
-  governancePolicy: (id: string) => `/admin/governance/policies/${id}`,
-  governanceDecisions: '/admin/governance/decisions',
-  governanceHooks: '/admin/governance/hooks',
-
-  models: '/admin/models',
 
   settings: '/admin/settings',
   setup: '/admin/setup',

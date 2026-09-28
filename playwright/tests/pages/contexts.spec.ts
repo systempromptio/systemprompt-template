@@ -47,7 +47,8 @@ test.describe('actions', () => {
     const page = new ContextsPage(adminPage);
     await page.goto();
     const before = await page.table().rowCount();
-    await page.search('e2e-member-2');
+    const text = await page.table().rows().first().innerText();
+    await page.search(text.split(/\s+/)[0]);
     expect(await page.table().rowCount()).toBeLessThanOrEqual(before);
     expect(await page.table().rowCount()).toBeGreaterThan(0);
   });

@@ -87,11 +87,8 @@ and page objects never write a literal admin URL.
 | `sessions`, `session(id)` | `/admin/sessions[/{id}]` | 303 |
 | `traces`, `trace(id)` | `/admin/traces[/{id}]` | 303 |
 | `contexts`, `context(id)` | `/admin/contexts[/{id}]` | 303 |
-| `governance`, `governancePolicy(id)` | `/admin/governance`, `/admin/governance/policies/{id}` | 303 |
-| `governanceDecisions` | `/admin/governance/decisions` | 303 |
-| `governanceHooks` | `/admin/governance/hooks` | 303 |
+| `governance` | `/admin/governance` | 303 |
 | `demoTrace` | `/admin/demo/trace` | 303 |
-| `models` | `/admin/models` | 303 |
 | `profile`, `settings`, `setup` | `/admin/{profile,settings,setup}` | 200 |
 | `login` | `/admin/login` | 200 |
 

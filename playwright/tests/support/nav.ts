@@ -64,16 +64,7 @@ export const NAV: NavSection[] = [
   },
   {
     heading: 'Governance',
-    items: [
-      item('Policies', 'governance'),
-      item('Decisions', 'governanceDecisions'),
-      item('Hooks', 'governanceHooks'),
-      item('Trace demo', 'demoTrace'),
-    ],
-  },
-  {
-    heading: 'Platform',
-    items: [item('Models', 'models')],
+    items: [item('Governance', 'governance')],
   },
   {
     heading: 'Account',
