@@ -10,7 +10,7 @@ runs:
       id: core
       shell: bash
       run: echo "ref=$(tr -d '[:space:]' < bridge/CORE_REF)" >> "$GITHUB_OUTPUT"
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         repository: systempromptio/systemprompt-core
         ref: ${{ steps.core.outputs.ref }}

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # No production source file (excluding tests) may exceed 300 lines. Shared by
-# `just file-size` and the quality.yml file-size CI job.
+# `just file-size` and the lint-gates array (gates.yml static tier).
 #
 # `//!` module-head lines are excluded from the count, matching the core
 # repo's `just file-size`. The ceiling is a cohesion proxy for *code*; a file

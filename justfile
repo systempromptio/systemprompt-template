@@ -339,7 +339,8 @@ preflight-lint:
 # Weekly deep pass: preflight plus the network-touching supply-chain gates.
 preflight-full: preflight deny audit machete hack
 
-# Rustdoc with warnings denied (root workspace, as quality.yml ran it).
+# Rustdoc with warnings denied (root workspace; the tests/ workspace is not yet
+# held to it).
 # Single-flight coordinated.
 doc-check:
     @scripts/build-coordinator.sh run doc-check "" -- {{just_executable()}} _doc-check-uncoordinated

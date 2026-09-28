@@ -158,7 +158,7 @@ else.
 
 ## CI
 
-The `e2e` job of `.github/workflows/ci.yml` runs the suite: debug build,
+The `e2e` tier of `.github/workflows/gates.yml` runs the suite: debug build,
 `setup-local` against its own Docker Postgres, `just start`, wait on `/health`,
 then `just e2e --project chromium`, with `playwright-report/` and the server log
 uploaded on every result. `just e2e-gate` is the same tier for a local

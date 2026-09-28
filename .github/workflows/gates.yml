@@ -1,0 +1,344 @@
+name: Gates
+
+# The whole gate, on every push to `next`, every ordinary PR and on demand —
+# `just verify` locally runs the same static, lint and test tiers. Frozen
+# promotion PRs (promote/<version>/<main>/<candidate>, opened by
+# `just release`) do not repeat the matrix: they verify the exact next-push
+# proof, the base, the head and the merge tree. See docs/BRANCHING.md.
+#
+# Replaces ci.yml + quality.yml. Every tier runs independently (no `needs`
+# between them), so one red tier never hides another; "Gates passed" is the
+# single context the `main` ruleset should require.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit SHA or branch to gate. Defaults to the triggering ref."
+        type: string
+        required: false
+  pull_request:
+    branches: [main, next]
+  push:
+    branches: [next]
+
+concurrency:
+  group: gates-${{ inputs.ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  SQLX_OFFLINE: "true"
+  # aws-lc-sys refuses to build with GCC <10 and the release profile's LTO
+  # trips it; mirror the justfile's CC/CXX toggle.
+  CC: clang
+  CXX: clang++
+  # scripts/build-coordinator.sh serialises builds across agents sharing one
+  # clone (and guards free disk); a runner is single-tenant, so bypass it.
+  BUILD_NO_COORD: "1"
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  promotion:
+    name: Verify frozen promotion
+    if: github.event_name == 'pull_request' && github.base_ref == 'main' && startsWith(github.head_ref, 'promote/') && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner, repo} = context.repo;
+            let pr;
+            for (let attempt = 0; attempt < 6; attempt++) {
+              pr = (await github.rest.pulls.get({owner, repo, pull_number: context.payload.pull_request.number})).data;
+              if (pr.mergeable !== null) break;
+              await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+            const match = /^promote\/(\d+\.\d+\.\d+)\/([0-9a-f]{40})\/([0-9a-f]{40})$/.exec(pr.head.ref);
+            if (!match || pr.head.repo.full_name !== context.payload.repository.full_name || pr.base.ref !== 'main' || pr.base.sha !== match[2] || pr.head.sha !== match[3]) {
+              throw new Error('Promotion identity differs from frozen head/base');
+            }
+            const currentMain = (await github.rest.git.getRef({owner, repo, ref: 'heads/main'})).data.object.sha;
+            const currentNext = (await github.rest.git.getRef({owner, repo, ref: 'heads/next'})).data.object.sha;
+            if (currentMain !== pr.base.sha || currentNext !== pr.head.sha) throw new Error('main or next moved');
+            const comparison = (await github.rest.repos.compareCommitsWithBasehead({owner, repo, basehead: `${pr.base.sha}...${pr.head.sha}`})).data;
+            if (comparison.status !== 'ahead' || comparison.behind_by !== 0) throw new Error('main is not an ancestor of candidate');
+            const runs = (await github.rest.actions.listWorkflowRuns({owner, repo, workflow_id: 'gates.yml', event: 'push', branch: 'next', head_sha: pr.head.sha, per_page: 1})).data.workflow_runs;
+            const run = runs[0];
+            if (!run || run.head_sha !== pr.head.sha || run.head_branch !== 'next' || run.event !== 'push' || run.status !== 'completed' || run.conclusion !== 'success') throw new Error('Latest exact next-push Gates run did not succeed');
+            const jobs = await github.paginate('GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs', {owner, repo, run_id: run.id, attempt_number: run.run_attempt, per_page: 100});
+            const proof = jobs.filter(job => job.name === 'Gates passed');
+            if (proof.length !== 1 || proof[0].status !== 'completed' || proof[0].conclusion !== 'success') throw new Error('Gates passed aggregate did not succeed');
+            const head = (await github.rest.git.getCommit({owner, repo, commit_sha: pr.head.sha})).data;
+            if (pr.mergeable !== true || !pr.merge_commit_sha) throw new Error('GitHub merge result is not ready or conflicts');
+            const merge = (await github.rest.git.getCommit({owner, repo, commit_sha: pr.merge_commit_sha})).data;
+            if (merge.tree.sha !== head.tree.sha || merge.parents.length !== 2 || merge.parents[0].sha !== pr.base.sha || merge.parents[1].sha !== pr.head.sha) throw new Error('Merge result differs from proven candidate');
+            const latest = (await github.rest.actions.listWorkflowRuns({owner, repo, workflow_id: 'gates.yml', event: 'push', branch: 'next', head_sha: pr.head.sha, per_page: 1})).data.workflow_runs[0];
+            if (!latest || latest.id !== run.id || latest.run_attempt !== run.run_attempt || latest.status !== 'completed' || latest.conclusion !== 'success') throw new Error('Push proof changed during verification');
+            core.info(`Verified next-push run ${run.id} attempt ${run.run_attempt}, candidate ${pr.head.sha}, base ${pr.base.sha}`);
+
+  static:
+    if: github.event_name != 'pull_request' || github.base_ref != 'main' || !startsWith(github.head_ref, 'promote/') || github.event.pull_request.head.repo.full_name != github.repository
+    name: Static (fmt, pins, release self-tests, deploy config, source gates)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      # The sibling core is load-bearing here: check-fail-open and
+      # check-discarded-results run core's rust-contracts over this tree, and
+      # fail in CI without it.
+      - uses: ./.github/actions/core-checkout
+      - uses: extractions/setup-just@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ripgrep jq python3 python3-yaml
+      - run: rustup show
+      - run: just preflight-static
+
+  lint:
+    if: github.event_name != 'pull_request' || github.base_ref != 'main' || !startsWith(github.head_ref, 'promote/') || github.event.pull_request.head.repo.full_name != github.repository
+    name: Lint (clippy, rustdoc, MSRV)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      RUSTFLAGS: "-D warnings"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: ./.github/actions/core-checkout
+      - uses: extractions/setup-just@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ripgrep jq python3 python3-yaml clang mold libpq-dev libssl-dev pkg-config
+      # Why: clippy, rustdoc and the MSRV check each build a dependency tree;
+      # together they overflow the runner's ~14 GB.
+      - name: Free runner disk
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+            /usr/local/.ghcup /usr/local/share/boost /usr/local/share/powershell \
+            /usr/local/lib/node_modules
+          sudo docker image prune --all --force >/dev/null 2>&1 || true
+          df -h /
+      - run: rustup show
+      - run: rustup toolchain install 1.96.0 --profile minimal
+      - uses: Swatinem/rust-cache@v2
+      - run: just preflight-lint
+
+  test:
+    if: github.event_name != 'pull_request' || github.base_ref != 'main' || !startsWith(github.head_ref, 'promote/') || github.event.pull_request.head.repo.full_name != github.repository
+    name: Test (unit, integration, admin contract)
+    runs-on: ubuntu-latest
+    # Integration is dominated by CREATE/DROP DATABASE round-trips, and a cold
+    # cache (every core re-pin) adds the full compile on top; leave headroom so
+    # a growing suite never turns into a meaningless red X.
+    timeout-minutes: 90
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      # The harness accepts a maintenance DB named test, postgres, or *_test.
+      SYSTEMPROMPT_TEST_DATABASE_URL: postgres://test:test@localhost:5432/postgres
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U test -d test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      # Why: the runner ships ~13 GB free and the cargo target trees exhaust
+      # it; a full disk fails as a link error, not as a full disk. Everything
+      # removed is a preinstalled SDK nothing here uses; `|| true` because the
+      # image's contents drift between runner releases.
+      - name: Reclaim runner disk
+        run: |
+          echo "before:"; df -h / | tail -1
+          sudo rm -rf \
+            /usr/local/lib/android \
+            /opt/hostedtoolcache \
+            /usr/share/dotnet \
+            /opt/ghc /usr/local/.ghcup \
+            /usr/share/swift \
+            /usr/local/share/powershell \
+            /usr/share/miniconda \
+            /usr/local/lib/node_modules \
+            /usr/lib/google-cloud-sdk \
+            /opt/microsoft /opt/az /usr/share/az_* \
+            /usr/local/graalvm /usr/share/kotlinc \
+            /usr/local/share/boost /usr/local/julia* \
+            /opt/pipx /usr/local/aws-cli /usr/local/lib/heroku \
+            "${AGENT_TOOLSDIRECTORY:-}" 2>/dev/null || true
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          echo "after:"; df -h / | tail -1
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: ./.github/actions/core-checkout
+      - uses: extractions/setup-just@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends clang mold libpq-dev libssl-dev pkg-config python3 python3-yaml
+      - run: rustup show
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            tests
+      - run: just test
+
+  e2e:
+    if: github.event_name != 'pull_request' || github.base_ref != 'main' || !startsWith(github.head_ref, 'promote/') || github.event.pull_request.head.repo.full_name != github.repository
+    name: E2E (Playwright, admin console)
+    runs-on: ubuntu-latest
+    # A debug build of the server, a seeded database and a browser walk of every
+    # admin page. It needs the stack alive, so it is its own tier; it no longer
+    # waits for `test`, so a red unit test cannot hide a broken page.
+    timeout-minutes: 90
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      GATEWAY_URL: http://localhost:8080
+    steps:
+      - name: Reclaim runner disk
+        run: |
+          echo "before:"; df -h / | tail -1
+          sudo rm -rf \
+            /usr/local/lib/android \
+            /opt/hostedtoolcache \
+            /usr/share/dotnet \
+            /opt/ghc /usr/local/.ghcup \
+            /usr/share/swift \
+            /usr/local/share/powershell \
+            /usr/share/miniconda \
+            /usr/local/lib/node_modules \
+            /usr/lib/google-cloud-sdk \
+            /opt/microsoft /opt/az /usr/share/az_* \
+            /usr/local/graalvm /usr/share/kotlinc \
+            /usr/local/share/boost /usr/local/julia* \
+            /opt/pipx /usr/local/aws-cli /usr/local/lib/heroku \
+            "${AGENT_TOOLSDIRECTORY:-}" 2>/dev/null || true
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          echo "after:"; df -h / | tail -1
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: extractions/setup-just@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends clang mold libpq-dev libssl-dev pkg-config python3 postgresql-client jq
+      - uses: ./.github/actions/core-checkout
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            tests
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - run: just build
+      # setup-local brings up its own Docker Postgres, so this job takes no
+      # `services:` block: the seed then reads the same profile secrets a
+      # developer's machine does. The key is a placeholder and is never used —
+      # no page spec exercises inference, and setup-local refuses to generate
+      # a profile with no provider key at all off a TTY.
+      - name: Provision the local profile
+        run: just setup-local "sk-ant-e2e-placeholder" "" "" 8080 5432 e2e@example.invalid
+      # `infra services start` holds the terminal for the life of the server.
+      - name: Start the stack (detached)
+        run: nohup just start > e2e-server.log 2>&1 &
+      - name: Wait for gateway health and signing keys
+        run: |
+          for _ in $(seq 1 60); do
+            if curl -fsS http://localhost:8080/health | jq -e '.status == "healthy"' > /dev/null &&
+               curl -fsS http://localhost:8080/.well-known/jwks.json | jq -e '.keys | length > 0' > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "server never became healthy"; exit 1
+      - run: just e2e-install
+      - run: just e2e --project chromium
+      - if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: playwright/playwright-report/
+          retention-days: 7
+      - if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: e2e-server-log
+          path: e2e-server.log
+
+  # Supply chain, as the retired quality.yml ran it (root workspace). `just deny` /
+  # `just audit` / `just machete` cover tests/ as well in the weekly
+  # `just preflight-full`.
+  audit:
+    if: github.event_name != 'pull_request' || github.base_ref != 'main' || !startsWith(github.head_ref, 'promote/') || github.event.pull_request.head.repo.full_name != github.repository
+    name: cargo-audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: rustsec/audit-check@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  deny:
+    if: github.event_name != 'pull_request' || github.base_ref != 'main' || !startsWith(github.head_ref, 'promote/') || github.event.pull_request.head.repo.full_name != github.repository
+    name: cargo-deny (licenses, bans, advisories, sources)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+
+  machete:
+    if: github.event_name != 'pull_request' || github.base_ref != 'main' || !startsWith(github.head_ref, 'promote/') || github.event.pull_request.head.repo.full_name != github.repository
+    name: Unused dependency check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-machete
+      - run: cargo machete
+
+  # One stable context for the `main` ruleset: it fails unless every gate
+  # above succeeded, so a skipped or cancelled job can never pass as "not
+  # failed". Branch protection names this job, never the tiers.
+  gates-passed:
+    name: Gates passed
+    runs-on: ubuntu-latest
+    needs: [promotion, static, lint, test, e2e, audit, deny, machete]
+    if: always()
+    steps:
+      - env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          IS_PROMOTION: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' && startsWith(github.head_ref, 'promote/') && github.event.pull_request.head.repo.full_name == github.repository }}
+        run: |
+          tiers='["static","lint","test","e2e","audit","deny","machete"]'
+          if [ "$IS_PROMOTION" = true ]; then
+            jq -e --argjson t "$tiers" '.promotion.result == "success" and ([.[$t[]].result] | all(. == "skipped"))' <<<"$NEEDS_JSON" >/dev/null
+          else
+            jq -e --argjson t "$tiers" '.promotion.result == "skipped" and ([.[$t[]].result] | all(. == "success"))' <<<"$NEEDS_JSON" >/dev/null
+          fi
