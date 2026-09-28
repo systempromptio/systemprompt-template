@@ -111,3 +111,19 @@ pub async fn revoke_any_device_cert(pool: &PgPool, id: &str) -> Result<bool, sql
     .await?;
     Ok(result.rows_affected() > 0)
 }
+
+// Why: the sweep's half of a certificate's window. `user_device_certs` is
+// core's table, so the window is a side row (`user_device_cert_validity`)
+// and binds by stamping `revoked_at` — the column core's device gate reads.
+pub async fn revoke_expired_device_certs(pool: &PgPool) -> Result<u64, sqlx::Error> {
+    let result = sqlx::query!(
+        "UPDATE user_device_certs c
+            SET revoked_at = CURRENT_TIMESTAMP
+           FROM user_device_cert_validity v
+          WHERE v.device_id = c.id AND c.revoked_at IS NULL
+            AND v.valid_until <= CURRENT_TIMESTAMP"
+    )
+    .execute(pool)
+    .await?;
+    Ok(result.rows_affected())
+}

@@ -19,6 +19,7 @@
 mod error;
 mod registry;
 
+mod access_expiry;
 mod bundle_admin_css;
 mod content_analytics;
 mod copy_assets;
@@ -27,6 +28,7 @@ mod ingestion;
 mod llms_txt;
 mod prerender;
 mod publish;
+mod quota_month_window;
 mod robots;
 mod scope_defaults;
 mod secret_migration;
@@ -38,6 +40,7 @@ mod usage_rollup;
 pub use error::JobError;
 pub use registry::{JOB_TAG, extension_jobs};
 
+pub use access_expiry::{AccessExpiryJob, ExpirySweep, lost_manage_role};
 pub use bundle_admin_css::BundleAdminCssJob;
 pub use content_analytics::ContentAnalyticsAggregationJob;
 pub use copy_assets::CopyExtensionAssetsJob;
@@ -46,6 +49,7 @@ pub use ingestion::ContentIngestionJob;
 pub use llms_txt::LlmsTxtGenerationJob;
 pub use prerender::ContentPrerenderJob;
 pub use publish::PublishPipelineJob;
+pub use quota_month_window::QuotaMonthWindowJob;
 pub use robots::RobotsTxtGenerationJob;
 pub use scope_defaults::ScopeDefaultsJob;
 pub use secret_migration::SecretMigrationJob;
@@ -61,7 +65,9 @@ pub use usage_rollup::UsageDailyRollupJob;
 pub mod internals {
     pub use crate::bundle_admin_css::{collect_css_files, concatenate_css_files};
     pub use crate::copy_assets::{copy_all_assets, copy_asset};
-    pub use crate::governance_bootstrap::{GovernanceStatus, check_governance_config};
+    pub use crate::governance_bootstrap::{
+        GovernanceStatus, check_governance_config, check_judge_config,
+    };
     pub use crate::llms_txt::{sort_entries_in_place, write_header, write_section};
     pub use crate::publish::PipelineStats;
     pub use crate::robots::build_robots_txt_content;

@@ -6,14 +6,15 @@
 //! the precedence ladder, and a [`SubjectAttributeProvider`][p] that looks up
 //! the values a user holds for it.
 //!
-//! We declare three: [`project`], [`group`], and [`salesforce`]. They form a
+//! We declare three: [`project`], [`group`], and [`connector`]. They form a
 //! ladder with core's — user (0), `project` (140), `group` (150),
-//! `salesforce` (170), role (200) — where a lower number is
-//! the narrower, higher-priority scope. Groups carry people and marketplace
-//! entitlement; projects are work attribution. Both are DB rows an operator
-//! edits, and the directory's AD groups map into them rather than being a
-//! dimension of their own. Adding another — cost centre, clearance,
-//! jurisdiction — means writing a provider beside them and one
+//! `connector` (160), role (200) — where a lower number is the narrower,
+//! higher-priority scope. Groups carry people and marketplace entitlement;
+//! projects are work attribution. Both are DB rows an operator edits, and the
+//! directory's AD groups map into them rather than being a dimension of their
+//! own. `connector` is the MCP servers a person holds a ready connection to.
+//! Adding another — cost centre, clearance, jurisdiction — means writing a
+//! provider beside them and one
 //! `register_subject_attribute_provider!` call; no core change, and no edit to
 //! the resolve call sites, because they all read the registry through
 //! [`subject_attributes_for`] and [`dimensions`].
@@ -23,9 +24,9 @@
 mod account;
 pub use account::account_scope;
 pub(crate) mod catalog;
+pub mod connector;
 pub mod group;
 pub mod project;
-pub mod salesforce;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -37,9 +38,9 @@ use systemprompt_security::authz::{
     SubjectDimension, dimensions_of, discover_subject_providers, gather_subject_attributes,
 };
 
+use crate::authz::connector::ConnectorAttributeProvider;
 use crate::authz::group::GroupAttributeProvider;
 use crate::authz::project::ProjectAttributeProvider;
-use crate::authz::salesforce::SalesforceAttributeProvider;
 
 systemprompt_security::register_subject_attribute_provider!(|ctx| {
     let provider: SharedSubjectAttributeProvider =
@@ -55,7 +56,7 @@ systemprompt_security::register_subject_attribute_provider!(|ctx| {
 
 systemprompt_security::register_subject_attribute_provider!(|ctx| {
     let provider: SharedSubjectAttributeProvider =
-        Arc::new(SalesforceAttributeProvider::new(Arc::clone(&ctx.pool)));
+        Arc::new(ConnectorAttributeProvider::new(Arc::clone(&ctx.pool)));
     provider
 });
 

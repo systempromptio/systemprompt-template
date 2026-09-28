@@ -8,7 +8,7 @@
 //!
 //! The load-bearing case is the empty set. Core reads a declared-but-empty
 //! kind as "this deployment has none of these" and rejects every id of it, so
-//! a profile without a gateway would reject every route grant in roles.yaml.
+//! a profile without a gateway would reject every route grant in rules.yaml.
 //! `registered_routes` has to turn that into "enforce nothing" instead.
 
 use axum::http::StatusCode;

@@ -1,11 +1,11 @@
-//! Wire types for the bootstrap group/project definition loader
+//! Wire types for the group/project declaration
 //! (`services/web/config/groups.yaml`).
 //!
 //! The file declares the groups and projects an installation ships with, and
 //! the AD groups the directory maps into each. It defines *membership shape*,
-//! not entitlement: which entity a member reaches is authored separately in
-//! `services/access-control/{groups,projects}.yaml` and in each marketplace's
-//! own `access.rules` block.
+//! not entitlement and not members: which entity a group or project reaches
+//! is declared in `services/access-control/rules.yaml`, and who is in one is
+//! the directory's and the console's — people are never written to code.
 
 use serde::Deserialize;
 

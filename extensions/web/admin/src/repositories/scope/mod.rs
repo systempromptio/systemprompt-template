@@ -13,6 +13,7 @@
 //! exclusive attribution reads.
 
 pub mod defaults;
+pub mod expiry;
 pub mod membership;
 pub mod visibility;
 

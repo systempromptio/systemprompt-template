@@ -1,4 +1,5 @@
-//! Route CRUD against the profile YAML's `gateway.routes` sequence.
+//! Route CRUD against the services YAML's `gateway.routes` sequence, and the
+//! whole-sequence replace the `gateway_routes` table uses to regenerate it.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -25,12 +26,27 @@ pub fn validate_route(route: &GatewayRouteView) -> Result<(), MarketplaceError> 
     Ok(())
 }
 
+// Why: the form posts every field, so a cleared name arrives as `""`; the
+// file and the mirror should carry an absent name, not an empty one.
+pub fn normalise_metadata(route: &mut GatewayRouteView) {
+    let clean = |v: &mut Option<String>| {
+        *v = v
+            .as_deref()
+            .map(str::trim)
+            .filter(|t| !t.is_empty())
+            .map(str::to_owned);
+    };
+    clean(&mut route.name);
+    clean(&mut route.description);
+}
+
 pub fn create_route(
     gateway_path: &Path,
     route: &GatewayRouteView,
 ) -> Result<usize, MarketplaceError> {
     validate_route(route)?;
     let mut to_insert = route.clone();
+    normalise_metadata(&mut to_insert);
     if to_insert.id.trim().is_empty() {
         to_insert.id = synthesize_route_id(&to_insert.model_pattern, &to_insert.provider);
     }
@@ -68,6 +84,7 @@ pub fn update_route(
             return Ok(false);
         }
         let mut merged = route.clone();
+        normalise_metadata(&mut merged);
         let had_explicit_id = routes[index]
             .as_mapping()
             .is_some_and(|m| m.contains_key(Value::from("id")));
@@ -83,6 +100,18 @@ pub fn update_route(
             merged.requires = merged
                 .requires
                 .or_else(|| existing.get(Value::from("requires")).cloned());
+            let text = |key: &str| {
+                existing
+                    .get(Value::from(key))
+                    .and_then(Value::as_str)
+                    .map(str::to_owned)
+            };
+            merged.fallback_provider = merged
+                .fallback_provider
+                .or_else(|| text("fallback_provider"));
+            merged.fallback_upstream_model = merged
+                .fallback_upstream_model
+                .or_else(|| text("fallback_upstream_model"));
         }
         routes[index] = route_to_yaml(&merged);
         // Why: an edit adds no field the operator did not write. A route that
@@ -139,4 +168,25 @@ pub fn reorder_routes(gateway_path: &Path, order: &[usize]) -> Result<(), Market
     }
     write_gateway_file(gateway_path, &doc)?;
     Ok(())
+}
+
+// Why: the database → file direction. Every other function here edits one
+// route of the file in place; this one makes the file's `routes:` sequence
+// equal the given list, which is what the `gateway_routes` table does after
+// each console write so the next restart dispatches what the table says.
+// The settings above the sequence and the header comment are untouched.
+pub fn replace_routes(
+    gateway_path: &Path,
+    routes: &[GatewayRouteView],
+) -> Result<(), MarketplaceError> {
+    for route in routes {
+        validate_route(route)?;
+    }
+    let mut doc = read_gateway_file(gateway_path)?;
+    {
+        let seq = routes_seq_mut(&mut doc)?;
+        seq.clear();
+        seq.extend(routes.iter().map(route_to_yaml));
+    }
+    write_gateway_file(gateway_path, &doc)
 }

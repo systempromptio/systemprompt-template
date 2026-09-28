@@ -66,6 +66,25 @@ scheduler:
       owner: admin
       enabled: true
 
+    # Hourly validity sweep (web extension): revokes expired group/project
+    # membership, manual roles, access rules and device certificates, and
+    # pulls live credentials when an expiry removes a manage role. The
+    # `valid_until` of a rules.yaml entity binds through this sweep.
+    - name: access_expiry
+      extension: web
+      owner: admin
+      enabled: true
+
+    # Calendar-month quota windows (web extension, interim until core has
+    # calendar windows). Five minutes past UTC midnight: rewrites every
+    # monthly window in ai_gateway_policies to run out at month end and
+    # carries yesterday's bucket into today's. Idempotent for the day, so
+    # `systemprompt infra jobs run quota_month_window` is always safe.
+    - name: quota_month_window
+      extension: web
+      owner: admin
+      enabled: true
+
     - name: cleanup_anonymous_users
       extension: core
       owner: admin
@@ -189,9 +208,10 @@ scheduler:
   #
   # governance_bootstrap is boot-only: it has no `jobs` entry (so it is never
   # cron-scheduled) and declares an empty schedule. Its owner defaults to the
-  # system admin. It materialises the profile's gateway-route entities and
-  # projects services/access-control + gateway-policy YAML into the authz tables
-  # so authorization is correct at app start.
+  # system admin. It materialises the profile's gateway-route entities, seeds
+  # every empty sync plane (rules.yaml, groups, gateway policies and routes,
+  # governance chain) from its file and otherwise reports drift, so
+  # authorization is correct at app start.
   bootstrap_jobs:
     - governance_bootstrap
     - managed_inventory_refresh

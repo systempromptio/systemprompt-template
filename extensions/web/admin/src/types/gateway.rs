@@ -8,6 +8,10 @@ use serde::{Deserialize, Serialize};
 pub struct GatewayRouteView {
     #[serde(default)]
     pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     pub model_pattern: String,
     pub provider: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -23,6 +27,13 @@ pub struct GatewayRouteView {
     pub when: Option<serde_yaml::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub requires: Option<serde_yaml::Value>,
+    // Why: the provider tried when the primary refuses; core's
+    // `GatewayRoute::fallback_view` reads these two, so the editor must carry
+    // them or a console save silently removes a route's fallback.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fallback_provider: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fallback_upstream_model: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Default)]

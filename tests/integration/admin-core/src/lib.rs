@@ -15,6 +15,8 @@
 
 
 #[cfg(test)]
+mod access_expiry;
+#[cfg(test)]
 mod analytics_content_metrics;
 #[cfg(test)]
 mod analytics_content_rollup;

@@ -81,6 +81,8 @@ clap = { version = "4", features = ["derive"] }
 tempfile = "3"
 # Pinned to the exact version the root workspace pins, so the `ServerHandler`
 # trait the tests bring into scope is the one the MCP crates implement.
+async-trait = "0.1"
+zip = { version = "8", default-features = false, features = ["deflate"] }
 rmcp = { version = "=3.3.0", features = ["server"] }
 uuid = { version = "1.18", features = ["v4"] }
 base64 = "0.22"

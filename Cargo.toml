@@ -93,6 +93,7 @@ walkdir = "2.0"
 glob = "0.3"
 tempfile = "3.0"
 url = "2.5"
+zip = { version = "8", default-features = false, features = ["deflate-flate2"] }
 urlencoding = "2.1"
 jsonwebtoken = "10"
 saml = { version = "0.0.1-alpha.2", default-features = false, features = ["rsa-sha", "xmlenc"] }

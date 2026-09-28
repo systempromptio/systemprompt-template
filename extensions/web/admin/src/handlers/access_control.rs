@@ -251,13 +251,19 @@ fn push_catalog_sections(
     }
 }
 
-// Why: renders the snapshot for copy-out only; writes nothing to disk —
-// instances never write back to `services/`.
+// Why: the database rendered as `rules.yaml` — the access-control plane's
+// export — for copy-out only; writes nothing to disk — instances never write
+// back to `services/`.
 pub(crate) async fn yaml_snapshot_handler(
     State(pool): State<Arc<PgPool>>,
 ) -> AdminResult<Response> {
-    use crate::repositories::config::acl_yaml_snapshot;
-    let yaml = acl_yaml_snapshot::render_yaml_snapshot(&pool).await?;
+    use crate::repositories::sync::access_control::AccessControlPlane;
+    use crate::repositories::sync::plane::SyncPlane;
+    let yaml = AccessControlPlane
+        .export(&pool)
+        .await?
+        .map(|export| export.body)
+        .unwrap_or_default();
     Ok((
         StatusCode::OK,
         [(axum::http::header::CONTENT_TYPE, "application/yaml")],

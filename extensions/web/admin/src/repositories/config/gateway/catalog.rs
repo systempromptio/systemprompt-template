@@ -1,8 +1,8 @@
 //! The set of gateway routes this deployment vouches for.
 //!
 //! Every path that writes a `gateway_route` catalog row â the governance
-//! bootstrap, the roles.yaml ingestion it feeds, and the dashboard handlers â
-//! derives the set here, from the same `dispatchable_route_ids` the gateway
+//! bootstrap, the rules.yaml projection it feeds, and the dashboard handlers
+//! â derives the set here, from the same `dispatchable_route_ids` the gateway
 //! dispatches by, so no two of them can disagree about which ids are real. It
 //! includes the synthesized catch-all route, which the gateway YAML never
 //! lists. The routes and the registry they resolve against are services
@@ -45,6 +45,8 @@ pub fn dispatchable_routes(
             let route = route.into_owned();
             GatewayRouteView {
                 id: route.id.as_str().to_owned(),
+                name: route.name,
+                description: route.description,
                 model_pattern: route.model_pattern,
                 provider: route.provider.as_str().to_owned(),
                 upstream_model: route.upstream_model,
@@ -56,6 +58,8 @@ pub fn dispatchable_routes(
                 pricing: None,
                 when: None,
                 requires: None,
+                fallback_provider: route.fallback_provider.map(|p| p.as_str().to_owned()),
+                fallback_upstream_model: route.fallback_upstream_model,
             }
         })
         .collect())
@@ -115,7 +119,7 @@ pub fn client_facing_routes_from_services() -> Result<Vec<GatewayRouteView>, Mar
 
 // Why: an empty set is a services tree without a gateway, not a declaration
 // that no route exists â enforcing it would reject every route grant in
-// roles.yaml. Such a tree enforces nothing, and the boot job likewise leaves
+// rules.yaml. Such a tree enforces nothing, and the boot job likewise leaves
 // its catalog untouched.
 #[must_use]
 pub fn registered_routes(route_ids: &[String]) -> RegisteredEntities {

@@ -200,9 +200,7 @@ A marketplace can arrive as a signed **services bundle** published by another Gi
 - **Drift** — any difference between the two: missing in DB, only in DB, differs, default differs.
 - **Source** — `yaml` for rows the file placed, `dashboard` for rows the console wrote.
 
-## Transition in this repository
-
-Until the `rules.yaml` loader lands in `extensions/web/admin`, the boot still reads the legacy `services/access-control/roles.yaml` and `departments.yaml`. `scripts/validate-services.sh` keeps all three valid and requires every legacy grant to be declared in `rules.yaml`, so the new file is never the one missing a grant. The legacy files are deleted with the loader.
+## Not declared here
 
 Inbound Slack apps are not declared here: `authz.allowed_roles` in `services/slack/*.yaml` projects the `slack_workspace:<workspace_id>` entity at startup and stays with the app it gates.
 

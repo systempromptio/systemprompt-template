@@ -4,20 +4,24 @@
 //! Four steps, in dependency order:
 //! 0. Validate `services/governance/config.yaml`, failing the boot rather than
 //!    letting an unparseable file degrade to the built-in defaults unnoticed,
-//!    and warn when the resulting chain enforces nothing.
+//!    and warn when the resulting chain enforces nothing. Then report whether a
+//!    plugin owns `hooks.judge`, the conversation judge's switch.
 //! 1. Reconcile the services gateway-route entities into
 //!    `access_control_entities` (so the FK on `access_control_rules` is
 //!    satisfied and a `gateway_route` `entity_match` glob has routes to expand
 //!    over), deleting catalog rows no configured route claims.
-//! 2. Project `services/access-control/*.yaml` into the authz tables via core
-//!    ingestion, handing it step 1's route ids as the authoritative
-//!    `gateway_route` catalog. For a kind it is not handed, core ingestion
-//!    self-materialises a catalog row for any literal `entity_id`, which would
-//!    turn a mistyped or invented route id into a silent grant on a route that
-//!    can never dispatch; passing the real set makes ingestion reject it
-//!    instead. Step 1 must therefore run first — it is what makes the set
-//!    authoritative.
-//! 3. Load the gateway model allow-list into `ai_gateway_policies`.
+//! 2. Run every sync plane through the one boot contract
+//!    (`repositories::sync::boot`): groups, access control, gateway policies,
+//!    gateway routes and the governance chain, in that order. A plane whose
+//!    projection is empty is seeded from its file;
+//!    every other plane is compared and the drift logged, nothing written.
+//!    Reconciling code and database is an administrator's act on `/admin/sync`,
+//!    never a side effect of a restart. Step 1 must run first because the
+//!    `gateway_route/*` glob expands over its catalog.
+//! 3. Project each inbound Slack app's `authz.allowed_roles` onto its
+//!    `slack_workspace` entity. `rules.yaml` does not declare these; the gate
+//!    stays with the app it gates, so it is written on every boot, after the
+//!    seed has seen an empty table.
 //!
 //! Runs once at boot as a `scheduler.bootstrap_jobs` entry so authorization is
 //! correct at app start; it is not cron-scheduled (`schedule()` is empty). The
@@ -25,9 +29,6 @@
 //! gateway/provider edit, so no recurring cadence is needed. The catalog ids
 //! are deterministic, so re-runs are idempotent.
 
-use std::sync::Arc;
-
-use systemprompt::config::AppPaths;
 use systemprompt::database::DbPool;
 use systemprompt::traits::{Job, JobContext, JobResult};
 
@@ -37,7 +38,9 @@ use crate::error::JobError;
 use systemprompt_web_admin::repositories::config::gateway::{
     dispatchable_route_ids, registered_routes,
 };
-use systemprompt_web_admin::repositories::config::{acl_yaml_loader, groups_yaml_loader};
+use systemprompt_web_admin::repositories::config::slack_acl::load_slack_apps;
+use systemprompt_web_admin::repositories::sync::boot::reconcile_all;
+use systemprompt_web_admin::repositories::sync::sources_db::record_service_sources;
 use systemprompt_web_shared::error::MarketplaceError;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -76,45 +79,52 @@ async fn execute_inner(ctx: &JobContext) -> Result<JobResult, JobError> {
     let db_pool = ctx.db_pool::<DbPool>().ok_or(MarketplaceError::Internal(
         "Database not available in job context".to_owned(),
     ))?;
-    let paths = ctx
-        .app_paths::<Arc<AppPaths>>()
-        .ok_or(MarketplaceError::Internal(
-            "AppPaths not available in job context".to_owned(),
-        ))?;
-    let services_path = paths.system().services().to_path_buf();
+    // Why: the composed root — the same tree the sync page reads — so a kit's
+    // marketplace validates once its bundle is active, and boot and page can
+    // never disagree about what the declaration says.
+    let profile = systemprompt::config::ProfileBootstrap::get()?;
+    let services_path = systemprompt::loader::services_root::ServicesRootBootstrap::active_root_or(
+        &profile.paths.services,
+    );
 
     let governance = check_governance_config(&services_path)?;
-
-    systemprompt_web_admin::salesforce_orgs_boot_check(&services_path)
-        .await
-        .map_err(|e| JobError::from(MarketplaceError::Internal(e)))?;
+    check_judge_config()?;
 
     let catalog = bootstrap_gateway_entities(db_pool).await?;
 
     let pool = db_pool.write_pool();
-    // Why: before the ACL pass. The access-control files and each
-    // marketplace's `access.rules` write rows whose `rule_value` is a group or
-    // project id, so those rows must exist first or a fresh install would
-    // project a gate naming a group nothing can ever be a member of.
-    groups_yaml_loader::load_groups_from_yaml(&pool, &services_path)
-        .await
-        .map_err(JobError::from)?;
-
-    acl_yaml_loader::load_from_yaml(&pool, &services_path, &catalog.registered)
-        .await
-        .map_err(JobError::from)?;
-
-    let policy_repo = systemprompt::ai::repository::AiGatewayPolicyRepository::new(db_pool)
-        .map_err(|e| JobError::from(MarketplaceError::Internal(e.to_string())))?;
-    let policy = systemprompt::ai::load_gateway_policies_from_yaml(&policy_repo, &services_path)
+    let planes = reconcile_all(&pool)
         .await
         .map_err(|e| JobError::from(MarketplaceError::Internal(e.to_string())))?;
+
+    let slack_workspaces = load_slack_apps(&pool).await.map_err(JobError::from)?;
+
+    // Why: every skill invocation is credited to the marketplace that owns
+    // its plugin and the version that marketplace was serving; ownership and
+    // versions come from the composition this process booted on, so they are
+    // recorded here.
+    let sources = record_service_sources(&pool)
+        .await
+        .map_err(JobError::from)?;
 
     let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
     tracing::info!(
         gateway_entities = catalog.registered.known_ids(EntityKind::GatewayRoute).len(),
         gateway_entities_pruned = catalog.pruned,
-        gateway_policies = policy.inserted + policy.updated,
+        groups_declared = planes.groups.declared,
+        groups_seeded = planes.groups.seeded,
+        groups_drift = planes.groups.drift_rows,
+        access_rules_declared = planes.access_control.declared,
+        access_rules_seeded = planes.access_control.seeded,
+        access_drift = planes.access_control.drift_rows,
+        gateway_policies_declared = planes.gateway_policies.declared,
+        gateway_policies_seeded = planes.gateway_policies.seeded,
+        gateway_policies_drift = planes.gateway_policies.drift_rows,
+        slack_workspaces,
+        service_sources = sources.sources,
+        service_owned_ids = sources.owned_ids,
+        marketplace_versions = sources.versions.marketplaces,
+        marketplace_versions_new = sources.versions.new_versions,
         governance_policies_active = governance.active,
         governance_policies_warning = governance.warning,
         duration_ms,
@@ -179,6 +189,30 @@ pub fn check_governance_config(
     Ok(GovernanceStatus { active, warning })
 }
 
+// Why: `hooks.judge` on the governance owner is the switch for the
+// conversation judge; core already refuses two owners. Reported so the boot
+// log says whether conversations will be labelled.
+#[doc(hidden)]
+pub fn check_judge_config() -> Result<(), JobError> {
+    let services = systemprompt::loader::ServicesBootstrap::get()?;
+    let owner = services
+        .plugins
+        .values()
+        .find(|p| p.enabled && p.hooks.judge)
+        .map(|p| p.id.as_str());
+    let automatic = systemprompt::config::ProfileBootstrap::get()?
+        .judge
+        .automatic;
+    if let Some(owner) = owner {
+        tracing::info!(owner, automatic, "conversation judge configured");
+    } else {
+        tracing::warn!(
+            "no enabled plugin sets hooks.judge: true — conversations will not be judged"
+        );
+    }
+    Ok(())
+}
+
 struct GatewayCatalog {
     registered: RegisteredEntities,
     pruned: u64,
@@ -203,7 +237,7 @@ async fn bootstrap_gateway_entities(db_pool: &DbPool) -> Result<GatewayCatalog, 
         tracing::warn!(
             gateway = %gateway_path.display(),
             "services config declares no dispatchable gateway routes — leaving the \
-             gateway_route catalog untouched and not enforcing route ids in roles.yaml"
+             gateway_route catalog untouched and not expanding the route glob in rules.yaml"
         );
         return Ok(GatewayCatalog {
             registered,

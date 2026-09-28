@@ -18,4 +18,8 @@ pub use catalog::{
 };
 pub use config::{get_gateway_config, update_gateway_settings};
 pub use matching::{find_matching_route, glob_match, slugify_pattern, synthesize_route_id};
-pub use routes::{create_route, delete_route, reorder_routes, update_route, validate_route};
+pub use routes::{
+    create_route, delete_route, normalise_metadata, reorder_routes, replace_routes, update_route,
+    validate_route,
+};
+pub use yaml_io::{read_gateway_file, route_from_yaml, route_to_yaml};

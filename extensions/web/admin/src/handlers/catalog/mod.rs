@@ -64,8 +64,10 @@ async fn visibility_inputs(
     Vec<repositories::marketplace::manifests::MarketplaceConfigSummary>,
     Vec<crate::types::access_control::AccessControlRule>,
 ) {
-    let manifests = repositories::marketplace::manifests::list_marketplace_configs(services_path)
-        .unwrap_or_default();
+    let mut manifests =
+        repositories::marketplace::manifests::list_marketplace_configs(services_path)
+            .unwrap_or_default();
+    repositories::marketplace::manifests_access::attach_access(pool, &mut manifests).await;
     let rules = repositories::users::access_control::list_all_rules(pool)
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "catalog: rule listing failed"))

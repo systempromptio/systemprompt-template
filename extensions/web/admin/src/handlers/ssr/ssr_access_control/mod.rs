@@ -18,7 +18,6 @@ use axum::response::{IntoResponse, Redirect, Response};
 use sqlx::PgPool;
 
 use crate::error::{AdminError, AdminHtmlResult};
-use crate::handlers::shared;
 use crate::handlers::ssr::types::BreadcrumbView;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -40,7 +39,6 @@ pub(crate) async fn access_control_page(
         let target = format!("/admin/users/{}?tab=access", urlencoding::encode(user));
         return Ok(Redirect::permanent(&target).into_response());
     }
-    let services_path = shared::get_services_path()?;
 
     let stats = data::load_stats(&pool).await;
 
@@ -52,8 +50,12 @@ pub(crate) async fn access_control_page(
         .await
         .inspect_err(|e| tracing::warn!(error = %e, "access-control: open-entity count failed"))
         .unwrap_or_default();
-    let declared =
-        crate::repositories::access_control::yaml_declared::load_declared_rules(&services_path);
+    // Why: a declaration that cannot be read leaves every rule unattributed
+    // rather than failing the page; the sync plane reports why.
+    let declared = crate::repositories::sync::access_control::declared_now()
+        .await
+        .inspect_err(|e| tracing::warn!(error = %e, "access-control: rules.yaml unreadable"))
+        .unwrap_or_default();
     let capped = i64::try_from(ledger_rows.len()).unwrap_or(i64::MAX)
         >= crate::repositories::access_control::rules::RULE_CAP;
     let ledger = rules::build(&ledger_rows, &declared, open_entities, &query, capped);

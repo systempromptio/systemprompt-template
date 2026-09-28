@@ -10,11 +10,6 @@
 # /admin/sync (Insert only · Overwrite from code · Export from
 # dashboard). Full explanation: /documentation/access-control.
 #
-# TRANSITION: until the rules.yaml loader lands in extensions/web/admin, the
-# boot still reads roles.yaml + departments.yaml beside this file. Both are
-# kept equivalent to this one and scripts/validate-services.sh checks all
-# three; roles.yaml and departments.yaml are deleted when the loader ships.
-#
 # How a decision is made (core resolver, narrowest band wins):
 #   person (0) → project (140) → group (150) → connected server (160)
 #   → role (200)

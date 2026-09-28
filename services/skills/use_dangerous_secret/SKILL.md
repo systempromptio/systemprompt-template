@@ -8,8 +8,8 @@ agent to behave.
 
 Two layers refuse this skill, either of which is sufficient:
 
-1. **Access-control deny (authz layer).** `services/access-control/roles.yaml` carries an entity-level deny rule for
-   this skill (`entity_type: skill, entity_id: use_dangerous_secret, access: deny`). Deny overrides the inherited
+1. **Access-control deny (authz layer).** `services/access-control/rules.yaml` carries an entity-level deny rule for
+   this skill (`entity: skill/use_dangerous_secret`, `deny: {role: [user]}`). Deny overrides the inherited
    marketplace grant, so the skill is refused for the `user` role before it can run. The dangerous capability is
    catalogued but access-denied by policy.
 

@@ -73,7 +73,7 @@ pub(crate) async fn marketplaces_page(
 ) -> AdminHtmlResult<Response> {
     console_only(&user_ctx)?;
     let path = shared::get_services_path()?;
-    let manifests = data::load_manifests(&path);
+    let manifests = data::load_manifests(&pool, &path).await;
     let audience = data::audience_matrix(&pool, &manifests, &known_roles()).await;
     let grants = data::group_grants(&pool).await;
     let plugin_catalog = crate::repositories::marketplace::plugins::list_plugin_catalog(&path)
@@ -201,7 +201,7 @@ pub(crate) async fn marketplace_detail_page(
 ) -> AdminHtmlResult<Response> {
     console_only(&user_ctx)?;
     let path = shared::get_services_path()?;
-    let manifests = data::load_manifests(&path);
+    let manifests = data::load_manifests(&pool, &path).await;
     let manifest = manifests
         .iter()
         .find(|m| m.id == marketplace_id)

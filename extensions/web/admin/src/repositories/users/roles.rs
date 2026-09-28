@@ -152,3 +152,48 @@ where
     .fetch_one(executor)
     .await
 }
+
+
+// Why: Delete this user's expired manual grants and rewrite the effective set
+// without them. The directory half is snapshotted before the delete for the
+// same reason `set_manual_roles` does it: derived as "effective minus manual",
+// it would otherwise absorb the expired role and keep it alive. Returns the
+// effective roles before and after so the caller can tell whether a manage
+// role was lost.
+pub async fn expire_manual_roles(
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Result<(Vec<String>, Vec<String>), sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let before = sqlx::query_scalar!(
+        r#"SELECT roles AS "roles!: Vec<String>" FROM users WHERE id = $1 FOR UPDATE"#,
+        user_id.as_str()
+    )
+    .fetch_one(&mut *tx)
+    .await?;
+    let directory = directory_roles_on(&mut *tx, user_id).await?;
+    sqlx::query!(
+        "DELETE FROM user_manual_roles
+         WHERE user_id = $1 AND valid_until IS NOT NULL AND valid_until <= CURRENT_TIMESTAMP",
+        user_id.as_str()
+    )
+    .execute(&mut *tx)
+    .await?;
+    let after = write_effective_roles(&mut *tx, user_id, &directory).await?;
+    tx.commit().await?;
+    Ok((before, after))
+}
+
+// Why: the people the sweep has to visit — anyone holding a manual grant whose
+// window has closed.
+pub async fn list_users_with_expired_manual_roles(
+    pool: &PgPool,
+) -> Result<Vec<UserId>, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT DISTINCT user_id AS "user_id!: UserId" FROM user_manual_roles
+           WHERE valid_until IS NOT NULL AND valid_until <= CURRENT_TIMESTAMP
+           ORDER BY user_id"#
+    )
+    .fetch_all(pool)
+    .await
+}

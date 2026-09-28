@@ -58,20 +58,20 @@ A client `POST /v1/messages` with `model: claude-haiku-4-5` then returns `model:
 
 Each route is gated by an `access_control_entities` row keyed on its id, which is content-addressed (`hash(model_pattern, provider)`). Changing a route's provider mints a *new* id, so a freshly-edited route is denied (`unknown to access control`) until the catalog is reconciled. Reconciliation makes the catalog equal to the live profile's routes — new ids are registered, and rows no route produces any more are deleted along with their grants — and it happens in two places:
 
-- **At boot** — the `governance_bootstrap` job reconciles the catalog from the running profile, then ingests `services/access-control/roles.yaml` against it.
+- **At boot** — the `governance_bootstrap` job reconciles the catalog from the running profile, then seeds an empty `access_control_rules` from `services/access-control/rules.yaml`, expanding its `gateway_route/*` glob against that catalog (a non-empty table is only compared and its drift reported).
 - **After a CLI edit** — `systemprompt admin config gateway route …` reconciles immediately, so the edit takes effect without a restart.
 
-Routes are granted by `entity_match`, never by a literal `entity_id`:
+Routes are granted by a glob, never by a literal id:
 
 ```yaml
-- entity_type: gateway_route
-  entity_match: "*"
-  access: allow
-  default_included: true
-  roles: [user]
+- entity: gateway_route/*
+  default: open
+  why: Every model route is reachable by every signed-in role.
+  allow:
+    role: [user]
 ```
 
-Route ids are generated, so there is no id to write out — a literal `gateway_route` `entity_id` fails the boot by name, and `scripts/validate-services.sh` rejects it in CI. A route that needs a narrower grant gets a narrower glob over its slug (`entity_match: "claude-star-*"`), not a pinned hash.
+Route ids are generated, so there is no id to write out — a literal `gateway_route/<id>` fails the boot by name, and `scripts/validate-services.sh` rejects it in CI. The only form written is `gateway_route/*`, expanded at boot against the live catalog.
 
 ## Extensible provider registry
 

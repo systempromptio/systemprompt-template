@@ -26,13 +26,20 @@ use super::view::{
 
 pub(super) const MARKETPLACE_ENTITY: &str = "marketplace";
 
-pub(super) fn load_manifests(services_path: &Path) -> Vec<MarketplaceConfigSummary> {
-    repositories::marketplace::manifests::list_marketplace_configs(services_path).unwrap_or_else(
-        |e| {
-            tracing::warn!(error = %e, "Failed to load marketplace manifests");
-            Vec::new()
-        },
-    )
+// Why: the manifests name the marketplaces; the database says who reaches
+// them. Both are needed for every card and every audience cell.
+pub(super) async fn load_manifests(
+    pool: &PgPool,
+    services_path: &Path,
+) -> Vec<MarketplaceConfigSummary> {
+    let mut manifests =
+        repositories::marketplace::manifests::list_marketplace_configs(services_path)
+            .unwrap_or_else(|e| {
+                tracing::warn!(error = %e, "Failed to load marketplace manifests");
+                Vec::new()
+            });
+    repositories::marketplace::manifests_access::attach_access(pool, &mut manifests).await;
+    manifests
 }
 
 fn section_input(

@@ -1,9 +1,12 @@
-//! Bootstrap loader: `services/web/config/groups.yaml` → DB.
+//! The *overwrite from code* projection of `services/web/config/groups.yaml`.
 //!
 //! Upserts the groups and projects the installation ships with, and the AD
 //! group mappings that place a signing-in user in them. Rows written here
 //! carry `source = 'yaml'`; dashboard-created rows carry `source =
-//! 'dashboard'` and are never touched.
+//! 'dashboard'` and are never touched. It runs when the groups plane seeds
+//! an empty database at boot and when an administrator chooses *Overwrite
+//! from code* on `/admin/sync` — never on an ordinary restart, which only
+//! compares. Members are not in the file and are never written here.
 //!
 //! Reconciliation is deliberately asymmetric. Mappings are fully reconciled —
 //! a mapping dropped from the file is dropped from the DB, or a group removed
@@ -13,23 +16,21 @@
 //! YAML file would cascade all of that away. Removing a group is a dashboard
 //! act, taken deliberately, with the member list in front of you.
 
-use std::path::Path;
-
 use sqlx::PgPool;
 use systemprompt_web_shared::error::MarketplaceError;
 
 use super::groups_yaml_types::{GroupsDoc, GroupsLoadReport, MemberSetDef};
 
-const GROUPS_FILE: &str = "web/config/groups.yaml";
+pub const GROUPS_FILE: &str = "web/config/groups.yaml";
 
-pub async fn load_groups_from_yaml(
+// Why: the projection takes a parsed document rather than a path, so the
+// file on disk and an uploaded `groups.yaml` (an import preview's overwrite)
+// land exactly the same way.
+pub async fn apply_groups_doc(
     pool: &PgPool,
-    services_path: &Path,
+    doc: &GroupsDoc,
 ) -> Result<GroupsLoadReport, MarketplaceError> {
     let mut report = GroupsLoadReport::default();
-    let Some(doc) = read_doc(services_path).await? else {
-        return Ok(report);
-    };
     doc.validate()
         .map_err(|e| MarketplaceError::config_file(GROUPS_FILE, e))?;
 
@@ -52,18 +53,6 @@ pub async fn load_groups_from_yaml(
         "bootstrap_groups_loaded"
     );
     Ok(report)
-}
-
-async fn read_doc(services_path: &Path) -> Result<Option<GroupsDoc>, MarketplaceError> {
-    let path = services_path.join(GROUPS_FILE);
-    match tokio::fs::read_to_string(&path).await {
-        Ok(s) if s.trim().is_empty() => Ok(Some(GroupsDoc::default())),
-        Ok(s) => serde_yaml::from_str::<GroupsDoc>(&s)
-            .map(Some)
-            .map_err(|e| MarketplaceError::config_file(GROUPS_FILE, e)),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
-        Err(e) => Err(e.into()),
-    }
 }
 
 // Why: name and description only. `source` is set on insert and left alone on

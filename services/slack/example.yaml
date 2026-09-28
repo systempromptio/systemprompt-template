@@ -11,7 +11,7 @@
 #
 # `authz.allowed_roles` is projected into `access_control_rules` as
 # `slack_workspace:<workspace_id>` at startup (see
-# extensions/web/admin/src/repositories/config/acl_yaml_loader.rs) with
+# extensions/web/admin/src/repositories/config/slack_acl.rs) with
 # default_included=false — a role that is not listed is denied.
 #
 # Bot scopes needed: commands, chat:write, users:read, and — only if

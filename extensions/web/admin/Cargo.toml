@@ -44,6 +44,7 @@ tracing = { workspace = true }
 
 # Crypto & encoding
 sha2 = { workspace = true }
+serde_jcs = { workspace = true }
 chacha20poly1305 = { workspace = true }
 hex = { workspace = true }
 jsonwebtoken = { workspace = true }
@@ -54,6 +55,7 @@ rand = { workspace = true }
 handlebars = { workspace = true }
 
 # Archive
+zip = { workspace = true }
 
 # HTTP client
 reqwest = { workspace = true }

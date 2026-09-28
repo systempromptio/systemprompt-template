@@ -372,7 +372,7 @@ Four gates stand between a Slack message and a tool call, each denying by defaul
 
 1. **Workspace** — `authz.allowed_roles` is projected at startup into an
    `access_control_rules` row for `slack_workspace:<workspace_id>` with
-   `default_included=false` (`repositories/config/acl_yaml_loader.rs`).
+   `default_included=false` (`repositories/config/slack_acl.rs`).
 2. **Identity** — the sender must map to an account holding the granted role.
    `link_by_workspace_email: true` attaches them to the account owning their *confirmed*
    Slack email; otherwise link by hand with
@@ -383,7 +383,7 @@ Four gates stand between a Slack message and a tool call, each denying by defaul
    ⇒ `Admin`, everyone else ⇒ `User`) and audience `[a2a, mcp]`; an agent declaring
    `oauth.scopes: [admin]` rejects the weaker token.
 4. **MCP server** — `services/mcp/systemprompt.yaml` requires audience `mcp` and scope
-   `admin`, and `roles.yaml` grants `mcp_server:systemprompt` to `admin` only.
+   `admin`; `rules.yaml` declares who reaches `mcp_server/systemprompt` at all.
 
 Bot scopes: `commands`, `chat:write`, `users:read`, plus `users:read.email` only if
 `link_by_workspace_email` is on.

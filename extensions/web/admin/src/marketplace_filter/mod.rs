@@ -7,7 +7,7 @@
 //! rule covers every member that declares no rules of its own, and a member
 //! that declares any rule owns its decision outright. Default policy is
 //! **explicit allow**: if neither path grants access, the item is dropped
-//! (see `services/access-control/roles.yaml`).
+//! (see `services/access-control/rules.yaml`).
 
 use std::sync::Arc;
 

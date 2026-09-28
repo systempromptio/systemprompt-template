@@ -15,7 +15,7 @@ use serde::Serialize;
 use crate::handlers::ssr::list_view::{PageWindow, Pagination};
 use crate::handlers::ssr::types::SortHeaderView;
 use crate::repositories::access_control::rules::LedgerRuleRow;
-use crate::repositories::access_control::yaml_declared::DeclaredRules;
+use crate::repositories::access_control::declared::{DeclaredKey, DeclaredSet};
 
 use super::rules_controls::{
     AcKpiView, AcOptionView, BASE_URL, MANUAL, PAGE_SIZE, RulesQuery, YAML, distinct, kpis,
@@ -53,13 +53,14 @@ pub(crate) struct AcRulesView {
     pub capped: bool,
 }
 
-fn source_of(row: &LedgerRuleRow, declared: &DeclaredRules) -> &'static str {
-    if declared.declares(
-        &row.entity_type,
-        &row.entity_id,
-        &row.rule_type,
-        &row.rule_value,
-    ) {
+fn source_of(row: &LedgerRuleRow, declared: &DeclaredSet) -> &'static str {
+    let key = DeclaredKey {
+        entity_type: row.entity_type.clone(),
+        entity_id: row.entity_id.clone(),
+        rule_type: row.rule_type.clone(),
+        rule_value: row.rule_value.clone(),
+    };
+    if declared.rules.contains_key(&key) {
         YAML
     } else {
         MANUAL
@@ -159,7 +160,7 @@ fn pagination(query: &RulesQuery, index: i64, total: i64, shown: usize) -> Pagin
 // Why: Build the whole ledger view from one read plus the declarative set.
 pub(super) fn build(
     rows: &[LedgerRuleRow],
-    declared: &DeclaredRules,
+    declared: &DeclaredSet,
     open_entities: i64,
     query: &RulesQuery,
     capped: bool,

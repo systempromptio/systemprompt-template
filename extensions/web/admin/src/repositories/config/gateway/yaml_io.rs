@@ -19,7 +19,7 @@ use crate::types::GatewayRouteView;
 
 use super::matching::synthesize_route_id;
 
-pub(super) fn read_gateway_file(gateway_path: &Path) -> Result<Value, MarketplaceError> {
+pub fn read_gateway_file(gateway_path: &Path) -> Result<Value, MarketplaceError> {
     let content = std::fs::read_to_string(gateway_path)?;
     let doc: Value = serde_yaml::from_str(&content)?;
     Ok(doc)
@@ -51,7 +51,7 @@ fn leading_comment_header(gateway_path: &Path) -> String {
         })
 }
 
-pub(super) fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
+pub fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
     let map = val.as_mapping()?;
     let model_pattern = map.get(Value::from("model_pattern"))?.as_str()?.to_owned();
     let provider = map.get(Value::from("provider"))?.as_str()?.to_owned();
@@ -75,8 +75,15 @@ pub(super) fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
             || synthesize_route_id(&model_pattern, &provider),
             str::to_owned,
         );
+    let text = |key: &str| {
+        map.get(Value::from(key))
+            .and_then(Value::as_str)
+            .map(str::to_owned)
+    };
     Some(GatewayRouteView {
         id,
+        name: text("name"),
+        description: text("description"),
         model_pattern,
         provider,
         upstream_model,
@@ -84,6 +91,8 @@ pub(super) fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
         pricing: map.get(Value::from("pricing")).cloned(),
         when: map.get(Value::from("when")).cloned(),
         requires: map.get(Value::from("requires")).cloned(),
+        fallback_provider: text("fallback_provider"),
+        fallback_upstream_model: text("fallback_upstream_model"),
     })
 }
 
@@ -91,12 +100,17 @@ pub(super) fn route_from_yaml(val: &Value) -> Option<GatewayRouteView> {
 // deterministic in `(model_pattern, provider)`, so a synthesized id in the file
 // is noise the operator did not write and `route_from_yaml` recreates it on
 // every read. A hand-chosen id is data and is always kept.
-pub(super) fn route_to_yaml(route: &GatewayRouteView) -> Value {
+pub fn route_to_yaml(route: &GatewayRouteView) -> Value {
     let mut map = Mapping::new();
     let derived = synthesize_route_id(&route.model_pattern, &route.provider);
     let id = route.id.trim();
     if !id.is_empty() && id != derived {
         map.insert(Value::from("id"), Value::from(id.to_owned()));
+    }
+    for (key, value) in [("name", &route.name), ("description", &route.description)] {
+        if let Some(value) = value.as_deref().map(str::trim).filter(|v| !v.is_empty()) {
+            map.insert(Value::from(key), Value::from(value.to_owned()));
+        }
     }
     map.insert(
         Value::from("model_pattern"),
@@ -121,6 +135,18 @@ pub(super) fn route_to_yaml(route: &GatewayRouteView) -> Value {
     }
     if let Some(requires) = &route.requires {
         map.insert(Value::from("requires"), requires.clone());
+    }
+    if let Some(fallback) = &route.fallback_provider {
+        map.insert(
+            Value::from("fallback_provider"),
+            Value::from(fallback.clone()),
+        );
+    }
+    if let Some(model) = &route.fallback_upstream_model {
+        map.insert(
+            Value::from("fallback_upstream_model"),
+            Value::from(model.clone()),
+        );
     }
     Value::Mapping(map)
 }

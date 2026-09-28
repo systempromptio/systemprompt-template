@@ -188,63 +188,6 @@ for decl in rules_doc.get("entities") or []:
         for value in sorted(both):
             errors.append(f"rules.yaml: {ref}: {band} '{value}' is both allowed and denied")
 
-# Transition: until the rules.yaml loader lands in extensions/web/admin the boot
-# still reads the legacy roles.yaml / departments.yaml. They must stay valid,
-# and every entity they grant must also be declared in rules.yaml, so the file
-# that replaces them is never the one missing a grant. Delete this block with
-# the two legacy files.
-declared_refs = {str(d.get("entity", "")) for d in rules_doc.get("entities") or []}
-LEGACY = [
-    root / "services/access-control/roles.yaml",
-    root / "services/access-control/departments.yaml",
-]
-department_names = set()
-for legacy in LEGACY:
-    if not legacy.exists():
-        continue
-    doc = load(legacy)
-    if legacy.name == "departments.yaml":
-        department_names = {d.get("name") for d in (doc.get("departments") or [])}
-    for rule in doc.get("rules") or []:
-        etype = rule.get("entity_type")
-        eid = rule.get("entity_id")
-        match = rule.get("entity_match")
-        if (eid is None) == (match is None):
-            errors.append(
-                f"{legacy.name}: a rule must carry exactly one of entity_id / entity_match"
-            )
-            continue
-        if legacy.name == "departments.yaml":
-            for dept in rule.get("departments") or []:
-                if dept not in department_names and dept != "Default":
-                    errors.append(f"{legacy.name}: department '{dept}' is not declared")
-        if eid is None:
-            if f"{etype}/{match}" not in declared_refs:
-                errors.append(
-                    f"{legacy.name}: {etype}/{match} is not declared in rules.yaml"
-                )
-            continue
-        # A literal gateway_route id cannot be validated here (profiles are
-        # gitignored, so CI has no route list) and cannot be correct either:
-        # route ids are generated as synthesize_route_id(model_pattern,
-        # provider), so no hand-written id matches a real route.
-        if etype in glob_only:
-            errors.append(
-                f"{legacy.name}: {etype} rules must use entity_match, not a literal "
-                f"entity_id ('{eid}') — no catalog registers a written-out {etype} id, "
-                f"so it would be minted, not checked"
-            )
-            continue
-        pool = known.get(etype)
-        if pool is None:
-            errors.append(f"{legacy.name}: unknown entity_type '{etype}' on '{eid}'")
-        elif eid not in pool:
-            errors.append(
-                f"{legacy.name}: entity_id '{eid}' (type {etype}) matches no defined resource"
-            )
-        if f"{etype}/{eid}" not in declared_refs:
-            errors.append(f"{legacy.name}: {etype}/{eid} is not declared in rules.yaml")
-
 for p in root.glob("services/marketplaces/*/config.yaml"):
     if "access" in (load(p).get("marketplace") or {}):
         errors.append(

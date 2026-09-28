@@ -8,20 +8,19 @@
 //!
 //! Most of this is not Postgres at all. The gateway routes live in the
 //! profile YAML, agent definitions in `services/agents/`, and access-control
-//! rules are bootstrapped from `services/access-control/*.yaml`. The
-//! exception is [`acl_detect`], which is DB-backed but belongs to this domain:
-//! it re-runs the configured ACL over traffic that already went through.
+//! rules are declared in `services/access-control/rules.yaml` — read here,
+//! seeded once at boot by `repositories::sync::boot`, and otherwise only
+//! compared against the database. Inbound Slack apps are the one projection
+//! that stays with the file it gates ([`slack_acl`]). The exception is
+//! [`acl_detect`], which is DB-backed but belongs to this domain: it re-runs
+//! the configured ACL over traffic that already went through.
 
 pub mod acl_detect;
-pub mod acl_yaml_loader;
-pub mod acl_yaml_snapshot;
-pub mod acl_yaml_types;
 pub mod agents;
 pub mod gateway;
 pub mod gateway_acl;
 pub mod groups_yaml_loader;
 pub mod groups_yaml_types;
-pub mod linked_yaml_loader;
-pub mod linked_yaml_types;
-pub mod member_grants_yaml_loader;
-pub mod member_grants_yaml_types;
+pub mod rules_yaml_loader;
+pub mod rules_yaml_types;
+pub mod slack_acl;

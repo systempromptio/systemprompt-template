@@ -1,11 +1,11 @@
 //! Marketplace manifests read from `services/marketplaces/*/config.yaml`.
 //!
-//! A marketplace is the unit entitlement is granted on: its `access` block
-//! declares the roles that may see it and the attribute bands (`group`,
-//! `project`, …) that widen or narrow that. The admin catalog pages need the
-//! declared audience *as written on disk*, not the resolved decision, so this
-//! walk is deliberately a plain YAML read with no database involvement — the
-//! resolved answer comes from the access matrix instead.
+//! A marketplace is the unit entitlement is granted on, but who reaches it is
+//! no longer written in its manifest: it is declared in
+//! `services/access-control/rules.yaml` and enforced from the database. The
+//! `access` summary on each manifest is therefore filled from the database by
+//! [`super::manifests_access::attach_access`], never from this file, so the
+//! catalog shows what is enforced rather than what a file once said.
 //!
 //! Every failure is a skip with a warning: a malformed manifest must not blank
 //! the whole catalog page.
@@ -67,64 +67,6 @@ fn member_ids(marketplace: &serde_yaml::Value, key: &str) -> Vec<String> {
     string_list(marketplace.get(key).and_then(|m| m.get("include")))
 }
 
-fn read_bands(access: Option<&serde_yaml::Value>) -> Vec<MarketplaceAccessBand> {
-    access
-        .and_then(|a| a.get("rules"))
-        .and_then(serde_yaml::Value::as_sequence)
-        .map(|seq| {
-            seq.iter()
-                .filter_map(|rule| {
-                    let rule_type = rule.get("rule_type")?.as_str()?.to_owned();
-                    Some(MarketplaceAccessBand {
-                        rule_type,
-                        values: string_list(rule.get("values")),
-                        access: rule
-                            .get("access")
-                            .and_then(serde_yaml::Value::as_str)
-                            .unwrap_or("allow")
-                            .to_owned(),
-                        justification: rule
-                            .get("justification")
-                            .and_then(serde_yaml::Value::as_str)
-                            .map(str::to_owned),
-                    })
-                })
-                .collect()
-        })
-        .unwrap_or_default()
-}
-
-// Why: `groups` and `projects` are projections of the bands, not separate YAML
-// keys. The catalog pages want them named because those two bands are the only
-// ones this deployment's people model uses; the rest stay in `bands` so a new
-// dimension still renders rather than vanishing.
-fn values_for(bands: &[MarketplaceAccessBand], rule_type: &str) -> Vec<String> {
-    bands
-        .iter()
-        .filter(|b| b.rule_type == rule_type && b.access == "allow")
-        .flat_map(|b| b.values.iter().cloned())
-        .collect()
-}
-
-fn read_access(marketplace: &serde_yaml::Value) -> MarketplaceAccessSummary {
-    let access = marketplace.get("access");
-    let bands = read_bands(access);
-    MarketplaceAccessSummary {
-        default_included: access
-            .and_then(|a| a.get("default_included"))
-            .and_then(serde_yaml::Value::as_bool)
-            .unwrap_or(false),
-        roles: string_list(access.and_then(|a| a.get("roles"))),
-        groups: values_for(&bands, "group"),
-        projects: values_for(&bands, "project"),
-        justification: access
-            .and_then(|a| a.get("justification"))
-            .and_then(serde_yaml::Value::as_str)
-            .map(str::to_owned),
-        bands,
-    }
-}
-
 fn parse_manifest(
     raw: &str,
     fallback_id: &str,
@@ -157,7 +99,7 @@ fn parse_manifest(
             .get("enabled")
             .and_then(serde_yaml::Value::as_bool)
             .unwrap_or(true),
-        access: read_access(marketplace),
+        access: MarketplaceAccessSummary::default(),
         plugins: member_ids(marketplace, "plugins"),
         mcp_servers: member_ids(marketplace, "mcp_servers"),
         agents: member_ids(marketplace, "agents"),
