@@ -26,6 +26,9 @@ JS_DIR = ROOT / "storage/files/js"
 FONT_DIR = ROOT / "storage/files/fonts"
 IMG_DIR = ROOT / "storage/files/images"
 PARTIALS_DIR = ROOT / "storage/files/admin/partials"
+# Build output, vendored sources and dependency trees carry nothing this gate
+# should read, and are large enough to exhaust memory when walked from ".".
+SKIP_DIRS = {"target", ".vendor", "node_modules", ".git", "coverage-report"}
 
 MARKUP_GLOBS = [
     ("services/web/templates", "*.html"),
@@ -34,6 +37,19 @@ MARKUP_GLOBS = [
     ("extensions", "*.rs"),
     ("bridge", "*.rs"),
 ]
+
+
+def walk_files(base: Path, pattern: str):
+    # Why: rglob descends into every directory before a filter can see the
+    # path, so the build trees are pruned during the walk instead.
+    import fnmatch
+    import os
+
+    for dirpath, dirnames, filenames in os.walk(base):
+        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+        for name in filenames:
+            if fnmatch.fnmatch(name, pattern):
+                yield Path(dirpath) / name
 
 
 def read(path: Path) -> str:
@@ -155,9 +171,8 @@ def dead_images(corpus: str) -> list:
         ("deploy", "*"),
         (".", "*.md"),
     ]:
-        for f in (ROOT / base).rglob(pattern):
-            if f.is_file():
-                extra.append(read(f))
+        for f in walk_files(ROOT / base, pattern):
+            extra.append(read(f))
     full = corpus + "\n".join(extra)
     return [f for f in sorted(IMG_DIR.rglob("*")) if f.is_file() and f.name not in full]
 

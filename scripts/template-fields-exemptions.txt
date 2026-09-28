@@ -1,0 +1,21 @@
+# Known unresolved Handlebars references, as `template: field, field`.
+# scripts/check-template-fields.py skips these and FAILS on any entry that
+# resolves now, so this list only ever shrinks. New entries need a reason.
+
+# Orphaned templates: no handler renders them on this branch (core 0.61
+# retired evals; the rest lost their routes). They are deleted, with their
+# partials and CSS, by the template cleanup and the admin-console port.
+storage/files/admin/partials/evals/judge.hbs: default_sample_size, judge_model, max_sample_size, scores
+storage/files/admin/templates/eval-run-detail.hbs: run
+storage/files/admin/templates/evals.hbs: scores
+storage/files/admin/templates/demo-trace.hbs: at, at_full, chain_id, option_label, session_detail_url
+storage/files/admin/templates/governance-policy-edit.hbs: config_path, decisions_url, params_yaml, toggle_url
+storage/files/admin/templates/governance-unknown-policy.hbs: policy_id
+storage/files/admin/templates/management-department-detail.hbs: users_url
+
+# Rendered pages reading a field their view model does not define: each
+# renders as an empty string today. Fixed when these pages are replaced by the
+# ported governance and gateway console.
+storage/files/admin/templates/governance-decisions.hbs: policy_url, user_filter
+storage/files/admin/templates/governance-hooks.hbs: export_json, timeout_label
+storage/files/admin/templates/models.hbs: deny_rule_id, requests_link, route_id, selected_user_id, selected_user_label

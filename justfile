@@ -178,16 +178,24 @@ _lint-gates-uncoordinated:
     #!/usr/bin/env bash
     set -uo pipefail
     gates=(
+        check-discarded-results.sh
+        check-fail-open.sh
         lint-schema.sh
         lint-extensions.sh
+        check-migration-numbers.sh
+        lint-layers.sh
+        lint-repo-construction.sh
+        check-json-value.sh
         check-sqlx.sh
         check-http-errors.sh
         check-test-value.sh
+        lint-silent-skips.sh
         lint-raw-ids.sh
         check-glob-reexports.sh
         check-comments.sh
         lint-inline-comments.sh
         check-duplicate-types.sh
+        check-field-copy-from.sh
         check-repository-naming.sh
         check-admin-template-links.sh
         check-admin-template-assets.sh
@@ -200,8 +208,17 @@ _lint-gates-uncoordinated:
         check-file-size.sh
         check-asset-reachability.sh
         check-workspace-deps.sh
+        check-dockerfile-paths.sh
+        check-dropped-schema.sh
         validate-services.sh
         check-release-tag.sh
+        check-core-ref.sh
+        coverage-badge.sh
+        check-docs-version.sh
+        # check-schema-baseline.sh joins this list with the first ladder rung
+        # (tests/fixtures/schema/release-baseline-0.61.0.sql); until then it
+        # has nothing to check and would only be red. release.sh runs it
+        # regardless, so no release can go out without the rung.
     )
     logdir=$(mktemp -d)
     trap 'rm -rf "$logdir"' EXIT

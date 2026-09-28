@@ -77,6 +77,24 @@ def partial_parameters() -> dict:
     return params
 
 
+EXEMPTIONS = ROOT / "scripts" / "template-fields-exemptions.txt"
+
+
+def load_exemptions() -> set:
+    entries = set()
+    if not EXEMPTIONS.is_file():
+        return entries
+    for line in EXEMPTIONS.read_text().splitlines():
+        line = line.split("#", 1)[0].strip()
+        if not line:
+            continue
+        template, _, names = line.partition(":")
+        for name in names.split(","):
+            if name.strip():
+                entries.add((template.strip(), name.strip()))
+    return entries
+
+
 def main() -> int:
     fields = known_field_names()
     params = partial_parameters()
@@ -100,8 +118,27 @@ def main() -> int:
                 continue
             findings.setdefault(str(path.relative_to(ROOT)), set()).add(segment)
 
+    # Why: a known unresolved reference is recorded as debt in the exemptions
+    # file rather than hidden in the pattern lists above, and an entry that no
+    # longer fires is stale and fails, so the list can only shrink.
+    exempt = load_exemptions()
+    stale = sorted(
+        f"{template}: {name}"
+        for template, name in exempt
+        if name not in findings.get(template, set())
+    )
+    for template, name in exempt:
+        if template in findings:
+            findings[template].discard(name)
+            if not findings[template]:
+                del findings[template]
+
     for template, names in sorted(findings.items()):
         print(f"{template}: {', '.join(sorted(names))}")
+    if stale:
+        print(f"\nstale entries in {EXEMPTIONS.relative_to(ROOT)} (the reference resolves now; delete them):")
+        for entry in stale:
+            print(f"  {entry}")
 
     total = sum(len(v) for v in findings.values())
     print(
@@ -109,7 +146,7 @@ def main() -> int:
         f"{len(params)} partials with parameters, "
         f"{total} unresolved in {len(findings)} of {len(TEMPLATES)} templates"
     )
-    if total and "--strict" in sys.argv:
+    if (total or stale) and "--strict" in sys.argv:
         print("\nEach name above is referenced by a template and defined nowhere.")
         print("It renders as empty string, so the page looks right with one value missing.")
         return 1

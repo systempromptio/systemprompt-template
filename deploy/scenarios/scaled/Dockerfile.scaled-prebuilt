@@ -39,10 +39,6 @@ RUN mkdir -p /app/bin /app/logs /app/storage /app/web /app/services/profiles/doc
 # deploy/scenarios/scaled/.bin/ (gitignored) before building.
 COPY deploy/scenarios/scaled/.bin/systemprompt            /app/bin/systemprompt
 COPY deploy/scenarios/scaled/.bin/systemprompt-mcp-agent  /app/bin/systemprompt-mcp-agent
-# systemprompt-mcp-marketplace is built by `just build-mcp` (CLI-driven) not by
-# `cargo build --workspace`. Omitted here — the scaled stress test does not
-# spawn it. If a marketplace-using scenario is added later, run `just build-mcp`
-# on the host then COPY that binary too.
 
 COPY services /app/services
 COPY storage /app/storage
