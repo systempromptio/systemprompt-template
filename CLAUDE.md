@@ -8,92 +8,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## Branching & Release Flow
+## Branching (this repo)
 
-**All work lands on `next`. Never push to `main`.**
-
-`next` is the repository's default branch, so a fresh clone starts there. `main`
-is protected by a ruleset that requires a pull request and grants **no bypass to
-anyone** — a direct `git push origin main` is refused for agents, sessions and
-repository admins alike. Protection is pinned to `main` by name, so moving the
-default branch does not move it.
+**All work lands on `next`. Never push to `main`.** `next` is the default
+branch; `main` is protected by a ruleset (pull request only, no bypass for
+anyone) and only moves through a frozen promotion PR that `just release`
+opens. Full contract: `docs/BRANCHING.md`; procedure: `docs/RELEASING.md`.
 
 ```
-next   ← default branch. Every agent, every session. Push freely.
-         Bar to land: it builds and works. No gates, no test suites.
-  ↓ `just gate` when you are ready, then `just promote` to open the release PR
-         This is where every pre-release check runs.
-main   ← protected, release-only. Tagged. Never pushed to directly.
+next   ← default branch. Push freely; gates.yml runs the whole gate on every push.
+  ↓ `just release X.Y.Z` — freezes the exact green next commit on
+  ↓ promote/X.Y.Z/<main>/<sha>, opens the PR; run it again once the PR's
+  ↓ proof is green to merge and push the vX.Y.Z tag
+main   ← release-only. Every commit is a verified promotion merge with a tag.
 ```
 
-**What you owe before pushing to `next`:** the code compiles and is functional.
-That is the whole bar. Run `just build` once at the end of your change set, make
-sure it does not error, and push. Do **not** run `just gate`, the test suites, or
-any other pre-release check as part of landing on `next`.
+**Versions are in lockstep with core**: core `X.Y.Z` → workspace `X.Y.Z` →
+tag `vX.Y.Z` → image `:X.Y.Z` → Helm `appVersion`.
+`scripts/sync-release-version.sh X.Y.Z [--check]` owns the product pins and
+refuses a release off core's `MAJOR.MINOR`; `scripts/sync-core-version.sh
+X.Y.Z [--check]` owns every core crate pin in **both** workspaces
+(`Cargo.toml`, `tests/Cargo.toml`, plus the bare pin in
+`extensions/web/Cargo.toml`) and `bridge/CORE_REF`. `just core-bump X.Y.Z`
+runs both, refreshes both lockfiles, migrates the local DB
+(`--profile local`) and builds.
 
-**The pre-release cycle belongs to the `next` -> `main` transition, not to
-`next`.** There is no scheduled job and nothing gating a push to `next`. The
-gates run when a person decides to promote, and only then:
+**`bridge/CORE_REF` names the core CI checks out** beside this repo
+(`.github/actions/core-checkout` → `../systemprompt-core`). There is no bridge
+crate here; the file exists for that checkout and for `core-guard`. With the
+override inert it must be `v<pin>` (`scripts/check-core-ref.sh`, a lint gate).
 
-1. `just gate [REF]` — dispatches every gate workflow against the ref
-   (default: the tip of `next`) and waits.
-2. `just promote [SHA]` — freezes that commit on the `promote` ref and **opens**
-   the release pull request onto `main`. It does not merge; you do.
-3. Tag `main` once merged. Tags are not covered by the ruleset.
+**Building against unreleased core.** The override set lives inert under
+`[workspace.metadata.unreleased-core-patch]` in `Cargo.toml` and
+`tests/Cargo.toml`. To track core `next`, rename that table to
+`[patch.crates-io]` in **both** manifests (`[patch]` is per-workspace: patch
+the root alone and the tests quietly build against crates.io), add the
+`# ACTIVE: core X.Y.Z is unreleased` marker above each, and move the pins to
+the sibling's workspace version — for a 0.x crate a `0.61.0` pin does not
+accept a `0.62.0` patch, and cargo **silently drops** the patch and builds
+the published crate. The only proof the patch is live is the build log naming
+`../systemprompt-core` paths. Then `just core-pin` (CORE_REF = the sibling's
+HEAD, push core first) and commit; `just deploy` runs `core-guard`, which
+refuses unless the sibling is clean and at CORE_REF. `.githooks/pre-commit`
+(`just init-hooks`) blocks a live patch without the marker; for a purely local
+experiment hide the four manifests/lockfiles with
+`git update-index --skip-worktree`. Do not run `just prepare` while the patch
+is live. `main` never carries a live patch (`scripts/validate-release.sh`).
 
-The commit is frozen on `promote` rather than the PR being headed at `next`
-because a PR headed at `next` merges whatever `next` points at *when you merge
-it* — anything pushed meanwhile would ride along ungated. That happened once
-for real.
-
-## Building Against Local Core (`next` tracks `next`)
-
-While `next` is open, this template builds against the **sibling
-`../systemprompt-core` checkout on its own `next` branch**, not against the
-published crates.io release. Core `next` carries unreleased API changes, so a
-build resolved from crates.io would not be validating the code that actually
-ships together.
-
-**The patch is a local working-tree edit and is never committed.** What is
-committed always pins a published core with both `[patch.crates-io]` blocks
-commented out, so nobody else ends up building against a path on your machine.
-A `.git/hooks/pre-commit` guard rejects any commit that stages an active patch
-block or a local `../systemprompt-core` path.
-
-Two blocks route the `systemprompt-*` crates at the local checkout, and **they
-must be uncommented and commented in lockstep**:
-
-| Manifest | Patches |
-|----------|---------|
-| `Cargo.toml` | the root workspace: the binary and every `extensions/` crate |
-| `tests/Cargo.toml` | the `tests/` workspace, which is a *separate* workspace |
-
-`[patch]` only applies from the manifest of the workspace being built. Patch the
-root alone and the test crates silently resolve core from crates.io while the
-extensions under test resolve it locally, so the suites compile against a
-different core than the binary does. That mismatch surfaces as a confusing
-"variant not found" error naming a path under `~/.cargo/registry/`. If you see a
-core path in an error that is not `../systemprompt-core/`, the patch blocks are
-out of lockstep.
-
-To enable the patch locally, uncomment both blocks and hide all four files from
-git so ordinary commits never carry them:
-
-```bash
-git update-index --skip-worktree Cargo.toml Cargo.lock tests/Cargo.toml tests/Cargo.lock
-```
-
-The lockfiles are hidden alongside the manifests because resolving against the
-local checkout rewrites them too. To land a genuine manifest change (a new
-dependency, a version bump), clear the flag with `--no-skip-worktree`, comment
-the patch blocks back out, commit, then re-enable both.
-
-`just core-bump` refuses to run while the root block is active: publish core,
-bump the pinned version, and re-comment both blocks before promoting to `main`.
-
-**Do not run `just prepare` while the patch is active.** It bakes core's own
-queries into the template's `.sqlx/` cache. Local core edits need core's
-per-crate cache regenerated in the core checkout instead.
+**Core (`../systemprompt-core`) is write-only from here.** Commit core changes
+on core's `next` and push; run no validation in the core checkout — this repo
+compiles the patched core anyway.
 
 ## Quick Start
 
@@ -104,6 +68,9 @@ per-crate cache regenerated in the core checkout instead.
 # gateway default. Passing keys is non-interactive — the first becomes default.
 just setup-local                                                          # interactive provider pick
 just setup-local <anthropic_key> [openai_key] [gemini_key] [http_port=8080] [pg_port=5432]
+
+# No toolchain? Install the release's binaries into target/release/ instead
+just fetch-release [X.Y.Z]                                                # linux-amd64/arm64, darwin-arm64
 
 # Build (locked dependencies, SQLX_OFFLINE=true; no database changes)
 just build            # debug
@@ -139,19 +106,34 @@ run the gate a single time.
 **Check the shared state before spending anything:**
 
 ```bash
-just build-status     # in-flight run + last result per recipe + is it still fresh?
+just build-status     # in-flight run + last result per recipe (a record, never a reason to skip)
 just server-status    # running server, its binary, and whether that binary is stale
 ```
 
-`just build`, `just clippy`, `just test-*`, and `just lint-gates` are
-single-flight (`scripts/build-coordinator.sh`). They key on a content
-fingerprint of the source tree, so:
+`just build`, `just clippy`, `just test-*`, `just doc-check`, `just msrv-check`,
+`just coverage` and `just lint-gates` are single-flight
+(`scripts/build-coordinator.sh`). One rule: **one build in flight at a time,
+always of the latest source.** Every call compiles the tree as it is (cargo is
+incremental, so an unchanged tree costs seconds); there is no "already built,
+skip" cache — a skip cache can report green while a bare `cargo build` from
+another tree has overwritten `target/debug/systemprompt` with stale code.
 
 | situation | what happens |
 |-----------|--------------|
-| this tree already passed this recipe | returns immediately, no compile |
-| identical run already in flight | attaches to its log, exits with its status |
-| someone else's run in flight | queues, then runs |
+| a run of this exact source is in flight | you are told so, attach to its log, exit with its status |
+| a run of different source is in flight | you are told so, wait for it, then run over the latest tree |
+| nothing in flight | you lead |
+
+**Free-disk guard.** Before it starts a compile (and again when it takes the
+lock after waiting), the coordinator refuses if the volume holding `target/`
+(`CARGO_TARGET_DIR` when set) has less than **`BUILD_MIN_FREE_GB`** GB free —
+default **25**. A debug `target/` here is tens of GB and a build that runs the
+disk dry fails as an unrelated linker error while taking every other process
+on the machine down with it; that happened on 2026-09-28. Free space first
+(`cargo clean`, old worktrees' `target/`, `coverage-report/`), or lower the
+threshold deliberately (`BUILD_MIN_FREE_GB=15 just build`; `0` disables it).
+`lint-gates` is exempt (read-only), and `BUILD_NO_COORD=1` (CI) bypasses the
+coordinator and the guard together.
 
 Results land in `.build/` (gitignored): `runs.jsonl`, `latest/<recipe>.json`,
 `logs/`, `binaries.jsonl`. Read them instead of re-running.
@@ -160,11 +142,68 @@ Results land in `.build/` (gitignored): `runs.jsonl`, `latest/<recipe>.json`,
 a server another agent is already running (say so and stop), and it warns when
 the binary predates the current source, but it only refuses outright when there
 is no binary at all. Staleness is reported from the ledger when the binary came
-from a coordinated build, and from file mtimes otherwise.
+from a coordinated build, and from file mtimes otherwise. `just stop` shuts
+this clone's services down cleanly.
 
 Always go through the justfile. A bare `cargo build` bypasses coordination and
 re-creates the contention. Escape hatches when you truly need them:
-`BUILD_FORCE=1`, `START_FORCE=1`, `BUILD_NO_COORD=1`.
+`START_FORCE=1`, `BUILD_NO_COORD=1` (`BUILD_FORCE=1` is accepted and does
+nothing: every run already compiles).
+
+---
+
+## Preflight (the gates; CI re-runs them on every push)
+
+```bash
+just verify             # what gates.yml runs: preflight-static → preflight-lint → test
+just preflight          # verify + coverage floor/ratchet
+just preflight-static   # no compile: fmt, sqlx cache, version/core pins, release self-tests, deploy config, docker/ py tests, lint gates
+just preflight-lint     # clippy -D warnings, rustdoc -D warnings, MSRV
+just preflight-full     # weekly: preflight + deny + audit + machete + hack (both workspaces)
+just e2e-gate           # the browser tier; needs a running stack (`just start`)
+just init-hooks         # once per clone: tracked .githooks/ (pre-commit only)
+```
+
+Each collector runs every check even after one fails and reports them all.
+`.github/workflows/gates.yml` runs the same tiers independently on every
+`next` push and ordinary PR — static, lint, test (Postgres 18), e2e
+(Playwright), and cargo-audit/deny/machete — and a single **`Gates passed`**
+job that fails unless every tier succeeded; it is the context the `main`
+ruleset should require. Frozen promotion PRs skip the tiers and verify the
+exact next-push proof instead.
+
+`just lint-gates` runs the `gates=()` array in the justfile concurrently
+(trust the array, not a count). Every failure is reported. Two of them,
+`check-fail-open` and `check-discarded-results`, run core's rust-contracts
+scanner from the sibling checkout: locally they skip with a message when
+`../systemprompt-core` is absent (`just core-checkout` clones it at
+CORE_REF); in CI its absence fails them. A deliberate discard carries
+`// Why: discard-ok: <reason>` on the line above it. Known unresolved template
+fields live in `scripts/template-fields-exemptions.txt` and unreferenced
+assets in `scripts/asset-reachability-exemptions.txt`; both fail on stale
+entries, so the lists only shrink.
+
+**Coverage floor + ratchet.** `just coverage` runs an instrumented llvm-cov
+pass over both workspaces (root, `tests/`) into `coverage-report/`
+(gitignored); `just coverage-check` enforces the tracked
+`coverage/baseline.json` — a floor, a 0.5pt total ratchet and per-crate
+ratchets — and refuses to record a baseline under half the previous total (a
+run that lost its instrumented binaries reports 0.00%). Raise it with
+`just coverage-baseline`, then `just coverage-badge`; the `coverage-badge.sh`
+gate fails if the README badge and the baseline disagree. Never use
+cargo-llvm-cov (see `scripts/coverage.sh`). `coverage.yml` measures `main`
+and nightly `next`; it does not gate releases. No baseline is recorded yet.
+
+**The schema-upgrade ladder.** `tests/fixtures/schema/release-baseline-<X.Y.Z>.sql`
+holds one recorded schema per release from the floor (0.61.0) up;
+`scripts/check-schema-baseline.sh` requires a rung for every release tag from
+the floor and one named for the workspace version, and `just release`
+refuses without it. `just schema-baseline` records the current tree's rung;
+`just schema-baseline X.Y.Z` records a published release's from its gateway
+tarball. The release pipeline's `upgrade-boot` boots the candidate image over
+every rung seeded by `seed_hot_tables.sql`. Never edit a rung by hand. (The
+retired single `release-baseline.sql` still feeds
+`tests/integration/schema-upgrade` until that suite moves to the ladder.)
 
 ---
 
@@ -337,7 +376,7 @@ Bot scopes: `commands`, `chat:write`, `users:read`, plus `users:read.email` only
 
 ## Critical Rules
 
-1. **Core is a crate dependency** — pinned to crates.io for published builds, and every commit keeps it that way. Locally, both `[patch.crates-io]` blocks (root + `tests/`) are uncommented as a working-tree edit held back by `skip-worktree`, routing core at the sibling `../systemprompt-core` checkout on its `next` branch. That checkout IS editable for cross-repo work. Publish + bump before promoting to `main`. See [Building Against Local Core](#building-against-local-core-next-tracks-next).
+1. **Core is a crate dependency** — pinned to the published release, in lockstep with this repo's version. `next` may build against the sibling `../systemprompt-core` on its `next` branch through a live `[patch.crates-io]` (both manifests, `# ACTIVE` marker, `just core-pin`); `main` never does. Adopting a release is `just core-bump X.Y.Z` (every pin, both lockfiles, CORE_REF, local migrate), then `just schema-baseline`, a CHANGELOG entry and `just verify`. Read core's changelog for tightened identifier validators and new `NOT NULL` columns — runtime failures a build cannot catch. See [Branching](#branching-this-repo) and `docs/RELEASING.md`.
 2. **Rust code -> `extensions/`** — All `.rs` files live here.
 3. **Config only -> `services/`** — YAML/Markdown only. No Rust code.
 4. **CSS files -> `storage/files/css/`** — NEVER put CSS in `extensions/*/assets/css/`.

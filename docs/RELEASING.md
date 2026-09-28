@@ -1,74 +1,111 @@
 # Releasing
 
-The canonical process for shipping a new gateway release when a new
-`systemprompt` core version lands on crates.io. Deliberately manual at the
-front (a core bump is never consumed blind), fully automatic after the tag.
+The canonical process for shipping a gateway release when a new
+`systemprompt` core version lands on crates.io. Manual at the front (a core
+bump is never consumed blind), frozen in the middle (the commit that ships is
+the commit the gates proved), automatic after the tag. The branch contract it
+relies on is in [BRANCHING.md](BRANCHING.md).
 
 ## Versioning policy
 
 The template tracks core in lockstep: core `X.Y.Z` on crates.io → workspace
 `version = X.Y.Z` → git tag `vX.Y.Z` → image tags `X.Y.Z` / `X.Y` / `X` /
 `latest` → Helm `appVersion: X.Y.Z` (the chart's own `version:` gets a minor
-bump per release, handled by the sync script).
+bump per release, handled by the sync script). `sync-release-version.sh
+--check` refuses a release whose `MAJOR.MINOR` differs from the core pin's; a
+template-only patch (`X.Y.1` on core `X.Y.0`) is the one sanctioned
+divergence.
 
-## Step A — bump and validate locally
+## Step A — adopt the core release on `next`
 
 ```bash
 just core-bump X.Y.Z
 ```
 
-This refuses to run with an active `[patch.crates-io]` override, then runs
-`scripts/sync-release-version.sh X.Y.Z` (bumps the workspace version, the
-`systemprompt` + `systemprompt-security` pins, Chart.yaml appVersion +
-chart version + artifacthub annotation/changelog, and the exact-pin deploy
-files: CasaOS compose, DigitalOcean compose + Packer default), runs
-`cargo update -w`, migrations against the local DB, `just build`, and
-`just clippy`.
+This refuses to run with a live `[patch.crates-io]` override, then runs
+`scripts/sync-release-version.sh X.Y.Z` (workspace version, Chart.yaml
+appVersion + chart version + artifacthub annotation/changelog, the exact-pin
+deploy files — CasaOS compose, DigitalOcean compose + Packer default — and
+the version literals in `docs/install/*.md` / `deploy/*/*.md`) and
+`scripts/sync-core-version.sh X.Y.Z` (every core crate pin in both
+workspaces, `bridge/CORE_REF = vX.Y.Z`), refreshes **both** lockfiles
+(`cargo update -w`, root and `tests/`), migrates the **local** database with
+the new binary (`--profile local`, never the active session's profile; a
+failed migrate stops the bump), then `just build` and `just clippy`.
 
-Then: run the test suite, exercise anything the core changelog touches,
-**write the `CHANGELOG.md` entry for this version**, review the diff, and
-commit to `next`. This is the human gate.
+Then, before anything is pushed:
 
-`main` is release-only and is reached by pull request, never by a direct
-push:
+1. Read core's CHANGELOG for tightened identifier validators and new
+   `NOT NULL` columns — runtime failures no compile catches.
+2. `just prepare` if queries changed, then `just schema-baseline` to record
+   the ladder rung `tests/fixtures/schema/release-baseline-X.Y.Z.sql`
+   (`scripts/check-schema-baseline.sh` and `just release` refuse without it).
+3. Write the `CHANGELOG.md` entry: `## [X.Y.Z] - YYYY-MM-DD`, bullets under
+   `Breaking`, `Added`, `Changed`, `Fixed`, `Removed`; every breaking bullet
+   leads with `**Breaking:**`, names the symbol, and ends `Migrate by …`.
+   `sync-release-version.sh` never touches it — only a human knows what is
+   breaking for a consumer.
+4. `just verify` (the static, lint and test tiers gates.yml runs) and, with a
+   stack up, `just e2e-gate`.
+5. Commit to `next` and push. `gates.yml` runs the full matrix on that exact
+   commit; its `Gates passed` job is the proof the release consumes.
 
-```bash
-just gate [REF]      # dispatch ci.yml + quality.yml against the ref (default: origin/next)
-just promote [SHA]   # freeze the SHA on the `promote` ref and open the PR onto main
-gh pr merge <NUM> --merge
-```
+## Step B — `just release X.Y.Z` (twice)
 
-`just promote` opens the pull request and stops; merging is yours. The commit
-is frozen on `promote` rather than the PR being headed at `next` because a PR
-headed at `next` merges whatever `next` points at when you merge it, so
-anything pushed in the meantime rides along ungated.
+`main` is release-only and protected: pull request only, no bypass. A PR
+headed at `next` would merge whatever `next` points at when it is merged, so
+the release freezes the proven commit instead.
 
-Step B tags `main`, so run it only once the release PR is merged and your
-local `main` is up to date.
+**First run** (from `next`, or a clean detached worktree at `origin/next`):
+checks the tree is clean, no patch is live, every pin agrees
+(`sync-release-version.sh X.Y.Z --check`, `sync-core-version.sh --check`,
+`check-core-ref.sh`), the schema ladder has the rung, the changelog has the
+heading, `HEAD == origin/next`, `main` is an ancestor of it, and the latest
+`gates.yml` **push** run on that exact SHA succeeded with a successful
+`Gates passed` job (`scripts/check-gates-green.sh`). It then pushes the
+frozen ref `promote/X.Y.Z/<main-sha>/<candidate-sha>` and opens the PR onto
+`main`. The PR's Gates run does not repeat the matrix: its `Verify frozen
+promotion` job re-reads the push proof and checks that `main` and `next`
+have not moved and that GitHub's merge commit has exactly the candidate's
+tree.
 
-`sync-release-version.sh` deliberately does not touch `CHANGELOG.md`: only a
-human knows which of the release's changes are breaking for a consumer. Head
-the entry `## [X.Y.Z] - YYYY-MM-DD` and group bullets under `Breaking`,
-`Added`, `Changed`, `Fixed`, `Removed`. Every breaking bullet leads with
-`**Breaking:**`, names the affected symbol, and ends with `Migrate by …`.
+**Second run**, once that PR run is green
+(`scripts/check-promotion-green.sh`): re-checks the PR head/base, that
+`main` has not moved, that `refs/pull/<n>/merge` has the proven tree and the
+push proof still stands, merges with `--match-head-commit`, verifies the
+merge's parents and tree, and pushes the `vX.Y.Z` tag at the merge commit. If
+the tag push fails, re-running resumes at the tag.
 
-## Step B — release
+Why the tag is pushed by the command and not by a workflow: everything
+downstream runs on a `v*` tag push, and a tag pushed with a workflow's
+`GITHUB_TOKEN` never starts another workflow. `check-release-tag.sh` (a lint
+gate) keeps the invariant that every CHANGELOG version older than the
+workspace version carries its tag, because the versioned image only exists if
+the tag did.
 
-```bash
-just release X.Y.Z
-```
+The self-tests for all of this run in the `static` tier:
+`tests/scripts/release-proof.sh`, `release-merge.sh`, `release-helper.sh`
+(mocked `git`/`gh`; no network).
 
-Checks the tree is clean, HEAD == origin/main, and every pin matches
-(`sync-release-version.sh --check`), then pushes the `vX.Y.Z` tag. From here
-everything is automatic:
+## Step C — automatic, from the tag
 
 | Workflow | Trigger | Produces |
 |---|---|---|
-| `release-gateway.yml` | tag push | binary tarballs + SHA256SUMS + cosign sig on a GH Release; Homebrew formula bump |
-| `docker.yml` | called by `release-gateway.yml` | multi-arch (amd64+arm64) image, tags `X.Y.Z`/`X.Y`/`X`/`latest`, cosign-signed |
-| `smoke-tests.yml` | called by `release-gateway.yml`, after the image | install-channel smokes + `release-tags` (all tags one digest, both arches, signature verifies) + `helm-release` (chart serves the new appVersion) |
+| `release-gateway.yml` | tag push | `resolve` re-verifies the promotion merge (`check-release-merge.sh`) and the pins (`validate-release.sh`); binary tarballs + `SHA256SUMS.gateway` + cosign sig on a GH Release; Homebrew formula bump |
+| `docker.yml` | called by `release-gateway.yml` | multi-arch image (amd64+arm64): per-arch `smoke-image.sh` on each candidate digest, manifest `:sha-<7>` cosign-signed, **`upgrade-boot`** over every schema rung, then **`promote-tags`** `:X.Y.Z`/`:X.Y`/`:X`/`:latest` at that proven digest |
 | `helm.yml` | called after image publication | required kind install/test, then chart publication |
+| `smoke-tests.yml` | called by `release-gateway.yml`, after the image and chart | install-channel smokes + `release-tags` (all tags one digest, both arches, signature verifies) + `helm-release` (chart serves the new appVersion) |
 | `ghcr-prune.yml` | after Docker succeeds on a tag + weekly | retention (below) |
+
+`upgrade-boot` restores each `tests/fixtures/schema/release-baseline-*.sql`
+into Postgres 18, seeds 2000 rows into every hot table
+(`tests/integration/schema-upgrade/src/seed_hot_tables.sql`), boots the
+candidate image over it with a fresh `/app/storage/data` volume, requires a
+finished-boot `/health` body (`{"status":"healthy"}` — the early listener
+answers 200 with `"starting"`) or `/readyz`, and checks the rows survived. An
+empty ladder fails the job. Only after it passes do the release aliases move,
+so an alias never names an image that failed to boot over an old release's
+database; a failed run leaves only its `:sha-*`.
 
 Image and smoke tests are `workflow_call` jobs inside the `release-gateway.yml`
 run, not separate event-triggered workflows. They used to listen for
@@ -76,17 +113,21 @@ run, not separate event-triggered workflows. They used to listen for
 default `GITHUB_TOKEN`, and events raised by that token do not start workflow
 runs. v0.23.0 was tagged, the release published, and no image was built at all
 until `docker.yml` was dispatched by hand. If you split them back out, use a
-PAT, not `github.token`.
+PAT, not `github.token`. A manual `release-gateway.yml` dispatch (rebuilding
+an existing tag) skips the merge proof.
 
 **A release is done when `smoke-tests` is fully green.** Until then, don't
 advertise it or update marketplace listings.
 
+Coverage (`coverage.yml`) measures `main`, nightly on `next`, and on demand.
+It is a measurement, not a release check.
+
 ## Image tag semantics
 
-- `:latest` — newest **release** (re-pointed only by `v*` tags).
+- `:latest` — newest **release** (re-pointed only by `promote-tags`, after the proofs).
 - `:X` / `:X.Y` — float within major/minor; what catalog templates pin (`:0`).
 - `:X.Y.Z` — immutable release pin; what Helm resolves via appVersion.
-- `:edge` + `:sha-<sha>` — every main push; development only, never advertised.
+- `:edge` + `:sha-<sha>` — every main push (and `:sha-<sha>` for every release candidate); development only, never advertised.
 
 Consumers pick up releases on their next pull: `helm repo update && helm
 upgrade`, `docker compose pull && up -d`, or a platform redeploy
@@ -127,14 +168,14 @@ with the `GHCR_PRUNE_TOKEN`.
 - [ ] one catalog deploy pulls the new version (e.g. `deploy/compose/one-click.docker-compose.yml`, which floats on `:0`)
 - [ ] `ghcr-prune` ran clean; expected old versions removed
 - [ ] rebuild + resubmit the DigitalOcean marketplace image (when listed)
-- [ ] release notes deploy matrix matches [docs/README.md](README.md) channel table (templates live in `.github/workflows/release-gateway.yml` and `release.yml`)
+- [ ] release notes deploy matrix matches [docs/README.md](README.md) channel table (the template lives in `.github/workflows/release-gateway.yml`)
 - [ ] update docs-internal/STATE.md release row
 
-## 0.48 release validation
+## Release validation notes
 
-Builds use the committed lockfiles and SQLx offline caches; migrations and dependency updates are explicit setup/maintenance steps. Both workspaces consume published core 0.49.0. The in-repository proc-macro-error2 compatibility patch is documented in `vendor/README.md`.
+Builds use the committed lockfiles and SQLx offline caches; migrations and dependency updates are explicit setup/maintenance steps. The in-repository proc-macro-error2 compatibility patch is documented in `vendor/README.md`.
 
-Release dispatch resolves its tag to a commit on main, validates version pins, and uses that commit for archives, containers and deployment tests. Candidate images must boot before receiving release aliases. Post-publication smoke tests check both architectures, fresh setup, restart and upgrade from 0.42.1 with retained users. Helm is installed against disposable Postgres before chart publication; Homebrew publication completes before install-channel smoke tests.
+Release dispatch resolves its tag to a commit on main, validates version pins, and uses that commit for archives, containers and deployment tests. Candidate images must boot per architecture and over every schema rung before receiving release aliases. Post-publication smoke tests check both architectures, fresh setup, restart and upgrade from 0.42.1 with retained users. Helm is installed against disposable Postgres before chart publication; Homebrew publication completes before install-channel smoke tests.
 
 If cleanup cannot read the package, verify the repository's Actions access in
 the GHCR package settings. Deletion requires the Admin role; never suppress

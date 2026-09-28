@@ -1,13 +1,53 @@
 # Changelog
 
+All notable changes to this repository are recorded here, newest first.
+
+Conventions (strict — hold every entry to them):
+
+- Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/): an `## [Unreleased]`
+  section at the top, then one `## [X.Y.Z] - YYYY-MM-DD` section per release, each with only the
+  categories it needs, in this order: `### Breaking`, `### Security`, `### Added`, `### Changed`,
+  `### Fixed`, `### Removed`. Every breaking bullet leads with `**Breaking:**`, names the
+  affected symbol, and ends with `Migrate by …`.
+- The heading shape is load-bearing. `just release X.Y.Z` refuses a version with no
+  `## [X.Y.Z]` heading, and `scripts/check-release-tag.sh` (a lint gate) requires every version
+  heading older than the workspace version to have its `vX.Y.Z` tag — the versioned image only
+  exists if the tag was pushed. A version that shipped as a chart but never as an image says so
+  in its heading (`## [X.Y.Z] - never released (…)`) and is counted, not checked.
+- Entries are written for the reader who did not make the change: full sentences, what changed
+  and **why**, named files/commands/flags where the reader will need them. No bare "updated X".
+- Every user-visible or operator-visible change lands in `Unreleased` **in the same commit** as
+  the change itself. A release moves the `Unreleased` content under its version heading;
+  `Unreleased` is never deleted, only emptied.
+- Version numbers track the root workspace `version` in `Cargo.toml`, which is core's version
+  (lockstep; see `docs/BRANCHING.md`).
+
 ## [Unreleased]
 
 ### Security
 
 - The template owns its starter `secret_scan.patterns` catalog, including separate AWS access-key id and secret-value rules. Core supplies the validated scanner and recovery engine without activating vendor signatures. The response scanner consumes the same compiled catalog as ingress governance.
 
+### Added
+
+- **Tooling:** `scripts/sync-core-version.sh` (every core crate pin in both workspaces plus `bridge/CORE_REF`), `scripts/check-core-ref.sh`, `scripts/check-core-crate-versions.sh`, and the recipes `core-pin`, `core-guard` (`just deploy` runs it), `core-checkout`, `schema-baseline`, `fetch-release`, `stop`, `verify`, `preflight*`, `doc-check`, `init-hooks` (tracked `.githooks/pre-commit`), `hack`, `lint-silent-skips`, `lint-no-untyped-admin` and `coverage*`.
+- **Gates:** `check-discarded-results`, `check-fail-open` (core's rust-contracts scanner), `check-migration-numbers`, `lint-layers`, `lint-repo-construction`, `check-json-value`, `lint-silent-skips`, `check-field-copy-from`, `check-dockerfile-paths`, `check-dropped-schema`, `check-core-ref`, `coverage-badge` and `check-docs-version` join `just lint-gates`. `check-schema-baseline` is the release ladder (floor 0.61.0) and joins the array with its first rung.
+- **Coverage:** `scripts/coverage.sh` / `coverage-check.sh` (floor and ratchet against `coverage/baseline.json`) and a nightly `coverage.yml`; no baseline is recorded yet.
+
+### Changed
+
+- **Release:** `just release X.Y.Z` replaces `just gate` / `just promote` and the mutable `promote` ref. It requires a green `Gates passed` on the exact `next` push commit, freezes it on `promote/X.Y.Z/<main>/<sha>`, opens the PR onto `main`, and — run again once the PR's `Verify frozen promotion` proof is green — merges it and pushes the `vX.Y.Z` tag at the merge. `release-gateway.yml` re-verifies that merge (`scripts/check-release-merge.sh`) before building anything. See `docs/RELEASING.md` and the new `docs/BRANCHING.md`.
+- **CI:** `.github/workflows/gates.yml` replaces `ci.yml` and `quality.yml` and now runs on every push to `next`: independent static, lint, test (Postgres 18), e2e (Playwright) and audit/deny/machete tiers plus a `Gates passed` aggregate for the `main` ruleset. `just verify` runs the same static, lint and test tiers locally.
+- **Images:** a release image gets `:X.Y.Z`, `:X.Y`, `:X` and `:latest` only after the per-arch smoke and a new `upgrade-boot` job (the image booted over every recorded release schema with 2000 seeded rows per hot table) pass; until then it carries only `:sha-<7>`. Probes now require a finished-boot `/health` body, not any 200.
+- **Build:** `scripts/build-coordinator.sh` has no success cache (every run compiles the latest tree; `BUILD_FORCE` is a no-op) and refuses to start a compile when the volume holding `target/` has less than `BUILD_MIN_FREE_GB` (default 25) GB free.
+- **Versions:** `scripts/sync-release-version.sh --check` enforces lockstep (the release's `MAJOR.MINOR` equals core's) and `sync-release-version.sh` now also rewrites the version literals in `docs/install/*.md` and `deploy/*/*.md`, which `scripts/check-docs-version.sh` keeps on the workspace version.
+- **Dockerfile:** the pinned toolchain is its own cached layer, an `artifacts` stage exports the binaries, and `/app/storage/data` exists owned by `app`, so a named volume mounted there is writable.
+
 ### Fixed
 
+- `scripts/validate-release.sh` refused every release since the core-0.61 migration because it counted the inert `[workspace.metadata.unreleased-core-patch]` table as a live core patch.
+- The operator docs named 0.2.2 and 0.49.0 and non-existent tarball names; they now name the current version and `systemprompt-gateway-<version>-<target>.tar.gz`.
+- The access-control page's open-entity count swallowed a database error silently; it is logged now.
 - Every managed MCP server in `services/mcp/*.yaml` now declares `tool_policy: allow`. Core 0.53.0 makes the key mandatory: a server without it is withheld from the signed bridge manifest and rejected by boot validation, so the deployment would have refused to start. `allow` keeps today's effective behaviour.
 
 ## [0.49.0] - 2026-09-09
