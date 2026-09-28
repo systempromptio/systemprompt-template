@@ -28,6 +28,44 @@ scheduler:
       enabled: true
 
     # Core jobs (defined in systemprompt-core)
+    # Re-reads the composed services tree every minute and records the
+    # managed inventory (marketplaces, plugins, skills) it observes.
+    - name: managed_inventory_refresh
+      extension: core
+      owner: admin
+      schedule: "0 * * * * *"
+      enabled: true
+
+    - name: oauth_cleanup
+      extension: core
+      owner: admin
+      schedule: "0 5 3 * * *"
+      enabled: true
+
+    - name: user_rate_limit_prune
+      extension: core
+      owner: admin
+      schedule: "0 0 * * * *"
+      enabled: true
+      enforce: true
+
+    # Drops expired Gemini thought signatures (hourly).
+    - name: thought_signature_cleanup
+      extension: core
+      owner: admin
+      enabled: true
+
+    # Ships the audit trail to the OTLP collector the profile names under
+    # `observability.otlp` (core job, every 15 s by its own schedule). Tails
+    # ai_requests / tool_call_ledger / governance_decisions as spans and the
+    # logs table as log records, by watermark in otlp_export_state; a batch
+    # is acknowledged before its cursor moves. No-op on a profile without
+    # the block.
+    - name: otlp_export
+      extension: core
+      owner: admin
+      enabled: true
+
     - name: cleanup_anonymous_users
       extension: core
       owner: admin
@@ -156,6 +194,7 @@ scheduler:
   # so authorization is correct at app start.
   bootstrap_jobs:
     - governance_bootstrap
+    - managed_inventory_refresh
     - database_cleanup
     - cleanup_inactive_sessions
     # Publish web assets before the cron loop: web/dist is generated, not

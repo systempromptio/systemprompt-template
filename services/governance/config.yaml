@@ -1,3 +1,37 @@
+# Governance policy chain — ENABLED in this installation. All four stages run
+# synchronously before every tool dispatch, first-deny-wins, every decision
+# audited to governance_decisions.
+#
+# A missing or malformed file falls back to core's vendor-neutral warn-only
+# chain. This file is therefore the complete installation policy: all stages,
+# signatures, tunables, and modes are explicit here.
+#
+# The gateway safety scanners are a second, independent plane — see
+# services/gateway/policies.yaml. They are switched on there too, and in the
+# same warn mode.
+#
+# WARN MODE. Every stage below runs and audits, and none of them refuses.
+# Confirmed policy matches are warnings. Entropy-only matches remain
+# observations inside the chain evidence and cannot become denials by changing
+# the mode alone.
+#
+# So this is a measurement window, not a posture. Read it back with
+#   systemprompt infra logs governance report --since 7d --group-by policy
+# and once the warnings show which tunables are wrong, fix those and put the
+# stages that no longer misfire back to `mode: enforce`, one at a time.
+#
+# `mode` is inherited: the top-level value below applies to every policy that
+# does not name its own, and a policy may override it. An unrecognised value is
+# a boot error, not a silent default — reading `warnn` as either `enforce` or
+# `warn` would change what is enforced without saying so.
+#
+# Warn mode is NOT the same as `enabled: false`. A disabled stage does not run
+# and writes nothing. An enabled stage always contributes evidence; a confirmed
+# match writes `decision = 'warn'`, while an entropy-only observation passes.
+#
+# The secret_scan pattern list is explicit and complete (32 signatures): the
+# values here ARE the live behaviour, never a silent core default.
+
 governance:
   mode: warn
   policies:

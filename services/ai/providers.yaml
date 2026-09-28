@@ -6,6 +6,21 @@
 # Included from services/config/config.yaml as `../ai/providers.yaml`.
 # Distinct from services/ai/config.yaml, which is the AI domain's own
 # configuration (per-provider toggles and defaults), not a priced catalog.
+#
+# A model id must be unique across the whole catalog (ProviderRegistry::
+# validate). To serve one model from two providers — say Claude from a cloud
+# host with Anthropic's API as the failover — declare the second copy under a
+# prefixed id (`anthropic-claude-sonnet-5`) with `upstream_model` carrying the
+# real name, mark it `hidden: true` (core 0.62+) so no client is offered the
+# twin, and name that provider as the route's `fallback_provider` in
+# gateway.yaml. The failover finds the twin by `upstream_model`, ignoring
+# `hidden`, and prices the served request from it. This catalog has no twins:
+# each provider serves only its own models.
+#
+# `max_thinking_budget` under `limits` marks a reasoning model. On the
+# openai-chat wire the gateway then sends the model's own output cap instead
+# of the caller's `max_tokens`, so hidden reasoning cannot starve the visible
+# answer; on the gemini wire it bounds the thinking budget.
 providers:
 - name: anthropic
   wire: anthropic
@@ -13,6 +28,27 @@ providers:
   endpoint: https://api.anthropic.com/v1
   api_key_secret: anthropic
   models:
+  - id: claude-opus-5-5
+    pricing:
+      input_per_million: 4.0
+      output_per_million: 20.0
+      cache_read_per_million: 0.2
+      cache_write_per_million: 5.0
+      per_image_cents: null
+    capabilities:
+      vision: true
+      audio_input: false
+      video_input: false
+      image_generation: false
+      audio_generation: false
+      streaming: true
+      tools: true
+      structured_output: true
+      system_prompts: true
+      image_resolution_config: false
+    limits:
+      context_window: 1000000
+      max_output_tokens: 128000
   - id: claude-sonnet-4-6
     pricing:
       input_per_million: 3.0

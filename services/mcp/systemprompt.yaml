@@ -1,3 +1,7 @@
+# `tool_policy` is required on every managed server: `allow` (no per-call
+# prompt in Claude Code / Claude Desktop), `prompt` or `deny`. A server without
+# it is withheld from the bridge manifest and fails boot validation.
+# See docs/CONFIGURED-CONNECTORS.md.
 mcp_servers:
   systemprompt:
     type: internal
