@@ -72,10 +72,7 @@ fn list_mcp_servers_is_empty_when_the_directory_holds_no_yaml() {
 fn list_mcp_servers_skips_a_file_that_is_not_valid_yaml() {
     let dir = ServicesDir::new();
     dir.write("broken.yaml", "mcp_servers: [unclosed\n  - :::");
-    dir.write(
-        "good.yaml",
-        "mcp_servers:\n  docs:\n    binary: docs-mcp\n",
-    );
+    dir.write("good.yaml", "mcp_servers:\n  docs:\n    binary: docs-mcp\n");
 
     let servers = list_mcp_servers(dir.path()).expect("list servers");
 
@@ -179,10 +176,7 @@ fn list_mcp_servers_falls_back_to_the_default_port_when_the_value_does_not_fit()
 #[test]
 fn list_mcp_servers_records_the_source_path_relative_to_the_services_root() {
     let dir = ServicesDir::new();
-    dir.write(
-        "docs.yaml",
-        "mcp_servers:\n  docs:\n    binary: b\n",
-    );
+    dir.write("docs.yaml", "mcp_servers:\n  docs:\n    binary: b\n");
 
     let servers = list_mcp_servers(dir.path()).expect("list servers");
 

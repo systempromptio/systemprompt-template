@@ -1,5 +1,6 @@
 //! `POST /admin/connectors/{provider}/reprovision` — a provider's upstream app
-//! was re-created or its tenant reset, so every stored grant against it is void.
+//! was re-created or its tenant reset, so every stored grant against it is
+//! void.
 //!
 //! Re-creating an upstream OAuth app deletes every user's consent. Without
 //! this, each user discovers it alone as a `grant_rejected` on their next tool

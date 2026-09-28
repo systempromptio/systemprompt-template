@@ -24,8 +24,8 @@ fn zip_error(e: zip::result::ZipError) -> AdminError {
     AdminError::invalid("archive could not be written", e)
 }
 
-// Why: lint-ok: unused-pub — the entry point of the /admin/sync export, whose handler lands with
-// the Stage-3 admin port.
+// Why: lint-ok: unused-pub — the entry point of the /admin/sync export, whose
+// handler lands with the Stage-3 admin port.
 pub async fn build_export_zip(pool: &PgPool, actor: &str) -> AdminResult<ExportZip> {
     let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
     let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));

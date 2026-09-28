@@ -48,8 +48,8 @@ pub struct BundleFiles {
     pub paths: Vec<String>,
 }
 
-// Why: lint-ok: unused-pub — the configuration page reads per-kind provenance; it lands with the
-// Stage-3 admin port.
+// Why: lint-ok: unused-pub — the configuration page reads per-kind provenance;
+// it lands with the Stage-3 admin port.
 pub fn active_bundle_files() -> AdminResult<Vec<BundleFiles>> {
     let profile = ProfileBootstrap::get()?;
     let cache = BundleCache::new(cache_root(profile));
@@ -83,8 +83,8 @@ fn under(path: &str, rel: &str, is_dir: bool) -> bool {
 
 // Why: `base_has` is whether the baked tree holds the path; a kind only a
 // bundle ships is that bundle's, one both ship is mixed.
-// Why: lint-ok: unused-pub — the configuration page reads per-kind provenance; it lands with the
-// Stage-3 admin port.
+// Why: lint-ok: unused-pub — the configuration page reads per-kind provenance;
+// it lands with the Stage-3 admin port.
 #[must_use]
 pub fn source_for_path(
     bundles: &[BundleFiles],

@@ -13,11 +13,11 @@
 //! 2. Run every sync plane through the one boot contract
 //!    (`repositories::sync::boot`): groups, access control, gateway policies,
 //!    gateway routes and the governance chain, in that order. A plane whose
-//!    projection is empty is seeded from its file;
-//!    every other plane is compared and the drift logged, nothing written.
-//!    Reconciling code and database is an administrator's act on `/admin/sync`,
-//!    never a side effect of a restart. Step 1 must run first because the
-//!    `gateway_route/*` glob expands over its catalog.
+//!    projection is empty is seeded from its file; every other plane is
+//!    compared and the drift logged, nothing written. Reconciling code and
+//!    database is an administrator's act on `/admin/sync`, never a side effect
+//!    of a restart. Step 1 must run first because the `gateway_route/*` glob
+//!    expands over its catalog.
 //! 3. Project each inbound Slack app's `authz.allowed_roles` onto its
 //!    `slack_workspace` entity. `rules.yaml` does not declare these; the gate
 //!    stays with the app it gates, so it is written on every boot, after the
