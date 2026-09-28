@@ -29,11 +29,15 @@ fi
 # schema/seeds/ is exempt: seed bodies are idempotent INSERT/UPDATE/MERGE by
 # contract, enforced at boot by the runner's seed classifier (rejects anything
 # else and non-idempotent INSERTs), not by this declarative-schema gate.
+# schema/retire/ is exempt the same way: retirements are DROP … IF EXISTS of
+# triggers, functions and views by contract, and core's retire phase refuses
+# anything else before the first write.
 # shellcheck disable=SC2207
 files=($(find "$ROOT" -type f -name '*.sql' \
     -path '*/schema/*' \
     -not -path '*/schema/migrations/*' \
     -not -path '*/schema/seeds/*' \
+    -not -path '*/schema/retire/*' \
     -not -path '*/target/*' \
     | sort))
 
@@ -44,10 +48,22 @@ fi
 
 violations=0
 forbidden='^[[:space:]]*(ALTER|DROP|UPDATE|INSERT|DELETE|TRUNCATE|GRANT|REVOKE|DO)\b'
+awk_forbidden='^[[:space:]]*(ALTER|DROP|UPDATE|INSERT|DELETE|TRUNCATE|GRANT|REVOKE|DO)([[:space:]]|$)'
 safe_drop='^[[:space:]]*DROP[[:space:]]+(MATERIALIZED[[:space:]]+VIEW|VIEW|INDEX|TRIGGER)[[:space:]]+IF[[:space:]]+EXISTS\b'
 
 for f in "${files[@]}"; do
-    if matches=$(grep -nEi "$forbidden" "$f" || true); [ -n "$matches" ]; then
+    # Ignore statements inside dollar-quoted function bodies. The opening line
+    # is still inspected, so an imperative DO $$ block remains a violation.
+    matches=$(awk -v pattern="$awk_forbidden" '
+        BEGIN { IGNORECASE = 1; quoted = 0 }
+        {
+            line = $0
+            if (!quoted && line ~ pattern) print FNR ":" line
+            delimiters = gsub(/\$\$/, "", line)
+            if (delimiters % 2 == 1) quoted = !quoted
+        }
+    ' "$f")
+    if [ -n "$matches" ]; then
         file_violations=0
         while IFS= read -r line; do
             content="${line#*:}"

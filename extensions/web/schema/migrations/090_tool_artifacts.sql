@@ -1,0 +1,95 @@
+-- Tools are not artifacts, and one definition says which is which: the
+-- `artifact_kind` rule, the `tool_activity` view that applies it to core's
+-- tool_call_ledger, and the on-demand `analysis_reports` queue. Twin of
+-- schema/46_tool_artifacts.sql.
+
+CREATE OR REPLACE FUNCTION artifact_kind(tool_name text, artifact_type text, has_ui boolean,
+    is_structured boolean, payload_sha256 text, input text, is_builtin boolean)
+RETURNS text LANGUAGE sql IMMUTABLE AS $$
+SELECT CASE
+    WHEN tool_name IN ('Edit', 'Write', 'MultiEdit', 'NotebookEdit', 'Read')
+         AND input IS NOT NULL AND position('"file_path"' IN input) > 0 THEN 'file'
+    WHEN COALESCE(is_builtin, false) THEN NULL
+    WHEN COALESCE(has_ui, false) THEN 'ui'
+    WHEN artifact_type IS NOT NULL AND artifact_type <> 'tool_result' THEN 'card'
+    WHEN payload_sha256 IS NOT NULL AND COALESCE(is_structured, false) THEN 'body'
+    ELSE NULL END
+$$;
+
+-- What a call was about, in one line: the file path, the command, the
+-- search pattern or query, else the first key of the input object. A body
+-- that is not a JSON object is clipped; a body that only looks like one
+-- falls back to the clip rather than failing the row.
+CREATE OR REPLACE FUNCTION tool_input_summary(input text)
+RETURNS text LANGUAGE plpgsql IMMUTABLE AS $$
+DECLARE body jsonb;
+BEGIN
+    IF input IS NULL OR input = '' THEN RETURN NULL; END IF;
+    IF left(ltrim(input), 1) <> '{' THEN RETURN left(input, 160); END IF;
+    body := input::jsonb;
+    RETURN COALESCE(
+        NULLIF(body->>'file_path', ''), NULLIF(body->>'command', ''),
+        NULLIF(body->>'pattern', ''), NULLIF(body->>'query', ''),
+        NULLIF(body->>'path', ''), NULLIF(body->>'url', ''),
+        NULLIF(body->>'skill', ''), NULLIF(body->>'name', ''),
+        (SELECT k FROM jsonb_object_keys(body) k LIMIT 1));
+EXCEPTION WHEN others THEN
+    RETURN left(input, 160);
+END $$;
+
+-- Every tool call with the artifact rule applied. The execution's own
+-- context and trace ids are exposed beside the ledger's coalesced ones
+-- because the conversation record joins hook-sourced executions through the
+-- harness session (`trace_id`), which the ledger overwrites with the
+-- request's trace when an intent row exists.
+DROP VIEW IF EXISTS tool_activity;
+CREATE VIEW tool_activity AS
+SELECT l.ai_tool_call_id, l.intent_id, l.request_id, l.mcp_execution_id, l.artifact_id,
+       l.user_id, l.session_id, l.context_id, l.trace_id, l.client_kind,
+       l.tool_name, l.server_name, l.intended_at, l.executed_at, l.completed_at,
+       l.execution_time_ms, l.execution_status, l.error_message, l.source, l.correlation,
+       l.artifact_type, l.artifact_title, l.is_structured, l.has_ui_resource, l.is_error,
+       l.payload_bytes, l.secret_redactions, l.state, l.occurred_at,
+       x.context_id AS execution_context_id,
+       x.trace_id AS execution_trace_id,
+       COALESCE(a.payload_sha256, x.payload_sha256) AS payload_sha256,
+       artifact_kind(l.tool_name, l.artifact_type, l.has_ui_resource, l.is_structured,
+                     COALESCE(a.payload_sha256, x.payload_sha256), x.input, b.is_builtin) AS artifact_kind,
+       tool_input_summary(x.input) AS input_summary,
+       b.is_builtin
+FROM tool_call_ledger l
+LEFT JOIN mcp_tool_executions x ON x.mcp_execution_id = l.mcp_execution_id
+LEFT JOIN mcp_artifacts a ON a.artifact_id = l.artifact_id
+CROSS JOIN LATERAL (SELECT (l.server_name IS NOT NULL AND l.server_name = l.source
+                            AND COALESCE(l.tool_name, '') NOT LIKE 'mcp\_\_%') AS is_builtin) b;
+
+CREATE TABLE IF NOT EXISTS analysis_reports (
+    id TEXT PRIMARY KEY,
+    scope_kind TEXT NOT NULL CHECK (scope_kind IN ('global', 'marketplace', 'skill', 'filter')),
+    scope_id TEXT,
+    scope_label TEXT,
+    window_start TIMESTAMPTZ NOT NULL,
+    window_end TIMESTAMPTZ NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'generated', 'failed')),
+    requested_by TEXT NOT NULL,
+    provider TEXT,
+    model TEXT,
+    ai_request_id TEXT,
+    input_tokens INTEGER,
+    output_tokens INTEGER,
+    cost_microdollars BIGINT,
+    inputs JSONB NOT NULL DEFAULT '{}'::jsonb,
+    findings JSONB,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    lease_token TEXT,
+    lease_until TIMESTAMPTZ,
+    next_attempt TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    last_error TEXT,
+    generated_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp()
+);
+CREATE INDEX IF NOT EXISTS idx_analysis_reports_created ON analysis_reports(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analysis_reports_scope ON analysis_reports(scope_kind, scope_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analysis_reports_pending ON analysis_reports(next_attempt)
+    WHERE status = 'pending';
