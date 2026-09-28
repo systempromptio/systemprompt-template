@@ -40,7 +40,7 @@ On first boot the entrypoint writes `/app/.systemprompt/profiles/docker/{profile
 ## Tags
 
 - `latest`: most recent release.
-- `<major>.<minor>.<patch>` (e.g. `0.5.0`), `<major>.<minor>` (e.g. `0.5`), `<major>` (e.g. `0`): published when a `v*` tag ships through the release pipeline.
+- `<major>.<minor>.<patch>` (e.g. `0.5.0`), `<major>.<minor>` (e.g. `0.5`), `<major>` (e.g. `0`): published when a `v*` tag ships through the release pipeline. <!-- pinned-release -->
 
 If a version tag is missing from GHCR, the release workflow hasn't completed for it yet: pin to `latest` or a tag you can see on the [package page](https://github.com/systempromptio/systemprompt-template/pkgs/container/systemprompt-template).
 

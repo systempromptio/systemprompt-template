@@ -14,7 +14,7 @@ This detects your OS + arch, downloads the signed tarball, verifies SHA256, and 
 
 ```bash
 # Pin a specific version
-curl -sSL https://get.systemprompt.io | sh -s -- --version v0.2.2
+curl -sSL https://get.systemprompt.io | sh -s -- --version v0.61.0
 
 # Install to a custom prefix
 curl -sSL https://get.systemprompt.io | sh -s -- --prefix /opt/systemprompt
@@ -29,20 +29,20 @@ Pick your tarball from [Releases](https://github.com/systempromptio/systemprompt
 
 | OS | Arch | Asset |
 |---|---|---|
-| Linux | x86_64 | `systemprompt-<version>-linux-amd64.tar.gz` |
-| Linux | arm64 | `systemprompt-<version>-linux-arm64.tar.gz` |
-| macOS | Intel | `systemprompt-<version>-darwin-amd64.tar.gz` |
-| macOS | Apple Silicon | `systemprompt-<version>-darwin-arm64.tar.gz` |
-| Windows | x86_64 | `systemprompt-<version>-windows-amd64.zip` |
+| Linux | x86_64 | `systemprompt-gateway-<version>-linux-amd64.tar.gz` |
+| Linux | arm64 | `systemprompt-gateway-<version>-linux-arm64.tar.gz` |
+| macOS | Apple Silicon | `systemprompt-gateway-<version>-darwin-arm64.tar.gz` |
+
+Windows runs the gateway through Docker ([install/ghcr.md](ghcr.md)); there is no native Windows or Intel-mac build.
 
 ```bash
 # Verify SHA256
-curl -LO https://github.com/systempromptio/systemprompt-template/releases/download/v0.2.2/SHA256SUMS.gateway
-grep systemprompt-0.2.2-linux-amd64.tar.gz SHA256SUMS.gateway | sha256sum -c -
+curl -LO https://github.com/systempromptio/systemprompt-template/releases/download/v0.61.0/SHA256SUMS.gateway
+grep systemprompt-gateway-0.61.0-linux-amd64.tar.gz SHA256SUMS.gateway | sha256sum -c -
 
 # Extract
-tar -xzf systemprompt-0.2.2-linux-amd64.tar.gz
-cd systemprompt-0.2.2-linux-amd64
+tar -xzf systemprompt-gateway-0.61.0-linux-amd64.tar.gz
+cd systemprompt-gateway-0.61.0-linux-amd64
 ./systemprompt --version
 ```
 

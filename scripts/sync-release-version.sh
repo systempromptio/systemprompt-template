@@ -32,6 +32,10 @@
 #   deploy/casaos/docker-compose.yml                exact image tag
 #   deploy/digitalocean/files/opt/systemprompt/docker-compose.yml  exact image tag
 #   deploy/digitalocean/marketplace-image.pkr.hcl   image_version default
+#   docs/install/*.md, deploy/*/*.md  every 0.x.y literal (apply only; lines
+#                            ending `<!-- pinned-release -->` are historical
+#                            and left alone; scripts/check-docs-version.sh is
+#                            the check)
 #
 # macOS + Linux compatible (no GNU-only sed flags).
 set -eu
@@ -138,6 +142,13 @@ check_or_apply deploy/digitalocean/marketplace-image.pkr.hcl \
     "s|default = \"[0-9.]*\"|default = \"$VERSION\"|" \
     "default = \"$VERSION\"" \
     "Packer image_version default"
+
+if [ "$MODE" != "--check" ]; then
+    for doc in docs/install/*.md deploy/*/*.md; do
+        [ -f "$doc" ] || continue
+        sed -i.bak -E "/<!-- pinned-release -->\$/!s/(^|[^0-9.])0\.[0-9]+\.[0-9]+([^0-9.]|\$)/\1$VERSION\2/g" "$doc" && rm -f "$doc.bak"
+    done
+fi
 
 if [ "$MODE" = "--check" ]; then
     [ "$fail" -eq 0 ] && echo "version sync OK: everything pinned to $VERSION" || exit 1
