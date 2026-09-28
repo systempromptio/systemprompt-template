@@ -32,6 +32,7 @@ pub(crate) struct RosterContext {
     // than present and refused.
     pub can_write: bool,
     pub role_choices: Vec<String>,
+    pub export: crate::export::ExportView,
 }
 
 #[derive(Debug, Serialize)]

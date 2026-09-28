@@ -22,6 +22,7 @@ pub mod audit_event_bus;
 pub mod authz;
 pub mod error;
 pub mod event_hub;
+pub(crate) mod export;
 pub mod gateway_entitlement;
 pub mod gateway_safety;
 pub(crate) mod handlers;

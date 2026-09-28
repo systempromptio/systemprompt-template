@@ -1,0 +1,10 @@
+{{!--
+  The export call to action every table page carries.
+
+  Invoke as: {{> components/export-button export}}
+  The partial's root context is the page's `export` view. Without JavaScript
+  the link downloads the default columns of the first dataset as CSV over the
+  page's own window; with it, `services/export.js` opens the dialog rendered
+  by `components/export-dialog` instead.
+--}}
+<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{href}}" data-export-open>Export</a>

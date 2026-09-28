@@ -9,7 +9,6 @@
 
 use crate::error::AdminError;
 use std::sync::Arc;
-use systemprompt_web_shared::{GroupId, ProjectId};
 
 use axum::extract::{Extension, Query, State};
 use axum::response::Response;
@@ -17,7 +16,6 @@ use serde::Deserialize;
 use sqlx::PgPool;
 
 use crate::error::{AdminHtmlResult, AdminResult};
-use crate::handlers::ssr::csv::{CsvBuilder, usd};
 use crate::handlers::ssr::types as charts;
 use crate::handlers::ssr::types::BreadcrumbView;
 use crate::templates::AdminTemplateEngine;
@@ -147,77 +145,51 @@ pub(crate) async fn analytics_requests_page(
     ))
 }
 
-// Why: `/admin/requests.csv` — the rows the log is showing, as a download.
-pub(crate) async fn analytics_requests_csv(
-    Extension(user_ctx): Extension<UserContext>,
-    State(pool): State<Arc<PgPool>>,
-    Query(mut query): Query<RequestsQuery>,
-) -> AdminResult<Response> {
-    if !user_ctx.is_console {
-        return Err(AdminError::Forbidden("Admin access required.".to_owned()));
-    }
+// Why: the export is the table the log shows — same scope, filter and sort —
+// so the dataset reads the page's own query type rather than a second one.
+pub(crate) async fn export_rows(
+    pool: &PgPool,
+    user_ctx: &UserContext,
+    mut query: RequestsQuery,
+    range: TimeRange,
+    limit: i64,
+) -> AdminResult<(
+    Vec<crate::repositories::analytics::requests::RequestRow>,
+    i64,
+)> {
     query.normalize();
-
     let request = crate::repositories::scope::ScopeRequest::from_query(
-        &user_ctx,
+        user_ctx,
         query.group.as_deref(),
         query.project.as_deref(),
     );
-    let scope = crate::repositories::scope::membership::get_subject_scope(&pool, &request).await?;
+    let scope = crate::repositories::scope::membership::get_subject_scope(pool, &request).await?;
     let filter = view::filter_from_query(&query, scope);
-    let (range, _) = data::resolve_range(&pool, &query).await;
-
-    // Why: one page's worth is not an export. The cap is high enough to be a
-    // real answer and low enough that a mis-set window cannot stream the whole
-    // audit table into a browser.
     let page = crate::repositories::analytics::requests::RequestPage {
         sort: view::sort_from_query(&query),
-        limit: 5000,
+        limit,
         offset: 0,
     };
-    let (rows, _) =
-        crate::repositories::analytics::requests::list_requests_paged(&pool, &filter, range, page)
-            .await
-            .inspect_err(|e| tracing::warn!(error = %e, "requests export: listing failed"))
-            .unwrap_or_default();
+    Ok(
+        crate::repositories::analytics::requests::list_requests_paged(pool, &filter, range, page)
+            .await?,
+    )
+}
 
-    let mut csv = CsvBuilder::new(&[
-        "created_at",
-        "request_id",
-        "user_id",
-        "group_id",
-        "project_id",
-        "provider",
-        "model",
-        "status",
-        "input_tokens",
-        "output_tokens",
-        "cost_usd",
-        "latency_ms",
-        "tool_calls",
-        "deny_count",
-    ]);
-    for r in &rows {
-        csv.row(&[
-            &r.created_at.to_rfc3339(),
-            r.request_id.as_str(),
-            r.user_id.as_str(),
-            r.group_id.as_ref().map_or("unattributed", GroupId::as_str),
-            r.project_id
-                .as_ref()
-                .map_or("unattributed", ProjectId::as_str),
-            &r.provider,
-            &r.model,
-            &r.status,
-            &r.input_tokens.unwrap_or(0).to_string(),
-            &r.output_tokens.unwrap_or(0).to_string(),
-            &usd(r.cost_microdollars),
-            &r.latency_ms.unwrap_or(0).to_string(),
-            &r.tool_call_count.to_string(),
-            &r.deny_count.to_string(),
-        ]);
+// Why: with no range in the URL the page shows the window `resolve_range`
+// widened to, so the export names that preset rather than letting the dialog
+// open on its own default.
+fn export_query(query: &RequestsQuery, auto_widened: Option<&'static str>) -> String {
+    let qs = urls::preserved_query_string(query, &["tab", "page"]);
+    if query.preset.is_some() || (query.from.is_some() && query.to.is_some()) {
+        return qs;
     }
-    Ok(csv.into_response("requests.csv"))
+    let preset = format!("preset={}", auto_widened.unwrap_or("24h"));
+    if qs.is_empty() {
+        preset
+    } else {
+        format!("{qs}&{preset}")
+    }
 }
 
 // Why: the handler owns auth and I/O; assembling the template context is a pure
@@ -294,7 +266,7 @@ fn page_context(input: PageInput<'_>) -> AnalyticsRequestsPageContext {
         chips: urls::active_chips(query),
         has_active_filters,
         clear_url: urls::clear_url(query),
-        csv_url: urls::csv_url(query),
+        export: crate::export::ExportView::single("requests", &export_query(query, auto_widened)),
         base_url: BASE_URL,
         scope_filter,
     }

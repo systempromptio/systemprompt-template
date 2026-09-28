@@ -8,6 +8,7 @@ import { initHeaderSearch } from './header-search.js';
 import { initLogout, initUserDisplay, getUserContext } from './auth.js';
 import { initFilterRibbon } from './filter-ribbon.js';
 import { initScope } from './scope.js';
+import { initExport } from './export.js';
 import { showToast } from './toast.js';
 import { initHelp } from '../components/sp-help.js';
 
@@ -34,6 +35,7 @@ for (const init of [
   initHeaderSearch,
   initFilterRibbon,
   initScope,
+  initExport,
   initHelp,
   initLogout,
   initUserDisplay,

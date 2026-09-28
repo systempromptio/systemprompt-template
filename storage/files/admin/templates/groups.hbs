@@ -7,6 +7,7 @@
         <span>Spend is attributed exclusively, so the rows and the unattributed total add up to the instance.</span>
         {{/inline}}
         {{#*inline "header_actions"}}
+        {{> components/export-button export}}
         {{#if can_manage}}
         <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="create-group">New group</button>
         {{/if}}

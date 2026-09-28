@@ -8,7 +8,7 @@ kind: "guide"
 public: true
 tags: ["dashboard", "analytics", "admin"]
 published_at: "2026-02-18"
-updated_at: "2026-03-19"
+updated_at: "2026-09-28"
 after_reading_this:
   - "Understand the metrics displayed on the admin dashboard"
   - "Use time-range controls to analyze AI usage trends"
@@ -175,9 +175,13 @@ These commands output structured data suitable for scripting, reporting, and int
 
 Cost data visibility is governed by the same RBAC system that controls all platform resources. Analysts with department-scoped roles see only their own department's cost data. Organization-wide cost views require the `admin` or `finance` role. This ensures sensitive spend data is compartmentalized appropriately across enterprise-scale deployments.
 
-### Export to CSV
+### Export
 
-Finance teams can export cost and usage data to CSV for integration with existing accounting and budgeting systems. Exports include per-agent breakdowns, department rollups, model-level costs, and daily/weekly/monthly aggregations. Use the dashboard export button or the CLI to generate reports on demand.
+Every console table carries one **Export** button. Without JavaScript it downloads the table's default columns as CSV over the page's own window; with it, it opens a dialog to pick the table (a page may offer several — the Cost tab offers provider cost, cost by day, consumption by container and the month-end reports), the window, the columns and the format: CSV, JSON, JSON Lines or Markdown. The dialog previews the row, column and cell counts before the download, and says when a file is capped (50,000 rows) or when the window asked for was wider than the table allows.
+
+The file is served from `GET /admin/export/{dataset}` with the page's own filters in the query string, plus `format=`, `columns=` and the window (`preset=`/`from=`/`to=`, `days=` or `month=YYYY-MM`, per table); `GET /admin/export/{dataset}/preview` answers the counts. A personal access token (`Authorization: Bearer sp-live-…`) is accepted on these two routes in place of a browser session, so CI can pull figures without a console login; it reads exactly what its owner could export and is refused everywhere else. "My conversations" (`history`) is the one table every signed-in person may export; the rest need a console seat.
+
+The older per-page CSV URLs (`/admin/requests.csv`, `/admin/analytics/cost.csv`, `/admin/governance/warnings.csv`, `/admin/governance/secrets.csv`, `/admin/reports/customer.csv`, `/admin/reports/internal.csv`) still answer, served by the same export handler, so scheduled finance pulls keep working.
 
 ---
 

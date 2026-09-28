@@ -101,6 +101,7 @@ pub(crate) struct GroupSortHeaders {
 
 #[derive(Debug, Serialize)]
 pub(crate) struct GroupsPageData {
+    pub export: crate::export::ExportView,
     pub page: &'static str,
     pub title: &'static str,
     pub breadcrumbs: Vec<BreadcrumbView>,

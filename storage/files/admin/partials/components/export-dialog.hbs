@@ -1,0 +1,146 @@
+{{!--
+  The export dialog. Rendered once by the layout when the page context
+  carries `export`; `services/export.js` fills the counts and builds the URL.
+
+  Two panes: the left holds what a download IS (data, window, format, count,
+  the button); the right holds which columns, as a grouped checklist. Root
+  context is the page's `export` view: `datasets` (id, title, description,
+  window, groups [{name, columns}]), `formats` (value, label) and `query`
+  (the page's filters). A trigger carrying `data-export-selected="<dataset>"`
+  opens on that dataset with the ticked rows' ids; one carrying
+  `data-export-group-label` names the breakdown bucket it exports. A
+  conversation page also carries `document`: its whole record, offered first
+  as "Full transcript" in JSON or Markdown, with no window and no columns. A
+  list of conversations carries `transcripts`: the full record of every row
+  it selects, JSON Lines, with the page's window and filters. `filters` are
+  the page filters the download carries, each droppable unless pinned.
+--}}
+<dialog class="sp-dialog sp-export" data-export-dialog data-export-query="{{query}}" aria-label="Export">
+  <form class="sp-export__form" method="dialog" data-export-form>
+    <header class="sp-export__head">
+      <h3 class="sp-export__title">{{> components/icon name="export"}}Export</h3>
+      <p class="sp-export__scope" data-export-scope hidden></p>
+      <button type="button" class="sp-btn sp-btn--xs sp-btn--ghost sp-export__close" data-action="export-close" aria-label="Close export">&times;</button>
+    </header>
+
+    <div class="sp-export__panes">
+    <div class="sp-export__pane sp-export__pane--what">
+    <label class="sp-export__field sp-export__dataset"{{#unless multiple}} hidden{{/unless}}>
+      <span>Data</span>
+      <select class="sp-search-input" name="dataset" data-export-dataset>
+        {{#if document}}<option value="document" data-kind="document" data-href-json="{{document.json_href}}" data-href-markdown="{{document.markdown_href}}" data-description="Every message body, every tool call with its input and result, every governance decision, scanner finding and hook event — the whole record of this conversation.">Full transcript</option>{{/if}}
+        {{#each datasets}}<option value="{{id}}" data-window="{{window}}" data-description="{{description}}">{{title}}</option>{{/each}}
+        {{#if transcripts}}<option value="transcripts" data-kind="transcripts" data-window="{{transcripts.window}}" data-source="{{transcripts.source}}" data-cap="{{transcripts.cap}}" data-description="The full record of every conversation selected — message bodies, tool calls with input and result, decisions, findings and hook events — one JSON object per line, up to {{formatNumber transcripts.cap}}.">Full transcripts</option>{{/if}}
+      </select>
+    </label>
+    <p class="sp-export__description" data-export-description>{{#unless document}}{{#each datasets}}{{#if @first}}{{description}}{{/if}}{{/each}}{{/unless}}</p>
+
+    {{#if filters}}
+    <fieldset class="sp-export__field" data-export-filters>
+      <legend>{{> components/icon name="filter"}}Page filters <span class="sp-export__filters-count" data-export-filters-count></span></legend>
+      <ul class="sp-export__chips">
+        {{#each filters}}
+        <li class="sp-export__chip" data-export-filter="{{key}}"><span class="sp-export__chip-label">{{label}}</span><span class="sp-export__chip-value" title="{{value}}">{{truncate value 40}}</span>{{#unless pinned}}<button type="button" class="sp-export__chip-drop" data-action="export-filter-drop" data-key="{{key}}" aria-label="Leave the {{label}} filter out of this download">&times;</button>{{/unless}}</li>
+        {{/each}}
+      </ul>
+      <p class="sp-export__hint" data-export-filters-note hidden>Dropped filters come back when the dialog reopens.</p>
+    </fieldset>
+    {{/if}}
+
+    <fieldset class="sp-export__field" data-export-window="live" hidden>
+      <legend>{{> components/icon name="calendar"}}Window</legend>
+      <div class="sp-export__presets" role="group" aria-label="Window presets">
+        <label class="sp-export__preset"><input type="radio" name="live_preset" value="15m">15m</label>
+        <label class="sp-export__preset"><input type="radio" name="live_preset" value="1h">1h</label>
+        <label class="sp-export__preset"><input type="radio" name="live_preset" value="24h">24h</label>
+        <label class="sp-export__preset"><input type="radio" name="live_preset" value="7d" checked>7d</label>
+        <label class="sp-export__preset"><input type="radio" name="live_preset" value="30d">30d</label>
+        <label class="sp-export__preset"><input type="radio" name="live_preset" value="90d">90d</label>
+        <label class="sp-export__preset"><input type="radio" name="live_preset" value="custom">Custom</label>
+      </div>
+      <div class="sp-export__custom" data-export-custom hidden>
+        <label><span>From</span><input type="datetime-local" class="sp-search-input" name="live_from"></label>
+        <label><span>To</span><input type="datetime-local" class="sp-search-input" name="live_to"></label>
+        <p class="sp-export__hint">Up to 90 days.</p>
+      </div>
+    </fieldset>
+
+    <fieldset class="sp-export__field" data-export-window="retained" hidden>
+      <legend>{{> components/icon name="calendar"}}Window</legend>
+      <div class="sp-export__presets" role="group" aria-label="Window presets">
+        <label class="sp-export__preset"><input type="radio" name="retained_days" value="1">1d</label>
+        <label class="sp-export__preset"><input type="radio" name="retained_days" value="7">7d</label>
+        <label class="sp-export__preset"><input type="radio" name="retained_days" value="30" checked>30d</label>
+        <label class="sp-export__preset"><input type="radio" name="retained_days" value="90">90d</label>
+        <label class="sp-export__preset"><input type="radio" name="retained_days" value="365">1y</label>
+        <label class="sp-export__preset"><input type="radio" name="retained_days" value="custom">Custom</label>
+      </div>
+      <div class="sp-export__custom" data-export-custom hidden>
+        <label><span>From</span><input type="date" class="sp-search-input" name="retained_start"></label>
+        <label><span>To</span><input type="date" class="sp-search-input" name="retained_end"></label>
+        <p class="sp-export__hint">UTC days, up to a year.</p>
+      </div>
+    </fieldset>
+
+    <fieldset class="sp-export__field" data-export-window="days" hidden>
+      <legend>{{> components/icon name="calendar"}}Window</legend>
+      <div class="sp-export__presets" role="group" aria-label="Window presets">
+        <label class="sp-export__preset"><input type="radio" name="days" value="1">1d</label>
+        <label class="sp-export__preset"><input type="radio" name="days" value="7">7d</label>
+        <label class="sp-export__preset"><input type="radio" name="days" value="30" checked>30d</label>
+        <label class="sp-export__preset"><input type="radio" name="days" value="90">90d</label>
+        <label class="sp-export__preset"><input type="radio" name="days" value="365">1y</label>
+      </div>
+    </fieldset>
+
+    <fieldset class="sp-export__field" data-export-window="month" hidden>
+      <legend>{{> components/icon name="calendar"}}Month</legend>
+      <label class="sp-export__custom"><span>Calendar month (UTC)</span><input type="month" class="sp-search-input" name="month"></label>
+      <p class="sp-export__hint">Left empty, the last complete month.</p>
+    </fieldset>
+
+    <fieldset class="sp-export__field">
+      <legend>{{> components/icon name="file"}}Format</legend>
+      <div class="sp-export__presets" role="group" aria-label="Format">
+        {{#each formats}}
+        <label class="sp-export__preset"><input type="radio" name="format" value="{{value}}"{{#if (eq value "csv")}} checked{{/if}}>{{label}}</label>
+        {{/each}}
+      </div>
+    </fieldset>
+
+    <div class="sp-export__foot">
+      <p class="sp-export__preview" data-export-preview aria-live="polite">Counting…</p>
+      <p class="sp-export__window-line" data-export-window-line hidden></p>
+      <a class="sp-btn sp-btn--primary sp-export__download" href="{{href}}" data-export-download>{{> components/icon name="download"}}Download</a>
+    </div>
+    </div>
+
+    <div class="sp-export__pane sp-export__pane--columns">
+    <div class="sp-export__columns-head">
+      <span class="sp-export__columns-title">{{> components/icon name="layers"}}Columns <span class="sp-export__columns-count" data-export-columns-count></span></span>
+      <label class="sp-export__filter">{{> components/icon name="search"}}<span class="sp-u-sr-only">Find a column</span><input type="search" class="sp-export__filter-input" placeholder="Find a column" data-export-column-filter></label>
+      <span class="sp-export__column-tools">
+        <button type="button" class="sp-btn sp-btn--xs sp-btn--ghost" data-action="export-columns-all">All</button>
+        <button type="button" class="sp-btn sp-btn--xs sp-btn--ghost" data-action="export-columns-default">Default</button>
+        <button type="button" class="sp-btn sp-btn--xs sp-btn--ghost" data-action="export-columns-none">None</button>
+      </span>
+    </div>
+    {{#each datasets}}
+    <fieldset class="sp-export__columns" data-export-columns="{{id}}" hidden>
+      <legend class="sp-u-sr-only">Columns of {{title}}</legend>
+      {{#each groups}}
+      <div class="sp-export__group" data-export-group>
+        <h4 class="sp-export__group-name">{{name}}</h4>
+        <div class="sp-export__column-grid">
+          {{#each columns}}
+          <label class="sp-export__column" data-export-column data-label="{{label}}"><input type="checkbox" name="columns" value="{{key}}" data-default="{{this.default}}"{{#if this.default}} checked{{/if}}><span>{{label}}</span></label>
+          {{/each}}
+        </div>
+      </div>
+      {{/each}}
+    </fieldset>
+    {{/each}}
+    </div>
+    </div>
+  </form>
+</dialog>

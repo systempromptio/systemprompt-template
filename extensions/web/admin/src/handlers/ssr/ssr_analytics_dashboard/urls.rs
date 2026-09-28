@@ -11,9 +11,7 @@ use crate::handlers::ssr::list_view::{PageWindow, Pagination};
 
 use super::context::{BucketLinkView, DashboardTab, DashboardTabLink, ScopeChipView, SloOption};
 
-pub(super) use super::urls_controls::{
-    attribution_links, audience_links, axis_links, cost_csv_url, drill_url,
-};
+pub(super) use super::urls_controls::{attribution_links, audience_links, axis_links, drill_url};
 use super::{AnalyticsDashboardQuery, BASE_URL};
 
 pub(super) fn preserved_query_string(query: &AnalyticsDashboardQuery, drop: &[&str]) -> String {

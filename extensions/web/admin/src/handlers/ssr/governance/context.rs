@@ -60,7 +60,7 @@ pub(super) struct GovernancePageContext {
     pub(super) categories: Vec<SelectOptionView>,
     pub(super) outcomes: Vec<SelectOptionView>,
     pub(super) search: String,
-    pub(super) csv_url: String,
+    pub(super) export: crate::export::ExportView,
     pub(super) clear_url: String,
     pub(super) has_filters: bool,
     pub(super) base_url: &'static str,
@@ -185,7 +185,7 @@ pub(super) fn build(input: Build<'_>) -> GovernancePageContext {
         ),
         outcomes: outcome_options(query),
         search: query.q.clone().unwrap_or_default(),
-        csv_url: csv_url(query),
+        export: export_view(query, tab),
         clear_url: format!("{BASE_URL}?tab={}", tab.as_str()),
         has_filters: has_filters(query),
         base_url: BASE_URL,
@@ -272,6 +272,17 @@ fn time_range_context(query: &GovernanceQuery, range: TimeRange) -> TimeRangeCon
     }
 }
 
-fn csv_url(query: &GovernanceQuery) -> String {
-    url_with(query, &[("page", "")]).replacen(BASE_URL, &format!("{BASE_URL}/warnings.csv"), 1)
+// Why: the export stays one row per evaluation while the console folds them
+// into calls — evidence wants everything that was decided. The active tab's
+// plane leads; the other is a pick away.
+fn export_view(query: &GovernanceQuery, tab: GovernanceTab) -> crate::export::ExportView {
+    let query = url_with(query, &[("page", ""), ("tab", "")]);
+    let query = query.split_once('?').map_or("", |(_, q)| q);
+    let ids: &[&str] = match tab {
+        GovernanceTab::Safety => &["governance-findings", "governance-decisions"],
+        GovernanceTab::Decisions | GovernanceTab::Hooks => {
+            &["governance-decisions", "governance-findings"]
+        },
+    };
+    crate::export::ExportView::new(ids, query)
 }

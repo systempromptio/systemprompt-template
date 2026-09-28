@@ -5,7 +5,7 @@
 
     {{#> components/toolbar toolbar_count="1,204 requests"}}
       {{#*inline "toolbar_filters"}}…selects…{{/inline}}
-      {{#*inline "toolbar_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{csv_url}}">Export CSV</a>{{/inline}}
+      {{#*inline "toolbar_actions"}}{{> components/export-button export}}{{/inline}}
     {{/components/toolbar}}
 --}}
 <div class="sp-toolbar">

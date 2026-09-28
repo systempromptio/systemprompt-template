@@ -106,12 +106,3 @@ pub(super) fn axis_links(
     })
     .collect()
 }
-
-pub(super) fn cost_csv_url(query: &AnalyticsDashboardQuery, internal: bool) -> String {
-    let qs = preserved_query_string(query, &["tab", "audience", "page"]);
-    let audience = if internal { "internal" } else { "customer" };
-    with_qs(
-        format!("/admin/analytics/cost.csv?audience={audience}"),
-        &qs,
-    )
-}

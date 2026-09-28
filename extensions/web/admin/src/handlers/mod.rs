@@ -52,8 +52,9 @@ pub(crate) use user_sessions::{
     list_user_sessions_handler, revoke_all_user_sessions_handler, revoke_user_session_handler,
 };
 pub(crate) use users::{
-    dashboard_handler, delete_user_handler, extract_user_from_cookie, list_events_handler,
-    list_users_handler, update_user_handler, user_detail_handler, user_usage_handler,
+    dashboard_handler, delete_user_handler, extract_token_from_headers, extract_user_from_cookie,
+    list_events_handler, list_users_handler, update_user_handler, user_detail_handler,
+    user_usage_handler,
 };
 
 pub(crate) mod connector_auth;

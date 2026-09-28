@@ -24,6 +24,20 @@ Conventions (strict — hold every entry to them):
 
 ## [Unreleased]
 
+### Breaking
+
+- **Breaking:** the per-page CSV URLs (`/admin/requests.csv`,
+  `/admin/analytics/cost.csv`, `/admin/governance/warnings.csv`,
+  `/admin/governance/secrets.csv`, `/admin/reports/customer.csv`,
+  `/admin/reports/internal.csv`) keep answering but are now served by the
+  export handler from the matching dataset (`export/legacy.rs`), so their
+  columns are that dataset's default columns and headers: money is an exact
+  six-decimal `cost_usd`, `warnings.csv` is the decision log alone (safety
+  findings are the `governance-findings` table), and the report CSVs still pick
+  their table from `?dimension=`. Migrate by reading the new headers, or by
+  requesting `/admin/export/{dataset}?format=csv&columns=…` with the columns a
+  consumer expects.
+
 ### Added
 
 - Console chrome from the upstream admin: the sidebar is now six collapsible
@@ -54,6 +68,25 @@ Conventions (strict — hold every entry to them):
   requests and spend (labelled as conversation spend — rows overlap), and the
   share attributed to a published version, from
   `repositories/analytics/site/skills.rs`.
+- One export surface for the console's tables (`extensions/web/admin/src/export/`):
+  `GET /admin/export/{dataset}` writes any registered table as CSV, JSON,
+  JSON Lines or Markdown with a chosen column set over the window the table's
+  contract allows, and `GET /admin/export/{dataset}/preview` answers the row,
+  column and cell counts first (50,000-row cap, flagged when it bites). 26
+  tables are registered: requests, sessions, traces, conversations by person
+  and people, users, groups, projects, "My conversations" and the org-wide
+  conversations list, the analytics Models/Skills/Tools/Tool servers/Session
+  cost tables, provider cost, cost by day and consumption by container, the
+  governance decision log, safety findings and secrets audit, and the five
+  month-end report tables. Every page that lists one of them carries an
+  **Export** button (`components/export-button`) that downloads CSV without
+  JavaScript and opens the export dialog (`components/export-dialog`,
+  `services/export*.js`) with it.
+- A personal access token is accepted in place of a browser session on
+  `GET /admin/export/…` only (`middleware/pat.rs`): it resolves to its owner and
+  meets exactly the gates a session does; every other admin route, and any
+  write, refuses it. Non-console users may export their own history
+  (`/admin/export/history`).
 - `util::mcp_tool_name` reduces a host's namespaced MCP tool name
   (`mcp__<server>__<tool>`, `mcp__plugin_<marketplace>_<server>__<tool>`) to the
   server and bare tool the gateway records.
@@ -69,12 +102,18 @@ Conventions (strict — hold every entry to them):
   and the request total in its centre, replacing the CSS conic-gradient disc;
   its legend rows carry a share bar. KPI tiles accept an `icon` and a
   sparkline `spark` in a reserved trend row.
+- `util::time_range` gains a `90d` preset and a public `TimeRangePreset::parse`,
+  `duration`, `as_str` and `label`; the sessions and traces pages read the
+  preset name from it instead of their own tables.
 - The header actions and install menus now bind to the ids the templates
   actually write (`header-actions`, `install-menu`); previously neither control
   was wired and the install button did nothing at narrow widths.
 
 ### Removed
 
+- The hand-rolled CSV builders (`handlers/ssr/csv.rs`, `governance/csv_export.rs`,
+  `ssr_analytics_dashboard/csv.rs`, `ssr_report_customer`, `ssr_report_internal`
+  and the requests/secrets CSV handlers), replaced by the export layer.
 - The server-only stacked chart (`types/svg_stack.rs`,
   `components/svg-stacked-chart`): both of its charts are now drawn as columns
   by the live layer from the ordinary line-chart view.

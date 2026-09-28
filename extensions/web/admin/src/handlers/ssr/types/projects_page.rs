@@ -70,6 +70,7 @@ pub(crate) struct ProjectsPageData {
     pub kpis: Vec<ProjectKpiView>,
     pub sort_headers: ProjectSortHeaders,
     pub rows: Vec<ProjectListRowView>,
+    pub export: crate::export::ExportView,
     pub pagination: Pagination,
     pub count_label: String,
     pub query: String,

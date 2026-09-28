@@ -167,7 +167,6 @@ pub(super) struct CostTabView {
     pub container_count: usize,
     pub audience_links: Vec<AttributionLink>,
     pub is_internal: bool,
-    pub csv_url: String,
     pub day_chart: Option<SvgLineChartView>,
     pub providers: Vec<SupplierRowView>,
     pub has_providers: bool,

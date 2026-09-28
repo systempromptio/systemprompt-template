@@ -77,7 +77,7 @@ pub(super) struct AnalyticsRequestsPageContext {
     pub chips: Vec<Chip>,
     pub has_active_filters: bool,
     pub clear_url: String,
-    pub csv_url: String,
+    pub export: crate::export::ExportView,
     pub base_url: &'static str,
     pub scope_filter: ScopeFilterView,
 }

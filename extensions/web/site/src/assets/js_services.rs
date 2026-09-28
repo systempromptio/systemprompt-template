@@ -57,6 +57,12 @@ fn service_core_js(p: &Path) -> Vec<AssetDefinition> {
         svc_js!(p, "confirm.js"),
         svc_js!(p, "dropdown.js"),
         svc_js!(p, "events.js"),
+        svc_js!(p, "export-columns.js"),
+        svc_js!(p, "export-formats.js"),
+        svc_js!(p, "export-preview.js"),
+        svc_js!(p, "export-scope.js"),
+        svc_js!(p, "export-url.js"),
+        svc_js!(p, "export.js"),
         svc_js!(p, "filter-ribbon.js"),
         svc_js!(p, "header-actions.js"),
         svc_js!(p, "header-search-list.js"),
@@ -94,6 +100,10 @@ fn service_utils_js(storage_js: &Path) -> Vec<AssetDefinition> {
         AssetDefinition::js(
             storage_js.join("components/sp-help.js"),
             "js/components/sp-help.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-table-select.js"),
+            "js/components/sp-table-select.js",
         ),
         AssetDefinition::js(
             storage_js.join("components/sp-chart.js"),

@@ -42,7 +42,6 @@ use crate::util::time_range::{
 mod context;
 mod context_overview;
 mod context_tabs;
-pub(crate) mod csv;
 mod data;
 mod data_tabs;
 mod filters;

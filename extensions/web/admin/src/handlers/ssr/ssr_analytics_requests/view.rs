@@ -24,7 +24,7 @@ const EM_DASH: &str = "\u{2014}";
 // everything, everyone else's own groups whatever the query said. The group
 // and project on the filter are the narrower, exclusive attribution key, so a
 // person counts against one container rather than every one they belong to.
-pub(super) fn filter_from_query(query: &RequestsQuery, scope: SubjectScope) -> RequestFilter {
+pub(crate) fn filter_from_query(query: &RequestsQuery, scope: SubjectScope) -> RequestFilter {
     RequestFilter {
         scope,
         user_id: query.user_id.clone().filter(|u| !u.as_str().is_empty()),
@@ -65,7 +65,7 @@ fn empty_to_none(v: Option<&String>) -> Option<String> {
         .map(str::to_owned)
 }
 
-pub(super) fn sort_from_query(query: &RequestsQuery) -> RequestSortSpec {
+pub(crate) fn sort_from_query(query: &RequestsQuery) -> RequestSortSpec {
     let column = match query.sort.as_deref() {
         Some("cost") => RequestSortColumn::Cost,
         Some("latency") => RequestSortColumn::Latency,

@@ -6,7 +6,7 @@
       {{#*inline "header_actions"}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/approvals">Approvals</a>
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/secrets">Secrets audit</a>
-        <a class="sp-btn sp-btn--sm sp-btn--primary" href="{{csv_url}}">Export CSV</a>
+        {{> components/export-button export}}
       {{/inline}}
     {{/components/page-header}}
 
@@ -93,7 +93,6 @@
       <div class="sp-toolbar__actions">
         {{#if has_filters}}<a class="sp-btn sp-btn--sm sp-btn--ghost" href="{{clear_url}}">Clear</a>{{/if}}
         <button type="submit" class="sp-btn sp-btn--sm sp-btn--outline">Apply</button>
-        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{csv_url}}">CSV</a>
       </div>
     </form>
 

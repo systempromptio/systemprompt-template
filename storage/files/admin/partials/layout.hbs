@@ -75,6 +75,7 @@
             <div class="sp-notice-region" id="global-limit-warnings" hidden></div>
             {{#if scope_selector}}{{> components/scope-selector}}{{/if}}
             {{> content}}
+            {{#if export}}{{> components/export-dialog export}}{{/if}}
             {{#if help}}{{> components/help-dialog help}}{{/if}}
             {{> components/admin-footer}}
         </main>

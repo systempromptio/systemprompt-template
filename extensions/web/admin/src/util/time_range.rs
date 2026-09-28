@@ -43,28 +43,66 @@ pub enum TimeRangePreset {
     Hours24,
     Days7,
     Days30,
+    Days90,
     Custom,
 }
 
 impl TimeRangePreset {
-    const fn duration(self) -> Option<Duration> {
+    #[must_use]
+    pub const fn duration(self) -> Option<Duration> {
         match self {
             Self::Min15 => Some(Duration::minutes(15)),
             Self::Hour1 => Some(Duration::hours(1)),
             Self::Hours24 => Some(Duration::hours(24)),
             Self::Days7 => Some(Duration::days(7)),
             Self::Days30 => Some(Duration::days(30)),
+            Self::Days90 => Some(Duration::days(90)),
             Self::Custom => None,
         }
     }
 
-    fn parse(value: &str) -> Option<Self> {
+    // Why: the spelling the URL and the picker use, so a page can hand a
+    // resolved range back to the address bar without a second table.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Min15 => "15m",
+            Self::Hour1 => "1h",
+            Self::Hours24 => "24h",
+            Self::Days7 => "7d",
+            Self::Days30 => "30d",
+            Self::Days90 => "90d",
+            Self::Custom => "custom",
+        }
+    }
+
+    #[must_use]
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::Min15 => "15 minutes",
+            Self::Hour1 => "hour",
+            Self::Hours24 => "24 hours",
+            Self::Days7 => "7 days",
+            Self::Days30 => "30 days",
+            Self::Days90 => "90 days",
+            Self::Custom => "custom range",
+        }
+    }
+
+    // Why: the inverse of `as_str`, and it accepts the aliases three pages
+    // shipped before this table was the only one — a URL carrying `1d` or
+    // `90d` must resolve rather than silently fall back to the default.
+    #[must_use]
+    pub fn parse(value: &str) -> Option<Self> {
         match value {
             "15m" => Some(Self::Min15),
             "1h" => Some(Self::Hour1),
-            "24h" => Some(Self::Hours24),
+            // Why: three pages shipped "1d" for the same window before this
+            // table was the only one; a URL carrying it must not fall back.
+            "24h" | "1d" => Some(Self::Hours24),
             "7d" => Some(Self::Days7),
             "30d" => Some(Self::Days30),
+            "90d" => Some(Self::Days90),
             "custom" => Some(Self::Custom),
             _ => None,
         }

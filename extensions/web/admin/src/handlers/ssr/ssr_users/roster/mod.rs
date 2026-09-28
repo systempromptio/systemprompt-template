@@ -202,6 +202,21 @@ pub(crate) async fn users_page(
         pagination: view::build_pagination(&url, window),
         can_write: user_ctx.is_admin,
         role_choices: read.roles,
+        export: crate::export::ExportView::single(
+            "users",
+            &crate::export::view::query_string(&[
+                ("filter", Some(url.filter.as_str())),
+                ("role", url.role.as_deref()),
+                ("q", url.search.as_deref()),
+                ("group", url.group.as_deref()),
+                ("project", url.project.as_deref()),
+                ("sort", Some(url.sort.column)),
+                (
+                    "dir",
+                    Some(if url.sort.descending { "desc" } else { "asc" }),
+                ),
+            ]),
+        ),
     };
 
     Ok(super::super::render_typed_page(

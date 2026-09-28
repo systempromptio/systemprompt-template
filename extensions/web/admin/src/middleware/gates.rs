@@ -121,6 +121,10 @@ pub(crate) async fn non_admin_gate_middleware(request: Request, next: Next) -> R
 fn is_non_admin_allowed_path(path: &str) -> bool {
     path.starts_with("/admin/profile")
         || path.starts_with("/admin/history")
+        // Why: the export of "My conversations" is identity-scoped like the
+        // page; every other dataset refuses a caller itself
+        // (`export::model::DataSet::allows`).
+        || path.starts_with("/admin/export/history")
         || path.starts_with("/admin/settings")
         || path.starts_with("/admin/requirements/")
         || path.starts_with("/admin/auth/")

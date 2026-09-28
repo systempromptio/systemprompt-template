@@ -190,3 +190,30 @@ pub(crate) struct Pagination {
     pub(crate) prev_url: Option<String>,
     pub(crate) next_url: Option<String>,
 }
+
+// Why: a page's filters as `(name, value)` pairs, dropping the ones a link
+// replaces and URL-encoding the rest. The pairs are the only part a page owns;
+// the filtering and the encoding are not. `extra` carries the numeric
+// parameters that are not `Option<&str>` — a page number, an SLO threshold.
+pub(crate) fn query_string_dropping(
+    pairs: &[(&str, Option<&str>)],
+    extra: &[(&str, Option<i64>)],
+    drop: &[&str],
+) -> String {
+    let mut parts: Vec<String> = pairs
+        .iter()
+        .filter(|(name, _)| !drop.contains(name))
+        .filter_map(|(name, value)| {
+            value
+                .filter(|v| !v.is_empty())
+                .map(|v| format!("{name}={}", urlencoding::encode(v)))
+        })
+        .collect();
+    parts.extend(
+        extra
+            .iter()
+            .filter(|(name, _)| !drop.contains(name))
+            .filter_map(|(name, value)| value.map(|v| format!("{name}={v}"))),
+    );
+    parts.join("&")
+}

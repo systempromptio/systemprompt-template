@@ -66,6 +66,7 @@ impl DashboardTab {
 pub(super) struct AnalyticsDashboardContext {
     pub page: &'static str,
     pub title: String,
+    pub export: crate::export::ExportView,
     pub time_range: DashboardTimeRange,
     pub tabs: Vec<DashboardTabLink>,
     // Why: the window's headline figures, on the toolbar rather than under the

@@ -19,11 +19,13 @@
 
 mod context;
 mod conversation;
+mod export;
 mod kind;
 mod view;
 
 pub(crate) use context::HistoryRowView;
 pub(crate) use conversation::history_conversation_page;
+pub(crate) use export::{ExportRequest, export_rows};
 pub(crate) use kind::HistoryView;
 pub use view::command_name;
 pub(crate) use view::row_view;
@@ -93,6 +95,28 @@ struct HistorySearchEnvelope {
     page_size: i64,
 }
 
+// Why: the viewer's scope, narrowed to one user when the query names one they
+// may see; naming one outside it is a 403 on the page and the export alike.
+fn scope_user_ids(
+    scope: &HistoryScope,
+    query: &HistoryQuery,
+    verb: &str,
+) -> Result<Option<Vec<String>>, AdminError> {
+    let target = query
+        .user_id
+        .as_ref()
+        .filter(|u| !u.as_str().trim().is_empty());
+    match target {
+        Some(target_id) if scope.may_view(target_id) => {
+            Ok(Some(vec![target_id.as_str().to_owned()]))
+        },
+        Some(_) => Err(AdminError::Forbidden(format!(
+            "You may only {verb} conversation history within your own scope."
+        ))),
+        None => Ok(scope.user_ids()),
+    }
+}
+
 struct HistorySlice {
     scope: HistoryScope,
     items: Vec<HistoryItem>,
@@ -107,22 +131,7 @@ async fn fetch_history_slice(
     view: HistoryView,
 ) -> Result<HistorySlice, AdminError> {
     let scope = view.scope(user_ctx);
-
-    let target = query
-        .user_id
-        .as_ref()
-        .filter(|u| !u.as_str().trim().is_empty());
-    let scope_ids = match target {
-        Some(target_id) => {
-            if !scope.may_view(target_id) {
-                return Err(AdminError::Forbidden(
-                    "You may only view conversation history within your own scope.".to_owned(),
-                ));
-            }
-            Some(vec![target_id.as_str().to_owned()])
-        },
-        None => scope.user_ids(),
-    };
+    let scope_ids = scope_user_ids(&scope, query, "view")?;
 
     let page = query.page.unwrap_or(0).max(0);
     let (items, total) = list_history_items(
@@ -271,6 +280,7 @@ async fn render_listing(
         base_url: base,
         pagination: build_pagination(query, window, base),
         breadcrumbs: view.breadcrumbs(),
+        export: export::export_view(query, view),
     };
     Ok(super::render_typed_page(
         engine,

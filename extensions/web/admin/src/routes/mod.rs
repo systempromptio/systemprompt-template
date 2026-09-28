@@ -4,6 +4,7 @@ mod admin;
 mod admin_groups;
 mod ssr;
 mod ssr_bridge;
+mod ssr_export;
 mod ssr_redirects;
 
 pub(crate) use admin::{

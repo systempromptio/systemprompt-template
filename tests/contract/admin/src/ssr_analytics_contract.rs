@@ -115,6 +115,79 @@ async fn the_per_user_analytics_page_renders_that_person_over_several_windows() 
     db.cleanup().await;
 }
 
+// Every format the dialog offers answers as a file, and the preview answers
+// the counts the dialog shows — for the same dataset and query.
+#[tokio::test(flavor = "multi_thread")]
+async fn the_export_surface_serves_every_format_and_a_preview() {
+    if !globals::init() {
+        return;
+    }
+    let Some(db) = TempDb::create().await else {
+        return;
+    };
+
+    let credentials = principal::provision(&db.pool).await;
+    let app = App::new(&db.pool, credentials);
+    seed_person(&db.pool).await;
+
+    let mut failures = Vec::new();
+    for (path, starts_with) in [
+        ("/admin/export/requests?format=json&preset=30d", "["),
+        ("/admin/export/requests?format=jsonl&preset=30d", ""),
+        ("/admin/export/requests?format=markdown&preset=30d", "| "),
+        (
+            "/admin/export/analytics-skills?format=markdown&preset=30d",
+            "| ",
+        ),
+    ] {
+        let (status, body) = app.call(Call::get(path, Principal::Admin)).await;
+        if status != StatusCode::OK {
+            failures.push(format!("  {path} -> {}", status.as_u16()));
+        } else if !body.starts_with(starts_with) {
+            failures.push(format!("  {path} does not start with {starts_with:?}"));
+        }
+    }
+    let (status, body) = app
+        .call(Call::get(
+            "/admin/export/requests/preview?preset=30d&columns=request_id,model",
+            Principal::Admin,
+        ))
+        .await;
+    if status != StatusCode::OK || !body.contains("\"columns\":2") {
+        failures.push(format!("  preview -> {} {body}", status.as_u16()));
+    }
+    for (path, principal, expected) in [
+        (
+            "/admin/export/nope?format=csv",
+            Principal::Admin,
+            StatusCode::NOT_FOUND,
+        ),
+        (
+            "/admin/export/requests?format=csv",
+            Principal::NonAdmin,
+            StatusCode::SEE_OTHER,
+        ),
+        (
+            "/admin/export/history?format=csv",
+            Principal::NonAdmin,
+            StatusCode::OK,
+        ),
+    ] {
+        let (status, _) = app.call(Call::get(path, principal)).await;
+        if status != expected {
+            failures.push(format!(
+                "  {path} -> {} (expected {})",
+                status.as_u16(),
+                expected.as_u16()
+            ));
+        }
+    }
+
+    assert!(failures.is_empty(), "\n{}", failures.join("\n"));
+
+    db.cleanup().await;
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn a_user_id_that_matches_nobody_is_a_404_rather_than_a_blank_page() {
     if !globals::init() {

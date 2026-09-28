@@ -4,7 +4,7 @@
   a bare `sub` mustache printed its zero-argument result on every heading.
 
     {{#> components/section title="Recent warnings" count=total note="…"}}
-      {{#*inline "section_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{csv_url}}">CSV</a>{{/inline}}
+      {{#*inline "section_actions"}}{{> components/export-button export}}{{/inline}}
     {{/components/section}}
 --}}
 <div class="sp-section__head">

@@ -3,6 +3,7 @@
     {{> components/breadcrumbs crumbs=breadcrumbs}}
     {{#> components/page-header title=title}}
         {{#*inline "header_actions"}}
+        {{> components/export-button export}}
         {{#if can_write}}
         <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="create-user">New user</button>
         <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="bulk-roles" disabled>Change roles</button>

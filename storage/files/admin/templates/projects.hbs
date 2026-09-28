@@ -4,6 +4,7 @@
     {{#> components/page-header title=title subtitle=subtitle}}
         {{#*inline "header_meta"}}<span>{{window_label}}</span>{{/inline}}
         {{#*inline "header_actions"}}
+        {{> components/export-button export}}
         {{#if can_manage}}
         <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="new-project">New project</button>
         {{/if}}

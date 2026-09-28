@@ -9,6 +9,7 @@
 //! the same role set.
 
 mod gates;
+mod pat;
 
 pub(crate) use gates::{
     non_admin_gate_middleware, require_auth_middleware, require_roles_middleware,
@@ -52,12 +53,20 @@ pub(crate) async fn user_context_middleware(
     mut request: Request,
     next: Next,
 ) -> Response {
-    let headers = request.headers();
-    let session = match extract_user_from_cookie(headers) {
+    let cookie = extract_user_from_cookie(request.headers());
+    let pat = cookie
+        .is_err()
+        .then(|| pat::pat_request(&request))
+        .flatten();
+    let session = match cookie {
         Ok(s) => s,
-        Err(reason) => {
-            tracing::warn!(reason = %reason, "UserContext middleware: no valid session");
-            return next.run(request).await;
+        Err(reason) => match pat::pat_session(&pool, pat).await {
+            pat::PatSession::Accepted(s) => s,
+            pat::PatSession::Rejected(response) => return response,
+            pat::PatSession::NotApplicable => {
+                tracing::warn!(reason = %reason, "UserContext middleware: no valid session");
+                return next.run(request).await;
+            },
         },
     };
 

@@ -8,8 +8,8 @@ pub mod error;
 pub mod exchange_codes;
 
 pub use api_keys::{
-    ApiKeyRow, EnrollDeviceParams, EnrolledDevice, IssuedApiKey, enroll_device, issue_api_key,
-    list_api_keys_for_user, revoke_api_key,
+    API_KEY_PREFIX, ApiKeyRow, ApiKeyUser, EnrollDeviceParams, EnrolledDevice, IssuedApiKey,
+    enroll_device, find_api_key_user, issue_api_key, list_api_keys_for_user, revoke_api_key,
 };
 pub use bridge_users::{BridgeIdentityRow, find_bridge_user};
 pub use device_certs::{DeviceCertRow, revoke_device_cert};

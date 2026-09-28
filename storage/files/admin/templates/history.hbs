@@ -10,6 +10,7 @@
         {{#*inline "header_actions"}}
             <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/profile">Profile</a>
             {{#if filter_user_id}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/history">Clear user filter</a>{{/if}}
+            {{> components/export-button export}}
         {{/inline}}
     {{/components/page-header}}
 

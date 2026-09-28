@@ -1,0 +1,19 @@
+@layer components {
+
+/* The record choices ("Full transcript", "Full transcripts") have no
+   columns: the checklist pane is hidden, so the dialog narrows to the one
+   pane that is left rather than holding an empty column open beside it. */
+.sp-dialog.sp-export.sp-export--document {
+    max-width: min(28rem, 94vw);
+    width: min(28rem, 94vw);
+}
+
+.sp-export--document .sp-export__panes {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.sp-export--document .sp-export__pane--what {
+    border-inline-end: 0;
+}
+
+}

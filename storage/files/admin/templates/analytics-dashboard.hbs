@@ -7,7 +7,7 @@
         subtitle="What the AI did, by model, skill, tool, session and cost."}}
       {{#*inline "header_actions"}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/requests">Request log</a>
-        <a class="sp-btn sp-btn--sm sp-btn--primary" href="{{cost.csv_url}}">Export cost CSV</a>
+        {{> components/export-button export}}
       {{/inline}}
     {{/components/page-header}}
 

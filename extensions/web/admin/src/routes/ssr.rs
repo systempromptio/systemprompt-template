@@ -136,11 +136,12 @@ fn people_routes() -> Router<Arc<PgPool>> {
 fn ai_activity_routes() -> Router<Arc<PgPool>> {
     Router::new()
         .route("/analytics", get(handlers::ssr::analytics_dashboard_page))
+        .merge(super::ssr_export::routes())
         // Why: the Cost tab's export. Same handler contract as the tab, so the
         // file always matches the view the operator was looking at.
-        .route("/analytics/cost.csv", get(handlers::ssr::cost_csv))
+        .route("/analytics/cost.csv", get(crate::export::legacy::cost_csv))
         .route("/requests", get(handlers::ssr::analytics_requests_page))
-        .route("/requests.csv", get(handlers::ssr::analytics_requests_csv))
+        .route("/requests.csv", get(crate::export::legacy::requests_csv))
         .route(
             "/requests/{request_id}",
             get(handlers::ssr::governance_audit_detail_page),
@@ -176,7 +177,7 @@ fn governance_routes() -> Router<Arc<PgPool>> {
         .route("/governance", get(handlers::ssr::governance_page))
         .route(
             "/governance/warnings.csv",
-            get(handlers::ssr::governance_csv),
+            get(crate::export::legacy::governance_csv),
         )
         .route(
             "/governance/decisions/{decision_id}",
@@ -189,7 +190,7 @@ fn governance_routes() -> Router<Arc<PgPool>> {
         )
         .route(
             "/governance/secrets.csv",
-            get(handlers::ssr::secrets_audit_csv),
+            get(crate::export::legacy::secrets_csv),
         )
 }
 
@@ -227,11 +228,11 @@ fn platform_routes() -> Router<Arc<PgPool>> {
         // endpoint the finance hand-off still fetches, so they stay mounted.
         .route(
             "/reports/customer.csv",
-            get(handlers::ssr::report_customer_csv),
+            get(crate::export::legacy::report_customer_csv),
         )
         .route(
             "/reports/internal.csv",
-            get(handlers::ssr::report_internal_csv),
+            get(crate::export::legacy::report_internal_csv),
         )
 }
 

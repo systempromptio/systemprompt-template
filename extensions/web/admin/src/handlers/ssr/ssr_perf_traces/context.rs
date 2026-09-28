@@ -30,6 +30,7 @@ pub(super) struct PerfTracesPageContext {
     pub(super) error_only: bool,
     pub(super) deny_only: bool,
     pub(super) scope_filter: ScopeFilterView,
+    pub(super) export: crate::export::ExportView,
 }
 
 #[derive(Debug, Serialize)]

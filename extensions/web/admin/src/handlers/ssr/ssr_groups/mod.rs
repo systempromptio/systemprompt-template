@@ -87,6 +87,10 @@ pub(crate) async fn groups_page(
     );
 
     let data = GroupsPageData {
+        export: crate::export::ExportView::single(
+            "groups",
+            &crate::export::view::query_string(&[("days", Some(&window_days.to_string()))]),
+        ),
         page: "groups",
         title: "Groups",
         breadcrumbs: vec![BreadcrumbView::current("Groups")],

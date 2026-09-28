@@ -1,0 +1,191 @@
+@layer components {
+
+.sp-export__field:disabled .sp-export__presets {
+    opacity: 0.5;
+}
+
+.sp-export__field:disabled .sp-export__preset {
+    cursor: not-allowed;
+}
+
+.sp-export__custom {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--sp-space-3);
+}
+
+.sp-export__custom p {
+    grid-column: 1 / -1;
+}
+
+.sp-export__foot {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-3);
+    margin-top: auto;
+    padding-top: var(--sp-space-3);
+    border-top: 1px solid var(--sp-border-subtle);
+}
+
+.sp-export__preview {
+    margin: 0;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+}
+
+.sp-export__preview strong {
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-export__preview[data-tone="warn"] {
+    color: var(--sp-warning-strong);
+}
+
+.sp-export__preview[data-tone="error"] {
+    color: var(--sp-danger-strong);
+}
+
+.sp-export__download {
+    justify-content: center;
+    gap: var(--sp-space-2);
+}
+
+.sp-export__columns-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2) var(--sp-space-3);
+}
+
+.sp-export__columns-title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-secondary);
+}
+
+.sp-export__columns-title .sp-icon {
+    color: var(--sp-text-tertiary);
+}
+
+.sp-export__columns-count {
+    font-weight: var(--sp-font-normal);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-export__filter {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    flex: 1 1 10rem;
+    max-width: 18rem;
+    padding: 0 var(--sp-space-2);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-surface);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-export__filter:focus-within {
+    border-color: var(--sp-accent);
+    box-shadow: 0 0 0 2px var(--sp-accent-dim);
+}
+
+.sp-export__filter-input {
+    flex: 1;
+    min-width: 0;
+    padding: var(--sp-space-1) 0;
+    border: 0;
+    background: transparent;
+    color: var(--sp-text-primary);
+    font: inherit;
+    font-size: var(--sp-text-sm);
+}
+
+.sp-export__filter-input:focus {
+    outline: none;
+}
+
+.sp-export__column-tools {
+    display: inline-flex;
+    gap: var(--sp-space-1);
+    margin-inline-start: auto;
+}
+
+.sp-export__columns {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-4);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+
+.sp-export__group-name {
+    margin: 0 0 var(--sp-space-2);
+    padding-bottom: var(--sp-space-1);
+    border-bottom: 1px solid var(--sp-border-subtle);
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-export__column-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: var(--sp-space-1) var(--sp-space-3);
+}
+
+.sp-export__column {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--sp-space-2);
+    min-width: 0;
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-normal);
+    color: var(--sp-text-primary);
+    cursor: pointer;
+}
+
+.sp-export__column span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-export__column input {
+    margin: 0;
+    flex-shrink: 0;
+    accent-color: var(--sp-accent);
+}
+
+/* On a phone the two panes stack and the checklist drops to two columns,
+   so the dialog stays scrollable as one column rather than two competing
+   scroll regions. */
+@media (max-width: 48rem) {
+    .sp-export__panes {
+        grid-template-columns: 1fr;
+    }
+
+    .sp-export__pane--what {
+        border-inline-end: 0;
+        border-bottom: 1px solid var(--sp-border-subtle);
+    }
+
+    .sp-export__column-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+}

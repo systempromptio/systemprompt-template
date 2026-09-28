@@ -83,6 +83,10 @@ pub(super) async fn page_data(
             &page_url(query),
         ),
         rows,
+        export: crate::export::ExportView::single(
+            "projects",
+            &crate::export::view::query_string(&[("q", query.q.as_deref())]),
+        ),
         query: query.q.clone().unwrap_or_default(),
         truncated,
         can_manage,

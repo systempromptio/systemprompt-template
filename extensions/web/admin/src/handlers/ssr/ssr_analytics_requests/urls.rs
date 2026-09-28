@@ -168,17 +168,6 @@ pub(super) fn sort_url_prefix(query: &RequestsQuery) -> String {
     }
 }
 
-// Why: the export is the same question the table is answering, so it carries
-// every filter and the window rather than dumping the raw table.
-pub(super) fn csv_url(query: &RequestsQuery) -> String {
-    let qs = preserved_query_string(query, &["tab", "page"]);
-    if qs.is_empty() {
-        "/admin/requests.csv".to_owned()
-    } else {
-        format!("/admin/requests.csv?{qs}")
-    }
-}
-
 pub(super) fn build_pagination(query: &RequestsQuery, window: PageWindow) -> Pagination {
     let page = window.index;
     let qs = preserved_query_string(query, &["page"]);

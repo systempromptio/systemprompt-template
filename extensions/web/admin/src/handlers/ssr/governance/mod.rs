@@ -23,8 +23,9 @@ use sqlx::PgPool;
 
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::handlers::ssr::list_view::scope_filter_view;
-use crate::repositories::governance::decision_log::{DecisionFilter, DecisionSort};
-use crate::repositories::governance::findings::FindingFilter;
+use crate::repositories::governance::decision_log::{DecisionFilter, DecisionLogRow, DecisionSort};
+use crate::repositories::governance::findings::{FindingFilter, SafetyFindingLogRow};
+use crate::repositories::governance::{DecisionPage, PageSlice};
 use crate::repositories::scope::{ScopeRequest, SubjectScope, membership};
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
@@ -32,13 +33,10 @@ use crate::util::time_range::{TimeRange, TimeRangeQuery, parse_time_range};
 
 mod columns;
 mod context;
-mod csv_export;
 mod data;
 mod kpis;
 mod urls;
 mod view;
-
-pub(crate) use csv_export::governance_csv;
 
 
 pub(crate) const BASE_URL: &str = "/admin/governance";
@@ -180,6 +178,53 @@ async fn resolve_scope(
         ScopeRequest::from_query(user_ctx, query.group.as_deref(), query.project.as_deref());
     let scope = membership::get_subject_scope(pool, &request).await?;
     Ok((request, scope))
+}
+
+// Why: the exports read the same window, scope and filters the page shows,
+// through the page's own query type — one per plane.
+pub(crate) async fn export_decisions(
+    pool: &PgPool,
+    user_ctx: &UserContext,
+    query: GovernanceQuery,
+    range: TimeRange,
+    limit: i64,
+) -> Result<(Vec<DecisionLogRow>, i64), AdminError> {
+    require_console(user_ctx)?;
+    let (_, scope) = resolve_scope(pool, user_ctx, &query).await?;
+    Ok(
+        crate::repositories::governance::decision_log::list_governance_decisions_paged(
+            pool,
+            range,
+            &scope,
+            &decision_filter(&query),
+            DecisionPage {
+                sort: sort_from(&query),
+                slice: PageSlice::first(limit),
+            },
+        )
+        .await?,
+    )
+}
+
+pub(crate) async fn export_findings(
+    pool: &PgPool,
+    user_ctx: &UserContext,
+    query: GovernanceQuery,
+    range: TimeRange,
+    limit: i64,
+) -> Result<(Vec<SafetyFindingLogRow>, i64), AdminError> {
+    require_console(user_ctx)?;
+    let (_, scope) = resolve_scope(pool, user_ctx, &query).await?;
+    Ok(
+        crate::repositories::governance::findings::list_safety_findings_paged(
+            pool,
+            range,
+            &scope,
+            &finding_filter(&query),
+            PageSlice::first(limit),
+        )
+        .await?,
+    )
 }
 
 pub(crate) async fn governance_page(

@@ -1,0 +1,78 @@
+@layer components {
+
+/* The page filters a download carries, as chips the reader can drop for this
+   one file. A pinned chip (the conversation, session or skill the page is
+   about) has no drop button. */
+.sp-export__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sp-export__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    max-width: 100%;
+    padding: var(--sp-space-1) var(--sp-space-2);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-surface);
+    font-size: var(--sp-text-xs);
+}
+
+.sp-export__chip-label {
+    color: var(--sp-text-tertiary);
+}
+
+.sp-export__chip-value {
+    overflow: hidden;
+    color: var(--sp-text-primary);
+    font-weight: var(--sp-font-medium);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-export__chip-drop {
+    padding: 0 var(--sp-space-1);
+    border: 0;
+    border-radius: var(--sp-radius-full);
+    background: transparent;
+    color: var(--sp-text-tertiary);
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.sp-export__chip-drop:hover,
+.sp-export__chip-drop:focus-visible {
+    background: var(--sp-accent-dim);
+    color: var(--sp-accent-text);
+}
+
+.sp-export__filters-count {
+    color: var(--sp-text-tertiary);
+    font-weight: var(--sp-font-medium);
+}
+
+.sp-export__chip[hidden],
+.sp-export__window-line[hidden] {
+    display: none;
+}
+
+/* The dates the file covers, as the server resolved them. */
+.sp-export__window-line {
+    margin: 0;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-export__window-line[data-tone="warn"] {
+    color: var(--sp-warning-strong);
+}
+
+}
