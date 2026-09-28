@@ -252,10 +252,7 @@ _lint-gates-uncoordinated:
         check-core-ref.sh
         coverage-badge.sh
         check-docs-version.sh
-        # check-schema-baseline.sh joins this list with the first ladder rung
-        # (tests/fixtures/schema/release-baseline-0.61.0.sql); until then it
-        # has nothing to check and would only be red. release.sh runs it
-        # regardless, so no release can go out without the rung.
+        check-schema-baseline.sh
     )
     logdir=$(mktemp -d)
     trap 'rm -rf "$logdir"' EXIT

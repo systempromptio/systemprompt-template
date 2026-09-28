@@ -201,9 +201,10 @@ the floor and one named for the workspace version, and `just release`
 refuses without it. `just schema-baseline` records the current tree's rung;
 `just schema-baseline X.Y.Z` records a published release's from its gateway
 tarball. The release pipeline's `upgrade-boot` boots the candidate image over
-every rung seeded by `seed_hot_tables.sql`. Never edit a rung by hand. (The
-retired single `release-baseline.sql` still feeds
-`tests/integration/schema-upgrade` until that suite moves to the ladder.)
+every rung seeded by `seed_hot_tables.sql`, and
+`tests/integration/schema-upgrade` restores each rung, seeds it the same way,
+runs the current installer over it (2000 rows per hot table must survive) and
+diffs the result against a fresh install. Never edit a rung by hand.
 
 ---
 
