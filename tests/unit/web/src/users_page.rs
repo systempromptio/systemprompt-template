@@ -233,7 +233,7 @@ fn access_read_failures_are_visible_and_cannot_offer_rule_edits() {
         }),
         true,
     ) else {
-        return;
+        return; // skip-ok: components/user-access.hbs is not in this tree until the access panels are ported
     };
     assert!(html.contains("Unable to load permissions"));
     assert!(html.contains("Unable to load connections"));
@@ -261,7 +261,7 @@ fn access_included_content_does_not_claim_client_execution() {
         }),
         false,
     ) else {
-        return;
+        return; // skip-ok: components/user-access.hbs is not in this tree until the access panels are ported
     };
     for text in [
         "Explicitly denied",
@@ -293,7 +293,7 @@ fn a_failed_personal_rule_read_is_unknown_rather_than_inherited() {
         }),
         true,
     ) else {
-        return;
+        return; // skip-ok: components/user-access.hbs is not in this tree until the access panels are ported
     };
     assert!(html.contains("sp-p-access__rule-state\">Unable to load</span>"));
     assert!(!html.contains("data-edit-permissions"));
