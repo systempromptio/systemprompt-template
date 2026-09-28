@@ -1,0 +1,10 @@
+extension:
+  type: cli
+  name: kit-export
+  binary: systemprompt-kit-export
+  description: Export a marketplace from services/ into a kit repository tree (Anthropic marketplace format plus the systemprompt sidecars, no access block)
+  build_type: workspace
+  enabled: true
+  commands:
+    - name: kit-export
+      description: "kit-export <marketplace> <dir> — write the marketplace, its plugins and skills as a kit tree and prove it re-imports"

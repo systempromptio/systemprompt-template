@@ -50,6 +50,7 @@ systemprompt-web-jobs = { path = "../extensions/web/jobs" }
 systemprompt-web-extension = { path = "../extensions/web" }
 systemprompt-web-site = { path = "../extensions/web/site" }
 
+systemprompt-kit-export = { path = "../extensions/cli/kit-export" }
 # Core facade — DbPool / Database / identifiers for the integration crate.
 # The contract crate additionally enables `full`, which links the core
 # extension crates whose `register_extension!` registrations carry the

@@ -4345,6 +4345,17 @@ dependencies = [
 
 [[package]]
 name = "serde_jcs"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cacecf649bc1a7c5f0e299cc813977c6a78116abda2b93b1ee01735b71ead9a8"
+dependencies = [
+ "ryu-js",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "serde_jcs"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3a60f3fda61525e439ef6d67422118f11e986566997d9021c56867ad814a0aa"
@@ -5419,6 +5430,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "systemprompt-kit-export"
+version = "0.62.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "serde",
+ "serde_json",
+ "serde_yaml_ng",
+ "systemprompt",
+ "tempfile",
+]
+
+[[package]]
 name = "systemprompt-loader"
 version = "0.62.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5487,7 +5511,7 @@ dependencies = [
  "libc",
  "schemars",
  "serde",
- "serde_jcs",
+ "serde_jcs 0.2.0",
  "serde_json",
  "serde_yaml_ng",
  "sha2 0.11.0",
@@ -5596,7 +5620,7 @@ dependencies = [
  "schemars",
  "semver",
  "serde",
- "serde_jcs",
+ "serde_jcs 0.2.0",
  "serde_json",
  "serde_yaml_ng",
  "sha2 0.11.0",
@@ -5771,7 +5795,7 @@ dependencies = [
  "reqwest 0.12.28",
  "rsa",
  "serde",
- "serde_jcs",
+ "serde_jcs 0.2.0",
  "serde_json",
  "serde_yaml_ng",
  "sha2 0.11.0",
@@ -5947,6 +5971,7 @@ dependencies = [
  "saml",
  "semver",
  "serde",
+ "serde_jcs 0.1.0",
  "serde_json",
  "serde_yaml_ng",
  "sha2 0.10.9",
@@ -5963,6 +5988,7 @@ dependencies = [
  "url",
  "urlencoding",
  "uuid",
+ "zip",
 ]
 
 [[package]]
@@ -6512,6 +6538,12 @@ name = "typed-arena"
 version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6af6ae20167a9ece4bcb41af5b80f8a1f1df981f6391189ce00fd257af04126a"
+
+[[package]]
+name = "typed-path"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e28f89b80c87b8fb0cf04ab448d5dd0dd0ade2f8891bae878de66a75a28600e"
 
 [[package]]
 name = "typenum"
@@ -7294,6 +7326,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.5",
+]
+
+[[package]]
+name = "zip"
+version = "8.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b"
+dependencies = [
+ "crc32fast",
+ "flate2",
+ "indexmap",
+ "memchr",
+ "typed-path",
 ]
 
 [[package]]

@@ -20,6 +20,7 @@ systemprompt-web-shared = { workspace = true }
 systemprompt-web-admin = { workspace = true }
 systemprompt-web-extension = { workspace = true }
 systemprompt-web-site = { workspace = true }
+systemprompt-kit-export = { workspace = true }
 systemprompt = { workspace = true, features = ["full"] }
 handlebars = { workspace = true }
 tokio = { workspace = true }

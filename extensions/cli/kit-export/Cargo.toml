@@ -1,0 +1,28 @@
+[package]
+name = "systemprompt-kit-export"
+version.workspace = true
+license.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Developer CLI extension for the Systemprompt instance: exports a marketplace from services/ into a kit repository tree in Anthropic marketplace format."
+repository.workspace = true
+homepage.workspace = true
+publish = false
+
+[[bin]]
+name = "systemprompt-kit-export"
+path = "src/main.rs"
+
+[dependencies]
+# Audit: uses loader (ConfigLoader), marketplace (CatalogContent, build_plugin_bundle, import), models — requires `full`.
+systemprompt = { workspace = true, features = ["full"] }
+
+anyhow.workspace = true
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+tempfile.workspace = true
+
+[lints]
+workspace = true

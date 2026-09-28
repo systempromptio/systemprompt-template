@@ -1476,12 +1476,6 @@ services-pin KIT REF PROFILE=".systemprompt/profiles/production/profile.yaml":
 kit-export MARKETPLACE DIR:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ ! -f "{{justfile_directory()}}/extensions/cli/kit-export/Cargo.toml" ]; then
-        echo "ERROR: kit-export is not built in this repository yet — the" >&2
-        echo "  extensions/cli/kit-export crate lands with the Rust port of the" >&2
-        echo "  sync plane. Until then seed a kit by hand from deploy/kit/." >&2
-        exit 1
-    fi
     BIN="$(dirname "{{CLI}}")/systemprompt-kit-export"
     if [ ! -x "$BIN" ]; then
         echo "ERROR: $BIN not found. Run: just build" >&2

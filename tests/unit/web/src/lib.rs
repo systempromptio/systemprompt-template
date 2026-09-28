@@ -259,7 +259,10 @@ mod managed_assets;
 #[cfg(test)]
 mod managed_bundle;
 
-// Static gates over the schema and the migrations.
+// Static gates over the schema and the migrations, and the kit exporter's
+// round trip.
+#[cfg(test)]
+mod kit_export;
 #[cfg(test)]
 mod migration_cost;
 
