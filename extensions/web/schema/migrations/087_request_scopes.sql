@@ -1,3 +1,7 @@
+-- @cost: rows=3644 measured=30s triggers=suspended
+-- (Estimate, not a measurement on this repo: rows is the ai_requests count the
+-- equivalent production backfill wrote; 30s keeps the derived
+-- statement_timeout at the runner's 300s default.)
 -- Cost attribution stamped at request time. Twin of
 -- schema/40_request_scopes.sql, plus the backfill below.
 --

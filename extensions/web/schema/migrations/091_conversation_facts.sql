@@ -1,3 +1,8 @@
+-- @cost: rows=0 measured=30s triggers=suspended
+-- (Estimate, not a measurement: the one hot-table statement is the
+-- non-concurrent idx_ai_requests_updated_at build, which writes no rows; the
+-- conversation_facts indexes are built on a table created empty here. 30s
+-- keeps the derived statement_timeout at the runner's 300s default.)
 -- Twin of schema/45_conversation_facts.sql: the deterministic
 -- conversation_facts rollup, its per-skill half, the rollup watermark and the
 -- refresh functions. Collapses astound's facts table, its later columns

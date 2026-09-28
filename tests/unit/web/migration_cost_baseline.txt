@@ -1,0 +1,7 @@
+# Migrations that rewrite a hot table and predate the cost gate.
+# They cannot be annotated: the checksum covers the whole body, so adding a
+# comment makes every established database refuse to boot. This list may only
+# shrink -- an entry whose migration no longer trips the detector fails the gate.
+068_dashboard_indexes
+071_recover_native_sessions
+073_version_impact_owner_constraints

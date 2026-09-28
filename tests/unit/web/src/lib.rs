@@ -259,6 +259,10 @@ mod managed_assets;
 #[cfg(test)]
 mod managed_bundle;
 
+// Static gates over the schema and the migrations.
+#[cfg(test)]
+mod migration_cost;
+
 // The declarative access-control model (`rules.yaml`) and the Code ↔ Instance
 // sync data layer: projection, drift, review, export, the boot contract, the
 // configuration archive, and each plane's pure halves.

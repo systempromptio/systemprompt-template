@@ -1,0 +1,6 @@
+# Trigger functions that run FOR EACH ROW and loop beyond that row.
+#
+# Each one turns a single write into N statements, which is what once made a
+# bulk UPDATE on ai_requests cost 113 ms a row on a production instance. The
+# declarative schema here declares none, so the list is empty; it exists so
+# the population cannot grow, and may only shrink.
