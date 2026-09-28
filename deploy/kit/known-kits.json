@@ -1,0 +1,35 @@
+{
+  "_comment": [
+    "The external kits this instance composes, one entry per remote source.",
+    "This is the single list the tooling reads: `just services-pin <kit> <digest>` takes the image and public key from here to write the profile's services.sources[] entry. Nothing is hand-typed twice.",
+    "A kit's marketplace, plugins and skills live in the kit's repository; who reaches them is declared in services/access-control/rules.yaml with `owner: bundle:<name>`.",
+    "status: pinned — the profile pins this kit (or is expected to); the seed asserts its marketplaces are served. planned — the kit repository is being seeded (`just kit-export`); its ids still live in services/ until it is pinned, so the seed ignores it.",
+    "pull: public — the GHCR package is public, so the profile entry carries no auth_secret. channel — the tag the kit's CI moves on every release; `just services-pin <kit> <channel>` follows it, `just services-pin <kit> sha256:<digest>` pins one upload."
+  ],
+  "kits": [],
+  "_example": {
+    "name": "<kit>",
+    "status": "planned",
+    "repo": "<org>/<kit-repo>",
+    "image": "ghcr.io/<org>/<kit-repo>",
+    "pull": "public",
+    "channel": "stable",
+    "public_key": "<base64 Ed25519 public key from `systemprompt core services keygen`>",
+    "marketplaces": {
+      "<marketplace-id>": {
+        "plugins": [
+          "<plugin-id>"
+        ],
+        "mcp_servers": []
+      }
+    },
+    "plugins": {
+      "<plugin-id>": {
+        "skills": [
+          "<skill_id>"
+        ],
+        "mcp_servers": []
+      }
+    }
+  }
+}

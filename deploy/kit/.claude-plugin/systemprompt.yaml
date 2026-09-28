@@ -1,0 +1,19 @@
+# systemprompt sidecar for the marketplace — the few things Anthropic's
+# marketplace.json has no slot for. Everything marketplace.json already says
+# (name, description, version, owner, plugins) is refused here.
+#
+# NO `access:` BLOCK. Who reaches this marketplace is declared in the
+# instance repository (services/access-control/rules.yaml, entity
+# `marketplace/<name>` with `owner: bundle:<kit>`). A kit release can never
+# widen its own audience; the instance ignores an access block a kit carries
+# and shows it as a warning on /admin/sync.
+schema: 1
+marketplace:
+  title: "<Team> Development"
+  visibility: private
+  enabled: true
+  # MCP servers this marketplace exposes, by id as defined on the instance
+  # (services/mcp/<id>.yaml). The kit does not define servers.
+  mcp_servers:
+    source: explicit
+    include: []

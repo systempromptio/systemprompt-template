@@ -1463,6 +1463,34 @@ core-pin REF="":
     printf '%s\n' "$ref" > bridge/CORE_REF
     echo "bridge/CORE_REF = $ref"
 
+# Pin a kit's services bundle in a profile (default: the production profile)
+# to a GHCR digest, or to the kit's channel tag (e.g. `stable`) so every
+# release the kit's CI publishes is one Import on /admin/sync away. The kit's
+# image, public key and pull mode come from deploy/kit/known-kits.json; the
+# entry is rewritten in place or inserted (with the `sources:` block) when
+# absent. The digest is printed by the kit's publish workflow.
+services-pin KIT REF PROFILE=".systemprompt/profiles/production/profile.yaml":
+    python3 scripts/services-pin.py "{{KIT}}" "{{REF}}" "{{PROFILE}}"
+
+# Export a marketplace from services/ into a kit repository tree (Anthropic
+# marketplace format + systemprompt sidecars, no access block) and prove it
+# re-imports identically. Runbook: deploy/kit/README-INTEGRATION.md.
+kit-export MARKETPLACE DIR:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f "{{justfile_directory()}}/extensions/cli/kit-export/Cargo.toml" ]; then
+        echo "ERROR: kit-export is not built in this repository yet — the" >&2
+        echo "  extensions/cli/kit-export crate lands with the Rust port of the" >&2
+        echo "  sync plane. Until then seed a kit by hand from deploy/kit/." >&2
+        exit 1
+    fi
+    BIN="$(dirname "{{CLI}}")/systemprompt-kit-export"
+    if [ ! -x "$BIN" ]; then
+        echo "ERROR: $BIN not found. Run: just build" >&2
+        exit 1
+    fi
+    exec "$BIN" "{{MARKETPLACE}}" "{{DIR}}" --services "{{justfile_directory()}}/services"
+
 # What "build next and next together" means in practice: while
 # [patch.crates-io] is active the server compiles against ../systemprompt-core
 # in place, so the only way a deploy can ship exactly the core CI gates is if

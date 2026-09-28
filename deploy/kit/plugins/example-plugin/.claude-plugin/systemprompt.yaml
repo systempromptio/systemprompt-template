@@ -1,0 +1,11 @@
+# systemprompt sidecar for one plugin. `plugins/<id>/.claude-plugin/plugin.json`
+# carries name, description, version, author, keywords and license; this file
+# carries only what that format cannot.
+schema: 1
+plugin:
+  title: "Example plugin"
+  category: development
+  enabled: true
+  mcp_servers:
+    source: explicit
+    include: []

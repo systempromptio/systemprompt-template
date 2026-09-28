@@ -1,0 +1,238 @@
+# Validate this kit on every push and pull request; publish it as a signed
+# services bundle when its declared version has not been released yet.
+#
+# Copied verbatim into a kit repository (see README-INTEGRATION.md) apart from
+# the two env values below. Secrets: BUNDLE_SIGNING_SEED (the Ed25519 seed
+# whose public half the instance pins) is required. INSTANCE_RELEASE_TOKEN
+# (Contents: read on the instance repository) is needed only while that
+# repository is private — the job downloads its server binary (and packs the
+# base from its services/ tree) from there. SYSTEMPROMPT_ADMIN_TOKEN + SYSTEMPROMPT_API_URL are optional:
+# with them the job asks the instance to import the new composition in place;
+# without them an operator presses Import on /admin/sync. KIT_STATS_PAT is
+# optional too: a personal access token (owner with console access) that lets
+# the job write the instance's run record per kit version into the release
+# notes (tools/kit-stats.sh; kit-stats.yml refreshes it daily). The image is
+# pushed with the workflow's own token, so no packages PAT is needed.
+#
+# The version is the trigger. `metadata.version` in marketplace.json names the
+# release: merge to main with a version no tag carries and CI tags, releases
+# and publishes it; merge with the version unchanged and CI validates and
+# stops, saying so. Nothing republishes under a version that already shipped.
+#
+# Two tags are pushed for every release: the release tag itself, and the
+# kit's channel tag (`stable`). A profile that pins the digest follows nothing;
+# a profile that follows the channel serves the new release after one Import.
+name: Publish services bundle
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # A hand-cut release still publishes, for a tag made outside this flow.
+  release:
+    types: [published]
+  workflow_dispatch:
+
+env:
+  # The instance release whose gateway binary (and, where the release ships
+  # one, base bundle) this kit validates against. Bump deliberately.
+  INSTANCE_RELEASE: v0.61.0
+  INSTANCE_REPO: systempromptio/systemprompt-template
+  # Empty: validate against the base-bundle asset of INSTANCE_RELEASE. A git
+  # ref (e.g. `next`): pack the base from the instance repository's services/
+  # tree at that ref instead. This repository's releases ship no base-bundle
+  # asset, so the ref is the default.
+  INSTANCE_BASE_REF: next
+  CHANNEL: stable
+
+# contents: write — the publish job creates the tag and the GitHub release.
+permissions:
+  contents: write
+  packages: write
+
+# `shell: bash` runs with `-eo pipefail`; the default `bash -e` does not, and a
+# `publish | tee` whose publish fails would otherwise pass the step.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # Everything that can say "no" runs here, on every trigger, so a pull
+  # request is refused before it is merged rather than at release time.
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch the server binary and the base bundle
+        env:
+          GH_TOKEN: ${{ secrets.INSTANCE_RELEASE_TOKEN || github.token }}
+        run: |
+          gh release download "$INSTANCE_RELEASE" --repo "$INSTANCE_REPO" \
+            --pattern 'systemprompt-gateway-*-linux-amd64.tar.gz' --dir ./release
+          tar -xzf release/systemprompt-gateway-*-linux-amd64.tar.gz -C release
+          echo "$PWD/$(ls -d release/systemprompt-gateway-*-linux-amd64)" >> "$GITHUB_PATH"
+          if [ -z "$INSTANCE_BASE_REF" ]; then
+            gh release download "$INSTANCE_RELEASE" --repo "$INSTANCE_REPO" \
+              --pattern 'systemprompt-*-base-*.tar.gz' --dir ./release
+            mv release/systemprompt-*-base-*.tar.gz ./base.tar.gz
+          else
+            echo "::notice::packing the base from $INSTANCE_REPO@$INSTANCE_BASE_REF services/ (INSTANCE_BASE_REF is set)"
+            git clone --depth 1 --branch "$INSTANCE_BASE_REF" \
+              "https://x-access-token:${GH_TOKEN}@github.com/${INSTANCE_REPO}.git" ./release/instance
+            "$PWD/$(ls -d release/systemprompt-gateway-*-linux-amd64)/systemprompt" \
+              core services bundle --root ./release/instance/services --out ./base.tar.gz --version "0.0.0-$INSTANCE_BASE_REF"
+            rm -rf ./release/instance
+          fi
+
+      # Runs before the importer so a bad SKILL.md is reported as the line that
+      # causes it, not as a byte offset. It also catches what the importer
+      # accepts and the instance then serves badly: a skill whose references
+      # never reach the bundle, two skills covering one topic, an id generic
+      # enough to collide with another kit at boot.
+      - name: Sanitize the kit
+        run: |
+          python3 -m pip install --quiet --disable-pip-version-check pyyaml
+          KIT_EXISTING_TAGS="$(git tag --list 'v*')" python3 tools/sanitize-kit.py --strict || {
+            echo "::error::kit sanitation failed — the annotations above name every file, line and fix"
+            exit 1
+          }
+
+      - name: Import the authored tree
+        run: |
+          systemprompt core marketplace import --from . --into ./services --strict || {
+            echo "::error::core refused to import this tree; the message above names the file"
+            exit 1
+          }
+
+      - name: Validate against the base
+        run: |
+          systemprompt core services validate --root ./services --base ./base.tar.gz --strict || {
+            echo "::error::this kit does not compose with the instance's services/ tree — most often an id the base already owns"
+            exit 1
+          }
+
+  # Only after validate is green, and only for a version that has not shipped.
+  publish:
+    needs: validate
+    if: github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    # The secrets context is not allowed in a step-level `if:` — the whole
+    # workflow fails to parse. Expose the optional secrets as job env and test
+    # the env instead.
+    env:
+      ADMIN_TOKEN: ${{ secrets.SYSTEMPROMPT_ADMIN_TOKEN }}
+      API_URL: ${{ secrets.SYSTEMPROMPT_API_URL }}
+      STATS_PAT: ${{ secrets.KIT_STATS_PAT }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # The version in the manifest decides whether there is anything to do. A
+      # release event carries its own tag and always publishes.
+      - name: Decide the release
+        id: decide
+        run: |
+          version=$(jq -r '.metadata.version // empty' .claude-plugin/marketplace.json)
+          [ -n "$version" ] || { echo "::error file=.claude-plugin/marketplace.json::metadata.version is missing; CI names the release tag after it"; exit 1; }
+          if [ "$GITHUB_EVENT_NAME" = release ]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            tag="v$version"
+            if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+              echo "::notice title=Nothing to publish::$tag is already released, so this push publishes nothing. Bump metadata.version in .claude-plugin/marketplace.json to ship these changes."
+              { echo "## Nothing to publish"; echo; echo "\`$tag\` already exists. Bump \`metadata.version\` in \`.claude-plugin/marketplace.json\` to publish."; } >> "$GITHUB_STEP_SUMMARY"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Publishing::$tag"
+
+      - name: Fetch the server binary and the base bundle
+        if: steps.decide.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.INSTANCE_RELEASE_TOKEN || github.token }}
+        run: |
+          gh release download "$INSTANCE_RELEASE" --repo "$INSTANCE_REPO" \
+            --pattern 'systemprompt-gateway-*-linux-amd64.tar.gz' --dir ./release
+          tar -xzf release/systemprompt-gateway-*-linux-amd64.tar.gz -C release
+          echo "$PWD/$(ls -d release/systemprompt-gateway-*-linux-amd64)" >> "$GITHUB_PATH"
+
+      - name: Import the authored tree
+        if: steps.decide.outputs.skip == 'false'
+        run: systemprompt core marketplace import --from . --into ./services --strict
+
+      - name: Pack and sign
+        if: steps.decide.outputs.skip == 'false'
+        env:
+          BUNDLE_SIGNING_SEED: ${{ secrets.BUNDLE_SIGNING_SEED }}
+          TAG: ${{ steps.decide.outputs.tag }}
+        run: |
+          [ -n "$BUNDLE_SIGNING_SEED" ] || { echo "::error::BUNDLE_SIGNING_SEED is not set; the instance pins its public half and will not verify an unsigned bundle"; exit 1; }
+          systemprompt core services bundle \
+            --root ./services --out ./bundle.tar.gz --marketplace-only \
+            --version "$TAG" --sign-key env:BUNDLE_SIGNING_SEED \
+            --source-repo "$GITHUB_REPOSITORY" --source-commit "$GITHUB_SHA" --workflow-run "$GITHUB_RUN_ID"
+          echo "KIT_IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - name: Publish the release tag and move the channel
+        id: publish
+        if: steps.decide.outputs.skip == 'false'
+        env:
+          GHCR_AUTH: ${{ github.actor }}:${{ github.token }}
+          TAG: ${{ steps.decide.outputs.tag }}
+        run: |
+          systemprompt core services publish --bundle ./bundle.tar.gz \
+            --to "oci://$KIT_IMAGE:$TAG" --auth env:GHCR_AUTH --json | tee publish.json
+          digest=$(jq -r '[.. | objects | select(.heading? == "digest") | .content] | first // .digest // empty' publish.json)
+          [ -n "$digest" ] || { echo "::error::publish returned no digest"; cat publish.json; exit 1; }
+          systemprompt core services publish --bundle ./bundle.tar.gz \
+            --to "oci://$KIT_IMAGE:$CHANNEL" --auth env:GHCR_AUTH --json | tee channel.json
+          channel_digest=$(jq -r '[.. | objects | select(.heading? == "digest") | .content] | first // .digest // empty' channel.json)
+          [ "$digest" = "$channel_digest" ] || { echo "::error::channel digest $channel_digest differs from release digest $digest"; exit 1; }
+          echo "::notice title=Bundle digest::$digest — pin with: just services-pin <kit> $digest (or follow the channel: just services-pin <kit> $CHANNEL)"
+          { echo "## Services bundle"; echo; echo "- image: \`$KIT_IMAGE:$TAG\` and \`:$CHANNEL\`"; echo "- digest: \`$digest\`"; } >> "$GITHUB_STEP_SUMMARY"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+      # The bundle is published before the tag, so a tag never names a release
+      # that does not exist in the registry.
+      - name: Tag and release
+        if: steps.decide.outputs.skip == 'false' && github.event_name != 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.decide.outputs.tag }}
+          DIGEST: ${{ steps.publish.outputs.digest }}
+        run: |
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --generate-notes \
+            --notes "Published \`$KIT_IMAGE:$TAG\` and moved \`:$CHANNEL\` to \`$DIGEST\`."
+          echo "::notice title=Released::$TAG"
+
+      # The versions before this one, as the instance measured them: what this
+      # release will be compared against. kit-stats.yml keeps it current.
+      - name: Record the run record in the release notes
+        if: steps.decide.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tools/kit-stats.sh "${{ steps.decide.outputs.tag }}"
+
+      # Ask the instance to import now. It recomposes, projects entitlement and
+      # refreshes the inventory in place — no restart. A profile that pins a
+      # digest sees `changed: false` until an operator re-pins; one that
+      # follows the channel serves this release when the call returns.
+      - name: Import on the instance
+        if: steps.decide.outputs.skip == 'false' && env.ADMIN_TOKEN != ''
+        run: |
+          curl -fsS -X POST -H "Authorization: Bearer $ADMIN_TOKEN" \
+            "$API_URL/api/v1/admin/services/refresh" | tee import.json
+          jq -e '.changed' import.json >/dev/null && echo "::notice::instance imported the new composition (reconciled: $(jq -r .reconciled import.json))" || echo "::notice::instance composition unchanged — pinned by digest? run: just services-pin <kit> ${{ steps.publish.outputs.digest }}"
+
+      - name: Say how to serve it
+        if: steps.decide.outputs.skip == 'false' && env.ADMIN_TOKEN == ''
+        run: |
+          echo "::notice title=One step left::no SYSTEMPROMPT_ADMIN_TOKEN is set, so press Import sources on /admin/sync to serve ${{ steps.decide.outputs.tag }}"
+          { echo; echo "No admin token is configured, so the instance has not imported this release yet. Press **Import sources** on \`/admin/sync\`."; } >> "$GITHUB_STEP_SUMMARY"
