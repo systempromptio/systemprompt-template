@@ -66,7 +66,7 @@ pub(super) async fn test(
     headers: HeaderMap,
 ) -> AdminResult<Response> {
     let user = live_user(&pool, &headers, true).await?;
-    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
+    service::require_entitlement(&pool, &user.user_id).await?;
     oauth::verified_token(&pool, &user.user_id, provider.clone(), true).await?;
     Ok((
         [(CACHE_CONTROL, "no-store")],
@@ -90,7 +90,7 @@ pub(super) async fn manual(
     Json(input): Json<ManualToken>,
 ) -> AdminResult<Response> {
     let user = live_user(&pool, &headers, true).await?;
-    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
+    service::require_entitlement(&pool, &user.user_id).await?;
     if !provider.configured() || !matches!(provider, Provider::Atlassian | Provider::Github) {
         return Err(AdminError::BadRequest(
             "Use browser authorization for this connector".into(),

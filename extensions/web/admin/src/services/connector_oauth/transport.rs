@@ -72,18 +72,6 @@ async fn registration(
             "https://github.com/login/oauth/authorize".into(),
             "https://github.com/login/oauth/access_token".into(),
         )),
-        Provider::Salesforce(_) => {
-            let org = provider.salesforce_org()?;
-            let base = org.domain()?;
-            Ok((
-                Registration {
-                    client_id: ClientId::new(org.client_id()?),
-                    client_secret: org.client_secret_value()?,
-                },
-                format!("{base}/services/oauth2/authorize"),
-                format!("{base}/services/oauth2/token"),
-            ))
-        },
         Provider::Atlassian => {
             let metadata = super::discovery::atlassian_metadata().await?;
             atlassian_endpoint(&metadata.authorization)?;
@@ -149,9 +137,6 @@ pub async fn authorize(consent: Consent<'_>, provider: Provider) -> AdminResult<
         url.query_pairs_mut()
             .append_pair("resource", &provider.endpoint())
             .append_pair("scope", super::discovery::ATLASSIAN_SCOPES);
-    } else if provider.is_salesforce() {
-        url.query_pairs_mut()
-            .append_pair("scope", "mcp_api refresh_token openid");
     }
     Ok((
         url.to_string(),

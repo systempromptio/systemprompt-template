@@ -13,11 +13,10 @@ use crate::repositories::users::enrolment::UserDeviceRow;
 use crate::repositories::users::sessions::SigninSessionRow;
 
 use super::context::{
-    DeviceRowView, DevicesTabView, IdentityTabView, MembershipTabView, SalesforceIdentityView,
-    ScopeDefaultOptionView, UserConversationsTabView, UserSessionRowView, UserSessionsTabView,
+    DeviceRowView, DevicesTabView, IdentityTabView, MembershipTabView, ScopeDefaultOptionView,
+    UserConversationsTabView, UserSessionRowView, UserSessionsTabView,
 };
 use super::load::{IdentityData, MembershipData, UserConversationsData};
-use crate::services::connector_oauth::Provider;
 use crate::types::UserContext;
 
 pub(super) use super::usage::usage_tab;
@@ -51,16 +50,6 @@ pub(super) fn identity_tab(
             .find(|i| i.issuer == SLACK_ISSUER)
             .map(|i| i.external_sub.clone())
             .unwrap_or_default(),
-        salesforce_identities: data
-            .salesforce_identities
-            .iter()
-            .map(|identity| SalesforceIdentityView {
-                label: Provider::try_from(identity.provider.clone())
-                    .map_or_else(|_| identity.provider.clone(), |p| p.display_name()),
-                provider: identity.provider.clone(),
-                sf_username: identity.sf_username.clone(),
-            })
-            .collect(),
         share_token_version: data.share_token_version,
     }
 }

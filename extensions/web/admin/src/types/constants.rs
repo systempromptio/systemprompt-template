@@ -32,8 +32,8 @@ pub const ROLE_USER: &str = "user";
 // estate without being able to drive it.
 pub const ROLE_PROJECT_MANAGER: &str = "project_manager";
 // Why: the Cowork entitlement role. It opens the systemprompt-cowork
-// marketplace and the Salesforce MCP server to client-facing staff whichever
-// group they sit in, and reaches nothing on the admin dashboard.
+// marketplace to client-facing staff whichever group they sit in, and reaches
+// nothing on the admin dashboard.
 pub const ROLE_KNOWLEDGE_WORKER: &str = "knowledge_worker";
 
 pub const ACTION_GRANTED: &str = "granted";

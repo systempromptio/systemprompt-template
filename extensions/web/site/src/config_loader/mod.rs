@@ -9,10 +9,8 @@
 use std::sync::{Arc, OnceLock};
 
 mod adfs;
-mod downstream;
 
 use adfs::load_adfs_config;
-use downstream::load_salesforce_config;
 
 use systemprompt::config::{AppPaths, ProfileBootstrap};
 use thiserror::Error;
@@ -124,9 +122,6 @@ static SKILLS_PAGE_CONFIG: OnceLock<Result<Option<Arc<SkillsPageConfig>>, String
     OnceLock::new();
 static ADFS_CONFIG: OnceLock<Result<Option<Arc<systemprompt_web_admin::AdfsConfig>>, String>> =
     OnceLock::new();
-static SALESFORCE_CONFIG: OnceLock<
-    Result<Option<Arc<systemprompt_web_admin::SalesforceConfig>>, String>,
-> = OnceLock::new();
 
 #[must_use]
 pub fn navigation_config() -> Option<Arc<NavigationConfig>> {
@@ -158,15 +153,6 @@ pub fn skills_page_config() -> Option<Arc<SkillsPageConfig>> {
 #[must_use]
 pub fn adfs_config() -> Option<Arc<systemprompt_web_admin::AdfsConfig>> {
     log_and_discard_err(&ADFS_CONFIG, load_adfs_config, "ADFS config error")
-}
-
-#[must_use]
-pub fn salesforce_config() -> Option<Arc<systemprompt_web_admin::SalesforceConfig>> {
-    log_and_discard_err(
-        &SALESFORCE_CONFIG,
-        load_salesforce_config,
-        "Salesforce config error",
-    )
 }
 
 #[doc(hidden)]

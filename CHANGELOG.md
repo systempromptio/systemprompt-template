@@ -70,6 +70,7 @@ Conventions (strict — hold every entry to them):
 
 ### Removed
 
+- **Breaking:** Salesforce identity and org support, which served another deployment: the Salesforce SSO/identity link (`/admin/users/{id}/salesforce-identity`, `/admin/api/profile/salesforce/unlink`), the per-user bearer accessor (`/api/public/salesforce/token`), JWT-bearer org provisioning, the Salesforce connector-OAuth provider and its user-detail row, and schema `21_salesforce_identity.sql`. Migration 095 drops `salesforce_user_identities` on established databases. The generic connector-OAuth machinery stays, and `/connectors/{provider}/reprovision` now works for any configured provider (its error code is `provider_reprovisioned`). Migrate by removing any `access-control/salesforce.yaml` and Salesforce MCP/connector config before upgrading; ADFS SSO is unaffected.
 - The orphaned evals admin templates (`evals.hbs`, `eval-run-detail.hbs`, `partials/evals/*`) and `css/admin/20-page-evals.css`: core 0.61 retired evals and nothing renders them. The `/admin/evals` contract variants and the never-compiled `evals_repositories.rs` test go with them.
 - `tests/unit/web/src/india_skills.rs`, a test for another deployment's skill inventory.
 

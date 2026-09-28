@@ -266,8 +266,4 @@ fn api_routes() -> Router<Arc<PgPool>> {
             "/api/profile/bridge-code",
             post(handlers::ssr::issue_bridge_code),
         )
-        .route(
-            "/api/profile/salesforce/unlink",
-            post(handlers::salesforce_auth::salesforce_unlink),
-        )
 }

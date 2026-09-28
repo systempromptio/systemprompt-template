@@ -24,8 +24,6 @@ pub(crate) mod projects;
 pub(crate) mod resources;
 pub(crate) mod responses;
 pub(crate) mod roles;
-pub(crate) mod salesforce_auth;
-pub(crate) mod salesforce_identity;
 pub(crate) mod scope_defaults;
 pub(crate) mod secrets;
 pub(crate) mod self_service;

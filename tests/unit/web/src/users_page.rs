@@ -251,7 +251,7 @@ fn access_included_content_does_not_claim_client_execution() {
                 "workspaces": [{ "name": "India Development", "status": "Allowed", "tone": "ok",
                     "reason": "Allowed through group india-devs", "plugins": [
                         { "name": "Business Analysis", "skills": 16 },
-                        { "name": "Salesforce Core", "skills": 18 }] }],
+                        { "name": "Engineering Core", "skills": 18 }] }],
                 "other_workspaces": [
                 { "name": "Platform workspace", "status": "Explicitly denied", "tone": "err", "reason": "Denied through group india-devs" },
                 { "name": "Cowork", "status": "Not assigned", "tone": "muted", "reason": "No matching grant for this workspace" }],

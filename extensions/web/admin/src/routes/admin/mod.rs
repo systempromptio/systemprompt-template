@@ -108,14 +108,6 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
             "/users/{user_id}/share-token",
             post(handlers::share::issue_share_token_handler),
         )
-        // Why: set administratively because ADFS replaced the Salesforce SSO
-        // login that used to capture the Username from a `preferred_username`
-        // claim. Nothing derives it now, so someone has to state it.
-        .route(
-            "/users/{user_id}/salesforce-identity",
-            post(handlers::salesforce_identity::link_salesforce_identity_handler)
-                .delete(handlers::salesforce_identity::unlink_salesforce_identity_handler),
-        )
         .route(
             "/connectors/{provider}/reprovision",
             post(handlers::connector_reprovision::reprovision_connector_handler),

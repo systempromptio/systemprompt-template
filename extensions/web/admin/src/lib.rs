@@ -51,10 +51,8 @@ pub use handlers::connector_auth::router as connector_api_router;
 pub use handlers::dev_login::{
     DEV_LOGIN_PATH, dev_login_allowed, dev_login_enabled, dev_login_url,
 };
-pub use handlers::salesforce_auth::{SalesforceConfig, SalesforceDeps, SalesforceError};
 pub use routes::{admin_ssr_router, bridge_auth_ssr_router};
-pub use services::salesforce_orgs::salesforce_orgs_boot_check;
-pub use services::{connector_oauth, salesforce_orgs};
+pub use services::connector_oauth;
 pub use types::{
     CreateUserRequest, MarketplaceContext, UserContext, UserSummary, UserUsageEvent,
     roles_grant_console,
@@ -114,19 +112,6 @@ pub fn bridge_identity_router(pool: Arc<PgPool>) -> Router {
             get(handlers::bridge_whoami::bridge_whoami_handler),
         )
         .with_state(pool)
-}
-
-// Why: the per-user Salesforce bearer accessor core's external-MCP client GETs
-// at tool-call time. Mounted under `/api/public` and deliberately NOT behind
-// `require_auth_middleware`: the caller is core carrying the user's own bridge
-// token, which has no session cookie, so the handler authenticates it itself.
-pub fn salesforce_api_router(deps: SalesforceDeps) -> Router {
-    Router::new()
-        .route(
-            "/salesforce/token",
-            get(handlers::salesforce_auth::salesforce_token_handler),
-        )
-        .layer(Extension(deps))
 }
 
 pub fn share_manifest_router(pool: Arc<PgPool>) -> Router {

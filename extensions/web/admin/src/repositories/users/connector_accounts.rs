@@ -126,7 +126,7 @@ pub async fn is_live_session(
 }
 
 // Why: one statement for every user on the provider, not a per-user loop —
-// a sandbox refresh invalidates everyone at once and the profile page must
+// a re-created upstream app invalidates everyone at once and the profile page must
 // tell them all before any tool call discovers it.
 pub async fn reprovision_provider(
     tx: &mut Transaction<'_, Postgres>,

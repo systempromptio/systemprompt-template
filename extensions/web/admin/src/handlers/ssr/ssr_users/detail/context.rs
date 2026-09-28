@@ -88,15 +88,7 @@ pub(crate) struct IdentityTabView {
     pub external_sub: String,
     pub linked_at: String,
     pub slack_user_id: String,
-    pub salesforce_identities: Vec<SalesforceIdentityView>,
     pub share_token_version: i32,
-}
-
-#[derive(Debug, Serialize)]
-pub(crate) struct SalesforceIdentityView {
-    pub provider: String,
-    pub label: String,
-    pub sf_username: String,
 }
 
 #[derive(Debug, Serialize)]

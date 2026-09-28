@@ -78,9 +78,9 @@ fn client_errors() -> Vec<(AdminError, StatusCode, &'static str)> {
             "slow down",
         ),
         (
-            AdminError::Unavailable("salesforce is not configured".to_owned()),
+            AdminError::Unavailable("the connector is not configured".to_owned()),
             StatusCode::SERVICE_UNAVAILABLE,
-            "salesforce is not configured",
+            "the connector is not configured",
         ),
     ]
 }
@@ -137,7 +137,7 @@ async fn server_side_causes_never_reach_the_caller() {
             "Unauthorized",
         ),
         (
-            AdminError::Upstream("salesforce returned 503 for /services/oauth2/token".to_owned()),
+            AdminError::Upstream("atlassian returned 503 for /oauth/token".to_owned()),
             StatusCode::BAD_GATEWAY,
             "Upstream service error",
         ),

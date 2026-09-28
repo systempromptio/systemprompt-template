@@ -4,7 +4,7 @@ import { showConfirmDialog } from '/js/services/confirm.js';
 // never kept in browser storage, URL parameters, or rendered response payloads.
 const root = document.querySelector('[data-connected-accounts]');
 const labels = { verification_required: 'Authorization saved — verification required', not_configured: 'Not configured', not_connected: 'Not connected', connected: 'Connected', reconnect_required: 'Reconnect required', temporarily_unavailable: 'Temporarily unavailable' };
-const names = { atlassian: 'Atlassian', github: 'GitHub', salesforce: 'Salesforce' };
+const names = { atlassian: 'Atlassian', github: 'GitHub' };
 let revision = -1;
 let sequence = 0;
 let pending = false;

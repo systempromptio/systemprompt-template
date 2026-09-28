@@ -18,11 +18,6 @@ pub(crate) fn build(db: &DbHandles, session_service: &Arc<SessionCreationService
     let secrets_api = admin::secrets_router(Arc::clone(&db.write));
     let bridge_identity = admin::bridge_identity_router(Arc::clone(&db.read));
     let links_router = api::router(Arc::clone(&db.read), WebExtension::blog_config());
-    let salesforce_api = admin::salesforce_api_router(admin::SalesforceDeps {
-        config: WebExtension::salesforce_config()
-            .unwrap_or_else(|| Arc::new(admin::SalesforceConfig::disabled())),
-        write_pool: Arc::clone(&db.write),
-    });
 
     Router::new()
         .route(
@@ -32,7 +27,6 @@ pub(crate) fn build(db: &DbHandles, session_service: &Arc<SessionCreationService
         .merge(links_router)
         .merge(bridge_identity)
         .merge(admin::connector_api_router(Arc::clone(&db.write)))
-        .merge(salesforce_api)
         .merge(webhook_api)
         .merge(secrets_api)
         .nest("/admin", admin_api)

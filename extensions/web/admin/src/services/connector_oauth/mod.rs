@@ -6,7 +6,6 @@ pub mod discovery;
 pub mod generic;
 mod generic_discovery;
 pub mod payload;
-mod salesforce;
 pub mod site;
 mod tokens;
 mod transport;
@@ -172,11 +171,10 @@ pub async fn verified_token(
     let mut tx = pool.begin().await?;
     let mut account = accounts::get_locked_account(&mut tx, user, provider.slug()).await?;
     let row = repo::lock(&mut tx, user, provider.slug()).await?;
-    let preauthorize = row.is_none() && provider.is_salesforce() && account.generation == 0;
-    require_connection(&account.status, preauthorize)?;
+    require_connection(&account.status)?;
     // Why: a saved OAuth grant is not usable until the MCP verification has
     // succeeded.
-    if !probe && !preauthorize && account.verified_at.is_none() {
+    if !probe && account.verified_at.is_none() {
         return Err(AdminError::Forbidden(
             "Test the connection in Account before using this MCP".into(),
         ));
@@ -189,23 +187,18 @@ pub async fn verified_token(
                 return Err(error);
             },
         },
-        None if preauthorize => salesforce::mint(pool, user, &provider, account.generation).await?,
         None => {
             return Err(AdminError::NotFound(
                 "Connect your provider account in Systemprompt".into(),
             ));
         },
     };
-    let remint = grant.auth_method == "jwt_bearer" && grant.expires_at <= Utc::now().timestamp();
-    if remint {
-        grant = salesforce::mint(pool, user, &provider, account.generation).await?;
-    }
     let refresh = grant.auth_method == "oauth" && grant.expires_at <= Utc::now().timestamp() + 120;
     let result = async {
         if refresh {
             transport::refresh(&mut grant).await?;
         }
-        if probe || preauthorize || remint {
+        if probe {
             verify::verify(&mut grant).await?;
         }
         Ok::<(), AdminError>(())
@@ -216,10 +209,10 @@ pub async fn verified_token(
         tx.commit().await?;
         return Err(error);
     }
-    if refresh || probe || preauthorize || remint {
+    if refresh || probe {
         repo::store(&mut tx, user, provider.slug(), &seal(&grant)?).await?;
     }
-    if probe || preauthorize || remint {
+    if probe {
         apply_verification(&mut account, &grant);
         accounts::update_account(&mut tx, user, &account).await?;
     }
@@ -230,8 +223,8 @@ pub async fn verified_token(
     ))
 }
 
-fn require_connection(status: &str, preauthorize: bool) -> AdminResult<()> {
-    if !preauthorize && matches!(status, "not_connected" | "reconnect_required") {
+fn require_connection(status: &str) -> AdminResult<()> {
+    if matches!(status, "not_connected" | "reconnect_required") {
         return Err(AdminError::NotFound(
             "Connect your provider account in Systemprompt".into(),
         ));

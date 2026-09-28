@@ -87,18 +87,12 @@ fn apply_tokens(grant: &mut Grant, tokens: Tokens) -> AdminResult<()> {
     if let Some(refresh) = tokens.refresh_token {
         grant.refresh_token = Some(refresh);
     }
-    // Why: Salesforce may omit expires_in. In that case refresh on the next use
-    // instead of guessing how long the upstream session will stay valid.
+    // Why: a generic provider may omit expires_in. In that case refresh on the
+    // next use instead of guessing how long the upstream session will stay valid.
     let seconds = tokens
         .expires_in
         .filter(|n| *n > 0 && *n <= 31_536_000)
-        .or_else(|| {
-            matches!(
-                grant.provider,
-                Provider::Salesforce(_) | Provider::Generic(_)
-            )
-            .then_some(0)
-        })
+        .or_else(|| matches!(grant.provider, Provider::Generic(_)).then_some(0))
         .ok_or_else(|| AdminError::Upstream("Connector returned no valid token expiry".into()))?;
     grant.expires_at = if seconds == 0 && matches!(grant.provider, Provider::Generic(_)) {
         i64::MAX

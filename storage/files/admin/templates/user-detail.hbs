@@ -108,10 +108,6 @@
                     <dd><span class="sp-kv-row__value"><span class="sp-u-mono">{{#if identity.slack_user_id}}{{identity.slack_user_id}}{{else}}Not linked{{/if}}</span>{{#if can_write}}{{#if identity.slack_user_id}}<button type="button" class="sp-btn sp-btn--sm sp-btn--danger" data-unlink="slack">Unlink</button>{{/if}}{{/if}}</span></dd>
                 </div>
                 <div class="sp-kv-row">
-                    <dt>Salesforce</dt>
-                    <dd><span class="sp-kv-row__value"><span class="sp-u-mono">{{#if identity.salesforce_username}}{{identity.salesforce_username}}{{else}}Not linked{{/if}}</span>{{#if can_write}}{{#if identity.salesforce_username}}<button type="button" class="sp-btn sp-btn--sm sp-btn--danger" data-unlink="salesforce">Unlink</button>{{/if}}{{/if}}</span></dd>
-                </div>
-                <div class="sp-kv-row">
                     <dt>Share token</dt>
                     <dd><span class="sp-kv-row__value"><span class="sp-u-num">version {{identity.share_token_version}}</span>{{#if can_write}}<button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-issue-share-token>Issue</button>{{/if}}</span></dd>
                 </div>

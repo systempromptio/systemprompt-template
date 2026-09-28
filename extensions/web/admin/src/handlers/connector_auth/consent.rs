@@ -40,7 +40,7 @@ pub(super) async fn start(
             "Sign in to the same Systemprompt account as your bridge".into(),
         ));
     }
-    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
+    service::require_entitlement(&pool, &user.user_id).await?;
     let mut tx = pool.begin().await?;
     let account = accounts::get_locked_account(&mut tx, &user.user_id, provider.slug()).await?;
     tx.commit().await?;
@@ -83,7 +83,7 @@ pub(super) async fn callback(
     Query(params): Query<Callback>,
 ) -> AdminResult<Response> {
     let user = live_user(&pool, &headers, false).await?;
-    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
+    service::require_entitlement(&pool, &user.user_id).await?;
     let row = credentials::consume_state(&pool, &user.user_id, provider.slug(), &params.state)
         .await?
         .ok_or_else(|| {
@@ -138,7 +138,7 @@ pub(super) async fn token(
         ));
     }
     let user = live_user(&pool, &headers, false).await?;
-    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
+    service::require_entitlement(&pool, &user.user_id).await?;
     let access_token = oauth::verified_token(&pool, &user.user_id, provider.clone(), false).await?;
     // Why: The descriptor uses an empty scheme: the trusted adapter supplies the
     // complete header so personal Atlassian tokens can use Basic authentication.

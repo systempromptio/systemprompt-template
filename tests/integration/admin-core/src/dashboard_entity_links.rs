@@ -93,16 +93,16 @@ async fn upsert_session_entity_link_keeps_a_later_entity_id_and_never_clears_it(
     };
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("linkid")).await;
     let session = unique("session");
-    upsert_session_entity_link(&db.pool, &user, link(&session, "mcp_server", "salesforce"))
+    upsert_session_entity_link(&db.pool, &user, link(&session, "mcp_server", "docs"))
         .await
         .expect("upsert link");
 
-    let mut with_id = link(&session, "mcp_server", "salesforce");
+    let mut with_id = link(&session, "mcp_server", "docs");
     with_id.entity_id = Some("srv-42");
     upsert_session_entity_link(&db.pool, &user, with_id)
         .await
         .expect("upsert link with id");
-    upsert_session_entity_link(&db.pool, &user, link(&session, "mcp_server", "salesforce"))
+    upsert_session_entity_link(&db.pool, &user, link(&session, "mcp_server", "docs"))
         .await
         .expect("upsert link without id");
 
