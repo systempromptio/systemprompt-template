@@ -1,0 +1,36 @@
+.hero-bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  backdrop-filter: blur(2px) saturate(1.05);
+  -webkit-backdrop-filter: blur(2px) saturate(1.05);
+  background:
+    linear-gradient(to bottom, oklch(0 0 0 / 0.55) 0%, oklch(0 0 0 / 0.15) 22%, transparent 40%),
+    linear-gradient(to right, transparent 35%, oklch(0 0 0 / 0.35) 70%, oklch(0 0 0 / 0.55) 100%),
+    linear-gradient(to top, oklch(0 0 0 / 0.35) 0%, transparent 25%);
+}
+
+@media (max-width: 900px) {
+  .hero-bg-video {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    flex: none;
+  }
+
+  .hero-scrim {
+    display: none;
+  }
+}

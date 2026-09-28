@@ -9,11 +9,15 @@ publish = false
 workspace = true
 
 [dependencies]
+systemprompt-users = { workspace = true }
+systemprompt-content = { workspace = true }
+systemprompt-marketplace = { workspace = true }
 template-test-common = { workspace = true }
 # Why: the installer only sees the migrations of crates linked into this
 # binary. The same set the shared harness links, so the "current installer"
 # this crate runs is the one the server runs at boot.
 systemprompt = { workspace = true, features = ["full"] }
+systemprompt-web-content = { workspace = true }
 
 sqlx = { workspace = true }
 tokio = { workspace = true }

@@ -55,6 +55,7 @@ pub(super) struct GovernancePageContext {
     pub(super) has_rows: bool,
     pub(super) row_count: String,
     pub(super) pagination: Pagination,
+    pub(super) policy: String,
     pub(super) policies: Vec<SelectOptionView>,
     pub(super) categories: Vec<SelectOptionView>,
     pub(super) outcomes: Vec<SelectOptionView>,
@@ -175,6 +176,7 @@ pub(super) fn build(input: Build<'_>) -> GovernancePageContext {
         has_rows: rows_shown > 0,
         row_count: format!("{total} {noun}"),
         pagination: build_pagination(query, window, noun),
+        policy: query.policy.clone().unwrap_or_default(),
         policies: options("All policies", query.policy.as_deref(), &data.policies),
         categories: options(
             "All categories",

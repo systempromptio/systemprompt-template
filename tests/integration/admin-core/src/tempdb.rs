@@ -15,6 +15,7 @@
 
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
+use std::path::Path;
 use std::sync::Arc;
 
 use sqlx::{AssertSqlSafe, PgPool};
@@ -22,7 +23,10 @@ use systemprompt::database::{Database, install_extension_schemas};
 use systemprompt::extension::ExtensionRegistry;
 use url::Url;
 
+use systemprompt_marketplace as _;
+use systemprompt_users as _;
 use systemprompt_web_admin as _;
+use systemprompt_web_content as _;
 use systemprompt_web_extension as _;
 
 pub struct TempDb {
@@ -147,6 +151,16 @@ async fn ensure_template(admin: &PgPool, base: &str, template: &str) {
                 .expect("connect to the template database"),
         );
         let database = Database::from_pools(Arc::clone(&pool), Some(Arc::clone(&pool)));
+        let _ = std::hint::black_box(systemprompt_content::ContentExtension);
+        let _ = systemprompt::extension::runtime_config::set_injected_extensions(
+            systemprompt::extension::runtime_config::InjectedExtensions {
+                extensions: vec![
+                    Arc::new(systemprompt_content::ContentExtension),
+                    Arc::new(systemprompt_marketplace::ManagedResourcesExtension),
+                ],
+                ..Default::default()
+            },
+        );
         let registry = ExtensionRegistry::discover().expect("discover extension registrations");
         assert!(
             !registry.is_empty(),
@@ -212,6 +226,12 @@ async fn copy_template(admin: &PgPool, template: &str, db_name: &str) {
 
 impl TempDb {
     pub async fn create() -> Option<Self> {
+        if !systemprompt::loader::ServicesBootstrap::is_initialized() {
+            let services =
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../services/config/config.yaml");
+            systemprompt::loader::ServicesBootstrap::init_from_path(&services)
+                .expect("bootstrap services config for admin integration tests");
+        }
         let base = server_url()?;
         // CREATE DATABASE cannot run inside a transaction, so the maintenance
         // connection lives on `postgres` and executes autocommit.

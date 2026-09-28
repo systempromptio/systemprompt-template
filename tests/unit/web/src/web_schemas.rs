@@ -51,15 +51,32 @@ fn migrations_have_unique_increasing_versions_and_non_empty_sql() {
         "migrations must be handed to the runner in version order"
     );
 
-    let names: HashSet<&str> = migrations.iter().map(|m| m.name.as_str()).collect();
-    assert_eq!(names.len(), migrations.len(), "two migrations share a name");
+    let live_names: HashSet<&str> = migrations
+        .iter()
+        .filter(|m| !m.tombstone)
+        .map(|m| m.name.as_str())
+        .collect();
+    assert_eq!(
+        live_names.len(),
+        migrations.iter().filter(|m| !m.tombstone).count(),
+        "two live migrations share a name"
+    );
 
     for migration in &migrations {
-        assert!(
-            !migration.sql.trim().is_empty(),
-            "migration {} ({}) has no SQL",
-            migration.version,
-            migration.name
-        );
+        if migration.tombstone {
+            assert!(
+                migration.sql.trim().is_empty(),
+                "tombstone migration {} ({}) unexpectedly carries SQL",
+                migration.version,
+                migration.name
+            );
+        } else {
+            assert!(
+                !migration.sql.trim().is_empty(),
+                "migration {} ({}) has no SQL",
+                migration.version,
+                migration.name
+            );
+        }
     }
 }

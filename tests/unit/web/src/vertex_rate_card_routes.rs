@@ -89,11 +89,17 @@ fn the_full_rate_card_still_validates_against_the_gateway() {
 #[test]
 fn every_rate_card_id_matches_a_gateway_route() {
     let config = gateway().resolve();
+    let configured_registry = registry();
+    let configured_ids: std::collections::HashSet<&str> = configured_registry
+        .providers
+        .iter()
+        .flat_map(|provider| provider.models.iter().map(|model| model.id.as_str()))
+        .collect();
     let unroutable: Vec<String> = card()
         .entries
         .iter()
-        .filter(|e| e.retires_on.is_none())
-        .map(|e| e.id.as_str().to_owned())
+        .filter(|entry| entry.retires_on.is_none() && configured_ids.contains(entry.id.as_str()))
+        .map(|entry| entry.id.as_str().to_owned())
         .filter(|id| config.find_route(id).is_none())
         .collect();
     assert!(

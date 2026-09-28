@@ -73,10 +73,6 @@ mod dev_login_pure;
 #[cfg(test)]
 mod devices_page;
 #[cfg(test)]
-mod doc_links;
-#[cfg(test)]
-mod downstream_credential_configs;
-#[cfg(test)]
 mod format_display;
 #[cfg(test)]
 mod groups_yaml_types;
@@ -174,32 +170,25 @@ mod web_extension_wiring;
 #[cfg(test)]
 mod web_schemas;
 
+
+// Enterprise-only ADFS, connector, bridge, asset and catalog contracts live in
+// the internal distribution. The reusable template intentionally ships no
+// enterprise identity provider, downstream integrations or branded asset set.
+
 // Migrated from the former in-crate `extensions/web/admin/tests/` and
 // `extensions/web/tests/` directories: the tests workspace is the only home.
 #[cfg(test)]
 mod access_control_yaml_source;
 #[cfg(test)]
-mod account_pages;
-#[cfg(test)]
 mod activity_constructors;
-#[cfg(test)]
-mod adfs_claims;
-#[cfg(test)]
-mod adfs_config_files;
 #[cfg(test)]
 mod adfs_session_pure;
 #[cfg(test)]
 mod adfs_state_cookie;
 #[cfg(test)]
-mod admin_css_classes;
-#[cfg(test)]
-mod ai_catalog_config;
-#[cfg(test)]
 mod analytics;
 #[cfg(test)]
 mod analytics_conversations_redact;
-#[cfg(test)]
-mod asset_manifest;
 #[cfg(test)]
 #[cfg(test)]
 #[cfg(test)]
@@ -256,7 +245,6 @@ mod india_skills;
 #[cfg(test)]
 mod salesforce_orgs;
 
-mod bridge_release_parity;
 
 #[cfg(test)]
 mod vertex_rate_card_routes;

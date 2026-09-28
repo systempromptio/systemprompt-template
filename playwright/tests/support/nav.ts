@@ -50,7 +50,6 @@ export const NAV: NavSection[] = [
     items: [
       item('Users', 'users'),
       item('Departments', 'departments'),
-      item('Access tokens', 'accessTokens'),
       item('Access control', 'accessControl'),
     ],
   },
@@ -61,21 +60,11 @@ export const NAV: NavSection[] = [
       item('Sessions', 'sessions'),
       item('Traces', 'traces'),
       item('Contexts', 'contexts'),
-      item('Evals', 'evals'),
     ],
   },
   {
     heading: 'Governance',
-    items: [
-      item('Policies', 'governance'),
-      item('Decisions', 'governanceDecisions'),
-      item('Hooks', 'governanceHooks'),
-      item('Trace demo', 'demoTrace'),
-    ],
-  },
-  {
-    heading: 'Platform',
-    items: [item('Models', 'models')],
+    items: [item('Governance', 'governance')],
   },
   {
     heading: 'Account',

@@ -95,7 +95,7 @@ test('anonymous requests retain the destination login flow', async ({ browser })
     const page = await context.newPage();
     await page.goto('/admin/users');
     await expect(page).toHaveURL(/\/admin\/login(?:[?#]|$)/);
-    await expect(page.locator('input, button').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
     await expect(page.locator('nav a[href="/admin/users"]')).toHaveCount(0);
   } finally {
     await context.close();

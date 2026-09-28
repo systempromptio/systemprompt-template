@@ -56,6 +56,9 @@ systemprompt-web-site = { path = "../extensions/web/site" }
 # migrations the admin schema needs.
 systemprompt = { version = "0.61.0", default-features = false, features = ["core", "database"] }
 systemprompt-security = { version = "0.61.0" }
+systemprompt-users = { version = "0.61.0" }
+systemprompt-content = { version = "0.61.0" }
+systemprompt-marketplace = { version = "0.61.0" }
 systemprompt-api = { version = "0.61.0" }
 
 # HTTP contract harness — drives the real admin router in-process.

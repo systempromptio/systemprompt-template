@@ -22,6 +22,12 @@ workspace = true
 # Audit: uses ai, database, extension, loader, models, traits — requires `full`
 # (ai + loader are gated by the `full` feature).
 systemprompt = { workspace = true, features = ["full"] }
+# Link the Core extensions declared by `WebExtension::dependencies()` so their
+# inventory registrations and migrations are present in the final binary.
+systemprompt-security = { workspace = true }
+systemprompt-users = { workspace = true }
+systemprompt-content = { workspace = true }
+systemprompt-marketplace = { workspace = true }
 
 # Local sub-crates
 systemprompt-web-shared = { workspace = true }

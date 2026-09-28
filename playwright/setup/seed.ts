@@ -1,4 +1,4 @@
-// Idempotent e2e seed: the principals, their departments and tokens, and a
+// Idempotent e2e seed: principals, tokens, and a
 // declarative demo dataset placed at fixed offsets from the instant the seed
 // started.
 //
@@ -14,8 +14,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Client } from 'pg';
-import { seedDepartments } from './seed/departments';
-import { seedEvals } from './seed/evals';
 import { seedGovernance } from './seed/governance';
 import { seedPrincipals } from './seed/principals';
 import { seedTokens } from './seed/tokens';
@@ -24,8 +22,6 @@ import { seedTraffic } from './seed/traffic';
 const REPO = join(__dirname, '..', '..');
 
 export { E2E, E2E_SESSIONS, DEPARTMENT_OF } from './seed/principals';
-export { departmentId } from './seed/departments';
-export { EVAL_RUN_ID } from './seed/evals';
 export { T0 } from './seed/kit';
 
 export function databaseUrl(): string {
@@ -50,8 +46,6 @@ const E2E_REQUEST_IDS = `SELECT id FROM ai_requests WHERE user_id IN (${E2E_USER
 // `e2e-%` profiles) are what this seed actually owns. The department rows are
 // upserted on every run, so they cannot drift.
 const RESET_STATEMENTS = [
-  `DELETE FROM eval_results WHERE run_id LIKE 'e2e-%' OR id LIKE 'e2e-%'`,
-  `DELETE FROM eval_runs WHERE id LIKE 'e2e-%'`,
   `DELETE FROM user_api_keys WHERE user_id IN (${E2E_USER_IDS})`,
   `DELETE FROM ai_request_tool_calls WHERE id LIKE 'e2e-%'`,
   `DELETE FROM ai_safety_findings WHERE id LIKE 'e2e-%'`,
@@ -85,8 +79,8 @@ const RESET_STATEMENTS = [
 
 async function reset(db: Client) {
   for (const stmt of RESET_STATEMENTS) {
-    // A few side tables are optional on an older database (secret_audit_log,
-    // the eval tables); a missing table must not abort a reset that has
+    // A few side tables are optional on an older database (such as secret_audit_log);
+    // a missing table must not abort a reset that has
     // already deleted rows.
     try {
       await db.query(stmt);
@@ -101,12 +95,10 @@ export async function seed(opts: { reset?: boolean } = {}): Promise<void> {
   await db.connect();
   try {
     if (opts.reset) await reset(db);
-    await seedDepartments(db);
     await seedPrincipals(db);
     await seedTokens(db);
     await seedTraffic(db);
     await seedGovernance(db);
-    await seedEvals(db);
   } finally {
     await db.end();
   }

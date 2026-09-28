@@ -127,18 +127,17 @@ async function seedWorkSessions(db: Client) {
 }
 
 export async function seedPrincipals(db: Client) {
-  await seedWorkSessions(db);
   for (const p of PRINCIPALS) {
     await upsertUser(db, p.id, p.email, p.roles);
-    // The department is written here rather than in departments.ts so a
-    // principal always has its profile row. seed.ts upserts the department
-    // rows first, so the name is never dangling.
     await db.query(
-      `INSERT INTO user_profile_ext (user_id, department) VALUES ($1, $2)
-       ON CONFLICT (user_id) DO UPDATE SET department = EXCLUDED.department`,
-      [p.id, DEPARTMENT_OF[p.id] ?? 'Default'],
+      `INSERT INTO user_profile_ext (user_id) VALUES ($1)
+       ON CONFLICT (user_id) DO NOTHING`,
+      [p.id],
     );
   }
+  // Core 61 validates usage-event owners, so principal rows must exist before
+  // the synthetic session records that reference them are inserted.
+  await seedWorkSessions(db);
   // Group membership is the dashboard's organization model; departments remain
   // seeded for the compatibility pages.
   for (const [userId, name] of Object.entries(DEPARTMENT_OF)) {

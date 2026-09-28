@@ -1,7 +1,17 @@
 -- Management section: desktop app device linkage.
 --
--- Departments used to live here; they are gone. A user's grouping is the
--- `project` column on `user_profile_ext` (13_web_side_tables.sql).
+-- Departments and billing organizations are web-owned. Core 61 no longer
+-- supplies this legacy model, so this extension declares the application data it uses.
+
+CREATE TABLE IF NOT EXISTS departments (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT NOT NULL DEFAULT '',
+    org_id TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 
 -- Desktop app linkage. device_id matches the cowork api_key id or device_cert id
 -- depending on enrolment mode; both are TEXT, so we keep this loose intentionally.

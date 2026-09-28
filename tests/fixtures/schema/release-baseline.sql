@@ -1,4 +1,4 @@
--- systemprompt-astound release-baseline: 0.52.0 (core v0.52.0)
+-- systemprompt-systemprompt release-baseline: 0.60.0 (core v0.60.0)
 -- Recorded by 'just schema-baseline' from a fresh install; the upgrade test
 -- restores it and migrates forward. Re-record after every version bump.
 --
@@ -12,7 +12,6 @@
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
@@ -10432,7 +10431,6 @@ ALTER TABLE ONLY public.webauthn_setup_tokens
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;

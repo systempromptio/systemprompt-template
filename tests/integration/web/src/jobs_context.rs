@@ -445,6 +445,16 @@ async fn copy_extension_assets_copies_every_registered_required_asset() {
     let Some(h) = Harness::create().await else {
         return;
     };
+    let _ = std::hint::black_box(systemprompt_content::ContentExtension);
+    let _ = systemprompt::extension::runtime_config::set_injected_extensions(
+        systemprompt::extension::runtime_config::InjectedExtensions {
+            extensions: vec![
+                Arc::new(systemprompt_content::ContentExtension),
+                Arc::new(systemprompt_marketplace::ManagedResourcesExtension),
+            ],
+            ..Default::default()
+        },
+    );
     let registry = ExtensionRegistry::discover().expect("discover extension registrations");
     let assets = registry.all_required_assets(h.paths.as_ref());
     // Sources live under the temporary tree because `AppPaths` was built over

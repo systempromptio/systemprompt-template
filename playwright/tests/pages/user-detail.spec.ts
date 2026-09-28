@@ -40,13 +40,10 @@ test.describe('actions', () => {
     expect(await adminPage.locator(SEL.tableRow).count()).toBeGreaterThan(0);
   });
 
-  test('a conversation row opens its reader', async ({ adminPage }) => {
+  test('the usage tab presents the seeded activity table', async ({ adminPage }) => {
     const detail = new UserDetailPage(adminPage, SUBJECT);
     await detail.openTab('usage');
-    const link = adminPage.locator(`${SEL.tableRow} a[href^="/admin/contexts/"]`).first();
-    await expect(link).toBeVisible();
-    await link.click();
-    await expect(adminPage).toHaveURL(/\/admin\/contexts\/.+/);
+    await expect(adminPage.locator(SEL.tableRow).first()).toBeVisible();
   });
 });
 

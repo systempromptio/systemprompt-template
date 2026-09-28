@@ -19,10 +19,10 @@ const ACCESS: AccessRow[] = [
 ];
 
 test.describe('renders', () => {
-  test('offers the email field and the passkey sign-in', async ({ anonPage }) => {
+  test('offers passkey sign-in and registration', async ({ anonPage }) => {
     await anonPage.goto(PATH);
-    await expect(anonPage.locator('input[type="email"]').first()).toBeVisible();
-    await expect(anonPage.getByRole('button', { name: /sign in|continue|passkey/i }).first()).toBeVisible();
+    await expect(anonPage.locator('main')).toContainText(/sign in with your passkey/i);
+    await expect(anonPage.getByRole('link', { name: /register/i })).toBeVisible();
   });
 
   test('is where an anonymous visitor to the console is sent', async ({ browser }) => {
@@ -37,20 +37,20 @@ test.describe('renders', () => {
 test.describe('actions', () => {
   test('carries the redirect target through to the form', async ({ anonPage }) => {
     await anonPage.goto(`${PATH}?redirect=${encodeURIComponent(PATHS.users)}`);
-    await expect(anonPage.locator('input[type="email"]').first()).toBeVisible();
+    await expect(anonPage.getByRole('heading', { name: /sign in/i })).toBeVisible();
     expect(anonPage.url()).toContain('redirect=');
   });
 
-  test('refuses a magic-link request for an address that is not one', async ({ anonPage }) => {
-    const res = await anonPage.request.post('/admin/api/magic-link/request', {
-      data: { email: 'not-an-address' },
-    });
-    expect([400, 404, 422]).toContain(res.status());
+  test('explains that email sign-in is unavailable in the demo', async ({ anonPage }) => {
+    await anonPage.goto(PATH);
+    await expect(anonPage.locator('main')).toContainText(/emails are not enabled/i);
   });
 });
 
 test.describe('authorization', () => {
-  authorizationTable(PATH, ACCESS);
+  authorizationTable(PATH, ACCESS.map((row) =>
+    row.principal === 'anon' ? row : { ...row, status: 303 },
+  ));
 });
 
 test.describe('design language', () => {
@@ -99,9 +99,9 @@ test.describe('design language', () => {
   test('the page it signs into meets the density bar', async ({ browser }) => {
     const context = await browser.newContext({ storageState: AUTH.admin });
     const page = await context.newPage();
-    await page.goto(PATHS.evals);
+    await page.goto(PATHS.requests);
     await expect(page.locator('h1').first()).toBeVisible();
-    await expectDensity(page, 'list');
+    await expectDensity(page, 'stackedList');
     await context.close();
   });
 });

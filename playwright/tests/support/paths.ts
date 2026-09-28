@@ -12,7 +12,6 @@ export const PATHS = {
   user: (id: string) => `/admin/users/${encodeURIComponent(id)}`,
   departments: '/admin/departments',
   department: (id: string) => `/admin/departments/${id}`,
-  accessTokens: '/admin/access-tokens',
   accessControl: '/admin/access-control',
 
   requests: '/admin/requests',
@@ -23,16 +22,8 @@ export const PATHS = {
   trace: (id: string) => `/admin/traces/${id}`,
   contexts: '/admin/contexts',
   context: (id: string) => `/admin/contexts/${id}`,
-  evals: '/admin/evals',
-  evalRun: (id: string) => `/admin/evals/runs/${id}`,
 
   governance: '/admin/governance',
-  governancePolicy: (id: string) => `/admin/governance/policies/${id}`,
-  governanceDecisions: '/admin/governance/decisions',
-  governanceHooks: '/admin/governance/hooks',
-  demoTrace: '/admin/demo/trace',
-
-  models: '/admin/models',
 
   settings: '/admin/settings',
   setup: '/admin/setup',

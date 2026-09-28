@@ -666,6 +666,22 @@ setup-local ANTHROPIC_KEY="" OPENAI_KEY="" GEMINI_KEY="" HTTP_PORT="8080" PG_POR
         echo "    rm -rf \"$PROFILE_DIR\" && just setup-local <keys...> $HTTP_PORT $PG_PORT"
         echo ""
     fi
+    # Core 61 seals gateway accounting records and requires a durable 32-byte
+    # at-rest key. Keep an existing key so a local re-run can still open its
+    # journal; generate one only for profiles created by older Core releases.
+    python3 - "$PROFILE_DIR/secrets.json" <<'PYTHON'
+    import json
+    import secrets
+    import sys
+    from pathlib import Path
+
+    path = Path(sys.argv[1])
+    data = json.loads(path.read_text())
+    key = data.get("encryption_master_key", "")
+    if len(key) != 64 or any(char not in "0123456789abcdefABCDEF" for char in key):
+        data["encryption_master_key"] = secrets.token_hex(32)
+        path.write_text(json.dumps(data, indent=2) + "\n")
+    PYTHON
     mkdir -p "$ROOT/web/dist"
     echo "Building binaries (release, full workspace)..."
     just build --release

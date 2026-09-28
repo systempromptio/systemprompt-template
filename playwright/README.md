@@ -78,7 +78,7 @@ and page objects never write a literal admin URL.
 
 | key | path | non-admin |
 |---|---|---|
-| `root` | `/admin` (308 → evals) | 308 |
+| `root` | `/admin` (overview dashboard) | 308 |
 | `users`, `user(id)` | `/admin/users`, `/admin/user?id=` | 303 |
 | `departments`, `department(id)` | `/admin/departments[/{id}]` | 303 |
 | `accessTokens` | `/admin/access-tokens` | 303 |
@@ -87,12 +87,8 @@ and page objects never write a literal admin URL.
 | `sessions`, `session(id)` | `/admin/sessions[/{id}]` | 303 |
 | `traces`, `trace(id)` | `/admin/traces[/{id}]` | 303 |
 | `contexts`, `context(id)` | `/admin/contexts[/{id}]` | 303 |
-| `evals`, `evalRun(id)` | `/admin/evals`, `/admin/evals/runs/{id}` | 303 |
-| `governance`, `governancePolicy(id)` | `/admin/governance`, `/admin/governance/policies/{id}` | 303 |
-| `governanceDecisions` | `/admin/governance/decisions` | 303 |
-| `governanceHooks` | `/admin/governance/hooks` | 303 |
+| `governance` | `/admin/governance` | 303 |
 | `demoTrace` | `/admin/demo/trace` | 303 |
-| `models` | `/admin/models` | 303 |
 | `profile`, `settings`, `setup` | `/admin/{profile,settings,setup}` | 200 |
 | `login` | `/admin/login` | 200 |
 
@@ -116,7 +112,6 @@ deleted, because a developer may have hand-assigned a real user to one.
 | `tokens.ts` | one personal access token per member: live, expired and revoked in a fixed mix |
 | `traffic.ts` | 12 sessions, 6 contexts, 240 AI requests over a 6-model × 10-outcome wheel, 60 tool executions, 40 skill invocations |
 | `governance.ts` | decisions at all four chain stages (`secret_scan`, `scope_check`, `tool_blocklist`, `rate_limit`), safety findings, approvals, session analyses and ratings, the secret audit log |
-| `evals.ts` | one completed judge run with 24 results over the completed requests |
 
 Times are fixed offsets from `T0`, the instant the seed started, so two runs an hour
 apart produce the same shape shifted forward. Column shapes mirror

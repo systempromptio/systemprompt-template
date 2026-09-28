@@ -1,0 +1,100 @@
+.hero-ctas {
+  display: flex;
+  gap: var(--sp-space-md);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: var(--sp-space-xl);
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--sp-space-sm) var(--sp-space-lg);
+  border-radius: var(--sp-radius-sm);
+  font-family: var(--sp-font-brand);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  gap: 1.25rem;
+  transition: background-color var(--sp-transition-fast), color var(--sp-transition-fast), transform var(--sp-transition-fast), box-shadow var(--sp-transition-fast);
+}
+
+.hero-cta::after {
+  content: "";
+  flex: none;
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 50%;
+  background: var(--sp-color-accent);
+}
+
+.hero-cta-primary {
+  background: var(--sp-color-primary);
+  color: var(--sp-color-text-on-primary);
+  border: 1px solid var(--sp-color-primary);
+}
+
+.hero-cta-primary:hover {
+  background: var(--sp-color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--sp-shadow-md);
+}
+
+.hero-cta-secondary {
+  background: transparent;
+  color: var(--sp-color-text);
+  border: 1px solid var(--sp-color-border);
+}
+
+.hero-cta-secondary:hover {
+  background: var(--sp-color-surface);
+  border-color: var(--sp-color-primary);
+  color: var(--sp-color-primary);
+  transform: translateY(-1px);
+}
+
+.section-header {
+  margin-bottom: var(--sp-space-2xl);
+  text-align: center;
+}
+
+.section-title {
+  font-size: 2rem;
+  font-family: var(--sp-font-heading);
+  color: var(--sp-color-text);
+  margin: 0 0 var(--sp-space-sm);
+}
+
+.copy-btn {
+  flex: 0 0 auto;
+  padding: 0 var(--sp-space-md);
+  background: var(--sp-color-surface-variant);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  color: var(--sp-color-text);
+  font-family: var(--sp-font-brand);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background-color var(--sp-transition-fast), border-color var(--sp-transition-fast), color var(--sp-transition-fast);
+}
+
+.copy-btn:hover {
+  background: var(--sp-brand-50);
+  border-color: var(--sp-color-primary);
+  color: var(--sp-color-primary);
+}
+
+.copy-btn.copied {
+  background: var(--sp-color-primary);
+  border-color: var(--sp-color-primary);
+  color: var(--sp-color-text-on-primary);
+}
+
+.copy-btn.copied::after {
+  content: "ed";
+}
