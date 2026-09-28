@@ -21,7 +21,7 @@ const ACCESS: AccessRow[] = [
 test.describe('renders', () => {
   test('offers passkey sign-in and registration', async ({ anonPage }) => {
     await anonPage.goto(PATH);
-    await expect(anonPage.getByRole('button', { name: /sign in|continue|passkey/i }).first()).toBeVisible();
+    await expect(anonPage.locator('main')).toContainText(/sign in with your passkey/i);
     await expect(anonPage.getByRole('link', { name: /register/i })).toBeVisible();
   });
 
@@ -101,7 +101,7 @@ test.describe('design language', () => {
     const page = await context.newPage();
     await page.goto(PATHS.requests);
     await expect(page.locator('h1').first()).toBeVisible();
-    await expectDensity(page, 'list');
+    await expectDensity(page, 'stackedList');
     await context.close();
   });
 });

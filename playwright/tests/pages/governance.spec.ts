@@ -14,8 +14,7 @@ test.describe('renders', () => {
   });
 
   test('links each recorded decision to its audit detail', async ({ adminPage }) => {
-    const page = new GovernancePage(adminPage);
-    await page.goto();
+    await adminPage.goto(PATH);
     expect(await adminPage.locator(`a[href^="/admin/governance/decisions/"]`).count()).toBeGreaterThan(0);
   });
 
@@ -52,8 +51,7 @@ test.describe('design language', () => {
   designLanguageTests(PATH);
 
   test('meets the density bar', async ({ adminPage }) => {
-    const page = new GovernancePage(adminPage);
-    await page.goto();
-    await expectDensity(adminPage, 'list');
+    await adminPage.goto(PATH);
+    await expectDensity(adminPage, 'stackedList');
   });
 });
