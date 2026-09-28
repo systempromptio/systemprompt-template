@@ -241,8 +241,6 @@ mod util_ranges;
 mod util_svg_pure;
 
 #[cfg(test)]
-mod india_skills;
-#[cfg(test)]
 mod salesforce_orgs;
 
 

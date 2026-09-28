@@ -4,7 +4,6 @@
 # route instead.
 # Client-side flows and compatibility links retained while Core 0.61 no longer owns SSR routes.
 /admin/governance/decisions
-/admin/evals
 /admin/models
 /admin/governance/hooks
 /admin/register

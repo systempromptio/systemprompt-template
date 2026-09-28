@@ -170,19 +170,6 @@ const PAGES: [Variant; 7] = [
     v("/admin/governance", "Governance summary"),
 ];
 
-// The evals screen: five tabs, each rendering a different partial, plus the
-// fallback an unrecognised tab lands on.
-const EVALS: [Variant; 6] = [
-    v("/admin/evals", "Latency distribution"),
-    v("/admin/evals?tab=overview", "Latency distribution"),
-    v("/admin/evals?tab=judge", "Judge live traffic"),
-    v("/admin/evals?tab=head-to-head", "Compare two models"),
-    v("/admin/evals?tab=golden-set", "Replay the golden set"),
-    // An unrecognised tab shows the page rather than a 400 — a mistyped tab in
-    // a shared link must still render.
-    v("/admin/evals?tab=nonsense", "Latency distribution"),
-];
-
 #[tokio::test(flavor = "multi_thread")]
 async fn admin_pages_render_the_branch_their_query_selects() {
     if !globals::init() {
@@ -202,7 +189,6 @@ async fn admin_pages_render_the_branch_their_query_selects() {
         .chain(TRACES.iter())
         .chain(CONTEXTS.iter())
         .chain(PAGES.iter())
-        .chain(EVALS.iter())
     {
         let (status, body) = app.call(Call::get(variant.path, Principal::Admin)).await;
 
