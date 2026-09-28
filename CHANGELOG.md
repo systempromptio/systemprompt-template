@@ -33,6 +33,11 @@ Conventions (strict — hold every entry to them):
 - **Tooling:** `scripts/sync-core-version.sh` (every core crate pin in both workspaces plus `bridge/CORE_REF`), `scripts/check-core-ref.sh`, `scripts/check-core-crate-versions.sh`, and the recipes `core-pin`, `core-guard` (`just deploy` runs it), `core-checkout`, `schema-baseline`, `fetch-release`, `stop`, `verify`, `preflight*`, `doc-check`, `init-hooks` (tracked `.githooks/pre-commit`), `hack`, `lint-silent-skips`, `lint-no-untyped-admin` and `coverage*`.
 - **Gates:** `check-discarded-results`, `check-fail-open` (core's rust-contracts scanner), `check-migration-numbers`, `lint-layers`, `lint-repo-construction`, `check-json-value`, `lint-silent-skips`, `check-field-copy-from`, `check-dockerfile-paths`, `check-dropped-schema`, `check-core-ref`, `coverage-badge` and `check-docs-version` join `just lint-gates`. `check-schema-baseline` is the release ladder (floor 0.61.0) and joins the array with its first rung.
 - **Coverage:** `scripts/coverage.sh` / `coverage-check.sh` (floor and ratchet against `coverage/baseline.json`) and a nightly `coverage.yml`; no baseline is recorded yet.
+- **Schema:** declarative schemas and one migration each (slots 083–094) for `sync_state`, `service_sources`/`service_owned_ids`, `marketplace_versions` (+ `marketplace_version_at`), `conversation_analyses`, `ai_request_scopes` (stamped by an `AFTER INSERT` statement trigger on `ai_requests`; migration 087 backfills history from each person's current primaries), validity windows on `group_members`/`project_members`/`user_manual_roles` plus `access_control_rule_validity`/`user_device_cert_validity`, `gateway_routes`/`governance_chain`, `tool_activity` (+ `artifact_kind`) and `analysis_reports`, `conversation_facts`/`conversation_skill_facts` and their refresh functions, the `user_last_seen` view, the retention ledger, and `expire_raw_evidence`. The pages and jobs that read them arrive with the admin-console port; the declarative files are registered in `schemas.rs` in the same pass.
+- **Access control:** `services/access-control/rules.yaml` is the one declarative source of entitlement — one entry per entity with a required `why`, `default: open|closed`, optional `valid_until` and `owner: bundle:<name>`, and allow/deny bands (`role`, `group`, `project`, `connector`). `scripts/validate-services.sh` checks it (entities exist, groups/projects are declared, no marketplace carries an `access:` block, plugin and marketplace includes resolve, marketplace JSON is not stale). New docs: `/documentation/access-control` and `/documentation/services-sync`.
+- **Kits:** `deploy/kit/` is the template for a kit repository that publishes a signed services bundle (publish and stats workflows, `tools/sanitize-kit.py`, runbook); `deploy/kit/known-kits.json` lists none yet. `just services-pin <kit> <digest|channel> [profile]` writes the profile's `services.sources[]` entry. `just kit-export` is declared and refuses until its CLI crate lands. New docs: `docs/kits-on-another-instance.md` and `docs/CONFIGURED-CONNECTORS.md`.
+- **Scheduler:** core jobs `managed_inventory_refresh` (also run at boot), `oauth_cleanup`, `user_rate_limit_prune`, `thought_signature_cleanup` and `otlp_export` are scheduled.
+- **Models:** `claude-opus-5-5` in the provider catalog ($4 / $20 per million input/output tokens).
 
 ### Changed
 
@@ -42,6 +47,10 @@ Conventions (strict — hold every entry to them):
 - **Build:** `scripts/build-coordinator.sh` has no success cache (every run compiles the latest tree; `BUILD_FORCE` is a no-op) and refuses to start a compile when the volume holding `target/` has less than `BUILD_MIN_FREE_GB` (default 25) GB free.
 - **Versions:** `scripts/sync-release-version.sh --check` enforces lockstep (the release's `MAJOR.MINOR` equals core's) and `sync-release-version.sh` now also rewrites the version literals in `docs/install/*.md` and `deploy/*/*.md`, which `scripts/check-docs-version.sh` keeps on the workspace version.
 - **Dockerfile:** the pinned toolchain is its own cached layer, an `artifacts` stage exports the binaries, and `/app/storage/data` exists owned by `app`, so a named volume mounted there is writable.
+- **Access control:** the `enterprise-demo` marketplace config no longer carries an `access:` block; its grant is declared in `rules.yaml` and, until the `rules.yaml` loader lands, in `roles.yaml`, which the boot still reads. `roles.yaml` and `departments.yaml` are marked superseded and are kept equivalent to `rules.yaml` by `validate-services.sh`.
+- **Gateway:** routes carry a `name` and `description`; `default_model` is `claude-sonnet-5[1m]` so Claude Code budgets the model's 1M context; `quota_fault_mode: closed` refuses a request whose quota subject cannot be resolved instead of passing it uncounted. `services/gateway/policies.yaml` pins `history: off` and the full heuristic phrase list and documents the warn-mode semantics; thresholds are unchanged.
+- **Governance:** `services/governance/config.yaml` carries its doctrine header (warn mode as a measurement window; inherited `mode`); the pattern list is unchanged.
+- **Schema lint:** `scripts/lint-schema.sh` ignores statements inside dollar-quoted function bodies and exempts `schema/retire/`.
 
 ### Fixed
 
@@ -49,6 +58,12 @@ Conventions (strict — hold every entry to them):
 - The operator docs named 0.2.2 and 0.49.0 and non-existent tarball names; they now name the current version and `systemprompt-gateway-<version>-<target>.tar.gz`.
 - The access-control page's open-entity count swallowed a database error silently; it is logged now.
 - Every managed MCP server in `services/mcp/*.yaml` now declares `tool_policy: allow`. Core 0.53.0 makes the key mandatory: a server without it is withheld from the signed bridge manifest and rejected by boot validation, so the deployment would have refused to start. `allow` keeps today's effective behaviour.
+- The admin sidebar fell back to another deployment's domain for its logo alt text and label when `branding.domain` is unset; it now falls back to `systemprompt.io`.
+
+### Removed
+
+- The orphaned evals admin templates (`evals.hbs`, `eval-run-detail.hbs`, `partials/evals/*`) and `css/admin/20-page-evals.css`: core 0.61 retired evals and nothing renders them. The `/admin/evals` contract variants and the never-compiled `evals_repositories.rs` test go with them.
+- `tests/unit/web/src/india_skills.rs`, a test for another deployment's skill inventory.
 
 ## [0.49.0] - 2026-09-09
 
