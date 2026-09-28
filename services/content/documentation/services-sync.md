@@ -28,6 +28,8 @@ related_docs:
 
 **TL;DR:** Everything this instance serves is *declared* somewhere in code and *enforced* from what the process loaded and what the database holds. Three places in the console show that: **Configuration** (`/admin/configuration`, the Platform home) lists every kind of configuration the instance loads with its source, hash and — where the database holds a projection — its state; **Code sync** (`/admin/sync`) is where declarations come from and the archive that moves them; and each projected plane has a **Sync tab on the page that owns it** (Access control, Groups, Gateway → Policies) with its drift and the three directions. A **source** is where declarations come from — `base` is this repository's `services/` tree, `bundle:<name>` is each external kit the profile pins by digest — and every source has a content hash. A **plane** is what a source's declarations project into the database — access control, groups and projects, gateway policies — and every plane records the declared hash it last applied, when, by whom and in which mode. Nothing writes on its own after the first seed: the page shows the difference and offers a direction.
 
+> **Status on this release.** The declaration, the boot seed and the drift report are live: an empty table is seeded from the file at boot, and every later boot compares the two and logs `sync_drift` (or `sync_in_sync`) without writing. The console surfaces described below — `/admin/sync`, the per-page Sync tabs, the review tabs and the export/import endpoints — arrive with the admin-console port; until then read the drift in the boot log (`systemprompt infra logs view --level warn`).
+
 ## The model
 
 | word | meaning | today |

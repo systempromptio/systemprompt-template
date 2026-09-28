@@ -1,5 +1,7 @@
 # Kit integration runbook
 
+> The instance side described here (`/admin/sync`, **Import sources**, `GET /admin/export/{dataset}`, `POST /api/v1/admin/services/refresh`) arrives with the admin-console port. Today the template records service sources and marketplace versions at boot and reports drift in the boot log.
+
 A **kit** is a GitHub repository that owns one marketplace in Anthropic
 marketplace format — `.claude-plugin/marketplace.json`, `plugins/<id>/` with
 `.claude-plugin/plugin.json` and `skills/<kebab-id>/SKILL.md` — plus two small

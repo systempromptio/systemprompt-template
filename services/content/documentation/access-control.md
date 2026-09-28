@@ -27,6 +27,8 @@ related_docs:
 
 **TL;DR:** Every workspace, plugin, skill, MCP server and model route a signed-in person can reach is decided by rules on that entity. The rules are **declared once**, in `services/access-control/rules.yaml`, each with a stated reason, and **enforced from the database**. A decision walks the bands from narrowest to widest — *person → project → group → connected server → role* — and the first band that names the person decides, with a deny beating an allow inside it. Code and database are compared on every boot and **never silently merged**: `/admin/sync` shows the differences and offers three ways to resolve them.
 
+> **Status on this release.** The declaration, the boot seed and the drift report are live: an empty table is seeded from the file at boot, and every later boot compares the two and logs `sync_drift` (or `sync_in_sync`) without writing. The console surfaces described below — `/admin/sync`, the per-page Sync tabs, the review tabs and the export/import endpoints — arrive with the admin-console port; until then read the drift in the boot log (`systemprompt infra logs view --level warn`).
+
 ## What access control decides — and what it does not
 
 Access control answers one question: *may this person reach this entity?* The entities are:
