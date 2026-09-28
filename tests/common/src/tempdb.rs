@@ -33,6 +33,7 @@ use systemprompt_web_extension as _;
 
 use crate::skip::skip_or_panic;
 
+#[derive(Debug)]
 pub struct TempDb {
     pub pool: Arc<PgPool>,
     admin_url: String,
@@ -45,8 +46,8 @@ pub struct TempDb {
 // Refuses to run against a development database: only database names `test`,
 // `postgres`, or `*_test` are accepted, so a stray `DATABASE_URL` pointing at
 // a dev server's live database panics instead of being used as the
-// maintenance connection. Only throwaway `<prefix>_<uuid>` databases are ever
-// created or dropped.
+// maintenance connection. Only throwaway `<prefix>_p<pid>_<hex>` databases
+// (and this suite's templates) are ever created or dropped.
 fn server_url() -> Option<String> {
     let raw = std::env::var("SYSTEMPROMPT_TEST_DATABASE_URL")
         .or_else(|_| std::env::var("DATABASE_URL"))
@@ -163,9 +164,10 @@ async fn drop_stale_templates(conn: &mut sqlx::PgConnection, prefix: &str, keep:
         return; // skip-ok: a stale template that cannot be listed is collected next run
     };
     for name in stale {
-        let _ = sqlx::query(AssertSqlSafe(format!("DROP DATABASE IF EXISTS \"{name}\"")))
+        sqlx::query(AssertSqlSafe(format!("DROP DATABASE IF EXISTS \"{name}\"")))
             .execute(&mut *conn)
-            .await;
+            .await
+            .ok();
     }
 }
 
@@ -257,11 +259,12 @@ impl TempDb {
         // CREATE DATABASE cannot run inside a transaction, so the maintenance
         // connection lives on `postgres` and executes autocommit.
         let admin_url = with_database(&base, "postgres");
-        let db_name = format!("{prefix}_{}", uuid::Uuid::new_v4().simple());
+        let db_name = crate::orphans::database_name(prefix);
 
         let admin = PgPool::connect(&admin_url)
             .await
             .expect("connect to maintenance database");
+        crate::orphans::sweep(&admin).await;
         let template = template_name(prefix);
         ensure_template(&admin, &base, prefix, &template).await;
         // Name is a UUID-derived literal, not user input — safe to interpolate.
@@ -289,11 +292,12 @@ impl TempDb {
         let prefix = &suite_prefix();
         let base = server_url()?;
         let admin_url = with_database(&base, "postgres");
-        let db_name = format!("{prefix}_{}", uuid::Uuid::new_v4().simple());
+        let db_name = crate::orphans::database_name(prefix);
 
         let admin = PgPool::connect(&admin_url)
             .await
             .expect("connect to maintenance database");
+        crate::orphans::sweep(&admin).await;
         sqlx::query(AssertSqlSafe(format!("CREATE DATABASE \"{db_name}\"")))
             .execute(&admin)
             .await

@@ -259,12 +259,14 @@ mod managed_assets;
 #[cfg(test)]
 mod managed_bundle;
 
-// Static gates over the schema and the migrations, and the kit exporter's
-// round trip.
+// Static gates over the schema, the migrations and the services tree, and
+// the kit exporter's round trip.
 #[cfg(test)]
 mod kit_export;
 #[cfg(test)]
 mod migration_cost;
+#[cfg(test)]
+mod services_tree_declarations;
 
 // The declarative access-control model (`rules.yaml`) and the Code ↔ Instance
 // sync data layer: projection, drift, review, export, the boot contract, the

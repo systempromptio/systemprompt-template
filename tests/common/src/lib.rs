@@ -5,6 +5,7 @@
 //! decided in one place ([`skip`]) rather than five times over with four of
 //! them getting it wrong.
 
+pub mod orphans;
 pub mod paths;
 pub mod skip;
 pub mod tempdb;

@@ -13,14 +13,16 @@ pub fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
         .find(|dir| dir.join("services").is_dir() && dir.join("extensions").is_dir())
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| {
-            panic!(
-                "no repository root above {}: expected an ancestor holding both services/ and \
+        .map_or_else(
+            || {
+                panic!(
+                    "no repository root above {}: expected an ancestor holding both services/ and \
                  extensions/",
-                env!("CARGO_MANIFEST_DIR")
-            )
-        })
+                    env!("CARGO_MANIFEST_DIR")
+                )
+            },
+            Path::to_path_buf,
+        )
 }
 
 #[must_use]

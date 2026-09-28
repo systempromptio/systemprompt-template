@@ -159,7 +159,7 @@ _test-integration-uncoordinated:
         echo "so .systemprompt/profiles/local/secrets.json carries a database_url." >&2
         exit 1
     fi
-    cargo nextest run --locked --no-fail-fast --manifest-path tests/Cargo.toml --workspace -E 'package(mcp-integration-tests) | package(web-integration-tests) | package(admin-db-core-tests) | package(admin-db-config-tests) | package(schema-upgrade-tests)'
+    cargo nextest run --locked --no-fail-fast --manifest-path tests/Cargo.toml --workspace -E 'package(mcp-integration-tests) | package(web-integration-tests) | package(admin-db-core-tests) | package(admin-db-config-tests) | package(gateway-integration-tests) | package(schema-upgrade-tests)'
 
 # HTTP contract suite: drives every admin route under three principals and
 # diffs the result against tests/contract/admin/baseline.txt. Same throwaway-
