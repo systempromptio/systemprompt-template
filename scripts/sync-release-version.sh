@@ -17,6 +17,12 @@
 # every core pin agrees with every other, and that the product version is the
 # one being released.
 #
+# Lockstep: the release and the core it ships share MAJOR.MINOR. --check
+# refuses a release whose X.Y differs from the core pin's, so a template
+# 0.62.0 can never go out on core 0.61.x. A template-only patch (0.37.1 on
+# core 0.37.0) is the one sanctioned divergence and passes. Core pins and
+# bridge/CORE_REF beyond the two listed below are scripts/sync-core-version.sh's.
+#
 # Covered pins:
 #   Cargo.toml            workspace version + systemprompt/-security core pins
 #   extensions/web/Cargo.toml  systemprompt-extension pin
@@ -54,6 +60,10 @@ fi
 case "$CORE_VERSION" in
   *[!0-9.]*|*..*|.*|*.) echo "ERROR: CORE_VERSION '$CORE_VERSION' is not a plain semver (X.Y.Z)"; exit 1 ;;
 esac
+if [ "${CORE_VERSION%.*}" != "$MAJ.$MIN" ]; then
+    echo "DRIFT: release $VERSION is not in lockstep with core $CORE_VERSION (MAJOR.MINOR must match)"
+    fail=1
+fi
 
 # file, description, grep pattern that must match post-apply
 check_or_apply() { # $1=file $2=sed-expr $3=expect-regex $4=label
