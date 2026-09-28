@@ -3,6 +3,7 @@ target/
 # dir inside the context) because `target` is a symlink escaping the context.
 .git/
 node_modules/
+**/node_modules/
 web/dist/
 storage/data/
 .systemprompt/profiles/
@@ -18,6 +19,7 @@ demo/recording/
 demo/.token
 demo/.token.user
 docs/
+docs-internal/
 logs/
 *.log
 .env
@@ -38,3 +40,11 @@ signing_key.pem
 **/.env
 **/.env.*
 **/signing_key.pem
+
+# Never ship a key into an image, even from a local build that has one on disk.
+*.pem
+**/*.pem
+# Build residue outside target/ (coverage runs, local packaging, CI's core checkout)
+dist/
+coverage-report/
+.vendor/

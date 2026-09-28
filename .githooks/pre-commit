@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Tracked pre-commit hook. Enable with `just init-hooks` (sets core.hooksPath).
+#
+# Fast checks only (<5s): the patch-marker guard, formatting of staged Rust
+# files, and the two cheapest source gates. The full gate is `just verify`;
+# CI (gates.yml) re-runs it on every push to next.
+set -euo pipefail
+
+# ── Guardrail: the local systemprompt-core dev patch may only be committed
+# deliberately. The override set lives inert under
+# [workspace.metadata.unreleased-core-patch]; it goes live by renaming that
+# table to [patch.crates-io] (next, while core is unreleased), and the
+# manifest then carries an "# ACTIVE: core X.Y.Z is unreleased" marker above
+# it to say so. This blocks an active patch that lacks the marker — i.e. a
+# developer's ad-hoc local pin leaking into a commit. `tests/` is a separate
+# cargo workspace with its own mirror of the patch ([patch] only applies
+# per-workspace), so both manifests are guarded.
+violations=()
+for manifest in Cargo.toml tests/Cargo.toml; do
+  git diff --cached --name-only | grep -qx "$manifest" || continue
+  staged="$(git show ":$manifest" 2>/dev/null || true)"
+  if printf '%s\n' "$staged" | grep -Eq '^\[patch\.crates-io\]'; then
+    if ! printf '%s\n' "$staged" | grep -Eq '^# ACTIVE: core [0-9.]+ is unreleased'; then
+      violations+=("$manifest stages an active [patch.crates-io] block without the deliberate '# ACTIVE: core X.Y.Z is unreleased' marker")
+    fi
+  fi
+done
+if (( ${#violations[@]} > 0 )); then
+  echo "✗ pre-commit blocked: undeclared local systemprompt-core dev patch." >&2
+  for v in "${violations[@]}"; do echo "  - $v" >&2; done
+  echo "" >&2
+  echo "Either move the block back under [workspace.metadata.unreleased-core-patch]," >&2
+  echo "or (for a deliberate unreleased-core pin) add the" >&2
+  echo "'# ACTIVE: core X.Y.Z is unreleased' marker above it." >&2
+  exit 1
+fi
+
+# ── Formatting (whole-tree fmt check is still fast), both workspaces.
+if git diff --cached --name-only | grep -q '\.rs$'; then
+  if ! cargo fmt --all -- --check >/dev/null 2>&1 \
+     || ! cargo fmt --manifest-path tests/Cargo.toml --all -- --check >/dev/null 2>&1; then
+    echo "✗ pre-commit blocked: cargo fmt --check fails. Run 'cargo fmt --all' (and with --manifest-path tests/Cargo.toml)." >&2
+    exit 1
+  fi
+fi
+
+# ── Cheapest source gates.
+for gate in check-file-headers.sh check-file-size.sh; do
+  if ! bash "scripts/$gate" >/dev/null 2>&1; then
+    echo "✗ pre-commit blocked: scripts/$gate fails. Run: bash scripts/$gate" >&2
+    exit 1
+  fi
+done
+
+exit 0

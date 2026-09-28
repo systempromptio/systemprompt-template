@@ -2,6 +2,8 @@
 # Multi-stage build for systemprompt-template.
 # Stage 1 compiles the Rust workspace against the repo's .sqlx/ offline cache.
 # Stage 2 ships a slim Debian runtime with the binaries + services/ YAML tree.
+# The `artifacts` stage exports just the binaries:
+#   docker build --target artifacts --output type=local,dest=out .
 
 FROM rust:1-bookworm AS builder
 
@@ -15,6 +17,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
+
+# rust-toolchain.toml pins a nightly; rustup installs it on first use. Copy the
+# pin alone first so the toolchain download is its own cached layer and does
+# not repeat on every source change.
+COPY rust-toolchain.toml /src/rust-toolchain.toml
+RUN rustup show
+
 COPY . /src
 
 ENV SQLX_OFFLINE=true \
@@ -28,6 +37,10 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     && mkdir -p /out/bin \
     && cp target/release/systemprompt /out/bin/ \
     && cp target/release/systemprompt-mcp-agent /out/bin/
+
+# Binaries only, from the same compile as the runtime image.
+FROM scratch AS artifacts
+COPY --from=builder /out/bin /bin
 
 # hey powers the demo/performance load tests; its upstream S3 binary host is
 # dead (403), so build it from source and ship it on PATH — demo/_common.sh's
@@ -64,7 +77,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN useradd -m -u 1000 app
 WORKDIR /app
 
-RUN mkdir -p /app/bin /app/logs /app/data /app/storage /app/web /app/.systemprompt/profiles/docker
+# /app/storage/data is runtime state (excluded from the build context), so it
+# is created here: a named volume mounted at a path the image lacks comes up
+# root-owned, and the server, running as uid 1000, cannot write it.
+RUN mkdir -p /app/bin /app/logs /app/data /app/storage/data /app/web /app/.systemprompt/profiles/docker
 
 COPY --from=builder /out/bin/ /app/bin/
 COPY --from=heybuilder /go/bin/hey /app/bin/hey

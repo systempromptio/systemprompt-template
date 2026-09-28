@@ -14,3 +14,11 @@ linker = "clang"
 
 [env]
 SQLX_OFFLINE = { value = "true", force = false }
+# The linker is already pinned to clang above, and aws-lc-sys needs it as the
+# C compiler too (GCC <10 hits bug #95189). Every C build script records CC in
+# its fingerprint, so a recipe that exported CC while another did not made
+# cargo rebuild aws-lc, rustls, reqwest, rmcp and everything above them on
+# each switch between `just build` and `just test-*`. One value here, for
+# every cargo invocation, keeps the shared target/ warm.
+CC = { value = "clang", force = false }
+CXX = { value = "clang++", force = false }
