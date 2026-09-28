@@ -12,10 +12,6 @@ marketplace:
     - demo
     - enterprise
   license: proprietary
-  access:
-    default_included: true
-    roles: [user]
-    justification: "Public enterprise governance evaluation demo"
   mcp_servers:
     source: explicit
     include:

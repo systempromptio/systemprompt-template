@@ -1,5 +1,8 @@
 # Department definitions and department-scoped access control rules.
 #
+# SUPERSEDED by rules.yaml (group and project bands; groups.yaml declares the
+# groups). Empty here; deleted with roles.yaml when the rules.yaml loader lands.
+#
 # This file is the BOOTSTRAP source of truth. On startup the publish pipeline:
 #   1. Upserts each department by `name` into the `departments` table.
 #   2. Upserts each rule into `access_control_rules` (rule_type=department).

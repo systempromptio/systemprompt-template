@@ -36,3 +36,5 @@ This site covers two things: the **terminal demo** walkthroughs and how to **log
 
 - [Authentication & Login](/documentation/authentication) — Login, passkeys, magic links, and session management
 - [Dashboard Usage](/documentation/dashboard) — Real-time metrics, activity feed, and health indicators
+- [Access Control](/documentation/access-control) — Who reaches what: bands, precedence, rules.yaml and drift
+- [Code ↔ Instance Sync](/documentation/services-sync) — Sources, planes, hashes and the three sync directions

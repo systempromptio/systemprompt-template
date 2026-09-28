@@ -288,3 +288,7 @@ docs_sidebar:
         href: "/documentation/authentication"
       - label: "Dashboard Usage"
         href: "/documentation/dashboard"
+      - label: "Access Control"
+        href: "/documentation/access-control"
+      - label: "Code ↔ Instance Sync"
+        href: "/documentation/services-sync"

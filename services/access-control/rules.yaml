@@ -1,0 +1,114 @@
+# Access control — the one declarative source of entitlement on this instance.
+#
+# Every entity a signed-in person can be allowed or refused — marketplaces,
+# plugins, skills, agents, MCP servers, gateway routes — is declared here and
+# nowhere else. The runtime enforces the DATABASE (`access_control_rules` +
+# `access_control_entities`); this file is what the database is expected to
+# contain. On boot the server SEEDS an empty database from this file and
+# otherwise only COMPARES the two and reports drift. It never overwrites:
+# reconciling code and database is a deliberate act on
+# /admin/sync (Insert only · Overwrite from code · Export from
+# dashboard). Full explanation: /documentation/access-control.
+#
+# TRANSITION: until the rules.yaml loader lands in extensions/web/admin, the
+# boot still reads roles.yaml + departments.yaml beside this file. Both are
+# kept equivalent to this one and scripts/validate-services.sh checks all
+# three; roles.yaml and departments.yaml are deleted when the loader ships.
+#
+# How a decision is made (core resolver, narrowest band wins):
+#   person (0) → project (140) → group (150) → connected server (160)
+#   → role (200)
+# The narrowest band in which the person matches ANY rule decides; inside that
+# band a deny beats an allow. An entity that declares any rule is CLOSED to
+# everyone its rules do not name unless `default: open`. An entity with no
+# rules at all inherits from its parent (skill → plugin → marketplace).
+#
+# Shape:
+#   entities:
+#     - entity: <kind>/<id>       kind ∈ marketplace | plugin | skill | mcp_server |
+#                                 agent | gateway_route | hook
+#                                 (gateway_route and hook take only the glob `*`,
+#                                 expanded against the live catalog: route ids are
+#                                 generated, never hand-written)
+#       owner: bundle:<name>     OPTIONAL — the entity arrives in a remote services
+#                                 bundle (deploy/kit/known-kits.json), not this tree;
+#                                 it may be absent until that bundle is active and is
+#                                 reported on /admin/sync as "awaiting its bundle"
+#       default: open | closed   what an unmatched person gets (default: closed)
+#       why: "..."               REQUIRED — lands on every rule row as its justification
+#       valid_until: <RFC 3339>  OPTIONAL — every rule of the entity lapses at this
+#                                 instant; a past value means "not declared", and the
+#                                 hourly access_expiry sweep deletes the rows
+#       allow:                   band → subjects; a band may also be
+#         role: [...]              { values: [...], why: "..." } to override the why
+#         group: [...]
+#         project: [...]
+#         connector: [...]       value = the server id; matches people whose Connections
+#                                 page shows that server as connected (a live OAuth grant)
+#       deny: {}                 same bands
+#
+# Groups and projects named here must exist in services/web/config/groups.yaml.
+# scripts/validate-services.sh checks all of this in CI.
+#
+# Not declared here: inbound Slack apps. `authz.allowed_roles` in
+# services/slack/*.yaml is projected as `slack_workspace:<workspace_id>` at
+# startup (closed to every role it does not list), and stays with the app it
+# gates.
+
+entities:
+  # ─── Workspaces (marketplaces) ───────────────────────────────────────────
+  # The bridge manifest filter cascades this grant onto every member skill,
+  # agent and MCP server that declares no rule of its own.
+  - entity: marketplace/enterprise-demo
+    default: open
+    why: Public enterprise governance evaluation demo.
+    allow:
+      role: [user]
+
+  # ─── Skills ───────────────────────────────────────────────────────────────
+  # Skills shipped with enterprise-demo need no rule: they inherit the
+  # marketplace grant. Declare a skill here only to refuse it.
+  #
+  # use_dangerous_secret is catalogued by the marketplace but refused by
+  # policy (deny beats the inherited allow), so a user-role attempt is refused
+  # at the authz layer before it runs — independent of the runtime secret_scan
+  # governance stage. This is the access-control demonstration.
+  - entity: skill/use_dangerous_secret
+    default: closed
+    why: >-
+      Access-control demonstration: a dangerous capability that exists in the
+      catalog but is denied by policy.
+    deny:
+      role: [user]
+
+  # ─── Agents ───────────────────────────────────────────────────────────────
+  - entity: agent/associate_agent
+    default: open
+    why: Agent shipped with the enterprise-demo marketplace.
+    allow:
+      role: [user]
+
+  - entity: agent/developer_agent
+    default: open
+    why: Agent shipped with the enterprise-demo marketplace.
+    allow:
+      role: [user]
+
+  # ─── MCP servers ──────────────────────────────────────────────────────────
+  - entity: mcp_server/systemprompt
+    default: open
+    why: >-
+      The platform MCP server shipped with enterprise-demo; its tools are
+      gated a second time by oauth.scopes in services/mcp/systemprompt.yaml.
+    allow:
+      role: [user]
+
+  # ─── Model routes ─────────────────────────────────────────────────────────
+  - entity: gateway_route/*
+    default: open
+    why: >-
+      Every model route is reachable by every signed-in role. Usage is shaped
+      by governance and quotas, not by entitlement. Route ids are generated
+      (slug + fnv1a6), so only the glob is ever written here.
+    allow:
+      role: [user, admin]

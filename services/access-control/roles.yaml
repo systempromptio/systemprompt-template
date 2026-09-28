@@ -1,5 +1,10 @@
 # Role-scoped access control rules.
 #
+# SUPERSEDED by rules.yaml beside this file, which is the declarative source of
+# entitlement. This file stays only until the rules.yaml loader lands in
+# extensions/web/admin; keep the two equivalent (scripts/validate-services.sh
+# checks both) and delete this one with the loader.
+#
 # This file is the BOOTSTRAP source of truth. On startup the publish pipeline
 # reads it and upserts each rule into `access_control_rules` (rule_type=role).
 # Dashboard edits write to the database only — there is NO write-back to this
@@ -30,8 +35,8 @@
 rules:
   # enterprise-demo marketplace. The bridge manifest filter resolves this rule
   # and cascades it onto every member skill/agent/mcp that lacks an own rule
-  # (see marketplace_filter.rs). Mirrors marketplace.access in
-  # services/marketplaces/enterprise-demo/config.yaml.
+  # (see marketplace_filter.rs). Mirrors marketplace/enterprise-demo in
+  # rules.yaml; marketplace configs carry no `access:` block.
   - entity_type: marketplace
     entity_id: enterprise-demo
     access: allow
