@@ -1,5 +1,9 @@
 {{!--
-  Server-rendered SVG line chart (single or multi series), no client JS.
+  Server-rendered SVG line chart (single or multi series). Works without
+  client JS; `sp-chart.js` replaces the plot with one drawn at pixel size
+  (real axes, gridlines, dots or stacked columns per `data-kind`, crosshair,
+  tooltip, legend toggles, a table view) from the `data-values` each series
+  carries and the `data-labels` on the figure.
 
   Invoke as: {{> components/svg-line-chart volume_chart}}
   The partial's root context is an SvgLineChartView.
@@ -13,14 +17,17 @@
     chart_title / subtitle       heading and one-line summary
     has_data                     false when every bucket is zero
     aria_label                   the plot's accessible summary
-    series                       [{path_d, area_d?, color_token, label}]
+    series                       [{path_d, area_d?, color_token, label, values, value_display, points[{x,y}]}]
+                                 (value_display is the legend figure the live layer prints)
+                                 (points are set only for ≤ 12 buckets)
     ref_lines                    [{y, label, tone}] cap/warn dashes
     legend                       [{label, color_index, value_display}] (multi only)
     y_max/y_mid_display          gridline labels
     x_start/mid/end_display      time axis labels
+    x_labels_json / y_unit       per-bucket labels and unit for the tooltip
     empty_message                shown instead of the plot when empty
 --}}
-<figure class="sp-svgchart">
+<figure class="sp-svgchart" data-chart data-kind="{{kind}}" data-labels="{{x_labels_json}}" data-unit="{{y_unit}}">
     <figcaption class="sp-timeseries__head">
         <span class="sp-timeseries__title">{{chart_title}}</span>
         <span class="sp-timeseries__subtitle">{{subtitle}}</span>
@@ -33,19 +40,23 @@
             <span>0</span>
         </div>
         <svg class="sp-svgchart__plot" viewBox="0 0 100 40" preserveAspectRatio="none"
-             role="img" aria-label="{{aria_label}}">
+             role="img" aria-label="{{aria_label}}" data-chart-plot>
             {{#each ref_lines}}
             <line x1="0" x2="100" y1="{{this.y}}" y2="{{this.y}}"
                   class="sp-svgchart__ref sp-svgchart__ref--{{this.tone}}"
                   vector-effect="non-scaling-stroke"></line>
             {{/each}}
             {{#each series}}
+            <g class="sp-svgchart__series" data-series="{{@index}}" data-label="{{this.label}}" data-values="{{this.values}}" data-total="{{this.value_display}}" data-color="{{this.color_token}}">
             {{#if this.area_d}}
             <path d="{{this.area_d}}" fill="var({{this.color_token}})" class="sp-svgchart__area"></path>
             {{/if}}
             <path d="{{this.path_d}}" fill="none" stroke="var({{this.color_token}})"
                   vector-effect="non-scaling-stroke" class="sp-svgchart__line"></path>
+            {{#each this.points}}<path class="sp-svgchart__dot" d="M{{this.x}},{{this.y}} h0" stroke="var({{this.color_token}})" vector-effect="non-scaling-stroke"></path>{{/each}}
+            </g>
             {{/each}}
+            <line class="sp-svgchart__cursor" x1="0" x2="0" y1="0" y2="40" vector-effect="non-scaling-stroke" data-chart-cursor hidden></line>
         </svg>
     </div>
     <div class="sp-timeseries__x-axis" aria-hidden="true">
@@ -63,7 +74,7 @@
     {{#if legend}}
     <ul class="sp-pie-chart__legend sp-svgchart__legend">
         {{#each legend}}
-        <li class="sp-pie-chart__item sp-pie-chart__item--inline">
+        <li class="sp-pie-chart__item sp-pie-chart__item--inline sp-svgchart__legend-item" data-chart-toggle="{{@index}}">
             <span class="sp-pie-chart__swatch sp-pie-chart__swatch--{{this.color_index}}"></span>
             <span class="sp-pie-chart__label">{{this.label}}</span>
             <span class="sp-pie-chart__value">{{this.value_display}}</span>

@@ -9,7 +9,7 @@ use serde::Serialize;
 use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::handlers::ssr::list_view::Pagination;
-use crate::handlers::ssr::types::SvgStackedChartView;
+use crate::handlers::ssr::types::SvgLineChartView;
 
 use super::context::{AttributionLink, KpiTile};
 
@@ -55,6 +55,36 @@ pub(super) struct RedirectRowView {
     pub served_model: String,
     pub requests: i64,
     pub drill_url: String,
+}
+
+#[derive(Debug, Default, Serialize)]
+pub(super) struct SkillsTabView {
+    pub kpis: Vec<KpiTile>,
+    pub skill_count: i64,
+    pub rows: Vec<SkillRowView>,
+    pub has_rows: bool,
+    pub pagination: Option<Pagination>,
+    pub measurement_note: String,
+}
+
+#[derive(Debug, Serialize)]
+pub(super) struct SkillRowView {
+    pub skill: String,
+    // Why: no qualifier field. The full `plugin:skill` is already on the
+    // title, so a separate plugin string would be the same text twice.
+    pub name_display: String,
+    pub invocations: i64,
+    pub share_pct: i64,
+    pub slash_display: String,
+    pub tool_display: String,
+    pub users: i64,
+    pub conversations: i64,
+    pub requests: i64,
+    // Why: the spend of the conversations that invoked the skill — not a
+    // cost of the skill, which has none.
+    pub cost_display: String,
+    pub attributed_display: String,
+    pub catalog_url: String,
 }
 
 #[derive(Debug, Default, Serialize)]
@@ -138,7 +168,7 @@ pub(super) struct CostTabView {
     pub audience_links: Vec<AttributionLink>,
     pub is_internal: bool,
     pub csv_url: String,
-    pub day_chart: Option<SvgStackedChartView>,
+    pub day_chart: Option<SvgLineChartView>,
     pub providers: Vec<SupplierRowView>,
     pub has_providers: bool,
     pub models: Vec<SupplierRowView>,

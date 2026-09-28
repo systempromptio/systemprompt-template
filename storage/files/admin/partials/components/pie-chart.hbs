@@ -1,21 +1,23 @@
 {{!--
-  Distribution pie, CSS-only via conic-gradient.
+  Distribution donut, server-rendered SVG.
 
   Invoke as: {{> components/pie-chart model_pie}}
   The partial's root context is the pie object itself.
 
-  The disc is decoration: its whole stop list is precomputed by the view layer
-  (`--pie-stops`), so the template does no arithmetic. The legend is the
-  accessible and interactive representation — each row carries the share, the
+  Every arc arrives as a precomputed path in a 100×100 space with its own
+  <title> tooltip, so the ring scales to its panel and each slice can be
+  hovered; the centre carries the total. The legend is the accessible and
+  interactive representation — each row carries the share, a share bar, the
   detail line, and an optional drill-down link.
 
   Inputs (fields on the passed context):
     title / subtitle    heading and the one-line summary under it
     has_data            false when the window has nothing to slice
-    stops               full conic-gradient stop list
+    arcs                [{path_d, color_token, tooltip}]
+    center_value/label  the figure in the ring's hole and what it counts
     aria_label          spoken summary of the slices
-    legend              [{label, color_index, share_display, value_display, filter_url}]
-    empty_message       shown instead of the disc when has_data is false
+    legend              [{label, color_index, share_display, share_pct, value_display, filter_url}]
+    empty_message       shown instead of the ring when has_data is false
 --}}
 <figure class="sp-pie-chart">
     <figcaption class="sp-pie-chart__head">
@@ -24,11 +26,20 @@
     </figcaption>
     {{#if has_data}}
     <div class="sp-pie-chart__body">
-        <div class="sp-pie-chart__disc" role="img" aria-label="{{aria_label}}"
-             style="--pie-stops: {{stops}}"></div>
+        <div class="sp-pie-chart__ring">
+            <svg class="sp-pie-chart__svg" viewBox="0 0 100 100" role="img" aria-label="{{aria_label}}">
+                {{#each arcs}}
+                <path class="sp-pie-chart__arc" d="{{this.path_d}}" fill="var({{this.color_token}})"><title>{{this.tooltip}}</title></path>
+                {{/each}}
+            </svg>
+            <div class="sp-pie-chart__center" aria-hidden="true">
+                <span class="sp-pie-chart__center-value">{{center_value}}</span>
+                <span class="sp-pie-chart__center-label">{{center_label}}</span>
+            </div>
+        </div>
         <ul class="sp-pie-chart__legend">
             {{#each legend}}
-            <li class="sp-pie-chart__item">
+            <li class="sp-pie-chart__item" style="--v: {{this.share_pct}}%">
                 <span class="sp-pie-chart__swatch sp-pie-chart__swatch--{{this.color_index}}" aria-hidden="true"></span>
                 <span class="sp-pie-chart__label">
                     {{#if this.filter_url}}
@@ -39,6 +50,7 @@
                 </span>
                 <span class="sp-pie-chart__share">{{this.share_display}}</span>
                 <span class="sp-pie-chart__value">{{this.value_display}}</span>
+                <span class="sp-pie-chart__bar sp-pie-chart__bar--{{this.color_index}}" aria-hidden="true"></span>
             </li>
             {{/each}}
         </ul>

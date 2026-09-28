@@ -18,6 +18,13 @@
 .sp-pie-chart__swatch--5 { background: var(--sp-chart-red); }
 .sp-pie-chart__swatch--6 { background: var(--sp-chart-cyan); }
 .sp-pie-chart__swatch--7 { background: var(--sp-chart-indigo); }
+.sp-pie-chart__bar--1 { --bar-color: var(--sp-chart-purple); }
+.sp-pie-chart__bar--2 { --bar-color: var(--sp-chart-blue); }
+.sp-pie-chart__bar--3 { --bar-color: var(--sp-chart-green); }
+.sp-pie-chart__bar--4 { --bar-color: var(--sp-chart-amber); }
+.sp-pie-chart__bar--5 { --bar-color: var(--sp-chart-red); }
+.sp-pie-chart__bar--6 { --bar-color: var(--sp-chart-cyan); }
+.sp-pie-chart__bar--7 { --bar-color: var(--sp-chart-indigo); }
 
 .sp-svgchart__legend {
     flex: 0 0 auto;

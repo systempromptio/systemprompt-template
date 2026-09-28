@@ -30,6 +30,38 @@
     overflow: hidden;
 }
 
+.sp-kpi__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+/* The trend is a reserved row under the value, never an overlay: a
+   sparkline drawn over the value made the number unreadable, and one beside
+   it squeezed eight-tile rows until every label truncated. */
+.sp-kpi__trend {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    min-width: 0;
+    margin-block: var(--sp-space-1);
+}
+
+.sp-kpi__trend .sp-spark {
+    width: 100%;
+    height: 1.6rem;
+}
+
+.sp-kpi__label .sp-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    margin-inline-end: var(--sp-space-1);
+    vertical-align: -0.125em;
+    color: var(--sp-text-tertiary);
+}
+
 .sp-kpi__label,
 .sp-kpi__sub {
     overflow: hidden;
@@ -76,6 +108,7 @@
 .sp-kpi--err,
 .sp-kpi--danger  { box-shadow: var(--sp-shadow-card), inset 2px 0 0 var(--sp-danger); }
 .sp-kpi--accent  { box-shadow: var(--sp-shadow-card), inset 2px 0 0 var(--sp-accent); }
+.sp-kpi--info    { box-shadow: var(--sp-shadow-card), inset 2px 0 0 var(--sp-info); }
 
 .sp-kpi--link {
     text-decoration: none;

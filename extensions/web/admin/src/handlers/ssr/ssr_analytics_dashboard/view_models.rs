@@ -5,15 +5,11 @@
 //! Split from `view.rs` at the 300-line ceiling.
 
 use crate::handlers::ssr::format::format_cost;
-use crate::handlers::ssr::types::{
-    PieView, StackSeriesInput, StackedChartSpec, SvgLineChartView, SvgStackedChartView,
-    stacked_chart,
-};
+use crate::handlers::ssr::types::{PieView, Plot, SvgLineChartView, SvgSeriesInput, chart_on_axis};
 use crate::repositories::analytics::site::model_series::ModelCostBucket;
 use crate::repositories::analytics::site::series::UsageBucket;
-use crate::util::time_range::TimeRange;
 
-use super::view::{self, bucket_label, date_label, midpoint};
+use super::view::{self, bucket_label};
 
 // Why: pivots the sparse per-model rows onto the spine the usage series
 // already established, so the stacked bars line up bucket-for-bucket with the
@@ -21,9 +17,8 @@ use super::view::{self, bucket_label, date_label, midpoint};
 pub(super) fn model_cost_stack(
     rows: &[ModelCostBucket],
     spine: &[UsageBucket],
-    range: &TimeRange,
     weekly: bool,
-) -> SvgStackedChartView {
+) -> SvgLineChartView {
     let bucket_labels: Vec<String> = spine
         .iter()
         .map(|b| bucket_label(b.bucket_start, weekly))
@@ -55,7 +50,7 @@ pub(super) fn model_cost_stack(
                     values[b] += row.cost_microdollars;
                 }
             }
-            StackSeriesInput {
+            SvgSeriesInput {
                 label: models[i].clone(),
                 values,
                 value_display: format_cost(totals[i]),
@@ -64,21 +59,26 @@ pub(super) fn model_cost_stack(
         .collect();
 
     let grand_total: i64 = totals.iter().sum();
-    stacked_chart(StackedChartSpec {
-        title: "Cost by model",
-        subtitle: format!(
-            "{} across {} models",
-            format_cost(grand_total),
-            models.len()
-        ),
-        empty_message: "No billed requests in this window.",
-        series,
-        bucket_labels,
-        value_display: format_cost,
-        x_start_display: date_label(range.from),
-        x_mid_display: date_label(midpoint(range)),
-        x_end_display: date_label(range.to),
-    })
+    // Why: drawn as stacked columns in the live layer — per-bucket magnitude
+    // is a column's job, and the columns share the lines' bucket spine.
+    chart_on_axis(
+        &bucket_labels,
+        "No billed requests in this window.",
+        Plot {
+            y_unit: "µ$",
+            y_display: format_cost,
+            ..Plot::new(
+                "Cost by model",
+                format!(
+                    "{} across {} models",
+                    format_cost(grand_total),
+                    models.len()
+                ),
+                series,
+            )
+        },
+    )
+    .into_columns()
 }
 
 // Why: the four Overview visuals are built together because they share one
@@ -88,19 +88,18 @@ pub(super) struct OverviewCharts {
     pub volume: SvgLineChartView,
     pub cost: SvgLineChartView,
     pub model_pie: PieView,
-    pub model_cost: SvgStackedChartView,
+    pub model_cost: SvgLineChartView,
 }
 
 pub(super) fn overview_charts(
     fetched: &super::data::AnalyticsDashboardData,
     query: &super::AnalyticsDashboardQuery,
-    range: &TimeRange,
     weekly: bool,
 ) -> OverviewCharts {
     OverviewCharts {
-        volume: view::volume_chart(&fetched.series, range, weekly),
-        cost: view::spend_chart(&fetched.series, range, weekly),
+        volume: view::volume_chart(&fetched.series, weekly),
+        cost: view::spend_chart(&fetched.series, weekly),
         model_pie: view::model_pie(&fetched.models, query),
-        model_cost: model_cost_stack(&fetched.model_cost, &fetched.series, range, weekly),
+        model_cost: model_cost_stack(&fetched.model_cost, &fetched.series, weekly),
     }
 }

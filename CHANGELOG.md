@@ -42,6 +42,18 @@ Conventions (strict — hold every entry to them):
   `sparkline`, `filter-ribbon`, `table-select`, `bulk-bar` and `help-dialog`
   (opened by the page header's `?` through `components/sp-help.js`), with their
   stylesheets.
+- A live chart layer for `/admin/analytics`: `components/sp-chart.js` (with
+  `sp-chart-draw`, `sp-chart-scale`, `sp-chart-tooltip`) redraws each
+  server-rendered `svg-line-chart` at real pixel size with axes, a hover
+  crosshair and tooltip, keyboard focus, legend toggles and a table view. The
+  server chart still renders complete without scripts. Request volume now plots
+  requests, failures and active people on one axis; cost by model and the Cost
+  tab's provider-by-day chart are drawn as stacked columns by the same layer.
+- An analytics **Skills** tab (`/admin/analytics?tab=skills`): invocations
+  (slash vs. tool), people, the conversations that invoked each skill and their
+  requests and spend (labelled as conversation spend — rows overlap), and the
+  share attributed to a published version, from
+  `repositories/analytics/site/skills.rs`.
 - `util::mcp_tool_name` reduces a host's namespaced MCP tool name
   (`mcp__<server>__<tool>`, `mcp__plugin_<marketplace>_<server>__<tool>`) to the
   server and bare tool the gateway records.
@@ -53,12 +65,19 @@ Conventions (strict — hold every entry to them):
   gradient. Expandable table rows (Devices, By person) are driven by the shared
   `services/table-expand.js`: the whole row is the trigger and the detail
   slides open, replacing the per-page toggles.
+- The model-usage chart is a donut drawn as SVG arcs with a per-slice tooltip
+  and the request total in its centre, replacing the CSS conic-gradient disc;
+  its legend rows carry a share bar. KPI tiles accept an `icon` and a
+  sparkline `spark` in a reserved trend row.
 - The header actions and install menus now bind to the ids the templates
   actually write (`header-actions`, `install-menu`); previously neither control
   was wired and the install button did nothing at narrow widths.
 
 ### Removed
 
+- The server-only stacked chart (`types/svg_stack.rs`,
+  `components/svg-stacked-chart`): both of its charts are now drawn as columns
+  by the live layer from the ordinary line-chart view.
 - `73-analysis.css`: every rule in it styled an analysis page this branch does not render; the analysis suite brings its own stylesheet back.
 
 ## [0.62.0] - 2026-09-28

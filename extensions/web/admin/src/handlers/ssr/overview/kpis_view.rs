@@ -90,6 +90,8 @@ pub(super) fn volume_chart(range: OverviewRange, data: &OverviewData) -> SvgLine
         x_mid_display: format!("{} ago", range.half_span_label()),
         x_end_display: "now".to_owned(),
         show_area: true,
+        x_labels: Vec::new(),
+        y_unit: "",
     })
 }
 

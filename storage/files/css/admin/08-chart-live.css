@@ -1,0 +1,181 @@
+@layer components {
+
+/* The live chart draws at pixel size inside a host that takes every pixel
+   its panel gives it; the server's stretched SVG stays underneath for the
+   no-script case and is hidden once this takes over. */
+/* Once the live layer is up the server plot, its gutters and its legend
+   step aside; `[hidden]` alone loses to the component rules that give them
+   a display, so the live modifier hides them here at equal weight. */
+.sp-svgchart--live .sp-timeseries__plot,
+.sp-svgchart--live .sp-timeseries__x-axis,
+.sp-svgchart--live .sp-svgchart__legend,
+.sp-svgchart--live .sp-svgchart__refs {
+    display: none;
+}
+
+.sp-chart {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 12rem;
+    min-width: 0;
+}
+
+.sp-chart[hidden] {
+    display: none;
+}
+
+/* Out of flow on purpose: draw() sizes the SVG from the host, so an in-flow
+   SVG would feed its own height back into the host and every resize would
+   grow the chart without bound. The host is sized by layout alone. */
+.sp-chart__svg {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.sp-chart__svg:focus-visible {
+    outline: 2px solid var(--sp-accent);
+    outline-offset: 2px;
+    border-radius: var(--sp-radius-sm);
+}
+
+/* Gridlines are one step off the surface and hairline; the baseline is the
+   only axis line, so the data is the loudest thing on the panel. */
+.sp-chart__grid {
+    stroke: var(--sp-border-subtle);
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+.sp-chart__baseline {
+    stroke: var(--sp-border-default);
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+.sp-chart__tick {
+    font-size: var(--sp-text-2xs);
+    fill: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-chart__line {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.sp-chart__area {
+    opacity: 0.1;
+}
+
+/* Dots carry a 2px surface ring so they stay legible where lines cross; on
+   dense series they appear only for the hovered bucket. */
+.sp-chart__dot {
+    stroke: var(--sp-bg-surface);
+    stroke-width: 2;
+    transition: r var(--sp-duration-fast) var(--sp-ease-out);
+}
+
+.sp-chart__dot--hover {
+    opacity: 0;
+}
+
+.sp-chart__dot.is-active {
+    opacity: 1;
+    r: 6;
+}
+
+.sp-chart__bar {
+    transition: opacity var(--sp-duration-fast) var(--sp-ease-out);
+}
+
+.sp-chart__hits:hover ~ *,
+.sp-chart__series:has(.is-active) .sp-chart__bar:not(.is-active) {
+    opacity: 0.55;
+}
+
+.sp-chart__hit {
+    fill: transparent;
+    cursor: crosshair;
+}
+
+.sp-chart__cursor {
+    stroke: var(--sp-border-strong);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sp-chart__cursor.is-visible {
+    opacity: 1;
+}
+
+.sp-chart__tip {
+    position: absolute;
+    /* Keep the readout inside the chart host. Dashboard panels scroll their
+       fixed-height contents, so positioning it above the host clips the
+       tooltip at the panel's top edge. */
+    top: var(--sp-space-2);
+    transform: translateX(-50%);
+    display: grid;
+    gap: var(--sp-space-05);
+    min-width: 9rem;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface-overlay);
+    box-shadow: var(--sp-shadow-float);
+    font-size: var(--sp-text-xs);
+    pointer-events: none;
+    z-index: var(--sp-z-dropdown);
+}
+
+.sp-chart__tip[hidden] {
+    display: none;
+}
+
+.sp-chart__tip-label {
+    color: var(--sp-text-tertiary);
+    font-weight: var(--sp-font-semibold);
+}
+
+/* Values lead, names follow: the reader has the series and wants the number. */
+.sp-chart__tip-row {
+    display: grid;
+    grid-template-columns: 0.9rem auto 1fr;
+    align-items: center;
+    gap: var(--sp-space-2);
+    white-space: nowrap;
+}
+
+.sp-chart__tip-row i,
+.sp-chart__key {
+    display: inline-block;
+    width: 0.9rem;
+    height: 0.6rem;
+    border-radius: 2px;
+    background: var(--sp-series);
+}
+
+.sp-chart__tip-row i,
+.sp-chart__key--line {
+    height: 2px;
+    border-radius: 1px;
+}
+
+.sp-chart__tip-row b {
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-chart__tip-row span {
+    color: var(--sp-text-secondary);
+}
+
+}

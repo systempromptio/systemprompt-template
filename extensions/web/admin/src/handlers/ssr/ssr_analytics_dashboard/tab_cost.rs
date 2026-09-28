@@ -7,15 +7,14 @@
 //! this file has none to render even by accident.
 
 use crate::handlers::ssr::format::format_cost;
-use crate::handlers::ssr::types::{StackSeriesInput, StackedChartSpec, stacked_chart};
+use crate::handlers::ssr::types::{Plot, SvgLineChartView, SvgSeriesInput, chart_on_axis};
 use crate::repositories::analytics::site::cost::{
     ContainerAxis, ContainerUsageRow, CostDayRow, SupplierCostRow,
 };
-use crate::util::time_range::TimeRange;
 
 use super::context::{ContainerRowView, CostTabView, KpiTile, SupplierRowView};
 use super::tab_models::{per, share};
-use super::view::{compact, date_label, midpoint};
+use super::view::compact;
 use super::{AnalyticsDashboardQuery, urls};
 
 pub(super) struct CostInput<'a> {
@@ -27,11 +26,7 @@ pub(super) struct CostInput<'a> {
     pub is_internal: bool,
 }
 
-pub(super) fn cost_tab(
-    input: &CostInput<'_>,
-    range: &TimeRange,
-    query: &AnalyticsDashboardQuery,
-) -> CostTabView {
+pub(super) fn cost_tab(input: &CostInput<'_>, query: &AnalyticsDashboardQuery) -> CostTabView {
     let provider_max = input
         .providers
         .iter()
@@ -59,7 +54,7 @@ pub(super) fn cost_tab(
         audience_links: urls::audience_links(query, input.is_internal),
         is_internal: input.is_internal,
         csv_url: urls::cost_csv_url(query, input.is_internal),
-        day_chart: input.is_internal.then(|| day_chart(input.days, range)),
+        day_chart: input.is_internal.then(|| day_chart(input.days)),
         has_providers: !input.providers.is_empty(),
         providers: input
             .providers
@@ -131,10 +126,7 @@ fn container_row(row: &ContainerUsageRow, max: i64, axis: ContainerAxis) -> Cont
     }
 }
 
-fn day_chart(
-    days: &[CostDayRow],
-    range: &TimeRange,
-) -> crate::handlers::ssr::types::SvgStackedChartView {
+fn day_chart(days: &[CostDayRow]) -> SvgLineChartView {
     let mut labels: Vec<chrono::NaiveDate> = days.iter().map(|d| d.day).collect();
     labels.sort_unstable();
     labels.dedup();
@@ -142,7 +134,7 @@ fn day_chart(
     providers.sort();
     providers.dedup();
 
-    let mut series: Vec<StackSeriesInput> = providers
+    let mut series: Vec<SvgSeriesInput> = providers
         .iter()
         .map(|p| {
             let values: Vec<i64> = labels
@@ -155,7 +147,7 @@ fn day_chart(
                 })
                 .collect();
             let total: i64 = values.iter().sum();
-            StackSeriesInput {
+            SvgSeriesInput {
                 label: p.clone(),
                 values,
                 value_display: format_cost(total),
@@ -165,24 +157,28 @@ fn day_chart(
     series.sort_by_key(|s| std::cmp::Reverse(s.values.iter().sum::<i64>()));
 
     let grand: i64 = days.iter().map(|d| d.cost_microdollars).sum();
-    stacked_chart(StackedChartSpec {
-        title: "Provider cost by day",
-        subtitle: format!(
-            "{} across {} providers",
-            format_cost(grand),
-            providers.len()
-        ),
-        empty_message: "No billed requests in this window.",
-        series,
-        bucket_labels: labels
-            .iter()
-            .map(|d| d.format("%b %d").to_string())
-            .collect(),
-        value_display: format_cost,
-        x_start_display: date_label(range.from),
-        x_mid_display: date_label(midpoint(range)),
-        x_end_display: date_label(range.to),
-    })
+    let labels: Vec<String> = labels
+        .iter()
+        .map(|d| d.format("%b %d").to_string())
+        .collect();
+    chart_on_axis(
+        &labels,
+        "No billed requests in this window.",
+        Plot {
+            y_unit: "µ$",
+            y_display: format_cost,
+            ..Plot::new(
+                "Provider cost by day",
+                format!(
+                    "{} across {} providers",
+                    format_cost(grand),
+                    providers.len()
+                ),
+                series,
+            )
+        },
+    )
+    .into_columns()
 }
 
 fn kpis(input: &CostInput<'_>) -> Vec<KpiTile> {

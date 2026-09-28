@@ -95,5 +95,21 @@ fn service_utils_js(storage_js: &Path) -> Vec<AssetDefinition> {
             storage_js.join("components/sp-help.js"),
             "js/components/sp-help.js",
         ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-chart.js"),
+            "js/components/sp-chart.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-chart-scale.js"),
+            "js/components/sp-chart-scale.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-chart-draw.js"),
+            "js/components/sp-chart-draw.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-chart-tooltip.js"),
+            "js/components/sp-chart-tooltip.js",
+        ),
     ]
 }

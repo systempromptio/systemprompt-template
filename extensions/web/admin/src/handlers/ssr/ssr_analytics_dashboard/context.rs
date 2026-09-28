@@ -5,7 +5,7 @@
 
 use serde::Serialize;
 
-use crate::handlers::ssr::types::{PieView, SvgLineChartView, SvgStackedChartView};
+use crate::handlers::ssr::types::{PieView, SvgLineChartView};
 
 pub(super) use super::context_overview::{
     AnomalyRowView, BucketLinkView, CodeFrameView, DashboardTabLink, DashboardTimeRange,
@@ -14,8 +14,8 @@ pub(super) use super::context_overview::{
 };
 pub(super) use super::context_tabs::{
     ContainerRowView, CostTabView, ModelUsageRowView, ModelsTabView, RedirectRowView,
-    SessionCostRowView, SessionsTabView, SupplierRowView, ToolRowView, ToolServerRowView,
-    ToolsTabView,
+    SessionCostRowView, SessionsTabView, SkillRowView, SkillsTabView, SupplierRowView, ToolRowView,
+    ToolServerRowView, ToolsTabView,
 };
 
 // Why: each tab is its own GET so it can be bookmarked, and so only the
@@ -24,6 +24,7 @@ pub(super) use super::context_tabs::{
 pub(super) enum DashboardTab {
     Overview,
     Models,
+    Skills,
     Tools,
     Sessions,
     Cost,
@@ -35,6 +36,7 @@ impl DashboardTab {
     pub(super) fn from_query(raw: Option<&str>) -> Self {
         match raw {
             Some("models") => Self::Models,
+            Some("skills") => Self::Skills,
             Some("tools") => Self::Tools,
             Some("sessions") => Self::Sessions,
             Some("cost") => Self::Cost,
@@ -46,6 +48,7 @@ impl DashboardTab {
         match self {
             Self::Overview => "overview",
             Self::Models => "models",
+            Self::Skills => "skills",
             Self::Tools => "tools",
             Self::Sessions => "sessions",
             Self::Cost => "cost",
@@ -72,6 +75,7 @@ pub(super) struct AnalyticsDashboardContext {
     pub breadcrumbs: Vec<Crumb>,
     pub is_overview: bool,
     pub is_models: bool,
+    pub is_skills: bool,
     pub is_tools: bool,
     pub is_sessions: bool,
     pub is_cost: bool,
@@ -92,7 +96,7 @@ pub(super) struct AnalyticsDashboardContext {
     pub volume_chart: SvgLineChartView,
     pub cost_chart: SvgLineChartView,
     pub model_pie: PieView,
-    pub model_cost_chart: SvgStackedChartView,
+    pub model_cost_chart: SvgLineChartView,
 
     pub leaderboard: LeaderboardView,
     pub permissions: PermissionStatsView,
@@ -111,6 +115,7 @@ pub(super) struct AnalyticsDashboardContext {
     pub code_frames: Vec<CodeFrameView>,
 
     pub models: ModelsTabView,
+    pub skills: SkillsTabView,
     pub tools: ToolsTabView,
     pub sessions: SessionsTabView,
     pub cost: CostTabView,

@@ -24,5 +24,7 @@ pub(crate) fn daily_requests_chart(daily: &[i64]) -> SvgLineChartView {
         x_mid_display: "15d ago".to_owned(),
         x_end_display: "today".to_owned(),
         show_area: true,
+        x_labels: Vec::new(),
+        y_unit: "",
     })
 }

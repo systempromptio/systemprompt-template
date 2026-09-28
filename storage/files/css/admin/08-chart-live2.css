@@ -1,0 +1,69 @@
+@layer components {
+
+/* Legend, table view and the head tools of a live chart; the plot itself is
+   in 08-chart-live.css. */
+.sp-chart__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1) var(--sp-space-4);
+    margin: var(--sp-space-2) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sp-chart__legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    cursor: pointer;
+    border-radius: var(--sp-radius-sm);
+}
+
+.sp-chart__legend-item:focus-visible {
+    outline: 2px solid var(--sp-accent);
+    outline-offset: 2px;
+}
+
+.sp-chart__legend-item.is-hidden {
+    opacity: 0.45;
+    text-decoration: line-through;
+}
+
+.sp-chart__legend-value {
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-chart__tools {
+    margin-inline-start: auto;
+}
+
+.sp-chart__table {
+    width: 100%;
+    margin-top: var(--sp-space-2);
+    border-collapse: collapse;
+    font-size: var(--sp-text-xs);
+}
+
+.sp-chart__table th,
+.sp-chart__table td {
+    padding: var(--sp-space-1) var(--sp-space-2);
+    border-bottom: 1px solid var(--sp-border-subtle);
+    text-align: start;
+}
+
+.sp-chart__table-num {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sp-chart__dot,
+    .sp-chart__bar {
+        transition: none;
+    }
+}
+
+}

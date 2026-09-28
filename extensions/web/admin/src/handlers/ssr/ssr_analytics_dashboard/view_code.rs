@@ -35,6 +35,8 @@ pub(super) fn commit_chart(buckets: &[CodeDayBucket], range: &TimeRange) -> SvgL
         x_mid_display: date_label(midpoint(range)),
         x_end_display: date_label(range.to),
         show_area: true,
+        x_labels: Vec::new(),
+        y_unit: "",
     })
 }
 
@@ -72,6 +74,8 @@ pub(super) fn loc_chart(buckets: &[CodeDayBucket], range: &TimeRange) -> SvgLine
         x_mid_display: date_label(midpoint(range)),
         x_end_display: date_label(range.to),
         show_area: false,
+        x_labels: Vec::new(),
+        y_unit: "",
     })
 }
 

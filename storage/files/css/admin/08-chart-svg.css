@@ -8,14 +8,20 @@
         gap: var(--sp-space-2);
         flex: 1;
         min-height: 0;
+        min-width: 0;
         margin: 0;
+    }
+    .sp-svgchart .sp-timeseries__head {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: var(--sp-space-2);
     }
 
     .sp-svgchart__plot {
         width: 100%;
         height: 100%;
         min-height: 10rem;
-        max-height: 14rem;
         display: block;
         border-bottom: 1px solid var(--sp-border-default);
         background: linear-gradient(var(--sp-border-subtle), var(--sp-border-subtle))
@@ -28,6 +34,14 @@
 
     .sp-svgchart__area {
         opacity: 0.12;
+    }
+
+    /* A dot is a zero-length round-capped stroke: with preserveAspectRatio
+       "none" a <circle> stretches into an ellipse, while a non-scaling stroke
+       stays round at every panel width. */
+    .sp-svgchart__dot {
+        stroke-width: 6px;
+        stroke-linecap: round;
     }
 
     .sp-svgchart__ref {
@@ -79,7 +93,6 @@
     }
 
 }
-
 @layer components {
     /* Sparklines: a 100x24 unit space stretched to its cell. The stroke keeps
        its weight through the stretch; the last point is marked. */
@@ -122,5 +135,34 @@
         stroke: var(--sp-bg-surface);
         stroke-width: 9px;
         stroke-linecap: round;
+    }
+
+    /* The server plot's crosshair; the live layer sp-chart.js draws carries
+       its own cursor and tooltip (08-chart-live.css). */
+    .sp-timeseries__plot {
+        position: relative;
+    }
+    .sp-svgchart__cursor {
+        stroke: var(--sp-text-tertiary);
+        stroke-width: 1px;
+        stroke-dasharray: 2 2;
+        pointer-events: none;
+    }
+    .sp-svgchart__cursor[hidden] {
+        display: none;
+    }
+    .sp-svgchart--live .sp-svgchart__plot:focus-visible {
+        outline: 2px solid var(--sp-accent);
+        outline-offset: 2px;
+    }
+    .sp-svgchart__series.is-hidden {
+        display: none;
+    }
+    .sp-svgchart__legend-item {
+        cursor: pointer;
+    }
+    .sp-svgchart__legend-item.is-hidden {
+        opacity: 0.4;
+        text-decoration: line-through;
     }
 }

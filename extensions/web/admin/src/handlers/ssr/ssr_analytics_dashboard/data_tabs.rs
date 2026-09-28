@@ -16,6 +16,9 @@ use crate::repositories::analytics::site::models::{
 use crate::repositories::analytics::site::sessions::{
     SessionCostRow, SessionRatingStats, get_session_rating_stats, list_session_costs_paged,
 };
+use crate::repositories::analytics::site::skills::{
+    SkillStatsRow, SkillTotals, get_skill_totals, list_skill_stats,
+};
 use crate::repositories::analytics::site::tools::{
     ToolServerRow, ToolStatsRow, list_tool_servers, list_tool_stats,
 };
@@ -28,6 +31,9 @@ use super::data::unwrap_or_empty;
 pub(super) struct TabData {
     pub models: Vec<ModelStatsRow>,
     pub redirects: Vec<ModelRedirectRow>,
+    pub skills: Vec<SkillStatsRow>,
+    pub skills_total: i64,
+    pub skill_totals: SkillTotals,
     pub tool_servers: Vec<ToolServerRow>,
     pub tools: Vec<ToolStatsRow>,
     pub tools_total: i64,
@@ -56,6 +62,23 @@ pub(super) async fn load_models(pool: &PgPool, plan: &TabPlan<'_>) -> TabData {
     TabData {
         models: unwrap_or_empty(stats, "list_model_stats"),
         redirects: unwrap_or_empty(redirects, "list_model_redirects"),
+        ..TabData::default()
+    }
+}
+
+pub(super) async fn load_skills(pool: &PgPool, plan: &TabPlan<'_>) -> TabData {
+    let (paged, totals) = tokio::join!(
+        list_skill_stats(pool, plan.range, plan.scope, plan.limit, plan.offset),
+        get_skill_totals(pool, plan.range, plan.scope),
+    );
+    let (skills, skills_total) = unwrap_paged(paged, "list_skill_stats");
+    TabData {
+        skills,
+        skills_total,
+        skill_totals: totals.unwrap_or_else(|e| {
+            tracing::warn!(error = %e, "get_skill_totals failed");
+            SkillTotals::default()
+        }),
         ..TabData::default()
     }
 }

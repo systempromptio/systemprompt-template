@@ -6,8 +6,8 @@
 
 use crate::handlers::ssr::format::format_cost;
 use crate::handlers::ssr::types::{
-    LineChartSpec, PieSliceInput, PieView, SvgLineChartView, SvgSeriesInput, delta_view,
-    line_chart, pie_view, sparkline,
+    PieSliceInput, PieView, Plot, SvgLineChartView, SvgSeriesInput, chart_on_axis, delta_view,
+    pie_view, sparkline,
 };
 use crate::repositories::analytics::site::distribution::ModelDistributionRow;
 use crate::repositories::analytics::site::kpis::SiteKpis;
@@ -102,61 +102,71 @@ pub(super) fn window_days(range: &TimeRange) -> f64 {
     (secs / 86_400.0).max(1.0)
 }
 
-pub(super) fn volume_chart(
-    buckets: &[UsageBucket],
-    range: &TimeRange,
-    weekly: bool,
-) -> SvgLineChartView {
-    let total: i64 = buckets.iter().map(|b| b.requests).sum();
-    let errors: i64 = buckets.iter().map(|b| b.errors).sum();
-    let label = if weekly {
-        "requests/week"
-    } else {
-        "requests/day"
-    };
-    line_chart(LineChartSpec {
-        title: "Request volume",
-        subtitle: format!("{total} requests · {errors} failed"),
-        empty_message: "No gateway requests in this window.",
-        series: vec![SvgSeriesInput {
-            label: label.to_owned(),
-            values: buckets.iter().map(|b| b.requests).collect(),
-            value_display: total.to_string(),
-        }],
-        ref_lines: Vec::new(),
-        y_max: None,
-        y_display: |v| v.to_string(),
-        x_start_display: date_label(range.from),
-        x_mid_display: date_label(midpoint(range)),
-        x_end_display: date_label(range.to),
-        show_area: true,
-    })
+// Why: the two lines share one bucket-label spine, so the hover crosshair
+// names the same day on both.
+fn labels(buckets: &[UsageBucket], weekly: bool) -> Vec<String> {
+    buckets
+        .iter()
+        .map(|b| bucket_label(b.bucket_start, weekly))
+        .collect()
 }
 
-pub(super) fn spend_chart(
-    buckets: &[UsageBucket],
-    range: &TimeRange,
-    weekly: bool,
-) -> SvgLineChartView {
+pub(super) fn volume_chart(buckets: &[UsageBucket], weekly: bool) -> SvgLineChartView {
+    let total: i64 = buckets.iter().map(|b| b.requests).sum();
+    let errors: i64 = buckets.iter().map(|b| b.errors).sum();
+    let peak_users: i64 = buckets.iter().map(|b| b.active_users).max().unwrap_or(0);
+    chart_on_axis(
+        &labels(buckets, weekly),
+        "No gateway requests in this window.",
+        Plot::new(
+            "Request volume",
+            format!("{total} requests · {errors} failed · peak {peak_users} people in one bucket"),
+            vec![
+                SvgSeriesInput {
+                    label: "Requests".to_owned(),
+                    values: buckets.iter().map(|b| b.requests).collect(),
+                    value_display: total.to_string(),
+                },
+                SvgSeriesInput {
+                    label: "Failed".to_owned(),
+                    values: buckets.iter().map(|b| b.errors).collect(),
+                    value_display: errors.to_string(),
+                },
+                SvgSeriesInput {
+                    label: "People".to_owned(),
+                    values: buckets.iter().map(|b| b.active_users).collect(),
+                    value_display: peak_users.to_string(),
+                },
+            ],
+        ),
+    )
+}
+
+pub(super) fn spend_chart(buckets: &[UsageBucket], weekly: bool) -> SvgLineChartView {
     let total: i64 = buckets.iter().map(|b| b.cost_microdollars).sum();
-    let label = if weekly { "cost/week" } else { "cost/day" };
-    line_chart(LineChartSpec {
-        title: "Cost over time",
-        subtitle: format!("{} across the window", format_cost(total)),
-        empty_message: "No billed requests in this window.",
-        series: vec![SvgSeriesInput {
-            label: label.to_owned(),
-            values: buckets.iter().map(|b| b.cost_microdollars).collect(),
-            value_display: format_cost(total),
-        }],
-        ref_lines: Vec::new(),
-        y_max: None,
-        y_display: format_cost,
-        x_start_display: date_label(range.from),
-        x_mid_display: date_label(midpoint(range)),
-        x_end_display: date_label(range.to),
-        show_area: true,
-    })
+    let per_bucket = total / i64::try_from(buckets.len()).unwrap_or(1).max(1);
+    chart_on_axis(
+        &labels(buckets, weekly),
+        "No billed requests in this window.",
+        Plot {
+            y_unit: "µ$",
+            y_display: format_cost,
+            ..Plot::new(
+                "Cost over time",
+                format!(
+                    "{} across the window · {} per {}",
+                    format_cost(total),
+                    format_cost(per_bucket),
+                    if weekly { "week" } else { "day" }
+                ),
+                vec![SvgSeriesInput {
+                    label: "Cost".to_owned(),
+                    values: buckets.iter().map(|b| b.cost_microdollars).collect(),
+                    value_display: format_cost(total),
+                }],
+            )
+        },
+    )
 }
 
 pub(super) fn model_pie(
@@ -182,6 +192,7 @@ pub(super) fn model_pie(
         "Model usage",
         format!("{total_requests} requests across {} models", models.len()),
         slices,
+        "requests",
         "No model usage in this window.",
     )
 }

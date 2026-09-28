@@ -1,0 +1,184 @@
+@layer components {
+
+/* The distribution donut: a ring sized to its panel, the total in the hole,
+   and a legend whose rows carry a share bar in the slice's colour. The
+   swatch and bar colour indices live in 20-page-analytics-dashboard2.css
+   beside the chart colour tokens they mirror. */
+
+.sp-pie-chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-3);
+    flex: 1;
+    margin: 0;
+    min-width: 0;
+}
+
+.sp-pie-chart__head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-05);
+}
+
+.sp-pie-chart__title {
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+    color: var(--sp-text-primary);
+}
+
+.sp-pie-chart__subtitle {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* The ring takes the panel's height and the legend the rest of its width;
+   on a narrow panel the legend drops under the ring. */
+.sp-pie-chart__body {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-5);
+    flex: 1;
+    min-height: 0;
+    flex-wrap: wrap;
+}
+
+.sp-pie-chart__ring {
+    position: relative;
+    flex: 0 1 15rem;
+    min-width: 11rem;
+    max-width: 16rem;
+    aspect-ratio: 1;
+    align-self: center;
+}
+
+.sp-pie-chart__svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+/* A slice lifts on hover and its siblings step back, so the one under the
+   pointer is the one the tooltip names. */
+.sp-pie-chart__arc {
+    transition: opacity var(--sp-duration-fast) ease, transform var(--sp-duration-fast) ease;
+    transform-origin: 50% 50%;
+    transform-box: view-box;
+}
+
+.sp-pie-chart__svg:hover .sp-pie-chart__arc {
+    opacity: 0.45;
+}
+
+.sp-pie-chart__svg .sp-pie-chart__arc:hover {
+    opacity: 1;
+    transform: scale(1.04);
+}
+
+.sp-pie-chart__center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.sp-pie-chart__center-value {
+    font-size: var(--sp-text-2xl);
+    font-weight: 600;
+    line-height: 1;
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-pie-chart__center-label {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    margin-top: var(--sp-space-1);
+}
+
+.sp-pie-chart__legend {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+    min-width: 0;
+    flex: 1;
+}
+
+.sp-pie-chart__item {
+    display: grid;
+    grid-template-columns: auto minmax(9rem, 1fr) auto auto;
+    grid-template-areas:
+        "swatch label share value"
+        "swatch bar   bar   bar";
+    column-gap: var(--sp-space-2);
+    row-gap: var(--sp-space-05);
+    align-items: baseline;
+    font-size: var(--sp-text-xs);
+}
+
+/* The share as a bar under each row, filled to `--v`, in the slice's colour. */
+.sp-pie-chart__bar {
+    grid-area: bar;
+    display: block;
+    height: 0.25rem;
+    border-radius: var(--sp-radius-sm);
+    background: linear-gradient(var(--sp-border-subtle), var(--sp-border-subtle));
+    position: relative;
+    overflow: hidden;
+}
+
+.sp-pie-chart__bar::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--v, 0%);
+    background: var(--bar-color, var(--sp-accent));
+    border-radius: inherit;
+}
+
+.sp-pie-chart__item--inline {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    white-space: nowrap;
+}
+
+.sp-pie-chart__swatch {
+    grid-area: swatch;
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: var(--sp-radius-sm);
+    align-self: center;
+}
+
+.sp-pie-chart__label {
+    grid-area: label;
+    color: var(--sp-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-pie-chart__label a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.sp-pie-chart__label a:hover {
+    text-decoration: underline;
+}
+
+.sp-pie-chart__share {
+    grid-area: share;
+    font-variant-numeric: tabular-nums;
+    color: var(--sp-text-secondary);
+}
+
+}
