@@ -206,6 +206,21 @@ every rung seeded by `seed_hot_tables.sql`, and
 runs the current installer over it (2000 rows per hot table must survive) and
 diffs the result against a fresh install. Never edit a rung by hand.
 
+**Schema retirements and `@supersedes-checksum`.** Migrations are history:
+never edit or renumber an applied one. To retire a trigger, function,
+procedure or view another extension's migration would trip over, add
+`extensions/web/schema/retire/NNN_<name>.sql` (only `DROP TRIGGER|FUNCTION|
+PROCEDURE|VIEW … IF EXISTS`; core refuses anything else) and override
+`Extension::retirements()` in `extensions/web/src/extension_impl.rs` to return
+it; core runs every extension's retirements before any migration. None exist
+yet, so the default (empty) is inherited and `schema/retire/` holds only a
+`.gitkeep`. When an applied migration's text truly must change (it can no
+longer replay on a newer core), keep its slot, rewrite it and put
+`-- @supersedes-checksum: <old 16-hex checksum>` in its leading comment block;
+core accepts exactly that transition instead of refusing boot. A migration
+that cannot be replayed at all becomes `NNN_<name>.tombstone` (see 053) — a
+number is never reused.
+
 ---
 
 ## CLI Structure
