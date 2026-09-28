@@ -50,7 +50,11 @@ wait_health() {
     local port
     port=$("${compose[@]}" port "$app_service" 8080 | head -1 | tr -d '\r' | sed 's/.*://')
     for _ in $(seq 1 120); do
-        if curl --max-time 3 -fs "http://${SMOKE_HOST:-localhost}:$port/api/v1/health" >/dev/null && \
+        # Why: the early-bind listener answers 200 {"status":"starting"} while
+        # the server is still bootstrapping, so a bare 200 proves nothing;
+        # require the finished-boot body.
+        if curl --max-time 3 -fs "http://${SMOKE_HOST:-localhost}:$port/health" 2>/dev/null \
+            | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get("status") == "healthy" else 1)' 2>/dev/null && \
             curl --max-time 3 -fs "http://${SMOKE_HOST:-localhost}:$port/" >/dev/null; then
             base="http://${SMOKE_HOST:-localhost}:$port"
             return

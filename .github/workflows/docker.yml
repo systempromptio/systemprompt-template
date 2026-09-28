@@ -4,7 +4,16 @@ name: Docker
 #
 # Tag scheme (see docs/RELEASING.md):
 #   push to main       -> :edge, :sha-<sha>        (moving development image)
-#   release published  -> :X.Y.Z, :X.Y, :X, :latest (multi-arch, signed)
+#   release            -> :sha-<sha> first; :X.Y.Z, :X.Y, :X, :latest only
+#                         after the per-arch smoke AND the upgrade-boot proof
+#                         pass (promote-tags), so a release alias can never
+#                         name an image that failed to boot over an old
+#                         release's database. GHCR tags are effectively
+#                         create-once for a version; a failed run leaves only
+#                         its :sha-*.
+#
+# A push to main is a promotion merge (`just release`); the `proof` job
+# re-verifies it (scripts/check-release-merge.sh) before anything is built.
 #
 # Releases arrive as a `workflow_call` from release-gateway.yml, NOT as a
 # `release: published` event and NOT via `push: tags`:
@@ -66,8 +75,26 @@ env:
   IMAGE: ghcr.io/systempromptio/systemprompt-template
 
 jobs:
+  proof:
+    name: Verify promotion merge
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/check-release-merge.sh "$GITHUB_SHA"
+
   build:
     name: Build (${{ matrix.arch }})
+    needs: proof
+    if: ${{ !cancelled() && (needs.proof.result == 'success' || needs.proof.result == 'skipped') }}
     strategy:
       fail-fast: true
       matrix:
@@ -142,6 +169,11 @@ jobs:
       contents: read
       packages: write
       id-token: write # cosign keyless
+    outputs:
+      digest: ${{ steps.digest.outputs.digest }}
+      short: ${{ steps.short.outputs.short }}
+      version: ${{ steps.over.outputs.full }}
+      release: ${{ steps.over.outputs.set }}
     steps:
       - uses: actions/download-artifact@v5
         with:
@@ -170,20 +202,21 @@ jobs:
             echo "maj=${v%%.*}"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Short SHA
+        id: short
+        env:
+          REF_SHA: ${{ inputs.ref || github.sha }}
+        run: echo "short=${REF_SHA:0:7}" >> "$GITHUB_OUTPUT"
+
+      # Only moving or immutable-by-content tags here. The release aliases
+      # (:X.Y.Z, :X.Y, :X, :latest) wait for promote-tags.
       - uses: docker/metadata-action@v5
         id: meta
         with:
           images: ${{ env.IMAGE }}
           tags: |
             type=edge,branch=main,enable=${{ steps.over.outputs.set == 'false' }}
-            type=sha,enable=${{ steps.over.outputs.set == 'false' }}
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=${{ steps.over.outputs.full }},enable=${{ steps.over.outputs.set == 'true' }}
-            type=raw,value=${{ steps.over.outputs.majmin }},enable=${{ steps.over.outputs.set == 'true' }}
-            type=raw,value=${{ steps.over.outputs.maj }},enable=${{ steps.over.outputs.set == 'true' }}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') || steps.over.outputs.set == 'true' }}
+            type=raw,value=sha-${{ steps.short.outputs.short }}
 
       - name: Create and push manifest list
         working-directory: /tmp/digests
@@ -195,10 +228,127 @@ jobs:
       - name: Resolve manifest digest
         id: digest
         run: |
-          digest=$(docker buildx imagetools inspect "$IMAGE:${{ steps.meta.outputs.version }}" --format '{{json .Manifest.Digest}}' | tr -d '"')
+          digest=$(docker buildx imagetools inspect "$IMAGE:sha-${{ steps.short.outputs.short }}" --format '{{json .Manifest.Digest}}' | tr -d '"')
           echo "digest=${digest}" >> "$GITHUB_OUTPUT"
 
       - uses: sigstore/cosign-installer@v3
 
       - name: Cosign sign (keyless)
         run: cosign sign --yes "$IMAGE@${{ steps.digest.outputs.digest }}"
+
+  # Why: the per-arch smoke boots a fresh database. Only this path — the
+  # published image, its entrypoint, an old release's schema with rows in its
+  # hot tables, a fresh named volume — exercises an in-place upgrade the way a
+  # self-hosted install meets it. Every rung of the ladder
+  # (tests/fixtures/schema/release-baseline-<X.Y.Z>.sql) is restored, seeded
+  # (seed_hot_tables.sql: 2000 rows per hot table) and booted over.
+  upgrade-boot:
+    name: Boot the image over every seeded release
+    needs: merge
+    if: needs.merge.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U test" --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upgrade and boot from every rung
+        env:
+          PGPASSWORD: test
+          DIGEST: ${{ needs.merge.outputs.digest }}
+        run: |
+          set -euo pipefail
+          ref="$IMAGE@$DIGEST"
+          docker pull "$ref"
+          shopt -s nullglob
+          rungs=(tests/fixtures/schema/release-baseline-*.sql)
+          # An empty ladder proves nothing; refuse rather than pass vacuously.
+          [ "${#rungs[@]}" -gt 0 ] || { echo "::error::no schema rungs (tests/fixtures/schema/release-baseline-X.Y.Z.sql); run 'just schema-baseline'"; exit 1; }
+          for fixture in "${rungs[@]}"; do
+            rung=$(basename "$fixture" .sql); rung=${rung#release-baseline-}
+            db="upgrade_${rung//./_}"
+            echo "::group::$rung"
+            psql -h localhost -U test -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE $db"
+            grep -v '^[\]' "$fixture" | grep -v "set_config('search_path'" \
+              | psql -q -h localhost -U test -d "$db" -v ON_ERROR_STOP=1 > /dev/null
+            psql -q -h localhost -U test -d "$db" -v ON_ERROR_STOP=1 \
+              -f tests/integration/schema-upgrade/src/seed_hot_tables.sql
+            vol="storage_data_${db}"
+            docker volume create "$vol" > /dev/null
+            docker run -d --name "boot_$db" --network host \
+              -e ANTHROPIC_API_KEY=sk-ant-release-gate \
+              -e ADMIN_EMAIL=release-gate@example.invalid \
+              -e DATABASE_URL="postgres://test:test@localhost:5432/$db" \
+              -v "$vol:/app/storage/data" "$ref" > /dev/null
+            healthy=""
+            for _ in $(seq 1 60); do
+              # The early-bind listener answers /health 200 {"status":"starting"}
+              # during bootstrap, so a bare 200 proves nothing: require the
+              # finished-boot body, or /readyz (503 until boot completes).
+              if curl -fsS http://localhost:8080/health 2>/dev/null | jq -e '.status == "healthy"' > /dev/null 2>&1 \
+                || curl -fsS http://localhost:8080/readyz > /dev/null 2>&1; then healthy=1; break; fi
+              if [ "$(docker inspect -f '{{.State.Running}}' "boot_$db")" != "true" ]; then break; fi
+              sleep 5
+            done
+            last=$(curl -sS --max-time 5 http://localhost:8080/health 2>&1 || true)
+            docker logs "boot_$db" 2>&1 | tail -40
+            docker rm -f "boot_$db" > /dev/null
+            if [ -z "$healthy" ]; then
+              echo "last /health body: $last"
+              echo "::error::image did not finish booting over release $rung (see container log above)"
+              exit 1
+            fi
+            rows=$(psql -At -h localhost -U test -d "$db" -c "SELECT count(*) FROM ai_requests")
+            [ "$rows" = "2000" ] || { echo "::error::release $rung lost ai_requests rows ($rows)"; exit 1; }
+            echo "::endgroup::"
+          done
+
+  # The release aliases, pointed at the digest that passed both the per-arch
+  # smoke (build) and upgrade-boot, then read back.
+  promote-tags:
+    name: Tag the proven image
+    needs: [merge, upgrade-boot]
+    if: needs.merge.outputs.release == 'true' && needs.upgrade-boot.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Point :X.Y.Z, :X.Y, :X and :latest at the proven digest
+        env:
+          DIGEST: ${{ needs.merge.outputs.digest }}
+          VERSION: ${{ needs.merge.outputs.version }}
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::not a release version: '$VERSION'"; exit 1; }
+          published=("$VERSION" "${VERSION%.*}" "${VERSION%%.*}" latest)
+          args=()
+          for t in "${published[@]}"; do args+=(-t "$IMAGE:$t"); done
+          docker buildx imagetools create "${args[@]}" "$IMAGE@$DIGEST"
+          for t in "${published[@]}"; do
+            got=$(docker buildx imagetools inspect "$IMAGE:$t" --format '{{json .Manifest.Digest}}' | tr -d '"')
+            [ "$got" = "$DIGEST" ] || { echo "::error::$IMAGE:$t is $got, expected $DIGEST"; exit 1; }
+          done
