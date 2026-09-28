@@ -11,7 +11,7 @@
 # validate). To serve one model from two providers — say Claude from a cloud
 # host with Anthropic's API as the failover — declare the second copy under a
 # prefixed id (`anthropic-claude-sonnet-5`) with `upstream_model` carrying the
-# real name, mark it `hidden: true` (core 0.62+) so no client is offered the
+# real name, mark it `hidden: true` so no client is offered the
 # twin, and name that provider as the route's `fallback_provider` in
 # gateway.yaml. The failover finds the twin by `upstream_model`, ignoring
 # `hidden`, and prices the served request from it. This catalog has no twins:
