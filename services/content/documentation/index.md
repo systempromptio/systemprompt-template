@@ -49,6 +49,7 @@ This site covers two things: the **terminal demo** walkthroughs and how to **log
 - [Bridge installation](/documentation/bridge-install) — Install, sign-in and troubleshooting, including Linux and WSL
 - [Install on macOS](/documentation/install-macos) and [Install on Windows](/documentation/install-windows) — Per-platform bridge setup
 - [Downloads](/documentation/downloads) — Bridge files and checksum verification
+- [Expose your instance remotely](/documentation/remote-access) — Public HTTPS URL, nginx with TLS, and the profile keys that change
 
 ## Skills and analysis
 

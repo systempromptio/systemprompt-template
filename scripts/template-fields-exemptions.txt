@@ -2,16 +2,15 @@
 # scripts/check-template-fields.py skips these and FAILS on any entry that
 # resolves now, so this list only ever shrinks. New entries need a reason.
 
-# Orphaned templates: no handler renders them on this branch (they lost their
-# routes). They are deleted, with their partials and CSS, by the admin-console
-# port.
+# Orphaned template-only pages: no handler renders them (they lost their
+# routes). Retiring one deletes it with its partials, page JS and CSS.
 storage/files/admin/templates/demo-trace.hbs: chain_id, option_label, session_detail_url
 storage/files/admin/templates/governance-policy-edit.hbs: config_path, decisions_url, params_yaml, toggle_url
 storage/files/admin/templates/management-department-detail.hbs: users_url
 
-# Rendered pages reading a field their view model does not define: each
-# renders as an empty string today. Fixed when these pages are replaced by the
-# ported governance and gateway console.
+# Rendered template-only partials reading a field their view model does not
+# define: each renders as an empty string today. Fix by adding the field to
+# the view model or dropping the reference.
 storage/files/admin/templates/governance-decisions.hbs: policy_url, user_filter
 storage/files/admin/templates/governance-hooks.hbs: export_json, timeout_label
 storage/files/admin/templates/models.hbs: deny_rule_id, requests_link, selected_user_id, selected_user_label

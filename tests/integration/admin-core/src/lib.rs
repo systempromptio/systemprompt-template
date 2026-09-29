@@ -109,7 +109,7 @@ mod dashboard_query_scaling;
 #[cfg(test)]
 mod gateway_owner_isolation;
 
-// Managed authoring (Stage 3 phase 11): immutable revisions and bundles
+// Managed authoring: immutable revisions and bundles
 // through core's managed repository.
 #[cfg(test)]
 mod managed_revisions;

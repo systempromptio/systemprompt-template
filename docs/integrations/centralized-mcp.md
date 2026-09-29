@@ -2,13 +2,9 @@
 
 A marketplace can expose third-party MCP servers (an issue tracker, a wiki, a
 CRM) through this instance's MCP gateway. Each person links their **own**
-account on the server; the bridge displays the same server-owned connection
-model in its Profile view, and **Manage on server** opens that page. Provider
-credentials are never placed in a marketplace bundle or desktop config.
-
-Until the Connectors console page lands, a person links accounts from the
-Connections section of `/admin/profile`; the routes below are the same either
-way.
+account on `/admin/connectors`. The bridge displays the same server-owned
+connection model in its Profile view, and **Manage on server** opens that page.
+Provider credentials are never placed in a marketplace bundle or desktop config.
 
 ## Provisioning
 

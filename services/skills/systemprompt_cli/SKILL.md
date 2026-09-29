@@ -2,6 +2,30 @@
 
 A navigable map of the `systemprompt` CLI. Use it to find the right command, then drill in with `--help`.
 
+## Typed tools first
+
+The `systemprompt` MCP server (admin-only) has typed tools for the common questions. Prefer them to a hand-built CLI command.
+
+| Question | Tool |
+|----------|------|
+| What did one person do: conversations, active days, skills, titles | `user_activity` |
+| One row per conversation in a window | `conversation_list` |
+| Who is spending, how much | `usage_by_user` |
+| Debug one request (not for counting activity) | `request_log` |
+| What was said in one request | `conversation_audit` (`max_chars` 300-500) |
+| Who is registered, with which role | `users` |
+| The dashboard | `admin_report` (`{"report":"costs","days":7}`) |
+
+For people and usage questions use the skills `admin_person_activity` (one person) and `admin_ai_usage` (spend, adoption). Rows are named `<user_id> (<display name>)`; the id is what other tools take as `user`. Map ids to emails with `users`.
+
+**Paging.** `limit` is clamped to 200. `request_log`: non-empty `next_cursor` means older rows - pass it as `cursor`. `conversation_audit`: `has_more` means pass `next_offset` as `offset`; `message_count`/`tool_call_count` are totals. `users`: `next_cursor` is the next `offset`. `usage_by_user`: `truncated` means raise `limit` or narrow the window. To reach an earlier window set `since`/`until`; do not page back to it.
+
+## Rules
+
+- Never conclude a day, total or trend from one page. Use an aggregate tool, or page to the end and say "at least N" if you stopped.
+- When two sources disagree, report both figures and do not invent a cause.
+- State the window, and name any source that was denied, truncated or empty.
+
 ## When to Use
 
 Use this skill whenever you need to operate the Enterprise Demo through its CLI: managing skills, services, agents, configuration, governance logs, analytics, cloud deploys, or MCP plugins. It tells you which of the 8 domains owns a task and how to discover the exact command.
