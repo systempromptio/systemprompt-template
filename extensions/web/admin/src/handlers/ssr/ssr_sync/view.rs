@@ -61,6 +61,8 @@ pub(crate) struct SyncPageData {
     pub show_access: bool,
     pub access_review: Option<super::access_review::AccessReviewView>,
     pub docs_url: &'static str,
+    pub configuration_url: &'static str,
+    pub observability_url: &'static str,
     pub export_zip_url: &'static str,
     pub import_url: &'static str,
     pub sources: SourcesView,

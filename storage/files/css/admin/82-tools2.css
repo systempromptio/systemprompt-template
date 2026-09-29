@@ -1,0 +1,101 @@
+@layer components {
+
+/* The rows. Fixed layout keeps eleven columns from fighting; the input and
+   title columns take what the fixed ones leave. The header sticks so a page
+   of fifty calls keeps its column names in view. */
+.sp-tools-table {
+    table-layout: fixed;
+}
+
+.sp-tools-table thead th,
+.sp-tools-breakdown thead th {
+    position: sticky;
+    top: 0;
+    z-index: var(--sp-z-sticky);
+    background: var(--sp-bg-surface);
+}
+
+.sp-tools-table th.sp-tools-col-select { width: 2rem; }
+.sp-tools-table th.sp-col-date { width: 7rem; }
+.sp-tools-table th.sp-tools-col-tool { width: 16%; }
+.sp-tools-table th.sp-tools-col-server { width: 9%; }
+.sp-tools-table th.sp-tools-col-input { width: 22%; }
+.sp-tools-table th.sp-tools-col-person { width: 9%; }
+.sp-tools-table th.sp-tools-col-links { width: 6rem; }
+.sp-tools-table th.sp-tools-col-artifact { width: 9%; }
+.sp-tools-table th.sp-tools-col-kind { width: 6rem; }
+.sp-tools-table th.sp-tools-col-title { width: 26%; }
+.sp-tools-table th.sp-tools-col-open { width: 9rem; }
+.sp-tools-table th.sp-table__cell--num { width: 5.5rem; }
+
+.sp-tools-table td {
+    vertical-align: top;
+    max-width: 0;
+    font-size: var(--sp-text-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Why: a td may never carry a display other than table-cell (06-table-cell.css);
+   the inline boxes inside these cells overflow visibly rather than clip a
+   badge or a glyph in half. */
+.sp-tools-table td.sp-tools-col-select,
+.sp-tools-table td.sp-tools-col-links,
+.sp-tools-table td.sp-tools-col-kind,
+.sp-tools-table td.sp-tools-col-artifact,
+.sp-tools-table td.sp-tools-col-open {
+    display: table-cell;
+    max-width: none;
+    overflow: visible;
+}
+
+.sp-tools-table td.sp-tools-col-tool,
+.sp-tools-table td.sp-tools-col-input,
+.sp-tools-table td.sp-tools-col-title,
+.sp-tools-table td.sp-tools-col-server,
+.sp-tools-table td.sp-tools-col-person {
+    overflow: hidden;
+}
+
+.sp-tools-table td.sp-tools-col-person .sp-table__link {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-tools-table .sp-table__cell--num {
+    text-align: end;
+}
+
+.sp-tools-table tr:hover > td {
+    background: var(--sp-bg-surface-alt);
+}
+
+/* The pinned-window chip beside the presets, when a row link set the range. */
+.sp-tools-pinned {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    padding: 0 var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-full);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.9;
+}
+
+.sp-tools-pinned .sp-icon {
+    color: var(--sp-text-tertiary);
+}
+
+.sp-tools-pinned__widen {
+    color: var(--sp-accent-text);
+    text-decoration: none;
+}
+
+.sp-tools-pinned__widen:hover,
+.sp-tools-pinned__widen:focus-visible {
+    text-decoration: underline;
+}
+}

@@ -1,0 +1,35 @@
+@layer components {
+.sp-aconv-meta {
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.sp-aconv-skill {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-decoration: none;
+    padding: 0 var(--sp-space-2);
+    border-radius: var(--sp-radius-sm);
+    font-size: var(--sp-text-xs);
+    line-height: 1.6;
+}
+.sp-aconv-skill {
+    color: var(--sp-text-secondary);
+    border: 1px solid var(--sp-border-subtle);
+    font-family: var(--sp-font-mono);
+}
+.sp-aconv-skill--hooked {
+    color: var(--sp-accent-text);
+    background: var(--sp-accent-dim);
+    border-color: transparent;
+}
+a.sp-aconv-skill:hover,
+a.sp-aconv-skill:focus-visible {
+    text-decoration: underline;
+}
+}

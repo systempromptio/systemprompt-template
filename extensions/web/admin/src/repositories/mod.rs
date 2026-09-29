@@ -5,6 +5,7 @@
 //! symbol has and collisions between domains cannot arise.
 
 pub mod access_control;
+pub mod analysis;
 pub mod analytics;
 pub mod bridge;
 pub mod config;
@@ -21,6 +22,7 @@ pub mod groups;
 pub mod jobs;
 pub mod marketplace;
 pub mod mcp;
+pub mod observability;
 pub mod overview;
 pub mod people_usage;
 pub mod projects;

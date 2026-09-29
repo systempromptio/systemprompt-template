@@ -299,3 +299,9 @@ mod sync_sources_hash;
 mod sync_staging;
 #[cfg(test)]
 mod time_bound_access;
+
+// The Platform and Developer pages ported in Stage 3 phases 8–11: the
+// observability view, the retention ledger, connectors and the managed
+// resources, each through its pure half.
+#[cfg(test)]
+mod observability_view;

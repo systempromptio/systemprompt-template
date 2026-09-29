@@ -2,9 +2,11 @@
 
 mod admin;
 mod admin_groups;
+pub(crate) mod managed_state;
 mod ssr;
 mod ssr_bridge;
 mod ssr_export;
+mod ssr_governance;
 mod ssr_redirects;
 
 pub(crate) use admin::{

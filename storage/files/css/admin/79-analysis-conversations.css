@@ -1,0 +1,73 @@
+@layer components {
+/* Analysis › Conversations: dense rows of the deterministic record, every
+   figure coloured by the same four tones the badges use, a trend slot per
+   tile, a sparkline per row and one judge score per conversation. The row
+   and cell rules are in 79-analysis-conversations2.css, the detail page in
+   79-analysis-conversation-detail.css. */
+.sp-aconv-range {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-space-2);
+    margin-block: var(--sp-space-2) var(--sp-space-3);
+}
+.sp-aconv-range .sp-tabs {
+    margin: 0;
+}
+/* Charts share one x axis in a row; four fold to two columns. */
+.sp-aconv-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: var(--sp-space-3);
+    margin-block: var(--sp-space-3) var(--sp-space-4);
+}
+.sp-aconv-chart {
+    display: flex;
+    min-width: 0;
+    height: 19rem;
+    padding: var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface);
+}
+.sp-aconv-block {
+    min-width: 0;
+    margin-block: var(--sp-space-3) var(--sp-space-5);
+}
+.sp-aconv-block > .sp-table {
+    max-width: 100%;
+}
+/* Toned numbers: the same value is the same colour on every page. */
+.sp-aconv-num {
+    font-variant-numeric: tabular-nums;
+}
+.sp-aconv-num--ok { color: var(--sp-success-strong); }
+.sp-aconv-num--warn { color: var(--sp-warning-strong); }
+.sp-aconv-num--err { color: var(--sp-danger-strong); font-weight: var(--sp-font-semibold); }
+.sp-aconv-num--muted { color: var(--sp-text-tertiary); }
+.sp-aconv-num--accent { color: var(--sp-text-primary); }
+/* Share and cache bars: a track with a filled inline-start portion, the
+   width carried on --sp-fill so the template prints one number. */
+.sp-aconv-bar {
+    display: inline-block;
+    vertical-align: middle;
+    width: 6rem;
+    height: 0.45rem;
+    border-radius: 2px;
+    background: var(--sp-bg-surface-alt);
+    overflow: hidden;
+}
+.sp-aconv-bar i {
+    display: block;
+    height: 100%;
+    width: var(--sp-fill, 0%);
+    background: var(--sp-accent);
+}
+.sp-aconv-bar__label {
+    margin-inline-start: var(--sp-space-1);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+}

@@ -1,0 +1,7 @@
+@layer components {
+/* Compact tiles: a band of context above dense rows, not a card each. */
+.sp-kpi-grid--compact .sp-kpi {
+    min-height: 0;
+    padding: var(--sp-space-2) var(--sp-space-3);
+}
+}

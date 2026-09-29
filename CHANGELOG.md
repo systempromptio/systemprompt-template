@@ -108,6 +108,29 @@ Conventions (strict — hold every entry to them):
 - `util::mcp_tool_name` reduces a host's namespaced MCP tool name
   (`mcp__<server>__<tool>`, `mcp__plugin_<marketplace>_<server>__<tool>`) to the
   server and bare tool the gateway records.
+- **Tools & artifacts** (`/admin/tools`, `/admin/artifacts`, Developer group):
+  every tool call the platform saw — the model's intent, the execution, the
+  governance decision keyed to it and the artifact it produced — read from the
+  `tool_activity` view in one statement (`repositories/analysis/tools/page.sql`)
+  with KPI tiles, charts, a filter ribbon, a breakdown by tool, server, person,
+  client, skill or kind, and a paged, selectable table. The Artifacts page is
+  the same page narrowed to calls the one artifact rule says produced something
+  a person can view; `/admin/artifacts/{id}` shows one artifact with its
+  provenance, scanner findings and stored body, and `…/preview` renders it in a
+  sandboxed same-origin frame through core's renderer registry. Four export
+  datasets back them (`tools`, `tools-breakdown`, `artifacts`,
+  `artifacts-breakdown`).
+- **Configuration** (`/admin/configuration`, Platform group): one row per kind
+  of configuration under `services/`, projected kinds with their plane's state
+  and a link to the owning page's Sync tab, served kinds with the source and
+  hash that ship them, plus the `database_cleanup` retention windows read from
+  the profile beside what the job last deleted.
+- **Observability** (`/admin/system/observability`): the profile's
+  `observability.otlp` block beside core's `otlp_export_state` ledger, with
+  **Export now** (runs core's `otlp_export_now` out of turn) and **Test
+  connection** (posts an empty OTLP/HTTP envelope to the collector); both are
+  administrator writes behind the write-origin check. The Code sync page links
+  to Configuration and Observability from its header.
 
 ### Changed
 
@@ -126,6 +149,14 @@ Conventions (strict — hold every entry to them):
 - The header actions and install menus now bind to the ids the templates
   actually write (`header-actions`, `install-menu`); previously neither control
   was wired and the install button did nothing at narrow widths.
+- The admin SSR router now takes the shared `DbPool` and builds core's
+  managed-resource repository and OTLP export ledger once
+  (`routes/managed_state.rs`); `admin_ssr_router` returns
+  `Result<Router, StateError>`. The six legacy CSV URLs moved into
+  `routes/ssr_export.rs` and the governance pages into
+  `routes/ssr_governance.rs` (same paths). `handlers::ssr::format::relative_time`
+  now delegates to `systemprompt_web_shared::format::relative_time`, which
+  gains `truncate_chars`, `truncate_ellipsis` and `compact_num`.
 
 ### Removed
 

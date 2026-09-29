@@ -1,0 +1,31 @@
+/* /admin/system/observability — the declared exporter and one row per signal. */
+@layer components {
+
+.sp-obs-inline { display: inline; }
+
+.sp-obs-exporter {
+    margin-block: var(--sp-space-3) var(--sp-space-6);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface);
+}
+
+/* Why: a collector's refusal is the one line an operator came for; it is
+   clipped to the cell with the full text in the title, never wrapped into
+   a paragraph that pushes the counters off screen. */
+.sp-obs-error {
+    display: inline-block;
+    max-width: 28ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+    color: var(--sp-danger-strong);
+    font-size: var(--sp-text-xs);
+    cursor: help;
+}
+
+.sp-obs-signals td { vertical-align: top; }
+
+}

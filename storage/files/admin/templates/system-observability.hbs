@@ -1,0 +1,82 @@
+{{#> layout page_title=title page_id=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="Where this instance ships its audit trail. The profile's observability.otlp block names the collector; core's otlp_export job tails ai_requests and logs by watermark and posts OTLP to it. This page reads the job's ledger and can run it out of turn."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{docs_url}}" target="_blank" rel="noopener noreferrer">How export works</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{sync_url}}">Code ↔ Instance</a>
+        {{#if can_write}}{{#if configured}}
+        <form method="post" action="{{test_url}}" class="sp-obs-inline"><button class="sp-btn sp-btn--sm sp-btn--secondary" type="submit" title="Post an empty OTLP envelope to the collector with the configured headers; nothing is exported">Test connection</button></form>
+        <form method="post" action="{{export_url}}" class="sp-obs-inline"><button class="sp-btn sp-btn--sm sp-btn--primary" type="submit" title="Run one batch of every enabled signal now, ignoring batch_seconds">Export now</button></form>
+        {{/if}}{{/if}}
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        <span>Job <code class="sp-code-inline">{{job_name}}</code></span>
+        {{#if exporter}}
+        <span>Protocol <strong>{{exporter.protocol}}</strong></span>
+        <span>Batch every <strong>{{exporter.batch_seconds}}s</strong></span>
+        {{/if}}
+        {{/inline}}
+    {{/components/page-header}}
+
+    {{#if outcome}}
+    {{> components/notice tone=outcome.tone title=outcome.title message=outcome.detail}}
+    {{/if}}
+
+    {{#unless configured}}
+    {{> components/notice tone="warn" title="No collector configured" message="The active profile declares no observability.otlp block, so the otlp_export job has nothing to ship and exits on every tick. Add the block to the profile — endpoint, headers, signals, batch_seconds — and restart. Metrics are not affected: they stay on the Prometheus /metrics listener."}}
+    {{/unless}}
+
+    {{#if exporter}}
+    {{#> components/section title="Exporter" note="Declared in the profile and read by the job at every tick. Header values are credentials and are never shown."}}{{/components/section}}
+    <dl class="sp-kv-list sp-obs-exporter">
+        <div class="sp-kv-row"><dt>Endpoint</dt><dd><span class="sp-u-mono">{{exporter.endpoint}}</span></dd></div>
+        <div class="sp-kv-row"><dt>Traces</dt><dd><span class="sp-u-mono">{{exporter.traces_url}}</span></dd></div>
+        <div class="sp-kv-row"><dt>Logs</dt><dd><span class="sp-u-mono">{{exporter.logs_url}}</span></dd></div>
+        <div class="sp-kv-row"><dt>Signals</dt><dd>{{#each exporter.signals}}{{> components/badge tone="accent" text=this}} {{/each}}</dd></div>
+        <div class="sp-kv-row"><dt>Headers</dt><dd>{{#if exporter.header_names}}{{#each exporter.header_names}}<span class="sp-u-mono">{{this}}</span>{{#unless @last}}, {{/unless}}{{/each}}{{else}}<span class="sp-u-text-tertiary">none</span>{{/if}}</dd></div>
+    </dl>
+    {{/if}}
+
+    <div class="sp-kpi-grid" aria-label="Export totals">
+        {{> components/kpi label="Batches acknowledged" value=(formatNumber totals.batches) note="since the ledger began"}}
+        {{> components/kpi label="Rows shipped" value=(formatNumber totals.rows) note="requests and log records"}}
+        {{> components/kpi label="Batches failed" value=(formatNumber totals.failures) tone=totals.failures_tone note="kept their cursor and were retried"}}
+    </div>
+
+    {{#> components/section title="Signals" count=signal_count note="One cursor per signal. The watermark moves only once the collector acknowledged the batch; lag is now minus the watermark, and an idle signal settles a few seconds behind."}}{{/components/section}}
+    {{#if signals}}
+    {{#> components/table caption="Export state per signal" modifier="sp-obs-signals"}}
+        <thead><tr>
+            <th>Signal</th>
+            <th>State</th>
+            <th>Lag</th>
+            <th>Watermark</th>
+            <th>Last success</th>
+            <th>Last error</th>
+            <th>Batches</th>
+            <th>Rows</th>
+            <th>Failures</th>
+        </tr></thead>
+        <tbody>
+        {{#each signals}}
+        <tr data-signal="{{signal}}">
+            <td><strong>{{signal}}</strong></td>
+            <td>{{> components/badge tone=status_tone text=status}}</td>
+            <td>{{#if lag}}{{> components/badge tone=lag.tone text=lag.label}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if watermark_at}}{{relativeTime watermark_at}}{{#if watermark_id}}<br><span class="sp-u-mono sp-u-text-tertiary" title="{{watermark_id}}">{{truncate watermark_id 16}}</span>{{/if}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if last_success_at}}{{relativeTime last_success_at}}{{else}}<span class="sp-u-text-tertiary">never</span>{{/if}}</td>
+            <td>{{#if last_error}}<span class="sp-obs-error" title="{{last_error}}">{{truncate last_error 80}}</span>{{#if last_error_at}}<br><span class="sp-u-text-tertiary">{{relativeTime last_error_at}}</span>{{/if}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td class="sp-u-mono">{{formatNumber batches_total}}</td>
+            <td class="sp-u-mono">{{formatNumber rows_total}}</td>
+            <td class="sp-u-mono">{{formatNumber failures_total}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state heading="No signal state yet" message="The job writes a row per signal on its first tick after the profile names a collector."}}
+    {{/if}}
+    {{/inline}}
+{{/layout}}

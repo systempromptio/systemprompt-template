@@ -5,6 +5,8 @@
     {{#> components/page-header title=title subtitle="Where declarations come from and how they move. Sources are the internal base tree this repository ships and each external bundle the profile pins — one mechanism, some local, some remote. The archive carries every projected plane between the database and the repository. Access review settles the access-control rules entity by entity; every other plane's database against its file is on that plane's own page, under Sync."}}
         {{#*inline "header_actions"}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{docs_url}}" target="_blank" rel="noopener noreferrer">How sync works</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{configuration_url}}">Configuration</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{observability_url}}" title="The profile's observability.otlp block and the otlp_export job's ledger">Observability</a>
         {{/inline}}
         {{#*inline "header_meta"}}
         <span>Release <strong>v{{sources.base.version}}</strong></span>

@@ -9,25 +9,29 @@ use tower_http::normalize_path::NormalizePathLayer;
 
 use super::super::templates::AdminTemplateEngine;
 use super::super::{handlers, middleware};
+use super::managed_state::StateError;
 use super::ssr_redirects;
 use crate::handlers::adfs_auth::AdfsDeps;
+use systemprompt::database::DbPool;
 
 pub fn admin_ssr_router(
+    db: &DbPool,
     pool: Arc<PgPool>,
-    _write_pool: &PgPool,
     engine: AdminTemplateEngine,
     sso_deps: AdfsDeps,
-    _owner: systemprompt::identifiers::UserId,
-) -> Router {
+    owner: systemprompt::identifiers::UserId,
+) -> Result<Router, StateError> {
+    let managed = Arc::new(super::managed_state::ManagedState::new(db, owner)?);
     let inner = overview_routes()
         .merge(people_routes())
         .merge(ai_activity_routes())
-        .merge(governance_routes())
+        .merge(super::ssr_governance::routes())
         .merge(platform_routes())
         .merge(account_routes())
         .merge(api_routes())
         .merge(ssr_redirects::legacy_routes())
         .layer(Extension(engine.clone()))
+        .layer(Extension(managed))
         .layer(Extension(sso_deps.clone()))
         .layer(axum_middleware::from_fn_with_state(
             Arc::clone(&pool),
@@ -51,11 +55,11 @@ pub fn admin_ssr_router(
         .with_state(pool)
         .fallback_service(inner);
 
-    Router::new().fallback_service(
+    Ok(Router::new().fallback_service(
         tower::ServiceBuilder::new()
             .layer(NormalizePathLayer::trim_trailing_slash())
             .service(combined),
-    )
+    ))
 }
 
 fn public_routes(pool: Arc<PgPool>) -> Router<Arc<PgPool>> {
@@ -137,11 +141,7 @@ fn ai_activity_routes() -> Router<Arc<PgPool>> {
     Router::new()
         .route("/analytics", get(handlers::ssr::analytics_dashboard_page))
         .merge(super::ssr_export::routes())
-        // Why: the Cost tab's export. Same handler contract as the tab, so the
-        // file always matches the view the operator was looking at.
-        .route("/analytics/cost.csv", get(crate::export::legacy::cost_csv))
         .route("/requests", get(handlers::ssr::analytics_requests_page))
-        .route("/requests.csv", get(crate::export::legacy::requests_csv))
         .route(
             "/requests/{request_id}",
             get(handlers::ssr::governance_audit_detail_page),
@@ -156,6 +156,18 @@ fn ai_activity_routes() -> Router<Arc<PgPool>> {
             "/traces/{trace_id}",
             get(handlers::ssr::perf_trace_detail_page),
         )
+        // Why: every tool result, from every client, as one linked entity;
+        // the preview is the artifact rendered for the detail page's frame.
+        .route("/tools", get(handlers::ssr::tools_page))
+        .route("/artifacts", get(handlers::ssr::artifacts_page))
+        .route(
+            "/artifacts/{artifact_id}",
+            get(handlers::ssr::artifact_detail_page),
+        )
+        .route(
+            "/artifacts/{artifact_id}/preview",
+            get(handlers::ssr::artifact_preview),
+        )
         // Why: the org-wide twin of "My conversations". It reads one
         // conversation per row where `/contexts` reads one context, and it is
         // the page an operator looks for under AI activity when they want to
@@ -165,32 +177,6 @@ fn ai_activity_routes() -> Router<Arc<PgPool>> {
         .route(
             "/contexts/{context_id}",
             get(handlers::ssr::context_detail_page),
-        )
-}
-
-// Why: sidebar group 4. These read a posture rather than listing an entity.
-// The three are one group because they are the three things a policy can do to
-// a call — decide it, hold it for a person, or record a credential it touched —
-// and an operator tuning one reads the other two.
-fn governance_routes() -> Router<Arc<PgPool>> {
-    Router::new()
-        .route("/governance", get(handlers::ssr::governance_page))
-        .route(
-            "/governance/warnings.csv",
-            get(crate::export::legacy::governance_csv),
-        )
-        .route(
-            "/governance/decisions/{decision_id}",
-            get(handlers::ssr::governance_audit_detail_page),
-        )
-        .route("/governance/approvals", get(handlers::ssr::approvals_page))
-        .route(
-            "/governance/secrets",
-            get(handlers::ssr::secrets_audit_page),
-        )
-        .route(
-            "/governance/secrets.csv",
-            get(crate::export::legacy::secrets_csv),
         )
 }
 
@@ -223,6 +209,10 @@ fn platform_routes() -> Router<Arc<PgPool>> {
             get(handlers::catalog::skill_detail_page),
         )
         .route("/gateway", get(handlers::ssr::gateway_page))
+        // Why: the Platform group's home — every kind of configuration the
+        // instance loads, where it comes from and whether the database
+        // agrees.
+        .route("/configuration", get(handlers::ssr::configuration_page))
         // Why: Code sync — the sources and the archive that move declarations
         // between the repository and this instance, and the access review
         // that settles the access-control plane entity by entity.
@@ -231,16 +221,21 @@ fn platform_routes() -> Router<Arc<PgPool>> {
             "/sync/import/{stage_id}",
             get(handlers::ssr::import_preview_page),
         )
-        // Why: the month-end pack's *pages* are gone — the cost tab of the
-        // analytics dashboard replaced them — but the CSV exports are a data
-        // endpoint the finance hand-off still fetches, so they stay mounted.
+        // Why: the exporter is core's `otlp_export` job and its config is a
+        // profile block; this page shows both and triggers the job out of
+        // turn. It lives beside Sync because that is where the declared
+        // config is read from.
         .route(
-            "/reports/customer.csv",
-            get(crate::export::legacy::report_customer_csv),
+            "/system/observability",
+            get(handlers::ssr::observability_page),
         )
         .route(
-            "/reports/internal.csv",
-            get(crate::export::legacy::report_internal_csv),
+            "/system/observability/export",
+            post(handlers::ssr::observability_export_now),
+        )
+        .route(
+            "/system/observability/test",
+            post(handlers::ssr::observability_test_connection),
         )
 }
 

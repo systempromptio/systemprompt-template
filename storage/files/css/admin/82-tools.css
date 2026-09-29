@@ -1,0 +1,147 @@
+@layer components {
+
+/* Tools & artifacts: one dense ledger of calls, the artifact subset beside
+   it. Kind is carried by a glyph and a tint together so a colour-blind
+   reader still tells a file from a card. */
+.sp-tools-kpis {
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.sp-tools-block__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-3);
+    margin-block-end: var(--sp-space-2);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-tools-block__title {
+    margin: 0;
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-primary);
+}
+
+.sp-tools-block__head .sp-tabs {
+    margin: 0 0 0 auto;
+}
+
+.sp-tools-tool {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    min-width: 0;
+    max-width: 100%;
+}
+
+.sp-tools-tool .sp-icon {
+    color: var(--sp-text-tertiary);
+}
+
+.sp-tools-tool code {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-tools-input {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+}
+
+.sp-tools-path {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    max-width: 18rem;
+    padding: 0 var(--sp-space-2);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-sm);
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.7;
+}
+
+.sp-tools-kind {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    padding: 0 var(--sp-space-2);
+    border-radius: var(--sp-radius-sm);
+    font-size: var(--sp-text-xs);
+    font-weight: var(--sp-font-medium);
+    line-height: 1.7;
+    text-decoration: none;
+    white-space: nowrap;
+    color: var(--sp-text-secondary);
+    background: var(--sp-bg-surface-alt);
+}
+
+.sp-tools-kind--file { color: var(--sp-accent-text); background: var(--sp-accent-dim); }
+.sp-tools-kind--card { color: var(--sp-info-strong); background: color-mix(in oklch, var(--sp-info) 14%, transparent); }
+.sp-tools-kind--ui { color: var(--sp-success-strong); background: var(--sp-success-dim); }
+.sp-tools-kind--body { color: var(--sp-warning-strong); background: var(--sp-warning-dim); }
+.sp-tools-kind--wrench { color: var(--sp-text-tertiary); }
+
+a.sp-tools-kind:hover,
+a.sp-tools-kind:focus-visible {
+    outline: 1px solid currentColor;
+}
+
+.sp-tools-links {
+    display: inline-flex;
+    gap: var(--sp-space-1);
+}
+
+.sp-tools-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--sp-radius-sm);
+    color: var(--sp-text-tertiary);
+    text-decoration: none;
+}
+
+.sp-tools-link:hover,
+.sp-tools-link:focus-visible {
+    color: var(--sp-accent-text);
+    background: var(--sp-accent-dim);
+}
+
+.sp-tools-decision {
+    text-decoration: none;
+}
+
+.sp-tools-export {
+    display: inline-flex;
+    color: var(--sp-text-tertiary);
+    text-decoration: none;
+}
+
+.sp-tools-export:hover,
+.sp-tools-export:focus-visible {
+    color: var(--sp-accent-text);
+}
+
+.sp-tools-col-share {
+    white-space: nowrap;
+}
+
+.sp-tools-col-export {
+    width: 2rem;
+    text-align: end;
+}
+
+}

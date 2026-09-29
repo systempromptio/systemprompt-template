@@ -1,6 +1,7 @@
 //! Persistence for the analytics pages and their CSV exports.
 
 pub mod agents;
+pub mod artifacts;
 pub mod content_rollup;
 pub mod context_detail;
 pub mod conversation_rows;

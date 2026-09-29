@@ -30,12 +30,14 @@ pub(crate) fn build(db: &DbHandles, sso_deps: admin::AdfsDeps) -> Option<SsrRout
     Some(SsrRouters {
         bridge_auth: admin::bridge_auth_ssr_router(Arc::clone(&db.read), engine.clone()),
         admin: admin::admin_ssr_router(
+            &db.db,
             Arc::clone(&db.read),
-            &db.write,
             engine,
             sso_deps,
             db.owner.clone(),
-        ),
+        )
+        .map_err(|e| tracing::error!(error = %e, "Failed to build admin SSR repositories"))
+        .ok()?,
     })
 }
 

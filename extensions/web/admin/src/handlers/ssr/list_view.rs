@@ -19,6 +19,12 @@ use crate::repositories::scope::ScopeRequest;
 use crate::repositories::{groups, projects};
 use crate::types::UserContext;
 
+// Why: what a page of anything holds on this console. Fifteen files declared
+// their own `const PAGE_SIZE: i64 = 50`, so "the page size" was fifteen facts
+// that happened to agree. The two deliberate 25s (a user's conversations, a
+// skill's conversations) keep their own constant and say why.
+pub(crate) const DEFAULT_PAGE_SIZE: i64 = 50;
+
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct SelectOptionView {
     pub value: String,
@@ -216,4 +222,35 @@ pub(crate) fn query_string_dropping(
             .filter_map(|(name, value)| value.map(|v| format!("{name}={v}"))),
     );
     parts.join("&")
+}
+
+// Why: every list page computed the same two URLs, the same two booleans
+// derived from them and the same 1-based `current_page` off a zero-based
+// window. Nineteen copies drifted: some used `page - 1` where others used
+// `saturating_sub(1)`, and one page counted from 1 against sixteen counting
+// from 0. `page_url` is the one thing a page genuinely owns — its own URL
+// shape — so it is all a page supplies.
+pub(crate) fn paginate(window: PageWindow, page_url: impl Fn(i64) -> String) -> Pagination {
+    let page = window.index;
+    let prev_url = (page > 0).then(|| page_url(page - 1));
+    let next_url = (page + 1 < window.total_pages).then(|| page_url(page + 1));
+    let (first_row, last_row) = window.bounds();
+    Pagination {
+        current_page: page + 1,
+        total_pages: window.total_pages,
+        first_row,
+        last_row,
+        total_rows: window.total_rows,
+        noun: window.noun,
+        has_prev: prev_url.is_some(),
+        has_next: next_url.is_some(),
+        prev_url,
+        next_url,
+    }
+}
+
+// Why: the common case — a prefix already ending in `?` or `&`, with the page
+// number last.
+pub(crate) fn paginate_prefixed(window: PageWindow, prefix: &str) -> Pagination {
+    paginate(window, |page| format!("{prefix}page={page}"))
 }

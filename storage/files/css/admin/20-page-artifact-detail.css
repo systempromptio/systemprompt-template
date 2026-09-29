@@ -1,0 +1,29 @@
+@layer components {
+
+/* Artifact detail: /admin/artifacts/{id}. The body is third-party content
+   and is bounded so a large result never becomes the page. */
+.sp-p-artifact-detail__body {
+    max-block-size: 40rem;
+    overflow: auto;
+    padding: var(--sp-space-4);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-md);
+    background: var(--sp-bg-surface);
+    font-size: var(--sp-text-sm);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.sp-p-artifact-detail__preview {
+    inline-size: 100%;
+    min-block-size: 24rem;
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-md);
+    background: var(--sp-bg-surface);
+}
+
+.sp-p-artifact-detail__clean {
+    color: var(--sp-text-secondary);
+}
+
+}
