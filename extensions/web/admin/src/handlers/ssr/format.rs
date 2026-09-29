@@ -40,8 +40,18 @@ pub(crate) fn format_span(
     }
 }
 
+// Why: "3d ago" answers "is this still in use" at a glance; the exact stamp
+// stays on the cell's `title`. Months are thirty days, which is the roster's
+// idle threshold, so "1mo ago" and the idle-30d chip agree.
 pub(crate) fn relative_time(t: chrono::DateTime<chrono::Utc>) -> String {
-    systemprompt_web_shared::format::relative_time(chrono::Utc::now().timestamp() - t.timestamp())
+    let delta = chrono::Utc::now().timestamp() - t.timestamp();
+    match delta {
+        d if d < 60 => "just now".to_owned(),
+        d if d < 3_600 => format!("{}m ago", d / 60),
+        d if d < 86_400 => format!("{}h ago", d / 3_600),
+        d if d < 2_592_000 => format!("{}d ago", d / 86_400),
+        d => format!("{}mo ago", d / 2_592_000),
+    }
 }
 
 // Why: `ai_requests.client_kind` is a closed set the core enum owns; a value

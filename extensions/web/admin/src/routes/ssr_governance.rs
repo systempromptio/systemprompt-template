@@ -2,7 +2,8 @@
 //! the secrets trail.
 //!
 //! Split from `ssr.rs` on size alone; the sidebar group and the handlers are
-//! unchanged.
+//! unchanged. The two `.csv` URLs are the pre-export-dialog links, kept
+//! mounted so a bookmarked download still answers.
 
 use std::sync::Arc;
 
@@ -20,6 +21,10 @@ pub(super) fn routes() -> Router<Arc<PgPool>> {
     Router::new()
         .route("/governance", get(handlers::ssr::governance_page))
         .route(
+            "/governance/warnings.csv",
+            get(crate::export::legacy::governance_csv),
+        )
+        .route(
             "/governance/decisions/{decision_id}",
             get(handlers::ssr::governance_audit_detail_page),
         )
@@ -27,5 +32,9 @@ pub(super) fn routes() -> Router<Arc<PgPool>> {
         .route(
             "/governance/secrets",
             get(handlers::ssr::secrets_audit_page),
+        )
+        .route(
+            "/governance/secrets.csv",
+            get(crate::export::legacy::secrets_csv),
         )
 }
