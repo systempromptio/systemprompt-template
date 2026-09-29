@@ -27,7 +27,7 @@ pub fn admin_ssr_router(
         .merge(ai_activity_routes())
         .merge(super::ssr_analysis::routes())
         .merge(super::ssr_governance::routes())
-        .merge(platform_routes())
+        .merge(super::ssr_platform::routes())
         .merge(account_routes())
         .merge(api_routes())
         .merge(ssr_redirects::legacy_routes())
@@ -146,11 +146,7 @@ fn ai_activity_routes() -> Router<Arc<PgPool>> {
     Router::new()
         .route("/analytics", get(handlers::ssr::analytics_dashboard_page))
         .merge(super::ssr_export::routes())
-        // Why: the Cost tab's export. Same handler contract as the tab, so the
-        // file always matches the view the operator was looking at.
-        .route("/analytics/cost.csv", get(crate::export::legacy::cost_csv))
         .route("/requests", get(handlers::ssr::analytics_requests_page))
-        .route("/requests.csv", get(crate::export::legacy::requests_csv))
         .route(
             "/requests/{request_id}",
             get(handlers::ssr::governance_audit_detail_page),
@@ -165,6 +161,18 @@ fn ai_activity_routes() -> Router<Arc<PgPool>> {
             "/traces/{trace_id}",
             get(handlers::ssr::perf_trace_detail_page),
         )
+        // Why: every tool result, from every client, as one linked entity;
+        // the preview is the artifact rendered for the detail page's frame.
+        .route("/tools", get(handlers::ssr::tools_page))
+        .route("/artifacts", get(handlers::ssr::artifacts_page))
+        .route(
+            "/artifacts/{artifact_id}",
+            get(handlers::ssr::artifact_detail_page),
+        )
+        .route(
+            "/artifacts/{artifact_id}/preview",
+            get(handlers::ssr::artifact_preview),
+        )
         // Why: the org-wide twin of "My conversations". It reads one
         // conversation per row where `/contexts` reads one context, and it is
         // the page an operator looks for under AI activity when they want to
@@ -174,70 +182,6 @@ fn ai_activity_routes() -> Router<Arc<PgPool>> {
         .route(
             "/contexts/{context_id}",
             get(handlers::ssr::context_detail_page),
-        )
-}
-
-// Why: sidebar group 5 — the installable units declared in `services/*.yaml`,
-// flattened out of the old `/catalog/` prefix, plus the gateway that routes
-// model traffic to the providers behind them.
-fn platform_routes() -> Router<Arc<PgPool>> {
-    Router::new()
-        .route("/mcp", get(handlers::catalog::mcp::mcp_servers_page))
-        .route(
-            "/mcp/{mcp_id}",
-            get(handlers::catalog::mcp::mcp_detail_page),
-        )
-        .route(
-            "/marketplaces",
-            get(handlers::catalog::marketplaces::marketplaces_page),
-        )
-        .route(
-            "/marketplaces/{marketplace_id}",
-            get(handlers::catalog::marketplaces::marketplace_detail_page),
-        )
-        .route("/plugins", get(handlers::catalog::plugins_page))
-        .route(
-            "/plugins/{plugin_id}",
-            get(handlers::catalog::plugin_detail_page),
-        )
-        .route("/skills", get(handlers::catalog::skills_page))
-        .route(
-            "/skills/{skill_id}",
-            get(handlers::catalog::skill_detail_page),
-        )
-        .route("/gateway", get(handlers::ssr::gateway_page))
-        // Why: Code sync — the sources and the archive that move declarations
-        // between the repository and this instance, and the access review
-        // that settles the access-control plane entity by entity.
-        .route("/sync", get(handlers::ssr::sync_page))
-        .route(
-            "/sync/import/{stage_id}",
-            get(handlers::ssr::import_preview_page),
-        )
-        .route(
-            "/gateway/routes/{route_id}",
-            get(handlers::ssr::gateway_route_page),
-        )
-        // Why: the policy editor writes `ai_gateway_policies` directly; core
-        // re-reads it per request, so these are live edits, not file edits.
-        .route(
-            "/gateway/policies",
-            get(handlers::ssr::gateway_policies_page).post(handlers::ssr::save_gateway_policy),
-        )
-        .route(
-            "/gateway/policies/delete",
-            post(handlers::ssr::delete_gateway_policy),
-        )
-        // Why: the month-end pack's *pages* are gone — the cost tab of the
-        // analytics dashboard replaced them — but the CSV exports are a data
-        // endpoint the finance hand-off still fetches, so they stay mounted.
-        .route(
-            "/reports/customer.csv",
-            get(crate::export::legacy::report_customer_csv),
-        )
-        .route(
-            "/reports/internal.csv",
-            get(crate::export::legacy::report_internal_csv),
         )
 }
 
@@ -255,6 +199,8 @@ fn account_routes() -> Router<Arc<PgPool>> {
             get(handlers::ssr::history_conversation_page),
         )
         .route("/settings", get(handlers::ssr::settings_page))
+        .route("/connect", get(handlers::ssr::connect_page))
+        .route("/connectors", get(handlers::ssr::connectors_page))
         .route("/setup", get(handlers::ssr::setup_page))
 }
 

@@ -128,6 +128,11 @@
 
 .sp-conversation__tool-part .sp-code-block { max-height: 20rem; }
 
+.sp-conversation__tool-artifact {
+    margin: 0;
+    font-size: var(--sp-text-xs);
+}
+
 .sp-conversation__meta {
     order: 3;
     display: flex;

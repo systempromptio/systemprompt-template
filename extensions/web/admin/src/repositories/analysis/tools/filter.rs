@@ -31,8 +31,6 @@ impl ToolState {
         }
     }
 
-    // Why: lint-ok: unused-pub — the /admin/tools page parses its query with
-    // it; that page lands with Stage 3 phase 9 (tools, artifacts).
     #[must_use]
     pub fn parse_tool_state(value: Option<&str>) -> Option<Self> {
         match value {
@@ -83,8 +81,6 @@ impl ArtifactKind {
         self.as_str()
     }
 
-    // Why: lint-ok: unused-pub — the /admin/tools page parses its query with
-    // it; that page lands with Stage 3 phase 9 (tools, artifacts).
     #[must_use]
     pub fn parse_artifact_kind(value: Option<&str>) -> Option<Self> {
         match value {
@@ -118,8 +114,6 @@ impl ToolSort {
         }
     }
 
-    // Why: lint-ok: unused-pub — the /admin/tools page parses its query with
-    // it; that page lands with Stage 3 phase 9 (tools, artifacts).
     #[must_use]
     pub fn parse_tool_sort(value: Option<&str>) -> Self {
         match value {
@@ -191,8 +185,6 @@ impl ToolBreakdownBy {
         }
     }
 
-    // Why: lint-ok: unused-pub — the /admin/tools page parses its query with
-    // it; that page lands with Stage 3 phase 9 (tools, artifacts).
     #[must_use]
     pub fn parse_tool_breakdown(value: Option<&str>) -> Self {
         match value {

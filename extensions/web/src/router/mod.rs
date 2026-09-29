@@ -32,7 +32,9 @@ pub(crate) fn build(ctx: &dyn ExtensionContext) -> Option<ExtensionRouter> {
         session_service: Arc::clone(&session_service),
     };
 
-    let api_router = api::build(&db, &session_service);
+    let api_router = api::build(&db, &session_service)
+        .map_err(|e| tracing::error!(error = %e, "Failed to build admin API repositories"))
+        .ok()?;
     let share_api = api::share(&db);
 
     let mut combined = Router::new()

@@ -194,12 +194,11 @@ fn alert(finding: Finding, obs: &HourlyObservation) {
     );
 }
 
-#[expect(
-    clippy::cast_precision_loss,
-    reason = "display only: hourly spend in dollars is far below f64's exact-integer range"
-)]
 fn usd(microdollars: i64) -> String {
-    format!("${:.2}", microdollars as f64 / 1_000_000.0)
+    format!(
+        "${:.2}",
+        systemprompt_web_admin::numeric::to_f64(microdollars) / 1_000_000.0
+    )
 }
 
 #[async_trait::async_trait]

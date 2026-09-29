@@ -173,6 +173,10 @@ pub struct UsersQuery {
 #[derive(Debug, Clone, Deserialize)]
 pub struct SetUserRolesRequest {
     pub roles: Vec<String>,
+    // Why: one window for every manual grant in this save. None keeps them
+    // open-ended; a directory role is never bounded here.
+    #[serde(default)]
+    pub valid_until: Option<DateTime<Utc>>,
 }
 
 /// What a user holds, split by where it came from. `roles` is the effective
@@ -183,6 +187,7 @@ pub struct UserRolesResponse {
     pub roles: Vec<String>,
     pub manual_roles: Vec<String>,
     pub directory_roles: Vec<String>,
+    pub valid_until: Option<DateTime<Utc>>,
 }
 
 /// One row of the `/admin/overview/identity` users table.

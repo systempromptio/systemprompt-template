@@ -1,0 +1,80 @@
+@layer components {
+
+.sp-p-connect__issue {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-4);
+}
+
+.sp-p-connect__status {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin: 0;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border: 1px solid var(--sp-success);
+    border-radius: var(--sp-corners-sm);
+    background: color-mix(in oklch, var(--sp-success) 8%, var(--sp-bg-surface));
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+}
+
+.sp-p-connect__status code {
+    padding: 0 var(--sp-space-2);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-sm);
+    background: var(--sp-bg-surface);
+    color: var(--sp-text-primary);
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-base);
+    letter-spacing: 0.04em;
+    user-select: all;
+}
+
+/* Why: display:flex in this layer outranks the reset's [hidden] rule, so
+   the hidden attribute the script toggles has to be restated here. */
+.sp-p-connect__status[hidden],
+.sp-p-connect__pending[hidden] { display: none; }
+
+.sp-p-connect__status-label { font-weight: 600; color: var(--sp-success-strong); }
+.sp-p-connect__status-expiry strong { font-variant-numeric: tabular-nums; }
+
+.sp-p-connect__error {
+    margin: var(--sp-space-3) 0 0;
+    color: var(--sp-danger-strong);
+    font-size: var(--sp-text-sm);
+}
+
+.sp-p-connect__pending {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    margin-block: var(--sp-space-2) 0;
+    padding: var(--sp-space-4) var(--sp-space-5);
+    border: 1px dashed var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface-alt);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+}
+
+.sp-p-connect__pending::before {
+    content: "";
+    flex: none;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-text-tertiary);
+}
+
+.sp-p-connect__wizard[data-connect-state="expired"] .sp-p-connect__pending {
+    border-style: solid;
+    border-color: var(--sp-warning);
+    color: var(--sp-text-primary);
+}
+
+.sp-p-connect__wizard[data-connect-state="expired"] .sp-p-connect__pending::before { background: var(--sp-warning); }
+
+}

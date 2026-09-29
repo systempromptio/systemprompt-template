@@ -76,6 +76,64 @@ row carries `authorization_params: {access_type: offline, prompt: consent}` —
 without it the connection expires with the hour-long access token — and
 `identity: userinfo` so the row shows the Google address.
 
+## The Connectors page
+
+`/admin/connectors` (Account group) is where a person manages their own
+connections. A health strip counts configured, connected and broken
+connectors and names the next step; the cards below are grouped by what to do
+next — *Needs your attention* (reconnect required, verification required,
+temporarily unavailable), *Ready to connect*, *Connected*, and *Nothing to do*
+(built in, or not open to this account). Each card shows the provider kind,
+what it unlocks, the plugins that carry the server (`mcp_servers.include` of
+every enabled plugin), the verified account and resource, and one primary
+action: **Connect** when nothing is saved, **Test connection** when something
+is, **Reconnect** only after a failure. The page is server-rendered from the
+same snapshot the browser then polls (`GET /api/public/account/connections`,
+`storage/files/js/pages/connectors.js`), and the card model lives in one place
+on each side (`handlers/ssr/ssr_connectors_cards.rs`,
+`storage/files/js/services/connector-labels.js`).
+
+**Test connection** (`POST /api/public/account/connections/{server}/test`)
+returns the snapshot plus a step-by-step report — credential, MCP session,
+tools, identity — each with its outcome and duration, so a failed probe says
+which stage failed instead of a blank error
+(`services/connector_oauth/report.rs`). A probe always reaches the provider;
+an ordinary broker call made within 30 seconds of a recorded outage is held
+without one, so a provider outage does not turn into one refresh per MCP
+request. Every 4xx from a token endpoint (RFC 6749 §5.2 — `invalid_grant`,
+`unauthorized_client`, `invalid_client`, …) retires the grant and asks for a
+reconnect; only a 5xx, a 429 or a transport failure is treated as an outage.
+
+After consent the browser returns to `/admin/connectors#connector-<server>`.
+
+### Session-attested servers
+
+A server that requires the platform's own OAuth (`oauth.required: true` with
+non-empty `oauth.scopes`) and declares no `connector:` block is authenticated
+by the caller's signed-in session, not by a grant. Its card reads *Connected*
+for anyone whose roles carry those scopes (`admin` means a manage role, `user`
+any active account) and *Not open to your account* otherwise; its **Test
+connection** checks the session's scope and whether the server answers
+(`services/connector_readiness.rs`). There is nothing to connect or
+disconnect.
+
+### Readiness
+
+`Connection::readiness` is the one answer to "will this person's calls to the
+server work": configured; needs no sign-in, or is entitled, `connected` (or
+`temporarily_unavailable`) and verified. The bridge manifest filter and the
+`connector:` authorization band both ask it, and the manifest filter records
+why it dropped a server a rule admitted in the manifest's diagnostics.
+
+## Connecting a client
+
+`/admin/connect` is the three-step wizard that used to sit on the profile:
+choose Claude Code, Claude Desktop or OpenCode, mint a single-use connect code
+(ten minutes), then copy the install or sign-in command
+(`storage/files/js/pages/connect-code.js`). It also lists the bridge
+downloads under `/files/downloads/` and the client guides. The profile page
+links to both pages and no longer carries either.
+
 ## Failures
 
 Connector accounts are validated by server id, not by a fixed provider list,

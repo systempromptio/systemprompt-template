@@ -13,3 +13,9 @@ impl From<ManagedError> for AdminError {
         }
     }
 }
+
+impl From<systemprompt::models::managed::RevisionBundleError> for AdminError {
+    fn from(error: systemprompt::models::managed::RevisionBundleError) -> Self {
+        ManagedError::from(error).into()
+    }
+}

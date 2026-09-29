@@ -29,6 +29,7 @@ pub fn public_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
         site_js!(&site, "analytics-state.js"),
         site_js!(&site, "analytics-transport.js"),
         site_js!(&site, "copy-buttons.js"),
+        site_js!(&site, "docs-evidence-gallery.js"),
         site_js!(&site, "docs-export.js"),
         site_js!(&site, "docs-nav.js"),
         site_js!(&site, "docs-pagination.js"),
@@ -55,6 +56,7 @@ fn service_core_js(p: &Path) -> Vec<AssetDefinition> {
         svc_js!(p, "auth.js"),
         svc_js!(p, "bootstrap.js"),
         svc_js!(p, "confirm.js"),
+        svc_js!(p, "connector-labels.js"),
         svc_js!(p, "dropdown.js"),
         svc_js!(p, "events.js"),
         svc_js!(p, "export-columns.js"),
@@ -109,6 +111,10 @@ fn service_utils_js(storage_js: &Path) -> Vec<AssetDefinition> {
         AssetDefinition::js(
             storage_js.join("components/sp-chart.js"),
             "js/components/sp-chart.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-evidence-lightbox.js"),
+            "js/components/sp-evidence-lightbox.js",
         ),
         AssetDefinition::js(
             storage_js.join("components/sp-chart-scale.js"),

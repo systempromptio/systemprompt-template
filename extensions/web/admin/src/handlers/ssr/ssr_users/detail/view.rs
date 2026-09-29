@@ -24,8 +24,8 @@ pub(super) use super::usage::usage_tab;
 const SLACK_ISSUER: &str = "https://slack.com";
 
 // Why: the export datasets are console-only; a plain user on their own page
-// gets no button rather than one that answers 403. The transcript bundle
-// joins it with the analysis suite (Stage 3 phase 7).
+// gets no button rather than one that answers 403. The transcript bundle is
+// the person's sessions, the same set the Sessions export lists.
 pub(super) fn export(user_id: &UserId, viewer: &UserContext) -> Option<crate::export::ExportView> {
     viewer.is_console.then(|| {
         let query = crate::export::view::query_string(&[("user_id", Some(user_id.as_str()))]);
@@ -50,6 +50,10 @@ pub(super) fn identity_tab(
         is_active: detail.is_active,
         created_at: stamp(Some(detail.created_at)),
         role_choices,
+        roles_valid_until_day: data
+            .manual_roles_valid_until
+            .map(|t| t.format("%Y-%m-%d").to_string())
+            .unwrap_or_default(),
         has_adfs_groups: !data.adfs_groups.is_empty(),
         adfs_groups: data.adfs_groups.clone(),
         idp_issuer: primary.map(|i| i.issuer.clone()).unwrap_or_default(),

@@ -4,8 +4,9 @@
 //! filters and per-row governance / tool-call counts; [`get_request_kpis`]
 //! (in `kpis`) totals the same predicate for the tiles above the table; the
 //! per-model / per-provider / per-status rollups behind the breakdown tabs
-//! live in `breakdown`, and the per-request safety findings and tool calls the
-//! detail page shows live in `detail`.
+//! live in `breakdown`, the per-request safety findings and tool calls the
+//! detail page shows live in `detail`, and the stored tool schemas it compares
+//! live in `schemas`.
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
@@ -19,6 +20,7 @@ mod detail;
 mod facets;
 mod kpis;
 mod paged;
+mod schemas;
 
 pub use breakdown::{
     BreakdownRow, list_requests_by_model, list_requests_by_provider, list_requests_by_status,
@@ -29,6 +31,7 @@ pub use detail::{
 pub use facets::{FacetValue, list_request_facets};
 pub use kpis::{RequestKpis, get_request_kpis};
 pub use paged::{RequestPage, list_requests_paged};
+pub use schemas::{RequestSchemaRow, find_request_schemas};
 
 #[derive(Debug, Clone)]
 pub struct RequestFilter {

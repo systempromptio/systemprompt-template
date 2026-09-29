@@ -1,4 +1,4 @@
-{{#> layout title=title page=page}}
+{{#> layout page_title=title page_id=page}}
     {{#*inline "content"}}
     {{> components/breadcrumbs crumbs=breadcrumbs}}
     <a href="{{back_url}}" class="sp-back-link">&larr; Back to the request log</a>
@@ -53,7 +53,7 @@
     <section class="sp-trace-detail__summary" aria-label="Request summary">
       <div class="sp-trace-detail__field">
         <span class="sp-trace-detail__label">User</span>
-        <code class="sp-code-inline" title="{{summary.user_id}}">{{summary.user_id}}</code>
+        {{#if summary.user_id}}<a href="{{summary.user_url}}"><code class="sp-code-inline" title="{{summary.user_id}}">{{summary.user_id}}</code></a>{{else}}<span class="sp-table__cell--muted" title="No identity was recorded for this request">&mdash;</span>{{/if}}
       </div>
       {{#if summary.tenant_id}}
         <div class="sp-trace-detail__field">
@@ -74,7 +74,7 @@
       {{#if summary.trace_url}}
         <div class="sp-trace-detail__field">
           <span class="sp-trace-detail__label">Trace</span>
-          <a href="{{summary.trace_url}}">Open waterfall &rarr;</a>
+          <a href="{{summary.trace_url}}">Open trace &rarr;</a>
         </div>
       {{/if}}
       <div class="sp-trace-detail__field">
@@ -131,7 +131,7 @@
           </tbody>
         {{/components/table}}
       {{else}}
-        <p class="sp-empty">No policy decisions recorded for this session.</p>
+        {{> components/empty-state compact=true message="No policy decisions recorded for this session."}}
       {{/if}}
     </section>
 
@@ -149,29 +149,30 @@
             <th class="sp-table__cell--num">Tokens</th>
             <th class="sp-table__cell--num">Cost</th>
             <th class="sp-table__cell--num">Latency</th>
-            <th class="sp-table__cell--actions"></th>
+            <th class="sp-table__cell--actions"><span class="sp-u-sr-only">Open</span></th>
           </tr></thead>
           <tbody>
           {{#each requests}}
-            <tr>
-              <td><code class="sp-code-inline">{{this.request_id}}</code></td>
+            <tr{{#if this.is_primary}} aria-current="true"{{/if}}>
+              <td><a href="{{this.url}}" title="{{this.id}}"><code class="sp-code-inline">{{shortId this.request_id}}</code></a>
+                {{#if this.is_primary}}<span class="sp-table__cell--muted"> · this request</span>{{/if}}</td>
               <td>{{this.provider}}</td>
-              <td>{{this.model}}</td>
+              <td class="sp-table__cell--mono">{{this.model}}</td>
               <td class="sp-col-status">
-                {{#if (eq this.status "success")}}<span class="sp-badge sp-badge--ok">OK</span>{{else}}<span class="sp-badge sp-badge--warn">{{this.status}}</span>{{/if}}
+                {{#if this.is_ok}}<span class="sp-badge sp-badge--ok">OK</span>{{else}}<span class="sp-badge sp-badge--err">{{this.status}}</span>{{/if}}
               </td>
-              <td class="sp-table__cell--num">{{this.input_tokens}} / {{this.output_tokens}}</td>
-              <td class="sp-table__cell--num">${{this.cost_microdollars}} µ</td>
-              <td class="sp-table__cell--num">{{this.latency_ms}} ms</td>
+              <td class="sp-table__cell--num">{{this.tokens_display}}</td>
+              <td class="sp-table__cell--num sp-u-mono">{{this.cost_display}}</td>
+              <td class="sp-table__cell--num">{{this.latency_display}}</td>
               <td class="sp-table__cell--actions">
-                <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-chain-id="{{this.id}}">Chain</button>
+                {{#unless this.is_primary}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{this.url}}">Open</a>{{/unless}}
               </td>
             </tr>
           {{/each}}
           </tbody>
         {{/components/table}}
       {{else}}
-        <p class="sp-empty">No model traffic recorded for this session.</p>
+        {{> components/empty-state compact=true message="No model traffic recorded for this session."}}
       {{/if}}
     </section>
 
@@ -232,7 +233,7 @@
           </tbody>
         {{/components/table}}
       {{else}}
-        {{> components/empty-state message="No scanner findings recorded for this request."}}
+        {{> components/empty-state compact=true message="No scanner findings recorded for this request."}}
       {{/if}}
     </section>
 
@@ -245,7 +246,8 @@
             <th class="sp-table__cell--num">#</th>
             <th>Tool</th>
             <th>MCP execution</th>
-            <th>Result</th>
+            <th title="Intended: the model asked and nothing reported it running. Executed: a hook, the proxy or an in-process server recorded the run.">State</th>
+            <th title="The stored result of the call">Artifact</th>
             <th class="sp-col-date">When</th>
           </tr></thead>
           <tbody>
@@ -254,14 +256,15 @@
               <td class="sp-table__cell--num">{{this.sequence_number}}</td>
               <td><code class="sp-code-inline">{{this.tool_name}}</code></td>
               <td class="sp-u-mono">{{#if this.mcp_execution_id}}{{this.mcp_execution_id}}{{else}}&mdash;{{/if}}</td>
-              <td>{{this.result_label}}</td>
+              <td><span class="sp-badge sp-badge--{{this.state_tone}}">{{this.state_label}}</span></td>
+              <td>{{#if this.artifact_url}}<a href="{{this.artifact_url}}">{{#if this.is_structured}}structured{{else}}result{{/if}} &rarr;</a>{{else}}&mdash;{{/if}}</td>
               <td class="sp-col-date">{{this.created_at}}</td>
             </tr>
           {{/each}}
           </tbody>
         {{/components/table}}
       {{else}}
-        {{> components/empty-state message="This request issued no tool calls."}}
+        {{> components/empty-state compact=true message="This request issued no tool calls."}}
       {{/if}}
     </section>
 
@@ -276,5 +279,115 @@
       </details>
     </section>
     {{/if}}
+
+    <section aria-label="Tool schemas" class="sp-p-request-schemas">
+      {{> components/section title="Tool schemas" count=schemas.client_count
+          note="What the client offered and what the gateway sent upstream, paired by name. Gemini rule hits are recomputed from the client schema: each is a shape the provider would have refused as sent."}}
+      {{#if schemas.available}}
+        <dl class="sp-kv-list sp-p-request-schemas__digests">
+          <div class="sp-kv-row"><dt>Provider</dt><dd>{{schemas.provider}}{{#if schemas.rules_apply}} <span class="sp-badge sp-badge--info">Gemini rules apply</span>{{/if}}</dd></div>
+          <div class="sp-kv-row"><dt>Client tools</dt><dd>{{schemas.client_count}}</dd></div>
+          <div class="sp-kv-row"><dt>Provider tools</dt><dd>{{#if schemas.has_provider}}{{schemas.provider_count}}{{else}}not recorded{{/if}}</dd></div>
+          <div class="sp-kv-row"><dt>Rewritten</dt><dd>{{schemas.changed_count}}{{#if schemas.rule_hit_count}} · {{schemas.rule_hit_count}} rule hits{{/if}}</dd></div>
+          <div class="sp-kv-row"><dt>Request body</dt><dd class="sp-u-mono">{{#if schemas.request_sha256}}{{schemas.request_sha256}}{{else}}&mdash;{{/if}}{{#if schemas.request_bytes}} · {{schemas.request_bytes}} bytes{{/if}}{{#if schemas.request_truncated}} · <span class="sp-badge sp-badge--warn">excerpt only</span>{{/if}}</dd></div>
+          <div class="sp-kv-row"><dt>Prepared body</dt><dd class="sp-u-mono">{{#if schemas.prepared_sha256}}{{schemas.prepared_sha256}}{{else}}&mdash;{{/if}}</dd></div>
+        </dl>
+
+        <div class="sp-tabs" role="tablist" data-tabs="request-schemas" aria-label="Schema view">
+          <button type="button" class="sp-tab sp-tab--active" role="tab" id="schema-tab-client" aria-controls="schema-panel-client" aria-selected="true" data-tab="client">Client schema</button>
+          <button type="button" class="sp-tab" role="tab" id="schema-tab-provider" aria-controls="schema-panel-provider" aria-selected="false" tabindex="-1" data-tab="provider">Provider schema</button>
+          <button type="button" class="sp-tab" role="tab" id="schema-tab-diff" aria-controls="schema-panel-diff" aria-selected="false" tabindex="-1" data-tab="diff">Side by side{{#if schemas.has_changes}} <span class="sp-tab-count">{{schemas.changed_count}}</span>{{/if}}</button>
+        </div>
+
+        <div class="sp-tab-panel" id="schema-panel-client" role="tabpanel" aria-labelledby="schema-tab-client">
+          {{#if schemas.client_json}}
+            <pre class="sp-code-block sp-p-request-schemas__json"><code>{{schemas.client_json}}</code></pre>
+          {{else}}
+            {{> components/empty-state message="The client's tools array was not recorded for this request."}}
+          {{/if}}
+        </div>
+        <div class="sp-tab-panel" id="schema-panel-provider" role="tabpanel" aria-labelledby="schema-tab-provider" hidden>
+          {{#if schemas.has_provider}}
+            <pre class="sp-code-block sp-p-request-schemas__json"><code>{{schemas.provider_json}}</code></pre>
+          {{else}}
+            {{> components/empty-state message="The prepared tools array was not recorded for this request. Requests before the gateway kept it show only the prepared body's digest."}}
+          {{/if}}
+        </div>
+        <div class="sp-tab-panel" id="schema-panel-diff" role="tabpanel" aria-labelledby="schema-tab-diff" hidden>
+          {{#if schemas.tools}}
+          <ul class="sp-p-request-schemas__tools">
+            {{#each schemas.tools}}
+            <li class="sp-p-request-schemas__tool{{#if this.changed}} sp-p-request-schemas__tool--changed{{/if}}">
+              <details class="sp-code-collapsible">
+                <summary>
+                  <code class="sp-code-inline">{{this.name}}</code>
+                  <span class="sp-badge sp-badge--{{this.tone}}">{{this.label}}</span>
+                  {{#if this.has_rule_hits}}<span class="sp-badge sp-badge--warn">{{this.rule_hit_count}} rule hits</span>{{/if}}
+                  {{#if this.description}}<span class="sp-table__cell--muted sp-p-request-schemas__desc">{{this.description}}</span>{{/if}}
+                </summary>
+                {{#if this.has_rule_hits}}
+                <ul class="sp-p-request-schemas__hits">
+                  {{#each this.rule_hits}}<li><code class="sp-code-inline">{{this}}</code></li>{{/each}}
+                </ul>
+                {{/if}}
+                <div class="sp-p-request-schemas__pair">
+                  <div>
+                    <h3 class="sp-p-request-schemas__side">Client</h3>
+                    {{#if this.has_client}}<pre class="sp-code-block"><code>{{this.client_json}}</code></pre>{{else}}<p class="sp-empty">Not offered by the client.</p>{{/if}}
+                  </div>
+                  <div>
+                    <h3 class="sp-p-request-schemas__side">Provider</h3>
+                    {{#if this.has_provider}}<pre class="sp-code-block"><code>{{this.provider_json}}</code></pre>{{else}}<p class="sp-empty">Not in the prepared body.</p>{{/if}}
+                  </div>
+                </div>
+              </details>
+            </li>
+            {{/each}}
+          </ul>
+          {{else}}
+            {{> components/empty-state compact=true message="No tools on either side of this request."}}
+          {{/if}}
+        </div>
+      {{else}}
+        {{> components/empty-state compact=true message="No tool schemas were stored for this request."}}
+      {{/if}}
+    </section>
+
+    <section aria-label="Artifacts">
+      {{> components/section title="Artifacts" count=artifacts.count
+          note="Every stored tool result of this session, newest first — including a CLI result too large for the wire, which is kept whole here and pointed at from the tool result the model received."}}
+      {{#if artifacts.has_rows}}
+        {{#> components/table caption="Artifacts stored for this session"}}
+          <thead><tr>
+            <th>Artifact</th>
+            <th>Tool</th>
+            <th>Type</th>
+            <th>Title</th>
+            <th class="sp-table__cell--num">Bytes</th>
+            <th>Request</th>
+            <th class="sp-col-date">When</th>
+          </tr></thead>
+          <tbody>
+          {{#each artifacts.rows}}
+            <tr{{#if this.is_this_request}} aria-current="true"{{/if}}>
+              <td><a href="{{this.url}}"><code class="sp-code-inline">{{shortId this.artifact_key}}</code></a>{{#if this.is_error}} <span class="sp-badge sp-badge--err">error</span>{{/if}}</td>
+              <td><code class="sp-code-inline">{{this.tool_name}}</code> <span class="sp-table__cell--muted">{{this.server_name}}</span></td>
+              <td>{{this.artifact_type}}{{#if this.is_structured}} <span class="sp-badge sp-badge--muted">structured</span>{{/if}}</td>
+              <td class="sp-table__cell--muted">{{this.title}}</td>
+              <td class="sp-table__cell--num sp-u-mono">{{this.bytes}}</td>
+              <td>{{#if this.request_id}}<code class="sp-code-inline">{{shortId this.request_id}}</code>{{#if this.is_this_request}}<span class="sp-table__cell--muted"> · this request</span>{{/if}}{{else}}<span class="sp-table__cell--muted">no intent</span>{{/if}}</td>
+              <td class="sp-col-date">{{this.created_at}}</td>
+            </tr>
+          {{/each}}
+          </tbody>
+        {{/components/table}}
+      {{else}}
+        {{> components/empty-state compact=true message="No artifacts stored for this session."}}
+      {{/if}}
+    </section>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/components/sp-tabs.js?v={{css_version}}" type="module"></script>
     {{/inline}}
 {{/layout}}

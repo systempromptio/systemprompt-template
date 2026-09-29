@@ -18,5 +18,6 @@ pub(crate) mod projects;
 pub(crate) mod reports;
 pub(crate) mod requests;
 pub(crate) mod sessions;
+pub(crate) mod tools;
 pub(crate) mod traces;
 pub(crate) mod versions;

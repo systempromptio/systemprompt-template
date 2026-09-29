@@ -3,7 +3,7 @@
 //! Assembled for `GET /api/public/bridge/whoami`, which answers the desktop
 //! bridge's "who am I signed in as". The pieces live in four tables — the
 //! core `users` and `federated_identities` rows and the web-owned
-//! `user_groups` view and `project_members` — and the bridge shows them on one
+//! `user_groups` and `user_projects` views — and the bridge shows them on one
 //! card, so they are fetched as one query rather than four round trips.
 
 use chrono::{DateTime, Utc};
@@ -77,7 +77,7 @@ pub async fn find_identity_envelope(
             COALESCE(ARRAY(SELECT ug.group_id FROM user_groups ug
                            WHERE ug.user_id = u.id ORDER BY ug.group_id),
                      ARRAY[]::TEXT[]) AS "group_ids!: Vec<String>",
-            COALESCE(ARRAY(SELECT DISTINCT pm.project_id FROM project_members pm
+            COALESCE(ARRAY(SELECT pm.project_id FROM user_projects pm
                            WHERE pm.user_id = u.id ORDER BY pm.project_id),
                      ARRAY[]::TEXT[]) AS "project_ids!: Vec<String>",
             u.created_at AS "created_at!",

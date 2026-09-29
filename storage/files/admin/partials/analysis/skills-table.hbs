@@ -22,8 +22,8 @@
 <td class="sp-table__cell--num sp-u-num" title="{{tokens_title}}">{{tokens_display}}</td>
 <td class="sp-table__cell--num sp-u-num">{{cost_display}}</td>
 <td class="sp-table__cell--num sp-u-num">{{cost_per_invocation}}</td>
-<td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-cell-link sp-aconv-num sp-aconv-num--accent" title="Tool calls in this skill's conversations">{{tool_calls}}</span>{{#if tool_calls_failed}} <span class="sp-u-text-danger">({{tool_calls_failed}})</span>{{/if}}</td>
-<td class="sp-table__cell--num sp-u-num">{{#if artifacts}}<span class="sp-aconv-cell-link sp-aconv-num sp-aconv-num--accent" title="Artifacts produced in this skill's conversations">{{artifacts}}</span>{{else}}<span class="sp-aconv-num sp-aconv-num--muted">0</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num"><a class="sp-aconv-cell-link sp-aconv-num sp-aconv-num--accent" href="{{tools_href}}" title="Tool calls in this skill's conversations — opens them">{{tool_calls}}</a>{{#if tool_calls_failed}} <span class="sp-u-text-danger">({{tool_calls_failed}})</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{#if artifacts}}<a class="sp-aconv-cell-link sp-aconv-num sp-aconv-num--accent" href="{{artifacts_href}}" title="Artifacts produced in this skill's conversations — opens them">{{artifacts}}</a>{{else}}<span class="sp-aconv-num sp-aconv-num--muted">0</span>{{/if}}</td>
 <td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{errors_tone}}">{{errors}}</span>{{#if denied}} <span class="sp-aconv-num sp-aconv-num--{{denied_tone}}" title="Denied tool calls">⛔{{denied}}</span>{{/if}}</td>
 <td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{latency_tone}}">{{latency_display}}</span></td>
 <td class="sp-askill-col-models">{{> components/badge-stack items=models stack_max=1 stack_tone="info" stack_mono=true stack_label="Models"}}</td>

@@ -1,0 +1,123 @@
+@layer components {
+
+/* The handshake, one row per stage. A stage is pending, running, ok, failed
+   or skipped; the mark carries the state so the eye reads the column before
+   the words, and a failure names the stage rather than the provider. */
+
+.sp-connector__check {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface-alt);
+}
+
+.sp-connector__check[hidden] { display: none; }
+
+.sp-connector__steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sp-connector__step {
+    display: grid;
+    grid-template-columns: 1.25rem 7rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    column-gap: var(--sp-space-2);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-connector__step-mark {
+    display: inline-block;
+    inline-size: 0.75rem;
+    block-size: 0.75rem;
+    align-self: center;
+    border: 2px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-full);
+}
+
+.sp-connector__step.is-running .sp-connector__step-mark {
+    border-top-color: var(--sp-accent);
+    animation: sp-spin var(--sp-duration-slow) linear infinite;
+}
+
+.sp-connector__step.is-ok .sp-connector__step-mark {
+    border-color: var(--sp-success);
+    background: var(--sp-success);
+}
+
+.sp-connector__step.is-fail .sp-connector__step-mark {
+    border-color: var(--sp-danger);
+    background: var(--sp-danger);
+}
+
+.sp-connector__step.is-skipped { opacity: 0.6; }
+
+.sp-connector__step-title {
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-secondary);
+}
+
+.sp-connector__step.is-ok .sp-connector__step-title,
+.sp-connector__step.is-running .sp-connector__step-title { color: var(--sp-text-primary); }
+.sp-connector__step.is-fail .sp-connector__step-title { color: var(--sp-danger-strong); }
+
+.sp-connector__step-detail {
+    overflow-wrap: anywhere;
+    color: var(--sp-text-secondary);
+}
+
+.sp-connector__step.is-fail .sp-connector__step-detail { color: var(--sp-danger-strong); }
+
+.sp-connector__step-ms {
+    font-family: var(--sp-font-mono);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.sp-connector__summary {
+    margin: 0;
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+}
+
+.sp-connector__summary.is-ok { color: var(--sp-success-strong); }
+.sp-connector__summary.is-fail { color: var(--sp-danger-strong); }
+
+/* The personal-token and site forms open inside the card, under the actions,
+   so a person types where they clicked and cancels back to the same card. */
+
+.sp-connector__form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: var(--sp-space-3);
+    align-items: end;
+    padding: var(--sp-space-3);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-base);
+}
+
+.sp-connector__form label {
+    display: grid;
+    gap: var(--sp-space-1);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.sp-connector__form .sp-connector__actions { grid-column: 1 / -1; margin-top: 0; }
+
+}
+
+@layer responsive {
+@media (max-width: 40rem) {
+    .sp-connector__step { grid-template-columns: 1.25rem minmax(0, 1fr) auto; }
+    .sp-connector__step-detail { grid-column: 2 / -1; }
+}
+}

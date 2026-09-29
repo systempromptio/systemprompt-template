@@ -50,3 +50,53 @@ pub fn format_duration_ms(ms: i64) -> String {
         format!("{:.1} h", ms as f64 / 3_600_000.0)
     }
 }
+
+// Why: `max_chars` is a character budget, so the guard must count characters
+// too. Guarding on `s.len()` (bytes) and cutting on `char_indices()` lets any
+// string that is longer in bytes than in characters fall through the guard and
+// come back with an ellipsis appended to text that was never truncated.
+pub fn truncate_chars(s: &str, max_chars: usize) -> &str {
+    s.char_indices()
+        .nth(max_chars)
+        .map_or(s, |(end, _)| &s[..end])
+}
+
+// Why: the one truncation the admin console shows a reader, so there is one
+// ellipsis spelling (`…`) and it appears only when something was cut.
+pub fn truncate_ellipsis(s: &str, max_chars: usize) -> String {
+    let head = truncate_chars(s, max_chars);
+    if head.len() == s.len() {
+        s.to_owned()
+    } else {
+        format!("{head}\u{2026}")
+    }
+}
+
+// Why: distinct from `short_num` — this ladder drops the decimal between 10k
+// and a million, where the tenth of a thousand is noise rather than precision.
+// Two pages had a byte-identical copy of it under two different names.
+pub fn compact_num(v: i64) -> String {
+    if v >= 1_000_000 {
+        format!("{:.1}M", v as f64 / 1_000_000.0)
+    } else if v >= 10_000 {
+        format!("{}k", v / 1000)
+    } else if v >= 1000 {
+        format!("{:.1}k", v as f64 / 1000.0)
+    } else {
+        v.to_string()
+    }
+}
+
+// Why: "3d ago" answers "is this still in use" at a glance; the exact stamp
+// stays on the cell's `title`. Months are thirty days, which is the roster's
+// idle threshold, so "1mo ago" and the idle-30d chip agree. One ladder, so
+// two pages cannot disagree about what a fresh timestamp reads as.
+pub fn relative_time(delta_secs: i64) -> String {
+    match delta_secs.max(0) {
+        d if d < 60 => "just now".to_owned(),
+        d if d < 3_600 => format!("{}m ago", d / 60),
+        d if d < 86_400 => format!("{}h ago", d / 3_600),
+        d if d < 2_592_000 => format!("{}d ago", d / 86_400),
+        d => format!("{}mo ago", d / 2_592_000),
+    }
+}

@@ -1,0 +1,94 @@
+{{#> layout page_title=title page_id=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="What this instance is running, where each piece comes from, and whether the database agrees with the code. Code is the source of truth; a projected kind is executed from the database and reconciled on its own page; everything else is read from the composed tree as it stands."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{docs_url}}" target="_blank" rel="noopener noreferrer">How sync works</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{sync_url}}">Code sync</a>
+        <a class="sp-btn sp-btn--sm sp-btn--primary" href="{{export_zip_url}}" download>Export zip</a>
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        <span>Release <strong>v{{release}}</strong></span>
+        {{#if base_tree_hash}}<span>Tree <span class="sp-sync-hash" title="{{base_tree_hash.full}}">{{base_tree_hash.short}}</span></span>{{/if}}
+        {{#if composed_hash}}<span>Composition <span class="sp-sync-hash" title="{{composed_hash.full}}">{{composed_hash.short}}</span></span>{{/if}}
+        <span>Provenance <strong>{{provenance}}</strong></span>
+        <span><strong>{{bundle_count}}</strong> bundle(s) pinned</span>
+        {{/inline}}
+    {{/components/page-header}}
+
+    {{#if sources_unreadable}}
+    {{> components/notice tone="err" title="Sources could not be read" message=sources_unreadable}}
+    {{/if}}
+
+    <div class="sp-kpi-grid" aria-label="Configuration totals">
+        {{#each kpis}}
+        {{> components/kpi label=label value=value note=note tone=tone}}
+        {{/each}}
+    </div>
+
+    {{#> components/table caption="Retention — how long the high-volume tables keep their rows" modifier="sp-config-retention"}}
+        <thead><tr>
+            <th>Table</th>
+            <th>Keeps</th>
+            <th>Window from</th>
+            <th>Deleted at last run</th>
+        </tr></thead>
+        <tbody>
+        {{#each retention.rows}}
+        <tr data-table="{{table}}">
+            <td><strong>{{table}}</strong><br><span class="sp-u-text-tertiary">{{purpose}}</span></td>
+            <td><strong>{{days}}</strong> days</td>
+            <td><span class="sp-u-mono sp-u-text-tertiary">{{days_source}}</span></td>
+            <td>{{#if deleted_last_run}}{{deleted_last_run}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+        <tfoot><tr>
+            <td colspan="4">
+                <span class="sp-u-mono">{{retention.job_name}}</span>
+                {{#if retention.never_ran}}
+                {{> components/badge tone="warn" text="never ran"}}
+                {{else}}
+                {{#if retention.last_status}}{{> components/badge tone=retention.last_status_tone text=retention.last_status}}{{/if}}
+                last run {{relativeTime retention.last_run}}{{#if retention.orphaned_logs_last_run}} · orphaned log rows removed: {{retention.orphaned_logs_last_run}}{{/if}}
+                {{/if}}
+                {{#if retention.next_run}} · next run {{relativeTime retention.next_run}}{{/if}}
+                {{#if retention.last_error}}<br><span class="sp-u-text-tertiary">{{retention.last_error}}</span>{{/if}}
+                <br><span class="sp-u-text-tertiary">Windows are read from <span class="sp-u-mono">retention:</span> in the profile; a count ending in + means the run stopped at its time budget with more to delete. Manual trigger: <span class="sp-u-mono">systemprompt infra jobs run database_cleanup</span>.</span>
+            </td>
+        </tr></tfoot>
+    {{/components/table}}
+    <p class="sp-u-text-tertiary">Sizes, growth, archives and the monthly health check for these tables are on <a href="/admin/lifecycle">Data lifecycle</a>.</p>
+
+    {{> components/tabs tabs=tabs nav_label="Configuration views"}}
+
+    {{#> components/table caption="Every kind of configuration the instance loads" modifier="sp-config"}}
+        <thead><tr>
+            <th>Kind</th>
+            <th>Path</th>
+            <th>Source</th>
+            <th>Content hash</th>
+            <th>Mode</th>
+            <th>State</th>
+            <th>Last applied</th>
+            <th></th>
+        </tr></thead>
+        <tbody>
+        {{#each rows}}
+        <tr data-kind="{{id}}" data-projected="{{is_projected}}">
+            <td><strong>{{label}}</strong><br><span class="sp-u-text-tertiary">{{purpose}}</span></td>
+            <td><span class="sp-u-mono">{{path}}</span>{{#if is_dir}}<span class="sp-u-text-tertiary">/ · {{files}} file(s)</span>{{/if}}</td>
+            <td>{{> components/badge tone=source_tone text=source}}</td>
+            <td>{{#if hash}}<span class="sp-sync-hash" title="{{hash.full}}">{{hash.short}}</span>{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if is_projected}}{{> components/badge tone="info" text="projected"}}<br><span class="sp-u-mono sp-u-text-tertiary">{{projection}}</span>{{else}}{{> components/badge tone="muted" text="served from code"}}{{/if}}</td>
+            <td>{{> components/badge tone=state_tone text=state}}<br><span class="sp-u-text-tertiary">{{state_note}}</span></td>
+            <td>{{#if applied}}<span class="sp-sync-hash" title="{{applied.hash.full}}">{{applied.hash.short}}</span> by <strong>{{applied.by}}</strong> {{relativeTime applied.at}} <span class="sp-u-text-tertiary">({{applied.mode}})</span>{{#if applied.declared_changed}}<br>{{> components/badge tone="warn" text="declaration changed since"}}{{/if}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if link}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{link}}">{{link_label}} →</a>{{/if}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{/inline}}
+    {{#*inline "scripts"}}{{/inline}}
+{{/layout}}

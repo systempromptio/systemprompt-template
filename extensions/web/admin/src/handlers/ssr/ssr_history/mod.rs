@@ -21,34 +21,37 @@ mod context;
 mod conversation;
 mod export;
 mod kind;
+mod search;
 mod view;
+mod window;
 
 pub(crate) use context::HistoryRowView;
 pub(crate) use conversation::history_conversation_page;
 pub(crate) use export::{ExportRequest, export_rows};
 pub(crate) use kind::HistoryView;
+pub(crate) use search::history_search;
 pub use view::command_name;
 pub(crate) use view::row_view;
 
 use std::sync::Arc;
 
-use axum::Json;
 use axum::extract::{Extension, Query, State};
-use axum::response::{IntoResponse, Response};
-use serde::{Deserialize, Serialize};
+use axum::response::Response;
+use serde::Deserialize;
 use sqlx::PgPool;
-use systemprompt::identifiers::{ContextId, SessionId, UserId};
+use systemprompt::identifiers::UserId;
 
-use crate::error::{AdminError, AdminHtmlResult, AdminResult};
+use crate::error::{AdminError, AdminHtmlResult};
 use crate::handlers::ssr::list_view::PageWindow;
 use crate::repositories::analytics::conversations::{
-    HistoryFilter, HistoryItem, HistoryScope, list_history_items, redact_text,
+    HistoryFilter, HistoryItem, HistoryScope, list_history_items,
 };
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
-use context::HistoryPageContext;
-use view::{build_pagination, detail_url, scope_label, side_toggle_url};
+use context::{HiddenInputView, HistoryPageContext};
+use view::{build_pagination, scope_label, side_toggle_url, window_links};
+use window::HistoryWindow;
 
 const PAGE_SIZE: i64 = 50;
 
@@ -58,41 +61,17 @@ pub(crate) struct HistoryQuery {
     user_id: Option<UserId>,
     page: Option<i64>,
     side: Option<String>,
+    // Why: the window — a preset `days`, or a custom `start`/`end` — bounds a
+    // conversation's last activity; none of them means all time.
+    days: Option<u32>,
+    start: Option<String>,
+    end: Option<String>,
 }
 
 impl HistoryQuery {
     fn show_side(&self) -> bool {
         self.side.as_deref() == Some("1")
     }
-}
-
-#[derive(Debug, Serialize)]
-struct HistorySearchItem {
-    source: &'static str,
-    session_id: Option<SessionId>,
-    context_id: Option<ContextId>,
-    user_id: UserId,
-    ai_title: Option<String>,
-    preview: Option<String>,
-    model: Option<String>,
-    started_at: Option<String>,
-    captured_at: String,
-    entries_counted: i64,
-    total_input_tokens: i64,
-    total_output_tokens: i64,
-    cost_microdollars: i64,
-    side_call_count: i64,
-    rank: Option<f32>,
-    snippet: Option<String>,
-    detail_url: Option<String>,
-}
-
-#[derive(Debug, Serialize)]
-struct HistorySearchEnvelope {
-    items: Vec<HistorySearchItem>,
-    total: i64,
-    page: i64,
-    page_size: i64,
 }
 
 // Why: the viewer's scope, narrowed to one user when the query names one they
@@ -134,12 +113,15 @@ async fn fetch_history_slice(
     let scope_ids = scope_user_ids(&scope, query, "view")?;
 
     let page = query.page.unwrap_or(0).max(0);
+    let (since, until) = HistoryWindow::of(query).bounds();
     let (items, total) = list_history_items(
         pool,
         HistoryFilter {
             scope_user_ids: scope_ids.as_deref(),
             search: query.q.as_deref(),
             include_side_calls: query.show_side(),
+            since,
+            until,
         },
         PAGE_SIZE,
         page * PAGE_SIZE,
@@ -151,44 +133,6 @@ async fn fetch_history_slice(
         total,
         page,
     })
-}
-
-pub(crate) async fn history_search(
-    Extension(user_ctx): Extension<UserContext>,
-    State(pool): State<Arc<PgPool>>,
-    Query(query): Query<HistoryQuery>,
-) -> AdminResult<Response> {
-    let slice = fetch_history_slice(&pool, &user_ctx, &query, HistoryView::Own).await?;
-    let items = slice
-        .items
-        .into_iter()
-        .map(|item| HistorySearchItem {
-            source: item.source.label(),
-            detail_url: detail_url(&item, &user_ctx, HistoryView::Own),
-            session_id: item.session_id.clone(),
-            context_id: item.context_id.clone(),
-            user_id: item.user_id,
-            ai_title: item.title,
-            preview: item.preview.map(|s| redact_text(&s).0),
-            model: item.model,
-            started_at: item.started_at.map(|t| t.to_rfc3339()),
-            captured_at: item.last_at.to_rfc3339(),
-            entries_counted: item.turns,
-            total_input_tokens: item.total_input_tokens,
-            total_output_tokens: item.total_output_tokens,
-            cost_microdollars: item.cost_microdollars,
-            side_call_count: item.side_call_count,
-            rank: item.rank,
-            snippet: item.snippet.map(|s| redact_text(&s).0),
-        })
-        .collect();
-    Ok(Json(HistorySearchEnvelope {
-        items,
-        total: slice.total,
-        page: slice.page,
-        page_size: PAGE_SIZE,
-    })
-    .into_response())
 }
 
 pub(crate) async fn history_page(
@@ -267,6 +211,7 @@ async fn render_listing(
         "conversations",
     );
     let base = view.base_url();
+    let history_window = HistoryWindow::of(query);
     let data = HistoryPageContext {
         page: view.page_id(),
         title: view.title(),
@@ -277,10 +222,17 @@ async fn render_listing(
         rows,
         show_side: query.show_side(),
         side_toggle_url: side_toggle_url(query, base),
+        window_links: window_links(query, base),
+        window_label: history_window.label(),
+        window_inputs: history_window
+            .pairs()
+            .into_iter()
+            .map(|(name, value)| HiddenInputView { name, value })
+            .collect(),
         base_url: base,
         pagination: build_pagination(query, window, base),
         breadcrumbs: view.breadcrumbs(),
-        export: export::export_view(query, view),
+        export: export::export_view(query, view, &history_window),
     };
     Ok(super::render_typed_page(
         engine,

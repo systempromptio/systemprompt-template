@@ -137,6 +137,7 @@ pub(crate) async fn sync_page(
         history: history.into_iter().map(SyncHistoryView::from).collect(),
         breadcrumbs: vec![
             BreadcrumbView::link("Admin", "/admin"),
+            BreadcrumbView::link("Platform", "/admin/configuration"),
             BreadcrumbView::current("Code sync"),
         ],
         tabs: tabs(tab, access_attention()),
@@ -144,6 +145,8 @@ pub(crate) async fn sync_page(
         show_access: tab == SyncTab::Access,
         access_review,
         docs_url: DOCS_URL,
+        configuration_url: "/admin/configuration",
+        observability_url: crate::handlers::ssr::ssr_observability::PAGE_URL,
         export_zip_url: EXPORT_ZIP_URL,
         import_url: IMPORT_URL,
         composed_hash: sources.composed_hash.as_deref().and_then(HashView::of),

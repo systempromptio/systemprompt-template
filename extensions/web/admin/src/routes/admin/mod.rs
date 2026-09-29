@@ -22,34 +22,46 @@ use sqlx::PgPool;
 use super::super::types::{ROLES_CONSOLE, ROLES_MANAGE, ROLES_PLATFORM};
 use super::super::{handlers, middleware};
 use super::admin_groups;
+use super::managed_state::StateError;
 use crate::repositories::sync::archive::MAX_UPLOAD_BYTES;
+use systemprompt::database::DbPool;
 
 mod read;
 use read::build_admin_read_routes_inner;
 
 pub(crate) fn build_admin_only_routes(
+    db: &DbPool,
     read_pool: &Arc<PgPool>,
     write_pool: &Arc<PgPool>,
-    _owner: systemprompt::identifiers::UserId,
-) -> Router {
+    owner: systemprompt::identifiers::UserId,
+) -> Result<Router, StateError> {
     // Why: the split is the `project_manager` boundary. Reads are the admin
     // dashboard's data and open to any console role; every ordinary write
     // mutates an identity, a role, an ACL rule or the gateway config, so it
     // stays with the admin roles. The platform tier is narrower still: an AD
     // mapping decides what the directory grants everyone, so only
     // `platform_admin` may move one.
-    let reads = build_admin_read_routes_inner(read_pool).layer(
-        axum_middleware::from_fn_with_state(ROLES_CONSOLE, middleware::require_roles_middleware),
-    );
-    let writes = build_admin_write_routes(write_pool).layer(axum_middleware::from_fn_with_state(
-        ROLES_MANAGE,
-        middleware::require_roles_middleware,
-    ));
+    let reads = build_admin_read_routes_inner(read_pool)
+        .merge(super::managed_resources::reads())
+        .layer(axum_middleware::from_fn_with_state(
+            ROLES_CONSOLE,
+            middleware::require_roles_middleware,
+        ));
+    let writes = build_admin_write_routes(write_pool)
+        .merge(super::managed_resources::writes())
+        .layer(axum_middleware::from_fn_with_state(
+            ROLES_MANAGE,
+            middleware::require_roles_middleware,
+        ));
     let platform = build_admin_platform_routes(write_pool).layer(
         axum_middleware::from_fn_with_state(ROLES_PLATFORM, middleware::require_roles_middleware),
     );
 
-    reads.merge(writes).merge(platform)
+    let managed = Arc::new(super::managed_state::ManagedState::new(db, owner)?);
+    Ok(reads
+        .merge(writes)
+        .merge(platform)
+        .layer(axum::Extension(managed)))
 }
 
 // Why: the access-control writes are their own table — every route here edits
@@ -207,6 +219,12 @@ fn build_management_write_routes() -> Router<Arc<PgPool>> {
         .route(
             "/devices/{kind}/{id}",
             delete(handlers::devices::admin_revoke_credential),
+        )
+        // Why: a certificate's expiry is a side row this extension owns; the
+        // hourly sweep turns it into the revocation core's gate reads.
+        .route(
+            "/devices/certs/{id}/expiry",
+            put(handlers::devices::admin_set_cert_expiry),
         )
 }
 

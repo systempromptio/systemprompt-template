@@ -2,6 +2,7 @@
 
 mod account;
 mod consent;
+mod identity;
 
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::users::extract_mcp_accessor_user;
@@ -31,8 +32,25 @@ pub fn router(pool: Arc<PgPool>) -> Router {
         .route("/connectors/{provider}/start", get(consent::start))
         .route("/connectors/{provider}/callback", get(consent::callback))
         .route("/connectors/{provider}/token", get(consent::token))
+        .route("/identity/{server}/token", get(identity::token))
         .layer(axum::extract::DefaultBodyLimit::max(32768))
         .with_state(pool)
+}
+
+// Why: only the gateway's credential broker may read a per-user bearer.
+fn require_broker(headers: &HeaderMap) -> AdminResult<()> {
+    use sha2::{Digest, Sha256};
+    let expected = oauth::config::secret("mcp_credential_broker_secret")?;
+    let presented = headers
+        .get("x-systemprompt-credential-broker")
+        .and_then(|v| v.to_str().ok())
+        .ok_or_else(|| AdminError::Forbidden("Backend credential access required".into()))?;
+    if Sha256::digest(expected.as_bytes()) != Sha256::digest(presented.as_bytes()) {
+        return Err(AdminError::Forbidden(
+            "Backend credential access rejected".into(),
+        ));
+    }
+    Ok(())
 }
 
 async fn live_user(

@@ -163,3 +163,33 @@ pub(crate) async fn admin_revoke_credential(
         ))
     }
 }
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct SetCertExpiryRequest {
+    #[serde(default)]
+    pub valid_until: Option<DateTime<Utc>>,
+}
+
+// Why: sets or clears the window on someone else's certificate, on the same
+// admin-gated tier as the fleet revoke. The window is not the revocation:
+// the sweep stamps `revoked_at` once it passes, which is what core reads.
+pub(crate) async fn admin_set_cert_expiry(
+    State(pool): State<Arc<PgPool>>,
+    Path(id): Path<String>,
+    Json(body): Json<SetCertExpiryRequest>,
+) -> AdminResult<Response> {
+    if body.valid_until.is_some_and(|until| until <= Utc::now()) {
+        return Err(AdminError::BadRequest(
+            "valid_until must be in the future".to_owned(),
+        ));
+    }
+    let set = repositories::devices::certs::set_device_cert_validity(&pool, &id, body.valid_until)
+        .await?;
+    if set {
+        Ok(StatusCode::NO_CONTENT.into_response())
+    } else {
+        Err(AdminError::NotFound(
+            "no active certificate with that id".to_owned(),
+        ))
+    }
+}

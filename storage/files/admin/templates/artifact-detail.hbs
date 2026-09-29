@@ -1,0 +1,85 @@
+{{#> layout page_title=title page_id=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    <a href="{{back_url}}" class="sp-back-link">&larr; Back to artifacts</a>
+
+    {{#> components/page-header
+        title=artifact.artifact_title help=help
+        subtitle="One tool result as the platform stored it: the typed body, its provenance, and the rows of the same call it is joined to."}}
+      {{#*inline "header_meta"}}
+        <span class="sp-tools-kind sp-tools-kind--{{artifact.kind_icon}}">{{> components/icon name=artifact.kind_icon}}{{artifact.kind_label}}</span>
+        <span class="sp-badge sp-badge--nodot {{#if artifact.is_structured}}sp-badge--info{{else}}sp-badge--muted{{/if}}">{{artifact.artifact_type}}</span>
+        {{#if artifact.has_ui_resource}}<span class="sp-badge sp-badge--nodot sp-badge--ok">ui resource</span>{{/if}}
+        <span class="sp-badge sp-badge--{{provenance.state_tone}}">{{provenance.state_label}}</span>
+      {{/inline}}
+      {{#*inline "header_actions"}}
+        {{#if provenance.session_url}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{provenance.session_url}}">Session</a>{{/if}}
+        {{#if provenance.request_url}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{provenance.request_url}}">Request</a>{{/if}}
+        {{#if provenance.governance_url}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{provenance.governance_url}}">Decision</a>{{/if}}
+      {{/inline}}
+    {{/components/page-header}}
+
+    {{#if artifact.is_error}}
+    <section class="sp-notice sp-notice--err" role="alert">
+      <h2 class="sp-notice__title">The tool reported an error</h2>
+      {{#if provenance.error_message}}<p>{{provenance.error_message}}</p>{{/if}}
+    </section>
+    {{/if}}
+
+    <section class="sp-trace-detail__summary" aria-label="Artifact">
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Artifact</span><code class="sp-code-inline" title="{{artifact.artifact_id}}">{{artifact.artifact_id_short}}</code></div>
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Tool</span><span class="sp-tools-tool">{{#if artifact.is_builtin}}{{> components/icon name="terminal"}}{{else}}{{> components/icon name="plug"}}{{/if}}<code class="sp-code-inline">{{artifact.tool_name}}</code></span> <span class="sp-table__cell--muted">on {{artifact.server_name}}</span></div>
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Input</span>{{#if artifact.input_summary}}<code class="sp-code-inline sp-u-mono" title="{{artifact.input_summary}}">{{artifact.input_summary}}</code>{{else}}<span class="sp-table__cell--muted">&mdash;</span>{{/if}}</div>
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Skill</span>{{#if artifact.skill}}<a href="{{artifact.skill_url}}"><code class="sp-code-inline">{{artifact.skill}}</code></a>{{else}}<span class="sp-table__cell--muted">none in session</span>{{/if}}</div>
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">User</span><span title="{{provenance.user_id}}">{{provenance.user_label}}</span></div>
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Stored</span><span>{{artifact.created_at}} · {{artifact.bytes_display}}</span></div>
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Digest</span>{{#if artifact.payload_sha256}}<code class="sp-code-inline sp-u-mono" title="{{artifact.payload_sha256}}">{{artifact.payload_sha256}}</code>{{else}}<span class="sp-table__cell--muted">&mdash;</span>{{/if}}</div>
+    </section>
+
+    {{#> components/section title="Provenance" note="How this row is known to be this call: the vantage point, the join quality, and the other rows of the same call."}}{{/components/section}}
+    <section class="sp-trace-detail__summary" aria-label="Provenance">
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Seen from</span><span>{{provenance.source_label}}{{#if provenance.last_seen_label}} <span class="sp-table__cell--muted">· last {{provenance.last_seen_label}}</span>{{/if}}</span></div>
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Join</span><span class="sp-badge sp-badge--{{provenance.correlation_tone}}">{{provenance.correlation}}</span></div>
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Client</span><span>{{#if provenance.client_label}}{{provenance.client_label}}{{else}}<span class="sp-table__cell--muted">&mdash;</span>{{/if}}</span></div>
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">tool_use_id</span>{{#if provenance.ai_tool_call_id}}<code class="sp-code-inline sp-u-mono">{{provenance.ai_tool_call_id}}</code>{{else}}<span class="sp-table__cell--muted">not carried</span>{{/if}}</div>
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Execution</span><code class="sp-code-inline sp-u-mono">{{provenance.mcp_execution_id}}</code>{{#if provenance.execution_status}} <span class="sp-table__cell--muted">· {{provenance.execution_status}}{{#if provenance.execution_time_display}} in {{provenance.execution_time_display}}{{/if}}</span>{{/if}}</div>
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Intent</span>{{#if provenance.request_url}}<a href="{{provenance.request_url}}">request <code class="sp-code-inline">{{provenance.request_id}}</code></a>{{#if provenance.intended_at}} <span class="sp-table__cell--muted">· {{provenance.intended_at}}</span>{{/if}}{{else}}<span class="sp-table__cell--muted">no gateway tool_use — unattested</span>{{/if}}</div>
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Decision</span>{{#if provenance.governance_url}}<a href="{{provenance.governance_url}}">{{provenance.governance_decision}}</a>{{else}}<span class="sp-table__cell--muted">none keyed to this call</span>{{/if}}</div>
+      <div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Session</span>{{#if provenance.session_url}}<a href="{{provenance.session_url}}"><code class="sp-code-inline" title="{{provenance.session_id}}">{{provenance.session_id}}</code></a>{{else}}<span class="sp-table__cell--muted">&mdash;</span>{{/if}}</div>
+      {{#if provenance.trace_id}}<div class="sp-trace-detail__field"><span class="sp-trace-detail__label">Trace</span><code class="sp-code-inline" title="{{provenance.trace_id}}">{{provenance.trace_id}}</code></div>{{/if}}
+    </section>
+
+    {{#> components/section title="Scan" count=finding_count note="Every finding raised at ingestion. A redacted finding names a secret span that was removed before the body was stored; the body below is the stored, scanned form."}}{{/components/section}}
+    {{#if has_findings}}
+      {{#> components/table caption="Findings"}}
+        <thead><tr><th>Severity</th><th>Category</th><th>Scanner</th><th>Path</th><th>Detail</th><th>When</th></tr></thead>
+        <tbody>
+        {{#each findings}}
+        <tr>
+          <td><span class="sp-badge sp-badge--{{this.severity_tone}}">{{this.severity}}</span></td>
+          <td><code class="sp-code-inline">{{this.category}}</code>{{#if this.redacted}} <span class="sp-badge sp-badge--nodot sp-badge--err">redacted</span>{{/if}}</td>
+          <td class="sp-table__cell--muted">{{this.scanner}}</td>
+          <td class="sp-u-mono sp-table__cell--muted">{{#if this.path}}{{this.path}}{{else}}&mdash;{{/if}}</td>
+          <td class="sp-table__cell--muted">{{#if this.excerpt}}{{this.excerpt}}{{else}}&mdash;{{/if}}</td>
+          <td class="sp-table__cell--date">{{this.created_at}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+      {{/components/table}}
+    {{else}}
+      <p class="sp-p-artifact-detail__clean">No findings{{#if artifact.secret_redactions}} — but {{artifact.secret_redactions}} secret span(s) were redacted{{/if}}.</p>
+    {{/if}}
+
+    {{#if preview_url}}
+    {{#> components/section title="Preview" note="The artifact rendered as a host would render it, in a sandboxed frame."}}{{/components/section}}
+    <iframe class="sp-p-artifact-detail__preview" src="{{preview_url}}" sandbox="allow-scripts" title="Artifact preview" loading="lazy"></iframe>
+    {{/if}}
+
+    {{#> components/section title="Body" note="The typed body as stored, content-addressed by its digest."}}{{/components/section}}
+    {{#if body_missing}}
+      <p class="sp-table__cell--muted">The body is no longer retained; only the digest and size survive.</p>
+    {{else}}
+      <pre class="sp-p-artifact-detail__body"><code>{{body_pretty}}</code></pre>
+    {{/if}}
+    {{/inline}}{{#*inline "scripts"}}{{/inline}}
+{{/layout}}

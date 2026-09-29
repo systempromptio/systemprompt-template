@@ -1,10 +1,32 @@
 @layer components {
 
-/* Tools & artifacts: the tool-name, input and kind chips the analysis
-   conversation detail shares with the Tools page. Kind is carried by a glyph
-   and a tint together so a colour-blind reader still tells a file from a
-   card. Only the rules the conversation detail reads are here; the Tools
-   page's own rules join them with the Stage-3 phase-9 port. */
+/* Tools & artifacts: one dense ledger of calls, the artifact subset beside
+   it. Kind is carried by a glyph and a tint together so a colour-blind
+   reader still tells a file from a card. */
+.sp-tools-kpis {
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.sp-tools-block__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-3);
+    margin-block-end: var(--sp-space-2);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-tools-block__title {
+    margin: 0;
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-primary);
+}
+
+.sp-tools-block__head .sp-tabs {
+    margin: 0 0 0 auto;
+}
+
 .sp-tools-tool {
     display: inline-flex;
     align-items: center;
@@ -33,6 +55,23 @@
     color: var(--sp-text-secondary);
 }
 
+.sp-tools-path {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    max-width: 18rem;
+    padding: 0 var(--sp-space-2);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-sm);
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.7;
+}
+
 .sp-tools-kind {
     display: inline-flex;
     align-items: center;
@@ -58,4 +97,51 @@ a.sp-tools-kind:hover,
 a.sp-tools-kind:focus-visible {
     outline: 1px solid currentColor;
 }
+
+.sp-tools-links {
+    display: inline-flex;
+    gap: var(--sp-space-1);
+}
+
+.sp-tools-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--sp-radius-sm);
+    color: var(--sp-text-tertiary);
+    text-decoration: none;
+}
+
+.sp-tools-link:hover,
+.sp-tools-link:focus-visible {
+    color: var(--sp-accent-text);
+    background: var(--sp-accent-dim);
+}
+
+.sp-tools-decision {
+    text-decoration: none;
+}
+
+.sp-tools-export {
+    display: inline-flex;
+    color: var(--sp-text-tertiary);
+    text-decoration: none;
+}
+
+.sp-tools-export:hover,
+.sp-tools-export:focus-visible {
+    color: var(--sp-accent-text);
+}
+
+.sp-tools-col-share {
+    white-space: nowrap;
+}
+
+.sp-tools-col-export {
+    width: 2rem;
+    text-align: end;
+}
+
 }

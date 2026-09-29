@@ -5,6 +5,7 @@ import { apiFetch } from '../services/api.js';
 import { showToast } from '../services/toast.js';
 import { showConfirmDialog } from '../services/confirm.js';
 import { on, initDelegation } from '../services/events.js';
+import { validUntilFrom } from '../services/validity.js';
 
 const setStatus = (name, text) => {
   const el = document.querySelector(`[data-status="${name}"]`);
@@ -42,6 +43,7 @@ const formHandlers = {
   'user-roles': (form, userId) =>
     submit('user-roles', userId, '/roles', {
       roles: [...Array.from(form.querySelectorAll('input[name="roles"]:checked'), (cb) => cb.value), ...String(new FormData(form).get("additional_roles") ?? "").split(",").map((r) => r.trim()).filter(Boolean)],
+      valid_until: validUntilFrom(form.elements.namedItem('valid_until')),
     }),
   // An empty select means "no primary container": the person's spend then lands
   // in the unattributed bucket rather than in a group they are not in.

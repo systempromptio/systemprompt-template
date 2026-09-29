@@ -1,0 +1,132 @@
+{{#> layout page_title=title page_id=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="What the retention jobs measured, archived and found. Raw tables are bounded by age and archived weekly before they expire; the rollups are kept and archived monthly; the health check runs with the monthly archive. Deletion is core's database_cleanup — its windows and last run are on Configuration."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{configuration_url}}">Configuration</a>
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        <span>Jobs <code class="sp-code-inline">retention_daily_report</code> <code class="sp-code-inline">retention_export_weekly</code> <code class="sp-code-inline">retention_export_monthly</code></span>
+        {{/inline}}
+    {{/components/page-header}}
+
+    <div class="sp-kpi-grid" aria-label="Lifecycle totals">
+        {{> components/kpi label="Managed tables" value=(formatNumber measures_count) note="measured daily at 04:30"}}
+        {{> components/kpi label="Archive files" value=(formatNumber archive_count) note="under storage/exports"}}
+        {{> components/kpi label="P1 findings" value=(formatNumber findings_p1) tone=findings_p1_tone note="last health check"}}
+        {{> components/kpi label="P2 findings" value=(formatNumber findings_p2) tone=findings_p2_tone note="last health check"}}
+    </div>
+
+    {{#> components/section title="What this instance keeps" note="The retention policy in force. Every window is a profile key — change it in .systemprompt/profiles/<name>/profile.yaml under retention: and restart; a key left out takes the default shown as its source. Deletion runs nightly in database_cleanup and only deletes when its scheduler entry sets enforce: true."}}{{/components/section}}
+    {{#> components/table caption="Retention windows enforced by database_cleanup" modifier="sp-lifecycle-windows"}}
+        <thead><tr><th>Table</th><th>What it holds</th><th>Kept for</th><th>Where the value comes from</th><th>Deleted last run</th></tr></thead>
+        <tbody>
+        {{#each retention.rows}}
+        <tr data-table="{{table}}">
+            <td><strong>{{table}}</strong></td>
+            <td>{{purpose}}</td>
+            <td class="sp-u-mono">{{days}} d</td>
+            <td><span class="sp-u-text-tertiary">{{days_source}}</span></td>
+            <td class="sp-u-mono">{{#if deleted_last_run}}{{deleted_last_run}}{{else}}<span class="sp-u-text-tertiary">&mdash;</span>{{/if}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    <p class="sp-u-text-tertiary">
+        Job <code class="sp-code-inline">{{retention.job_name}}</code>
+        {{#if retention.never_ran}}has never run{{else}}last ran {{relativeTime retention.last_run}}{{/if}}
+        {{#if retention.last_status}} &middot; {{> components/badge tone=retention.last_status_tone text=retention.last_status}}{{/if}}
+        {{#if retention.next_run}} &middot; next run {{relativeTime retention.next_run}}{{/if}}.
+        Rollups are never expired: <span class="sp-u-mono">conversation_facts</span>,
+        <span class="sp-u-mono">admin_usage_daily_rollups</span> and
+        <span class="sp-u-mono">plugin_usage_daily</span> outlive the raw rows they summarise,
+        and the raw weeks are archived below before they age out.
+        {{#if retention.last_error}}<br><span class="sp-u-text-tertiary">{{retention.last_error}}</span>{{/if}}
+    </p>
+
+    {{#> components/section title="Managed tables" note="The latest daily measurement. Growth compares total size with the measurement closest to seven days earlier; a row is flagged when its oldest row is more than a week beyond its window, which means the cleanup job is not running or not enforced."}}{{/components/section}}
+    {{#if measures}}
+    {{#> components/table caption="Size and age per retention-managed table" modifier="sp-lifecycle-tables"}}
+        <thead><tr>
+            <th>Table</th>
+            <th>Window</th>
+            <th>Live rows</th>
+            <th>Dead rows</th>
+            <th>Total</th>
+            <th>Indexes</th>
+            <th>Oldest row</th>
+            <th>Growth</th>
+            <th>Measured</th>
+        </tr></thead>
+        <tbody>
+        {{#each measures}}
+        <tr data-table="{{table_name}}">
+            <td><strong>{{table_name}}</strong></td>
+            <td>{{window}}</td>
+            <td class="sp-u-mono">{{formatNumber live_rows}}</td>
+            <td class="sp-u-mono">{{formatNumber dead_rows}}</td>
+            <td class="sp-u-mono">{{total}}</td>
+            <td class="sp-u-mono">{{indexes}}</td>
+            <td>{{#if oldest_row}}{{oldest_row}}{{#if over_window}} {{> components/badge tone="err" text="beyond window"}}{{/if}}{{else}}<span class="sp-u-text-tertiary">empty</span>{{/if}}</td>
+            <td>{{> components/badge tone=growth_tone text=growth_label}}</td>
+            <td>{{relativeTime measured_at}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state heading="No measurements yet" message="retention_daily_report writes one row per managed table on its first run. Trigger it with: systemprompt infra jobs run retention_daily_report"}}
+    {{/if}}
+
+    {{#> components/section title="Health check" note="Ranked findings from the last monthly run. P1 is a queue that is not draining or a window that is not applied; P2 will hurt within a year; P3 is hygiene."}}{{/components/section}}
+    {{#if health_run_at}}
+    <p class="sp-u-text-tertiary">Last run {{relativeTime health_run_at}}.</p>
+    {{#if findings}}
+    {{#> components/table caption="Findings" modifier="sp-lifecycle-findings"}}
+        <thead><tr><th>Rank</th><th>Check</th><th>Detail</th></tr></thead>
+        <tbody>
+        {{#each findings}}
+        <tr>
+            <td>{{> components/badge tone=tone text=rank}}</td>
+            <td class="sp-u-mono">{{check}}</td>
+            <td>{{detail}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/notice tone="ok" title="Nothing to report" message="The last health check found no queue backlog, no window overrun, no bloat and no unused index above 10 MiB."}}
+    {{/if}}
+    {{else}}
+    {{> components/empty-state heading="No health report yet" message="retention_export_monthly runs on the first of the month at 02:30. Trigger it now with: systemprompt infra jobs run retention_export_monthly"}}
+    {{/if}}
+
+    {{#> components/section title="Archives" note="One gzipped JSON Lines file per table per period, written by COPY with row_to_json, so each is complete and restorable. The manifest lists every file with its SHA-256; weekly archives are pruned after keep_weeks once the month's rollup archive exists, monthly archives are kept."}}{{/components/section}}
+    {{#if periods}}
+    {{#each periods}}
+    <details class="sp-card" {{#if @first}}open{{/if}}>
+        <summary class="sp-card__body">
+            <strong>{{period}}</strong> <span class="sp-u-text-tertiary">{{tier}} · {{window}} · written {{relativeTime written_at}}</span>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{manifest_href}}">manifest.json</a>
+        </summary>
+        {{#> components/table caption="Files" modifier="sp-lifecycle-files"}}
+            <thead><tr><th>Table</th><th>Rows</th><th>Size</th><th>SHA-256</th><th></th></tr></thead>
+            <tbody>
+            {{#each files}}
+            <tr>
+                <td><strong>{{table_name}}</strong></td>
+                <td class="sp-u-mono">{{formatNumber rows}}</td>
+                <td class="sp-u-mono">{{size}}</td>
+                <td><span class="sp-u-mono" title="{{sha256}}">{{sha256_short}}…</span></td>
+                <td><a class="sp-btn sp-btn--sm sp-btn--outline" href="{{href}}">Download</a></td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/table}}
+    </details>
+    {{/each}}
+    {{else}}
+    {{> components/empty-state heading="No archives yet" message="retention_export_weekly runs on Sunday at 02:00 for the previous ISO week; pass weeks_back to backfill: systemprompt infra jobs run retention_export_weekly -p weeks_back=4"}}
+    {{/if}}
+    {{/inline}}
+{{/layout}}

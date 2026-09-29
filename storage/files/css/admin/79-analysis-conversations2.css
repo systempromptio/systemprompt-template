@@ -23,18 +23,23 @@
 }
 .sp-aconv-table th,
 .sp-aconv-breakdown th,
-.sp-askill-table th {
+.sp-askill-table th,
+.sp-tools-table th,
+.sp-tools-breakdown th {
     white-space: nowrap;
     overflow-wrap: normal;
     hyphens: none;
 }
 /* Breakdown tables lay out by content: with a fixed layout their ten
    equal columns clipped every header to three letters. */
-.sp-aconv-breakdown {
+.sp-aconv-breakdown,
+.sp-tools-breakdown {
     table-layout: auto;
 }
-.sp-aconv-breakdown th:first-child { min-width: 12rem; }
-.sp-aconv-breakdown th.sp-aconv-col-share { min-width: 8.5rem; }
+.sp-aconv-breakdown th:first-child,
+.sp-tools-breakdown th:first-child { min-width: 12rem; }
+.sp-aconv-breakdown th.sp-aconv-col-share,
+.sp-tools-breakdown th.sp-tools-col-share { min-width: 8.5rem; }
 .sp-aconv-table td {
     vertical-align: top;
     max-width: 0;

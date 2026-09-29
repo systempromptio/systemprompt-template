@@ -205,6 +205,96 @@ Conventions (strict — hold every entry to them):
 - `util::mcp_tool_name` reduces a host's namespaced MCP tool name
   (`mcp__<server>__<tool>`, `mcp__plugin_<marketplace>_<server>__<tool>`) to the
   server and bare tool the gateway records.
+- **Tools & artifacts** (`/admin/tools`, `/admin/artifacts`, Developer group):
+  every tool call the platform saw — the model's intent, the execution, the
+  governance decision keyed to it and the artifact it produced — read from the
+  `tool_activity` view in one statement (`repositories/analysis/tools/page.sql`)
+  with KPI tiles, charts, a filter ribbon, a breakdown by tool, server, person,
+  client, skill or kind, and a paged, selectable table. The Artifacts page is
+  the same page narrowed to calls the one artifact rule says produced something
+  a person can view; `/admin/artifacts/{id}` shows one artifact with its
+  provenance, scanner findings and stored body, and `…/preview` renders it in a
+  sandboxed same-origin frame through core's renderer registry. Four export
+  datasets back them (`tools`, `tools-breakdown`, `artifacts`,
+  `artifacts-breakdown`).
+- **Configuration** (`/admin/configuration`, Platform group): one row per kind
+  of configuration under `services/`, projected kinds with their plane's state
+  and a link to the owning page's Sync tab, served kinds with the source and
+  hash that ship them, plus the `database_cleanup` retention windows read from
+  the profile beside what the job last deleted.
+- **Observability** (`/admin/system/observability`): the profile's
+  `observability.otlp` block beside core's `otlp_export_state` ledger, with
+  **Export now** (runs core's `otlp_export_now` out of turn) and **Test
+  connection** (posts an empty OTLP/HTTP envelope to the collector); both are
+  administrator writes behind the write-origin check. The Code sync page links
+  to Configuration and Observability from its header.
+- **Data lifecycle** (`/admin/lifecycle`, Platform group): what the retention
+  jobs measured, archived and found — the latest size, dead tuples, oldest row
+  and week-on-week growth of every managed table, the weekly and monthly
+  archives with their SHA-256 and a download link
+  (`/admin/lifecycle/archive/{tier}/{period}/{file}`, path segments validated
+  against the shapes the jobs write), the last health report's ranked
+  findings, and the retention windows in force. Three web-extension jobs
+  write it (`extensions/web/jobs/src/retention/`): `retention_daily_report`
+  (04:30 daily, into `retention_runs`), `retention_export_weekly` (Sunday
+  02:00, the previous ISO week of the raw tables to
+  `storage/exports/weekly/`) and `retention_export_monthly` (1st, 02:30, the
+  kept rollups to `storage/exports/monthly/`, then the health check and a
+  `VACUUM (ANALYZE)`). Every archive is gzipped JSON Lines from
+  `COPY … TO STDOUT` with a manifest, restorable with `COPY … FROM`. Runbook:
+  `docs/ops/retention-and-backups.md`.
+- **Connectors** (`/admin/connectors`, Account group): a person's connections
+  as cards grouped by what to do next — needs attention, ready to connect,
+  connected, nothing to do — under a health strip that names the next step.
+  **Test connection** now returns a step-by-step report (credential, MCP
+  session, tools, identity) with each stage's outcome and duration
+  (`services/connector_oauth/report.rs`), shown inline on the card.
+  Session-attested servers — `oauth.required` with scopes and no `connector:`
+  block, such as the `systemprompt` control plane — appear as connectors that
+  are live for anyone whose roles carry the scopes, tested by a live check
+  (`services/connector_readiness.rs`). Generic connectors gain
+  `connector.display_name`, `authorization_params` and `identity: userinfo`
+  (read `sub`/`email` from the issuer's OIDC userinfo endpoint), and issuer
+  identifiers are compared as URLs with a single trailing slash ignored.
+- **Connect a client** (`/admin/connect`, Account group): the three-step
+  connect-code wizard for Claude Code, Claude Desktop and OpenCode, the bridge
+  downloads and the client guides, on a page of its own.
+- **Managed resources API** (`/api/public/admin/managed/*`): owner-authenticated
+  sources, snapshots, git sync, resource bindings, immutable revisions and
+  their bundles, candidates, publications with history, reconciliations,
+  withdrawals, distributions and installation receipts, over core's managed
+  repository. Reads are open to the console roles, writes need an
+  administrator and pass the write-origin check; nothing activates
+  implicitly (`handlers/managed_resources/`, `routes/managed_resources.rs`).
+- **Signed identity for external MCP servers**
+  (`GET /api/public/identity/{server}/token`): for a server whose
+  `external_auth.token_endpoint` names that route, the credential broker gets a
+  300-second RS256 JWT for the calling user (`iss`, `aud` = the server's
+  endpoint, `sub`, `email`, `name`, `iat`, `exp`, `jti`), signed with the
+  instance authority key and verifiable against `/.well-known/jwks.json`. The
+  access rule for `mcp_server/<id>` is the whole entitlement decision
+  (`services/identity_token.rs`, `docs/EXTERNAL-MCP-IDENTITY.md`).
+- Request detail (`/admin/requests/{id}`): the client and provider **tool
+  schemas** the request carried, paired by name with the Gemini declaration
+  rules each client schema breaks (`types/tool_schema_diff.rs`), the session's
+  stored **artifacts**, and each tool call's ledger state and artifact link;
+  the related-requests table links every request and marks this one.
+- History (`/admin/history`, `/admin/conversations`): a **window** — 7, 30, 90
+  days, a year, or all time, or a custom `start`/`end` — over a conversation's
+  last activity, carried through search, paging and the export (the table
+  export and the transcript bundle both take the window).
+- Devices: an administrator can set or clear a device certificate's expiry
+  (`PUT /api/public/admin/devices/certs/{id}/expiry`); the certificates tab
+  shows it and the hourly sweep revokes the certificate once it passes.
+- User detail: manual role grants take an expiry ("Manual grants expire");
+  `GET`/`PUT /api/public/admin/users/{id}/roles` carry `valid_until`, and the
+  reads that decide what a person holds see only grants inside their window.
+- The login page offers **Sign in with single sign-on** when an ADFS relying
+  party is configured and names the reason when the IdP sends the browser
+  back with `?sso=<reason>` (`pages/admin-login.js`); a development instance
+  shows the `just dev-login` hint.
+- Documentation pages group evidence screenshots (`/files/images/evidence/…`)
+  into a gallery with a lightbox (`site/docs-evidence-gallery.js`).
 
 - **Typed admin-analytics MCP tools.** The `systemprompt` MCP server gains
   `user_activity`, `conversation_list`, `usage_by_user`, `request_log`,
@@ -258,6 +348,46 @@ Conventions (strict — hold every entry to them):
 - The header actions and install menus now bind to the ids the templates
   actually write (`header-actions`, `install-menu`); previously neither control
   was wired and the install button did nothing at narrow widths.
+- The admin SSR router now takes the shared `DbPool` and builds core's
+  managed-resource repository and OTLP export ledger once
+  (`routes/managed_state.rs`); `admin_ssr_router` returns
+  `Result<Router, StateError>`. The four legacy CSV URLs outside governance moved into
+  `routes/ssr_export.rs` and the governance pages (with their two CSVs) into
+  `routes/ssr_governance.rs` (same paths), and the Platform group's routes
+  into `routes/ssr_platform.rs` (size split only). `systemprompt_web_shared::format`
+  gains `relative_time`, `truncate_chars`, `truncate_ellipsis` and
+  `compact_num`.
+- `plugin_usage_retention` now calls `expire_raw_evidence` (schema
+  `32_raw_retention.sql`): hook events, gateway requests and what hangs off
+  them expire together after 90 days, while `conversation_facts`,
+  `conversation_skill_facts` and the daily rollups are kept. It and the three
+  `retention_*` jobs now have explicit entries in
+  `services/scheduler/config.yaml`.
+- The profile page no longer carries the connect wizard or the connectors
+  list; its header links to **Connect a client** and **Connectors** instead,
+  and a finished OAuth consent returns to `/admin/connectors#connector-<id>`.
+  `profile-connect-code.js`, `profile-connections.js` and `05-connection.css`
+  are replaced by `connect-code.js`, `connectors.js`,
+  `services/connector-labels.js` and the `20-page-connect*` /
+  `20-page-connectors*` stylesheets.
+- Connector token handling: every 4xx from a token endpoint now retires the
+  grant as a reconnect (RFC 6749 §5.2), where only `invalid_grant` or a 401
+  did before; a 5xx, 429 or transport failure stays an outage and keeps the
+  grant. A broker call within 30 seconds of a recorded outage is held without
+  another provider call; Test connection always goes through. A server the
+  access rules admit is withheld from the bridge manifest until the person's
+  connection to it is ready, and the manifest's diagnostics say why.
+- `admin_router` now takes the shared `DbPool` and returns
+  `Result<Router, StateError>` (it builds core's managed repository once);
+  `router::api::build` propagates it. The workspace `jsonwebtoken` moves to
+  core's `11` (with `rust_crypto`), which the identity token needs to sign with
+  core's authority key.
+- The identity envelope and role query read `user_projects` (the windowed
+  view) instead of `project_members`, so an expired project membership no
+  longer shows as held.
+- Extension config errors keep their underlying cause
+  (`ExtensionConfigErrors::push_with_source`) instead of flattening it into
+  the message.
 
 - `systemprompt_cli` points at the typed tools and tables the CLI flags that
   exist; `docs/gateway-routes.md` describes the services-YAML catalog, client
@@ -272,7 +402,6 @@ Conventions (strict — hold every entry to them):
 - The server-only stacked chart (`types/svg_stack.rs`,
   `components/svg-stacked-chart`): both of its charts are now drawn as columns
   by the live layer from the ordinary line-chart view.
-- `73-analysis.css`: every rule in it styled an analysis page this branch does not render; the analysis suite brings its own stylesheet back.
 
 ## [0.62.0] - 2026-09-28
 

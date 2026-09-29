@@ -1,0 +1,49 @@
+{{#> layout page_title=title page_id=page}}
+{{#*inline "content"}}
+{{> components/breadcrumbs crumbs=breadcrumbs}}
+{{#> components/page-header title=title help=help subtitle="Every tool call the platform saw — the model's intent, the execution, what governance decided and what it produced. An artifact is a call whose result a person can view or retrieve; everything else is a tool call."}}
+{{#*inline "header_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/artifacts">{{> components/icon name="file"}} Artifacts</a> <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/traces">{{> components/icon name="layers"}} Traces</a> {{> components/export-button export}}{{/inline}}
+{{/components/page-header}}
+{{#if range_rejected}}{{> components/notice tone="warn" message="That range could not be read, so this page is showing the default window."}}{{/if}}
+<div class="sp-aconv-range">{{> components/tabs tabs=range_links nav_label="Window"}}{{#if window_pinned}}<span class="sp-tools-pinned" title="This window was set by the link you followed">{{> components/icon name="calendar"}} {{window_display}} <a class="sp-tools-pinned__widen" href="{{widen_href}}">Widen to 30 days</a></span>{{/if}}{{> components/scope-filter scope_filter}}</div>
+<div class="sp-kpi-grid sp-kpi-grid--compact sp-tools-kpis">
+{{#each kpis}}{{> components/kpi label=label icon=icon value=value note=note tone=tone hint=hint spark=spark}}{{/each}}
+</div>
+<section class="sp-aconv-charts" aria-label="Over time">
+{{#each charts}}<div class="sp-aconv-chart">{{> components/svg-line-chart this}}</div>{{/each}}
+</section>
+{{> components/filter-ribbon ribbon}}
+<section class="sp-section sp-aconv-block" aria-label="Breakdown">
+<header class="sp-tools-block__head">{{> components/icon name="layers"}}<h2 class="sp-tools-block__title">Breakdown</h2>{{> components/tabs tabs=breakdown_tabs nav_label="Breakdown"}}</header>
+{{#> components/table caption=(concat "Tool calls " breakdown_label) modifier="sp-tools-breakdown"}}
+<thead><tr><th scope="col">{{breakdown_label}}</th><th scope="col" class="sp-table__cell--num">Calls</th><th scope="col" class="sp-tools-col-share" title="Share of the filtered set's calls">Share</th><th scope="col" class="sp-table__cell--num">Executed</th><th scope="col" class="sp-table__cell--num">Failed</th><th scope="col" class="sp-table__cell--num" title="Denied by governance">Denied</th><th scope="col" class="sp-table__cell--num">People</th><th scope="col" class="sp-table__cell--num" title="Calls that produced something viewable">{{> components/icon name="file"}} Artifacts</th><th scope="col" class="sp-table__cell--num" title="95th percentile execution time">p95</th><th scope="col" class="sp-tools-col-export"><span class="sp-u-sr-only">Export</span></th></tr></thead>
+<tbody>
+{{#each breakdown}}<tr><td class="sp-table__cell--primary"><span class="sp-tools-tool">{{> components/icon name=icon}}{{#if href}}<a class="sp-table__link" href="{{href}}">{{label}}</a>{{else}}{{label}}{{/if}}</span></td><td class="sp-table__cell--num sp-u-num">{{formatNumber calls}}</td><td class="sp-tools-col-share"><span class="sp-aconv-bar" style="--sp-fill: {{share_pct}}%"><i></i></span><span class="sp-aconv-bar__label">{{share_pct}}%</span></td><td class="sp-table__cell--num sp-u-num">{{formatNumber executed}}</td><td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{failed_tone}}">{{failed}}</span></td><td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{denied_tone}}">{{denied}}</span></td><td class="sp-table__cell--num sp-u-num">{{users}}</td><td class="sp-table__cell--num sp-u-num" title="{{artifact_pct}} of calls">{{artifacts}}</td><td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{duration_tone}}">{{duration_display}}</span></td><td class="sp-tools-col-export">{{#if export_href}}<a class="sp-tools-export" href="{{export_href}}" title="Download the calls in this bucket as CSV" aria-label="Export {{label}}">{{> components/icon name="download"}}</a>{{/if}}</td></tr>
+{{else}}<tr class="sp-table__empty"><td colspan="10">{{> components/empty-state heading="Nothing in this window" message="No tool call falls inside the window with these filters. Widen the window or clear a filter."}}</td></tr>{{/each}}
+</tbody>
+{{/components/table}}
+</section>
+<section class="sp-section sp-aconv-block" aria-label="Tool calls">
+<header class="sp-tools-block__head">{{> components/icon name="wrench"}}<h2 class="sp-tools-block__title">{{count_label}}</h2></header>
+{{#> components/table caption="Tool calls" pagination=pagination modifier="sp-tools-table"}}
+<thead><tr><th scope="col" class="sp-tools-col-select">{{> components/table-select header=true label="tool calls"}}</th>{{> components/sort-header sort_headers.time}}{{> components/sort-header sort_headers.tool}}<th scope="col" class="sp-tools-col-server">Server</th><th scope="col" class="sp-tools-col-input">Input</th><th scope="col">State</th>{{> components/sort-header sort_headers.duration}}<th scope="col" title="Governance decision keyed to the call">Decision</th><th scope="col" class="sp-tools-col-person">Person</th><th scope="col" class="sp-tools-col-links">Links</th><th scope="col" class="sp-tools-col-artifact" title="What the call produced, when the artifact rule says it produced something viewable">{{> components/icon name="file"}} Artifact</th></tr></thead>
+<tbody>
+{{#each rows}}<tr data-row-key="{{row_key}}">
+<td class="sp-tools-col-select">{{> components/table-select id=row_key label=tool_name}}</td>
+<td class="sp-col-date"><time datetime="{{at_full}}" title="{{at_full}}">{{at}}</time></td>
+<td class="sp-table__cell--primary sp-tools-col-tool"><span class="sp-tools-tool" title="{{#if is_builtin}}builtin harness tool{{else}}MCP server tool{{/if}}">{{> components/icon name=tool_icon}}<code class="sp-u-mono">{{tool_name}}</code></span>{{#if skill}}<div class="sp-aconv-meta"><a class="sp-aconv-skill sp-aconv-skill--hooked" href="{{skill_href}}">{{skill}}</a></div>{{/if}}</td>
+<td class="sp-tools-col-server sp-aconv-meta" title="{{source}}">{{server_name}}</td>
+<td class="sp-tools-col-input"><span class="sp-tools-input{{#if is_path}} sp-u-mono{{/if}}" title="{{input_full}}">{{input_summary}}</span>{{#if error_message}}<div class="sp-aconv-meta sp-u-text-danger" title="{{error_message}}">{{truncate error_message 60}}</div>{{/if}}</td>
+<td>{{> components/badge tone=state_tone text=state}}{{#if status}}<div class="sp-aconv-meta">{{status}}</div>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{duration_display}}</td>
+<td>{{#if decision_href}}<a href="{{decision_href}}" class="sp-tools-decision">{{> components/badge tone=decision_tone text=decision}}</a>{{else}}<span class="sp-u-text-tertiary">{{decision}}</span>{{/if}}</td>
+<td class="sp-tools-col-person">{{#if user_href}}<a class="sp-table__link" href="{{user_href}}" title="{{user_key}}">{{user_label}}</a>{{else}}{{user_label}}{{/if}}{{#if client_kind}}<div class="sp-aconv-meta">{{client_kind}}</div>{{/if}}</td>
+<td class="sp-tools-col-links"><div class="sp-tools-links">{{#if conversation_href}}<a class="sp-tools-link" href="{{conversation_href}}" title="Conversation">{{> components/icon name="chat"}}</a>{{/if}}{{#if session_href}}<a class="sp-tools-link" href="{{session_href}}" title="Session">{{> components/icon name="clock"}}</a>{{/if}}{{#if request_href}}<a class="sp-tools-link" href="{{request_href}}" title="Request">{{> components/icon name="bolt"}}</a>{{/if}}{{#if trace_href}}<a class="sp-tools-link" href="{{trace_href}}" title="Trace">{{> components/icon name="gauge"}}</a>{{/if}}</div></td>
+<td class="sp-tools-col-artifact">{{#if artifact_kind}}<a class="sp-tools-kind sp-tools-kind--{{artifact_kind}}" href="{{artifact_href}}" title="{{artifact_title}}">{{> components/icon name=artifact_icon}}{{artifact_label}}</a>{{#if preview_href}} <a class="sp-tools-link" href="{{preview_href}}" target="_blank" rel="noopener" title="Preview">{{> components/icon name="search"}}</a>{{/if}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+</tr>
+{{else}}<tr class="sp-table__empty"><td colspan="11">{{> components/empty-state heading="No tool calls match" message="Clear a filter or widen the window. A call appears here once the gateway records the model's intent or a hook reports an execution."}}</td></tr>{{/each}}
+</tbody>
+{{/components/table}}
+{{> components/bulk-bar noun="tool calls" export_dataset="tools"}}
+</section>
+{{/inline}}{{#*inline "scripts"}}<script type="module" src="/js/components/sp-chart.js?v={{css_version}}"></script>{{/inline}}{{/layout}}

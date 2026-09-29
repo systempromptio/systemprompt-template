@@ -1,0 +1,18 @@
+/* /admin/configuration — one row per kind of configuration the instance
+   loads. Column widths keep the path and the hash from crowding the label. */
+@layer components {
+
+.sp-config td:first-child { min-width: 14rem; }
+
+.sp-config td:nth-child(2) {
+    max-width: 18rem;
+    font-size: var(--sp-text-xs);
+    overflow-wrap: anywhere;
+}
+
+.sp-config td:nth-child(6),
+.sp-config td:nth-child(7) {
+    font-size: var(--sp-text-sm);
+}
+
+}

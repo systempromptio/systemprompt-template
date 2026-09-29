@@ -62,8 +62,9 @@ impl TranscriptSource {
     }
 
     // Why: this instance's history listing (transcripts and gateway
-    // conversations in one union) has no time axis, so its sets take no
-    // window; the ledger pages keep the live one.
+    // conversations in one union) carries its own window in its query
+    // (`days`/`start`/`end`, read by `HistoryWindow`), so the export layer
+    // resolves none for it; the ledger pages keep the live one.
     pub(crate) const fn window(self) -> Window {
         match self {
             Self::Sessions | Self::Analysis => Window::Live,

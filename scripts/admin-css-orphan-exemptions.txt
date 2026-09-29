@@ -104,7 +104,3 @@ sp-col-currency
 sp-col-tags
 sp-col-text
 sp-col-thumbnail
-#
-# 4. The Analysis nav group's hue. The group itself returns with the analysis
-#    suite (Stage 3 phase 7), which deletes this entry.
-sp-nav-group--analysis

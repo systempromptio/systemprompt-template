@@ -2,14 +2,15 @@
     {{#*inline "content"}}
     {{> components/breadcrumbs crumbs=breadcrumbs}}
 
-    {{#> components/page-header title=title subtitle="Connect Claude Code, Claude Desktop or OpenCode to this gateway, and see what you have used."}}
+    {{#> components/page-header title=title subtitle="What you have used and how you appear in this console. Connect a client and manage your connectors on their own pages."}}
         {{#*inline "header_meta"}}
             <span class="sp-u-mono">{{identity.email}}</span>
             <span>{{#each identity.roles}}{{this}} {{/each}}</span>
             {{#if identity.provider}}<span>signed in via {{identity.provider}}</span>{{/if}}
         {{/inline}}
         {{#*inline "header_actions"}}
-            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/setup">Setup guide</a>
+            <a class="sp-btn sp-btn--sm sp-btn--primary" href="/admin/connect">Connect a client</a>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/connectors">Connectors</a>
             <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/history">My conversations</a>
         {{/inline}}
     {{/components/page-header}}
@@ -18,98 +19,6 @@
     {{> components/notice tone="warn" title="You have user permissions"
         message="Admin pages, the systemprompt MCP server and the admin plugins are hidden. An operator promotes an account with `systemprompt admin users role promote`; sign out and back in afterwards, because the admin scope is minted with the token."}}
     {{/unless}}
-
-    <section class="sp-p-profile__connect" id="connect" aria-label="Connect a client">
-        {{#> components/section title="Connect your workspace" note="Choose your client, create a secure code, then run the command to get started."}}{{/components/section}}
-        <div class="sp-card">
-            <div class="sp-card__body">
-                <div class="sp-p-profile__step-heading"><span>1</span><h3>Choose your client</h3></div>
-                <div class="sp-tabs" role="tablist" data-tabs="profile-connect" aria-label="Client to connect">
-                    <button type="button" class="sp-tab sp-tab--active" role="tab" id="connect-tab-claude-code" aria-controls="connect-panel-claude-code" aria-selected="true" data-tab="claude-code">Claude Code</button>
-                    <button type="button" class="sp-tab" role="tab" id="connect-tab-claude-desktop" aria-controls="connect-panel-claude-desktop" aria-selected="false" tabindex="-1" data-tab="claude-desktop">Claude Desktop</button>
-                    <button type="button" class="sp-tab" role="tab" id="connect-tab-opencode" aria-controls="connect-panel-opencode" aria-selected="false" tabindex="-1" data-tab="opencode">OpenCode</button>
-                </div>
-
-                <div class="sp-p-profile__authorization">
-                <div class="sp-p-profile__step-heading"><span>2</span><h3>Create a connection code</h3></div>
-                <p class="sp-p-profile__lede">Connects as <strong>{{identity.email}}</strong>. Your code works once and expires after ten minutes.</p>
-                {{#if bridge_connect_available}}
-                <div class="sp-p-profile__issue">
-                    <button type="button" class="sp-btn sp-btn--primary" id="issue-connect-code">Generate a connect code</button>
-                    <p class="sp-p-profile__status" id="connect-code-status" role="status" hidden>
-                        Code <code data-connect-field="code"></code> · expires in <span data-connect-expiry></span> · signs in as <strong>{{identity.email}}</strong>
-                    </p>
-                </div>
-                <p class="sp-p-profile__lede" id="connect-code-error" role="alert" hidden></p>
-                {{else}}
-                <p class="sp-p-profile__lede">
-                    No gateway URL is configured, so a connect code cannot be minted here. An administrator
-                    can issue one from the server with
-                    <code class="sp-u-mono">systemprompt admin bridge issue-code --user-id {{identity.email}}</code>,
-                    then paste it into the commands below.
-                </p>
-                {{/if}}
-
-                </div>
-                <div class="sp-p-profile__step-heading"><span>3</span><h3>Install and connect</h3></div>
-                {{#unless download_base_url}}<p class="sp-p-profile__lede">Desktop client downloads are not configured. If the bridge is already installed, generate a code and use the sign-in commands below.</p>{{/unless}}
-                <div class="sp-tab-panel" id="connect-panel-claude-code" role="tabpanel" aria-labelledby="connect-tab-claude-code">
-                    <div class="sp-p-profile__guide">
-                        <p class="sp-p-profile__lede">Installs the bridge and points Claude Code at this gateway. Every prompt is then governed, priced and audited under your account.</p>
-                        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/documentation/connect-claude-code">Read the guide</a>
-                    </div>
-                    <p class="sp-p-profile__pending" data-connect-pending>Your sign-in command will appear here after you create a connection code.</p>
-                    <p class="sp-p-profile__label">Linux, WSL and macOS terminal</p>
-                    {{#if download_base_url}}<pre class="sp-connect__cmd"><code data-connect-field="install_command"></code></pre>{{/if}}
-                    <p class="sp-p-profile__lede">Open a new terminal and run <code class="sp-u-mono">claude</code>. Send your first message, then <a href="/admin/history">view your conversation</a> to check that it reached this gateway.</p>
-                    <details class="sp-p-profile__advanced"><summary>Already have the bridge? Sign in again</summary>
-                    <pre class="sp-connect__cmd"><code data-connect-field="login_command"></code></pre>
-                    </details>
-
-                </div>
-
-                <div class="sp-tab-panel" id="connect-panel-claude-desktop" role="tabpanel" aria-labelledby="connect-tab-claude-desktop" hidden>
-                    <div class="sp-p-profile__guide">
-                        <p class="sp-p-profile__lede">The desktop bridge signs Claude Desktop and Cowork in to this gateway and keeps your skills, plugins and MCP servers in sync.</p>
-                        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/documentation/bridge-install">Read the guide</a>
-                    </div>
-                    <p class="sp-p-profile__pending" data-connect-pending>Your sign-in command will appear here after you create a connection code.</p>
-                    <p class="sp-p-profile__label">Windows</p>
-                    {{#if download_base_url}}<ul class="sp-p-profile__downloads">
-                        <li><a href="{{download_base_url}}/systemprompt-bridge-windows.exe">systemprompt-bridge-windows.exe</a><a href="{{download_base_url}}/systemprompt-bridge-windows.exe.sha256">sha256</a></li>
-                    </ul>{{/if}}
-                    <p class="sp-p-profile__lede">Run it and paste the code when asked, or from PowerShell in the download folder. SmartScreen may warn on first run; the binary is unsigned.</p>
-                    <pre class="sp-connect__cmd"><code data-connect-field="desktop_windows_login_command"></code></pre>
-                    <p class="sp-p-profile__label">macOS</p>
-                    {{#if download_base_url}}<ul class="sp-p-profile__downloads">
-                        <li><a href="{{download_base_url}}/systemprompt-bridge-macos.dmg">systemprompt-bridge-macos.dmg</a><a href="{{download_base_url}}/systemprompt-bridge-macos.dmg.sha256">sha256</a></li>
-                    </ul>{{/if}}
-                    <p class="sp-p-profile__lede">Drag Systemprompt Bridge to Applications, launch it and paste the code, or sign in from the terminal.</p>
-                    <pre class="sp-connect__cmd"><code data-connect-field="login_command"></code></pre>
-                    <p class="sp-p-profile__label">Linux and WSL</p>
-                    {{#if download_base_url}}<ul class="sp-p-profile__downloads">
-                        <li><a href="{{download_base_url}}/systemprompt-bridge-linux-x86_64.tar.gz">linux x86_64</a><a href="{{download_base_url}}/systemprompt-bridge-linux-x86_64.tar.gz.sha256">sha256</a></li>
-                        <li><a href="{{download_base_url}}/systemprompt-bridge-linux-aarch64.tar.gz">linux aarch64</a><a href="{{download_base_url}}/systemprompt-bridge-linux-aarch64.tar.gz.sha256">sha256</a></li>
-                    </ul>{{/if}}
-                    {{#if download_base_url}}<pre class="sp-connect__cmd"><code data-connect-field="install_command"></code></pre>{{/if}}
-                </div>
-
-                <div class="sp-tab-panel" id="connect-panel-opencode" role="tabpanel" aria-labelledby="connect-tab-opencode" hidden>
-                    <div class="sp-p-profile__guide">
-                        <p class="sp-p-profile__lede">Registers a <code class="sp-u-mono">systemprompt</code> provider in OpenCode against the gateway's OpenAI-compatible endpoint, so OpenCode never holds a vendor key.</p>
-                        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/documentation/connect-opencode">Read the guide</a>
-                    </div>
-                    <p class="sp-p-profile__pending" data-connect-pending>Your sign-in command will appear here after you create a connection code.</p>
-                    <p class="sp-p-profile__label">Fresh install</p>
-                    {{#if download_base_url}}<pre class="sp-connect__cmd"><code data-connect-field="opencode_install_command"></code></pre>{{/if}}
-                    <details class="sp-p-profile__advanced"><summary>Already have the bridge? Sign in again</summary>
-                    <pre class="sp-connect__cmd"><code data-connect-field="opencode_login_command"></code></pre>
-                    </details>
-                    <p class="sp-p-profile__lede">A <code class="sp-u-mono">403 no loopback credential presented</code> from OpenCode means the provider block was written without the key; run the command above again.</p>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <section class="sp-kpi-grid" aria-label="Your usage">
         {{> components/kpi label="Spend · 30d" value=(formatUsd usage.d30.cost_microdollars) note=(concat "7d " (formatUsd usage.d7.cost_microdollars) " · 24h " (formatUsd usage.d1.cost_microdollars)) delta=(deltaPct usage.d30.cost_microdollars usage.d30.previous_cost_microdollars)}}
@@ -168,33 +77,6 @@
         {{/if}}
     </section>
 
-
-    <section class="sp-p-profile__connections" id="connected-accounts" aria-label="Connectors" data-connected-accounts>
-        {{#> components/section title="Connectors" note="Authorize once; every machine connected above uses the same account."}}
-            {{#*inline "section_actions"}}<span class="sp-section__count" data-connection-count></span>{{/inline}}
-        {{/components/section}}
-        <p class="sp-notice sp-connection__message" data-connection-message role="status" hidden></p>
-        <div class="sp-card sp-card--flush">
-            <ul class="sp-connection-list" data-connection-list>
-                {{#each connections.connections}}
-                <li class="sp-connection" data-status="{{status}}">
-                    <span class="sp-connection__mark" aria-hidden="true">{{provider}}</span>
-                    <div class="sp-connection__body">
-                        <h3 class="sp-connection__name">{{provider}}</h3>
-                        <div class="sp-connection__meta">
-                            {{#if account_name}}<span class="sp-u-mono">{{account_name}}</span>{{/if}}
-                            {{#if resource_name}}<span>{{resource_name}}</span>{{/if}}
-                            {{#unless entitled}}<span>Connector access must be granted by an administrator</span>{{/unless}}
-                        </div>
-                    </div>
-                    <span class="sp-badge sp-badge--muted sp-connection__status">{{status}}</span>
-                    <div class="sp-connection__actions"></div>
-                </li>
-                {{/each}}
-            </ul>
-        </div>
-        <noscript>Enable JavaScript to manage connectors.</noscript>
-    </section>
 
     <details class="sp-p-profile__more">
         <summary>Account details — identity, gateway, marketplaces and agents</summary>
@@ -275,11 +157,5 @@
             {{/if}}
         </section>
     </details>
-    {{/inline}}
-    {{#*inline "scripts"}}
-    <script src="/js/components/sp-copy.js?v={{css_version}}" defer></script>
-    <script src="/js/components/sp-tabs.js?v={{css_version}}" type="module"></script>
-    <script src="/js/pages/profile-connections.js?v={{css_version}}" type="module"></script>
-    <script src="/js/pages/profile-connect-code.js?v={{css_version}}" type="module"></script>
     {{/inline}}
 {{/layout}}

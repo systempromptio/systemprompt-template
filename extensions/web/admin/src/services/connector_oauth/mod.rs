@@ -1,22 +1,30 @@
 //! Hosted MCP authorization, with encrypted user-bound grants and locked
 //! refresh.
 
+mod account_state;
 pub mod config;
 pub mod discovery;
 pub mod generic;
 mod generic_discovery;
 pub mod payload;
+mod report;
+mod response;
 pub mod site;
 mod tokens;
 mod transport;
+mod userinfo;
 pub mod verify;
 
 use crate::error::{AdminError, AdminResult};
 use crate::repositories::secrets::secret_crypto;
 use crate::repositories::users::connector_credentials::{self as repo, EncryptedGrant};
+use account_state::{
+    apply_verification, open_or_flag, record_grant_failure, require_connection, token_state,
+};
 use chrono::Utc;
 pub use config::Provider;
 pub use generic::Consent;
+pub use report::{VerificationReport, VerificationStep};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
@@ -76,11 +84,7 @@ pub fn seal(grant: &Grant) -> AdminResult<EncryptedGrant> {
     })
 }
 
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "Preserves the public provider API for embedded callers"
-)]
-pub fn open(row: &EncryptedGrant, user: &UserId, provider: Provider) -> AdminResult<Grant> {
+pub fn open(row: &EncryptedGrant, user: &UserId, provider: &Provider) -> AdminResult<Grant> {
     let key = secret_crypto::load_master_key()?;
     let nonce = row
         .nonce
@@ -99,62 +103,6 @@ pub fn open(row: &EncryptedGrant, user: &UserId, provider: Provider) -> AdminRes
     Ok(grant)
 }
 
-// Why: an outage or permission problem must not destroy a refresh grant; only
-// a rejected grant is deleted and the generation bumped.
-async fn record_grant_failure(
-    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-    user: &UserId,
-    account: &mut crate::repositories::users::connector_accounts::ProviderConnection,
-    grant: &Grant,
-    error: &AdminError,
-) -> AdminResult<()> {
-    let provider = &grant.provider;
-    if matches!(error, AdminError::Unauthorized(_)) {
-        account.status = "reconnect_required".into();
-        account.error_code = Some("grant_rejected".into());
-        account.generation += 1;
-        repo::delete(tx, user, provider.slug()).await?;
-    } else {
-        account.status = "temporarily_unavailable".into();
-        account.error_code = Some(
-            if matches!(error, AdminError::Forbidden(_)) {
-                "provider_permission_denied"
-            } else {
-                "provider_unavailable"
-            }
-            .into(),
-        );
-        // Why: A successful refresh followed by a failed probe still rotates the
-        // grant. Persist it before returning the probe error.
-        repo::store(tx, user, provider.slug(), &seal(grant)?).await?;
-    }
-    crate::repositories::users::connector_accounts::update_account(tx, user, account).await?;
-    Ok(())
-}
-
-// Why: A grant that cannot be opened under the current configuration flags the
-// account for reconnection before the error propagates.
-async fn open_or_flag(
-    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-    user: &UserId,
-    provider: &Provider,
-    row: &EncryptedGrant,
-    account: &mut crate::repositories::users::connector_accounts::ProviderConnection,
-) -> AdminResult<Grant> {
-    match open(row, user, provider.clone()) {
-        Ok(grant) => Ok(grant),
-        Err(error) => {
-            if matches!(error, AdminError::Unauthorized(_)) {
-                account.status = "reconnect_required".into();
-                account.error_code = Some("configuration_changed".into());
-                crate::repositories::users::connector_accounts::update_account(tx, user, account)
-                    .await?;
-            }
-            Err(error)
-        },
-    }
-}
-
 // Why: Resolve a server-only Authorization header, refreshing under the account
 // lock. One account-locked transaction keeps refresh, generation checks and
 // error-state commits together.
@@ -164,6 +112,32 @@ pub async fn verified_token(
     provider: Provider,
     probe: bool,
 ) -> AdminResult<String> {
+    let mut report = VerificationReport::for_provider(provider.slug());
+    resolve_token(pool, user, provider, probe, &mut report).await
+}
+
+// Why: a probe that fails at a stage is a result, not an error — the page
+// shows which stage. Only a failure before the first stage (no grant, not
+// configured) propagates as an error.
+pub async fn probe_connection(
+    pool: &PgPool,
+    user: &UserId,
+    provider: Provider,
+) -> AdminResult<VerificationReport> {
+    let mut report = VerificationReport::for_provider(provider.slug());
+    match resolve_token(pool, user, provider, true, &mut report).await {
+        Err(error) if report.steps.is_empty() => Err(error),
+        Ok(_) | Err(_) => Ok(report.finish()),
+    }
+}
+
+async fn resolve_token(
+    pool: &PgPool,
+    user: &UserId,
+    provider: Provider,
+    probe: bool,
+    report: &mut VerificationReport,
+) -> AdminResult<String> {
     use crate::repositories::users::connector_accounts as accounts;
     if !provider.configured() {
         return Err(AdminError::Unavailable("Connector not configured".into()));
@@ -172,11 +146,17 @@ pub async fn verified_token(
     let mut account = accounts::get_locked_account(&mut tx, user, provider.slug()).await?;
     let row = repo::lock(&mut tx, user, provider.slug()).await?;
     require_connection(&account.status)?;
+    if !probe && account_state::in_outage_hold(&account, row.as_ref().map(|r| r.updated_at)) {
+        return Err(AdminError::Unavailable(
+            "Connector provider recently unavailable; retry shortly".into(),
+        ));
+    }
+    let row = row.map(|r| r.grant);
     // Why: a saved OAuth grant is not usable until the MCP verification has
     // succeeded.
     if !probe && account.verified_at.is_none() {
         return Err(AdminError::Forbidden(
-            "Test the connection in Account before using this MCP".into(),
+            "Test the connection on the Connectors page before using this MCP".into(),
         ));
     }
     let mut grant = match row {
@@ -194,16 +174,7 @@ pub async fn verified_token(
         },
     };
     let refresh = grant.auth_method == "oauth" && grant.expires_at <= Utc::now().timestamp() + 120;
-    let result = async {
-        if refresh {
-            transport::refresh(&mut grant).await?;
-        }
-        if probe {
-            verify::verify(&mut grant).await?;
-        }
-        Ok::<(), AdminError>(())
-    }
-    .await;
+    let result = refresh_and_verify(&mut grant, refresh, probe, report).await;
     if let Err(error) = result {
         record_grant_failure(&mut tx, user, &mut account, &grant, &error).await?;
         tx.commit().await?;
@@ -223,27 +194,26 @@ pub async fn verified_token(
     ))
 }
 
-fn require_connection(status: &str) -> AdminResult<()> {
-    if matches!(status, "not_connected" | "reconnect_required") {
-        return Err(AdminError::NotFound(
-            "Connect your provider account in Systemprompt".into(),
-        ));
+async fn refresh_and_verify(
+    grant: &mut Grant,
+    refresh: bool,
+    verify: bool,
+    report: &mut VerificationReport,
+) -> AdminResult<()> {
+    let started = std::time::Instant::now();
+    let outcome = if refresh {
+        transport::refresh(grant)
+            .await
+            .map(|()| "Access token refreshed".to_owned())
+    } else {
+        Ok(token_state(grant))
+    };
+    report.record("token", started, &outcome);
+    outcome?;
+    if verify {
+        verify::verify_reporting(grant, &transport::client()?, report).await?;
     }
     Ok(())
-}
-
-fn apply_verification(
-    account: &mut crate::repositories::users::connector_accounts::ProviderConnection,
-    grant: &Grant,
-) {
-    account.auth_method = Some(grant.auth_method.clone());
-    account.account_id = Some(grant.account_id.clone());
-    account.account_name = Some(grant.account_name.clone());
-    account.resource_id = Some(grant.resource_id.clone());
-    account.resource_name = Some(grant.resource_name.clone());
-    account.status = "connected".into();
-    account.error_code = None;
-    account.verified_at = Some(Utc::now());
 }
 
 // Why: Token-refresh transport seam used by the external integration tests.

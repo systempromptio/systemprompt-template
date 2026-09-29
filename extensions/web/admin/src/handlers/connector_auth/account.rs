@@ -66,13 +66,16 @@ pub(super) async fn test(
     headers: HeaderMap,
 ) -> AdminResult<Response> {
     let user = live_user(&pool, &headers, true).await?;
-    service::require_entitlement(&pool, &user.user_id).await?;
-    oauth::verified_token(&pool, &user.user_id, provider.clone(), true).await?;
-    Ok((
-        [(CACHE_CONTROL, "no-store")],
-        Json(service::get_connections(&pool, &user.user_id).await?),
-    )
-        .into_response())
+    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
+    let report = if provider.is_session_attested() {
+        service::probe_session_connection(&pool, &user.user_id, &provider).await?
+    } else {
+        oauth::probe_connection(&pool, &user.user_id, provider.clone()).await?
+    };
+    tracing::info!(user_id = %user.user_id, provider = provider.slug(), ok = report.ok, "connector_probed");
+    let mut snapshot = service::get_connections(&pool, &user.user_id).await?;
+    snapshot.verification = Some(report);
+    Ok(([(CACHE_CONTROL, "no-store")], Json(snapshot)).into_response())
 }
 
 #[derive(Deserialize)]
@@ -90,7 +93,7 @@ pub(super) async fn manual(
     Json(input): Json<ManualToken>,
 ) -> AdminResult<Response> {
     let user = live_user(&pool, &headers, true).await?;
-    service::require_entitlement(&pool, &user.user_id).await?;
+    service::require_entitlement(&pool, &user.user_id, provider.clone()).await?;
     if !provider.configured() || !matches!(provider, Provider::Atlassian | Provider::Github) {
         return Err(AdminError::BadRequest(
             "Use browser authorization for this connector".into(),

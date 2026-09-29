@@ -317,3 +317,15 @@ mod sync_sources_hash;
 mod sync_staging;
 #[cfg(test)]
 mod time_bound_access;
+
+// The Platform and Developer pages ported in Stage 3 phases 8–11 —
+// connectors, the observability view and the request detail's tool-schema
+// diff — each through its pure half.
+#[cfg(test)]
+mod connector_cards;
+#[cfg(test)]
+mod connector_oauth;
+#[cfg(test)]
+mod observability_view;
+#[cfg(test)]
+mod tool_schema_diff;

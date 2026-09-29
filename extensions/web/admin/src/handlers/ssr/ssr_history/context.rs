@@ -4,7 +4,7 @@ use serde::Serialize;
 use systemprompt::identifiers::{SessionId, UserId};
 
 use crate::handlers::ssr::list_view::Pagination;
-use crate::handlers::ssr::types::BreadcrumbView;
+use crate::handlers::ssr::types::{BreadcrumbView, TabLinkView};
 
 #[derive(Debug, Serialize)]
 pub(super) struct HistoryPageContext {
@@ -17,10 +17,21 @@ pub(super) struct HistoryPageContext {
     pub rows: Vec<HistoryRowView>,
     pub show_side: bool,
     pub side_toggle_url: String,
+    pub window_links: Vec<TabLinkView>,
+    pub window_label: String,
+    pub window_inputs: Vec<HiddenInputView>,
     pub base_url: &'static str,
     pub pagination: Pagination,
     pub breadcrumbs: Vec<BreadcrumbView>,
     pub export: crate::export::ExportView,
+}
+
+// Why: the window's own parameters, carried through the search form so a
+// search stays inside the window it was typed in.
+#[derive(Debug, Serialize)]
+pub(super) struct HiddenInputView {
+    pub name: &'static str,
+    pub value: String,
 }
 
 #[derive(Debug, Serialize)]

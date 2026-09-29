@@ -49,7 +49,7 @@
 <button type="button" class="sp-tab" role="tab" id="aconvd-tab-safety" aria-controls="aconvd-panel-safety" aria-selected="false" tabindex="-1" data-tab="safety">Safety <span class="sp-tab-count">{{safety_count}}</span></button>
 </div>
 <section class="sp-section sp-tab-panel" id="aconvd-panel-tools" role="tabpanel" aria-labelledby="aconvd-tab-tools">
-<header class="sp-aconvd-plane__head">{{> components/icon name="wrench"}}<h2 class="sp-aconvd-plane__title">Tools <span class="sp-aconv-meta">{{tool_count}} calls</span></h2></header>
+<header class="sp-aconvd-plane__head">{{> components/icon name="wrench"}}<h2 class="sp-aconvd-plane__title">Tools <span class="sp-aconv-meta">{{tool_count}} calls</span></h2><a class="sp-btn sp-btn--xs sp-btn--outline" href="/admin/tools?context={{context_key}}">All on the Tools page</a></header>
 {{#> components/table caption="Tool calls — the model's intent, the execution and its result" modifier="sp-aconvd-tools"}}
 <thead><tr><th scope="col">Tool</th><th scope="col">Input</th><th scope="col">State</th><th scope="col" class="sp-table__cell--num">Duration</th><th scope="col">Result</th><th scope="col">At</th></tr></thead>
 <tbody>
@@ -59,12 +59,12 @@
 {{/components/table}}
 </section>
 <section class="sp-section sp-tab-panel" id="aconvd-panel-artifacts" role="tabpanel" aria-labelledby="aconvd-tab-artifacts" hidden>
-<header class="sp-aconvd-plane__head">{{> components/icon name="file"}}<h2 class="sp-aconvd-plane__title">Artifacts <span class="sp-aconv-meta">{{artifact_count}} viewable</span></h2></header>
+<header class="sp-aconvd-plane__head">{{> components/icon name="file"}}<h2 class="sp-aconvd-plane__title">Artifacts <span class="sp-aconv-meta">{{artifact_count}} viewable</span></h2><a class="sp-btn sp-btn--xs sp-btn--outline" href="/admin/artifacts?context={{context_key}}">All on the Artifacts page</a></header>
 {{#> components/table caption="Artifacts — the tool calls that produced something viewable" modifier="sp-aconvd-artifacts"}}
-<thead><tr><th scope="col">Kind</th><th scope="col">Title · path</th><th scope="col">Tool</th><th scope="col" class="sp-table__cell--num">Size</th><th scope="col">At</th></tr></thead>
+<thead><tr><th scope="col">Kind</th><th scope="col">Title · path</th><th scope="col">Tool</th><th scope="col" class="sp-table__cell--num">Size</th><th scope="col">Open</th><th scope="col">At</th></tr></thead>
 <tbody>
-{{#each artifacts}}<tr><td><span class="sp-tools-kind sp-tools-kind--{{artifact_kind}}">{{> components/icon name=artifact_icon}}{{artifact_label}}</span></td><td class="sp-table__cell--primary sp-tools-input{{#if is_path}} sp-u-mono{{/if}}" title="{{artifact_title}}">{{truncate artifact_title 70}}</td><td><span class="sp-tools-tool">{{> components/icon name=tool_icon}}<code>{{tool_name}}</code></span></td><td class="sp-table__cell--num sp-u-num">{{bytes_display}}</td><td class="sp-col-date">{{at}}</td></tr>
-{{else}}<tr class="sp-table__empty"><td colspan="5">{{> components/empty-state heading="No artifacts" message="No tool call on this conversation produced a file, a card, a UI resource or a retained body."}}</td></tr>{{/each}}
+{{#each artifacts}}<tr><td><span class="sp-tools-kind sp-tools-kind--{{artifact_kind}}">{{> components/icon name=artifact_icon}}{{artifact_label}}</span></td><td class="sp-table__cell--primary sp-tools-input{{#if is_path}} sp-u-mono{{/if}}" title="{{artifact_title}}">{{#if artifact_href}}<a class="sp-table__link" href="{{artifact_href}}">{{truncate artifact_title 70}}</a>{{else}}{{truncate artifact_title 70}}{{/if}}</td><td><span class="sp-tools-tool">{{> components/icon name=tool_icon}}<code>{{tool_name}}</code></span></td><td class="sp-table__cell--num sp-u-num">{{bytes_display}}</td><td>{{#if preview_href}}<a class="sp-btn sp-btn--xs sp-btn--outline" href="{{preview_href}}" target="_blank" rel="noopener">Preview</a>{{else}}{{#if artifact_href}}<a class="sp-btn sp-btn--xs sp-btn--ghost" href="{{artifact_href}}">Open</a>{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}{{/if}}</td><td class="sp-col-date">{{at}}</td></tr>
+{{else}}<tr class="sp-table__empty"><td colspan="6">{{> components/empty-state heading="No artifacts" message="No tool call on this conversation produced a file, a card, a UI resource or a retained body."}}</td></tr>{{/each}}
 </tbody>
 {{/components/table}}
 </section>

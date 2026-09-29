@@ -1,0 +1,85 @@
+@layer components {
+
+/* The request page's Tool schemas section: the client's tools beside the
+   provider's. The two full arrays are one block each; the side-by-side tab is
+   one collapsible per tool, with the schemas in two columns so a sanitizer
+   rewrite is read as a diff rather than hunted for across two scrolls. */
+.sp-p-request-schemas {
+    min-width: 0;
+}
+
+.sp-p-request-schemas__digests {
+    margin-block-end: var(--sp-space-4);
+}
+
+.sp-p-request-schemas__json {
+    max-height: 32rem;
+    overflow: auto;
+}
+
+.sp-p-request-schemas__tools {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--sp-space-2);
+}
+
+.sp-p-request-schemas__tool {
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface);
+}
+
+/* Why: a rewritten tool has to be findable in a list of thirty without
+   opening each one; the stripe is the same signal the governance log uses. */
+.sp-p-request-schemas__tool--changed {
+    box-shadow: inset 2px 0 0 var(--sp-info);
+}
+
+.sp-p-request-schemas__tool summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+}
+
+.sp-p-request-schemas__desc {
+    flex-basis: 100%;
+    font-size: var(--sp-text-xs);
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sp-p-request-schemas__hits {
+    margin: var(--sp-space-2) 0 0;
+    padding-inline-start: var(--sp-space-5);
+    font-size: var(--sp-text-sm);
+    color: var(--sp-warning-strong);
+}
+
+.sp-p-request-schemas__pair {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: var(--sp-space-3);
+    margin-block-start: var(--sp-space-2);
+}
+
+.sp-p-request-schemas__pair .sp-code-block {
+    max-height: 24rem;
+    overflow: auto;
+}
+
+.sp-p-request-schemas__side {
+    margin: 0 0 var(--sp-space-1);
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sp-text-tertiary);
+}
+
+}

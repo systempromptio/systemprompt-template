@@ -1,0 +1,162 @@
+@layer components {
+
+.sp-p-connect__wizard,
+.sp-p-connect__section { margin-block: var(--sp-space-5) var(--sp-space-8); }
+.sp-p-connect__wizard .sp-card__body { padding: 0 var(--sp-space-6); }
+
+/* Why: each step is a two-column row — the number, title and one-line
+   explanation on the left, the control on the right — so the wizard uses the
+   full console width instead of stacking narrow blocks under one another. */
+.sp-p-connect__step {
+    display: grid;
+    grid-template-columns: minmax(14rem, 20rem) minmax(0, 1fr);
+    gap: var(--sp-space-6) var(--sp-space-8);
+    padding-block: var(--sp-space-6);
+    border-block-start: 1px solid var(--sp-border-subtle);
+}
+
+.sp-p-connect__step:first-child { border-block-start: 0; }
+
+.sp-p-connect__step-heading {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--sp-space-3);
+    align-items: center;
+    align-content: start;
+}
+
+.sp-p-connect__step-heading h3 { margin: 0; font-size: var(--sp-text-base); }
+
+.sp-p-connect__step-heading p {
+    grid-column: 2;
+    margin: var(--sp-space-1) 0 0;
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+    line-height: 1.6;
+}
+
+.sp-p-connect__step-num {
+    display: grid;
+    place-items: center;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-accent-fill);
+    color: var(--sp-text-on-accent);
+    font-size: var(--sp-text-xs);
+    font-weight: 700;
+}
+
+.sp-p-connect__step-body { min-inline-size: 0; }
+
+.sp-p-connect__lede {
+    margin-block: 0 var(--sp-space-3);
+    max-inline-size: 90ch;
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+    line-height: 1.6;
+}
+
+.sp-p-connect__lede a {
+    color: var(--sp-accent-text);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+.sp-p-connect__label {
+    display: block;
+    margin-block: var(--sp-space-4) var(--sp-space-2);
+    color: var(--sp-text-primary);
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.sp-p-connect__ready > .sp-p-connect__label:first-child { margin-block-start: 0; }
+
+.sp-p-connect__wizard .sp-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-space-3);
+    border: 0;
+    overflow: visible;
+    margin: 0;
+}
+
+.sp-p-connect__wizard .sp-tab {
+    display: grid;
+    gap: var(--sp-space-1);
+    justify-items: start;
+    text-align: start;
+    padding: var(--sp-space-4);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+    color: var(--sp-text-primary);
+    white-space: normal;
+    top: 0;
+}
+
+.sp-p-connect__wizard .sp-tab strong { font-size: var(--sp-text-sm); font-weight: 600; }
+.sp-p-connect__wizard .sp-tab span { color: var(--sp-text-secondary); font-size: var(--sp-text-xs); font-weight: 400; }
+
+.sp-p-connect__wizard .sp-tab:hover { border-color: var(--sp-border-strong); }
+
+.sp-p-connect__wizard .sp-tab--active,
+.sp-p-connect__wizard .sp-tab[aria-selected="true"] {
+    border-color: var(--sp-accent-text);
+    background: var(--sp-accent-surface);
+    box-shadow: inset 0 0 0 1px var(--sp-accent-text);
+}
+
+.sp-p-connect__wizard .sp-tab--active strong { color: var(--sp-accent-text); }
+
+.sp-p-connect__guide {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--sp-space-3);
+    margin-block: 0 var(--sp-space-4);
+}
+
+.sp-p-connect__guide .sp-p-connect__lede { margin: 0; max-inline-size: 65ch; }
+
+.sp-p-connect__wizard .sp-connect__cmd {
+    min-block-size: 4rem;
+    margin-block: 0 var(--sp-space-3);
+    padding: var(--sp-space-4) var(--sp-space-8) var(--sp-space-4) var(--sp-space-4);
+    font-size: var(--sp-text-xs);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.7;
+}
+
+.sp-p-connect__advanced {
+    padding: var(--sp-space-3) 0;
+    border-block-start: 1px solid var(--sp-border-subtle);
+}
+
+.sp-p-connect__advanced summary {
+    cursor: pointer;
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-sm);
+    font-weight: 600;
+}
+
+.sp-p-connect__advanced[open] summary { margin-bottom: var(--sp-space-3); }
+
+}
+
+@layer responsive {
+@media (max-width: 72rem) {
+    .sp-p-connect__step { grid-template-columns: minmax(0, 1fr); gap: var(--sp-space-4); }
+}
+@media (max-width: 40rem) {
+    .sp-p-connect__wizard .sp-card__body { padding: 0 var(--sp-space-4); }
+    .sp-p-connect__step { padding-block: var(--sp-space-4); }
+    .sp-p-connect__wizard .sp-tabs { grid-template-columns: minmax(0, 1fr); gap: var(--sp-space-2); }
+}
+}

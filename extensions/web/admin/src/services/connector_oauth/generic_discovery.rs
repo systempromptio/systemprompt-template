@@ -15,10 +15,31 @@ pub(super) struct AuthorizationMetadata {
     pub(super) token_endpoint: String,
     pub(super) registration_endpoint: Option<String>,
     #[serde(default)]
+    pub(super) userinfo_endpoint: Option<String>,
+    #[serde(default)]
     pub(super) code_challenge_methods_supported: Vec<String>,
     #[serde(default)]
     pub(super) token_endpoint_auth_methods_supported: Vec<String>,
 }
+// Why: RFC 8414 §2 issuer identity is scheme, host, port and path with a
+// single trailing slash not significant. Google advertises
+// `https://accounts.google.com/` in protected-resource metadata and
+// `https://accounts.google.com` in its OpenID metadata; a byte comparison
+// rejects that pairing.
+pub fn same_issuer(advertised: &str, declared: &str) -> bool {
+    let Some((a, b)) = Url::parse(advertised).ok().zip(Url::parse(declared).ok()) else {
+        return false;
+    };
+    a.scheme() == b.scheme()
+        && a.host_str() == b.host_str()
+        && a.port_or_known_default() == b.port_or_known_default()
+        && a.path().trim_end_matches('/') == b.path().trim_end_matches('/')
+        && a.query().is_none()
+        && b.query().is_none()
+        && a.fragment().is_none()
+        && b.fragment().is_none()
+}
+
 pub(super) fn trusted_endpoint(provider: &Provider, value: &str) -> AdminResult<Url> {
     let settings = provider
         .settings()
@@ -54,7 +75,7 @@ pub fn validate_endpoint(resource: &str, origins: &[String], value: &str) -> Adm
 }
 
 async fn read<T: serde::de::DeserializeOwned>(
-    http: &reqwest::Client, // lint-ok: web-transport - OAuth validation calls an external provider
+    http: &reqwest::Client,
     provider: &Provider,
     url: &str,
 ) -> AdminResult<T> {
@@ -90,7 +111,7 @@ pub(super) async fn bounded_json<T: serde::de::DeserializeOwned>(
 }
 
 pub(super) async fn metadata(
-    http: &reqwest::Client, // lint-ok: web-transport - OAuth validation calls an external provider
+    http: &reqwest::Client,
     provider: &Provider,
 ) -> AdminResult<AuthorizationMetadata> {
     let resource_url = trusted_endpoint(provider, &provider.endpoint())?;
@@ -132,7 +153,7 @@ pub(super) async fn metadata(
             ));
             read(http, provider, endpoint.as_str()).await?
         };
-    if result.issuer != *issuer
+    if !same_issuer(&result.issuer, issuer)
         || !result
             .code_challenge_methods_supported
             .iter()

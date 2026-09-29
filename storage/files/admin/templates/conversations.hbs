@@ -1,12 +1,11 @@
 {{!--
   AI activity → Conversations: the org-wide twin of "My conversations". Same
-  rows, same search, same side-call toggle; this one names the user and can be
-  narrowed to one of them. Rows open the admin context view, which renders the
-  same transcript unredacted.
+  rows, same search, window and side-call toggle; this one names the user and
+  can be narrowed to one of them. Rows open the admin context view, which
+  renders the same transcript unredacted.
 
-  Astound's copy adds a time window (`window_links`, `window_inputs`) and row
-  selection; the history listing here has neither yet, so this page is the
-  whole-history listing the handler already serves.
+  Astound's copy also has row selection (`table-select` + the transcripts
+  bulk bar); the history row here carries no selectable id yet.
 --}}
 {{#> layout}}
     {{#*inline "content"}}
@@ -14,7 +13,7 @@
 
     {{#> components/page-header title=title subtitle="Every conversation on this instance, newest first — Claude Code sessions and gateway conversations alike — who had it, which model answered, what it cost. Full-text search runs over the redacted transcript."}}
         {{#*inline "header_meta"}}
-            <span>Showing {{scope_label}}.</span>
+            <span>Showing {{scope_label}}, {{window_label}}.</span>
         {{/inline}}
         {{#*inline "header_actions"}}
             <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/history">My conversations</a>
@@ -25,12 +24,15 @@
         {{/inline}}
     {{/components/page-header}}
 
+    {{> components/tabs tabs=window_links nav_label="Window"}}
+
     <section aria-label="Conversations">
         {{#> components/toolbar toolbar_count=(concat pagination.total_rows " conversations")}}
             {{#*inline "toolbar_filters"}}
             <form method="get" action="{{base_url}}" class="sp-toolbar__search" role="search">
                 {{#if filter_user_id}}<input type="hidden" name="user_id" value="{{filter_user_id}}">{{/if}}
                 {{#if show_side}}<input type="hidden" name="side" value="1">{{/if}}
+                {{#each window_inputs}}<input type="hidden" name="{{this.name}}" value="{{this.value}}">{{/each}}
                 <label class="sp-u-sr-only" for="conversations-q">Search conversations</label>
                 <input type="search" id="conversations-q" name="q" value="{{search_query}}" class="sp-search-input"
                        placeholder="Search prompts and responses…">
@@ -79,7 +81,7 @@
         {{/components/table}}
         {{else}}
         {{> components/empty-state heading="No conversations match"
-            message="Clear the search or the user filter, or show side calls, to widen the listing."}}
+            message="Clear the search or the user filter, widen the window, or show side calls, to widen the listing."}}
         {{/if}}
     </section>
     {{/inline}}

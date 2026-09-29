@@ -106,6 +106,9 @@
                 <pre class="sp-code-block">{{this.tool_result_pretty}}</pre>
               </details>
               {{/if}}
+              {{#if this.artifact_url}}
+              <p class="sp-conversation__tool-artifact"><a href="{{this.artifact_url}}">{{#if this.artifact_structured}}Structured artifact{{else}}Stored result{{/if}} &rarr;</a></p>
+              {{/if}}
             </div>
           </details>
           {{else}}

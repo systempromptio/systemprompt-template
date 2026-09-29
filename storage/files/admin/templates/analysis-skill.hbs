@@ -54,8 +54,8 @@
 <td class="sp-aconv-cell-person"><a class="sp-table__link" href="{{user_href}}" title="{{user_key}}">{{display_name}}</a>{{#if group_name}}<div class="sp-aconv-meta">{{group_name}}{{#if project_name}} · {{project_name}}{{/if}}</div>{{/if}}</td>
 <td class="sp-aconv-cell-client"><span class="sp-badge sp-badge--{{client.tone}}">{{client.label}}</span><div class="sp-aconv-meta sp-aconv-model">{{model}}</div></td>
 <td class="sp-table__cell--num sp-u-num">{{turns}}</td>
-<td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{tools_tone}} sp-aconv-cell-link" title="{{tools_title}}">{{tools_display}}</span></td>
-<td class="sp-table__cell--num sp-u-num">{{#if artifacts}}<span class="sp-aconv-num sp-aconv-num--accent sp-aconv-cell-link">{{artifacts}}</span>{{else}}<span class="sp-aconv-num sp-aconv-num--muted">0</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num"><a class="sp-aconv-num sp-aconv-num--{{tools_tone}} sp-aconv-cell-link" href="{{tools_href}}" title="{{tools_title}}">{{tools_display}}</a></td>
+<td class="sp-table__cell--num sp-u-num">{{#if artifacts}}<a class="sp-aconv-num sp-aconv-num--accent sp-aconv-cell-link" href="{{artifacts_href}}">{{artifacts}}</a>{{else}}<span class="sp-aconv-num sp-aconv-num--muted">0</span>{{/if}}</td>
 <td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{errors_tone}}">{{errors}}</span>{{#if denied}} <span class="sp-aconv-num sp-aconv-num--{{denied_tone}}" title="Denied tool calls">⛔{{denied}}</span>{{/if}}</td>
 <td class="sp-table__cell--num sp-u-num sp-aconv-cell-tokens" title="{{tokens_title}}">{{tokens_display}}<span class="sp-aconv-cache sp-aconv-cache--{{cache_tone}}" style="--sp-fill: {{cache_pct}}%"><i></i></span></td>
 <td class="sp-table__cell--num sp-u-num">{{cost_display}}</td>

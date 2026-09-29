@@ -4,19 +4,23 @@ use super::{Grant, Provider};
 use crate::error::{AdminError, AdminResult};
 use chrono::Utc;
 use serde::Deserialize;
+
 #[derive(Deserialize)]
 struct Tokens {
     access_token: Option<String>,
     refresh_token: Option<String>,
     expires_in: Option<i64>,
     error: Option<String>,
+    error_description: Option<String>,
     token_type: Option<String>,
 }
+
+use systemprompt_web_shared::format::truncate_chars as truncate;
 
 async fn request_with_client(
     grant: &mut Grant,
     fields: &[(&str, &str)],
-    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
+    http: &reqwest::Client,
 ) -> AdminResult<()> {
     super::generic::validate_grant(grant)?;
     let body = {
@@ -40,32 +44,25 @@ async fn request_with_client(
         };
         request = request.basic_auth(encode(&grant.client), Some(encode(&grant.client_secret)));
     }
+    let provider = grant.provider.slug().to_owned();
     let response = request
         .header("Accept", "application/json")
         .header("Content-Type", "application/x-www-form-urlencoded")
         .body(body)
         .send()
         .await
-        .map_err(|_redacted_error| {
+        .map_err(|error| {
+            tracing::warn!(
+                target: "connector_oauth",
+                provider,
+                grant_type = fields.first().map_or("", |(_, v)| v),
+                timeout = error.is_timeout(),
+                connect = error.is_connect(),
+                "token request failed before a response"
+            );
             AdminError::Upstream("Connector authorization service unavailable".into())
         })?;
-    let status = response.status();
-    if status.is_server_error() || status.as_u16() == 429 {
-        return Err(AdminError::Upstream(
-            "Connector authorization service unavailable".into(),
-        ));
-    }
-    let tokens: Tokens = super::generic_discovery::bounded_json(response).await?;
-    if tokens.error.as_deref() == Some("invalid_grant") || status.as_u16() == 401 {
-        return Err(AdminError::Unauthorized(
-            "Connector grant rejected; reconnect required".into(),
-        ));
-    }
-    if !status.is_success() || tokens.error.is_some() {
-        return Err(AdminError::Upstream(
-            "Connector application authorization rejected".into(),
-        ));
-    }
+    let tokens = accepted_tokens(&provider, response).await?;
     if matches!(grant.provider, Provider::Generic(_))
         && !tokens
             .token_type
@@ -77,6 +74,41 @@ async fn request_with_client(
         ));
     }
     apply_tokens(grant, tokens)
+}
+
+async fn accepted_tokens(provider: &str, response: reqwest::Response) -> AdminResult<Tokens> {
+    let status = response.status();
+    if status.is_server_error() || status.as_u16() == 429 {
+        tracing::warn!(
+            target: "connector_oauth",
+            provider,
+            status = status.as_u16(),
+            "token endpoint unavailable"
+        );
+        return Err(AdminError::Upstream(
+            "Connector authorization service unavailable".into(),
+        ));
+    }
+    let tokens: Tokens = super::generic_discovery::bounded_json(response).await?;
+    // Why: RFC 6749 §5.2 — every error a token endpoint answers with a 4xx
+    // (invalid_grant, unauthorized_client, invalid_client, invalid_scope …)
+    // is final for this grant; retrying it is a loop, not resilience. Only a
+    // 5xx, a 429 or a transport failure is an outage.
+    if !status.is_success() || tokens.error.is_some() {
+        let code = tokens.error.as_deref().unwrap_or("none");
+        tracing::warn!(
+            target: "connector_oauth",
+            provider,
+            status = status.as_u16(),
+            oauth_error = code,
+            oauth_error_description = tokens.error_description.as_deref().map(|d| truncate(d, 160)),
+            "token request rejected; grant retired"
+        );
+        return Err(AdminError::Unauthorized(format!(
+            "Connector grant rejected ({code}); reconnect required"
+        )));
+    }
+    Ok(tokens)
 }
 
 fn apply_tokens(grant: &mut Grant, tokens: Tokens) -> AdminResult<()> {
@@ -116,7 +148,7 @@ pub async fn exchange_with_client(
     grant: &mut Grant,
     code: &str,
     callback: &str,
-    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
+    http: &reqwest::Client,
 ) -> AdminResult<()> {
     let verifier = grant.verifier.clone();
     request_with_client(
@@ -137,10 +169,8 @@ pub async fn exchange_with_client(
 pub(super) async fn refresh(grant: &mut Grant) -> AdminResult<()> {
     refresh_with_client(grant, &client()?).await
 }
-pub async fn refresh_with_client(
-    grant: &mut Grant,
-    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
-) -> AdminResult<()> {
+
+pub async fn refresh_with_client(grant: &mut Grant, http: &reqwest::Client) -> AdminResult<()> {
     if matches!(grant.provider, Provider::Generic(_)) {
         super::generic::validate_refresh(grant, http).await?;
     }
