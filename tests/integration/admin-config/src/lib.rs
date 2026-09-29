@@ -16,6 +16,10 @@
 #[cfg(test)]
 mod analysis_ingestion;
 #[cfg(test)]
+mod bridge_api_keys;
+#[cfg(test)]
+mod bridge_identity;
+#[cfg(test)]
 mod config_acl_detect;
 #[cfg(test)]
 mod config_acl_review;
@@ -37,6 +41,8 @@ mod gateway_routes_editor;
 mod jobs_repo;
 #[cfg(test)]
 mod marketplace_catalog;
+#[cfg(test)]
+mod marketplace_filter;
 #[cfg(test)]
 mod secrets_migration;
 #[cfg(test)]

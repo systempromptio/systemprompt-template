@@ -41,6 +41,10 @@
 //!   plus the asset-manifest check, all sharing `support`
 
 #[cfg(test)]
+mod account_pages;
+#[cfg(test)]
+mod agents_ingestion;
+#[cfg(test)]
 mod campaign_link_full_url;
 #[cfg(test)]
 mod catalog_sorting;
@@ -144,6 +148,8 @@ mod report_pnl;
 mod seed_contract;
 #[cfg(test)]
 mod shared_errors;
+#[cfg(test)]
+mod shared_ids;
 #[cfg(test)]
 mod short_id_display;
 #[cfg(test)]

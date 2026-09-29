@@ -1,5 +1,5 @@
-//! The four account templates — profile, history, settings, setup — are held
-//! to the design system rather than to a screenshot.
+//! The account templates — profile, history, connect, connectors, setup — are
+//! held to the design system rather than to a screenshot.
 //!
 //! Each of these pages carried its own header, its own card and its own list
 //! markup before the rebuild, which is how the account section came to look
@@ -11,11 +11,13 @@
 
 use crate::support::repo_root;
 
-const PAGES: [&str; 4] = ["profile", "history", "settings", "setup"];
+const PAGES: [&str; 5] = ["profile", "history", "connect", "connectors", "setup"];
 
 // Every class family the account pages used to define for themselves. Their
 // stylesheets are deleted, so any surviving reference styles nothing at all.
-const RETIRED: [&str; 14] = [
+const RETIRED: [&str; 16] = [
+    "sp-connection",
+    "sp-p-settings",
     "sp-profile-hero",
     "sp-profile-card",
     "sp-profile-row",
@@ -89,6 +91,7 @@ fn the_retired_account_stylesheets_are_gone() {
         "20-page-profile7-deflist.css",
         "90-setup.css",
         "90-setup-actions.css",
+        "05-connection.css",
     ] {
         if css.join(file).exists() {
             left.push(file);
@@ -119,12 +122,12 @@ fn every_account_table_carries_a_screen_reader_caption() {
     );
 }
 
-// The connect card is the reason the profile page exists: one issued code,
+// The connect card is the reason the connect page exists: one issued code,
 // three clients, each with its guide and every command the code fills. These
 // are the facts a redesign must keep, and they are all textual.
 #[test]
-fn the_profile_connect_card_is_tabbed_documented_and_quiet() {
-    let body = template("profile");
+fn the_connect_card_is_tabbed_documented_and_quiet() {
+    let body = template("connect");
     let mut missing = Vec::new();
     for needle in [
         r#"data-tabs="profile-connect""#,
@@ -137,8 +140,7 @@ fn the_profile_connect_card_is_tabbed_documented_and_quiet() {
         r#"data-connect-field="install_command""#,
         r#"data-connect-field="opencode_install_command""#,
         r#"data-connect-field="desktop_windows_login_command""#,
-        r#"href="/files/downloads/astound-bridge-macos.dmg""#,
-        r#"id="connected-accounts""#,
+        r#"href="/files/downloads/systemprompt-bridge-macos.dmg""#,
         "components/sp-tabs.js",
     ] {
         if !body.contains(needle) {
@@ -147,7 +149,7 @@ fn the_profile_connect_card_is_tabbed_documented_and_quiet() {
     }
     assert!(
         missing.is_empty(),
-        "profile connect card lost:\n{}",
+        "connect card lost:\n{}",
         missing.join("\n")
     );
     assert_eq!(
@@ -157,11 +159,55 @@ fn the_profile_connect_card_is_tabbed_documented_and_quiet() {
     );
     assert!(
         !body.contains("not available yet"),
-        "the macOS bridge ships; the profile must not say otherwise"
+        "the macOS bridge ships; the connect page must not say otherwise"
     );
+}
+
+// The profile carries the person's usage and nothing else: the connect
+// wizard, the connector list and the settings form each have a page of their
+// own. This installation keeps settings on `/admin/settings`.
+#[test]
+fn the_profile_holds_usage_only() {
+    let settings = template("settings");
+    for needle in [
+        r#"id="settings-form""#,
+        r#"id="settings-timezone""#,
+        r#"id="delete-account-btn""#,
+    ] {
+        assert!(settings.contains(needle), "settings page lost {needle}");
+    }
+    let body = template("profile");
+    for needle in [r#"href="/admin/connect""#, r#"href="/admin/connectors""#] {
+        assert!(body.contains(needle), "profile lost {needle}");
+    }
+    for stray in [
+        "data-connect-field",
+        "data-connected-accounts",
+        "data-tabs=",
+    ] {
+        assert!(!body.contains(stray), "profile still carries {stray}");
+    }
     let tables = body.matches("{{#> components/table").count();
     assert!(
         tables <= 4,
         "profile carries {tables} tables; the analytics breakdowns belong to History"
     );
+}
+
+// The connectors page leads with the summary and puts the test flow inside
+// every card, so a person never has to scroll past their usage to find it.
+#[test]
+fn the_connectors_page_leads_with_summary_and_owns_the_test_flow() {
+    let body = template("connectors");
+    for needle in [
+        r#"data-summary="connected""#,
+        r#"data-summary="needs_attention""#,
+        r#"data-summary="not_connected""#,
+        r#"data-summary="configured""#,
+        "data-connector-grid",
+        "sp-connector__check",
+        "pages/connectors.js",
+    ] {
+        assert!(body.contains(needle), "connectors page lost {needle}");
+    }
 }

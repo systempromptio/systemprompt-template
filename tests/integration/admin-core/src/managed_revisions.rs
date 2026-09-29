@@ -228,10 +228,10 @@ async fn importing_the_current_baseline_is_repeatable_and_preserves_source_bytes
     let repo = ManagedRepository::new(&db_pool(&db)).expect("build the managed repository");
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../services");
     let ids = [
-        "admin_daily_brief",
-        "admin_critical_projects",
         "admin_ai_usage",
+        "admin_person_activity",
         "systemprompt_cli",
+        "who_am_i",
     ]
     .map(str::to_owned);
     let captured = capture_skills(&root, &ids).expect("real baseline source");

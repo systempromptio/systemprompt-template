@@ -37,6 +37,8 @@ mod analytics_site;
 #[cfg(test)]
 mod analytics_site_code;
 #[cfg(test)]
+mod approvals;
+#[cfg(test)]
 mod conversation_facts_detail;
 #[cfg(test)]
 mod dashboard_apm;
