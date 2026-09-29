@@ -11,15 +11,18 @@ use super::pools::DbHandles;
 use crate::extension::WebExtension;
 use crate::{admin, api};
 
-pub(crate) fn build(db: &DbHandles, session_service: &Arc<SessionCreationService>) -> Router {
-    let admin_api = admin::admin_router(Arc::clone(&db.read), &db.write, db.owner.clone());
+pub(crate) fn build(
+    db: &DbHandles,
+    session_service: &Arc<SessionCreationService>,
+) -> Result<Router, admin::StateError> {
+    let admin_api = admin::admin_router(&db.db, Arc::clone(&db.read), &db.write, db.owner.clone())?;
     let webhook_api =
         admin::hooks_webhook_router(Arc::clone(&db.write), Arc::clone(session_service));
     let secrets_api = admin::secrets_router(Arc::clone(&db.write));
     let bridge_identity = admin::bridge_identity_router(Arc::clone(&db.read));
     let links_router = api::router(Arc::clone(&db.read), WebExtension::blog_config());
 
-    Router::new()
+    Ok(Router::new()
         .route(
             "/auth/session",
             post(api::auth::set_session).delete(api::auth::clear_session),
@@ -29,7 +32,7 @@ pub(crate) fn build(db: &DbHandles, session_service: &Arc<SessionCreationService
         .merge(admin::connector_api_router(Arc::clone(&db.write)))
         .merge(webhook_api)
         .merge(secrets_api)
-        .nest("/admin", admin_api)
+        .nest("/admin", admin_api))
 }
 
 pub(crate) fn share(db: &DbHandles) -> Router {

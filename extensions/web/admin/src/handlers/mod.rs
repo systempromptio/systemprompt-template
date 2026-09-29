@@ -18,6 +18,7 @@ pub(crate) mod gateway_catalog;
 pub(crate) mod groups;
 pub(crate) mod hooks_track;
 mod jobs;
+pub(crate) mod managed_resources;
 mod plugins;
 mod plugins_env;
 pub(crate) mod projects;

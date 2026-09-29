@@ -130,6 +130,8 @@ pub(super) struct CertRowView {
     pub(super) label: String,
     pub(super) fingerprint: String,
     pub(super) enrolled_display: String,
+    pub(super) expires_display: String,
+    pub(super) expires_day: String,
     pub(super) status_label: &'static str,
     pub(super) status_tone: &'static str,
     pub(super) can_revoke: bool,

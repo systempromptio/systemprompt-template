@@ -108,6 +108,17 @@
     font-size: var(--sp-text-xs);
 }
 
+.sp-p-devices__expiry {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    margin-inline-end: var(--sp-space-2);
+}
+
+.sp-p-devices__expiry .sp-search-input {
+    inline-size: 10rem;
+}
+
 .sp-col-host,
 .sp-col-token,
 .sp-col-user {

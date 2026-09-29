@@ -79,6 +79,11 @@
                     {{/if}}
                     {{/each}}
                 </div>
+                <label class="sp-form-field" for="roles-valid-until">
+                    <span>Manual grants expire</span>
+                    <input type="date" id="roles-valid-until" name="valid_until" class="sp-search-input" value="{{identity.roles_valid_until_day}}"{{#unless can_write}} disabled{{/unless}}>
+                    <span class="sp-u-text-tertiary sp-u-text-xs">Applies to every role granted here, not to roles the directory projects. Blank is open-ended; the hourly sweep removes expired grants and revokes live credentials when a manage role lapses.</span>
+                </label>
             </div>
             {{#if can_write}}
             <footer class="sp-form-section__foot">

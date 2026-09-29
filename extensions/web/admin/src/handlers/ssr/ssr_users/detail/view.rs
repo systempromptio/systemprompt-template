@@ -39,6 +39,10 @@ pub(super) fn identity_tab(
         is_active: detail.is_active,
         created_at: stamp(Some(detail.created_at)),
         role_choices,
+        roles_valid_until_day: data
+            .manual_roles_valid_until
+            .map(|t| t.format("%Y-%m-%d").to_string())
+            .unwrap_or_default(),
         has_adfs_groups: !data.adfs_groups.is_empty(),
         adfs_groups: data.adfs_groups.clone(),
         idp_issuer: primary.map(|i| i.issuer.clone()).unwrap_or_default(),

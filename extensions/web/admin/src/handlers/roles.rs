@@ -32,10 +32,12 @@ pub(crate) async fn get_user_roles_handler(
     let roles = require_effective_roles(&pool, &user_id).await?;
     let manual_roles = repo::list_manual_roles(&pool, &user_id).await?;
     let directory_roles = repo::list_directory_roles(&pool, &user_id).await?;
+    let valid_until = repo::find_manual_roles_valid_until(&pool, &user_id).await?;
     Ok(Json(UserRolesResponse {
         roles,
         manual_roles,
         directory_roles,
+        valid_until,
     })
     .into_response())
 }
@@ -71,7 +73,14 @@ pub(crate) async fn set_user_roles_handler(
         .filter(|role| !directory_roles.contains(role))
         .cloned()
         .collect();
-    repo::set_manual_roles(&pool, &user_id, &manual, &user_ctx.user_id).await?;
+    repo::set_manual_roles(
+        &pool,
+        &user_id,
+        &manual,
+        &user_ctx.user_id,
+        body.valid_until,
+    )
+    .await?;
     let roles = repo::recompute_roles(&pool, &user_id, None).await?;
 
     // Why: losing admin or executive access must revoke live credentials too.
@@ -86,10 +95,12 @@ pub(crate) async fn set_user_roles_handler(
 
     let manual_roles = repo::list_manual_roles(&pool, &user_id).await?;
     let directory_roles = repo::list_directory_roles(&pool, &user_id).await?;
+    let valid_until = repo::find_manual_roles_valid_until(&pool, &user_id).await?;
     Ok(Json(UserRolesResponse {
         roles,
         manual_roles,
         directory_roles,
+        valid_until,
     })
     .into_response())
 }

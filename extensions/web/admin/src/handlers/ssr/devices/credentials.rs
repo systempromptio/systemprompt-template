@@ -122,6 +122,11 @@ fn cert_row(row: &FleetCertRow, can_manage: bool) -> CertRowView {
         label: row.label.clone(),
         fingerprint: row.fingerprint.clone(),
         enrolled_display: stamp(row.enrolled_at),
+        expires_display: maybe_stamp(row.valid_until),
+        expires_day: row
+            .valid_until
+            .map(|t| t.format("%Y-%m-%d").to_string())
+            .unwrap_or_default(),
         status_label,
         status_tone,
         can_revoke: can_manage && row.revoked_at.is_none(),

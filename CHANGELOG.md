@@ -162,6 +162,43 @@ Conventions (strict — hold every entry to them):
 - **Connect a client** (`/admin/connect`, Account group): the three-step
   connect-code wizard for Claude Code, Claude Desktop and OpenCode, the bridge
   downloads and the client guides, on a page of its own.
+- **Managed resources API** (`/api/public/admin/managed/*`): owner-authenticated
+  sources, snapshots, git sync, resource bindings, immutable revisions and
+  their bundles, candidates, publications with history, reconciliations,
+  withdrawals, distributions and installation receipts, over core's managed
+  repository. Reads are open to the console roles, writes need an
+  administrator and pass the write-origin check; nothing activates
+  implicitly (`handlers/managed_resources/`, `routes/managed_resources.rs`).
+- **Signed identity for external MCP servers**
+  (`GET /api/public/identity/{server}/token`): for a server whose
+  `external_auth.token_endpoint` names that route, the credential broker gets a
+  300-second RS256 JWT for the calling user (`iss`, `aud` = the server's
+  endpoint, `sub`, `email`, `name`, `iat`, `exp`, `jti`), signed with the
+  instance authority key and verifiable against `/.well-known/jwks.json`. The
+  access rule for `mcp_server/<id>` is the whole entitlement decision
+  (`services/identity_token.rs`, `docs/EXTERNAL-MCP-IDENTITY.md`).
+- Request detail (`/admin/requests/{id}`): the client and provider **tool
+  schemas** the request carried, paired by name with the Gemini declaration
+  rules each client schema breaks (`types/tool_schema_diff.rs`), the session's
+  stored **artifacts**, and each tool call's ledger state and artifact link;
+  the related-requests table links every request and marks this one.
+- History (`/admin/history`, `/admin/conversations`): a **window** — 7, 30, 90
+  days, a year, or all time, or a custom `start`/`end` — over a conversation's
+  last activity, carried through search, paging and the export.
+  `/admin/conversations` now renders its own org-wide template with the User
+  column (it named a template that did not exist).
+- Devices: an administrator can set or clear a device certificate's expiry
+  (`PUT /api/public/admin/devices/certs/{id}/expiry`); the certificates tab
+  shows it and the hourly sweep revokes the certificate once it passes.
+- User detail: manual role grants take an expiry ("Manual grants expire");
+  `GET`/`PUT /api/public/admin/users/{id}/roles` carry `valid_until`, and the
+  reads that decide what a person holds see only grants inside their window.
+- The login page offers **Sign in with single sign-on** when an ADFS relying
+  party is configured and names the reason when the IdP sends the browser
+  back with `?sso=<reason>` (`pages/admin-login.js`); a development instance
+  shows the `just dev-login` hint.
+- Documentation pages group evidence screenshots (`/files/images/evidence/…`)
+  into a gallery with a lightbox (`site/docs-evidence-gallery.js`).
 
 ### Changed
 
@@ -208,6 +245,17 @@ Conventions (strict — hold every entry to them):
   another provider call; Test connection always goes through. A server the
   access rules admit is withheld from the bridge manifest until the person's
   connection to it is ready, and the manifest's diagnostics say why.
+- `admin_router` now takes the shared `DbPool` and returns
+  `Result<Router, StateError>` (it builds core's managed repository once);
+  `router::api::build` propagates it. The workspace `jsonwebtoken` moves to
+  core's `11` (with `rust_crypto`), which the identity token needs to sign with
+  core's authority key.
+- The identity envelope and role query read `user_projects` (the windowed
+  view) instead of `project_members`, so an expired project membership no
+  longer shows as held.
+- Extension config errors keep their underlying cause
+  (`ExtensionConfigErrors::push_with_source`) instead of flattening it into
+  the message.
 
 ### Removed
 

@@ -30,8 +30,8 @@ pub async fn find_user_access_profile(
                 ARRAY[]::TEXT[]
             ) AS "group_ids!: Vec<String>",
             COALESCE(
-                (SELECT ARRAY_AGG(DISTINCT pm.project_id)
-                 FROM project_members pm WHERE pm.user_id = u.id),
+                (SELECT ARRAY_AGG(pm.project_id)
+                 FROM user_projects pm WHERE pm.user_id = u.id),
                 ARRAY[]::TEXT[]
             ) AS "project_ids!: Vec<String>"
         FROM users u

@@ -4,7 +4,7 @@
 
     {{#> components/page-header title=title subtitle="Your Claude Code sessions and gateway conversations, newest first — models, turns, tokens and cost. Full-text search runs over the redacted transcript."}}
         {{#*inline "header_meta"}}
-            <span>Showing {{scope_label}}.</span>
+            <span>Showing {{scope_label}}, {{window_label}}.</span>
             {{#if viewer_is_admin}}{{> components/badge tone="accent" text="admin view"}}{{/if}}
         {{/inline}}
         {{#*inline "header_actions"}}
@@ -14,12 +14,15 @@
         {{/inline}}
     {{/components/page-header}}
 
+    {{> components/tabs tabs=window_links nav_label="Window"}}
+
     <section aria-label="Conversation history">
         {{#> components/toolbar toolbar_count=(concat pagination.total_rows " conversations")}}
             {{#*inline "toolbar_filters"}}
             <form method="get" action="/admin/history" class="sp-toolbar__search" role="search">
                 {{#if filter_user_id}}<input type="hidden" name="user_id" value="{{filter_user_id}}">{{/if}}
                 {{#if show_side}}<input type="hidden" name="side" value="1">{{/if}}
+                {{#each window_inputs}}<input type="hidden" name="{{this.name}}" value="{{this.value}}">{{/each}}
                 <label class="sp-u-sr-only" for="history-q">Search conversation history</label>
                 <input type="search" id="history-q" name="q" value="{{search_query}}" class="sp-search-input"
                        placeholder="Search prompts and responses…">

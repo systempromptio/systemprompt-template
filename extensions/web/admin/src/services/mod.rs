@@ -11,3 +11,4 @@ pub mod connector_oauth;
 
 pub(crate) mod connector_accounts;
 pub(crate) mod connector_readiness;
+pub mod identity_token;

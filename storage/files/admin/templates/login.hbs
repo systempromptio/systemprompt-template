@@ -89,6 +89,14 @@
                             Lost your passkey? Email recovery is disabled in this demo, so
                             <a href="/admin/register">register a new account</a> instead.
                         </p>
+                        {{#if sso_enabled}}
+                        <div class="sp-form-actions">
+                            <a id="sso-btn" class="sp-btn sp-btn--outline sp-u-w-full" href="/admin/auth/adfs/start{{#if redirect_encoded}}?redirect={{redirect_encoded}}{{/if}}">Sign in with single sign-on</a>
+                        </div>
+                        {{/if}}
+                        {{#if dev_login_enabled}}
+                        <p class="sp-login-switch">Development instance: run <code>just dev-login &lt;user&gt;</code> and open the printed link.</p>
+                        {{/if}}
                     </div>
 
                     <div id="magic-link-form" hidden>
@@ -136,5 +144,6 @@
     </main>
 
     <script data-cfasync="false" src="/js/services/webauthn-login.js?v={{css_version}}" type="module"></script>
+    <script data-cfasync="false" src="/js/pages/admin-login.js?v={{css_version}}" type="module"></script>
 </body>
 </html>

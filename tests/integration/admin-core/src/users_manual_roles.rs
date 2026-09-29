@@ -50,7 +50,7 @@ async fn a_manual_grant_is_added_to_the_effective_set() {
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("manual")).await;
     let admin = insert_user(&db.pool, &unique("admin"), &unclaimed_email("granter")).await;
 
-    set_manual_roles(&db.pool, &user, &roles(&["developer"]), &admin)
+    set_manual_roles(&db.pool, &user, &roles(&["developer"]), &admin, None)
         .await
         .expect("grant developer");
     let effective = recompute_roles(&db.pool, &user, None)
@@ -82,7 +82,7 @@ async fn a_sign_in_rewrites_the_directory_half_and_keeps_the_manual_one() {
     )
     .await;
     let granter = insert_user(&db.pool, &unique("admin"), &unclaimed_email("granter2")).await;
-    set_manual_roles(&db.pool, &user, &roles(&["developer"]), &granter)
+    set_manual_roles(&db.pool, &user, &roles(&["developer"]), &granter, None)
         .await
         .expect("grant developer by hand");
 
@@ -106,10 +106,10 @@ async fn setting_manual_roles_replaces_rather_than_accumulates() {
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("replace")).await;
     let granter = insert_user(&db.pool, &unique("admin"), &unclaimed_email("granter3")).await;
 
-    set_manual_roles(&db.pool, &user, &roles(&["developer", "admin"]), &granter)
+    set_manual_roles(&db.pool, &user, &roles(&["developer", "admin"]), &granter, None)
         .await
         .expect("first edit");
-    set_manual_roles(&db.pool, &user, &roles(&["developer"]), &granter)
+    set_manual_roles(&db.pool, &user, &roles(&["developer"]), &granter, None)
         .await
         .expect("second edit drops admin");
 
@@ -129,11 +129,11 @@ async fn clearing_every_manual_role_leaves_the_directory_set_alone() {
     };
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("clear")).await;
     let granter = insert_user(&db.pool, &unique("admin"), &unclaimed_email("granter4")).await;
-    set_manual_roles(&db.pool, &user, &roles(&["developer"]), &granter)
+    set_manual_roles(&db.pool, &user, &roles(&["developer"]), &granter, None)
         .await
         .expect("grant");
 
-    set_manual_roles(&db.pool, &user, &[], &granter)
+    set_manual_roles(&db.pool, &user, &[], &granter, None)
         .await
         .expect("revoke everything manual");
     let effective = recompute_roles(&db.pool, &user, None)
@@ -151,7 +151,7 @@ async fn a_role_held_both_ways_counts_as_manual() {
     };
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("both")).await;
     let granter = insert_user(&db.pool, &unique("admin"), &unclaimed_email("granter5")).await;
-    set_manual_roles(&db.pool, &user, &roles(&["user"]), &granter)
+    set_manual_roles(&db.pool, &user, &roles(&["user"]), &granter, None)
         .await
         .expect("grant the role the directory also holds");
 

@@ -2,6 +2,7 @@ import { rawFetch } from '../services/api.js';
 import { showConfirmDialog } from '../services/confirm.js';
 import { showToast } from '../services/toast.js';
 import { on } from '../services/events.js';
+import { validUntilFrom } from '../services/validity.js';
 
 const LABELS = { pats: 'access token', certs: 'device certificate' };
 
@@ -33,3 +34,22 @@ on('click', '[data-revoke-id]', (event, button) => {
     () => revoke(button),
   );
 });
+
+const setCertExpiry = async (button) => {
+  const input = button.parentElement?.querySelector('[data-cert-expiry-input]');
+  const id = button.dataset.certExpiryId;
+  button.disabled = true;
+  try {
+    await rawFetch(`/api/public/admin/devices/certs/${encodeURIComponent(id)}/expiry`, {
+      method: 'PUT',
+      body: JSON.stringify({ valid_until: validUntilFrom(input) }),
+    });
+    showToast(`Expiry saved for ${button.dataset.certExpiryName}.`, 'success');
+    window.setTimeout(() => window.location.reload(), 900);
+  } catch (err) {
+    button.disabled = false;
+    showToast(err.message || 'Could not save the expiry.', 'error');
+  }
+};
+
+on('click', '[data-cert-expiry-id]', (event, button) => setCertExpiry(button));

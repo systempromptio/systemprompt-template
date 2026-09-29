@@ -2,6 +2,7 @@
 
 mod admin;
 mod admin_groups;
+mod managed_resources;
 pub(crate) mod managed_state;
 mod ssr;
 mod ssr_bridge;

@@ -179,7 +179,7 @@ async fn a_sign_in_keeps_a_manually_granted_role_the_directory_never_mentions() 
     };
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("keepsmanual")).await;
     let granter = insert_user(&db.pool, &unique("admin"), &unclaimed_email("ssogranter")).await;
-    set_manual_roles(&db.pool, &user, &["developer".to_owned()], &granter)
+    set_manual_roles(&db.pool, &user, &["developer".to_owned()], &granter, None)
         .await
         .expect("grant developer by hand");
     let sub = unique("sub");

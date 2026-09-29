@@ -94,7 +94,7 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 sha2 = "0.10"
 # Pinned to the version core signs with, so the tokens this suite mints for the
 # hook audiences validate against core's own decoder.
-jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+jsonwebtoken = { version = "11", features = ["rust_crypto"] }
 
 # Mirrors the root workspace's local-core patch. `[patch]` only applies from
 # the manifest of the workspace being built, and tests/ is a separate

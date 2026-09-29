@@ -2,6 +2,7 @@
 
 mod account;
 mod consent;
+mod identity;
 
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::users::extract_mcp_accessor_user;
@@ -31,6 +32,7 @@ pub fn router(pool: Arc<PgPool>) -> Router {
         .route("/connectors/{provider}/start", get(consent::start))
         .route("/connectors/{provider}/callback", get(consent::callback))
         .route("/connectors/{provider}/token", get(consent::token))
+        .route("/identity/{server}/token", get(identity::token))
         .layer(axum::extract::DefaultBodyLimit::max(32768))
         .with_state(pool)
 }

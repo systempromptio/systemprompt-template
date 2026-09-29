@@ -4,29 +4,30 @@
 //! `id` may be an `ai_requests.id`, `request_id`, or `governance_decisions.id`.
 //! Renders the full chain (identity, policy evaluations, prompt/response
 //! preview, cost, latency, linked trace) using the existing
-//! `find_decision_chain` envelope.
+//! `find_decision_chain` envelope, the client and provider tool schemas the
+//! request carried, and the session's stored artifacts.
 
 use crate::error::AdminError;
 use std::sync::Arc;
 
 use systemprompt::identifiers::{AgentId, AiRequestId, SessionId, TraceId, UserId};
 
-use axum::extract::{Extension, Path, State};
+use axum::extract::{Path, State};
 use axum::response::Response;
 use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::error::AdminHtmlResult;
 use crate::handlers::ssr::entity_urls::{session_detail_url, trace_detail_url};
+use crate::handlers::ssr::page::Page;
 use crate::handlers::ssr::types::BreadcrumbView;
 use crate::repositories::governance::chain::{
     AiRequestSummary, ChainEnvelope, DecisionStage, TranscriptEnvelope, find_decision_chain,
 };
-use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
 
 mod evidence;
-
+mod rows;
+mod schemas;
 
 #[derive(Debug, Serialize)]
 struct AuditDetailContext<'a> {
@@ -34,14 +35,16 @@ struct AuditDetailContext<'a> {
     title: String,
     breadcrumbs: Vec<BreadcrumbView>,
     evidence: evidence::EvidenceView,
+    schemas: schemas::SchemaView,
+    artifacts: schemas::ArtifactsView,
     summary: Summary,
     primary: Option<PrimaryRequest>,
     banner: Option<Banner>,
     decisions: &'a [DecisionStage],
-    requests: &'a [AiRequestSummary],
+    requests: Vec<rows::RequestRowView>,
     events: &'a [crate::repositories::governance::chain::ChainUsageEvent],
-    transcript: &'a Option<TranscriptEnvelope>,
     session_summary: &'a Option<crate::repositories::governance::chain::SessionSummary>,
+    transcript: &'a Option<TranscriptEnvelope>,
     back_url: &'static str,
 }
 
@@ -53,6 +56,7 @@ struct Summary {
     trace_url: Option<String>,
     session_url: String,
     user_id: UserId,
+    user_url: String,
     agent_id: Option<AgentId>,
     agent_scope: Option<String>,
     decision_count: i64,
@@ -102,16 +106,13 @@ struct Denial {
 }
 
 pub(crate) async fn governance_audit_detail_page(
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
+    shell: Page,
     State(pool): State<Arc<PgPool>>,
     Path(id): Path<String>,
 ) -> AdminHtmlResult<Response> {
-    if !user_ctx.is_console {
+    if !shell.user.is_console {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
-
     let Some(envelope) = find_decision_chain(&pool, &id).await? else {
         return Err(AdminError::NotFound("No audit chain found for that id.".to_owned()).into());
     };
@@ -123,7 +124,15 @@ pub(crate) async fn governance_audit_detail_page(
     );
 
     let request_ids: Vec<String> = envelope.requests.iter().map(|r| r.id.clone()).collect();
-    let evidence = evidence::load(&pool, &request_ids).await;
+    let primary_id = primary.map(|r| r.id.as_str());
+    let primary_provider = primary
+        .and_then(|r| r.provider.as_deref())
+        .unwrap_or_default();
+    let (evidence, schemas, artifacts) = tokio::join!(
+        evidence::load(&pool, &request_ids),
+        schemas::load_schemas(&pool, primary_id.unwrap_or_default(), primary_provider),
+        schemas::load_artifacts(&pool, &envelope.session_id, primary_id),
+    );
 
     let summary = build_summary(&envelope);
     let primary_json = primary.map(build_primary_json);
@@ -137,26 +146,32 @@ pub(crate) async fn governance_audit_detail_page(
         ],
         title,
         evidence,
+        schemas,
+        artifacts,
         summary,
         primary: primary_json,
         banner,
         decisions: &envelope.decisions,
-        requests: &envelope.requests,
+        requests: envelope
+            .requests
+            .iter()
+            .map(|r| rows::build_request_row(r, primary.is_some_and(|p| p.id == r.id)))
+            .collect(),
         events: &envelope.events,
-        transcript: &envelope.transcript,
         session_summary: &envelope.summary,
+        transcript: &envelope.transcript,
         // Why: the log this page is reached from. `/admin/governance` was the
         // old answer and is still mounted, but a reader who clicked a request
         // row expects the row list back, not the policy console.
         back_url: "/admin/requests",
     };
 
-    Ok(super::render_typed_page(
-        &engine,
+    Ok(crate::handlers::ssr::render_typed_page(
+        &shell.engine,
         "governance-audit-detail",
         &ctx,
-        &user_ctx,
-        &mkt_ctx,
+        &shell.user,
+        &shell.marketplace,
     ))
 }
 
@@ -182,6 +197,10 @@ fn build_summary(env: &ChainEnvelope) -> Summary {
         trace_url: env.trace_id.as_ref().map(trace_detail_url),
         session_url: session_detail_url(&env.session_id),
         user_id: env.identity.user_id.clone(),
+        user_url: format!(
+            "/admin/users/{}",
+            urlencoding::encode(env.identity.user_id.as_str())
+        ),
         agent_id: env.identity.agent_id.clone(),
         agent_scope: env.identity.agent_scope.clone(),
         decision_count: env.totals.decision_count,

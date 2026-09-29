@@ -17,6 +17,7 @@ pub struct ExtensionConfigError {
     pub message: String,
     pub path: Option<PathBuf>,
     pub suggestion: Option<String>,
+    pub source: Option<Box<dyn std::error::Error + Send + Sync>>,
 }
 
 impl ExtensionConfigErrors {
@@ -34,6 +35,7 @@ impl ExtensionConfigErrors {
             message: message.into(),
             path: None,
             suggestion: None,
+            source: None,
         });
     }
 
@@ -48,6 +50,7 @@ impl ExtensionConfigErrors {
             message: message.into(),
             path: Some(path.into()),
             suggestion: None,
+            source: None,
         });
     }
 
@@ -62,6 +65,22 @@ impl ExtensionConfigErrors {
             message: message.into(),
             path: None,
             suggestion: Some(suggestion.into()),
+            source: None,
+        });
+    }
+
+    pub fn push_with_source(
+        &mut self,
+        field: impl Into<String>,
+        message: impl Into<String>,
+        source: impl Into<Box<dyn std::error::Error + Send + Sync>>,
+    ) {
+        self.errors.push(ExtensionConfigError {
+            field: field.into(),
+            message: message.into(),
+            path: None,
+            suggestion: None,
+            source: Some(source.into()),
         });
     }
 
@@ -84,6 +103,9 @@ impl std::fmt::Display for ExtensionConfigErrors {
         writeln!(f, "Extension '{}' configuration errors:", self.extension)?;
         for error in &self.errors {
             write!(f, "  [{}] {}", error.field, error.message)?;
+            if let Some(source) = &error.source {
+                write!(f, ": {source}")?;
+            }
             if let Some(path) = &error.path {
                 write!(f, "\n    Path: {}", path.display())?;
             }

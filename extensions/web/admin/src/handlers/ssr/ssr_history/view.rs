@@ -6,14 +6,16 @@ use systemprompt::identifiers::UserId;
 
 use crate::handlers::ssr::entity_urls::{context_detail_url, session_detail_url};
 use crate::handlers::ssr::format::{format_cost, format_token_total, relative_time};
-use crate::handlers::ssr::list_view::{PageWindow, Pagination};
+use crate::handlers::ssr::list_view::{PageWindow, Pagination, paginate_prefixed};
 use crate::handlers::ssr::transcript_view::short_id;
+use crate::handlers::ssr::types::TabLinkView;
 use crate::repositories::analytics::conversations::{
     HistoryItem, HistoryScope, HistorySource, redact_text,
 };
 use crate::types::UserContext;
 
 use super::context::HistoryRowView;
+use super::window::HistoryWindow;
 use super::{HistoryQuery, HistoryView};
 
 pub(super) fn scope_label(scope: &HistoryScope) -> String {
@@ -131,6 +133,12 @@ pub(crate) fn row_view(
 }
 
 fn query_parts(query: &HistoryQuery, keep_side: bool) -> Vec<String> {
+    let mut parts = filter_parts(query, keep_side);
+    parts.extend(HistoryWindow::of(query).query_parts());
+    parts
+}
+
+fn filter_parts(query: &HistoryQuery, keep_side: bool) -> Vec<String> {
     let mut parts: Vec<String> = Vec::new();
     if let Some(q) = query.q.as_deref().filter(|s| !s.is_empty()) {
         parts.push(format!("q={}", urlencoding::encode(q)));
@@ -168,20 +176,17 @@ pub(super) fn build_pagination(query: &HistoryQuery, window: PageWindow, base: &
     } else {
         format!("{base}?{}&", parts.join("&"))
     };
-    let page = window.index;
-    let prev_url = (page > 0).then(|| format!("{prefix}page={}", page - 1));
-    let next_url = (page + 1 < window.total_pages).then(|| format!("{prefix}page={}", page + 1));
-    let (first_row, last_row) = window.bounds();
-    Pagination {
-        current_page: page + 1,
-        total_pages: window.total_pages,
-        first_row,
-        last_row,
-        total_rows: window.total_rows,
-        noun: window.noun,
-        has_prev: prev_url.is_some(),
-        has_next: next_url.is_some(),
-        prev_url,
-        next_url,
-    }
+    paginate_prefixed(window, &prefix)
+}
+
+// Why: a new window starts from the first page, so the tabs carry every
+// filter but the window itself and the page.
+pub(super) fn window_links(query: &HistoryQuery, base: &str) -> Vec<TabLinkView> {
+    let parts = filter_parts(query, true);
+    let prefix = if parts.is_empty() {
+        format!("{base}?")
+    } else {
+        format!("{base}?{}&", parts.join("&"))
+    };
+    HistoryWindow::of(query).tabs(&prefix)
 }

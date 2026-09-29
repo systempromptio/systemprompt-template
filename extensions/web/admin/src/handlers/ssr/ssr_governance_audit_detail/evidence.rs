@@ -45,7 +45,10 @@ pub(super) struct ToolCallView {
     pub tool_name: String,
     pub sequence_number: i32,
     pub mcp_execution_id: Option<String>,
-    pub result_label: &'static str,
+    pub artifact_url: Option<String>,
+    pub state_label: String,
+    pub state_tone: &'static str,
+    pub is_structured: bool,
     pub created_at: String,
 }
 
@@ -89,7 +92,18 @@ pub(super) async fn load(pool: &PgPool, request_ids: &[String]) -> EvidenceView 
             tool_name: t.tool_name,
             sequence_number: t.sequence_number,
             mcp_execution_id: t.mcp_execution_id,
-            result_label: if t.has_result { "recorded" } else { "none" },
+            artifact_url: t.artifact_id.map(|id| format!("/admin/artifacts/{id}")),
+            state_tone: match (t.state.as_str(), t.execution_status.as_deref()) {
+                (_, Some("failed" | "timeout")) => "err",
+                ("executed", _) => "ok",
+                _ => "muted",
+            },
+            state_label: match t.execution_status.as_deref() {
+                Some("failed") => "failed".to_owned(),
+                Some("timeout") => "timed out".to_owned(),
+                _ => t.state,
+            },
+            is_structured: t.is_structured,
             created_at: local_time(t.created_at),
         })
         .collect();

@@ -8,6 +8,7 @@
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
+use systemprompt::identifiers::ArtifactId;
 
 /// One scanner hit against a request, in either direction.
 #[derive(Debug, Clone)]
@@ -21,13 +22,17 @@ pub struct SafetyFindingRow {
     pub created_at: DateTime<Utc>,
 }
 
-/// One tool the model asked for, in the order it asked.
+/// One tool the model asked for, in the order it asked, with the execution
+/// and artifact the ledger joined to it by the client's `tool_use_id`.
 #[derive(Debug, Clone)]
 pub struct RequestToolCallRow {
     pub tool_name: String,
     pub sequence_number: i32,
     pub mcp_execution_id: Option<String>,
-    pub has_result: bool,
+    pub artifact_id: Option<ArtifactId>,
+    pub state: String,
+    pub execution_status: Option<String>,
+    pub is_structured: bool,
     pub created_at: DateTime<Utc>,
 }
 
@@ -56,13 +61,17 @@ pub async fn list_request_tool_calls(
 ) -> Result<Vec<RequestToolCallRow>, sqlx::Error> {
     sqlx::query_as!(
         RequestToolCallRow,
-        r#"SELECT tool_name AS "tool_name!", sequence_number AS "sequence_number!",
-                  mcp_execution_id,
-                  (tool_result_payload IS NOT NULL) AS "has_result!",
-                  created_at AS "created_at!"
-           FROM ai_request_tool_calls
-           WHERE request_id = ANY($1)
-           ORDER BY created_at ASC, sequence_number ASC
+        r#"SELECT t.tool_name AS "tool_name!", t.sequence_number AS "sequence_number!",
+                  l.mcp_execution_id,
+                  l.artifact_id AS "artifact_id: ArtifactId",
+                  COALESCE(l.state, 'intended') AS "state!",
+                  l.execution_status,
+                  COALESCE(l.is_structured, FALSE) AS "is_structured!",
+                  t.created_at AS "created_at!"
+           FROM ai_request_tool_calls t
+           LEFT JOIN tool_call_ledger l ON l.intent_id = t.id
+           WHERE t.request_id = ANY($1)
+           ORDER BY t.created_at ASC, t.sequence_number ASC
            LIMIT 200"#,
         ai_request_ids
     )

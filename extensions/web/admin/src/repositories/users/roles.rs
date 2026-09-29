@@ -7,7 +7,15 @@
 //! dashboard. Only the manual half is stored — `user_manual_roles` — so the
 //! directory half is whatever the effective set holds beyond it. That keeps
 //! one row per manual grant and no second copy of what AD already says.
+//!
+//! A manual grant carries a validity window. The reads that decide what a
+//! person holds see only rows inside it; the provenance read
+//! (`directory_roles_on`) sees every row, expired included, because an expired
+//! manual grant is still not something the directory said. The hourly sweep
+//! deletes expired rows and rewrites `users.roles` from what is left
+//! (`expire_manual_roles`).
 
+use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 
@@ -18,10 +26,28 @@ pub async fn list_manual_roles(
     user_id: &UserId,
 ) -> Result<Vec<String>, sqlx::Error> {
     sqlx::query_scalar!(
-        "SELECT role FROM user_manual_roles WHERE user_id = $1 ORDER BY role",
+        "SELECT role FROM user_manual_roles
+         WHERE user_id = $1 AND valid_from <= CURRENT_TIMESTAMP
+           AND (valid_until IS NULL OR valid_until > CURRENT_TIMESTAMP)
+         ORDER BY role",
         user_id.as_str()
     )
     .fetch_all(pool)
+    .await
+}
+
+// Why: the earliest expiry across the manual grants, which is what the role
+// editor shows as "manual grants expire" — one window per save, so the rows
+// agree unless an older save set a different one.
+pub async fn find_manual_roles_valid_until(
+    pool: &PgPool,
+    user_id: &UserId,
+) -> Result<Option<DateTime<Utc>>, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT MIN(valid_until) AS "valid_until?" FROM user_manual_roles WHERE user_id = $1"#,
+        user_id.as_str()
+    )
+    .fetch_one(pool)
     .await
 }
 
@@ -85,6 +111,7 @@ pub async fn set_manual_roles(
     user_id: &UserId,
     roles: &[String],
     granted_by: &UserId,
+    valid_until: Option<DateTime<Utc>>,
 ) -> Result<(), sqlx::Error> {
     let mut tx = pool.begin().await?;
     let directory = directory_roles_on(&mut *tx, user_id).await?;
@@ -95,11 +122,12 @@ pub async fn set_manual_roles(
     .execute(&mut *tx)
     .await?;
     sqlx::query!(
-        "INSERT INTO user_manual_roles (user_id, role, granted_by)
-         SELECT $1, r, $3 FROM UNNEST($2::TEXT[]) AS r ON CONFLICT DO NOTHING",
+        "INSERT INTO user_manual_roles (user_id, role, granted_by, valid_until)
+         SELECT $1, r, $3, $4 FROM UNNEST($2::TEXT[]) AS r ON CONFLICT DO NOTHING",
         user_id.as_str(),
         roles,
-        granted_by.as_str()
+        granted_by.as_str(),
+        valid_until
     )
     .execute(&mut *tx)
     .await?;
@@ -140,7 +168,9 @@ where
             FROM (
                 SELECT UNNEST($2::TEXT[]) AS r
                 UNION
-                SELECT role FROM user_manual_roles WHERE user_id = $1
+                SELECT role FROM user_manual_roles
+                 WHERE user_id = $1 AND valid_from <= CURRENT_TIMESTAMP
+                   AND (valid_until IS NULL OR valid_until > CURRENT_TIMESTAMP)
             ) all_roles
         )
         WHERE id = $1
@@ -152,7 +182,6 @@ where
     .fetch_one(executor)
     .await
 }
-
 
 // Why: Delete this user's expired manual grants and rewrite the effective set
 // without them. The directory half is snapshotted before the delete for the
