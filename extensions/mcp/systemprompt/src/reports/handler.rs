@@ -2,7 +2,6 @@
 
 use super::{ReportInput, ReportOutput};
 use crate::cli::CliLocation;
-use crate::tools::TOOL_ADMIN_REPORT;
 use rmcp::ErrorData;
 use systemprompt::identifiers::McpExecutionId;
 use systemprompt::mcp::McpToolHandler;
@@ -18,7 +17,7 @@ impl McpToolHandler for ReportHandler<'_> {
     type Input = ReportInput;
     type Output = ReportOutput;
     fn tool_name(&self) -> &'static str {
-        TOOL_ADMIN_REPORT
+        "admin_report"
     }
     fn description(&self) -> &'static str {
         "Read this platform's own AI usage and cost: spend, models, trends and sessions over a chosen window, with source coverage and an interactive dashboard. Reads the audit tables through the CLI; performs no administrative change. Jira and Confluence are NOT read here — use the atlassian server directly for those."

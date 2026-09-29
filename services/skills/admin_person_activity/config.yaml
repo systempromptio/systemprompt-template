@@ -1,0 +1,10 @@
+id: admin_person_activity
+name: Person & Team Activity
+description: "What a person or team has been working on and how much they use the platform, from their conversations, skills and active days."
+enabled: true
+file: SKILL.md
+tags:
+  - admin
+  - reporting
+  - people
+category: governance

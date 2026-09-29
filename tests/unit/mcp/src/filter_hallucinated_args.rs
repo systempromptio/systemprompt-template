@@ -1,6 +1,7 @@
 //! `filter_hallucinated_args` drops the output-format flags models routinely
-//! append to `systemprompt` invocations, while leaving every real argument
-//! (including their values and positional args) untouched.
+//! append to `systemprompt` invocations, and `--export` with its path (it
+//! writes a file on the server no client can read), while leaving every real
+//! argument (including their values and positional args) untouched.
 
 use systemprompt_mcp_agent::filter_hallucinated_args;
 
@@ -59,4 +60,28 @@ fn only_matches_exact_flag_tokens_not_substrings_or_values() {
     let input = v(&["run", "--output", "json", "--formatter", "--json-lines"]);
     let out = filter_hallucinated_args(input.clone());
     assert_eq!(out, input);
+}
+
+#[test]
+fn strips_export_together_with_its_path_value() {
+    let out = filter_hallucinated_args(v(&[
+        "analytics",
+        "requests",
+        "list",
+        "--export",
+        "requests.csv",
+        "--since",
+        "7d",
+    ]));
+    assert_eq!(out, v(&["analytics", "requests", "list", "--since", "7d"]));
+    let out = filter_hallucinated_args(v(&["infra", "logs", "export", "--export=out.csv"]));
+    assert_eq!(out, v(&["infra", "logs", "export"]));
+}
+
+#[test]
+fn a_flag_directly_after_export_is_kept() {
+    // `--export --since 7d`: the model forgot the path; the next flag is a
+    // real argument, not the missing value.
+    let out = filter_hallucinated_args(v(&["list", "--export", "--since", "7d"]));
+    assert_eq!(out, v(&["list", "--since", "7d"]));
 }

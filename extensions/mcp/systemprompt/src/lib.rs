@@ -6,13 +6,17 @@
 //! thin `tokio::main` shell that builds a [`SystempromptServer`] and serves it
 //! over stdio.
 
+#[doc(hidden)]
+pub mod bounds;
 mod cli;
 pub mod error;
 #[doc(hidden)]
 pub mod reports;
+#[doc(hidden)]
+pub mod typed;
 
 #[doc(hidden)]
-pub use cli::{CliLocation, filter_hallucinated_args};
+pub use cli::{CliError, CliLocation, filter_hallucinated_args};
 pub mod server;
 pub mod tools;
 

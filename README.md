@@ -14,6 +14,8 @@ Identity, model access, MCP tool execution, policy and audit in a Rust runtime y
 
 [Quick start](#quick-start) · [Run the proof](#run-the-proof) · [Core](https://github.com/systempromptio/systemprompt-core) · [Documentation](https://systemprompt.io/documentation/)
 
+[![Coverage 0%](https://img.shields.io/badge/coverage-0%25-dc2626?style=flat-square)](coverage/baseline.json)
+
 </div>
 
 ## Start with control

@@ -30,7 +30,7 @@ systemprompt plugins mcp logs systemprompt              # server logs for debugg
 
 ### Calling the systemprompt tool
 
-The `systemprompt` server exposes one tool, also named `systemprompt`, that executes a CLI command. Pass the command **without** the `systemprompt` prefix:
+The `systemprompt` server exposes a CLI tool, also named `systemprompt`, beside `admin_report` and six typed analytics tools (`user_activity`, `conversation_list`, `usage_by_user`, `request_log`, `conversation_audit`, `users`; see `systemprompt_cli`). The `systemprompt` tool executes a CLI command. Pass the command **without** the `systemprompt` prefix:
 
 ```bash
 systemprompt plugins mcp call systemprompt systemprompt --args '{"command":"core skills list"}'

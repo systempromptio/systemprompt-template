@@ -26,6 +26,8 @@ plugin:
   skills:
     source: explicit
     include:
+      - admin_ai_usage
+      - admin_person_activity
       - analytics_dashboards
       - demonstrate_governance
       - inspect_agents
@@ -36,6 +38,7 @@ plugin:
       - manage_services
       - systemprompt_cli
       - use_dangerous_secret
+      - who_am_i
     exclude: []
 
   agents:

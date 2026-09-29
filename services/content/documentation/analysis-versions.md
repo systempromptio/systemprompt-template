@@ -8,14 +8,16 @@ kind: "guide"
 public: true
 tags: ["enterprise", "admin", "operations"]
 published_at: "2026-09-16"
-updated_at: "2026-09-23"
+updated_at: "2026-09-28"
 after_reading_this:
   - "Say what a marketplace version is, and why a base and a bundled marketplace carry the same kind of identity"
   - "Read a marketplace's history and tell a changed skill from an added or removed one"
   - "Compare two versions and read the figures under each, skill by skill"
   - "Find whether devices received the version being served"
 related_docs:
-  - title: "Analysis: Measure, Compare and Publish a Skill"
+  - title: "Evaluate a Plugin: Fixed Suite, PAT Export, Deterministic Metrics"
+    url: "/documentation/analysis-evaluate-plugins"
+  - title: "Analysis: The Record of Every Conversation and Skill"
     url: "/documentation/analysis"
   - title: "Code ↔ Instance: Sources, Planes and Sync"
     url: "/documentation/services-sync"
@@ -23,7 +25,7 @@ related_docs:
 
 # Versions: marketplace hashes, history and compare
 
-**TL;DR:** `/admin/analysis/versions` lists every marketplace by the content hash of what it serves. A version *is* its hash. Open a marketplace for **History** (every version, what changed, how each performed), **Compare** (two versions side by side, skill by skill) and **Distribution** (what devices received). Analysis observes and compares; experiments happen off the platform.
+**TL;DR:** `/admin/analysis/versions` lists every marketplace by the content hash of what it serves. A version *is* its hash. Open a marketplace for **History** (every version, what changed, how each performed), **Compare** (two versions side by side, skill by skill), **Evaluation** (deterministic per-version metrics) and **Distribution** (what devices received). Analysis observes and compares; experiments happen off the platform.
 
 ## What a version is
 
@@ -35,7 +37,7 @@ Because the hash covers bytes and nothing else:
 - Two marketplaces sharing a plugin hash differently only through their own config.
 - A plugin that names a skill whose directory is missing still moves the hash: the broken reference is part of the version.
 
-Versions are recorded at boot and on every **Sync inventory now**. A hash seen before reopens its row; a hash that moved closes the previous version at that moment; a marketplace the composition no longer declares is closed and reads as *retired*. History is never rewritten.
+Versions are recorded at boot and on every **Sync inventory**. A hash seen before reopens its row; a hash that moved closes the previous version at that moment; a marketplace the composition no longer declares is closed and reads as *retired*. History is never rewritten.
 
 A conversation is credited to the version being served when it first invoked one of the marketplace's skills, and stays there whatever is deployed later. The `conversation_rollup` job records that per skill and per conversation in `conversation_skill_facts`, beside the conversation's own record, and both are kept forever — so a version's figures outlive the 90-day raw-event window. Versions recorded before manifests were kept carry the coarser source hash and are marked *source hash*.
 
@@ -62,6 +64,10 @@ Pick a *before* and an *after* version; the two newest are chosen by default. Th
 
 A version seeded from a source hash has no manifest, so no change can be derived; the page says so and lists skills from their recorded invocations alone.
 
+## Evaluation
+
+Deterministic figures per version, plugin, skill and tool — success, completion, cost, tokens, turns, connector calls and failed calls by class — each compared with a baseline version, with an attention list of what regressed. Every figure is a fixed rule over the `analysis-plugin-eval` dataset; no model scores anything. The tab, its datasets and the loop that drives it are described in [Evaluate a Plugin](/documentation/analysis-evaluate-plugins).
+
 ## Distribution
 
 The delivery pipeline for the marketplace's skills, scoped to the skills its current manifest names:
@@ -80,11 +86,11 @@ Users, requests, spend and latency reach a version through the conversations its
 ## How pinning or importing a kit shows up here
 
 1. You pin the kit by digest on [Code ↔ Instance](/documentation/services-sync), or change the digest it pins.
-2. On the next boot or **Sync inventory now**, each marketplace the kit declares is hashed and recorded with source `bundle:<name>`.
+2. On the next boot or **Sync inventory**, each marketplace the kit declares is hashed and recorded with source `bundle:<name>`.
 3. A marketplace that already existed with different bytes gets a new version; History shows what changed.
 4. Each new skill becomes a managed resource with a captured revision and a normal row on [Skills](/documentation/analysis-measure-skills), whose marketplace caption carries the new hash.
 
-A kit owns its content. This repository owns access, so entitlement for a kit's marketplace is still declared in `rules.yaml`.
+A kit owns its content. This repository owns access, so entitlement for a kit's marketplace is still declared in `services/access-control/rules.yaml`. The marketplace this instance ships in its own tree, `enterprise-demo`, is a base marketplace and carries source `base`.
 
 ## Troubleshooting
 
@@ -92,7 +98,7 @@ A kit owns its content. This repository owns access, so entitlement for a kit's 
 
 **Symptom:** The landing page is empty.
 **Cause:** Versions are recorded at boot and on inventory sync, and neither has run since the table was created.
-**Solution:** Press **Sync inventory now** on Skills, or restart the server.
+**Solution:** Press **Sync inventory** on the Skills tab of `/admin/analysis/skills`, or restart the server.
 
 ### A version shows *no manifest*
 
@@ -109,4 +115,5 @@ A kit owns its content. This repository owns access, so entitlement for a kit's 
 ## Related pages
 
 - [Analysis overview](/documentation/analysis)
+- [Evaluate a Plugin: Fixed Suite, PAT Export, Deterministic Metrics](/documentation/analysis-evaluate-plugins)
 - [Code ↔ Instance: Sources, Planes and Sync](/documentation/services-sync)

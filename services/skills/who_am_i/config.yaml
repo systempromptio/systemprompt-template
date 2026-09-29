@@ -1,0 +1,10 @@
+id: who_am_i
+name: Who Am I
+description: "Report who the signed-in user is on this instance, which workspaces, skills and connectors their access actually grants, and where to see their own usage."
+enabled: true
+file: SKILL.md
+tags:
+  - commons
+  - profile
+  - onboarding
+category: productivity

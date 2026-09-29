@@ -206,6 +206,24 @@ Conventions (strict — hold every entry to them):
   (`mcp__<server>__<tool>`, `mcp__plugin_<marketplace>_<server>__<tool>`) to the
   server and bare tool the gateway records.
 
+- **Typed admin-analytics MCP tools.** The `systemprompt` MCP server gains
+  `user_activity`, `conversation_list`, `usage_by_user`, `request_log`,
+  `conversation_audit` and `users`: flags live in the JSON schema, results page
+  by cursor or offset and are bounded to what a model can read. The per-person
+  tools read `conversation_facts`, which the conversation rollup fills.
+- The CLI passthrough bounds its result: an oversize result is stored whole as
+  an artifact and the model receives a pointer; `--export` and its path are
+  stripped like the output-format flags. Every tool's input schema is
+  Gemini-declarable and passes Claude Code's schema acceptance rules.
+- Skills `who_am_i`, `admin_ai_usage` and `admin_person_activity` on the
+  `systemprompt` plugin; `rules.yaml` narrows the two admin skills to the
+  `admin` role and declares `who_am_i` open to every signed-in role.
+- Documentation: connect guides for Claude Code, Cowork and OpenCode, bridge
+  install and downloads (macOS, Windows), the analysis suite, the skill
+  lifecycle and the enterprise capability pages; operator docs for Docker
+  Compose, required secrets, centralized MCP connections and recorded tech
+  debt. The README carries a coverage badge rendered from `coverage/baseline.json`.
+
 ### Changed
 
 - The gateway route editor (`POST|PATCH|DELETE /api/public/admin/gateway/routes`,
@@ -240,6 +258,11 @@ Conventions (strict — hold every entry to them):
 - The header actions and install menus now bind to the ids the templates
   actually write (`header-actions`, `install-menu`); previously neither control
   was wired and the install button did nothing at narrow widths.
+
+- `systemprompt_cli` points at the typed tools and tables the CLI flags that
+  exist; `docs/gateway-routes.md` describes the services-YAML catalog, client
+  attribution and `bridge_releases.token_secret`.
+- The admin report view's brand mark reads `systemprompt.io`.
 
 ### Removed
 

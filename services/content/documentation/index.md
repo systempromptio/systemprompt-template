@@ -38,3 +38,39 @@ This site covers two things: the **terminal demo** walkthroughs and how to **log
 - [Dashboard Usage](/documentation/dashboard) — Real-time metrics, activity feed, and health indicators
 - [Access Control](/documentation/access-control) — Who reaches what: bands, precedence, rules.yaml and drift
 - [Code ↔ Instance Sync](/documentation/services-sync) — Sources, planes, hashes and the three sync directions
+
+## Connect a client
+
+*Route Claude Code, Cowork or OpenCode through the gateway.*
+
+- [Connect Claude Code](/documentation/connect-claude-code) — Terminal routing on macOS, Linux and Windows, model selection and verification
+- [Connect Cowork](/documentation/connect-cowork) — Claude Desktop Cowork through the bridge on macOS and Windows
+- [Connect OpenCode](/documentation/connect-opencode) — One installer flag writes the provider block and the key
+- [Bridge installation](/documentation/bridge-install) — Install, sign-in and troubleshooting, including Linux and WSL
+- [Install on macOS](/documentation/install-macos) and [Install on Windows](/documentation/install-windows) — Per-platform bridge setup
+- [Downloads](/documentation/downloads) — Bridge files and checksum verification
+
+## Skills and analysis
+
+*See which skills are used, how conversations went, and what changed between versions.*
+
+- [Skill lifecycle](/documentation/skills-lifecycle) — Authoring, discovery, signed distribution, runtime loading and measurement
+- [Analysis overview](/documentation/analysis) — The analysis tabs and the end-to-end path
+- [Measure which skills are used](/documentation/analysis-measure-skills)
+- [Create a conversation and see it land](/documentation/analysis-test-conversation)
+- [Versions: sources, generations and compare](/documentation/analysis-versions)
+- [Evaluate plugins](/documentation/analysis-evaluate-plugins)
+
+## Enterprise capabilities
+
+*What the platform does for identity, cost, audit and safety — and what it does not yet.*
+
+- [User and access management](/documentation/enterprise-user-access)
+- [Usage and analytics](/documentation/enterprise-analytics)
+- [Model routing](/documentation/enterprise-model-routing)
+- [Cost management and budgets](/documentation/enterprise-cost-management)
+- [Audit and observability](/documentation/enterprise-audit-observability)
+- [Conversation history](/documentation/enterprise-conversation-history)
+- [Safety and guardrails](/documentation/enterprise-safety-guardrails)
+- [Tool governance](/documentation/enterprise-tool-governance)
+- [Roadmap](/documentation/enterprise-roadmap)
