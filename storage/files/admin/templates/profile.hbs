@@ -164,7 +164,7 @@
         {{/components/table}}
         {{#if side_call_note}}<p class="sp-p-profile__side-note">{{side_call_note}}</p>{{/if}}
         {{else}}
-        {{> components/empty-state title="No conversations yet" message="Conversations are grouped by context id on incoming inference requests. Connect a client above to start one."}}
+        {{> components/empty-state heading="No conversations yet" message="Conversations are grouped by context id on incoming inference requests. Connect a client above to start one."}}
         {{/if}}
     </section>
 
@@ -247,7 +247,7 @@
                 </tbody>
             {{/components/table}}
             {{else}}
-            {{> components/empty-state title="No marketplace reaches this account" message="Group membership is what grants a marketplace. Ask an administrator to add you to a group."}}
+            {{> components/empty-state heading="No marketplace reaches this account" message="Group membership is what grants a marketplace. Ask an administrator to add you to a group."}}
             {{/if}}
         </section>
 
@@ -271,7 +271,7 @@
                 </tbody>
             {{/components/table}}
             {{else}}
-            {{> components/empty-state title="No agents configured" message="Agents you enable appear here with their live status."}}
+            {{> components/empty-state heading="No agents configured" message="Agents you enable appear here with their live status."}}
             {{/if}}
         </section>
     </details>

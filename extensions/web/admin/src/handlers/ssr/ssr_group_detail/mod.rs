@@ -1,4 +1,5 @@
-//! `/admin/groups/{group_id}` — one group across five tabs, and the
+//! `/admin/groups/{group_id}` — one group across five tabs (its marketplaces
+//! are the first section of Access), and the
 //! Unassigned bucket as a variant of the same page.
 //!
 //! Unassigned is not a group anyone created: it is everyone with no group row
@@ -9,24 +10,24 @@
 
 use std::sync::Arc;
 
-use axum::extract::{Extension, Path, Query, State};
-use axum::response::Response;
+use axum::extract::{Path, Query, State};
+use axum::response::{IntoResponse, Redirect, Response};
 use serde::Deserialize;
 use sqlx::PgPool;
 use systemprompt_web_shared::GroupId;
 
 use crate::error::{AdminError, AdminHtmlResult};
 use crate::repositories;
-use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
+use crate::types::UserContext;
 
 use super::people_chart::daily_requests_chart;
 use super::people_view;
 use super::ssr_groups::UNASSIGNED_GROUP;
 use super::types::{
-    BreadcrumbView, GroupDetailPageData, GroupOverviewView, MarketplaceAssignmentView,
-    MemberSetChipView, MembersTabView, UsageLeaderRowView,
+    BreadcrumbView, GroupDetailPageData, GroupOverviewView, MemberSetChipView, MembersTabView,
+    UsageLeaderRowView,
 };
+use crate::handlers::ssr::page::Page;
 
 mod data;
 mod tabs;
@@ -37,20 +38,20 @@ pub(crate) struct TabQuery {
     tab: Option<String>,
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "axum extractor list; the router decides the arity, not this signature"
-)]
 pub(crate) async fn group_detail_page(
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
+    shell: Page,
     State(pool): State<Arc<PgPool>>,
     Path(group_id): Path<GroupId>,
     Query(query): Query<TabQuery>,
 ) -> AdminHtmlResult<Response> {
-    if !user_ctx.is_console {
+    if !shell.user.is_console {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
+    }
+
+    // Why: a group's marketplaces are rows of its Access tab now; the old
+    // tab's links land there.
+    if query.tab.as_deref() == Some("marketplaces") {
+        return Ok(Redirect::to(&format!("/admin/groups/{group_id}?tab=access")).into_response());
     }
 
     let group = repositories::groups::crud::find_group(&pool, &group_id).await?;
@@ -80,27 +81,27 @@ pub(crate) async fn group_detail_page(
             people_view::stat_tiles(&usage, counts.members)
         },
         overview: load_overview(&pool, &group_id, active).await,
-        members: load_members(&pool, &group_id, active, &user_ctx).await,
-        marketplaces: load_marketplaces(&pool, &group_id, active).await,
+        members: load_members(&pool, &group_id, active, &shell.user).await,
         access: load_access(&pool, &group_id, active).await,
         projects: load_projects(&pool, &group_id, active).await,
-        mappings: load_mappings(&pool, &group_id, active, &user_ctx).await,
+        mappings: load_mappings(&pool, &group_id, active, &shell.user).await,
         active_tab: active.to_owned(),
         group_name: group.name,
         description: group.description,
         is_unassigned,
         not_found: false,
-        can_manage: user_ctx.is_admin,
-        can_map: user_ctx.is_platform_admin,
+        can_manage: shell.user.is_admin,
+        can_map: shell.user.is_platform_admin,
+        export: (!is_unassigned).then(|| export_view(&group_id)),
         group_id,
     };
 
     Ok(super::render_typed_page(
-        &engine,
+        &shell.engine,
         "group-detail",
         &data,
-        &user_ctx,
-        &mkt_ctx,
+        &shell.user,
+        &shell.marketplace,
     ))
 }
 
@@ -135,31 +136,6 @@ async fn load_overview(
             })
             .collect(),
     })
-}
-
-// Why: the whole catalog, flagged with what this group already reaches. The
-// rows a group is not entitled to are what makes the tab an editor rather
-// than a receipt.
-async fn load_marketplaces(
-    pool: &PgPool,
-    group_id: &GroupId,
-    active: &str,
-) -> Option<Vec<MarketplaceAssignmentView>> {
-    if active != tabs::MARKETPLACES {
-        return None;
-    }
-    Some(
-        data::load_marketplace_options(pool, group_id)
-            .await
-            .into_iter()
-            .map(|m| MarketplaceAssignmentView {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                assigned: m.assigned,
-            })
-            .collect(),
-    )
 }
 
 async fn load_members(
@@ -236,6 +212,17 @@ async fn load_mappings(
         rows.into_iter().map(|r| (r.ad_group, r.source)),
         user_ctx.is_platform_admin,
     ))
+}
+
+// Why: the group's own traffic, keyed by `group` the way every scoped
+// dataset reads it. Unassigned is membership by absence, which no `group`
+// filter can name, so it offers no export.
+fn export_view(group_id: &GroupId) -> crate::export::ExportView {
+    let query = crate::export::view::query_string(&[("group", Some(group_id.as_str()))]);
+    // Why: `analysis-conversations` and the transcript bundle join this list
+    // with the analysis suite (Stage 3 phase 7); an id the registry does not
+    // hold is dropped by `ExportView::new`.
+    crate::export::ExportView::new(&["requests", "sessions", "analysis-conversations"], &query)
 }
 
 fn breadcrumbs(name: &str) -> Vec<BreadcrumbView> {

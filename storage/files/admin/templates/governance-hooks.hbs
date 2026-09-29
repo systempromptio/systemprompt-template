@@ -42,7 +42,7 @@
         </tbody>
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No hooks declared" message="No plugin YAML under services/ declares a hook."}}
+    {{> components/empty-state heading="No hooks declared" message="No plugin YAML under services/ declares a hook."}}
     {{/if}}
 
     {{#> components/section title="Recent events" count=recent_count note="The newest hook events ingested by /api/public/hooks/govern and /api/public/hooks/track."}}{{/components/section}}
@@ -70,7 +70,7 @@
         </tbody>
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No hook events" message="Nothing has fired a governance hook yet. Drive a tool call through a plugin that declares one and it appears here."}}
+    {{> components/empty-state heading="No hook events" message="Nothing has fired a governance hook yet. Drive a tool call through a plugin that declares one and it appears here."}}
     {{/if}}
     {{/inline}}
     {{#*inline "scripts"}}{{/inline}}

@@ -10,15 +10,7 @@
 // sort-header builder, and `lib.rs` and the catalog views name the type
 // through it.
 pub(crate) use crate::handlers::ssr::types::SortHeaderView;
-
-// Why: One column an operator can order a platform list by.
-#[derive(Debug, Clone, Copy)]
-pub struct SortColumn {
-    pub key: &'static str,
-    pub label: &'static str,
-    pub class: &'static str,
-    pub hint: &'static str,
-}
+pub use crate::handlers::ssr::types::table::SortColumn;
 
 // Why: The header row for `columns`, given the base path and the applied order.
 //
@@ -43,32 +35,14 @@ pub fn sort_headers(
         .iter()
         .map(|col| {
             let active = col.key == active_key;
-            let next_dir = if active && active_dir == "desc" {
-                "asc"
-            } else {
-                "desc"
-            };
-            SortHeaderView {
-                label: col.label,
-                class: col.class,
-                hint: col.hint,
-                url: format!("{prefix}sort={}&dir={next_dir}", col.key),
+            let descending = active_dir != "asc";
+            let next_dir = SortHeaderView::next_dir(active, descending);
+            SortHeaderView::new(
+                (col.label, col.class, col.hint),
+                format!("{prefix}sort={}&dir={next_dir}", col.key),
                 active,
-                aria_sort: if !active {
-                    "none"
-                } else if active_dir == "asc" {
-                    "ascending"
-                } else {
-                    "descending"
-                },
-                indicator: if !active {
-                    "\u{2195}"
-                } else if active_dir == "asc" {
-                    "\u{25b2}"
-                } else {
-                    "\u{25bc}"
-                },
-            }
+                descending,
+            )
         })
         .collect()
 }

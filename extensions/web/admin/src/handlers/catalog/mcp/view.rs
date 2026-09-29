@@ -172,4 +172,7 @@ pub(super) struct McpDetailData {
     pub included_by_count: usize,
     pub matrix_url: String,
     pub access_control_url: &'static str,
+    // Why: "Who gets this" — the server's rules, reach and drift, in the
+    // panel every catalog detail page shares.
+    pub access: crate::handlers::ssr::entity_panel::EntityAccessView,
 }

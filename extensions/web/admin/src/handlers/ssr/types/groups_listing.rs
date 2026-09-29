@@ -36,7 +36,10 @@ pub(crate) struct GroupRowView {
     pub top_model_short: Option<String>,
     pub top_model_requests: i64,
     pub source: String,
+    // Why: `source_label` is the filter value the URL carries, `source_display`
+    // the words in the cell, and `source_abbrev` the sentence on its title.
     pub source_label: &'static str,
+    pub source_display: &'static str,
     pub source_abbrev: &'static str,
     pub is_unassigned: bool,
 }

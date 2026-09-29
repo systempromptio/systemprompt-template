@@ -7,6 +7,7 @@
 //! so one type parameterised over both would have to encode the differences
 //! anyway.
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use systemprompt::identifiers::UserId;
@@ -38,6 +39,9 @@ pub struct ProjectMemberRow {
     pub email: Option<String>,
     pub sources: Vec<String>,
     pub source_ad_groups: Vec<String>,
+    // Why: the manual row's expiry, or None for an open-ended membership. A
+    // directory row never carries one — the directory decides its own end.
+    pub valid_until: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -63,4 +67,6 @@ pub struct UpdateProjectRequest {
 #[derive(Debug, Clone, Deserialize)]
 pub struct AddProjectMemberRequest {
     pub user_id: UserId,
+    #[serde(default)]
+    pub valid_until: Option<DateTime<Utc>>,
 }

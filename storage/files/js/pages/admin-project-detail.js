@@ -2,6 +2,7 @@ import { apiFetch } from '../services/api.js';
 import { showToast } from '../services/toast.js';
 import { showConfirmDialog } from '../services/confirm.js';
 import { on, initDelegation } from '../services/events.js';
+import { validUntilFrom } from '../services/validity.js';
 
 const projectId = () => document.querySelector('[data-project-id]')?.dataset.projectId ?? '';
 
@@ -16,9 +17,10 @@ const addMember = async () => {
     return;
   }
   try {
+    const validUntil = validUntilFrom(document.querySelector('[data-field="add-member-until"]'));
     await apiFetch(projectPath('/members'), {
       method: 'POST',
-      body: JSON.stringify({ user_id: userId }),
+      body: JSON.stringify({ user_id: userId, valid_until: validUntil }),
     });
     showToast('Member added', 'success');
     window.location.reload();

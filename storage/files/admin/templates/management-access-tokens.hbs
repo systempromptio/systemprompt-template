@@ -78,7 +78,7 @@
         </tbody>
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No tokens match" message="No token matches this status, department and search. Clear a filter, or issue a token for an account."}}
+    {{> components/empty-state heading="No tokens match" message="No token matches this status, department and search. Clear a filter, or issue a token for an account."}}
     {{/if}}
 
     {{#if can_write}}{{> components/create-token-panel user_options=user_options}}{{/if}}

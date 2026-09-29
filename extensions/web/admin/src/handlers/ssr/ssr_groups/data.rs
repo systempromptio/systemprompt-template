@@ -14,7 +14,7 @@ use crate::repositories;
 use crate::repositories::groups::usage::{GroupUsageRow, UNATTRIBUTED_ROW, list_groups_with_usage};
 use crate::services::marketplaces::load_marketplaces;
 
-use super::super::people_view::share;
+use super::super::people_view::{share, short_model};
 use super::super::types::{GroupRowView, MemberSetChipView, UnattributedRowView};
 use super::UNASSIGNED_GROUP;
 
@@ -65,6 +65,7 @@ pub(super) async fn load_listing(pool: &PgPool, window_days: i32) -> Listing {
             top_model_short: g.top_model.as_deref().map(short_model),
             top_model: g.top_model,
             top_model_requests: g.top_model_requests,
+            source_display: source_display(source_label(&g.source)),
             source_abbrev: source_abbrev(source_label(&g.source)),
             source_label: source_label(&g.source),
             source: g.source,
@@ -87,22 +88,19 @@ pub(super) async fn load_listing(pool: &PgPool, window_days: i32) -> Listing {
     }
 }
 
-// Why: the listing has ten columns at 1440px and the model name is the widest
-// thing that is not a sentence. The vendor prefix is the same on every row of
-// an Anthropic estate, so it carries no information here; the cell keeps the
-// full id on its title.
-fn short_model(model: &str) -> String {
-    let tail = model.rsplit('/').next().unwrap_or(model);
-    tail.strip_prefix("claude-").unwrap_or(tail).to_owned()
-}
-
-// Why: two letters and a title, because the column is one of ten and the word
-// itself is never the reason anyone opens this page.
+// Why: the cell shows the whole word and the title says what it means for
+// membership. A two-letter abbreviation ("Di", "Sy") saved a few pixels in a
+// ten-column table and cost the one thing the column is for — knowing whether
+// a group's members are decided in the directory or on this page.
 fn source_abbrev(label: &str) -> &'static str {
     match label {
-        "Directory" => "Di",
-        "System" => "Sy",
-        _ => "Da",
+        "Directory" => {
+            "Members follow the mapped directory group and are re-projected at every sign-in"
+        },
+        "System" => {
+            "Built in: the people who are in no group at all, never written and never deleted"
+        },
+        _ => "Created on this page; members are assigned here",
     }
 }
 
@@ -111,6 +109,16 @@ fn source_label(source: &str) -> &'static str {
         "yaml" | "adfs" => "Directory",
         "system" => "System",
         _ => "Dashboard",
+    }
+}
+
+// Why: the URL value (`?source=Directory|Dashboard|System`) is stable so
+// bookmarks and the e2e specs hold; only the words a reader sees changed.
+fn source_display(label: &str) -> &'static str {
+    match label {
+        "Directory" => "Directory",
+        "System" => "Built-in",
+        _ => "Created here",
     }
 }
 

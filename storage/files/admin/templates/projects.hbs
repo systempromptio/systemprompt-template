@@ -1,4 +1,4 @@
-{{#> layout title=title page=page}}
+{{#> layout page_title=title page_id=page}}
     {{#*inline "content"}}
     {{> components/breadcrumbs crumbs=breadcrumbs}}
     {{#> components/page-header title=title subtitle=subtitle}}
@@ -31,33 +31,57 @@
             {{/inline}}
         {{/components/toolbar}}
 
-        {{#> components/table caption="Projects with their membership, spend and tool health" pagination=pagination}}
+        {{#> components/table caption="Projects with their membership, spend, model and agent mix, tool health and output" pagination=pagination modifier="sp-t-projects"}}
             <thead><tr>
                 {{> components/sort-header sort_headers.name}}
                 {{> components/sort-header sort_headers.members}}
                 {{> components/sort-header sort_headers.groups}}
                 {{> components/sort-header sort_headers.requests}}
+                {{> components/sort-header sort_headers.tokens}}
                 {{> components/sort-header sort_headers.cost}}
+                {{> components/sort-header sort_headers.models}}
+                {{> components/sort-header sort_headers.clients}}
                 {{> components/sort-header sort_headers.tools}}
                 {{> components/sort-header sort_headers.skills}}
+                {{> components/sort-header sort_headers.artifacts}}
+                <th class="sp-table__cell--actions"><span class="sp-u-sr-only">Report</span></th>
             </tr></thead>
             <tbody>
             {{#each rows}}
             <tr data-project-id="{{id}}">
                 <td class="sp-p-projects__col-name">
                     <a href="{{href}}" class="sp-table__cell--primary">{{name}}</a>
-                    <span class="sp-p-projects__sub">{{#if description}}{{truncate description 48}}{{else}}{{id}}{{/if}}</span>
+                    <span class="sp-p-projects__sub"{{#if description}} title="{{description}}"{{/if}}>{{#if description}}{{truncate description 32}}{{else}}{{id}}{{/if}}</span>
                 </td>
-                <td class="sp-table__cell--num sp-u-num">{{formatNumber member_count}}<span class="sp-p-projects__sub">{{active_members}} active</span></td>
+                <td class="sp-table__cell--num sp-u-num" title="{{active_members}} of {{member_count}} active in the window">{{formatNumber member_count}}<span class="sp-p-projects__meta">{{active_members}} active</span></td>
                 <td class="sp-table__cell--num sp-u-num">{{formatNumber group_count}}</td>
                 <td class="sp-table__cell--num sp-u-num">{{formatNumber requests}}</td>
+                <td class="sp-table__cell--num sp-u-num" title="{{formatNumber tokens}} tokens">{{tokens_display}}</td>
                 <td class="sp-table__cell--num sp-u-num sp-u-mono">{{cost_display}}</td>
-                <td class="sp-table__cell--num sp-u-num">{{> components/badge tone=tool_tone text=(concat tool_success_pct "%")}}<span class="sp-p-projects__sub">{{formatNumber tool_calls}} calls</span></td>
+                <td class="sp-p-projects__col-mix">
+                    {{#if top_model}}
+                    <code class="sp-table__cell--mono" title="{{top_model}} led {{models_used}} distinct models">{{top_model_short}}</code>{{#if (gt models_used 1)}}<span class="sp-p-projects__meta">+{{sub models_used 1}}</span>{{/if}}
+                    {{else}}
+                    <span class="sp-u-text-tertiary">&mdash;</span>
+                    {{/if}}
+                </td>
+                <td class="sp-p-projects__col-mix">
+                    {{#if top_client}}
+                    {{> components/badge tone="muted" text=top_client}}{{#if (gt clients_used 1)}}<span class="sp-p-projects__meta">+{{sub clients_used 1}}</span>{{/if}}
+                    {{else}}
+                    <span class="sp-u-text-tertiary">&mdash;</span>
+                    {{/if}}
+                </td>
+                <td class="sp-table__cell--num sp-u-num" title="{{formatNumber tool_calls}} MCP calls">{{#if tool_calls}}{{> components/badge tone=tool_tone text=(concat tool_success_pct "%")}}<span class="sp-p-projects__meta">{{formatNumber tool_calls}}</span>{{else}}<span class="sp-u-text-tertiary">&mdash;</span>{{/if}}</td>
                 <td class="sp-table__cell--num sp-u-num">{{formatNumber skills_used}}</td>
+                <td class="sp-table__cell--num sp-u-num">{{formatNumber artifacts}}</td>
+                <td class="sp-table__cell--actions">
+                    <a class="sp-btn sp-btn--sm sp-btn--outline sp-btn--icon" href="{{report_href}}" title="Report for {{name}} — members, spend, models, agents, tools, skills and artifacts on one printable page" aria-label="Report for {{name}}">{{> components/icon name="report" class="sp-icon--sm"}}</a>
+                </td>
             </tr>
             {{else}}
-            <tr class="sp-table__empty"><td colspan="7">
-                {{> components/empty-state title="No projects match" message="Clear the search, or create a project to start attributing work."}}
+            <tr class="sp-table__empty"><td colspan="12">
+                {{> components/empty-state heading="No projects match" message="Clear the search, or create a project to start attributing work."}}
             </td></tr>
             {{/each}}
             </tbody>

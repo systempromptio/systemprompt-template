@@ -45,7 +45,14 @@ pub(crate) async fn add_group_member_handler(
     Json(body): Json<AddGroupMemberRequest>,
 ) -> AdminResult<Response> {
     refuse_system_write(&pool, &group_id).await?;
-    repo::insert_group_member(&pool, &group_id, &body.user_id, &user_ctx.user_id).await?;
+    repo::insert_group_member(
+        &pool,
+        &group_id,
+        &body.user_id,
+        &user_ctx.user_id,
+        body.valid_until,
+    )
+    .await?;
     defaults::recompute_scope_defaults(&pool).await?;
     Ok((StatusCode::CREATED, ()).into_response())
 }

@@ -87,7 +87,7 @@
         </tbody>
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No users match" message="No account matches this filter, role and search. Clear one of them to widen the roster."}}
+    {{> components/empty-state heading="No users match" message="No account matches this filter, role and search. Clear one of them to widen the roster."}}
     {{/if}}
 
     {{#if can_write}}{{> components/create-user-panel}}{{/if}}

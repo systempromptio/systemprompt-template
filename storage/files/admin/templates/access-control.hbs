@@ -1,11 +1,11 @@
-{{#> layout title=title page=page}}
+{{#> layout page_title=title page_id=page}}
     {{#*inline "head_extra"}}{{/inline}}
     {{#*inline "content"}}
     {{> components/breadcrumbs crumbs=breadcrumbs}}
-    {{#> components/page-header title=title subtitle="Review every rule, its subject and source. Edit grants on the group or user's Access tab."}}
+    {{#> components/page-header title=title subtitle="Who reaches what on this instance, and why. Rules is the ledger by entity; Audience grid is every role, group and project at once; Find a person opens one account's own Access tab; Sync opens Code sync's Access review, where rules.yaml and this database are reconciled entity by entity."}}
         {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{docs_url}}" target="_blank" rel="noopener noreferrer">How it works</a>
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/groups">Group rules</a>
-        <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="show-yaml">Show as YAML</button>
         {{#if can_write}}
         <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="new-group">+ New group</button>
         {{/if}}
@@ -14,97 +14,209 @@
         <span><strong>{{stats.groups}}</strong> groups</span>
         <span><strong>{{stats.projects}}</strong> projects</span>
         <span><strong>{{stats.users}}</strong> people</span>
+        <span>Declared in <code class="sp-code-inline">services/access-control/rules.yaml</code>; enforced from this database</span>
         {{/inline}}
     {{/components/page-header}}
 
-    <section class="sp-kpi-grid" aria-label="Rule totals">
-        {{#each ledger.kpis}}
+    {{> components/tabs tabs=tabs nav_label="Access control views"}}
+
+    {{#if on_audience}}
+    {{> components/section title="Audience grid" count=audience.total_rows note="Every role, group and project against every governed entity, decided by the same resolver the enforcement point calls. Narrow by subject, entity kind, decision or band; click a column to focus on one subject, a row to see every subject for one entity."}}
+    {{> components/audience-grid audience=audience}}
+    {{/if}}
+
+    {{#if on_person}}
+    {{> components/section title="Find a person" note="Search every account by name, email or id. Each match opens that person's own Access tab: every workspace, connection and rule the resolver gives them, and their overrides."}}
+    <form class="sp-toolbar sp-toolbar--fields sp-ac-person__picker" method="get" action="/admin/access-control" aria-label="Find a person">
+        <input type="hidden" name="tab" value="person">
+        <div class="sp-toolbar__field sp-ac-person__field">
+            <label class="sp-toolbar__field-label" for="ac-person-q">Person</label>
+            <input class="sp-search-input" id="ac-person-q" name="q" value="{{person.query}}" placeholder="name, email or account id" autocomplete="off">
+        </div>
+        <div class="sp-toolbar__actions">
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Search</button>
+        </div>
+    </form>
+    {{#if person.searched}}
+    {{#if person.hits}}
+    <ul class="sp-ac-person__hits">
+        {{#each person.hits}}
+        <li class="sp-ac-person__who">
+            <span class="sp-avatar sp-avatar--sm sp-avatar--tone-{{avatar_tone name}}" aria-hidden="true">{{initials name}}</span>
+            <span class="sp-user-cell-text">
+                <span class="sp-user-cell-name">{{name}}</span>
+                <span class="sp-user-cell-email">{{email}}</span>
+            </span>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{href}}">Open their access →</a>
+        </li>
+        {{/each}}
+    </ul>
+    {{#if person.more}}{{> components/notice tone="info" title="More matches" message="Only the first 25 matches are listed. Narrow the search."}}{{/if}}
+    {{else}}
+    {{> components/notice tone="warn" title="No match" message="No account's name, email or id contains that text."}}
+    {{/if}}
+    {{else}}
+    {{> components/empty-state heading="Search for someone" message="Type part of a name, an email or an account id."}}
+    {{/if}}
+    {{/if}}
+
+    {{#if on_rules}}
+
+    {{#if declared_unreadable}}
+    {{> components/notice tone="err" title="The declaration could not be compared" message=declared_unreadable}}
+    {{/if}}
+
+    {{#if drift}}
+    <div class="sp-notice sp-notice--warn sp-ac-drift" role="status">
+        <p class="sp-notice__title">Code and database differ</p>
+        <p>
+            <strong>{{drift.counts.missing_in_db}}</strong> added in code ·
+            <strong>{{drift.counts.changed}}</strong> changed in code ·
+            <strong>{{drift.counts.default_changed}}</strong> defaults changed ·
+            <strong>{{drift.counts.only_in_db_code}}</strong> removed from code ·
+            <strong>{{drift.counts.only_in_db_dashboard}}</strong> written in the console.
+            Nothing is changed automatically.
+        </p>
+        <p><a class="sp-btn sp-btn--sm sp-btn--secondary" href="{{drift.url}}">Review and synchronise</a></p>
+    </div>
+    {{/if}}
+
+    <details class="sp-ac-explain" data-ac="explain" open>
+        <summary>How a decision is made</summary>
+        <div class="sp-ac-explain__body">
+            <ol class="sp-ac-ladder" aria-label="Precedence ladder, narrowest first">
+                <li><span class="sp-ac-ladder__band">person</span><span class="sp-ac-ladder__prec">0</span><span class="sp-ac-ladder__note">an override on one account</span></li>
+                <li><span class="sp-ac-ladder__band">project</span><span class="sp-ac-ladder__prec">140</span><span class="sp-ac-ladder__note">work the person is assigned to</span></li>
+                <li><span class="sp-ac-ladder__band">group</span><span class="sp-ac-ladder__prec">150</span><span class="sp-ac-ladder__note">the team the directory placed them in</span></li>
+                <li><span class="sp-ac-ladder__band">linked account</span><span class="sp-ac-ladder__prec">170</span><span class="sp-ac-ladder__note">an org they have connected</span></li>
+                <li><span class="sp-ac-ladder__band">role</span><span class="sp-ac-ladder__prec">200</span><span class="sp-ac-ladder__note">the widest band: user, admin, …</span></li>
+            </ol>
+            <ul class="sp-ac-explain__rules">
+                <li>The <strong>narrowest band in which the person matches any rule decides</strong>; bands where nothing names them are skipped.</li>
+                <li>Inside that band a <strong>deny beats an allow</strong>.</li>
+                <li>An entity with any rule is <strong>closed</strong> to everyone its rules do not name, unless it is marked <strong>open</strong>.</li>
+                <li>An entity with no rule at all inherits from its parent: skill → plugin → marketplace.</li>
+            </ul>
+            <p class="sp-ac-explain__more"><a href="{{docs_url}}" target="_blank" rel="noopener noreferrer">Worked examples, the file format and the sync loop →</a></p>
+        </div>
+    </details>
+
+    <section class="sp-kpi-grid" aria-label="Access-control totals">
+        {{#each entities.kpis}}
         {{> components/kpi label=label value=value note=note tone=tone}}
         {{/each}}
     </section>
 
-    {{#> components/section title="Rule ledger" count=ledger.total note="Each rule, where it applies, and whether configuration declares it."}}
+    {{#> components/section title="Entities" count=entities.total note="One row per governed entity, grouped by kind. Chips are the subjects each band names; expand a row for the individual rules and the resolver's outcome in plain words."}}
         {{#*inline "section_actions"}}
-        {{#if ledger.filters_applied}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{ledger.clear_url}}">Clear filters</a>{{/if}}
+        {{#if entities.filters_applied}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{entities.clear_url}}">Clear filters</a>{{/if}}
         {{/inline}}
     {{/components/section}}
 
-    <form class="sp-toolbar sp-toolbar--fields" method="get" action="/admin/access-control" role="search" aria-label="Filter access rules">
-        <div class="sp-toolbar__field">
-            <label class="sp-toolbar__field-label" for="ac-filter-subject">Subject kind</label>
-            <select class="sp-select" id="ac-filter-subject" name="subject_kind">
-            {{#each ledger.subject_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
-            </select>
-        </div>
+    <form class="sp-toolbar sp-toolbar--fields" method="get" action="/admin/access-control" role="search" aria-label="Filter entities">
         <div class="sp-toolbar__field">
             <label class="sp-toolbar__field-label" for="ac-filter-entity">Entity kind</label>
             <select class="sp-select" id="ac-filter-entity" name="entity_kind">
-            {{#each ledger.entity_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+            {{#each entities.entity_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
             </select>
         </div>
         <div class="sp-toolbar__field">
-            <label class="sp-toolbar__field-label" for="ac-filter-source">Rule source</label>
-            <select class="sp-select" id="ac-filter-source" name="source">
-            {{#each ledger.source_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+            <label class="sp-toolbar__field-label" for="ac-filter-band">Band</label>
+            <select class="sp-select" id="ac-filter-band" name="band">
+            {{#each entities.band_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
             </select>
         </div>
-        <label class="sp-u-sr-only" for="ac-filter-q">Search rules</label>
+        <div class="sp-toolbar__field">
+            <label class="sp-toolbar__field-label" for="ac-filter-state">State</label>
+            <select class="sp-select" id="ac-filter-state" name="state">
+            {{#each entities.state_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+            </select>
+        </div>
+        <div class="sp-toolbar__field">
+            <label class="sp-toolbar__field-label" for="ac-filter-expiring">Expiry</label>
+            <select class="sp-select" id="ac-filter-expiring" name="expiring">
+                <option value="">Any</option>
+                <option value="7d"{{#if entities.expiring_only}} selected{{/if}}>Expiring in 7 days</option>
+            </select>
+        </div>
+        <label class="sp-u-sr-only" for="ac-filter-q">Search entities</label>
         <div class="sp-toolbar__search">
-            <input class="sp-search-input" id="ac-filter-q" type="search" name="q" value="{{ledger.search}}" placeholder="Entity or subject">
+            <input class="sp-search-input" id="ac-filter-q" type="search" name="q" value="{{entities.search}}" placeholder="Entity, subject or reason">
         </div>
         <div class="sp-toolbar__actions">
             <button type="submit" class="sp-btn sp-btn--sm sp-btn--secondary">Apply</button>
         </div>
     </form>
 
-    {{#if ledger.rows}}
-    {{#> components/table caption="Access-control rules on this instance" pagination=ledger.pagination modifier="sp-p-ac__ledger"}}
+    {{#if entities.groups}}
+    {{#> components/table caption="Governed entities" modifier="sp-p-ac__entities"}}
         <thead><tr>
-            {{#each ledger.sort_headers}}{{> components/sort-header this}}{{/each}}
-            <th class="sp-col-default">Entity default</th>
+            <th class="sp-col-entity">Entity</th>
+            <th class="sp-col-default">Default</th>
+            <th class="sp-col-reaches">Reaches</th>
+            <th class="sp-col-denied">Refused</th>
             <th class="sp-col-why">Why</th>
+            <th class="sp-col-state">Code ↔ DB</th>
         </tr></thead>
-        <tbody>
-        {{#each ledger.rows}}
-        <tr>
-            <td>{{entity_type_label}}</td>
-            <td class="sp-u-mono">{{entity_id}}</td>
-            <td>{{subject_kind}}</td>
-            <td class="sp-u-mono">{{subject}}</td>
-            <td>{{> components/badge tone=access_tone text=access}}</td>
-            <td>{{> components/badge tone=source_tone text=source}}</td>
-            <td class="sp-u-text-muted">{{default_label}}</td>
-            <td class="sp-u-text-muted">{{truncate justification 60}}</td>
+        {{#each entities.groups}}
+        <tbody class="sp-ac-group" data-entity-kind="{{kind}}">
+        <tr class="sp-ac-group__row"><th scope="rowgroup" colspan="6"><span class="sp-ac-group__label">{{kind_label}}</span> <span class="sp-count-pill">{{count}}</span></th></tr>
+        {{#each rows}}
+        <tr class="sp-ac-entity" data-entity-type="{{entity_type}}" data-entity-id="{{entity_id}}">
+            <td>
+                <details class="sp-ac-entity__details">
+                    <summary class="sp-ac-entity__summary">
+                        <span class="sp-ac-entity__label">{{entity_label}}</span>
+                        {{#if labelled}}<span class="sp-ac-entity__sub">{{entity_sub}}</span>{{/if}}
+                        <span class="sp-u-mono sp-ac-entity__id" title="{{entity_type_label}} id">{{#if labelled}}{{entity_id}}{{else}}{{entity_type_label}}{{/if}}</span>
+                    </summary>
+                    <div class="sp-ac-entity__expanded">
+                        <p class="sp-ac-entity__resolution">{{resolution}}</p>
+                        <table class="sp-ac-rules">
+                            <thead><tr><th>Band</th><th>Subject</th><th>Access</th><th>Written by</th><th>Reason</th><th>Expires</th></tr></thead>
+                            <tbody>
+                            {{#each rules}}
+                            <tr>
+                                <td><span class="sp-ac-layer-tag">{{band_label}}</span></td>
+                                <td class="sp-u-mono">{{subject}}</td>
+                                <td>{{> components/badge tone=access_tone text=access}}</td>
+                                <td>{{> components/badge tone=source_tone text=source}}</td>
+                                <td class="sp-u-text-secondary">{{justification}}</td>
+                                <td>{{#if expires_at}}<span title="{{formatDate expires_at}}">{{relativeTime expires_at}}</span>{{#if expires_soon}} {{> components/badge tone="warn" text="soon"}}{{/if}}{{else}}<span class="sp-u-text-tertiary">Never</span>{{/if}}</td>
+                            </tr>
+                            {{/each}}
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </td>
+            <td>{{#if default_open}}{{> components/badge tone="warn" text="open"}}{{else}}{{> components/badge tone="muted" text="closed"}}{{/if}}</td>
+            <td>
+                {{#each allow}}
+                <span class="sp-ac-band"><span class="sp-ac-band__label">{{label}}</span>{{#each values}}<span class="sp-ac-band__chip">{{this}}</span>{{/each}}</span>
+                {{else}}<span class="sp-u-text-tertiary">—</span>{{/each}}
+            </td>
+            <td>
+                {{#each deny}}
+                <span class="sp-ac-band sp-ac-band--deny"><span class="sp-ac-band__label">{{label}}</span>{{#each values}}<span class="sp-ac-band__chip">{{this}}</span>{{/each}}</span>
+                {{else}}<span class="sp-u-text-tertiary">—</span>{{/each}}
+            </td>
+            <td class="sp-ac-entity__why">{{#if has_why}}{{why}}{{else}}<span class="sp-u-text-tertiary">No reason recorded</span>{{/if}}{{#if expiring_soon}} {{> components/badge tone="warn" text="expiring"}}{{/if}}</td>
+            <td>{{#if in_sync}}{{> components/badge tone=state_tone text=state}}{{else}}<a class="sp-badge sp-badge--{{state_tone}}" href="{{sync_url}}">{{state}} ↗</a>{{/if}}</td>
         </tr>
         {{/each}}
         </tbody>
+        {{/each}}
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No rules match" message="No access-control rule matches these filters. Clear them to see the whole ledger."}}
+    {{> components/empty-state heading="No entity matches" message="No governed entity matches these filters. Clear them to see every entity."}}
     {{/if}}
 
-    {{#if ledger.capped}}
-    {{> components/notice tone="warn" title="Listing is capped" message="Only the first 1000 rules are shown. Narrow the filters to see the rest."}}
+    {{#if entities.capped}}
+    {{> components/notice tone="warn" title="Listing is capped" message="Only the first 1000 rules were read. Narrow the filters to see the rest."}}
     {{/if}}
 
-    <dialog class="sp-dialog sp-ac-dialog" data-dialog="yaml" aria-labelledby="ac-yaml-title">
-        <div class="sp-ac-dialog__header">
-            <h2 id="ac-yaml-title">Current state as YAML</h2>
-            <button type="button" class="sp-ac-dialog__close" data-action="close-dialog" aria-label="Close">&times;</button>
-        </div>
-        <div class="sp-ac-dialog__body">
-            <p class="sp-ac-modal-hint">
-                The database state of the band rules on this instance, in the loader's schema.
-                Copy what you want to keep into <code class="sp-code-inline">services/</code> in the
-                source repository and redeploy. Per-user overrides are deliberately excluded.
-            </p>
-            <pre class="sp-ac-yaml-pre" data-ac="yaml-content"><span class="sp-loading">Loading…</span></pre>
-        </div>
-        <div class="sp-ac-dialog__actions">
-            <button type="button" class="sp-btn sp-btn--secondary" data-action="copy-yaml">Copy</button>
-            <button type="button" class="sp-btn sp-btn--outline" data-action="close-dialog">Close</button>
-        </div>
-    </dialog>
+    {{/if}}
 
     {{#if can_write}}
     <dialog class="sp-dialog sp-ac-dialog" data-dialog="new-group" aria-labelledby="ac-new-group-title">
@@ -115,11 +227,11 @@
         <div class="sp-ac-dialog__body">
             <label class="sp-ac-field">
                 <span>Identifier</span>
-                <input type="text" data-ac="new-group-id" class="sp-search-input" placeholder="engineering" autocomplete="off" maxlength="64">
+                <input type="text" data-ac="new-group-id" class="sp-search-input" placeholder="europe-devs" autocomplete="off" maxlength="64">
             </label>
             <label class="sp-ac-field">
                 <span>Name</span>
-                <input type="text" data-ac="new-group-name" class="sp-search-input" placeholder="Engineering" autocomplete="off" maxlength="64">
+                <input type="text" data-ac="new-group-name" class="sp-search-input" placeholder="Commerce devs" autocomplete="off" maxlength="64">
             </label>
             <label class="sp-ac-field">
                 <span>Description</span>

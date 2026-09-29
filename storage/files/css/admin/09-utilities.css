@@ -81,8 +81,6 @@
 .sp-u-border-bottom { border-bottom: 1px solid var(--sp-border-subtle); }
 
 .is-clickable { cursor: pointer; }
-.is-success { color: var(--sp-success-strong); }
-.is-danger { color: var(--sp-danger-strong); }
 
 .sp-dashboard-grid {
     display: grid;

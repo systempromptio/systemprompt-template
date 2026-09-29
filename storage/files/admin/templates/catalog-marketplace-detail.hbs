@@ -58,7 +58,7 @@
         </tbody>
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No groups" message="Nothing to assign this marketplace to yet."}}
+    {{> components/empty-state heading="No groups" message="Nothing to assign this marketplace to yet."}}
     {{/if}}
     </section>
 
@@ -150,8 +150,11 @@
             {{/if}}
         </section>
     </div>
+    {{#if access}}{{> components/entity-access panel=access}}{{/if}}
+    {{> components/access-reason-dialog}}
     {{/inline}}
     {{#*inline "scripts"}}
+    <script type="module" src="/js/pages/admin-entity-access.js?v={{css_version}}"></script>
     <script type="module" src="/js/pages/admin-marketplace-groups.js?v={{css_version}}"></script>
     {{/inline}}
 {{/layout}}

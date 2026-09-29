@@ -8,10 +8,64 @@
     scroll-margin-top: var(--sp-space-6);
 }
 
+.sp-entity-access__headline {
+    font-size: var(--sp-text-base);
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-primary);
+}
+
+.sp-entity-access__headline--nobody {
+    padding: var(--sp-space-3);
+    border-radius: var(--sp-corners-sm);
+    color: var(--sp-danger-strong);
+    background: var(--sp-danger-dim);
+}
+
+.sp-entity-access__drift {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-3);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+    box-shadow: var(--sp-shadow-card), inset 2px 0 0 var(--sp-warning);
+}
+
+.sp-entity-access__drift-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-space-2);
+    font-size: var(--sp-text-sm);
+}
+
 .sp-entity-access__actions {
     display: flex;
     flex-wrap: wrap;
     gap: var(--sp-space-2);
+}
+
+.sp-entity-access__band {
+    margin-top: var(--sp-space-2);
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+    text-transform: capitalize;
+    color: var(--sp-text-secondary);
+}
+
+.sp-entity-access__rules td {
+    vertical-align: top;
+}
+
+.sp-entity-access__add,
+.sp-entity-access__why {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-3);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface-alt);
 }
 
 .sp-entity-access__field {
@@ -31,6 +85,23 @@
 }
 
 .sp-access-review__lines td {
+    vertical-align: top;
+}
+
+.sp-access-why {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+}
+
+.sp-access-why__verdict {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-space-2);
+}
+
+.sp-access-why__bands td {
     vertical-align: top;
 }
 

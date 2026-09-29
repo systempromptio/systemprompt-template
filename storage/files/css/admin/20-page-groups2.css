@@ -5,13 +5,6 @@
     gap: var(--sp-space-1);
 }
 
-.sp-p-groups__ranges .sp-btn.is-active {
-    border-color: var(--sp-accent);
-    background: var(--sp-bg-tertiary);
-    color: var(--sp-text-primary);
-    font-weight: 600;
-}
-
 .sp-p-groups__remainder {
     border-block-start: 2px solid var(--sp-border-strong);
     background: var(--sp-bg-tertiary);

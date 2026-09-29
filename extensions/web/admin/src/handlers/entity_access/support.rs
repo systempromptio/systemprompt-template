@@ -12,6 +12,7 @@ use systemprompt::identifiers::RoleId;
 use systemprompt_security::authz::{Access, AccessControlRepository, EntityKind, RuleType};
 use systemprompt_web_shared::{GroupId, ProjectId};
 
+use crate::activity::{self, NewActivity, RuleChange};
 use crate::error::{AdminError, AdminResult};
 use crate::handlers::shared;
 use crate::repositories;
@@ -20,9 +21,7 @@ use crate::repositories::mcp::mcp_servers;
 pub(super) fn validate_entity_type(entity_type: &str) -> AdminResult<EntityKind> {
     use std::str::FromStr;
     EntityKind::from_str(entity_type)
-        // Why: 400-boundary classification; BadRequest carries the client-facing
-        // message by design. lint-ok: error-adapt
-        .map_err(|e| AdminError::BadRequest(format!("invalid entity_type: {e}")))
+        .map_err(|source| AdminError::invalid("invalid entity_type", source))
 }
 
 pub(super) fn repo(pool: &PgPool) -> AccessControlRepository {
@@ -68,10 +67,7 @@ pub(super) async fn parse_subject(
         },
         "role" => {
             let role = RoleId::try_new(rule_value)
-                // Why: 400-boundary classification; the validator's reason is
-                // the only thing that tells the caller which rule the name
-                // broke. lint-ok: error-adapt
-                .map_err(|e| AdminError::BadRequest(format!("invalid rule_value: {e}")))?;
+                .map_err(|source| AdminError::invalid("invalid rule_value", source))?;
             Ok((RuleType::ROLE, role.as_str().to_owned()))
         },
         "group" => {
@@ -120,4 +116,33 @@ pub(super) fn collect_entity_ids(entity_type: &str) -> AdminResult<Vec<String>> 
         },
         _ => Ok(Vec::new()),
     }
+}
+
+// Why: the trail names the subject a removal took away, which is only
+// readable before the row is gone. An unreadable listing names the id.
+pub(super) async fn rule_subject(
+    pool: &PgPool,
+    kind: EntityKind,
+    entity_id: &str,
+    rule_id: &str,
+) -> String {
+    repo(pool)
+        .list_rules_for_entity(kind, entity_id)
+        .await
+        .inspect_err(|e| tracing::warn!(error = %e, "entity access: rule lookup failed"))
+        .unwrap_or_default()
+        .into_iter()
+        .find(|r| r.id.as_str() == rule_id)
+        .map_or_else(
+            || format!("rule {rule_id}"),
+            |r| format!("{}:{}", r.rule_type, r.rule_value),
+        )
+}
+
+pub(super) async fn record_change(
+    pool: &PgPool,
+    user_id: &systemprompt::identifiers::UserId,
+    change: RuleChange<'_>,
+) {
+    activity::record(pool, NewActivity::access_rule_changed(user_id, change)).await;
 }

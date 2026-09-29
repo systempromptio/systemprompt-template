@@ -86,5 +86,10 @@
         {{#each keywords}}<span class="sp-chip sp-chip--tag">{{this}}</span>{{/each}}
     </div>
     {{/if}}
+    {{#if access}}{{> components/entity-access panel=access}}{{/if}}
+    {{> components/access-reason-dialog}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script type="module" src="/js/pages/admin-entity-access.js?v={{css_version}}"></script>
     {{/inline}}
 {{/layout}}

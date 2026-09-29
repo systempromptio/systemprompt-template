@@ -114,7 +114,7 @@
       {{/each}}
       {{#unless has_rows}}
         <tr class="sp-table__empty"><td colspan="6">
-          {{> components/empty-state title="No hook events"
+          {{> components/empty-state heading="No hook events"
               message="Nothing has fired a governance hook yet. The counts above cover the last 24 hours."}}
         </td></tr>
       {{/unless}}
@@ -169,7 +169,7 @@
       {{/each}}
       {{#unless has_rows}}
         <tr class="sp-table__empty"><td colspan="9">
-          {{> components/empty-state title="No decisions in this window"
+          {{> components/empty-state heading="No decisions in this window"
               message="Either nothing called a governed tool, or the filters above exclude everything that did."}}
         </td></tr>
       {{/unless}}
@@ -200,7 +200,7 @@
       {{/each}}
       {{#unless has_rows}}
         <tr class="sp-table__empty"><td colspan="9">
-          {{> components/empty-state title="No safety findings"
+          {{> components/empty-state heading="No safety findings"
               message="No scanner matched anything in this window. A scanner earning nothing is worth reviewing too."}}
         </td></tr>
       {{/unless}}

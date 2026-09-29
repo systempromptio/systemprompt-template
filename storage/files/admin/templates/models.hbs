@@ -72,9 +72,9 @@
     {{/components/table}}
     {{else}}
     {{#if has_search}}
-    {{> components/empty-state title="No routes match" message="No route in services/ai/gateway.yaml matches that search. Clear it to see the whole catalogue."}}
+    {{> components/empty-state heading="No routes match" message="No route in services/ai/gateway.yaml matches that search. Clear it to see the whole catalogue."}}
     {{else}}
-    {{> components/empty-state title="No gateway routes" message="services/ai/gateway.yaml declares no routes, so there is nothing to grant or deny."}}
+    {{> components/empty-state heading="No gateway routes" message="services/ai/gateway.yaml declares no routes, so there is nothing to grant or deny."}}
     {{/if}}
     {{/if}}
     </section>
@@ -109,7 +109,7 @@
         </tbody>
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No requests yet" message="Drive a request through the gateway (for example the Pi coding agent) and it appears here."}}
+    {{> components/empty-state heading="No requests yet" message="Drive a request through the gateway (for example the Pi coding agent) and it appears here."}}
     {{/if}}
     {{/if}}
     {{/inline}}

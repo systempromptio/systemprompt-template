@@ -49,9 +49,9 @@
         {{else}}
         <tr class="sp-table__empty"><td colspan="6">
             {{#if search}}
-            {{> components/empty-state title="Nothing matches" message="No plugin matches that filter."}}
+            {{> components/empty-state heading="Nothing matches" message="No plugin matches that filter."}}
             {{else}}
-            {{> components/empty-state title="No plugins" message="Add a services/plugins/<id>/config.yaml and restart."}}
+            {{> components/empty-state heading="No plugins" message="Add a services/plugins/<id>/config.yaml and restart."}}
             {{/if}}
         </td></tr>
         {{/each}}

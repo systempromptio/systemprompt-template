@@ -46,6 +46,12 @@ pub fn group_subject(slug: &str) -> MatrixSubject {
     banded_subject("group", "group", slug)
 }
 
+// Why: A subject that is on one project and nothing else.
+#[must_use]
+pub fn project_subject(slug: &str) -> MatrixSubject {
+    banded_subject("project", "project", slug)
+}
+
 // Why: A subject that holds exactly one role and no attributes.
 #[must_use]
 pub fn role_subject(role: &str) -> MatrixSubject {

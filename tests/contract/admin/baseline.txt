@@ -123,7 +123,6 @@ GET    /api/public/admin/access-control                      anonymous=401 non-a
 GET    /api/public/admin/access-control/entity-access/all    anonymous=401 non-admin=403 developer=403 admin=400 platform-admin=400 project-manager=400 knowledge-worker=403
 GET    /api/public/admin/access-control/entity/{entity_type}/{entity_id}/access anonymous=401 non-admin=403 developer=403 admin=400 platform-admin=400 project-manager=400 knowledge-worker=403
 GET    /api/public/admin/access-control/users/{user_id}/matrix anonymous=401 non-admin=403 developer=403 admin=404 platform-admin=404 project-manager=404 knowledge-worker=403
-GET    /api/public/admin/access-control/yaml-snapshot        anonymous=401 non-admin=403 developer=403 admin=200 platform-admin=200 project-manager=200 knowledge-worker=403
 GET    /api/public/admin/agents                              anonymous=401 non-admin=200 developer=200 admin=200 platform-admin=200 project-manager=200 knowledge-worker=200
 GET    /api/public/admin/agents/{agent_id}                   anonymous=401 non-admin=404 developer=404 admin=404 platform-admin=404 project-manager=404 knowledge-worker=404
 GET    /api/public/admin/dashboard                           anonymous=401 non-admin=200 developer=200 admin=200 platform-admin=200 project-manager=200 knowledge-worker=200

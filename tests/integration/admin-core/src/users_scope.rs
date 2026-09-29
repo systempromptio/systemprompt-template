@@ -59,7 +59,7 @@ async fn a_group_filter_narrows_to_that_groups_members() {
     let member = insert_user(&db.pool, &unique("user"), &unclaimed_email("in")).await;
     let outsider = insert_user(&db.pool, &unique("user"), &unclaimed_email("out")).await;
     let admin = insert_user(&db.pool, &unique("admin"), &unclaimed_email("admin")).await;
-    insert_group_member(&db.pool, &group, &member, &admin)
+    insert_group_member(&db.pool, &group, &member, &admin, None)
         .await
         .expect("add member");
 

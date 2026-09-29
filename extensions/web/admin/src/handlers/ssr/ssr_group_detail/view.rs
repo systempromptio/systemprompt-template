@@ -30,6 +30,7 @@ fn as_member_input(row: &GroupMemberRow) -> MemberInput<'_> {
         email: row.email.as_deref(),
         sources: &row.sources,
         source_ad_groups: &row.source_ad_groups,
+        valid_until: row.valid_until,
     }
 }
 

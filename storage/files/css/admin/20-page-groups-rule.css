@@ -1,0 +1,27 @@
+@layer components {
+
+/* Why: the reason field appears only once allow or deny is chosen, inline with
+   the select, so the row asks for the why at the moment the decision is made. */
+.sp-group-rule {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+    justify-content: flex-end;
+}
+
+.sp-group-rule__reason {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+}
+
+.sp-group-rule__reason .sp-search-input {
+    inline-size: 16rem;
+}
+
+.sp-group-rule__reason input[type="date"] {
+    inline-size: 10rem;
+}
+
+}

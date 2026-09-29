@@ -51,9 +51,9 @@
         {{else}}
         <tr class="sp-table__empty"><td colspan="6">
             {{#if search}}
-            {{> components/empty-state title="Nothing matches" message="No skill matches that filter."}}
+            {{> components/empty-state heading="Nothing matches" message="No skill matches that filter."}}
             {{else}}
-            {{> components/empty-state title="No skills" message="Add a services/skills/<id>/config.yaml and restart."}}
+            {{> components/empty-state heading="No skills" message="Add a services/skills/<id>/config.yaml and restart."}}
             {{/if}}
         </td></tr>
         {{/each}}

@@ -32,5 +32,10 @@
         </ul>
         {{else}}<p class="sp-u-text-tertiary">Not bundled in any plugin. Assign directly through the access matrix.</p>{{/if}}
     </section>
+    {{#if access}}{{> components/entity-access panel=access}}{{/if}}
+    {{> components/access-reason-dialog}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script type="module" src="/js/pages/admin-entity-access.js?v={{css_version}}"></script>
     {{/inline}}
 {{/layout}}

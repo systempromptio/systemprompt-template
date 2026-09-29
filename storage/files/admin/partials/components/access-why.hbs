@@ -1,0 +1,38 @@
+{{!--
+  The "Why?" explainer's answer: the final decision, then every band of the
+  ladder narrowest first, with what it would decide alone and whether it
+  decided, was outranked, or had no rule.
+
+    {{> components/access-why why=panel.why}}
+--}}
+<div class="sp-access-why" aria-live="polite">
+    {{#if why.found}}
+    <p class="sp-access-why__verdict">
+        <strong>{{why.person}}</strong> {{> components/access-badge decision=why.decision}}
+        <span class="sp-u-text-secondary">decided by the <span class="sp-ac-layer-tag">{{why.decided_by}}</span> band — {{why.detail}}</span>
+    </p>
+    {{#> components/table caption="Every band the resolver considers" modifier="sp-access-why__bands"}}
+        <thead><tr>
+            <th scope="col">Band</th>
+            <th scope="col">This person holds</th>
+            <th scope="col">Alone it says</th>
+            <th scope="col">Outcome</th>
+            <th scope="col">Rule</th>
+        </tr></thead>
+        <tbody>
+        {{#each why.bands}}
+        <tr>
+            <td><span class="sp-ac-layer-tag">{{this.label}}</span> <span class="sp-u-text-tertiary sp-u-text-xs">{{this.precedence}}</span></td>
+            <td class="sp-u-mono sp-u-text-xs">{{this.held}}</td>
+            <td>{{> components/access-badge decision=this.decision}}</td>
+            <td>{{> components/badge tone=this.verdict_tone text=this.verdict_label}}</td>
+            <td class="sp-u-text-secondary sp-u-text-xs">{{this.detail}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    <p class="sp-u-text-xs sp-u-text-tertiary">The narrowest band in which the person matches a rule decides; a band that would also have matched is outranked. Parent chains — a marketplace's rules over its plugins — are included.</p>
+    {{else}}
+    {{> components/notice tone="warn" title="No such account" message="Nothing matches that email or account id."}}
+    {{/if}}
+</div>

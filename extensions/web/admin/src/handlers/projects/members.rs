@@ -48,7 +48,14 @@ pub(crate) async fn add_project_member_handler(
     Json(body): Json<AddProjectMemberRequest>,
 ) -> AdminResult<Response> {
     require_project(&pool, &project_id).await?;
-    repo::insert_project_member(&pool, &project_id, &body.user_id, &user_ctx.user_id).await?;
+    repo::insert_project_member(
+        &pool,
+        &project_id,
+        &body.user_id,
+        &user_ctx.user_id,
+        body.valid_until,
+    )
+    .await?;
     defaults::recompute_scope_defaults(&pool).await?;
     Ok((StatusCode::CREATED, ()).into_response())
 }

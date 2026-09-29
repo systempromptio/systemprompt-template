@@ -9,11 +9,12 @@
         <span>Last seen {{header.last_active}}</span>
         {{/inline}}
         {{#*inline "header_actions"}}
-        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/users/{{header.user_id}}?tab=access">Access</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/users/{{header.user_id}}?tab=access">Access &amp; connections</a>
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/requests?user_id={{header.user_id}}">Request log</a>
         {{#if can_write}}
         <button type="button" class="sp-btn sp-btn--sm sp-btn--danger" data-revoke-all="{{header.user_id}}">Sign out everywhere</button>
         {{/if}}
+        {{#if export}}{{> components/export-button export}}{{/if}}
         {{/inline}}
     {{/components/page-header}}
 
@@ -185,47 +186,7 @@
     </section>
     {{/if}}
 
-    {{#if access}}
-    <section class="sp-p-user-detail__pane" data-access data-user-id="{{header.user_id}}">
-        {{#> components/section title="Effective access" note="Every entity on this instance, resolved through the same resolver the enforcement point calls. Inherit means this person holds no rule of their own and the cell is what the wider bands decided. A rule set here is saved to this instance only, and a deny at another band still outranks an allow written here; the Decided by column names which band won."}}
-            {{#*inline "section_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/access-control">Rule ledger</a>{{/inline}}
-        {{/components/section}}
-        {{#unless access.has_groups}}
-        {{> components/notice tone="info" title="No group membership" message="This person is in no group, so only role, project and default rules apply. Add them to a group on the Membership tab."}}
-        {{/unless}}
-        {{#each access.sections}}
-        <h3 class="sp-section__title">{{this.label}}</h3>
-        {{#if this.has_rows}}
-        {{#> components/table caption=this.label}}
-            <thead><tr>
-                <th>Entity</th>
-                <th class="sp-col-status">Effective</th>
-                <th>Decided by</th>
-                <th class="sp-table__cell--actions">This person</th>
-            </tr></thead>
-            <tbody>
-            {{#each this.rows}}
-            <tr data-entity-type="{{this.entity_type}}" data-entity-id="{{this.entity_id}}" data-rule-id="{{this.rule_id}}">
-                <td>{{this.entity_name}} <span class="sp-u-mono sp-u-text-xs sp-u-text-tertiary">{{this.entity_id}}</span></td>
-                <td class="sp-col-status">{{> components/badge tone=this.effective_tone text=this.effective}}</td>
-                <td><span class="sp-access-layer">{{this.layer}}</span> <span class="sp-u-text-tertiary sp-u-text-xs">{{this.detail}}</span></td>
-                <td class="sp-table__cell--actions">
-                    <select class="sp-filter-select" data-action="set-user-rule" data-previous="{{this.state}}" aria-label="Override for {{this.entity_name}}"{{#unless @root.can_write}} disabled{{/unless}}>
-                        <option value="inherit"{{#if (eq this.state "inherit")}} selected{{/if}}>Inherit</option>
-                        <option value="allow"{{#if (eq this.state "allow")}} selected{{/if}}>Allow</option>
-                        <option value="deny"{{#if (eq this.state "deny")}} selected{{/if}}>Deny</option>
-                    </select>
-                </td>
-            </tr>
-            {{/each}}
-            </tbody>
-        {{/components/table}}
-        {{else}}
-        {{> components/empty-state message="No entities of this kind are configured."}}
-        {{/if}}
-        {{/each}}
-    </section>
-    {{/if}}
+    {{#if access}}{{> components/user-access}}{{/if}}
 
     {{#if devices}}
     <section class="sp-p-user-detail__pane" data-user-id="{{header.user_id}}">
@@ -258,7 +219,7 @@
             </tbody>
         {{/components/table}}
         {{else}}
-        {{> components/empty-state title="No devices" message="This account has no bridge session, device certificate or access token."}}
+        {{> components/empty-state heading="No devices" message="This account has no bridge session, device certificate or access token."}}
         {{/if}}
     </section>
     {{/if}}
@@ -294,7 +255,7 @@
             </tbody>
         {{/components/table}}
         {{else}}
-        {{> components/empty-state title="No sessions" message="This account has never signed in."}}
+        {{> components/empty-state heading="No sessions" message="This account has never signed in."}}
         {{/if}}
     </section>
     {{/if}}

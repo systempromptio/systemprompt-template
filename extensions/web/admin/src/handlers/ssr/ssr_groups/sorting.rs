@@ -9,6 +9,7 @@
 use std::cmp::Ordering;
 
 use super::super::types::{FilterLinkView, GroupRowView, GroupSortHeaders, SortHeaderView};
+use crate::handlers::ssr::types::table::SortColumn;
 
 pub(super) const BASE_URL: &str = "/admin/groups";
 
@@ -20,63 +21,56 @@ pub(super) const RANGES: [(&str, &str, i32); 3] = [
     ("90d", "90 days", 90),
 ];
 
-struct Column {
-    key: &'static str,
-    label: &'static str,
-    class: &'static str,
-    hint: &'static str,
-}
-
-const COLUMNS: [Column; 9] = [
-    Column {
+const COLUMNS: [SortColumn; 9] = [
+    SortColumn {
         key: "name",
         label: "Group",
         class: "",
         hint: "The group's display name",
     },
-    Column {
+    SortColumn {
         key: "source",
         label: "Source",
         class: "",
         hint: "Who created the group: the directory loader, the dashboard, or the system",
     },
-    Column {
+    SortColumn {
         key: "members",
         label: "Members",
         class: "sp-table__cell--num",
         hint: "Everyone in the group, and how many made a request in the window",
     },
-    Column {
+    SortColumn {
         key: "active",
         label: "Active",
         class: "sp-table__cell--num",
         hint: "Members who made a request in the window",
     },
-    Column {
+    SortColumn {
         key: "projects",
         label: "Projects",
         class: "sp-table__cell--num",
         hint: "Distinct projects this group's members work on",
     },
-    Column {
+    SortColumn {
         key: "model",
         label: "Top model",
         class: "",
         hint: "The model this group sent the most requests to",
     },
-    Column {
+    SortColumn {
         key: "requests",
         label: "Requests",
         class: "sp-table__cell--num",
         hint: "Requests attributed exclusively to this group",
     },
-    Column {
+    SortColumn {
         key: "tokens",
         label: "Tokens",
         class: "sp-table__cell--num",
         hint: "Input plus output tokens, exclusively attributed",
     },
-    Column {
+    SortColumn {
         key: "cost",
         label: "Cost",
         class: "sp-table__cell--num",
@@ -136,8 +130,8 @@ pub(super) fn source_links(selected: &str, range: &str) -> Vec<FilterLinkView> {
     [
         ("", "All sources"),
         ("Directory", "Directory"),
-        ("Dashboard", "Dashboard"),
-        ("System", "System"),
+        ("Dashboard", "Created here"),
+        ("System", "Built-in"),
     ]
     .into_iter()
     .map(|(value, label)| FilterLinkView {
@@ -192,38 +186,20 @@ pub(super) fn sort_headers(key: &str, dir: &str, range: &str, source: &str) -> G
     }
 }
 
-fn header(col: &Column, key: &str, dir: &str, range: &str, source: &str) -> SortHeaderView {
+fn header(col: &SortColumn, key: &str, dir: &str, range: &str, source: &str) -> SortHeaderView {
     let active = col.key == key;
-    let next = if active && dir == "desc" {
-        "asc"
-    } else {
-        "desc"
-    };
-    SortHeaderView {
-        label: col.label,
-        class: col.class,
-        hint: col.hint,
-        url: format!(
+    let descending = dir != "asc";
+    let next = SortHeaderView::next_dir(active, descending);
+    SortHeaderView::new(
+        (col.label, col.class, col.hint),
+        format!(
             "{BASE_URL}?range={range}&sort={}&dir={next}{}",
             col.key,
             source_query(source)
         ),
         active,
-        aria_sort: if !active {
-            "none"
-        } else if dir == "asc" {
-            "ascending"
-        } else {
-            "descending"
-        },
-        indicator: if !active {
-            "\u{2195}"
-        } else if dir == "asc" {
-            "\u{25b2}"
-        } else {
-            "\u{25bc}"
-        },
-    }
+        descending,
+    )
 }
 
 // Why: the derived Unassigned bucket sorts to the end whatever the column,

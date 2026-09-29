@@ -80,7 +80,7 @@ async fn a_sign_in_replaces_directory_rows_and_leaves_manual_ones() {
 
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("sso")).await;
     let admin = insert_user(&db.pool, &unique("admin"), &unclaimed_email("admin")).await;
-    insert_group_member(&db.pool, &manual_group, &user, &admin)
+    insert_group_member(&db.pool, &manual_group, &user, &admin, None)
         .await
         .expect("manual grant");
 

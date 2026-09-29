@@ -6,6 +6,12 @@
 //! [`Attribution::Exclusive`](crate::repositories::scope::Attribution) so the
 //! projects partition the instance; the per-member breakdown is the one place
 //! the pages ask for member attribution, and it says so on the screen.
+//! Artifacts, like tool calls, are hook-plane rows keyed on the person and
+//! read membership too.
+//!
+//! "Clients" is the coding agent that made the request (`client_kind`) —
+//! this instance ships no A2A agents, so the agents a project uses are its
+//! Claude Code, Codex and desktop sessions, and the rollup names the busiest.
 
 use serde::Serialize;
 use sqlx::PgPool;
@@ -30,10 +36,16 @@ pub struct ProjectRollup {
     pub group_count: i64,
     pub active_members: i64,
     pub requests: i64,
+    pub tokens: i64,
     pub cost_microdollars: i64,
+    pub models_used: i64,
+    pub top_model: Option<String>,
+    pub clients_used: i64,
+    pub top_client: Option<String>,
     pub tool_calls: i64,
     pub tool_success: i64,
     pub skills_used: i64,
+    pub artifacts: i64,
 }
 
 pub async fn list_project_rollups(
@@ -55,7 +67,13 @@ pub async fn list_project_rollups(
                     WHERE m.scope_id = p.id)::BIGINT AS "attributed_members!",
                   COALESCE(r.requests, 0)::BIGINT AS "requests!",
                   COALESCE(r.active_members, 0)::BIGINT AS "active_members!",
+                  COALESCE(r.tokens, 0)::BIGINT AS "tokens!",
                   COALESCE(r.cost_microdollars, 0)::BIGINT AS "cost_microdollars!",
+                  COALESCE(r.models_used, 0)::BIGINT AS "models_used!",
+                  r.top_model AS "top_model?",
+                  COALESCE(r.clients_used, 0)::BIGINT AS "clients_used!",
+                  r.top_client AS "top_client?",
+                  COALESCE(a.artifacts, 0)::BIGINT AS "artifacts!",
                   COALESCE(t.calls, 0)::BIGINT AS "tool_calls!",
                   COALESCE(t.ok, 0)::BIGINT AS "tool_success!",
                   COALESCE(s.skills, 0)::BIGINT AS "skills_used!"
@@ -63,7 +81,12 @@ pub async fn list_project_rollups(
            LEFT JOIN (
                SELECT m.scope_id, COUNT(x.id) AS requests,
                       COUNT(DISTINCT x.user_id) AS active_members,
-                      COALESCE(SUM(x.cost_microdollars), 0) AS cost_microdollars
+                      COALESCE(SUM(COALESCE(x.tokens_used, COALESCE(x.input_tokens, 0) + COALESCE(x.output_tokens, 0) + COALESCE(x.cache_read_tokens, 0) + COALESCE(x.cache_creation_tokens, 0))), 0) AS tokens,
+                      COALESCE(SUM(x.cost_microdollars), 0) AS cost_microdollars,
+                      COUNT(DISTINCT x.model) AS models_used,
+                      MODE() WITHIN GROUP (ORDER BY x.model) AS top_model,
+                      COUNT(DISTINCT x.client_kind) FILTER (WHERE x.client_kind NOT IN ('unknown', 'internal')) AS clients_used,
+                      MODE() WITHIN GROUP (ORDER BY x.client_kind) FILTER (WHERE x.client_kind NOT IN ('unknown', 'internal')) AS top_client
                FROM membership m
                JOIN ai_requests x ON x.user_id = m.user_id
                 AND x.created_at >= NOW() - make_interval(days => $3)
@@ -84,6 +107,13 @@ pub async fn list_project_rollups(
                 AND e.invoked_at >= NOW() - make_interval(days => $3)
                WHERE e.skill IS NOT NULL GROUP BY m.scope_id
            ) s ON s.scope_id = p.id
+           LEFT JOIN (
+               SELECT m.scope_id, COUNT(*) AS artifacts
+               FROM membership m
+               JOIN mcp_artifacts x ON x.user_id = m.user_id
+                AND x.created_at >= NOW() - make_interval(days => $3)
+               GROUP BY m.scope_id
+           ) a ON a.scope_id = p.id
            ORDER BY p.name
            LIMIT $4"#,
         ScopeKind::Project.as_str(),
@@ -104,10 +134,16 @@ pub async fn list_project_rollups(
             group_count: row.group_count,
             active_members: row.active_members,
             requests: row.requests,
+            tokens: row.tokens,
             cost_microdollars: row.cost_microdollars,
+            models_used: row.models_used,
+            top_model: row.top_model,
+            clients_used: row.clients_used,
+            top_client: row.top_client,
             tool_calls: row.tool_calls,
             tool_success: row.tool_success,
             skills_used: row.skills_used,
+            artifacts: row.artifacts,
         })
         .collect())
 }

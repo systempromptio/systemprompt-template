@@ -1,0 +1,77 @@
+@layer components {
+
+/* Why: the per-entity rule list is a table inside a cell; it inherits the
+   body type so it reads as detail, not as a second data table. */
+.sp-ac-rules {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--sp-text-xs);
+}
+
+.sp-ac-rules th,
+.sp-ac-rules td {
+    padding: var(--sp-space-1) var(--sp-space-2);
+    text-align: left;
+    vertical-align: top;
+}
+
+.sp-ac-rules th {
+    color: var(--sp-text-tertiary);
+    font-weight: 500;
+}
+
+.sp-ac-rules tr + tr td { border-top: 1px solid var(--sp-border-subtle); }
+
+/* Why: one band is a labelled cluster of chips, so "group india-devs, uk"
+   reads as a unit and two bands on the same entity do not run together. */
+.sp-ac-band {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-1);
+    margin: 0 var(--sp-space-2) var(--sp-space-1) 0;
+}
+
+.sp-ac-band__label {
+    font-size: var(--sp-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sp-text-tertiary);
+}
+
+.sp-ac-band__chip {
+    padding: 0 var(--sp-space-2);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-badge-accent-bg);
+    color: var(--sp-text-primary);
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-xs);
+    line-height: var(--sp-leading-normal);
+    white-space: nowrap;
+}
+
+.sp-ac-band--deny .sp-ac-band__chip {
+    background: var(--sp-danger-dim);
+    color: var(--sp-danger-strong);
+}
+
+/* Why: one heading row per entity kind turns the ledger into a catalogue;
+   it is a table row so the columns above still line up with the rows below. */
+.sp-ac-group + .sp-ac-group .sp-ac-group__row th { border-top: 1px solid var(--sp-border-subtle); }
+
+.sp-ac-group__row th {
+    padding: var(--sp-space-3) var(--sp-space-2) var(--sp-space-1);
+    border-bottom: 1px solid var(--sp-border-subtle);
+    background: var(--sp-bg-surface-raised);
+    text-align: left;
+}
+
+.sp-ac-group__label {
+    font-size: var(--sp-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sp-text-secondary);
+}
+
+}

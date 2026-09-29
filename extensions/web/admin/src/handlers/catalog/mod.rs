@@ -11,6 +11,7 @@
 //! plugin ↔ member relationship in both directions. The plugin and skill pages
 //! are strictly read-only: operators edit `services/*.yaml` and restart.
 
+mod access;
 mod data;
 mod entries;
 pub(crate) mod marketplaces;
@@ -149,12 +150,17 @@ pub(crate) async fn plugins_page(
     ))
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "axum extractor list; the router decides the arity, not this signature"
+)]
 pub(crate) async fn plugin_detail_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Path(plugin_id): Path<PluginId>,
+    axum::extract::Query(query): axum::extract::Query<view::PanelQuery>,
 ) -> AdminHtmlResult<Response> {
     admin_only(&user_ctx)?;
     let path = shared::get_services_path()?;
@@ -162,8 +168,17 @@ pub(crate) async fn plugin_detail_page(
     let catalog = data::load_catalog(&path, &user_ctx.roles);
     let counts = assignment_counts_by_type(&pool, ENTITY_PLUGIN).await;
     let assignment_count = counts.get(plugin_id.as_str()).copied().unwrap_or(0);
-    let page = view_models::plugin_detail(&catalog, &plugin_id, assignment_count)
+    let mut page = view_models::plugin_detail(&catalog, &plugin_id, assignment_count)
         .ok_or_else(|| AdminError::NotFound("No such plugin.".to_owned()))?;
+    page.access = Some(
+        access::panel(
+            &pool,
+            &user_ctx,
+            (ENTITY_PLUGIN, plugin_id.as_str()),
+            query.why.as_deref(),
+        )
+        .await,
+    );
     Ok(render_typed_page(
         &engine,
         "catalog-plugin-detail",
@@ -237,12 +252,17 @@ pub(crate) async fn skills_page(
     ))
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "axum extractor list; the router decides the arity, not this signature"
+)]
 pub(crate) async fn skill_detail_page(
     Extension(user_ctx): Extension<UserContext>,
     Extension(mkt_ctx): Extension<MarketplaceContext>,
     Extension(engine): Extension<AdminTemplateEngine>,
     State(pool): State<Arc<PgPool>>,
     Path(skill_id): Path<String>,
+    axum::extract::Query(query): axum::extract::Query<view::PanelQuery>,
 ) -> AdminHtmlResult<Response> {
     admin_only(&user_ctx)?;
     let path = shared::get_services_path()?;
@@ -251,8 +271,17 @@ pub(crate) async fn skill_detail_page(
     let counts = assignment_counts_by_type(&pool, ENTITY_SKILL).await;
     let assignment_count = counts.get(&skill_id).copied().unwrap_or(0);
     let skill = systemprompt::identifiers::SkillId::new(&skill_id);
-    let page = view_models::skill_detail(&catalog, &skill, assignment_count)
+    let mut page = view_models::skill_detail(&catalog, &skill, assignment_count)
         .ok_or_else(|| AdminError::NotFound("No such skill.".to_owned()))?;
+    page.access = Some(
+        access::panel(
+            &pool,
+            &user_ctx,
+            (ENTITY_SKILL, skill_id.as_str()),
+            query.why.as_deref(),
+        )
+        .await,
+    );
     Ok(render_typed_page(
         &engine,
         "catalog-skill-detail",

@@ -1,9 +1,11 @@
-// The access-control page's two dialogs. The ledger itself is server-rendered
-// and filtered by form submission, so this file only opens the YAML snapshot
-// and creates a group.
+// The access-control page. The entities table and the audience grid are
+// server-rendered and filtered by form submission; this file remembers whether
+// the "how a decision is made" strip is collapsed and creates a group.
 
 import { apiFetch } from '../services/api.js';
-import { showToast } from '../services/toast.js';
+import { initSyncPlane } from '../components/sp-sync-plane.js';
+
+const EXPLAIN_KEY = 'sp-ac-explain-collapsed';
 
 const dialog = (name) => document.querySelector(`dialog[data-dialog="${name}"]`);
 
@@ -23,27 +25,6 @@ const showGroupError = (message) => {
   if (!err) return;
   err.textContent = message;
   err.hidden = !message;
-};
-
-const showYaml = async () => {
-  openDialog('yaml');
-  const target = field('yaml-content');
-  target.textContent = 'Loading…';
-  try {
-    const yaml = await apiFetch('/access-control/yaml-snapshot');
-    target.textContent = yaml || 'No band rules are stored in the database yet.';
-  } catch {
-    target.textContent = 'Failed to load the YAML snapshot.';
-  }
-};
-
-const copyYaml = async (button) => {
-  try {
-    await navigator.clipboard.writeText(field('yaml-content').textContent);
-    button.textContent = 'Copied';
-  } catch {
-    showToast('Copy failed — select the text manually', 'error');
-  }
 };
 
 // Why: a duplicate identifier is the server's call. It answers with a
@@ -69,10 +50,8 @@ const saveGroup = async () => {
 };
 
 const ACTIONS = {
-  'show-yaml': showYaml,
   'new-group': () => openDialog('new-group'),
   'close-dialog': closeDialogs,
-  'copy-yaml': (target) => copyYaml(target),
   'save-group': saveGroup,
 };
 
@@ -85,10 +64,34 @@ const bindRoot = (root) => {
   });
 };
 
+// Why: the strip is open on first visit so the model is read once, and stays
+// closed afterwards for the person who has. Per browser, never per account.
+const rememberExplain = () => {
+  const strip = field('explain');
+  if (!strip) return;
+  try {
+    if (window.localStorage.getItem(EXPLAIN_KEY) === '1') strip.open = false;
+  } catch {
+    // storage unavailable: leave it open
+  }
+  strip.addEventListener('toggle', () => {
+    try {
+      window.localStorage.setItem(EXPLAIN_KEY, strip.open ? '0' : '1');
+    } catch {
+      // storage unavailable: nothing to remember
+    }
+  });
+};
+
 const init = () => {
   const header = document.querySelector('.sp-page-header');
   if (header) bindRoot(header);
   for (const el of document.querySelectorAll('dialog[data-dialog]')) bindRoot(el);
+  rememberExplain();
 };
 
 init();
+
+// Why: the Sync tab renders the shared sync-plane component; its buttons
+// are bound here so the tab works without a second page script.
+initSyncPlane();

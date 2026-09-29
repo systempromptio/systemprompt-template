@@ -80,17 +80,6 @@ pub(crate) struct GroupOverviewView {
     pub leaderboard: Vec<UsageLeaderRowView>,
 }
 
-// Why: One marketplace, and whether this group reaches it. Entitlement is an
-// ordinary access-control rule on the marketplace entity keyed by the group
-// dimension, so the checkbox writes a rule rather than a membership.
-#[derive(Debug, Clone, Serialize)]
-pub(crate) struct MarketplaceAssignmentView {
-    pub id: String,
-    pub name: String,
-    pub description: String,
-    pub assigned: bool,
-}
-
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct MemberRowView {
     pub user_id: UserId,
@@ -108,6 +97,10 @@ pub(crate) struct MemberRowView {
     pub last_active: Option<String>,
     pub sources: Vec<SourceBadgeView>,
     pub source_ad_groups: Vec<String>,
+    // Why: the manual membership's expiry, RFC 3339, or None for open-ended;
+    // `expires_soon` is the one-week warning the row badges.
+    pub expires_at: Option<String>,
+    pub expires_soon: bool,
     // Why: a member the directory put here cannot be removed by hand — the
     // next sign-in would write the row straight back.
     pub can_remove: bool,
@@ -168,13 +161,13 @@ pub(crate) struct GroupDetailPageData {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub members: Option<MembersTabView>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub marketplaces: Option<Vec<MarketplaceAssignmentView>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub access: Option<Vec<AccessSectionView>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub projects: Option<Vec<ProjectRowView>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mappings: Option<Vec<MappingRowView>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub export: Option<crate::export::ExportView>,
 }
 
 // Why: One entity's effective grant for a group subject, plus the toggle state

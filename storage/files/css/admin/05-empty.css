@@ -27,6 +27,16 @@
     text-align: left;
 }
 
+/* A section whose absence is the normal case: one quiet line under the
+   section head, so a page of empty sections reads as a checklist, not a void. */
+.sp-empty--compact {
+    align-items: flex-start;
+    padding: var(--sp-space-3) var(--sp-space-4);
+    text-align: left;
+    border: 1px dashed var(--sp-border-default);
+    border-radius: var(--sp-radius-md);
+}
+
 .sp-empty--pad { padding-block: var(--sp-space-10); }
 .sp-empty--pad-lg { padding-block: var(--sp-space-16); }
 

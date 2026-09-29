@@ -195,13 +195,7 @@ fn every_detail_table_has_an_empty_state() {
     );
 }
 
-fn render_access(mut access: serde_json::Value, can_write: bool) -> Option<String> {
-    if !repo_root()
-        .join("storage/files/admin/templates/components/user-access.hbs")
-        .exists()
-    {
-        return None;
-    }
+fn render_access(mut access: serde_json::Value, can_write: bool) -> String {
     if access.get("sections").is_none() {
         access["sections"] = serde_json::json!([]);
     }
@@ -210,31 +204,27 @@ fn render_access(mut access: serde_json::Value, can_write: bool) -> Option<Strin
         &repo_root().join("storage/files/admin"),
     )
     .expect("templates load");
-    Some(
-        engine
-            .render(
-                "components/user-access",
-                &serde_json::json!({
-                    "header": { "user_id": "test-user", "name": "Test user" },
-                    "can_write": can_write, "access": access,
-                }),
-            )
-            .expect("access renders"),
-    )
+    engine
+        .render(
+            "components/user-access",
+            &serde_json::json!({
+                "header": { "user_id": "test-user", "name": "Test user" },
+                "can_write": can_write, "access": access,
+            }),
+        )
+        .expect("access renders")
 }
 
 #[test]
 fn access_read_failures_are_visible_and_cannot_offer_rule_edits() {
-    let Some(html) = render_access(
+    let html = render_access(
         serde_json::json!({
             "available": false, "rules_available": false,
             "overview": { "catalog_available": false, "connections_available": false,
                 "device_activity": "Unable to load" },
         }),
         true,
-    ) else {
-        return; // skip-ok: components/user-access.hbs is not in this tree until the access panels are ported
-    };
+    );
     assert!(html.contains("Unable to load permissions"));
     assert!(html.contains("Unable to load connections"));
     assert!(!html.contains("data-edit-permissions"));
@@ -243,33 +233,31 @@ fn access_read_failures_are_visible_and_cannot_offer_rule_edits() {
 
 #[test]
 fn access_included_content_does_not_claim_client_execution() {
-    let Some(html) = render_access(
+    let html = render_access(
         serde_json::json!({
             "available": true, "rules_available": true,
             "overview": { "catalog_available": true, "allowed_count": 1,
                 "connections_available": true, "attention_count": 1,
-                "workspaces": [{ "name": "India Development", "status": "Allowed", "tone": "ok",
-                    "reason": "Allowed through group india-devs", "plugins": [
+                "workspaces": [{ "name": "Engineering Workspace", "status": "Allowed", "tone": "ok",
+                    "reason": "Allowed through group engineering", "plugins": [
                         { "name": "Business Analysis", "skills": 16 },
                         { "name": "Engineering Core", "skills": 18 }] }],
                 "other_workspaces": [
-                { "name": "Platform workspace", "status": "Explicitly denied", "tone": "err", "reason": "Denied through group india-devs" },
+                { "name": "Platform workspace", "status": "Explicitly denied", "tone": "err", "reason": "Denied through group engineering" },
                 { "name": "Cowork", "status": "Not assigned", "tone": "muted", "reason": "No matching grant for this workspace" }],
             "connections": [{ "name": "Atlassian", "permission": "Allowed",
                     "status": "Sign-in required", "tone": "warn", "verified_at": "Not verified", "next_step": "Sign in through the bridge app" }],
                 "device_activity": "2026-09-01 12:00" },
         }),
         false,
-    ) else {
-        return; // skip-ok: components/user-access.hbs is not in this tree until the access panels are ported
-    };
+    );
     for text in [
         "Explicitly denied",
         "Not assigned",
         "16 skills",
         "18 skills",
         "Sign-in required",
-        "Allowed through group india-devs",
+        "Allowed through group engineering",
         "Installation and skill execution on the device are not verified",
         "2026-09-01 12:00",
     ] {
@@ -280,21 +268,19 @@ fn access_included_content_does_not_claim_client_execution() {
 
 #[test]
 fn a_failed_personal_rule_read_is_unknown_rather_than_inherited() {
-    let Some(html) = render_access(
+    let html = render_access(
         serde_json::json!({
             "available": true, "rules_available": false, "has_groups": true,
             "overview": { "catalog_available": false, "connections_available": false,
                 "device_activity": "Not verified", "workspaces": [] },
             "sections": [{ "label": "Marketplaces", "has_rows": true, "rows": [{
-                "entity_type": "marketplace", "entity_id": "india", "entity_name": "India",
+                "entity_type": "marketplace", "entity_id": "engineering", "entity_name": "Engineering",
                 "rule_id": "", "effective": "allow", "effective_tone": "ok", "layer": "group",
-                "detail": "group:india-devs allow", "state": "inherit"
+                "detail": "group:engineering allow", "state": "inherit"
             }] }],
         }),
         true,
-    ) else {
-        return; // skip-ok: components/user-access.hbs is not in this tree until the access panels are ported
-    };
+    );
     assert!(html.contains("sp-p-access__rule-state\">Unable to load</span>"));
     assert!(!html.contains("data-edit-permissions"));
     assert!(!html.contains("data-can-edit"));

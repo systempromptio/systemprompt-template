@@ -148,6 +148,9 @@ pub(crate) struct MarketplaceDetailData {
     pub group_assignments_count: usize,
     pub assigned_count: usize,
     pub access_control_url: &'static str,
+    // Why: "Who gets this" — the marketplace's rules, reach and drift, read
+    // and edited in the panel every catalog detail page shares.
+    pub access: crate::handlers::ssr::entity_panel::EntityAccessView,
 }
 
 #[must_use]

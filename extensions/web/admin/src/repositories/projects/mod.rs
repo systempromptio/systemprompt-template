@@ -9,4 +9,5 @@ pub mod activity;
 pub mod crud;
 pub mod mappings;
 pub mod members;
+pub mod output;
 pub mod usage;

@@ -1,0 +1,195 @@
+{{#> layout page_title=title page_id=page}}
+    {{#*inline "content"}}
+    <div data-print-hide>{{> components/breadcrumbs crumbs=breadcrumbs}}</div>
+    {{#> components/page-header title=project_name subtitle=description}}
+        {{#*inline "header_meta"}}
+        <span class="sp-u-mono">{{project_id}}</span>
+        <span>{{window_label}}</span>
+        <span>Generated {{generated_at}} by {{generated_by}}</span>
+        {{/inline}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{detail_href}}" data-print-hide>Back to project</a>
+        <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="save-pdf" data-print-hide>{{> components/icon name="download" class="sp-icon--sm"}} Save as PDF</button>
+        <span data-print-hide>{{> components/export-button export}}</span>
+        {{/inline}}
+    {{/components/page-header}}
+
+    <article class="sp-p-report" data-project-report="{{project_id}}"{{#if print_on_load}} data-print-on-load{{/if}}>
+        <section class="sp-p-report__summary" aria-label="Summary">
+            <dl class="sp-p-report__facts">
+                {{#each facts}}
+                <div class="sp-p-report__fact"><dt>{{label}}</dt><dd>{{value}}</dd></div>
+                {{/each}}
+            </dl>
+        </section>
+
+        <section class="sp-kpi-grid" aria-label="Project totals">
+            {{#each kpis}}
+            {{> components/kpi label=label value=value note=this.note tone=tone}}
+            {{/each}}
+        </section>
+
+        <section class="sp-p-report__section" aria-label="Groups represented">
+            {{> components/section title="Groups represented" count=group_count note="The groups this project's members belong to. Entitlement comes from there, not from here."}}
+            {{> components/group-chips chips=groups_represented empty="No member of this project holds a group."}}
+        </section>
+
+        <section class="sp-p-report__section" aria-label="Members">
+            {{> components/section title="Members" count=member_count note="Member view — a person on more than one project appears under each."}}
+            {{#> components/table caption="Project members with their own usage"}}
+                <thead><tr>
+                    <th>Member</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th class="sp-table__cell--num">Requests</th>
+                    <th class="sp-table__cell--num">Tokens</th>
+                    <th class="sp-table__cell--num">Cost</th>
+                    <th class="sp-table__cell--date">Last active</th>
+                </tr></thead>
+                <tbody>
+                {{#each members}}
+                <tr>
+                    <td>{{display_name}}{{#if email}}<span class="sp-p-projects__sub">{{email}}</span>{{/if}}</td>
+                    <td>{{#each sources}}{{> components/source-badge this}}{{/each}}</td>
+                    <td>{{#if is_active}}{{#if (gt requests_30d 0)}}{{> components/badge tone="ok" text="Active"}}{{else}}{{> components/badge tone="muted" text="Idle"}}{{/if}}{{else}}{{> components/badge tone="muted" text="Disabled"}}{{/if}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{formatNumber requests_30d}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{formatNumber tokens_30d}}</td>
+                    <td class="sp-table__cell--num sp-u-num sp-u-mono">{{formatUsd cost_30d_microdollars}}</td>
+                    <td class="sp-table__cell--date">{{#if last_active}}{{formatDate last_active}}{{else}}Never{{/if}}</td>
+                </tr>
+                {{else}}
+                <tr class="sp-table__empty"><td colspan="7">{{> components/empty-state message="No members."}}</td></tr>
+                {{/each}}
+                </tbody>
+            {{/components/table}}
+        </section>
+
+        <section class="sp-p-report__section" aria-label="Spend">
+            {{> components/section title="Spend" note="Exclusive attribution: each person's requests count under their primary project."}}
+            <div class="sp-p-project__split">
+                {{> components/svg-line-chart daily}}
+                {{> components/svg-line-chart daily_cost}}
+            </div>
+        </section>
+
+        <div class="sp-p-project__split">
+            <section class="sp-p-report__section" aria-label="Models">
+                {{> components/section title="Models" count=(len models)}}
+                {{#> components/table caption="Model mix over the window"}}
+                    <thead><tr><th>Model</th><th>Share</th><th class="sp-table__cell--num">Requests</th><th class="sp-table__cell--num">Cost</th></tr></thead>
+                    <tbody>
+                    {{#each models}}
+                    <tr><td class="sp-u-mono">{{model}}</td>
+                        <td>{{> components/share-bar share_pct=share_pct label=(concat model " share")}}</td>
+                        <td class="sp-table__cell--num sp-u-num">{{formatNumber requests}}</td>
+                        <td class="sp-table__cell--num sp-u-num sp-u-mono">{{formatUsd cost_microdollars}}</td></tr>
+                    {{else}}
+                    <tr class="sp-table__empty"><td colspan="4">{{> components/empty-state message="No gateway traffic in the window."}}</td></tr>
+                    {{/each}}
+                    </tbody>
+                {{/components/table}}
+            </section>
+            <section class="sp-p-report__section" aria-label="Agents">
+                {{> components/section title="Agents" count=(len agents) note="The coding agents that made the requests."}}
+                {{#> components/table caption="Requests by coding agent"}}
+                    <thead><tr><th>Agent</th><th>Share</th><th class="sp-table__cell--num">Requests</th><th class="sp-table__cell--num">People</th><th class="sp-table__cell--num">Tokens</th><th class="sp-table__cell--num">Cost</th></tr></thead>
+                    <tbody>
+                    {{#each agents}}
+                    <tr><td title="{{client_kind}}">{{label}}</td>
+                        <td>{{> components/share-bar share_pct=share_pct label=(concat label " share")}}</td>
+                        <td class="sp-table__cell--num sp-u-num">{{formatNumber requests}}</td>
+                        <td class="sp-table__cell--num sp-u-num">{{users}}</td>
+                        <td class="sp-table__cell--num sp-u-num">{{tokens_display}}</td>
+                        <td class="sp-table__cell--num sp-u-num sp-u-mono">{{cost_display}}</td></tr>
+                    {{else}}
+                    <tr class="sp-table__empty"><td colspan="6">{{> components/empty-state message="No agent traffic in the window."}}</td></tr>
+                    {{/each}}
+                    </tbody>
+                {{/components/table}}
+            </section>
+        </div>
+
+        <section class="sp-p-report__section" aria-label="Skills">
+            {{> components/section title="Skills" count=(len skills) note="Invocations, and how many of the project's people used each."}}
+            {{#> components/table caption="Skills used"}}
+                <thead><tr><th>Skill</th><th class="sp-table__cell--num">Calls</th><th class="sp-table__cell--num">People</th></tr></thead>
+                <tbody>
+                {{#each skills}}
+                <tr><td>{{skill}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{formatNumber invocations}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{users}}</td></tr>
+                {{else}}
+                <tr class="sp-table__empty"><td colspan="3">{{> components/empty-state message="No skill invocations in the window."}}</td></tr>
+                {{/each}}
+                </tbody>
+            {{/components/table}}
+        </section>
+
+        <section class="sp-p-report__section" aria-label="Tools">
+            {{> components/section title="Tools" count=(len tools) note="MCP calls by server and tool, with the share that did not return success."}}
+            {{#> components/table caption="MCP tool health"}}
+                <thead><tr><th>Server</th><th>Tool</th><th class="sp-table__cell--num">Calls</th><th class="sp-table__cell--num">Failures</th><th class="sp-table__cell--num">Error rate</th><th class="sp-table__cell--num">p95</th><th class="sp-table__cell--num">People</th></tr></thead>
+                <tbody>
+                {{#each tools}}
+                <tr><td>{{server_name}}</td>
+                    <td class="sp-u-mono">{{tool_name}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{formatNumber calls}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{formatNumber failures}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{> components/badge tone=tone text=(concat error_pct "%")}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{p95_display}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{users}}</td></tr>
+                {{else}}
+                <tr class="sp-table__empty"><td colspan="7">{{> components/empty-state message="No MCP tool calls in the window."}}</td></tr>
+                {{/each}}
+                </tbody>
+            {{/components/table}}
+        </section>
+
+        <section class="sp-p-report__section" aria-label="Artifacts">
+            {{> components/section title="Artifacts" count=artifact_total note="What the project's tool calls produced, by server and type."}}
+            {{#> components/table caption="Artifacts by server and type"}}
+                <thead><tr><th>Server</th><th>Type</th><th class="sp-table__cell--num">Artifacts</th><th class="sp-table__cell--num">Errors</th><th class="sp-table__cell--num">People</th><th class="sp-table__cell--date">Last produced</th></tr></thead>
+                <tbody>
+                {{#each artifacts}}
+                <tr><td>{{server_name}}</td>
+                    <td>{{> components/badge tone="muted" text=artifact_type}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{formatNumber artifacts}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{formatNumber errors}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{users}}</td>
+                    <td class="sp-table__cell--date">{{formatDate last_created_at}}</td></tr>
+                {{else}}
+                <tr class="sp-table__empty"><td colspan="6">{{> components/empty-state message="No artifacts were produced in the window."}}</td></tr>
+                {{/each}}
+                </tbody>
+            {{/components/table}}
+        </section>
+
+        <section class="sp-p-report__section" aria-label="Sessions">
+            {{> components/section title="Sessions" count=(len sessions) note="The most recent working sessions this project's people ran."}}
+            {{#> components/table caption="Recent sessions"}}
+                <thead><tr><th>Session</th><th>Person</th><th class="sp-table__cell--num">Requests</th><th class="sp-table__cell--num">Models</th><th class="sp-table__cell--num">Cost</th><th class="sp-table__cell--date">Last activity</th></tr></thead>
+                <tbody>
+                {{#each sessions}}
+                <tr>
+                    <td class="sp-u-mono" title="{{session_id}}">{{session_short}}</td>
+                    <td title="{{user_id}}">{{person}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{formatNumber requests}}</td>
+                    <td class="sp-table__cell--num sp-u-num">{{models}}</td>
+                    <td class="sp-table__cell--num sp-u-num sp-u-mono">{{cost_display}}</td>
+                    <td class="sp-table__cell--date">{{formatDate last_activity}}</td></tr>
+                {{else}}
+                <tr class="sp-table__empty"><td colspan="6">{{> components/empty-state message="No sessions started in the window."}}</td></tr>
+                {{/each}}
+                </tbody>
+            {{/components/table}}
+        </section>
+
+        <footer class="sp-p-report__foot">
+            <p>Astound Digital · {{project_name}} · {{window_label}} · generated {{generated_at}}. Every figure is exclusive attribution — each request counts under one project — except the Members table, which is the member view.</p>
+        </footer>
+    </article>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-project-report.js"></script>
+    {{/inline}}
+{{/layout}}

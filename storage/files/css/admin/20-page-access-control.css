@@ -1,111 +1,149 @@
 @layer components {
 
-.sp-shell__main:has(.sp-p-ac__ledger) .sp-page-header {
-    margin-block: var(--sp-space-2);
+/* Why: the entity and its reason are what say what this row is, so those two
+   take the slack and every other column is sized to its content. */
+.sp-p-ac__entities .sp-col-default { width: 6rem; }
+.sp-p-ac__entities .sp-col-reaches { width: 22%; }
+.sp-p-ac__entities .sp-col-denied { width: 10rem; }
+.sp-p-ac__entities .sp-col-state { width: 7.5rem; }
+
+.sp-p-ac__entities .sp-col-entity,
+.sp-p-ac__entities .sp-col-why { min-width: 12rem; }
+.sp-p-ac__diff .sp-u-text-secondary { max-width: 22rem; }
+
+.sp-ac-drift .sp-btn { margin-top: var(--sp-space-2); }
+
+/* Why: the model in five lines, open on first visit and collapsible after.
+   A <details> so it costs nothing to keep on the page once it has been read. */
+.sp-ac-explain {
+    margin-block: var(--sp-space-4);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface);
 }
 
+.sp-ac-explain > summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--sp-text-primary);
+}
 
-/* Why: the entity id and the subject are what say which rule this is, so the
-   two of them take the slack and every other column is sized to its label. */
-.sp-p-ac__ledger .sp-col-kind { width: 9rem; }
-.sp-p-ac__ledger .sp-col-access { width: 6.5rem; }
-.sp-p-ac__ledger .sp-col-default { width: 7.5rem; }
-.sp-p-ac__ledger .sp-col-why { width: 10rem; }
+.sp-ac-explain__body {
+    display: grid;
+    grid-template-columns: minmax(16rem, 22rem) 1fr;
+    gap: var(--sp-space-5);
+    margin-top: var(--sp-space-3);
+}
 
-.sp-ac-field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-space-1);
-    margin-bottom: var(--sp-space-3);
+.sp-ac-explain__rules {
+    margin: 0;
+    padding-left: var(--sp-space-4);
     font-size: var(--sp-text-sm);
     color: var(--sp-text-secondary);
 }
 
-.sp-ac-form-error {
-    margin: 0 0 var(--sp-space-2);
-    color: var(--sp-danger-strong);
+.sp-ac-explain__rules li + li { margin-top: var(--sp-space-1); }
+
+.sp-ac-explain__more {
+    grid-column: 1 / -1;
+    margin: 0;
     font-size: var(--sp-text-sm);
 }
 
-.sp-ac-modal-hint {
+/* Why: the ladder is drawn as a ladder — narrowest band at the top, precedence
+   number beside it — because the order IS the rule. */
+.sp-ac-ladder {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 2px solid var(--sp-border-strong);
+}
+
+.sp-ac-ladder li {
+    display: grid;
+    grid-template-columns: 8rem 3rem 1fr;
+    gap: var(--sp-space-2);
+    align-items: baseline;
+    padding: var(--sp-space-1) var(--sp-space-3);
+    font-size: var(--sp-text-sm);
+}
+
+.sp-ac-ladder li + li { border-top: 1px dashed var(--sp-border-subtle); }
+
+.sp-ac-ladder__band {
+    font-weight: 600;
+    color: var(--sp-text-primary);
+}
+
+.sp-ac-ladder__prec {
+    font-family: var(--sp-font-mono);
     font-size: var(--sp-text-xs);
     color: var(--sp-text-tertiary);
 }
 
-.sp-ac-dialog {
-    max-width: min(720px, 94vw);
-}
+.sp-ac-ladder__note { color: var(--sp-text-secondary); }
 
-.sp-ac-dialog__header {
+.sp-ac-entity[data-entity-type] > td { vertical-align: top; }
+
+.sp-ac-entity__summary,
+.sp-ac-entity__details > summary {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sp-space-3);
-    padding: var(--sp-space-4) var(--sp-space-5);
-    border-bottom: 1px solid var(--sp-border-subtle);
-}
-
-.sp-ac-dialog__header h2 {
-    margin: 0;
-    font-size: var(--sp-text-lg);
-}
-
-.sp-ac-dialog__close {
-    background: none;
-    border: none;
-    color: var(--sp-text-secondary);
-    font-size: var(--sp-text-lg);
-    line-height: 1;
+    flex-direction: column;
+    gap: var(--sp-space-05);
     cursor: pointer;
+    list-style: none;
 }
 
-.sp-ac-dialog__body {
-    padding: var(--sp-space-5);
-    max-height: 60vh;
-    overflow-y: auto;
-}
+.sp-ac-entity__details > summary::-webkit-details-marker { display: none; }
 
-.sp-ac-dialog__actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--sp-space-2);
-    padding: var(--sp-space-4) var(--sp-space-5);
-    border-top: 1px solid var(--sp-border-subtle);
-}
-
-/* Why: the layer name is a fixed vocabulary next to free text, so it takes a
-   monospace pill to read as a category rather than part of the sentence. */
-.sp-ac-layer-tag {
-    display: inline-block;
-    padding: 0 var(--sp-space-2);
-    border: 1px solid var(--sp-border-subtle);
-    border-radius: var(--sp-radius-full);
-    background: var(--sp-bg-surface-raised);
-    color: var(--sp-text-secondary);
-    font-family: var(--sp-font-mono);
-    font-size: var(--sp-text-xs);
-    line-height: var(--sp-leading-normal);
-    white-space: nowrap;
-}
-
-.sp-ac-yaml-pre {
-    margin: 0;
-    padding: var(--sp-space-3);
-    background: var(--sp-bg-surface-raised);
-    border-radius: var(--sp-corners-sm);
-    font-family: var(--sp-font-mono);
-    font-size: var(--sp-text-xs);
-    white-space: pre-wrap;
-    overflow-x: auto;
-}
-
-/* Why: the entity's kind above its id in a sync-plane diff row — a small
-   caps label so the id stays what the eye lands on. */
 .sp-ac-entity__kind {
     font-size: var(--sp-text-xs);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--sp-text-tertiary);
+}
+
+/* Why: the label is what the row is called; the generated id is kept as a
+   quiet subtitle so a rule written against it can still be matched by eye. */
+.sp-ac-entity__label {
+    color: var(--sp-text-primary);
+    font-weight: 500;
+}
+
+.sp-ac-entity__sub {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.sp-ac-entity__id {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-ac-entity__details[open] .sp-ac-entity__label { text-decoration: underline dotted; }
+
+.sp-ac-entity__expanded {
+    margin-top: var(--sp-space-3);
+    padding: var(--sp-space-3);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface-raised);
+}
+
+.sp-ac-entity__resolution {
+    margin: 0 0 var(--sp-space-3);
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-primary);
+}
+
+.sp-ac-entity__why {
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+}
+
+
+@media (max-width: 900px) {
+    .sp-ac-explain__body { grid-template-columns: 1fr; }
 }
 
 }

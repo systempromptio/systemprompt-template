@@ -7,7 +7,9 @@
 use std::sync::Arc;
 
 use sqlx::PgPool;
-use systemprompt::security::authz::{AccessControlRepository, AuthzError, EntityKind};
+use systemprompt::security::authz::{
+    AccessControlRepository, AuthzError, DASHBOARD_SOURCE, EntityKind,
+};
 
 use crate::types::access_control::{
     AccessControlRule, AccessControlRuleInput, AccessDecision, RuleType,
@@ -68,6 +70,11 @@ pub async fn list_rules_for_entity(
 
 const SOURCE_LABEL: &str = "admin:dashboard";
 
+// Why: replaces the entity's rule set with `rules`, but as an upsert plus a
+// delete of what is absent rather than a wipe and re-insert. A row the file
+// already declared and the console left alone keeps its `yaml` source and its
+// justification, so it does not turn into drift; only rows the console changed
+// or added are stamped `dashboard`.
 pub async fn set_entity_rules(
     pool: &PgPool,
     entity_type: EntityKind,
@@ -81,45 +88,12 @@ pub async fn set_entity_rules(
     catalog(pool)
         .ensure_entity(entity_type, entity_id, SOURCE_LABEL)
         .await?;
-    let entity_type = entity_type.as_str();
     let mut tx = pool.begin().await?;
-
-    sqlx::query!(
-        "DELETE FROM access_control_rules WHERE entity_type = $1 AND entity_id = $2",
-        entity_type,
-        entity_id
-    )
-    .execute(&mut *tx)
-    .await?;
-
-    let mut results = Vec::new();
-    for rule in rules {
-        let id = uuid::Uuid::new_v4().to_string();
-        let rule_type_str = rule.rule_type.to_string();
-        let access_str = rule.access.to_string();
-        let row = sqlx::query_as!(
-            AccessControlRule,
-            r#"INSERT INTO access_control_rules (id, entity_type, entity_id, rule_type, rule_value, access)
-               VALUES ($1, $2, $3, $4, $5, $6)
-               RETURNING id, entity_type, entity_id,
-                         rule_type as "rule_type!: RuleType",
-                         rule_value,
-                         access as "access!: AccessDecision",
-                         created_at, updated_at"#,
-            id,
-            entity_type,
-            entity_id,
-            rule_type_str,
-            rule.rule_value,
-            access_str,
-        )
-        .fetch_one(&mut *tx)
-        .await?;
-        results.push(row);
-    }
-
+    replace_rules(&mut tx, entity_type.as_str(), entity_id, rules).await?;
     tx.commit().await?;
-    Ok(results)
+    list_rules_for_entity(pool, entity_type.as_str(), entity_id)
+        .await
+        .map_err(AuthzError::from)
 }
 
 pub async fn bulk_set_rules(
@@ -133,42 +107,71 @@ pub async fn bulk_set_rules(
             .ensure_entity(*entity_type, entity_id, SOURCE_LABEL)
             .await?;
     }
-
     let mut tx = pool.begin().await?;
-    let mut count = 0usize;
-
     for (entity_type, entity_id) in entities {
-        let entity_type = entity_type.as_str();
-        sqlx::query!(
-            "DELETE FROM access_control_rules WHERE entity_type = $1 AND entity_id = $2",
-            entity_type,
-            entity_id
-        )
-        .execute(&mut *tx)
-        .await?;
-
-        for rule in rules {
-            let id = uuid::Uuid::new_v4().to_string();
-            let rule_type_str = rule.rule_type.to_string();
-            let access_str = rule.access.to_string();
-            sqlx::query!(
-                r"INSERT INTO access_control_rules (id, entity_type, entity_id, rule_type, rule_value, access)
-                  VALUES ($1, $2, $3, $4, $5, $6)",
-                id,
-                entity_type,
-                entity_id,
-                rule_type_str,
-                rule.rule_value,
-                access_str,
-            )
-            .execute(&mut *tx)
-            .await?;
-        }
-        count += 1;
+        replace_rules(&mut tx, entity_type.as_str(), entity_id, rules).await?;
     }
-
     tx.commit().await?;
-    Ok(count)
+    Ok(entities.len())
+}
+
+async fn replace_rules(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    entity_type: &str,
+    entity_id: &str,
+    rules: &[AccessControlRuleInput],
+) -> Result<(), sqlx::Error> {
+    let mut kept_types: Vec<String> = Vec::with_capacity(rules.len());
+    let mut kept_values: Vec<String> = Vec::with_capacity(rules.len());
+    for rule in rules {
+        let id = uuid::Uuid::new_v4().to_string();
+        let rule_type_str = rule.rule_type.to_string();
+        let access_str = rule.access.to_string();
+        sqlx::query!(
+            r"INSERT INTO access_control_rules
+                  (id, entity_type, entity_id, rule_type, rule_value, access, justification, source)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+              ON CONFLICT (entity_type, entity_id, rule_type, rule_value) DO UPDATE
+                 SET access = EXCLUDED.access,
+                     justification = COALESCE(EXCLUDED.justification, access_control_rules.justification),
+                     source = CASE
+                         WHEN access_control_rules.access = EXCLUDED.access
+                          AND EXCLUDED.justification IS NULL THEN access_control_rules.source
+                         ELSE EXCLUDED.source
+                     END,
+                     updated_at = CASE
+                         WHEN access_control_rules.access = EXCLUDED.access
+                          AND EXCLUDED.justification IS NULL THEN access_control_rules.updated_at
+                         ELSE NOW()
+                     END",
+            id,
+            entity_type,
+            entity_id,
+            rule_type_str,
+            rule.rule_value,
+            access_str,
+            rule.justification.as_deref().map(str::trim).filter(|j| !j.is_empty()),
+            DASHBOARD_SOURCE,
+        )
+        .execute(&mut **tx)
+        .await?;
+        kept_types.push(rule_type_str);
+        kept_values.push(rule.rule_value.clone());
+    }
+    sqlx::query!(
+        r"DELETE FROM access_control_rules
+           WHERE entity_type = $1 AND entity_id = $2
+             AND (rule_type, rule_value) NOT IN (
+                   SELECT t, v FROM UNNEST($3::TEXT[], $4::TEXT[]) AS kept(t, v)
+                 )",
+        entity_type,
+        entity_id,
+        &kept_types,
+        &kept_values,
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
 }
 
 fn catalog(pool: &PgPool) -> AccessControlRepository {

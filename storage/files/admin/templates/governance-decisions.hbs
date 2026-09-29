@@ -72,7 +72,7 @@
     {{> components/notice tone="info" title="Listing is capped" message="Only the newest matching decisions are loaded before the window is applied, so an older part of this window may be missing. Narrow with a policy, outcome or user filter to see further back."}}
     {{/if}}
     {{else}}
-    {{> components/empty-state title="No decisions in this window" message="Either nothing called a governed tool, or the filters above exclude everything that did."}}
+    {{> components/empty-state heading="No decisions in this window" message="Either nothing called a governed tool, or the filters above exclude everything that did."}}
     {{/if}}
     {{/inline}}
     {{#*inline "scripts"}}{{/inline}}

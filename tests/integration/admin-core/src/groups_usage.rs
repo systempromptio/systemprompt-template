@@ -43,7 +43,7 @@ async fn the_summary_counts_only_this_groups_members() {
     let member = insert_user(&db.pool, &unique("user"), &unclaimed_email("member")).await;
     let outsider = insert_user(&db.pool, &unique("user"), &unclaimed_email("outsider")).await;
     let admin = insert_user(&db.pool, &unique("admin"), &unclaimed_email("admin")).await;
-    insert_group_member(&db.pool, &group, &member, &admin)
+    insert_group_member(&db.pool, &group, &member, &admin, None)
         .await
         .expect("add member");
 
@@ -103,7 +103,7 @@ async fn the_model_leaderboard_and_daily_series_agree_with_the_summary() {
     seed_group(&db.pool, &group).await;
     let member = insert_user(&db.pool, &unique("user"), &unclaimed_email("member")).await;
     let admin = insert_user(&db.pool, &unique("admin"), &unclaimed_email("admin")).await;
-    insert_group_member(&db.pool, &group, &member, &admin)
+    insert_group_member(&db.pool, &group, &member, &admin, None)
         .await
         .expect("add member");
     insert_request(&db.pool, &RequestSpec::completed(&unique("req"), &member)).await;
@@ -142,7 +142,7 @@ async fn a_groups_projects_are_the_projects_its_members_are_in() {
     seed_group(&db.pool, &group).await;
     let member = insert_user(&db.pool, &unique("user"), &unclaimed_email("member")).await;
     let admin = insert_user(&db.pool, &unique("admin"), &unclaimed_email("admin")).await;
-    insert_group_member(&db.pool, &group, &member, &admin)
+    insert_group_member(&db.pool, &group, &member, &admin, None)
         .await
         .expect("add member");
     sqlx::query(

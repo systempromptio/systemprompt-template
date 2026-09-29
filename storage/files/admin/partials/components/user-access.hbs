@@ -1,0 +1,129 @@
+    <section class="sp-p-user-detail__pane" data-access data-user-id="{{header.user_id}}">
+        <div class="sp-p-access__summary" aria-label="Access summary">
+            <article class="sp-p-access__card">
+                <h3>Allowed workspaces</h3>
+                <strong class="sp-p-access__value">{{#if access.available}}{{#if access.overview.catalog_available}}{{access.overview.allowed_count}}{{else}}Unable to load{{/if}}{{else}}Unable to load{{/if}}</strong>
+                <p>Resolved from this person's permissions</p>
+            </article>
+            <article class="sp-p-access__card">
+                <h3>Connections needing attention</h3>
+                <strong class="sp-p-access__value">{{#if access.overview.connections_available}}{{access.overview.attention_count}}{{else}}Unable to load{{/if}}</strong>
+                <p>Among connectors this person is allowed to use</p>
+            </article>
+            <article class="sp-p-access__card">
+                <h3>Latest device activity</h3>
+                <strong>{{access.overview.device_activity}}</strong>
+                <p>{{access.overview.device_detail}}</p>
+                <a href="/admin/users/{{header.user_id}}?tab=devices">View devices</a>
+            </article>
+        </div>
+        <section aria-label="Workspaces" class="sp-p-access__stack">
+            <h3 class="sp-section__title">Workspaces</h3>
+            <p class="sp-u-text-secondary">Included content reflects current access. Installation and skill execution on the device are not verified.</p>
+            {{#if access.available}}
+            {{#each access.overview.workspaces}}
+            <details class="sp-p-access__card sp-p-access__workspace">
+                <summary><span>{{this.name}}</span> {{> components/badge tone=this.tone text=this.status}}<span class="sp-p-access__reason">{{this.reason}}</span></summary>
+                <h4>Included content</h4>
+                {{#if @root.access.overview.catalog_available}}
+                <ul class="sp-p-access__plugins">
+                    {{#each this.plugins}}<li><span>{{this.name}}</span><span>{{this.skills}} skills</span></li>{{else}}<li>No plugins included for this person</li>{{/each}}
+                </ul>
+                {{else}}<p>Unable to load included content.</p>{{/if}}
+            </details>
+            {{else}}
+            {{#if access.overview.catalog_available}}<p>No allowed workspaces.</p>{{else}}<p>Unable to load workspace access.</p>{{/if}}
+            {{/each}}
+            {{#if access.overview.other_workspaces}}
+            <details class="sp-p-access__card">
+                <summary>Other workspaces</summary>
+                <p>Being an administrator does not by itself grant every workspace. Access follows the rules shown here.</p>
+                <ul class="sp-p-access__other">
+                {{#each access.overview.other_workspaces}}
+                    <li><div><strong>{{this.name}}</strong><p>{{this.reason}}</p></div>{{> components/badge tone=this.tone text=this.status}}</li>
+                {{/each}}
+                </ul>
+            </details>
+            {{/if}}
+            {{else}}<p role="status">Unable to load permissions. Try reloading this page.</p>{{/if}}
+        </section>
+        <section aria-label="Connector connections" class="sp-p-access__stack">
+            <h3 class="sp-section__title">Connections</h3>
+            <p class="sp-u-text-secondary">Workspace access and provider sign-in are separate. These are MCP connections, separate from the account links on Identity.</p>
+            <div class="sp-p-access__summary">
+            {{#if access.overview.connections_available}}
+            {{#each access.overview.connections}}
+                <article class="sp-p-access__card">
+                    <h4>{{this.name}}</h4>
+                    <p>Permission: <strong>{{this.permission}}</strong></p>
+                    {{> components/badge tone=this.tone text=this.status}}
+                    <p>{{this.next_step}}</p>
+                    <small>Last verified: {{this.verified_at}}</small>
+                </article>
+            {{/each}}
+            {{else}}<p role="status">Unable to load connections. Try reloading this page.</p>{{/if}}
+            </div>
+        </section>
+        <details class="sp-p-access__card">
+            <summary>What does “locked by plugin” mean in Claude Code?</summary>
+            <p>A skill marked “on” is enabled. “Locked by plugin” means its enablement is managed through the parent plugin in /plugin. The label alone does not identify an execution block.</p>
+            <p>If a skill starts but cannot continue, check its response for missing connector access, sign-in, or required workspace files.</p>
+            <a href="/admin/users/{{header.user_id}}?tab=usage">Review recent activity</a>
+        </details>
+        <details class="sp-p-access__card" data-permission-details>
+            <summary>Permission details</summary>
+            <p>These are individual resource rules. Included content above also applies marketplace and plugin inheritance. A deny rule takes priority over an allow.</p>
+            <div class="sp-p-access__actions">
+                <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/access-control">Rule ledger</a>
+                {{#if can_write}}{{#if access.rules_available}}
+                <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-edit-permissions aria-expanded="false" aria-controls="user-permission-tables">Edit permissions</button>
+                {{/if}}{{/if}}
+            </div>
+            {{#unless access.rules_available}}<p role="status">Unable to load individual rules. Editing is unavailable.</p>{{/unless}}
+            <p>Inherit removes only this person’s override and saves at once. Allow and deny save when you press Save; the reason is optional for a personal override and is shown on the rule.</p>
+            <div id="user-permission-tables">
+        {{#if access.available}}{{#unless access.has_groups}}
+        {{> components/notice tone="info" title="No group membership" message="This person is in no group, so only role, project and default rules apply. Add them to a group on the Membership tab."}}
+        {{/unless}}{{/if}}
+        {{#each access.sections}}
+        <h3 class="sp-section__title">{{this.label}}</h3>
+        {{#if this.has_rows}}
+        {{#> components/table caption=this.label}}
+            <thead><tr>
+                <th>Entity</th>
+                <th class="sp-col-status">Effective</th>
+                <th>Decided by</th>
+                <th class="sp-table__cell--actions">This person</th>
+            </tr></thead>
+            <tbody>
+            {{#each this.rows}}
+            <tr data-entity-type="{{this.entity_type}}" data-entity-id="{{this.entity_id}}" data-rule-id="{{this.rule_id}}">
+                <td>{{this.entity_name}} <span class="sp-u-mono sp-u-text-xs sp-u-text-tertiary">{{this.entity_id}}</span></td>
+                <td class="sp-col-status">{{> components/badge tone=this.effective_tone text=this.effective}}</td>
+                <td><span class="sp-access-layer">{{this.layer}}</span> <span class="sp-u-text-tertiary sp-u-text-xs">{{this.detail}}</span></td>
+                <td class="sp-table__cell--actions">
+                    <span class="sp-p-access__rule-state">{{#if @root.access.rules_available}}{{this.state}}{{else}}Unable to load{{/if}}</span>
+                    <div class="sp-group-rule" data-user-rule>
+                        <select class="sp-filter-select sp-p-access__rule-editor" data-action="set-user-rule" data-previous="{{this.state}}" aria-label="Override for {{this.entity_name}}" disabled{{#if @root.can_write}}{{#if @root.access.rules_available}} data-can-edit="true"{{/if}}{{/if}}>
+                            <option value="inherit"{{#if (eq this.state "inherit")}} selected{{/if}}>Inherit</option>
+                            <option value="allow"{{#if (eq this.state "allow")}} selected{{/if}}>Allow</option>
+                            <option value="deny"{{#if (eq this.state "deny")}} selected{{/if}}>Deny</option>
+                        </select>
+                        <span class="sp-group-rule__reason" data-user-reason hidden>
+                            <input type="text" class="sp-search-input" data-user-reason-input maxlength="240" placeholder="Why? (optional)" aria-label="Reason for the override on {{this.entity_name}}">
+                            <input type="date" class="sp-search-input" data-user-until-input aria-label="Expiry of the override on {{this.entity_name}}" title="Expires (blank = open-ended)">
+                            <button type="button" class="sp-btn sp-btn--sm sp-btn--secondary" data-action="save-user-rule">Save</button>
+                        </span>
+                    </div>
+                </td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/table}}
+        {{else}}
+        {{> components/empty-state message="No entities of this kind are configured."}}
+        {{/if}}
+        {{/each}}
+            </div>
+        </details>
+    </section>

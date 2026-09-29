@@ -1,0 +1,139 @@
+{{!-- The audience grid: filters, totals, legend, the inspector for one
+     subject or one entity, then the grid itself — roles, groups and projects
+     across the top in three bands, every governed entity down the side
+     grouped by kind, each cell the resolver's decision first and the band
+     that decided it second. Context: `audience` (AudienceGridView). --}}
+<form class="sp-toolbar sp-toolbar--fields sp-ac-audience__filters" method="get" action="/admin/access-control" role="search" aria-label="Narrow the audience grid">
+    <input type="hidden" name="tab" value="audience">
+    <div class="sp-toolbar__field">
+        <label class="sp-toolbar__field-label" for="ac-aud-subject-kind">Subjects</label>
+        <select class="sp-select" id="ac-aud-subject-kind" name="subject_kind">
+        {{#each audience.filters.subject_kind_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+    </div>
+    <div class="sp-toolbar__field">
+        <label class="sp-toolbar__field-label" for="ac-aud-subject">Focus on</label>
+        <select class="sp-select" id="ac-aud-subject" name="subject">
+        {{#each audience.filters.subject_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+    </div>
+    <div class="sp-toolbar__field">
+        <label class="sp-toolbar__field-label" for="ac-aud-entity">Entity kind</label>
+        <select class="sp-select" id="ac-aud-entity" name="entity_kind">
+        {{#each audience.filters.entity_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+    </div>
+    <div class="sp-toolbar__field">
+        <label class="sp-toolbar__field-label" for="ac-aud-decision">Decision</label>
+        <select class="sp-select" id="ac-aud-decision" name="decision">
+        {{#each audience.filters.decision_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+    </div>
+    <div class="sp-toolbar__field">
+        <label class="sp-toolbar__field-label" for="ac-aud-band">Decided by</label>
+        <select class="sp-select" id="ac-aud-band" name="band">
+        {{#each audience.filters.band_options}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+    </div>
+    <label class="sp-u-sr-only" for="ac-aud-q">Search entities</label>
+    <div class="sp-toolbar__search">
+        <input class="sp-search-input" id="ac-aud-q" type="search" name="q" value="{{audience.filters.search}}" placeholder="Entity name or id">
+    </div>
+    <div class="sp-toolbar__actions">
+        <button type="submit" class="sp-btn sp-btn--sm sp-btn--secondary">Apply</button>
+        {{#if audience.filters.filters_applied}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{audience.filters.clear_url}}">Clear</a>{{/if}}
+    </div>
+</form>
+
+{{#if audience.resolved}}
+<section class="sp-kpi-grid sp-ac-audience__kpis" aria-label="Audience grid totals">
+    {{#each audience.kpis}}
+    {{> components/kpi label=label value=value note=note tone=tone href=href active=active}}
+    {{/each}}
+</section>
+
+<div class="sp-ac-audience__legend" role="note" aria-label="How to read a cell">
+    {{#each audience.legend}}
+    <span class="sp-badge sp-badge--{{tone}} sp-badge--nodot"><span class="sp-ac-audience__glyph" aria-hidden="true">{{glyph}}</span> {{label}}</span>
+    {{/each}}
+    <span class="sp-ac-audience__legend-note">The small word under each mark is the band that decided; hover a cell for the rule.</span>
+</div>
+
+{{#if audience.focus}}
+<section class="sp-ac-audience__focus" aria-labelledby="ac-aud-focus-title">
+    <div class="sp-section__head">
+        <h2 class="sp-section__title" id="ac-aud-focus-title"><span class="sp-ac-audience__focus-kind">{{audience.focus.kind_label}}</span> {{audience.focus.label}}{{#if audience.focus.note}} <span class="sp-u-mono sp-ac-audience__focus-sub">{{audience.focus.note}}</span>{{/if}}</h2>
+        <p class="sp-section__sub">All {{audience.focus.item_noun}} on screen, by the resolver's decision, with the rule that made it.</p>
+        <div class="sp-section__actions"><a class="sp-btn sp-btn--sm sp-btn--outline" href="{{audience.focus.back_url}}">← Back to the grid</a></div>
+    </div>
+    <div class="sp-ac-audience__buckets">
+        {{#each audience.focus.buckets}}
+        <article class="sp-card sp-ac-audience__bucket sp-ac-audience__bucket--{{tone}}">
+            <h3 class="sp-ac-audience__bucket-title"><span class="sp-ac-audience__glyph" aria-hidden="true">{{glyph}}</span> {{label}} <span class="sp-count-pill">{{count}}</span></h3>
+            <table class="sp-ac-audience__bucket-table">
+                <thead><tr><th>{{@root.audience.focus.item_label}}</th><th>Band</th><th>Rule</th><th>Why</th><th>Expires</th></tr></thead>
+                <tbody>
+                {{#each items}}
+                <tr>
+                    <td><a class="sp-ac-audience__bucket-label" href="{{rules_url}}">{{label}}</a><span class="sp-ac-audience__bucket-kind">{{kind_label}}{{#if this.note}} · {{this.note}}{{/if}}</span></td>
+                    <td><span class="sp-badge sp-badge--muted sp-badge--nodot sp-badge--sm">{{layer}}</span></td>
+                    <td class="sp-u-mono">{{detail}}</td>
+                    <td>{{#if why}}{{why}}{{else}}<span class="sp-ac-audience__none">—</span>{{/if}}</td>
+                    <td>{{#if expires_at}}{{expires_at}}{{else}}<span class="sp-ac-audience__none">—</span>{{/if}}</td>
+                </tr>
+                {{/each}}
+                </tbody>
+            </table>
+        </article>
+        {{/each}}
+    </div>
+</section>
+{{/if}}
+
+{{#if audience.has_rows}}
+<div class="sp-ac-audience__wrap" tabindex="0" role="region" aria-label="Audience grid">
+    <table class="sp-ac-audience">
+        <thead>
+            <tr class="sp-ac-audience__bands">
+                <th scope="col" rowspan="2" class="sp-ac-audience__corner">Entity</th>
+                {{#each audience.column_groups}}
+                <th scope="colgroup" colspan="{{span}}" class="sp-ac-audience__band sp-ac-audience__band--{{kind}}">{{kind_label}} <span class="sp-count-pill">{{span}}</span></th>
+                {{/each}}
+            </tr>
+            <tr>
+                {{#each audience.columns}}
+                <th scope="col" class="sp-ac-audience__col sp-ac-audience__col--{{kind}}{{#if is_focused}} is-focused{{/if}}">
+                    <a class="sp-ac-audience__col-link" href="{{focus_url}}" title="Focus on {{label}}">{{label}}</a>
+                    <span class="sp-ac-audience__col-counts"><span class="sp-ac-audience__count sp-ac-audience__count--ok">{{allowed}}</span><span class="sp-ac-audience__count sp-ac-audience__count--err">{{denied}}</span></span>
+                </th>
+                {{/each}}
+            </tr>
+        </thead>
+        {{#each audience.row_groups}}
+        <tbody data-entity-kind="{{kind}}">
+            <tr class="sp-ac-audience__group-row"><th scope="rowgroup" colspan="{{../audience.colspan}}"><span class="sp-ac-audience__group-label">{{kind_label}}</span> <span class="sp-count-pill">{{count}}</span></th></tr>
+            {{#each rows}}
+            <tr class="sp-ac-audience__row" data-entity-type="{{entity_type}}" data-entity-id="{{entity_id}}">
+                <th scope="row" class="sp-ac-audience__entity">
+                    <a class="sp-ac-audience__entity-link" href="{{drill_url}}" title="Every subject for {{entity_name}}">{{entity_name}}</a>
+                    <span class="sp-ac-audience__entity-sub">{{#if entity_sub}}{{entity_sub}}{{else}}{{entity_id}}{{/if}}</span>
+                </th>
+                {{#each cells}}
+                <td class="sp-ac-audience__cell is-{{decision}}" title="{{decision}} — {{detail}}">
+                    <span class="sp-ac-audience__glyph" aria-hidden="true">{{glyph}}</span>
+                    <span class="sp-u-sr-only">{{decision}}</span>
+                    <span class="sp-ac-audience__layer">{{layer}}</span>
+                </td>
+                {{/each}}
+            </tr>
+            {{/each}}
+        </tbody>
+        {{/each}}
+    </table>
+</div>
+{{else}}
+{{> components/empty-state heading="Nothing matches these filters" message="Widen a filter or clear them all to see the whole grid."}}
+{{/if}}
+{{else}}
+{{> components/empty-state message="The grid could not be resolved. Check the server log for the access-control resolver."}}
+{{/if}}

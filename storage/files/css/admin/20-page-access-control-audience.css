@@ -1,0 +1,189 @@
+@layer components {
+
+/* Why: the grid is a matrix, not a list — both header rows and the entity
+   column stay put while the body scrolls in both directions, or the reader
+   loses which subject and which entity a cell belongs to. */
+.sp-ac-audience__wrap {
+    overflow: auto;
+    max-height: 75vh;
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface);
+}
+
+.sp-ac-audience {
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: var(--sp-text-sm);
+    min-width: 100%;
+}
+
+.sp-ac-audience thead th {
+    position: sticky;
+    top: 0;
+    z-index: var(--sp-z-sticky);
+    background: var(--sp-bg-card-header);
+    border-bottom: 1px solid var(--sp-border-default);
+    text-align: center;
+    vertical-align: bottom;
+    padding: var(--sp-space-1) var(--sp-space-2);
+}
+
+/* Why: the second header row sits under the first; its offset is the first
+   row's height, which the band row pins with a fixed line box. */
+.sp-ac-audience__bands th { height: var(--sp-space-8); }
+.sp-ac-audience thead tr + tr th { top: var(--sp-space-8); }
+
+.sp-ac-audience__corner,
+.sp-ac-audience__entity,
+.sp-ac-audience__group-row th {
+    position: sticky;
+    left: 0;
+    z-index: var(--sp-z-sticky);
+    text-align: left;
+    background: var(--sp-bg-surface);
+    border-right: 1px solid var(--sp-border-default);
+}
+
+.sp-ac-audience__corner {
+    z-index: var(--sp-z-sticky-header);
+    background: var(--sp-bg-card-header);
+    font-size: var(--sp-text-2xs);
+    text-transform: uppercase;
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-tertiary);
+    min-width: 16rem;
+}
+
+/* Why: the three subject kinds are three different bands of the ladder;
+   a tint per band keeps "role" and "group" columns from reading as one axis. */
+.sp-ac-audience__band {
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-secondary);
+    border-left: 1px solid var(--sp-border-default);
+}
+
+.sp-ac-audience__band--role { background: var(--sp-bg-tertiary); }
+.sp-ac-audience__band--group { background: color-mix(in oklch, var(--sp-info) 10%, var(--sp-bg-card-header)); }
+.sp-ac-audience__band--project { background: color-mix(in oklch, var(--sp-accent) 8%, var(--sp-bg-card-header)); }
+
+.sp-ac-audience__col {
+    min-width: 5.5rem;
+    max-width: 9rem;
+    font-size: var(--sp-text-xs);
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-primary);
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: keep-all;
+}
+
+.sp-ac-audience__col--group { background: color-mix(in oklch, var(--sp-info) 5%, var(--sp-bg-card-header)); }
+.sp-ac-audience__col--project { background: color-mix(in oklch, var(--sp-accent) 4%, var(--sp-bg-card-header)); }
+
+.sp-ac-audience__col.is-focused {
+    box-shadow: inset 0 calc(-1 * var(--sp-space-05)) 0 var(--sp-accent);
+    color: var(--sp-accent-text);
+}
+
+.sp-ac-audience__col-link { color: inherit; text-decoration: none; }
+.sp-ac-audience__col-link:hover { text-decoration: underline; }
+
+.sp-ac-audience__col-counts {
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-space-1);
+    margin-top: var(--sp-space-05);
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-medium);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-ac-audience__count--ok { color: var(--sp-success-strong); }
+.sp-ac-audience__count--err { color: var(--sp-danger-strong); }
+.sp-ac-audience__count::before { content: "✓"; margin-right: var(--sp-space-05); }
+.sp-ac-audience__count--err::before { content: "✕"; }
+
+.sp-ac-audience__group-row th {
+    background: var(--sp-bg-tertiary);
+    padding: var(--sp-space-1) var(--sp-space-3);
+    border-top: 1px solid var(--sp-border-default);
+    border-bottom: 1px solid var(--sp-border-subtle);
+}
+
+.sp-ac-audience__group-label {
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-secondary);
+}
+
+.sp-ac-audience__entity {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-05);
+    padding: var(--sp-space-1) var(--sp-space-3);
+    border-bottom: 1px solid var(--sp-border-subtle);
+    min-width: 16rem;
+    max-width: 22rem;
+}
+
+.sp-ac-audience__entity-link {
+    color: var(--sp-text-primary);
+    font-weight: var(--sp-font-semibold);
+    text-decoration: none;
+}
+
+.sp-ac-audience__entity-link:hover { color: var(--sp-accent-text); text-decoration: underline; }
+
+.sp-ac-audience__entity-sub {
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-2xs);
+    color: var(--sp-text-tertiary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-ac-audience__row:hover .sp-ac-audience__entity { background: var(--sp-bg-tertiary); }
+.sp-ac-audience__row:hover .sp-ac-audience__cell { filter: saturate(1.6); }
+
+/* Why: the decision is the colour and the mark; the band word is deliberately
+   quiet. Denied cells carry a real tint so a closed row is unmistakable, and
+   no zebra striping competes with it. */
+.sp-ac-audience__cell {
+    padding: var(--sp-space-1) var(--sp-space-2);
+    border-bottom: 1px solid var(--sp-border-subtle);
+    border-left: 1px solid color-mix(in oklch, var(--sp-border-subtle) 50%, transparent);
+    text-align: center;
+    line-height: 1.15;
+}
+
+.sp-ac-audience__cell .sp-ac-audience__glyph { display: block; font-size: var(--sp-text-sm); font-weight: var(--sp-font-semibold); }
+.sp-ac-audience__layer {
+    display: block;
+    font-size: var(--sp-text-2xs);
+    letter-spacing: 0.02em;
+    color: var(--sp-text-secondary);
+}
+
+.sp-ac-audience__cell.is-allow { background: var(--sp-success-dim); }
+.sp-ac-audience__cell.is-allow .sp-ac-audience__glyph { color: var(--sp-success-strong); }
+.sp-ac-audience__cell.is-deny { background: var(--sp-danger-dim); }
+.sp-ac-audience__cell.is-deny .sp-ac-audience__glyph { color: var(--sp-danger-strong); }
+.sp-ac-audience__cell.is-warn { background: var(--sp-warning-dim); }
+.sp-ac-audience__cell.is-warn .sp-ac-audience__glyph { color: var(--sp-warning-strong); }
+.sp-ac-audience__cell.is-pending { background: color-mix(in oklch, var(--sp-info) 12%, transparent); }
+.sp-ac-audience__cell.is-pending .sp-ac-audience__glyph { color: var(--sp-info-strong); }
+
+@media print {
+    .sp-ac-audience__filters { display: none; }
+    .sp-ac-audience__wrap { max-height: none; overflow: visible; }
+    .sp-ac-audience__cell { print-color-adjust: exact; }
+}
+
+}

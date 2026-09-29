@@ -1,4 +1,4 @@
-{{#> layout title=title page=page}}
+{{#> layout page_title=title page_id=page}}
     {{#*inline "content"}}
     {{> components/breadcrumbs crumbs=breadcrumbs}}
 
@@ -37,7 +37,7 @@
     {{/if}}
 
     <section aria-label="Groups">
-    {{> components/section title="Groups" count=total_groups note="One row per group. Unfiltered, the last row is the traffic no group accounts for, and the rows sum to the instance."}}
+    {{> components/section title="Groups" count=total_groups note="One row per group. Directory groups take their members from the mapped directory group at each sign-in; groups created here have members assigned on this dashboard; Built-in is the Unassigned bucket. Unfiltered, the last row is the traffic no group accounts for, and the rows sum to the instance."}}
 
     {{#> components/toolbar toolbar_count=toolbar_count}}
         {{#*inline "toolbar_filters"}}
@@ -81,7 +81,7 @@
                     {{#if is_unassigned}}{{> components/badge tone="warn" text="Needs assignment"}}{{/if}}
                 </a>
             </td>
-            <td><span class="sp-badge sp-badge--muted" title="{{source_label}}">{{source_abbrev}}</span></td>
+            <td><span class="sp-badge sp-badge--muted" title="{{source_abbrev}}" data-source="{{source_label}}">{{source_display}}</span></td>
             <td class="sp-table__cell--num sp-u-num"><span class="sp-group-member-count">{{member_count}}</span></td>
             <td class="sp-table__cell--num sp-u-num">{{active_members_30d}}</td>
             <td class="sp-table__cell--num sp-u-num">{{project_count}}</td>
@@ -118,7 +118,7 @@
         </tbody>
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No groups yet" message="The directory creates them as sign-ins map onto them, or create one here."}}
+    {{> components/empty-state heading="No groups yet" message="The directory creates them as sign-ins map onto them, or create one here."}}
     {{/if}}
     </section>
 

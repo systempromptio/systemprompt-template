@@ -3,7 +3,8 @@
 //! A project is work attribution and an ACL subject; a group is people and
 //! entitlement. The listing answers "where is the spend and is the tooling
 //! working"; the detail page answers it for one project across three tabs —
-//! who is on it, what it did, and how it is configured.
+//! who is on it, what it did, and how it is configured. The report route
+//! lays all of it out on one printable page.
 
 use std::sync::Arc;
 use systemprompt_web_shared::ProjectId;
@@ -18,16 +19,25 @@ use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
 use super::list_view::Pagination;
+use super::page::Page;
 use super::types::BreadcrumbView;
 
 mod detail;
 mod detail_view;
 mod list;
+mod report;
 mod sort;
 
 pub(super) const BASE_URL: &str = "/admin/projects";
 pub(super) const PAGE_SIZE: i64 = 50;
 pub(super) const WINDOW_LABEL: &str = "Last 30 days · exclusive attribution";
+
+// Why: `?print=1` opens the browser's print dialog as soon as the report has
+// rendered, which is what the listing's Report action links to.
+#[derive(Debug, Default, serde::Deserialize)]
+pub(crate) struct ProjectReportQuery {
+    print: Option<String>,
+}
 
 // Why: which tab of the detail page a request asked for.
 #[derive(Debug, Default, serde::Deserialize)]
@@ -106,6 +116,45 @@ pub(crate) async fn project_detail_page(
     ))
 }
 
+pub(crate) async fn project_report_page(
+    shell: Page,
+    State(pool): State<Arc<PgPool>>,
+    Path(project_id): Path<ProjectId>,
+    Query(query): Query<ProjectReportQuery>,
+) -> AdminHtmlResult<Response> {
+    if !shell.user.is_console {
+        return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
+    }
+
+    let Some(project) = repositories::projects::crud::find_project(&pool, &project_id).await?
+    else {
+        return Err(AdminError::NotFound("No such project.".to_owned()).into());
+    };
+
+    let (detail, usage, extra) = tokio::join!(
+        detail::load(&pool, &project_id, &shell.user),
+        detail::load_usage(&pool, &project_id),
+        report::load(&pool, &project_id),
+    );
+    let data = report::page_data(
+        report::ReportInputs {
+            project: &project,
+            detail: &detail,
+            usage: &usage,
+            report: &extra,
+            print_on_load: query.print.as_deref() == Some("1"),
+        },
+        &shell.user,
+    );
+    Ok(super::render_typed_page(
+        &shell.engine,
+        "project-report",
+        &data,
+        &shell.user,
+        &shell.marketplace,
+    ))
+}
+
 fn active_tab(requested: Option<&str>) -> &'static str {
     match requested {
         Some("usage") => "usage",
@@ -137,6 +186,34 @@ async fn settings_reads(
         .filter(|r| r.rule_type.as_str() == "project" && r.rule_value == project_id.as_str())
         .collect();
     (mappings, rules)
+}
+
+fn project_query(project_id: &ProjectId) -> String {
+    crate::export::view::query_string(&[("project", Some(project_id.as_str()))])
+}
+
+// Why: the project's own traffic, keyed by `project` the way every scoped
+// dataset reads it. `analysis-conversations` and the transcript bundle join
+// with the analysis suite (Stage 3 phase 7); an id the registry does not hold
+// is dropped by `ExportView::new`.
+pub(super) fn export_view(project_id: &ProjectId) -> crate::export::ExportView {
+    crate::export::ExportView::new(
+        &["requests", "sessions", "analysis-conversations"],
+        &project_query(project_id),
+    )
+}
+
+// Why: the report is a rolling window but the customer hand-off is a calendar
+// month, so the dialog's month picker chooses which one the files cover.
+pub(super) fn report_export_view(project_id: &ProjectId) -> crate::export::ExportView {
+    crate::export::ExportView::new(
+        &[
+            "report-customer-users",
+            "report-customer-projects",
+            "report-customer-models",
+        ],
+        &project_query(project_id),
+    )
 }
 
 pub(super) fn breadcrumbs(name: &str) -> Vec<BreadcrumbView> {

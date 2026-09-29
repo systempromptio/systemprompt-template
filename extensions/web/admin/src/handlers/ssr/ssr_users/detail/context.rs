@@ -30,6 +30,11 @@ pub(crate) struct UserDetailContext {
     // error toast.
     pub is_self: bool,
 
+    // Why: the person's requests, sessions and conversations in one dialog.
+    // `None` for a reader the datasets refuse.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub export: Option<crate::export::ExportView>,
+
     pub identity: Option<IdentityTabView>,
     pub conversations: Option<UserConversationsTabView>,
     pub membership: Option<MembershipTabView>,

@@ -1,20 +1,61 @@
 @layer components {
 
 .sp-p-projects__col-name {
-    display: flex;
-    align-items: baseline;
-    gap: var(--sp-space-2);
-    min-inline-size: 16rem;
+    min-inline-size: 12rem;
 }
 
+/* The description trails the name on the same line, clipped to the room the
+   row has left. A flex td was the earlier form and cost the column its
+   table-cell layout; an inline-block with a ceiling keeps the row a row. */
 .sp-p-projects__sub {
-    min-inline-size: 0;
+    display: inline-block;
+    max-inline-size: 7rem;
     margin-inline-start: var(--sp-space-2);
     overflow: hidden;
     color: var(--sp-text-tertiary);
     font-size: var(--sp-text-xs);
     text-overflow: ellipsis;
     white-space: nowrap;
+    vertical-align: bottom;
+}
+
+/* The listing is twelve columns wide. The name column takes the slack (the
+   table's own first-column rule) and every other column sizes to its content,
+   so a header is never asked to wrap and a count never drifts away from its
+   heading; "Tool success" used to break onto two lines because the numeric
+   column's 7ch ceiling was narrower than the words. */
+.sp-t-projects th,
+.sp-t-projects td {
+    padding-inline: var(--sp-space-2);
+    white-space: nowrap;
+}
+
+.sp-t-projects .sp-table__sort {
+    margin-inline: calc(-1 * var(--sp-space-2));
+    padding-inline: var(--sp-space-2);
+}
+
+.sp-t-projects .sp-table__cell--num,
+.sp-t-projects .sp-p-projects__col-mix {
+    inline-size: 1%;
+}
+
+.sp-t-projects .sp-p-projects__col-mix {
+    max-inline-size: none;
+}
+
+/* The secondary figure sits on the same line as its number — "1 · 1 active",
+   "73% · 15" — in the tertiary colour, so the primary value stays where the
+   header put it. */
+.sp-p-projects__meta {
+    margin-inline-start: var(--sp-space-1);
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-normal);
+}
+
+.sp-p-projects__meta::before {
+    content: "· ";
 }
 
 .sp-p-project {
@@ -53,6 +94,94 @@
 @media (max-width: 64rem) {
     .sp-p-project__split {
         grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+}
+
+@layer components {
+
+/* The report is the detail page laid end to end for paper. The facts block is
+   the one thing it adds on screen: a definition list a manager can read
+   without scrolling, before the tiles restate the numbers with tone. */
+.sp-p-report {
+    display: grid;
+    gap: var(--sp-space-6);
+}
+
+.sp-p-report__summary,
+.sp-p-report__section {
+    display: grid;
+    gap: var(--sp-space-3);
+    break-inside: avoid;
+}
+
+.sp-p-report__facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: var(--sp-space-3) var(--sp-space-6);
+    margin: 0;
+    padding: var(--sp-space-4) var(--sp-space-5);
+    background: var(--sp-bg-surface);
+    border-radius: var(--sp-corners-md);
+    box-shadow: var(--sp-shadow-card);
+}
+
+.sp-p-report__fact dt {
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    letter-spacing: var(--sp-tracking-wide);
+    text-transform: uppercase;
+}
+
+.sp-p-report__fact dd {
+    margin: 0;
+    color: var(--sp-text-primary);
+    font-size: var(--sp-text-sm);
+    overflow-wrap: anywhere;
+}
+
+
+/* A report is read, not scanned: a timestamp is printed whole. */
+.sp-p-report .sp-table__cell--date {
+    inline-size: auto;
+    max-inline-size: none;
+    white-space: nowrap;
+}
+
+.sp-p-report__foot {
+    padding-block-start: var(--sp-space-4);
+    border-block-start: 1px solid var(--sp-border-subtle);
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+}
+
+.sp-p-report__foot p {
+    margin: 0;
+}
+
+}
+
+@layer responsive {
+
+@media print {
+    .sp-p-report {
+        gap: 6mm;
+    }
+
+    .sp-p-report__facts {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+
+    /* A4 is too narrow for two tables side by side at a readable size. */
+    .sp-p-report .sp-p-project__split {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .sp-p-report .sp-section__head {
+        break-after: avoid;
     }
 }
 

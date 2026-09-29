@@ -1,0 +1,30 @@
+@layer components {
+
+/* Why: the search is the whole tab until it has run, so it reads as one
+   line — the input takes the width, the button sits beside it. */
+.sp-ac-person__picker { margin-bottom: var(--sp-space-4); }
+
+.sp-ac-person__field { flex: 1 1 24rem; }
+
+.sp-ac-person__field .sp-search-input { width: 100%; }
+
+.sp-ac-person__hits {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sp-ac-person__who {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-3);
+    margin-bottom: var(--sp-space-4);
+    padding: var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface-raised);
+}
+
+.sp-ac-person__who .sp-user-cell-text { flex: 1 1 auto; }
+
+}

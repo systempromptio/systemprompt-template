@@ -95,6 +95,10 @@ pub struct AccessControlRuleInput {
     pub rule_type: RuleType,
     pub rule_value: String,
     pub access: AccessDecision,
+    // Why: the reason a rule exists is required for every band but `user`;
+    // the handler enforces that, the repository just carries it to the row.
+    #[serde(default)]
+    pub justification: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

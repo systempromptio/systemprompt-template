@@ -59,7 +59,7 @@ async fn one_real_membership_removes_the_derived_one() {
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("placed")).await;
     let group = unique_group("grp");
     insert_group(&db.pool, &group, "Placed").await;
-    insert_group_member(&db.pool, &group, &user, &user)
+    insert_group_member(&db.pool, &group, &user, &user, None)
         .await
         .expect("manual grant");
 
@@ -86,7 +86,7 @@ async fn the_directory_replaces_only_its_own_rows() {
     insert_group(&db.pool, &by_hand, "By hand").await;
     insert_group(&db.pool, &from_ad, "From AD").await;
     map_ad_group(&db.pool, "Systemprompt-Commerce", from_ad.as_str()).await;
-    insert_group_member(&db.pool, &by_hand, &user, &user)
+    insert_group_member(&db.pool, &by_hand, &user, &user, None)
         .await
         .expect("manual grant");
 
@@ -195,7 +195,7 @@ async fn removing_a_manual_grant_leaves_the_directory_row_in_place() {
     replace_directory_group_memberships(&db.pool, &user, &["Systemprompt-Commerce".to_owned()])
         .await
         .expect("sign-in");
-    insert_group_member(&db.pool, &group, &user, &user)
+    insert_group_member(&db.pool, &group, &user, &user, None)
         .await
         .expect("manual grant on top");
 
@@ -221,11 +221,11 @@ async fn granting_the_same_membership_twice_is_a_conflict() {
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("twice")).await;
     let group = unique_group("grp");
     insert_group(&db.pool, &group, "Commerce").await;
-    insert_group_member(&db.pool, &group, &user, &user)
+    insert_group_member(&db.pool, &group, &user, &user, None)
         .await
         .expect("first grant");
 
-    let refusal = insert_group_member(&db.pool, &group, &user, &user)
+    let refusal = insert_group_member(&db.pool, &group, &user, &user, None)
         .await
         .expect_err("already a member");
 
@@ -259,7 +259,7 @@ async fn the_member_list_carries_the_identity_a_dashboard_shows() {
     let user = insert_user(&db.pool, &unique("user"), &email).await;
     let group = unique_group("grp");
     insert_group(&db.pool, &group, "Commerce").await;
-    insert_group_member(&db.pool, &group, &user, &user)
+    insert_group_member(&db.pool, &group, &user, &user, None)
         .await
         .expect("grant");
 

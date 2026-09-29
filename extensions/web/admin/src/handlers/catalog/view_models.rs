@@ -142,6 +142,7 @@ pub(super) fn plugin_detail(
         .unwrap_or_default();
 
     Some(PluginDetailData {
+        access: None,
         breadcrumbs: trail("Plugins", "/admin/plugins", &plugin.name),
         page: "plugin-detail",
         title: plugin.name.clone(),
@@ -222,6 +223,7 @@ pub(super) fn skill_detail(
         .cloned()
         .unwrap_or_default();
     Some(SkillDetailData {
+        access: None,
         breadcrumbs: trail("Skills", "/admin/skills", &entry.name),
         // Why: the catalog page defines the skill; the analytics tab says who
         // actually runs it. They are different pages and this is the hop.

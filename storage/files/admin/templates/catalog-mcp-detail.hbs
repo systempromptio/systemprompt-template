@@ -50,7 +50,7 @@
         </tbody>
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No tool calls" message="This server has executed nothing in the window. It may be declared but never reached."}}
+    {{> components/empty-state heading="No tool calls" message="This server has executed nothing in the window. It may be declared but never reached."}}
     {{/if}}
     </section>
 
@@ -82,7 +82,7 @@
         </tbody>
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No calls recorded" message="Nothing has executed against this server."}}
+    {{> components/empty-state heading="No calls recorded" message="Nothing has executed against this server."}}
     {{/if}}
     </section>
 
@@ -113,7 +113,7 @@
         </tbody>
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No sessions" message="No client has ever attached to this server."}}
+    {{> components/empty-state heading="No sessions" message="No client has ever attached to this server."}}
     {{/if}}
     </section>
 
@@ -147,7 +147,7 @@
         </tbody>
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No rules" message="Nothing names this server directly. Reach is whatever the default above says."}}
+    {{> components/empty-state heading="No rules" message="Nothing names this server directly. Reach is whatever the default above says."}}
     {{/if}}
     </section>
     </div>
@@ -180,5 +180,10 @@
             {{/if}}
         </section>
     </div>
+    {{#if access}}{{> components/entity-access panel=access}}{{/if}}
+    {{> components/access-reason-dialog}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script type="module" src="/js/pages/admin-entity-access.js?v={{css_version}}"></script>
     {{/inline}}
 {{/layout}}

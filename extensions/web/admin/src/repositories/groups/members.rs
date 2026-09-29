@@ -5,7 +5,12 @@
 //! group has to actually remove the membership — while `manual` rows an admin
 //! added survive that replace. The primary key carries `source`, so both can
 //! hold the same pair and a member row reports the set of sources behind it.
+//!
+//! Every read here is windowed: a row outside its `valid_from`/`valid_until`
+//! or stamped `revoked_at` is not a membership. The `user_groups` view carries
+//! the same predicate, so the two never disagree about who is in a group.
 
+use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt_web_shared::GroupId;
@@ -26,15 +31,22 @@ pub async fn list_group_members(
             u.email AS "email?",
             COALESCE(
                 (SELECT ARRAY_AGG(DISTINCT gm.source) FROM group_members gm
-                 WHERE gm.group_id = ug.group_id AND gm.user_id = ug.user_id),
+                 WHERE gm.group_id = ug.group_id AND gm.user_id = ug.user_id
+                   AND gm.revoked_at IS NULL AND gm.valid_from <= CURRENT_TIMESTAMP
+                   AND (gm.valid_until IS NULL OR gm.valid_until > CURRENT_TIMESTAMP)),
                 ARRAY['derived']::TEXT[]
             ) AS "sources!",
             COALESCE(
                 (SELECT ARRAY_AGG(DISTINCT gm.source_ad_group) FROM group_members gm
                  WHERE gm.group_id = ug.group_id AND gm.user_id = ug.user_id
-                   AND gm.source_ad_group IS NOT NULL),
+                   AND gm.source_ad_group IS NOT NULL
+                   AND gm.revoked_at IS NULL AND gm.valid_from <= CURRENT_TIMESTAMP
+                   AND (gm.valid_until IS NULL OR gm.valid_until > CURRENT_TIMESTAMP)),
                 ARRAY[]::TEXT[]
-            ) AS "source_ad_groups!"
+            ) AS "source_ad_groups!",
+            (SELECT gm.valid_until FROM group_members gm
+              WHERE gm.group_id = ug.group_id AND gm.user_id = ug.user_id
+                AND gm.source = 'manual' AND gm.revoked_at IS NULL) AS "valid_until?"
         FROM user_groups ug
         JOIN users u ON u.id = ug.user_id
         WHERE ug.group_id = $1
@@ -77,7 +89,7 @@ pub async fn list_source_ad_groups(
     .fetch_all(pool)
     .await
 }
-// Why: downstream API. lint-ok: unused-pub
+
 pub async fn list_unassigned_users(pool: &PgPool) -> Result<Vec<UserId>, sqlx::Error> {
     sqlx::query_scalar!(
         r#"SELECT user_id AS "user_id!: UserId" FROM user_groups
@@ -97,18 +109,30 @@ pub async fn count_group_members(pool: &PgPool, group_id: &GroupId) -> Result<i6
     .await
 }
 
+// Why: a manual row the sweep already revoked is revived rather than refused —
+// the person was granted again, and the old window is what the audit trail
+// already recorded. A live manual row is the one conflict that means
+// "already a member".
 pub async fn insert_group_member(
     pool: &PgPool,
     group_id: &GroupId,
     user_id: &UserId,
     granted_by: &UserId,
+    valid_until: Option<DateTime<Utc>>,
 ) -> AdminResult<()> {
     let inserted = sqlx::query!(
-        "INSERT INTO group_members (group_id, user_id, source, granted_by)
-         VALUES ($1, $2, 'manual', $3) ON CONFLICT DO NOTHING",
+        "INSERT INTO group_members (group_id, user_id, source, granted_by, valid_until)
+         VALUES ($1, $2, 'manual', $3, $4)
+         ON CONFLICT (group_id, user_id, source) DO UPDATE
+            SET granted_by = EXCLUDED.granted_by,
+                valid_from = CURRENT_TIMESTAMP,
+                valid_until = EXCLUDED.valid_until,
+                revoked_at = NULL
+          WHERE group_members.revoked_at IS NOT NULL",
         group_id.as_str(),
         user_id.as_str(),
-        granted_by.as_str()
+        granted_by.as_str(),
+        valid_until
     )
     .execute(pool)
     .await?;
@@ -129,7 +153,8 @@ pub async fn delete_group_member(
     user_id: &UserId,
 ) -> AdminResult<()> {
     let sources = sqlx::query_scalar!(
-        r#"SELECT source AS "source!" FROM group_members WHERE group_id = $1 AND user_id = $2"#,
+        r#"SELECT source AS "source!" FROM group_members
+           WHERE group_id = $1 AND user_id = $2 AND revoked_at IS NULL"#,
         group_id.as_str(),
         user_id.as_str()
     )

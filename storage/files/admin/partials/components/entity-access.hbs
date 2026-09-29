@@ -1,0 +1,123 @@
+{{!--
+  "Who gets this": one entity's access, read and edited in one place. Used
+  on the marketplace, plugin, skill and MCP server detail pages.
+
+    {{> components/entity-access panel=access}}
+
+  panel  an EntityAccessView (handlers/ssr/entity_panel). The hash key is
+         `panel` and nothing inside is named `panel`, because a partial's
+         hash shadows the same name at every depth.
+
+  The script is pages/admin-entity-access.js; the reason dialog it opens is
+  components/access-reason-dialog, included once per page.
+--}}
+<section class="sp-entity-access" id="access" aria-labelledby="entity-access-title"
+         data-entity-access data-entity-type="{{panel.entity_type}}" data-entity-id="{{panel.entity_id}}">
+    <div class="sp-section__head">
+        <h2 class="sp-section__title" id="entity-access-title">Who gets this</h2>
+        {{#if panel.rule_count}}<span class="sp-section__count">{{panel.rule_count}}</span>{{/if}}
+        <p class="sp-section__sub">Default {{> components/access-badge decision=panel.default_decision}} — every rule below is enforced as held in this database.</p>
+    </div>
+
+    {{#if panel.note}}<p class="sp-u-text-sm sp-u-text-secondary">{{panel.note}}</p>{{/if}}
+    {{#if panel.not_live}}
+    {{> components/notice tone="err" title="Declared in code, not live — nobody reaches this" message=panel.review.advice}}
+    {{/if}}
+    <p class="sp-entity-access__headline{{#if panel.nobody}} sp-entity-access__headline--nobody{{/if}}"{{#if panel.nobody}} role="alert"{{/if}}>{{panel.headline}}</p>
+
+    {{#if panel.drift_unreadable}}
+    {{> components/notice tone="warn" title="rules.yaml could not be compared" message=panel.drift_unreadable}}
+    {{/if}}
+    {{#if panel.review}}
+    <div class="sp-entity-access__drift" data-access-review data-entity="{{panel.review.key}}" data-fingerprint="{{panel.review.fingerprint}}">
+        <p class="sp-entity-access__drift-head">
+            {{> components/badge tone=panel.review.kind_tone text=panel.review.kind_label}}
+            <span>Code and this database disagree about this entity.</span>
+            {{#unless panel.not_live}}<span class="sp-u-text-secondary">{{panel.review.advice}}</span>{{/unless}}
+        </p>
+        {{#if panel.review.kept}}
+        <p class="sp-u-text-sm sp-u-text-secondary">Kept as it is in this database by <strong>{{panel.review.kept.by}}</strong> {{relativeTime panel.review.kept.at}}: {{panel.review.kept.reason}}</p>
+        {{/if}}
+        {{> components/access-review-lines lines=panel.review.lines}}
+        {{#if panel.can_write}}
+        <div class="sp-entity-access__actions">
+            {{#if panel.review.applies}}<button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="access-apply-code">Apply code</button>{{/if}}
+            {{#unless panel.review.kept}}<button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="access-keep-db">Keep database</button>{{/unless}}
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{panel.sync_url}}">Export to code on Code sync</a>
+        </div>
+        {{/if}}
+    </div>
+    {{/if}}
+
+    {{#each panel.bands}}
+    <h3 class="sp-entity-access__band">{{this.label}}</h3>
+    {{#> components/table caption="Rules at this band" modifier="sp-entity-access__rules"}}
+        <thead><tr>
+            <th scope="col">Subject</th>
+            <th scope="col">Decision</th>
+            <th scope="col">Why</th>
+            <th scope="col">Written in</th>
+            <th scope="col">Expires</th>
+            {{#if panel.can_write}}<th scope="col"><span class="sp-u-sr-only">Actions</span></th>{{/if}}
+        </tr></thead>
+        <tbody>
+        {{#each this.rules}}
+        <tr>
+            <td>{{this.subject_label}}{{#unless (eq this.subject_label this.subject)}} <span class="sp-u-mono sp-u-text-xs sp-u-text-tertiary">{{this.subject}}</span>{{/unless}}</td>
+            <td>{{> components/access-badge decision=this.decision}}</td>
+            <td class="sp-u-text-secondary">{{#if this.why}}{{this.why}}{{else}}<span class="sp-u-text-tertiary">no reason recorded</span>{{/if}}</td>
+            <td>{{> components/badge tone=this.source_tone text=this.source_label}}</td>
+            <td>{{#if this.until}}{{this.until}}{{else}}<span class="sp-u-text-tertiary">never</span>{{/if}}</td>
+            {{#if panel.can_write}}<td class="sp-table__cell--actions"><button type="button" class="sp-btn sp-btn--xs sp-btn--outline-danger" data-action="access-remove" data-rule-id="{{this.id}}" data-subject="{{this.subject_label}}">Remove</button></td>{{/if}}
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state compact=true message="No rule names this entity directly. Reach comes from the default and from anything it inherits."}}
+    {{/each}}
+
+    {{#if panel.can_write}}
+    <form class="sp-entity-access__add" data-access-add aria-label="Add a rule">
+        <label class="sp-entity-access__field">Band
+            <select class="sp-select" name="band" data-access-band>
+                <option value="group">Group</option>
+                <option value="role">Role</option>
+                <option value="project">Project</option>
+                <option value="user">Person</option>
+            </select>
+        </label>
+        <label class="sp-entity-access__field" data-access-subject="group">Group
+            <select class="sp-select" name="group">{{#each panel.subjects.groups}}<option value="{{this.value}}">{{this.label}}</option>{{/each}}</select>
+        </label>
+        <label class="sp-entity-access__field" data-access-subject="role" hidden>Role
+            <select class="sp-select" name="role">{{#each panel.subjects.roles}}<option value="{{this.value}}">{{this.label}}</option>{{/each}}</select>
+        </label>
+        <label class="sp-entity-access__field" data-access-subject="project" hidden>Project
+            <select class="sp-select" name="project">{{#each panel.subjects.projects}}<option value="{{this.value}}">{{this.label}}</option>{{/each}}</select>
+        </label>
+        <label class="sp-entity-access__field" data-access-subject="user" hidden>Person
+            <input class="sp-search-input" name="user" list="entity-access-people" placeholder="account id">
+        </label>
+        <label class="sp-entity-access__field">Decision
+            <select class="sp-select" name="access"><option value="allow">Allow</option><option value="deny">Deny</option></select>
+        </label>
+        <label class="sp-entity-access__field sp-entity-access__field--wide">Reason
+            <input class="sp-search-input" name="reason" maxlength="240" required placeholder="Why does this subject get this?">
+        </label>
+        <label class="sp-entity-access__field">Expires
+            <input class="sp-search-input" type="date" name="until">
+        </label>
+        <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">Add rule</button>
+    </form>
+    {{/if}}
+
+    <form class="sp-entity-access__why" method="get" action="{{panel.page_url}}#access" aria-label="Explain one person's access">
+        <label class="sp-entity-access__field sp-entity-access__field--wide">Why does this person (not) get it?
+            <input class="sp-search-input" name="why" list="entity-access-people" value="{{#if panel.why}}{{panel.why.query}}{{/if}}" placeholder="email or account id">
+        </label>
+        <button type="submit" class="sp-btn sp-btn--sm sp-btn--secondary">Why?</button>
+    </form>
+    <datalist id="entity-access-people">{{#each panel.people}}<option value="{{this.id}}">{{this.label}}</option>{{/each}}</datalist>
+    {{#if panel.why}}{{> components/access-why why=panel.why}}{{/if}}
+</section>

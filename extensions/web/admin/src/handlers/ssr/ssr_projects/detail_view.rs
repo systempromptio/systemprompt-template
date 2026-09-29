@@ -112,9 +112,10 @@ pub(super) fn usage_tab(
     u: &ProjectUsageData,
     skills: &[SkillEffectivenessRow],
 ) -> ProjectUsageTabView {
+    let (daily, daily_cost) = daily_charts(&u.daily);
     ProjectUsageTabView {
-        daily: daily_chart(&u.daily),
-        daily_cost: daily_cost_chart(&u.daily),
+        daily,
+        daily_cost,
         model_count: u.models.len() as i64,
         skill_count: skills.len() as i64,
         tool_count: u.tools.len() as i64,
@@ -141,6 +142,10 @@ pub(super) fn usage_tab(
             .map(|c| i64::from(c.deletions.unwrap_or(0)))
             .sum(),
     }
+}
+
+pub(super) fn daily_charts(daily: &[DailyRequests]) -> (SvgLineChartView, SvgLineChartView) {
+    (daily_chart(daily), daily_cost_chart(daily))
 }
 
 fn daily_chart(daily: &[DailyRequests]) -> SvgLineChartView {
@@ -240,6 +245,7 @@ pub(super) fn session_row(s: &ProjectSessionRow) -> ProjectSessionRowView {
         session_short: short(s.session_id.as_str()),
         href: format!("/admin/sessions/{}", s.session_id.as_str()),
         session_id: s.session_id.clone(),
+        person: s.user_id.to_string(),
         user_id: s.user_id.clone(),
         requests: s.requests,
         models: s.models,

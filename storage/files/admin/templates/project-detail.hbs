@@ -7,10 +7,12 @@
         <span>{{window_label}}</span>
         {{/inline}}
         {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/projects/{{project_id}}/report" title="One printable page: members, spend, models, agents, tools, skills and artifacts">{{> components/icon name="report" class="sp-icon--sm"}} Report</a>
         {{#if can_manage}}
         {{#if members}}<button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="add-member">Add member</button>{{/if}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/projects/{{project_id}}?tab=settings">Settings</a>
         {{/if}}
+        {{> components/export-button export}}
         {{/inline}}
     {{/components/page-header}}
 
@@ -39,6 +41,7 @@
                 <th class="sp-table__cell--num" aria-sort="none">Tokens</th>
                 <th class="sp-table__cell--num" aria-sort="none">Cost</th>
                 <th class="sp-table__cell--date">Last active</th>
+                <th class="sp-table__cell--date">Expires</th>
                 <th class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
             </tr></thead>
             <tbody>
@@ -51,6 +54,7 @@
                 <td class="sp-table__cell--num sp-u-num">{{formatNumber tokens_30d}}</td>
                 <td class="sp-table__cell--num sp-u-num sp-u-mono">{{formatUsd cost_30d_microdollars}}</td>
                 <td class="sp-table__cell--date">{{#if last_active}}<span title="{{formatDate last_active}}">{{relativeTime last_active}}</span>{{else}}Never{{/if}}</td>
+                <td class="sp-table__cell--date">{{#if expires_at}}<span title="{{formatDate expires_at}}">{{relativeTime expires_at}}</span>{{#if expires_soon}} {{> components/badge tone="warn" text="soon"}}{{/if}}{{else}}<span class="sp-u-text-tertiary">Never</span>{{/if}}</td>
                 <td class="sp-table__cell--actions">
                     {{#if can_remove}}
                     <button type="button" class="sp-btn sp-btn--outline sp-btn--sm" data-action="remove-member" data-user-id="{{user_id}}">Remove</button>
@@ -58,8 +62,8 @@
                 </td>
             </tr>
             {{else}}
-            <tr class="sp-table__empty"><td colspan="8">
-                {{> components/empty-state title="No members" message="Add someone, or map a directory group to this project on the Settings tab."}}
+            <tr class="sp-table__empty"><td colspan="9">
+                {{> components/empty-state heading="No members" message="Add someone, or map a directory group to this project on the Settings tab."}}
             </td></tr>
             {{/each}}
             </tbody>
@@ -241,6 +245,9 @@
                 <option value="{{user_id}}">{{label}}</option>
                 {{/each}}
             </select>
+            <label for="add-member-until">Expires</label>
+            <input type="date" id="add-member-until" class="sp-search-input" data-field="add-member-until" aria-describedby="add-member-until-note">
+            <p id="add-member-until-note" class="sp-u-text-tertiary sp-u-text-xs">Leave blank for an open-ended membership. An expired membership is revoked by the hourly sweep.</p>
             <menu>
                 <button type="button" class="sp-btn sp-btn--outline" data-action="close-add-member">Cancel</button>
                 <button type="button" class="sp-btn sp-btn--primary" data-action="confirm-add-member">Add</button>

@@ -6,25 +6,7 @@ Conventions (strict — hold every entry to them):
 
 - Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/): an `## [Unreleased]`
   section at the top, then one `## [X.Y.Z] - YYYY-MM-DD` section per release, each with only the
-  categories it needs, in this order: `### Breaking`, `### Security`, `### Added`, `- **Code sync** (`/admin/sync`, Platform group): one page for where
-  declarations come from and how they move. *Sources* lists the base tree and
-  every pinned bundle with its hashes and offers **Import sources**, which runs
-  core's in-process services refresh (`POST /api/public/admin/sync/sources/refresh`).
-  *Access review* settles the access-control drift one entity per row — apply
-  code, keep the database, or export — each with a stated reason, above the
-  whole-plane card. *Export & import* downloads every projected plane as one
-  zip (`GET …/sync/export.zip`) and stages an uploaded one for a preview at
-  `/admin/sync/import/{stage}` that writes nothing until a plane is applied.
-  The JSON API behind it is `GET …/sync/status`, `…/sync/planes/{plane}/drift`,
-  `…/export`, `POST …/sync/planes/{plane}/apply`, `…/sync/access-control/keep`,
-  `…/sync/import`, `…/sync/import/{stage}/apply` and `DELETE …/sync/import/{stage}`;
-  reads are open to the console roles, every write needs an administrator, and
-  every write and export leaves an activity row (`handlers/sync/`,
-  `handlers/ssr/{ssr_sync,ssr_sync_import,sync_plane}/`). The Groups page gains
-  a **Sync** tab showing `groups.yaml` against this database with the same
-  component.
-
-### Changed`,
+  categories it needs, in this order: `### Breaking`, `### Security`, `### Added`, `### Changed`,
   `### Fixed`, `### Removed`. Every breaking bullet leads with `**Breaking:**`, names the
   affected symbol, and ends with `Migrate by …`.
 - The heading shape is load-bearing. `just release X.Y.Z` refuses a version with no
@@ -44,6 +26,15 @@ Conventions (strict — hold every entry to them):
 
 ### Breaking
 
+- **Breaking:** a rule on a shared band (group, role, project or any
+  extension dimension) now needs a `justification`. `POST` and `PUT` on
+  `/api/public/admin/access-control/entity/…`, `PUT …/access-control/bulk` and
+  `POST …/access-control/bulk-template` answer 400 without one; a `user` rule
+  may still go unexplained. Migrate by sending `justification` with every
+  non-`user` rule.
+- **Breaking:** `GET /api/public/admin/access-control/yaml-snapshot` is gone;
+  the access-control plane's export on Code sync replaces it. Migrate by
+  reading `GET /api/public/admin/sync/planes/access_control/export`.
 - **Breaking:** the per-page CSV URLs (`/admin/requests.csv`,
   `/admin/analytics/cost.csv`, `/admin/governance/warnings.csv`,
   `/admin/governance/secrets.csv`, `/admin/reports/customer.csv`,
@@ -58,6 +49,52 @@ Conventions (strict — hold every entry to them):
 
 ### Added
 
+- **Code sync** (`/admin/sync`, Platform group): one page for where
+  declarations come from and how they move. *Sources* lists the base tree and
+  every pinned bundle with its hashes and offers **Import sources**, which runs
+  core's in-process services refresh (`POST /api/public/admin/sync/sources/refresh`).
+  *Access review* settles the access-control drift one entity per row — apply
+  code, keep the database, or export — each with a stated reason, above the
+  whole-plane card. *Export & import* downloads every projected plane as one
+  zip (`GET …/sync/export.zip`) and stages an uploaded one for a preview at
+  `/admin/sync/import/{stage}` that writes nothing until a plane is applied.
+  The JSON API behind it is `GET …/sync/status`, `…/sync/planes/{plane}/drift`,
+  `…/export`, `POST …/sync/planes/{plane}/apply`, `…/sync/access-control/keep`,
+  `…/sync/import`, `…/sync/import/{stage}/apply` and `DELETE …/sync/import/{stage}`;
+  reads are open to the console roles, every write needs an administrator, and
+  every write and export leaves an activity row (`handlers/sync/`,
+  `handlers/ssr/{ssr_sync,ssr_sync_import,sync_plane}/`). The Groups page gains
+  a **Sync** tab showing `groups.yaml` against this database with the same
+  component.
+- **Access control, rebuilt around the entity** (`/admin/access-control`). The
+  Rules tab lists every governed entity under a heading per kind, with its
+  allow and deny bands as chips, the resolver's outcome in one sentence, the
+  reason each rule exists, and whether code and this database agree about it.
+  The **Audience grid** tab resolves every role, group and project against every
+  entity through the real resolver, with a focus inspector in both directions;
+  **Find a person** links to that person's own Access tab; **Sync** links to the
+  Access review on Code sync. Old `?tab=sync` and `?user=` links redirect
+  (`handlers/ssr/ssr_access_control/`).
+- **"Who gets this" on every catalog detail page.** Marketplace, plugin, skill
+  and MCP server detail pages carry one panel (`components/entity-access`,
+  `pages/admin-entity-access.js`, `handlers/ssr/entity_panel/`): who reaches the
+  entity, its rules by band with who wrote each and when it expires, the drift
+  for that entity with apply-code and keep-database actions, an add-rule form,
+  and a **Why?** explainer that walks one named person's band ladder
+  (`repositories/users/access_control/explain.rs`). Every rule written or
+  removed there leaves an activity row with its reason.
+- **Project report** (`/admin/projects/{id}/report`): the detail page's three
+  tabs plus the coding agents and artifacts behind the project on one printable
+  page, with a **Save as PDF** control and the customer-report export for a
+  calendar month. The projects listing gains Tokens, Models, Agents and
+  Artifacts columns, all sortable, and a Report action per row; the projects
+  export gains the same columns.
+- **Time-bound memberships in the console.** Adding a member to a group or a
+  project takes an optional expiry, and the member tables show it with a
+  one-week warning. A group's rule on its Access tab asks for a reason and an
+  optional expiry before it saves.
+- **Export buttons on the group, project and user detail pages**, each scoped
+  to that group, project or person.
 - Console chrome from the upstream admin: the sidebar is now six collapsible
   groups (AI activity, People & access, Governance, Platform, Account,
   Developer). The group holding the current page is always open; the others

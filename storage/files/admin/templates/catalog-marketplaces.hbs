@@ -73,9 +73,9 @@
         </tr></thead>
         <tbody><tr class="sp-table__empty"><td colspan="7">
             {{#if search}}
-            {{> components/empty-state title="Nothing matches" message="No marketplace matches that filter."}}
+            {{> components/empty-state heading="Nothing matches" message="No marketplace matches that filter."}}
             {{else}}
-            {{> components/empty-state title="No marketplaces" message="Add a services/marketplaces/<id>/config.yaml and restart."}}
+            {{> components/empty-state heading="No marketplaces" message="Add a services/marketplaces/<id>/config.yaml and restart."}}
             {{/if}}
         </td></tr></tbody>
     {{/components/table}}

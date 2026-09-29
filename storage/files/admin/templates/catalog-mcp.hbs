@@ -70,9 +70,9 @@
         </tr></thead>
         <tbody><tr class="sp-table__empty"><td colspan="9">
             {{#if search}}
-            {{> components/empty-state title="Nothing matches" message="No MCP server matches that filter."}}
+            {{> components/empty-state heading="Nothing matches" message="No MCP server matches that filter."}}
             {{else}}
-            {{> components/empty-state title="No MCP servers" message="Nothing is declared under services/mcp and nothing has connected. Add a services/mcp/<id>.yaml and restart."}}
+            {{> components/empty-state heading="No MCP servers" message="Nothing is declared under services/mcp and nothing has connected. Add a services/mcp/<id>.yaml and restart."}}
             {{/if}}
         </td></tr></tbody>
     {{/components/table}}

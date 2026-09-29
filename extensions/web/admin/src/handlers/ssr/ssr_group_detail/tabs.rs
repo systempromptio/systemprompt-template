@@ -9,14 +9,12 @@ use systemprompt_web_shared::GroupId;
 
 pub(super) const USAGE: &str = "usage";
 pub(super) const MEMBERS: &str = "members";
-pub(super) const MARKETPLACES: &str = "marketplaces";
 pub(super) const ACCESS: &str = "access";
 pub(super) const PROJECTS: &str = "projects";
 pub(super) const MAPPINGS: &str = "mappings";
 
 pub(super) struct TabCounts {
     pub members: i64,
-    pub marketplaces: i64,
     pub projects: i64,
     pub mappings: i64,
 }
@@ -28,7 +26,7 @@ pub(super) const fn visible_tabs(is_unassigned: bool) -> &'static [&'static str]
     if is_unassigned {
         &[MEMBERS, USAGE, PROJECTS]
     } else {
-        &[USAGE, MEMBERS, MARKETPLACES, PROJECTS, MAPPINGS, ACCESS]
+        &[USAGE, MEMBERS, ACCESS, PROJECTS, MAPPINGS]
     }
 }
 
@@ -64,7 +62,6 @@ pub(super) fn tab_links(
 fn label_for(slug: &str) -> &'static str {
     match slug {
         MEMBERS => "Members",
-        MARKETPLACES => "Marketplaces",
         ACCESS => "Access",
         PROJECTS => "Projects",
         MAPPINGS => "Directory mappings",
@@ -75,7 +72,6 @@ fn label_for(slug: &str) -> &'static str {
 fn count_for(slug: &str, counts: &TabCounts) -> Option<i64> {
     match slug {
         MEMBERS => Some(counts.members),
-        MARKETPLACES => Some(counts.marketplaces),
         PROJECTS => Some(counts.projects),
         MAPPINGS => Some(counts.mappings),
         _ => None,

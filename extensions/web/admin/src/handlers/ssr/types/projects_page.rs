@@ -12,6 +12,7 @@ use systemprompt::identifiers::{SessionId, UserId};
 use systemprompt_web_shared::ProjectId;
 
 use super::super::list_view::Pagination;
+use super::table::SortHeaderView;
 use super::{
     AccessRowView, BreadcrumbView, MappingRowView, MemberRowView, MemberSetChipView,
     ModelMixRowView, SvgLineChartView, TabLinkView, UserOptionView,
@@ -30,18 +31,6 @@ pub(crate) struct ProjectKpiView {
     pub href: Option<String>,
 }
 
-// Why: one sortable column header, as `components/sort-header` reads it.
-#[derive(Debug, Clone, Serialize)]
-pub(crate) struct ProjectSortHeaderView {
-    pub label: &'static str,
-    pub class: &'static str,
-    pub hint: &'static str,
-    pub url: String,
-    pub active: bool,
-    pub aria_sort: &'static str,
-    pub indicator: &'static str,
-}
-
 // Why: one project on the listing.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ProjectListRowView {
@@ -53,11 +42,22 @@ pub(crate) struct ProjectListRowView {
     pub active_members: i64,
     pub group_count: i64,
     pub requests: i64,
+    pub tokens: i64,
+    pub tokens_display: String,
     pub cost_display: String,
+    pub models_used: i64,
+    // Why: the vendor prefix repeats on every row of a single-vendor estate,
+    // so the cell shows the tail and keeps the full id on its title.
+    pub top_model: Option<String>,
+    pub top_model_short: Option<String>,
+    pub clients_used: i64,
+    pub top_client: Option<String>,
     pub tool_calls: i64,
     pub tool_success_pct: i64,
     pub tool_tone: &'static str,
     pub skills_used: i64,
+    pub artifacts: i64,
+    pub report_href: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -82,13 +82,17 @@ pub(crate) struct ProjectsPageData {
 // name and the column set is checked when the page compiles.
 #[derive(Debug, Serialize)]
 pub(crate) struct ProjectSortHeaders {
-    pub name: ProjectSortHeaderView,
-    pub members: ProjectSortHeaderView,
-    pub groups: ProjectSortHeaderView,
-    pub requests: ProjectSortHeaderView,
-    pub cost: ProjectSortHeaderView,
-    pub tools: ProjectSortHeaderView,
-    pub skills: ProjectSortHeaderView,
+    pub name: SortHeaderView,
+    pub members: SortHeaderView,
+    pub groups: SortHeaderView,
+    pub requests: SortHeaderView,
+    pub tokens: SortHeaderView,
+    pub cost: SortHeaderView,
+    pub models: SortHeaderView,
+    pub clients: SortHeaderView,
+    pub tools: SortHeaderView,
+    pub skills: SortHeaderView,
+    pub artifacts: SortHeaderView,
 }
 
 // Why: one tool the project ran, with the share that did not succeed.
@@ -121,6 +125,9 @@ pub(crate) struct ProjectSessionRowView {
     pub session_short: String,
     pub href: String,
     pub user_id: UserId,
+    // Why: the name a reader knows the person by; the id when no member row
+    // carries one, so a printed report never shows an empty cell.
+    pub person: String,
     pub requests: i64,
     pub models: i64,
     pub cost_display: String,
@@ -203,4 +210,5 @@ pub(crate) struct ProjectDetailPageData {
     pub usage: Option<ProjectUsageTabView>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub settings: Option<ProjectSettingsTabView>,
+    pub export: crate::export::ExportView,
 }

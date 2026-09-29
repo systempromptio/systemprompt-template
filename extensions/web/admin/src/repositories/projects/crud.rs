@@ -48,15 +48,15 @@ pub async fn list_project_summaries(pool: &PgPool) -> Result<Vec<ProjectSummary>
             COALESCE(u.cost_microdollars, 0)::BIGINT AS "cost_30d_microdollars!"
         FROM projects p
         LEFT JOIN (
-            SELECT project_id, COUNT(DISTINCT user_id) AS member_count
-            FROM project_members GROUP BY project_id
+            SELECT project_id, COUNT(*) AS member_count
+            FROM user_projects GROUP BY project_id
         ) m ON m.project_id = p.id
         LEFT JOIN (
             SELECT pm.project_id,
                    COUNT(DISTINCT r.user_id) AS active_members,
                    COUNT(r.id) AS requests,
                    COALESCE(SUM(r.cost_microdollars), 0) AS cost_microdollars
-            FROM (SELECT DISTINCT project_id, user_id FROM project_members) pm
+            FROM user_projects pm
             JOIN ai_requests r
               ON r.user_id = pm.user_id
              AND r.created_at >= NOW() - INTERVAL '30 days'

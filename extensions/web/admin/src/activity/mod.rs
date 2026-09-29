@@ -7,7 +7,7 @@ mod constructors_session;
 pub mod enums;
 pub mod types;
 
-pub use constructors_entity::PlaneApply;
+pub use constructors_entity::{PlaneApply, RuleChange};
 
 pub use crate::repositories::users::activity::queries;
 pub use crate::repositories::users::activity::record::record;

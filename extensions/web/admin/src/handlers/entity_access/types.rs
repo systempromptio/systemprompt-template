@@ -1,6 +1,7 @@
 //! Request/response DTOs for the generic entity-access handlers in
 //! [`super`].
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use systemprompt_security::authz::AccessRule;
 
@@ -20,11 +21,22 @@ pub(crate) struct UpsertRuleBody {
     pub access: String,
     #[serde(default)]
     pub justification: Option<String>,
+    // Why: when the rule stops applying. None is open-ended and clears any
+    // window an earlier save put on the same row.
+    #[serde(default)]
+    pub valid_until: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub(crate) struct RemoveRuleQuery {
+    #[serde(default)]
+    pub reason: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
 pub(crate) struct UpsertRuleResponse {
     pub rule: AccessRule,
+    pub valid_until: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -65,6 +77,8 @@ pub(crate) struct ApplyTemplateBody {
     pub subject_type: String,
     pub subject_value: String,
     pub action: String,
+    #[serde(default)]
+    pub justification: Option<String>,
 }
 
 #[derive(Debug, Serialize)]

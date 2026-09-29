@@ -1,4 +1,4 @@
-<div class="sp-empty" role="status">
-  {{#if title}}<p class="sp-empty__title">{{title}}</p>{{/if}}
+<div class="sp-empty{{#if compact}} sp-empty--compact{{/if}}" role="status">
+  {{#if heading}}<p class="sp-empty__title">{{heading}}</p>{{/if}}
   <p>{{message}}</p>
 </div>

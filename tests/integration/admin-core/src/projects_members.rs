@@ -18,7 +18,7 @@ async fn a_manual_member_is_listed_with_its_source() {
     let user = insert_user(&db.pool, &unique("user"), &unclaimed_email("member")).await;
     let admin = insert_user(&db.pool, &unique("admin"), &unclaimed_email("admin")).await;
 
-    insert_project_member(&db.pool, &ProjectId::new("core"), &user, &admin)
+    insert_project_member(&db.pool, &ProjectId::new("core"), &user, &admin, None)
         .await
         .expect("add");
 

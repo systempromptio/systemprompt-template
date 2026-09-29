@@ -5,7 +5,6 @@ use std::sync::Arc;
 
 use axum::Json;
 use axum::extract::{Extension, Path, Query, State};
-use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::PgPool;
@@ -54,6 +53,7 @@ pub(crate) async fn update_entity_rules_handler(
 ) -> AdminResult<Response> {
     let kind = editable_entity_kind(&entity_type)?;
     registered_routes_from_services()?.require(kind, &entity_id)?;
+    require_band_justification(&body.rules)?;
 
     let rules =
         repositories::users::access_control::set_entity_rules(&pool, kind, &entity_id, &body.rules)
@@ -87,6 +87,7 @@ pub(crate) async fn bulk_assign_handler(
         .map(|e| registered_entity(&registered, &e.entity_type, &e.entity_id))
         .collect::<AdminResult<Vec<(EntityKind, String)>>>()?;
 
+    require_band_justification(&body.rules)?;
     let rules_per_entity = body.rules.len();
     let updated_count =
         repositories::users::access_control::bulk_set_rules(&pool, &entities, &body.rules).await?;
@@ -95,6 +96,27 @@ pub(crate) async fn bulk_assign_handler(
         rules_per_entity,
     })
     .into_response())
+}
+
+// Why: every band but `user` is a shared decision — a group, a role, a project
+// — and a shared decision with no stated reason is how the ledger's "why"
+// column ended up blank. A per-person override may stay unexplained; it is
+// usually temporary and belongs to one account.
+pub(crate) fn require_band_justification(
+    rules: &[crate::types::access_control::AccessControlRuleInput],
+) -> AdminResult<()> {
+    let missing = rules.iter().find(|r| {
+        r.rule_type != crate::types::access_control::RuleType::USER
+            && r.justification
+                .as_deref()
+                .is_none_or(|j| j.trim().is_empty())
+    });
+    missing.map_or(Ok(()), |rule| {
+        Err(AdminError::BadRequest(format!(
+            "a reason (justification) is required for the {} rule on '{}'",
+            rule.rule_type, rule.rule_value
+        )))
+    })
 }
 
 fn editable_entity_kind(entity_type: &str) -> AdminResult<EntityKind> {
@@ -164,26 +186,23 @@ pub(crate) fn build_matrix_sections(
         ));
     }
 
-    match repositories::config::gateway::dispatchable_routes_from_services() {
+    match repositories::config::gateway::get_route_labels_from_services() {
         Err(e) => {
             // Why: skipping the section keeps the rest of the matrix rendering,
             // but a dropped gateway section is indistinguishable from a
             // deployment with no routes, so it may not go unrecorded.
             tracing::error!(error = %e, "gateway routes unavailable for the access-control matrix");
         },
-        Ok(routes) => {
-            let rows = routes
-                .into_iter()
-                .map(|r| {
-                    let label = r.model_pattern.clone();
-                    (r.id, label, None)
-                })
+        Ok(labels) => {
+            // Why: the row's name is the route's label and its description
+            // the one-line "pattern → provider", so every matrix reader
+            // shows a route the way the gateway page does.
+            let rows = labels
+                .routes
+                .iter()
+                .map(|r| (r.id.clone(), r.label.clone(), Some(r.subtitle())))
                 .collect();
-            sections.push((
-                "gateway_route".to_owned(),
-                "Gateway routes".to_owned(),
-                rows,
-            ));
+            sections.push(("gateway_route".to_owned(), "Model routes".to_owned(), rows));
         },
     }
 
@@ -249,25 +268,4 @@ fn push_catalog_sections(
             .collect();
         sections.push(("skill".to_owned(), "Skills".to_owned(), rows));
     }
-}
-
-// Why: the database rendered as `rules.yaml` — the access-control plane's
-// export — for copy-out only; writes nothing to disk — instances never write
-// back to `services/`.
-pub(crate) async fn yaml_snapshot_handler(
-    State(pool): State<Arc<PgPool>>,
-) -> AdminResult<Response> {
-    use crate::repositories::sync::access_control::AccessControlPlane;
-    use crate::repositories::sync::plane::SyncPlane;
-    let yaml = AccessControlPlane
-        .export(&pool)
-        .await?
-        .map(|export| export.body)
-        .unwrap_or_default();
-    Ok((
-        StatusCode::OK,
-        [(axum::http::header::CONTENT_TYPE, "application/yaml")],
-        yaml,
-    )
-        .into_response())
 }

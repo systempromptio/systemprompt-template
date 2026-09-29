@@ -98,7 +98,7 @@
         </tbody>
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No one matches" message="No one holds a role matching these filters. Clear them to see the whole estate."}}
+    {{> components/empty-state heading="No one matches" message="No one holds a role matching these filters. Clear them to see the whole estate."}}
     {{/if}}
 
     {{#> components/section title="Role entitlements" count=entitlement_total note="Every access-control rule written at the role band. Edit them in Access control."}}
@@ -129,7 +129,7 @@
         </tbody>
     {{/components/table}}
     {{else}}
-    {{> components/empty-state title="No role entitlements" message="Nothing is granted at the role band. Entitlement here comes from the group and project bands instead."}}
+    {{> components/empty-state heading="No role entitlements" message="Nothing is granted at the role band. Entitlement here comes from the group and project bands instead."}}
     {{/if}}
 
     {{#if can_write}}

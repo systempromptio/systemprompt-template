@@ -1,6 +1,7 @@
 //! Project membership, with the same two-writer rule groups have: the
 //! directory replaces its own rows at every sign-in, manual rows survive.
 
+use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use systemprompt::identifiers::UserId;
 use systemprompt_web_shared::ProjectId;
@@ -24,10 +25,13 @@ pub async fn list_project_members(
                 ARRAY_AGG(DISTINCT pm.source_ad_group)
                     FILTER (WHERE pm.source_ad_group IS NOT NULL),
                 ARRAY[]::TEXT[]
-            ) AS "source_ad_groups!"
+            ) AS "source_ad_groups!",
+            MIN(pm.valid_until) FILTER (WHERE pm.source = 'manual') AS "valid_until?"
         FROM project_members pm
         JOIN users u ON u.id = pm.user_id
         WHERE pm.project_id = $1
+          AND pm.revoked_at IS NULL AND pm.valid_from <= CURRENT_TIMESTAMP
+          AND (pm.valid_until IS NULL OR pm.valid_until > CURRENT_TIMESTAMP)
         GROUP BY pm.user_id, u.display_name, u.email
         ORDER BY u.display_name NULLS LAST, pm.user_id
         "#,
@@ -42,7 +46,7 @@ pub async fn list_project_ids_for_user(
     user_id: &UserId,
 ) -> Result<Vec<ProjectId>, sqlx::Error> {
     sqlx::query_scalar!(
-        r#"SELECT DISTINCT project_id AS "project_id!: ProjectId" FROM project_members WHERE user_id = $1 ORDER BY project_id"#,
+        r#"SELECT project_id AS "project_id!: ProjectId" FROM user_projects WHERE user_id = $1 ORDER BY project_id"#,
         user_id.as_str()
     )
     .fetch_all(pool)
@@ -54,26 +58,35 @@ pub async fn count_project_members(
     project_id: &ProjectId,
 ) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar!(
-        r#"SELECT COUNT(DISTINCT user_id)::BIGINT AS "count!"
-           FROM project_members WHERE project_id = $1"#,
+        r#"SELECT COUNT(*)::BIGINT AS "count!"
+           FROM user_projects WHERE project_id = $1"#,
         project_id.as_str()
     )
     .fetch_one(pool)
     .await
 }
 
+// Why: same revive-on-conflict rule as `groups::members::insert_group_member`.
 pub async fn insert_project_member(
     pool: &PgPool,
     project_id: &ProjectId,
     user_id: &UserId,
     granted_by: &UserId,
+    valid_until: Option<DateTime<Utc>>,
 ) -> AdminResult<()> {
     let inserted = sqlx::query!(
-        "INSERT INTO project_members (project_id, user_id, source, granted_by)
-         VALUES ($1, $2, 'manual', $3) ON CONFLICT DO NOTHING",
+        "INSERT INTO project_members (project_id, user_id, source, granted_by, valid_until)
+         VALUES ($1, $2, 'manual', $3, $4)
+         ON CONFLICT (project_id, user_id, source) DO UPDATE
+            SET granted_by = EXCLUDED.granted_by,
+                valid_from = CURRENT_TIMESTAMP,
+                valid_until = EXCLUDED.valid_until,
+                revoked_at = NULL
+          WHERE project_members.revoked_at IS NOT NULL",
         project_id.as_str(),
         user_id.as_str(),
-        granted_by.as_str()
+        granted_by.as_str(),
+        valid_until
     )
     .execute(pool)
     .await?;
@@ -92,7 +105,7 @@ pub async fn delete_project_member(
 ) -> AdminResult<()> {
     let sources = sqlx::query_scalar!(
         r#"SELECT source AS "source!" FROM project_members
-           WHERE project_id = $1 AND user_id = $2"#,
+           WHERE project_id = $1 AND user_id = $2 AND revoked_at IS NULL"#,
         project_id.as_str(),
         user_id.as_str()
     )

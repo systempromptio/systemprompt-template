@@ -113,9 +113,9 @@ pub(super) async fn resolve_sections_for(
 // question of a dozen subjects, and re-reading the whole rule table for each
 // of them turns one page render into two dozen round trips.
 pub(super) struct ResolutionInputs {
-    rules: Vec<AccessControlRule>,
-    defaults: HashMap<(String, String), bool>,
-    chains: systemprompt_security::authz::ParentChainIndex,
+    pub(super) rules: Vec<AccessControlRule>,
+    pub(super) defaults: HashMap<(String, String), bool>,
+    pub(super) chains: systemprompt_security::authz::ParentChainIndex,
 }
 
 pub(super) async fn resolution_inputs(pool: &PgPool) -> Result<ResolutionInputs, sqlx::Error> {
@@ -198,7 +198,7 @@ async fn load_entity_defaults(
     Ok(out)
 }
 
-async fn find_user_for_matrix(
+pub(super) async fn find_user_for_matrix(
     pool: &PgPool,
     user_id: &UserId,
 ) -> Result<Option<UserMatrixUser>, sqlx::Error> {
@@ -209,7 +209,7 @@ async fn find_user_for_matrix(
                   u.roles AS "roles!: Vec<String>",
                   ARRAY(SELECT ug.group_id FROM user_groups ug
                         WHERE ug.user_id = u.id) AS "group_ids!: Vec<String>",
-                  ARRAY(SELECT DISTINCT pm.project_id FROM project_members pm
+                  ARRAY(SELECT pm.project_id FROM user_projects pm
                         WHERE pm.user_id = u.id) AS "project_ids!: Vec<String>"
            FROM users u
            WHERE u.id = $1"#,

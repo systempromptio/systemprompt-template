@@ -23,6 +23,16 @@ pub(super) use super::usage::usage_tab;
 
 const SLACK_ISSUER: &str = "https://slack.com";
 
+// Why: the export datasets are console-only; a plain user on their own page
+// gets no button rather than one that answers 403. The transcript bundle
+// joins it with the analysis suite (Stage 3 phase 7).
+pub(super) fn export(user_id: &UserId, viewer: &UserContext) -> Option<crate::export::ExportView> {
+    viewer.is_console.then(|| {
+        let query = crate::export::view::query_string(&[("user_id", Some(user_id.as_str()))]);
+        crate::export::ExportView::new(&["requests", "sessions", "conversations"], &query)
+    })
+}
+
 pub(super) fn identity_tab(
     detail: &crate::types::UserDetail,
     data: &IdentityData,

@@ -1,6 +1,6 @@
 //! The projects listing as a file: one row per project with the same
-//! membership, spend, tool health and skill spread the page shows, over the
-//! window the dialog picks.
+//! membership, spend, model and agent mix, tool health and output the page
+//! shows, over the window the dialog picks.
 
 use async_trait::async_trait;
 use serde::Deserialize;
@@ -36,11 +36,17 @@ const COLUMNS: &[Column] = &[
     Column::new("active_members", "Active members", CellKind::Integer).group("People"),
     Column::new("groups", "Groups", CellKind::Integer).group("People"),
     Column::new("requests", "Requests", CellKind::Integer).group("Usage"),
+    Column::new("tokens", "Tokens", CellKind::Integer).group("Usage"),
     Column::new("cost", "Cost", CellKind::Money).group("Usage"),
+    Column::new("models", "Models", CellKind::Integer).group("Mix"),
+    Column::new("top_model", "Top model", CellKind::Text).group("Mix"),
+    Column::new("agents", "Agents", CellKind::Integer).group("Mix"),
+    Column::new("top_agent", "Top agent", CellKind::Text).group("Mix"),
     Column::new("tool_calls", "Tool calls", CellKind::Integer).group("Tools"),
     Column::new("tool_success", "Tool successes", CellKind::Integer).group("Tools"),
     Column::new("tool_success_pct", "Tool success %", CellKind::Integer).group("Tools"),
     Column::new("skills", "Skills", CellKind::Integer).group("Output"),
+    Column::new("artifacts", "Artifacts", CellKind::Integer).group("Output"),
 ];
 
 fn row(p: &ProjectRollup) -> Vec<Cell> {
@@ -58,11 +64,17 @@ fn row(p: &ProjectRollup) -> Vec<Cell> {
         p.active_members.into(),
         p.group_count.into(),
         p.requests.into(),
+        p.tokens.into(),
         Cell::Money(p.cost_microdollars),
+        p.models_used.into(),
+        Cell::opt_text(p.top_model.as_deref()),
+        p.clients_used.into(),
+        Cell::opt_text(p.top_client.as_deref()),
         p.tool_calls.into(),
         p.tool_success.into(),
         success_pct.into(),
         p.skills_used.into(),
+        p.artifacts.into(),
     ]
 }
 
@@ -75,7 +87,7 @@ impl DataSet for Projects {
         "Projects"
     }
     fn description(&self) -> &'static str {
-        "One row per project: members, groups, requests, cost, tool health and skills used."
+        "One row per project: members, groups, requests, tokens, cost, model and agent mix, tool health, skills and artifacts."
     }
     fn columns(&self) -> &'static [Column] {
         COLUMNS

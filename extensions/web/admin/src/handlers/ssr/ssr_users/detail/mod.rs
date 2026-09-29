@@ -117,6 +117,7 @@ pub(crate) async fn user_detail_page(
         },
         can_write: user_ctx.is_admin,
         is_self: user_ctx.user_id.as_str() == user_id.as_str(),
+        export: view::export(&user_id, &user_ctx),
         identity: None,
         conversations: None,
         membership: None,

@@ -113,6 +113,10 @@ fn people_routes() -> Router<Arc<PgPool>> {
             "/projects/{project_id}",
             get(handlers::ssr::project_detail_page),
         )
+        .route(
+            "/projects/{project_id}/report",
+            get(handlers::ssr::project_report_page),
+        )
         .route("/roles", get(handlers::ssr::roles_page))
         .route("/devices", get(handlers::ssr::devices_page))
         .route("/access-control", get(handlers::ssr::access_control_page))

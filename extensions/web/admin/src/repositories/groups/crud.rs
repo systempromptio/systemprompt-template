@@ -62,7 +62,7 @@ pub async fn list_group_summaries(pool: &PgPool) -> Result<Vec<GroupSummary>, sq
         LEFT JOIN (
             SELECT ug.group_id, COUNT(DISTINCT pm.project_id) AS project_count
             FROM user_groups ug
-            JOIN project_members pm ON pm.user_id = ug.user_id
+            JOIN user_projects pm ON pm.user_id = ug.user_id
             GROUP BY ug.group_id
         ) pc ON pc.group_id = g.id
         LEFT JOIN (

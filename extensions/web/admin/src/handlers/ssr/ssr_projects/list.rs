@@ -12,7 +12,8 @@ use crate::repositories::projects::usage::{LISTING_CAP, ProjectRollup, list_proj
 use crate::repositories::scope::membership::UNATTRIBUTED;
 use crate::repositories::scope::{Attribution, ScopeKind};
 
-use super::super::people_view::{format_usd, or_default};
+use super::super::format::short_num;
+use super::super::people_view::{format_usd, or_default, short_model};
 use super::super::types::{BreadcrumbView, ProjectKpiView, ProjectListRowView, ProjectsPageData};
 use super::sort::{page_url, sort_headers, sort_key, sort_rows};
 use super::{PAGE_SIZE, PageCounts, WINDOW_LABEL, pagination, pct};
@@ -200,10 +201,19 @@ fn row_view(p: &ProjectRollup) -> ProjectListRowView {
         active_members: p.active_members,
         group_count: p.group_count,
         requests: p.requests,
+        tokens: p.tokens,
+        tokens_display: short_num(p.tokens),
         cost_display: format_usd(p.cost_microdollars),
+        models_used: p.models_used,
+        top_model_short: p.top_model.as_deref().map(short_model),
+        top_model: p.top_model.clone(),
+        clients_used: p.clients_used,
+        top_client: p.top_client.clone(),
         tool_calls: p.tool_calls,
         tool_success_pct: success,
         tool_tone: tool_tone(success, p.tool_calls),
         skills_used: p.skills_used,
+        artifacts: p.artifacts,
+        report_href: format!("/admin/projects/{}/report", p.id),
     }
 }

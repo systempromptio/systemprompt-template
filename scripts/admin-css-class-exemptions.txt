@@ -22,3 +22,7 @@ expanded
 loading
 error
 success
+
+# Audience-grid cell decisions rendered from data (`is-{{decision}}` in
+# components/audience-grid.hbs); `warn` is the one no template spells whole.
+is-warn

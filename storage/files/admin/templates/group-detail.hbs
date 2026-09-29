@@ -1,7 +1,11 @@
-{{#> layout title=title page=page}}
+{{#> layout page_title=title page_id=page}}
     {{#*inline "content"}}
     {{> components/breadcrumbs crumbs=breadcrumbs}}
-    {{> components/page-header title=group_name subtitle=description}}
+    {{#> components/page-header title=group_name subtitle=description}}
+        {{#*inline "header_actions"}}
+        {{#if export}}{{> components/export-button export}}{{/if}}
+        {{/inline}}
+    {{/components/page-header}}
 
     {{#if not_found}}
     {{> components/empty-state message="No group with that identifier."}}
@@ -149,6 +153,7 @@
                 <th class="sp-u-numeric sp-table__cell--num">Tokens 30d</th>
                 <th class="sp-u-numeric sp-table__cell--num">Cost 30d</th>
                 <th class="sp-col-date">Last active</th>
+                <th class="sp-col-date">Expires</th>
                 <th class="sp-table__cell--actions"></th>
             </tr></thead>
             <tbody>
@@ -172,6 +177,7 @@
                 <td class="sp-u-numeric">{{formatNumber tokens_30d}}</td>
                 <td class="sp-u-numeric">{{formatUsd cost_30d_microdollars}}</td>
                 <td class="sp-col-date">{{#if last_active}}<span title="{{formatDate last_active}}">{{relativeTime last_active}}</span>{{else}}<span class="sp-u-text-tertiary">Never</span>{{/if}}</td>
+                <td class="sp-col-date">{{#if expires_at}}<span title="{{formatDate expires_at}}">{{relativeTime expires_at}}</span>{{#if expires_soon}} {{> components/badge tone="warn" text="soon"}}{{/if}}{{else}}<span class="sp-u-text-tertiary">Never</span>{{/if}}</td>
                 <td class="sp-table__cell--actions sp-member-actions">
                     {{#if @root.can_manage}}
                     {{#if @root.is_unassigned}}
@@ -209,6 +215,9 @@
                 <option value="{{user_id}}">{{label}}</option>
                 {{/each}}
             </select>
+            <label for="add-member-until">Expires</label>
+            <input type="date" id="add-member-until" class="sp-search-input" data-field="add-member-until" aria-describedby="add-member-until-note">
+            <p id="add-member-until-note" class="sp-u-text-tertiary sp-u-text-xs">Leave blank for an open-ended membership. An expired membership is revoked by the hourly sweep.</p>
             <menu>
                 <button type="button" class="sp-btn sp-btn--outline" data-action="close-add-member">Cancel</button>
                 <button type="button" class="sp-btn sp-btn--primary" data-action="confirm-add-member">Add</button>
@@ -219,50 +228,15 @@
     {{/if}}
     {{/if}}
 
-    {{#if marketplaces}}
-    <section class="sp-group-panel" aria-label="Marketplaces" data-group-id="{{group_id}}">
-        <p class="sp-group-panel__note">
-            A marketplace a group reaches is an access-control rule on the marketplace entity keyed by
-            this group, not a membership. Assigning one here writes that rule; unassigning deletes it and
-            leaves the marketplace's own default for the rest of the estate untouched.
-        </p>
-        {{#if can_manage}}
-        <div class="sp-toolbar" role="toolbar" aria-label="Marketplace actions">
-            <span class="sp-toolbar__count">Tick a marketplace to entitle this group to it</span>
-            <div class="sp-toolbar__actions">
-                <button type="button" class="sp-btn sp-btn--primary sp-btn--sm" data-action="save-marketplaces">Save entitlement</button>
-            </div>
-        </div>
-        {{/if}}
-        {{#> components/table caption="Marketplaces this group is entitled to"}}
-            <thead><tr>
-                <th class="sp-table__cell--actions">Assigned</th>
-                <th>Marketplace</th>
-                <th>Description</th>
-            </tr></thead>
-            <tbody>
-            {{#each marketplaces}}
-            <tr data-marketplace-id="{{id}}">
-                <td class="sp-table__cell--actions">
-                    <input type="checkbox" id="mkt-{{id}}" data-field="marketplace" value="{{id}}"
-                           {{#if assigned}}checked{{/if}}{{#unless @root.can_manage}} disabled{{/unless}}>
-                    <label class="sp-u-sr-only" for="mkt-{{id}}">Assign {{name}} to this group</label>
-                </td>
-                <td><a href="/admin/marketplaces/{{id}}">{{name}}</a> <code class="sp-u-mono">{{id}}</code></td>
-                <td>{{truncate description 120}}</td>
-            </tr>
-            {{/each}}
-            </tbody>
-        {{/components/table}}
-    </section>
-    {{/if}}
-
     {{#if (eq active_tab "access")}}
     <section class="sp-group-panel" aria-label="Effective access" data-group-id="{{group_id}}">
         <p class="sp-group-panel__note">
             Every entity resolved for a subject holding only this group's membership, through the
-            same resolver the enforcement point calls. <strong>Inherit</strong> means this group
-            holds no rule of its own and the cell is whatever the wider bands decided.
+            same resolver the enforcement point calls. Marketplaces come first: allowing one here is
+            what entitles this group to it. <strong>Inherit</strong> means this group
+            holds no rule of its own and the cell is whatever the wider bands decided. Allow or
+            deny asks for a reason: it is recorded on the rule and shown on
+            <a href="/admin/access-control">Access control</a>.
         </p>
         {{#each access}}
         <h2 class="sp-section__title">{{label}}</h2>
@@ -277,14 +251,21 @@
             {{#each rows}}
             <tr data-entity-type="{{entity_type}}" data-entity-id="{{entity_id}}">
                 <td>{{entity_name}}</td>
-                <td class="sp-col-status"><span class="sp-badge sp-badge-{{#if (eq effective "allow")}}is-success{{else}}is-danger{{/if}}">{{effective}}</span></td>
+                <td class="sp-col-status">{{> components/access-badge decision=effective}}</td>
                 <td><span class="sp-access-layer">{{layer}}</span> <span class="sp-u-text-tertiary sp-u-text-xs">{{detail}}</span></td>
                 <td class="sp-table__cell--actions">
-                    <select class="sp-filter-select" data-action="set-group-rule" data-entity-type="{{entity_type}}" data-entity-id="{{entity_id}}" aria-label="Rule for {{entity_name}}"{{#unless @root.can_manage}} disabled{{/unless}}>
-                        <option value="inherit"{{#if (eq state "inherit")}} selected{{/if}}>Inherit</option>
-                        <option value="allow"{{#if (eq state "allow")}} selected{{/if}}>Allow</option>
-                        <option value="deny"{{#if (eq state "deny")}} selected{{/if}}>Deny</option>
-                    </select>
+                    <div class="sp-group-rule" data-group-rule>
+                        <select class="sp-filter-select" data-action="set-group-rule" data-entity-type="{{entity_type}}" data-entity-id="{{entity_id}}" aria-label="Rule for {{entity_name}}"{{#unless @root.can_manage}} disabled{{/unless}}>
+                            <option value="inherit"{{#if (eq state "inherit")}} selected{{/if}}>Inherit</option>
+                            <option value="allow"{{#if (eq state "allow")}} selected{{/if}}>Allow</option>
+                            <option value="deny"{{#if (eq state "deny")}} selected{{/if}}>Deny</option>
+                        </select>
+                        <span class="sp-group-rule__reason" data-group-reason hidden>
+                            <input type="text" class="sp-search-input" data-group-reason-input maxlength="240" placeholder="Why? (required)" aria-label="Reason for the rule on {{entity_name}}">
+                            <input type="date" class="sp-search-input" data-group-until-input aria-label="Expiry of the rule on {{entity_name}}" title="Expires (blank = open-ended)">
+                            <button type="button" class="sp-btn sp-btn--sm sp-btn--secondary" data-action="save-group-rule">Save</button>
+                        </span>
+                    </div>
                 </td>
             </tr>
             {{/each}}
@@ -356,6 +337,5 @@
     <script data-cfasync="false" type="module" src="/js/pages/admin-group-detail.js"></script>
     <script data-cfasync="false" type="module" src="/js/pages/admin-group-access.js"></script>
     <script data-cfasync="false" type="module" src="/js/pages/admin-group-assign.js"></script>
-    <script data-cfasync="false" type="module" src="/js/pages/admin-group-marketplaces.js"></script>
     {{/inline}}
 {{/layout}}

@@ -13,6 +13,8 @@ use systemprompt::identifiers::PluginId;
 use serde::Serialize;
 use sqlx::PgPool;
 
+use crate::handlers::ssr::entity_panel::EntityAccessView;
+
 #[derive(Debug, Clone, Serialize)]
 pub(super) struct LinkedEntity {
     pub(super) id: String,
@@ -123,6 +125,9 @@ pub(super) struct PluginDetailData {
     pub(super) mcp_count: usize,
     pub(super) agents_count: usize,
     pub(super) hooks_count: usize,
+    // Why: the "Who gets this" panel; set by the handler after the catalog
+    // entry resolves, since only the handler holds the pool.
+    pub(super) access: Option<EntityAccessView>,
 }
 
 #[derive(Debug, Serialize)]
@@ -140,10 +145,17 @@ pub(super) struct SkillDetailData {
     pub(super) assignment_count: i64,
     pub(super) included_by: Vec<LinkedEntity>,
     pub(super) included_by_count: usize,
+    pub(super) access: Option<EntityAccessView>,
 }
 
 pub(super) fn matrix_url(entity_type: &str, entity_id: &str) -> String {
     format!("/admin/access-control?entity_type={entity_type}&entity_id={entity_id}")
+}
+
+#[derive(Debug, Default, serde::Deserialize)]
+pub(crate) struct PanelQuery {
+    // Why: the "Why?" explainer's person — an account id or an email.
+    pub why: Option<String>,
 }
 
 pub(super) fn plugin_url(id: &str) -> String {
