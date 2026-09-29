@@ -261,6 +261,8 @@ fn account_routes() -> Router<Arc<PgPool>> {
             get(handlers::ssr::history_conversation_page),
         )
         .route("/settings", get(handlers::ssr::settings_page))
+        .route("/connect", get(handlers::ssr::connect_page))
+        .route("/connectors", get(handlers::ssr::connectors_page))
         .route("/setup", get(handlers::ssr::setup_page))
 }
 

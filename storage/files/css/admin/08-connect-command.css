@@ -39,6 +39,7 @@
     color: var(--sp-text-tertiary);
     cursor: pointer;
     opacity: 0.75;
+    transition: opacity var(--sp-duration-fast) ease,
                 color var(--sp-duration-fast) ease;
 }
 

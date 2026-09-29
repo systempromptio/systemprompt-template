@@ -1,0 +1,193 @@
+@layer components {
+
+/* One card per provider, and every card the same shape: mark, name and kind
+   on one row, what it unlocks beneath, the account facts as a list, then the
+   actions pinned to the bottom edge so the primary button of every card in a
+   row sits on the same line. The status colour lives on the mark's ring and
+   the card's leading edge, never on the whole surface. */
+
+.sp-connector-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+    gap: var(--sp-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sp-connector {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-5);
+    background: var(--sp-bg-surface);
+    border-radius: var(--sp-corners-md);
+    box-shadow: var(--sp-shadow-card);
+    border-inline-start: 3px solid var(--sp-border-subtle);
+    transition: box-shadow var(--sp-duration-fast) var(--sp-ease-in-out);
+}
+
+.sp-connector:hover { box-shadow: var(--sp-shadow-card-hover); }
+
+.sp-connector[data-status="connected"] { border-inline-start-color: var(--sp-success); }
+.sp-connector[data-status="reconnect_required"],
+.sp-connector[data-status="verification_required"] { border-inline-start-color: var(--sp-warning); }
+.sp-connector[data-status="temporarily_unavailable"] { border-inline-start-color: var(--sp-danger); }
+
+.sp-connector__head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: var(--sp-space-3);
+}
+
+.sp-connector__mark {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sp-space-10);
+    height: var(--sp-space-10);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-tertiary);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-md);
+    font-weight: var(--sp-font-semibold);
+    letter-spacing: var(--sp-tracking-wide);
+}
+
+.sp-connector[data-glyph="atlassian"] .sp-connector__mark,
+.sp-connector[data-glyph="github"] .sp-connector__mark {
+    background: var(--sp-accent-dim);
+    color: var(--sp-accent-text);
+}
+
+.sp-connector[data-status="connected"] .sp-connector__mark {
+    background: var(--sp-success-dim);
+    color: var(--sp-success-strong);
+}
+
+.sp-connector__mark::after {
+    content: "";
+    position: absolute;
+    right: calc(-1 * var(--sp-space-1));
+    bottom: calc(-1 * var(--sp-space-1));
+    width: var(--sp-space-3);
+    height: var(--sp-space-3);
+    border: 2px solid var(--sp-bg-surface);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-border-default);
+}
+
+.sp-connector[data-status="connected"] .sp-connector__mark::after { background: var(--sp-success); }
+.sp-connector[data-status="reconnect_required"] .sp-connector__mark::after,
+.sp-connector[data-status="verification_required"] .sp-connector__mark::after { background: var(--sp-warning); }
+.sp-connector[data-status="temporarily_unavailable"] .sp-connector__mark::after { background: var(--sp-danger); }
+
+.sp-connector__title {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-05);
+    min-width: 0;
+}
+
+.sp-connector__name {
+    margin: 0;
+    font-size: var(--sp-text-md);
+    font-weight: var(--sp-font-semibold);
+    line-height: var(--sp-leading-snug);
+    color: var(--sp-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-connector__kind {
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    letter-spacing: var(--sp-tracking-wide);
+    text-transform: uppercase;
+    color: var(--sp-text-tertiary);
+}
+
+.sp-connector__status { justify-self: end; white-space: nowrap; }
+
+.sp-connector__about {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+}
+
+.sp-connector__blurb {
+    margin: 0;
+    font-size: var(--sp-text-sm);
+    line-height: var(--sp-leading-relaxed);
+    color: var(--sp-text-secondary);
+}
+
+.sp-connector__uses {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sp-connector__use {
+    padding: var(--sp-space-05) var(--sp-space-2);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-surface-alt);
+    font-size: var(--sp-text-2xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-connector__facts {
+    display: grid;
+    gap: var(--sp-space-1);
+    margin: 0;
+    padding: var(--sp-space-3);
+    border-radius: var(--sp-corners-inner-sm);
+    background: var(--sp-bg-surface-alt);
+    font-size: var(--sp-text-xs);
+}
+
+.sp-connector__facts[hidden] { display: none; }
+
+.sp-connector__fact {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    column-gap: var(--sp-space-2);
+}
+
+.sp-connector__fact dt { color: var(--sp-text-tertiary); }
+
+.sp-connector__fact dd {
+    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sp-text-primary);
+}
+
+.sp-connector__note {
+    margin: 0;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border-radius: var(--sp-corners-inner-sm);
+    background: var(--sp-warning-dim);
+    color: var(--sp-warning-strong);
+    font-size: var(--sp-text-xs);
+}
+
+.sp-connector__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-2);
+    margin-top: auto;
+    padding-top: var(--sp-space-2);
+}
+
+.sp-connector__actions:empty { display: none; }
+
+}

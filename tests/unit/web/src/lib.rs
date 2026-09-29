@@ -304,4 +304,8 @@ mod time_bound_access;
 // observability view, the retention ledger, connectors and the managed
 // resources, each through its pure half.
 #[cfg(test)]
+mod connector_cards;
+#[cfg(test)]
+mod connector_oauth;
+#[cfg(test)]
 mod observability_view;

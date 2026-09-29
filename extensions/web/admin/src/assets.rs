@@ -104,8 +104,8 @@ fn page_js_assets(storage_js: &Path) -> Vec<AssetDefinition> {
         page_js!(&pages, "admin-user-access.js"),
         page_js!(&pages, "admin-user-detail.js"),
         page_js!(&pages, "admin-users.js"),
-        page_js!(&pages, "profile-connect-code.js"),
-        page_js!(&pages, "profile-connections.js"),
+        page_js!(&pages, "connect-code.js"),
+        page_js!(&pages, "connectors.js"),
     ]
 }
 

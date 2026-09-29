@@ -1,8 +1,8 @@
 //! OAuth for configured MCP resources with explicitly trusted authorization
 //! origins.
 
-pub use super::generic_discovery::validate_endpoint;
 use super::generic_discovery::{bounded_json, metadata, trusted_endpoint};
+pub use super::generic_discovery::{same_issuer, validate_endpoint};
 use super::transport::client;
 use super::{Grant, Provider, config};
 use crate::error::{AdminError, AdminResult};
@@ -60,7 +60,7 @@ pub async fn authorize_with_client(
     consent: Consent<'_>,
     provider: Provider,
     callback: &str,
-    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
+    http: &reqwest::Client,
 ) -> AdminResult<(String, Grant)> {
     let Consent {
         user,
@@ -99,6 +99,8 @@ pub async fn authorize_with_client(
         ("resource", provider.endpoint().as_str()),
         ("scope", scope.as_str()),
     ]);
+    url.query_pairs_mut()
+        .extend_pairs(settings.authorization_params.iter());
     let grant = Grant {
         user: user.into(),
         configuration_binding: binding(&provider)?,
@@ -123,10 +125,8 @@ pub async fn authorize_with_client(
     };
     Ok((url.into(), grant))
 }
-pub async fn validate_refresh(
-    grant: &Grant,
-    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
-) -> AdminResult<()> {
+
+pub async fn validate_refresh(grant: &Grant, http: &reqwest::Client) -> AdminResult<()> {
     validate_grant(grant)?;
     let metadata = metadata(http, &grant.provider).await?;
     if (metadata.issuer.as_str(), metadata.token_endpoint.as_str())
@@ -146,7 +146,7 @@ async fn register_client(
     provider: &Provider,
     meta: &super::generic_discovery::AuthorizationMetadata,
     callback: &str,
-    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
+    http: &reqwest::Client,
 ) -> AdminResult<(Registration, &'static str)> {
     let settings = provider
         .settings()
@@ -184,7 +184,7 @@ async fn register_client(
         let response = http
             .post(trusted_endpoint(provider, endpoint)?)
             .json(&serde_json::json!({
-                "client_name": "Systemprompt Digital", "redirect_uris": [callback],
+                "client_name": "Systemprompt", "redirect_uris": [callback],
                 "grant_types": ["authorization_code", "refresh_token"], "response_types": ["code"],
                 "token_endpoint_auth_method": "none", "scope": scope
             }))

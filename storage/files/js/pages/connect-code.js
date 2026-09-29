@@ -5,7 +5,14 @@ const button = document.getElementById('issue-connect-code');
 const status = document.getElementById('connect-code-status');
 const expiry = document.querySelector('[data-connect-expiry]');
 const error = document.getElementById('connect-code-error');
+const wizard = document.getElementById('connect');
 let countdown = null;
+
+const setState = (state) => {
+  if (wizard) wizard.dataset.connectState = state;
+  for (const node of document.querySelectorAll('[data-connect-ready]')) node.hidden = state !== 'ready';
+  for (const node of document.querySelectorAll('[data-connect-pending]')) node.hidden = state === 'ready';
+};
 
 const showError = (message) => {
   if (!error) return;
@@ -26,8 +33,8 @@ const expire = () => {
   for (const node of document.querySelectorAll('[data-connect-field]')) node.textContent = '';
   for (const node of document.querySelectorAll('[data-connect-pending]')) {
     node.textContent = 'Your connection code expired. Create a new code to continue.';
-    node.hidden = false;
   }
+  setState('expired');
   button.disabled = false;
   button.textContent = 'Generate a new connect code';
 };
@@ -49,7 +56,7 @@ const fill = (block) => {
   for (const node of document.querySelectorAll('[data-connect-field]')) {
     node.textContent = block[node.dataset.connectField] ?? '';
   }
-  for (const node of document.querySelectorAll('[data-connect-pending]')) node.hidden = true;
+  setState('ready');
   if (status) status.hidden = false;
 };
 

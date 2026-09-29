@@ -55,6 +55,7 @@ fn service_core_js(p: &Path) -> Vec<AssetDefinition> {
         svc_js!(p, "auth.js"),
         svc_js!(p, "bootstrap.js"),
         svc_js!(p, "confirm.js"),
+        svc_js!(p, "connector-labels.js"),
         svc_js!(p, "dropdown.js"),
         svc_js!(p, "events.js"),
         svc_js!(p, "export-columns.js"),

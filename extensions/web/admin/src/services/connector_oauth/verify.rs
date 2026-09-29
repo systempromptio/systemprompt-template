@@ -1,63 +1,16 @@
 //! Read-only provider identity and MCP protocol verification before connection
 //! use.
+
+use super::report::VerificationReport;
+use super::response::{body, tool_error};
 use super::transport::client;
 use super::{Grant, Provider};
 use crate::error::{AdminError, AdminResult};
 use serde_json::{Value, json};
-async fn body(response: reqwest::Response) -> AdminResult<Value> {
-    let status = response.status();
-    if status.as_u16() == 401 {
-        return Err(AdminError::Unauthorized("Provider grant rejected".into()));
-    }
-    if status.as_u16() == 403 {
-        return Err(AdminError::Forbidden(
-            "Provider permissions do not allow this operation".into(),
-        ));
-    }
-    if !status.is_success() {
-        return Err(AdminError::Upstream(
-            "Provider temporarily unavailable".into(),
-        ));
-    }
-    let mut response = response;
-    let mut bytes = Vec::new();
-    while let Some(chunk) = response
-        .chunk()
-        .await
-        .map_err(|_redacted_error| AdminError::Upstream("Provider response interrupted".into()))?
-    {
-        if bytes.len() + chunk.len() > 1_048_576 {
-            return Err(AdminError::Upstream(
-                "Provider response exceeds verification limit".into(),
-            ));
-        }
-        bytes.extend_from_slice(&chunk);
-        if let Ok(value) = serde_json::from_slice::<Value>(&bytes) {
-            return Ok(value);
-        }
-        // Why: Streamable HTTP can answer a request on an SSE stream that remains
-        // open. Return when its JSON-RPC response arrives, not at stream EOF.
-        if let Ok(text) = std::str::from_utf8(&bytes) {
-            for frame in text.split("\n\n") {
-                let data = frame
-                    .lines()
-                    .filter_map(|l| l.strip_prefix("data:"))
-                    .collect::<Vec<_>>()
-                    .join("\n");
-                if let Ok(value) = serde_json::from_str::<Value>(&data)
-                    && value.get("id").is_some()
-                {
-                    return Ok(value);
-                }
-            }
-        }
-    }
-    Err(AdminError::Upstream(
-        "Provider returned an invalid response".into(),
-    ))
-}
+use std::time::Instant;
+
 async fn rpc(
-    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
+    http: &reqwest::Client,
     grant: &Grant,
     session: &mut Option<String>,
     payload: Value,
@@ -106,51 +59,14 @@ async fn rpc(
         .ok_or_else(|| AdminError::Upstream("MCP response has no result".into()))
 }
 
-fn tool_error(grant: &Grant, payload: &Value, value: &Value) -> AdminError {
-    let operation = payload
-        .pointer("/params/name")
-        .and_then(Value::as_str)
-        .or_else(|| payload.get("method").and_then(Value::as_str))
-        .unwrap_or("request");
-    let mut detail = value
-        .pointer("/error/message")
-        .and_then(Value::as_str)
-        .or_else(|| {
-            value
-                .pointer("/result/content/0/text")
-                .and_then(Value::as_str)
-        })
-        .unwrap_or("Provider returned a tool error")
-        .to_owned();
-    for secret in [
-        &grant.access_token,
-        grant.refresh_token.as_deref().unwrap_or(""),
-        &grant.client_secret,
-        &grant.verifier,
-    ] {
-        if !secret.is_empty() {
-            detail = detail.replace(secret, "[redacted]");
-        }
-    }
-    let detail: String = detail
-        .chars()
-        .filter(|c| !c.is_control())
-        .take(600)
-        .collect();
-    AdminError::Unavailable(format!(
-        "{} MCP {operation}: {detail}",
-        grant.provider.slug()
-    ))
-}
-
 async fn identity(
-    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
+    http: &reqwest::Client,
     grant: &mut Grant,
     session: &mut Option<String>,
 ) -> AdminResult<()> {
     if matches!(grant.provider, Provider::Generic(_)) {
         grant.resource_name = grant.provider.endpoint();
-        return Ok(());
+        return super::userinfo::generic_identity(http, grant).await;
     }
     let info = match &grant.provider {
         Provider::Generic(_) => return Ok(()),
@@ -168,7 +84,7 @@ async fn identity(
             let response = http
                 .get("https://api.github.com/user")
                 .bearer_auth(&grant.access_token)
-                .header("User-Agent", "Systemprompt-Systemprompt")
+                .header("User-Agent", "Systemprompt")
                 .send()
                 .await
                 .map_err(|_redacted_error| {
@@ -192,6 +108,7 @@ async fn identity(
         .ok_or_else(|| AdminError::Upstream("Provider returned no verified account ID".into()))?;
     info.get("displayName")
         .or_else(|| info.get("login"))
+        .or_else(|| info.get("preferred_username"))
         .and_then(Value::as_str)
         .unwrap_or(&grant.account_id)
         .clone_into(&mut grant.account_name);
@@ -206,48 +123,19 @@ async fn identity(
 pub async fn verify(grant: &mut Grant) -> AdminResult<()> {
     verify_with_client(grant, &client()?).await
 }
-pub async fn verify_with_client(
+
+pub async fn verify_with_client(grant: &mut Grant, http: &reqwest::Client) -> AdminResult<()> {
+    let mut report = VerificationReport::for_provider(grant.provider.slug());
+    verify_reporting(grant, http, &mut report).await
+}
+
+pub async fn verify_reporting(
     grant: &mut Grant,
-    http: &reqwest::Client, // Why: external OAuth boundary. lint-ok: web-transport
+    http: &reqwest::Client,
+    report: &mut VerificationReport,
 ) -> AdminResult<()> {
     let mut session = None;
-    let result = async {
-        rpc(
-            http,
-            grant,
-            &mut session,
-            json!({"jsonrpc":"2.0", "id":1, "method":"initialize",
-            "params":{"protocolVersion":"2025-03-26", "capabilities":{},
-                "clientInfo":{"name":"Systemprompt connection verification", "version":"1.0"}}}),
-        )
-        .await?;
-        rpc(
-            http,
-            grant,
-            &mut session,
-            json!({"jsonrpc":"2.0", "method":"notifications/initialized"}),
-        )
-        .await?;
-        let tools = rpc(
-            http,
-            grant,
-            &mut session,
-            json!({"jsonrpc":"2.0", "id":2, "method":"tools/list"}),
-        )
-        .await?;
-        if tools
-            .get("tools")
-            .and_then(Value::as_array)
-            .map_or(0, Vec::len)
-            == 0
-        {
-            return Err(AdminError::Upstream(
-                "MCP server has no accessible tools".into(),
-            ));
-        }
-        identity(http, grant, &mut session).await
-    }
-    .await;
+    let result = handshake(grant, http, &mut session, report).await;
     // Why: The probe uses a private session, never a user's active Claude session.
     if let Some(session) = session {
         let _cleanup_result = http
@@ -261,4 +149,89 @@ pub async fn verify_with_client(
             .await;
     }
     result
+}
+
+async fn handshake(
+    grant: &mut Grant,
+    http: &reqwest::Client,
+    session: &mut Option<String>,
+    report: &mut VerificationReport,
+) -> AdminResult<()> {
+    let started = Instant::now();
+    let outcome = async {
+        rpc(
+            http,
+            grant,
+            session,
+            json!({"jsonrpc":"2.0", "id":1, "method":"initialize",
+            "params":{"protocolVersion":"2025-03-26", "capabilities":{},
+                "clientInfo":{"name":"Systemprompt connection verification", "version":"1.0"}}}),
+        )
+        .await?;
+        rpc(
+            http,
+            grant,
+            session,
+            json!({"jsonrpc":"2.0", "method":"notifications/initialized"}),
+        )
+        .await?;
+        Ok(format!(
+            "MCP session open at {}",
+            host(&grant.provider.endpoint())
+        ))
+    }
+    .await;
+    report.record("initialize", started, &outcome);
+    outcome?;
+
+    let started = Instant::now();
+    let outcome = async {
+        let tools = rpc(
+            http,
+            grant,
+            session,
+            json!({"jsonrpc":"2.0", "id":2, "method":"tools/list"}),
+        )
+        .await?;
+        let count = tools
+            .get("tools")
+            .and_then(Value::as_array)
+            .map_or(0, Vec::len);
+        if count == 0 {
+            return Err(AdminError::Upstream(
+                "MCP server has no accessible tools".into(),
+            ));
+        }
+        Ok(format!("{count} tools available"))
+    }
+    .await;
+    report.record("tools", started, &outcome);
+    outcome?;
+
+    let started = Instant::now();
+    let outcome = async {
+        identity(http, grant, session).await?;
+        Ok(
+            match (
+                grant.account_name.is_empty(),
+                grant.resource_name.is_empty(),
+            ) {
+                (false, false) => {
+                    format!("{} · {}", grant.account_name, host(&grant.resource_name))
+                },
+                (false, true) => grant.account_name.clone(),
+                _ => "Identity confirmed".to_owned(),
+            },
+        )
+    }
+    .await;
+    report.record("identity", started, &outcome);
+    outcome.map(|_| ())
+}
+
+fn host(url: &str) -> String {
+    reqwest::Url::parse(url)
+        .ok()
+        .and_then(|u| u.host_str().map(str::to_owned))
+        .unwrap_or_else(|| url.to_owned())
 }

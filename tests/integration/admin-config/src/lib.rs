@@ -22,6 +22,12 @@ mod config_acl_sync;
 #[cfg(test)]
 mod config_gateway_acl;
 #[cfg(test)]
+mod connector_credentials;
+#[cfg(test)]
+mod connector_readiness;
+#[cfg(test)]
+mod connector_reprovision;
+#[cfg(test)]
 mod fixtures;
 #[cfg(test)]
 mod jobs_repo;

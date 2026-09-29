@@ -146,6 +146,22 @@ Conventions (strict — hold every entry to them):
   `VACUUM (ANALYZE)`). Every archive is gzipped JSON Lines from
   `COPY … TO STDOUT` with a manifest, restorable with `COPY … FROM`. Runbook:
   `docs/ops/retention-and-backups.md`.
+- **Connectors** (`/admin/connectors`, Account group): a person's connections
+  as cards grouped by what to do next — needs attention, ready to connect,
+  connected, nothing to do — under a health strip that names the next step.
+  **Test connection** now returns a step-by-step report (credential, MCP
+  session, tools, identity) with each stage's outcome and duration
+  (`services/connector_oauth/report.rs`), shown inline on the card.
+  Session-attested servers — `oauth.required` with scopes and no `connector:`
+  block, such as the `systemprompt` control plane — appear as connectors that
+  are live for anyone whose roles carry the scopes, tested by a live check
+  (`services/connector_readiness.rs`). Generic connectors gain
+  `connector.display_name`, `authorization_params` and `identity: userinfo`
+  (read `sub`/`email` from the issuer's OIDC userinfo endpoint), and issuer
+  identifiers are compared as URLs with a single trailing slash ignored.
+- **Connect a client** (`/admin/connect`, Account group): the three-step
+  connect-code wizard for Claude Code, Claude Desktop and OpenCode, the bridge
+  downloads and the client guides, on a page of its own.
 
 ### Changed
 
@@ -178,6 +194,20 @@ Conventions (strict — hold every entry to them):
   `conversation_skill_facts` and the daily rollups are kept. It and the three
   `retention_*` jobs now have explicit entries in
   `services/scheduler/config.yaml`.
+- The profile page no longer carries the connect wizard or the connectors
+  list; its header links to **Connect a client** and **Connectors** instead,
+  and a finished OAuth consent returns to `/admin/connectors#connector-<id>`.
+  `profile-connect-code.js`, `profile-connections.js` and `05-connection.css`
+  are replaced by `connect-code.js`, `connectors.js`,
+  `services/connector-labels.js` and the `20-page-connect*` /
+  `20-page-connectors*` stylesheets.
+- Connector token handling: every 4xx from a token endpoint now retires the
+  grant as a reconnect (RFC 6749 §5.2), where only `invalid_grant` or a 401
+  did before; a 5xx, 429 or transport failure stays an outage and keeps the
+  grant. A broker call within 30 seconds of a recorded outage is held without
+  another provider call; Test connection always goes through. A server the
+  access rules admit is withheld from the bridge manifest until the person's
+  connection to it is ready, and the manifest's diagnostics say why.
 
 ### Removed
 

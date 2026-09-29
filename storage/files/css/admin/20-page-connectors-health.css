@@ -1,0 +1,118 @@
+@layer components {
+
+/* The health strip answers "am I set up?" in one glance: a headline, the one
+   thing to do next, and a bar whose green and amber lengths are the counts.
+   The four stats beside it are the same numbers, so a person who wants the
+   figure reads it without leaving the strip. */
+
+.sp-connect-health {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: var(--sp-space-6);
+    align-items: center;
+    margin-block: 0 var(--sp-space-6);
+    padding: var(--sp-space-5) var(--sp-space-6);
+    background: var(--sp-bg-surface);
+    border-radius: var(--sp-corners-md);
+    box-shadow: var(--sp-shadow-card);
+}
+
+.sp-connect-health__lead {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+    min-width: 0;
+}
+
+.sp-connect-health__headline {
+    margin: 0;
+    font-size: var(--sp-text-xl);
+    font-weight: var(--sp-font-semibold);
+    line-height: var(--sp-leading-snug);
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-connect-health__next {
+    margin: 0;
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+}
+
+.sp-connect-health__next[hidden] { display: none; }
+
+.sp-connect-health__bar {
+    display: flex;
+    height: var(--sp-space-2);
+    margin-top: var(--sp-space-2);
+    overflow: hidden;
+    border-radius: var(--sp-radius-sm);
+    background: var(--sp-bg-tertiary);
+}
+
+.sp-connect-health__seg {
+    flex: 0 0 var(--sp-fill, 0%);
+    transition: flex-basis var(--sp-duration-fast) var(--sp-ease-in-out);
+}
+
+.sp-connect-health__seg--ok {
+    background: linear-gradient(90deg, var(--sp-progress-green-from), var(--sp-progress-green-to));
+}
+
+.sp-connect-health__seg--warn {
+    background: linear-gradient(90deg, var(--sp-progress-amber-from), var(--sp-progress-amber-to));
+}
+
+.sp-connect-health__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--sp-space-3);
+    margin: 0;
+}
+
+.sp-connect-health__stat {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: var(--sp-space-1);
+    padding-inline-start: var(--sp-space-3);
+    border-inline-start: 2px solid var(--sp-border-subtle);
+}
+
+.sp-connect-health__stat--ok   { border-inline-start-color: var(--sp-success); }
+.sp-connect-health__stat--warn { border-inline-start-color: var(--sp-warning); }
+
+.sp-connect-health__stat dt {
+    font-size: var(--sp-text-2xs);
+    font-weight: var(--sp-font-semibold);
+    letter-spacing: var(--sp-tracking-wide);
+    text-transform: uppercase;
+    color: var(--sp-text-tertiary);
+}
+
+.sp-connect-health__stat dd {
+    margin: 0;
+    font-size: var(--sp-text-xl);
+    font-weight: var(--sp-font-semibold);
+    line-height: 1;
+    color: var(--sp-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-p-connectors__message { margin-block: 0 var(--sp-space-3); }
+.sp-p-connectors__message[hidden] { display: none; }
+
+/* Groups read as a to-do list: the first section is the one to act on, and
+   an empty group is not rendered, so the page never opens on "nothing here". */
+
+.sp-connector-group + .sp-connector-group { margin-top: var(--sp-density-section); }
+
+.sp-connector-group[data-group="quiet"] .sp-connector { opacity: 0.82; }
+
+}
+
+@layer responsive {
+@media (max-width: 56rem) {
+    .sp-connect-health { grid-template-columns: minmax(0, 1fr); }
+    .sp-connect-health__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+}

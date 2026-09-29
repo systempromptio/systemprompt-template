@@ -1,5 +1,6 @@
 //! Encrypted hosted MCP grants and single-use, user-bound consent state.
 
+use chrono::{DateTime, Utc};
 use sqlx::{PgPool, Postgres, Transaction};
 use systemprompt::identifiers::UserId;
 
@@ -29,20 +30,32 @@ pub async fn store(
     Ok(())
 }
 
+#[derive(Debug)]
+pub struct LockedGrant {
+    pub grant: EncryptedGrant,
+    pub updated_at: DateTime<Utc>,
+}
+
 pub async fn lock(
     tx: &mut Transaction<'_, Postgres>,
     user: &UserId,
     provider: &str,
-) -> Result<Option<EncryptedGrant>, sqlx::Error> {
-    sqlx::query_as!(
-        EncryptedGrant,
-        "SELECT ciphertext, nonce FROM mcp_connector_credentials \
+) -> Result<Option<LockedGrant>, sqlx::Error> {
+    let row = sqlx::query!(
+        "SELECT ciphertext, nonce, updated_at FROM mcp_connector_credentials \
          WHERE user_id = $1 AND provider = $2 FOR UPDATE",
         user.as_str(),
         provider,
     )
     .fetch_optional(&mut **tx)
-    .await
+    .await?;
+    Ok(row.map(|row| LockedGrant {
+        grant: EncryptedGrant {
+            ciphertext: row.ciphertext,
+            nonce: row.nonce,
+        },
+        updated_at: row.updated_at,
+    }))
 }
 
 pub async fn delete(

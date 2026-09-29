@@ -1,0 +1,194 @@
+{{#> layout page_title=title page_id=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+
+    {{#> components/page-header title=title subtitle="Connect Claude Code, Claude Desktop or OpenCode to this gateway. Every prompt is then governed, priced and audited under your account."}}
+        {{#*inline "header_meta"}}
+            <span class="sp-u-mono">{{user_email}}</span>
+            {{#if gateway}}<span>gateway <code class="sp-u-mono">{{gateway}}</code></span>{{/if}}
+        {{/inline}}
+        {{#*inline "header_actions"}}
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/setup">Setup guide</a>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/devices">Devices &amp; enrolments</a>
+        {{/inline}}
+    {{/components/page-header}}
+
+    <section class="sp-p-connect__wizard" id="connect" aria-label="Connect a client" data-connect-state="idle">
+        {{#> components/section title="Connect your workspace" note="Three steps: choose your client, create a secure code, then run one command."}}{{/components/section}}
+        <div class="sp-card">
+            <div class="sp-card__body">
+
+                <div class="sp-p-connect__step">
+                    <div class="sp-p-connect__step-heading">
+                        <span class="sp-p-connect__step-num">1</span>
+                        <h3>Choose your client</h3>
+                        <p>The install command below changes with your choice.</p>
+                    </div>
+                    <div class="sp-p-connect__step-body">
+                        <div class="sp-tabs" role="tablist" data-tabs="profile-connect" aria-label="Client to connect">
+                            <button type="button" class="sp-tab sp-tab--active" role="tab" id="connect-tab-claude-code" aria-controls="connect-panel-claude-code" aria-selected="true" data-tab="claude-code"><strong>Claude Code</strong><span>Terminal client, any OS</span></button>
+                            <button type="button" class="sp-tab" role="tab" id="connect-tab-claude-desktop" aria-controls="connect-panel-claude-desktop" aria-selected="false" tabindex="-1" data-tab="claude-desktop"><strong>Claude Desktop</strong><span>Desktop app and Cowork</span></button>
+                            <button type="button" class="sp-tab" role="tab" id="connect-tab-opencode" aria-controls="connect-panel-opencode" aria-selected="false" tabindex="-1" data-tab="opencode"><strong>OpenCode</strong><span>OpenAI-compatible provider</span></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sp-p-connect__step">
+                    <div class="sp-p-connect__step-heading">
+                        <span class="sp-p-connect__step-num">2</span>
+                        <h3>Create a connection code</h3>
+                        <p>Connects as <strong>{{user_email}}</strong>. The code works once and expires after ten minutes.</p>
+                    </div>
+                    <div class="sp-p-connect__step-body">
+                        {{#if bridge_connect_available}}
+                        <div class="sp-p-connect__issue">
+                            <button type="button" class="sp-btn sp-btn--primary" id="issue-connect-code">Generate a connect code</button>
+                            <p class="sp-p-connect__status" id="connect-code-status" role="status" hidden>
+                                <span class="sp-p-connect__status-label">Your code</span>
+                                <code data-connect-field="code"></code>
+                                <span class="sp-p-connect__status-expiry">expires in <strong data-connect-expiry></strong></span>
+                            </p>
+                        </div>
+                        <p class="sp-p-connect__error" id="connect-code-error" role="alert" hidden></p>
+                        {{else}}
+                        <p class="sp-p-connect__lede">
+                            No gateway URL is configured, so a connect code cannot be minted here. An administrator
+                            can issue one from the server with
+                            <code class="sp-u-mono">systemprompt admin bridge issue-code --user-id {{user_email}}</code>,
+                            then paste it into the commands below.
+                        </p>
+                        {{/if}}
+                    </div>
+                </div>
+
+                <div class="sp-p-connect__step">
+                    <div class="sp-p-connect__step-heading">
+                        <span class="sp-p-connect__step-num">3</span>
+                        <h3>Install and connect</h3>
+                        <p>Copy the command and run it. The bridge installs itself and signs you in.</p>
+                    </div>
+                    <div class="sp-p-connect__step-body">
+
+                        <div class="sp-tab-panel" id="connect-panel-claude-code" role="tabpanel" aria-labelledby="connect-tab-claude-code">
+                            <div class="sp-p-connect__guide">
+                                <p class="sp-p-connect__lede">Installs the bridge and points Claude Code at this gateway.</p>
+                                <a class="sp-btn sp-btn--sm sp-btn--outline" href="/documentation/connect-claude-code">Read the guide</a>
+                            </div>
+                            <div class="sp-p-connect__ready" data-connect-ready hidden>
+                                <p class="sp-p-connect__label">Linux, WSL and macOS terminal</p>
+                                <pre class="sp-connect__cmd"><code data-connect-field="install_command"></code></pre>
+                                <p class="sp-p-connect__lede">Open a new terminal and run <code class="sp-u-mono">claude</code>. Send your first message, then <a href="/admin/history">view your conversation</a> to check that it reached this gateway.</p>
+                                <details class="sp-p-connect__advanced"><summary>Already have the bridge? Sign in again</summary>
+                                <pre class="sp-connect__cmd"><code data-connect-field="login_command"></code></pre>
+                                </details>
+                                <details class="sp-p-connect__advanced">
+                                    <summary>Advanced — from a checkout of this repository</summary>
+                                    <p class="sp-p-connect__label">Claude Code in a container scoped to this gateway</p>
+                                    <pre class="sp-connect__cmd"><code data-connect-field="just_install_command"></code></pre>
+                                    <p class="sp-p-connect__label">Configure this host</p>
+                                    <pre class="sp-connect__cmd"><code data-connect-field="just_login_command"></code></pre>
+                                    <p class="sp-p-connect__label">Bare code</p>
+                                    <pre class="sp-connect__cmd"><code data-connect-field="code"></code></pre>
+                                </details>
+                            </div>
+                        </div>
+
+                        <div class="sp-tab-panel" id="connect-panel-claude-desktop" role="tabpanel" aria-labelledby="connect-tab-claude-desktop" hidden>
+                            <div class="sp-p-connect__guide">
+                                <p class="sp-p-connect__lede">The desktop bridge signs Claude Desktop and Cowork in to this gateway and keeps your skills, plugins and MCP servers in sync.</p>
+                                <a class="sp-btn sp-btn--sm sp-btn--outline" href="/documentation/bridge-install">Read the guide</a>
+                            </div>
+                            <div class="sp-p-connect__ready" data-connect-ready hidden>
+                                <p class="sp-p-connect__label">Windows</p>
+                                <p class="sp-p-connect__lede">Download <a href="/files/downloads/systemprompt-bridge-windows.exe" download>systemprompt-bridge-windows.exe</a>, run it and paste the code when asked, or from PowerShell in the download folder. SmartScreen may warn on first run; the binary is unsigned.</p>
+                                <pre class="sp-connect__cmd"><code data-connect-field="desktop_windows_login_command"></code></pre>
+                                <p class="sp-p-connect__label">macOS</p>
+                                <p class="sp-p-connect__lede">Download <a href="/files/downloads/systemprompt-bridge-macos.dmg" download>systemprompt-bridge-macos.dmg</a>, drag Systemprompt Bridge to Applications, launch it and paste the code, or sign in from the terminal.</p>
+                                <pre class="sp-connect__cmd"><code data-connect-field="login_command"></code></pre>
+                                <p class="sp-p-connect__label">Linux and WSL</p>
+                                <pre class="sp-connect__cmd"><code data-connect-field="install_command"></code></pre>
+                            </div>
+                        </div>
+
+                        <div class="sp-tab-panel" id="connect-panel-opencode" role="tabpanel" aria-labelledby="connect-tab-opencode" hidden>
+                            <div class="sp-p-connect__guide">
+                                <p class="sp-p-connect__lede">Registers a <code class="sp-u-mono">systemprompt</code> provider in OpenCode against the gateway's OpenAI-compatible endpoint, so OpenCode never holds a vendor key.</p>
+                                <a class="sp-btn sp-btn--sm sp-btn--outline" href="/documentation/connect-opencode">Read the guide</a>
+                            </div>
+                            <div class="sp-p-connect__ready" data-connect-ready hidden>
+                                <p class="sp-p-connect__label">Fresh install</p>
+                                <pre class="sp-connect__cmd"><code data-connect-field="opencode_install_command"></code></pre>
+                                <details class="sp-p-connect__advanced"><summary>Already have the bridge? Sign in again</summary>
+                                <pre class="sp-connect__cmd"><code data-connect-field="opencode_login_command"></code></pre>
+                                </details>
+                                <p class="sp-p-connect__lede">A <code class="sp-u-mono">403 no loopback credential presented</code> from OpenCode means the provider block was written without the key; run the command above again.</p>
+                            </div>
+                        </div>
+                        <p class="sp-p-connect__pending" data-connect-pending>Your install command will appear here once you create a connection code in step 2.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="sp-p-connect__section" aria-label="Downloads">
+        {{#> components/section title="Downloads" note="The bridge binary for every platform, with a checksum beside each."}}
+            {{#*inline "section_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="/documentation/downloads">All downloads</a>{{/inline}}
+        {{/components/section}}
+        <ul class="sp-p-connect__downloads">
+            <li class="sp-card">
+                <strong>Windows</strong>
+                <code>systemprompt-bridge-windows.exe</code>
+                <span class="sp-p-connect__download-actions">
+                    <a class="sp-btn sp-btn--sm sp-btn--outline-primary" href="/files/downloads/systemprompt-bridge-windows.exe" download>Download</a>
+                    <a class="sp-btn sp-btn--sm sp-btn--ghost" href="/files/downloads/systemprompt-bridge-windows.exe.sha256" download>sha256</a>
+                </span>
+            </li>
+            <li class="sp-card">
+                <strong>macOS</strong>
+                <code>systemprompt-bridge-macos.dmg</code>
+                <span class="sp-p-connect__download-actions">
+                    <a class="sp-btn sp-btn--sm sp-btn--outline-primary" href="/files/downloads/systemprompt-bridge-macos.dmg" download>Download</a>
+                    <a class="sp-btn sp-btn--sm sp-btn--ghost" href="/files/downloads/systemprompt-bridge-macos.dmg.sha256" download>sha256</a>
+                </span>
+            </li>
+            <li class="sp-card">
+                <strong>Linux x86_64</strong>
+                <code>systemprompt-bridge-linux-x86_64.tar.gz</code>
+                <span class="sp-p-connect__download-actions">
+                    <a class="sp-btn sp-btn--sm sp-btn--outline-primary" href="/files/downloads/systemprompt-bridge-linux-x86_64.tar.gz" download>Download</a>
+                    <a class="sp-btn sp-btn--sm sp-btn--ghost" href="/files/downloads/systemprompt-bridge-linux-x86_64.tar.gz.sha256" download>sha256</a>
+                </span>
+            </li>
+            <li class="sp-card">
+                <strong>Linux aarch64</strong>
+                <code>systemprompt-bridge-linux-aarch64.tar.gz</code>
+                <span class="sp-p-connect__download-actions">
+                    <a class="sp-btn sp-btn--sm sp-btn--outline-primary" href="/files/downloads/systemprompt-bridge-linux-aarch64.tar.gz" download>Download</a>
+                    <a class="sp-btn sp-btn--sm sp-btn--ghost" href="/files/downloads/systemprompt-bridge-linux-aarch64.tar.gz.sha256" download>sha256</a>
+                </span>
+            </li>
+        </ul>
+    </section>
+
+    <section class="sp-p-connect__section" aria-label="Guides">
+        {{> components/section title="Guides" note="Step-by-step documentation for every client and platform."}}
+        <ul class="sp-p-connect__guides">
+            <li class="sp-card"><a class="sp-p-connect__guide-link" href="/documentation/connect-claude-code"><strong>Claude Code</strong><span>Install the bridge and enrol the terminal client.</span></a></li>
+            <li class="sp-card"><a class="sp-p-connect__guide-link" href="/documentation/bridge-install"><strong>Claude Desktop &amp; Cowork</strong><span>Install the desktop bridge and sign in.</span></a></li>
+            <li class="sp-card"><a class="sp-p-connect__guide-link" href="/documentation/connect-cowork"><strong>Cowork</strong><span>Marketplaces, plugins and skills inside Cowork.</span></a></li>
+            <li class="sp-card"><a class="sp-p-connect__guide-link" href="/documentation/connect-opencode"><strong>OpenCode</strong><span>Register the gateway as an OpenCode provider.</span></a></li>
+            <li class="sp-card"><a class="sp-p-connect__guide-link" href="/documentation/install-windows"><strong>Windows</strong><span>Installer, elevation and managed settings.</span></a></li>
+            <li class="sp-card"><a class="sp-p-connect__guide-link" href="/documentation/install-macos"><strong>macOS</strong><span>The .dmg, Gatekeeper and the login command.</span></a></li>
+            <li class="sp-card"><a class="sp-p-connect__guide-link" href="/documentation/remote-access"><strong>Remote access</strong><span>Reach this gateway from outside the network.</span></a></li>
+            <li class="sp-card"><a class="sp-p-connect__guide-link" href="/documentation/develop-claude-code"><strong>Develop with Claude Code</strong><span>Skills, hooks and governed tools day to day.</span></a></li>
+        </ul>
+    </section>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/components/sp-copy.js?v={{css_version}}" defer></script>
+    <script src="/js/components/sp-tabs.js?v={{css_version}}" type="module"></script>
+    <script src="/js/pages/connect-code.js?v={{css_version}}" type="module"></script>
+    {{/inline}}
+{{/layout}}

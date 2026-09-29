@@ -1,0 +1,86 @@
+{{#> layout page_title=title page_id=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+
+    {{#> components/page-header title=title subtitle="Authorize each provider once; every client you connect — desktop, CLI, Cowork — uses the same account."}}
+        {{#*inline "header_meta"}}
+            <span class="sp-u-mono">{{user_email}}</span>
+        {{/inline}}
+        {{#*inline "header_actions"}}
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/connect">Connect a client</a>
+        {{/inline}}
+    {{/components/page-header}}
+
+    <div data-connectors data-user-id="{{user_id}}">
+    <section class="sp-connect-health" aria-label="Connector summary">
+        <div class="sp-connect-health__lead">
+            <p class="sp-connect-health__headline" data-summary-headline>{{summary.headline}}</p>
+            <p class="sp-connect-health__next" data-summary-next{{#unless summary.next_step}} hidden{{/unless}}>{{summary.next_step}}</p>
+            <div class="sp-connect-health__bar" role="img" aria-label="{{summary.headline}}">
+                <span class="sp-connect-health__seg sp-connect-health__seg--ok" data-summary-bar="connected" style="--sp-fill:{{summary.connected_pct}}%"></span>
+                <span class="sp-connect-health__seg sp-connect-health__seg--warn" data-summary-bar="needs_attention" style="--sp-fill:{{summary.attention_pct}}%"></span>
+            </div>
+        </div>
+        <dl class="sp-connect-health__stats">
+            <div class="sp-connect-health__stat sp-connect-health__stat--ok" data-summary="connected"><dt>Connected</dt><dd data-value>{{summary.connected}}</dd></div>
+            <div class="sp-connect-health__stat sp-connect-health__stat--warn" data-summary="needs_attention"><dt>Needs attention</dt><dd data-value>{{summary.needs_attention}}</dd></div>
+            <div class="sp-connect-health__stat" data-summary="not_connected"><dt>Not connected</dt><dd data-value>{{summary.not_connected}}</dd></div>
+            <div class="sp-connect-health__stat" data-summary="configured"><dt>On this gateway</dt><dd data-value>{{summary.configured}}</dd></div>
+        </dl>
+    </section>
+
+    <p class="sp-notice sp-p-connectors__message" data-connection-message role="status" hidden></p>
+    {{#if has_connectors}}
+    <div data-connector-grid data-connector-groups>
+        {{#each groups}}
+        <section class="sp-connector-group" data-group="{{key}}" aria-label="{{title}}">
+            <div class="sp-section__head">
+                <h2 class="sp-section__title">{{title}}</h2>
+                <span class="sp-section__count" data-group-count>{{count}}</span>
+                <p class="sp-section__sub">{{note}}</p>
+            </div>
+            <ul class="sp-connector-grid" data-group-list>
+                {{#each cards}}
+                <li class="sp-connector" id="connector-{{provider}}" data-status="{{status}}" data-provider="{{provider}}" data-glyph="{{glyph}}">
+                    <div class="sp-connector__head">
+                        <span class="sp-connector__mark" aria-hidden="true">{{monogram}}</span>
+                        <div class="sp-connector__title">
+                            <h3 class="sp-connector__name">{{display_name}}</h3>
+                            <span class="sp-connector__kind">{{kind}}</span>
+                        </div>
+                        <span class="sp-badge sp-badge--{{tone}} sp-connector__status">{{status_label}}</span>
+                    </div>
+                    <div class="sp-connector__about">
+                        <p class="sp-connector__blurb">{{blurb}}</p>
+                        {{#if used_by}}
+                        <ul class="sp-connector__uses" aria-label="Included in">
+                            {{#each used_by}}<li class="sp-connector__use">{{this}}</li>{{/each}}
+                        </ul>
+                        {{/if}}
+                    </div>
+                    <dl class="sp-connector__facts"{{#unless has_facts}} hidden{{/unless}}>
+                        {{#if account_name}}<div class="sp-connector__fact"><dt>Account</dt><dd class="sp-u-mono" title="{{account_name}}">{{account_name}}</dd></div>{{/if}}
+                        {{#if resource_host}}<div class="sp-connector__fact"><dt>Site</dt><dd title="{{resource_host}}">{{resource_host}}</dd></div>{{/if}}
+                        {{#if verified_relative}}<div class="sp-connector__fact"><dt>Verified</dt><dd>{{verified_relative}}</dd></div>{{/if}}
+                    </dl>
+                    {{#if note}}<p class="sp-connector__note">{{note}}</p>{{/if}}
+                    <div class="sp-connector__actions">
+                        {{#each actions}}<button class="sp-btn sp-btn--sm sp-btn--{{variant}}" type="button" data-action="{{action}}">{{label}}</button>{{/each}}
+                    </div>
+                    {{#if can_test}}<div class="sp-connector__check" hidden></div>{{/if}}
+                </li>
+                {{/each}}
+            </ul>
+        </section>
+        {{/each}}
+    </div>
+    {{else}}
+    {{> components/empty-state heading="No connectors on this gateway" message="Connectors appear here once an administrator enables an MCP server that needs your authorization."}}
+    {{/if}}
+    <noscript><p class="sp-p-connectors__message sp-notice sp-notice--warn">Enable JavaScript to connect, test or disconnect a provider.</p></noscript>
+    </div>
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script src="/js/pages/connectors.js?v={{css_version}}" type="module"></script>
+    {{/inline}}
+{{/layout}}

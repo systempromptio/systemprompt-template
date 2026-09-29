@@ -76,6 +76,9 @@ pub mod test_support {
     pub use crate::handlers::hooks_track::loc::{LocDelta, compute_loc_delta};
     pub use crate::handlers::hooks_track::session_summary::GeneratedSessionSummary;
     pub use crate::handlers::resolve_principal;
+    pub use crate::handlers::ssr::ssr_connectors_cards::{
+        ConnectorCardView, card as connector_card,
+    };
     pub use crate::handlers::ssr::ssr_history::command_name as history_command_name;
     pub use crate::handlers::ssr::transcript_view::{
         ConversationView, EmptyReason, ParsedAssistant, SideCallRowView, SideCallsView, StepView,
@@ -83,6 +86,10 @@ pub mod test_support {
         TranscriptRequestIds, TurnView, build_conversation, meta_view, parse_assistant, preview,
         short_id, strip_system_reminders, tidy_lines, transcript_request_ids,
     };
+    pub use crate::services::connector_accounts::{
+        Connection, ConnectionSnapshot, get_connections,
+    };
+    pub use crate::services::connector_readiness::NotReady;
 }
 
 pub fn hooks_webhook_router(

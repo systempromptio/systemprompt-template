@@ -26,13 +26,32 @@ pub fn user_id(raw: &str) -> UserId {
 }
 
 pub async fn insert_user(pool: &PgPool, id: &str) {
+    insert_user_with_roles(pool, id, &["user".to_owned()]).await;
+}
+
+// Why: the connection snapshot reads the services tree, so the first user a
+// suite inserts also installs an empty one when nothing else has.
+pub async fn insert_user_with_roles(pool: &PgPool, id: &str, roles: &[String]) {
+    static SERVICES: std::sync::Once = std::sync::Once::new();
+    SERVICES.call_once(|| {
+        if systemprompt::loader::ServicesBootstrap::is_initialized() {
+            return;
+        }
+        let directory = tempfile::tempdir().expect("services fixture");
+        let path = directory.path().join("config.yaml");
+        std::fs::write(&path, "{}").expect("write services fixture");
+        systemprompt::loader::ServicesBootstrap::init_from_path(&path)
+            .expect("install services fixture");
+    });
+
     sqlx::query(
         "INSERT INTO users (id, name, email, display_name, status, email_verified, roles)
-         VALUES ($1, $2, $2, $3, 'active', TRUE, ARRAY['user'])",
+         VALUES ($1, $2, $2, $3, 'active', TRUE, $4)",
     )
     .bind(id)
     .bind(format!("{id}@example.test"))
     .bind(format!("User {id}"))
+    .bind(roles.to_vec())
     .execute(pool)
     .await
     .expect("insert user");

@@ -9,7 +9,7 @@ fn grant() -> Grant {
         authorization_issuer: String::new(),
         token_auth_method: String::new(),
         user: "fixture-user".into(),
-        provider: Provider::Github,
+        provider: Provider::Atlassian,
         client: "fixture-app".into(),
         client_secret: "fixture-secret".into(),
         verifier: String::new(),
@@ -29,6 +29,14 @@ fn grant() -> Grant {
 }
 
 async fn endpoint(body: &'static str) -> (String, tokio::task::JoinHandle<String>) {
+    endpoint_with_status(200, "OK", body).await
+}
+
+async fn endpoint_with_status(
+    status: u16,
+    reason: &'static str,
+    body: &'static str,
+) -> (String, tokio::task::JoinHandle<String>) {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
     let task = tokio::spawn(async move {
@@ -55,7 +63,7 @@ async fn endpoint(body: &'static str) -> (String, tokio::task::JoinHandle<String
             }
         }
         let response = format!(
-            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+            "HTTP/1.1 {status} {reason}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
             body.len()
         );
         socket.write_all(response.as_bytes()).await.unwrap();
@@ -67,6 +75,55 @@ async fn endpoint(body: &'static str) -> (String, tokio::task::JoinHandle<String
 #[test]
 fn debug_redacts_connector_credentials() {
     assert_eq!(format!("{:?}", grant()), "Grant { <redacted> }");
+}
+
+// A failed connection probe is returned to the Connectors page as a report,
+// rather than bubbling out as a blank error. Keep the report stateful: a
+// later successful cleanup step must not make a failed handshake look green.
+#[test]
+fn verification_report_keeps_the_failed_stage_and_finishes_unsuccessfully() {
+    use std::time::Instant;
+    use systemprompt_web_admin::connector_oauth::VerificationReport;
+    use systemprompt_web_admin::error::AdminError;
+
+    let mut report = VerificationReport::for_provider("atlassian");
+    report.record(
+        "initialize",
+        Instant::now(),
+        &Ok("MCP session open at mcp.atlassian.com".to_owned()),
+    );
+    report.record(
+        "tools",
+        Instant::now(),
+        &Err(AdminError::Upstream(
+            "MCP server has no accessible tools".to_owned(),
+        )),
+    );
+    // The caller can still record a later stage while cleaning up a failed
+    // attempt; the first failure remains the outcome shown to the user.
+    report.record("identity", Instant::now(), &Ok("Pilot user".to_owned()));
+
+    let report = report.finish();
+    assert!(!report.ok);
+    assert_eq!(report.provider, "atlassian");
+    assert_eq!(report.steps.len(), 3);
+    assert!(report.steps[0].ok);
+    assert!(!report.steps[1].ok);
+    assert_eq!(report.steps[1].step, "tools");
+    assert_eq!(
+        report.error.as_deref(),
+        Some("Upstream error: MCP server has no accessible tools")
+    );
+}
+
+#[test]
+fn verification_report_does_not_mark_an_empty_probe_as_connected() {
+    use systemprompt_web_admin::connector_oauth::VerificationReport;
+
+    let report = VerificationReport::for_provider("atlassian").finish();
+    assert!(!report.ok);
+    assert!(report.steps.is_empty());
+    assert!(report.error.is_none());
 }
 
 #[tokio::test]
@@ -95,6 +152,53 @@ async fn revoked_grants_are_authentication_failures() {
     let error = refresh_at(&mut grant(), &url).await.unwrap_err();
     assert_eq!(error.status(), axum::http::StatusCode::UNAUTHORIZED);
     mock.await.unwrap();
+}
+
+// Atlassian retires a refresh token with `403 unauthorized_client`; a
+// retired grant is a reconnect, never an outage to retry on every call.
+#[tokio::test]
+async fn a_retired_refresh_token_is_an_authentication_failure_not_an_outage() {
+    let (url, mock) = endpoint_with_status(
+        403,
+        "Forbidden",
+        r#"{"error":"unauthorized_client","error_description":"refresh_token is invalid"}"#,
+    )
+    .await;
+    let error = refresh_at(&mut grant(), &url).await.unwrap_err();
+    assert_eq!(error.status(), axum::http::StatusCode::UNAUTHORIZED);
+    assert!(
+        error.to_string().contains("unauthorized_client"),
+        "the OAuth error code names the cause: {error}"
+    );
+    mock.await.unwrap();
+}
+
+#[tokio::test]
+async fn a_4xx_without_an_oauth_error_body_still_retires_the_grant() {
+    let (url, mock) = endpoint_with_status(400, "Bad Request", r#"{}"#).await;
+    let error = refresh_at(&mut grant(), &url).await.unwrap_err();
+    assert_eq!(error.status(), axum::http::StatusCode::UNAUTHORIZED);
+    mock.await.unwrap();
+}
+
+#[tokio::test]
+async fn token_endpoint_outages_stay_upstream_errors() {
+    for (status, reason) in [(503, "Service Unavailable"), (429, "Too Many Requests")] {
+        let (url, mock) = endpoint_with_status(status, reason, r#"{"error":"server_error"}"#).await;
+        let mut credential = grant();
+        let error = refresh_at(&mut credential, &url).await.unwrap_err();
+        assert_eq!(
+            error.status(),
+            axum::http::StatusCode::BAD_GATEWAY,
+            "{status} is an outage"
+        );
+        assert_eq!(
+            credential.refresh_token.as_deref(),
+            Some("fixture-refresh"),
+            "an outage keeps the grant for the retry"
+        );
+        mock.await.unwrap();
+    }
 }
 
 #[tokio::test]
@@ -134,7 +238,7 @@ fn atlassian_identity_accepts_wrapped_and_text_tool_results() {
 fn atlassian_sites_accepts_wrapped_array_and_ignores_empty_structured_content() {
     use serde_json::json;
     use systemprompt_web_admin::connector_oauth::payload::atlassian_sites;
-    let sites = json!([{"id":"cloud-123","url":"https://astounddigital.atlassian.net"}]);
+    let sites = json!([{"id":"cloud-123","url":"https://example-team.atlassian.net"}]);
     for response in [
         json!({"structuredContent":{"result":sites}}),
         json!({"structuredContent":{},"content":[{"text":sites.to_string()}]}),
@@ -159,10 +263,10 @@ fn atlassian_v2_resources_use_cloud_id_without_url() {
 fn atlassian_site_lookup_cannot_target_arbitrary_hosts() {
     use systemprompt_web_admin::connector_oauth::site::tenant_metadata_url;
     assert_eq!(
-        tenant_metadata_url("https://astounddigital.atlassian.net")
+        tenant_metadata_url("https://example-team.atlassian.net")
             .unwrap()
             .as_str(),
-        "https://astounddigital.atlassian.net/_edge/tenant_info"
+        "https://example-team.atlassian.net/_edge/tenant_info"
     );
     for site in [
         "http://example.atlassian.net",
@@ -178,7 +282,7 @@ fn atlassian_site_lookup_cannot_target_arbitrary_hosts() {
 
 #[test]
 fn configured_provider_ids_preserve_legacy_wire_names() {
-    for id in ["atlassian", "github", "fourth-mcp"] {
+    for id in ["atlassian", "github", "fifth-mcp", "fourth-mcp"] {
         let provider: Provider = serde_json::from_value(serde_json::json!(id)).unwrap();
         assert_eq!(provider.slug(), id);
         assert_eq!(
@@ -186,7 +290,13 @@ fn configured_provider_ids_preserve_legacy_wire_names() {
             serde_json::json!(id)
         );
     }
-    for invalid in ["", "../github", "https://evil.test", "provider?x=1", "a/b"] {
+    for invalid in [
+        "",
+        "../atlassian",
+        "https://evil.test",
+        "provider?x=1",
+        "a/b",
+    ] {
         assert!(serde_json::from_value::<Provider>(serde_json::json!(invalid)).is_err());
     }
 }
@@ -226,15 +336,20 @@ async fn gateway_does_not_allow_a_request_when_its_policy_database_is_unavailabl
         .connect_lazy("postgres://test:test@localhost:1/test")
         .unwrap();
     pool.close().await;
+    let database = systemprompt::database::Database::from_pools(std::sync::Arc::new(pool), None);
+    let user_id = systemprompt::identifiers::UserId::new("00000000-0000-0000-0000-000000000001");
+    let model = systemprompt::identifiers::ModelId::new("test-model");
+    let route = systemprompt::identifiers::RouteId::new("test-route");
+    let provider = systemprompt::identifiers::ProviderId::new("test-provider");
     let request = GatewayGuardRequest {
-        user_id: "00000000-0000-0000-0000-000000000001",
-        model: "test-model",
-        route_id: Some("test-route"),
-        provider: "test-provider",
+        user_id: &user_id,
+        model: &model,
+        route_id: Some(&route),
+        provider: &provider,
         streaming: false,
     };
     let denial = RouteEntitlementGuard
-        .check(&pool, &request)
+        .check(&database, &request)
         .await
         .unwrap_err();
     assert!(matches!(denial.kind, GatewayDenyKind::Unavailable));
@@ -245,7 +360,7 @@ async fn gateway_does_not_allow_a_request_when_its_policy_database_is_unavailabl
     };
     assert!(
         RouteEntitlementGuard
-            .check(&pool, &unresolved)
+            .check(&database, &unresolved)
             .await
             .is_ok()
     );
@@ -282,7 +397,7 @@ async fn fourth_configured_connector_completes_oauth_and_mcp_verification() {
     let origin = origin.trim();
     assert!(origin.starts_with("https://localhost:"));
     let yaml = format!(
-        "mcp_servers:\n  fourth-mcp:\n    type: external\n    binary: ''\n    package: null\n    port: 5050\n    endpoint: {origin}/mcp\n    enabled: true\n    display_in_web: false\n    oauth: {{required: false, scopes: [user], audience: mcp, client_id: null}}\n    connector: {{adapter: generic, scopes: [tools:read]}}\n"
+        "mcp_servers:\n  fourth-mcp:\n    type: external\n    endpoint: {origin}/mcp\n    enabled: true\n    display_in_web: false\n    oauth: {{required: false, scopes: [user], audience: mcp, client_id: null}}\n    connector: {{adapter: generic, scopes: [tools:read]}}\n"
     );
     let config = root.path().join("config.yaml");
     std::fs::write(&config, yaml).unwrap();
@@ -333,6 +448,114 @@ async fn fourth_configured_connector_completes_oauth_and_mcp_verification() {
     assert!(generic::validate_grant(&grant).is_err());
 }
 
+#[test]
+fn issuer_comparison_ignores_a_single_trailing_slash_and_nothing_else() {
+    use systemprompt_web_admin::connector_oauth::generic::same_issuer;
+    assert!(same_issuer(
+        "https://accounts.google.com",
+        "https://accounts.google.com/"
+    ));
+    assert!(same_issuer(
+        "https://idp.example/tenant/",
+        "https://idp.example/tenant"
+    ));
+    assert!(!same_issuer(
+        "https://accounts.google.com",
+        "https://accounts.google.com/foo"
+    ));
+    assert!(!same_issuer(
+        "https://accounts.google.com",
+        "http://accounts.google.com"
+    ));
+    assert!(!same_issuer(
+        "https://accounts.google.com",
+        "https://accounts.google.com:8443"
+    ));
+    assert!(!same_issuer(
+        "https://idp.example",
+        "https://idp.example/?x=1"
+    ));
+    assert!(!same_issuer("not a url", "not a url"));
+}
+
+#[tokio::test]
+async fn offline_params_connector_sends_its_authorization_params_and_reads_userinfo() {
+    use std::io::{BufRead, BufReader};
+    use std::process::{Command, Stdio};
+    use systemprompt_web_admin::connector_oauth::{exchange_with_client, generic, verify};
+    struct Server(std::process::Child);
+    impl Drop for Server {
+        fn drop(&mut self) {
+            let _ = self.0.kill();
+            let _ = self.0.wait();
+        }
+    }
+    let root = tempfile::tempdir().unwrap();
+    let script =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/oauth/server.py");
+    let mut server = Server(
+        Command::new("python3")
+            .arg("-u")
+            .arg(script)
+            .arg(root.path())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap(),
+    );
+    let mut origin = String::new();
+    BufReader::new(server.0.stdout.take().unwrap())
+        .read_line(&mut origin)
+        .unwrap();
+    let origin = origin.trim();
+    let yaml = format!(
+        "mcp_servers:\n  drive_knowledge:\n    type: external\n    endpoint: {origin}/mcp\n    enabled: true\n    display_in_web: false\n    oauth: {{required: false, scopes: [user], audience: mcp, client_id: null}}\n    connector:\n      adapter: generic\n      display_name: Drive knowledge\n      scopes: [openid, email, tools:read]\n      authorization_params: {{access_type: offline, prompt: consent}}\n      identity: userinfo\n"
+    );
+    let config = root.path().join("config.yaml");
+    std::fs::write(&config, yaml).unwrap();
+    systemprompt::loader::ServicesBootstrap::init_from_path(&config).unwrap();
+    let ca = reqwest::Certificate::from_pem(&std::fs::read(root.path().join("ca.pem")).unwrap())
+        .unwrap();
+    let http = reqwest::Client::builder()
+        .add_root_certificate(ca)
+        .redirect(reqwest::redirect::Policy::none())
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .unwrap();
+    let provider = Provider::try_from("drive_knowledge".to_owned()).unwrap();
+    assert_eq!(provider.display_name(), "Drive knowledge");
+    let callback = "https://dashboard.example.test/api/public/connectors/drive_knowledge/callback";
+    let (url, mut grant) = generic::authorize_with_client(
+        generic::Consent {
+            user: "active-user",
+            state: "test-state",
+            verifier: "test-verifier".into(),
+        },
+        provider,
+        callback,
+        &http,
+    )
+    .await
+    .unwrap();
+    let url = reqwest::Url::parse(&url).unwrap();
+    let params = url
+        .query_pairs()
+        .collect::<std::collections::HashMap<_, _>>();
+    assert_eq!(params["access_type"], "offline");
+    assert_eq!(params["prompt"], "consent");
+    assert_eq!(params["scope"], "openid email tools:read");
+    assert_eq!(
+        grant.authorization_issuer, origin,
+        "the issuer is banked as the AS declares it"
+    );
+    exchange_with_client(&mut grant, "test-code", callback, &http)
+        .await
+        .unwrap();
+    verify::verify_with_client(&mut grant, &http).await.unwrap();
+    assert_eq!(grant.account_id, "1029384756");
+    assert_eq!(grant.account_name, "pilot.tester@example.test");
+    assert_eq!(grant.resource_name, format!("{origin}/mcp"));
+}
+
 #[tokio::test]
 async fn subject_attribute_failure_is_not_an_empty_membership() {
     let pool = sqlx::postgres::PgPoolOptions::new()
@@ -345,4 +568,40 @@ async fn subject_attribute_failure_is_not_an_empty_membership() {
             .await
             .is_err()
     );
+}
+
+#[tokio::test]
+async fn gateway_rejects_incompatible_database_handles_even_when_reported_connected() {
+    use systemprompt::extension::{GatewayDenyKind, GatewayGuardRequest, GatewayRequestGuard};
+    use systemprompt::identifiers::{ModelId, ProviderId, RouteId, UserId};
+    use systemprompt::traits::DatabaseHandle;
+    use systemprompt_web_admin::gateway_entitlement::RouteEntitlementGuard;
+
+    struct ForeignDatabase;
+    impl DatabaseHandle for ForeignDatabase {
+        fn is_connected(&self) -> bool {
+            true
+        }
+        fn as_any(&self) -> &dyn std::any::Any {
+            self
+        }
+    }
+
+    let user_id = UserId::new("gateway-foreign-database-consumer");
+    let model = ModelId::new("test-model");
+    let route = RouteId::new("test-route");
+    let provider = ProviderId::new("test-provider");
+    let request = GatewayGuardRequest {
+        user_id: &user_id,
+        model: &model,
+        route_id: Some(&route),
+        provider: &provider,
+        streaming: false,
+    };
+    let denial = RouteEntitlementGuard
+        .check(&ForeignDatabase, &request)
+        .await
+        .expect_err("unknown database implementations cannot authorize routes");
+    assert!(matches!(denial.kind, GatewayDenyKind::Unavailable));
+    assert_eq!(denial.retry_after_seconds, 5);
 }
