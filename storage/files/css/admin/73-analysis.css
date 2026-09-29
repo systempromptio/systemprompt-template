@@ -1,0 +1,86 @@
+@layer components {
+.sp-analysis-pagination {
+    display: flex;
+    gap: var(--sp-space-4);
+    margin: var(--sp-space-4) 0;
+}
+.sp-analysis-definitions {
+    margin: var(--sp-space-6) 0;
+    max-width: 75rem;
+    line-height: var(--sp-leading-relaxed);
+}
+.sp-analysis-definitions summary {
+    cursor: pointer;
+    font-weight: var(--sp-font-semibold);
+}
+.sp-analysis-table td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+}
+.sp-analysis-table .sp-table__cell--num {
+    white-space: nowrap;
+}
+[data-section="analysis-versions"] form {
+    margin-bottom: var(--sp-space-4);
+}
+.sp-analysis-file-preview {
+    max-height: 30rem;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    padding: var(--sp-space-4);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+}
+[data-section="analysis-versions"] code,
+[data-section="analysis-versions"] dd {
+    overflow-wrap: anywhere;
+}
+.sp-analysis-form {
+    display: grid;
+    gap: var(--sp-space-3);
+    max-width: 48rem;
+    margin: var(--sp-space-4) 0;
+}
+.sp-analysis-form label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-medium);
+}
+.sp-analysis-form input:not([type="checkbox"]),
+.sp-analysis-form select,
+.sp-analysis-form textarea {
+    min-width: 0;
+    padding: var(--sp-space-2);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+    color: var(--sp-text-primary);
+    font: inherit;
+    font-weight: var(--sp-font-normal);
+}
+.sp-analysis-form label:has(input[type="checkbox"]) {
+    flex-direction: row;
+    align-items: center;
+}
+}
+
+.sp-analysis-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-space-4);
+    margin-block-end: var(--sp-space-3);
+}
+.sp-analysis-strip .sp-breadcrumbs {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+}
+.sp-analysis-strip__guide {
+    flex: none;
+}

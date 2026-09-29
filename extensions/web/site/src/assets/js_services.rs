@@ -130,5 +130,13 @@ fn service_utils_js(storage_js: &Path) -> Vec<AssetDefinition> {
             storage_js.join("components/sp-access-review.js"),
             "js/components/sp-access-review.js",
         ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-transcript.js"),
+            "js/components/sp-transcript.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-report-poll.js"),
+            "js/components/sp-report-poll.js",
+        ),
     ]
 }

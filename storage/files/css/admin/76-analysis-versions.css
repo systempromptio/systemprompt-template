@@ -1,0 +1,188 @@
+@layer components {
+/* A version is its hash: the one mono token on every row, quiet by default. */
+.sp-hash {
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+.sp-p-versions .sp-page-header {
+    margin-block: var(--sp-space-3) var(--sp-space-3);
+    padding-bottom: var(--sp-space-2);
+}
+.sp-p-versions .sp-tabs {
+    margin-bottom: var(--sp-space-3);
+}
+.sp-p-versions .sp-kpi-grid {
+    margin-bottom: var(--sp-space-3);
+}
+.sp-versions-table {
+    font-size: var(--sp-text-sm);
+    min-width: 58rem;
+}
+.sp-versions-table th[scope="col"] {
+    white-space: nowrap;
+}
+/* One version is one line; the inline diff sits behind a <details> in the
+   Change cell so the timeline stays scannable and needs no script. */
+.sp-versions-row td {
+    white-space: nowrap;
+    vertical-align: top;
+}
+.sp-versions-row--current td {
+    background: color-mix(in oklch, var(--sp-success) 6%, transparent);
+}
+.sp-generation-delta {
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-xs);
+}
+.sp-generation-delta__add {
+    color: var(--sp-success-strong);
+}
+.sp-generation-delta__remove {
+    color: var(--sp-danger-strong);
+}
+.sp-generation-delta__change {
+    color: var(--sp-text-tertiary);
+}
+.sp-versions-diff {
+    margin-top: var(--sp-space-1);
+    font-size: var(--sp-text-xs);
+}
+.sp-versions-diff__summary {
+    cursor: pointer;
+    color: var(--sp-text-secondary);
+}
+.sp-versions-diff__list {
+    display: grid;
+    gap: var(--sp-space-1);
+    margin: var(--sp-space-2) 0 0;
+    padding: 0;
+    list-style: none;
+}
+.sp-versions-diff__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+    white-space: normal;
+}
+.sp-versions-up {
+    color: var(--sp-success-strong);
+}
+/* Compare: the two versions' tiles sit side by side above one skill table
+   whose paired columns read before · after. */
+.sp-versions-pick {
+    margin-bottom: var(--sp-space-3);
+}
+.sp-versions-pair {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: var(--sp-space-4);
+    margin-bottom: var(--sp-space-4);
+}
+.sp-versions-side {
+    min-width: 0;
+}
+.sp-versions-side__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin: 0 0 var(--sp-space-2);
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+}
+/* Distribution: the delivery tables carried over from the publication page. */
+.sp-pub-section {
+    min-width: 0;
+    margin-block: var(--sp-space-3) var(--sp-space-5);
+}
+.sp-pub-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 18rem;
+    vertical-align: middle;
+}
+.sp-pub-receipts {
+    table-layout: fixed;
+}
+.sp-pub-receipts th:nth-child(1) { width: 15%; }
+.sp-pub-receipts th:nth-child(2) { width: 18%; }
+.sp-pub-receipts th:nth-child(3) { width: 11%; }
+.sp-pub-receipts th:nth-child(4) { width: 11%; }
+.sp-pub-receipts th:nth-child(5) { width: 12%; }
+.sp-pub-receipts th:nth-child(6) { width: 15%; }
+.sp-pub-receipts th:nth-child(7) { width: 18%; }
+.sp-pub-receipts td {
+    max-width: 0;
+}
+.sp-pub-consumer,
+.sp-pub-verified {
+    white-space: nowrap;
+}
+.sp-pub-table .sp-badge {
+    padding-block: 0;
+    line-height: 1;
+}
+.sp-pub-table .sp-u-mono,
+.sp-pub-table .sp-pub-note,
+.sp-pub-table .sp-pub-meta {
+    line-height: var(--sp-density-cell-line);
+    white-space: nowrap;
+}
+.sp-pub-meta {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+.sp-pub-note {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    border-bottom: 1px dotted var(--sp-border-default);
+    cursor: help;
+}
+.sp-pub-table td:has(.sp-pub-details) {
+    white-space: normal;
+    overflow: visible;
+}
+.sp-pub-details summary {
+    cursor: pointer;
+    font-size: var(--sp-text-sm);
+}
+.sp-pub-evidence {
+    max-height: 20rem;
+    max-width: 100%;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    margin-top: var(--sp-space-2);
+    padding: var(--sp-space-3);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+    font-size: var(--sp-text-xs);
+}
+.sp-pub-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+}
+.sp-pub-field__help {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+/* The one link out of Code ↔ Instance into the version history. */
+.sp-sync-sources__versions {
+    font-size: var(--sp-text-xs);
+}
+}
+
+@layer components {
+/* The judge's means beside a version's figures on the Compare tab. */
+.sp-versions-side__eval {
+    margin-block-start: var(--sp-space-3);
+}
+.sp-versions-side__eval-note {
+    margin: var(--sp-space-1) 0 0;
+    font-size: var(--sp-text-2xs);
+}
+}

@@ -19,6 +19,10 @@ use crate::repositories::scope::ScopeRequest;
 use crate::repositories::{groups, projects};
 use crate::types::UserContext;
 
+// Why: what a page of anything holds on this console, as one constant rather
+// than a `const PAGE_SIZE: i64 = 50` per page that merely happens to agree.
+pub(crate) const DEFAULT_PAGE_SIZE: i64 = 50;
+
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct SelectOptionView {
     pub value: String,
@@ -173,6 +177,35 @@ pub(crate) struct Chip {
     pub(crate) label: String,
     pub(crate) value: String,
     pub(crate) remove_url: String,
+}
+
+// Why: every list page computes the same two URLs, the same two booleans
+// derived from them and the same 1-based `current_page` off a zero-based
+// window. `page_url` is the one thing a page genuinely owns — its own URL
+// shape — so it is all a page supplies.
+pub(crate) fn paginate(window: PageWindow, page_url: impl Fn(i64) -> String) -> Pagination {
+    let page = window.index;
+    let prev_url = (page > 0).then(|| page_url(page - 1));
+    let next_url = (page + 1 < window.total_pages).then(|| page_url(page + 1));
+    let (first_row, last_row) = window.bounds();
+    Pagination {
+        current_page: page + 1,
+        total_pages: window.total_pages,
+        first_row,
+        last_row,
+        total_rows: window.total_rows,
+        noun: window.noun,
+        has_prev: prev_url.is_some(),
+        has_next: next_url.is_some(),
+        prev_url,
+        next_url,
+    }
+}
+
+// Why: the common case — a prefix already ending in `?` or `&`, with the page
+// number last.
+pub(crate) fn paginate_prefixed(window: PageWindow, prefix: &str) -> Pagination {
+    paginate(window, |page| format!("{prefix}page={page}"))
 }
 
 #[derive(Debug, Serialize)]

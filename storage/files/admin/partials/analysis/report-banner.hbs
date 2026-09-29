@@ -1,0 +1,31 @@
+{{!--
+  The latest AI report for a scope as a slim strip under a page header, or
+  the invitation to generate one. Root context is a ReportBannerView
+  (handlers/ssr/analysis/reports/banner.rs): exists, pending, href, headline,
+  assessment (tone), assessment_label, assessment_icon, generated_ago,
+  generate_action, reports_href, scope_kind, scope_id, query, label.
+
+    {{> analysis/report-banner report_banner}}
+
+  The form posts the page's own query so the report is written over exactly
+  the rows the reader is looking at: with filters active the request is a
+  `filter` scope, with none it is the banner's own scope (global).
+--}}
+<aside class="sp-report-banner sp-report-banner--{{assessment}}" aria-label="AI report">
+  <span class="sp-report-banner__icon">{{> components/icon name=assessment_icon}}</span>
+  {{#if exists}}
+  <span class="sp-badge sp-badge--nodot sp-badge--{{assessment}}">{{assessment_label}}</span>
+  <a class="sp-report-banner__headline" href="{{href}}">{{headline}}</a>
+  <span class="sp-report-banner__meta">generated {{generated_ago}} · <a href="{{href}}">View report &rarr;</a></span>
+  {{else}}
+  <span class="sp-report-banner__headline sp-report-banner__headline--empty">{{#if pending}}A report is queued — run <code>systemprompt infra jobs run analysis_report</code> to generate it.{{else}}No AI report for this view yet.{{/if}}</span>
+  <span class="sp-report-banner__meta"><a href="{{reports_href}}">All reports &rarr;</a></span>
+  {{/if}}
+  <form method="post" action="{{generate_action}}" class="sp-report-banner__form">
+    <input type="hidden" name="scope_kind" value="{{#if query}}filter{{else}}{{scope_kind}}{{/if}}">
+    <input type="hidden" name="scope_id" value="{{scope_id}}">
+    <input type="hidden" name="query" value="{{query}}">
+    <input type="hidden" name="label" value="{{label}}">
+    <button type="submit" class="sp-btn sp-btn--xs sp-btn--outline" title="Queue an AI report over exactly the rows these filters select">{{> components/icon name="sparkle"}} {{#if exists}}Report on this view{{else}}Generate{{/if}}</button>
+  </form>
+</aside>

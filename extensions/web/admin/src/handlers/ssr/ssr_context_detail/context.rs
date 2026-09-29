@@ -36,6 +36,7 @@ pub(super) struct ContextDetailPageContext {
     pub(super) entity_links: Vec<EntityLinkView>,
     pub(super) has_entity_links: bool,
     pub(super) entity_link_count: usize,
+    pub(super) export: crate::export::ExportView,
 }
 
 #[derive(Debug, Serialize)]
@@ -88,6 +89,16 @@ pub(super) struct ContextRequestRowView {
     pub(super) model: String,
     pub(super) status: String,
     pub(super) is_error: bool,
+    // Why: the per-request figures the page totals are summed from — the
+    // export's evidence when a total looks wrong.
+    pub(super) input_tokens: Option<i32>,
+    pub(super) cache_read_tokens: Option<i32>,
+    pub(super) cache_creation_tokens: Option<i32>,
+    pub(super) output_tokens: Option<i32>,
+    pub(super) max_tokens: Option<i32>,
+    pub(super) latency_ms: Option<i32>,
+    pub(super) cost_microdollars: i64,
+    pub(super) created_at: String,
     pub(super) latency_display: String,
     pub(super) cost_display: String,
     pub(super) created_at_local: String,

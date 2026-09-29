@@ -5,14 +5,16 @@
 
     {{> components/conversation conversation}}
 
-  Anchors and <details> only — no JS. The turn rail is a <details> shipped
-  open; the stylesheet hides its summary on wide viewports.
+  Anchors and <details> only — the page is complete with JS off. The turn rail
+  is a <details> shipped open; the stylesheet hides its summary on wide
+  viewports. `sp-transcript.js` adds expand-all / collapse-all on top and
+  nothing else.
 --}}
 {{#if has_content}}
 {{#if redaction_count}}
 <p class="sp-conversation__redaction" role="status">{{redaction_count}} credential-shaped value(s) masked in this transcript.</p>
 {{/if}}
-<div class="sp-conversation">
+<div class="sp-conversation" data-transcript>
   <details class="sp-conversation__nav" open>
     <summary class="sp-conversation__nav-summary">Turns ({{turn_count}})</summary>
     <div class="sp-conversation__nav-heading">Conversation <span>{{turn_count}} turns</span></div>
@@ -34,6 +36,10 @@
   </details>
 
   <div class="sp-conversation__body">
+    <div class="sp-conversation__toolbar" data-transcript-controls hidden>
+      <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-transcript-expand>Expand all</button>
+      <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-transcript-collapse>Collapse all</button>
+    </div>
     {{#each threads}}
       {{#unless this.is_main}}
       <div class="sp-conversation__thread" id="{{this.anchor}}">
@@ -89,13 +95,13 @@
             </summary>
             <div class="sp-conversation__tool-body">
               {{#if this.tool_input_pretty}}
-              <details class="sp-conversation__tool-part" open>
+              <details class="sp-conversation__tool-part">
                 <summary>Input</summary>
                 <pre class="sp-code-block">{{this.tool_input_pretty}}</pre>
               </details>
               {{/if}}
               {{#if this.tool_result_pretty}}
-              <details class="sp-conversation__tool-part" open>
+              <details class="sp-conversation__tool-part">
                 <summary>Result</summary>
                 <pre class="sp-code-block">{{this.tool_result_pretty}}</pre>
               </details>
@@ -167,5 +173,14 @@
   </div>
 </div>
 {{else}}
-{{> components/empty-state heading="Nothing to show" message="No turns were recorded for this conversation."}}
+{{#if (eq empty_reason "no_requests")}}
+{{> components/empty-state heading="Nothing to show"
+    message="No AI requests were recorded against this conversation."}}
+{{else}}
+{{!-- Why: the requests exist and the KPI numbers above are real; what is
+      missing is the stored message bodies. Saying "no turns were recorded"
+      here reads as "nothing happened", which contradicts the tiles. --}}
+{{> components/empty-state heading="Transcript unavailable"
+    message="This conversation has recorded requests, but none of them retained a message body — so there is no transcript to render. The per-request detail still holds the timing, tokens and cost."}}
+{{/if}}
 {{/if}}

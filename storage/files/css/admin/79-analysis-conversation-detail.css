@@ -1,0 +1,157 @@
+@layer components {
+/* Analysis › Conversation detail: the record's facts on the left, the
+   judge's card on the right, then one table per plane. */
+/* Detail: the record's facts on the left, the judge's card on the right. */
+.sp-aconvd-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 1fr);
+    gap: var(--sp-space-3);
+    margin-block: var(--sp-space-2) var(--sp-space-3);
+}
+@media (max-width: 60rem) {
+    .sp-aconvd-head {
+        grid-template-columns: 1fr;
+    }
+}
+.sp-aconvd-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: var(--sp-space-2) var(--sp-space-3);
+    margin: 0;
+    padding: var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface);
+}
+.sp-aconvd-facts dt {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.sp-aconvd-facts dd {
+    margin: 0;
+    font-size: var(--sp-text-sm);
+    overflow-wrap: anywhere;
+}
+.sp-aconvd-id {
+    font-size: var(--sp-text-xs);
+}
+.sp-aconvd-judge {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-inline-start: 4px solid var(--sp-border-strong);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface);
+}
+.sp-aconvd-judge--ok { border-inline-start-color: var(--sp-success-strong); }
+.sp-aconvd-judge--warn { border-inline-start-color: var(--sp-warning-strong); }
+.sp-aconvd-judge--err { border-inline-start-color: var(--sp-danger-strong); }
+.sp-aconvd-judge__score {
+    display: flex;
+    align-items: baseline;
+    font-family: var(--sp-font-mono);
+}
+.sp-aconvd-judge__num {
+    font-size: var(--sp-text-3xl);
+    font-weight: var(--sp-font-bold);
+    line-height: 1;
+}
+.sp-aconvd-judge--ok .sp-aconvd-judge__num { color: var(--sp-success-strong); }
+.sp-aconvd-judge--warn .sp-aconvd-judge__num { color: var(--sp-warning-strong); }
+.sp-aconvd-judge--err .sp-aconvd-judge__num { color: var(--sp-danger-strong); }
+.sp-aconvd-judge--muted .sp-aconvd-judge__num { color: var(--sp-text-tertiary); }
+.sp-aconvd-judge__of {
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-sm);
+}
+.sp-aconvd-judge__body {
+    display: grid;
+    gap: var(--sp-space-2);
+    min-width: 0;
+}
+.sp-aconvd-judge__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-1);
+}
+.sp-aconvd-judge__label {
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+    margin-inline-end: var(--sp-space-1);
+}
+.sp-aconvd-judge__summary,
+.sp-aconvd-judge__rationale {
+    margin: 0;
+    font-size: var(--sp-text-sm);
+}
+.sp-aconvd-judge__rationale {
+    color: var(--sp-text-secondary);
+}
+.sp-aconvd-judge__meta {
+    margin: 0;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+.sp-aconvd-turn--side td {
+    color: var(--sp-text-tertiary);
+}
+.sp-aconvd-model {
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-xs);
+}
+.sp-aconvd-reason {
+    max-width: 24rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+/* The five planes under the ledger, one tab each: a single full-width table
+   at a time, so no plane is squeezed beside another; a long plane scrolls
+   inside itself rather than stretching the page. */
+.sp-aconvd-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-space-3);
+}
+.sp-aconvd-grid > .sp-section {
+    min-width: 0;
+}
+.sp-aconvd-grid .sp-table__scroll {
+    max-block-size: 40rem;
+    overflow: auto;
+}
+.sp-aconvd-grid .sp-table__el thead th {
+    position: sticky;
+    inset-block-start: 0;
+    background: var(--sp-bg-surface);
+    z-index: 1;
+}
+.sp-aconvd-plane__head {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin-block-end: var(--sp-space-2);
+    color: var(--sp-text-tertiary);
+}
+.sp-aconvd-plane__title {
+    margin: 0;
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-primary);
+}
+.sp-aconvd-plane__head .sp-btn {
+    margin-inline-start: auto;
+}
+.sp-aconvd-tools td,
+.sp-aconvd-artifacts td,
+.sp-aconvd-gov td,
+.sp-aconvd-skills td,
+.sp-aconvd-safety td {
+    font-size: var(--sp-text-sm);
+}
+}

@@ -1,0 +1,102 @@
+{{#> layout}}
+{{#*inline "content"}}
+{{#> components/page-header title=heading help=help subtitle=(concat display_name " · " client.label " · " first_display " → " last_display " · " duration_display)}}
+{{#*inline "header_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{context_href}}">Read transcript &rarr;</a> {{#if session_href}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{session_href}}">Session</a> {{/if}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{back_url}}">&larr; Conversations</a> {{> components/export-button export}}{{/inline}}
+{{/components/page-header}}
+{{> analysis-subnav}}
+<section class="sp-aconvd-head" aria-label="Record">
+<dl class="sp-aconvd-facts">
+<div><dt>Person</dt><dd><a class="sp-table__link" href="{{user_href}}">{{display_name}}</a></dd></div>
+<div><dt>Group · project</dt><dd>{{#if group_name}}{{group_name}}{{else}}—{{/if}}{{#if project_name}} · {{project_name}}{{/if}}</dd></div>
+<div><dt>Client</dt><dd><span class="sp-badge sp-badge--{{client.tone}}" title="{{client.title}}">{{client.label}}</span> <span class="sp-u-text-tertiary">{{wire_protocol}}</span></dd></div>
+<div><dt>Models</dt><dd>{{#each models}}<span class="sp-aconv-model-chip">{{this}}</span>{{else}}—{{/each}}</dd></div>
+<div><dt>Providers</dt><dd>{{#each providers}}{{#if @index}}, {{/if}}{{this}}{{else}}—{{/each}}</dd></div>
+<div><dt>Harness session</dt><dd>{{#if session_href}}<a class="sp-table__link" href="{{session_href}}">{{hook_status}}</a>{{else}}<span class="sp-u-text-tertiary">{{hook_status}}</span>{{/if}}</dd></div>
+<div><dt>Context</dt><dd><code class="sp-aconvd-id">{{context_key}}</code></dd></div>
+</dl>
+<aside class="sp-aconvd-judge sp-aconvd-judge--{{judge.tone}}" id="judge" aria-label="Judge">
+<div class="sp-aconvd-judge__score"><span class="sp-aconvd-judge__num">{{judge.completion_display}}</span><span class="sp-aconvd-judge__of">/100</span></div>
+<div class="sp-aconvd-judge__body">
+<div class="sp-aconvd-judge__head"><span class="sp-aconvd-judge__label">Completed the original intent</span>{{#if judge.judged}}{{> components/badge tone="info" text=judge.category_label}} {{> components/badge tone=judge.outcome_tone text=judge.outcome}}{{else}}{{#if judge.pending}}{{> components/badge tone="warn" text="Queued for the judge"}}{{else}}{{> components/badge tone="muted" text="Not judged yet"}}{{/if}}{{/if}}</div>
+{{#if judge.judged}}<p class="sp-aconvd-judge__summary">{{judge.summary}}</p><p class="sp-aconvd-judge__rationale">{{judge.rationale}}</p>{{#if judge.tags}}<div class="sp-aconv-tags">{{#each judge.tags}}<span class="sp-aconv-tag">{{this}}</span>{{/each}}</div>{{/if}}<p class="sp-aconvd-judge__meta">{{judge.model}} · {{judge.judged_at}} · {{judge.tokens_display}} tokens · {{judge.cost_display}} · {{judge.trigger}}</p>{{else}}<p class="sp-aconvd-judge__summary sp-u-text-tertiary">The judge reads a conversation once it has been quiet or its session has ended, and records one label: title, summary, intent, outcome and this score.</p>{{/if}}
+{{#if can_judge}}<form method="post" action="{{judge.judge_url}}" class="sp-inventory-inline"><button class="sp-btn sp-btn--xs sp-btn--outline" type="submit" title="Queue this conversation for the judge; the next tick reads it within five minutes">{{#if judge.judged}}Judge again{{else}}Judge now{{/if}}</button></form>{{/if}}
+</div>
+</aside>
+</section>
+<div class="sp-kpi-grid sp-kpi-grid--compact">
+{{#each kpis}}{{> components/kpi label=label icon=icon value=value note=note tone=tone hint=hint}}{{/each}}
+</div>
+<section class="sp-aconv-charts" aria-label="Per turn">
+{{#each charts}}<div class="sp-aconv-chart">{{> components/svg-line-chart this}}</div>{{/each}}
+</section>
+<section class="sp-section" aria-label="Turn ledger">
+{{#> components/table caption=(concat turn_count " requests in order") modifier="sp-aconvd-turns"}}
+<thead><tr><th scope="col">#</th><th scope="col">Time</th><th scope="col">Kind</th><th scope="col">Model</th><th scope="col">Status</th><th scope="col" class="sp-table__cell--num">In</th><th scope="col" class="sp-table__cell--num">Out</th><th scope="col" class="sp-table__cell--num">Cache</th><th scope="col" class="sp-table__cell--num">Reasoning</th><th scope="col" class="sp-table__cell--num">Cost</th><th scope="col" class="sp-table__cell--num">Latency</th><th scope="col" class="sp-table__cell--num">Tools</th><th scope="col" class="sp-table__cell--num">Safety</th></tr></thead>
+<tbody>
+{{#each turns}}<tr class="{{#unless is_turn}}sp-aconvd-turn--side{{/unless}}">
+<td class="sp-u-num">{{index}}</td><td><a class="sp-table__link" href="{{href}}">{{at}}</a></td><td>{{kind}}{{#if streaming}} <span class="sp-u-text-tertiary" title="streamed">≋</span>{{/if}}</td><td class="sp-aconvd-model">{{model}}{{#if routed}}<div class="sp-aconv-meta" title="Requested model, routed by the gateway">← {{routed}}</div>{{/if}}</td><td>{{> components/badge tone=status_tone text=status}}{{#if finish_reason}}<div class="sp-aconv-meta">{{finish_reason}}</div>{{/if}}{{#if error_message}}<div class="sp-aconv-meta sp-u-text-danger" title="{{error_message}}">{{truncate error_message 80}}</div>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{input_display}}</td><td class="sp-table__cell--num sp-u-num">{{output_display}}</td><td class="sp-table__cell--num sp-u-num">{{cache_display}}</td><td class="sp-table__cell--num sp-u-num">{{reasoning_display}}</td><td class="sp-table__cell--num sp-u-num">{{cost_display}}</td><td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{latency_tone}}">{{latency_display}}</span></td><td class="sp-table__cell--num sp-u-num" title="{{tool_names}}">{{tools}}</td><td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{safety_tone}}">{{safety}}</span></td>
+</tr>{{else}}<tr class="sp-table__empty"><td colspan="13">{{> components/empty-state heading="No requests" message="The gateway has no request rows for this conversation."}}</td></tr>{{/each}}
+</tbody>
+{{/components/table}}
+</section>
+<div class="sp-aconvd-grid">
+<div class="sp-tabs" role="tablist" data-tabs="aconvd-planes" aria-label="Conversation planes">
+<button type="button" class="sp-tab sp-tab--active" role="tab" id="aconvd-tab-tools" aria-controls="aconvd-panel-tools" aria-selected="true" data-tab="tools">Tools <span class="sp-tab-count">{{tool_count}}</span></button>
+<button type="button" class="sp-tab" role="tab" id="aconvd-tab-artifacts" aria-controls="aconvd-panel-artifacts" aria-selected="false" tabindex="-1" data-tab="artifacts">Artifacts <span class="sp-tab-count">{{artifact_count}}</span></button>
+<button type="button" class="sp-tab" role="tab" id="aconvd-tab-governance" aria-controls="aconvd-panel-governance" aria-selected="false" tabindex="-1" data-tab="governance">Governance <span class="sp-tab-count">{{decision_count}}</span></button>
+<button type="button" class="sp-tab" role="tab" id="aconvd-tab-skills" aria-controls="aconvd-panel-skills" aria-selected="false" tabindex="-1" data-tab="skills">Skills <span class="sp-tab-count">{{skill_count}}</span></button>
+<button type="button" class="sp-tab" role="tab" id="aconvd-tab-safety" aria-controls="aconvd-panel-safety" aria-selected="false" tabindex="-1" data-tab="safety">Safety <span class="sp-tab-count">{{safety_count}}</span></button>
+</div>
+<section class="sp-section sp-tab-panel" id="aconvd-panel-tools" role="tabpanel" aria-labelledby="aconvd-tab-tools">
+<header class="sp-aconvd-plane__head">{{> components/icon name="wrench"}}<h2 class="sp-aconvd-plane__title">Tools <span class="sp-aconv-meta">{{tool_count}} calls</span></h2></header>
+{{#> components/table caption="Tool calls — the model's intent, the execution and its result" modifier="sp-aconvd-tools"}}
+<thead><tr><th scope="col">Tool</th><th scope="col">Input</th><th scope="col">State</th><th scope="col" class="sp-table__cell--num">Duration</th><th scope="col">Result</th><th scope="col">At</th></tr></thead>
+<tbody>
+{{#each tool_calls}}<tr><td class="sp-table__cell--primary"><span class="sp-tools-tool" title="{{#if is_builtin}}builtin harness tool{{else}}MCP server tool{{/if}} · {{server_name}} · {{source}}">{{> components/icon name=tool_icon}}<code>{{tool_name}}</code></span>{{#if error_message}}<div class="sp-aconv-meta sp-u-text-danger" title="{{error_message}}">{{truncate error_message 60}}</div>{{/if}}</td><td class="sp-tools-input{{#if is_path}} sp-u-mono{{/if}}" title="{{input_summary}}">{{truncate input_summary 60}}</td><td>{{> components/badge tone=state_tone text=state}}{{#if status}} <span class="sp-aconv-meta">{{status}}</span>{{/if}}</td><td class="sp-table__cell--num sp-u-num">{{duration_display}}</td><td>{{#if artifact_kind}}<span class="sp-tools-kind sp-tools-kind--{{artifact_kind}}">{{> components/icon name=artifact_icon}}{{artifact_label}}</span>{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td><td class="sp-col-date">{{at}}</td></tr>
+{{else}}<tr class="sp-table__empty"><td colspan="6">{{> components/empty-state heading="No tool calls" message="Neither the model asked for a tool nor the hooks reported one on this conversation."}}</td></tr>{{/each}}
+</tbody>
+{{/components/table}}
+</section>
+<section class="sp-section sp-tab-panel" id="aconvd-panel-artifacts" role="tabpanel" aria-labelledby="aconvd-tab-artifacts" hidden>
+<header class="sp-aconvd-plane__head">{{> components/icon name="file"}}<h2 class="sp-aconvd-plane__title">Artifacts <span class="sp-aconv-meta">{{artifact_count}} viewable</span></h2></header>
+{{#> components/table caption="Artifacts — the tool calls that produced something viewable" modifier="sp-aconvd-artifacts"}}
+<thead><tr><th scope="col">Kind</th><th scope="col">Title · path</th><th scope="col">Tool</th><th scope="col" class="sp-table__cell--num">Size</th><th scope="col">At</th></tr></thead>
+<tbody>
+{{#each artifacts}}<tr><td><span class="sp-tools-kind sp-tools-kind--{{artifact_kind}}">{{> components/icon name=artifact_icon}}{{artifact_label}}</span></td><td class="sp-table__cell--primary sp-tools-input{{#if is_path}} sp-u-mono{{/if}}" title="{{artifact_title}}">{{truncate artifact_title 70}}</td><td><span class="sp-tools-tool">{{> components/icon name=tool_icon}}<code>{{tool_name}}</code></span></td><td class="sp-table__cell--num sp-u-num">{{bytes_display}}</td><td class="sp-col-date">{{at}}</td></tr>
+{{else}}<tr class="sp-table__empty"><td colspan="5">{{> components/empty-state heading="No artifacts" message="No tool call on this conversation produced a file, a card, a UI resource or a retained body."}}</td></tr>{{/each}}
+</tbody>
+{{/components/table}}
+</section>
+<section class="sp-section sp-tab-panel" id="aconvd-panel-governance" role="tabpanel" aria-labelledby="aconvd-tab-governance" hidden>
+<header class="sp-aconvd-plane__head">{{> components/icon name="shield"}}<h2 class="sp-aconvd-plane__title">Governance <span class="sp-aconv-meta">{{decision_count}} decisions</span></h2><a class="sp-btn sp-btn--xs sp-btn--outline" href="/admin/governance?q={{context_key}}">All on the Governance page</a></header>
+{{#> components/table caption="Governance decisions — every tool call the chain evaluated for this conversation" modifier="sp-aconvd-gov"}}
+<thead><tr><th scope="col">Tool</th><th scope="col">Decision</th><th scope="col">Policy</th><th scope="col">Reason</th><th scope="col">Plugin</th><th scope="col">At</th></tr></thead>
+<tbody>
+{{#each decisions}}<tr><td class="sp-table__cell--primary"><code>{{tool_name}}</code></td><td>{{> components/badge tone=tone text=decision}}</td><td>{{policy}}</td><td class="sp-aconvd-reason" title="{{reason}}">{{truncate reason 90}}</td><td>{{plugin}}</td><td class="sp-col-date">{{at}}</td></tr>
+{{else}}<tr class="sp-table__empty"><td colspan="6">{{> components/empty-state heading="No decisions" message="The governance chain recorded nothing for this conversation."}}</td></tr>{{/each}}
+</tbody>
+{{/components/table}}
+</section>
+<section class="sp-section sp-tab-panel" id="aconvd-panel-skills" role="tabpanel" aria-labelledby="aconvd-tab-skills" hidden>
+<header class="sp-aconvd-plane__head">{{> components/icon name="skill"}}<h2 class="sp-aconvd-plane__title">Skills <span class="sp-aconv-meta">{{skill_count}} invoked</span></h2><a class="sp-btn sp-btn--xs sp-btn--outline" href="/admin/analysis/skills">All on the Skills page</a></header>
+{{#> components/table caption="Skills invoked, with the marketplace version served at the time" modifier="sp-aconvd-skills"}}
+<thead><tr><th scope="col">Skill</th><th scope="col">Plugin</th><th scope="col">Marketplace</th><th scope="col">Version</th><th scope="col" class="sp-table__cell--num">Invocations</th><th scope="col">First</th></tr></thead>
+<tbody>
+{{#each skills}}<tr><td class="sp-table__cell--primary"><a class="sp-aconv-skill sp-aconv-skill--hooked" href="{{chip.href}}">{{chip.name}}</a></td><td>{{plugin}}</td><td>{{marketplace}}</td><td>{{#if version_href}}<a class="sp-table__link" href="{{version_href}}"><code>{{version_short}}</code></a>{{else}}<code>{{version_short}}</code>{{/if}}</td><td class="sp-table__cell--num sp-u-num">{{invocations}}</td><td class="sp-col-date">{{first_at}}</td></tr>
+{{else}}<tr class="sp-table__empty"><td colspan="6">{{> components/empty-state heading="No skills" message="The harness hooks reported no skill invocation for this conversation's session."}}</td></tr>{{/each}}
+</tbody>
+{{/components/table}}
+</section>
+<section class="sp-section sp-tab-panel" id="aconvd-panel-safety" role="tabpanel" aria-labelledby="aconvd-tab-safety" hidden>
+<header class="sp-aconvd-plane__head">{{> components/icon name="alert"}}<h2 class="sp-aconvd-plane__title">Safety <span class="sp-aconv-meta">{{safety_count}} findings</span></h2></header>
+{{#> components/table caption="Safety scanner findings on this conversation's requests and responses" modifier="sp-aconvd-safety"}}
+<thead><tr><th scope="col">Phase</th><th scope="col">Category</th><th scope="col">Severity</th><th scope="col">Scanner</th><th scope="col">Blocked</th><th scope="col">At</th></tr></thead>
+<tbody>
+{{#each safety}}<tr><td>{{phase}}</td><td class="sp-table__cell--primary"><a class="sp-table__link" href="{{request_href}}">{{category}}</a></td><td>{{> components/badge tone=tone text=severity}}</td><td>{{scanner}}</td><td>{{#if blocked}}yes{{else}}no{{/if}}</td><td class="sp-col-date">{{at}}</td></tr>
+{{else}}<tr class="sp-table__empty"><td colspan="6">{{> components/empty-state heading="No findings" message="The gateway scanners flagged nothing on this conversation's requests or responses."}}</td></tr>{{/each}}
+</tbody>
+{{/components/table}}
+</section>
+</div>
+{{/inline}}{{#*inline "scripts"}}<script type="module" src="/js/components/sp-chart.js?v={{css_version}}"></script><script type="module" src="/js/components/sp-tabs.js?v={{css_version}}"></script>{{/inline}}{{/layout}}

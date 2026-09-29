@@ -1,9 +1,10 @@
 {{!--
-  Admin navigation: six collapsible groups, in the order an operator moves
+  Admin navigation: seven collapsible groups, in the order an operator moves
   through them — what the AI did (AI activity, which opens with Overview), who
-  it happened to (People & access), what the policy said (Governance), what is
-  installed (Platform), the signed-in person themselves (Account), and last the
-  raw technical records (Developer).
+  it happened to (People & access), what the skills are worth (Analysis), what
+  the policy said (Governance), what is installed (Platform), the signed-in
+  person themselves (Account), and last the raw technical records
+  (Developer).
 
   Exactly one group is always open: the one holding the current page. It has
   no chevron and its toggle is a no-op. Before JS runs, CSS opens it with
@@ -89,6 +90,37 @@
         {{#> nav-item href="/admin/devices" text="Devices & enrolments" leaf="devices" child="device-detail" page=page}}
             {{#*inline "nav_text"}}Devices &amp; enrolments{{/inline}}
             {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="8" rx="1"/><path d="M5.5 13.5h5" stroke-linecap="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        </div>
+        </div>
+        </section>
+        {{/if}}
+
+        {{!-- ANALYSIS — what the record and the judge say about conversations,
+             skills and marketplace versions. Console-only: this instance has
+             no marketplace-participant tier. --}}
+        {{#if current_user.is_console}}
+        <section class="sp-nav-group sp-nav-group--analysis" data-nav-group="analysis">
+        <h2 class="sp-nav-label">
+            <button class="sp-nav-group__toggle" type="button" data-action="nav-group-toggle" aria-expanded="false" aria-controls="sp-nav-group-analysis">
+                <span class="sp-nav-group__title">Analysis</span>
+                <span class="sp-nav-group__count" data-nav-group-count aria-hidden="true"></span>
+                <svg class="sp-nav-group__chevron" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+        </h2>
+        <div class="sp-nav-group__items" id="sp-nav-group-analysis">
+        <div class="sp-nav-group__inner">
+        {{#> nav-item href="/admin/analysis/conversations" text="Conversations" leaf="analysis-conversations" child="analysis-conversation" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M4 10V6M8 10V2M12 10V4"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/analysis/skills" text="Skills" leaf="analysis-skills" child="analysis-skill" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M2 6h12M2 10h12M6 6v8"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/analysis/reports" text="Reports" leaf="analysis-reports" child="analysis-report" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2.5h10v11H3z" stroke-linejoin="round"/><path d="M5.5 10.5v-2M8 10.5v-4M10.5 10.5v-6" stroke-linecap="round"/></svg>{{/inline}}
+        {{/nav-item}}
+        {{#> nav-item href="/admin/analysis/versions" text="Versions" leaf="analysis-versions" child="analysis-marketplace-versions" child2="analysis-revision" page=page}}
+            {{#*inline "nav_icon"}}<svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2v8a3 3 0 0 0 3 3h5M4 5h5a3 3 0 0 0-3-3"/><circle cx="4" cy="2" r="1"/><circle cx="12" cy="2" r="1"/><circle cx="12" cy="13" r="1"/></svg>{{/inline}}
         {{/nav-item}}
         </div>
         </div>

@@ -18,6 +18,15 @@ const GATEWAY_DEFAULT_NAME: &str = "Gateway conversation";
 pub(crate) struct ConversationStatsView {
     pub turn_count: i64,
     pub tool_call_count: i64,
+    // Why: the raw totals the strings below are rendered from, so a JSON
+    // export of the page carries the number and not only "18.0M".
+    pub request_count: i64,
+    pub total_input_tokens: i64,
+    pub total_cache_read_tokens: i64,
+    pub total_cache_creation_tokens: i64,
+    pub total_output_tokens: i64,
+    pub total_cost_microdollars: i64,
+    pub side_call_cost_microdollars: i64,
     pub tokens_display: String,
     pub tokens_note: String,
     pub cost_display: String,
@@ -95,18 +104,50 @@ pub(crate) fn stats_view(kpis: &ContextKpis) -> ConversationStatsView {
     ConversationStatsView {
         turn_count: kpis.turn_count,
         tool_call_count: kpis.tool_call_count,
-        tokens_display: format_token_total(kpis.total_input_tokens + kpis.total_output_tokens),
-        tokens_note: format!(
-            "{} in / {} out",
-            format_token_total(kpis.total_input_tokens),
-            format_token_total(kpis.total_output_tokens)
-        ),
+        request_count: kpis.request_count,
+        total_input_tokens: kpis.total_input_tokens,
+        total_cache_read_tokens: kpis.total_cache_read_tokens,
+        total_cache_creation_tokens: kpis.total_cache_creation_tokens,
+        total_output_tokens: kpis.total_output_tokens,
+        total_cost_microdollars: kpis.total_cost_microdollars,
+        side_call_cost_microdollars: kpis.side_call_cost_microdollars,
+        tokens_display: format_token_total(wire_input(kpis) + kpis.total_output_tokens),
+        tokens_note: tokens_note(kpis),
         cost_display: format_cost(kpis.total_cost_microdollars),
         error_count: kpis.error_count,
         side_call_count: kpis.side_call_count,
         side_call_cost_display: format_cost(kpis.side_call_cost_microdollars),
         models: kpis.models.clone(),
     }
+}
+
+// Why: core stores the billable counts disjointly — `input_tokens` is only
+// the uncached part — so what the session actually sent is the three summed.
+const fn wire_input(kpis: &ContextKpis) -> i64 {
+    kpis.total_input_tokens + kpis.total_cache_read_tokens + kpis.total_cache_creation_tokens
+}
+
+// Why: the cached share is the figure that explains a large input total: a
+// session that re-sends a 180k context a hundred times is cheap when the
+// cache hits and expensive when it never does, and the total alone cannot
+// tell the two apart.
+fn tokens_note(kpis: &ContextKpis) -> String {
+    let input = wire_input(kpis);
+    let cached = kpis.total_cache_read_tokens;
+    let cached_note = if input > 0 && cached > 0 {
+        format!(
+            " ({} cached, {}%)",
+            format_token_total(cached),
+            cached.saturating_mul(100) / input
+        )
+    } else {
+        String::new()
+    };
+    format!(
+        "{} in{cached_note} / {} out",
+        format_token_total(input),
+        format_token_total(kpis.total_output_tokens)
+    )
 }
 
 pub(crate) fn status_badge(hook_status: Option<&str>, error_count: i64) -> Option<StatusBadgeView> {

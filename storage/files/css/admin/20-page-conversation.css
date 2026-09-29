@@ -3,11 +3,17 @@
 /* The reader is a sticky turn rail beside the transcript. The rail is a
    <details> that ships open: on a wide viewport its summary is hidden and it
    reads as a plain sidebar; under 900px the summary appears and the rail
-   collapses above the transcript without a line of JS. */
+   collapses above the transcript without a line of JS.
+
+   The reader takes the full width of the shell and starts at its left edge.
+   It used to be capped at 88rem and centred, which on a wide screen left a
+   column of dead space beside the rail while the transcript — the entire
+   reason the page is open — was the thing being squeezed. Prose keeps its own
+   measure further down, so width here costs legibility nothing. */
 
 .sp-conversation {
     display: grid;
-    grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr);
+    grid-template-columns: 18rem minmax(0, 1fr);
     gap: var(--sp-space-6);
     align-items: start;
 }

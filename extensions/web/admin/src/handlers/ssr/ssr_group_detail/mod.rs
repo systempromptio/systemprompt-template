@@ -219,10 +219,8 @@ async fn load_mappings(
 // filter can name, so it offers no export.
 fn export_view(group_id: &GroupId) -> crate::export::ExportView {
     let query = crate::export::view::query_string(&[("group", Some(group_id.as_str()))]);
-    // Why: `analysis-conversations` and the transcript bundle join this list
-    // with the analysis suite (Stage 3 phase 7); an id the registry does not
-    // hold is dropped by `ExportView::new`.
     crate::export::ExportView::new(&["requests", "sessions", "analysis-conversations"], &query)
+        .with_transcripts(crate::export::view::TranscriptSource::Sessions)
 }
 
 fn breadcrumbs(name: &str) -> Vec<BreadcrumbView> {

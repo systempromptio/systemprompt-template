@@ -1,0 +1,45 @@
+{{!--
+  The Skills page's Overview tab: the scope's KPI strip, then one row per
+  marketplace — entitled → installed → active on one track, the window's
+  activity and spend, and the judge's mean. Reads the page context directly.
+--}}
+<div class="sp-kpi-grid sp-kpi-grid--compact sp-aconv-kpis">
+{{#each kpis}}{{> components/kpi label=label icon=icon value=value note=note tone=tone hint=hint spark=spark}}{{/each}}
+</div>
+<section class="sp-section sp-adopt" aria-label="Marketplace adoption">
+<header class="sp-aconv-block__head">{{> components/icon name="layers"}}<h2 class="sp-aconv-block__title">Adoption by marketplace</h2><span class="sp-aconv-meta">entitled → installed → active · {{scope_label}} · last {{days}} days</span></header>
+{{#if adoption}}
+{{#> components/table caption="Marketplace adoption" modifier="sp-adopt-table"}}
+<thead><tr>
+<th scope="col" class="sp-adopt-table__col-name">Marketplace</th>
+<th scope="col" class="sp-table__cell--num" title="People the access-control rules reach for this marketplace">Entitled</th>
+<th scope="col" class="sp-table__cell--num" title="Consumers holding a verified installation receipt for one of its skills; the rate counts only the entitled">Installed</th>
+<th scope="col" class="sp-table__cell--num" title="Distinct people who invoked one of its skills in the window; the rate is over the installed">Active</th>
+<th scope="col" class="sp-adopt-table__col-track" title="Installed (wash) and active (solid) as shares of the entitled">Reach</th>
+<th scope="col" class="sp-table__cell--num" title="Distinct skills invoked, over those declared">Skills</th>
+<th scope="col" class="sp-table__cell--num" title="Hook-reported invocations in the window">Invoked</th>
+<th scope="col" class="sp-table__cell--num" title="Gateway conversations whose session invoked one of its skills">Conv.</th>
+<th scope="col" class="sp-table__cell--num">Cost</th>
+<th scope="col" class="sp-table__cell--num sp-askill-col-done" title="AI judge: mean completion over the judged conversations">{{> components/icon name="sparkle"}} AI</th>
+<th scope="col" class="sp-col-date" title="Most recent verified installation receipt">Last install</th>
+</tr></thead>
+<tbody>
+{{#each adoption}}
+<tr>
+<td class="sp-table__cell--primary sp-adopt-table__col-name"><a class="sp-table__link" href="{{skills_href}}"><b>{{marketplace_name}}</b></a><div class="sp-aconv-meta">{{plugins}} plugins · {{skills}} skills · <a class="sp-hash sp-hash--chip" href="{{versions_href}}" title="{{versions}} versions">{{version_short}}</a></div></td>
+<td class="sp-table__cell--num sp-u-num">{{entitled}}</td>
+<td class="sp-table__cell--num sp-u-num" title="{{hosts_title}}">{{installed}}<span class="sp-aconv-meta"> {{install_rate}}</span>{{#if installed_outside}}<div class="sp-aconv-meta" title="Installed by people the rules do not entitle to this marketplace">+{{installed_outside}} outside</div>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{active}}<span class="sp-aconv-meta"> {{activation_rate}}</span></td>
+<td class="sp-adopt-table__col-track"><div class="sp-adopt__track" role="img" aria-label="{{entitled}} entitled, {{installed}} installed, {{active}} active"><i class="sp-adopt__fill sp-adopt__fill--installed" style="--sp-fill: {{install_rate_pct}}%"></i><i class="sp-adopt__fill sp-adopt__fill--active" style="--sp-fill: {{active_pct}}%"></i></div></td>
+<td class="sp-table__cell--num sp-u-num">{{skills_used}}<span class="sp-aconv-meta"> / {{skills}}</span></td>
+<td class="sp-table__cell--num sp-u-num"><a class="sp-aconv-cell-link sp-aconv-num sp-aconv-num--accent" href="{{activity_href}}" title="Invocations per day for this marketplace">{{formatNumber invocations}}</a></td>
+<td class="sp-table__cell--num sp-u-num">{{conversations}}</td>
+<td class="sp-table__cell--num sp-u-num">{{cost_display}}</td>
+<td class="sp-table__cell--num sp-askill-col-done">{{> components/ai-score tone=completion_tone score=completion_display href=skills_href show_value=true}}</td>
+<td class="sp-col-date">{{last_install}}</td>
+</tr>
+{{/each}}
+</tbody>
+{{/components/table}}
+{{else}}<p class="sp-empty">No marketplace is declared on this instance.</p>{{/if}}
+</section>

@@ -1,0 +1,310 @@
+{{#> layout}}{{#*inline "content"}}
+<section class="sp-p-versions">
+{{#> components/page-header title=name subtitle="Every version of this marketplace by content hash — what changed between them, how each performed, and what devices received."}}
+{{#*inline "header_actions"}}<form method="get" action="/admin/analysis/versions/{{marketplace_id}}" class="sp-inventory-inline"><input type="hidden" name="tab" value="{{tab}}"><label class="sp-u-sr-only" for="mv-days">Window</label><select class="sp-select" id="mv-days" name="days"><option value="7"{{#if (eq days 7)}} selected{{/if}}>7 days</option><option value="30"{{#if (eq days 30)}} selected{{/if}}>30 days</option><option value="90"{{#if (eq days 90)}} selected{{/if}}>90 days</option><option value="365"{{#if (eq days 365)}} selected{{/if}}>365 days</option></select><button class="sp-btn sp-btn--sm sp-btn--outline" type="submit">Apply</button></form> <a class="sp-btn sp-btn--sm sp-btn--primary" href="/admin/analysis/skills?marketplace={{marketplace_id}}&amp;days={{days}}">Skills</a> {{> components/export-button export}}{{/inline}}
+{{/components/page-header}}
+{{> analysis-subnav}}
+
+<p class="sp-inventory-summary">{{#if current}}Serving <a class="sp-hash sp-hash--chip" href="#{{current.anchor}}" title="{{current.hash}}">{{current.hash_short}}</a> since {{relativeTime current.first_seen_at}} · {{current.plugin_count}} plugins · {{current.skill_count}} skills · source <span class="sp-u-mono">{{current.source}}</span>{{#if current.source_hash_short}} <span class="sp-hash" title="{{current.source_hash}}">{{current.source_hash_short}}</span>{{/if}}{{else}}Not served by the current composition{{/if}} · {{version_count}} versions recorded</p>
+
+{{> components/tabs tabs=tabs nav_label="Version views"}}
+
+{{#if (eq tab "history")}}
+{{#> components/table caption="Every version of this marketplace, newest first, with what changed and how it performed in the window" modifier="sp-analysis-table sp-versions-table"}}
+<thead><tr>
+<th scope="col">Version</th>
+<th scope="col">Served</th>
+<th scope="col" class="sp-table__cell--num">Plugins</th>
+<th scope="col" class="sp-table__cell--num">Skills</th>
+<th scope="col" title="Skills added, removed and changed against the version before it">Change</th>
+<th scope="col" class="sp-table__cell--num" title="Mean judge completion over the conversations served by this version">Done</th>
+<th scope="col" class="sp-table__cell--num">Invocations</th>
+<th scope="col" class="sp-table__cell--num">Users</th>
+<th scope="col" class="sp-table__cell--num">Requests</th>
+<th scope="col" class="sp-table__cell--num">Cost</th>
+<th scope="col" class="sp-table__cell--num" title="Median of the conversations' p50 latency and 95th percentile of their p95">p50 · p95</th>
+<th scope="col" class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
+</tr></thead>
+<tbody>
+{{#each history}}
+<tr class="sp-versions-row{{#if is_current}} sp-versions-row--current{{/if}}" id="{{anchor}}">
+<td class="sp-table__cell--primary"><span class="sp-hash sp-hash--chip" title="{{hash}}">{{hash_short}}</span>{{#if is_current}} {{> components/badge tone="ok" text="current"}}{{/if}}{{#if legacy}} {{> components/badge tone="muted" text="source hash"}}{{/if}}{{#if declared_version}} <span class="sp-u-text-tertiary">v{{declared_version}}</span>{{/if}}</td>
+<td title="{{first_seen_at}}{{#if effective_until}} → {{effective_until}}{{/if}}">{{relativeTime first_seen_at}}{{#if effective_until}} <span class="sp-u-text-tertiary">→ {{relativeTime effective_until}}</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{#if has_manifest}}{{plugin_count}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{#if has_manifest}}{{skill_count}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+<td>{{#if diff}}<span class="sp-generation-delta"><span class="sp-generation-delta__add">+{{diff.added}}</span> <span class="sp-generation-delta__remove">−{{diff.removed}}</span> <span class="sp-generation-delta__change">~{{diff.changed}}</span></span>{{#if diff.skills}}<details class="sp-versions-diff"><summary class="sp-versions-diff__summary">{{#if compare_href}}what changed{{else}}first version{{/if}}</summary><ul class="sp-versions-diff__list">{{#each diff.plugins}}{{#unless (eq change "unchanged")}}<li class="sp-versions-diff__item">{{> components/badge tone=change_tone text=change_label}} <span class="sp-u-mono">plugin {{plugin_id}}</span></li>{{/unless}}{{/each}}{{#each diff.skills}}{{#unless (eq change "unchanged")}}<li class="sp-versions-diff__item">{{> components/badge tone=change_tone text=change_label}} <span class="sp-u-mono">{{plugin_id}}:{{skill_id}}</span>{{#if before}} <span class="sp-hash" title="{{before}}">{{truncate before 8}}</span>{{/if}}{{#if after}} <span class="sp-hash" title="{{after}}">→ {{truncate after 8}}</span>{{/if}}</li>{{/unless}}{{/each}}</ul></details>{{/if}}{{else}}<span class="sp-u-text-tertiary" title="Recorded from the source hash before manifests were kept; nothing to diff">no manifest</span>{{/if}}</td>
+<td class="sp-table__cell--num"><span class="sp-aconv-score sp-aconv-score--{{completion_tone}}" title="{{scored_sessions}} judged conversations">{{completion_display}}</span></td>
+<td class="sp-table__cell--num sp-u-num">{{invocations}}{{#if failed_invocations}} <span class="sp-u-text-danger">{{failed_invocations}} failed</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{users}}</td>
+<td class="sp-table__cell--num sp-u-num">{{requests}}{{#if failed}} <span class="sp-u-text-danger">{{failed}} failed</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{cost}}</td>
+<td class="sp-table__cell--num sp-u-num">{{p50}} · {{p95}}</td>
+<td class="sp-table__cell--actions">{{#if compare_href}}<a class="sp-table__link" href="{{../base_href}}{{compare_href}}">Compare</a>{{else}}<span class="sp-u-text-tertiary">first</span>{{/if}}</td>
+</tr>
+{{/each}}
+</tbody>
+{{/components/table}}
+{{/if}}
+
+{{#if compare}}
+<form method="get" action="/admin/analysis/versions/{{marketplace_id}}" class="sp-toolbar__filter sp-versions-pick">
+<input type="hidden" name="tab" value="compare"><input type="hidden" name="days" value="{{days}}">
+<div class="sp-toolbar__field"><label class="sp-toolbar__field-label" for="cmp-a">Before</label><select class="sp-select sp-u-mono" id="cmp-a" name="a">{{#each compare.options}}<option value="{{hash}}"{{#if is_a}} selected{{/if}}>{{label}}</option>{{/each}}</select></div>
+<div class="sp-toolbar__field"><label class="sp-toolbar__field-label" for="cmp-b">After</label><select class="sp-select sp-u-mono" id="cmp-b" name="b">{{#each compare.options}}<option value="{{hash}}"{{#if is_b}} selected{{/if}}>{{label}}</option>{{/each}}</select></div>
+<button class="sp-btn sp-btn--sm sp-btn--primary" type="submit">Compare</button>
+</form>
+
+<div class="sp-versions-pair">
+{{#each compare.sides}}
+<section class="sp-versions-side">
+<h3 class="sp-versions-side__title"><span class="sp-hash sp-hash--chip" title="{{hash}}">{{hash_short}}</span>{{#if is_current}} {{> components/badge tone="ok" text="current"}}{{/if}} <span class="sp-u-text-tertiary">{{relativeTime first_seen_at}}{{#if effective_until}} → {{relativeTime effective_until}}{{/if}}</span></h3>
+<div class="sp-kpi-grid sp-kpi-grid--compact">
+{{> components/kpi label="Invocations" value=invocations note=(concat failed_invocations " failed")}}
+{{> components/kpi label="Users" value=users note=(concat conversations " conversations")}}
+{{> components/kpi label="Requests" value=requests note=(concat failed " failed")}}
+{{> components/kpi label="Cost" value=cost note="turn spend, overlaps"}}
+{{> components/kpi label="p95" value=p95 note=(concat "p50 " p50)}}
+</div>
+<div class="sp-versions-side__eval"><span class="sp-aconv-score sp-aconv-score--{{completion_tone}} sp-aconv-score--lg">{{completion_display}}</span><p class="sp-u-text-tertiary sp-versions-side__eval-note">mean judge completion over {{scored_sessions}} judged conversations served by this version</p></div>
+</section>
+{{/each}}
+</div>
+
+{{#> components/table caption="Every skill either version carried, with its change and its figures under each" modifier="sp-analysis-table sp-versions-table"}}
+<thead><tr>
+<th scope="col">Skill</th>
+<th scope="col" title="{{compare.added}} added · {{compare.removed}} removed · {{compare.changed}} changed · {{compare.unchanged}} unchanged">Change</th>
+<th scope="col" class="sp-table__cell--num" colspan="2">Invocations <span class="sp-u-text-tertiary">before · after</span></th>
+<th scope="col" class="sp-table__cell--num">Δ</th>
+<th scope="col" class="sp-table__cell--num" colspan="2">Users</th>
+<th scope="col" class="sp-table__cell--num" colspan="2">Requests</th>
+<th scope="col" class="sp-table__cell--num" colspan="2">Failed</th>
+<th scope="col" class="sp-table__cell--num" colspan="2">Cost</th>
+<th scope="col" class="sp-table__cell--num" colspan="2">p95</th>
+</tr></thead>
+<tbody>
+{{#each compare.skills}}
+<tr>
+<td class="sp-table__cell--primary"><span class="sp-u-mono">{{plugin_id}}:{{skill_id}}</span></td>
+<td>{{> components/badge tone=change_tone text=change_label}}</td>
+<td class="sp-table__cell--num sp-u-num">{{a.invocations}}</td><td class="sp-table__cell--num sp-u-num">{{b.invocations}}</td>
+<td class="sp-table__cell--num sp-u-num{{#if (gt invocations_delta 0)}} sp-versions-up{{/if}}{{#if (gt 0 invocations_delta)}} sp-u-text-danger{{/if}}">{{invocations_delta}}</td>
+<td class="sp-table__cell--num sp-u-num">{{a.users}}</td><td class="sp-table__cell--num sp-u-num">{{b.users}}</td>
+<td class="sp-table__cell--num sp-u-num">{{a.requests}}</td><td class="sp-table__cell--num sp-u-num">{{b.requests}}</td>
+<td class="sp-table__cell--num sp-u-num">{{a.failed}}</td><td class="sp-table__cell--num sp-u-num{{#if (gt failed_delta 0)}} sp-u-text-danger{{/if}}">{{b.failed}}</td>
+<td class="sp-table__cell--num sp-u-num">{{a.cost}}</td><td class="sp-table__cell--num sp-u-num">{{b.cost}}</td>
+<td class="sp-table__cell--num sp-u-num">{{a.p95}}</td><td class="sp-table__cell--num sp-u-num">{{b.p95}}</td>
+</tr>
+{{else}}
+<tr class="sp-table__empty"><td colspan="15">{{> components/empty-state heading="Nothing to compare" message="Neither version has a manifest or any attributed use in this window."}}</td></tr>
+{{/each}}
+</tbody>
+{{/components/table}}
+{{#unless compare.comparable}}{{> components/notice tone="info" title="No manifest on one side" message="One of these versions was recorded from a source hash before manifests were kept, so skills are listed from their facts only and no change can be derived."}}{{/unless}}
+{{/if}}
+
+{{#if evaluation}}
+{{#if evaluation.has_runs}}
+<form method="get" action="/admin/analysis/versions/{{marketplace_id}}" class="sp-toolbar__filter sp-versions-pick">
+<input type="hidden" name="tab" value="evaluation"><input type="hidden" name="days" value="{{days}}">
+<div class="sp-toolbar__field"><label class="sp-toolbar__field-label" for="ev-b">Version</label><select class="sp-select sp-u-mono" id="ev-b" name="b">{{#each evaluation.versions}}<option value="{{hash}}"{{#if is_selected}} selected{{/if}}>{{hash_short}}{{#if declared_version}} · v{{declared_version}}{{/if}}{{#if is_current}} · current{{/if}}</option>{{/each}}</select></div>
+<div class="sp-toolbar__field"><label class="sp-toolbar__field-label" for="ev-a">Against</label><select class="sp-select sp-u-mono" id="ev-a" name="a"><option value="">previous version</option>{{#each evaluation.versions}}<option value="{{hash}}"{{#if is_baseline}} selected{{/if}}>{{hash_short}}{{#if declared_version}} · v{{declared_version}}{{/if}}</option>{{/each}}</select></div>
+<button class="sp-btn sp-btn--sm sp-btn--primary" type="submit">Show</button>
+</form>
+
+{{#with evaluation.selected}}
+<p class="sp-inventory-summary">Version <span class="sp-hash sp-hash--chip" title="{{hash}}">{{hash_short}}</span>{{#if declared_version}} v{{declared_version}}{{/if}} · {{summary.runs}} conversations{{#if ../evaluation.baseline}} · compared with <span class="sp-hash" title="{{../evaluation.baseline.hash}}">{{../evaluation.baseline.hash_short}}</span>{{/if}} · every figure is an aggregate of the rows in the export</p>
+<dl class="sp-eval-kpis">
+<div class="sp-eval-kpi"><dt>Success</dt><dd>{{summary.success_rate.value}}{{#if summary.success_rate.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.success_rate.tone}}">{{summary.success_rate.delta}}</span>{{/if}}</dd></div>
+<div class="sp-eval-kpi"><dt>Completed</dt><dd>{{summary.completed_rate.value}}{{#if summary.completed_rate.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.completed_rate.tone}}">{{summary.completed_rate.delta}}</span>{{/if}}</dd></div>
+<div class="sp-eval-kpi"><dt>Cost per run</dt><dd>{{summary.avg_cost.value}}{{#if summary.avg_cost.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.avg_cost.tone}}">{{summary.avg_cost.delta}}</span>{{/if}}</dd></div>
+<div class="sp-eval-kpi"><dt>Output tokens per run</dt><dd>{{summary.avg_output_tokens.value}}{{#if summary.avg_output_tokens.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.avg_output_tokens.tone}}">{{summary.avg_output_tokens.delta}}</span>{{/if}}</dd></div>
+<div class="sp-eval-kpi"><dt>Cached context per run</dt><dd>{{summary.avg_cache_read_tokens.value}}{{#if summary.avg_cache_read_tokens.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.avg_cache_read_tokens.tone}}">{{summary.avg_cache_read_tokens.delta}}</span>{{/if}}</dd></div>
+<div class="sp-eval-kpi"><dt>Turns per run</dt><dd>{{summary.avg_turns.value}}{{#if summary.avg_turns.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.avg_turns.tone}}">{{summary.avg_turns.delta}}</span>{{/if}}</dd></div>
+<div class="sp-eval-kpi"><dt>Connector calls per run</dt><dd>{{summary.avg_connector_calls.value}}{{#if summary.avg_connector_calls.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.avg_connector_calls.tone}}">{{summary.avg_connector_calls.delta}}</span>{{/if}}</dd></div>
+<div class="sp-eval-kpi"><dt>Failed calls</dt><dd>{{summary.failed_calls.value}}{{#if summary.failed_calls.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.failed_calls.tone}}">{{summary.failed_calls.delta}}</span>{{/if}}</dd></div>
+</dl>
+<p class="sp-inventory-summary">Failed calls by class: schema {{summary.schema_errors}} · access {{summary.access_errors}} · upstream {{summary.upstream_errors}} · bad arguments {{summary.bad_arguments}} · timeouts {{summary.timeouts}} · writes {{summary.writes}}</p>
+{{/with}}
+
+{{#> components/table caption="Every version with conversations, oldest first; each is compared with the one before it" modifier="sp-analysis-table sp-versions-table"}}
+<thead><tr>
+<th scope="col">Version</th>
+<th scope="col">Served</th>
+<th scope="col" class="sp-table__cell--num">Runs</th>
+<th scope="col" class="sp-table__cell--num">Success</th>
+<th scope="col" class="sp-table__cell--num">Cost per run</th>
+<th scope="col" class="sp-table__cell--num">Output tokens</th>
+<th scope="col" class="sp-table__cell--num">Cached context</th>
+<th scope="col" class="sp-table__cell--num">Turns</th>
+<th scope="col" class="sp-table__cell--num">Failed calls</th>
+</tr></thead>
+<tbody>
+{{#each evaluation.versions}}
+<tr class="sp-versions-row{{#if is_selected}} sp-versions-row--current{{/if}}">
+<td class="sp-table__cell--primary"><span class="sp-hash sp-hash--chip" title="{{hash}}">{{hash_short}}</span>{{#if is_current}} {{> components/badge tone="ok" text="current"}}{{/if}}{{#if declared_version}} <span class="sp-u-text-tertiary">v{{declared_version}}</span>{{/if}}</td>
+<td title="{{first_seen_at}}">{{relativeTime first_seen_at}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.runs}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.success_rate.value}}{{#if summary.success_rate.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.success_rate.tone}}">{{summary.success_rate.delta}}</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.avg_cost.value}}{{#if summary.avg_cost.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.avg_cost.tone}}">{{summary.avg_cost.delta}}</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.avg_output_tokens.value}}{{#if summary.avg_output_tokens.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.avg_output_tokens.tone}}">{{summary.avg_output_tokens.delta}}</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.avg_cache_read_tokens.value}}{{#if summary.avg_cache_read_tokens.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.avg_cache_read_tokens.tone}}">{{summary.avg_cache_read_tokens.delta}}</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.avg_turns.value}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.failed_calls.value}}{{#if summary.failed_calls.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.failed_calls.tone}}">{{summary.failed_calls.delta}}</span>{{/if}}</td>
+</tr>
+{{/each}}
+</tbody>
+{{/components/table}}
+
+{{#> components/table caption="Each skill under the selected version, compared with the same skill under the baseline" modifier="sp-analysis-table"}}
+<thead><tr>
+<th scope="col">Skill</th>
+<th scope="col" class="sp-table__cell--num">Runs</th>
+<th scope="col" class="sp-table__cell--num">Success</th>
+<th scope="col" class="sp-table__cell--num">Cost per run</th>
+<th scope="col" class="sp-table__cell--num">Output tokens</th>
+<th scope="col" class="sp-table__cell--num">Turns</th>
+<th scope="col" class="sp-table__cell--num">Connector calls</th>
+<th scope="col" class="sp-table__cell--num">Failed calls</th>
+<th scope="col" class="sp-table__cell--actions"><span class="sp-u-sr-only">Conversation</span></th>
+</tr></thead>
+<tbody>
+{{#each evaluation.skills}}
+<tr>
+<td class="sp-table__cell--primary sp-u-mono">{{skill}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.runs}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.success_rate.value}}{{#if summary.success_rate.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.success_rate.tone}}">{{summary.success_rate.delta}}</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.avg_cost.value}}{{#if summary.avg_cost.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.avg_cost.tone}}">{{summary.avg_cost.delta}}</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.avg_output_tokens.value}}{{#if summary.avg_output_tokens.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.avg_output_tokens.tone}}">{{summary.avg_output_tokens.delta}}</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.avg_turns.value}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.avg_connector_calls.value}}</td>
+<td class="sp-table__cell--num sp-u-num">{{summary.failed_calls.value}}{{#if summary.failed_calls.delta}} <span class="sp-eval-delta sp-eval-delta--{{summary.failed_calls.tone}}">{{summary.failed_calls.delta}}</span>{{/if}}</td>
+<td class="sp-table__cell--actions">{{#if last_context_id}}<a class="sp-table__link" href="/admin/analysis/conversations/{{last_context_id}}">Latest run</a>{{/if}}</td>
+</tr>
+{{/each}}
+</tbody>
+{{/components/table}}
+{{else}}
+{{> components/notice tone="info" title="No conversations in this window" message="No conversation invoked one of this marketplace's skills in the window. Widen the window, or run the plugin's eval suite."}}
+{{/if}}
+{{/if}}
+
+{{#if distribution}}
+<div class="sp-kpi-grid sp-kpi-grid--compact">
+{{> components/kpi label="Published skills" value=distribution.published_resources note="with a reviewed publication"}}
+{{> components/kpi label="Devices current" value=distribution.devices_current note=(concat "of " distribution.devices_eligible " entitled")}}
+{{> components/kpi label="Verified receipts" value=distribution.verified_receipts tone="ok" note="full readback from the device"}}
+{{> components/kpi label="Failed deliveries" value=distribution.failed_deliveries tone="err" note="claims that never distributed"}}
+{{> components/kpi label="Pending withdrawals" value=distribution.pending_withdrawals tone="warn" note="awaiting a decision below"}}
+</div>
+
+<section class="sp-pub-section">
+{{> components/section title="Device coverage" note="Entitled devices holding the served publication of each skill. Acknowledged is what the bridge reported; verified is a full file readback."}}
+{{#if distribution.coverage}}
+{{#> components/table caption="Acknowledged and verified devices per skill" modifier="sp-pub-table"}}
+<thead><tr><th scope="col">Skill</th><th scope="col" class="sp-table__cell--num">Entitled devices</th><th scope="col" class="sp-table__cell--num">Acknowledged</th><th scope="col" class="sp-table__cell--num">Verified</th><th scope="col" class="sp-table__cell--num">Coverage</th></tr></thead>
+<tbody>{{#each distribution.coverage}}<tr><td class="sp-table__cell--primary">{{resource_key}}</td><td class="sp-table__cell--num sp-u-num">{{eligible_devices}}</td><td class="sp-table__cell--num sp-u-num">{{acknowledged_devices}}</td><td class="sp-table__cell--num sp-u-num">{{verified_devices}}</td><td class="sp-table__cell--num sp-u-num">{{#if pct}}{{pct}}%{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td></tr>{{/each}}</tbody>
+{{/components/table}}
+{{else}}{{> components/empty-state heading="No coverage observed" message="Coverage appears once a device with a grant for one of these skills reports an installation."}}{{/if}}
+</section>
+
+<section class="sp-pub-section">
+{{> components/section title="Publications" count=distribution.published_resources note="Every reviewed publication of this marketplace's skills, newest first. Digests are shown short; the full value is in the tooltip."}}
+{{#if distribution.publications}}
+{{#> components/table caption="Reviewed publications" modifier="sp-pub-table"}}
+<thead><tr><th scope="col">Skill</th><th scope="col">Action</th><th scope="col">Revision</th><th scope="col">Bundle digest</th><th scope="col">Provenance</th><th scope="col">Distribution</th><th scope="col" class="sp-table__cell--num">Receipts</th><th scope="col">Reviewed by</th></tr></thead>
+<tbody>
+{{#each distribution.publications}}
+<tr>
+<td class="sp-table__cell--primary" title="{{resource_full}}">{{#if resource_href}}<a class="sp-table__link" href="{{resource_href}}">{{resource_key}}</a>{{else}}{{resource_key}}{{/if}}</td>
+<td>{{> components/badge tone=action_tone text=action_label}}</td>
+<td>{{#if revision_short}}<span class="sp-u-mono" title="{{revision_full}}">{{revision_short}}</span>{{else}}&mdash;{{/if}}</td>
+<td>{{#if digest_short}}<span class="sp-u-mono" title="{{digest_full}}">{{digest_short}}</span>{{else}}&mdash;{{/if}}</td>
+<td>{{#if provenance_short}}<span class="sp-u-mono" title="{{provenance_full}}">{{provenance_short}}</span>{{else}}&mdash;{{/if}}</td>
+<td>{{> components/badge tone=distribution_tone text=distribution_status}}</td>
+<td class="sp-table__cell--num sp-u-num">{{receipts}}</td>
+<td><span class="sp-u-mono" title="{{reviewer_full}}">{{reviewer_short}}</span>{{#if limitations}} <span class="sp-pub-note" title="{{limitations}}">limitations</span>{{/if}}</td>
+</tr>
+{{/each}}
+</tbody>
+{{/components/table}}
+{{else}}{{> components/empty-state heading="No reviewed publications" message="A skill appears here once the inventory sync captures a revision and it is adopted."}}{{/if}}
+</section>
+
+<section class="sp-pub-section">
+{{> components/section title="Withdrawal proposals" count=distribution.pending_withdrawals note="Raised when the upstream source no longer carries a skill. Approving one withdraws the published generation."}}
+{{#if distribution.withdrawals}}
+{{#> components/table caption="Withdrawal proposals" modifier="sp-pub-table"}}
+<thead><tr><th scope="col">Resource</th><th scope="col">Reason</th><th scope="col">Status</th><th scope="col">Raised</th><th scope="col">Decision</th></tr></thead>
+<tbody>
+{{#each distribution.withdrawals}}
+<tr>
+<td class="sp-u-mono">{{this.resource_id}}</td>
+<td>{{this.reason}}</td>
+<td>{{#if (eq this.status "pending")}}{{> components/badge tone="warn" text="Pending"}}{{else}}{{#if (eq this.status "approved")}}{{> components/badge tone="ok" text="Approved"}}{{else}}{{> components/badge tone="muted" text="Rejected"}}{{/if}}{{/if}}</td>
+<td>{{formatDate this.created_at}}</td>
+<td>{{#if (eq this.status "pending")}}{{#if @root.can_manage}}<form method="post" action="/admin/analysis/publications/withdrawals" class="sp-inventory-inline"><input type="hidden" name="proposal_id" value="{{this.id}}"><button class="sp-btn sp-btn--xs sp-btn--primary" name="decision" value="approve" type="submit">Approve</button><button class="sp-btn sp-btn--xs sp-btn--outline" name="decision" value="reject" type="submit">Reject</button></form>{{else}}&mdash;{{/if}}{{else}}{{this.decided_by}}{{/if}}</td>
+</tr>
+{{/each}}
+</tbody>
+{{/components/table}}
+{{else}}{{> components/empty-state heading="No withdrawal proposals" message="One appears when an inventory sync finds a published skill missing from its upstream source."}}{{/if}}
+</section>
+
+<section class="sp-pub-section">
+{{> components/section title="Deliveries" note="One row per claim the bridge made on the publication outbox. A failed claim is retried; its error is the reason it has not distributed."}}
+{{#if distribution.deliveries}}
+{{#> components/table caption="Distribution claims" modifier="sp-pub-table"}}
+<thead><tr><th scope="col">Publication</th><th scope="col">Status</th><th scope="col">Claimed</th><th scope="col">Error</th></tr></thead>
+<tbody>{{#each distribution.deliveries}}<tr><td><span class="sp-u-mono" title="{{publication_full}}">{{publication_short}}</span></td><td>{{> components/badge tone=status_tone text=status}}</td><td>{{formatDate claimed_at}}</td><td>{{#if error}}{{error}}{{else}}&mdash;{{/if}}</td></tr>{{/each}}</tbody>
+{{/components/table}}
+{{else}}{{> components/empty-state heading="No delivery claims" message="A row appears when a bridge claims a published skill from the distribution outbox."}}{{/if}}
+</section>
+
+<section class="sp-pub-section">
+{{> components/section title="Installation receipts" count=distribution.verified_receipts note="What a device reported back after installing. Verified means every file was read back and the digests matched."}}
+{{#if distribution.receipts}}
+{{#> components/table caption="Installation receipts with their retained evidence" modifier="sp-pub-table sp-pub-receipts"}}
+<thead><tr><th scope="col">Receipt</th><th scope="col">Consumer</th><th scope="col">Device</th><th scope="col">Host</th><th scope="col">Bundle digest</th><th scope="col">Verified</th><th scope="col">Evidence</th></tr></thead>
+<tbody>
+{{#each distribution.receipts}}
+<tr>
+<td><span class="sp-u-mono" title="{{id_full}}">{{id_short}}</span> <span class="sp-pub-meta" title="{{installation_full}}">{{installation_short}}</span></td>
+<td class="sp-pub-consumer" title="{{consumer_id}}">{{#if consumer_id}}{{consumer_id}}{{else}}&mdash;{{/if}}</td>
+<td>{{#if device_short}}<span class="sp-u-mono" title="{{device_full}}">{{device_short}}</span>{{else}}&mdash;{{/if}}</td>
+<td title="{{host}}">{{#if host}}{{host}}{{else}}&mdash;{{/if}}</td>
+<td><span class="sp-u-mono" title="{{digest_full}}">{{digest_short}}</span></td>
+<td class="sp-pub-verified" title="{{formatDate verified_at}}">{{> components/badge tone=verified_tone text=verified_label}} <span class="sp-pub-meta">{{relativeTime verified_at}}</span></td>
+<td><details class="sp-pub-details"><summary>Files and evidence</summary><pre class="sp-pub-evidence">{{installed_manifest}}</pre><pre class="sp-pub-evidence">{{evidence}}</pre></details></td>
+</tr>
+{{/each}}
+</tbody>
+{{/components/table}}
+{{else}}{{> components/empty-state heading="No installation receipts" message="A receipt is written when a device installs a distributed skill and reports the files it wrote back."}}{{/if}}
+</section>
+
+{{#if can_manage}}
+<details class="sp-analysis-definitions">
+<summary>Record a review manually</summary>
+<form method="post" action="/admin/analysis/publications/review" class="sp-analysis-form">
+<label class="sp-pub-field">Resource ID<input name="resource_id" required><span class="sp-pub-field__help">The managed resource id shown in each publication's tooltip.</span></label>
+<label class="sp-pub-field">Revision ID<input name="revision_id"><span class="sp-pub-field__help">The captured revision to publish. Leave empty to withdraw.</span></label>
+<label class="sp-pub-field">Action<select name="action"><option value="initial_adoption">Initial baseline adoption</option><option value="withdraw">Withdraw</option><option value="rollback">Rollback as new publication</option></select></label>
+<label class="sp-pub-field">Expected generation<input type="number" min="0" name="expected_generation" required><span class="sp-pub-field__help">The publication counter you are publishing on top of. A mismatch is rejected.</span></label>
+<label class="sp-pub-field">Idempotency key<input name="operation_key" required><span class="sp-pub-field__help">Replaying the same key never publishes twice.</span></label>
+<label class="sp-pub-field">Comparison evidence JSON<textarea name="comparison_evidence" required>{}</textarea><span class="sp-pub-field__help">Retained verbatim. A composed_hash or bundle_content_hash key becomes the provenance shown above.</span></label>
+<label class="sp-pub-field">Limitations<textarea name="limitations"></textarea><span class="sp-pub-field__help">What this publication is known not to cover. Shown beside the reviewer.</span></label>
+<button class="sp-btn sp-btn--primary" type="submit">Record review and publication</button>
+</form>
+</details>
+{{/if}}
+{{/if}}
+
+<details class="sp-analysis-definitions"><summary>How to read this page</summary>
+<p>A version is the sha256 of everything the marketplace delivers — its config, its plugins and their skills — hashed as a kit's <code>content_hash</code> is. Each row of History is one such hash: when it was first served, when it stopped, what moved against the version before it, and the window's figures for the conversations that ran under it. A conversation belongs to the version being served when it first invoked one of the marketplace's skills, and stays there whatever is deployed later.</p>
+<p>Compare puts two versions side by side. Skills are labelled added, removed or changed from the two manifests' digests, and each carries its figures under either version. A version recorded from a source hash before manifests were kept has no diff and says so.</p>
+<p>Distribution is the delivery pipeline for this marketplace's skills: the publication the bridge serves for each, the claims it made, the receipts devices sent back, and how many entitled devices hold the served publication. Withdrawal proposals are decided here.</p>
+<p>Invocations and failures are the skills' own. Users, requests, cost and latency are the figures of the conversations that invoked them: users are every person who ran one, requests are turns, cost is turn spend with side calls excluded, and p50 · p95 are the median of the conversations' median latency and the 95th percentile of their p95. They overlap across versions and skills and must not be summed.</p>
+</details>
+</section>
+{{/inline}}{{/layout}}

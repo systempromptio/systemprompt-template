@@ -1,0 +1,39 @@
+@layer components {
+/* Evaluation: the selected version's headline figures, each with its change
+   from the baseline; the same deltas recur in the version and skill tables. */
+.sp-eval-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: var(--sp-space-3);
+    margin: 0 0 var(--sp-space-3);
+}
+.sp-eval-kpi {
+    display: grid;
+    gap: var(--sp-space-1);
+    padding: var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-md);
+}
+.sp-eval-kpi dt {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+.sp-eval-kpi dd {
+    margin: 0;
+    font-size: var(--sp-text-lg);
+    font-variant-numeric: tabular-nums;
+}
+.sp-eval-delta {
+    font-size: var(--sp-text-xs);
+    font-variant-numeric: tabular-nums;
+}
+.sp-eval-delta--good {
+    color: var(--sp-success-strong);
+}
+.sp-eval-delta--bad {
+    color: var(--sp-danger-strong);
+}
+.sp-eval-delta--flat {
+    color: var(--sp-text-tertiary);
+}
+}

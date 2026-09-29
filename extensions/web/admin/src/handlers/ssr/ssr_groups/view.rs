@@ -1,15 +1,11 @@
 //! The group listing's header tiles and its page window.
 
-use super::super::list_view::Pagination;
+use super::super::list_view::{PageWindow, Pagination, paginate as build_pagination};
 use super::super::people_view::format_usd;
 use super::super::types::{GroupKpiView, GroupRowView, UnattributedRowView};
 use super::UNASSIGNED_GROUP;
 use super::sorting::BASE_URL;
-
-// Why: what a page of groups holds. Fifty is the design system's default and
-// no estate in this product has come near it, so paging is a guard rather
-// than a routine step.
-pub(super) const PAGE_SIZE: i64 = 50;
+use crate::handlers::ssr::list_view::DEFAULT_PAGE_SIZE;
 
 // Why: the KPI row answers the five questions this page exists for before any
 // column is read: how many groups, how many people, what the estate spent,
@@ -107,30 +103,31 @@ pub(super) fn paginate(
     // is spelled out as the quotient plus a partial page. Written this way
     // rather than as `(n + size - 1) / size` because that form reads as a
     // rounding trick and clippy asks for the intrinsic that is not available.
-    let total_pages = (total_rows / PAGE_SIZE + i64::from(total_rows % PAGE_SIZE != 0)).max(1);
+    let total_pages =
+        (total_rows / DEFAULT_PAGE_SIZE + i64::from(total_rows % DEFAULT_PAGE_SIZE != 0)).max(1);
     let current_page = page.clamp(1, total_pages);
-    let start = (current_page - 1) * PAGE_SIZE;
+    let start = (current_page - 1) * DEFAULT_PAGE_SIZE;
     let window: Vec<GroupRowView> = rows
         .into_iter()
         .skip(start.max(0) as usize)
-        .take(PAGE_SIZE as usize)
+        .take(DEFAULT_PAGE_SIZE as usize)
         .collect();
-    let last_row = start + window.len() as i64;
     let source_query = super::sorting::source_query(source);
     let url =
         |p: i64| format!("{BASE_URL}?range={range}&sort={sort}&dir={dir}{source_query}&page={p}");
 
-    let pagination = Pagination {
-        current_page,
-        total_pages,
-        first_row: if window.is_empty() { 0 } else { start + 1 },
-        last_row,
-        total_rows,
-        noun: "groups",
-        has_prev: current_page > 1,
-        has_next: current_page < total_pages,
-        prev_url: (current_page > 1).then(|| url(current_page - 1)),
-        next_url: (current_page < total_pages).then(|| url(current_page + 1)),
-    };
+    // Why: this page's `?page=` is 1-based where every other list page counts
+    // from 0, so the window is built on the zero-based index and the link adds
+    // the one back.
+    let pagination = build_pagination(
+        PageWindow::new(
+            current_page - 1,
+            DEFAULT_PAGE_SIZE,
+            total_rows,
+            window.len() as i64,
+            "groups",
+        ),
+        |index| url(index + 1),
+    );
     (window, pagination)
 }

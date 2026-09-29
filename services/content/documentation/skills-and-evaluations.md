@@ -201,20 +201,20 @@ marketplace, CLI, agent, bridge, and evaluator consumer. Until that integration 
 complete, do not claim that a published managed revision has replaced the configured
 disk skill everywhere.
 
-The maintainer UI for this work is under `/admin/analysis`:
+The maintainer UI for this work is under `/admin/analysis` (see
+[Analysis](/documentation/analysis)):
 
-- `/admin/analysis/skills` shows observed skill use.
-- `/admin/analysis/versions` captures and inspects the four-skill Super Admin baseline.
-- A revision page can create a text candidate without modifying the baseline.
-- The comparison page shows file and provenance changes; it does not prove an outcome
-  improvement.
-- `/admin/analysis/evaluations` lists existing experiment records and their execution
-  and accounting states.
-- `/admin/analysis/impact` groups revision-attributed invocation cohorts while keeping
-  missing attribution and incomplete accounting visible.
-- `/admin/analysis/publications` separates human review, publication generation,
-  distribution state, and installation receipts. This lifecycle surface is under
-  integration and does not make an unevaluated candidate safe to publish.
+- `/admin/analysis/conversations` is the record of every gateway conversation,
+  with the conversation judge's one label on top.
+- `/admin/analysis/skills` shows observed skill use per marketplace: entitled,
+  installed and active people, invocations, and the conversations behind each skill.
+- `/admin/analysis/versions` lists every marketplace by content hash, with
+  History, Compare and Distribution views; the Distribution view carries the
+  publication review, withdrawal decisions and installation receipts that the
+  old Impact and Publications pages held (both paths now redirect here).
+- A revision page (`/admin/analysis/revisions/{id}`) shows a managed revision's
+  verified files and provenance; it does not prove an outcome improvement.
+- `/admin/analysis/reports` writes on-demand AI reports over the record.
 
 Browser writes require an administrator and a matching same-origin request. Managed
 and experiment repositories scope reads and mutations to the authenticated owner;
@@ -421,11 +421,10 @@ not run inference, MCP operations, approvals, scoring, or publication.
 
 On the main local application, sign in as an administrator and open:
 
-1. `/admin/analysis/versions` and capture the current four-skill baseline.
-2. Inspect each immutable revision and its exact files.
-3. Create a candidate only when you have a rationale; compare it with its baseline.
-4. Open `/admin/analysis/evaluations` to inspect experiment records in your owner
-   scope, including matrix size, state, and settled/reserved/capped spend.
+1. `/admin/analysis/versions` and pick the marketplace whose skills you are changing.
+2. Inspect each immutable revision and its exact files from the History view.
+3. Compare two versions skill by skill before you publish a candidate.
+4. Read the Distribution view for review state and installation receipts.
 
 Stop the isolated services when finished; its database volume is retained:
 

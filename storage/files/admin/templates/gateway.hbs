@@ -28,7 +28,7 @@
         </dl>
     </details>
 
-    <section class="sp-kpi-grid" aria-label="Gateway totals">
+    <section class="sp-kpi-grid sp-kpi-grid--compact" aria-label="Gateway totals">
         {{#each kpis}}
         {{> components/kpi label=this.label value=this.value note=this.note tone=this.tone}}
         {{/each}}

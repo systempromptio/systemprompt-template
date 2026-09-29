@@ -1,0 +1,23 @@
+{{!--
+  The analysis section's breadcrumb and guide link. Reads `page` from the
+  rendering context, so a page includes it with no parameters:
+  {{> analysis-subnav}}. Navigation between the section's pages is the
+  sidebar's job; this strip only says where the reader is.
+--}}
+<div class="sp-analysis-strip">
+<nav class="sp-breadcrumbs" aria-label="Breadcrumb">
+    <a href="/admin/analysis/conversations">Analysis</a>
+    <span class="sp-breadcrumbs__sep" aria-hidden="true">›</span>
+    {{#if (eq page "analysis-skills")}}<span aria-current="page">Skills</span>
+    {{else}}{{#if (eq page "analysis-skill")}}<a href="/admin/analysis/skills">Skills</a> <span class="sp-breadcrumbs__sep" aria-hidden="true">›</span> <span aria-current="page">{{skill_name}}</span>
+    {{else}}{{#if (eq page "analysis-conversations")}}<span aria-current="page">Conversations</span>
+    {{else}}{{#if (eq page "analysis-conversation")}}<a href="/admin/analysis/conversations">Conversations</a> <span class="sp-breadcrumbs__sep" aria-hidden="true">›</span> <span aria-current="page">{{crumb}}</span>
+    {{else}}{{#if (eq page "analysis-versions")}}<span aria-current="page">Versions</span>
+    {{else}}{{#if (eq page "analysis-marketplace-versions")}}<a href="/admin/analysis/versions">Versions</a> <span class="sp-breadcrumbs__sep" aria-hidden="true">›</span> <span aria-current="page">{{name}}</span>
+    {{else}}{{#if (eq page "analysis-revision")}}<a href="/admin/analysis/versions">Versions</a> <span class="sp-breadcrumbs__sep" aria-hidden="true">›</span> <span aria-current="page">Revision</span>
+    {{else}}{{#if (eq page "analysis-reports")}}<span aria-current="page">Reports</span>
+    {{else}}{{#if (eq page "analysis-report")}}<a href="/admin/analysis/reports">Reports</a> <span class="sp-breadcrumbs__sep" aria-hidden="true">›</span> <span aria-current="page">Report</span>
+    {{else}}<span aria-current="page">Analysis</span>{{/if}}{{/if}}{{/if}}{{/if}}{{/if}}{{/if}}{{/if}}{{/if}}{{/if}}
+</nav>
+<a class="sp-btn sp-btn--xs sp-btn--outline sp-analysis-strip__guide" href="/documentation/analysis" target="_blank" rel="noopener" title="Open the Analysis guide in a new tab">Guide</a>
+</div>

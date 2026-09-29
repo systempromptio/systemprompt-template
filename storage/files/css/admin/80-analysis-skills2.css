@@ -1,0 +1,42 @@
+@layer components {
+/* The unused-skills list lives behind a toolbar pill, not at the page foot:
+   it is a lookup, and the page ends with its table. */
+.sp-askill-unused {
+    position: relative;
+}
+.sp-askill-unused__summary {
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-1);
+    cursor: pointer;
+}
+.sp-askill-unused__summary::-webkit-details-marker {
+    display: none;
+}
+.sp-askill-unused__panel {
+    position: absolute;
+    inset-inline-end: 0;
+    top: calc(100% + var(--sp-space-1));
+    z-index: var(--sp-z-dropdown);
+    width: min(36rem, 90vw);
+    max-height: 22rem;
+    overflow: auto;
+    padding: var(--sp-space-3);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface-overlay);
+    box-shadow: var(--sp-shadow-float);
+}
+.sp-askill-unused__list {
+    columns: 2 14rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--sp-text-xs);
+}
+.sp-askill-unused__list li {
+    break-inside: avoid;
+    padding-block: var(--sp-space-05);
+}
+}

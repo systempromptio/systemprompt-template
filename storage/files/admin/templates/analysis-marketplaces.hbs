@@ -1,0 +1,58 @@
+{{#> layout}}{{#*inline "content"}}
+<section class="sp-p-versions">
+{{#> components/page-header title=title subtitle="Every marketplace by the content hash of what it serves. A version is its hash; open one to see its history, compare two, or check what devices received."}}
+{{#*inline "header_actions"}}<form method="get" action="/admin/analysis/versions" class="sp-inventory-inline"><label class="sp-u-sr-only" for="mv-days">Window</label><select class="sp-select" id="mv-days" name="days"><option value="7"{{#if (eq days 7)}} selected{{/if}}>7 days</option><option value="30"{{#if (eq days 30)}} selected{{/if}}>30 days</option><option value="90"{{#if (eq days 90)}} selected{{/if}}>90 days</option><option value="365"{{#if (eq days 365)}} selected{{/if}}>365 days</option></select><button class="sp-btn sp-btn--sm sp-btn--outline" type="submit">Apply</button></form> {{> components/export-button export}}{{/inline}}
+{{/components/page-header}}
+{{> analysis-subnav}}
+
+<div class="sp-kpi-grid sp-kpi-grid--compact">
+{{> components/kpi label="Marketplaces" value=current note=(concat retired " retired")}}
+{{> components/kpi label="Versions recorded" value=versions note="distinct content hashes, all time"}}
+</div>
+
+{{#> components/table caption="Marketplaces with their current version and the window's figures across every version" modifier="sp-analysis-table sp-versions-table"}}
+<thead><tr>
+<th scope="col">Marketplace</th>
+<th scope="col" title="Content hash of the version being served">Version</th>
+<th scope="col" title="Where the declarations come from: this tree, or a pinned kit">Source</th>
+<th scope="col" class="sp-table__cell--num">Plugins</th>
+<th scope="col" class="sp-table__cell--num">Skills</th>
+<th scope="col" class="sp-table__cell--num" title="Distinct versions recorded for this marketplace">Versions</th>
+<th scope="col" title="When the current version was first observed">Since</th>
+<th scope="col" class="sp-table__cell--num" title="Mean judge completion over the conversations served by the current version, then by every earlier version">Done · before</th>
+<th scope="col" class="sp-table__cell--num">Invocations</th>
+<th scope="col" class="sp-table__cell--num">Users</th>
+<th scope="col" class="sp-table__cell--num">Requests</th>
+<th scope="col" class="sp-table__cell--num">Cost</th>
+<th scope="col" class="sp-table__cell--actions"><span class="sp-u-sr-only">Actions</span></th>
+</tr></thead>
+<tbody>
+{{#each marketplaces}}
+<tr class="sp-versions-row">
+<td class="sp-table__cell--primary"><a class="sp-table__link" href="{{href}}">{{name}}</a>{{#unless (eq name marketplace_id)}} <span class="sp-u-text-tertiary sp-u-mono">{{marketplace_id}}</span>{{/unless}}</td>
+<td>{{#if hash}}<a class="sp-hash sp-hash--chip" href="{{href}}#v-{{hash_short}}" title="{{hash}}">{{hash_short}}</a>{{else}}{{> components/badge tone="muted" text="retired"}}{{/if}}</td>
+<td>{{#if source}}<span class="sp-u-mono">{{source}}</span>{{#if source_short}} <span class="sp-hash" title="{{source_hash}}">{{source_short}}</span>{{/if}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{#if plugin_count}}{{plugin_count}}{{else}}—{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{#if skill_count}}{{skill_count}}{{else}}—{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{versions}}</td>
+<td title="{{last_changed_at}}">{{relativeTime last_changed_at}}</td>
+<td class="sp-table__cell--num"><span class="sp-aconv-score sp-aconv-score--{{completion_tone}}" title="{{completion_judged}} judged conversations on the current version">{{completion_display}}</span> <span class="sp-aconv-meta" title="{{history_judged}} judged conversations on earlier versions">· {{history_display}}</span></td>
+<td class="sp-table__cell--num sp-u-num">{{invocations}}{{#if failed_invocations}} <span class="sp-u-text-danger">{{failed_invocations}} failed</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{users}}</td>
+<td class="sp-table__cell--num sp-u-num">{{requests}}{{#if failed}} <span class="sp-u-text-danger">{{failed}} failed</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num">{{cost}}</td>
+<td class="sp-table__cell--actions"><a class="sp-table__link" href="{{href}}">History</a> <a class="sp-table__link" href="{{href}}&amp;tab=compare">Compare</a></td>
+</tr>
+{{else}}
+<tr class="sp-table__empty"><td colspan="13">{{> components/empty-state heading="No marketplace versions recorded" message="Versions are recorded at boot and on every inventory sync. Press Sync inventory now on Skills, or restart the server after importing a marketplace."}}</td></tr>
+{{/each}}
+</tbody>
+{{/components/table}}
+
+<details class="sp-analysis-definitions"><summary>How to read this page</summary>
+<p>A marketplace version is the sha256 of everything it delivers — its own config, every plugin it includes and every skill those plugins ship — hashed the same way a kit's <code>content_hash</code> and this tree's hash are. A base marketplace and a bundled one therefore have the same kind of identity, and the source hash beside it is provenance, not identity.</p>
+<p>A new version is recorded whenever the bytes move, at boot and on every inventory sync; the previous one is closed at that moment. Invocations, users, requests and cost are the window's figures across every version of the marketplace, counted from the conversations that first invoked one of its skills in the window. Users are every person who ran those conversations. Requests are their turns and cost is their turn spend (side calls such as titles excluded); a conversation that used several marketplaces counts under each, so these must not be summed.</p>
+<p>A retired marketplace is one the composition no longer declares; its history stays.</p>
+</details>
+</section>
+{{/inline}}{{/layout}}

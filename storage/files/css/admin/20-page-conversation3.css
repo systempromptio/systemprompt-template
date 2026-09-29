@@ -112,7 +112,6 @@
 }
 
 @layer components {
-.sp-conversation { max-inline-size: 88rem; margin-inline: auto; }
 .sp-conversation__nav-heading {
     display: flex;
     justify-content: space-between;

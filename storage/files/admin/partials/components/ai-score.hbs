@@ -1,0 +1,15 @@
+{{!--
+  The AI verdict as one circle: green at 80 and above, amber from 50, red
+  below; a hollow grey ring when nothing has been judged, pulsing while a
+  verdict is queued. The score itself is the accessible name, and the
+  optional `show_value` prints it beside the circle.
+
+    {{> components/ai-score tone=judge.tone score=judge.completion_display href=href}}
+    {{> components/ai-score tone="muted" score="—" pending=true}}
+    {{> components/ai-score tone="muted" judge_url=judge.judge_url back_url=back_url}}   (manual mode)
+    {{> components/ai-score tone=completion_tone score=completion_display show_value=true}}
+
+  `judge_url` renders the circle as the POST button that queues the judge —
+  only pages in manual mode (profile evaluation.automatic = false) pass it.
+--}}
+{{#if judge_url}}<form method="post" action="{{judge_url}}" class="sp-inventory-inline"><input type="hidden" name="back" value="{{back_url}}"><button class="sp-ai-dot sp-ai-dot--muted sp-ai-dot--button" type="submit" title="Not judged yet — ask the AI to judge this conversation now"><span class="sp-u-sr-only">Judge now</span></button></form>{{else}}{{#if href}}<a class="sp-ai-dot sp-ai-dot--{{tone}}" href="{{href}}" aria-label="AI completion {{score}} of 100" title="AI completion {{score}} of 100 — open the verdict"></a>{{else}}<span class="sp-ai-dot sp-ai-dot--{{tone}}{{#if pending}} sp-ai-dot--pending{{/if}}" role="img" aria-label="{{#if pending}}Queued for the AI judge{{else}}AI completion {{score}}{{/if}}" title="{{#if pending}}Queued for the AI judge{{else}}AI completion {{score}}{{#if label}} — {{label}}{{/if}}{{/if}}"></span>{{/if}}{{#if show_value}}<b class="sp-ai-dot__value sp-aconv-num sp-aconv-num--{{tone}}">{{score}}</b>{{/if}}{{/if}}

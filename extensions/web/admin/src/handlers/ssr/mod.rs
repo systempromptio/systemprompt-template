@@ -11,6 +11,7 @@ use axum::extract::Query;
 use axum::response::{Html, IntoResponse, Redirect, Response};
 
 
+pub(crate) mod analysis_urls;
 mod approvals;
 mod context;
 pub(crate) mod conversation_header;
@@ -57,6 +58,7 @@ mod ssr_setup;
 pub(crate) mod ssr_skills_contexts;
 mod ssr_sync;
 mod ssr_sync_import;
+pub(crate) mod ssr_tools;
 mod ssr_users;
 pub(crate) mod sync_plane;
 pub(crate) mod transcript_view;

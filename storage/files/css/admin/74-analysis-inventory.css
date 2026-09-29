@@ -1,0 +1,37 @@
+@layer components {
+/* The line that says which marketplace you are looking at. It reads as a
+   sentence, so it is one line and never a row of controls. */
+.sp-inventory-summary {
+    margin: 0 0 var(--sp-space-2);
+    color: var(--sp-text-secondary);
+    font-size: var(--sp-text-xs);
+}
+
+/* Compact tiles: a band of context above dense rows, not a card each. */
+.sp-kpi-grid--compact .sp-kpi {
+    min-height: 0;
+    padding: var(--sp-space-2) var(--sp-space-3);
+}
+
+.sp-inventory-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+}
+
+/* A version is its hash. The chip is the one mono token on a row of
+   numbers, so it is quiet by default and only reads as a link on hover. */
+.sp-hash--chip {
+    display: inline-block;
+    padding: 0 var(--sp-space-1);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    text-decoration: none;
+    color: var(--sp-text-secondary);
+}
+.sp-hash--chip:hover,
+.sp-hash--chip:focus-visible {
+    color: var(--sp-text-primary);
+    border-color: var(--sp-border-strong);
+}
+}

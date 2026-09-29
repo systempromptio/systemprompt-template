@@ -1,0 +1,46 @@
+{{#> layout}}
+{{#*inline "content"}}
+{{#> components/page-header title=title help=help subtitle="On-demand AI readings of the deterministic record: one structured call over the figures for a scope and a window, grounded in the ids it cites. Nothing is scheduled — a report is written the moment someone asks for it."}}
+{{#*inline "header_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/analysis/conversations">{{> components/icon name="chat"}} Conversations</a> <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/analysis/skills">{{> components/icon name="skill"}} Skills</a>{{/inline}}
+{{/components/page-header}}
+{{> analysis-subnav}}
+<section class="sp-report-request" aria-label="Generate a report">
+<form method="post" action="/admin/analysis/reports" class="sp-report-request__form">
+<label class="sp-report-request__field"><span>Scope</span>
+<select name="scope_kind" class="sp-search-input" data-report-scope>
+<option value="global">Whole instance</option>
+<option value="marketplace">One marketplace</option>
+<option value="skill">One skill</option>
+</select></label>
+<label class="sp-report-request__field"><span>Marketplace or skill</span>
+<input list="report-scope-ids" name="scope_id" class="sp-search-input" placeholder="marketplace id or plugin:skill">
+<datalist id="report-scope-ids">{{#each marketplace_options}}<option value="{{this.value}}">{{this.label}}</option>{{/each}}</datalist></label>
+<label class="sp-report-request__field"><span>Window</span>
+<select name="days" class="sp-search-input">
+<option value="7">7 days</option>
+<option value="30" selected>30 days</option>
+<option value="90">90 days</option>
+</select></label>
+<button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">{{> components/icon name="sparkle"}} Generate report</button>
+</form>
+</section>
+<section class="sp-section" aria-label="Reports">
+{{#> components/table caption="Reports, newest first" modifier="sp-report-table"}}
+<thead><tr><th scope="col" class="sp-col-date">When</th><th scope="col">Scope</th><th scope="col">Window</th><th scope="col">Status</th><th scope="col">Assessment</th><th scope="col" class="sp-report-col-headline">Headline</th><th scope="col">Model</th><th scope="col" class="sp-table__cell--num">Cost</th><th scope="col">Requested by</th></tr></thead>
+<tbody>
+{{#each rows}}<tr>
+<td class="sp-col-date" title="{{created_display}}"><a class="sp-table__link" href="{{href}}">{{created_relative}}</a></td>
+<td class="sp-table__cell--primary"><a class="sp-table__link" href="{{href}}">{{scope_label}}</a><div class="sp-aconv-meta">{{scope_kind}}</div></td>
+<td>{{window_display}}</td>
+<td>{{#if (eq status "pending")}}{{> components/ai-score tone="muted" score="—" pending=true}} <span class="sp-aconv-meta">writing…</span>{{else}}{{> components/badge tone=status_tone text=status}}{{/if}}{{#if error}}<div class="sp-aconv-meta sp-u-text-danger" title="{{error}}">{{truncate error 60}}</div>{{/if}}</td>
+<td>{{#if assessment}}{{> components/badge tone=assessment_tone text=assessment_label}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+<td class="sp-report-col-headline"><a class="sp-table__link" href="{{href}}">{{headline}}</a></td>
+<td class="sp-aconvd-model">{{model}}</td>
+<td class="sp-table__cell--num sp-u-num">{{cost_display}}</td>
+<td>{{requested_by}}</td>
+</tr>
+{{else}}<tr class="sp-table__empty"><td colspan="9">{{> components/empty-state heading="No report yet" message="Generate one above, or use “Report on this view” on the Conversations or Skills page to report on exactly the rows a filter selects."}}</td></tr>{{/each}}
+</tbody>
+{{/components/table}}
+</section>
+{{/inline}}{{#*inline "scripts"}}{{/inline}}{{/layout}}

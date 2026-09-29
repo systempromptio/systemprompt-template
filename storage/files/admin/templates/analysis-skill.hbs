@@ -1,0 +1,72 @@
+{{#> layout}}
+{{#*inline "content"}}
+{{#> components/page-header title=skill_name help=help subtitle=(concat "Skill " skill_key " from plugin " plugin_name " in " marketplaces_display " — its record over the last " days " days.")}}
+{{#*inline "header_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{catalog_href}}" title="Open this skill in the Platform catalog, where its contents and entitlement live">Catalog</a> <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/analysis/conversations?skill={{skill_key}}">Conversations</a> <a class="sp-btn sp-btn--sm sp-btn--primary" href="{{skills_href}}">All skills &rarr;</a> {{> components/export-button export}}{{/inline}}
+{{/components/page-header}}
+{{> analysis-subnav}}
+<div class="sp-aconv-range">{{> components/tabs tabs=range_links nav_label="Window"}}</div>
+{{#if used}}
+<div class="sp-kpi-grid sp-kpi-grid--compact">
+{{#each kpis}}{{> components/kpi label=label icon=icon value=value note=note tone=tone hint=hint}}{{/each}}
+</div>
+<section class="sp-aconv-charts sp-aconv-charts--four" aria-label="Over time">
+{{#each charts}}<div class="sp-aconv-chart">{{> components/svg-line-chart this}}</div>{{/each}}
+</section>
+<section class="sp-section sp-aconv-block" aria-label="Breakdown">
+{{> components/tabs tabs=breakdown_tabs nav_label="Split invocations by"}}
+{{#> components/table caption=(concat "Invocations by " breakdown_label) modifier="sp-aconv-breakdown"}}
+<thead><tr><th scope="col">{{breakdown_label}}</th><th scope="col" class="sp-table__cell--num">Invocations</th><th scope="col" class="sp-aconv-col-share">Share</th><th scope="col" class="sp-table__cell--num">People</th><th scope="col" class="sp-table__cell--num">Conv.</th><th scope="col" class="sp-table__cell--num">Tokens</th><th scope="col" class="sp-table__cell--num">Cost</th><th scope="col" class="sp-table__cell--num" title="Failed requests plus denied tool calls">Err</th><th scope="col" class="sp-table__cell--num">p95</th><th scope="col" class="sp-table__cell--num" title="Mean judge completion">Done</th></tr></thead>
+<tbody>
+{{#each breakdown}}<tr><td class="sp-table__cell--primary">{{#if user_href}}<a class="sp-table__link" href="{{user_href}}">{{label}}</a>{{else}}{{label}}{{/if}}</td><td class="sp-table__cell--num sp-u-num">{{formatNumber invocations}}</td><td class="sp-aconv-col-share"><span class="sp-aconv-bar" style="--sp-fill: {{share_pct}}%"><i></i></span><span class="sp-aconv-bar__label">{{share_pct}}%</span></td><td class="sp-table__cell--num sp-u-num">{{users}}</td><td class="sp-table__cell--num sp-u-num">{{conversations}}</td><td class="sp-table__cell--num sp-u-num">{{tokens_display}}</td><td class="sp-table__cell--num sp-u-num">{{cost_display}}</td><td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{errors_tone}}">{{errors}}</span></td><td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{latency_tone}}">{{latency_display}}</span></td><td class="sp-table__cell--num">{{> components/ai-score tone=completion_tone score=completion_display show_value=true label=(concat judged " judged")}}</td></tr>
+{{else}}<tr class="sp-table__empty"><td colspan="10">{{> components/empty-state heading="Nothing to split" message="No invocation in the window."}}</td></tr>{{/each}}
+</tbody>
+{{/components/table}}
+</section>
+{{else}}
+<section class="sp-section">{{> components/empty-state heading="Not invoked in this window" message="No harness hook reported this skill in the window. Widen the window, or open the catalog to check the plugin is still published."}}</section>
+{{/if}}
+{{#if run_count}}
+<section class="sp-section sp-aconv-block" aria-label="Runs by kit version">
+{{#> components/table caption="Runs by kit version — a run is one session from the first invocation to the agent's last stop" modifier="sp-aconv-breakdown"}}
+<thead><tr><th scope="col">Kit version</th><th scope="col" class="sp-table__cell--num">Runs</th><th scope="col" class="sp-table__cell--num" title="Reached PR_CREATED, or judged achieved when the skill keeps no workflow log">Succeeded</th><th scope="col" class="sp-table__cell--num">Median time</th><th scope="col" class="sp-table__cell--num">p90 time</th><th scope="col" class="sp-table__cell--num" title="Wall time minus human wait">Agent</th><th scope="col" class="sp-table__cell--num" title="Time the agent sat waiting for a reply or an answer">Human wait</th><th scope="col" class="sp-table__cell--num">Prompts</th><th scope="col" class="sp-table__cell--num">Questions</th><th scope="col" class="sp-table__cell--num">Cost / run</th></tr></thead>
+<tbody>
+{{#each releases}}<tr><td class="sp-table__cell--primary">{{version}}{{#if low_sample}} <span class="sp-aconv-meta" title="Fewer than five runs — read the figures as anecdote">few runs</span>{{/if}}</td><td class="sp-table__cell--num sp-u-num">{{runs}}</td><td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{success_tone}}">{{success_display}}</span>{{#if success_change}}<div class="sp-aconv-meta">{{success_change}}</div>{{/if}}</td><td class="sp-table__cell--num sp-u-num">{{median_wall}}{{#if wall_change}}<div class="sp-aconv-meta">{{wall_change}}</div>{{/if}}</td><td class="sp-table__cell--num sp-u-num">{{p90_wall}}</td><td class="sp-table__cell--num sp-u-num">{{median_agent}}</td><td class="sp-table__cell--num sp-u-num">{{median_wait}}</td><td class="sp-table__cell--num sp-u-num">{{median_prompts}}</td><td class="sp-table__cell--num sp-u-num">{{median_questions}}</td><td class="sp-table__cell--num sp-u-num">{{cost_per_run}}</td></tr>
+{{/each}}
+</tbody>
+{{/components/table}}
+</section>
+<section class="sp-section sp-aconv-block" aria-label="Runs">
+{{#> components/table caption=(concat "Latest runs of " run_count) modifier="sp-aconv-table"}}
+<thead><tr><th scope="col" class="sp-col-date">Started</th><th scope="col">Kit</th><th scope="col" class="sp-table__cell--num">Time</th><th scope="col" class="sp-table__cell--num">Agent</th><th scope="col" class="sp-table__cell--num">Wait</th><th scope="col" class="sp-table__cell--num">Prompts</th><th scope="col" class="sp-table__cell--num">Questions</th><th scope="col" class="sp-table__cell--num" title="Failed tool calls">Tool err</th><th scope="col" class="sp-table__cell--num">Cost</th><th scope="col">Reached</th><th scope="col">Result</th></tr></thead>
+<tbody>
+{{#each runs}}<tr data-context-id="{{context_key}}"><td class="sp-col-date"><a class="sp-table__link" href="{{href}}"><time datetime="{{started_full}}" title="{{started_full}}">{{started_display}}</time></a></td><td>{{version}}</td><td class="sp-table__cell--num sp-u-num">{{wall}}</td><td class="sp-table__cell--num sp-u-num">{{agent}}</td><td class="sp-table__cell--num sp-u-num">{{wait}}</td><td class="sp-table__cell--num sp-u-num">{{prompts}}</td><td class="sp-table__cell--num sp-u-num">{{questions}}</td><td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{failures_tone}}">{{tool_failures}}</span></td><td class="sp-table__cell--num sp-u-num">{{cost}}</td><td>{{state}}{{#if phases}}<div class="sp-aconv-meta">{{phases}}</div>{{/if}}</td><td><span class="sp-aconv-num sp-aconv-num--{{verdict_tone}}">{{verdict}}</span></td></tr>
+{{/each}}
+</tbody>
+{{/components/table}}
+</section>
+{{/if}}
+<section class="sp-section sp-aconv-block" aria-label="Conversations">
+{{#> components/table caption=(concat conversation_count " conversations invoked this skill") pagination=pagination modifier="sp-aconv-table"}}
+<thead><tr><th scope="col" class="sp-aconv-col-title">Conversation</th><th scope="col" class="sp-aconv-col-person">Person</th><th scope="col" class="sp-aconv-col-client">Client · model</th><th scope="col" class="sp-table__cell--num">Turns</th><th scope="col" class="sp-table__cell--num" title="Tool calls">{{> components/icon name="wrench"}}</th><th scope="col" class="sp-table__cell--num" title="Artifacts">{{> components/icon name="file"}}</th><th scope="col" class="sp-table__cell--num">Err</th><th scope="col" class="sp-table__cell--num">Tokens</th><th scope="col" class="sp-table__cell--num">Cost</th><th scope="col" class="sp-table__cell--num">p95</th><th scope="col" class="sp-table__cell--num">Length</th><th scope="col" class="sp-aconv-col-skills">Skills</th><th scope="col" class="sp-col-date">Last</th><th scope="col" class="sp-aconv-col-judge" title="AI judge completion">{{> components/icon name="sparkle"}} AI</th></tr></thead>
+<tbody>
+{{#each conversations}}<tr data-context-id="{{context_key}}">
+<td class="sp-table__cell--primary sp-aconv-cell-title"><a class="sp-table__link" href="{{href}}" title="{{context_key}}">{{title}}</a>{{#if judge.judged}}<div class="sp-aconv-meta"><span class="sp-aconv-intent">{{judge.category_label}}</span> · <span class="sp-aconv-outcome sp-aconv-outcome--{{judge.outcome_tone}}">{{judge.outcome}}</span>{{#if judge.summary}} · <span class="sp-aconv-summary">{{judge.summary}}</span>{{/if}}</div>{{else}}<div class="sp-aconv-meta">not judged yet</div>{{/if}}</td>
+<td class="sp-aconv-cell-person"><a class="sp-table__link" href="{{user_href}}" title="{{user_key}}">{{display_name}}</a>{{#if group_name}}<div class="sp-aconv-meta">{{group_name}}{{#if project_name}} · {{project_name}}{{/if}}</div>{{/if}}</td>
+<td class="sp-aconv-cell-client"><span class="sp-badge sp-badge--{{client.tone}}">{{client.label}}</span><div class="sp-aconv-meta sp-aconv-model">{{model}}</div></td>
+<td class="sp-table__cell--num sp-u-num">{{turns}}</td>
+<td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{tools_tone}} sp-aconv-cell-link" title="{{tools_title}}">{{tools_display}}</span></td>
+<td class="sp-table__cell--num sp-u-num">{{#if artifacts}}<span class="sp-aconv-num sp-aconv-num--accent sp-aconv-cell-link">{{artifacts}}</span>{{else}}<span class="sp-aconv-num sp-aconv-num--muted">0</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{errors_tone}}">{{errors}}</span>{{#if denied}} <span class="sp-aconv-num sp-aconv-num--{{denied_tone}}" title="Denied tool calls">⛔{{denied}}</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num sp-aconv-cell-tokens" title="{{tokens_title}}">{{tokens_display}}<span class="sp-aconv-cache sp-aconv-cache--{{cache_tone}}" style="--sp-fill: {{cache_pct}}%"><i></i></span></td>
+<td class="sp-table__cell--num sp-u-num">{{cost_display}}</td>
+<td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{latency_tone}}">{{latency_display}}</span></td>
+<td class="sp-table__cell--num sp-u-num">{{duration_display}}</td>
+<td class="sp-aconv-cell-skills"><div class="sp-aconv-skills">{{#each skills}}<a class="sp-aconv-skill sp-aconv-skill--hooked" href="{{href}}">{{name}}</a>{{/each}}</div></td>
+<td class="sp-col-date"><time datetime="{{last_full}}" title="{{last_full}}">{{last_display}}</time></td>
+<td class="sp-aconv-col-judge"><div class="sp-verdict">{{#if judge.judged}}{{> components/ai-score tone=judge.tone score=judge.completion_display href=(concat href "#judge")}}<div class="sp-verdict__card" role="tooltip"><span class="sp-verdict__score sp-aconv-score sp-aconv-score--{{judge.tone}}">{{judge.completion_display}}</span><b class="sp-verdict__head">{{judge.category_label}} · {{judge.outcome}}</b><p class="sp-verdict__summary">{{judge.summary}}</p></div>{{else}}{{#if judge.pending}}{{> components/ai-score tone="muted" score="—" pending=true}}{{else}}{{#if judge.can_judge}}{{> components/ai-score tone="muted" judge_url=judge.judge_url back_url=back_url}}{{else}}{{> components/ai-score tone="muted" score="not judged yet"}}{{/if}}{{/if}}{{/if}}</div></td>
+</tr>
+{{else}}<tr class="sp-table__empty"><td colspan="14">{{> components/empty-state heading="No conversations" message="No gateway conversation's session invoked this skill in the window."}}</td></tr>{{/each}}
+</tbody>
+{{/components/table}}
+</section>
+{{/inline}}{{#*inline "scripts"}}<script type="module" src="/js/components/sp-chart.js?v={{css_version}}"></script>{{/inline}}{{/layout}}

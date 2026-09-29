@@ -1,0 +1,69 @@
+@layer components {
+
+/* Analysis › Skills › Overview: one row per marketplace. The funnel is three
+   figures with the conversion beside each and one proportional track — the
+   fills never carry text, which is what made the old bars unreadable. */
+.sp-adopt {
+    margin-block: var(--sp-space-3) var(--sp-space-4);
+    min-width: 0;
+}
+
+.sp-adopt-table th.sp-adopt-table__col-name { width: 22%; }
+.sp-adopt-table th.sp-adopt-table__col-track { width: 14%; min-width: 7rem; }
+.sp-adopt-table th.sp-table__cell--num { width: 7%; }
+.sp-adopt-table th.sp-col-date { width: 7%; }
+
+.sp-adopt-table td {
+    vertical-align: top;
+}
+
+.sp-adopt-table td.sp-table__cell--num,
+.sp-adopt-table td.sp-col-date {
+    padding-block-start: var(--sp-space-3);
+}
+
+.sp-adopt-table__col-name .sp-table__link b {
+    font-size: var(--sp-text-base);
+    font-weight: var(--sp-font-semibold);
+}
+
+.sp-adopt-table__col-track {
+    padding-block-start: var(--sp-space-4);
+}
+
+/* One track, two overlaid fills from the same hue: installed as a wash,
+   active solid, both as shares of entitled. */
+.sp-adopt__track {
+    position: relative;
+    height: 0.4rem;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-surface-alt);
+    overflow: hidden;
+}
+
+.sp-adopt__fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: var(--sp-fill, 0%);
+    min-width: 2px;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-chart-blue);
+    transition: width var(--sp-duration-normal) var(--sp-ease-out);
+}
+
+.sp-adopt__fill--installed {
+    opacity: 0.35;
+}
+
+.sp-adopt__fill--active {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sp-adopt__fill {
+        transition: none;
+    }
+}
+
+}

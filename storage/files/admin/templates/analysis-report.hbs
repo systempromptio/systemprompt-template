@@ -1,0 +1,41 @@
+{{#> layout}}
+{{#*inline "content"}}
+{{#> components/page-header title=scope_label help=help subtitle=(concat window_display " · requested by " requested_by)}}
+{{#*inline "header_actions"}}<form method="post" action="{{regenerate_url}}" class="sp-inventory-inline"><button class="sp-btn sp-btn--sm {{#if failed}}sp-btn--primary{{else}}sp-btn--outline{{/if}}" type="submit" title="Write a fresh report over the same scope, anchored to now">{{> components/icon name="sparkle"}} {{#if failed}}Retry{{else}}Regenerate{{/if}}</button></form> <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{back_url}}">&larr; Reports</a>{{/inline}}
+{{/components/page-header}}
+{{> analysis-subnav}}
+<section class="sp-report-head sp-report-head--{{assessment_tone}}" aria-label="Verdict">
+<div class="sp-report-head__badge">{{> components/icon name=assessment_icon}}</div>
+<div class="sp-report-head__body">
+{{#if pending}}<div class="sp-report-loading" data-report-poll="{{status_url}}" role="status" aria-live="polite"><p class="sp-report-head__headline">Writing this report…</p><p class="sp-report-loading__detail" data-report-poll-detail>{{digest_summary}}</p><div class="sp-report-loading__bar"><i></i></div><p class="sp-report-loading__hint" data-report-poll-elapsed>One structured call to the judge model; usually 10–40 seconds. The page refreshes itself when the verdict is in.</p></div>
+{{else}}{{#if failed}}<p class="sp-report-head__headline sp-report-head__headline--empty">Could not write this report{{#if error}} — {{error}}{{/if}}. Retry starts a fresh one over the same scope.</p>
+{{else}}<p class="sp-report-head__headline">{{headline}}</p>{{/if}}{{/if}}
+<div class="sp-report-head__meta">{{> components/badge tone=status_tone text=status}}{{#if assessment}} {{> components/badge tone=assessment_tone text=assessment_label}}{{/if}}{{#if generated_display}} <span>{{generated_display}}</span>{{/if}}{{#if model}} <span class="sp-aconvd-model">{{model}}</span>{{/if}}{{#if cost_display}} <span>{{tokens_display}} tokens · {{cost_display}}</span>{{/if}}{{#if filter_query}} <span class="sp-aconv-meta" title="{{filter_query}}">from a filtered view</span>{{/if}}</div>
+</div>
+</section>
+<div class="sp-kpi-grid sp-kpi-grid--compact">
+{{#each tiles}}{{> components/kpi label=label icon=icon value=value note=note tone=tone hint=hint}}{{/each}}
+</div>
+<div class="sp-report-grid">
+<section class="sp-section sp-report-themes" aria-label="Themes">
+<h2 class="sp-report-section__title">{{> components/icon name="layers"}} Themes</h2>
+{{#each themes}}
+<article class="sp-report-theme sp-report-theme--{{severity}}">
+<header class="sp-report-theme__head"><span class="sp-report-theme__icon">{{> components/icon name=icon}}</span><h3 class="sp-report-theme__title">{{theme_title}}</h3><span class="sp-report-theme__kind">{{kind}}</span></header>
+<p class="sp-report-theme__detail">{{detail}}</p>
+{{#if evidence}}<ul class="sp-report-evidence">{{#each evidence}}<li><a class="sp-report-evidence__chip sp-report-evidence__chip--{{this.kind}}" href="{{this.href}}" title="{{this.kind}}">{{this.label}}</a></li>{{/each}}</ul>{{/if}}
+</article>
+{{else}}<p class="sp-empty">{{#if pending}}Themes appear once the report is generated.{{else}}The model returned no themes.{{/if}}</p>{{/each}}
+</section>
+<section class="sp-section sp-report-recs" aria-label="Recommendations">
+<h2 class="sp-report-section__title">{{> components/icon name="check"}} Recommendations</h2>
+<ol class="sp-report-recs__list">
+{{#each recommendations}}<li class="sp-report-rec"><div class="sp-report-rec__head">{{> components/badge tone=priority_tone text=priority}}<span class="sp-report-rec__action">{{action}}</span></div><p class="sp-report-rec__rationale">{{rationale}}</p></li>
+{{else}}<li class="sp-report-rec sp-report-rec--empty">{{#if pending}}Recommendations appear once the report is generated.{{else}}None.{{/if}}</li>{{/each}}
+</ol>
+</section>
+</div>
+<details class="sp-report-digest"><summary>{{> components/icon name="report"}} The digest this report was written from</summary>
+<pre class="sp-report-digest__text">{{digest_text}}</pre>
+</details>
+{{/inline}}{{#*inline "scripts"}}{{#if pending}}<script type="module" src="/js/components/sp-report-poll.js?v={{css_version}}"></script>{{/if}}{{/inline}}{{/layout}}

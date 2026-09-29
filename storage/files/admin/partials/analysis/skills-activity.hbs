@@ -1,0 +1,28 @@
+{{!--
+  The Skills page's Activity tab: invocations over the window as one chart,
+  and the skills it draws as a list — each a link into the table, scoped.
+  Reads the page context directly.
+--}}
+<section class="sp-aconv-chart sp-askill-chart" aria-label="Invocations over the window">{{> components/svg-line-chart chart}}</section>
+<section class="sp-section sp-askill-top" aria-label="Skills in the window">
+<header class="sp-aconv-block__head">{{> components/icon name="skill"}}<h2 class="sp-aconv-block__title">Skills in the window</h2><span class="sp-aconv-meta">{{row_count}} skills · {{scope_label}} · last {{days}} days</span></header>
+{{#if top_skills}}
+{{#> components/table caption="Skills by invocations" modifier="sp-askill-top-table"}}
+<thead><tr><th scope="col" class="sp-askill-col-skill">Skill</th><th scope="col">Marketplace</th><th scope="col" class="sp-table__cell--num" title="Hook-reported invocations in the window">Invoked</th><th scope="col" class="sp-askill-top__col-share" title="Share of every invocation in the scope">Share</th><th scope="col" class="sp-table__cell--num" title="Distinct people who invoked it">People</th><th scope="col" class="sp-col-date">Last</th></tr></thead>
+<tbody>
+{{#each top_skills}}
+<tr>
+<td class="sp-table__cell--primary sp-askill-col-skill"><a class="sp-table__link sp-u-mono" href="{{href}}">{{skill}}</a></td>
+<td>{{marketplace_name}}</td>
+<td class="sp-table__cell--num sp-u-num">{{formatNumber invocations}}</td>
+<td class="sp-askill-top__col-share"><div class="sp-askill-top__share"><div class="sp-adopt__track" role="img" aria-label="{{share}} of invocations"><i class="sp-adopt__fill sp-adopt__fill--active" style="--sp-fill: {{share_pct}}%"></i></div><span class="sp-aconv-meta">{{share}}</span></div></td>
+<td class="sp-table__cell--num sp-u-num">{{users}}</td>
+<td class="sp-col-date">{{last_used}}</td>
+</tr>
+{{/each}}
+</tbody>
+{{/components/table}}
+{{else}}
+{{> components/empty-state heading="No skill was invoked in this window" message="Invocations arrive through the harness hooks (UserPromptSubmit and the Skill tool). Widen the window or the marketplace scope."}}
+{{/if}}
+</section>

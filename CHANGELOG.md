@@ -133,10 +133,31 @@ Conventions (strict — hold every entry to them):
   Eleven new export tables: analysis skills, skill conversations, skill runs,
   kit-release impact, classified conversations and their breakdown,
   conversation turns, marketplaces/versions and plugin evaluation.
+- The Analysis section (`/admin/analysis/*`, `handlers/ssr/analysis/`,
+  `routes/ssr_analysis.rs`), console-only, as a new sidebar group:
+  **Conversations** (every gateway conversation with the judge's label,
+  badge stacks, a turnless filter, breakdown tabs, charts, **Judge N
+  unjudged** and **Judge selected**), a conversation's own page (judge score
+  and rationale, active time, per-turn charts, the turn, tool, governance,
+  safety and skill planes, **Judge now** and a manual review), **Skills**
+  (marketplace adoption, activity and the skills table, with **Sync
+  inventory**) and a skill's page, **Reports** (on-demand AI reports over the
+  record, polled while they are written), and **Versions** (every marketplace
+  by content hash with History, Compare, Evaluation and Distribution views,
+  and a revision's verified files). Each page's `?` opens its glossary
+  (`HelpView`). The analytics Skills tab links each row to its Analysis page.
+  The old `/admin/analysis/impact` and `/admin/analysis/publications` paths
+  redirect to Versions. Guides: `/documentation/analysis`,
+  `/documentation/analysis-measure-skills`, `/documentation/analysis-versions`.
+- `/admin/conversations` now renders: the org-wide conversations listing had a
+  route but no `conversations` template, so the page failed. The conversation
+  reader (`/admin/contexts/{id}`) and "My conversations" detail carry an
+  **Export** button for the full record, a Turns / Requests split, and
+  expand-all / collapse-all on the transcript (`components/sp-transcript.js`).
 
-- Console chrome from the upstream admin: the sidebar is now six collapsible
-  groups (AI activity, People & access, Governance, Platform, Account,
-  Developer). The group holding the current page is always open; the others
+- Console chrome from the upstream admin: the sidebar is now collapsible
+  groups (AI activity, People & access, Analysis, Governance, Platform,
+  Account, Developer). The group holding the current page is always open; the others
   remember the reader's choice (`services/nav-groups.js`). The Access control
   link carries a count of entities where code and the database disagree and no
   one has decided yet (`repositories/sync/attention.rs`), shown to console

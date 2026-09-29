@@ -10,7 +10,7 @@ mod data;
 use crate::error::AdminError;
 use std::sync::Arc;
 
-use axum::extract::{Extension, Path, Query, State};
+use axum::extract::{Path, Query, State};
 use axum::response::Response;
 use serde::Deserialize;
 use sqlx::PgPool;
@@ -20,11 +20,11 @@ use crate::error::AdminHtmlResult;
 use crate::handlers::ssr::transcript_view::transcript_request_ids;
 use crate::repositories::analytics::context_detail::{
     find_context_header, get_context_kpis, list_context_requests, list_messages_for_requests,
-    list_tool_calls_for_requests,
 };
-use crate::templates::AdminTemplateEngine;
-use crate::types::{MarketplaceContext, UserContext};
+use crate::repositories::analytics::context_tool_calls::list_tool_calls_for_requests;
+use crate::repositories::scope::may_view;
 
+use crate::handlers::ssr::page::Page;
 use data::{DetailInputs, build_detail_data, default_kpis, resolve_tab};
 
 #[derive(Debug, Deserialize)]
@@ -32,22 +32,18 @@ pub(crate) struct ContextTabQuery {
     tab: Option<String>,
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "axum handler: every argument is an extractor"
-)]
 pub(crate) async fn context_detail_page(
-    Extension(user_ctx): Extension<UserContext>,
-    Extension(mkt_ctx): Extension<MarketplaceContext>,
-    Extension(engine): Extension<AdminTemplateEngine>,
+    shell: Page,
     State(pool): State<Arc<PgPool>>,
     Path(context_id): Path<String>,
     Query(query): Query<ContextTabQuery>,
 ) -> AdminHtmlResult<Response> {
-    if !user_ctx.is_console {
+    // Why: this instance has no participant tier, so the conversation reader
+    // stays a console page, as it was before the analysis port; `may_view`
+    // below still decides which owners a console caller can open.
+    if !shell.user.is_console {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
-
     // Why: `ContextId::new` panics on anything that is not a UUID, and this
     // segment comes straight off the URL.
     let Ok(context_id) = ContextId::try_new(context_id.trim()) else {
@@ -57,7 +53,14 @@ pub(crate) async fn context_detail_page(
         .into());
     };
 
-    let Some(header) = find_context_header(&pool, &context_id).await? else {
+    let header = find_context_header(&pool, &context_id).await?;
+    // Why: 404, not 403, for an owner outside the caller's view — the same
+    // answer as a missing id, so the URL is no oracle for other people's ids.
+    let visible = match &header {
+        Some(h) => may_view(&pool, &shell.user, h.user_id.as_ref()).await?,
+        None => false,
+    };
+    let Some(header) = header.filter(|_| visible) else {
         return Err(AdminError::NotFound(
             "No conversation, AI request, or message rows match that context id.".to_owned(),
         )
@@ -127,11 +130,11 @@ pub(crate) async fn context_detail_page(
         },
     );
 
-    Ok(super::render_typed_page(
-        &engine,
+    Ok(crate::handlers::ssr::render_typed_page(
+        &shell.engine,
         "context-detail",
         &data,
-        &user_ctx,
-        &mkt_ctx,
+        &shell.user,
+        &shell.marketplace,
     ))
 }

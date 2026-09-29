@@ -1,0 +1,71 @@
+@layer components {
+
+/* One circle carries the judge's verdict; the row's hover card carries the
+   words. A filled circle is a link to the verdict, a hollow one means no
+   verdict yet, and in manual mode the hollow one is the button that asks. */
+.sp-ai-dot {
+    display: inline-block;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: var(--sp-radius-full);
+    border: 2px solid var(--sp-border-strong);
+    background: transparent;
+    vertical-align: middle;
+    box-shadow: 0 0 0 2px var(--sp-bg-surface);
+    padding: 0;
+    cursor: default;
+}
+
+.sp-ai-dot--ok { border-color: var(--sp-success-strong); background: var(--sp-success-strong); }
+.sp-ai-dot--warn { border-color: var(--sp-warning-strong); background: var(--sp-warning-strong); }
+.sp-ai-dot--err { border-color: var(--sp-danger-strong); background: var(--sp-danger-strong); }
+.sp-ai-dot--muted { border-color: var(--sp-border-strong); background: transparent; }
+
+a.sp-ai-dot {
+    cursor: pointer;
+    transition: transform var(--sp-duration-fast) var(--sp-ease-out);
+}
+
+a.sp-ai-dot:hover,
+a.sp-ai-dot:focus-visible,
+.sp-ai-dot--button:hover,
+.sp-ai-dot--button:focus-visible {
+    transform: scale(1.25);
+    outline: none;
+    box-shadow: 0 0 0 2px var(--sp-bg-surface), 0 0 0 4px var(--sp-accent-dim);
+}
+
+.sp-ai-dot--button {
+    cursor: pointer;
+    border-style: dashed;
+}
+
+.sp-ai-dot--button:hover,
+.sp-ai-dot--button:focus-visible {
+    border-color: var(--sp-accent);
+    border-style: solid;
+}
+
+.sp-ai-dot--pending {
+    border-color: var(--sp-warning-strong);
+    animation: sp-ai-dot-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes sp-ai-dot-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+
+.sp-ai-dot__value {
+    margin-inline-start: var(--sp-space-1);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--sp-font-semibold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sp-ai-dot--pending {
+        animation: none;
+    }
+}
+
+}

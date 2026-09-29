@@ -1,0 +1,121 @@
+@layer components {
+/* The rows. Fixed layout keeps fourteen columns from fighting; the title
+   column takes what the numbers leave. */
+.sp-aconv-table {
+    table-layout: fixed;
+}
+/* Sixteen columns; the widths sum to 95% + the select gutter, so nothing is
+   squeezed below its header. */
+.sp-aconv-table th.sp-aconv-col-select { width: 1.6rem; }
+.sp-aconv-table th.sp-aconv-col-title { width: 15%; }
+.sp-aconv-table th.sp-aconv-col-person { width: 8%; }
+.sp-aconv-table th.sp-aconv-col-client { width: 8%; }
+.sp-aconv-table th.sp-aconv-col-spark { width: 4.5%; }
+.sp-aconv-table th.sp-aconv-col-skills { width: 9%; }
+.sp-aconv-table th.sp-aconv-col-judge { width: 3%; }
+.sp-aconv-table th.sp-col-date { width: 7.5%; }
+.sp-aconv-table th.sp-table__cell--num { width: 5%; }
+.sp-aconv-table td.sp-table__cell--num,
+.sp-aconv-table td.sp-col-date {
+    max-width: none;
+    white-space: nowrap;
+    overflow: visible;
+}
+.sp-aconv-table th,
+.sp-aconv-breakdown th,
+.sp-askill-table th {
+    white-space: nowrap;
+    overflow-wrap: normal;
+    hyphens: none;
+}
+/* Breakdown tables lay out by content: with a fixed layout their ten
+   equal columns clipped every header to three letters. */
+.sp-aconv-breakdown {
+    table-layout: auto;
+}
+.sp-aconv-breakdown th:first-child { min-width: 12rem; }
+.sp-aconv-breakdown th.sp-aconv-col-share { min-width: 8.5rem; }
+.sp-aconv-table td {
+    vertical-align: top;
+    max-width: 0;
+    font-size: var(--sp-text-sm);
+    font-variant-numeric: tabular-nums;
+}
+.sp-aconv-table thead th,
+.sp-aconv-breakdown thead th {
+    position: sticky;
+    top: 0;
+    z-index: var(--sp-z-sticky);
+    background: var(--sp-bg-surface);
+}
+.sp-aconv-table tbody tr:hover > td,
+.sp-aconv-breakdown tbody tr:hover > td {
+    background: var(--sp-bg-surface-alt);
+}
+.sp-aconv-table th .sp-icon,
+.sp-aconv-breakdown th .sp-icon {
+    color: var(--sp-text-tertiary);
+    vertical-align: -0.15em;
+}
+.sp-aconv-cell-link {
+    text-decoration: none;
+}
+.sp-aconv-cell-link:hover,
+.sp-aconv-cell-link:focus-visible {
+    text-decoration: underline;
+}
+.sp-aconv-col-export {
+    width: 1.8rem;
+    text-align: end;
+}
+.sp-aconv-export {
+    display: inline-flex;
+    color: var(--sp-text-tertiary);
+}
+.sp-aconv-export:hover,
+.sp-aconv-export:focus-visible {
+    color: var(--sp-accent-text);
+}
+/* Why: a td may never carry a display other than table-cell (06-table-cell.css);
+   the flex box that wraps the chips is the inner div, so the cell keeps its
+   column width and the chips wrap inside it instead of collapsing. */
+.sp-aconv-table td.sp-aconv-cell-skills,
+.sp-aconv-table td.sp-aconv-cell-spark,
+.sp-aconv-table td.sp-aconv-col-judge,
+.sp-aconv-table td.sp-aconv-cell-title {
+    display: table-cell;
+    max-width: none;
+    overflow: visible;
+}
+.sp-aconv-table td.sp-aconv-cell-title {
+    max-width: 0;
+}
+.sp-aconv-cell-person,
+.sp-aconv-cell-client {
+    overflow: hidden;
+}
+.sp-aconv-cell-title .sp-table__link,
+.sp-aconv-cell-person .sp-table__link {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+}
+.sp-aconv-turns-toggle {
+    margin-inline-start: auto;
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+}
+.sp-aconv-turns-toggle:hover {
+    color: var(--sp-accent-text);
+}
+.sp-aconv-continued {
+    display: inline-block;
+    padding: 0 var(--sp-space-2);
+    border-radius: var(--sp-radius-sm);
+    color: var(--sp-text-secondary);
+    border: 1px solid var(--sp-border-subtle);
+    font-size: var(--sp-text-xs);
+    white-space: nowrap;
+}

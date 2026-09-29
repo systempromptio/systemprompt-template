@@ -1,0 +1,163 @@
+@layer components {
+
+/* Evidence chips are the report's citations: each opens the console page for
+   the id the model cited, so a claim is one click from the rows behind it. */
+.sp-report-evidence {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1);
+    margin: var(--sp-space-2) 0 0;
+    padding: 0;
+    list-style: none;
+}
+.sp-report-evidence__chip {
+    display: inline-block;
+    max-width: 18rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 var(--sp-space-2);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-radius-sm);
+    font-size: var(--sp-text-xs);
+    line-height: 1.7;
+    color: var(--sp-text-secondary);
+    text-decoration: none;
+}
+.sp-report-evidence__chip--skill,
+.sp-report-evidence__chip--tool,
+.sp-report-evidence__chip--model {
+    font-family: var(--sp-font-mono);
+}
+.sp-report-evidence__chip--conversation {
+    color: var(--sp-accent-text);
+    background: var(--sp-accent-dim);
+    border-color: transparent;
+}
+.sp-report-evidence__chip--person {
+    color: var(--sp-text-primary);
+}
+.sp-report-evidence__chip:hover,
+.sp-report-evidence__chip:focus-visible {
+    border-color: var(--sp-border-strong);
+    text-decoration: underline;
+}
+
+.sp-report-recs {
+    align-self: start;
+}
+.sp-report-recs__list {
+    display: grid;
+    gap: var(--sp-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.sp-report-rec {
+    padding: var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+}
+.sp-report-rec--empty {
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-sm);
+}
+.sp-report-rec__head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-space-2);
+}
+.sp-report-rec__action {
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-medium);
+}
+.sp-report-rec__rationale {
+    margin: var(--sp-space-1) 0 0;
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+    line-height: var(--sp-leading-relaxed);
+}
+
+.sp-report-digest {
+    margin-block: var(--sp-space-4);
+}
+.sp-report-digest > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    cursor: pointer;
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-secondary);
+}
+.sp-report-digest__text {
+    max-height: 30rem;
+    overflow: auto;
+    margin: var(--sp-space-2) 0 0;
+    padding: var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+    font-size: var(--sp-text-xs);
+    line-height: var(--sp-leading-relaxed);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* The loading widget stands where the headline will be: what is being read,
+   an indeterminate bar, and how long it has taken — so the wait is honest. */
+.sp-report-loading {
+    display: grid;
+    gap: var(--sp-space-2);
+}
+
+.sp-report-loading__detail,
+.sp-report-loading__hint {
+    margin: 0;
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+}
+
+.sp-report-loading__hint {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-report-loading__bar {
+    position: relative;
+    height: 0.35rem;
+    max-width: 24rem;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-accent-dim);
+    overflow: hidden;
+}
+
+.sp-report-loading__bar i {
+    position: absolute;
+    inset-block: 0;
+    width: 35%;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-accent);
+    animation: sp-report-sweep 1.4s ease-in-out infinite;
+}
+
+.sp-report-loading.is-failed .sp-report-loading__bar i {
+    animation: none;
+    width: 100%;
+    background: var(--sp-danger-strong);
+}
+
+@keyframes sp-report-sweep {
+    0% { inset-inline-start: -35%; }
+    100% { inset-inline-start: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sp-report-loading__bar i {
+        animation: none;
+        width: 100%;
+    }
+}
+
+}

@@ -92,7 +92,7 @@
             <td>{{#if pinned_digest}}<span class="sp-sync-hash" title="{{pinned_digest}}">{{truncate pinned_digest 19}}</span>{{else}}<span class="sp-u-text-tertiary">tag</span>{{/if}}</td>
             <td>{{#if active_digest}}<span class="sp-sync-hash" title="{{active_digest}}">{{truncate active_digest 19}}</span>{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
             <td class="sp-u-mono">{{default version "—"}}</td>
-            <td>{{#if content_hash}}<span class="sp-sync-hash" title="{{content_hash}}">{{truncate content_hash 12}}</span>{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if content_hash}}<span class="sp-sync-hash" title="{{content_hash}}">{{truncate content_hash 12}}</span><br><a class="sp-sync-sources__versions" href="/admin/analysis/versions">Versions</a>{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
             <td>{{#if fetched_at}}{{relativeTime fetched_at}}{{else}}<span class="sp-u-text-tertiary">never</span>{{/if}}</td>
             <td class="sp-sync-sources__owns">{{owns.summary}}{{#if owns.marketplaces}}<br>{{#each owns.marketplaces}}<span class="sp-u-mono">{{this}}</span> {{/each}}{{/if}}</td>
             <td>

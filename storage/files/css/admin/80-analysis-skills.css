@@ -1,0 +1,163 @@
+@layer components {
+/* Analysis › Skills: one scope strip (window, marketplace) over three tabs.
+   Overview is the adoption table (80-analysis-adoption.css); Activity is the
+   chart and its top-skills list; Skills is one table per marketplace with a
+   plugin band per group. */
+
+/* The scope strip: two labelled pill rows, wrapping on a narrow screen. The
+   tab strip beneath it is the page's own — underlined, full width. */
+.sp-askill-scope {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2) var(--sp-space-6);
+    margin-block: var(--sp-space-2) var(--sp-space-3);
+}
+
+.sp-askill-scope__group {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    min-width: 0;
+}
+
+.sp-askill-scope__label {
+    font-size: var(--sp-text-2xs);
+    text-transform: uppercase;
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-tertiary);
+    white-space: nowrap;
+}
+
+.sp-askill-scope .sp-tabs {
+    margin: 0;
+    border-bottom: none;
+    gap: var(--sp-space-1);
+}
+
+.sp-askill-scope .sp-tab {
+    padding: var(--sp-space-1) var(--sp-space-3);
+    border: 1px solid var(--sp-border-default);
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-surface);
+    font-size: var(--sp-text-xs);
+    top: 0;
+}
+
+.sp-askill-scope .sp-tab--active {
+    background: var(--sp-accent-fill);
+    color: var(--sp-text-on-accent);
+    border-color: var(--sp-accent);
+}
+
+.sp-askill-views .sp-tabs {
+    margin-bottom: var(--sp-space-3);
+}
+
+.sp-askill-chart {
+    min-height: 20rem;
+    margin-block: var(--sp-space-3);
+}
+
+/* Activity: the skills the chart draws, share as a track beside the figure. */
+.sp-askill-top {
+    margin-block: var(--sp-space-3) var(--sp-space-4);
+    min-width: 0;
+}
+
+.sp-askill-top-table th.sp-askill-top__col-share { width: 14%; min-width: 7rem; }
+
+.sp-askill-top__share {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: var(--sp-space-2);
+}
+
+.sp-askill-group {
+    min-width: 0;
+    margin-block: var(--sp-space-3) var(--sp-space-4);
+}
+.sp-askill-group__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-space-2);
+    margin-block-end: var(--sp-space-2);
+}
+.sp-askill-group__title {
+    margin: 0;
+    font-size: var(--sp-text-base);
+    font-weight: var(--sp-font-semibold);
+}
+.sp-askill-table {
+    table-layout: fixed;
+}
+.sp-askill-table th.sp-askill-col-skill { width: 13%; }
+.sp-askill-table th.sp-askill-col-spark { width: 5%; }
+.sp-askill-table th.sp-askill-col-models { width: 9%; min-width: 8rem; }
+.sp-askill-table th.sp-askill-col-agents { width: 7%; min-width: 6rem; }
+.sp-askill-table th.sp-aconv-col-select { width: 1.6rem; }
+.sp-askill-table th.sp-col-date { width: 6%; }
+.sp-askill-table th.sp-table__cell--num { width: 5%; }
+.sp-askill-table th.sp-askill-col-done { width: 4.5rem; }
+.sp-askill-table td.sp-table__cell--num,
+.sp-askill-table td.sp-col-date {
+    max-width: none;
+    white-space: nowrap;
+    overflow: visible;
+}
+.sp-askill-table td {
+    vertical-align: top;
+    max-width: 0;
+    font-size: var(--sp-text-sm);
+}
+.sp-askill-table td.sp-askill-col-spark,
+.sp-askill-table td.sp-askill-col-models {
+    display: table-cell;
+    max-width: none;
+    overflow: visible;
+}
+.sp-askill-col-skill {
+    overflow: hidden;
+}
+.sp-askill-col-spark .sp-spark {
+    width: 100%;
+    height: 1.4rem;
+}
+/* The plugin band inside a marketplace table: one row spanning every
+   column, quieter than a header, louder than a row. */
+.sp-askill-plugin th {
+    padding-block: var(--sp-space-1);
+    font-size: var(--sp-text-xs);
+    font-weight: var(--sp-font-semibold);
+    text-align: start;
+    color: var(--sp-text-secondary);
+    background: var(--sp-bg-surface-alt);
+}
+.sp-askill-plugin__name {
+    font-family: var(--sp-font-mono);
+    color: var(--sp-text-primary);
+}
+
+.sp-askill-col-done {
+    white-space: nowrap;
+}
+.sp-askill-judged {
+    display: inline;
+    font-variant-numeric: tabular-nums;
+}
+.sp-askill-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: var(--sp-z-sticky);
+    background: var(--sp-bg-surface);
+}
+.sp-askill-table th .sp-icon {
+    color: var(--sp-text-tertiary);
+    vertical-align: -0.15em;
+}
+.sp-askill-table tbody tr:hover > td {
+    background: var(--sp-bg-surface-alt);
+}
+}

@@ -1,7 +1,8 @@
 {{!--
   Skills tab. A skill has no cost of its own; the cost column is the spend of
-  the conversations that invoked it, and rows overlap. Each row links to the
-  skill's catalog entry.
+  the conversations that invoked it, from the same facts Analysis reads, and
+  rows overlap. Each row says whether the skill is under evaluation and links
+  to Analysis for the conversations behind it.
 --}}
 <section aria-label="Skill adoption">
     {{> analytics/kpi-row tiles=skills.kpis}}
@@ -11,12 +12,13 @@
 
     {{#> components/section title="Skills" count=skills.skill_count}}
       {{#*inline "section_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/analysis/skills">Analysis</a>
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/skills">Skill catalog</a>
       {{/inline}}
     {{/components/section}}
 
     {{#if skills.has_rows}}
-    {{#> components/table caption="Skill invocations, reach and conversation spend"
+    {{#> components/table caption="Skill invocations, reach, conversation spend and evaluation state"
          pagination=skills.pagination}}
         <thead><tr>
             <th scope="col">Skill</th>
@@ -34,7 +36,8 @@
         {{#each skills.rows}}
         <tr>
             <td class="sp-table__cell--mono sp-table__cell--primary sp-p-analytics__name">
-                <a href="{{this.catalog_url}}" title="{{this.skill}}">{{this.name_display}}</a>
+                <a href="{{#if this.analysis_url}}{{this.analysis_url}}{{else}}{{this.catalog_url}}{{/if}}"
+                   title="{{this.skill}}">{{this.name_display}}</a>
             </td>
             <td class="sp-table__cell--num sp-u-num">{{this.invocations}}</td>
             <td class="sp-table__cell--spark"><span class="sp-p-analytics__bar" style="--v:{{this.share_pct}}%"></span></td>

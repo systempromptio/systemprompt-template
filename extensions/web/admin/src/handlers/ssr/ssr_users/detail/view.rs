@@ -30,6 +30,7 @@ pub(super) fn export(user_id: &UserId, viewer: &UserContext) -> Option<crate::ex
     viewer.is_console.then(|| {
         let query = crate::export::view::query_string(&[("user_id", Some(user_id.as_str()))]);
         crate::export::ExportView::new(&["requests", "sessions", "conversations"], &query)
+            .with_transcripts(crate::export::view::TranscriptSource::Sessions)
     })
 }
 

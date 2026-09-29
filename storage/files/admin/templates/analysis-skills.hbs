@@ -1,0 +1,16 @@
+{{#> layout}}
+{{#*inline "content"}}
+{{#> components/page-header title=title help=help subtitle="Every skill as the record shows it, in three views under one scope: how each marketplace is adopted, invocations over time, and the table — who invoked what, the conversations behind it, their cost, errors and the judge's one completion score."}}
+{{#*inline "header_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/analysis/conversations?flag=skills">{{> components/icon name="chat"}} Conversations with skills</a> <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/analysis/versions">{{> components/icon name="calendar"}} Versions</a> <a class="sp-btn sp-btn--sm sp-btn--primary" href="/admin/skills">Catalog &rarr;</a> {{> components/export-button export}}{{/inline}}
+{{/components/page-header}}
+{{> analysis-subnav}}
+{{> analysis/report-banner report_banner}}
+<div class="sp-askill-scope" aria-label="Scope">
+<div class="sp-askill-scope__group"><span class="sp-askill-scope__label">Window</span>{{> components/tabs tabs=range_links nav_label="Window"}}</div>
+<div class="sp-askill-scope__group"><span class="sp-askill-scope__label">Marketplace</span>{{> components/tabs tabs=marketplace_links nav_label="Marketplace"}}</div>
+</div>
+<div class="sp-askill-views">{{> components/tabs tabs=tabs nav_label="Skills views"}}</div>
+{{#if (eq tab "overview")}}{{> analysis/skills-overview}}{{/if}}
+{{#if (eq tab "activity")}}{{> analysis/skills-activity}}{{/if}}
+{{#if (eq tab "skills")}}{{> analysis/skills-table}}{{/if}}
+{{/inline}}{{#*inline "scripts"}}{{#if (eq tab "activity")}}<script type="module" src="/js/components/sp-chart.js?v={{css_version}}"></script>{{/if}}{{/inline}}{{/layout}}

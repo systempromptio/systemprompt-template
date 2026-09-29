@@ -193,14 +193,13 @@ fn project_query(project_id: &ProjectId) -> String {
 }
 
 // Why: the project's own traffic, keyed by `project` the way every scoped
-// dataset reads it. `analysis-conversations` and the transcript bundle join
-// with the analysis suite (Stage 3 phase 7); an id the registry does not hold
-// is dropped by `ExportView::new`.
+// dataset reads it, with every conversation's full record beside the tables.
 pub(super) fn export_view(project_id: &ProjectId) -> crate::export::ExportView {
     crate::export::ExportView::new(
         &["requests", "sessions", "analysis-conversations"],
         &project_query(project_id),
     )
+    .with_transcripts(crate::export::view::TranscriptSource::Sessions)
 }
 
 // Why: the report is a rolling window but the customer hand-off is a calendar

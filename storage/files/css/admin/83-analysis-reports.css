@@ -1,0 +1,192 @@
+@layer components {
+
+/* Analysis › Reports. The verdict head, the theme cards and the banner all
+   key their colour off the same three assessment tones the badges use, so a
+   "watch" report reads amber everywhere it is mentioned. */
+.sp-report-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin-block: var(--sp-space-2) var(--sp-space-3);
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-inline-start: 3px solid var(--sp-border-strong);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+    font-size: var(--sp-text-sm);
+}
+.sp-report-banner--ok { border-inline-start-color: var(--sp-success-strong); }
+.sp-report-banner--warn { border-inline-start-color: var(--sp-warning-strong); }
+.sp-report-banner--err { border-inline-start-color: var(--sp-danger-strong); }
+.sp-report-banner__icon {
+    display: inline-flex;
+    color: var(--sp-accent-text);
+}
+.sp-report-banner__headline {
+    flex: 1 1 20rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sp-text-primary);
+    text-decoration: none;
+    font-weight: var(--sp-font-medium);
+}
+.sp-report-banner__headline--empty {
+    color: var(--sp-text-tertiary);
+    font-weight: var(--sp-font-normal);
+}
+.sp-report-banner__meta {
+    color: var(--sp-text-tertiary);
+    font-size: var(--sp-text-xs);
+    white-space: nowrap;
+}
+.sp-report-banner__form {
+    display: inline-flex;
+    margin-inline-start: auto;
+}
+.sp-report-banner .sp-btn .sp-icon {
+    margin-inline-end: var(--sp-space-1);
+}
+
+.sp-report-request {
+    margin-block: var(--sp-space-2) var(--sp-space-4);
+}
+.sp-report-request__form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--sp-space-3);
+    padding: var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface);
+}
+.sp-report-request__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+    font-size: var(--sp-text-xs);
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-secondary);
+    min-width: 12rem;
+}
+.sp-report-table .sp-report-col-headline {
+    max-width: 28rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sp-report-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--sp-space-3);
+    margin-block: var(--sp-space-2) var(--sp-space-3);
+    padding: var(--sp-space-4);
+    border: 1px solid var(--sp-border-subtle);
+    border-inline-start: 4px solid var(--sp-border-strong);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface);
+}
+.sp-report-head--ok { border-inline-start-color: var(--sp-success-strong); }
+.sp-report-head--warn { border-inline-start-color: var(--sp-warning-strong); }
+.sp-report-head--err { border-inline-start-color: var(--sp-danger-strong); }
+.sp-report-head__badge {
+    display: inline-flex;
+    font-size: var(--sp-text-2xl);
+    color: var(--sp-text-tertiary);
+}
+.sp-report-head--ok .sp-report-head__badge { color: var(--sp-success-strong); }
+.sp-report-head--warn .sp-report-head__badge { color: var(--sp-warning-strong); }
+.sp-report-head--err .sp-report-head__badge { color: var(--sp-danger-strong); }
+.sp-report-head__body {
+    display: grid;
+    gap: var(--sp-space-2);
+    min-width: 0;
+}
+.sp-report-head__headline {
+    margin: 0;
+    font-size: var(--sp-text-lg);
+    font-weight: var(--sp-font-semibold);
+    line-height: var(--sp-leading-tight);
+}
+.sp-report-head__headline--empty {
+    color: var(--sp-text-tertiary);
+    font-weight: var(--sp-font-normal);
+}
+.sp-report-head__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-report-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 1fr);
+    gap: var(--sp-space-3);
+}
+@media (max-width: 60rem) {
+    .sp-report-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.sp-report-section__title {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin: 0 0 var(--sp-space-3);
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-tertiary);
+}
+.sp-report-themes {
+    display: grid;
+    gap: var(--sp-space-2);
+    align-content: start;
+}
+.sp-report-theme {
+    padding: var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-inline-start: 3px solid var(--sp-border-strong);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+}
+.sp-report-theme--ok { border-inline-start-color: var(--sp-success-strong); }
+.sp-report-theme--warn { border-inline-start-color: var(--sp-warning-strong); }
+.sp-report-theme--err { border-inline-start-color: var(--sp-danger-strong); }
+.sp-report-theme__head {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-space-2);
+}
+.sp-report-theme__icon { display: inline-flex; color: var(--sp-text-tertiary); }
+.sp-report-theme--ok .sp-report-theme__icon { color: var(--sp-success-strong); }
+.sp-report-theme--warn .sp-report-theme__icon { color: var(--sp-warning-strong); }
+.sp-report-theme--err .sp-report-theme__icon { color: var(--sp-danger-strong); }
+.sp-report-theme__title {
+    flex: 1;
+    margin: 0;
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+}
+.sp-report-theme__kind {
+    font-size: var(--sp-text-2xs);
+    text-transform: uppercase;
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-tertiary);
+}
+.sp-report-theme__detail {
+    margin: var(--sp-space-1) 0 0;
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+    line-height: var(--sp-leading-relaxed);
+}
+
+}

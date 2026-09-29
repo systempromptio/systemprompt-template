@@ -1,0 +1,70 @@
+@layer components {
+
+/* The stats above the transcript are one-line facts, so they are a strip and
+   not a grid of tiles. Six KPI tiles cost roughly a screen-height of vertical
+   space directly above the thing the page exists to show. */
+
+.sp-conversation-facts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-space-2) var(--sp-space-5);
+    margin: 0 0 var(--sp-density-section);
+    padding: var(--sp-space-3) var(--sp-space-4);
+    background: var(--sp-bg-surface);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+    font-size: var(--sp-text-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+.sp-conversation-facts__item {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-space-2);
+    min-width: 0;
+}
+
+.sp-conversation-facts__item dt {
+    font-size: var(--sp-text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--sp-tracking-wide);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-conversation-facts__item dd {
+    margin: 0;
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-primary);
+}
+
+.sp-conversation-facts__item--err dd {
+    color: var(--sp-danger-strong);
+}
+
+.sp-conversation__toolbar {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--sp-space-2);
+}
+
+/* Prose keeps a measure whatever the transcript column is given; payloads,
+   tables and tool output take the whole width, which is the point of letting
+   the reader bleed to the shell edge in the first place. */
+
+.sp-conversation__prompt-text,
+.sp-conversation__text {
+    max-inline-size: 78ch;
+}
+
+}
+
+@layer responsive {
+
+@media (max-width: 900px) {
+    .sp-conversation-facts {
+        gap: var(--sp-space-2) var(--sp-space-4);
+    }
+}
+
+}

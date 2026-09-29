@@ -1,0 +1,53 @@
+{{#> layout}}
+{{#*inline "content"}}
+{{#> components/page-header title=title help=help subtitle="Every gateway conversation as the record shows it — who, which client and model, turns, tools and artifacts, errors and denials, tokens, cost, latency."}}
+{{#*inline "header_actions"}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/analysis/skills">{{> components/icon name="skill"}} Skills</a> <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/conversations">{{> components/icon name="chat"}} Read conversations</a> {{> components/export-button export}}{{/inline}}
+{{/components/page-header}}
+{{> analysis-subnav}}
+{{> analysis/report-banner report_banner}}
+<div class="sp-aconv-range">{{> components/tabs tabs=range_links nav_label="Window"}}{{> components/scope-filter scope_filter}}</div>
+<div class="sp-kpi-grid sp-kpi-grid--compact sp-aconv-kpis">
+{{#each kpis.tiles}}{{> components/kpi label=label icon=icon value=value note=note tone=tone hint=hint spark=spark}}{{/each}}
+</div>
+<section class="sp-aconv-charts" aria-label="Over time">
+{{#each charts}}<div class="sp-aconv-chart">{{> components/svg-line-chart this}}</div>{{/each}}
+</section>
+{{> components/filter-ribbon ribbon}}
+<section class="sp-section sp-aconv-block" aria-label="Breakdown">
+<header class="sp-aconv-block__head">{{> components/icon name="layers"}}<h2 class="sp-aconv-block__title">Breakdown</h2>{{> components/tabs tabs=breakdown_tabs nav_label="Breakdown"}}</header>
+{{#> components/table caption=(concat "Conversations " breakdown_label) modifier="sp-aconv-breakdown"}}
+<thead><tr><th scope="col">{{breakdown_label}}</th><th scope="col" class="sp-table__cell--num">Conversations</th><th scope="col" class="sp-table__cell--num">People</th><th scope="col" class="sp-table__cell--num">Turns</th><th scope="col" class="sp-table__cell--num" title="Tool calls">{{> components/icon name="wrench"}} Tools</th><th scope="col" class="sp-table__cell--num" title="Tool calls that produced something viewable">{{> components/icon name="file"}} Artifacts</th><th scope="col" class="sp-table__cell--num">Tokens</th><th scope="col" class="sp-table__cell--num">Cost</th><th scope="col" class="sp-aconv-col-share" title="Share of the filtered set's cost">Share</th><th scope="col" class="sp-table__cell--num" title="Failed requests">Err</th><th scope="col" class="sp-table__cell--num" title="Denied tool calls">Denied</th><th scope="col" class="sp-aconv-col-export"><span class="sp-u-sr-only">Export</span></th></tr></thead>
+<tbody>
+{{#each breakdown}}<tr><td class="sp-table__cell--primary">{{#if href}}<a class="sp-table__link" href="{{href}}">{{label}}</a>{{else}}{{label}}{{/if}}</td><td class="sp-table__cell--num sp-u-num">{{formatNumber conversations}}</td><td class="sp-table__cell--num sp-u-num">{{formatNumber users}}</td><td class="sp-table__cell--num sp-u-num">{{formatNumber turns}}</td><td class="sp-table__cell--num sp-u-num">{{formatNumber tool_calls}}</td><td class="sp-table__cell--num sp-u-num">{{formatNumber artifacts}}</td><td class="sp-table__cell--num sp-u-num">{{tokens_display}}</td><td class="sp-table__cell--num sp-u-num">{{cost_display}}</td><td class="sp-aconv-col-share"><span class="sp-aconv-bar" style="--sp-fill: {{cost_share_pct}}%"><i></i></span><span class="sp-aconv-bar__label">{{cost_share_pct}}%</span></td><td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{errors_tone}}">{{errors}}</span></td><td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{denied_tone}}">{{denied}}</span></td><td class="sp-aconv-col-export">{{#if export_href}}<a class="sp-aconv-export" href="{{export_href}}" data-export-open data-export-query="{{export_query}}" data-export-group-label="{{label}}" title="Download the conversations in this bucket" aria-label="Export {{label}}">{{> components/icon name="download"}}</a>{{/if}}</td></tr>
+{{else}}<tr class="sp-table__empty"><td colspan="12">{{> components/empty-state heading="Nothing in this window" message="No conversation's last activity falls inside the window with these filters. Widen the window or clear a filter; the rollup job refreshes the record every minute."}}</td></tr>{{/each}}
+</tbody>
+{{/components/table}}
+</section>
+<section class="sp-section sp-aconv-block" aria-label="Conversations">
+<header class="sp-aconv-block__head">{{> components/icon name="chat"}}<h2 class="sp-aconv-block__title">{{count_label}}</h2>{{#if turns_toggle.show_all}}<a class="sp-aconv-turns-toggle" href="{{turns_toggle.href}}" title="Hide conversations that never had a turn — title and side calls the client made on its own">Hide {{formatNumber turns_toggle.without_turns}} without turns</a>{{else}}{{#if turns_toggle.without_turns}}<a class="sp-aconv-turns-toggle" href="{{turns_toggle.href}}" title="Conversations with no turn — title and side calls the client made on its own — are hidden">{{formatNumber turns_toggle.without_turns}} without turns hidden · View all</a>{{/if}}{{/if}}</header>
+{{#> components/table caption="Conversations" pagination=pagination modifier="sp-aconv-table"}}
+<thead><tr><th scope="col" class="sp-aconv-col-select">{{> components/table-select header=true label="conversations"}}</th><th scope="col" class="sp-aconv-col-title">Conversation</th><th scope="col" class="sp-aconv-col-person">Person</th><th scope="col" class="sp-aconv-col-client">Client · model</th>{{> components/sort-header sort_headers.turns}}{{> components/sort-header sort_headers.tools}}<th scope="col" class="sp-table__cell--num" title="Tool calls that produced something viewable — files, cards, UI, retained bodies">{{> components/icon name="file"}}</th>{{> components/sort-header sort_headers.errors}}{{> components/sort-header sort_headers.tokens}}{{> components/sort-header sort_headers.cost}}{{> components/sort-header sort_headers.active}}{{> components/sort-header sort_headers.duration}}<th scope="col" class="sp-aconv-col-spark" title="Tokens per turn, last 24 turns">{{> components/icon name="spark"}}</th><th scope="col" class="sp-aconv-col-skills">Skills</th>{{> components/sort-header sort_headers.activity}}</tr></thead>
+<tbody>
+{{#each rows}}<tr data-context-id="{{context_key}}" data-category="{{judge.category}}">
+<td class="sp-aconv-col-select">{{> components/table-select id=context_key label=title}}</td>
+<td class="sp-table__cell--primary sp-aconv-cell-title">{{#if continuation}}<span class="sp-aconv-continued" title="A Claude Code session resumed after its context was compacted">↻ continued</span> {{/if}}<a class="sp-table__link" href="{{href}}" title="{{context_key}}">{{title}}</a>{{#if judge.judged}}<div class="sp-aconv-meta"><span class="sp-aconv-intent">{{judge.category_label}}</span> · <span class="sp-aconv-outcome sp-aconv-outcome--{{judge.outcome_tone}}">{{judge.outcome}}</span>{{#if judge.summary}} · <span class="sp-aconv-summary">{{judge.summary}}</span>{{/if}}</div>{{else}}{{#if continuation.prev_href}}<div class="sp-aconv-meta">continues <a class="sp-table__link" href="{{continuation.prev_href}}">the previous conversation</a></div>{{/if}}{{/if}}</td>
+<td class="sp-aconv-cell-person"><a class="sp-table__link" href="{{user_href}}" title="{{user_key}}">{{display_name}}</a>{{#if group_name}}<div class="sp-aconv-meta">{{group_name}}{{#if project_name}} · {{project_name}}{{/if}}</div>{{else}}{{#if project_name}}<div class="sp-aconv-meta">{{project_name}}</div>{{/if}}{{/if}}</td>
+<td class="sp-aconv-cell-client"><span class="sp-badge sp-badge--{{client.tone}}" title="{{client.title}}">{{client.label}}</span><div class="sp-aconv-meta sp-aconv-model" title="{{model}}{{#each extra_models}} · {{this}}{{/each}}">{{model}}{{#if extra_models}} <span class="sp-aconv-more">+{{extra_models_count}}</span>{{/if}}</div></td>
+<td class="sp-table__cell--num sp-u-num">{{turns}}</td>
+<td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{tools_tone}} sp-aconv-cell-link" title="{{tools_title}}">{{tools_display}}</span></td>
+<td class="sp-table__cell--num sp-u-num">{{#if artifacts}}<span class="sp-aconv-num sp-aconv-num--accent sp-aconv-cell-link" title="{{artifacts}} artifacts">{{artifacts}}</span>{{else}}<span class="sp-aconv-num sp-aconv-num--muted">0</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num"><span class="sp-aconv-num sp-aconv-num--{{errors_tone}}" title="Failed requests">{{errors}}</span>{{#if denied}} <span class="sp-aconv-num sp-aconv-num--{{denied_tone}}" title="Denied tool calls">⛔{{denied}}</span>{{/if}}{{#if safety}} <span class="sp-aconv-num sp-aconv-num--{{safety_tone}}" title="Safety findings">⚑{{safety}}</span>{{/if}}</td>
+<td class="sp-table__cell--num sp-u-num sp-aconv-cell-tokens" title="{{tokens_title}}">{{tokens_display}}<span class="sp-aconv-cache sp-aconv-cache--{{cache_tone}}" style="--sp-fill: {{cache_pct}}%" title="{{cache_pct}}% of what the models read came from cache"><i></i></span></td>
+<td class="sp-table__cell--num sp-u-num">{{cost_display}}</td>
+<td class="sp-table__cell--num sp-u-num">{{active_display}}</td>
+<td class="sp-table__cell--num sp-u-num">{{duration_display}}</td>
+<td class="sp-aconv-cell-spark">{{> components/sparkline spark}}</td>
+<td class="sp-aconv-cell-skills"><div class="sp-aconv-skills">{{#each skills}}<a class="sp-aconv-skill{{#if hooked}} sp-aconv-skill--hooked{{/if}}" href="{{href}}" title="{{name}} — {{#if hooked}}reported by the harness hook{{else}}read from the transcript by the judge{{/if}}; opens the skill's analysis">{{name}}</a>{{else}}<span class="sp-u-text-tertiary">—</span>{{/each}}</div></td>
+<td class="sp-col-date"><time datetime="{{last_full}}" title="{{last_full}}">{{last_display}}</time></td>
+</tr>
+{{else}}<tr class="sp-table__empty"><td colspan="15">{{> components/empty-state heading="No conversations match" message="Clear a filter or widen the window. A conversation appears here once the gateway has recorded a turn for it; the rollup job refreshes the record every minute."}}</td></tr>{{/each}}
+</tbody>
+{{/components/table}}
+{{> components/bulk-bar noun="conversations" export_dataset="analysis-conversations" transcripts=true}}
+</section>
+{{/inline}}{{#*inline "scripts"}}<script type="module" src="/js/components/sp-chart.js?v={{css_version}}"></script>{{/inline}}{{/layout}}

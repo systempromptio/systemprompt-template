@@ -4,6 +4,7 @@
 
     {{> components/breadcrumbs crumbs=breadcrumbs}}
     {{#> components/page-header title=title}}
+      {{#*inline "header_actions"}}{{> components/export-button export}}{{/inline}}
       {{#*inline "header_meta"}}
         <span class="sp-conversation__facts">
           {{#if header.user_url}}
@@ -50,7 +51,11 @@
     </details>
 
     <section class="sp-kpi-grid" aria-label="Conversation stats">
-      {{> components/kpi label="Turns" value=stats.turn_count}}
+      {{!-- "Turns" counts the human prompts the transcript renders; the
+            request total is its own tile rather than a second, larger number
+            also called Turns. --}}
+      {{> components/kpi label="Turns" value=conversation.turn_count}}
+      {{> components/kpi label="Requests" value=stats.turn_count}}
       {{> components/kpi label="Tool calls" value=stats.tool_call_count}}
       {{> components/kpi label="Tokens" value=stats.tokens_display note=stats.tokens_note}}
       {{> components/kpi label="Cost" value=stats.cost_display}}
