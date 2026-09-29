@@ -1,0 +1,23 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle=subtitle}}
+        {{#*inline "header_actions"}}
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="#access">Access</a>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/gateway?tab=routes">All routes</a>
+        {{/inline}}
+    {{/components/page-header}}
+
+    <dl class="sp-kv-list">
+        {{#each facts}}
+        <div class="sp-kv-row"><dt>{{label}}</dt><dd class="sp-u-mono">{{value}}</dd></div>
+        {{/each}}
+    </dl>
+
+    {{> components/entity-access panel=access}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    {{> components/access-reason-dialog}}
+    <script type="module" src="/js/pages/admin-entity-access.js?v={{css_version}}"></script>
+    {{/inline}}
+{{/layout}}

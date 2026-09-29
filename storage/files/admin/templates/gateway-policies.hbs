@@ -1,0 +1,74 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="The quota windows, safety scanners and block lists the gateway applies to every inference request. A save writes ai_gateway_policies and is live within a minute — no restart, no file edit. The Sync tab shows what this editor changed against services/gateway/policies.yaml."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{quotas_url}}">Usage vs ceiling</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{docs_url}}" target="_blank" rel="noopener noreferrer">How quotas work</a>
+        {{/inline}}
+    {{/components/page-header}}
+
+    {{> components/tabs tabs=tabs nav_label="Gateway policy views"}}
+
+    {{#if sync}}
+    {{> components/sync-plane plane=sync can_write=can_write}}
+    {{> components/sync-plane-dialogs}}
+    {{else}}
+    {{#if saved}}
+    {{> components/notice tone="ok" title="Saved" message=(concat "Policy '" saved "' is written. The gateway reads it on the next request; a cached policy lasts at most sixty seconds.")}}
+    {{/if}}
+    {{#if error}}
+    {{> components/notice tone="err" title="Not saved" message=error}}
+    {{/if}}
+    {{#unless can_write}}
+    {{> components/notice tone="info" title="Read only" message="Editing gateway policies needs an administrator. Everything below is the live configuration."}}
+    {{/unless}}
+
+    {{#each policies}}
+    <section class="sp-gwp" data-policy="{{name}}" aria-labelledby="gwp-{{name}}">
+        <form method="post" action="/admin/gateway/policies" class="sp-gwp__form">
+            <div class="sp-gwp__head">
+                <h2 id="gwp-{{name}}" class="sp-gwp__title"><span class="sp-u-mono">{{name}}</span></h2>
+                <div class="sp-gwp__meta">
+                    {{#if enabled}}{{> components/badge tone="ok" text="enabled"}}{{else}}{{> components/badge tone="muted" text="disabled"}}{{/if}}
+                    {{#if in_force.windows}}{{> components/badge tone="accent" text="windows in force"}}{{/if}}
+                    {{#if in_force.safety}}{{> components/badge tone="accent" text="safety in force"}}{{/if}}
+                    <span class="sp-u-text-tertiary">updated {{relativeTime updated_at}}</span>
+                </div>
+            </div>
+            <input type="hidden" name="name" value="{{name}}">
+            {{> gateway-policy-fields this can_write=../can_write}}
+        </form>
+        {{#if ../can_write}}
+        <form method="post" action="/admin/gateway/policies/delete" class="sp-gwp__delete" data-confirm="Delete policy '{{name}}'? The gateway stops applying it within a minute.">
+            <input type="hidden" name="name" value="{{name}}">
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--ghost">Delete policy</button>
+        </form>
+        {{/if}}
+    </section>
+    {{/each}}
+    {{#unless policies}}
+    {{> components/empty-state heading="No gateway policies" message="The table is empty: every request runs with no quota windows and no safety scanning. Declare one below, or Insert only from the Sync page."}}
+    {{/unless}}
+
+    {{#if can_write}}
+    <details class="sp-gwp sp-gwp--new">
+        <summary class="sp-gwp__summary">New policy</summary>
+        <form method="post" action="/admin/gateway/policies" class="sp-gwp__form">
+            <div class="sp-form-field">
+                <label class="sp-form-label" for="gwp-new-name">Name</label>
+                <input class="sp-field-input" id="gwp-new-name" name="name" required pattern="[A-Za-z0-9_-]+" placeholder="team-quotas">
+                <span class="sp-field-hint">Letters, digits, '-' and '_'. Core merges enabled policies by priority; the highest wins each section outright.</span>
+            </div>
+            {{> gateway-policy-fields new_policy can_write=can_write}}
+        </form>
+    </details>
+    {{/if}}
+
+    <p class="sp-u-text-sm sp-u-text-tertiary">A <strong>calendar month</strong> window is stored as {{month_sentinel}} seconds and kept aligned to the month's end by the daily <code class="sp-code-inline">quota_month_window</code> job, which carries yesterday's usage into today's bucket. This is the extension's interim until core has calendar windows; usage in the first minute after midnight UTC may not carry.</p>
+    {{/if}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script type="module" src="/js/pages/admin-gateway-policies.js?v={{css_version}}"></script>
+    {{/inline}}
+{{/layout}}

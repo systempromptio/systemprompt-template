@@ -50,6 +50,7 @@ pub struct SafetyStats {
 pub struct FindingFilter {
     pub category: Option<String>,
     pub blocked: Option<bool>,
+    pub search: Option<String>,
 }
 
 pub async fn list_safety_findings_paged(
@@ -71,13 +72,20 @@ pub async fn list_safety_findings_paged(
              AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))
              AND ($4::TEXT IS NULL OR f.category = $4)
              AND ($5::BOOLEAN IS NULL OR f.blocked = $5)
+             AND ($6::TEXT IS NULL
+                  OR f.category ILIKE '%' || $6 || '%'
+                  OR f.scanner ILIKE '%' || $6 || '%'
+                  OR f.excerpt ILIKE '%' || $6 || '%'
+                  OR r.user_id ILIKE '%' || $6 || '%'
+                  OR r.model ILIKE '%' || $6 || '%')
            ORDER BY f.created_at DESC, f.id
-           LIMIT $6 OFFSET $7"#,
+           LIMIT $7 OFFSET $8"#,
         range.from,
         range.to,
         scope.as_sql(),
         filter.category.as_deref(),
         filter.blocked,
+        filter.search.as_deref(),
         slice.limit,
         slice.offset,
     )
@@ -91,12 +99,19 @@ pub async fn list_safety_findings_paged(
            WHERE f.created_at >= $1 AND f.created_at < $2
              AND ($3::TEXT[] IS NULL OR r.user_id = ANY($3))
              AND ($4::TEXT IS NULL OR f.category = $4)
-             AND ($5::BOOLEAN IS NULL OR f.blocked = $5)"#,
+             AND ($5::BOOLEAN IS NULL OR f.blocked = $5)
+             AND ($6::TEXT IS NULL
+                  OR f.category ILIKE '%' || $6 || '%'
+                  OR f.scanner ILIKE '%' || $6 || '%'
+                  OR f.excerpt ILIKE '%' || $6 || '%'
+                  OR r.user_id ILIKE '%' || $6 || '%'
+                  OR r.model ILIKE '%' || $6 || '%')"#,
         range.from,
         range.to,
         scope.as_sql(),
         filter.category.as_deref(),
         filter.blocked,
+        filter.search.as_deref(),
     )
     .fetch_one(pool)
     .await?;

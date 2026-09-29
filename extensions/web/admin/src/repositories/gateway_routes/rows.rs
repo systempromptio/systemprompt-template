@@ -149,3 +149,18 @@ pub async fn delete_gateway_route(pool: &PgPool, id: &str) -> Result<u64, sqlx::
         .await?
         .rows_affected())
 }
+
+pub async fn set_gateway_route_position(
+    pool: &PgPool,
+    id: &str,
+    position: i32,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "UPDATE gateway_routes SET position = $2, updated_at = NOW() WHERE id = $1",
+        id,
+        position
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}

@@ -95,6 +95,28 @@ Conventions (strict — hold every entry to them):
   optional expiry before it saves.
 - **Export buttons on the group, project and user detail pages**, each scoped
   to that group, project or person.
+- Gateway policy editor at `/admin/gateway/policies`: every `ai_gateway_policies`
+  row as a plain form — quota windows (hour, day, calendar month or a custom
+  length) per subject, the safety scanners and their block lists, and the
+  warn/enforce switch of each plane — plus a Sync tab for the
+  `gateway_policies` plane. Core reads the table per request, so a save is live
+  within a minute; it shows as drift until exported or overwritten from code.
+  Quota subjects are the dimensions this instance resolves: `user`, `group`,
+  `project`, `connector` and `organization`.
+- Quota usage at `/admin/governance/quotas`: for each window the gateway is
+  counting right now, every subject's requests, tokens and spend against the
+  ceiling, with warn mode stated rather than painted red. Linked from the
+  Governance header.
+- Gateway page tabs (Overview, Providers, Routes, Settings, and a link to
+  Policies): a dispatch-order table, one card per provider with the models it
+  serves and the routes that reach it, and route names and descriptions that
+  are written to `services/ai/gateway.yaml` with the route. Every surface names
+  a route through the same label resolver (`repositories/config/gateway/labels.rs`).
+- `/admin/gateway/routes/{route_id}`: one route's dispatch facts and the shared
+  "Who gets this" access panel for the `gateway_route` entity.
+- The Safety findings tab on `/admin/governance` takes a search (`?q=`) over
+  category, scanner, excerpt, user and model.
+
 - Console chrome from the upstream admin: the sidebar is now six collapsible
   groups (AI activity, People & access, Governance, Platform, Account,
   Developer). The group holding the current page is always open; the others
@@ -147,6 +169,15 @@ Conventions (strict — hold every entry to them):
   server and bare tool the gateway records.
 
 ### Changed
+
+- The gateway route editor (`POST|PATCH|DELETE /api/public/admin/gateway/routes`,
+  `…/reorder`) writes the `gateway_routes` table and then regenerates the
+  file's `routes:` sequence from it (`repositories/gateway_routes/editor.rs`),
+  where it used to edit the YAML in place; the table and the file can no
+  longer disagree after a console edit, and a saved route is dispatched at the
+  next restart as before.
+- Governance page routes moved to `routes/ssr_governance.rs` (size split only;
+  every URL, including the two legacy `.csv` downloads, is unchanged).
 
 - Avatars take a stable per-person tone from the new `avatar_tone` helper and
   one size scale (`05-avatar.css`, `01-tokens-avatar.css`) instead of a single

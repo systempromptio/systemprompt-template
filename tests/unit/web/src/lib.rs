@@ -210,6 +210,8 @@ mod gateway_catalog_pure;
 #[cfg(test)]
 mod governance_decision_view;
 #[cfg(test)]
+mod governance_gateway;
+#[cfg(test)]
 mod governance_warnings_rollup;
 #[cfg(test)]
 mod hooks_track_ai_pure;
@@ -227,6 +229,8 @@ mod plugins_env_unauth;
 mod profile_schema;
 #[cfg(test)]
 mod projects_page;
+#[cfg(test)]
+mod route_labels_pure;
 #[cfg(test)]
 mod secrets_crypto_pure;
 #[cfg(test)]
@@ -277,6 +281,8 @@ mod services_tree_declarations;
 // configuration archive, and each plane's pure halves.
 #[cfg(test)]
 mod gateway_policies_drift;
+#[cfg(test)]
+mod gateway_policies_form;
 #[cfg(test)]
 mod gateway_policies_month_window;
 #[cfg(test)]

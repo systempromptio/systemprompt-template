@@ -1,0 +1,61 @@
+/* /admin/governance/quotas — one card per quota window, a meter per subject. */
+@layer components {
+
+.sp-quota {
+    margin-block: var(--sp-space-6);
+    padding: var(--sp-space-4);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface);
+}
+
+.sp-quota__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-space-2) var(--sp-space-4);
+    margin-bottom: var(--sp-space-3);
+}
+
+.sp-quota__title { margin: 0; font-size: var(--sp-text-lg); }
+
+.sp-quota__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-1) var(--sp-space-4);
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+}
+
+.sp-quota__table { table-layout: fixed; inline-size: 100%; }
+
+/* Why: the meter is the point of the page — a subject's distance from its
+   ceiling at a glance — so it gets the widest column and the fill is a
+   custom property the template sets, never an inline width. */
+.sp-quota__table th:nth-child(6) { inline-size: 22%; }
+
+.sp-quota__bar {
+    position: relative;
+    block-size: 0.5rem;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-bg-tertiary);
+    overflow: hidden;
+}
+
+.sp-quota__fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: var(--sp-fill, 0%);
+    border-radius: inherit;
+}
+
+.sp-quota__fill--ok   { background: var(--sp-success); }
+.sp-quota__fill--warn { background: var(--sp-warning); }
+.sp-quota__fill--err  { background: var(--sp-danger); }
+
+.sp-quota__row--breached td:first-child { color: var(--sp-danger-strong); }
+
+}

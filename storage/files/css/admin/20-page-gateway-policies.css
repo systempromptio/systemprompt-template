@@ -1,0 +1,99 @@
+/* /admin/gateway/policies — one card per policy row, each a plain form. */
+@layer components {
+
+.sp-gwp {
+    margin-block: var(--sp-space-6);
+    padding: var(--sp-space-4);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface);
+}
+
+.sp-gwp__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-space-2) var(--sp-space-4);
+    margin-bottom: var(--sp-space-3);
+}
+
+.sp-gwp__title { margin: 0; font-size: var(--sp-text-lg); }
+
+.sp-gwp__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+}
+
+.sp-gwp__form { display: grid; gap: var(--sp-space-4); }
+
+.sp-gwp__fieldset {
+    margin: 0;
+    padding: var(--sp-space-3) var(--sp-space-4);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+}
+
+/* Why: a disabled fieldset is the read-only view; the fields keep their
+   values and lose their affordance, which is the honest rendering of "you
+   may look". */
+.sp-gwp__fieldset:disabled { opacity: 0.8; }
+
+.sp-gwp__windows { display: grid; gap: var(--sp-space-2); }
+
+/* Why: six columns on one line per window so a row reads left to right as
+   "who · how long · the ceilings"; on a narrow screen the row stacks and the
+   header row, which only labels the columns, is dropped. */
+.sp-gwp__window {
+    display: grid;
+    grid-template-columns: 9rem 11rem repeat(4, minmax(6rem, 1fr));
+    gap: var(--sp-space-2);
+    align-items: start;
+}
+
+.sp-gwp__window--head {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.sp-gwp__period { display: grid; gap: var(--sp-space-1); }
+
+.sp-gwp__custom[hidden] { display: none; }
+
+.sp-gwp__checks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: var(--sp-space-4);
+    margin-bottom: var(--sp-space-3);
+}
+
+.sp-gwp__check-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+}
+
+.sp-gwp__check-group .sp-form-label { inline-size: 100%; margin: 0; }
+
+.sp-gwp__delete { margin-top: var(--sp-space-3); }
+
+.sp-gwp__summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.sp-gwp--new[open] .sp-gwp__summary { margin-bottom: var(--sp-space-3); }
+
+@media (max-width: 60rem) {
+    .sp-gwp__window { grid-template-columns: 1fr 1fr; }
+    .sp-gwp__window--head { display: none; }
+}
+
+}

@@ -1,0 +1,122 @@
+{{!--
+  The body of one gateway policy form: switches, windows, scanners, block
+  lists. Rendered for every existing policy and for the "new policy" form,
+  so it carries no name field of its own.
+
+    {{> gateway-policy-fields policy can_write=can_write}}
+--}}
+<fieldset class="sp-gwp__fieldset"{{#unless can_write}} disabled{{/unless}}>
+    <legend class="sp-form-section__group-label">Policy</legend>
+    <div class="sp-form-grid">
+        <div class="sp-form-field">
+            <label class="sp-form-label" for="gwp-{{name}}-enabled">Enabled</label>
+            <select class="sp-filter-select" id="gwp-{{name}}-enabled" name="enabled">
+                <option value="true"{{#if enabled}} selected{{/if}}>Yes</option>
+                <option value="false"{{#unless enabled}} selected{{/unless}}>No</option>
+            </select>
+        </div>
+        <div class="sp-form-field">
+            <label class="sp-form-label" for="gwp-{{name}}-priority">Priority</label>
+            <input class="sp-field-input" id="gwp-{{name}}-priority" name="priority" type="number" value="{{priority}}">
+            <span class="sp-field-hint">Higher wins each section outright.</span>
+        </div>
+        <div class="sp-form-field">
+            <label class="sp-form-label" for="gwp-{{name}}-quota-mode">Quota windows</label>
+            <select class="sp-filter-select" id="gwp-{{name}}-quota-mode" name="quota_mode">
+                <option value="warn"{{#if quota_warn}} selected{{/if}}>Warn — record a breach, let the request run</option>
+                <option value="enforce"{{#unless quota_warn}} selected{{/unless}}>Enforce — answer 429 past a ceiling</option>
+            </select>
+        </div>
+        <div class="sp-form-field">
+            <label class="sp-form-label" for="gwp-{{name}}-safety-mode">Safety scanners</label>
+            <select class="sp-filter-select" id="gwp-{{name}}-safety-mode" name="safety_mode">
+                <option value="warn"{{#if safety_warn}} selected{{/if}}>Warn — record every finding, refuse nothing</option>
+                <option value="enforce"{{#unless safety_warn}} selected{{/unless}}>Enforce — deny on a blocked category</option>
+            </select>
+        </div>
+    </div>
+</fieldset>
+
+<fieldset class="sp-gwp__fieldset"{{#unless can_write}} disabled{{/unless}}>
+    <legend class="sp-form-section__group-label">Quota windows</legend>
+    <p class="sp-u-text-sm sp-u-text-secondary">One row per subject and period. A row with no subject is ignored; a row with a subject needs at least one ceiling. Cost is in dollars.</p>
+    {{#if has_month_window}}
+    <p class="sp-u-text-sm sp-u-text-tertiary">This policy has a calendar-month window; the daily job keeps it aligned to the month's end.</p>
+    {{/if}}
+    <div class="sp-gwp__windows">
+        <div class="sp-gwp__window sp-gwp__window--head" aria-hidden="true">
+            <span>Subject</span><span>Period</span><span>Max requests</span><span>Max input tokens</span><span>Max output tokens</span><span>Max cost ($)</span>
+        </div>
+        {{#each windows}}
+        <div class="sp-gwp__window" data-window="{{index}}">
+            <label class="sp-u-sr-only" for="gwp-{{../name}}-w{{index}}-subject">Subject</label>
+            <select class="sp-filter-select" id="gwp-{{../name}}-w{{index}}-subject" name="w{{index}}_subject">
+                {{#each subjects}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}
+            </select>
+            <div class="sp-gwp__period">
+                <label class="sp-u-sr-only" for="gwp-{{../name}}-w{{index}}-window">Period</label>
+                <select class="sp-filter-select" id="gwp-{{../name}}-w{{index}}-window" name="w{{index}}_window" data-window-choice>
+                    <option value="hour"{{#if (eq choice "hour")}} selected{{/if}}>hour</option>
+                    <option value="day"{{#if (eq choice "day")}} selected{{/if}}>day</option>
+                    <option value="week"{{#if (eq choice "week")}} selected{{/if}}>week</option>
+                    <option value="month"{{#if (eq choice "month")}} selected{{/if}}>calendar month</option>
+                    <option value="custom"{{#if (eq choice "custom")}} selected{{/if}}>custom (seconds)</option>
+                </select>
+                <input class="sp-field-input sp-gwp__custom" name="w{{index}}_window" type="number" min="1" value="{{custom_seconds}}" placeholder="seconds" aria-label="Custom window in seconds" data-window-custom{{#unless (eq choice "custom")}} hidden{{/unless}}>
+                {{#if label}}<span class="sp-field-hint">{{label}}</span>{{/if}}
+            </div>
+            <input class="sp-field-input" name="w{{index}}_max_requests" type="number" min="0" value="{{max_requests}}" aria-label="Max requests">
+            <input class="sp-field-input" name="w{{index}}_max_input_tokens" type="number" min="0" value="{{max_input_tokens}}" aria-label="Max input tokens">
+            <input class="sp-field-input" name="w{{index}}_max_output_tokens" type="number" min="0" value="{{max_output_tokens}}" aria-label="Max output tokens">
+            <input class="sp-field-input" name="w{{index}}_max_cost" type="text" inputmode="decimal" value="{{max_cost}}" aria-label="Max cost in dollars">
+        </div>
+        {{/each}}
+    </div>
+</fieldset>
+
+<fieldset class="sp-gwp__fieldset"{{#unless can_write}} disabled{{/unless}}>
+    <legend class="sp-form-section__group-label">Safety scanners</legend>
+    <div class="sp-gwp__checks">
+        <div class="sp-gwp__check-group">
+            <p class="sp-form-label">Scanners</p>
+            {{#each scanners}}
+            <label class="sp-choice"><input type="checkbox" name="scanner" value="{{value}}"{{#if checked}} checked{{/if}}> {{value}}</label>
+            {{/each}}
+            <span class="sp-field-hint">`secrets` is egress-only; list its category under responses.</span>
+        </div>
+        <div class="sp-gwp__check-group">
+            <p class="sp-form-label">Block on request</p>
+            {{#each block}}
+            <label class="sp-choice"><input type="checkbox" name="block" value="{{value}}"{{#if checked}} checked{{/if}}> {{value}}</label>
+            {{/each}}
+        </div>
+        <div class="sp-gwp__check-group">
+            <p class="sp-form-label">Block on response</p>
+            {{#each block_response}}
+            <label class="sp-choice"><input type="checkbox" name="block_response" value="{{value}}"{{#if checked}} checked{{/if}}> {{value}}</label>
+            {{/each}}
+            <span class="sp-field-hint">Buffered replies only; a streamed reply is audited, never blocked.</span>
+        </div>
+    </div>
+    <div class="sp-form-grid">
+        <div class="sp-form-field">
+            <label class="sp-form-label" for="gwp-{{name}}-history">Conversation history</label>
+            <select class="sp-filter-select" id="gwp-{{name}}-history" name="history">
+                <option value="off"{{#if (eq history "off")}} selected{{/if}}>off — scan the new turn only</option>
+                <option value="audit"{{#if (eq history "audit")}} selected{{/if}}>audit — rescan earlier turns, record only</option>
+                <option value="block"{{#if (eq history "block")}} selected{{/if}}>block — rescan earlier turns, may deny</option>
+            </select>
+        </div>
+        <div class="sp-form-field">
+            <label class="sp-form-label" for="gwp-{{name}}-phrases">Heuristic phrases</label>
+            <textarea class="sp-field-input" id="gwp-{{name}}-phrases" name="heuristic_phrases" rows="4">{{heuristic_phrases}}</textarea>
+            <span class="sp-field-hint">One per line. Empty falls back to core's builtin list; the heuristic scanner needs at least one phrase from either.</span>
+        </div>
+    </div>
+</fieldset>
+
+{{#if can_write}}
+<div class="sp-form-actions">
+    <button type="submit" class="sp-btn sp-btn--sm sp-btn--primary">{{#if is_new}}Create policy{{else}}Save policy{{/if}}</button>
+</div>
+{{/if}}

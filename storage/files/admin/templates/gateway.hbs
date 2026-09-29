@@ -9,6 +9,8 @@
         {{#*inline "header_actions"}}
             <button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="route-new">New route</button>
             <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/access-control?entity_kind=gateway_route">Route access</a>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/gateway/policies">Policies</a>
+            <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{sync_url}}">Sync</a>
         {{/inline}}
     {{/components/page-header}}
 
@@ -18,18 +20,173 @@
     {{#if catalog_error}}
     {{> components/notice tone="warn" title="The resolved route set is unavailable" message=catalog_error}}
     {{/if}}
+    <details class="sp-p-gateway__explain">
+        <summary>How saved routes reach the dispatcher</summary>
+        <dl class="sp-p-gateway__explain-body">
+            <div><dt>Saved routes are dispatched at the next restart</dt><dd>{{runtime_note}}</dd></div>
+            <div><dt>Names travel with the file</dt><dd>{{names_note}}</dd></div>
+        </dl>
+    </details>
 
     <section class="sp-kpi-grid" aria-label="Gateway totals">
         {{#each kpis}}
-        {{> components/kpi label=this.label value=this.value note=this.sub tone=this.tone}}
+        {{> components/kpi label=this.label value=this.value note=this.note tone=this.tone}}
         {{/each}}
     </section>
 
     {{> components/tabs tabs=tabs nav_label="Gateway views"}}
 
-    {{#unless show_resolved}}
+    {{#if show_overview}}
+    <section aria-label="Dispatch order">
+    {{> components/section title="Dispatch order" count=dispatch_count note="Every route the dispatcher will try, first match wins. Edit the order on the Routes tab."}}
+    {{#if dispatch_count}}
+    {{#> components/table caption="Resolved routes in dispatch order" modifier="sp-p-gateway__dispatch"}}
+        <thead><tr>
+            <th class="sp-table__cell--num" aria-sort="none">#</th>
+            <th aria-sort="none">Route</th>
+            <th aria-sort="none">Pattern → upstream</th>
+            <th aria-sort="none">Provider</th>
+            <th aria-sort="none">Surface</th>
+            <th aria-sort="none">Fails over to</th>
+            <th aria-sort="none">Requires</th>
+            <th class="sp-table__cell--num" aria-sort="none">Rules</th>
+        </tr></thead>
+        <tbody>
+        {{#each dispatch}}
+        <tr>
+            <td class="sp-table__cell--num sp-u-num">{{#if route.position}}{{route.position}}{{else}}<span class="sp-badge sp-badge--muted">catch-all</span>{{/if}}</td>
+            <td class="sp-table__cell--primary"><a class="sp-table__link" href="/admin/gateway?tab=routes">{{route.label}}</a><span class="sp-p-gateway__sub sp-u-mono">{{route.id}}</span></td>
+            <td class="sp-table__cell--mono">{{route.model_pattern}}{{#if route.upstream}} → {{route.upstream}}{{/if}}</td>
+            <td><a class="sp-table__link" href="/admin/gateway?tab=providers#provider-{{provider}}">{{provider_label}}</a><span class="sp-p-gateway__sub sp-u-mono">{{provider}}</span></td>
+            <td>{{> components/badge tone=surface_tone text=surface}}</td>
+            <td class="sp-table__cell--muted">{{#if route.fallback}}{{route.fallback}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td class="sp-table__cell--muted">{{#if route.requires}}{{route.requires}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{#if route.grants}}<a class="sp-table__link" href="{{route.matrix_url}}">{{route.grants}}</a>{{else}}<span class="sp-u-text-tertiary">0</span>{{/if}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state heading="No routes resolved" message="The dispatcher has nothing to match, so every request is refused."}}
+    {{/if}}
+    </section>
+
+    <section aria-label="Providers">
+    {{> components/section title="Providers" count=providers_count note="Every upstream this instance can dispatch to, in the order providers.yaml declares them. A provider with no route is priced but unreachable."}}
+    {{#if providers_count}}
+    {{#> components/table caption="Providers and the routes that reach them" modifier="sp-p-gateway__providers"}}
+        <thead><tr>
+            <th aria-sort="none">Provider</th>
+            <th aria-sort="none">Surface</th>
+            <th aria-sort="none">Wire</th>
+            <th class="sp-table__cell--num" aria-sort="none">Models</th>
+            <th class="sp-table__cell--num" aria-sort="none">Routes</th>
+            <th class="sp-table__cell--num" aria-sort="none">Rules</th>
+            <th aria-sort="none">Failover for</th>
+            <th aria-sort="none">State</th>
+        </tr></thead>
+        <tbody>
+        {{#each provider_cards}}
+        <tr{{#if unreachable}} class="is-unreachable"{{/if}}>
+            <td class="sp-table__cell--primary"><a class="sp-table__link" href="/admin/gateway?tab=providers#{{anchor}}">{{label}}</a><span class="sp-p-gateway__sub sp-u-mono">{{id}}</span></td>
+            <td>{{> components/badge tone=surface_tone text=surface}}</td>
+            <td class="sp-table__cell--mono">{{wire}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{model_count}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{route_count}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{#if grants_total}}<a class="sp-table__link" href="{{reached_by_url}}">{{grants_total}}</a>{{else}}<span class="sp-u-text-tertiary">0</span>{{/if}}</td>
+            <td class="sp-table__cell--muted">{{#if fallback_for}}{{#each fallback_for}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td>{{> components/badge tone=state_tone text=state_label}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state message="No provider registry is loaded, so no route can be checked against one."}}
+    {{/if}}
+    </section>
+    {{/if}}
+
+    {{#if show_providers}}
+    <section aria-label="Providers and models">
+    {{> components/section title="Providers" count=providers_count note="Open a provider for its endpoint, the models it serves and every route that delivers traffic there."}}
+    {{#if providers_count}}
+    {{#> components/table caption="Providers with their models and routes" modifier="sp-p-gateway__providers"}}
+        <thead><tr>
+            <th aria-sort="none">Provider</th>
+            <th aria-sort="none">Endpoint</th>
+            <th aria-sort="none">Surface</th>
+            <th class="sp-table__cell--num" aria-sort="none">Models</th>
+            <th class="sp-table__cell--num" aria-sort="none">Routes</th>
+            <th class="sp-table__cell--num" aria-sort="none">Rules</th>
+            <th aria-sort="none">State</th>
+            <th class="sp-table__cell--actions"><span class="sp-u-sr-only">Open</span></th>
+        </tr></thead>
+        <tbody>
+        {{#each provider_cards}}
+        <tr class="sp-table__row--expand{{#if unreachable}} is-unreachable{{/if}}" id="{{anchor}}" data-expand-row tabindex="0">
+            <td class="sp-table__cell--primary">{{label}}<span class="sp-p-gateway__sub sp-u-mono">{{id}}</span></td>
+            <td class="sp-table__cell--mono sp-p-gateway__endpoint">{{endpoint}}</td>
+            <td>{{> components/badge tone=surface_tone text=surface}} <span class="sp-badge sp-badge--muted">{{wire}} wire</span></td>
+            <td class="sp-table__cell--num sp-u-num">{{model_count}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{route_count}}</td>
+            <td class="sp-table__cell--num sp-u-num">{{#if grants_total}}<a class="sp-table__link" href="{{reached_by_url}}">{{grants_total}}</a>{{else}}<span class="sp-u-text-tertiary">0</span>{{/if}}</td>
+            <td>{{> components/badge tone=state_tone text=state_label}}</td>
+            <td class="sp-table__cell--actions">
+                <button class="sp-btn sp-btn--sm sp-btn--icon sp-btn--ghost sp-table__row-toggle" data-action="row-toggle" type="button" aria-expanded="false" aria-controls="{{anchor}}-detail" aria-label="Show models and routes for {{label}}">
+                    <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </td>
+        </tr>
+        <tr class="sp-table__row-detail" id="{{anchor}}-detail" hidden>
+            <td colspan="8">
+<div class="sp-table__detail-panel"><div class="sp-table__detail-inner">
+            <dl class="sp-p-gateway__detail">
+                {{#if description}}<div><dt>About</dt><dd>{{description}}</dd></div>{{/if}}
+                <div><dt>Endpoint</dt><dd class="sp-u-mono">{{endpoint}}</dd></div>
+                {{#if fallback_for}}<div><dt>Failover for</dt><dd>{{#each fallback_for}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</dd></div>{{/if}}
+                <div><dt>Models</dt><dd>{{#if models}}<ul class="sp-p-gateway__models">{{#each models}}<li><code class="sp-code-inline">{{this}}</code></li>{{/each}}</ul>{{else}}<span class="sp-u-text-tertiary">none priced</span>{{/if}}</dd></div>
+            </dl>
+            {{#if routes}}
+            <table class="sp-table__el sp-table__el--nested">
+                <thead><tr>
+                    <th class="sp-table__cell--num">#</th>
+                    <th>Route</th>
+                    <th>Pattern → upstream</th>
+                    <th>Fails over to</th>
+                    <th>Requires</th>
+                    <th class="sp-table__cell--num">Rules</th>
+                </tr></thead>
+                <tbody>
+                {{#each routes}}
+                <tr>
+                    <td class="sp-table__cell--num sp-u-num">{{#if position}}{{position}}{{else}}<span class="sp-badge sp-badge--muted">catch-all</span>{{/if}}</td>
+                    <td class="sp-table__cell--primary">{{label}}<span class="sp-p-gateway__sub sp-u-mono">{{id}}</span>{{#if description}}<span class="sp-p-gateway__sub">{{description}}</span>{{/if}}</td>
+                    <td class="sp-table__cell--mono">{{model_pattern}}{{#if upstream}} → {{upstream}}{{/if}}</td>
+                    <td class="sp-table__cell--muted">{{#if fallback}}{{fallback}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+                    <td class="sp-table__cell--muted">{{#if requires}}{{requires}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+                    <td class="sp-table__cell--num sp-u-num"><a class="sp-table__link" href="{{matrix_url}}">{{grants}}</a></td>
+                </tr>
+                {{/each}}
+                </tbody>
+            </table>
+            {{else}}
+            <p class="sp-p-gateway__empty">No route names this provider, so no request can reach it.</p>
+            {{/if}}
+</div></div>
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{> components/empty-state message="No provider registry is loaded, so no route can be checked against one."}}
+    {{/if}}
+    </section>
+    {{/if}}
+
+    {{#if show_routes}}
     <section aria-label="Routes">
-    {{#> components/section title="Routes" count=routes_count note="Tried top to bottom. The first pattern that matches a requested model wins."}}
+    {{#> components/section title="Routes" count=routes_count note="In the order the dispatcher tries them: the first pattern that matches a requested model wins."}}
         {{#*inline "section_actions"}}
             <button type="button" class="sp-btn sp-btn--xs sp-btn--outline" data-action="route-new">Add route</button>
         {{/inline}}
@@ -39,7 +196,7 @@
     {{#> components/table caption="Gateway routes in dispatch order" modifier="sp-p-gateway__routes"}}
         <thead><tr>
             <th class="sp-table__cell--num" aria-sort="none">#</th>
-            <th aria-sort="none">Route id</th>
+            <th aria-sort="none">Route</th>
             <th aria-sort="none">Model pattern</th>
             <th aria-sort="none">Provider</th>
             <th aria-sort="none">Upstream</th>
@@ -50,11 +207,11 @@
         </tr></thead>
         <tbody>
         {{#each routes}}
-        <tr data-route-index="{{index}}" data-route-id="{{id}}">
+        <tr data-route-index="{{index}}" data-route-id="{{id}}" data-name="{{name}}" data-description="{{description}}" data-model-pattern="{{model_pattern}}" data-provider="{{provider}}" data-upstream="{{upstream_model}}">
             <td class="sp-table__cell--num sp-u-num">{{add index 1}}</td>
-            <td class="sp-table__cell--mono"><a class="sp-table__link" href="{{matrix_url}}"{{#unless dispatchable}} title="not dispatched"{{/unless}}>{{id}}</a></td>
+            <td><a class="sp-table__link" href="{{matrix_url}}"{{#unless dispatchable}} title="not dispatched"{{/unless}}>{{label}}</a><br><span class="sp-u-mono sp-u-text-xs sp-u-text-tertiary">{{id}}</span></td>
             <td class="sp-table__cell--mono">{{model_pattern}}</td>
-            <td>{{provider}}</td>
+            <td>{{provider_label}} <span class="sp-u-mono sp-u-text-xs sp-u-text-tertiary">{{provider}}</span></td>
             <td class="sp-table__cell--mono">{{#if upstream_model}}{{upstream_model}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
             <td>{{> components/badge tone=surface_tone text=surface}}</td>
             <td class="sp-table__cell--muted" title="when: {{default when "any"}}{{#if has_pricing}} · pricing set{{/if}}">{{#if requires}}{{requires}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
@@ -73,13 +230,13 @@
     {{> components/empty-state heading="No routes" message="The gateway declares no routes, so every model falls through to the catch-all."}}
     {{/if}}
     </section>
-    {{else}}
+
     <section aria-label="Resolved routes">
     {{> components/section title="Resolved but not declared" count=resolved_only_count note="Routes the dispatcher will match that the file does not list, such as the synthesized catch-all."}}
     {{#if resolved_only_count}}
     {{#> components/table caption="Routes present in the resolved set but absent from the gateway file"}}
         <thead><tr>
-            <th aria-sort="none">Route id</th>
+            <th aria-sort="none">Route</th>
             <th aria-sort="none">Model pattern</th>
             <th aria-sort="none">Provider</th>
             <th aria-sort="none">Upstream</th>
@@ -88,7 +245,7 @@
         <tbody>
         {{#each resolved_only}}
         <tr data-route-id="{{id}}">
-            <td class="sp-table__cell--mono">{{id}}</td>
+            <td class="sp-table__cell--primary">{{label}}<span class="sp-p-gateway__sub sp-u-mono">{{id}}</span></td>
             <td class="sp-table__cell--mono">{{model_pattern}}</td>
             <td>{{provider}}</td>
             <td class="sp-table__cell--mono">{{#if upstream_model}}{{upstream_model}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
@@ -101,8 +258,10 @@
     {{> components/empty-state message="Every route the dispatcher matches is declared in the file."}}
     {{/if}}
     </section>
-    {{/unless}}
+    {{/if}}
 
+    {{#if show_settings}}
+    <div class="sp-p-gateway__settings">
     <section aria-label="Settings">
     {{> components/section title="Settings" note="Applied to every inference request the gateway accepts."}}
     <form class="sp-form-grid" id="gateway-settings" novalidate>
@@ -131,41 +290,33 @@
     </form>
     </section>
 
-    <div class="sp-catalog-detail-grid">
-        <section class="sp-catalog-rel-section" aria-label="Providers">
-            <h2 class="sp-catalog-rel-section__title">Providers <span class="sp-count-pill">{{providers_count}}</span></h2>
-            {{#if providers_count}}
-            <ul class="sp-rel-list">
-                {{#each providers}}
-                <li class="sp-rel-link sp-rel-link--static">
-                    <span class="sp-rel-link__name sp-u-mono">{{name}}</span>
-                    <span class="sp-u-text-tertiary sp-u-text-xs">{{surface}} · {{model_count}} models{{#unless advertised}} · backend only{{/unless}}</span>
-                </li>
-                {{/each}}
-            </ul>
-            {{else}}
-            {{> components/empty-state message="No provider registry is loaded, so no route can be checked against one."}}
-            {{/if}}
-        </section>
-
-        <section class="sp-catalog-rel-section" aria-label="Catalog probe">
-            <h2 class="sp-catalog-rel-section__title">What one person sees</h2>
-            <p class="sp-u-text-sm sp-u-text-secondary">The routes the gateway would advertise to a chosen account, resolved through the same rules the dispatcher uses.</p>
-            <form class="sp-form-field sp-form-field--inline" id="gateway-probe" novalidate>
-                <label class="sp-form-label" for="gw-probe-user">Account</label>
-                <select class="sp-filter-select" id="gw-probe-user" name="user_id">
-                    {{#each probe_users}}<option value="{{id}}">{{label}}</option>{{/each}}
-                </select>
-                <button type="submit" class="sp-btn sp-btn--sm sp-btn--outline">Probe</button>
-            </form>
-            <div data-probe-result role="status" class="sp-u-mt-3"></div>
-        </section>
+    <section aria-label="Catalog probe">
+    {{> components/section title="What one person sees" note="The routes the gateway would advertise to a chosen account, resolved through the same rules the dispatcher uses."}}
+        <form class="sp-form-field sp-form-field--inline" id="gateway-probe" novalidate>
+            <label class="sp-form-label" for="gw-probe-user">Account</label>
+            <select class="sp-filter-select" id="gw-probe-user" name="user_id">
+                {{#each probe_users}}<option value="{{id}}">{{label}}</option>{{/each}}
+            </select>
+            <button type="submit" class="sp-btn sp-btn--sm sp-btn--outline">Probe</button>
+        </form>
+        <div data-probe-result role="status"></div>
+    </section>
     </div>
+    {{/if}}
 
     <dialog class="sp-dialog" id="gateway-route-dialog" aria-labelledby="gw-dialog-title">
         <form method="dialog" class="sp-dialog-form" id="gateway-route-form" novalidate>
             <h2 class="sp-ac-dialog__header" id="gw-dialog-title">Route</h2>
             <div class="sp-ac-dialog__body">
+                <div class="sp-form-field">
+                    <label class="sp-form-label" for="gw-route-name">Name</label>
+                    <input class="sp-field-input" id="gw-route-name" name="name" placeholder="Claude (Anthropic)" maxlength="80">
+                    <span class="sp-field-hint">Shown everywhere in place of the route id. Blank derives one from the pattern and provider.</span>
+                </div>
+                <div class="sp-form-field">
+                    <label class="sp-form-label" for="gw-route-description">Description</label>
+                    <input class="sp-field-input" id="gw-route-description" name="description" placeholder="What this route is for and what it reaches" maxlength="240">
+                </div>
                 <div class="sp-form-field">
                     <label class="sp-form-label" for="gw-route-id">Route id</label>
                     <input class="sp-field-input" id="gw-route-id" name="id" placeholder="left blank, derived from pattern and provider">
@@ -178,7 +329,7 @@
                     <label class="sp-form-label" for="gw-route-provider">Provider</label>
                     <input class="sp-field-input" id="gw-route-provider" name="provider" required list="gw-provider-list">
                     <datalist id="gw-provider-list">
-                        {{#each providers}}<option value="{{name}}"></option>{{/each}}
+                        {{#each providers}}<option value="{{name}}">{{label}}</option>{{/each}}
                     </datalist>
                 </div>
                 <div class="sp-form-field">

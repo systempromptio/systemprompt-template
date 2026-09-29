@@ -1,0 +1,72 @@
+{{#> layout title=title page=page}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="Usage against ceiling, per subject, for every quota window the gateway is enforcing now. Each row is the one bucket the gateway reserves against in the current period; a subject with no row has made no request in it."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--primary" href="{{editor_url}}">Edit policies</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance">Decisions</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{docs_url}}" target="_blank" rel="noopener noreferrer">How quotas work</a>
+        {{/inline}}
+    {{/components/page-header}}
+
+    {{#if quota_warn}}
+    {{> components/notice tone="warn" title="Warn mode" message="Every window is reserved against and every ceiling evaluated, but a breach is recorded as a warning and the request runs. A subject past 100% here was never refused."}}
+    {{else}}
+    {{> components/notice tone="info" title="Enforce mode" message="A subject past a ceiling is answered 429 until the window turns over."}}
+    {{/if}}
+
+    {{#each windows}}
+    <section class="sp-quota" data-window="{{subject_kind}}" aria-labelledby="quota-{{@index}}">
+        <div class="sp-quota__head">
+            <h2 id="quota-{{@index}}" class="sp-quota__title">per <span class="sp-u-mono">{{subject_kind}}</span> · {{label}}</h2>
+            <div class="sp-quota__meta">
+                <span>period <span class="sp-u-mono">{{formatDate window_start}}</span> → <span class="sp-u-mono">{{formatDate window_end}}</span></span>
+                {{#if max_requests}}<span>≤ {{formatNumber max_requests}} requests</span>{{/if}}
+                {{#if max_input_tokens}}<span>≤ {{formatNumber max_input_tokens}} input tokens</span>{{/if}}
+                {{#if max_output_tokens}}<span>≤ {{formatNumber max_output_tokens}} output tokens</span>{{/if}}
+                {{#if max_cost}}<span>≤ {{max_cost}}</span>{{/if}}
+                {{#if breached}}{{> components/badge tone="err" text=(concat breached " past ceiling")}}{{/if}}
+                {{#if is_month}}{{> components/badge tone="info" text="calendar month (interim)"}}{{/if}}
+            </div>
+        </div>
+        {{#if rows}}
+        {{#> components/table caption=(concat "Usage per " subject_kind) modifier="sp-quota__table"}}
+            <thead><tr>
+                <th>Subject</th>
+                <th>Requests</th>
+                <th>Input tokens</th>
+                <th>Output tokens</th>
+                <th>Cost</th>
+                <th>Headroom</th>
+                <th class="sp-col-date">Last request</th>
+            </tr></thead>
+            <tbody>
+            {{#each rows}}
+            <tr data-subject="{{subject_id}}"{{#if breached}} class="sp-quota__row--breached"{{/if}}>
+                <td class="sp-table__cell--mono">{{#if subject_url}}<a class="sp-table__link" href="{{subject_url}}">{{subject_id}}</a>{{else}}{{subject_id}}{{/if}}</td>
+                <td class="sp-table__cell--num">{{formatNumber requests}}</td>
+                <td class="sp-table__cell--num">{{formatNumber input_tokens}}</td>
+                <td class="sp-table__cell--num">{{formatNumber output_tokens}}</td>
+                <td class="sp-table__cell--num">{{cost}}</td>
+                <td>
+                    <div class="sp-quota__bar" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{bar_percent}}" aria-label="{{percent}}% of the {{ceiling}} ceiling">
+                        <span class="sp-quota__fill sp-quota__fill--{{tone}}" style="--sp-fill:{{bar_percent}}%"></span>
+                    </div>
+                    <span class="sp-u-text-xs sp-u-text-secondary">{{percent}}% of {{ceiling}}</span>
+                </td>
+                <td class="sp-table__cell--date">{{updated}}</td>
+            </tr>
+            {{/each}}
+            </tbody>
+        {{/components/table}}
+        {{else}}
+        {{> components/empty-state heading="No usage in this period" message="No subject has made a request in the current window."}}
+        {{/if}}
+    </section>
+    {{/each}}
+
+    {{#unless has_windows}}
+    {{> components/empty-state heading="No quota windows" message="No enabled gateway policy declares a quota window, so nothing is being counted. Add one in the policy editor."}}
+    {{/unless}}
+    {{/inline}}
+{{/layout}}

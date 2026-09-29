@@ -10,7 +10,8 @@
 
 use serde::Serialize;
 
-use crate::handlers::ssr::types::BreadcrumbView;
+use super::models::{DispatchRow, ProviderCardView};
+use crate::handlers::ssr::types::{BreadcrumbView, PickableUserView, TabLinkView};
 
 #[derive(Debug, Clone, Serialize)]
 pub(super) struct GatewayRouteRow {
@@ -18,6 +19,12 @@ pub(super) struct GatewayRouteRow {
     // endpoint addresses and what reordering permutes. Not a display detail.
     pub index: usize,
     pub id: String,
+    pub name: String,
+    pub description: String,
+    // Why: the declared name, or the label derived from pattern and
+    // provider — the same string access control shows for this route.
+    pub label: String,
+    pub provider_label: String,
     pub model_pattern: String,
     pub provider: String,
     pub upstream_model: String,
@@ -38,6 +45,7 @@ pub(super) struct GatewayRouteRow {
 #[derive(Debug, Clone, Serialize)]
 pub(super) struct ResolvedOnlyRow {
     pub id: String,
+    pub label: String,
     pub model_pattern: String,
     pub provider: String,
     pub upstream_model: String,
@@ -47,6 +55,7 @@ pub(super) struct ResolvedOnlyRow {
 #[derive(Debug, Clone, Serialize)]
 pub(super) struct ProviderOptionView {
     pub name: String,
+    pub label: String,
     pub surface: String,
     pub model_count: usize,
     pub advertised: bool,
@@ -56,14 +65,8 @@ pub(super) struct ProviderOptionView {
 pub(super) struct GatewayKpiView {
     pub label: &'static str,
     pub value: String,
-    pub sub: String,
+    pub note: String,
     pub tone: &'static str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub(super) struct ProbeAccountView {
-    pub id: String,
-    pub label: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -83,12 +86,23 @@ pub(super) struct GatewayPageData {
     pub resolved_only_count: usize,
     pub providers: Vec<ProviderOptionView>,
     pub providers_count: usize,
-    pub probe_users: Vec<ProbeAccountView>,
+    pub probe_users: Vec<PickableUserView>,
+    pub provider_cards: Vec<ProviderCardView>,
+    pub dispatch: Vec<DispatchRow>,
+    pub dispatch_count: usize,
     // Why: the page cannot mutate a file it could not read. The banner carries
     // the loader's own message rather than an empty table, because "no routes"
     // and "the gateway file is unreadable" are opposite operator situations.
     pub load_error: String,
     pub catalog_error: String,
-    pub tabs: Vec<crate::handlers::ssr::types::TabLinkView>,
-    pub show_resolved: bool,
+    // Why: the table is what the editor writes and the file is what core
+    // boots from; the page prints the one sentence that reconciles them.
+    pub runtime_note: &'static str,
+    pub sync_url: &'static str,
+    pub names_note: &'static str,
+    pub tabs: Vec<TabLinkView>,
+    pub show_overview: bool,
+    pub show_providers: bool,
+    pub show_routes: bool,
+    pub show_settings: bool,
 }

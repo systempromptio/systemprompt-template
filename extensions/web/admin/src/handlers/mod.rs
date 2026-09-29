@@ -41,8 +41,9 @@ pub(crate) use webhook::{
 };
 
 pub(crate) use gateway::{
-    create_gateway_route_handler, delete_gateway_route_handler, get_gateway_handler,
-    reorder_gateway_routes_handler, update_gateway_route_handler, update_gateway_settings_handler,
+    create_gateway_route_handler, delete_gateway_route_handler, gateway_config_view,
+    get_gateway_handler, reorder_gateway_routes_handler, update_gateway_route_handler,
+    update_gateway_settings_handler,
 };
 pub(crate) use jobs::list_jobs_handler;
 pub(crate) use plugins::list_plugins_handler;

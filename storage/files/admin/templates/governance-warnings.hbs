@@ -6,6 +6,7 @@
       {{#*inline "header_actions"}}
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/approvals">Approvals</a>
         <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/secrets">Secrets audit</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="/admin/governance/quotas">Quotas</a>
         {{> components/export-button export}}
       {{/inline}}
     {{/components/page-header}}
@@ -22,9 +23,9 @@
       {{> components/time-range time_range}}
     </div>
 
-    <nav class="sp-p-governance__stages" aria-label="Deny counts by chain stage">
+    <nav class="sp-p-governance__stages" aria-label="Policies active in this window">
       {{#each stage_filters}}
-      <a class="sp-p-governance__stage{{#if this.active}} is-active{{/if}}" href="{{this.href}}">
+      <a class="sp-p-governance__stage sp-p-governance__stage--{{this.tone}}{{#if this.active}} is-active{{/if}}" href="{{this.href}}">
         <span class="sp-p-governance__stage-label">{{this.label}}</span>
         <span class="sp-p-governance__stage-count sp-u-num">{{this.count}}</span>
       </a>
@@ -66,9 +67,9 @@
         </select>
       </label>
       <label class="sp-toolbar__search">
-        <span class="sp-u-sr-only">Search tool, user or reason</span>
+        <span class="sp-u-sr-only">Search every evaluation in a call</span>
         <input class="sp-search-input" type="search" name="q" value="{{search}}"
-               placeholder="Tool, user or reason…">
+               placeholder="Any evaluation: target, user, reason, trace…">
       </label>
       {{/if}}
       {{#if is_safety}}
@@ -84,6 +85,11 @@
         <select class="sp-filter-select" name="blocked">
           {{#each outcomes}}<option value="{{this.value}}"{{#if this.selected}} selected{{/if}}>{{this.label}}</option>{{/each}}
         </select>
+      </label>
+      <label class="sp-toolbar__search">
+        <span class="sp-u-sr-only">Search the findings</span>
+        <input class="sp-search-input" type="search" name="q" value="{{search}}"
+               placeholder="Category, scanner, excerpt, user, model…">
       </label>
       {{/if}}
       {{#if is_hooks}}
@@ -107,7 +113,7 @@
           <td class="sp-table__cell--date">{{this.created_at}}</td>
           <td><code class="sp-code-inline">{{this.kind}}</code></td>
           <td>{{this.tool_name}}</td>
-          <td class="sp-table__cell--muted">{{this.plugin_id}}</td>
+          <td class="sp-table__cell--muted">{{this.plugin}}</td>
           <td class="sp-table__cell--mono">{{this.user_id}}</td>
           <td>{{> components/badge tone=this.tone text=this.status}}</td>
         </tr>
@@ -143,6 +149,27 @@
     </div>
     {{/if}}
 
+    {{#if attention}}
+    <section class="sp-p-governance__attention" aria-label="Warning groups for review">
+      <div class="sp-p-governance__attention-head">
+        <h2 class="sp-p-governance__attention-title">Review groups</h2>
+        <span class="sp-p-governance__attention-count sp-u-num">{{attention_total}}</span>
+        {{#if attention_more_url}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{attention_more_url}}">See all</a>{{/if}}
+      </div>
+      <ul class="sp-p-governance__attention-list">
+        {{#each attention}}
+        <li class="sp-p-governance__attention-item">
+          {{> components/badge tone=this.tone text=this.decision}}
+          <a class="sp-u-link-strong" href="{{this.detail_url}}">{{this.target}}</a>
+          <span class="sp-p-governance__attention-who">{{this.user_label}}</span>
+          <span class="sp-p-governance__attention-why" title="{{this.reason_full}}">{{this.reason}} · {{this.eval_count}} evaluations</span>
+          <span class="sp-p-governance__attention-when">{{this.created_at}}</span>
+        </li>
+        {{/each}}
+      </ul>
+    </section>
+    {{/if}}
+
     {{#if is_decisions}}
     {{#> components/table caption="Governance decisions" pagination=pagination modifier="sp-t-decisions"}}
       <thead><tr>
@@ -153,22 +180,23 @@
       </tr></thead>
       <tbody>
       {{#each decisions}}
-        <tr>
-          <td class="sp-table__cell--date">{{this.created_at}}</td>
+        <tr{{#if this.attention}} class="sp-t-decisions__row--attention"{{/if}}>
+          <td class="sp-table__cell--date" title="{{this.eval_count}} evaluation(s)">{{this.created_at}} <span class="sp-table__cell--muted">{{this.span}}</span></td>
           <td>{{> components/badge tone=this.tone text=this.decision}}</td>
-          <td><a class="sp-table__link" href="{{this.detail_url}}"><code class="sp-code-inline">{{this.policy}}</code></a></td>
-          <td class="sp-table__cell--muted">{{this.stage}}</td>
-          <td>{{this.tool_name}}</td>
-          <td class="sp-table__cell--mono"><a class="sp-table__link" href="{{this.user_url}}">{{this.user_id}}</a></td>
-          <td class="sp-table__cell--muted">{{this.scope}}</td>
-          <td class="sp-p-governance__reason" title="{{this.reason_full}}">{{this.reason}}</td>
+          <td title="{{this.target_title}}">{{this.target}}</td>
+          <td><a class="sp-table__link" href="{{this.user_url}}" title="{{this.user_id}}">{{this.user_label}}</a></td>
+          <td class="sp-p-governance__reason" title="{{this.reason_full}}">{{#if this.reason}}{{this.reason}}{{else}}&mdash;{{/if}}</td>
+          <td class="sp-p-governance__chain">
+            {{#each this.chain}}<a class="sp-p-governance__pill sp-p-governance__pill--{{this.tone}}" href="{{this.href}}" title="{{this.title}}">{{this.policy}}</a>{{/each}}
+            {{#if this.chain_overflow}}<span class="sp-p-governance__pill-more">{{this.chain_overflow}}</span>{{/if}}
+          </td>
           <td class="sp-table__cell--actions">
             {{#if this.trace_url}}<a class="sp-table__link" href="{{this.trace_url}}">Trace</a>{{/if}}
           </td>
         </tr>
       {{/each}}
       {{#unless has_rows}}
-        <tr class="sp-table__empty"><td colspan="9">
+        <tr class="sp-table__empty"><td colspan="7">
           {{> components/empty-state heading="No decisions in this window"
               message="Either nothing called a governed tool, or the filters above exclude everything that did."}}
         </td></tr>

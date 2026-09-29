@@ -1,0 +1,117 @@
+@layer components {
+
+/* The governed-call row: the chain strip that makes the fold lossless, the
+   stripe that finds an objection without a filter, and the band that lifts the
+   denials and warnings above the log. Split from 20-page-governance.css, which
+   carries the page's column budgets and toolbar, to stay under the per-file
+   line ceiling. */
+
+/* Why: the row still reads as an ordinary audit row — a filled background would
+   make a handful of denials louder than the log they belong to — but a call
+   that objected has to be findable while scrolling, with no filter applied. */
+.sp-t-decisions__row--attention td:first-child {
+    box-shadow: inset 2px 0 0 var(--sp-danger-strong);
+}
+
+/* The chain strip: one pill per policy evaluation the row folded in. It is what
+   makes the fold lossless, so it never wraps and never grows the row. */
+.sp-p-governance__chain {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sp-p-governance__pill {
+    display: inline-block;
+    padding: 0 var(--sp-space-1);
+    margin-inline-end: var(--sp-space-1);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    font-size: var(--sp-text-2xs);
+    color: var(--sp-text-secondary);
+    text-decoration: none;
+}
+
+.sp-p-governance__pill:hover { border-color: var(--sp-accent); }
+.sp-p-governance__pill--err { border-color: var(--sp-danger-strong); color: var(--sp-danger-strong); }
+.sp-p-governance__pill--warn { border-color: var(--sp-warning-strong); color: var(--sp-warning-strong); }
+.sp-p-governance__pill--ok { color: var(--sp-text-tertiary); }
+
+.sp-p-governance__pill-more {
+    font-size: var(--sp-text-2xs);
+    color: var(--sp-text-tertiary);
+}
+
+/* Tones for the policy chips. A policy that only ever allowed still earns a
+   chip — "this ran and objected to nothing" is a reading too — but it earns a
+   muted one. */
+.sp-p-governance__stage--err { border-color: var(--sp-danger-strong); }
+.sp-p-governance__stage--warn { border-color: var(--sp-warning-strong); }
+.sp-p-governance__stage--muted { color: var(--sp-text-tertiary); }
+
+/* Why: the denials and warnings, above the log rather than somewhere inside
+   twenty pages of allows. A list and not a second table: it is a pointer into
+   the log, and giving it columns would make it compete with the thing it points
+   at. */
+.sp-p-governance__attention {
+    margin-block-end: var(--sp-density-section);
+    padding: var(--sp-space-3);
+    border: 1px solid var(--sp-danger-strong);
+    border-radius: var(--sp-corners-md);
+    background: var(--sp-bg-surface);
+}
+
+.sp-p-governance__attention-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-space-3);
+    margin-block-end: var(--sp-space-2);
+}
+
+.sp-p-governance__attention-title {
+    margin: 0;
+    font-size: var(--sp-text-sm);
+    font-weight: var(--sp-font-semibold);
+    color: var(--sp-text-primary);
+}
+
+.sp-p-governance__attention-count {
+    font-weight: 600;
+    color: var(--sp-danger-strong);
+}
+
+.sp-p-governance__attention-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sp-p-governance__attention-item {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-space-2);
+    padding-block: var(--sp-space-05);
+    font-size: var(--sp-text-xs);
+    border-block-start: 1px solid var(--sp-border-subtle);
+}
+
+.sp-p-governance__attention-item:first-child { border-block-start: none; }
+
+.sp-p-governance__attention-who { color: var(--sp-text-secondary); }
+
+/* The reason takes the slack and is the one thing allowed to be clipped: the
+   badge, the target and the time are what make the entry findable in the log. */
+.sp-p-governance__attention-why {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sp-text-tertiary);
+}
+
+.sp-p-governance__attention-when {
+    color: var(--sp-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+}

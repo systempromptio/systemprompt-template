@@ -4,7 +4,10 @@
 //! `services/ai/gateway.yaml`, which the editor addresses by index, and the
 //! resolved route set the dispatcher will actually match. A page that rendered
 //! one while claiming to show the other would let an operator reorder a list
-//! that is not the list being dispatched, so both halves are asserted here.
+//! that is not the list being dispatched, so both halves are asserted here —
+//! the Routes tab for the file, the Resolved tab for the dispatcher — along
+//! with the Models tab the page opens on, which groups the same routes by
+//! provider.
 
 use axum::http::StatusCode;
 
@@ -38,18 +41,47 @@ async fn the_gateway_page_renders_the_routing_table() {
         ));
     }
 
-    // Why: these are the page's whole claim. The dispatch-order note is what
-    // makes the ordinal column mean something, and the settings form is the
-    // only place the enabled flag can be changed from.
-    for marker in ["the order the dispatcher tries them", "gateway-settings"] {
+    // Why: the default view is the overview — dispatch order and the provider
+    // table — so an operator sees both without opening a tab.
+    for marker in ["Dispatch order", "sp-p-gateway__providers"] {
         if !body.contains(marker) {
             failures.push(format!("  /admin/gateway rendered without {marker:?}"));
         }
     }
 
+    // Why: each provider opens into its models and routes on its own tab, and
+    // the settings form is the only place the enabled flag can be changed from.
+    for (tab, marker) in [
+        ("providers", "data-expand-row"),
+        ("settings", "gateway-settings"),
+    ] {
+        let path = format!("/admin/gateway?tab={tab}");
+        let (tab_status, tab_body) = app.call(Call::get(&path, Principal::Admin)).await;
+        if tab_status != StatusCode::OK || !tab_body.contains(marker) {
+            failures.push(format!(
+                "  /admin/gateway?tab={tab} -> {} without {marker:?}",
+                tab_status.as_u16()
+            ));
+        }
+    }
+
+    // Why: the dispatch-order note is what makes the ordinal column mean
+    // something; it lives on the Routes tab with the reorder controls.
+    let (routes_status, routes_body) = app
+        .call(Call::get("/admin/gateway?tab=routes", Principal::Admin))
+        .await;
+    if routes_status != StatusCode::OK
+        || !routes_body.contains("the order the dispatcher tries them")
+    {
+        failures.push(format!(
+            "  /admin/gateway?tab=routes -> {} without the dispatch-order table",
+            routes_status.as_u16()
+        ));
+    }
+
     // Why: the resolved-only section is the half an operator cannot see in
-    // the file. It sits behind its own tab so the routing table keeps the
-    // fold, and the tab has to render it.
+    // the file. It sits under the Routes tab, and the old `resolved` tab
+    // link still has to land on it.
     let (resolved_status, resolved_body) = app
         .call(Call::get("/admin/gateway?tab=resolved", Principal::Admin))
         .await;
@@ -62,9 +94,10 @@ async fn the_gateway_page_renders_the_routing_table() {
 
     // Why: the editor addresses routes by their index in the YAML sequence, so
     // a row without one is a row whose edit and delete buttons point nowhere.
-    if body.contains("data-route-index=\"0\"") == body.contains("No routes") {
+    if routes_body.contains("data-route-index=\"0\"") == routes_body.contains("No routes") {
         failures.push(
-            "  /admin/gateway showed neither an indexed route row nor the empty state".to_owned(),
+            "  /admin/gateway?tab=routes showed neither an indexed route row nor the empty state"
+                .to_owned(),
         );
     }
 

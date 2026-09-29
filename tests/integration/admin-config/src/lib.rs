@@ -24,6 +24,8 @@ mod config_gateway_acl;
 #[cfg(test)]
 mod fixtures;
 #[cfg(test)]
+mod gateway_routes_editor;
+#[cfg(test)]
 mod jobs_repo;
 #[cfg(test)]
 mod marketplace_catalog;

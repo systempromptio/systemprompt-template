@@ -154,6 +154,7 @@ fn finding_filter(query: &GovernanceQuery) -> FindingFilter {
             Some("audited") => Some(false),
             _ => None,
         },
+        search: non_empty(query.q.as_deref()),
     }
 }
 

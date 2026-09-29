@@ -20,7 +20,9 @@ pub(crate) mod entity_panel;
 pub(crate) mod entity_urls;
 pub(crate) mod format;
 mod gateway;
+mod gateway_policies;
 pub(crate) mod governance;
+mod governance_quotas;
 pub(crate) mod list_view;
 mod overview;
 pub(crate) mod page;
@@ -62,8 +64,12 @@ pub(crate) mod types;
 
 pub(crate) use approvals::approvals_page;
 pub(crate) use devices::devices_page;
-pub(crate) use gateway::gateway_page;
+pub(crate) use gateway::{gateway_page, gateway_route_page};
+pub(crate) use gateway_policies::{
+    delete_gateway_policy, gateway_policies_page, save_gateway_policy,
+};
 pub(crate) use governance::governance_page;
+pub(crate) use governance_quotas::governance_quotas_page;
 pub(crate) use overview::overview_page;
 pub(crate) use roles::roles_page;
 pub(crate) use secrets_audit::secrets_audit_page;

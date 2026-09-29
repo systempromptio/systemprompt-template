@@ -22,12 +22,13 @@ const openDialog = (index) => {
   if (!f) return;
   const row = index === null ? null : document.querySelector('tr[data-route-index="' + index + '"]');
   f.dataset.index = index === null ? '' : String(index);
-  f.elements.id.value = row ? row.dataset.routeId : '';
-  const cells = row ? row.querySelectorAll('td') : [];
-  f.elements.model_pattern.value = row ? cells[2].textContent.trim() : '';
-  f.elements.provider.value = row ? cells[3].textContent.trim() : '';
-  const upstream = row ? cells[4].textContent.trim() : '';
-  f.elements.upstream_model.value = upstream === '—' ? '' : upstream;
+  const d = row ? row.dataset : {};
+  f.elements.id.value = d.routeId || '';
+  f.elements.name.value = d.name || '';
+  f.elements.description.value = d.description || '';
+  f.elements.model_pattern.value = d.modelPattern || '';
+  f.elements.provider.value = d.provider || '';
+  f.elements.upstream_model.value = d.upstream || '';
   setError('');
   dialog()?.showModal();
 };
@@ -35,8 +36,12 @@ const openDialog = (index) => {
 const body = () => {
   const f = form();
   const upstream = f.elements.upstream_model.value.trim();
+  const name = f.elements.name.value.trim();
+  const description = f.elements.description.value.trim();
   return {
     id: f.elements.id.value.trim(),
+    name: name ? name : null,
+    description: description ? description : null,
     model_pattern: f.elements.model_pattern.value.trim(),
     provider: f.elements.provider.value.trim(),
     upstream_model: upstream ? upstream : null,
@@ -114,19 +119,46 @@ const saveSettings = async (event) => {
   }
 };
 
+const probeCell = (text, mono) => {
+  const td = document.createElement('td');
+  if (mono) td.className = 'sp-table__cell--mono';
+  td.textContent = text;
+  return td;
+};
+
+const probeRow = (r) => {
+  const tr = document.createElement('tr');
+  tr.append(
+    probeCell(r.name || r.id, false),
+    probeCell(r.model_pattern, true),
+    probeCell(r.provider, false),
+    probeCell(r.upstream_model || '—', true),
+  );
+  return tr;
+};
+
 const renderProbe = (target, routes) => {
   if (!routes.length) {
     target.textContent = 'No route is visible to this account.';
     return;
   }
-  const list = routes
-    .map((r) => r.id + '  ' + r.model_pattern + ' → ' + r.provider)
-    .join('\n');
-  target.innerHTML = '';
-  const pre = document.createElement('pre');
-  pre.className = 'sp-code-block';
-  pre.textContent = routes.length + ' route(s)\n' + list;
-  target.append(pre);
+  const table = document.createElement('table');
+  table.className = 'sp-table__el sp-table__el--nested';
+  const head = document.createElement('thead');
+  const headRow = document.createElement('tr');
+  ['Route', 'Pattern', 'Provider', 'Upstream'].forEach((label) => {
+    const th = document.createElement('th');
+    th.textContent = label;
+    headRow.append(th);
+  });
+  head.append(headRow);
+  const body = document.createElement('tbody');
+  body.append(...routes.map(probeRow));
+  table.append(head, body);
+  const wrap = document.createElement('div');
+  wrap.className = 'sp-table sp-p-gateway__probe';
+  wrap.append(table);
+  target.replaceChildren(wrap);
 };
 
 const probe = async (event) => {

@@ -275,3 +275,33 @@ fn a_non_mapping_profile_root_is_an_internal_error() -> anyhow::Result<()> {
     ));
     Ok(())
 }
+
+#[test]
+fn name_and_description_round_trip_and_blank_ones_are_dropped() -> anyhow::Result<()> {
+    let dir = tempfile::tempdir()?;
+    let path = profile(dir.path(), "gateway:\n  routes: []\n");
+    let mut r = route("named", "claude-*", "anthropic");
+    r.name = Some("Claude (Anthropic)".to_owned());
+    r.description = Some("  Every claude-* request.  ".to_owned());
+    create_route(&path, &r)?;
+    let cfg = get_gateway_config(&path)?;
+    assert_eq!(cfg.routes[0].name.as_deref(), Some("Claude (Anthropic)"));
+    assert_eq!(
+        cfg.routes[0].description.as_deref(),
+        Some("Every claude-* request.")
+    );
+    let text = std::fs::read_to_string(&path)?;
+    let name_at = text.find("name: Claude").expect("name written");
+    let pattern_at = text.find("model_pattern:").expect("pattern written");
+    assert!(name_at < pattern_at, "name is written before the pattern");
+
+    let mut cleared = cfg.routes[0].clone();
+    cleared.name = Some("   ".to_owned());
+    cleared.description = None;
+    assert!(update_route(&path, 0, &cleared)?);
+    let cfg = get_gateway_config(&path)?;
+    assert_eq!(cfg.routes[0].name, None);
+    assert_eq!(cfg.routes[0].description, None);
+    assert!(!std::fs::read_to_string(&path)?.contains("name:"));
+    Ok(())
+}
