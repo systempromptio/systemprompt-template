@@ -14,6 +14,7 @@
 
 use std::sync::Arc;
 
+use axum::extract::DefaultBodyLimit;
 use axum::routing::{delete, get, patch, post, put};
 use axum::{Router, middleware as axum_middleware};
 use sqlx::PgPool;
@@ -21,6 +22,7 @@ use sqlx::PgPool;
 use super::super::types::{ROLES_CONSOLE, ROLES_MANAGE, ROLES_PLATFORM};
 use super::super::{handlers, middleware};
 use super::admin_groups;
+use crate::repositories::sync::archive::MAX_UPLOAD_BYTES;
 
 mod read;
 use read::build_admin_read_routes_inner;
@@ -80,6 +82,41 @@ fn build_access_control_write_routes() -> Router<Arc<PgPool>> {
         )
 }
 
+// Why: every sync write sits in the manage tier — this instance has no
+// marketplace participant tier to narrow it to — and the archive import
+// beside the plane apply, since a staged archive can rewrite every plane at
+// once.
+fn build_sync_write_routes() -> Router<Arc<PgPool>> {
+    Router::new()
+        // Why: the upload is the raw zip as the body; the limit is the
+        // archive cap, not the router's default.
+        .route(
+            "/sync/import",
+            post(handlers::sync::stage_import_handler)
+                .layer(DefaultBodyLimit::max(MAX_UPLOAD_BYTES)),
+        )
+        .route(
+            "/sync/import/{stage_id}/apply",
+            post(handlers::sync::apply_import_handler),
+        )
+        .route(
+            "/sync/import/{stage_id}",
+            delete(handlers::sync::discard_import_handler),
+        )
+        .route(
+            "/sync/planes/{plane}/apply",
+            post(handlers::sync::apply_handler),
+        )
+        .route(
+            "/sync/access-control/keep",
+            post(handlers::sync::keep_handler),
+        )
+        .route(
+            "/sync/sources/refresh",
+            post(handlers::sync::refresh_sources_handler),
+        )
+}
+
 fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
     Router::new()
         .route("/gateway", patch(handlers::update_gateway_settings_handler))
@@ -122,6 +159,7 @@ fn build_admin_write_routes(write_pool: &Arc<PgPool>) -> Router {
             delete(handlers::revoke_user_session_handler),
         )
         .merge(build_access_control_write_routes())
+        .merge(build_sync_write_routes())
         .route(
             "/users/{user_id}/roles",
             put(handlers::roles::set_user_roles_handler),

@@ -121,5 +121,13 @@ fn service_utils_js(storage_js: &Path) -> Vec<AssetDefinition> {
             storage_js.join("components/sp-chart-tooltip.js"),
             "js/components/sp-chart-tooltip.js",
         ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-sync-plane.js"),
+            "js/components/sp-sync-plane.js",
+        ),
+        AssetDefinition::js(
+            storage_js.join("components/sp-access-review.js"),
+            "js/components/sp-access-review.js",
+        ),
     ]
 }

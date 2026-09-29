@@ -30,6 +30,7 @@ pub(crate) mod self_service;
 pub(crate) mod share;
 pub(crate) mod shared;
 pub(crate) mod ssr;
+pub(crate) mod sync;
 mod user_sessions;
 mod users;
 pub(crate) mod users_bootstrap;

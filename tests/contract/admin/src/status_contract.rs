@@ -21,7 +21,12 @@ use crate::{baseline, globals, principal};
 // else while the error model is still being adopted. It is checked in both
 // directions — an entry whose route stops failing must be deleted — so it can
 // only ever shrink.
-const KNOWN_5XX: [(&str, &str); 0] = [];
+const KNOWN_5XX: [(&str, &str); 1] = [(
+    "POST /api/public/admin/sync/sources/refresh",
+    "runs core's in-process ServicesRefresh, which core layers onto extension routers at \
+     mount time; the contract harness mounts the admin router without it, so the missing \
+     extension is the only answer it can see",
+)];
 
 fn known_5xx(key: &str) -> bool {
     KNOWN_5XX.iter().any(|(route, _)| *route == key)

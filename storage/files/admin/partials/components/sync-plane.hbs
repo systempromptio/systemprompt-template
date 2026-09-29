@@ -1,0 +1,113 @@
+{{!--
+  One sync plane: declared hash, last apply, drift totals by cause, the
+  recommended next step, the three directions and the diff table. Rendered on an owner page's Sync tab and on
+  the import preview; the JS is components/sp-sync-plane.js.
+
+  Invoke as: {{> components/sync-plane plane=sync can_write=can_write}}
+
+  Inputs:
+    plane      a PlaneCardView — apply_url is where the buttons post,
+               show_export hides the third card on a preview
+    can_write  whether the two writing buttons render
+
+  The confirm/export dialogs are components/sync-plane-dialogs, included
+  once per page.
+--}}
+<section class="sp-sync-plane" data-plane="{{plane.id}}" aria-labelledby="plane-{{plane.id}}">
+    <div class="sp-sync-plane__head">
+        <h2 id="plane-{{plane.id}}">{{plane.label}}</h2>
+        <div class="sp-sync-plane__meta">
+            <span><code class="sp-code-inline">services/{{plane.source_file}}</code> → <code class="sp-code-inline">{{plane.projection}}</code></span>
+            <span><strong>{{plane.declared_count}}</strong> declared in {{plane.source_label}} · <strong>{{plane.in_db}}</strong> in this database</span>
+            {{#if plane.declared_hash}}<span>declared <span class="sp-sync-hash" title="{{plane.declared_hash.full}}">{{plane.declared_hash.short}}</span></span>{{/if}}
+            {{#if plane.applied}}
+            <span>last applied <span class="sp-sync-hash" title="{{plane.applied.hash.full}}">{{plane.applied.hash.short}}</span> by <strong>{{plane.applied.by}}</strong> {{relativeTime plane.applied.at}} ({{plane.applied.mode}})</span>
+            {{#if plane.applied.declared_changed}}{{> components/badge tone="warn" text="declaration changed since last apply"}}{{/if}}
+            {{else}}
+            <span class="sp-u-text-tertiary">never applied from code on this database</span>
+            {{/if}}
+        </div>
+    </div>
+
+    {{#if plane.unreadable}}
+    {{> components/notice tone="err" title="The declaration could not be read" message=plane.unreadable}}
+    {{/if}}
+    {{#if plane.runtime_note}}
+    {{> components/notice tone="info" title="Takes effect after a restart" message=plane.runtime_note}}
+    {{/if}}
+
+    <div class="sp-kpi-grid" aria-label="{{plane.label}} drift totals">
+        {{#each plane.kpis}}
+        {{> components/kpi label=label value=value note=note tone=tone}}
+        {{/each}}
+    </div>
+
+    {{#if plane.is_clean}}
+    {{> components/notice tone="ok" title="In step" message="The declaration and this database hold the same rows."}}
+    {{/if}}
+    {{#if plane.recommendation}}
+    <p class="sp-sync-plane__next" data-sync-next="{{plane.recommendation.card}}">
+        <strong>Next:</strong> {{plane.recommendation.text}}
+    </p>
+    {{/if}}
+
+    <div class="sp-sync-actions" aria-label="Synchronise {{plane.label}}">
+        <article class="sp-sync-card{{#if (eq plane.recommendation.card "insert")}} sp-sync-card--recommended{{/if}}">
+            <h3>Apply all new</h3>
+            <p>Add what {{plane.source_label}} declares and this database lacks. Nothing existing is changed or removed.</p>
+            <p class="sp-sync-card__count">+{{plane.actions.insert}} rows · +{{plane.actions.insert_entities}} entities</p>
+            {{#if can_write}}<button type="button" class="sp-btn sp-btn--secondary" data-action="sync-apply" data-plane="{{plane.id}}" data-apply-url="{{plane.apply_url}}" data-entities="{{plane.entity_filter}}" data-mode="insert_only" data-count="{{plane.actions.insert}}">Apply all new</button>{{/if}}
+        </article>
+        <article class="sp-sync-card sp-sync-card--danger{{#if (eq plane.recommendation.card "overwrite")}} sp-sync-card--recommended{{/if}}">
+            <h3>Replace database with code</h3>
+            <p>Make this database equal {{plane.source_label}}: add what code added, correct what code changed, <strong>delete</strong> what code removed. Rows written here, or by a bundle, on entities the file no longer names are kept; per-person overrides are never touched.</p>
+            <p class="sp-sync-card__count">+{{plane.actions.insert}} · ~{{plane.actions.update}} · −{{plane.actions.delete}}{{#if plane.actions.delete_console}} <span class="sp-u-text-warning">({{plane.actions.delete_console}} of them written here)</span>{{/if}}{{#if plane.actions.kept}} · keeps {{plane.actions.kept}}{{/if}}</p>
+            {{#if can_write}}<button type="button" class="sp-btn sp-btn--primary" data-action="sync-apply" data-plane="{{plane.id}}" data-apply-url="{{plane.apply_url}}" data-entities="{{plane.entity_filter}}" data-mode="overwrite" data-count="{{plane.actions.delete}}" data-dashboard="{{plane.actions.delete_console}}" data-kept="{{plane.actions.kept}}">Replace database with code</button>{{/if}}
+        </article>
+        {{#if plane.show_export}}
+        <article class="sp-sync-card{{#if (eq plane.recommendation.card "export")}} sp-sync-card--recommended{{/if}}">
+            <h3>Export to code</h3>
+            <p>Render this database as <code class="sp-code-inline">{{plane.source_file}}</code> and commit it. That is the only way a row written here reaches the file; the instance never writes into the repository itself.</p>
+            <p class="sp-sync-card__count">{{plane.in_db}} rows{{#if plane.actions.kept}} · {{plane.actions.kept}} only here{{/if}}</p>
+            <button type="button" class="sp-btn sp-btn--outline" data-action="sync-export" data-export-url="{{plane.export_url}}" data-file="{{plane.source_file}}">Export</button>
+        </article>
+        {{/if}}
+    </div>
+
+    {{#> components/section title="Differences" count=plane.row_count note="One line per disagreement: what happened, who wrote the database row, and the one action that settles it."}}
+        {{#*inline "section_actions"}}
+        {{#if plane.entity_filter}}<a class="sp-btn sp-btn--sm sp-btn--outline" href="{{plane.clear_filter_url}}">Show all entities</a>{{/if}}
+        {{/inline}}
+    {{/components/section}}
+
+    {{#if plane.rows}}
+    {{#> components/table caption="Differences between the declaration and the database" modifier="sp-p-ac__diff"}}
+        <thead><tr>
+            <th>Difference</th>
+            <th>Entity</th>
+            <th>Band · subject</th>
+            <th>In code</th>
+            <th>In this database</th>
+            <th>Written by</th>
+            <th>Resolves with</th>
+        </tr></thead>
+        <tbody>
+        {{#each plane.rows}}
+        <tr data-diff="{{kind}}" data-entity-type="{{entity_type}}" data-entity-id="{{entity_id}}">
+            <td>{{> components/badge tone=kind_tone text=kind_label}}</td>
+            <td><span class="sp-ac-entity__kind">{{entity_type_label}}</span> <span class="sp-u-mono">{{entity_id}}</span></td>
+            <td><span class="sp-ac-layer-tag">{{band_label}}</span> <span class="sp-u-mono">{{subject}}</span></td>
+            <td class="sp-u-text-secondary">{{in_code}}</td>
+            <td class="sp-u-text-secondary">{{in_db}}</td>
+            <td>{{#if origin}}{{> components/badge tone=origin_tone text=origin}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td>{{> components/badge tone=resolve_tone text=resolve}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    {{#unless plane.is_clean}}
+    {{> components/empty-state heading="Nothing to show" message="No difference matches this entity."}}
+    {{/unless}}
+    {{/if}}
+</section>

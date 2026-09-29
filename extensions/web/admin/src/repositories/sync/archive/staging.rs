@@ -78,8 +78,6 @@ impl StagingStore {
     // Why: the JSON API and the SSR pages are separate routers built in
     // separate places; one process-wide store is what lets a stage created
     // through one be read by the other.
-    // Why: lint-ok: unused-pub — the process-wide store the /admin/sync import
-    // handlers share; they land with the Stage-3 admin port.
     pub fn global() -> &'static Self {
         static STORE: OnceLock<StagingStore> = OnceLock::new();
         STORE.get_or_init(Self::default)

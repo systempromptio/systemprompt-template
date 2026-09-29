@@ -97,7 +97,7 @@ pub async fn record_marketplace_versions(
 }
 
 // Why: lint-ok: unused-pub — the marketplace-version pages read it; they land
-// with the Stage-3 admin port.
+// with the analysis suite (Stage 3 phase 7).
 pub async fn list_current_marketplace_versions(
     pool: &PgPool,
 ) -> Result<Vec<MarketplaceVersionRow>, sqlx::Error> {

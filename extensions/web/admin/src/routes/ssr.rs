@@ -223,6 +223,14 @@ fn platform_routes() -> Router<Arc<PgPool>> {
             get(handlers::catalog::skill_detail_page),
         )
         .route("/gateway", get(handlers::ssr::gateway_page))
+        // Why: Code sync — the sources and the archive that move declarations
+        // between the repository and this instance, and the access review
+        // that settles the access-control plane entity by entity.
+        .route("/sync", get(handlers::ssr::sync_page))
+        .route(
+            "/sync/import/{stage_id}",
+            get(handlers::ssr::import_preview_page),
+        )
         // Why: the month-end pack's *pages* are gone — the cost tab of the
         // analytics dashboard replaced them — but the CSV exports are a data
         // endpoint the finance hand-off still fetches, so they stay mounted.

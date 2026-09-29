@@ -22,7 +22,8 @@ use crate::repositories;
 use crate::templates::AdminTemplateEngine;
 use crate::types::{MarketplaceContext, UserContext};
 
-use super::types::{BreadcrumbView, GroupsPageData, MemberSetChipView};
+use super::sync_plane::{is_sync_tab, plane_card_by_id, sync_tab};
+use super::types::{BreadcrumbView, GroupsPageData, MemberSetChipView, TabLinkView};
 
 mod data;
 mod sorting;
@@ -37,6 +38,21 @@ pub(crate) struct GroupsQuery {
     dir: Option<String>,
     page: Option<i64>,
     source: Option<String>,
+    // Why: `tab=sync` renders the groups plane instead of the listing.
+    tab: Option<String>,
+}
+
+fn tabs(on_sync: bool) -> Vec<TabLinkView> {
+    vec![
+        TabLinkView {
+            slug: "groups",
+            label: "Groups",
+            href: sorting::BASE_URL.to_owned(),
+            is_active: !on_sync,
+            count: None,
+        },
+        sync_tab(sorting::BASE_URL, on_sync),
+    ]
 }
 
 pub(crate) async fn groups_page(
@@ -49,6 +65,13 @@ pub(crate) async fn groups_page(
     if !user_ctx.is_console {
         return Err(AdminError::Forbidden("Admin access required.".to_owned()).into());
     }
+
+    let on_sync = is_sync_tab(query.tab.as_deref());
+    let sync = if on_sync {
+        plane_card_by_id(&pool, repositories::sync::groups::PLANE_ID, "").await?
+    } else {
+        None
+    };
 
     let window_days = sorting::window_days(query.range.as_deref());
     let range = query.range.as_deref().unwrap_or("30d").to_owned();
@@ -110,6 +133,8 @@ pub(crate) async fn groups_page(
         can_map: user_ctx.is_platform_admin,
         group_options: group_options(&pool).await,
         unkeyed_people: listing.unkeyed_people,
+        tabs: tabs(on_sync),
+        sync,
     };
 
     Ok(super::render_typed_page(

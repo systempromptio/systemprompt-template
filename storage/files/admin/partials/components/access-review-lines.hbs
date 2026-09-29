@@ -1,0 +1,21 @@
+{{!--
+  One entity's code-versus-database diff, a line per rule.
+
+    {{> components/access-review-lines lines=review.lines}}
+--}}
+{{#> components/table caption="Code against this database" modifier="sp-access-review__lines"}}
+    <thead><tr>
+        <th scope="col">Band · subject</th>
+        <th scope="col">In code</th>
+        <th scope="col">In this database</th>
+    </tr></thead>
+    <tbody>
+    {{#each lines}}
+    <tr>
+        <td><span class="sp-ac-layer-tag">{{this.band_label}}</span> <span class="sp-u-mono">{{this.subject}}</span></td>
+        <td class="sp-u-text-secondary">{{this.in_code}}</td>
+        <td class="sp-u-text-secondary">{{this.in_db}}</td>
+    </tr>
+    {{/each}}
+    </tbody>
+{{/components/table}}

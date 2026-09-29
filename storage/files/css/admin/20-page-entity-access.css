@@ -1,0 +1,59 @@
+@layer components {
+
+.sp-entity-access {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-3);
+    margin-block: var(--sp-space-5);
+    scroll-margin-top: var(--sp-space-6);
+}
+
+.sp-entity-access__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-2);
+}
+
+.sp-entity-access__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-1);
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-secondary);
+}
+
+.sp-entity-access__field[hidden] {
+    display: none;
+}
+
+.sp-entity-access__field--wide {
+    flex: 1 1 16rem;
+}
+
+.sp-access-review__lines td {
+    vertical-align: top;
+}
+
+.sp-access-review__row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-space-2);
+    padding: var(--sp-space-3);
+    margin-bottom: var(--sp-space-3);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-surface);
+    box-shadow: var(--sp-shadow-card);
+}
+
+.sp-access-review__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-space-2);
+}
+
+.sp-access-review__kept {
+    margin-block: var(--sp-space-3);
+}
+
+}

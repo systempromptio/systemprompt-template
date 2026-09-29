@@ -1,0 +1,25 @@
+{{!--
+  One entity on the Access review: what kind of disagreement, the diff, and
+  the three ways to settle it.
+
+    {{> components/access-review-row row=this can_write=@root.can_write}}
+
+  row  a ReviewRowView (handlers/ssr/ssr_sync/access_review)
+--}}
+<article class="sp-access-review__row" data-access-review data-entity="{{row.key}}" data-fingerprint="{{row.fingerprint}}">
+    <header class="sp-access-review__head">
+        {{> components/badge tone=row.kind_tone text=row.kind_label}}
+        {{#if row.entity_url}}<a class="sp-u-mono" href="{{row.entity_url}}">{{row.key}}</a>{{else}}<span class="sp-u-mono">{{row.key}}</span>{{/if}}
+    </header>
+    <p class="sp-u-text-sm sp-u-text-secondary">{{row.advice}}</p>
+    {{#if row.kept}}
+    <p class="sp-u-text-sm sp-u-text-secondary">Kept by <strong>{{row.kept.by}}</strong> {{relativeTime row.kept.at}}: {{row.kept.reason}}</p>
+    {{/if}}
+    {{> components/access-review-lines lines=row.lines}}
+    {{#if can_write}}
+    <div class="sp-entity-access__actions">
+        {{#if row.applies}}<button type="button" class="sp-btn sp-btn--sm sp-btn--primary" data-action="access-apply-code">Apply code</button>{{/if}}
+        {{#unless row.kept}}<button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="access-keep-db">Keep database</button>{{/unless}}
+    </div>
+    {{/if}}
+</article>

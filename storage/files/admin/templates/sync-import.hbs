@@ -1,0 +1,86 @@
+{{#> layout page_title=title page_id=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="What this archive would do to the database, plane by plane. Nothing has been written. Each plane below is the archive's file compared with this database; choose a direction per plane, or apply every plane at once."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{docs_url}}" target="_blank" rel="noopener noreferrer">How sync works</a>
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{sync_url}}?tab=archive">Back to Code sync</a>
+        {{#if can_write}}<button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="discard-import" data-discard-url="{{discard_url}}">Discard</button>{{/if}}
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        <span>Staged by <strong>{{staged_by}}</strong> {{relativeTime staged_at}}</span>
+        <span>Expires {{relativeTime expires_at}}</span>
+        <span>Stage <span class="sp-u-mono">{{stage_id}}</span></span>
+        {{/inline}}
+    {{/components/page-header}}
+
+    {{#if manifest}}
+    <p class="sp-sync-manifest">
+        Exported from release <strong>v{{manifest.release}}</strong> by <strong>{{manifest.exported_by}}</strong> {{relativeTime manifest.exported_at}}
+        {{#if manifest.base_tree_hash}}· tree <span class="sp-sync-hash" title="{{manifest.base_tree_hash.full}}">{{manifest.base_tree_hash.short}}</span>{{/if}}
+        {{#if manifest.composed_hash}}· composition <span class="sp-sync-hash" title="{{manifest.composed_hash.full}}">{{manifest.composed_hash.short}}</span>{{/if}}
+        · {{manifest.planes}} plane(s) listed
+    </p>
+    {{else}}
+    <p class="sp-sync-manifest sp-u-text-tertiary">No MANIFEST.yaml in this archive{{#if manifest_error}} ({{manifest_error}}){{/if}} — a hand-made archive is fine; the files are what count.</p>
+    {{/if}}
+
+    <div class="sp-kpi-grid" aria-label="Preview totals">
+        {{#each kpis}}
+        {{> components/kpi label=label value=value note=note tone=tone}}
+        {{/each}}
+    </div>
+
+    {{#if planes}}
+    {{#if can_write}}
+    <div class="sp-sync-apply-all" role="group" aria-label="Apply every plane">
+        <span>Apply <strong>every plane in the archive</strong> in one direction:</span>
+        <button type="button" class="sp-btn sp-btn--secondary" data-action="sync-apply" data-plane="all" data-apply-url="{{apply_all_url}}" data-mode="insert_only" data-count="every plane's">Insert only, all</button>
+        <button type="button" class="sp-btn sp-btn--primary" data-action="sync-apply" data-plane="all" data-apply-url="{{apply_all_url}}" data-mode="overwrite" data-count="every plane's" data-dashboard="some">Overwrite from archive, all</button>
+    </div>
+    {{/if}}
+    {{#each planes}}
+    {{> components/sync-plane plane=this can_write=../can_write}}
+    {{/each}}
+    {{else}}
+    {{> components/empty-state heading="No projected plane in this archive" message="None of the files the instance projects into the database were in the upload. The entries below are served from code."}}
+    {{/if}}
+
+    {{#if absent}}
+    {{#> components/section title="Not in the archive" note="Planes this instance projects that the archive did not carry. Their database is untouched by anything on this page."}}{{/components/section}}
+    <ul class="sp-sync-archive__files">
+        {{#each absent}}
+        <li><code class="sp-code-inline">services/{{source_file}}</code> <span class="sp-u-text-tertiary">— {{label}}</span> · <a href="{{owner_url}}?tab=sync">its Sync tab</a></li>
+        {{/each}}
+    </ul>
+    {{/if}}
+
+    {{#if other}}
+    {{#> components/section title="Served from code" count=other_count note="Entries the instance reads from the tree rather than the database. Nothing here is applied: commit them to the repository, or publish them as a bundle and pin it."}}{{/components/section}}
+    {{#> components/table caption="Archive entries not projected into the database" modifier="sp-sync-other"}}
+        <thead><tr>
+            <th>Entry</th>
+            <th>Kind</th>
+            <th>Size</th>
+            <th>Hash</th>
+        </tr></thead>
+        <tbody>
+        {{#each other}}
+        <tr>
+            <td class="sp-u-mono">{{path}}</td>
+            <td>{{#if kind_label}}{{kind_label}}{{else}}<span class="sp-u-text-tertiary">unknown</span>{{/if}}</td>
+            <td class="sp-u-text-tertiary">{{bytes}} B</td>
+            <td><span class="sp-sync-hash">{{hash}}</span></td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{/if}}
+
+    {{> components/sync-plane-dialogs}}
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-sync.js?v={{css_version}}"></script>
+    {{/inline}}
+{{/layout}}

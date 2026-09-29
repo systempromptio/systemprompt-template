@@ -485,19 +485,22 @@ async fn access_control_api_replaces_rules_and_projects_a_matrix() {
         }
     }
 
-    // The YAML snapshot serialises the whole access plane; it is the one read
-    // that can fail on a rule the serialiser has no representation for.
-    let (status, body) = app
-        .call(Call::get(
-            &api("/access-control/yaml-snapshot"),
-            Principal::Admin,
-        ))
-        .await;
-    if status.is_server_error() {
-        failures.push(format!(
-            "  the YAML snapshot faulted: {}",
-            body.chars().take(200).collect::<String>()
-        ));
+    // The YAML snapshot and the sync plane's export both serialise the whole
+    // access plane as rules.yaml; they are the reads that can fault on a row
+    // the serialiser has no shape for. The drift beside them re-reads the
+    // file and diffs it against the same rows.
+    for path in [
+        api("/access-control/yaml-snapshot"),
+        api("/sync/planes/access_control/export"),
+        api("/sync/planes/access_control/drift"),
+    ] {
+        let (status, body) = app.call(Call::get(&path, Principal::Admin)).await;
+        if status.is_server_error() {
+            failures.push(format!(
+                "  {path} faulted: {}",
+                body.chars().take(200).collect::<String>()
+            ));
+        }
     }
 
     // Every one of these is admin-only; a non-admin session must be refused
@@ -506,6 +509,8 @@ async fn access_control_api_replaces_rules_and_projects_a_matrix() {
         api("/access-control"),
         api(&format!("/access-control/users/{user_id}/matrix")),
         api("/access-control/yaml-snapshot"),
+        api("/sync/planes/access_control/export"),
+        api("/sync/planes/access_control/drift"),
     ] {
         let (status, _) = app.call(Call::get(&path, Principal::NonAdmin)).await;
         if !(status == StatusCode::FORBIDDEN

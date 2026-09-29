@@ -1,0 +1,59 @@
+/* /admin/sync — Code sync: the sources table, the archive cards, a
+   participant's per-marketplace cards and the sync history. */
+@layer components {
+
+.sp-sync-sources__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-space-1);
+}
+
+.sp-sync-sources__owns {
+    font-size: var(--sp-text-xs);
+    color: var(--sp-text-tertiary);
+}
+
+.sp-sync-pin {
+    margin: var(--sp-space-2) 0 0;
+    padding: var(--sp-space-2) var(--sp-space-3);
+    border: 1px solid var(--sp-border-subtle);
+    border-radius: var(--sp-corners-sm);
+    background: var(--sp-bg-sunken);
+    font-family: var(--sp-font-mono);
+    font-size: var(--sp-text-xs);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* Why: two cards, export and import, wide enough that the file list under
+   export does not wrap into a column of one-word lines. */
+.sp-sync-archive {
+    grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+}
+
+.sp-sync-archive__files {
+    margin: 0;
+    padding-left: var(--sp-space-5);
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+}
+
+.sp-sync-archive__upload {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-space-2);
+    margin-top: auto;
+}
+
+.sp-sync-history td:nth-child(4) {
+    overflow-wrap: anywhere;
+}
+
+.sp-sync-manifest {
+    margin-block: var(--sp-space-3);
+    font-size: var(--sp-text-sm);
+    color: var(--sp-text-secondary);
+}
+
+}

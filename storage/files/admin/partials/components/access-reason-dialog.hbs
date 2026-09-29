@@ -1,0 +1,24 @@
+{{!--
+  The reason every access write asks for: remove a rule, apply code to one
+  entity, keep the database's version. Include once per page; the script is
+  components/sp-access-review.js.
+--}}
+<dialog class="sp-dialog sp-ac-dialog" data-dialog="access-reason" aria-labelledby="access-reason-title">
+    <form method="dialog" data-access-reason-form>
+        <div class="sp-ac-dialog__header">
+            <h2 id="access-reason-title" data-access-reason="title">Confirm</h2>
+            <button type="button" class="sp-ac-dialog__close" data-action="access-reason-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="sp-ac-dialog__body">
+            <p data-access-reason="body"></p>
+            <label class="sp-entity-access__field sp-entity-access__field--wide">Reason
+                <textarea class="sp-search-input" data-access-reason="input" rows="2" maxlength="240" required></textarea>
+            </label>
+            <p class="sp-ac-modal-hint">Recorded in the activity log with your name.</p>
+        </div>
+        <div class="sp-ac-dialog__actions">
+            <button type="submit" class="sp-btn sp-btn--primary">Confirm</button>
+            <button type="button" class="sp-btn sp-btn--outline" data-action="access-reason-close">Cancel</button>
+        </div>
+    </form>
+</dialog>

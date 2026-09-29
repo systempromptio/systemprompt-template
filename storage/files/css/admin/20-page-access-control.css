@@ -99,4 +99,13 @@
     overflow-x: auto;
 }
 
+/* Why: the entity's kind above its id in a sync-plane diff row — a small
+   caps label so the id stays what the eye lands on. */
+.sp-ac-entity__kind {
+    font-size: var(--sp-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sp-text-tertiary);
+}
+
 }

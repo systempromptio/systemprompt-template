@@ -9,7 +9,8 @@
 use serde::Serialize;
 
 use super::super::list_view::Pagination;
-use super::{BreadcrumbView, MemberSetChipView, SortHeaderView};
+use super::{BreadcrumbView, MemberSetChipView, SortHeaderView, TabLinkView};
+use crate::handlers::ssr::sync_plane::PlaneCardView;
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct GroupRowView {
@@ -127,4 +128,7 @@ pub(crate) struct GroupsPageData {
     // nowhere to file their spend, so the page says how many there are and
     // offers the recompute rather than quietly reporting a smaller instance.
     pub unkeyed_people: i64,
+    pub tabs: Vec<TabLinkView>,
+    // Why: set on the Sync tab — `groups.yaml` against this database.
+    pub sync: Option<PlaneCardView>,
 }

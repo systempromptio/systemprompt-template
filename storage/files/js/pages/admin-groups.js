@@ -6,6 +6,7 @@ import { apiFetch } from '../services/api.js';
 import { showToast } from '../services/toast.js';
 import { showConfirmDialog } from '../services/confirm.js';
 import { on, initDelegation } from '../services/events.js';
+import { initSyncPlane } from '../components/sp-sync-plane.js';
 
 const dialog = (name) => document.querySelector(`dialog[data-dialog="${name}"]`);
 
@@ -87,3 +88,7 @@ export const init = () => {
 };
 
 init();
+
+// Why: the Sync tab renders the shared sync-plane component; its buttons
+// are bound here so the tab works without a second page script.
+initSyncPlane();

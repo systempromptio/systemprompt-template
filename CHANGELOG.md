@@ -6,7 +6,25 @@ Conventions (strict — hold every entry to them):
 
 - Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/): an `## [Unreleased]`
   section at the top, then one `## [X.Y.Z] - YYYY-MM-DD` section per release, each with only the
-  categories it needs, in this order: `### Breaking`, `### Security`, `### Added`, `### Changed`,
+  categories it needs, in this order: `### Breaking`, `### Security`, `### Added`, `- **Code sync** (`/admin/sync`, Platform group): one page for where
+  declarations come from and how they move. *Sources* lists the base tree and
+  every pinned bundle with its hashes and offers **Import sources**, which runs
+  core's in-process services refresh (`POST /api/public/admin/sync/sources/refresh`).
+  *Access review* settles the access-control drift one entity per row — apply
+  code, keep the database, or export — each with a stated reason, above the
+  whole-plane card. *Export & import* downloads every projected plane as one
+  zip (`GET …/sync/export.zip`) and stages an uploaded one for a preview at
+  `/admin/sync/import/{stage}` that writes nothing until a plane is applied.
+  The JSON API behind it is `GET …/sync/status`, `…/sync/planes/{plane}/drift`,
+  `…/export`, `POST …/sync/planes/{plane}/apply`, `…/sync/access-control/keep`,
+  `…/sync/import`, `…/sync/import/{stage}/apply` and `DELETE …/sync/import/{stage}`;
+  reads are open to the console roles, every write needs an administrator, and
+  every write and export leaves an activity row (`handlers/sync/`,
+  `handlers/ssr/{ssr_sync,ssr_sync_import,sync_plane}/`). The Groups page gains
+  a **Sync** tab showing `groups.yaml` against this database with the same
+  component.
+
+### Changed`,
   `### Fixed`, `### Removed`. Every breaking bullet leads with `**Breaking:**`, names the
   affected symbol, and ends with `Migrate by …`.
 - The heading shape is load-bearing. `just release X.Y.Z` refuses a version with no

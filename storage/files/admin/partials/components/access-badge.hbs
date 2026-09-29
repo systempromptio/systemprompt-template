@@ -1,0 +1,11 @@
+{{!--
+  The one vocabulary for an access decision, everywhere it is shown.
+
+    {{> components/access-badge decision="allow"}}
+
+  decision: allow → Allowed · deny → Denied · none → No rule ·
+            open → Open · closed → Closed · warn → Allowed (warn mode) ·
+            pending → Awaiting approval
+  Words, not only colour, carry the state.
+--}}
+{{#if (eq decision "allow")}}<span class="sp-badge sp-badge--ok">Allowed</span>{{/if}}{{#if (eq decision "deny")}}<span class="sp-badge sp-badge--err">Denied</span>{{/if}}{{#if (eq decision "none")}}<span class="sp-badge sp-badge--muted">No rule</span>{{/if}}{{#if (eq decision "open")}}<span class="sp-badge sp-badge--warn">Open</span>{{/if}}{{#if (eq decision "closed")}}<span class="sp-badge sp-badge--muted">Closed</span>{{/if}}{{#if (eq decision "warn")}}<span class="sp-badge sp-badge--warn">Allowed (warn mode)</span>{{/if}}{{#if (eq decision "pending")}}<span class="sp-badge sp-badge--info">Awaiting approval</span>{{/if}}

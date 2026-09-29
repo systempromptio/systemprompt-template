@@ -42,8 +42,6 @@ pub enum SyncHistoryScope<'a> {
     Marketplaces(&'a [MarketplaceId]),
 }
 
-// Why: lint-ok: unused-pub — the /admin/sync trail reads it; its page lands
-// with the Stage-3 admin port.
 pub async fn list_sync_history(
     pool: &PgPool,
     scope: SyncHistoryScope<'_>,

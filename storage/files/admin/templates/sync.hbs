@@ -1,0 +1,197 @@
+{{#> layout page_title=title page_id=page}}
+    {{#*inline "head_extra"}}{{/inline}}
+    {{#*inline "content"}}
+    {{> components/breadcrumbs crumbs=breadcrumbs}}
+    {{#> components/page-header title=title subtitle="Where declarations come from and how they move. Sources are the internal base tree this repository ships and each external bundle the profile pins — one mechanism, some local, some remote. The archive carries every projected plane between the database and the repository. Access review settles the access-control rules entity by entity; every other plane's database against its file is on that plane's own page, under Sync."}}
+        {{#*inline "header_actions"}}
+        <a class="sp-btn sp-btn--sm sp-btn--outline" href="{{docs_url}}" target="_blank" rel="noopener noreferrer">How sync works</a>
+        {{/inline}}
+        {{#*inline "header_meta"}}
+        <span>Release <strong>v{{sources.base.version}}</strong></span>
+        {{#if base_tree_hash}}<span>Tree <span class="sp-sync-hash" title="{{base_tree_hash.full}}">{{base_tree_hash.short}}</span></span>{{/if}}
+        {{#if composed_hash}}<span>Composition <span class="sp-sync-hash" title="{{composed_hash.full}}">{{composed_hash.short}}</span></span>{{/if}}
+        <span>Provenance <strong>{{sources.base.provenance}}</strong></span>
+        {{/inline}}
+    {{/components/page-header}}
+
+    {{> components/tabs tabs=tabs nav_label="Code sync views"}}
+
+    {{#if sources_unreadable}}
+    {{> components/notice tone="err" title="Sources could not be read" message=sources_unreadable}}
+    {{/if}}
+
+    {{#if show_access}}
+    {{#with access_review}}
+    {{#if unreadable}}
+    {{> components/notice tone="err" title="rules.yaml could not be compared" message=unreadable}}
+    {{/if}}
+    {{#if not_live_count}}
+    {{> components/notice tone="err" title="Declared in code, not live" message="Some entities rules.yaml names were never applied to this database, so nobody reaches them through those rules. Apply code on each row below; nothing is ever applied at boot."}}
+    {{/if}}
+    {{#> components/section title="To review" count=pending_count note="One row per entity where rules.yaml and this database disagree. Apply code makes that entity match the file; Keep database writes nothing and takes the row off this list until either side changes; Export carries the database into the file. Every choice asks for a reason."}}
+        {{#*inline "section_actions"}}
+        <button type="button" class="sp-btn sp-btn--sm sp-btn--outline" data-action="sync-export" data-export-url="{{export_url}}" data-file="access-control/rules.yaml">Export database to code</button>
+        {{/inline}}
+    {{/components/section}}
+    {{#each pending}}{{> components/access-review-row row=this can_write=@root.can_write}}{{else}}
+    {{> components/notice tone="ok" title="Nothing to review" message="Every entity rules.yaml names is live as declared, and nothing was written here that code lacks."}}
+    {{/each}}
+    {{#if kept}}
+    <details class="sp-access-review__kept">
+        <summary>Kept as they are in this database ({{kept_count}})</summary>
+        {{#each kept}}{{> components/access-review-row row=this can_write=@root.can_write}}{{/each}}
+    </details>
+    {{/if}}
+    {{#if plane}}{{> components/sync-plane plane=plane can_write=@root.can_write}}{{/if}}
+    {{/with}}
+    {{> components/sync-plane-dialogs}}
+    {{> components/access-reason-dialog}}
+    {{else}}
+    {{#if show_sources}}
+    {{#if sources.base.provenance_error}}
+    {{> components/notice tone="warn" title="Serving a fallback tree" message=sources.base.provenance_error}}
+    {{/if}}
+    {{#if sources.restart_pending}}
+    {{> components/notice tone="warn" title="Reconcile pending" message="The composition was recomposed but has not been projected into the authz tables. Press Import sources to reconcile it in place — no restart is involved."}}
+    {{/if}}
+
+    {{#> components/section title="Sources" note="Every place a declaration comes from, internal and external, with the hash it declares. A digest is code: the instance never rewrites its own profile."}}
+        {{#*inline "section_actions"}}
+        {{#if can_refresh}}<button type="button" class="sp-btn sp-btn--sm sp-btn--secondary" data-action="refresh-sources">Import sources</button>{{/if}}
+        {{/inline}}
+    {{/components/section}}
+
+    {{#> components/table caption="Sources and their hashes" modifier="sp-sync-sources"}}
+        <thead><tr>
+            <th>Source</th>
+            <th>Kind</th>
+            <th>Pinned</th>
+            <th>Active</th>
+            <th>Version</th>
+            <th>Content hash</th>
+            <th>Fetched</th>
+            <th>Owns</th>
+            <th>State</th>
+        </tr></thead>
+        <tbody>
+        <tr data-source="base">
+            <td><strong>base</strong><br><span class="sp-u-mono sp-u-text-tertiary">{{sources.base.tree_path}}</span></td>
+            <td>internal<br><span class="sp-u-text-tertiary">this repository</span></td>
+            <td class="sp-u-text-tertiary">release v{{sources.base.version}}</td>
+            <td class="sp-u-text-tertiary">{{sources.base.provenance}}</td>
+            <td class="sp-u-mono">{{sources.base.version}}</td>
+            <td>{{#if base_tree_hash}}<span class="sp-sync-hash" title="{{base_tree_hash.full}}">{{base_tree_hash.short}}</span>{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td class="sp-u-text-tertiary">baked into the image</td>
+            <td class="sp-sync-sources__owns">everything not owned by a bundle, every entitlement</td>
+            <td>{{> components/badge tone="ok" text="code"}}</td>
+        </tr>
+        {{#each sources.bundles}}
+        <tr data-source="{{name}}">
+            <td><strong>{{name}}</strong><br><span class="sp-u-mono sp-u-text-tertiary">{{reference}}</span></td>
+            <td>external<br><span class="sp-u-text-tertiary">{{transport}} bundle</span></td>
+            <td>{{#if pinned_digest}}<span class="sp-sync-hash" title="{{pinned_digest}}">{{truncate pinned_digest 19}}</span>{{else}}<span class="sp-u-text-tertiary">tag</span>{{/if}}</td>
+            <td>{{#if active_digest}}<span class="sp-sync-hash" title="{{active_digest}}">{{truncate active_digest 19}}</span>{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td class="sp-u-mono">{{default version "—"}}</td>
+            <td>{{#if content_hash}}<span class="sp-sync-hash" title="{{content_hash}}">{{truncate content_hash 12}}</span>{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+            <td>{{#if fetched_at}}{{relativeTime fetched_at}}{{else}}<span class="sp-u-text-tertiary">never</span>{{/if}}</td>
+            <td class="sp-sync-sources__owns">{{owns.summary}}{{#if owns.marketplaces}}<br>{{#each owns.marketplaces}}<span class="sp-u-mono">{{this}}</span> {{/each}}{{/if}}</td>
+            <td>
+                <div class="sp-sync-sources__badges">
+                {{#each badges}}<span title="{{detail}}">{{> components/badge tone=tone text=text}}</span>{{/each}}
+                </div>
+                <details>
+                    <summary class="sp-u-text-tertiary">how to pin</summary>
+                    <pre class="sp-sync-pin">{{pin_command}}
+owner key for rules.yaml: {{owner_key}}</pre>
+                </details>
+            </td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{#unless sources.bundles}}
+    <p class="sp-u-text-tertiary">No remote bundles are pinned in this profile's <code class="sp-code-inline">services.sources</code>; the instance serves the baked tree alone.</p>
+    {{/unless}}
+    {{#if sources.refresh_hint}}
+    <details>
+        <summary class="sp-u-text-tertiary">Refresh from a terminal</summary>
+        <pre class="sp-sync-pin">{{sources.refresh_hint}}</pre>
+    </details>
+    {{/if}}
+
+    {{#> components/section title="Sync history" note="Every source refresh and plane apply, newest first: who, which plane, which direction, and — for an apply scoped to marketplaces — which ones."}}{{/components/section}}
+    {{#if history}}
+    {{#> components/table caption="Sync history" modifier="sp-sync-history"}}
+        <thead><tr>
+            <th>When</th>
+            <th>Who</th>
+            <th>Plane</th>
+            <th>What happened</th>
+            <th>Marketplaces</th>
+        </tr></thead>
+        <tbody>
+        {{#each history}}
+        <tr data-activity="{{id}}">
+            <td><time datetime="{{at}}" title="{{at}}">{{relativeTime at}}</time></td>
+            <td><a href="{{actor_url}}">{{actor}}</a></td>
+            <td class="sp-u-mono">{{plane}}</td>
+            <td>{{description}}</td>
+            <td>{{#if marketplaces}}{{#each marketplaces}}<span class="sp-u-mono">{{this}}</span> {{/each}}{{else}}<span class="sp-u-text-tertiary">—</span>{{/if}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+    {{/components/table}}
+    {{else}}
+    <p class="sp-u-text-tertiary">No sync has been recorded yet.</p>
+    {{/if}}
+
+    {{else}}
+
+    <div class="sp-sync-actions sp-sync-archive" aria-label="Export and import the configuration">
+        <article class="sp-sync-card">
+            <h3>Export configuration</h3>
+            <p>Every projected plane's database rendered back to its file, laid out as <code class="sp-code-inline">services/</code>, with a <code class="sp-code-inline">MANIFEST.yaml</code> naming the release and the hashes. Extract at the repository root, review the diff, commit.</p>
+            <ul class="sp-sync-archive__files">
+                {{#each export_planes}}
+                <li><code class="sp-code-inline">services/{{source_file}}</code> <span class="sp-u-text-tertiary">— {{label}}</span></li>
+                {{/each}}
+            </ul>
+            <a class="sp-btn sp-btn--primary" href="{{export_zip_url}}" download>Download zip</a>
+        </article>
+        <article class="sp-sync-card">
+            <h3>Import configuration</h3>
+            <p>Upload an archive in the same layout — one you exported, or the repository's <code class="sp-code-inline">services/</code> zipped. <strong>Nothing is written on upload.</strong> You get a preview of every plane against this database and choose Insert only or Overwrite per plane. Files the instance serves from code are listed, not applied.</p>
+            <p class="sp-u-text-tertiary">A staged upload is kept for {{stage_ttl_minutes}} minutes.</p>
+            {{#if can_write}}
+            <form class="sp-sync-archive__upload" data-sync="import-form">
+                <input class="sp-field-input" type="file" name="archive" accept=".zip,application/zip" data-sync="import-file" required>
+                <button type="submit" class="sp-btn sp-btn--secondary" data-action="stage-import" data-import-url="{{import_url}}">Stage for preview</button>
+            </form>
+            {{else}}
+            <p class="sp-u-text-tertiary">Importing needs an administrator.</p>
+            {{/if}}
+        </article>
+    </div>
+    {{/if}}
+    {{/if}}
+
+    <dialog class="sp-dialog sp-ac-dialog" data-dialog="refresh" aria-labelledby="sync-refresh-title">
+        <div class="sp-ac-dialog__header">
+            <h2 id="sync-refresh-title">Import sources</h2>
+            <button type="button" class="sp-ac-dialog__close" data-action="close-dialog" aria-label="Close">&times;</button>
+        </div>
+        <div class="sp-ac-dialog__body">
+            <p data-sync="refresh-body">Re-fetch every pinned source, verify it, and recompose. If the composition changed, its entitlements are projected and the skill inventory refreshed in place — the running process serves the new tree without a restart. The profile's pins are never rewritten.</p>
+            <pre class="sp-ac-yaml-pre" data-sync="refresh-result" hidden></pre>
+        </div>
+        <div class="sp-ac-dialog__actions">
+            <button type="button" class="sp-btn sp-btn--primary" data-action="confirm-refresh">Import</button>
+            <button type="button" class="sp-btn sp-btn--outline" data-action="close-dialog">Close</button>
+        </div>
+    </dialog>
+
+    {{/inline}}
+    {{#*inline "scripts"}}
+    <script data-cfasync="false" type="module" src="/js/pages/admin-sync.js?v={{css_version}}"></script>
+    {{/inline}}
+{{/layout}}

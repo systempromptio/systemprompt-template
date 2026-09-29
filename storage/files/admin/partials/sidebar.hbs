@@ -126,8 +126,9 @@
         </section>
         {{/if}}
 
-        {{!-- PLATFORM — the installable units declared in services/*.yaml, and
-             the gateway that routes to them. --}}
+        {{!-- PLATFORM — the installable units declared in services/*.yaml, the
+             gateway that routes to them, and Code sync, which moves their
+             declarations between the repository and this database. --}}
         {{#if current_user.is_console}}
         <section class="sp-nav-group sp-nav-group--platform" data-nav-group="platform">
         <h2 class="sp-nav-label">
@@ -154,6 +155,10 @@
         <a href="/admin/gateway"{{navActive page "gateway"}}>
             <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12" stroke-linecap="round"/><circle cx="5" cy="8" r="2"/><circle cx="11" cy="8" r="2"/></svg>
             Gateway
+        </a>
+        <a href="/admin/sync"{{navActive page "sync"}}>
+            <svg class="sp-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 6.5A5.5 5.5 0 003.6 4.6M3 9.5a5.5 5.5 0 009.4 1.9" stroke-linecap="round"/><path d="M2.5 2.5v3h3M13.5 13.5v-3h-3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Code sync
         </a>
         </div>
         </div>

@@ -20,6 +20,12 @@
         {{/inline}}
     {{/components/page-header}}
 
+    {{> components/tabs tabs=tabs nav_label="Group views"}}
+
+    {{#if sync}}
+    {{> components/sync-plane plane=sync can_write=can_manage}}
+    {{> components/sync-plane-dialogs}}
+    {{else}}
     <section class="sp-kpi-grid" aria-label="Group totals">
         {{#each kpis}}
         {{> components/kpi label=this.label value=this.value note=this.note tone=this.tone}}
@@ -153,6 +159,7 @@
             </menu>
         </form>
     </dialog>
+    {{/if}}
     {{/if}}
     {{/inline}}
     {{#*inline "scripts"}}

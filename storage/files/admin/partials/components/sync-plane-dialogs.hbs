@@ -1,0 +1,41 @@
+{{!--
+  The two dialogs the sync-plane component opens: the confirm before a
+  write, and the export viewer. Include once per page that renders one or
+  more components/sync-plane sections.
+--}}
+<dialog class="sp-dialog sp-ac-dialog" data-dialog="sync-confirm" aria-labelledby="sync-confirm-title">
+    <div class="sp-ac-dialog__header">
+        <h2 id="sync-confirm-title" data-sync="confirm-title">Confirm</h2>
+        <button type="button" class="sp-ac-dialog__close" data-action="sync-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="sp-ac-dialog__body">
+        <p data-sync="confirm-body"></p>
+        <label class="sp-entity-access__field sp-entity-access__field--wide">Reason
+            <textarea class="sp-search-input" data-sync="confirm-reason" rows="2" maxlength="240" required></textarea>
+        </label>
+        <p class="sp-ac-modal-hint">The change is recorded in the activity log with your name, your reason, the plane and the counts, and the sync state records the declared hash you applied.</p>
+    </div>
+    <div class="sp-ac-dialog__actions">
+        <button type="button" class="sp-btn sp-btn--primary" data-action="sync-confirm">Apply</button>
+        <button type="button" class="sp-btn sp-btn--outline" data-action="sync-close">Cancel</button>
+    </div>
+</dialog>
+
+<dialog class="sp-dialog sp-ac-dialog" data-dialog="sync-export" aria-labelledby="sync-export-title">
+    <div class="sp-ac-dialog__header">
+        <h2 id="sync-export-title" data-sync="export-title">This database as its declaration</h2>
+        <button type="button" class="sp-ac-dialog__close" data-action="sync-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="sp-ac-dialog__body">
+        <p class="sp-ac-modal-hint">
+            Replace the file in the source repository with this, commit, and redeploy.
+            Lines starting <code class="sp-code-inline"># NOTE</code> name what could not be expressed and must be resolved by hand.
+        </p>
+        <pre class="sp-ac-yaml-pre" data-sync="export-content"><span class="sp-loading">Loading…</span></pre>
+    </div>
+    <div class="sp-ac-dialog__actions">
+        <button type="button" class="sp-btn sp-btn--secondary" data-action="sync-copy-export">Copy</button>
+        <a class="sp-btn sp-btn--secondary" data-sync="export-download" href="#" download>Download</a>
+        <button type="button" class="sp-btn sp-btn--outline" data-action="sync-close">Close</button>
+    </div>
+</dialog>
