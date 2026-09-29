@@ -25,6 +25,9 @@ Conventions (strict — hold every entry to them):
 ## [Unreleased]
 
 ### Breaking
+- **Breaking:** ADFS `allowed_email_domains` defaults to an empty list (it
+  named two invented domains). An enabled farm must list its own domains in
+  `adfs.yaml`; until it does, no address is provisioned.
 
 - **Breaking:** a rule on a shared band (group, role, project or any
   extension dimension) now needs a `justification`. `POST` and `PUT` on
@@ -48,6 +51,16 @@ Conventions (strict — hold every entry to them):
   consumer expects.
 
 ### Added
+- **Roles → Entitlements** (`/admin/roles?tab=entitlements`): every role-band
+  rule grouped by role and entity kind, a kind folded to one line when the
+  role reaches all of it, each entity linked to its "Who gets this" panel.
+- Quota subjects `organization` (everyone holds `default`) and `role` (manual
+  grants, then directory roles), so `subject: organization|role` windows
+  resolve under `quota_fault_mode: closed`; group and project subjects lead
+  with the person's primary. The gateway policy form offers `role`.
+- Marketplace list: a Source column with the shipping source and the
+  current content hash.
+- Documentation: *Expose your instance remotely* (`/documentation/remote-access`).
 
 - **Code sync** (`/admin/sync`, Platform group): one page for where
   declarations come from and how they move. *Sources* lists the base tree and
@@ -315,6 +328,17 @@ Conventions (strict — hold every entry to them):
   debt. The README carries a coverage badge rendered from `coverage/baseline.json`.
 
 ### Changed
+- The marketplace detail page reads and edits access only in the shared
+  "Who gets this" panel, like every other catalog detail page.
+- Printed console pages paginate (the shell becomes ordinary flow); a
+  variant-less button paints a raised neutral; conversation columns on
+  History and Sessions are bounded so long prompts cannot push the numbers
+  off the page.
+- The `systemprompt_cli` skill leads with the systemprompt MCP server's typed
+  tools and their paging rules.
+- `extensions/web` inherits `systemprompt-extension` from the workspace; the
+  unused `tracing-subscriber` and `glob` workspace entries are gone, and
+  `check-workspace-deps.sh` works with BSD `sed`.
 
 - The gateway route editor (`POST|PATCH|DELETE /api/public/admin/gateway/routes`,
   `…/reorder`) writes the `gateway_routes` table and then regenerates the
@@ -395,6 +419,11 @@ Conventions (strict — hold every entry to them):
 - The admin report view's brand mark reads `systemprompt.io`.
 
 ### Removed
+- The marketplace detail page's per-group Assign table and resolved-audience
+  tables, with `admin-marketplace-groups.js` (the group-marketplaces API stays).
+- `documentation/skills-and-evaluations` (customer content; see
+  `skills-lifecycle`), and the Connect page's link to a maintainer guide for
+  recipes this repository does not have.
 
 - The hand-rolled CSV builders (`handlers/ssr/csv.rs`, `governance/csv_export.rs`,
   `ssr_analytics_dashboard/csv.rs`, `ssr_report_customer`, `ssr_report_internal`
