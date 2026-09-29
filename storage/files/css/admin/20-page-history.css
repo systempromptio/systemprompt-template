@@ -8,6 +8,18 @@
     max-inline-size: 30rem;
 }
 
+/* A cell's max-inline-size is only advisory to the table algorithm, and a
+   percentage bound on its child is circular when the cell is itself sized by
+   content — so one 160-character opening prompt widened the column until
+   Turns, Tokens, Cost and When were pushed off the page. The bound belongs on
+   the clipped child, in absolute units. */
+.sp-p-history__table .sp-col-conversation > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-inline-size: 28rem;
+}
+
 .sp-p-history__table th.sp-table__cell--num,
 .sp-p-history__table td.sp-table__cell--num { min-inline-size: 4.5rem; }
 

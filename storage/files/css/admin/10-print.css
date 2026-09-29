@@ -17,17 +17,84 @@
     .sp-sidebar-close-btn,
     .sp-admin-footer,
     .sp-toolbar,
+    .sp-topbar,
+    .sp-notice-region,
+    .sp-page-header__actions,
+    .sp-table__cell--actions,
     [data-print-hide],
     [data-print-report] {
         display: none !important;
     }
 
-    .sp-shell__main,
+    /* On screen the shell is a viewport-high flex box whose main column
+       scrolls. A printer has no scrollbar: left as it is, every console page
+       printed exactly one sheet and clipped the rest, so both boxes become
+       ordinary flow for the page engine to paginate. */
+    .sp-shell {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+        background: #fff !important;
+    }
+
     .sp-shell__main {
         display: block !important;
+        height: auto !important;
+        overflow: visible !important;
         margin: 0 !important;
         padding: 0 !important;
         max-width: none !important;
+        background: none !important;
+    }
+
+    .sp-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .sp-table__scroll {
+        overflow: visible !important;
+        background-image: none !important;
+    }
+
+    .sp-table {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+
+    .sp-table__el th {
+        position: static;
+    }
+
+    .sp-table__el {
+        width: 100% !important;
+        max-width: 100% !important;
+        font-size: 8pt;
+    }
+
+    .sp-table__el td,
+    .sp-table__el th {
+        white-space: normal !important;
+        overflow: visible !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        padding: 2pt 4pt !important;
+    }
+
+    .sp-table__el td {
+        overflow-wrap: anywhere;
+    }
+
+    .sp-table__el td.sp-table__cell--num,
+    .sp-table__el td.sp-table__cell--date {
+        white-space: nowrap !important;
+    }
+
+    html,
+    body,
+    .sp-shell,
+    .sp-shell__main {
+        width: 100% !important;
+        min-width: 0 !important;
     }
 
     .sp-kpi,

@@ -11,10 +11,25 @@
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
+    transition: background-color var(--sp-duration-fast) var(--sp-ease-in-out),
+                border-color var(--sp-duration-fast) var(--sp-ease-in-out),
+                color var(--sp-duration-fast) var(--sp-ease-in-out),
+                box-shadow var(--sp-duration-fast) var(--sp-ease-in-out),
                 transform var(--sp-duration-fast) var(--sp-ease-in-out);
     text-decoration: none;
     white-space: nowrap;
     line-height: 20px;
+    background: var(--sp-bg-surface-raised);
+    color: var(--sp-text-primary);
+    border-color: var(--sp-border-default);
+}
+
+/* Why: a `.sp-btn` with no variant used to inherit a transparent, borderless
+   box, so the Search/Apply submits on every toolbar read as loose text. The
+   base now paints a raised neutral so an unmodified button is still a button;
+   every variant below overrides all three properties. */
+.sp-btn:hover {
+    border-color: var(--sp-border-strong);
 }
 
 .sp-btn:active { transform: scale(0.97); }
@@ -103,6 +118,15 @@
 .sp-btn--outline:hover {
     background: color-mix(in oklch, var(--sp-warm-900) 4%, transparent);
     border-color: var(--sp-border-strong);
+    color: var(--sp-text-primary);
+}
+
+/* Why: a segmented range/source group is a row of outline buttons with one
+   selected; the shell's scope bar and the Groups toolbar both draw it, so the
+   selected state belongs to the component rather than to either page. */
+.sp-btn--outline.is-active {
+    border-color: var(--sp-accent);
+    background: var(--sp-bg-tertiary);
     color: var(--sp-text-primary);
 }
 
