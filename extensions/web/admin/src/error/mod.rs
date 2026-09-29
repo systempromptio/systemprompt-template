@@ -6,6 +6,7 @@
 
 mod html;
 mod managed;
+mod orchestration;
 
 pub use html::{AdminHtmlError, AdminHtmlResult};
 
