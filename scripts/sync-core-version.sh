@@ -16,7 +16,6 @@
 #   Cargo.toml                 systemprompt/-security/-users/-content/
 #                              -marketplace/-extension/-api/-evaluation
 #   tests/Cargo.toml           the same set (separate workspace)
-#   extensions/web/Cargo.toml  systemprompt-extension (bare-string pin)
 #   any other systemprompt* pin in a Cargo.toml (residual sweep)
 #   bridge/CORE_REF            v<version>, when [patch.crates-io] is inactive
 #
@@ -71,13 +70,6 @@ for manifest in Cargo.toml tests/Cargo.toml; do
             "$crate core pin"
     done
 done
-
-# extensions/web declares its own bare-string systemprompt-extension pin
-# (dependency and build-dependency) rather than inheriting the workspace one.
-check_or_apply extensions/web/Cargo.toml \
-    "s|^systemprompt-extension = \"[0-9.]*\"|systemprompt-extension = \"$VERSION\"|" \
-    "^systemprompt-extension = \"$VERSION\"" \
-    "systemprompt-extension pin"
 
 # Residual sweep: any core pin in any manifest that the rules above do not
 # already move. A pin added to a new crate would otherwise sit stale forever,

@@ -27,8 +27,8 @@ Helm chart, CasaOS / DigitalOcean deploy pins, operator-doc literals) and its
 `--check` refuses a release whose `MAJOR.MINOR` differs from the core pin's.
 `scripts/sync-core-version.sh` owns the core crate pins in both workspaces
 (`systemprompt`, `-security`, `-users`, `-content`, `-marketplace`,
-`-extension`, `-api`, `-evaluation`, the bare-string pin in
-`extensions/web/Cargo.toml`) and `bridge/CORE_REF`, with a residual sweep
+`-extension`, `-api`, `-evaluation`; `extensions/web` inherits
+`-extension` from the workspace) and `bridge/CORE_REF`, with a residual sweep
 that fails on any `systemprompt*` pin it does not move. `just core-bump X.Y.Z`
 runs both. A template-only patch (`0.61.1` on core `0.61.0`) is the one
 sanctioned divergence.

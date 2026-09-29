@@ -24,8 +24,8 @@
 # bridge/CORE_REF beyond the two listed below are scripts/sync-core-version.sh's.
 #
 # Covered pins:
-#   Cargo.toml            workspace version + systemprompt/-security core pins
-#   extensions/web/Cargo.toml  systemprompt-extension pin
+#   Cargo.toml            workspace version + systemprompt/-security/-extension
+#                         core pins (extensions/web inherits -extension)
 #   tests/Cargo.toml      systemprompt/-security pins (separate workspace)
 #   helm/gateway/Chart.yaml  appVersion + artifacthub images annotation
 #                            (chart `version:` is bumped separately on apply)
@@ -99,11 +99,10 @@ check_or_apply Cargo.toml \
     "^systemprompt-security = \\{ version = \"$CORE_VERSION\"" \
     "systemprompt-security core pin"
 
-# extensions/web declares its own core pin rather than inheriting one.
-check_or_apply extensions/web/Cargo.toml \
-    "s|^systemprompt-extension = \"[0-9.]*\"|systemprompt-extension = \"$CORE_VERSION\"|" \
-    "^systemprompt-extension = \"$CORE_VERSION\"" \
-    "systemprompt-extension pin"
+check_or_apply Cargo.toml \
+    "s|^systemprompt-extension = { version = \"[0-9.]*\"|systemprompt-extension = { version = \"$CORE_VERSION\"|" \
+    "^systemprompt-extension = \\{ version = \"$CORE_VERSION\"" \
+    "systemprompt-extension core pin"
 
 # tests/ is a separate workspace and does not inherit the root pins.
 check_or_apply tests/Cargo.toml \

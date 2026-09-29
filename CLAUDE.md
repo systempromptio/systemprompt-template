@@ -28,8 +28,7 @@ tag `vX.Y.Z` → image `:X.Y.Z` → Helm `appVersion`.
 `scripts/sync-release-version.sh X.Y.Z [--check]` owns the product pins and
 refuses a release off core's `MAJOR.MINOR`; `scripts/sync-core-version.sh
 X.Y.Z [--check]` owns every core crate pin in **both** workspaces
-(`Cargo.toml`, `tests/Cargo.toml`, plus the bare pin in
-`extensions/web/Cargo.toml`) and `bridge/CORE_REF`. `just core-bump X.Y.Z`
+(`Cargo.toml`, `tests/Cargo.toml`) and `bridge/CORE_REF`. `just core-bump X.Y.Z`
 runs both, refreshes both lockfiles, migrates the local DB
 (`--profile local`) and builds.
 

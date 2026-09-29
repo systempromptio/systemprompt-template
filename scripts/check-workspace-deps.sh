@@ -14,7 +14,7 @@ while IFS= read -r line; do
         "["*) in_table=0 ;;
     esac
     [ "$in_table" -eq 1 ] || continue
-    dep=$(printf '%s' "$line" | sed -n 's/^\([A-Za-z0-9_-]\+\)[[:space:]]*=.*/\1/p')
+    dep=$(printf '%s' "$line" | sed -n 's/^\([A-Za-z0-9_-]\{1,\}\)[[:space:]]*=.*/\1/p')
     [ -n "$dep" ] || continue
     if ! grep -rqE "^${dep}([[:space:]]*=.*workspace[[:space:]]*=[[:space:]]*true|\.workspace[[:space:]]*=[[:space:]]*true)" \
         --include=Cargo.toml Cargo.toml extensions src 2>/dev/null; then

@@ -38,7 +38,7 @@ systemprompt-web-jobs = { workspace = true }
 
 # Extension framework — direct dep so the `extension_migrations!()` macro
 # expansion (`::systemprompt_extension::Migration`) resolves.
-systemprompt-extension = "0.62.0"
+systemprompt-extension = { workspace = true }
 inventory = { workspace = true }
 
 # Web framework
@@ -48,4 +48,4 @@ axum = { workspace = true }
 tracing = { workspace = true }
 
 [build-dependencies]
-systemprompt-extension = "0.62.0"
+systemprompt-extension = { workspace = true }
