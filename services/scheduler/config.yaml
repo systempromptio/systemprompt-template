@@ -160,6 +160,37 @@ scheduler:
       owner: admin
       enabled: true
 
+    # Expires raw evidence older than 90 days — hook events, gateway
+    # requests and what hangs off them — in one transaction (web extension).
+    # conversation_facts and conversation_skill_facts are kept.
+    - name: plugin_usage_retention
+      extension: web
+      owner: admin
+      enabled: true
+
+    # Data lifecycle: measure daily, archive raw weeks before they expire,
+    # archive the rollups monthly (kept forever) and run the health check.
+    # Archives land under storage/exports/{weekly,monthly}/ and are listed on
+    # /admin/lifecycle. Parameters: weeks_back / keep_weeks (26) on the
+    # weekly job, months_back / keep_months (0 = forever) on the monthly one.
+    - name: retention_daily_report
+      extension: web
+      owner: admin
+      schedule: "0 30 4 * * *"
+      enabled: true
+
+    - name: retention_export_weekly
+      extension: web
+      owner: admin
+      schedule: "0 0 2 * * 0"
+      enabled: true
+
+    - name: retention_export_monthly
+      extension: web
+      owner: admin
+      schedule: "0 30 2 1 * *"
+      enabled: true
+
     # publish_pipeline sub-steps. The composite above runs each of these every
     # 15 minutes in dependency order; scheduling them independently would
     # double-run them, so they are disabled here (an explicit entry also

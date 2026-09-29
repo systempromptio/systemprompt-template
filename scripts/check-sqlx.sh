@@ -9,6 +9,9 @@ pattern='sqlx::query[a-z_]*\('
 # Enumerated exceptions, core-style: each entry is one path with its reason.
 # Empty by design — adding a path requires justification in review.
 allowlist=(
+    # COPY … TO STDOUT, VACUUM and pg_catalog lookups over a static table
+    # registry — statements the macros cannot express, and none takes input.
+    extensions/web/jobs/src/retention/
 )
 
 if [ ${#allowlist[@]} -gt 0 ]; then

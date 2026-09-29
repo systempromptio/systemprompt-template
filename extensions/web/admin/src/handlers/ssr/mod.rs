@@ -152,10 +152,12 @@ fn sanitize_login_redirect(raw: Option<&str>) -> Option<String> {
 pub(crate) mod analysis;
 mod configuration;
 pub(crate) mod ssr_artifacts;
+mod ssr_lifecycle;
 mod ssr_observability;
 pub(crate) mod ssr_tools;
 pub(crate) use configuration::configuration_page;
 pub(crate) use ssr_artifacts::{artifact_detail_page, artifact_preview, artifacts_page};
+pub(crate) use ssr_lifecycle::{lifecycle_archive_download, lifecycle_page};
 pub(crate) use ssr_observability::{
     export_now as observability_export_now, observability_page,
     test_connection as observability_test_connection,

@@ -20,6 +20,7 @@ pub mod governance;
 pub mod governance_chain;
 pub mod groups;
 pub mod jobs;
+pub mod lifecycle;
 pub mod marketplace;
 pub mod mcp;
 pub mod observability;

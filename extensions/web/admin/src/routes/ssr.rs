@@ -213,6 +213,14 @@ fn platform_routes() -> Router<Arc<PgPool>> {
         // instance loads, where it comes from and whether the database
         // agrees.
         .route("/configuration", get(handlers::ssr::configuration_page))
+        // Why: the retention ledger — measurements, archives and the health
+        // report the retention_* jobs write — beside Configuration, where the
+        // windows and the cleanup job's last run are shown.
+        .route("/lifecycle", get(handlers::ssr::lifecycle_page))
+        .route(
+            "/lifecycle/archive/{tier}/{period}/{file}",
+            get(handlers::ssr::lifecycle_archive_download),
+        )
         // Why: Code sync — the sources and the archive that move declarations
         // between the repository and this instance, and the access review
         // that settles the access-control plane entity by entity.

@@ -20,11 +20,16 @@ chrono = { workspace = true }
 tokio = { workspace = true }
 async-trait = { workspace = true }
 tracing = { workspace = true }
+serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 uuid = { workspace = true }
 thiserror = { workspace = true }
 inventory = { workspace = true }
+flate2 = { workspace = true }
+futures-util = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
 
 # Job registration macros expand to ::inventory::submit! paths; machete
 # cannot see macro-expansion usage.

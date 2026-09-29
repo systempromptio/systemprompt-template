@@ -131,6 +131,21 @@ Conventions (strict — hold every entry to them):
   connection** (posts an empty OTLP/HTTP envelope to the collector); both are
   administrator writes behind the write-origin check. The Code sync page links
   to Configuration and Observability from its header.
+- **Data lifecycle** (`/admin/lifecycle`, Platform group): what the retention
+  jobs measured, archived and found — the latest size, dead tuples, oldest row
+  and week-on-week growth of every managed table, the weekly and monthly
+  archives with their SHA-256 and a download link
+  (`/admin/lifecycle/archive/{tier}/{period}/{file}`, path segments validated
+  against the shapes the jobs write), the last health report's ranked
+  findings, and the retention windows in force. Three web-extension jobs
+  write it (`extensions/web/jobs/src/retention/`): `retention_daily_report`
+  (04:30 daily, into `retention_runs`), `retention_export_weekly` (Sunday
+  02:00, the previous ISO week of the raw tables to
+  `storage/exports/weekly/`) and `retention_export_monthly` (1st, 02:30, the
+  kept rollups to `storage/exports/monthly/`, then the health check and a
+  `VACUUM (ANALYZE)`). Every archive is gzipped JSON Lines from
+  `COPY … TO STDOUT` with a manifest, restorable with `COPY … FROM`. Runbook:
+  `docs/ops/retention-and-backups.md`.
 
 ### Changed
 
@@ -157,6 +172,12 @@ Conventions (strict — hold every entry to them):
   `routes/ssr_governance.rs` (same paths). `handlers::ssr::format::relative_time`
   now delegates to `systemprompt_web_shared::format::relative_time`, which
   gains `truncate_chars`, `truncate_ellipsis` and `compact_num`.
+- `plugin_usage_retention` now calls `expire_raw_evidence` (schema
+  `32_raw_retention.sql`): hook events, gateway requests and what hangs off
+  them expire together after 90 days, while `conversation_facts`,
+  `conversation_skill_facts` and the daily rollups are kept. It and the three
+  `retention_*` jobs now have explicit entries in
+  `services/scheduler/config.yaml`.
 
 ### Removed
 

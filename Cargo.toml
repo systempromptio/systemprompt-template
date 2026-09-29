@@ -102,6 +102,8 @@ saml = { version = "0.0.1-alpha.2", default-features = false, features = ["rsa-s
 # Security
 rand = "0.9"
 sha2 = "0.10"
+flate2 = "1.1"
+futures-util = "0.3"
 hex = "0.4"
 base64 = "0.22"
 
