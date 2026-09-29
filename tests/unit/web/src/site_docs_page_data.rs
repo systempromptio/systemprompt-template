@@ -61,7 +61,7 @@ fn every_string_field_lands_in_its_uppercase_template_slot() {
         "title": "Governance Pipeline",
         "description": "How a tool call is audited.",
         "slug": "services/governance",
-        "author": "Astound Digital",
+        "author": "systemprompt.io",
         "keywords": "governance, audit",
         "image": "/files/images/governance.png",
     }));
@@ -69,7 +69,7 @@ fn every_string_field_lands_in_its_uppercase_template_slot() {
     assert_eq!(data["TITLE"], "Governance Pipeline");
     assert_eq!(data["DESCRIPTION"], "How a tool call is audited.");
     assert_eq!(data["SLUG"], "services/governance");
-    assert_eq!(data["AUTHOR"], "Astound Digital");
+    assert_eq!(data["AUTHOR"], "systemprompt.io");
     assert_eq!(data["KEYWORDS"], "governance, audit");
     assert_eq!(data["IMAGE"], "/files/images/governance.png");
 }

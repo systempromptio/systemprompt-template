@@ -13,7 +13,7 @@ use systemprompt::models::services::WebConfig;
 use systemprompt::template_provider::{ExtenderContext, TemplateDataExtender};
 use systemprompt_web_site::extenders::OrgUrlExtender;
 
-const ORG_URL: &str = "https://astound.example";
+const ORG_URL: &str = "https://acme.example";
 
 const WEB_CONFIG_PATH: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -32,7 +32,7 @@ fn install_config() {
     let _ = Config::install(Config {
         instance_id: "org-url-tests".to_owned(),
         max_concurrent_streams: 16,
-        sitename: "astound-test".to_owned(),
+        sitename: "example-test".to_owned(),
         database_type: "postgres".to_owned(),
         database_url: "postgres://unused".to_owned(),
         database_write_url: None,

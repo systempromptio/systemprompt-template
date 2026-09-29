@@ -142,7 +142,7 @@ fn two_marketplaces_sharing_bytes_hash_differently_only_through_their_own_config
 fn a_bundled_marketplace_carries_the_same_kind_of_hash_with_its_bundle_as_provenance() {
     let bundled = |id: &MarketplaceId| SourceOf {
         source: if id.as_str() == "india" {
-            "bundle:astound-ba".into()
+            "bundle:acme-ba".into()
         } else {
             "base".into()
         },
@@ -158,7 +158,7 @@ fn a_bundled_marketplace_carries_the_same_kind_of_hash_with_its_bundle_as_proven
         as_base[1].content_hash, as_bundle[1].content_hash,
         "identity is the bytes, never the source that shipped them"
     );
-    assert_eq!(as_bundle[1].source, "bundle:astound-ba");
+    assert_eq!(as_bundle[1].source, "bundle:acme-ba");
     assert_eq!(as_bundle[1].source_hash.as_deref(), Some("kithash"));
 }
 
@@ -182,8 +182,8 @@ fn a_missing_skill_directory_still_shapes_the_version() {
 #[test]
 fn skill_keys_take_the_dashed_form_invocation_facts_carry() {
     assert_eq!(
-        skill_key("astound-ba", "jira_management"),
-        "astound-ba:jira-management"
+        skill_key("acme-ba", "jira_management"),
+        "acme-ba:jira-management"
     );
     let versions = hash_marketplaces(&tree(), &specs(), base);
     assert_eq!(

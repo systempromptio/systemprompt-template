@@ -25,7 +25,7 @@ fn plain_server_form_splits_on_the_last_separator() {
 fn plugin_form_resolves_the_server_against_the_instance() {
     assert_eq!(
         parse_mcp_tool_name_with(
-            "mcp__plugin_astound-super-admin_systemprompt__admin_report",
+            "mcp__plugin_acme-super-admin_systemprompt__admin_report",
             &known()
         ),
         Some(McpToolName {
@@ -39,7 +39,7 @@ fn plugin_form_resolves_the_server_against_the_instance() {
 fn plugin_form_keeps_an_underscored_server_id_whole() {
     assert_eq!(
         parse_mcp_tool_name_with(
-            "mcp__plugin_astound-commons_google_workspace__search",
+            "mcp__plugin_acme-commons_google_workspace__search",
             &known()
         )
         .map(|n| n.server),

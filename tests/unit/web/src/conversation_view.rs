@@ -336,11 +336,8 @@ fn marker_parsing_handles_nested_brackets_inside_strings() {
 #[test]
 fn system_reminder_blocks_are_cut_from_a_prompt() {
     use systemprompt_web_admin::test_support::strip_system_reminders;
-    let body = "<system-reminder>\nhousekeeping\n</system-reminder>\n\n//astound-admin:demonstrate-rag <system-reminder>more</system-reminder>";
-    assert_eq!(
-        strip_system_reminders(body),
-        "//astound-admin:demonstrate-rag"
-    );
+    let body = "<system-reminder>\nhousekeeping\n</system-reminder>\n\n//acme-admin:demonstrate-rag <system-reminder>more</system-reminder>";
+    assert_eq!(strip_system_reminders(body), "//acme-admin:demonstrate-rag");
     assert_eq!(
         strip_system_reminders("plain <system-reminder>unterminated"),
         "plain <system-reminder>unterminated"
@@ -447,12 +444,12 @@ fn a_slash_command_row_is_named_by_its_command_not_its_xml_envelope() {
     use systemprompt_web_admin::test_support::history_command_name;
     assert_eq!(
         history_command_name(
-            "<command-message>astound-commons:cowork-setup</command-message> \
-             <command-name>/astound-commons:cowork-setup</command-name> \
+            "<command-message>acme-commons:cowork-setup</command-message> \
+             <command-name>/acme-commons:cowork-setup</command-name> \
              <command-args></command-args> Base directory for this skill: C:\\Use"
         )
         .as_deref(),
-        Some("/astound-commons:cowork-setup")
+        Some("/acme-commons:cowork-setup")
     );
     assert_eq!(
         history_command_name("how much did we spend on ai today"),

@@ -21,6 +21,7 @@ fn config() -> AdfsConfig {
     cfg.entity_id = "https://app.example.com/saml/metadata".to_owned();
     cfg.acs_url = "https://app.example.com/admin/auth/adfs/acs".to_owned();
     cfg.idp_metadata_xml = "<EntityDescriptor/>".to_owned();
+    cfg.allowed_email_domains = vec!["example.com".to_owned()];
     cfg.group_roles = BTreeMap::from([
         (
             "Systemprompt-Admins".to_owned(),
@@ -161,9 +162,13 @@ fn display_name_comes_from_the_name_attribute() {
 fn the_config_accessors_and_defaults_are_the_secure_ones() {
     let cfg = config();
     assert!(cfg.is_usable());
-    assert!(cfg.email_allowed("someone@astounddigital.com"));
+    assert!(cfg.email_allowed("someone@example.com"));
     assert!(!cfg.email_allowed("someone@gmail.com"));
     assert!(!AdfsConfig::disabled().is_usable());
+    assert!(
+        !AdfsConfig::disabled().email_allowed("someone@example.com"),
+        "no domain is allowed until the operator names one"
+    );
 
     let parsed: AdfsConfig = serde_yaml::from_str(
         "enabled: true\nentity_id: https://x/saml/metadata\nacs_url: https://x/cb\nidp_metadata_path: m.xml\n",

@@ -38,8 +38,8 @@ async fn setting_the_set_adds_and_withdraws_in_one_call() {
         &db.pool,
         &group,
         &[
-            MarketplaceId::new("astound-europe-dev"),
-            MarketplaceId::new("astound-cowork"),
+            MarketplaceId::new("acme-europe-dev"),
+            MarketplaceId::new("acme-cowork"),
         ],
     )
     .await
@@ -51,19 +51,19 @@ async fn setting_the_set_adds_and_withdraws_in_one_call() {
     assert_eq!(
         granted,
         vec![
-            MarketplaceId::new("astound-cowork"),
-            MarketplaceId::new("astound-europe-dev")
+            MarketplaceId::new("acme-cowork"),
+            MarketplaceId::new("acme-europe-dev")
         ]
     );
 
-    set_group_marketplaces(&db.pool, &group, &[MarketplaceId::new("astound-cowork")])
+    set_group_marketplaces(&db.pool, &group, &[MarketplaceId::new("acme-cowork")])
         .await
         .expect("narrow to one");
     assert_eq!(
         list_group_marketplace_ids(&db.pool, &group)
             .await
             .expect("read"),
-        vec![MarketplaceId::new("astound-cowork")],
+        vec![MarketplaceId::new("acme-cowork")],
         "a marketplace dropped from the set loses its rule"
     );
     db.cleanup().await;
@@ -81,32 +81,24 @@ async fn one_groups_entitlement_does_not_leak_into_another() {
     seed_group(&db.pool, &first).await;
     seed_group(&db.pool, &second).await;
 
-    set_group_marketplaces(
-        &db.pool,
-        &first,
-        &[MarketplaceId::new("astound-europe-dev")],
-    )
-    .await
-    .expect("grant");
-    set_group_marketplaces(
-        &db.pool,
-        &second,
-        &[MarketplaceId::new("astound-india-dev")],
-    )
-    .await
-    .expect("grant");
+    set_group_marketplaces(&db.pool, &first, &[MarketplaceId::new("acme-europe-dev")])
+        .await
+        .expect("grant");
+    set_group_marketplaces(&db.pool, &second, &[MarketplaceId::new("acme-india-dev")])
+        .await
+        .expect("grant");
 
     assert_eq!(
         list_group_marketplace_ids(&db.pool, &first)
             .await
             .expect("read"),
-        vec![MarketplaceId::new("astound-europe-dev")]
+        vec![MarketplaceId::new("acme-europe-dev")]
     );
     assert_eq!(
         list_group_marketplace_ids(&db.pool, &second)
             .await
             .expect("read"),
-        vec![MarketplaceId::new("astound-india-dev")]
+        vec![MarketplaceId::new("acme-india-dev")]
     );
     db.cleanup().await;
 }

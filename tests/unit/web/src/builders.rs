@@ -16,7 +16,7 @@ use systemprompt_web_shared::models::{
 fn link_metadata(title: &str) -> ContentLinkMetadata {
     ContentLinkMetadata {
         title: title.to_owned(),
-        url: format!("https://astounddigital.com/{title}"),
+        url: format!("https://example.com/{title}"),
     }
 }
 
@@ -36,11 +36,11 @@ fn seed() -> ContentSeed {
 fn create_link_params_defaults_to_an_active_link_with_no_campaign() {
     let params = CreateLinkParams::new(
         "abc123".to_owned(),
-        "https://astounddigital.com/pricing".to_owned(),
+        "https://example.com/pricing".to_owned(),
         "redirect",
     );
     assert_eq!(params.short_code, "abc123");
-    assert_eq!(params.target_url, "https://astounddigital.com/pricing");
+    assert_eq!(params.target_url, "https://example.com/pricing");
     assert_eq!(params.link_type, "redirect");
     assert!(params.is_active, "a new link is live unless disabled");
     assert!(params.source_content_id.is_none());
@@ -59,7 +59,7 @@ fn create_link_params_full_chain_sets_every_field() {
     let expires = Utc.with_ymd_and_hms(2027, 6, 1, 0, 0, 0).unwrap();
     let params = CreateLinkParams::new(
         "abc123".to_owned(),
-        "https://astounddigital.com/pricing".to_owned(),
+        "https://example.com/pricing".to_owned(),
         "utm",
     )
     .with_source_content_id(Some(ContentId::new("content_1")))

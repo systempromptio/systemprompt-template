@@ -23,12 +23,11 @@ pub(super) fn default_groups_attribute() -> String {
 // Why: ADFS SSO is the only way a non-operator account comes into existence,
 // so this list is one half of the provisioning gate; the group map is the
 // other. Operators are created out-of-band with `admin users create` and
-// enrol a passkey.
-pub(super) fn default_allowed_domains() -> Vec<String> {
-    vec![
-        "systempromptdigital.com".to_owned(),
-        "systempromptcommerce.com".to_owned(),
-    ]
+// enrol a passkey. No domain is allowed until the operator names the
+// directory's own in `allowed_email_domains`: a shipped default would admit
+// addresses at a domain nobody on this installation chose.
+pub(super) const fn default_allowed_domains() -> Vec<String> {
+    Vec::new()
 }
 
 // Why: Default off. An allow-listed domain says an address *could* belong to

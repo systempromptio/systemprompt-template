@@ -75,10 +75,7 @@ fn owned_by(artifact: &str, plugin: &str) -> (LibraryArtifactId, BTreeSet<Plugin
 
 fn candidate() -> MarketplaceCandidate {
     MarketplaceCandidate {
-        plugins: vec![
-            plugin_entry("astound-admin"),
-            plugin_entry("astound-commons"),
-        ],
+        plugins: vec![plugin_entry("acme-admin"), plugin_entry("acme-commons")],
         skills: vec![skill_entry("skill-a"), skill_entry("skill-b")],
         agents: vec![agent_entry("agent-a")],
         hooks: vec![hook_entry("hook-a")],
@@ -87,8 +84,8 @@ fn candidate() -> MarketplaceCandidate {
         ..MarketplaceCandidate::default()
     }
     .with_artifact_owners(BTreeMap::from([
-        owned_by("art-admin", "astound-admin"),
-        owned_by("art-common", "astound-commons"),
+        owned_by("art-admin", "acme-admin"),
+        owned_by("art-common", "acme-commons"),
     ]))
 }
 
@@ -157,7 +154,7 @@ fn keep_sets_shrink_every_list_to_what_survived() {
     let kept = retained(
         candidate(),
         &EntryKeepSets {
-            plugins: keep(&["astound-commons"], |s| {
+            plugins: keep(&["acme-commons"], |s| {
                 PluginId::try_new(s).expect("plugin id")
             }),
             skills: keep(&["skill-b"], |s| SkillId::try_new(s).expect("skill id")),
@@ -170,7 +167,7 @@ fn keep_sets_shrink_every_list_to_what_survived() {
         },
     );
     assert_eq!(kept.plugins.len(), 1);
-    assert_eq!(kept.plugins[0].id.as_str(), "astound-commons");
+    assert_eq!(kept.plugins[0].id.as_str(), "acme-commons");
     assert_eq!(kept.skills.len(), 1);
     assert_eq!(kept.skills[0].id.as_str(), "skill-b");
     assert!(kept.agents.is_empty());
@@ -184,7 +181,7 @@ fn an_artifact_survives_only_while_one_of_its_owning_plugins_does() {
     let kept = retained(
         candidate(),
         &EntryKeepSets {
-            plugins: keep(&["astound-commons"], |s| {
+            plugins: keep(&["acme-commons"], |s| {
                 PluginId::try_new(s).expect("plugin id")
             }),
             skills: std::collections::HashSet::new(),
@@ -226,7 +223,7 @@ fn an_unowned_artifact_is_dropped_rather_than_defaulting_to_visible() {
     let kept = retained(
         input,
         &EntryKeepSets {
-            plugins: keep(&["astound-admin", "astound-commons"], |s| {
+            plugins: keep(&["acme-admin", "acme-commons"], |s| {
                 PluginId::try_new(s).expect("plugin id")
             }),
             skills: std::collections::HashSet::new(),
@@ -241,9 +238,9 @@ fn an_unowned_artifact_is_dropped_rather_than_defaulting_to_visible() {
 
 #[test]
 fn the_assembly_context_passes_through_untouched() {
-    let astound = MarketplaceId::new("astound");
+    let acme = MarketplaceId::new("acme");
     let membership = MarketplaceMembership {
-        access: BTreeMap::from([(astound.clone(), MarketplaceAccess::default())]),
+        access: BTreeMap::from([(acme.clone(), MarketplaceAccess::default())]),
         ..MarketplaceMembership::default()
     };
     let mut input = candidate().with_membership(membership);
@@ -253,7 +250,7 @@ fn the_assembly_context_passes_through_untouched() {
     let kept = retained(
         input,
         &EntryKeepSets {
-            plugins: keep(&["astound-admin"], |s| {
+            plugins: keep(&["acme-admin"], |s| {
                 PluginId::try_new(s).expect("plugin id")
             }),
             skills: std::collections::HashSet::new(),
@@ -266,7 +263,7 @@ fn the_assembly_context_passes_through_untouched() {
     assert_eq!(kept.artifact_owners, owners);
     assert_eq!(
         kept.membership.all_ids(),
-        BTreeSet::from([astound]),
+        BTreeSet::from([acme]),
         "membership is assembly context, not an entry list, so filtering leaves it alone"
     );
     assert_eq!(kept.diagnostics, vec!["assembly warning".to_owned()]);
@@ -277,7 +274,7 @@ fn keeping_everything_is_the_identity() {
     let kept = retained(
         candidate(),
         &EntryKeepSets {
-            plugins: keep(&["astound-admin", "astound-commons"], |s| {
+            plugins: keep(&["acme-admin", "acme-commons"], |s| {
                 PluginId::try_new(s).expect("plugin id")
             }),
             skills: keep(&["skill-a", "skill-b"], |s| {

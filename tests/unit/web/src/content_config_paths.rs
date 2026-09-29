@@ -262,14 +262,14 @@ fn load_from_file_resolves_source_paths_against_the_files_directory() {
     let path = temp.path().join("content.yaml");
     fs::write(
         &path,
-        "base_url: https://astounddigital.com\ncontent_sources:\n  - source_id: guides\n    \
+        "base_url: https://example.com\ncontent_sources:\n  - source_id: guides\n    \
          category_id: guides\n    path: guides\n",
     )
     .expect("config file");
 
     let config = BlogConfigValidated::load_from_file(&path).expect("the fixture config validates");
 
-    assert_eq!(config.base_url().as_str(), "https://astounddigital.com/");
+    assert_eq!(config.base_url().as_str(), "https://example.com/");
     assert!(
         config.all_sources()[0].path().ends_with("guides"),
         "the source path resolved next to the config file"

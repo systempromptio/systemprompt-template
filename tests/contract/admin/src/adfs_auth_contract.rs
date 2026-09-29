@@ -1,4 +1,4 @@
-//! "Sign in with Astound SSO" — the branches reachable without a live farm.
+//! "Sign in with SSO" — the branches reachable without a live farm.
 //!
 //! SSO reports failure by *redirecting*, not by returning an error status: a
 //! `500` on the callback would strand the browser on a dead end instead of
@@ -24,13 +24,13 @@ use crate::{globals, principal};
 
 const START: &str = "/admin/auth/adfs/start";
 const ACS_PATH: &str = "/admin/auth/adfs/acs";
-const ACS: &str = "https://sp-dev.astound.digital/admin/auth/adfs/acs";
+const ACS: &str = "https://app.example.com/admin/auth/adfs/acs";
 
 fn configured() -> AdfsConfig {
     let metadata = globals::repo_root().join("services/web/config/adfs-federation-metadata.xml");
     AdfsConfig {
         enabled: true,
-        entity_id: "https://sp-dev.astound.digital/saml/metadata".to_owned(),
+        entity_id: "https://app.example.com/saml/metadata".to_owned(),
         acs_url: ACS.to_owned(),
         idp_metadata_path: "adfs-federation-metadata.xml".to_owned(),
         idp_metadata_xml: std::fs::read_to_string(metadata).expect("committed IdP metadata"),
@@ -137,7 +137,7 @@ async fn adfs_start_redirects_to_the_farm_with_a_request_and_a_state_cookie() {
         }
         let target = headers.location.clone().unwrap_or_default();
         for marker in [
-            "https://login.astoundcommerce.com/adfs/ls/",
+            "https://idp.example.com/adfs/ls/",
             "SAMLRequest=",
             "RelayState=",
         ] {

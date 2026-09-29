@@ -31,7 +31,7 @@ use tower::ServiceExt as _;
 use crate::fixtures::{content_params, link_params};
 use crate::tempdb::TempDb;
 
-const BASE_URL: &str = "https://astound.test";
+const BASE_URL: &str = "https://example.test";
 
 fn blog_config() -> Arc<BlogConfigValidated> {
     Arc::new(
@@ -143,7 +143,7 @@ async fn generate_link_returns_a_short_url_built_from_the_configured_base_url() 
     let (status, body) = post(
         app(&db),
         "/links/generate",
-        &json!({ "target_url": "https://astound.test/guides/one", "campaign_name": "launch" }),
+        &json!({ "target_url": "https://example.test/guides/one", "campaign_name": "launch" }),
     )
     .await;
 
@@ -153,7 +153,7 @@ async fn generate_link_returns_a_short_url_built_from_the_configured_base_url() 
         body["short_url"],
         json!(format!("{BASE_URL}/r/{short_code}"))
     );
-    assert_eq!(body["target_url"], json!("https://astound.test/guides/one"));
+    assert_eq!(body["target_url"], json!("https://example.test/guides/one"));
 
     db.cleanup().await;
 }
@@ -167,7 +167,7 @@ async fn generate_link_falls_back_to_a_literal_base_url_when_no_config_is_mounte
     let (status, body) = post(
         app_without_config(&db),
         "/links/generate",
-        &json!({ "target_url": "https://astound.test/guides/two" }),
+        &json!({ "target_url": "https://example.test/guides/two" }),
     )
     .await;
 
@@ -302,7 +302,7 @@ async fn recording_a_click_persists_the_attributes_the_caller_supplied() {
                         "link_id": link.id.as_str(),
                         "session_id": "session-explicit",
                         "referrer_page": "/guides/one",
-                        "referrer_url": "https://astound.test/guides/one",
+                        "referrer_url": "https://example.test/guides/one",
                         "user_agent": "integration-test",
                         "device_type": "desktop",
                     })

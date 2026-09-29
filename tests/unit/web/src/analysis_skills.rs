@@ -48,9 +48,9 @@ fn window_bounds_render_as_dates_on_midnight_and_datetimes_otherwise() {
 
 #[test]
 fn a_skill_key_is_plugin_colon_skill_and_nothing_else() {
-    let key = parse_skill_key("astound-india-ba:ba-bug-logging").unwrap_or_else(|e| panic!("{e}"));
-    assert_eq!(key.plugin_id.as_str(), "astound-india-ba");
-    assert_eq!(key.skill, "astound-india-ba:ba-bug-logging");
+    let key = parse_skill_key("acme-ba:ba-bug-logging").unwrap_or_else(|e| panic!("{e}"));
+    assert_eq!(key.plugin_id.as_str(), "acme-ba");
+    assert_eq!(key.skill, "acme-ba:ba-bug-logging");
     assert!(parse_skill_key("who-am-i").is_err(), "no plugin prefix");
     assert!(parse_skill_key(":who-am-i").is_err(), "empty plugin");
     assert!(parse_skill_key("a:").is_err(), "empty skill");

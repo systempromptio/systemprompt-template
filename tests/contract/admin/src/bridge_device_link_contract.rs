@@ -172,7 +172,7 @@ async fn approving_without_a_callback_displays_the_code_and_the_login_command() 
     let (status, body) = app.call(form(APPROVE, "")).await;
     assert_eq!(status, StatusCode::OK, "approve without redirect: {body}");
     assert!(
-        body.contains("astound-bridge login --code"),
+        body.contains("systemprompt-bridge login --code"),
         "the page prints the command the user is meant to paste, got: {body}"
     );
 
@@ -268,7 +268,7 @@ async fn denying_reports_the_refusal_both_ways() {
     let (status, body) = app.call(form(DENY, "")).await;
     assert_eq!(status, StatusCode::OK, "deny without redirect: {body}");
     assert!(
-        !body.contains("astound-bridge login --code"),
+        !body.contains("systemprompt-bridge login --code"),
         "the denial page offers no login command"
     );
 
