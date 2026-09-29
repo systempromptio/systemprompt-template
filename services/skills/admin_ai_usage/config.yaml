@@ -1,0 +1,10 @@
+id: admin_ai_usage
+name: AI Usage Report
+description: "AI spend, costs and adoption on this platform - what we spent this week, top users by cost, which skills and models are used most, failed or denied requests, and trends against the previous period."
+enabled: true
+file: SKILL.md
+tags:
+  - admin
+  - reporting
+  - governance
+category: governance

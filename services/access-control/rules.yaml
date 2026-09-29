@@ -76,6 +76,34 @@ entities:
     deny:
       role: [user]
 
+  # The two admin reporting skills read every person's activity and spend
+  # through admin-only MCP tools, so they are narrowed to the admin role
+  # rather than inheriting the marketplace's open grant. who_am_i reports
+  # only on the caller and stays open to every signed-in role.
+  - entity: skill/admin_ai_usage
+    default: closed
+    why: >-
+      Instance-wide AI spend and adoption reporting; the typed analytics
+      tools it drives are admin-only.
+    allow:
+      role: [admin]
+
+  - entity: skill/admin_person_activity
+    default: closed
+    why: >-
+      Reads other people's conversations, skills and spend; an admin
+      reporting surface, not a self-service one.
+    allow:
+      role: [admin]
+
+  - entity: skill/who_am_i
+    default: open
+    why: >-
+      Self-service onboarding: reports only the caller's own identity and
+      access, so every signed-in role receives it.
+    allow:
+      role: [user, admin]
+
   # ─── Agents ───────────────────────────────────────────────────────────────
   - entity: agent/associate_agent
     default: open
