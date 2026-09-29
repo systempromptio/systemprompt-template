@@ -220,11 +220,11 @@ Conventions (strict — hold every entry to them):
 - The admin SSR router now takes the shared `DbPool` and builds core's
   managed-resource repository and OTLP export ledger once
   (`routes/managed_state.rs`); `admin_ssr_router` returns
-  `Result<Router, StateError>`. The six legacy CSV URLs moved into
-  `routes/ssr_export.rs` and the governance pages into
-  `routes/ssr_governance.rs` (same paths). `handlers::ssr::format::relative_time`
-  now delegates to `systemprompt_web_shared::format::relative_time`, which
-  gains `truncate_chars`, `truncate_ellipsis` and `compact_num`.
+  `Result<Router, StateError>`. The four legacy CSV URLs outside governance moved into
+  `routes/ssr_export.rs` and the governance pages (with their two CSVs) into
+  `routes/ssr_governance.rs` (same paths). `systemprompt_web_shared::format`
+  gains `relative_time`, `truncate_chars`, `truncate_ellipsis` and
+  `compact_num`.
 - `plugin_usage_retention` now calls `expire_raw_evidence` (schema
   `32_raw_retention.sql`): hook events, gateway requests and what hangs off
   them expire together after 90 days, while `conversation_facts`,
