@@ -46,9 +46,28 @@ Maintainers: the release process (versioning, tag scheme, retention, rollback) i
 just setup-local <anthropic_key> "" "" 8081 5433
 ```
 
+### Docker Compose and secrets
+
+- [install/docker.md](install/docker.md): run the published image with the repository's compose file, remote Postgres, multi-node profiles, upgrades and rollbacks, and pointing a bridge at a gateway.
+- [install/required-secrets.md](install/required-secrets.md): the provider secrets the shipped catalog reads, how to set them, and how to prove one with a real dispatch.
+
 ### Gateway configuration
 
-- [gateway-routes.md](gateway-routes.md): `/v1/messages` provider routing, CLI route configuration, route access control, and the extensible provider registry.
+- [gateway-routes.md](gateway-routes.md): `/v1/messages` provider routing, CLI route configuration, client attribution, route access control, and the extensible provider registry.
+
+## Use the system
+
+- [CONFIGURED-CONNECTORS.md](CONFIGURED-CONNECTORS.md): personal MCP accounts and the connector OAuth block.
+- [integrations/centralized-mcp.md](integrations/centralized-mcp.md): server-held connector accounts for third-party MCP servers, provisioning and acceptance checks.
+- [kits-on-another-instance.md](kits-on-another-instance.md): shipping a services kit to another instance.
+- [profile.schema.json](profile.schema.json): the profile schema.
+- [evals.md](evals.md) and [skill-optimization.md](skill-optimization.md): evaluating and improving skills.
+
+## Maintain the repository
+
+- [BRANCHING.md](BRANCHING.md) and [RELEASING.md](RELEASING.md): branches, the frozen promotion and the release procedure.
+- [development/](development/): developer notes for the console and its ports.
+- [tech-debt.md](tech-debt.md): recorded platform debt — the artifact chain, sync, data lifecycle — with a local activity-reset runbook.
 
 ## Licence
 
