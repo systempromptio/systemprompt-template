@@ -217,7 +217,7 @@ Conventions (strict — hold every entry to them):
 - Governance page routes moved to `routes/ssr_governance.rs` (size split only;
   every URL, including the two legacy `.csv` downloads, is unchanged).
 - `conversation_requests` and `conversation_metrics_for`
-  (`27_conversation_requests.sql`, migration `100`) now carry the client
+  (`27_conversation_requests.sql`, migration `096`) now carry the client
   (`client_kind`, `client_attestation`), exclude every request a scheduled job
   made (the judge's own calls), file a conversation under the group and
   project stamped on its latest request (`ai_request_scopes`) rather than the
