@@ -4,6 +4,7 @@
 //! Per-call logic (RBAC, auditing, CLI-to-artifact conversion) lives in
 //! the `tool` submodule.
 
+mod overflow;
 #[doc(hidden)]
 pub mod tool;
 
@@ -23,7 +24,7 @@ use systemprompt::database::DbPool;
 use systemprompt::identifiers::McpServerId;
 use systemprompt::mcp::repository::ToolUsageRepository;
 use systemprompt::mcp::{
-    ArtifactIngest, ArtifactViewerConfig, McpToolExecutor, WEBSITE_URL,
+    ArtifactIngest, ArtifactViewerConfig, McpArtifactRepository, McpToolExecutor, WEBSITE_URL,
     build_artifact_viewer_resource, build_extension_capabilities,
     build_resource_template_list_result, build_tool_list_result, parse_artifact_resource_uri,
     read_artifact_resource, read_artifact_viewer_resource,
@@ -34,30 +35,13 @@ use systemprompt_mcp_shared::record_mcp_access;
 use systemprompt::mcp::client_profile_from_peer;
 use tool::{authenticate_tool_request, dispatch_tool};
 
-/// Which of the two services this binary is serving.
-///
-/// One binary carries both the admin console tools and the evaluation
-/// fixture; the `services/mcp` entry that launched it decides which tool set
-/// a session sees.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ServerRole {
-    Console,
-}
-
-impl ServerRole {
-    #[must_use]
-    pub const fn of(_service_id: &McpServerId) -> Self {
-        Self::Console
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct SystempromptServer {
     service_id: McpServerId,
-    role: ServerRole,
     db_pool: DbPool,
     executor: McpToolExecutor,
     authz_hook: SharedAuthzHook,
+    artifact_ingest: Arc<ArtifactIngest>,
 }
 
 impl SystempromptServer {
@@ -65,23 +49,24 @@ impl SystempromptServer {
         db_pool: DbPool,
         service_id: McpServerId,
         authz_hook: SharedAuthzHook,
+        artifact_ingest: Arc<ArtifactIngest>,
     ) -> Result<Self, SystempromptToolError> {
         let tool_usage_repo = Arc::new(
             ToolUsageRepository::new(&db_pool)
                 .map_err(|e| SystempromptToolError::Internal(e.to_string()))?,
         );
-        let artifact_ingest = Arc::new(
-            ArtifactIngest::from_db(&db_pool, None)
-                .map_err(|e| SystempromptToolError::Internal(e.to_string()))?,
+        let executor = McpToolExecutor::new(
+            tool_usage_repo,
+            Arc::clone(&artifact_ingest),
+            service_id.as_str(),
         );
-        let executor = McpToolExecutor::new(tool_usage_repo, artifact_ingest, service_id.as_str());
 
         Ok(Self {
-            role: ServerRole::of(&service_id),
             service_id,
             db_pool,
             executor,
             authz_hook,
+            artifact_ingest,
         })
     }
 }
@@ -118,11 +103,15 @@ impl ServerHandler for SystempromptServer {
             ])
             .with_website_url(WEBSITE_URL),
         )
-        .with_instructions(
-            format!("Execute SystemPrompt CLI commands. Skills: 'core skills list' or 'core skills show <id>'. \
-             Content: 'core content list'. Agents: 'admin agents list'. \
-             Discord: 'plugins run discord send \"message\"'. Full documentation: {WEBSITE_URL}/docs"),
-        )
+        .with_instructions(format!(
+            "Admin control plane for this platform. Typed tools first: user_activity (per person: \
+             conversations, active days, skills, titles), conversation_list (one row per \
+             conversation), usage_by_user (spend per user), request_log (requests by user/window, cursor-paged), \
+             conversation_audit (one request's transcript, paged and bounded), users (roster), \
+             admin_report (dashboard). The 'systemprompt' tool runs any other CLI command: \
+             'core skills list', 'core skills show <id>', 'admin users role promote <id>'. \
+             Never pass --json or --export. Full documentation: {WEBSITE_URL}/docs"
+        ))
     }
 
     fn initialize(
@@ -139,9 +128,7 @@ impl ServerHandler for SystempromptServer {
         _request: Option<PaginatedRequestParams>,
         _ctx: RequestContext<RoleServer>,
     ) -> impl Future<Output = Result<ListToolsResult, McpError>> + MaybeSendFuture + '_ {
-        let tool_list = match self.role {
-            ServerRole::Console => tools::list_tools(),
-        };
+        let tool_list = tools::list_tools();
         std::future::ready(Ok(build_tool_list_result(tool_list)))
     }
 
@@ -185,13 +172,13 @@ impl ServerHandler for SystempromptServer {
         dispatch_tool(
             &tool::Dispatch {
                 service_id: self.service_id.as_str(),
-                role: self.role,
                 db_pool: &self.db_pool,
                 executor: &self.executor,
                 request: &request,
                 request_context: &request_context,
                 client: &client,
                 cli: &cli,
+                ingest: &self.artifact_ingest,
             },
             &tool_name,
             &auth_token,
@@ -226,9 +213,9 @@ impl ServerHandler for SystempromptServer {
         _ctx: RequestContext<RoleServer>,
     ) -> Result<ReadResourceResponse, McpError> {
         if parse_artifact_resource_uri(&request.uri).is_some() {
-            let ingest = ArtifactIngest::from_db(&self.db_pool, None)
+            let repo = McpArtifactRepository::new(&self.db_pool)
                 .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-            return read_artifact_resource(&request, SERVER_NAME, ingest.artifacts())
+            return read_artifact_resource(&request, SERVER_NAME, &repo)
                 .await
                 .map(Into::into);
         }

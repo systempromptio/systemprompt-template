@@ -18,6 +18,9 @@ pub enum SystempromptToolError {
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
 
+    #[error("Artifact ingest failed: {0}")]
+    Ingest(#[from] systemprompt::mcp::McpDomainError),
+
     #[error("Internal error: {0}")]
     Internal(String),
 }
@@ -29,6 +32,7 @@ impl ExtensionError for SystempromptToolError {
             Self::NotFound(_) => "NOT_FOUND",
             Self::Io(_) => "IO_ERROR",
             Self::Serialization(_) => "SERIALIZATION_ERROR",
+            Self::Ingest(_) => "ARTIFACT_INGEST_ERROR",
             Self::Internal(_) => "INTERNAL_ERROR",
         }
     }
@@ -37,7 +41,7 @@ impl ExtensionError for SystempromptToolError {
         match self {
             Self::NotFound(_) => StatusCode::NOT_FOUND,
             Self::CommandFailed(_) => StatusCode::BAD_REQUEST,
-            Self::Io(_) | Self::Serialization(_) | Self::Internal(_) => {
+            Self::Io(_) | Self::Serialization(_) | Self::Ingest(_) | Self::Internal(_) => {
                 StatusCode::INTERNAL_SERVER_ERROR
             },
         }

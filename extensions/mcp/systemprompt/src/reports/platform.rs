@@ -97,7 +97,7 @@ fn cost_commands(days: u16) -> Vec<(&'static str, String, bool)> {
 }
 
 fn report_plan(input: &ReportInput) -> Result<ReportPlan, rmcp::ErrorData> {
-    let days = input.days_or_default();
+    let days = input.days;
     let super::ReportKind::Costs = input.report;
     let (kind, title, range, commands) = (
         "costs",

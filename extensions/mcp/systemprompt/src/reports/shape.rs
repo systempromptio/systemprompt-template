@@ -20,22 +20,22 @@ pub struct ReportInput {
         description = "Which report to run. `costs` is the only kind: AI usage, spend, models and sessions from this platform's own audit tables."
     )]
     pub report: ReportKind,
+    // Why: a plain `u16` with a serde default, not `Option<u16>`. schemars
+    // renders an `Option` as `type: ["integer", "null"]`, and Gemini/Vertex
+    // rejects a type list in a function declaration — the whole server's
+    // tool list was refused for this one field.
     #[schemars(description = "Lookback window in days, 1-90. Defaults to 7.")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub days: Option<u16>,
+    #[serde(default = "seven_days")]
+    pub days: u16,
 }
 
+// Why: `inline` keeps the enum out of `$defs`. A `$ref` into `$defs` is a
+// keyword Gemini names as unknown, so the kind must be spelled out in place.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
+#[schemars(inline)]
 pub enum ReportKind {
     Costs,
-}
-
-impl ReportInput {
-    #[must_use]
-    pub fn days_or_default(&self) -> u16 {
-        self.days.unwrap_or_else(seven_days)
-    }
 }
 
 const fn seven_days() -> u16 {
@@ -104,8 +104,12 @@ impl ReportOutput {
 }
 
 impl McpOutputSchema for ReportOutput {
+    // Why: a report is its own shape (`metrics` + `tables`), not the core
+    // `dashboard` model with `sections`; declaring the built-in type made the
+    // ingest wrap it in a `tool_result` envelope that failed the schema the
+    // tool advertises.
     fn artifact_type() -> &'static str {
-        "dashboard"
+        "report"
     }
     fn artifact_title(&self) -> Option<String> {
         Some(self.title.clone())

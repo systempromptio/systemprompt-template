@@ -3,7 +3,7 @@
 //! repositories (content CRUD and orphan pruning, campaign-link lookup, click
 //! tracking and its counters, content search) and the service layer over them,
 //! markdown ingestion from a real directory tree, the content-analytics job's
-//! rollups, and construction of the two bundled MCP servers.
+//! rollups, and construction of the bundled MCP server.
 //!
 //! Every test runs against its OWN throwaway database created on the server
 //! named by `DATABASE_URL`, with the real extension schema installed, so the
@@ -29,6 +29,14 @@ mod jobs_db;
 mod link_analytics_repository;
 #[cfg(test)]
 mod link_repository;
+#[cfg(test)]
+mod mcp_cli;
+#[cfg(test)]
+mod mcp_dispatch;
+#[cfg(test)]
+mod mcp_protocol;
+#[cfg(all(test, unix))]
+mod mcp_report_handler;
 #[cfg(test)]
 mod mcp_server;
 #[cfg(test)]
